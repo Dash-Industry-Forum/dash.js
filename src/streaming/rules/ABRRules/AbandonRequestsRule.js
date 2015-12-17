@@ -65,15 +65,15 @@ function AbandonRequestsRule(/*config*/) {
         fragmentDict[type][id] = fragmentDict[type][id] || {};
     }
 
-    function execute(context, callback) {
+    function execute(rulesContext, callback) {
         var fragmentInfo;
         var now = new Date().getTime();
-        var mediaInfo = context.getMediaInfo();
+        var mediaInfo = rulesContext.getMediaInfo();
         var mediaType = mediaInfo.type;
-        var progressEvent = context.getCurrentValue();
-        var representationInfo = context.getTrackInfo();
+        var progressEvent = rulesContext.getCurrentValue();
+        var representationInfo = rulesContext.getTrackInfo();
         var req = progressEvent.request;
-        var abrController = context.getStreamProcessor().getABRController();
+        var abrController = rulesContext.getStreamProcessor().getABRController();
         var switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
 
         if (!isNaN(req.index)) {

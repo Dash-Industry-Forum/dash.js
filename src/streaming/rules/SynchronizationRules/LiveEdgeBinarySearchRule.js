@@ -75,14 +75,14 @@ function LiveEdgeBinarySearchRule(config) {
         p = SwitchRequest.DEFAULT;
     }
 
-    function execute(context, callbackFunc) {
+    function execute(rulesContext, callbackFunc) {
         var request,
             DVRWindow; // all fragments are supposed to be available in this interval
 
         callback = callbackFunc;
-        streamProcessor = context.getStreamProcessor();
+        streamProcessor = rulesContext.getStreamProcessor();
         fragmentLoader = streamProcessor.getFragmentLoader();
-        representationInfo = context.getTrackInfo();
+        representationInfo = rulesContext.getTrackInfo();
         fragmentDuration = representationInfo.fragmentDuration;
         DVRWindow = representationInfo.DVRWindow; // all fragments are supposed to be available in this interval
 

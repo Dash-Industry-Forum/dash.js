@@ -50,26 +50,26 @@ function BufferLevelRule(config) {
 
     return instance;
 
-    function execute(context, callback) {
-        var mediaInfo = context.getMediaInfo();
+    function execute(rulesContext, callback) {
+        var mediaInfo = rulesContext.getMediaInfo();
         var mediaType = mediaInfo.type;
         var metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
         var bufferLevel = metricsExt.getCurrentBufferLevel(metrics) ? metricsExt.getCurrentBufferLevel(metrics).level : 0;
         var fragmentCount;
 
-        fragmentCount = bufferLevel < getBufferTarget(context, mediaType) ? 1 : 0;
+        fragmentCount = bufferLevel < getBufferTarget(rulesContext, mediaType) ? 1 : 0;
 
         callback(SwitchRequest(context).create(fragmentCount, SwitchRequest.DEFAULT));
     }
 
     function reset() {}
 
-    function getBufferTarget(context, type) {
-        var streamProcessor = context.getStreamProcessor();
-        var streamInfo = context.getStreamInfo();
+    function getBufferTarget(rulesContext, type) {
+        var streamProcessor = rulesContext.getStreamProcessor();
+        var streamInfo = rulesContext.getStreamInfo();
         var abrController = streamProcessor.getABRController();
         var duration = streamInfo.manifestInfo.duration;
-        var trackInfo = context.getTrackInfo();
+        var trackInfo = rulesContext.getTrackInfo();
         var isDynamic = streamProcessor.isDynamic(); //TODO make is dynamic false if live stream is playing more than X seconds from live edge in DVR window. So it will act like VOD.
         var isLongFormContent = (duration >= BufferController.LONG_FORM_CONTENT_DURATION_THRESHOLD);
         var bufferTarget = NaN;

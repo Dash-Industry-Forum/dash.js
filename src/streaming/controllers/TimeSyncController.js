@@ -29,11 +29,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import Error from './vo/Error.js';
-import EventBus from './../core/EventBus.js';
-import Events from './../core/events/Events.js';
-import FactoryMaker from '../core/FactoryMaker.js';
-import Debug from '../core/Debug.js';
+import Error from './../vo/Error.js';
+import EventBus from './../../core/EventBus.js';
+import Events from './../../core/events/Events.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
 
 const TIME_SYNC_FAILED_ERROR_CODE = 1;
 const HTTP_TIMEOUT_MS = 5000;

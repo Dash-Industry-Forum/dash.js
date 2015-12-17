@@ -52,14 +52,14 @@ function BufferOccupancyRule(config) {
 
     return instance;
 
-    function execute (context, callback) {
+    function execute (rulesContext, callback) {
         var now = new Date().getTime() / 1000;
-        var mediaInfo = context.getMediaInfo();
-        var representationInfo = context.getTrackInfo();
+        var mediaInfo = rulesContext.getMediaInfo();
+        var representationInfo = rulesContext.getTrackInfo();
         var mediaType = mediaInfo.type;
         var waitToSwitchTime = !isNaN(representationInfo.fragmentDuration) ? representationInfo.fragmentDuration / 2 : 2;
-        var current = context.getCurrentValue();
-        var streamProcessor = context.getStreamProcessor();
+        var current = rulesContext.getCurrentValue();
+        var streamProcessor = rulesContext.getStreamProcessor();
         var abrController = streamProcessor.getABRController();
         var metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
         var lastBufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null;

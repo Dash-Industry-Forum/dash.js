@@ -47,7 +47,7 @@ import ManifestModel from './models/ManifestModel.js';
 import MediaPlayerModel from './models/MediaPlayerModel.js';
 import MetricsModel from './models/MetricsModel.js';
 import AbrController from './controllers/AbrController.js';
-import TimeSyncController from './TimeSyncController.js';
+import TimeSyncController from './controllers/TimeSyncController.js';
 import ABRRulesCollection from './rules/ABRRules/ABRRulesCollection.js';
 import VideoModel from './models/VideoModel.js';
 import RulesController from './rules/RulesController.js';

@@ -50,8 +50,8 @@ function LiveEdgeWithTimeSynchronizationRule(config) {
     // to end up executing this rule), the last entry in the DVR window
     // should be the live edge. if that is incorrect for whatever reason,
     // playback will fail to start and some other action should be taken.
-    function execute(context, callback) {
-        var representationInfo = context.getTrackInfo();
+    function execute(rulesContext, callback) {
+        var representationInfo = rulesContext.getTrackInfo();
         var liveEdgeInitialSearchPosition = representationInfo.DVRWindow.end;
         var p = SwitchRequest.DEFAULT;
 

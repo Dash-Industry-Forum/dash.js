@@ -46,7 +46,7 @@ factory.WEAK = WEAK;
 export default factory;
 
 function SwitchRequest (v, p) {
-
+    //TODO refactor all the calls to this to use config to be like everything else.
     let value = (v === undefined) ? NO_CHANGE : v;
     let priority = (p === undefined) ? DEFAULT : p;
 

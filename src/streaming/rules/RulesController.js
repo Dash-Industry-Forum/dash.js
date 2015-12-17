@@ -47,6 +47,7 @@ factory.SYNC_RULE = SYNC_RULE;
 export default factory;
 
 function RulesController() {
+
     let context = this.context;
 
     let instance = {

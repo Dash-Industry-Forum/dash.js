@@ -65,10 +65,10 @@ function InsufficientBufferRule(config) {
         eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
     }
 
-    function execute (context, callback) {
+    function execute (rulesContext, callback) {
         var now = new Date().getTime();
-        var mediaType = context.getMediaInfo().type;
-        var current = context.getCurrentValue();
+        var mediaType = rulesContext.getMediaInfo().type;
+        var current = rulesContext.getCurrentValue();
         var metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
         var lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
         var switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);

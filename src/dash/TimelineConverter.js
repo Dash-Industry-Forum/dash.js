@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import LiveEdgeFinder from '../streaming/LiveEdgeFinder.js';
-import TimeSyncController from '../streaming/TimeSyncController.js';
+import TimeSyncController from '../streaming/controllers/TimeSyncController.js';
 import EventBus from '../core/EventBus.js';
 import Events from "../core/events/Events.js";
 

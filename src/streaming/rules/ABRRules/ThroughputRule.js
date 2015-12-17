@@ -91,16 +91,16 @@ function ThroughputRule(config) {
         return (averageThroughput / 1000 ) * AbrController.BANDWIDTH_SAFETY;
     }
 
-    function execute (context, callback) {
+    function execute (rulesContext, callback) {
         var downloadTime;
         var averageThroughput;
         var lastRequestThroughput;
 
-        var mediaInfo = context.getMediaInfo(),
+        var mediaInfo = rulesContext.getMediaInfo(),
             mediaType = mediaInfo.type,
-            current = context.getCurrentValue(),
+            current = rulesContext.getCurrentValue(),
             metrics = metricsModel.getReadOnlyMetricsFor(mediaType),
-            streamProcessor = context.getStreamProcessor(),
+            streamProcessor = rulesContext.getStreamProcessor(),
             abrController = streamProcessor.getABRController(),
             isDynamic= streamProcessor.isDynamic(),
             lastRequest = metricsExt.getCurrentHttpRequest(metrics),

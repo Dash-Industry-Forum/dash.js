@@ -49,11 +49,11 @@ function PlaybackTimeRule(config) {
 
     return instance;
 
-    function execute(context, callback) {
-        var mediaType = context.getMediaInfo().type;
-        var mediaInfo = context.getMediaInfo();
-        var streamId = context.getStreamInfo().id;
-        var streamProcessor = context.getStreamProcessor();
+    function execute(rulesContext, callback) {
+        var mediaType = rulesContext.getMediaInfo().type;
+        var mediaInfo = rulesContext.getMediaInfo();
+        var streamId = rulesContext.getStreamInfo().id;
+        var streamProcessor = rulesContext.getStreamProcessor();
         var scheduleController = streamProcessor.getScheduleController();
         var representationInfo = streamProcessor.getCurrentRepresentationInfo();
         var seekTarget = scheduleController.getSeekTarget(); //seekTarget ? seekTarget[mediaType] : null,
