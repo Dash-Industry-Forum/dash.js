@@ -142,6 +142,10 @@ function MediaPlayer() {
         removeUTCTimingSource: removeUTCTimingSource,
         clearDefaultUTCTimingSources: clearDefaultUTCTimingSources,
         restoreDefaultUTCTimingSources: restoreDefaultUTCTimingSources,
+        setBufferToKeep: setBufferToKeep,
+        getBufferToKeep: getBufferToKeep,
+        setBufferPruningInterval: setBufferPruningInterval,
+        getBufferPruningInterval: getBufferPruningInterval,
         enableManifestDateHeaderTimeSource: enableManifestDateHeaderTimeSource,
         displayCaptionsOnTop: displayCaptionsOnTop,
         attachVideoContainer: attachVideoContainer,
@@ -430,6 +434,9 @@ function MediaPlayer() {
         return streamInfo ? streamController.getStreamById(streamInfo.id) : null;
     }
 
+    /**
+     * TODO Need Docs
+     */
     function extend(parentNameString, childInstance) {
         FactoryMaker.extend(parentNameString, childInstance, context);
     }
@@ -1016,14 +1023,33 @@ function MediaPlayer() {
         mediaPlayerModel.setUseManifestDateHeaderTimeSource(value);
     }
 
+    /**
+     * TODO Need Docs
+     */
+    function setBufferToKeep(value) {
+        mediaPlayerModel.setBufferToKeep(value);
+    }
 
+    /**
+     * TODO Need Docs
+     */
+    function getBufferToKeep(){
+        return mediaPlayerModel.getBufferToKeep();
+    }
 
+    /**
+     * TODO Need Docs
+     */
+    function setBufferPruningInterval(value) {
+        mediaPlayerModel.setBufferPruningInterval(value);
+    }
 
-
-
-
-
-
+    /**
+     * TODO Need Docs
+     */
+    function getBufferPruningInterval(){
+        return mediaPlayerModel.getBufferPruningInterval();
+    }
 
     /**
      * This method serves to control captions z-index value. If 'true' is passed, the captions will have the highest z-index and be

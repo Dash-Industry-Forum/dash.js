@@ -1,6 +1,10 @@
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 const DEFAULT_UTC_TIMING_SOURCE = { scheme: "urn:mpeg:dash:utc:http-xsdate:2014", value: "http://time.akamai.com/?iso" };
+const BUFFER_TO_KEEP = 30;
+const BUFFER_PRUNING_INTERVAL = 30;
+const LIVE_DELAY_FRAGMENT_COUNT = 4;
+
 let factory = FactoryMaker.getSingletonFactory(MediaPlayerModel);
 factory.DEFAULT_UTC_TIMING_SOURCE = DEFAULT_UTC_TIMING_SOURCE;
 export default factory;
@@ -8,6 +12,10 @@ export default factory;
 function MediaPlayerModel() {
 
     let instance = {
+        setBufferToKeep: setBufferToKeep,
+        getBufferToKeep: getBufferToKeep,
+        setBufferPruningInterval: setBufferPruningInterval,
+        getBufferPruningInterval: getBufferPruningInterval,
         setScheduleWhilePaused: setScheduleWhilePaused,
         getScheduleWhilePaused: getScheduleWhilePaused,
         getUseSuggestedPresentationDelay: getUseSuggestedPresentationDelay,
@@ -25,21 +33,49 @@ function MediaPlayerModel() {
 
     return instance;
 
+
+    /*
+     BUFFER_TIME_AT_TOP_QUALITY
+
+    * */
+
+
     let useManifestDateHeaderTimeSource,
         useSuggestedPresentationDelay,
         UTCTimingSources,
         liveDelayFragmentCount,
-        scheduleWhilePaused;
+        scheduleWhilePaused,
+        bufferToKeep,
+        bufferPruningInterval;
 
     function setup() {
         UTCTimingSources = [];
         useSuggestedPresentationDelay = false;
         useManifestDateHeaderTimeSource = true;
         scheduleWhilePaused = false;
-        liveDelayFragmentCount = 4;
+        liveDelayFragmentCount = LIVE_DELAY_FRAGMENT_COUNT;
+        bufferToKeep = BUFFER_TO_KEEP;
+        bufferPruningInterval = BUFFER_PRUNING_INTERVAL;
+    }
+    //TODO Can we use Object.define to have setters/getters
+
+    function setBufferToKeep(value) {
+        bufferToKeep = value;
     }
 
-    function setScheduleWhilePaused(value) { //TODO Can we use Object.define to have setters/getters
+    function getBufferToKeep(){
+        return bufferToKeep;
+    }
+
+    function setBufferPruningInterval(value) {
+        bufferPruningInterval = value;
+    }
+
+    function getBufferPruningInterval(){
+        return bufferPruningInterval;
+    }
+
+    function setScheduleWhilePaused(value) {
         scheduleWhilePaused = value;
     }
 

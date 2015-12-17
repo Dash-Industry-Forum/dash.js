@@ -30,6 +30,7 @@
  */
 
 import FragmentModel from '../models/FragmentModel.js';
+import MediaPlayerModel from '../models/MediaPlayerModel.js';
 import HTTPRequest from '../vo/metrics/HTTPRequest.js';
 import SourceBufferExtensions from '../extensions/SourceBufferExtensions.js';
 import AbrController from './AbrController.js';
@@ -50,8 +51,6 @@ const RICH_BUFFER_THRESHOLD = 20;
 const BUFFER_LOADED = "bufferLoaded";
 const BUFFER_EMPTY = "bufferStalled";
 const STALL_THRESHOLD = 0.5;
-const BUFFER_TO_KEEP = 30;
-const BUFFER_PRUNING_INTERVAL = 30;
 
 let factory = FactoryMaker.getClassFactory(BufferController);
 
@@ -129,14 +128,15 @@ function BufferController(config) {
         streamProcessor,
         abrController,
         fragmentController,
-        scheduleController;
+        scheduleController,
+        mediaPlayerModel;
 
     function setup() {
         requiredQuality = -1,
         currentQuality = -1,
         isBufferingCompleted = false,
         bufferLevel = 0,
-        bufferTarget= 0,
+        bufferTarget = 0,
         criticalBufferLevel = Number.POSITIVE_INFINITY,
         maxAppendedIndex = -1,
         lastIndex = -1,
@@ -147,12 +147,14 @@ function BufferController(config) {
         isAppendingInProgress = false;
         isPruningInProgress = false;
         inbandEventFound = false;
+
     }
 
     function initialize(Type, Source, StreamProcessor) {
         type = Type;
         setMediaSource(Source);
         streamProcessor = StreamProcessor;
+        mediaPlayerModel = MediaPlayerModel(context).getInstance();
         playbackController = PlaybackController(context).getInstance();
         abrController = AbrController(context).getInstance();
         fragmentController = streamProcessor.getFragmentController();
@@ -523,7 +525,7 @@ function BufferController(config) {
 
         // we want to get rid off buffer that is more than x seconds behind current time
         if (currentRange !== null) {
-            bufferToPrune = currentTime - currentRange.start - BUFFER_TO_KEEP;
+            bufferToPrune = currentTime - currentRange.start - mediaPlayerModel.getBufferToKeep();
             if (bufferToPrune > 0) {
                 isPruningInProgress = true;
                 sourceBufferExt.remove(buffer, 0, Math.round(currentRange.start + bufferToPrune), mediaSource);
@@ -678,7 +680,7 @@ function BufferController(config) {
     function onWallclockTimeUpdated() {
          //constantly prune buffer every x seconds
         wallclockTicked += 1;
-        if ((wallclockTicked % BUFFER_PRUNING_INTERVAL) === 0 && !isAppendingInProgress) {
+        if ((wallclockTicked % mediaPlayerModel.getBufferPruningInterval()) === 0 && !isAppendingInProgress) {
             pruneBuffer();
         }
     }
