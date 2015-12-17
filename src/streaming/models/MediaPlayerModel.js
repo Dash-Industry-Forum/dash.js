@@ -1,6 +1,9 @@
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-export default FactoryMaker.getSingletonFactory(MediaPlayerModel);
+const DEFAULT_UTC_TIMING_SOURCE = { scheme: "urn:mpeg:dash:utc:http-xsdate:2014", value: "http://time.akamai.com/?iso" };
+let factory = FactoryMaker.getSingletonFactory(MediaPlayerModel);
+factory.DEFAULT_UTC_TIMING_SOURCE = DEFAULT_UTC_TIMING_SOURCE;
+export default factory;
 
 function MediaPlayerModel() {
 
@@ -11,6 +14,10 @@ function MediaPlayerModel() {
         setUseSuggestedPresentationDelay: setUseSuggestedPresentationDelay,
         setLiveDelayFragmentCount: setLiveDelayFragmentCount,
         getLiveDelayFragmentCount: getLiveDelayFragmentCount,
+        setUseManifestDateHeaderTimeSource: setUseManifestDateHeaderTimeSource,
+        getUseManifestDateHeaderTimeSource: getUseManifestDateHeaderTimeSource,
+        setUTCTimingSources:setUTCTimingSources,
+        getUTCTimingSources:getUTCTimingSources,
         reset: reset
     };
 
@@ -18,12 +25,16 @@ function MediaPlayerModel() {
 
     return instance;
 
-    let useSuggestedPresentationDelay,
+    let useManifestDateHeaderTimeSource,
+        useSuggestedPresentationDelay,
+        UTCTimingSources,
         liveDelayFragmentCount,
         scheduleWhilePaused;
 
     function setup() {
-        useSuggestedPresentationDelay = false,
+        UTCTimingSources = [];
+        useSuggestedPresentationDelay = false;
+        useManifestDateHeaderTimeSource = true;
         scheduleWhilePaused = false;
         liveDelayFragmentCount = 4;
     }
@@ -44,12 +55,28 @@ function MediaPlayerModel() {
         return liveDelayFragmentCount;
     }
 
+    function setUseManifestDateHeaderTimeSource(value) {
+        useManifestDateHeaderTimeSource = value;
+    }
+
+    function getUseManifestDateHeaderTimeSource() {
+        return useManifestDateHeaderTimeSource;
+    }
+
     function setUseSuggestedPresentationDelay(value) {
         useSuggestedPresentationDelay = value;
     }
 
     function getUseSuggestedPresentationDelay() {
         return useSuggestedPresentationDelay;
+    }
+
+    function setUTCTimingSources(value) {
+        UTCTimingSources = value;
+    }
+
+    function getUTCTimingSources() {
+        return UTCTimingSources;
     }
 
     function reset() {

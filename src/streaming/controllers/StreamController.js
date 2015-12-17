@@ -36,6 +36,7 @@ import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
 import URIQueryAndFragmentModel from '../models/URIQueryAndFragmentModel.js';
 import VideoModel from '../models/VideoModel.js';
+import MediaPlayerModel from '../models/MediaPlayerModel.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
 
@@ -54,7 +55,6 @@ function StreamController() {
         getAutoPlay         :getAutoPlay,
         getActiveStreamInfo :getActiveStreamInfo,
         isStreamActive      :isStreamActive,
-        setUTCTimingSources :setUTCTimingSources,
         getStreamById       :getStreamById,
         load                :load,
         loadWithManifest    :loadWithManifest,
@@ -93,15 +93,15 @@ function StreamController() {
         isUpdating,
         hasMediaError,
         mediaSource,
-        UTCTimingSources,
-        useManifestDateHeaderTimeSource,
         videoModel,
-        playbackController;
+        playbackController,
+        mediaPlayerModel;
 
 
     function setup() {
         protectionController = null;
         streams = [];
+        mediaPlayerModel = MediaPlayerModel(context).getInstance();
         //ownProtectionController = false;
         autoPlay = true;
         canPlay = false;
@@ -493,17 +493,17 @@ function StreamController() {
 
                 if (useCalculatedLiveEdgeTime) {
                     log("SegmentTimeline detected using calculated Live Edge Time");
-                    useManifestDateHeaderTimeSource = false;
+                    mediaPlayerModel.setUseManifestDateHeaderTimeSource(false);
                 }
             }
 
             var manifestUTCTimingSources = manifestExt.getUTCTimingSources(e.manifest);
-            var allUTCTimingSources = (!manifestExt.getIsDynamic(manifest) || useCalculatedLiveEdgeTime) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(UTCTimingSources);
+            var allUTCTimingSources = (!manifestExt.getIsDynamic(manifest) || useCalculatedLiveEdgeTime) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(mediaPlayerModel.getUTCTimingSources());
             var isHTTPS = URIQueryAndFragmentModel(context).getInstance().isManifestHTTPS();
 
             //If https is detected on manifest then lets apply that protocol to only the default time source(s). In the future we may find the need to apply this to more then just default so left code at this level instead of in MediaPlayer.
             allUTCTimingSources.forEach(function(item){
-                if (item.value.replace(/.*?:\/\//g, "") === MediaPlayer.DEFAULT_UTC_TIMING_SOURCE.value.replace(/.*?:\/\//g, "")){
+                if (item.value.replace(/.*?:\/\//g, "") === MediaPlayerModel.DEFAULT_UTC_TIMING_SOURCE.value.replace(/.*?:\/\//g, "")){
                     item.value = item.value.replace(isHTTPS ? new RegExp(/^(http:)?\/\//i) : new RegExp(/^(https:)?\/\//i), isHTTPS ? "https://" : "http://");
                     log("Matching default timing source protocol to manifest protocol: " , item.value);
                 }
@@ -513,7 +513,7 @@ function StreamController() {
                 metricsModel: metricsModel,
                 metricsExt: metricsExt
             });
-            timeSyncController.initialize(allUTCTimingSources, useManifestDateHeaderTimeSource);
+            timeSyncController.initialize(allUTCTimingSources, mediaPlayerModel.getUseManifestDateHeaderTimeSource());
         } else {
             reset();
         }
@@ -529,11 +529,6 @@ function StreamController() {
 
     function isStreamActive(streamInfo) {
         return (activeStream.getId() === streamInfo.id);
-    }
-
-    function setUTCTimingSources(value, value2) {
-        UTCTimingSources = value;
-        useManifestDateHeaderTimeSource = value2;
     }
 
     function getStreamById(id) {

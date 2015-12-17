@@ -68,10 +68,8 @@ import DashMetricsExtensions from '../dash/extensions/DashMetricsExtensions.js';
 import TimelineConverter from '../dash/TimelineConverter.js';
 import MediaPlayerFactory from '../streaming/MediaPlayerFactory.js';
 
-const DEFAULT_UTC_TIMING_SOURCE = { scheme: "urn:mpeg:dash:utc:http-xsdate:2014", value: "http://time.akamai.com/?iso" };
 let factory = FactoryMaker.getClassFactory(MediaPlayer);
 factory.MediaPlayerFactory = MediaPlayerFactory().getInstance();
-factory.DEFAULT_UTC_TIMING_SOURCE = DEFAULT_UTC_TIMING_SOURCE;
 factory.events = MediaPlayerEvents;
 export default factory;
 
@@ -161,8 +159,6 @@ function MediaPlayer() {
         resetting,
         playing,
         autoPlay,
-        useManifestDateHeaderTimeSource,
-        UTCTimingSources,
         abrController,
         mediaController,
         protectionController,
@@ -187,8 +183,6 @@ function MediaPlayer() {
         autoPlay = true;
         protectionController = null;
         protectionData = null;
-        useManifestDateHeaderTimeSource = true;
-        UTCTimingSources = [];
         adapter = null;
         Events.extend(MediaPlayerEvents);
     }
@@ -241,10 +235,6 @@ function MediaPlayer() {
      * @method
      */
     function play() {
-        if (!isReady()) {
-            play();
-            return;
-        }
         if (!initialized) {
             throw "MediaPlayer not initialized!";
         }
@@ -260,7 +250,6 @@ function MediaPlayer() {
         playing = true;
         log("Playback initiated!");
 
-
         createControllers();
         domStorage.checkInitialBitrate();
         if (typeof source === "string") {
@@ -268,8 +257,6 @@ function MediaPlayer() {
         } else {
             streamController.loadWithManifest(source);
         }
-        //TODO-refactor this to mediaPlayermodel and pull from there remove api to set.
-        streamController.setUTCTimingSources(UTCTimingSources, useManifestDateHeaderTimeSource);
     }
 
     function getDVRInfoMetric() {
@@ -964,7 +951,7 @@ function MediaPlayer() {
         var vo = new UTCTiming();
         vo.schemeIdUri = schemeIdUri;
         vo.value = value;
-        UTCTimingSources.push(vo);
+        mediaPlayerModel.getUTCTimingSources().push(vo);
     }
 
 
@@ -977,6 +964,7 @@ function MediaPlayer() {
      * @see {@link MediaPlayer#clearDefaultUTCTimingSources clearDefaultUTCTimingSources()}
      */
     function removeUTCTimingSource(schemeIdUri, value) {
+        let UTCTimingSources = mediaPlayerModel.getUTCTimingSources();
         UTCTimingSources.forEach(function (obj, idx) {
             if (obj.schemeIdUri === schemeIdUri && obj.value === value) {
                 UTCTimingSources.splice(idx, 1);
@@ -995,7 +983,7 @@ function MediaPlayer() {
      * @see {@link MediaPlayer#restoreDefaultUTCTimingSources restoreDefaultUTCTimingSources()}
      */
     function clearDefaultUTCTimingSources() {
-        UTCTimingSources = [];
+        mediaPlayerModel.setUTCTimingSources([]);
     }
 
     /**
@@ -1011,7 +999,7 @@ function MediaPlayer() {
      * @see {@link MediaPlayer#addUTCTimingSource addUTCTimingSource()}
      */
     function restoreDefaultUTCTimingSources() {
-        addUTCTimingSource(DEFAULT_UTC_TIMING_SOURCE.scheme, DEFAULT_UTC_TIMING_SOURCE.value);
+        addUTCTimingSource(MediaPlayerModel.DEFAULT_UTC_TIMING_SOURCE.scheme, MediaPlayerModel.DEFAULT_UTC_TIMING_SOURCE.value);
     }
 
 
@@ -1025,8 +1013,17 @@ function MediaPlayer() {
      * @see {@link MediaPlayer#addUTCTimingSource addUTCTimingSource()}
      */
     function enableManifestDateHeaderTimeSource(value) {
-        useManifestDateHeaderTimeSource = value;
+        mediaPlayerModel.setUseManifestDateHeaderTimeSource(value);
     }
+
+
+
+
+
+
+
+
+
 
     /**
      * This method serves to control captions z-index value. If 'true' is passed, the captions will have the highest z-index and be
