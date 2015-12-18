@@ -33,64 +33,6 @@ import EventsBase from '../../core/events/EventsBase.js';
 class ProtectionEvents extends EventsBase {
     constructor () {
         super();
-        //protection model
-        /**
-         * Event ID for needkey/encrypted events
-         *
-         * @constant
-         */
-        this.NEED_KEY = "needkey";
-
-        /**
-         * Event ID for events delivered when a key system access procedure
-         * has completed
-         *
-         * @constant
-         */
-        this.KEY_SYSTEM_ACCESS_COMPLETE = "keySystemAccessComplete";
-
-
-        /**
-         * Event ID for events delivered when a HTMLMediaElement has been
-         * associated with the protection set
-         *
-         * @constant
-         */
-        this.VIDEO_ELEMENT_SELECTED = "videoElementSelected";
-
-        /**
-         * Event ID for events delivered when a new server certificate has
-         * been delivered to the CDM
-         *
-         * @constant
-         */
-        this.SERVER_CERTIFICATE_UPDATED = "serverCertificateUpdated";
-
-        /**
-         * Event ID for events delivered when an error is encountered by the CDM
-         * while processing a license server response message
-         *
-         * @constant
-         */
-        this.KEY_ERROR = "keyError";
-
-        /**
-         * Event ID for events delivered when the process of shutting down
-         * a protection set has completed
-         *
-         * @constant
-         */
-        this.TEARDOWN_COMPLETE =  "protectionTeardownComplete";
-
-
-        /**
-         * Event ID for events delivered when a key system selection procedure
-         * completes
-         *
-         * @constant
-         * @public
-         */
-        this.INTERNAL_KEY_SYSTEM_SELECTED = "internalKeySystemSelected";
 
         /**
          * Event ID for events delivered when the protection set receives
@@ -100,11 +42,6 @@ class ProtectionEvents extends EventsBase {
          */
         this.INTERNAL_KEY_MESSAGE = "internalKeyMessage";
 
-        //EXTERNAL FACING EVENTS
-        this.PROTECTION_CREATED = "public_protectioncreated";
-        this.PROTECTION_DESTROYED = "public_protectiondestroyed";
-
-
         /**
          * Event ID for events delivered when a key system selection procedure
          * completes
@@ -112,17 +49,7 @@ class ProtectionEvents extends EventsBase {
          * @constant
          * @public
          */
-        this.KEY_SYSTEM_SELECTED = "public_keySystemSelected";
-
-
-        /**
-         * Event ID for events delivered when the protection set receives
-         * a key message from the CDM
-         *
-         * @constant
-         * @public
-         */
-        this.KEY_MESSAGE = "public_keyMessage";
+        this.INTERNAL_KEY_SYSTEM_SELECTED = "internalKeySystemSelected";
 
         /**
          * Event ID for events delivered when a new key has been added
@@ -135,7 +62,31 @@ class ProtectionEvents extends EventsBase {
          * @public
          */
         this.KEY_ADDED = "public_keyAdded";
+        /**
+         * Event ID for events delivered when an error is encountered by the CDM
+         * while processing a license server response message
+         *
+         * @constant
+         */
+        this.KEY_ERROR = "public_keyError";
 
+        /**
+         * Event ID for events delivered when the protection set receives
+         * a key message from the CDM
+         *
+         * @constant
+         * @public
+         */
+        this.KEY_MESSAGE = "public_keyMessage";
+
+        /**
+         * Event ID for events delivered when a key session close
+         * process has completed
+         *
+         * @constant
+         * @public
+         */
+        this.KEY_SESSION_CLOSED = "public_keySessionClosed";
 
         /**
          * Event ID for events delivered when a new key sessions creation
@@ -155,14 +106,6 @@ class ProtectionEvents extends EventsBase {
          */
         this.KEY_SESSION_REMOVED = "public_keySessionRemoved";
 
-        /**
-         * Event ID for events delivered when a key session close
-         * process has completed
-         *
-         * @constant
-         * @public
-         */
-        this.KEY_SESSION_CLOSED = "public_keySessionClosed";
 
         /**
          * Event ID for events delivered when the status of one or more
@@ -174,6 +117,23 @@ class ProtectionEvents extends EventsBase {
         this.KEY_STATUSES_CHANGED = "public_keyStatusesChanged";
 
         /**
+         * Event ID for events delivered when a key system access procedure
+         * has completed
+         *
+         * @constant
+         */
+        this.KEY_SYSTEM_ACCESS_COMPLETE = "keySystemAccessComplete";
+
+        /**
+         * Event ID for events delivered when a key system selection procedure
+         * completes
+         *
+         * @constant
+         * @public
+         */
+        this.KEY_SYSTEM_SELECTED = "public_keySystemSelected";
+
+        /**
          * Event ID for events delivered when a license request procedure
          * has completed
          *
@@ -181,6 +141,53 @@ class ProtectionEvents extends EventsBase {
          * @public
          */
         this.LICENSE_REQUEST_COMPLETE = "public_licenseRequestComplete";
+
+        /**
+         * Event ID for needkey/encrypted events
+         *
+         * @constant
+         */
+        this.NEED_KEY = "needkey";
+
+        /**
+         * Event ID for events delivered when the Protection system is detected and created.
+         *
+         * @constant
+         * @public
+         */
+        this.PROTECTION_CREATED = "public_protectioncreated";
+
+        /**
+         * Event ID for events delivered when the Protection system is destroyed.
+         *
+         * @constant
+         * @public
+         */
+        this.PROTECTION_DESTROYED = "public_protectiondestroyed";
+
+        /**
+         * Event ID for events delivered when a new server certificate has
+         * been delivered to the CDM
+         *
+         * @constant
+         */
+        this.SERVER_CERTIFICATE_UPDATED = "serverCertificateUpdated";
+
+        /**
+         * Event ID for events delivered when the process of shutting down
+         * a protection set has completed
+         *
+         * @constant
+         */
+        this.TEARDOWN_COMPLETE =  "protectionTeardownComplete";
+
+        /**
+         * Event ID for events delivered when a HTMLMediaElement has been
+         * associated with the protection set
+         *
+         * @constant
+         */
+        this.VIDEO_ELEMENT_SELECTED = "videoElementSelected";
     }
 }
 let protectionEvents = new ProtectionEvents();

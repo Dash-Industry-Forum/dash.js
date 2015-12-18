@@ -85,7 +85,6 @@ function StreamController() {
         streams,
         activeStream,
         protectionController,
-        //ownProtectionController,
         protectionData,
         autoPlay,
         canPlay,
@@ -102,7 +101,6 @@ function StreamController() {
         protectionController = null;
         streams = [];
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
-        //ownProtectionController = false;
         autoPlay = true;
         canPlay = false;
         isStreamSwitchingInProgress = false;
@@ -308,6 +306,8 @@ function StreamController() {
             isStreamSwitchingInProgress = false;
             fireSwitchEvent(Events.PERIOD_SWITCH_COMPLETED, from, to);
         };
+
+        //Removed a hack from 1.5 using setTimeout due to dijon.  Try without hack but remember.
         from.deactivate();
         activeStream = to;
         playbackController.initialize(activeStream.getStreamInfo());
@@ -560,7 +560,6 @@ function StreamController() {
         if (config.manifestExt){
             manifestExt = config.manifestExt;
         }
-
         if (config.protectionController){
             protectionController = config.protectionController;
         }
@@ -616,14 +615,11 @@ function StreamController() {
         eventBus.off(Events.PLAYBACK_ENDED, onEnded, this);
         eventBus.off(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
         eventBus.off(Events.MANIFEST_UPDATED, onManifestUpdated, this);
+
         manifestUpdater.reset();
         metricsModel.clearAllCurrentMetrics();
-
-
-        var manifestUrl = (manifestModel.getValue()) ? manifestModel.getValue().url : null;
         manifestModel.setValue(null);
         manifestLoader.reset();
-
         timelineConverter.reset();
         liveEdgeFinder.reset();
         adapter.reset();
@@ -641,29 +637,16 @@ function StreamController() {
 
         videoModel = null;
 
-        // Teardown the protection system, if necessary
         if (!protectionController) {
             eventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
         }
-            /*else if (ownProtectionController) {
-                var onTeardownComplete = function () {
-                    eventBus.off(Events.TEARDOWN_COMPLETE, onTeardownComplete, this);
-                    // Complete teardown process
-                    ownProtectionController = false;
-                    protectionController = null;
-                    protectionData = null;
-                    if (manifestUrl) {
-                        eventBus.trigger(Events.PROTECTION_DESTROYED, {data: manifestUrl});
-                    }
-                    eventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
-                };
-                eventBus.on(Events.TEARDOWN_COMPLETE, onTeardownComplete, this);
-                protectionController.reset();
-            }*/
         else {
             protectionController.setMediaElement(null);
             protectionController = null;
             protectionData = null;
+            if (manifestModel.getValue()) {
+                eventBus.trigger(Events.PROTECTION_DESTROYED, {data: manifestModel.getValue().url});
+            }
             eventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
         }
     }
