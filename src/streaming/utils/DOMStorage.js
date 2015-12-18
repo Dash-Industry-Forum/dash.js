@@ -171,10 +171,10 @@ function DOMStorage() {
                         localStorage.removeItem(key);
                     }
                 }
-                ////check again to see if local storage value was set, if not set default value for startup.
-                //if (abrController.getInitialBitrateFor(value) === undefined) {//TODO-refactor need to not set const here!!!
-                //    abrController.setInitialBitrateFor(value, AbrController["DEFAULT_"+value.toUpperCase()+"_BITRATE"]);
-                //}
+                //check again to see if local storage value was set, if not set default value for startup.
+                if (abrController.getInitialBitrateFor(value) === undefined) {
+                    abrController.setInitialBitrateFor(value, AbrController["DEFAULT_"+value.toUpperCase()+"_BITRATE"]);
+                }
             }
 
         }, this);

@@ -42,11 +42,15 @@ const ABANDON_LOAD = "abandonload";
 const BANDWIDTH_SAFETY = 0.9;
 const ABANDON_TIMEOUT = 10000;
 const ALLOW_LOAD = "allowload";
+const DEFAULT_VIDEO_BITRATE = 1000;
+const DEFAULT_AUDIO_BITRATE = 100;
 
 let factory = FactoryMaker.getSingletonFactory(AbrController);
 
 factory.ABANDON_LOAD = ABANDON_LOAD;
 factory.BANDWIDTH_SAFETY = BANDWIDTH_SAFETY;
+factory.DEFAULT_VIDEO_BITRATE = DEFAULT_VIDEO_BITRATE;
+factory.DEFAULT_AUDIO_BITRATE = DEFAULT_AUDIO_BITRATE;
 
 export default factory;
 
