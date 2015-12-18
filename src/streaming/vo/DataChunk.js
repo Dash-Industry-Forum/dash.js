@@ -32,19 +32,18 @@
 /*
 *  Represents a data structure that keep all the necessary info about a single init/media segment
 * */
-MediaPlayer.vo.DataChunk = function () {
-    "use strict";
-    this.streamId = null;
-    this.mediaInfo = null;
-    this.segmentType = null;
-    this.quality = NaN;
-    this.index = NaN;
-    this.bytes = null;
-    this.start = NaN;
-    this.end = NaN;
-    this.duration = NaN;
-};
+class DataChunk {
+    constructor() {
+        this.streamId = null;
+        this.mediaInfo = null;
+        this.segmentType = null;
+        this.quality = NaN;
+        this.index = NaN;
+        this.bytes = null;
+        this.start = NaN;
+        this.end = NaN;
+        this.duration = NaN;
+    }
+}
 
-MediaPlayer.vo.DataChunk.prototype = {
-    constructor: MediaPlayer.vo.DataChunk
-};
+export default DataChunk;

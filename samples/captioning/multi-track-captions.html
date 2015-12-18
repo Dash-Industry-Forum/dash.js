@@ -17,18 +17,13 @@
             player;
 
         function startVideo() {
-            var url = FRAGMENTED_CAPTION_URL,
-                context;
+            var url = FRAGMENTED_CAPTION_URL;
 
             videoElement = document.querySelector(".videoContainer video");
-            context = new Dash.di.DashContext();
-            player = new MediaPlayer(context);
-            player.startup();
-            player.attachView(videoElement);
+            player = MediaPlayer({}).create();
+            player.initialize(videoElement, url, true);
             controlbar = new ControlBar(player); // Checkout ControlBar.js for more info on how to target/add text tracks to UI
             controlbar.initialize();
-            player.setAutoPlay(true);
-            player.attachSource(url);
         }
 
     </script>

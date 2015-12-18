@@ -34,30 +34,41 @@
  *
  * For testing content that uses the PlayReady test server at
  *
- * @implements MediaPlayer.dependencies.protection.servers.LicenseServer
+ * @implements LicenseServer
  * @class
  */
-MediaPlayer.dependencies.protection.servers.PlayReady = function() {
-    "use strict";
+import FactoryMaker from '../../../core/FactoryMaker.js';
+export default FactoryMaker.getSingletonFactory(PlayReady);
 
-    return {
+function PlayReady() {
 
-        getServerURLFromMessage: function(url /*, message, messageType*/) { return url; },
-
-        getHTTPMethod: function(/*messageType*/) { return 'POST'; },
-
-        getResponseType: function(/*keySystemStr, messageType*/) { return 'arraybuffer'; },
-
-        getLicenseMessage: function(serverResponse/*, keySystemStr, messageType*/) {
-            return serverResponse;
-        },
-
-        getErrorResponse: function(serverResponse/*, keySystemStr, messageType*/) {
-            return String.fromCharCode.apply(null, new Uint8Array(serverResponse));
-        }
+    var instance = {
+        getServerURLFromMessage: getServerURLFromMessage,
+        getHTTPMethod: getHTTPMethod,
+        getResponseType: getResponseType,
+        getLicenseMessage: getLicenseMessage,
+        getErrorResponse: getErrorResponse,
     };
-};
 
-MediaPlayer.dependencies.protection.servers.PlayReady.prototype = {
-    constructor: MediaPlayer.dependencies.protection.servers.PlayReady
-};
+    return instance;
+
+    function getServerURLFromMessage(url /*, message, messageType*/) {
+        return url;
+    }
+
+    function getHTTPMethod(/*messageType*/) {
+        return 'POST';
+    }
+
+    function getResponseType(/*keySystemStr, messageType*/) {
+        return 'arraybuffer';
+    }
+
+    function getLicenseMessage(serverResponse/*, keySystemStr, messageType*/) {
+        return serverResponse;
+    }
+
+    function getErrorResponse(serverResponse/*, keySystemStr, messageType*/) {
+        return String.fromCharCode.apply(null, new Uint8Array(serverResponse));
+    }
+}

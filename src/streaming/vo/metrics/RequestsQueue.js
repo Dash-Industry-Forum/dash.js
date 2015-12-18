@@ -28,12 +28,12 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.metrics.RequestsQueue = function () {
-    "use strict";
-    this.loadingRequests = [];
-    this.executedRequests = [];
-};
 
-MediaPlayer.vo.metrics.RequestsQueue.prototype = {
-    constructor: MediaPlayer.vo.metrics.RequestsQueue
-};
+class RequestsQueue {
+    constructor() {
+        this.loadingRequests = [];
+        this.executedRequests = [];
+    }
+}
+
+export default RequestsQueue;

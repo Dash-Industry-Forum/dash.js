@@ -28,17 +28,17 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.ManifestInfo = function () {
-    "use strict";
-    this.DVRWindowSize = NaN;
-    this.loadedTime = null;
-    this.availableFrom = null;
-    this.minBufferTime = NaN;
-    this.duration = NaN;
-    this.isDynamic = false;
-    this.maxFragmentDuration = null;
-};
 
-MediaPlayer.vo.ManifestInfo.prototype = {
-    constructor: MediaPlayer.vo.ManifestInfo
-};
+class ManifestInfo {
+    constructor() {
+        this.DVRWindowSize = NaN;
+        this.loadedTime = null;
+        this.availableFrom = null;
+        this.minBufferTime = NaN;
+        this.duration = NaN;
+        this.isDynamic = false;
+        this.maxFragmentDuration = null;
+    }
+}
+
+export default ManifestInfo;

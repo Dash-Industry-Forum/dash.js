@@ -28,28 +28,29 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import FactoryMaker from '../../core/FactoryMaker.js';
+export default FactoryMaker.getSingletonFactory(VideoModelExtensions);
 
-MediaPlayer.dependencies.VideoModelExtensions = function () {
-    "use strict";
+function VideoModelExtensions() {
 
-    return {
-        getPlaybackQuality: function (videoElement) {
-            var hasWebKit = ("webkitDroppedFrameCount" in videoElement),
-                hasQuality = ("getVideoPlaybackQuality" in videoElement),
-                result = null;
+    let instance = {
+        getPlaybackQuality:getPlaybackQuality
+    }
 
-            if (hasQuality) {
-                result = videoElement.getVideoPlaybackQuality();
-            }
-            else if (hasWebKit) {
-                result = {droppedVideoFrames: videoElement.webkitDroppedFrameCount, creationTime: new Date()};
-            }
+    return instance;
 
-            return result;
+    function getPlaybackQuality(videoElement) {
+        var hasWebKit = ("webkitDroppedFrameCount" in videoElement);
+        var hasQuality = ("getVideoPlaybackQuality" in videoElement);
+        var result = null;
+
+        if (hasQuality) {
+            result = videoElement.getVideoPlaybackQuality();
         }
-    };
-};
+        else if (hasWebKit) {
+            result = {droppedVideoFrames: videoElement.webkitDroppedFrameCount, creationTime: new Date()};
+        }
 
-MediaPlayer.dependencies.VideoModelExtensions.prototype = {
-    constructor: MediaPlayer.dependencies.VideoModelExtensions
+        return result;
+    }
 };

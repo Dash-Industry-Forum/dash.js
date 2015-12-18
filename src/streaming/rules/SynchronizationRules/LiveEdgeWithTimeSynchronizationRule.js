@@ -29,40 +29,44 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*global MediaPlayer*/
+import SwitchRequest from '../SwitchRequest.js';
+import FactoryMaker from '../../../core/FactoryMaker.js';
 
-MediaPlayer.rules.LiveEdgeWithTimeSynchronizationRule = function () {
-    "use strict";
+export default FactoryMaker.getClassFactory(LiveEdgeWithTimeSynchronizationRule);
 
-    return {
-        timelineConverter: undefined,
+function LiveEdgeWithTimeSynchronizationRule(config) {
 
-        // if the time has been synchronized correctly (which it must have been
-        // to end up executing this rule), the last entry in the DVR window
-        // should be the live edge. if that is incorrect for whatever reason,
-        // playback will fail to start and some other action should be taken.
-        execute: function (context, callback) {
-            var representationInfo = context.getTrackInfo(),
-                liveEdgeInitialSearchPosition = representationInfo.DVRWindow.end,
-                p = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
+    let context = this.context;
 
-            if (representationInfo.useCalculatedLiveEdgeTime) {
-                //By default an expected live edge is the end of the last segment.
-                // A calculated live edge ('end' property of a range returned by TimelineConverter.calcSegmentAvailabilityRange)
-                // is used as an initial point for finding the actual live edge.
-                // But for SegmentTimeline mpds (w/o a negative @r) the end of the
-                // last segment is the actual live edge. At the same time, calculated live edge is an expected live edge.
-                // Thus, we need to switch an expected live edge and actual live edge for SegmentTimelne streams.
-                var actualLiveEdge = this.timelineConverter.getExpectedLiveEdge();
-                this.timelineConverter.setExpectedLiveEdge(liveEdgeInitialSearchPosition);
-                callback(new MediaPlayer.rules.SwitchRequest(actualLiveEdge, p));
-            } else {
-                callback(new MediaPlayer.rules.SwitchRequest(liveEdgeInitialSearchPosition, p));
-            }
-        }
+    let timelineConverter = config.timelineConverter;
+
+    let instance = {
+        execute: execute
     };
-};
 
-MediaPlayer.rules.LiveEdgeWithTimeSynchronizationRule.prototype = {
-    constructor: MediaPlayer.rules.LiveEdgeWithTimeSynchronizationRule
-};
+    return instance;
+
+    // if the time has been synchronized correctly (which it must have been
+    // to end up executing this rule), the last entry in the DVR window
+    // should be the live edge. if that is incorrect for whatever reason,
+    // playback will fail to start and some other action should be taken.
+    function execute(rulesContext, callback) {
+        var representationInfo = rulesContext.getTrackInfo();
+        var liveEdgeInitialSearchPosition = representationInfo.DVRWindow.end;
+        var p = SwitchRequest.DEFAULT;
+
+        if (representationInfo.useCalculatedLiveEdgeTime) {
+            //By default an expected live edge is the end of the last segment.
+            // A calculated live edge ('end' property of a range returned by TimelineConverter.calcSegmentAvailabilityRange)
+            // is used as an initial point for finding the actual live edge.
+            // But for SegmentTimeline mpds (w/o a negative @r) the end of the
+            // last segment is the actual live edge. At the same time, calculated live edge is an expected live edge.
+            // Thus, we need to switch an expected live edge and actual live edge for SegmentTimelne streams.
+            var actualLiveEdge = timelineConverter.getExpectedLiveEdge();
+            timelineConverter.setExpectedLiveEdge(liveEdgeInitialSearchPosition);
+            callback(SwitchRequest(context).create(actualLiveEdge, p));
+        } else {
+            callback(SwitchRequest(context).create(liveEdgeInitialSearchPosition, p));
+        }
+    }
+}

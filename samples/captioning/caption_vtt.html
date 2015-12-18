@@ -11,21 +11,11 @@
     <script>
         function startVideo() {
             var url = "http://dash.edgesuite.net/akamai/test/caption_test/ElephantsDream/elephants_dream_480p_heaac5_1.mpd",
-                video,
-                context,
+                video = document.querySelector(".dash-video-player video"),
                 player;
 
-
-            video = document.querySelector(".dash-video-player video");
-            context = new Dash.di.DashContext();
-            player = new MediaPlayer(context);
-
-            player.startup();
-
-            player.attachView(video);
-            player.setAutoPlay(true);
-
-            player.attachSource(url);
+            player = MediaPlayer({}).create();
+            player.initialize(video, url, true);
         }
     </script>
 

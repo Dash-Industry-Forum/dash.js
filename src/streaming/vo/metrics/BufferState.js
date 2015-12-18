@@ -28,12 +28,13 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.metrics.BufferState = function () {
-    "use strict";
-    this.target = null; // Required Buffer Level determined by the BufferLevelRule.
-    this.state = MediaPlayer.dependencies.BufferController.BUFFER_EMPTY;
-};
+import BufferController from '../../controllers/BufferController.js';
 
-MediaPlayer.vo.metrics.BufferState.prototype = {
-    constructor: MediaPlayer.vo.metrics.BufferState
-};
+class BufferState {
+    constructor() {
+        this.target = null; // Required Buffer Level determined by the BufferLevelRule.
+        this.state = BufferController.BUFFER_EMPTY;
+    }
+}
+
+export default BufferState;

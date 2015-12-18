@@ -28,18 +28,25 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.MediaSourceExtensions = function () {
-    "use strict";
-};
+import FactoryMaker from '../../core/FactoryMaker.js';
 
-MediaPlayer.dependencies.MediaSourceExtensions.prototype = {
-    constructor: MediaPlayer.dependencies.MediaSourceExtensions,
+export default FactoryMaker.getSingletonFactory(MediaSourceExtensions);
 
-    createMediaSource: function () {
-        "use strict";
+function MediaSourceExtensions() {
+    let instance = {
+        createMediaSource: createMediaSource,
+        attachMediaSource: attachMediaSource,
+        detachMediaSource: detachMediaSource,
+        setDuration: setDuration,
+        signalEndOfStream: signalEndOfStream
+    };
 
-        var hasWebKit = ("WebKitMediaSource" in window),
-            hasMediaSource = ("MediaSource" in window);
+    return instance;
+
+    function createMediaSource() {
+
+        var hasWebKit = ("WebKitMediaSource" in window);
+        var hasMediaSource = ("MediaSource" in window);
 
         if (hasMediaSource) {
             return new MediaSource();
@@ -48,40 +55,36 @@ MediaPlayer.dependencies.MediaSourceExtensions.prototype = {
         }
 
         return null;
-    },
+    }
 
-    attachMediaSource: function (source, videoModel) {
-        "use strict";
+    function attachMediaSource(source, videoModel) {
 
         var objectURL = window.URL.createObjectURL(source);
 
         videoModel.setSource(objectURL);
 
         return objectURL;
-    },
+    }
 
-    detachMediaSource: function (videoModel) {
-        "use strict";
+    function detachMediaSource(videoModel) {
         // it seems that any value passed to the setSource is cast to a sting when setting element.src,
         // so we cannot use null or undefined to reset the element. Use empty string instead.
         videoModel.setSource("");
-    },
+    }
 
-    setDuration: function (source, value) {
-        "use strict";
+    function setDuration(source, value) {
 
         if (source.duration != value)
             source.duration = value;
 
         return source.duration;
-    },
+    }
 
-    signalEndOfStream: function(source) {
-        "use strict";
+    function signalEndOfStream(source) {
 
-        var buffers = source.sourceBuffers,
-            ln = buffers.length,
-            i = 0;
+        var buffers = source.sourceBuffers;
+        var ln = buffers.length;
+        var i = 0;
 
         if (source.readyState !== "open") return;
 
@@ -91,4 +94,4 @@ MediaPlayer.dependencies.MediaSourceExtensions.prototype = {
 
         source.endOfStream();
     }
-};
+}

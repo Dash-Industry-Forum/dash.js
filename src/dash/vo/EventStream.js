@@ -28,16 +28,16 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-Dash.vo.EventStream = function () {
-    "use strict";
-    this.adaptionSet = null;
-    this.representation = null;
-    this.period = null;
-    this.timescale = 1;
-    this.value = "";
-    this.schemeIdUri = "";
-};
 
-Dash.vo.EventStream.prototype = {
-    constructor: Dash.vo.EventStream
-};
+class EventStream {
+    constructor() {
+        this.adaptionSet = null;
+        this.representation = null;
+        this.period = null;
+        this.timescale = 1;
+        this.value = "";
+        this.schemeIdUri = "";
+    }
+}
+
+export default EventStream;

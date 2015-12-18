@@ -32,13 +32,15 @@
 /**
  * CastLabs DRMToday License Server implementation
  *
- * @implements MediaPlayer.dependencies.protection.servers.LicenseServer
+ * @implements LicenseServer
  * @class
  */
-MediaPlayer.dependencies.protection.servers.DRMToday = function() {
-    "use strict";
+import FactoryMaker from '../../../core/FactoryMaker.js';
+export default FactoryMaker.getSingletonFactory(DRMToday);
 
-    var keySystems = {
+function DRMToday() {
+
+    const keySystems = {
         "com.widevine.alpha": {
             responseType: "json",
             getLicenseMessage: function(response) {
@@ -59,26 +61,33 @@ MediaPlayer.dependencies.protection.servers.DRMToday = function() {
         }
     };
 
-    return {
-
-        getServerURLFromMessage: function(url /*, message, messageType*/) { return url; },
-
-        getHTTPMethod: function(/*messageType*/) { return 'POST'; },
-
-        getResponseType: function(keySystemStr/*, messageType*/) {
-            return keySystems[keySystemStr].responseType;
-        },
-
-        getLicenseMessage: function(serverResponse, keySystemStr/*, messageType*/) {
-            return keySystems[keySystemStr].getLicenseMessage(serverResponse);
-        },
-
-        getErrorResponse: function(serverResponse, keySystemStr/*, messageType*/) {
-            return keySystems[keySystemStr].getErrorResponse(serverResponse);
-        }
+    var instance = {
+        getServerURLFromMessage: getServerURLFromMessage,
+        getHTTPMethod: getHTTPMethod,
+        getResponseType: getResponseType,
+        getLicenseMessage: getLicenseMessage,
+        getErrorResponse: getErrorResponse,
     };
-};
 
-MediaPlayer.dependencies.protection.servers.DRMToday.prototype = {
-    constructor: MediaPlayer.dependencies.protection.servers.DRMToday
-};
+    return instance;
+
+    function getServerURLFromMessage(url /*, message, messageType*/) {
+        return url;
+    }
+
+    function getHTTPMethod(/*messageType*/) {
+        return 'POST';
+    }
+
+    function getResponseType(keySystemStr/*, messageType*/) {
+        return keySystems[keySystemStr].responseType;
+    }
+
+    function getLicenseMessage(serverResponse, keySystemStr/*, messageType*/) {
+        return keySystems[keySystemStr].getLicenseMessage(serverResponse);
+    }
+
+    function getErrorResponse(serverResponse, keySystemStr/*, messageType*/) {
+        return keySystems[keySystemStr].getErrorResponse(serverResponse);
+    }
+}

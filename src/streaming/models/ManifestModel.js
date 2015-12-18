@@ -28,41 +28,33 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.models.ManifestModel = function () {
-    "use strict";
+import MediaPlayer from '../MediaPlayer.js';
+import EventBus from '../../core/EventBus.js';
+import Events from '../../core/events/Events.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
-    var manifest;
+export default FactoryMaker.getSingletonFactory(ManifestModel);
 
-    return {
-        system: undefined,
-        eventBus: undefined,
-        notify: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
+function  ManifestModel() {
+    let context = this.context;
 
-        getValue:  function () {
-            return manifest;
-        },
+    let eventBus = EventBus(context).getInstance();
 
-        setValue: function (value) {
-            manifest = value;
-
-            this.eventBus.dispatchEvent({
-                type: MediaPlayer.events.MANIFEST_LOADED,
-                data: value
-            });
-
-            this.notify(MediaPlayer.models.ManifestModel.eventList.ENAME_MANIFEST_UPDATED, {manifest: value});
-        }
+    let instance = {
+        getValue: getValue,
+        setValue: setValue
     };
+
+    return instance;
+
+    let manifest;
+
+    function getValue() {
+        return manifest;
+    }
+
+    function setValue(value) {
+        manifest = value;
+        eventBus.trigger(Events.MANIFEST_LOADED,  {data: value});
+    }
 };
-
-MediaPlayer.models.ManifestModel.prototype = {
-    constructor: MediaPlayer.models.ManifestModel
-};
-
-MediaPlayer.models.ManifestModel.eventList = {
-    ENAME_MANIFEST_UPDATED: "manifestUpdated"
-};
-
-

@@ -28,141 +28,128 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.FragmentController = function () {
-    "use strict";
+import HTTPRequest from '../vo/metrics/HTTPRequest.js';
+import DataChunk from '../vo/DataChunk.js';
+import FragmentModel from '../models/FragmentModel.js';
+import MetricsModel from '../models/MetricsModel.js';
+import EventBus from '../../core/EventBus.js';
+import Events from "../../core/events/Events.js";
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
 
-    var fragmentModels = [],
+export default FactoryMaker.getClassFactory(FragmentController);
 
-        findModel = function(context) {
-            var ln = fragmentModels.length;
-            // We expect one-to-one relation between FragmentModel and context,
-            // so just compare the given context object with the one that stored in the model to find the model for it
-            for (var i = 0; i < ln; i++) {
-                if (fragmentModels[i].getContext() == context) {
-                    return fragmentModels[i];
-                }
-            }
+function FragmentController(/*config*/) {
 
-            return null;
-        },
+    let context = this.context;
+    let log = Debug(context).getInstance().log;
+    let eventBus = EventBus(context).getInstance();
 
-        createDataChunk = function(bytes, request, streamId) {
-            var chunk = new MediaPlayer.vo.DataChunk();
-
-            chunk.streamId = streamId;
-            chunk.mediaInfo = request.mediaInfo;
-            chunk.segmentType = request.type;
-            chunk.start = request.startTime;
-            chunk.duration = request.duration;
-            chunk.end = chunk.start + chunk.duration;
-            chunk.bytes = bytes;
-            chunk.index = request.index;
-            chunk.quality = request.quality;
-
-            return chunk;
-        },
-
-        onFragmentLoadingStart = function(e) {
-            var self = this,
-                request = e.data.request;
-
-            if (self.isInitializationRequest(request)) {
-                self.notify(MediaPlayer.dependencies.FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADING_START, {request: request, fragmentModel: e.sender});
-            }else {
-                self.notify(MediaPlayer.dependencies.FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADING_START, {request: request, fragmentModel: e.sender});
-            }
-        },
-
-        onFragmentLoadingCompleted = function(e) {
-            var self = this,
-                request = e.data.request,
-                bytes = e.data.response,
-                streamId = e.sender.getContext().streamProcessor.getStreamInfo().id,
-                isInit = this.isInitializationRequest(request),
-                eventName = isInit ? MediaPlayer.dependencies.FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADED :
-                    MediaPlayer.dependencies.FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADED,
-                chunk;
-
-            if (!bytes) {
-                self.log("No " + request.mediaType + " bytes to push.");
-                return;
-            }
-
-            chunk = createDataChunk.call(this, bytes, request, streamId);
-
-            self.notify(eventName, {chunk: chunk, fragmentModel: e.sender});
-        },
-
-        onStreamCompleted = function(e) {
-            this.notify(MediaPlayer.dependencies.FragmentController.eventList.ENAME_STREAM_COMPLETED, {request: e.data.request, fragmentModel: e.sender});
-        };
-
-
-    return {
-        system: undefined,
-        log: undefined,
-        scheduleRulesCollection: undefined,
-        rulesController: undefined,
-        notify: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
-
-        setup: function() {
-            this[MediaPlayer.dependencies.FragmentModel.eventList.ENAME_FRAGMENT_LOADING_STARTED] = onFragmentLoadingStart;
-            this[MediaPlayer.dependencies.FragmentModel.eventList.ENAME_FRAGMENT_LOADING_COMPLETED] = onFragmentLoadingCompleted;
-            this[MediaPlayer.dependencies.FragmentModel.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
-        },
-
-        process: function (bytes) {
-            var result = null;
-
-            if (bytes !== null && bytes !== undefined && bytes.byteLength > 0) {
-                result = new Uint8Array(bytes);
-            }
-
-            return result;
-        },
-
-        getModel: function(context) {
-            if (!context) return null;
-            // Wrap the buffer controller into model and store it to track the loading state and execute the requests
-            var model = findModel(context);
-
-            if (!model){
-                model = this.system.getObject("fragmentModel");
-                model.setContext(context);
-                fragmentModels.push(model);
-            }
-
-            return model;
-        },
-
-        detachModel: function(model) {
-            var idx = fragmentModels.indexOf(model);
-            // If we have the model for the given buffer just remove it from array
-            if (idx > -1) {
-                fragmentModels.splice(idx, 1);
-            }
-        },
-
-		isInitializationRequest: function(request){
-			return (request && request.type && request.type === MediaPlayer.vo.metrics.HTTPRequest.INIT_SEGMENT_TYPE);
-		},
-
-        reset: function() {
-            fragmentModels = [];
-        }
+    let instance = {
+        process :process,
+        getModel :getModel,
+        detachModel :detachModel,
+        isInitializationRequest:isInitializationRequest,
+        reset :reset
     };
-};
 
-MediaPlayer.dependencies.FragmentController.prototype = {
-    constructor: MediaPlayer.dependencies.FragmentController
-};
+    setup();
 
-MediaPlayer.dependencies.FragmentController.eventList = {
-    ENAME_STREAM_COMPLETED: "streamCompleted",
-    ENAME_INIT_FRAGMENT_LOADING_START: "initFragmentLoadingStart",
-    ENAME_MEDIA_FRAGMENT_LOADING_START: "mediaFragmentLoadingStart",
-    ENAME_INIT_FRAGMENT_LOADED: "initFragmentLoaded",
-    ENAME_MEDIA_FRAGMENT_LOADED: "mediaFragmentLoaded"
+    return instance;
+
+    let fragmentModels;
+
+    function setup() {
+        fragmentModels = [];
+        eventBus.on(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, instance);
+    }
+
+    function process(bytes) {
+        var result = null;
+
+        if (bytes !== null && bytes !== undefined && bytes.byteLength > 0) {
+            result = new Uint8Array(bytes);
+        }
+
+        return result;
+    }
+
+    function getModel(scheduleController) {
+        if (!scheduleController) return null;
+        // Wrap the buffer controller into model and store it to track the loading state and execute the requests
+        var model = findModel(scheduleController);
+
+        if (!model){
+            model = FragmentModel(context).create({metricsModel: MetricsModel(context).getInstance()});
+            model.setScheduleController(scheduleController);
+            fragmentModels.push(model);
+        }
+
+        return model;
+    }
+
+    function detachModel(model) {
+        var idx = fragmentModels.indexOf(model);
+        // If we have the model for the given buffer just remove it from array
+        if (idx > -1) {
+            fragmentModels.splice(idx, 1);
+        }
+    }
+
+    function isInitializationRequest(request){
+        return (request && request.type && request.type === HTTPRequest.INIT_SEGMENT_TYPE);
+    }
+
+    function reset() {
+        eventBus.off(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
+        fragmentModels = [];
+    }
+
+    function findModel(scheduleController) {
+        var ln = fragmentModels.length;
+        // We expect one-to-one relation between FragmentModel and context,
+        // so just compare the given context object with the one that stored in the model to find the model for it
+        for (var i = 0; i < ln; i++) {
+            if (fragmentModels[i].getScheduleController() == scheduleController) {
+                return fragmentModels[i];
+            }
+        }
+
+        return null;
+    }
+
+    function createDataChunk(bytes, request, streamId) {
+        var chunk = new DataChunk();
+
+        chunk.streamId = streamId;
+        chunk.mediaInfo = request.mediaInfo;
+        chunk.segmentType = request.type;
+        chunk.start = request.startTime;
+        chunk.duration = request.duration;
+        chunk.end = chunk.start + chunk.duration;
+        chunk.bytes = bytes;
+        chunk.index = request.index;
+        chunk.quality = request.quality;
+
+        return chunk;
+    }
+
+    function onFragmentLoadingCompleted(e) {
+        let scheduleController = e.sender.getScheduleController()
+        if (!findModel(scheduleController)) return;
+
+        let request = e.request;
+        let bytes = e.response;
+        let isInit = isInitializationRequest(request);
+        let streamId = scheduleController.getStreamProcessor().getStreamInfo().id;
+        let chunk;
+
+        if (!bytes) {
+            log("No " + request.mediaType + " bytes to push.");
+            return;
+        }
+
+        chunk = createDataChunk(bytes, request, streamId);
+        eventBus.trigger(isInit ? Events.INIT_FRAGMENT_LOADED : Events.MEDIA_FRAGMENT_LOADED, {chunk: chunk, fragmentModel: e.sender});
+    }
 };

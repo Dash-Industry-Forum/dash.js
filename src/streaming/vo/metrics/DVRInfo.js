@@ -28,13 +28,13 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.metrics.DVRInfo = function () {
-    "use strict";
-    this.time = null;
-    this.range = null;
-    this.manifestInfo = null;
-};
 
-MediaPlayer.vo.metrics.DVRInfo.prototype = {
-    constructor: MediaPlayer.vo.metrics.DVRInfo
-};
+class DVRInfo {
+    constructor() {
+        this.time = null;
+        this.range = null;
+        this.manifestInfo = null;
+    }
+}
+
+export default DVRInfo;

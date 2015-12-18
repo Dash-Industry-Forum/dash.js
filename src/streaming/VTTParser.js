@@ -28,155 +28,167 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.utils.VTTParser = function () {
-    "use strict";
+import FactoryMaker from '../core/FactoryMaker.js';
+import Debug from '../core/Debug.js';
 
-    /**
-     *
-     * @type {RegExp}
-     */
-    var regExNewLine = /(?:\r\n|\r|\n)/gm,
-        regExToken = /-->/,
-        regExWhiteSpace = /(^[\s]+|[\s]+$)/g,
-        regExWhiteSpaceWordBoundry = /\s\b/g,
+export default FactoryMaker.getSingletonFactory(VTTParser);
 
+function VTTParser() {
 
-        convertCuePointTimes = function(time) {
-            var timeArray = time.split( ":"),
-                len = timeArray.length - 1;
+    let context = this.context
+    let log = Debug(context).getInstance().log;
 
-            time = parseInt( timeArray[len-1], 10 ) * 60 + parseFloat( timeArray[len]);
+    let instance = {
+        parse: parse
+    };
 
-            if ( len === 2 ) {
-                time += parseInt( timeArray[0], 10 ) * 3600;
-            }
+    setup();
+    return instance;
 
-            return time;
-        },
+    let regExNewLine,
+        regExToken,
+        regExWhiteSpace,
+        regExWhiteSpaceWordBoundry;
 
-        parseItemAttributes = function (data) {
-            var vttCuePoints = data.split(regExToken);
-            var arr = vttCuePoints[1].split(regExWhiteSpaceWordBoundry);
-            arr.shift(); //remove first array index it is empty...
-            vttCuePoints[1] = arr[0];
-            arr.shift();
-            return {cuePoints:vttCuePoints, styles:getCaptionStyles(arr)};
-        },
+    function setup() {
+        regExNewLine = /(?:\r\n|\r|\n)/gm;
+        regExToken = /-->/;
+        regExWhiteSpace = /(^[\s]+|[\s]+$)/g;
+        regExWhiteSpaceWordBoundry = /\s\b/g;
+    }
 
-        getCaptionStyles = function (arr) {
-            var styleObject = {};
-            arr.forEach(function (element) {
-                if (element.split(/:/).length > 1){
-                    var val = element.split(/:/)[1];
-                    if (val && val.search(/%/) != -1){
-                        val = parseInt(val.replace(/%/, ""));
-                    }
-                    if (element.match(/align/) || element.match(/A/)){
-                        styleObject.align = val;
-                    }
-                    if (element.match(/line/) || element.match(/L/) ){
-                        styleObject.line = val;
-                    }
-                    if (element.match(/position/) || element.match(/P/) ){
-                        styleObject.position = val;
-                    }
-                    if (element.match(/size/) || element.match(/S/)){
-                        styleObject.size = val;
-                    }
-                }
-            });
+    function parse(data) {
+        var captionArray = [],
+            len,
+            lastStartTime;
 
-            return styleObject;
-        },
+        data = data.split( regExNewLine );
+        len = data.length;
+        lastStartTime = -1;
 
-        /**
-         * VTT can have multiple lines to display per cuepoint.
-         * */
-        getSublines = function(data, idx){
-            var lineCount,
-                i = idx,
-                subline = "",
-                lineData = "";
+        for (var i = 0 ; i < len; i++)
+        {
+            var item = data[i];
 
-            while(data[i] !== "" && i < data.length) {
-                i++;
-            }
+            if (item.length > 0 && item !== "WEBVTT")
+            {
+                if (item.match(regExToken))
+                {
+                    var attributes = parseItemAttributes(item);
+                    var cuePoints = attributes.cuePoints;
+                    var styles = attributes.styles;
+                    var text = getSublines(data, i + 1);
+                    var startTime = convertCuePointTimes(cuePoints[0].replace(regExWhiteSpace, ''));
+                    var endTime = convertCuePointTimes(cuePoints[1].replace(regExWhiteSpace, ''));
 
-            lineCount = i - idx;
-            if (lineCount > 1){
-                for(var j = 0; j < lineCount; j++){
-                    lineData = data[(idx + j)];
-                    if(!lineData.match(regExToken)){
-                        subline += lineData;
-                        if (j !== lineCount-1) {
-                            subline += "\n";
+                    if((!isNaN(startTime) && !isNaN(endTime)) && startTime >= lastStartTime && endTime > startTime) {
+                        if (text !== ""){
+                            lastStartTime = startTime;
+                            //TODO Make VO external so other parsers can use.
+                            captionArray.push({
+                                start:startTime,
+                                end:endTime,
+                                data:text,
+                                styles:styles
+                            });
+                        }
+                        else {
+                            log("Skipping cue due to empty/malformed cue text");
                         }
                     }
                     else {
-                        // caption text should not have '-->' in it
-                        subline = "";
-                        break;
-                    }
-                }
-            } else {
-                lineData = data[idx];
-                if(!lineData.match(regExToken))
-                    subline = lineData;
-            }
-            return decodeURI(subline);
-        };
-
-    return {
-    
-        log: undefined,
-        parse: function (data)
-        {
-            var captionArray = [],
-                len,
-                lastStartTime;
-
-            data = data.split( regExNewLine );
-            len = data.length;
-            lastStartTime = -1;
-
-            for (var i = 0 ; i < len; i++)
-            {
-                var item = data[i];
-
-                if (item.length > 0 && item !== "WEBVTT")
-                {
-                    if (item.match(regExToken))
-                    {
-                        var attributes = parseItemAttributes(item),
-                            cuePoints = attributes.cuePoints,
-                            styles = attributes.styles,
-                            text = getSublines(data, i+1),
-                            startTime = convertCuePointTimes(cuePoints[0].replace(regExWhiteSpace, '')),
-                            endTime = convertCuePointTimes(cuePoints[1].replace(regExWhiteSpace, ''));
-
-                        if((!isNaN(startTime) && !isNaN(endTime)) && startTime >= lastStartTime && endTime > startTime) {
-                            if (text !== ""){
-                                lastStartTime = startTime;
-                                //TODO Make VO external so other parsers can use.
-                                captionArray.push({
-                                    start:startTime,
-                                    end:endTime,
-                                    data:text,
-                                    styles:styles
-                                });
-                            }
-                            else {
-                                this.log("Skipping cue due to empty/malformed cue text");
-                            }
-                        }
-                        else {
-                            this.log("Skipping cue due to incorrect cue timing");
-                        }
+                        log("Skipping cue due to incorrect cue timing");
                     }
                 }
             }
-
-            return captionArray;
         }
-    };
-};
+
+        return captionArray;
+    }
+
+    function convertCuePointTimes(time) {
+        var timeArray = time.split(":");
+        var len = timeArray.length - 1;
+
+        time = parseInt( timeArray[len-1], 10 ) * 60 + parseFloat( timeArray[len]);
+
+        if ( len === 2 ) {
+            time += parseInt( timeArray[0], 10 ) * 3600;
+        }
+
+        return time;
+    }
+
+    function parseItemAttributes(data) {
+        var vttCuePoints = data.split(regExToken);
+        var arr = vttCuePoints[1].split(regExWhiteSpaceWordBoundry);
+        arr.shift(); //remove first array index it is empty...
+        vttCuePoints[1] = arr[0];
+        arr.shift();
+        return {cuePoints:vttCuePoints, styles:getCaptionStyles(arr)};
+    }
+
+    function getCaptionStyles(arr) {
+        var styleObject = {};
+        arr.forEach(function (element) {
+            if (element.split(/:/).length > 1){
+                var val = element.split(/:/)[1];
+                if (val && val.search(/%/) != -1){
+                    val = parseInt(val.replace(/%/, ""));
+                }
+                if (element.match(/align/) || element.match(/A/)){
+                    styleObject.align = val;
+                }
+                if (element.match(/line/) || element.match(/L/) ){
+                    styleObject.line = val;
+                }
+                if (element.match(/position/) || element.match(/P/) ){
+                    styleObject.position = val;
+                }
+                if (element.match(/size/) || element.match(/S/)){
+                    styleObject.size = val;
+                }
+            }
+        });
+
+        return styleObject;
+    }
+
+    /**
+        * VTT can have multiple lines to display per cuepoint.
+        * */
+    function getSublines(data, idx) {
+        var i = idx;
+
+        var lineCount,
+            subline = "",
+            lineData = "";
+
+        while(data[i] !== "" && i < data.length) {
+            i++;
+        }
+
+        lineCount = i - idx;
+        if (lineCount > 1){
+            for(var j = 0; j < lineCount; j++){
+                lineData = data[(idx + j)];
+                if(!lineData.match(regExToken)){
+                    subline += lineData;
+                    if (j !== lineCount-1) {
+                        subline += "\n";
+                    }
+                }
+                else {
+                    // caption text should not have '-->' in it
+                    subline = "";
+                    break;
+                }
+            }
+        } else {
+            lineData = data[idx];
+            if(!lineData.match(regExToken))
+                subline = lineData;
+        }
+        return decodeURI(subline);
+    }
+}

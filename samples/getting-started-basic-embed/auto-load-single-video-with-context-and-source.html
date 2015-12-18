@@ -11,30 +11,33 @@
     <script>
         function init()
         {
-            var player, video, source, context;
+            var player,
+                video,
+                source,
+                context;
 
             // Example specifying only the video element, where the video element has a child source element
             video = document.querySelector("#video1");
-            player = Dash.create(video);
+            player = MediaPlayer.MediaPlayerFactory.create(video);
 
             // Example specifying only the video element, where the video element has a src attribute
             video = document.querySelector("#video2");
-            player = Dash.create(video);
+            player = MediaPlayer.MediaPlayerFactory.create(video);
 
             //Example adding video and source
             video = document.querySelector("#video3");
             source = document.createElement("source");
             source.src = "http://dash.edgesuite.net/envivio/Envivio-dash2/manifest.mpd";
             source.type = "application/dash+xml";
-            player = Dash.create(video, source);
+            player = MediaPlayer.MediaPlayerFactory.create(video, source);
 
             //Example adding video, source and context
             video = document.querySelector("#video4");
             source = document.createElement("source");
             source.src = "http://dash.edgesuite.net/envivio/Envivio-dash2/manifest.mpd";
             source.type = "application/dash+xml";
-            context = new Dash.di.DashContext();  // you could add a custom DashContext at this point
-            player = Dash.create(video, source, context);
+            context = {}
+            player = MediaPlayer.MediaPlayerFactory.create(video, source, context);
         }
     </script>
     <style>

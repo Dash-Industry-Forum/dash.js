@@ -28,24 +28,34 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.utils.Capabilities = function () {
-    "use strict";
-};
+import FactoryMaker from '../../core/FactoryMaker.js';
+export default FactoryMaker.getSingletonFactory(Capabilities);
 
+function Capabilities() {
 
-MediaPlayer.utils.Capabilities.prototype = {
-    constructor: MediaPlayer.utils.Capabilities,
-    system: undefined,
-    log: undefined,
+    let instance = {
+        supportsMediaSource: supportsMediaSource,
+        supportsEncryptedMedia: supportsEncryptedMedia,
+        supportsCodec: supportsCodec,
+        setEncryptedMediaSupported:setEncryptedMediaSupported
+    };
 
-    supportsMediaSource: function () {
-        "use strict";
+    setup();
 
-        var hasWebKit = ("WebKitMediaSource" in window),
-            hasMediaSource = ("MediaSource" in window);
+    return instance;
+
+    let encryptedMediaSupported;
+
+    function setup(){
+        encryptedMediaSupported = false;
+    }
+
+    function supportsMediaSource() {
+        let hasWebKit = ("WebKitMediaSource" in window);
+        let hasMediaSource = ("MediaSource" in window);
 
         return (hasWebKit || hasMediaSource);
-    },
+    }
 
     /**
      * Returns whether Encrypted Media Extensions are supported on this
@@ -53,12 +63,15 @@ MediaPlayer.utils.Capabilities.prototype = {
      *
      * @return {boolean} true if EME is supported, false otherwise
      */
-    supportsEncryptedMedia: function () {
-        return this.system.hasMapping('protectionModel');
-    },
+    function supportsEncryptedMedia() {
+        return encryptedMediaSupported;
+    }
 
-    supportsCodec: function (element, codec) {
-        "use strict";
+    function setEncryptedMediaSupported(value) {
+        encryptedMediaSupported = value;
+    }
+
+    function supportsCodec(element, codec) {
 
         if (!(element instanceof HTMLMediaElement)) {
             throw "element must be of type HTMLMediaElement.";
@@ -67,6 +80,4 @@ MediaPlayer.utils.Capabilities.prototype = {
         var canPlay = element.canPlayType(codec);
         return (canPlay === "probably" || canPlay === "maybe");
     }
-
-
-};
+}

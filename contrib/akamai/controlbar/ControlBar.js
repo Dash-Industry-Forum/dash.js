@@ -248,7 +248,7 @@ var ControlBar = function(dashjsMediaPlayer) {
 
         onTracksAdded = function(e){
             if (!captionMenu) {
-                createCaptionMenu(e.data);
+                createCaptionMenu(e);
                 captionBtn.addEventListener("click", onCaptionClick);
                 captionBtn.classList.remove("hide");
             }
@@ -394,7 +394,7 @@ var ControlBar = function(dashjsMediaPlayer) {
             document.addEventListener("MSFullscreenChange", onFullScreenChange, false);
             document.addEventListener("mozfullscreenchange", onFullScreenChange, false);
             document.addEventListener("webkitfullscreenchange", onFullScreenChange, false);
-            player.addEventListener(MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded);
+            player.on(MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded);
 
             //IE 11 Input Fix.
             if (isIE()) {
@@ -442,7 +442,7 @@ var ControlBar = function(dashjsMediaPlayer) {
             document.removeEventListener("MSFullscreenChange", onFullScreenChange);
             document.removeEventListener("mozfullscreenchange", onFullScreenChange);
             document.removeEventListener("webkitfullscreenchange", onFullScreenChange);
-            player.removeEventListener(MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded);
+            player.off(MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded);
         }
     }
 }

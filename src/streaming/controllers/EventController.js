@@ -28,161 +28,180 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.EventController = function(){
-    "use strict";
 
+import VideoModel from '../models/VideoModel.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
 
-    var inlineEvents = {}, // Holds all Inline Events not triggered yet
-        inbandEvents = {}, // Holds all Inband Events not triggered yet
-        activeEvents = {}, // Holds all Events currently running
-        eventInterval = null, // variable holding the setInterval
-        refreshDelay = 100, // refreshTime for the setInterval
-        presentationTimeThreshold = refreshDelay / 1000,
-        MPD_RELOAD_SCHEME = "urn:mpeg:dash:event:2012",
-        MPD_RELOAD_VALUE = 1,
+export default FactoryMaker.getSingletonFactory(EventController);
 
-        reset = function() {
-            clear();
-            inlineEvents = null;
-            inbandEvents = null;
-            activeEvents = null;
-        },
+function EventController() {
 
-        clear = function() {
-            if(eventInterval !== null) {
-                clearInterval(eventInterval);
-                eventInterval = null;
-            }
-        },
+    const MPD_RELOAD_SCHEME = "urn:mpeg:dash:event:2012";
+    const MPD_RELOAD_VALUE = 1;
 
-        start = function () {
-            var self = this;
+    let context = this.context;
+    let log = Debug(context).getInstance().log;
 
-            self.log("Start Event Controller");
-            if (!isNaN(refreshDelay)) {
-                eventInterval = setInterval(onEventTimer.bind(this), refreshDelay);
-            }
-        },
-
-        /**
-         * Add events to the eventList. Events that are not in the mpd anymore but not triggered yet will still be deleted
-         * @param values
-         */
-        addInlineEvents = function(values) {
-            var self = this;
-            inlineEvents = {};
-
-            if(values) {
-                for(var i = 0; i < values.length; i++) {
-                    var event = values[i];
-                    inlineEvents[event.id] = event;
-                    self.log("Add inline event with id " + event.id);
-                }
-            }
-            self.log("Added " + values.length + " inline events");
-        },
-
-        /**
-         * i.e. processing of any one event message box with the same id is sufficient
-         * @param values
-         */
-        addInbandEvents = function(values) {
-            var self = this;
-            for(var i = 0; i < values.length; i++) {
-                var event = values[i];
-                if (!(event.id in inbandEvents)) {
-                    inbandEvents[event.id] = event;
-                    self.log("Add inband event with id " + event.id);
-                } else {
-                    self.log("Repeated event with id " + event.id);
-                }
-
-            }
-        },
-
-        /**
-         * Itereate through the eventList and trigger/remove the events
-         */
-        onEventTimer = function () {
-            triggerEvents.call(this,inbandEvents);
-            triggerEvents.call(this,inlineEvents);
-            removeEvents.call(this);
-        },
-
-        triggerEvents = function(events) {
-            var self = this,
-                currentVideoTime = this.videoModel.getCurrentTime(),
-                presentationTime;
-
-            /* == Trigger events that are ready == */
-            if(events) {
-                var eventIds = Object.keys(events);
-                for (var i = 0; i < eventIds.length; i++) {
-                    var eventId = eventIds[i];
-                    var curr = events[eventId];
-
-                    if (curr !== undefined) {
-                        presentationTime = curr.presentationTime / curr.eventStream.timescale;
-                        if (presentationTime === 0 || (presentationTime <= currentVideoTime && presentationTime + presentationTimeThreshold > currentVideoTime)) {
-                            self.log("Start Event " + eventId + " at " + currentVideoTime);
-                            if (curr.duration > 0) activeEvents[eventId] = curr;
-                            if (curr.eventStream.schemeIdUri == MPD_RELOAD_SCHEME && curr.eventStream.value == MPD_RELOAD_VALUE) refreshManifest.call(this);
-                            delete events[eventId];
-                        }
-                    }
-                }
-            }
-        },
-
-        /**
-         * Remove events from the list that are over
-         */
-        removeEvents = function() {
-            var self = this;
-
-            if(activeEvents) {
-                var currentVideoTime = this.videoModel.getCurrentTime();
-                var eventIds = Object.keys(activeEvents);
-
-                for (var i = 0; i < eventIds.length; i++) {
-                    var eventId = eventIds[i];
-                    var curr = activeEvents[eventId];
-                    if (curr !== null && (curr.duration + curr.presentationTime) / curr.eventStream.timescale < currentVideoTime) {
-                        self.log("Remove Event " + eventId + " at time " + currentVideoTime);
-                        curr = null;
-                        delete activeEvents[eventId];
-                    }
-                }
-            }
-
-        },
-
-        refreshManifest = function () {
-            var manifest = this.manifestModel.getValue(),
-                url = manifest.url;
-
-            if (manifest.hasOwnProperty("Location")) {
-                url = manifest.Location;
-            }
-            this.log("Refresh manifest @ " + url);
-            this.manifestUpdater.getManifestLoader().load(url);
-        };
-
-    return {
-        manifestModel: undefined,
-        manifestUpdater: undefined,
-        log: undefined,
-        system: undefined,
-        videoModel: undefined,
+    let instance = {
+        initialize: initialize,
         addInlineEvents : addInlineEvents,
         addInbandEvents : addInbandEvents,
-        reset : reset,
         clear : clear,
-        start: start
+        start: start,
+        setConfig: setConfig,
+        reset : reset
     };
 
-};
+    return instance;
 
-MediaPlayer.dependencies.EventController.prototype = {
-    constructor: MediaPlayer.dependencies.EventController
-};
+    let inlineEvents, // Holds all Inline Events not triggered yet
+        inbandEvents, // Holds all Inband Events not triggered yet
+        activeEvents, // Holds all Events currently running
+        eventInterval, // variable holding the setInterval
+        refreshDelay, // refreshTime for the setInterval
+        presentationTimeThreshold,
+        manifestModel,
+        manifestUpdater;
+
+    function initialize() {
+        inlineEvents = {};
+        inbandEvents = {};
+        activeEvents = {};
+        eventInterval = null;
+        refreshDelay = 100;
+        presentationTimeThreshold = refreshDelay / 1000;
+    }
+
+    function clear() {
+        if(eventInterval !== null) {
+            clearInterval(eventInterval);
+            eventInterval = null;
+        }
+    }
+
+    function start() {
+        log("Start Event Controller");
+        if (!isNaN(refreshDelay)) {
+            eventInterval = setInterval(onEventTimer, refreshDelay);
+        }
+    }
+
+    /**
+     * Add events to the eventList. Events that are not in the mpd anymore but not triggered yet will still be deleted
+     * @param values
+     */
+    function addInlineEvents(values) {
+        inlineEvents = {};
+
+        if(values) {
+            for(var i = 0; i < values.length; i++) {
+                var event = values[i];
+                inlineEvents[event.id] = event;
+                log("Add inline event with id " + event.id);
+            }
+        }
+        log("Added " + values.length + " inline events");
+    }
+
+    /**
+     * i.e. processing of any one event message box with the same id is sufficient
+     * @param values
+     */
+    function addInbandEvents(values) {
+        for(var i = 0; i < values.length; i++) {
+            var event = values[i];
+            if (!(event.id in inbandEvents)) {
+                inbandEvents[event.id] = event;
+                log("Add inband event with id " + event.id);
+            } else {
+                log("Repeated event with id " + event.id);
+            }
+
+        }
+    }
+
+    /**
+     * Itereate through the eventList and trigger/remove the events
+     */
+    function onEventTimer() {
+        triggerEvents(inbandEvents);
+        triggerEvents(inlineEvents);
+        removeEvents();
+    }
+
+    function triggerEvents(events) {
+        var currentVideoTime = VideoModel(context).getInstance().getCurrentTime();
+        var presentationTime;
+
+        /* == Trigger events that are ready == */
+        if(events) {
+            var eventIds = Object.keys(events);
+            for (var i = 0; i < eventIds.length; i++) {
+                var eventId = eventIds[i];
+                var curr = events[eventId];
+
+                if (curr !== undefined) {
+                    presentationTime = curr.presentationTime / curr.eventStream.timescale;
+                    if (presentationTime === 0 || (presentationTime <= currentVideoTime && presentationTime + presentationTimeThreshold > currentVideoTime)) {
+                        log("Start Event " + eventId + " at " + currentVideoTime);
+                        if (curr.duration > 0) activeEvents[eventId] = curr;
+                        if (curr.eventStream.schemeIdUri == MPD_RELOAD_SCHEME && curr.eventStream.value == MPD_RELOAD_VALUE) refreshManifest();
+                        delete events[eventId];
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Remove events from the list that are over
+     */
+    function removeEvents() {
+        if(activeEvents) {
+            var currentVideoTime = VideoModel(context).getInstance().getCurrentTime();
+            var eventIds = Object.keys(activeEvents);
+
+            for (var i = 0; i < eventIds.length; i++) {
+                var eventId = eventIds[i];
+                var curr = activeEvents[eventId];
+                if (curr !== null && (curr.duration + curr.presentationTime) / curr.eventStream.timescale < currentVideoTime) {
+                    log("Remove Event " + eventId + " at time " + currentVideoTime);
+                    curr = null;
+                    delete activeEvents[eventId];
+                }
+            }
+        }
+
+    }
+
+    function refreshManifest() {
+        var manifest = manifestModel.getValue();
+        var url = manifest.url;
+
+        if (manifest.hasOwnProperty("Location")) {
+            url = manifest.Location;
+        }
+        log("Refresh manifest @ " + url);
+        manifestUpdater.getManifestLoader().load(url);
+    }
+
+    function setConfig(config) {
+        if (!config) return;
+
+        if (config.manifestModel) {
+            manifestModel = config.manifestModel;
+        }
+
+        if (config.manifestUpdater) {
+            manifestUpdater = config.manifestUpdater;
+        }
+    }
+
+    function reset() {
+        clear();
+        inlineEvents = null;
+        inbandEvents = null;
+        activeEvents = null;
+    }
+}
