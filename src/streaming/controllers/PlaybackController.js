@@ -100,12 +100,12 @@ function PlaybackController() {
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
     }
 
-    function initialize(streamInfoValue) {
-        streamInfo = streamInfoValue;
+    function initialize(StreamInfo) {
+        streamInfo = StreamInfo;
         removeAllListeners();
         setupVideoModel();
         isDynamic = streamInfo.manifestInfo.isDynamic;
-        liveStartTime = streamInfoValue.start;
+        liveStartTime = streamInfo.start;
 
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         eventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);

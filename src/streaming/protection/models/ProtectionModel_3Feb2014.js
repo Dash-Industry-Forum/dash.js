@@ -78,7 +78,7 @@ function ProtectionModel_3Feb2014(config) {
 
     function setup() {
         videoElement = null;
-        keySystem: null;
+        keySystem = null;
         mediaKeys = null;
         keySystemAccess = null;
         sessions = [];

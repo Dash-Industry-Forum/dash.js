@@ -124,6 +124,10 @@ function VirtualBuffer() {
         if (!diff) {
             if (oldChunk) {
                 chunk.bufferedRange = oldChunk.bufferedRange;
+            } else {
+                //TODO this is dirty fix for a case when segments are not aligned across representations and thus oldChunk is not found
+                // We should not use a calculated range here, only actual one should be used, but we don't know yet how to find it.
+                chunk.bufferedRange = {start: chunk.start, end: chunk.end};
             }
             return;
         }

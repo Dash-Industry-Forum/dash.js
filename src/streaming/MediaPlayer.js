@@ -146,6 +146,7 @@ function MediaPlayer() {
         getBufferToKeep: getBufferToKeep,
         setBufferPruningInterval: setBufferPruningInterval,
         getBufferPruningInterval: getBufferPruningInterval,
+        getProtectionController:getProtectionController,
         enableManifestDateHeaderTimeSource: enableManifestDateHeaderTimeSource,
         displayCaptionsOnTop: displayCaptionsOnTop,
         attachVideoContainer: attachVideoContainer,
@@ -1051,6 +1052,10 @@ function MediaPlayer() {
         return mediaPlayerModel.getBufferPruningInterval();
     }
 
+    function getProtectionController() {
+        return detectProtection();
+    }
+
     /**
      * This method serves to control captions z-index value. If 'true' is passed, the captions will have the highest z-index and be
      * displayed on top of other html elements. Default value is 'false' (z-index is not set).
@@ -1144,7 +1149,9 @@ function MediaPlayer() {
             source = urlOrManifest;
         }
 
-        //protectionController = protectionCtrl;
+        if (protectionCtrl){
+            protectionController = protectionCtrl;
+        }
         protectionData = data;
         resetAndPlay();
     }
@@ -1276,6 +1283,9 @@ function MediaPlayer() {
     }
 
     function detectProtection() {
+        if (protectionController){
+            return protectionController;
+        }
         if(typeof Protection == "function") {
             let protection = Protection(context).create();
             Events.extend(Protection.events);
@@ -1287,6 +1297,8 @@ function MediaPlayer() {
                 eventBus:eventBus,
                 adapter:adapter
             });
+            return protectionController;
         }
+        return null;
     }
 }

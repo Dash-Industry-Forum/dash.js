@@ -95,7 +95,6 @@ function ProtectionController(config) {
         sessionType = "temporary";
 
         Events.extend(Protection.events);
-        //protectionModel.init(); Not needed in latest
         eventBus.on(Events.NEED_KEY, onNeedKey, this);
         eventBus.on(Events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
     }

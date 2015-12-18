@@ -77,6 +77,7 @@ function  ProtectionModel_01b(config) {
 
     function setup() {
         videoElement = null;
+        keySystem = null;
         pendingSessions = [];
         sessions = [];
         protectionExt = ProtectionExtensions(context).getInstance();

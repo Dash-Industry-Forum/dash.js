@@ -329,7 +329,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
                 }
             }
             if (!found) {
-                var protCtrl = player.createProtection();
+                var protCtrl = player.getProtectionController();
                 if ($scope.selectedItem.hasOwnProperty("protData")) {
                     protCtrl.setProtectionData($scope.selectedItem.protData);
                 }
