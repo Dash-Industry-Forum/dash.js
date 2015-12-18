@@ -28,96 +28,119 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.TextController = function () {
+import RepresentationController from '../../dash/controllers/RepresentationController.js';
+import FragmentController from './FragmentController.js';
+import EventBus from '../../core/EventBus.js';
+import Events from '../../core/events/Events.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
-     var initialized = false,
-         mediaSource = null,
-         buffer = null,
-         type = null,
+export default FactoryMaker.getClassFactory(TextController);
 
-         onDataUpdateCompleted = function(/*e*/) {
-             this.notify(MediaPlayer.dependencies.TextController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED, {CCIndex: 0});
-         },
+function TextController(config) {
 
-         onInitFragmentLoaded = function (e) {
-             var self = this;
+    let context = this.context;
+    let eventBus = EventBus(context).getInstance();
 
-             if (e.data.fragmentModel !== self.streamProcessor.getFragmentModel() || (!e.data.chunk.bytes)) return;
+    let sourceBufferExt = config.sourceBufferExt;
+    let errHandler = config.errHandler;
 
-             self.sourceBufferExt.append(buffer, e.data.chunk);
-         };
-
-    return {
-        sourceBufferExt: undefined,
-        log: undefined,
-        system: undefined,
-        errHandler: undefined,
-        videoModel: undefined,
-        notify: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
-
-        setup: function() {
-            this[Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
-            this[MediaPlayer.dependencies.FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADED] = onInitFragmentLoaded;
-        },
-
-        initialize: function (typeValue, source, streamProcessor) {
-            var self = this;
-
-            type = typeValue;
-            self.setMediaSource(source);
-            self.representationController = streamProcessor.representationController;
-            self.streamProcessor = streamProcessor;
-        },
-
-        /**
-         * @param mediaInfo object
-         * @returns SourceBuffer object
-         * @memberof BufferController#
-         */
-        createBuffer: function(mediaInfo) {
-            try{
-                buffer = this.sourceBufferExt.createSourceBuffer(mediaSource, mediaInfo);
-
-                if (!initialized) {
-                    if (buffer.hasOwnProperty('initialize')) {
-                        buffer.initialize(type, this);
-                    }
-                    initialized = true;
-                }
-            } catch (e) {
-                this.errHandler.mediaSourceError("Error creating " + type +" source buffer.");
-            }
-
-            return buffer;
-        },
-
-        getBuffer: function () {
-            return buffer;
-        },
-
-        setBuffer: function (value) {
-            buffer = value;
-        },
-
-        setMediaSource: function(value) {
-            mediaSource = value;
-        },
-
-        reset: function (errored) {
-            if (!errored) {
-                this.sourceBufferExt.abort(mediaSource, buffer);
-                this.sourceBufferExt.removeSourceBuffer(mediaSource, buffer);
-            }
-        }
+    let instance = {
+        initialize :initialize,
+        createBuffer :createBuffer,
+        getBuffer :getBuffer,
+        setBuffer :setBuffer,
+        getStreamProcessor:getStreamProcessor,
+        setMediaSource :setMediaSource,
+        reset :reset
     };
-};
 
-MediaPlayer.dependencies.TextController.prototype = {
-    constructor: MediaPlayer.dependencies.TextController
-};
+    setup();
 
-MediaPlayer.dependencies.TextController.eventList = {
-    ENAME_CLOSED_CAPTIONING_REQUESTED: "closedCaptioningRequested"
+    return instance;
+
+    let initialized,
+        mediaSource,
+        buffer,
+        type,
+        streamProcessor,
+        representationController;
+
+    function setup() {
+
+        initialized = false;
+        mediaSource = null;
+        buffer = null;
+        type = null;
+        streamProcessor = null;
+        representationController = null;
+
+        eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+        eventBus.on(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
+    }
+
+    function initialize(Type, source, StreamProcessor) {
+        type = Type;
+        setMediaSource(source);
+        streamProcessor = StreamProcessor;
+        representationController = streamProcessor.getRepresentationController();
+    }
+
+    /**
+     * @param mediaInfo object
+     * @returns SourceBuffer object
+     * @memberof BufferController#
+     */
+    function createBuffer(mediaInfo) {
+        try{
+            buffer = sourceBufferExt.createSourceBuffer(mediaSource, mediaInfo);
+
+            if (!initialized) {
+                if (buffer.hasOwnProperty('initialize')) {
+                    buffer.initialize(type, this);
+                }
+                initialized = true;
+            }
+        } catch (e) {
+            errHandler.mediaSourceError("Error creating " + type +" source buffer.");
+        }
+
+        return buffer;
+    }
+
+    function getBuffer() {
+        return buffer;
+    }
+
+    function setBuffer(value) {
+        buffer = value;
+    }
+
+    function setMediaSource(value) {
+        mediaSource = value;
+    }
+
+    function getStreamProcessor() {
+        return streamProcessor;
+    }
+
+    function reset(errored) {
+
+        eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+        eventBus.off(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
+
+        if (!errored) {
+            sourceBufferExt.abort(mediaSource, buffer);
+            sourceBufferExt.removeSourceBuffer(mediaSource, buffer);
+        }
+    }
+
+    function onDataUpdateCompleted(e) {
+         if (e.sender.getStreamProcessor() !== streamProcessor) return;
+         eventBus.trigger(Events.TIMED_TEXT_REQUESTED, {index: 0, sender:e.sender}) //TODO make index dynamic if referring to MP?
+     }
+
+    function onInitFragmentLoaded(e) {
+         if (e.fragmentModel !== streamProcessor.getFragmentModel() || (!e.chunk.bytes)) return;
+         sourceBufferExt.append(buffer, e.chunk);
+     }
 };

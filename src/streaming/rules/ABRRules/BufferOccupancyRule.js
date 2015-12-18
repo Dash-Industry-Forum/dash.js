@@ -28,64 +28,73 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.rules.BufferOccupancyRule = function () {
-    "use strict";
+import SwitchRequest from '../SwitchRequest.js';
+import BufferController from '../../controllers/BufferController.js';
+import AbrController from '../../controllers/AbrController.js';
+import FactoryMaker from '../../../core/FactoryMaker.js';
+import Debug from '../../../core/Debug.js';
 
-    var lastSwitchTime = 0;
+export default FactoryMaker.getClassFactory(BufferOccupancyRule);
 
-    return {
-        log: undefined,
-        metricsModel: undefined,
+function BufferOccupancyRule(config) {
 
-        execute: function (context, callback) {
-            var self = this,
-                now = new Date().getTime()/1000,
-                mediaInfo = context.getMediaInfo(),
-                representationInfo = context.getTrackInfo(),
-                mediaType = mediaInfo.type,
-                waitToSwitchTime = !isNaN(representationInfo.fragmentDuration) ? representationInfo.fragmentDuration / 2 : 2,
-                current = context.getCurrentValue(),
-                streamProcessor = context.getStreamProcessor(),
-                abrController = streamProcessor.getABRController(),
-                metrics = this.metricsModel.getReadOnlyMetricsFor(mediaType),
-                lastBufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null,
-                lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null,
-                isBufferRich = false,
-                maxIndex = mediaInfo.representationCount - 1,
-                switchRequest = new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.WEAK);
+    let context = this.context;
+    let log = Debug(context).getInstance().log;
 
-            if (now - lastSwitchTime < waitToSwitchTime ||
-                abrController.getAbandonmentStateFor(mediaType) === MediaPlayer.dependencies.AbrController.ABANDON_LOAD) {
-                callback(switchRequest);
-                return;
-            }
+    let metricsModel = config.metricsModel;
 
-            if (lastBufferLevelVO !== null && lastBufferStateVO !== null) {
-                // This will happen when another rule tries to switch from top to any other.
-                // If there is enough buffer why not try to stay at high level.
-                if (lastBufferLevelVO.level > lastBufferStateVO.target) {
-                    isBufferRich = (lastBufferLevelVO.level - lastBufferStateVO.target) > MediaPlayer.dependencies.BufferController.RICH_BUFFER_THRESHOLD;
-                    if (isBufferRich && mediaInfo.representationCount > 1) {
-                        switchRequest = new MediaPlayer.rules.SwitchRequest(maxIndex, MediaPlayer.rules.SwitchRequest.prototype.STRONG);
-                    }
+    let instance = {
+        execute: execute,
+        reset: reset
+    };
+
+    let lastSwitchTime = 0;
+
+    return instance;
+
+    function execute (rulesContext, callback) {
+        var now = new Date().getTime() / 1000;
+        var mediaInfo = rulesContext.getMediaInfo();
+        var representationInfo = rulesContext.getTrackInfo();
+        var mediaType = mediaInfo.type;
+        var waitToSwitchTime = !isNaN(representationInfo.fragmentDuration) ? representationInfo.fragmentDuration / 2 : 2;
+        var current = rulesContext.getCurrentValue();
+        var streamProcessor = rulesContext.getStreamProcessor();
+        var abrController = streamProcessor.getABRController();
+        var metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
+        var lastBufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null;
+        var lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
+        var isBufferRich = false;
+        var maxIndex = mediaInfo.representationCount - 1;
+        var switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
+
+        if (now - lastSwitchTime < waitToSwitchTime ||
+            abrController.getAbandonmentStateFor(mediaType) === AbrController.ABANDON_LOAD) {
+            callback(switchRequest);
+            return;
+        }
+
+        if (lastBufferLevelVO !== null && lastBufferStateVO !== null) {
+            // This will happen when another rule tries to switch from top to any other.
+            // If there is enough buffer why not try to stay at high level.
+            if (lastBufferLevelVO.level > lastBufferStateVO.target) {
+                isBufferRich = (lastBufferLevelVO.level - lastBufferStateVO.target) > BufferController.RICH_BUFFER_THRESHOLD;
+                if (isBufferRich && mediaInfo.representationCount > 1) {
+                    switchRequest = SwitchRequest(context).create(maxIndex, SwitchRequest.STRONG);
                 }
             }
-
-            if (switchRequest.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE && switchRequest.value !== current) {
-                self.log("BufferOccupancyRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " Priority: ",
-                    switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.DEFAULT ? "Default" :
-                        switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.STRONG ? "Strong" : "Weak");
-            }
-
-            callback(switchRequest);
-        },
-
-        reset: function() {
-            lastSwitchTime = 0;
         }
-    };
-};
 
-MediaPlayer.rules.BufferOccupancyRule.prototype = {
-    constructor: MediaPlayer.rules.BufferOccupancyRule
-};
+        if (switchRequest.value !== SwitchRequest.NO_CHANGE && switchRequest.value !== current) {
+            log("BufferOccupancyRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " Priority: ",
+                switchRequest.priority === SwitchRequest.DEFAULT ? "Default" :
+                    switchRequest.priority === SwitchRequest.STRONG ? "Strong" : "Weak");
+        }
+
+        callback(switchRequest);
+    }
+
+    function reset() {
+        lastSwitchTime = 0;
+    }
+}

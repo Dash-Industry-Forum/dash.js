@@ -28,40 +28,61 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.rules.ABRRulesCollection = function () {
-    "use strict";
+import ThroughputRule from './ThroughputRule.js';
+import BufferOccupancyRule from './BufferOccupancyRule.js';
+import InsufficientBufferRule from './InsufficientBufferRule.js';
+import AbandonRequestsRule from './AbandonRequestsRule.js';
+import MetricsModel from '../../models/MetricsModel.js';
+import DashMetricsExtensions from '../../../dash/extensions/DashMetricsExtensions.js';
+import FactoryMaker from '../../../core/FactoryMaker.js';
 
-    var qualitySwitchRules = [],
-        adandonFragmentRules = [];
+const QUALITY_SWITCH_RULES = "qualitySwitchRules";
+const ABANDON_FRAGMENT_RULES = "abandonFragmentRules";
 
-    return {
-        insufficientBufferRule: undefined,
-        bufferOccupancyRule:undefined,
-        throughputRule:undefined,
-        abandonRequestRule:undefined,
+let factory =  FactoryMaker.getSingletonFactory(ABRRulesCollection);
 
-        getRules: function (type) {
-            switch (type) {
-                case MediaPlayer.rules.ABRRulesCollection.prototype.QUALITY_SWITCH_RULES:
-                    return qualitySwitchRules;
-                case MediaPlayer.rules.ABRRulesCollection.prototype.ABANDON_FRAGMENT_RULES:
-                    return adandonFragmentRules;
-                default:
-                    return null;
-            }
-        },
+factory.QUALITY_SWITCH_RULES = QUALITY_SWITCH_RULES;
+factory.ABANDON_FRAGMENT_RULES = ABANDON_FRAGMENT_RULES;
 
-        setup: function () {
-            //qualitySwitchRules.push(this.insufficientBufferRule);
-            qualitySwitchRules.push(this.throughputRule);
-            //qualitySwitchRules.push(this.bufferOccupancyRule);
-            //adandonFragmentRules.push(this.abandonRequestRule);
-        }
+export default factory;
+
+function ABRRulesCollection() {
+    let context = this.context;
+
+    let instance = {
+        initialize:initialize,
+        getRules:getRules
     };
-};
 
-MediaPlayer.rules.ABRRulesCollection.prototype = {
-    constructor: MediaPlayer.rules.ABRRulesCollection,
-    QUALITY_SWITCH_RULES: "qualitySwitchRules",
-    ABANDON_FRAGMENT_RULES: "abandonFragmentRules"
-};
+    return instance;
+
+    let qualitySwitchRules,
+        abandonFragmentRules;
+
+    function initialize() {
+        qualitySwitchRules = [];
+        abandonFragmentRules = [];
+
+        let metricsModel = MetricsModel(context).getInstance();
+
+        qualitySwitchRules.push(ThroughputRule(context).create({
+                metricsModel:metricsModel,
+                metricsExt:DashMetricsExtensions(context).getInstance()
+            })
+        );
+        qualitySwitchRules.push(BufferOccupancyRule(context).create({metricsModel:metricsModel}));
+        qualitySwitchRules.push(InsufficientBufferRule(context).create({metricsModel:metricsModel}));
+        abandonFragmentRules.push(AbandonRequestsRule(context).create());
+    }
+
+    function getRules (type) {
+        switch (type) {
+            case QUALITY_SWITCH_RULES:
+                return qualitySwitchRules;
+            case ABANDON_FRAGMENT_RULES:
+                return abandonFragmentRules;
+            default:
+                return null;
+        }
+    }
+}

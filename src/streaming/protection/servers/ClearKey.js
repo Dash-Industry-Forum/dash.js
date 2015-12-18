@@ -35,49 +35,62 @@
  * For testing purposes and evaluating potential uses for ClearKey, we have developed
  * a dirt-simple API for requesting ClearKey licenses from a remote server.
  *
- * @implements MediaPlayer.dependencies.protection.servers.LicenseServer
+ * @implements LicenseServer
  * @class
  */
-MediaPlayer.dependencies.protection.servers.ClearKey = function() {
-    "use strict";
+import KeyPair from '../vo/KeyPair.js';
+import ClearKeyKeySet from '../vo/ClearKeyKeySet.js';
+import FactoryMaker from '../../../core/FactoryMaker.js';
 
-    return {
+export default FactoryMaker.getSingletonFactory(ClearKey);
 
-        getServerURLFromMessage: function(url, message/*, messageType*/) {
-            // Build ClearKey server query string
-            var jsonMsg = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(message)));
-            url += "/?";
-            for (var i = 0; i < jsonMsg.kids.length; i++) {
-                url += jsonMsg.kids[i] + "&";
-            }
-            url = url.substring(0, url.length-1);
-            return url;
-        },
+function ClearKey() {
 
-        getHTTPMethod: function(/*messageType*/) { return 'GET'; },
-
-        getResponseType: function(/*keySystemStr*/) { return 'json'; },
-
-        getLicenseMessage: function(serverResponse/*, keySystemStr, messageType*/) {
-            if (!serverResponse.hasOwnProperty("keys")) {
-                return null;
-            }
-            var i, keyPairs = [];
-            for (i = 0; i < serverResponse.keys.length; i++) {
-                var keypair = serverResponse.keys[i],
-                    keyid = keypair.kid.replace(/=/g, ""),
-                    key = keypair.k.replace(/=/g, "");
-                keyPairs.push(new MediaPlayer.vo.protection.KeyPair(keyid, key));
-            }
-            return new MediaPlayer.vo.protection.ClearKeyKeySet(keyPairs);
-        },
-
-        getErrorResponse: function(serverResponse/*, keySystemStr, messageType*/) {
-            return String.fromCharCode.apply(null, new Uint8Array(serverResponse));
-        }
+    var instance = {
+        getServerURLFromMessage: getServerURLFromMessage,
+        getHTTPMethod: getHTTPMethod,
+        getResponseType: getResponseType,
+        getLicenseMessage: getLicenseMessage,
+        getErrorResponse: getErrorResponse,
     };
-};
 
-MediaPlayer.dependencies.protection.servers.ClearKey.prototype = {
-    constructor: MediaPlayer.dependencies.protection.servers.ClearKey
-};
+    return instance;
+
+    function getServerURLFromMessage(url, message/*, messageType*/) {
+        // Build ClearKey server query string
+        var jsonMsg = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(message)));
+        url += "/?";
+        for (var i = 0; i < jsonMsg.kids.length; i++) {
+            url += jsonMsg.kids[i] + "&";
+        }
+        url = url.substring(0, url.length-1);
+        return url;
+    }
+
+    function getHTTPMethod(/*messageType*/) {
+        return 'GET';
+    }
+
+    function getResponseType(/*keySystemStr*/) {
+        return 'json';
+    }
+
+    function getLicenseMessage(serverResponse/*, keySystemStr, messageType*/) {
+        if (!serverResponse.hasOwnProperty("keys")) {
+            return null;
+        }
+        var i, keyPairs = [];
+        for (i = 0; i < serverResponse.keys.length; i++) {
+            var keypair = serverResponse.keys[i];
+            var keyid = keypair.kid.replace(/=/g, "");
+            var key = keypair.k.replace(/=/g, "");
+
+            keyPairs.push(new KeyPair(keyid, key));
+        }
+        return new ClearKeyKeySet(keyPairs);
+    }
+
+    function getErrorResponse(serverResponse/*, keySystemStr, messageType*/) {
+        return String.fromCharCode.apply(null, new Uint8Array(serverResponse));
+    }
+}

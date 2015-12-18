@@ -28,37 +28,38 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.utils.BoxParser = function () {
-    "use strict";
 
-    var parse = function(data) {
+import IsoFile from './IsoFile.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+
+export default FactoryMaker.getSingletonFactory(BoxParser);
+
+function BoxParser(/*config*/) {
+    let context = this.context;
+
+    let instance = {
+        parse: parse
+    };
+
+    return instance;
+
+    /**
+     * @param {ArrayBuffer} data
+     * @returns {@link IsoFile}
+     * @memberof BoxParser#
+     */
+    function parse(data) {
         if (!data) return null;
 
         if (data.fileStart === undefined) {
             data.fileStart = 0;
         }
 
-        var parsedFile = ISOBoxer.parseBuffer(data),
-            dashIsoFile = this.system.getObject("isoFile");
+        var parsedFile = ISOBoxer.parseBuffer(data);
+        var dashIsoFile = IsoFile(context).create();
 
         dashIsoFile.setData(parsedFile);
 
         return dashIsoFile;
-    };
-
-    return {
-        system: undefined,
-        log: undefined,
-
-        /**
-         * @param {ArrayBuffer} data
-         * @returns {@link MediaPlayer.utils.IsoFile}
-         * @memberof BoxParser#
-         */
-        parse: parse
-    };
-};
-
-MediaPlayer.utils.BoxParser.prototype = {
-    constructor: MediaPlayer.utils.BoxParser
-};
+    }
+}

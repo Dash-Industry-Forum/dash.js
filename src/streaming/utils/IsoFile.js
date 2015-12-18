@@ -28,29 +28,117 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.utils.IsoFile = function () {
-    "use strict";
 
-    var parsedIsoFile,
+import IsoBox from '../vo/IsoBox.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
+export default FactoryMaker.getClassFactory(IsoFile);
+
+function IsoFile() {
+
+    let parsedIsoFile,
+        commonProps,
+        sidxProps,
+        sidxRefProps,
+        emsgProps,
+        mdhdProps,
+        tfhdProps,
+        tfdtProps,
+        trunProps,
+        trunSampleProps;
+
+    let instance = {
+            getBox: getBox,
+            getBoxes: getBoxes,
+            setData: setData,
+            getLastBox: getLastBox,
+            getOffset: getOffset
+        };
+
+    setup();
+
+    return instance;
+
+    /**
+    * @param {string} type
+    * @returns {@link IsoBox}
+    * @memberof IsoFile#
+    */
+    function getBox(type) {
+        if (!type || !parsedIsoFile || !parsedIsoFile.boxes || (parsedIsoFile.boxes.length === 0)) return null;
+
+        return convertToDashIsoBox(parsedIsoFile.fetch(type));
+    }
+
+    /**
+    * @param {string} type
+    * @returns {Array} array of {@link IsoBox}
+    * @memberof IsoFile#
+    */
+    function getBoxes(type) {
+        var boxData = parsedIsoFile.fetchAll(type);
+        var boxes = [],
+            box;
+
+        for (var i = 0, ln = boxData.length; i < ln; i += 1) {
+            box = convertToDashIsoBox(boxData[i]);
+
+            if (box) {
+                boxes.push(box);
+            }
+        }
+
+        return boxes;
+    }
+
+    /**
+    * @param {string} value
+    * @memberof IsoFile#
+    */
+    function setData(value) {
+            parsedIsoFile = value;
+    }
+
+    /**
+    * @returns {@link IsoBox}
+    * @memberof IsoFile#
+    */
+    function getLastBox() {
+        if (!parsedIsoFile || !parsedIsoFile.boxes || !parsedIsoFile.boxes.length) return null;
+
+        var type = parsedIsoFile.boxes[parsedIsoFile.boxes.length - 1].type;
+        var boxes = getBoxes(type);
+
+        return boxes[boxes.length-1];
+    }
+
+    /**
+    * @returns {Number}
+    * @memberof IsoFile#
+    */
+    function getOffset() {
+        return parsedIsoFile._cursor.offset;
+    }
+
+    function setup() {
         commonProps = {
             offset: "_offset",
             size: "size",
             type: "type"
-        },
+        };
 
         sidxProps = {
             references: "references",
             timescale: "timescale",
             earliest_presentation_time: "earliest_presentation_time",
             first_offset: "first_offset"
-        },
+        };
 
         sidxRefProps = {
             reference_type: "reference_type",
             referenced_size: "referenced_size",
             subsegment_duration: "subsegment_duration"
-        },
+        };
 
         emsgProps = {
             id: "id",
@@ -60,11 +148,11 @@ MediaPlayer.utils.IsoFile = function () {
             presentation_time_delta: "presentation_time_delta",
             event_duration: "event_duration",
             message_data: "message_data"
-        },
+        };
 
         mdhdProps = {
             timescale: "timescale"
-        },
+        };
 
         tfhdProps = {
             base_data_offset: "base_data_offset",
@@ -73,13 +161,13 @@ MediaPlayer.utils.IsoFile = function () {
             default_sample_size: "default_sample_size",
             default_sample_flags: "default_sample_flags",
             flags: "flags"
-        },
+        };
 
         tfdtProps = {
             version: "version",
             baseMediaDecodeTime: "baseMediaDecodeTime",
             flags: "flags"
-        },
+        };
 
         trunProps = {
             sample_count: "sample_count",
@@ -87,135 +175,65 @@ MediaPlayer.utils.IsoFile = function () {
             data_offset: "data_offset",
             flags: "flags",
             samples: "samples"
-        },
+        };
 
         trunSampleProps = {
             sample_size: "sample_size",
             sample_duration: "sample_duration",
             sample_composition_time_offset: "sample_composition_time_offset"
-        },
-
-        copyProps = function(from, to, props) {
-            for (var prop in props) {
-                to[prop] = from[props[prop]];
-            }
-        },
-
-        convertToDashIsoBox = function(boxData) {
-            if (!boxData) return null;
-
-            var box = new MediaPlayer.vo.IsoBox(),
-                i,
-                ln;
-
-            copyProps(boxData, box, commonProps);
-
-            if (boxData.hasOwnProperty("_incomplete")) {
-                box.isComplete = !boxData._incomplete;
-            }
-
-            switch (box.type) {
-                case "sidx":
-                    copyProps(boxData, box, sidxProps);
-                    if (box.references) {
-                        for (i = 0, ln = box.references.length; i < ln; i +=1) {
-                            copyProps(boxData.references[i], box.references[i], sidxRefProps);
-                        }
-                    }
-                    break;
-                case "emsg":
-                    copyProps(boxData, box, emsgProps);
-                    break;
-                case "mdhd":
-                    copyProps(boxData, box, mdhdProps);
-                    break;
-                case "tfhd":
-                    copyProps(boxData, box, tfhdProps);
-                    break;
-                case "tfdt":
-                    copyProps(boxData, box, tfdtProps);
-                    break;
-                case "trun":
-                    copyProps(boxData, box, trunProps);
-                    if (box.samples) {
-                        for (i = 0, ln = box.samples.length; i < ln; i +=1) {
-                            copyProps(boxData.samples[i], box.samples[i], trunSampleProps);
-                        }
-                    }
-                    break;
-            }
-
-            return box;
-        },
-
-        getBox = function(type) {
-            if (!type || !parsedIsoFile || !parsedIsoFile.boxes || (parsedIsoFile.boxes.length === 0)) return null;
-
-            return convertToDashIsoBox.call(this, parsedIsoFile.fetch(type));
-        },
-
-        getBoxes = function(type) {
-            var boxData = parsedIsoFile.fetchAll(type),
-                boxes = [],
-                box;
-
-            for (var i = 0, ln = boxData.length; i < ln; i += 1) {
-                box = convertToDashIsoBox.call(this, boxData[i]);
-
-                if (box) {
-                    boxes.push(box);
-                }
-            }
-
-            return boxes;
         };
+    }
 
-    return {
-        /**
-         * @param {string} type
-         * @returns {@link MediaPlayer.vo.IsoBox}
-         * @memberof IsoFile#
-         */
-        getBox: getBox,
-
-        /**
-         * @param {string} type
-         * @returns {Array} array of {@link MediaPlayer.vo.IsoBox}
-         * @memberof IsoFile#
-         */
-        getBoxes: getBoxes,
-
-        /**
-         * @param {string} value
-         * @memberof IsoFile#
-         */
-        setData: function(value) {
-            parsedIsoFile = value;
-        },
-
-        /**
-         * @returns {@link MediaPlayer.vo.IsoBox}
-         * @memberof IsoFile#
-         */
-        getLastBox: function() {
-            if (!parsedIsoFile || !parsedIsoFile.boxes || !parsedIsoFile.boxes.length) return null;
-
-            var type = parsedIsoFile.boxes[parsedIsoFile.boxes.length-1].type,
-                boxes = getBoxes.call(this, type);
-
-            return boxes[boxes.length-1];
-        },
-
-        /**
-         * @returns {Number}
-         * @memberof IsoFile#
-         */
-        getOffset: function() {
-            return parsedIsoFile._cursor.offset;
+    function copyProps(from, to, props) {
+        for (var prop in props) {
+            to[prop] = from[props[prop]];
         }
-    };
-};
+    }
 
-MediaPlayer.utils.IsoFile.prototype = {
-    constructor: MediaPlayer.utils.IsoFile
-};
+    function convertToDashIsoBox(boxData) {
+        if (!boxData) return null;
+
+        var box = new IsoBox();
+        var i,
+            ln;
+
+        copyProps(boxData, box, commonProps);
+
+        if (boxData.hasOwnProperty("_incomplete")) {
+            box.isComplete = !boxData._incomplete;
+        }
+
+        switch (box.type) {
+            case "sidx":
+                copyProps(boxData, box, sidxProps);
+                if (box.references) {
+                    for (i = 0, ln = box.references.length; i < ln; i +=1) {
+                        copyProps(boxData.references[i], box.references[i], sidxRefProps);
+                    }
+                }
+                break;
+            case "emsg":
+                copyProps(boxData, box, emsgProps);
+                break;
+            case "mdhd":
+                copyProps(boxData, box, mdhdProps);
+                break;
+            case "tfhd":
+                copyProps(boxData, box, tfhdProps);
+                break;
+            case "tfdt":
+                copyProps(boxData, box, tfdtProps);
+                break;
+            case "trun":
+                copyProps(boxData, box, trunProps);
+                if (box.samples) {
+                    for (i = 0, ln = box.samples.length; i < ln; i +=1) {
+                        copyProps(boxData.samples[i], box.samples[i], trunSampleProps);
+                    }
+                }
+                break;
+        }
+
+        return box;
+    }
+}

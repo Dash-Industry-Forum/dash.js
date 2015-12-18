@@ -28,148 +28,150 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.XlinkLoader = function () {
-    "use strict";
-    var RETRY_ATTEMPTS = 1,
-        RETRY_INTERVAL = 500,
-        RESOLVE_TO_ZERO = 'urn:mpeg:dash:resolve-to-zero:2013',
+import Error from './vo/Error.js';
+import HTTPRequest from './vo/metrics/HTTPRequest.js';
+import EventBus from '../core/EventBus.js';
+import Events from '../core/events/Events.js';
+import Debug from '../core/Debug.js';
+import FactoryMaker from '../core/FactoryMaker.js';
 
-        doLoad = function (url, element, resolveObject, remainingAttempts) {
-            var request = new XMLHttpRequest(),
-                self = this,
-                report,
-                onload,
-                progress,
-                firstProgressCall = true,
-                content,
-                needFailureReport = true,
-                requestTime = new Date();
+export default FactoryMaker.getClassFactory(XlinkLoader);
 
-            onload = function () {
-                if (request.status < 200 || request.status > 299) {
-                    return;
-                }
-                needFailureReport = false;
+function XlinkLoader(config) {
 
-                self.metricsModel.addHttpRequest("stream",
-                    null,
-                    MediaPlayer.vo.metrics.HTTPRequest.XLINK_EXPANSION_TYPE,
-                    url,
-                    request.responseURL || null,
-                    null,
-                    requestTime,
-                    request.firstByteDate || null,
-                    new Date(),
-                    request.status,
-                    null,
-                    request.getAllResponseHeaders());
+    const RETRY_ATTEMPTS = 1;
+    const RETRY_INTERVAL = 500;
+    const RESOLVE_TO_ZERO = 'urn:mpeg:dash:resolve-to-zero:2013';
 
-                content = request.responseText;
-                element.resolved = true;
+    let context  = this.context;
+    let log = Debug(context).getInstance().log;
+    let eventBus = EventBus(context).getInstance();
 
-                if (content) {
-                    element.resolvedContent = content;
-                    self.notify(MediaPlayer.dependencies.XlinkLoader.eventList.ENAME_XLINKELEMENT_LOADED, {
+    let errHandler = config.errHandler;
+    let metricsModel = config.metricsModel;
+    let requestModifierExt = config.requestModifierExt;
+
+    let instance = {
+        load:load
+    };
+
+    return instance;
+
+    function load(url, element, resolveObject) {
+        if (url === RESOLVE_TO_ZERO) {
+            element.resolvedContent = null;
+            element.resolved = true;
+            eventBus.trigger(Events.XLINK_ELEMENT_LOADED, {element: element, resolveObject: resolveObject});
+        } else {
+            doLoad(url, element, resolveObject, RETRY_ATTEMPTS);
+        }
+    }
+
+    function doLoad(url, element, resolveObject, remainingAttempts) {
+        var request = new XMLHttpRequest(),
+            report,
+            onload,
+            progress,
+            firstProgressCall = true,
+            content,
+            needFailureReport = true,
+            requestTime = new Date();
+
+        onload = function () {
+            if (request.status < 200 || request.status > 299) {
+                return;
+            }
+            needFailureReport = false;
+
+            metricsModel.addHttpRequest("stream",
+                null,
+                HTTPRequest.XLINK_EXPANSION_TYPE,
+                url,
+                request.responseURL || null,
+                null,
+                requestTime,
+                request.firstByteDate || null,
+                new Date(),
+                request.status,
+                null,
+                request.getAllResponseHeaders());
+
+            content = request.responseText;
+            element.resolved = true;
+
+            if (content) {
+                element.resolvedContent = content;
+                eventBus.trigger(Events.XLINK_ELEMENT_LOADED, {element: element, resolveObject: resolveObject});
+            } else {
+                element.resolvedContent = null;
+                eventBus.trigger(Events.XLINK_ELEMENT_LOADED,
+                    {
                         element: element,
-                        resolveObject: resolveObject
+                        resolveObject: resolveObject,
+                        error:new Error(null, "Failed loading Xlink element: " + url, null)
                     });
-                } else {
-                    element.resolvedContent = null;
-                    self.notify(MediaPlayer.dependencies.XlinkLoader.eventList.ENAME_XLINKELEMENT_LOADED, {
-                        element: element,
-                        resolveObject: resolveObject
-                    }, new MediaPlayer.vo.Error(null, "Failed loading Xlink element: " + url, null));
-                }
-            };
-
-            report = function () {
-                if (!needFailureReport) {
-                    return;
-                }
-                needFailureReport = false;
-
-                self.metricsModel.addHttpRequest("stream",
-                    null,
-                    MediaPlayer.vo.metrics.HTTPRequest.XLINK_EXPANSION_TYPE,
-                    url,
-                    request.responseURL || null,
-                    null,
-                    requestTime,
-                    request.firstByteDate || null,
-                    new Date(),
-                    request.status,
-                    null,
-                    request.getAllResponseHeaders());
-
-                if (remainingAttempts > 0) {
-                    console.log("Failed loading xLink content: " + url + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
-                    remainingAttempts--;
-                    setTimeout(function () {
-                        doLoad.call(self, url, element, resolveObject, remainingAttempts);
-                    }, RETRY_INTERVAL);
-                } else {
-                    console.log("Failed loading Xlink content: " + url + " no retry attempts left");
-                    self.errHandler.downloadError("xlink", url, request);
-                    element.resolved = true;
-                    element.resolvedContent = null;
-                    self.notify(MediaPlayer.dependencies.XlinkLoader.eventList.ENAME_XLINKELEMENT_LOADED, {
-                        element: element,
-                        resolveObject: resolveObject
-                    }, new Error("Failed loading xlink Element: " + url + " no retry attempts left"));
-                }
-            };
-
-            progress = function (event) {
-                if (firstProgressCall) {
-                    firstProgressCall = false;
-                    if (!event.lengthComputable || (event.lengthComputable && event.total != event.loaded)) {
-                        request.firstByteDate = new Date();
-                    }
-                }
-            };
-
-            try {
-                //console.log("Start loading manifest: " + url);
-                request.onload = onload;
-                request.onloadend = report;
-                request.onerror = report;
-                request.onprogress = progress;
-                request.open("GET", self.requestModifierExt.modifyRequestURL(url), true);
-                request.send();
-            } catch (e) {
-                console.log("Error");
-                request.onerror();
             }
         };
 
-    return {
-        errHandler: undefined,
-        metricsModel: undefined,
-        requestModifierExt: undefined,
-        notify: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
-
-        load: function (url, element, resolveObject) {
-            // Error handling: resolveToZero, no valid url
-            if (url === RESOLVE_TO_ZERO) {
-                element.resolvedContent = null;
-                element.resolved = true;
-                this.notify(MediaPlayer.dependencies.XlinkLoader.eventList.ENAME_XLINKELEMENT_LOADED, {
-                    element: element,
-                    resolveObject: resolveObject
-                });
-            } else {
-                doLoad.call(this, url, element, resolveObject, RETRY_ATTEMPTS);
+        report = function () {
+            if (!needFailureReport) {
+                return;
             }
+            needFailureReport = false;
+
+            metricsModel.addHttpRequest("stream",
+                null,
+                HTTPRequest.XLINK_EXPANSION_TYPE,
+                url,
+                request.responseURL || null,
+                null,
+                requestTime,
+                request.firstByteDate || null,
+                new Date(),
+                request.status,
+                null,
+                request.getAllResponseHeaders());
+
+            if (remainingAttempts > 0) {
+                log("Failed loading xLink content: " + url + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
+                remainingAttempts--;
+                setTimeout(function () {
+                    doLoad(url, element, resolveObject, remainingAttempts);
+                }, RETRY_INTERVAL);
+            } else {
+                log("Failed loading Xlink content: " + url + " no retry attempts left");
+                errHandler.downloadError("xlink", url, request);
+                element.resolved = true;
+                element.resolvedContent = null;
+                eventBus.trigger(Events.XLINK_ELEMENT_LOADED,
+                    {
+                        element: element,
+                        resolveObject: resolveObject,
+                        error:new Error("Failed loading xlink Element: " + url + " no retry attempts left")
+                    });
+            }
+        };
+
+        progress = function (event) {
+            if (firstProgressCall) {
+                firstProgressCall = false;
+                if (!event.lengthComputable || (event.lengthComputable && event.total != event.loaded)) {
+                    request.firstByteDate = new Date();
+                }
+            }
+        };
+
+        try {
+            //log("Start loading manifest: " + url);
+            request.onload = onload;
+            request.onloadend = report;
+            request.onerror = report;
+            request.onprogress = progress;
+            request.open("GET", requestModifierExt.modifyRequestURL(url), true);
+            request.send();
+        } catch (e) {
+            log("Xlink loading Error");
+            request.onerror();
         }
-    };
-};
-
-MediaPlayer.dependencies.XlinkLoader.prototype = {
-    constructor: MediaPlayer.dependencies.XlinkLoader
-};
-
-MediaPlayer.dependencies.XlinkLoader.eventList = {
-    ENAME_XLINKELEMENT_LOADED: "xlinkElementLoaded"
-};
+    }
+}

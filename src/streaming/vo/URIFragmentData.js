@@ -28,19 +28,18 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.URIFragmentData = function () {
-    "use strict";
-    this.t = null;
-    this.xywh = null;
-    this.track = null;
-    this.id = null;
-    this.s = null;
-};
 
-MediaPlayer.vo.URIFragmentData.prototype = {
-    constructor: MediaPlayer.vo.URIFragmentData
-};
+class URIFragmentData {
+    constructor() {
+        this.t = null;
+        this.xywh = null;
+        this.track = null;
+        this.id = null;
+        this.s = null;
+    }
+}
 
+export default URIFragmentData;
 
 /*
     From Spec http://www.w3.org/TR/media-frags/

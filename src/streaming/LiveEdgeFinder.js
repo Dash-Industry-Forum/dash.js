@@ -28,88 +28,95 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.LiveEdgeFinder = function () {
-    "use strict";
+import SynchronizationRulesCollection from './rules/SynchronizationRules/SynchronizationRulesCollection.js';
+import Error from './vo/Error.js';
+import EventBus from './../core/EventBus.js';
+import Events from "./../core/events/Events.js";
+import RulesController from './rules/RulesController.js';
+import FactoryMaker from '../core/FactoryMaker.js';
 
-    var isSearchStarted = false,
-        searchStartTime = NaN,
-        rules,
-        liveEdge = null,
-        ruleSet = MediaPlayer.rules.SynchronizationRulesCollection.prototype.BEST_GUESS_RULES,
+const LIVE_EDGE_NOT_FOUND_ERROR_CODE = 1;
 
-        onSearchCompleted = function(req) {
-            var searchTime = (new Date().getTime() - searchStartTime) / 1000;
+let factory = FactoryMaker.getSingletonFactory(LiveEdgeFinder);
+factory.LIVE_EDGE_NOT_FOUND_ERROR_CODE = LIVE_EDGE_NOT_FOUND_ERROR_CODE;
 
-            liveEdge = req.value;
+export default factory;
 
-            this.notify(MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, {liveEdge: liveEdge, searchTime: searchTime},
-                liveEdge === null ? new MediaPlayer.vo.Error(MediaPlayer.dependencies.LiveEdgeFinder.LIVE_EDGE_NOT_FOUND_ERROR_CODE, "live edge has not been found", null) : null);
-        },
+function LiveEdgeFinder() {
 
-        onStreamUpdated = function(e) {
-            var self = this;
+    let context = this.context;
+    let eventBus = EventBus(context).getInstance();
 
-            if (!self.streamProcessor.isDynamic() || isSearchStarted || e.error) {
-                return;
-            }
-
-            rules = self.synchronizationRulesCollection.getRules(ruleSet);
-            isSearchStarted = true;
-            searchStartTime = new Date().getTime();
-
-            self.rulesController.applyRules(rules, self.streamProcessor, onSearchCompleted.bind(self), null, function(currentValue, newValue) {
-                return newValue;
-            });
-        },
-
-        onTimeSyncComplete = function (e) {
-            if (e.error) {
-                ruleSet = MediaPlayer.rules.SynchronizationRulesCollection.prototype.BEST_GUESS_RULES;
-            } else {
-                ruleSet = MediaPlayer.rules.SynchronizationRulesCollection.prototype.TIME_SYNCHRONIZED_RULES;
-            }
-        };
-
-    return {
-        system: undefined,
-        synchronizationRulesCollection: undefined,
-        rulesController: undefined,
-        notify: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
-
-        setup: function() {
-            this[MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED] = onStreamUpdated;
-            this[MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED] = onTimeSyncComplete;
-        },
-
-        initialize: function(streamProcessor) {
-            this.streamProcessor = streamProcessor;
-            this.fragmentLoader = streamProcessor.fragmentLoader;
-        },
-
-        abortSearch: function() {
-            isSearchStarted = false;
-            searchStartTime = NaN;
-        },
-
-        getLiveEdge: function(){
-            return liveEdge;
-        },
-
-        reset: function(){
-            this.abortSearch();
-            liveEdge = null;
-        }
+    let instance = {
+        initialize:initialize,
+        abortSearch: abortSearch,
+        getLiveEdge: getLiveEdge,
+        reset: reset
     };
-};
 
-MediaPlayer.dependencies.LiveEdgeFinder.prototype = {
-    constructor: MediaPlayer.dependencies.LiveEdgeFinder
-};
+    return instance;
 
-MediaPlayer.dependencies.LiveEdgeFinder.eventList = {
-    ENAME_LIVE_EDGE_SEARCH_COMPLETED: "liveEdgeFound"
-};
+    let timelineConverter,
+        streamProcessor,
+        rulesController,
+        isSearchStarted,
+        searchStartTime,
+        rules,
+        liveEdge,
+        ruleSet;
 
-MediaPlayer.dependencies.LiveEdgeFinder.LIVE_EDGE_NOT_FOUND_ERROR_CODE = 1;
+    function initialize(TimelineConverter, StreamProcessor) {
+        timelineConverter = TimelineConverter;
+        streamProcessor = StreamProcessor;
+        isSearchStarted = false;
+        searchStartTime = NaN;
+        liveEdge = null;
+        rulesController = RulesController(context).getInstance();
+        ruleSet = SynchronizationRulesCollection.BEST_GUESS_RULES;
+        eventBus.on(Events.STREAM_INITIALIZED, onStreamInitialized, this);
+    }
+
+    function abortSearch() {
+        isSearchStarted = false;
+        searchStartTime = NaN;
+    }
+
+    function getLiveEdge(){
+        return liveEdge;
+    }
+
+    function reset(){
+        eventBus.off(Events.STREAM_INITIALIZED, onStreamInitialized, this);
+        abortSearch();
+        liveEdge = null;
+        timelineConverter = null;
+        streamProcessor = null;
+        isSearchStarted = false;
+        searchStartTime = NaN;
+        ruleSet = null;
+        rulesController = null;
+    }
+
+    function onSearchCompleted(req) {
+        var searchTime = (new Date().getTime() - searchStartTime) / 1000;
+        liveEdge = req.value;
+        eventBus.trigger(Events.LIVE_EDGE_SEARCH_COMPLETED, {liveEdge: liveEdge, searchTime: searchTime, error:liveEdge === null ? new Error(LIVE_EDGE_NOT_FOUND_ERROR_CODE, "live edge has not been found", null) : null});
+    }
+
+    function onStreamInitialized(e) {
+
+        if (!streamProcessor.isDynamic() || isSearchStarted || e.error) {
+            return;
+        }
+
+        ruleSet = timelineConverter.isTimeSyncCompleted() ? SynchronizationRulesCollection.TIME_SYNCHRONIZED_RULES : SynchronizationRulesCollection.BEST_GUESS_RULES;
+
+        rules = SynchronizationRulesCollection(context).getInstance().getRules(ruleSet);
+        isSearchStarted = true;
+        searchStartTime = new Date().getTime();
+
+        rulesController.applyRules(rules, streamProcessor, onSearchCompleted, null, function(currentValue, newValue) {
+            return newValue;
+        });
+    }
+}

@@ -28,76 +28,81 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.rules.PlaybackTimeRule = function () {
-    "use strict";
 
-    return {
-        adapter: undefined,
-        sourceBufferExt: undefined,
-        virtualBuffer: undefined,
-        playbackController: undefined,
-        textSourceBuffer:undefined,
-        log:undefined,
+import SwitchRequest from '../SwitchRequest.js';
+import FactoryMaker from '../../../core/FactoryMaker.js';
+import FragmentRequest from '../../vo/FragmentRequest.js';
+export default FactoryMaker.getClassFactory(PlaybackTimeRule);
 
-        execute: function(context, callback) {
-                var mediaType = context.getMediaInfo().type,
-                    mediaInfo = context.getMediaInfo(),
-                    streamId = context.getStreamInfo().id,
-                    streamProcessor = context.getStreamProcessor(),
-                    streamController = streamProcessor.getScheduleController(),
-                    representationInfo = streamProcessor.getCurrentRepresentationInfo(),
-                    seekTarget = streamController.getSeekTarget(),//seekTarget ? seekTarget[mediaType] : null,
-                    hasSeekTarget = !isNaN(seekTarget),
-                    p = hasSeekTarget ? MediaPlayer.rules.SwitchRequest.prototype.STRONG  : MediaPlayer.rules.SwitchRequest.prototype.DEFAULT,
-                    keepIdx = !hasSeekTarget,
-                    time = hasSeekTarget ? seekTarget : this.adapter.getIndexHandlerTime(streamProcessor),
-                    buffer = streamProcessor.bufferController.getBuffer(),
-                    appendedChunks,
-                    range = null,
-                    request;
+function PlaybackTimeRule(config) {
 
+    let context = this.context;
 
-            if (isNaN(time) || (mediaType === "fragmentedText" && this.textSourceBuffer.getAllTracksAreDisabled())) {
-                callback(new MediaPlayer.rules.SwitchRequest(null, p));
-                return;
-            }
+    let adapter = config.adapter;
+    let sourceBufferExt = config.sourceBufferExt;
+    let virtualBuffer = config.virtualBuffer;
+    let textSourceBuffer = config.textSourceBuffer;
 
-            if (hasSeekTarget) {
-                streamController.setSeekTarget(NaN);
-            }
-
-            if (buffer) {
-                range = this.sourceBufferExt.getBufferRange(streamProcessor.bufferController.getBuffer(), time);
-                if (range !== null) {
-                    appendedChunks = this.virtualBuffer.getChunks({streamId: streamId, mediaType: mediaType, appended: true, mediaInfo: mediaInfo, forRange: range});
-                    if (appendedChunks && appendedChunks.length > 0) {
-                        time = appendedChunks[appendedChunks.length-1].bufferedRange.end;
-                    }
-                }
-            }
-
-            request = this.adapter.getFragmentRequestForTime(streamProcessor, representationInfo, time, {keepIdx: keepIdx});
-
-            while (request && streamProcessor.getFragmentModel().isFragmentLoaded(request)) {
-                if (request.action === "complete") {
-                    request = null;
-                    streamProcessor.setIndexHandlerTime(NaN);
-                    break;
-                }
-
-                request = this.adapter.getNextFragmentRequest(streamProcessor, representationInfo);
-            }
-
-            if (request ) {
-                streamProcessor.setIndexHandlerTime(request.startTime + request.duration);
-                request.delayLoadingTime = new Date().getTime() + streamController.getTimeToLoadDelay();
-            }
-
-            callback(new MediaPlayer.rules.SwitchRequest(request, p));
-        },
+    let instance = {
+        execute: execute
     };
-};
 
-MediaPlayer.rules.PlaybackTimeRule.prototype = {
-    constructor: MediaPlayer.rules.PlaybackTimeRule
-};
+    return instance;
+
+    function execute(rulesContext, callback) {
+        var mediaType = rulesContext.getMediaInfo().type;
+        var mediaInfo = rulesContext.getMediaInfo();
+        var streamId = rulesContext.getStreamInfo().id;
+        var streamProcessor = rulesContext.getStreamProcessor();
+        var scheduleController = streamProcessor.getScheduleController();
+        var representationInfo = streamProcessor.getCurrentRepresentationInfo();
+        var seekTarget = scheduleController.getSeekTarget(); //seekTarget ? seekTarget[mediaType] : null,
+        var hasSeekTarget = !isNaN(seekTarget);
+        var p = hasSeekTarget ? SwitchRequest.STRONG : SwitchRequest.DEFAULT;
+        var keepIdx = !hasSeekTarget;
+        var time = hasSeekTarget ? seekTarget : adapter.getIndexHandlerTime(streamProcessor);
+        var buffer = streamProcessor.getBuffer();
+
+        var appendedChunks,
+            range = null,
+            request;
+
+        if (isNaN(time) || (mediaType === "fragmentedText" && textSourceBuffer.getAllTracksAreDisabled())) {
+            callback(SwitchRequest(context).create(null, p));
+            return;
+        }
+
+        if (hasSeekTarget) {
+            scheduleController.setSeekTarget(NaN);
+        }
+
+        if (buffer) {
+            range = sourceBufferExt.getBufferRange(streamProcessor.getBuffer(), time);
+            if (range !== null) {
+                appendedChunks = virtualBuffer.getChunks({streamId: streamId, mediaType: mediaType, appended: true, mediaInfo: mediaInfo, forRange: range});
+                if (appendedChunks && appendedChunks.length > 0) {
+                    time = appendedChunks[appendedChunks.length-1].bufferedRange.end;
+                }
+            }
+        }
+
+        request = adapter.getFragmentRequestForTime(streamProcessor, representationInfo, time, {keepIdx: keepIdx});
+
+        while (request && streamProcessor.getFragmentModel().isFragmentLoaded(request)) {
+            if (request.action === FragmentRequest.ACTION_COMPLETE) {
+                request = null;
+                streamProcessor.setIndexHandlerTime(NaN);
+                break;
+            }
+
+            request = adapter.getNextFragmentRequest(streamProcessor, representationInfo);
+        }
+
+        if (request ) {
+            streamProcessor.setIndexHandlerTime(request.startTime + request.duration);
+            request.delayLoadingTime = new Date().getTime() + scheduleController.getTimeToLoadDelay();
+        }
+
+        callback(SwitchRequest(context).create(request, p));
+    }
+}

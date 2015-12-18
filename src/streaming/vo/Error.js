@@ -28,13 +28,13 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.Error = function (code, message, data) {
-    "use strict";
-    this.code = code || null;
-    this.message = message || null;
-    this.data = data || null;
-};
 
-MediaPlayer.vo.Error.prototype = {
-    constructor: MediaPlayer.vo.Error
-};
+class Error {
+    constructor(code, message, data) {
+        this.code = code || null;
+        this.message = message || null;
+        this.data = data || null;
+    }
+}
+
+export default Error;

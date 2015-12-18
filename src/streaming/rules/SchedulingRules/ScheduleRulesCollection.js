@@ -28,37 +28,65 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.rules.ScheduleRulesCollection = function () {
-    "use strict";
+import FactoryMaker from '../../../core/FactoryMaker.js';
+import BufferLevelRule from './BufferLevelRule.js';
+import PlaybackTimeRule from './PlaybackTimeRule.js';
+import TextSourceBuffer from '../../TextSourceBuffer.js';
+import MetricsModel from '../../models/MetricsModel.js';
+import DashAdapter from '../../../dash/DashAdapter.js';
+import DashMetricsExtensions from '../../../dash/extensions/DashMetricsExtensions.js';
+import SourceBufferExtensions from '../../extensions/SourceBufferExtensions.js';
+import VirtualBuffer from '../../utils/VirtualBuffer.js';
 
-    var fragmentsToScheduleRules = [],
+const FRAGMENTS_TO_SCHEDULE_RULES = "fragmentsToScheduleRules";
+const NEXT_FRAGMENT_RULES = "nextFragmentRules";
+
+let factory = FactoryMaker.getSingletonFactory(ScheduleRulesCollection);
+
+factory.FRAGMENTS_TO_SCHEDULE_RULES = FRAGMENTS_TO_SCHEDULE_RULES;
+factory.NEXT_FRAGMENT_RULES = NEXT_FRAGMENT_RULES;
+
+export default factory;
+
+function ScheduleRulesCollection() {
+    let context = this.context;
+
+    let instance = {
+        initialize:initialize,
+        getRules: getRules
+    };
+
+    return instance;
+
+    let fragmentsToScheduleRules,
+        nextFragmentRules;
+
+    function initialize() {
+        fragmentsToScheduleRules = [];
         nextFragmentRules = [];
 
+        fragmentsToScheduleRules.push(BufferLevelRule(context).create({
+            metricsExt: DashMetricsExtensions(context).getInstance(),
+            metricsModel: MetricsModel(context).getInstance(),
+            textSourceBuffer:TextSourceBuffer(context).getInstance()
+        }));
+        nextFragmentRules.push(PlaybackTimeRule(context).create({
+            adapter: DashAdapter(context).getInstance(),
+            sourceBufferExt: SourceBufferExtensions(context).getInstance(),
+            virtualBuffer: VirtualBuffer(context).getInstance(),
+            textSourceBuffer: TextSourceBuffer(context).getInstance()
 
-    return {
-        bufferLevelRule: undefined,
-        playbackTimeRule: undefined,
+        }));
+    }
 
-        getRules: function (type) {
-            switch (type) {
-                case MediaPlayer.rules.ScheduleRulesCollection.prototype.FRAGMENTS_TO_SCHEDULE_RULES:
-                    return fragmentsToScheduleRules;
-                case MediaPlayer.rules.ScheduleRulesCollection.prototype.NEXT_FRAGMENT_RULES:
-                    return nextFragmentRules;
-                default:
-                    return null;
-            }
-        },
-
-        setup: function () {
-            fragmentsToScheduleRules.push(this.bufferLevelRule);
-            nextFragmentRules.push(this.playbackTimeRule);
+    function getRules(type) {
+        switch (type) {
+            case FRAGMENTS_TO_SCHEDULE_RULES:
+                return fragmentsToScheduleRules;
+            case NEXT_FRAGMENT_RULES:
+                return nextFragmentRules;
+            default:
+                return null;
         }
-    };
-};
-
-MediaPlayer.rules.ScheduleRulesCollection.prototype = {
-    constructor: MediaPlayer.rules.ScheduleRulesCollection,
-    FRAGMENTS_TO_SCHEDULE_RULES: "fragmentsToScheduleRules",
-    NEXT_FRAGMENT_RULES: "nextFragmentRules",
-};
+    }
+}

@@ -28,260 +28,276 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-Dash.dependencies.BaseURLExtensions = function () {
-    "use strict";
+import RequestModifierExtensions from '../../streaming/extensions/RequestModifierExtensions.js'
+import Segment from '../vo/Segment.js';
+import Error from '../../streaming/vo/Error.js';
+import ErrorHandler from '../../streaming/ErrorHandler.js';
+import Events from '../../core/events/Events.js'
+import EventBus from '../../core/EventBus.js';
+import BoxParser from '../../streaming/utils/BoxParser.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
 
-    var getSegmentsForSidx = function (sidx, info) {
-            var refs = sidx.references,
-                len = refs.length,
-                timescale = sidx.timescale,
-                time = sidx.earliest_presentation_time,
-                start = info.range.start + sidx.first_offset + sidx.size,
-                segments = [],
-                segment,
-                end,
-                duration,
-                size;
+export default FactoryMaker.getSingletonFactory(BaseURLExtensions);
 
-            for (var i = 0; i < len; i += 1) {
-                duration = refs[i].subsegment_duration;
-                size = refs[i].referenced_size;
+function  BaseURLExtensions() {
 
-                segment = new Dash.vo.Segment();
-                segment.duration = duration;
-                segment.media = info.url;
-                segment.startTime = time;
-                segment.timescale = timescale;
-                end = start + size - 1;
-                segment.mediaRange = start + "-" + end;
-                segments.push(segment);
-                time += duration;
-                start += size;
-            }
+    let context = this.context;
+    let log = Debug(context).getInstance().log;
+    let eventBus = EventBus(context).getInstance();
 
-            return segments;
-        },
+    let instance = {
+        initialize:initialize,
+        loadInitialization: loadInitialization,
+        loadSegments:loadSegments,
+        reset:reset
+    }
 
-        findInitRange = function (isoFile) {
-            var ftyp = isoFile.getBox("ftyp"),
-                moov = isoFile.getBox("moov"),
-                start,
-                end,
-                initRange = null;
+    return instance;
 
-            this.log("Searching for initialization.");
+    let errHandler,
+        boxParser,
+        requestModifierExt;
 
-            if (moov && moov.isComplete) {
-                start = ftyp ? ftyp.offset : moov.offset;
-                end = moov.offset + moov.size - 1;
-                initRange = start + "-" + end;
+    function initialize() {
+        errHandler = ErrorHandler(context).getInstance();
+        boxParser = BoxParser(context).getInstance();
+        requestModifierExt = RequestModifierExtensions(context).getInstance();
+    }
 
-                this.log("Found the initialization.  Range: " + initRange);
-            }
+    function loadInitialization(representation, loadingInfo) {
+        var needFailureReport = true,
+            initRange = null,
+            isoFile = null;
+        var request = new XMLHttpRequest();
+        var media = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
+                    AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL;
+        var info = loadingInfo || {
+            url: media,
+            range: {
+                start: 0,
+                end: 1500
+            },
+            searching: false,
+            bytesLoaded: 0,
+            bytesToLoad: 1500,
+            request: request
+        };
 
-            return initRange;
-        },
+        log("Start searching for initialization.");
 
-        loadInit = function (representation, loadingInfo) {
-            var request = new XMLHttpRequest(),
-                needFailureReport = true,
-                self = this,
-                initRange = null,
-                isoFile = null,
-                media = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
-                    AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL,
-                info = loadingInfo || {
-                    url: media,
-                    range: {start: 0,
-                            end: 1500},
-                    searching: false,
-                    bytesLoaded: 0,
-                    bytesToLoad: 1500,
-                    request: request
-                };
+        request.onload = function () {
+            if (request.status < 200 || request.status > 299) return;
 
-            self.log("Start searching for initialization.");
+            needFailureReport = false;
 
-            request.onload = function () {
-                if (request.status < 200 || request.status > 299) return;
+            info.bytesLoaded = info.range.end;
+            isoFile = boxParser.parse(request.response);
+            initRange = findInitRange(isoFile);
 
-                needFailureReport = false;
-
-                info.bytesLoaded = info.range.end;
-                isoFile = self.boxParser.parse(request.response);
-                initRange = findInitRange.call(self, isoFile);
-
-                if (initRange) {
-                    representation.range = initRange;
-                    representation.initialization = media;
-                    self.notify(Dash.dependencies.BaseURLExtensions.eventList.ENAME_INITIALIZATION_LOADED, {representation: representation});
-                } else {
-                    info.range.end = info.bytesLoaded + info.bytesToLoad;
-                    loadInit.call(self, representation, info);
-                }
-
-            };
-
-            request.onloadend = request.onerror = function () {
-                if (!needFailureReport) return;
-                needFailureReport = false;
-
-                self.errHandler.downloadError("initialization", info.url, request);
-                self.notify(Dash.dependencies.BaseURLExtensions.eventList.ENAME_INITIALIZATION_LOADED, {representation: representation});
-            };
-
-            sendRequest.call(self, request, info);
-            self.log("Perform init search: " + info.url);
-        },
-
-        loadSegments = function (representation, type, theRange, loadingInfo, callback) {
-            var self = this,
-                hasRange = theRange !== null,
-                request = new XMLHttpRequest(),
-                media = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
-                    AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL,
-                needFailureReport = true,
-                isoFile = null,
-                sidx = null,
-                info = {
-                    url: media,
-                    range: hasRange ? theRange : {start: 0, end: 1500},
-                    searching: !hasRange,
-                    bytesLoaded: loadingInfo ? loadingInfo.bytesLoaded : 0,
-                    bytesToLoad: 1500,
-                    request: request
-                };
-
-            request.onload = function () {
-                if (request.status < 200 || request.status > 299) return;
-
-                var extraBytes = info.bytesToLoad,
-                    loadedLength = request.response.byteLength;
-
-                needFailureReport = false;
-                info.bytesLoaded = info.range.end - info.range.start;
-                isoFile = self.boxParser.parse(request.response);
-                sidx = isoFile.getBox("sidx");
-
-                if (!sidx || !sidx.isComplete) {
-                    if (sidx) {
-                        info.range.start = sidx.offset || info.range.start;
-                        info.range.end = info.range.start + (sidx.size || extraBytes);
-                    } else if (loadedLength < info.bytesLoaded) {
-                        // if we have reached a search limit or if we have reached the end of the file we have to stop trying to find sidx
-                        callback.call(self, null, representation, type);
-                        return;
-                    } else {
-                        var lastBox = isoFile.getLastBox();
-
-                        if (lastBox && lastBox.size) {
-                            info.range.start = lastBox.offset + lastBox.size;
-                            info.range.end = info.range.start + extraBytes;
-                        } else {
-                            info.range.end += extraBytes;
-                        }
-                    }
-                    loadSegments.call(self, representation, type, info.range, info, callback);
-                } else {
-                    var ref = sidx.references,
-                        loadMultiSidx,
-                        segments;
-
-                    if (ref !== null && ref !== undefined && ref.length > 0) {
-                        loadMultiSidx = (ref[0].reference_type === 1);
-                    }
-
-                    if (loadMultiSidx) {
-                        self.log("Initiate multiple SIDX load.");
-                        info.range.end = info.range.start + sidx.size;
-
-                        var j, len, ss, se, r, segs = [],
-                            count = 0,
-                            offset = (sidx.offset || info.range.start) + sidx.size,
-                            tmpCallback = function(result) {
-                                if (result) {
-                                    segs = segs.concat(result);
-                                    count += 1;
-
-                                    if (count >= len) {
-                                        callback.call(self, segs, representation, type);
-                                    }
-                                } else {
-                                    callback.call(self, null, representation, type);
-                                }
-                            };
-
-                        for (j = 0, len = ref.length; j < len; j += 1) {
-                            ss = offset;
-                            se = offset + ref[j].referenced_size - 1;
-                            offset = offset + ref[j].referenced_size;
-                            r = {start: ss, end: se};
-                            loadSegments.call(self, representation, null, r, info, tmpCallback);
-                        }
-
-                    } else {
-                        self.log("Parsing segments from SIDX.");
-                        segments = getSegmentsForSidx.call(self, sidx, info);
-                        callback.call(self, segments, representation, type);
-                    }
-                }
-            };
-
-            request.onloadend = request.onerror = function () {
-                if (!needFailureReport) return;
-
-                needFailureReport = false;
-                self.errHandler.downloadError("SIDX", info.url, request);
-                callback.call(self, null, representation, type);
-            };
-
-            sendRequest.call(self, request, info);
-            self.log("Perform SIDX load: " + info.url);
-        },
-
-        sendRequest = function(request, info) {
-            request.open("GET", this.requestModifierExt.modifyRequestURL(info.url));
-            request.responseType = "arraybuffer";
-            request.setRequestHeader("Range", "bytes=" + info.range.start + "-" + info.range.end);
-            request = this.requestModifierExt.modifyRequestHeader(request);
-            request.send(null);
-        },
-
-        onLoaded = function(segments, representation, type) {
-            var self = this;
-
-            if( segments) {
-                self.notify(Dash.dependencies.BaseURLExtensions.eventList.ENAME_SEGMENTS_LOADED, {segments: segments, representation: representation, mediaType: type});
+            if (initRange) {
+                representation.range = initRange;
+                representation.initialization = media;
+                eventBus.trigger(Events.INITIALIZATION_LOADED, {representation: representation});
             } else {
-                self.notify(Dash.dependencies.BaseURLExtensions.eventList.ENAME_SEGMENTS_LOADED, {segments: null, representation: representation, mediaType: type}, new MediaPlayer.vo.Error(null, "error loading segments", null));
+                info.range.end = info.bytesLoaded + info.bytesToLoad;
+                loadInitialization(representation, info);
+            }
+
+        };
+
+        request.onloadend = request.onerror = function () {
+            if (!needFailureReport) return;
+            needFailureReport = false;
+
+            errHandler.downloadError("initialization", info.url, request);
+            eventBus.trigger(Events.INITIALIZATION_LOADED, {representation: representation});
+        };
+
+        sendRequest(request, info);
+        log("Perform init search: " + info.url);
+    }
+
+    function loadSegments(representation, type, range, loadingInfo, callback) {
+        var parts = range ? range.toString().split("-") : null;
+
+        range = parts ? {start: parseFloat(parts[0]), end: parseFloat(parts[1])} : null;
+        callback = !callback ? onLoaded : callback;
+        var needFailureReport = true,
+            isoFile = null,
+            sidx = null;
+        var hasRange = range !== null;
+        var request = new XMLHttpRequest();
+        var media = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
+            AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL;
+        var info = {
+            url: media,
+            range: hasRange ? range : { start: 0, end: 1500 },
+            searching: !hasRange,
+            bytesLoaded: loadingInfo ? loadingInfo.bytesLoaded : 0,
+            bytesToLoad: 1500,
+            request: request
+        };
+
+        request.onload = function () {
+            if (request.status < 200 || request.status > 299) return;
+
+            var extraBytes = info.bytesToLoad;
+            var loadedLength = request.response.byteLength;
+
+            needFailureReport = false;
+            info.bytesLoaded = info.range.end - info.range.start;
+            isoFile = boxParser.parse(request.response);
+            sidx = isoFile.getBox("sidx");
+
+            if (!sidx || !sidx.isComplete) {
+                if (sidx) {
+                    info.range.start = sidx.offset || info.range.start;
+                    info.range.end = info.range.start + (sidx.size || extraBytes);
+                } else if (loadedLength < info.bytesLoaded) {
+                    // if we have reached a search limit or if we have reached the end of the file we have to stop trying to find sidx
+                    callback(null, representation, type);
+                    return;
+                } else {
+                    var lastBox = isoFile.getLastBox();
+
+                    if (lastBox && lastBox.size) {
+                        info.range.start = lastBox.offset + lastBox.size;
+                        info.range.end = info.range.start + extraBytes;
+                    } else {
+                        info.range.end += extraBytes;
+                    }
+                }
+                loadSegments(representation, type, info.range, info, callback);
+            } else {
+                var ref = sidx.references;
+                var loadMultiSidx,
+                    segments;
+
+                if (ref !== null && ref !== undefined && ref.length > 0) {
+                    loadMultiSidx = (ref[0].reference_type === 1);
+                }
+
+                if (loadMultiSidx) {
+                    log("Initiate multiple SIDX load.");
+                    info.range.end = info.range.start + sidx.size;
+
+                    var j, len, ss, se, r, segs = [],
+                        count = 0;
+                    var offset = (sidx.offset || info.range.start) + sidx.size;
+                    var tmpCallback = function(result) {
+                        if (result) {
+                            segs = segs.concat(result);
+                            count += 1;
+
+                            if (count >= len) {
+                                callback(segs, representation, type);
+                            }
+                        } else {
+                            callback(null, representation, type);
+                        }
+                    };
+
+                    for (j = 0, len = ref.length; j < len; j += 1) {
+                        ss = offset;
+                        se = offset + ref[j].referenced_size - 1;
+                        offset = offset + ref[j].referenced_size;
+                        r = {start: ss, end: se};
+                        loadSegments(representation, null, r, info, tmpCallback);
+                    }
+
+                } else {
+                    log("Parsing segments from SIDX.");
+                    segments = getSegmentsForSidx(sidx, info);
+                    callback(segments, representation, type);
+                }
             }
         };
 
-    return {
-        log: undefined,
-        errHandler: undefined,
-        requestModifierExt:undefined,
-        boxParser: undefined,
-        notify: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
+        request.onloadend = request.onerror = function () {
+            if (!needFailureReport) return;
 
-        loadSegments: function(representation, type, range) {
-            var parts = range ? range.split("-") : null;
-            range = parts ? {start: parseFloat(parts[0]), end: parseFloat(parts[1])} : null;
+            needFailureReport = false;
+            errHandler.downloadError("SIDX", info.url, request);
+            callback(null, representation, type);
+        };
 
-            loadSegments.call(this, representation, type, range, null, onLoaded.bind(this));
-        },
+        sendRequest(request, info);
+        log("Perform SIDX load: " + info.url);
+    }
 
-        loadInitialization: loadInit
-    };
-};
+    function reset() {
+        errHandler = null;
+        boxParser = null;
+        requestModifierExt = null;
+        log = null;
+    }
 
-Dash.dependencies.BaseURLExtensions.prototype = {
-    constructor: Dash.dependencies.BaseURLExtensions
-};
+    function  getSegmentsForSidx(sidx, info) {
 
-Dash.dependencies.BaseURLExtensions.eventList = {
-    ENAME_INITIALIZATION_LOADED: "initializationLoaded",
-    ENAME_SEGMENTS_LOADED: "segmentsLoaded"
+        var refs = sidx.references;
+        var len = refs.length;
+        var timescale = sidx.timescale;
+        var time = sidx.earliest_presentation_time;
+        var start = info.range.start + sidx.first_offset + sidx.size;
+        var segments = [],
+            segment,
+            end,
+            duration,
+            size;
+
+        for (var i = 0; i < len; i += 1) {
+            duration = refs[i].subsegment_duration;
+            size = refs[i].referenced_size;
+
+            segment = new Segment();
+            segment.duration = duration;
+            segment.media = info.url;
+            segment.startTime = time;
+            segment.timescale = timescale;
+            end = start + size - 1;
+            segment.mediaRange = start + "-" + end;
+            segments.push(segment);
+            time += duration;
+            start += size;
+        }
+
+        return segments;
+    }
+
+    function findInitRange(isoFile) {
+        var ftyp = isoFile.getBox("ftyp");
+        var moov = isoFile.getBox("moov");
+        var start,
+            end,
+            initRange = null;
+
+        log("Searching for initialization.");
+
+        if (moov && moov.isComplete) {
+            start = ftyp ? ftyp.offset : moov.offset;
+            end = moov.offset + moov.size - 1;
+            initRange = start + "-" + end;
+
+            log("Found the initialization.  Range: " + initRange);
+        }
+
+        return initRange;
+    }
+
+    function sendRequest(request, info) {
+        request.open("GET", requestModifierExt.modifyRequestURL(info.url));
+        request.responseType = "arraybuffer";
+        request.setRequestHeader("Range", "bytes=" + info.range.start + "-" + info.range.end);
+        request = requestModifierExt.modifyRequestHeader(request);
+        request.send(null);
+    }
+
+    function onLoaded(segments, representation, type) {
+        if(segments) {
+            eventBus.trigger(Events.SEGMENTS_LOADED, {segments: segments, representation: representation, mediaType: type});
+        } else {
+            eventBus.trigger(Events.SEGMENTS_LOADED, {segments: null, representation: representation, mediaType: type, error: new Error(null, "error loading segments", null)});
+        }
+    }
 };

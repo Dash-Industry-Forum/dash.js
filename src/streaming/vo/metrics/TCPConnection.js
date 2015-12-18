@@ -28,16 +28,15 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.metrics.TCPConnection = function () {
-    "use strict";
 
-    this.tcpid = null;      // Identifier of the TCP connection on which the HTTP request was sent.
-    this.dest = null;       // IP Address of the interface over which the client is receiving the TCP data.
-    this.topen = null;      // Real-Time | The time at which the connection was opened (sending time of the initial SYN or connect socket operation).
-    this.tclose = null;     // Real-Time | The time at which the connection was closed (sending or reception time of FIN or RST or close socket operation).
-    this.tconnect = null;   // Connect time in ms (time from sending the initial SYN to receiving the ACK or completion of the connect socket operation).
-};
+class TCPConnection {
+    constructor() {
+        this.tcpid = null;      // Identifier of the TCP connection on which the HTTP request was sent.
+        this.dest = null;       // IP Address of the interface over which the client is receiving the TCP data.
+        this.topen = null;      // Real-Time | The time at which the connection was opened (sending time of the initial SYN or connect socket operation).
+        this.tclose = null;     // Real-Time | The time at which the connection was closed (sending or reception time of FIN or RST or close socket operation).
+        this.tconnect = null;   // Connect time in ms (time from sending the initial SYN to receiving the ACK or completion of the connect socket operation).
+    }
+}
 
-MediaPlayer.vo.metrics.TCPConnection.prototype = {
-    constructor: MediaPlayer.vo.metrics.TCPConnection
-};
+export default TCPConnection;
