@@ -113,14 +113,15 @@ let FactoryMaker = (function() {
     }
 
     function merge(name, classConstructor, context) {
-        let extensionContext = getExtensionContext(context);
 
-        let extended = extensionContext[name];
-        if (extended) {
-            extended = extended.apply({ context:context, factory:instance});
-            for(const prop in extended){
+        let extensionContext = getExtensionContext(context);
+        let extension = extensionContext[name];
+
+        if (extension) {
+            extension = extension.apply({ context:context, factory:instance, parent:classConstructor});
+            for(const prop in extension){
                 if (classConstructor.hasOwnProperty(prop)){
-                    classConstructor[prop] = extended[prop];
+                    classConstructor[prop] = extension[prop];
                 }
             }
         }
