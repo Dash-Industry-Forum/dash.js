@@ -40,32 +40,13 @@ import MediaPlayerModel from '../models/MediaPlayerModel.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
 
-export default FactoryMaker.getSingletonFactory(StreamController);
-
 function StreamController() {
 
     const STREAM_END_THRESHOLD = 0.2;
-
+    let instance;
     let context = this.context;
     let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
-
-    let instance = {
-        initialize          :initialize,
-        getAutoPlay         :getAutoPlay,
-        getActiveStreamInfo :getActiveStreamInfo,
-        isStreamActive      :isStreamActive,
-        getStreamById       :getStreamById,
-        load                :load,
-        loadWithManifest    :loadWithManifest,
-        setConfig           :setConfig,
-        reset               :reset
-    };
-
-    setup();
-
-    return instance;
-
 
     let capabilities,
         manifestUpdater,
@@ -149,7 +130,7 @@ function StreamController() {
      * and implements corresponding logic to switch between them.
      */
     function fireSwitchEvent(eventType, fromStream, toStream) {
-        eventBus.trigger(eventType, {fromStreamInfo: fromStream ? fromStream.getStreamInfo() : null, toStreamInfo: toStream.getStreamInfo()})
+        eventBus.trigger(eventType, {fromStreamInfo: fromStream ? fromStream.getStreamInfo() : null, toStreamInfo: toStream.getStreamInfo()});
     }
 
     function startAutoPlay() {
@@ -650,4 +631,22 @@ function StreamController() {
             eventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
         }
     }
-};
+
+    instance = {
+        initialize          :initialize,
+        getAutoPlay         :getAutoPlay,
+        getActiveStreamInfo :getActiveStreamInfo,
+        isStreamActive      :isStreamActive,
+        getStreamById       :getStreamById,
+        load                :load,
+        loadWithManifest    :loadWithManifest,
+        setConfig           :setConfig,
+        reset               :reset
+    };
+
+    setup();
+
+    return instance;
+}
+
+export default FactoryMaker.getSingletonFactory(StreamController);

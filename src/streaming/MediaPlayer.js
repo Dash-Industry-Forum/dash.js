@@ -68,11 +68,6 @@ import DashMetricsExtensions from '../dash/extensions/DashMetricsExtensions.js';
 import TimelineConverter from '../dash/TimelineConverter.js';
 import MediaPlayerFactory from '../streaming/MediaPlayerFactory.js';
 
-let factory = FactoryMaker.getClassFactory(MediaPlayer);
-factory.MediaPlayerFactory = MediaPlayerFactory().getInstance();
-factory.events = MediaPlayerEvents;
-export default factory;
-
 function MediaPlayer() {
 
     const VERSION = "2.0.0";
@@ -82,82 +77,8 @@ function MediaPlayer() {
     let debug = Debug(context).getInstance();
     let log = debug.log;
 
-
-    let instance = {
-        initialize:initialize,
-        on: on,
-        off: off,
-        extend: extend,
-        attachView: attachView,
-        attachSource: attachSource,
-        isReady: isReady,
-        play: play,
-        seek: seek,
-        time: time,
-        duration: duration,
-        timeAsUTC: timeAsUTC,
-        durationAsUTC: durationAsUTC,
-        getDVRWindowSize: getDVRWindowSize,
-        getDVRSeekOffset: getDVRSeekOffset,
-        convertToTimeCode: convertToTimeCode,
-        formatUTC: formatUTC,
-        reset: reset,
-        getVersion: getVersion,
-        getDebug: getDebug,
-        getVideoModel: getVideoModel,
-        getVideoContainer: getVideoContainer,
-        setLiveDelayFragmentCount: setLiveDelayFragmentCount,
-        useSuggestedPresentationDelay: useSuggestedPresentationDelay,
-        enableLastBitrateCaching: enableLastBitrateCaching,
-        enableLastMediaSettingsCaching: enableLastMediaSettingsCaching,
-        setMaxAllowedBitrateFor: setMaxAllowedBitrateFor,
-        getMaxAllowedBitrateFor: getMaxAllowedBitrateFor,
-        setAutoPlay: setAutoPlay,
-        getAutoPlay: getAutoPlay,
-        setScheduleWhilePaused: setScheduleWhilePaused,
-        getScheduleWhilePaused: getScheduleWhilePaused,
-        getMetricsExt: getMetricsExt,
-        getMetricsFor: getMetricsFor,
-        getQualityFor: getQualityFor,
-        setQualityFor: setQualityFor,
-        setTextTrack: setTextTrack,
-        getBitrateInfoListFor: getBitrateInfoListFor,
-        setInitialBitrateFor: setInitialBitrateFor,
-        getInitialBitrateFor: getInitialBitrateFor,
-        getStreamsFromManifest: getStreamsFromManifest,
-        getTracksFor: getTracksFor,
-        getTracksForTypeFromManifest: getTracksForTypeFromManifest,
-        getCurrentTrackFor: getCurrentTrackFor,
-        setInitialMediaSettingsFor: setInitialMediaSettingsFor,
-        getInitialMediaSettingsFor: getInitialMediaSettingsFor,
-        setCurrentTrack: setCurrentTrack,
-        getTrackSwitchModeFor: getTrackSwitchModeFor,
-        setTrackSwitchModeFor: setTrackSwitchModeFor,
-        setSelectionModeForInitialTrack: setSelectionModeForInitialTrack,
-        getSelectionModeForInitialTrack: getSelectionModeForInitialTrack,
-        getAutoSwitchQuality: getAutoSwitchQuality,
-        setAutoSwitchQuality: setAutoSwitchQuality,
-        retrieveManifest: retrieveManifest,
-        addUTCTimingSource: addUTCTimingSource,
-        removeUTCTimingSource: removeUTCTimingSource,
-        clearDefaultUTCTimingSources: clearDefaultUTCTimingSources,
-        restoreDefaultUTCTimingSources: restoreDefaultUTCTimingSources,
-        setBufferToKeep: setBufferToKeep,
-        getBufferToKeep: getBufferToKeep,
-        setBufferPruningInterval: setBufferPruningInterval,
-        getBufferPruningInterval: getBufferPruningInterval,
-        getProtectionController:getProtectionController,
-        enableManifestDateHeaderTimeSource: enableManifestDateHeaderTimeSource,
-        displayCaptionsOnTop: displayCaptionsOnTop,
-        attachVideoContainer: attachVideoContainer,
-        attachTTMLRenderingDiv: attachTTMLRenderingDiv
-    };
-
-    setup();
-
-    return instance;
-
-    let element,
+    let instance,
+        element,
         source,
         protectionData,
         initialized,
@@ -212,7 +133,7 @@ function MediaPlayer() {
             attachView(view);
         }
 
-        if (source) {;
+        if (source) {
             attachSource(source);
         }
 
@@ -1168,7 +1089,6 @@ function MediaPlayer() {
         protectionData = null;
     }
 
-
     function resetAndPlay() {
         adapter.reset();
         if (playing && streamController) {
@@ -1286,7 +1206,7 @@ function MediaPlayer() {
         if (protectionController){
             return protectionController;
         }
-        if(typeof Protection == "function") {
+        if(typeof Protection == "function") {//TODO need a better way to register/detect plugin components
             let protection = Protection(context).create();
             Events.extend(Protection.events);
             MediaPlayerEvents.extend(Protection.events, { publicOnly: true });
@@ -1301,4 +1221,83 @@ function MediaPlayer() {
         }
         return null;
     }
+
+    instance = {
+        initialize:initialize,
+        on: on,
+        off: off,
+        extend: extend,
+        attachView: attachView,
+        attachSource: attachSource,
+        isReady: isReady,
+        play: play,
+        seek: seek,
+        time: time,
+        duration: duration,
+        timeAsUTC: timeAsUTC,
+        durationAsUTC: durationAsUTC,
+        getDVRWindowSize: getDVRWindowSize,
+        getDVRSeekOffset: getDVRSeekOffset,
+        convertToTimeCode: convertToTimeCode,
+        formatUTC: formatUTC,
+        reset: reset,
+        getVersion: getVersion,
+        getDebug: getDebug,
+        getVideoModel: getVideoModel,
+        getVideoContainer: getVideoContainer,
+        setLiveDelayFragmentCount: setLiveDelayFragmentCount,
+        useSuggestedPresentationDelay: useSuggestedPresentationDelay,
+        enableLastBitrateCaching: enableLastBitrateCaching,
+        enableLastMediaSettingsCaching: enableLastMediaSettingsCaching,
+        setMaxAllowedBitrateFor: setMaxAllowedBitrateFor,
+        getMaxAllowedBitrateFor: getMaxAllowedBitrateFor,
+        setAutoPlay: setAutoPlay,
+        getAutoPlay: getAutoPlay,
+        setScheduleWhilePaused: setScheduleWhilePaused,
+        getScheduleWhilePaused: getScheduleWhilePaused,
+        getMetricsExt: getMetricsExt,
+        getMetricsFor: getMetricsFor,
+        getQualityFor: getQualityFor,
+        setQualityFor: setQualityFor,
+        setTextTrack: setTextTrack,
+        getBitrateInfoListFor: getBitrateInfoListFor,
+        setInitialBitrateFor: setInitialBitrateFor,
+        getInitialBitrateFor: getInitialBitrateFor,
+        getStreamsFromManifest: getStreamsFromManifest,
+        getTracksFor: getTracksFor,
+        getTracksForTypeFromManifest: getTracksForTypeFromManifest,
+        getCurrentTrackFor: getCurrentTrackFor,
+        setInitialMediaSettingsFor: setInitialMediaSettingsFor,
+        getInitialMediaSettingsFor: getInitialMediaSettingsFor,
+        setCurrentTrack: setCurrentTrack,
+        getTrackSwitchModeFor: getTrackSwitchModeFor,
+        setTrackSwitchModeFor: setTrackSwitchModeFor,
+        setSelectionModeForInitialTrack: setSelectionModeForInitialTrack,
+        getSelectionModeForInitialTrack: getSelectionModeForInitialTrack,
+        getAutoSwitchQuality: getAutoSwitchQuality,
+        setAutoSwitchQuality: setAutoSwitchQuality,
+        retrieveManifest: retrieveManifest,
+        addUTCTimingSource: addUTCTimingSource,
+        removeUTCTimingSource: removeUTCTimingSource,
+        clearDefaultUTCTimingSources: clearDefaultUTCTimingSources,
+        restoreDefaultUTCTimingSources: restoreDefaultUTCTimingSources,
+        setBufferToKeep: setBufferToKeep,
+        getBufferToKeep: getBufferToKeep,
+        setBufferPruningInterval: setBufferPruningInterval,
+        getBufferPruningInterval: getBufferPruningInterval,
+        getProtectionController:getProtectionController,
+        enableManifestDateHeaderTimeSource: enableManifestDateHeaderTimeSource,
+        displayCaptionsOnTop: displayCaptionsOnTop,
+        attachVideoContainer: attachVideoContainer,
+        attachTTMLRenderingDiv: attachTTMLRenderingDiv
+    };
+
+    setup();
+
+    return instance;
 }
+
+let factory = FactoryMaker.getClassFactory(MediaPlayer);
+factory.MediaPlayerFactory = MediaPlayerFactory().getInstance();
+factory.events = MediaPlayerEvents;
+export default factory;
