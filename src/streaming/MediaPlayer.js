@@ -62,7 +62,7 @@ MediaPlayer = function (context) {
  * 6) Transform fragments.
  * 7) Push fragmemt bytes into SourceBuffer.
  */
-    var VERSION = "1.5.2",
+    var VERSION = "1.6.0",
         numOfParallelRequestAllowed = 0,
         system,
         abrController,
