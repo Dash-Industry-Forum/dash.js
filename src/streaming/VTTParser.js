@@ -31,19 +31,9 @@
 import FactoryMaker from '../core/FactoryMaker.js';
 import Debug from '../core/Debug.js';
 
-export default FactoryMaker.getSingletonFactory(VTTParser);
-
 function VTTParser() {
-
-    let context = this.context
+    let context = this.context;
     let log = Debug(context).getInstance().log;
-
-    let instance = {
-        parse: parse
-    };
-
-    setup();
-    return instance;
 
     let regExNewLine,
         regExToken,
@@ -191,4 +181,13 @@ function VTTParser() {
         }
         return decodeURI(subline);
     }
+
+    let instance = {
+        parse: parse
+    };
+
+    setup();
+    return instance;
 }
+
+export default FactoryMaker.getSingletonFactory(VTTParser);

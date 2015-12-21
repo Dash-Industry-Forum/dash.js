@@ -44,8 +44,6 @@ import EventBus from '../../core/EventBus.js';
 import Events from "../../core/events/Events.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-export default FactoryMaker.getClassFactory(RepresentationController);
-
 function  RepresentationController() {
 
     const SEGMENTS_UPDATE_FAILED_ERROR_CODE = 1;
@@ -53,22 +51,8 @@ function  RepresentationController() {
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
 
-    let instance = {
-        initialize: initialize,
-        getData: getData,
-        getDataIndex: getDataIndex,
-        isUpdating: isUpdating,
-        updateData: updateData,
-        getStreamProcessor: getStreamProcessor,
-        getCurrentRepresentation: getCurrentRepresentation,
-        getRepresentationForQuality: getRepresentationForQuality,
-        reset: reset
-    }
-
-    setup();
-    return instance;
-
-    let data,
+    let instance,
+        data,
         dataIndex,
         updating,
         availableRepresentations,
@@ -93,14 +77,14 @@ function  RepresentationController() {
         availableRepresentations = [];
 
         abrController = AbrController(context).getInstance();
-        streamController = StreamController(context).getInstance(),
-        playbackController = PlaybackController(context).getInstance(),
-        manifestModel = ManifestModel(context).getInstance(),
-        metricsModel = MetricsModel(context).getInstance(),
-        domStorage = DOMStorage(context).getInstance(),
-        timelineConverter = TimelineConverter(context).getInstance(),
-        manifestExt = DashManifestExtensions(context).getInstance(),
-        metricsExt = DashMetricsExtensions(context).getInstance(),
+        streamController = StreamController(context).getInstance();
+        playbackController = PlaybackController(context).getInstance();
+        manifestModel = ManifestModel(context).getInstance();
+        metricsModel = MetricsModel(context).getInstance();
+        domStorage = DOMStorage(context).getInstance();
+        timelineConverter = TimelineConverter(context).getInstance();
+        manifestExt = DashManifestExtensions(context).getInstance();
+        metricsExt = DashMetricsExtensions(context).getInstance();
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
 
         eventBus.on(Events.QUALITY_CHANGED, onQualityChanged, instance);
@@ -364,4 +348,21 @@ function  RepresentationController() {
             localStorage.setItem(DOMStorage["LOCAL_STORAGE_"+type.toUpperCase()+"_BITRATE_KEY"], JSON.stringify({bitrate:bitrate/1000, timestamp:new Date().getTime()}));
         }
     }
-};
+
+    instance = {
+        initialize: initialize,
+        getData: getData,
+        getDataIndex: getDataIndex,
+        isUpdating: isUpdating,
+        updateData: updateData,
+        getStreamProcessor: getStreamProcessor,
+        getCurrentRepresentation: getCurrentRepresentation,
+        getRepresentationForQuality: getRepresentationForQuality,
+        reset: reset
+    };
+
+    setup();
+    return instance;
+}
+
+export default FactoryMaker.getClassFactory(RepresentationController);

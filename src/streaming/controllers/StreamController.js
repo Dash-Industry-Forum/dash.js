@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import PlaybackController from './PlaybackController.js';
-import MediaPlayer from '../MediaPlayer.js';
 import Stream from '../Stream.js';
 import ManifestUpdater from '../ManifestUpdater.js';
 import EventBus from '../../core/EventBus.js';

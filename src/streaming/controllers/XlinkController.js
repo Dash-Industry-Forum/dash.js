@@ -39,8 +39,6 @@ const ELEMENT_TYPE_ADAPTATIONSET = 'AdaptationSet';
 const ELEMENT_TYPE_EVENTSTREAM = 'EventStream';
 const RESOLVE_TO_ZERO = 'urn:mpeg:dash:resolve-to-zero:2013';
 
-export default FactoryMaker.getClassFactory(XlinkController);
-
 function XlinkController(config) {
 
     let context = this.context;
@@ -48,17 +46,8 @@ function XlinkController(config) {
 
     let xlinkLoader = config.xlinkLoader;
 
-    let instance = {
-        resolveManifestOnLoad :resolveManifestOnLoad,
-        setMatchers :setMatchers,
-        setIron :setIron,
-        reset :reset
-    };
-
-    setup();
-    return instance;
-
-    let matchers,
+    let instance,
+        matchers,
         iron,
         manifest,
         converter;
@@ -214,7 +203,7 @@ function XlinkController(config) {
                 delete element.originalContent['xlink:href'];
                 resolvedElements.push(element.originalContent);
             }
-            // Element was successfully resolved
+                // Element was successfully resolved
             else if (element.resolvedContent) {
                 for (j = 0; j < element.resolvedContent[type].length; j++) {
                     //TODO Contains another Xlink attribute with xlink:actuate set to onload. Remove all xLink attributes
@@ -264,4 +253,16 @@ function XlinkController(config) {
     function isInappropriateTarget() {
         return false;
     }
-};
+
+    instance = {
+        resolveManifestOnLoad :resolveManifestOnLoad,
+        setMatchers :setMatchers,
+        setIron :setIron,
+        reset :reset
+    };
+
+    setup();
+    return instance;
+}
+
+export default FactoryMaker.getClassFactory(XlinkController);

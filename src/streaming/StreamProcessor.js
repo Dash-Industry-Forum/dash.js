@@ -50,56 +50,16 @@ import DashManifestExtensions from "../dash/extensions/DashManifestExtensions.js
 import DashMetricsExtensions from '../dash/extensions/DashMetricsExtensions.js';
 import RepresentationController from '../dash/controllers/RepresentationController.js';
 import ErrorHandler from './ErrorHandler.js';
-import Debug from '../core/Debug.js';
 import FactoryMaker from '../core/FactoryMaker.js';
-
-export default FactoryMaker.getClassFactory(StreamProcessor);
 
 function StreamProcessor(config) {
 
     let context = this.context;
-    let log = Debug(context).getInstance().log;
 
     let indexHandler = config.indexHandler;
     let timelineConverter = config.timelineConverter;
     let adapter = config.adapter;
     let manifestModel = config.manifestModel;
-
-
-    let instance = {
-        initialize: initialize,
-        isUpdating: isUpdating,
-        getType: getType,
-        getBufferController: getBufferController,
-        getABRController: getABRController,
-        getFragmentLoader: getFragmentLoader,
-        getFragmentModel: getFragmentModel,
-        getScheduleController: getScheduleController,
-        getEventController: getEventController,
-        getFragmentController: getFragmentController,
-        getRepresentationController: getRepresentationController,
-        getIndexHandler: getIndexHandler,
-        getIndexHandlerTime: getIndexHandlerTime,
-        setIndexHandlerTime: setIndexHandlerTime,
-        getCurrentRepresentationInfo: getCurrentRepresentationInfo,
-        getRepresentationInfoForQuality: getRepresentationInfoForQuality,
-        isBufferingCompleted: isBufferingCompleted,
-        createBuffer: createBuffer,
-        getStreamInfo: getStreamInfo,
-        updateMediaInfo: updateMediaInfo,
-        getMediaInfoArr: getMediaInfoArr,
-        getMediaInfo: getMediaInfo,
-        getMediaSource: getMediaSource,
-        getBuffer: getBuffer,
-        setBuffer: setBuffer,
-        start: start,
-        stop: stop,
-        isDynamic: isDynamic,
-        reset: reset
-    };
-
-    setup();
-    return instance;
 
     let dynamic,
         mediaInfo,
@@ -324,4 +284,41 @@ function StreamProcessor(config) {
 
         return controller;
     }
+
+    let instance = {
+        initialize: initialize,
+        isUpdating: isUpdating,
+        getType: getType,
+        getBufferController: getBufferController,
+        getABRController: getABRController,
+        getFragmentLoader: getFragmentLoader,
+        getFragmentModel: getFragmentModel,
+        getScheduleController: getScheduleController,
+        getEventController: getEventController,
+        getFragmentController: getFragmentController,
+        getRepresentationController: getRepresentationController,
+        getIndexHandler: getIndexHandler,
+        getIndexHandlerTime: getIndexHandlerTime,
+        setIndexHandlerTime: setIndexHandlerTime,
+        getCurrentRepresentationInfo: getCurrentRepresentationInfo,
+        getRepresentationInfoForQuality: getRepresentationInfoForQuality,
+        isBufferingCompleted: isBufferingCompleted,
+        createBuffer: createBuffer,
+        getStreamInfo: getStreamInfo,
+        updateMediaInfo: updateMediaInfo,
+        getMediaInfoArr: getMediaInfoArr,
+        getMediaInfo: getMediaInfo,
+        getMediaSource: getMediaSource,
+        getBuffer: getBuffer,
+        setBuffer: setBuffer,
+        start: start,
+        stop: stop,
+        isDynamic: isDynamic,
+        reset: reset
+    };
+
+    setup();
+    return instance;
 }
+
+export default FactoryMaker.getClassFactory(StreamProcessor);

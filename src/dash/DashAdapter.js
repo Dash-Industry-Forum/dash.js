@@ -36,11 +36,12 @@ import ManifestInfo from '../streaming/vo/ManifestInfo.js';
 import Event from './vo/Event.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
-const METRIC_LIST = { //TODO need to refactor all that reference to be able to export like all other const on factory object.
+const METRIC_LIST = {
+    //TODO need to refactor all that reference to be able to export like all other const on factory object.
     TCP_CONNECTION: "TcpConnection",
     HTTP_REQUEST: "HttpRequest",
     HTTP_REQUEST_TRACE: "HttpRequestTrace",
-    TRACK_SWITCH : "RepresentationSwitch",
+    TRACK_SWITCH: "RepresentationSwitch",
     BUFFER_LEVEL: "BufferLevel",
     BUFFER_STATE: "BufferState",
     DVR_INFO: "DVRInfo",
@@ -52,44 +53,9 @@ const METRIC_LIST = { //TODO need to refactor all that reference to be able to e
     MANIFEST_UPDATE_TRACK_INFO: "ManifestUpdateRepresentationInfo",
     PLAY_LIST: "PlayList",
     PLAY_LIST_TRACE: "PlayListTrace"
-}
-
-export default FactoryMaker.getSingletonFactory(DashAdapter);
+};
 
 function DashAdapter() {
-
-
-    let instance = {
-        initialize:initialize,
-        convertDataToTrack: convertRepresentationToTrackInfo,
-        convertDataToMedia: convertAdaptationToMediaInfo,
-        convertDataToStream: convertPeriodToStreamInfo,
-        getDataForTrack: getRepresentationForTrackInfo,
-        getDataForMedia: getAdaptationForMediaInfo,
-        getDataForStream: getPeriodForStreamInfo,
-        getStreamsInfo: getStreamsInfo,
-        getManifestInfo: getManifestInfo,
-        getMediaInfoForType: getMediaInfoForType,
-        getAllMediaInfoForType: getAllMediaInfoForType,
-        getCurrentRepresentationInfo: getCurrentRepresentationInfo,
-        getRepresentationInfoForQuality: getRepresentationInfoForQuality,
-        updateData: updateData,
-        getInitRequest: getInitRequest,
-        getNextFragmentRequest: getNextFragmentRequest,
-        getFragmentRequestForTime: getFragmentRequestForTime,
-        generateFragmentRequestForTime: generateFragmentRequestForTime,
-        getIndexHandlerTime: getIndexHandlerTime,
-        setIndexHandlerTime: setIndexHandlerTime,
-        getEventsFor: getEventsFor,
-        getEvent: getEvent,
-        setConfig:setConfig,
-        reset:reset,
-        metricsList:METRIC_LIST
-    }
-
-    return instance;
-
-
     let manifestExt,
         periods,
         adaptations;
@@ -377,4 +343,36 @@ function DashAdapter() {
         periods = [];
         adaptations = {};
     }
-};
+
+    let instance = {
+        initialize: initialize,
+        convertDataToTrack: convertRepresentationToTrackInfo,
+        convertDataToMedia: convertAdaptationToMediaInfo,
+        convertDataToStream: convertPeriodToStreamInfo,
+        getDataForTrack: getRepresentationForTrackInfo,
+        getDataForMedia: getAdaptationForMediaInfo,
+        getDataForStream: getPeriodForStreamInfo,
+        getStreamsInfo: getStreamsInfo,
+        getManifestInfo: getManifestInfo,
+        getMediaInfoForType: getMediaInfoForType,
+        getAllMediaInfoForType: getAllMediaInfoForType,
+        getCurrentRepresentationInfo: getCurrentRepresentationInfo,
+        getRepresentationInfoForQuality: getRepresentationInfoForQuality,
+        updateData: updateData,
+        getInitRequest: getInitRequest,
+        getNextFragmentRequest: getNextFragmentRequest,
+        getFragmentRequestForTime: getFragmentRequestForTime,
+        generateFragmentRequestForTime: generateFragmentRequestForTime,
+        getIndexHandlerTime: getIndexHandlerTime,
+        setIndexHandlerTime: setIndexHandlerTime,
+        getEventsFor: getEventsFor,
+        getEvent: getEvent,
+        setConfig: setConfig,
+        reset: reset,
+        metricsList: METRIC_LIST
+    };
+
+    return instance;
+}
+
+export default FactoryMaker.getSingletonFactory(DashAdapter);

@@ -29,20 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import FactoryMaker from '../../core/FactoryMaker.js';
-export default FactoryMaker.getSingletonFactory(Capabilities);
 
 function Capabilities() {
-
-    let instance = {
-        supportsMediaSource: supportsMediaSource,
-        supportsEncryptedMedia: supportsEncryptedMedia,
-        supportsCodec: supportsCodec,
-        setEncryptedMediaSupported:setEncryptedMediaSupported
-    };
-
-    setup();
-
-    return instance;
 
     let encryptedMediaSupported;
 
@@ -80,4 +68,17 @@ function Capabilities() {
         var canPlay = element.canPlayType(codec);
         return (canPlay === "probably" || canPlay === "maybe");
     }
+
+    let instance = {
+        supportsMediaSource: supportsMediaSource,
+        supportsEncryptedMedia: supportsEncryptedMedia,
+        supportsCodec: supportsCodec,
+        setEncryptedMediaSupported:setEncryptedMediaSupported
+    };
+
+    setup();
+
+    return instance;
 }
+
+export default FactoryMaker.getSingletonFactory(Capabilities);

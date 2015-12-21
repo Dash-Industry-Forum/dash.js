@@ -30,19 +30,7 @@
  */
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-export default FactoryMaker.getSingletonFactory(MediaSourceExtensions);
-
 function MediaSourceExtensions() {
-    let instance = {
-        createMediaSource: createMediaSource,
-        attachMediaSource: attachMediaSource,
-        detachMediaSource: detachMediaSource,
-        setDuration: setDuration,
-        signalEndOfStream: signalEndOfStream
-    };
-
-    return instance;
-
     function createMediaSource() {
 
         var hasWebKit = ("WebKitMediaSource" in window);
@@ -94,4 +82,16 @@ function MediaSourceExtensions() {
 
         source.endOfStream();
     }
+    
+    let instance = {
+        createMediaSource: createMediaSource,
+        attachMediaSource: attachMediaSource,
+        detachMediaSource: detachMediaSource,
+        setDuration: setDuration,
+        signalEndOfStream: signalEndOfStream
+    };
+
+    return instance;
 }
+
+export default FactoryMaker.getSingletonFactory(MediaSourceExtensions);

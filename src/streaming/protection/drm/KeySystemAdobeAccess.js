@@ -36,9 +36,11 @@
  * @implements KeySystem
  */
 import FactoryMaker from '../../../core/FactoryMaker.js';
-export default FactoryMaker.getSingletonFactory(KeySystemAdobeAccess);
+
 //TODO implement
 function KeySystemAdobeAccess() {
     let instance = {};
     return instance;
 }
+
+export default FactoryMaker.getSingletonFactory(KeySystemAdobeAccess);

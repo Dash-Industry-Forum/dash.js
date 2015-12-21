@@ -39,22 +39,8 @@ import FactoryMaker from '../../../core/FactoryMaker.js';
 const QUALITY_SWITCH_RULES = "qualitySwitchRules";
 const ABANDON_FRAGMENT_RULES = "abandonFragmentRules";
 
-let factory =  FactoryMaker.getSingletonFactory(ABRRulesCollection);
-
-factory.QUALITY_SWITCH_RULES = QUALITY_SWITCH_RULES;
-factory.ABANDON_FRAGMENT_RULES = ABANDON_FRAGMENT_RULES;
-
-export default factory;
-
 function ABRRulesCollection() {
     let context = this.context;
-
-    let instance = {
-        initialize:initialize,
-        getRules:getRules
-    };
-
-    return instance;
 
     let qualitySwitchRules,
         abandonFragmentRules;
@@ -85,4 +71,18 @@ function ABRRulesCollection() {
                 return null;
         }
     }
+
+    let instance = {
+        initialize:initialize,
+        getRules:getRules
+    };
+
+    return instance;
 }
+
+let factory =  FactoryMaker.getSingletonFactory(ABRRulesCollection);
+
+factory.QUALITY_SWITCH_RULES = QUALITY_SWITCH_RULES;
+factory.ABANDON_FRAGMENT_RULES = ABANDON_FRAGMENT_RULES;
+
+export default factory;

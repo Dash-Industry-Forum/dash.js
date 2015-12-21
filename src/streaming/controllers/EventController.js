@@ -33,8 +33,6 @@ import VideoModel from '../models/VideoModel.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
 
-export default FactoryMaker.getSingletonFactory(EventController);
-
 function EventController() {
 
     const MPD_RELOAD_SCHEME = "urn:mpeg:dash:event:2012";
@@ -42,18 +40,6 @@ function EventController() {
 
     let context = this.context;
     let log = Debug(context).getInstance().log;
-
-    let instance = {
-        initialize: initialize,
-        addInlineEvents : addInlineEvents,
-        addInbandEvents : addInbandEvents,
-        clear : clear,
-        start: start,
-        setConfig: setConfig,
-        reset : reset
-    };
-
-    return instance;
 
     let inlineEvents, // Holds all Inline Events not triggered yet
         inbandEvents, // Holds all Inband Events not triggered yet
@@ -204,4 +190,18 @@ function EventController() {
         inbandEvents = null;
         activeEvents = null;
     }
+
+    let instance = {
+        initialize: initialize,
+        addInlineEvents : addInlineEvents,
+        addInbandEvents : addInbandEvents,
+        clear : clear,
+        start: start,
+        setConfig: setConfig,
+        reset : reset
+    };
+
+    return instance;
 }
+
+export default FactoryMaker.getSingletonFactory(EventController);

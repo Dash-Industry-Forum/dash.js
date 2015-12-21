@@ -32,8 +32,6 @@ import ErrorHandler from '../streaming/ErrorHandler.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 import Debug from '../core/Debug.js';
 
-export default FactoryMaker.getClassFactory(DashParser);
-
 function DashParser(/*config*/) {
 
     const SECONDS_IN_YEAR = 365 * 24 * 60 * 60;
@@ -46,13 +44,6 @@ function DashParser(/*config*/) {
 
     let context = this.context;
     let log = Debug(context).getInstance().log;
-
-    let instance = {
-        parse:parse
-    }
-
-    setup();
-    return instance;
 
     let durationRegex,
         datetimeRegex,
@@ -70,7 +61,7 @@ function DashParser(/*config*/) {
         matchers = [
             {
                 type: "duration",
-                test: function (attr) {
+                test: function(attr) {
 
                     var attributeList = [
                         "minBufferTime", "mediaPresentationDuration",
@@ -87,18 +78,18 @@ function DashParser(/*config*/) {
                     }
                     return false;
                 },
-                converter: function (str) {
+                converter: function(str) {
                     //str = "P10Y10M10DT10H10M10.1S";
                     var match = durationRegex.exec(str);
-                    var result =  (parseFloat(match[2] || 0) * SECONDS_IN_YEAR +
-                    parseFloat(match[4] || 0) * SECONDS_IN_MONTH +
-                    parseFloat(match[6] || 0) * SECONDS_IN_DAY +
-                    parseFloat(match[8] || 0) * SECONDS_IN_HOUR +
-                    parseFloat(match[10] || 0) * SECONDS_IN_MIN +
-                    parseFloat(match[12] || 0));
+                    var result = (parseFloat(match[2] || 0) * SECONDS_IN_YEAR +
+                        parseFloat(match[4] || 0) * SECONDS_IN_MONTH +
+                        parseFloat(match[6] || 0) * SECONDS_IN_DAY +
+                        parseFloat(match[8] || 0) * SECONDS_IN_HOUR +
+                        parseFloat(match[10] || 0) * SECONDS_IN_MIN +
+                        parseFloat(match[12] || 0));
 
                     if (match[1] !== undefined) {
-                        result= -result;
+                        result = -result;
                     }
 
                     return result;
@@ -106,10 +97,10 @@ function DashParser(/*config*/) {
             },
             {
                 type: "datetime",
-                test: function (attr) {
+                test: function(attr) {
                     return datetimeRegex.test(attr.value);
                 },
-                converter: function (str) {
+                converter: function(str) {
                     var match = datetimeRegex.exec(str);
                     var utcDate;
                     // If the string does not contain a timezone offset different browsers can interpret it either
@@ -117,7 +108,7 @@ function DashParser(/*config*/) {
                     // all browsers
                     utcDate = Date.UTC(
                         parseInt(match[1], 10),
-                        parseInt(match[2], 10)-1, // months start from zero
+                        parseInt(match[2], 10) - 1, // months start from zero
                         parseInt(match[3], 10),
                         parseInt(match[4], 10),
                         parseInt(match[5], 10),
@@ -134,14 +125,14 @@ function DashParser(/*config*/) {
             },
             {
                 type: "numeric",
-                test: function (attr) {
+                test: function(attr) {
                     return numericRegex.test(attr.value);
                 },
-                converter: function (str) {
+                converter: function(str) {
                     return parseFloat(str);
                 }
             }
-        ]
+        ];
     }
 
 
@@ -428,4 +419,13 @@ function DashParser(/*config*/) {
         }
         return manifest;
     }
-};
+
+    let instance = {
+        parse: parse
+    };
+
+    setup();
+    return instance;
+}
+
+export default FactoryMaker.getClassFactory(DashParser);

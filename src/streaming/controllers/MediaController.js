@@ -28,7 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import DOMStorage from '../utils/DOMStorage.js';
 import Events from '../../core/events/Events.js';
 import EventBus from '../../core/EventBus.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
@@ -40,43 +39,11 @@ const TRACK_SELECTION_MODE_HIGHEST_BITRATE = "highestBitrate";
 const TRACK_SELECTION_MODE_WIDEST_RANGE = "widestRange";
 const DEFAULT_INIT_TRACK_SELECTION_MODE = TRACK_SELECTION_MODE_HIGHEST_BITRATE;
 
-let factory = FactoryMaker.getSingletonFactory(MediaController);
-
-factory.TRACK_SWITCH_MODE_NEVER_REPLACE = TRACK_SWITCH_MODE_NEVER_REPLACE;
-factory.TRACK_SWITCH_MODE_ALWAYS_REPLACE = TRACK_SWITCH_MODE_ALWAYS_REPLACE;
-factory.TRACK_SELECTION_MODE_HIGHEST_BITRATE = TRACK_SELECTION_MODE_HIGHEST_BITRATE;
-factory.TRACK_SELECTION_MODE_WIDEST_RANGE = TRACK_SELECTION_MODE_WIDEST_RANGE;
-factory.DEFAULT_INIT_TRACK_SELECTION_MODE = DEFAULT_INIT_TRACK_SELECTION_MODE;
-
-export default factory;
-
 function MediaController() {
 
     let context = this.context;
     let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
-
-    let instance = {
-        initialize:initialize,
-        checkInitialMediaSettings :checkInitialMediaSettings,
-        addTrack :addTrack,
-        getTracksFor:getTracksFor,
-        getCurrentTrackFor:getCurrentTrackFor,
-        isCurrentTrack:isCurrentTrack,
-        setTrack:setTrack,
-        setInitialSettings:setInitialSettings,
-        getInitialSettings:getInitialSettings,
-        setSwitchMode:setSwitchMode,
-        getSwitchMode:getSwitchMode,
-        setSelectionModeForInitialTrack:setSelectionModeForInitialTrack,
-        getSelectionModeForInitialTrack:getSelectionModeForInitialTrack,
-        isMultiTrackSupportedByType:isMultiTrackSupportedByType,
-        isTracksEqual:isTracksEqual,
-        setConfig :setConfig,
-        reset :reset
-    };
-
-    return instance;
 
     let tracks,
         initialSettings,
@@ -340,7 +307,7 @@ function MediaController() {
      * @memberof MediaController#
      */
     function reset() {
-        resetInitialSettings()
+        resetInitialSettings();
         resetSwitchMode();
         tracks = {};
     }
@@ -482,4 +449,36 @@ function MediaController() {
             }
         };
     }
-};
+
+    let instance = {
+        initialize:initialize,
+        checkInitialMediaSettings :checkInitialMediaSettings,
+        addTrack :addTrack,
+        getTracksFor:getTracksFor,
+        getCurrentTrackFor:getCurrentTrackFor,
+        isCurrentTrack:isCurrentTrack,
+        setTrack:setTrack,
+        setInitialSettings:setInitialSettings,
+        getInitialSettings:getInitialSettings,
+        setSwitchMode:setSwitchMode,
+        getSwitchMode:getSwitchMode,
+        setSelectionModeForInitialTrack:setSelectionModeForInitialTrack,
+        getSelectionModeForInitialTrack:getSelectionModeForInitialTrack,
+        isMultiTrackSupportedByType:isMultiTrackSupportedByType,
+        isTracksEqual:isTracksEqual,
+        setConfig :setConfig,
+        reset :reset
+    };
+
+    return instance;
+}
+
+let factory = FactoryMaker.getSingletonFactory(MediaController);
+
+factory.TRACK_SWITCH_MODE_NEVER_REPLACE = TRACK_SWITCH_MODE_NEVER_REPLACE;
+factory.TRACK_SWITCH_MODE_ALWAYS_REPLACE = TRACK_SWITCH_MODE_ALWAYS_REPLACE;
+factory.TRACK_SELECTION_MODE_HIGHEST_BITRATE = TRACK_SELECTION_MODE_HIGHEST_BITRATE;
+factory.TRACK_SELECTION_MODE_WIDEST_RANGE = TRACK_SELECTION_MODE_WIDEST_RANGE;
+factory.DEFAULT_INIT_TRACK_SELECTION_MODE = DEFAULT_INIT_TRACK_SELECTION_MODE;
+
+export default factory;

@@ -36,8 +36,6 @@ import Events from "../../core/events/Events.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
 
-export default FactoryMaker.getSingletonFactory(PlaybackController);
-
 function PlaybackController() {
 
     //This value influences the startup time for live.
@@ -47,34 +45,8 @@ function PlaybackController() {
     let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
 
-    let instance = {
-        initialize: initialize,
-        setConfig: setConfig,
-        getStreamStartTime: getStreamStartTime,
-        getTimeToStreamEnd: getTimeToStreamEnd,
-        isPlaybackStarted: isPlaybackStarted,
-        getStreamId: getStreamId,
-        getStreamDuration: getStreamDuration,
-        getTime: getTime,
-        getPlaybackRate: getPlaybackRate,
-        getPlayedRanges: getPlayedRanges,
-        getIsDynamic: getIsDynamic,
-        setLiveStartTime: setLiveStartTime,
-        getLiveStartTime: getLiveStartTime,
-        getLiveDelay: getLiveDelay,
-        start: start,
-        isPaused: isPaused,
-        pause: pause,
-        isSeeking: isSeeking,
-        seek: seek,
-        reset: reset
-    };
-
-    setup();
-
-    return instance;
-
-    let streamController,
+    let instance,
+        streamController,
         timelineConverter,
         metricsModel,
         metricsExt,
@@ -421,7 +393,7 @@ function PlaybackController() {
             bufferEndTime = ranges.end(lastRange);
             remainingUnbufferedDuration = getStreamStartTime(streamInfo) + streamInfo.duration - bufferEndTime;
         }
-        eventBus.trigger(Events.PLAYBACK_PROGRESS, {bufferedRanges: videoModel.getElement().buffered, remainingUnbufferedDuration: remainingUnbufferedDuration})
+        eventBus.trigger(Events.PLAYBACK_PROGRESS, { bufferedRanges: videoModel.getElement().buffered, remainingUnbufferedDuration: remainingUnbufferedDuration });
     }
 
     function onPlaybackRateChanged() {
@@ -514,4 +486,33 @@ function PlaybackController() {
         videoModel.listen("loadedmetadata", onPlaybackMetaDataLoaded);
         videoModel.listen("ended", onPlaybackEnded);
     }
+
+    instance = {
+        initialize: initialize,
+        setConfig: setConfig,
+        getStreamStartTime: getStreamStartTime,
+        getTimeToStreamEnd: getTimeToStreamEnd,
+        isPlaybackStarted: isPlaybackStarted,
+        getStreamId: getStreamId,
+        getStreamDuration: getStreamDuration,
+        getTime: getTime,
+        getPlaybackRate: getPlaybackRate,
+        getPlayedRanges: getPlayedRanges,
+        getIsDynamic: getIsDynamic,
+        setLiveStartTime: setLiveStartTime,
+        getLiveStartTime: getLiveStartTime,
+        getLiveDelay: getLiveDelay,
+        start: start,
+        isPaused: isPaused,
+        pause: pause,
+        isSeeking: isSeeking,
+        seek: seek,
+        reset: reset
+    };
+
+    setup();
+
+    return instance;
 }
+
+export default FactoryMaker.getSingletonFactory(PlaybackController);

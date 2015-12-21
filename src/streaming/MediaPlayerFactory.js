@@ -1,8 +1,6 @@
 import FactoryMaker from '../core/FactoryMaker.js';
 import MediaPlayer from './MediaPlayer.js';
 
-export default FactoryMaker.getSingletonFactory(MediaPlayerFactory);
-
 function MediaPlayerFactory() {
 
     /**
@@ -10,13 +8,6 @@ function MediaPlayerFactory() {
      * @type {string}
      */
     const SUPPORTED_MIME_TYPE = "application/dash+xml";
-
-    let instance = {
-        create: create,
-        createAll: createAll
-    };
-
-    return instance;
 
     /**
      *  A new MediaPlayer is instantiated for the supplied videoElement and optional source and context.  If no context is provided,
@@ -73,4 +64,13 @@ function MediaPlayerFactory() {
         }
         return aPlayers;
     }
+
+    let instance = {
+        create: create,
+        createAll: createAll
+    };
+
+    return instance;
 }
+
+export default FactoryMaker.getSingletonFactory(MediaPlayerFactory);

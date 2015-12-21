@@ -33,19 +33,9 @@ import FactoryMaker from '../core/FactoryMaker.js';
 const SECONDS_IN_HOUR = 60 * 60; // Expression of an hour in seconds
 const SECONDS_IN_MIN = 60; // Expression of a minute in seconds
 
-export default FactoryMaker.getSingletonFactory(TTMLParser);
-
 function TTMLParser() {
 
     //let context = this.context;
-
-    let instance = {
-        parse: parse,
-        setConfig: setConfig
-    };
-
-    setup();
-    return instance;
 
     /*
      * This TTML parser follows "EBU-TT-D SUBTITLING DISTRIBUTION FORMAT - tech3380" spec - https://tech.ebu.ch/docs/tech/tech3380.pdf.
@@ -1166,4 +1156,14 @@ function TTMLParser() {
             }
         }
     }
+
+    let instance = {
+        parse: parse,
+        setConfig: setConfig
+    };
+
+    setup();
+    return instance;
 }
+
+export default FactoryMaker.getSingletonFactory(TTMLParser);

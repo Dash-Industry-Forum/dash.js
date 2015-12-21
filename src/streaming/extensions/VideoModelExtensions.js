@@ -29,16 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import FactoryMaker from '../../core/FactoryMaker.js';
-export default FactoryMaker.getSingletonFactory(VideoModelExtensions);
 
 function VideoModelExtensions() {
-
-    let instance = {
-        getPlaybackQuality:getPlaybackQuality
-    }
-
-    return instance;
-
     function getPlaybackQuality(videoElement) {
         var hasWebKit = ("webkitDroppedFrameCount" in videoElement);
         var hasQuality = ("getVideoPlaybackQuality" in videoElement);
@@ -53,4 +45,12 @@ function VideoModelExtensions() {
 
         return result;
     }
-};
+
+    let instance = {
+        getPlaybackQuality: getPlaybackQuality
+    };
+
+    return instance;
+}
+
+export default FactoryMaker.getSingletonFactory(VideoModelExtensions);

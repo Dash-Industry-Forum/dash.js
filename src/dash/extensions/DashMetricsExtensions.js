@@ -34,34 +34,10 @@ import ManifestModel from "../../streaming/models/ManifestModel.js";
 import DashManifestExtensions from "../../dash/extensions/DashManifestExtensions.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-export default FactoryMaker.getSingletonFactory(DashMetricsExtensions);
-
-
 function DashMetricsExtensions() {
 
     let context = this.context;
     let manifestModel = ManifestModel(context).getInstance();//TODO Need to pass this in not bake in
-
-    let instance = {
-        getBandwidthForRepresentation: getBandwidthForRepresentation,
-        getIndexForRepresentation: getIndexForRepresentation,
-        getMaxIndexForBufferType: getMaxIndexForBufferType,
-        getMaxAllowedIndexForBufferType: getMaxAllowedIndexForBufferType,
-        getCurrentRepresentationSwitch: getCurrentRepresentationSwitch,
-        getCurrentBufferLevel: getCurrentBufferLevel,
-        getCurrentPlaybackRate: getCurrentPlaybackRate,
-        getCurrentHttpRequest: getCurrentHttpRequest,
-        getHttpRequests: getHttpRequests,
-        getCurrentDroppedFrames: getCurrentDroppedFrames,
-        getCurrentSchedulingInfo: getCurrentSchedulingInfo,
-        getCurrentDVRInfo: getCurrentDVRInfo,
-        getCurrentManifestUpdate: getCurrentManifestUpdate,
-        getLatestFragmentRequestHeaderValueByID: getLatestFragmentRequestHeaderValueByID,
-        getLatestMPDRequestHeaderValueByID: getLatestMPDRequestHeaderValueByID,
-        getRequestsQueue: getRequestsQueue
-    }
-
-    return instance;
 
     function getBandwidthForRepresentation(representationId, periodId) {
         var representation;
@@ -433,4 +409,27 @@ function DashMetricsExtensions() {
 
         return -1;
     }
-};
+
+    let instance = {
+        getBandwidthForRepresentation: getBandwidthForRepresentation,
+        getIndexForRepresentation: getIndexForRepresentation,
+        getMaxIndexForBufferType: getMaxIndexForBufferType,
+        getMaxAllowedIndexForBufferType: getMaxAllowedIndexForBufferType,
+        getCurrentRepresentationSwitch: getCurrentRepresentationSwitch,
+        getCurrentBufferLevel: getCurrentBufferLevel,
+        getCurrentPlaybackRate: getCurrentPlaybackRate,
+        getCurrentHttpRequest: getCurrentHttpRequest,
+        getHttpRequests: getHttpRequests,
+        getCurrentDroppedFrames: getCurrentDroppedFrames,
+        getCurrentSchedulingInfo: getCurrentSchedulingInfo,
+        getCurrentDVRInfo: getCurrentDVRInfo,
+        getCurrentManifestUpdate: getCurrentManifestUpdate,
+        getLatestFragmentRequestHeaderValueByID: getLatestFragmentRequestHeaderValueByID,
+        getLatestMPDRequestHeaderValueByID: getLatestMPDRequestHeaderValueByID,
+        getRequestsQueue: getRequestsQueue
+    };
+
+    return instance;
+}
+
+export default FactoryMaker.getSingletonFactory(DashMetricsExtensions);

@@ -39,27 +39,9 @@ const SCHEDULING_RULE = 0;
 const ABR_RULE = 1;
 const SYNC_RULE = 2;
 
-let factory =  FactoryMaker.getSingletonFactory(RulesController);
-factory.SCHEDULING_RULE = SCHEDULING_RULE;
-factory.ABR_RULE = ABR_RULE;
-factory.SYNC_RULE = SYNC_RULE;
-
-export default factory;
-
 function RulesController() {
 
     let context = this.context;
-
-    let instance = {
-        initialize:initialize,
-        setConfig: setConfig,
-        setRules: setRules,
-        addRules: addRules,
-        applyRules: applyRules,
-        reset: reset
-    };
-
-    return instance;
 
     let rules,
         ruleMandatoryProperties;
@@ -255,4 +237,22 @@ function RulesController() {
             }
         }
     }
+
+    let instance = {
+        initialize:initialize,
+        setConfig: setConfig,
+        setRules: setRules,
+        addRules: addRules,
+        applyRules: applyRules,
+        reset: reset
+    };
+
+    return instance;
 }
+
+let factory =  FactoryMaker.getSingletonFactory(RulesController);
+factory.SCHEDULING_RULE = SCHEDULING_RULE;
+factory.ABR_RULE = ABR_RULE;
+factory.SYNC_RULE = SYNC_RULE;
+
+export default factory;

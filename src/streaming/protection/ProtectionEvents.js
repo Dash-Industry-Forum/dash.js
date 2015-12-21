@@ -190,5 +190,6 @@ class ProtectionEvents extends EventsBase {
         this.VIDEO_ELEMENT_SELECTED = "videoElementSelected";
     }
 }
+
 let protectionEvents = new ProtectionEvents();
-export {protectionEvents as default};
+export default protectionEvents;

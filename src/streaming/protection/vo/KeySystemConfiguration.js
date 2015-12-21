@@ -58,4 +58,4 @@ class KeySystemConfiguration {
     }
 }
 
-export default KeySystemConfiguration
+export default KeySystemConfiguration;

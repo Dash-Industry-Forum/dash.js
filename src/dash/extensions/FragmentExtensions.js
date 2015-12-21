@@ -31,18 +31,7 @@
 
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-export default FactoryMaker.getSingletonFactory(FragmentExtensions);
-
 function FragmentExtensions(/*config*/) {
-
-    let instance = {
-        getSamplesInfo: getSamplesInfo,
-        getMediaTimescaleFromMoov: getMediaTimescaleFromMoov,
-        setConfig: setConfig
-    };
-
-    return instance;
-
     let boxParser;
 
     function setConfig(config) {
@@ -96,5 +85,15 @@ function FragmentExtensions(/*config*/) {
         var mdhdBox = isoFile.getBox("mdhd");
 
         return mdhdBox ? mdhdBox.timescale : NaN;
+    }
+
+    let instance = {
+        getSamplesInfo: getSamplesInfo,
+        getMediaTimescaleFromMoov: getMediaTimescaleFromMoov,
+        setConfig: setConfig
     };
-};
+
+    return instance;
+}
+
+export default FactoryMaker.getSingletonFactory(FragmentExtensions);

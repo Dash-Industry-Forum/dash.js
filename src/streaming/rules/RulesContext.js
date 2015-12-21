@@ -31,24 +31,11 @@
 
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-export default FactoryMaker.getClassFactory(RulesContext);
-
 function RulesContext(config) {
 
     let representationInfo = config.streamProcessor.getCurrentRepresentationInfo();
     let sp = config.streamProcessor;
     let currentValue = config.currentValue;
-
-    let instance = {
-        getStreamInfo: getStreamInfo,
-        getMediaInfo: getMediaInfo,
-        getTrackInfo: getTrackInfo,
-        getCurrentValue: getCurrentValue,
-        getManifestInfo: getManifestInfo,
-        getStreamProcessor: getStreamProcessor
-    };
-
-    return instance;
 
     function getStreamInfo() {
         return representationInfo.mediaInfo.streamInfo;
@@ -73,4 +60,17 @@ function RulesContext(config) {
     function getStreamProcessor() {
         return sp;
     }
+
+    let instance = {
+        getStreamInfo: getStreamInfo,
+        getMediaInfo: getMediaInfo,
+        getTrackInfo: getTrackInfo,
+        getCurrentValue: getCurrentValue,
+        getManifestInfo: getManifestInfo,
+        getStreamProcessor: getStreamProcessor
+    };
+
+    return instance;
 }
+
+export default FactoryMaker.getClassFactory(RulesContext);

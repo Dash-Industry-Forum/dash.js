@@ -28,25 +28,14 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import MediaPlayer from '../MediaPlayer.js';
 import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
-
-export default FactoryMaker.getSingletonFactory(ManifestModel);
 
 function  ManifestModel() {
     let context = this.context;
 
     let eventBus = EventBus(context).getInstance();
-
-    let instance = {
-        getValue: getValue,
-        setValue: setValue
-    };
-
-    return instance;
-
     let manifest;
 
     function getValue() {
@@ -57,4 +46,13 @@ function  ManifestModel() {
         manifest = value;
         eventBus.trigger(Events.MANIFEST_LOADED,  {data: value});
     }
-};
+
+    let instance = {
+        getValue: getValue,
+        setValue: setValue
+    };
+
+    return instance;
+}
+
+export default FactoryMaker.getSingletonFactory(ManifestModel);

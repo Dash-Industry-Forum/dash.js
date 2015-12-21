@@ -32,22 +32,10 @@ import EventBus from "./EventBus.js";
 import Events from './events/Events.js';
 import FactoryMaker from './FactoryMaker.js';
 
-export default FactoryMaker.getSingletonFactory(Debug);
-
 function Debug() {
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
-
-    let instance = {
-        log: log,
-        setLogTimestampVisible: setLogTimestampVisible,
-        setLogToBrowserConsole: setLogToBrowserConsole,
-        getLogToBrowserConsole: getLogToBrowserConsole,
-    };
-
-    setup();
-    return instance;
 
     let logToBrowserConsole,
         showLogTimestamp,
@@ -133,4 +121,17 @@ function Debug() {
 
         eventBus.trigger(Events.LOG, {message: message});
     }
+
+    let instance = {
+        log: log,
+        setLogTimestampVisible: setLogTimestampVisible,
+        setLogToBrowserConsole: setLogToBrowserConsole,
+        getLogToBrowserConsole: getLogToBrowserConsole,
+    };
+
+    setup();
+
+    return instance;
 }
+
+export default FactoryMaker.getSingletonFactory(Debug);

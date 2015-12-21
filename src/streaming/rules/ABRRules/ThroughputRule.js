@@ -35,8 +35,6 @@ import HTTPRequest from '../../vo/metrics/HTTPRequest.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 import Debug from '../../../core/Debug.js';
 
-export default FactoryMaker.getClassFactory(ThroughputRule);
-
 function ThroughputRule(config) {
 
     const AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE = 2;
@@ -47,14 +45,6 @@ function ThroughputRule(config) {
 
     let metricsExt = config.metricsExt;
     let metricsModel = config.metricsModel;
-
-    let instance = {
-        execute: execute,
-        reset: reset
-    };
-
-    reset();
-    return instance;
 
     let throughputArray;
 
@@ -147,4 +137,14 @@ function ThroughputRule(config) {
     function reset() {
         throughputArray = [];
     }
+
+    let instance = {
+        execute: execute,
+        reset: reset
+    };
+
+    reset();
+    return instance;
 }
+
+export default FactoryMaker.getClassFactory(ThroughputRule);

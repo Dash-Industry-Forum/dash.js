@@ -30,17 +30,8 @@
  */
 
 import FactoryMaker from '../../core/FactoryMaker.js';
-export default FactoryMaker.getSingletonFactory(RequestModifierExtensions);
 
 function RequestModifierExtensions() {
-
-    let instance = {
-        modifyRequestURL: modifyRequestURL,
-        modifyRequestHeader: modifyRequestHeader
-    };
-
-    return instance;
-
     function modifyRequestURL(url) {
         return url;
     }
@@ -48,4 +39,13 @@ function RequestModifierExtensions() {
     function modifyRequestHeader(request) {
         return request;
     }
-};
+
+    let instance = {
+        modifyRequestURL: modifyRequestURL,
+        modifyRequestHeader: modifyRequestHeader
+    };
+
+    return instance;
+}
+
+export default FactoryMaker.getSingletonFactory(RequestModifierExtensions);

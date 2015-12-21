@@ -33,8 +33,6 @@ import BufferController from '../../controllers/BufferController.js';
 import PlaybackController from '../../controllers/PlaybackController.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
-export default FactoryMaker.getClassFactory(BufferLevelRule);
-
 function BufferLevelRule(config) {
 
     let context = this.context;
@@ -42,13 +40,6 @@ function BufferLevelRule(config) {
     let metricsExt = config.metricsExt;
     let metricsModel = config.metricsModel;
     let textSourceBuffer = config.textSourceBuffer;
-
-    let instance = {
-        execute: execute,
-        reset: reset
-    };
-
-    return instance;
 
     function execute(rulesContext, callback) {
         var mediaInfo = rulesContext.getMediaInfo();
@@ -89,4 +80,13 @@ function BufferLevelRule(config) {
 
         return bufferTarget;
     }
+
+    let instance = {
+        execute: execute,
+        reset: reset
+    };
+
+    return instance;
 }
+
+export default FactoryMaker.getClassFactory(BufferLevelRule);

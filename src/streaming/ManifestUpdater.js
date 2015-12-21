@@ -33,23 +33,11 @@ import Events from '../core/events/Events.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 import Debug from '../core/Debug.js';
 
-export default FactoryMaker.getSingletonFactory(ManifestUpdater);
-
 function ManifestUpdater() {
 
     let context = this.context;
     let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
-
-    let instance = {
-        initialize: initialize,
-        setManifest: setManifest,
-        getManifestLoader: getManifestLoader,
-        setConfig: setConfig,
-        reset: reset
-    };
-
-    return instance;
 
     let refreshDelay,
         refreshTimer,
@@ -177,4 +165,16 @@ function ManifestUpdater() {
         // When streams are ready we can consider manifest update completed. Resolve the update promise.
         isUpdating = false;
     }
+
+    let instance = {
+        initialize: initialize,
+        setManifest: setManifest,
+        getManifestLoader: getManifestLoader,
+        setConfig: setConfig,
+        reset: reset
+    };
+
+    return instance;
 }
+
+export default FactoryMaker.getSingletonFactory(ManifestUpdater);

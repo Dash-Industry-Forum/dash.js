@@ -28,32 +28,21 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import RequestModifierExtensions from '../../streaming/extensions/RequestModifierExtensions.js'
+import RequestModifierExtensions from '../../streaming/extensions/RequestModifierExtensions.js';
 import Segment from '../vo/Segment.js';
 import Error from '../../streaming/vo/Error.js';
 import ErrorHandler from '../../streaming/ErrorHandler.js';
-import Events from '../../core/events/Events.js'
+import Events from '../../core/events/Events.js';
 import EventBus from '../../core/EventBus.js';
 import BoxParser from '../../streaming/utils/BoxParser.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
-
-export default FactoryMaker.getSingletonFactory(BaseURLExtensions);
 
 function  BaseURLExtensions() {
 
     let context = this.context;
     let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
-
-    let instance = {
-        initialize:initialize,
-        loadInitialization: loadInitialization,
-        loadSegments:loadSegments,
-        reset:reset
-    }
-
-    return instance;
 
     let errHandler,
         boxParser,
@@ -300,4 +289,15 @@ function  BaseURLExtensions() {
             eventBus.trigger(Events.SEGMENTS_LOADED, {segments: null, representation: representation, mediaType: type, error: new Error(null, "error loading segments", null)});
         }
     }
-};
+
+    let instance = {
+        initialize: initialize,
+        loadInitialization: loadInitialization,
+        loadSegments: loadSegments,
+        reset: reset
+    };
+
+    return instance;
+}
+
+export default FactoryMaker.getSingletonFactory(BaseURLExtensions);

@@ -38,27 +38,11 @@ import Debug from '../../core/Debug.js';
 const TIME_SYNC_FAILED_ERROR_CODE = 1;
 const HTTP_TIMEOUT_MS = 5000;
 
-let factory = FactoryMaker.getSingletonFactory(TimeSyncController);
-
-factory.TIME_SYNC_FAILED_ERROR_CODE = TIME_SYNC_FAILED_ERROR_CODE;
-factory.HTTP_TIMEOUT_MS = HTTP_TIMEOUT_MS;
-
-export default factory;
-
 function TimeSyncController() {
 
     let context = this.context;
     let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
-
-    let instance = {
-        initialize: initialize,
-        getOffsetToDeviceTimeMs: getOffsetToDeviceTimeMs,
-        setConfig: setConfig,
-        reset: reset
-    };
-
-    return instance;
 
     let offsetToDeviceTimeMs,
         isSynchronizing,
@@ -358,4 +342,20 @@ function TimeSyncController() {
         setIsInitialised(false);
         setIsSynchronizing(false);
     }
+    
+    let instance = {
+        initialize: initialize,
+        getOffsetToDeviceTimeMs: getOffsetToDeviceTimeMs,
+        setConfig: setConfig,
+        reset: reset
+    };
+
+    return instance;
 }
+
+let factory = FactoryMaker.getSingletonFactory(TimeSyncController);
+
+factory.TIME_SYNC_FAILED_ERROR_CODE = TIME_SYNC_FAILED_ERROR_CODE;
+factory.HTTP_TIMEOUT_MS = HTTP_TIMEOUT_MS;
+
+export default factory;

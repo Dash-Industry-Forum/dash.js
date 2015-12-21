@@ -28,13 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import RepresentationController from '../../dash/controllers/RepresentationController.js';
-import FragmentController from './FragmentController.js';
 import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
-
-export default FactoryMaker.getClassFactory(TextController);
 
 function TextController(config) {
 
@@ -43,20 +39,6 @@ function TextController(config) {
 
     let sourceBufferExt = config.sourceBufferExt;
     let errHandler = config.errHandler;
-
-    let instance = {
-        initialize :initialize,
-        createBuffer :createBuffer,
-        getBuffer :getBuffer,
-        setBuffer :setBuffer,
-        getStreamProcessor:getStreamProcessor,
-        setMediaSource :setMediaSource,
-        reset :reset
-    };
-
-    setup();
-
-    return instance;
 
     let initialized,
         mediaSource,
@@ -135,12 +117,28 @@ function TextController(config) {
     }
 
     function onDataUpdateCompleted(e) {
-         if (e.sender.getStreamProcessor() !== streamProcessor) return;
-         eventBus.trigger(Events.TIMED_TEXT_REQUESTED, {index: 0, sender:e.sender}) //TODO make index dynamic if referring to MP?
-     }
+        if (e.sender.getStreamProcessor() !== streamProcessor) return;
+        eventBus.trigger(Events.TIMED_TEXT_REQUESTED, { index: 0, sender: e.sender }); //TODO make index dynamic if referring to MP?
+    }
 
     function onInitFragmentLoaded(e) {
-         if (e.fragmentModel !== streamProcessor.getFragmentModel() || (!e.chunk.bytes)) return;
-         sourceBufferExt.append(buffer, e.chunk);
-     }
-};
+        if (e.fragmentModel !== streamProcessor.getFragmentModel() || (!e.chunk.bytes)) return;
+        sourceBufferExt.append(buffer, e.chunk);
+    }
+
+    let instance = {
+        initialize :initialize,
+        createBuffer :createBuffer,
+        getBuffer :getBuffer,
+        setBuffer :setBuffer,
+        getStreamProcessor:getStreamProcessor,
+        setMediaSource :setMediaSource,
+        reset :reset
+    };
+
+    setup();
+
+    return instance;
+}
+
+export default FactoryMaker.getClassFactory(TextController);

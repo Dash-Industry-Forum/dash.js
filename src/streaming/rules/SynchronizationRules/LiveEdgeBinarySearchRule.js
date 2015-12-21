@@ -35,8 +35,6 @@ import FactoryMaker from '../../../core/FactoryMaker.js';
 
 const SEARCH_TIME_SPAN = 12 * 60 * 60; // set the time span that limits our search range to a 12 hours in seconds
 
-export default FactoryMaker.getClassFactory(LiveEdgeBinarySearchRule);
-
 function LiveEdgeBinarySearchRule(config) {
 
     let context = this.context;
@@ -44,15 +42,6 @@ function LiveEdgeBinarySearchRule(config) {
 
     let adapter = config.adapter;
     let timelineConverter = config.timelineConverter;
-
-    let instance = {
-        execute: execute,
-        reset: reset
-    };
-
-    setup();
-
-    return instance;
 
     let liveEdgeInitialSearchPosition,
         liveEdgeSearchRange,
@@ -227,4 +216,15 @@ function LiveEdgeBinarySearchRule(config) {
             findLiveEdge(searchTime, onSearchForFragmentSucceeded, onSearchForFragmentFailed, req);
         }
     }
+
+    let instance = {
+        execute: execute,
+        reset: reset
+    };
+
+    setup();
+
+    return instance;
 }
+
+export default FactoryMaker.getClassFactory(LiveEdgeBinarySearchRule);

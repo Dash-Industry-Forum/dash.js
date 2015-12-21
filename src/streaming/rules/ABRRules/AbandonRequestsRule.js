@@ -36,21 +36,9 @@ import Debug from '../../../core/Debug.js';
 const GRACE_TIME_THRESHOLD = 500;
 const ABANDON_MULTIPLIER = 1.5;
 
-export default FactoryMaker.getClassFactory(AbandonRequestsRule);
-
 function AbandonRequestsRule(/*config*/) {
-
     let context = this.context;
     let log = Debug(context).getInstance().log;
-
-    let instance = {
-        execute: execute,
-        reset: reset
-    };
-
-    setup();
-
-    return instance;
 
     let fragmentDict,
         abandonDict;
@@ -126,4 +114,15 @@ function AbandonRequestsRule(/*config*/) {
         fragmentDict = {};
         abandonDict = {};
     }
+
+    let instance = {
+        execute: execute,
+        reset: reset
+    };
+
+    setup();
+
+    return instance;
 }
+
+export default FactoryMaker.getClassFactory(AbandonRequestsRule);

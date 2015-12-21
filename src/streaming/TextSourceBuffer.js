@@ -34,22 +34,8 @@ import BoxParser from './utils/BoxParser.js';
 import CustomTimeRanges from './utils/CustomTimeRanges.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
-export default FactoryMaker.getSingletonFactory(TextSourceBuffer);
-
 function  TextSourceBuffer() {
-    
     let context = this.context;
-    
-    let instance = {
-        initialize :initialize,
-        append :append,
-        abort:abort,
-        getAllTracksAreDisabled:getAllTracksAreDisabled,
-        setTextTrack: setTextTrack,
-        setConfig :setConfig
-    };
-
-    return instance;
 
     let errHandler,
         adapter,
@@ -276,4 +262,17 @@ function  TextSourceBuffer() {
         }
         return parser;
     }
+    
+    let instance = {
+        initialize :initialize,
+        append :append,
+        abort:abort,
+        getAllTracksAreDisabled:getAllTracksAreDisabled,
+        setTextTrack: setTextTrack,
+        setConfig :setConfig
+    };
+
+    return instance;
 }
+
+export default FactoryMaker.getSingletonFactory(TextSourceBuffer);

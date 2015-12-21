@@ -41,46 +41,13 @@ import SchedulingInfo from '../vo/metrics/SchedulingInfo.js';
 import PlayList from '../vo/metrics/PlayList.js';
 import EventBus from '../../core/EventBus.js';
 import RequestsQueue from '../vo/metrics/RequestsQueue.js';
-import Events from '../../core/events/Events.js'
+import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
-
-export default FactoryMaker.getSingletonFactory(MetricsModel);
 
 function  MetricsModel() {
     let context = this.context;
 
     let eventBus = EventBus(context).getInstance();
-
-    let instance = {
-        metricsChanged: metricsChanged,
-        metricChanged: metricChanged,
-        metricUpdated: metricUpdated,
-        metricAdded: metricAdded,
-        clearCurrentMetricsForType: clearCurrentMetricsForType,
-        clearAllCurrentMetrics: clearAllCurrentMetrics,
-        getReadOnlyMetricsFor: getReadOnlyMetricsFor,
-        getMetricsFor: getMetricsFor,
-        addTcpConnection: addTcpConnection,
-        addHttpRequest: addHttpRequest,
-        appendHttpTrace: appendHttpTrace,
-        addRepresentationSwitch: addRepresentationSwitch,
-        addBufferLevel: addBufferLevel,
-        addBufferState: addBufferState,
-        addDVRInfo: addDVRInfo,
-        addDroppedFrames: addDroppedFrames,
-        addSchedulingInfo: addSchedulingInfo,
-        addRequestsQueue: addRequestsQueue,
-        addManifestUpdate: addManifestUpdate,
-        updateManifestUpdateInfo: updateManifestUpdateInfo,
-        addManifestUpdateStreamInfo: addManifestUpdateStreamInfo,
-        addManifestUpdateRepresentationInfo: addManifestUpdateRepresentationInfo,
-        addPlayList: addPlayList,
-        appendPlayListTrace: appendPlayListTrace,
-        setConfig: setConfig
-    };
-
-    setup();
-    return instance;
 
     let adapter,
         streamMetrics;
@@ -140,7 +107,7 @@ function  MetricsModel() {
         if (streamMetrics.hasOwnProperty(type)) {
             metrics = streamMetrics[type];
         } else {
-            metrics = new MetricsList()
+            metrics = new MetricsList();
             streamMetrics[type] = metrics;
         }
 
@@ -422,4 +389,37 @@ function  MetricsModel() {
         metricUpdated(playList.stream, adapter.metricsList.PLAY_LIST_TRACE, playList);
         return vo;
     }
-};
+    
+    let instance = {
+        metricsChanged: metricsChanged,
+        metricChanged: metricChanged,
+        metricUpdated: metricUpdated,
+        metricAdded: metricAdded,
+        clearCurrentMetricsForType: clearCurrentMetricsForType,
+        clearAllCurrentMetrics: clearAllCurrentMetrics,
+        getReadOnlyMetricsFor: getReadOnlyMetricsFor,
+        getMetricsFor: getMetricsFor,
+        addTcpConnection: addTcpConnection,
+        addHttpRequest: addHttpRequest,
+        appendHttpTrace: appendHttpTrace,
+        addRepresentationSwitch: addRepresentationSwitch,
+        addBufferLevel: addBufferLevel,
+        addBufferState: addBufferState,
+        addDVRInfo: addDVRInfo,
+        addDroppedFrames: addDroppedFrames,
+        addSchedulingInfo: addSchedulingInfo,
+        addRequestsQueue: addRequestsQueue,
+        addManifestUpdate: addManifestUpdate,
+        updateManifestUpdateInfo: updateManifestUpdateInfo,
+        addManifestUpdateStreamInfo: addManifestUpdateStreamInfo,
+        addManifestUpdateRepresentationInfo: addManifestUpdateRepresentationInfo,
+        addPlayList: addPlayList,
+        appendPlayListTrace: appendPlayListTrace,
+        setConfig: setConfig
+    };
+
+    setup();
+    return instance;
+}
+
+export default FactoryMaker.getSingletonFactory(MetricsModel);
