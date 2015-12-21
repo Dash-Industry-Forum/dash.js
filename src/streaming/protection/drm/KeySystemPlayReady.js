@@ -44,24 +44,8 @@ const uuid = "9a04f079-9840-4286-ab92-e65be0885f95";
 const systemString = "com.microsoft.playready";
 const schemeIdURI = "urn:uuid:" + uuid;
 
-export default FactoryMaker.getSingletonFactory(KeySystemPlayReady);
-
 function KeySystemPlayReady() {
-
-    let instance = {
-        uuid: uuid,
-        schemeIdURI: schemeIdURI,
-        systemString: systemString,
-        getInitData: getInitData,
-        getRequestHeadersFromMessage: getRequestHeadersFromMessage,
-        getLicenseRequestFromMessage: getLicenseRequestFromMessage,
-        getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
-        setPlayReadyMessageFormat: setPlayReadyMessageFormat
-    };
-
     let messageFormat = "utf16";
-
-    return instance;
 
     function getRequestHeadersFromMessage(message) {
         var msg,
@@ -225,4 +209,19 @@ function KeySystemPlayReady() {
         }
         messageFormat = format;
     }
+
+    let instance = {
+        uuid: uuid,
+        schemeIdURI: schemeIdURI,
+        systemString: systemString,
+        getInitData: getInitData,
+        getRequestHeadersFromMessage: getRequestHeadersFromMessage,
+        getLicenseRequestFromMessage: getLicenseRequestFromMessage,
+        getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
+        setPlayReadyMessageFormat: setPlayReadyMessageFormat
+    };
+
+    return instance;
 }
+
+export default FactoryMaker.getSingletonFactory(KeySystemPlayReady);

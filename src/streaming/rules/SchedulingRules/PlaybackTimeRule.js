@@ -32,7 +32,6 @@
 import SwitchRequest from '../SwitchRequest.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 import FragmentRequest from '../../vo/FragmentRequest.js';
-export default FactoryMaker.getClassFactory(PlaybackTimeRule);
 
 function PlaybackTimeRule(config) {
 
@@ -42,12 +41,6 @@ function PlaybackTimeRule(config) {
     let sourceBufferExt = config.sourceBufferExt;
     let virtualBuffer = config.virtualBuffer;
     let textSourceBuffer = config.textSourceBuffer;
-
-    let instance = {
-        execute: execute
-    };
-
-    return instance;
 
     function execute(rulesContext, callback) {
         var mediaType = rulesContext.getMediaInfo().type;
@@ -105,4 +98,12 @@ function PlaybackTimeRule(config) {
 
         callback(SwitchRequest(context).create(request, p));
     }
+
+    let instance = {
+        execute: execute
+    };
+
+    return instance;
 }
+
+export default FactoryMaker.getClassFactory(PlaybackTimeRule);

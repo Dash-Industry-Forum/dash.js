@@ -35,8 +35,6 @@ import Events from '../core/events/Events.js';
 import Debug from '../core/Debug.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
-export default FactoryMaker.getClassFactory(XlinkLoader);
-
 function XlinkLoader(config) {
 
     const RETRY_ATTEMPTS = 1;
@@ -50,12 +48,6 @@ function XlinkLoader(config) {
     let errHandler = config.errHandler;
     let metricsModel = config.metricsModel;
     let requestModifierExt = config.requestModifierExt;
-
-    let instance = {
-        load:load
-    };
-
-    return instance;
 
     function load(url, element, resolveObject) {
         if (url === RESOLVE_TO_ZERO) {
@@ -174,4 +166,12 @@ function XlinkLoader(config) {
             request.onerror();
         }
     }
+
+    let instance = {
+        load:load
+    };
+
+    return instance;
 }
+
+export default FactoryMaker.getClassFactory(XlinkLoader);

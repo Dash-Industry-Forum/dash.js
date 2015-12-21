@@ -29,19 +29,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 let FactoryMaker = (function() {
-
+    let instance;
     let extensions = [];
     let singletonContexts = [];
-
-    let instance = {
-        extend: extend,
-        getSingletonInstance:getSingletonInstance,
-        setSingletonInstance:setSingletonInstance,
-        getSingletonFactory:getSingletonFactory,
-        getClassFactory:getClassFactory
-    }
-
-    return instance;
 
     function extend(name, childInstance, context) {
         let extensionContext = getExtensionContext(context);
@@ -75,7 +65,7 @@ let FactoryMaker = (function() {
     }
 
     function getClassFactory(classConstructor) {
-        return function (context){
+        return function(context) {
 
             if (context === undefined) {
                 context = {};
@@ -83,10 +73,10 @@ let FactoryMaker = (function() {
 
             return {
                 create: function() {
-                    return merge(classConstructor.name, classConstructor.apply({ context:context } ,arguments), context);
+                    return merge(classConstructor.name, classConstructor.apply({ context: context }, arguments), context);
                 }
-            }
-        }
+            };
+        };
     }
 
     function getSingletonFactory(classConstructor) {
@@ -98,18 +88,18 @@ let FactoryMaker = (function() {
             let instance = getSingletonInstance(context, classConstructor.name);
 
             return {
-                getInstance : function() {
+                getInstance: function() {
                     if (instance) {
                         return instance;
                     }
 
                     instance = merge(classConstructor.name, classConstructor.apply({ context: context }, arguments), context);
-                    singletonContexts.push({ name:classConstructor.name, context : context, instance : instance });
+                    singletonContexts.push({ name: classConstructor.name, context: context, instance: instance });
 
                     return instance;
                 }
-            }
-        }
+            };
+        };
     }
 
     function merge(name, classConstructor, context) {
@@ -144,6 +134,15 @@ let FactoryMaker = (function() {
         return extensionContext;
     }
 
+    instance = {
+        extend: extend,
+        getSingletonInstance: getSingletonInstance,
+        setSingletonInstance: setSingletonInstance,
+        getSingletonFactory: getSingletonFactory,
+        getClassFactory: getClassFactory
+    };
+
+    return instance;
 }());
 
 export default FactoryMaker;

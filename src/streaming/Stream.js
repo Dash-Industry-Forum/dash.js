@@ -45,8 +45,6 @@ import Events from '../core/events/Events.js';
 import Debug from '../core/Debug.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
-export default FactoryMaker.getClassFactory(Stream);
-
 function Stream(config) {
 
     const DATA_UPDATE_FAILED_ERROR_CODE = 1;
@@ -62,29 +60,8 @@ function Stream(config) {
     let errHandler = config.errHandler;
     let timelineConverter = config.timelineConverter;
 
-    let instance = {
-        initialize: initialize,
-        activate: activate,
-        deactivate: deactivate,
-        getDuration: getDuration,
-        getStartTime: getStartTime,
-        getStreamIndex: getStreamIndex,
-        getId: getId,
-        getStreamInfo: getStreamInfo,
-        hasMedia: hasMedia,
-        getBitrateListFor: getBitrateListFor,
-        startEventController: startEventController,
-        resetEventController: resetEventController,
-        isActivated: isActivated,
-        isInitialized: isInitialized,
-        updateData: updateData,
-        reset: reset
-    };
-
-    setup();
-    return instance;
-
-    let streamProcessors,
+    let instance,
+        streamProcessors,
         isStreamActivated,
         isMediaInitialized,
         streamInfo,
@@ -557,4 +534,28 @@ function Stream(config) {
         isUpdating = false;
         checkIfInitializationCompleted();
     }
+
+    instance = {
+        initialize: initialize,
+        activate: activate,
+        deactivate: deactivate,
+        getDuration: getDuration,
+        getStartTime: getStartTime,
+        getStreamIndex: getStreamIndex,
+        getId: getId,
+        getStreamInfo: getStreamInfo,
+        hasMedia: hasMedia,
+        getBitrateListFor: getBitrateListFor,
+        startEventController: startEventController,
+        resetEventController: resetEventController,
+        isActivated: isActivated,
+        isInitialized: isInitialized,
+        updateData: updateData,
+        reset: reset
+    };
+
+    setup();
+    return instance;
 }
+
+export default FactoryMaker.getClassFactory(Stream);

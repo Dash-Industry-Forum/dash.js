@@ -31,33 +31,7 @@
 
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-export default FactoryMaker.getSingletonFactory(VideoModel);
-
 function VideoModel() {
-
-    let instance = {
-        initialize:initialize,
-        play: play,
-        pause: pause,
-        isPaused: isPaused,
-        getPlaybackRate: getPlaybackRate,
-        setPlaybackRate: setPlaybackRate,
-        getCurrentTime: getCurrentTime,
-        setCurrentTime: setCurrentTime,
-        setStallState: setStallState,
-        listen: listen,
-        unlisten: unlisten,
-        getElement: getElement,
-        setElement: setElement,
-        getVideoContainer: getVideoContainer,
-        setVideoContainer: setVideoContainer,
-        getTTMLRenderingDiv: getTTMLRenderingDiv,
-        setTTMLRenderingDiv: setTTMLRenderingDiv,
-        setSource: setSource
-    };
-
-    return instance;
-
     let element,
         TTMLRenderingDiv,
         videoContainer,
@@ -207,4 +181,29 @@ function VideoModel() {
             removeStalledStream.call(this, type);
         }
     }
+
+    let instance = {
+        initialize:initialize,
+        play: play,
+        pause: pause,
+        isPaused: isPaused,
+        getPlaybackRate: getPlaybackRate,
+        setPlaybackRate: setPlaybackRate,
+        getCurrentTime: getCurrentTime,
+        setCurrentTime: setCurrentTime,
+        setStallState: setStallState,
+        listen: listen,
+        unlisten: unlisten,
+        getElement: getElement,
+        setElement: setElement,
+        getVideoContainer: getVideoContainer,
+        setVideoContainer: setVideoContainer,
+        getTTMLRenderingDiv: getTTMLRenderingDiv,
+        setTTMLRenderingDiv: setTTMLRenderingDiv,
+        setSource: setSource
+    };
+
+    return instance;
 }
+
+export default FactoryMaker.getSingletonFactory(VideoModel);

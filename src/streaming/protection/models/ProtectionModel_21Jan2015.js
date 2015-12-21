@@ -41,38 +41,15 @@ import ProtectionExtensions from '../ProtectionExtensions.js';
 import NeedKey from '../vo/NeedKey.js';
 import KeyError from '../vo/KeyError.js';
 import KeyMessage from '../vo/KeyMessage.js';
-import KeySystemConfiguration from '../vo/KeySystemConfiguration.js';
 import KeySystemAccess from '../vo/KeySystemAccess.js';
-import SessionToken from '../vo/SessionToken.js';
 import Events from '../../../core/events/Events.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
-
-export default FactoryMaker.getClassFactory(ProtectionModel_21Jan2015);
 
 function ProtectionModel_21Jan2015(config) {
 
     let context = this.context;
     let eventBus = config.eventBus;//Need to pass in here so we can use same instance since this is optional module
     let log = config.log;
-
-    let instance = {
-        getAllInitData:getAllInitData,
-        requestKeySystemAccess:requestKeySystemAccess,
-        getKeySystem:getKeySystem,
-        selectKeySystem:selectKeySystem,
-        setMediaElement:setMediaElement,
-        setServerCertificate:setServerCertificate,
-        createKeySession:createKeySession,
-        updateKeySession:updateKeySession,
-        loadKeySession:loadKeySession,
-        removeKeySession:removeKeySession,
-        closeKeySession:closeKeySession,
-        reset:reset
-    };
-
-    setup();
-
-    return instance;
 
     var keySystem,
         videoElement,
@@ -386,4 +363,25 @@ function ProtectionModel_21Jan2015(config) {
 
         return token;
     }
-};
+
+    let instance = {
+        getAllInitData:getAllInitData,
+        requestKeySystemAccess:requestKeySystemAccess,
+        getKeySystem:getKeySystem,
+        selectKeySystem:selectKeySystem,
+        setMediaElement:setMediaElement,
+        setServerCertificate:setServerCertificate,
+        createKeySession:createKeySession,
+        updateKeySession:updateKeySession,
+        loadKeySession:loadKeySession,
+        removeKeySession:removeKeySession,
+        closeKeySession:closeKeySession,
+        reset:reset
+    };
+
+    setup();
+
+    return instance;
+}
+
+export default FactoryMaker.getClassFactory(ProtectionModel_21Jan2015);

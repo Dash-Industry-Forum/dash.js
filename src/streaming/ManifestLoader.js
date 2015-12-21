@@ -37,8 +37,6 @@ import Events from '../core/events/Events.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 import Debug from '../core/Debug.js';
 
-export default FactoryMaker.getClassFactory(ManifestLoader);
-
 function ManifestLoader(config) {
 
     const RETRY_ATTEMPTS = 3;
@@ -54,15 +52,8 @@ function ManifestLoader(config) {
     let metricsModel = config.metricsModel;
     let requestModifierExt = config.requestModifierExt;
 
-    let instance = {
-        load: load,
-        reset: reset
-    };
-
-    setup();
-    return instance;
-
-    let xlinkController,
+    let instance,
+        xlinkController,
         remainingAttempts;
 
     function setup() {
@@ -214,4 +205,14 @@ function ManifestLoader(config) {
     function onXlinkReady(event) {
         eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, { manifest: event.manifest });
     }
+
+    instance = {
+        load: load,
+        reset: reset
+    };
+
+    setup();
+    return instance;
 }
+
+export default FactoryMaker.getClassFactory(ManifestLoader);

@@ -37,24 +37,10 @@ import FactoryMaker from '../core/FactoryMaker.js';
 
 const LIVE_EDGE_NOT_FOUND_ERROR_CODE = 1;
 
-let factory = FactoryMaker.getSingletonFactory(LiveEdgeFinder);
-factory.LIVE_EDGE_NOT_FOUND_ERROR_CODE = LIVE_EDGE_NOT_FOUND_ERROR_CODE;
-
-export default factory;
-
 function LiveEdgeFinder() {
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
-
-    let instance = {
-        initialize:initialize,
-        abortSearch: abortSearch,
-        getLiveEdge: getLiveEdge,
-        reset: reset
-    };
-
-    return instance;
 
     let timelineConverter,
         streamProcessor,
@@ -119,4 +105,18 @@ function LiveEdgeFinder() {
             return newValue;
         });
     }
+
+    let instance = {
+        initialize:initialize,
+        abortSearch: abortSearch,
+        getLiveEdge: getLiveEdge,
+        reset: reset
+    };
+
+    return instance;
 }
+
+let factory = FactoryMaker.getSingletonFactory(LiveEdgeFinder);
+factory.LIVE_EDGE_NOT_FOUND_ERROR_CODE = LIVE_EDGE_NOT_FOUND_ERROR_CODE;
+
+export default factory;

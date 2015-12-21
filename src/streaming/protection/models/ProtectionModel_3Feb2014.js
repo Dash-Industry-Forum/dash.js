@@ -44,11 +44,8 @@ import KeyError from '../vo/KeyError.js';
 import KeyMessage from '../vo/KeyMessage.js';
 import KeySystemConfiguration from '../vo/KeySystemConfiguration.js';
 import KeySystemAccess from '../vo/KeySystemAccess.js';
-import SessionToken from '../vo/SessionToken.js';
 import Events from '../../../core/events/Events.js';
-import FactoryMaker from '../../../core/FactoryMaker.js'
-
-export default FactoryMaker.getClassFactory(ProtectionModel_3Feb2014);
+import FactoryMaker from '../../../core/FactoryMaker.js';
 
 function ProtectionModel_3Feb2014(config) {
 
@@ -57,24 +54,14 @@ function ProtectionModel_3Feb2014(config) {
     let log = config.log;
     let api = config.api;
 
-    let instance = {
-        getAllInitData:getAllInitData,
-        requestKeySystemAccess:requestKeySystemAccess,
-        selectKeySystem:selectKeySystem,
-        setMediaElement:setMediaElement,
-        createKeySession:createKeySession,
-        updateKeySession:updateKeySession,
-        closeKeySession:closeKeySession,
-        setServerCertificate:setServerCertificate,
-        loadKeySession:loadKeySession,
-        removeKeySession:removeKeySession,
-        reset:reset
-    };
 
-    setup();
-
-    return instance;
-
+    let videoElement,
+        keySystem,
+        mediaKeys,
+        keySystemAccess,
+        sessions,
+        eventHandler,
+        protectionExt;
 
     function setup() {
         videoElement = null;
@@ -85,14 +72,6 @@ function ProtectionModel_3Feb2014(config) {
         protectionExt = ProtectionExtensions(context).getInstance();
         eventHandler = createEventHandler();
     }
-
-
-    let videoElement,
-        keySystem,
-        mediaKeys,
-        keySystemAccess,
-        sessions;
-        eventHandler,
 
     function reset() {
         try {
@@ -295,9 +274,9 @@ function ProtectionModel_3Feb2014(config) {
     }
 
 
-        // IE11 does not let you set MediaKeys until it has entered a certain
-        // readyState, so we need this logic to ensure we don't set the keys
-        // too early
+    // IE11 does not let you set MediaKeys until it has entered a certain
+    // readyState, so we need this logic to ensure we don't set the keys
+    // too early
     function setMediaKeys() {
         var boundDoSetKeys = null;
         var doSetKeys = function() {
@@ -317,7 +296,8 @@ function ProtectionModel_3Feb2014(config) {
     // Function to create our session token objects which manage the EME
     // MediaKeySession and session-specific event handler
     function createSessionToken(keySession, initData) {
-        return { // Implements SessionToken
+        return {
+            // Implements SessionToken
             session: keySession,
             initData: initData,
 
@@ -329,11 +309,11 @@ function ProtectionModel_3Feb2014(config) {
 
                     case api.error:
                         var errorStr = "KeyError"; // TODO: Make better string from event
-                        eventBus.trigger(Events.KEY_ERROR, {data:new KeyError(this, errorStr)});
+                        eventBus.trigger(Events.KEY_ERROR, { data: new KeyError(this, errorStr) });
                         break;
                     case api.message:
                         var message = ArrayBuffer.isView(event.message) ? event.message.buffer : event.message;
-                        eventBus.trigger(Events.INTERNAL_KEY_MESSAGE, {data:new KeyMessage(this, message, event.destinationURL)});
+                        eventBus.trigger(Events.INTERNAL_KEY_MESSAGE, { data: new KeyMessage(this, message, event.destinationURL) });
                         break;
                     case api.ready:
                         log("DRM: Key added.");
@@ -342,7 +322,7 @@ function ProtectionModel_3Feb2014(config) {
 
                     case api.close:
                         log("DRM: Session closed.  SessionID = " + getSessionID());
-                        eventBus.trigger(Events.KEY_SESSION_CLOSED, {data:getSessionID()});
+                        eventBus.trigger(Events.KEY_SESSION_CLOSED, { data: getSessionID() });
                         break;
                 }
             },
@@ -359,5 +339,25 @@ function ProtectionModel_3Feb2014(config) {
                 return "temporary";
             }
         };
+    }
+
+    let instance = {
+        getAllInitData:getAllInitData,
+        requestKeySystemAccess:requestKeySystemAccess,
+        selectKeySystem:selectKeySystem,
+        setMediaElement:setMediaElement,
+        createKeySession:createKeySession,
+        updateKeySession:updateKeySession,
+        closeKeySession:closeKeySession,
+        setServerCertificate:setServerCertificate,
+        loadKeySession:loadKeySession,
+        removeKeySession:removeKeySession,
+        reset:reset
     };
-};
+
+    setup();
+
+    return instance;
+}
+
+export default FactoryMaker.getClassFactory(ProtectionModel_3Feb2014);

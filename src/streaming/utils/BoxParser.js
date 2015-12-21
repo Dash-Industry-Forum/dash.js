@@ -32,16 +32,8 @@
 import IsoFile from './IsoFile.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-export default FactoryMaker.getSingletonFactory(BoxParser);
-
 function BoxParser(/*config*/) {
     let context = this.context;
-
-    let instance = {
-        parse: parse
-    };
-
-    return instance;
 
     /**
      * @param {ArrayBuffer} data
@@ -62,4 +54,12 @@ function BoxParser(/*config*/) {
 
         return dashIsoFile;
     }
+
+    let instance = {
+        parse: parse
+    };
+
+    return instance;
 }
+
+export default FactoryMaker.getSingletonFactory(BoxParser);

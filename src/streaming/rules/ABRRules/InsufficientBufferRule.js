@@ -35,8 +35,6 @@ import Events from "../../../core/events/Events.js";
 import FactoryMaker from '../../../core/FactoryMaker.js';
 import Debug from '../../../core/Debug.js';
 
-export default FactoryMaker.getClassFactory(InsufficientBufferRule);
-
 function InsufficientBufferRule(config) {
 
     let context = this.context;
@@ -44,15 +42,6 @@ function InsufficientBufferRule(config) {
     let eventBus = EventBus(context).getInstance();
 
     let metricsModel = config.metricsModel;
-
-    let instance = {
-        execute: execute,
-        reset: reset
-    };
-
-    setup();
-
-    return instance;
 
     let bufferStateDict,
         lastSwitchTime,
@@ -112,4 +101,15 @@ function InsufficientBufferRule(config) {
         bufferStateDict = {};
         lastSwitchTime = 0;
     }
+
+    let instance = {
+        execute: execute,
+        reset: reset
+    };
+
+    setup();
+
+    return instance;
 }
+
+export default FactoryMaker.getClassFactory(InsufficientBufferRule);

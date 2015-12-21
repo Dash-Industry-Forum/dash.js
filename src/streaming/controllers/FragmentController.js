@@ -37,27 +37,14 @@ import Events from "../../core/events/Events.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
 
-export default FactoryMaker.getClassFactory(FragmentController);
-
 function FragmentController(/*config*/) {
 
     let context = this.context;
     let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
 
-    let instance = {
-        process :process,
-        getModel :getModel,
-        detachModel :detachModel,
-        isInitializationRequest:isInitializationRequest,
-        reset :reset
-    };
-
-    setup();
-
-    return instance;
-
-    let fragmentModels;
+    let instance,
+        fragmentModels;
 
     function setup() {
         fragmentModels = [];
@@ -135,7 +122,7 @@ function FragmentController(/*config*/) {
     }
 
     function onFragmentLoadingCompleted(e) {
-        let scheduleController = e.sender.getScheduleController()
+        let scheduleController = e.sender.getScheduleController();
         if (!findModel(scheduleController)) return;
 
         let request = e.request;
@@ -152,4 +139,18 @@ function FragmentController(/*config*/) {
         chunk = createDataChunk(bytes, request, streamId);
         eventBus.trigger(isInit ? Events.INIT_FRAGMENT_LOADED : Events.MEDIA_FRAGMENT_LOADED, {chunk: chunk, fragmentModel: e.sender});
     }
-};
+
+    instance = {
+        process :process,
+        getModel :getModel,
+        detachModel :detachModel,
+        isInitializationRequest:isInitializationRequest,
+        reset :reset
+    };
+
+    setup();
+
+    return instance;
+}
+
+export default FactoryMaker.getClassFactory(FragmentController);

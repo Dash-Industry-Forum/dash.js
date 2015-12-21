@@ -34,7 +34,7 @@ import ProtectionEvents from './ProtectionEvents.js';
 import ProtectionModel_21Jan2015 from './models/ProtectionModel_21Jan2015.js';
 import ProtectionModel_3Feb2014 from './models/ProtectionModel_3Feb2014.js';
 import ProtectionModel_01b from './models/ProtectionModel_01b.js';
-import FactoryMaker from '../../core/FactoryMaker.js'
+import FactoryMaker from '../../core/FactoryMaker.js';
 
 const APIS_ProtectionModel_01b = [
     // Un-prefixed as per spec
@@ -100,18 +100,8 @@ const APIS_ProtectionModel_3Feb2014 = [
     }
 ];
 
-
-let factory = FactoryMaker.getClassFactory(Protection);
-factory.events = ProtectionEvents;
-export default factory;
-
 function Protection() {
-
     let context = this.context;
-    let instance = {
-        createProtectionSystem:createProtectionSystem
-    }
-    return instance;
 
     /**
      * Create a ProtectionController and associated ProtectionModel for use with
@@ -159,15 +149,15 @@ function Protection() {
             log("EME detected on this user agent! (ProtectionModel_21Jan2015)");
             return ProtectionModel_21Jan2015(context).create({log:log, eventBus:eventBus});
 
-        } else if (getAPI(APIS_ProtectionModel_3Feb2014)){
+        } else if (getAPI(videoElement, APIS_ProtectionModel_3Feb2014)){
 
             log("EME detected on this user agent! (ProtectionModel_3Feb2014)");
-            return ProtectionModel_3Feb2014(context).create({log: log, eventBus:eventBus, api:getAPI(APIS_ProtectionModel_3Feb2014)});
+            return ProtectionModel_3Feb2014(context).create({log: log, eventBus:eventBus, api:getAPI(videoElement, APIS_ProtectionModel_3Feb2014)});
 
-        } else if (getAPI(APIS_ProtectionModel_01b)) {
+        } else if (getAPI(videoElement, APIS_ProtectionModel_01b)) {
 
             log("EME detected on this user agent! (ProtectionModel_01b)");
-            return ProtectionModel_01b(context).create({log: log, eventBus:eventBus, api:getAPI(APIS_ProtectionModel_01b)});
+            return ProtectionModel_01b(context).create({log: log, eventBus:eventBus, api:getAPI(videoElement, APIS_ProtectionModel_01b)});
 
         } else {
 
@@ -177,7 +167,7 @@ function Protection() {
         }
     }
 
-    function getAPI(apis) {
+    function getAPI(videoElement, apis) {
 
         for (var i = 0; i < apis.length; i++) {
             var api = apis[i];
@@ -203,4 +193,14 @@ function Protection() {
 
         return null;
     }
+
+    let instance = {
+        createProtectionSystem: createProtectionSystem
+    };
+
+    return instance;
 }
+
+let factory = FactoryMaker.getClassFactory(Protection);
+factory.events = ProtectionEvents;
+export default factory;

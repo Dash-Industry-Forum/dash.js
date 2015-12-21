@@ -41,8 +41,6 @@ import Events from "../../core/events/Events.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
 
-export default FactoryMaker.getClassFactory(ScheduleController);
-
 function ScheduleController(config) {
 
     let context = this.context;
@@ -58,26 +56,6 @@ function ScheduleController(config) {
     let scheduleRulesCollection = config.scheduleRulesCollection;
     let rulesController = config.rulesController;
     let mediaPlayerModel = config.mediaPlayerModel;
-
-
-    let instance = {
-        initialize:initialize,
-        getStreamProcessor:getStreamProcessor,
-        getSeekTarget:getSeekTarget,
-        setSeekTarget:setSeekTarget,
-        getFragmentModel:getFragmentModel,
-        setTimeToLoadDelay:setTimeToLoadDelay,
-        getTimeToLoadDelay:getTimeToLoadDelay,
-        replaceCanceledRequests:replaceCanceledRequests,
-        start: doStart,
-        stop: doStop,
-        reset:reset
-    };
-
-    setup();
-
-    return instance;
-
 
     let fragmentsToLoad,
         type,
@@ -484,4 +462,24 @@ function ScheduleController(config) {
         seekTarget = NaN;
         playbackController = null;
     }
-};
+
+    let instance = {
+        initialize:initialize,
+        getStreamProcessor:getStreamProcessor,
+        getSeekTarget:getSeekTarget,
+        setSeekTarget:setSeekTarget,
+        getFragmentModel:getFragmentModel,
+        setTimeToLoadDelay:setTimeToLoadDelay,
+        getTimeToLoadDelay:getTimeToLoadDelay,
+        replaceCanceledRequests:replaceCanceledRequests,
+        start: doStart,
+        stop: doStop,
+        reset:reset
+    };
+
+    setup();
+
+    return instance;
+}
+
+export default FactoryMaker.getClassFactory(ScheduleController);

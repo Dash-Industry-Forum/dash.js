@@ -52,18 +52,6 @@ const BUFFER_LOADED = "bufferLoaded";
 const BUFFER_EMPTY = "bufferStalled";
 const STALL_THRESHOLD = 0.5;
 
-let factory = FactoryMaker.getClassFactory(BufferController);
-
-factory.DEFAULT_MIN_BUFFER_TIME = DEFAULT_MIN_BUFFER_TIME;
-factory.BUFFER_TIME_AT_TOP_QUALITY = BUFFER_TIME_AT_TOP_QUALITY;
-factory.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM;
-factory.LONG_FORM_CONTENT_DURATION_THRESHOLD = LONG_FORM_CONTENT_DURATION_THRESHOLD;
-factory.RICH_BUFFER_THRESHOLD = RICH_BUFFER_THRESHOLD;
-factory.BUFFER_LOADED = BUFFER_LOADED;
-factory.BUFFER_EMPTY = BUFFER_EMPTY;
-
-export default factory;
-
 function BufferController(config) {
 
     let context = this.context;
@@ -81,31 +69,8 @@ function BufferController(config) {
     let virtualBuffer = config.virtualBuffer;
     let textSourceBuffer = config.textSourceBuffer;
 
-    let instance = {
-        initialize               :initialize,
-        createBuffer             :createBuffer,
-        getType                  :getType,
-        getStreamProcessor       :getStreamProcessor,
-        setStreamProcessor       :setStreamProcessor,
-        getBuffer                :getBuffer,
-        setBuffer                :setBuffer,
-        getBufferLevel           :getBufferLevel,
-        getMinBufferTime         :getMinBufferTime,
-        setMinBufferTime         :setMinBufferTime,
-        getCriticalBufferLevel   :getCriticalBufferLevel,
-        setMediaSource           :setMediaSource,
-        getMediaSource           :getMediaSource,
-        getIsBufferingCompleted  :getIsBufferingCompleted,
-        getIsAppendingInProgress :getIsAppendingInProgress,
-        reset                    :reset
-    };
-
-    setup();
-
-    return instance;
-
-
-    let requiredQuality,
+    let instance,
+        requiredQuality,
         currentQuality,
         isBufferingCompleted,
         bufferLevel,
@@ -132,18 +97,18 @@ function BufferController(config) {
         mediaPlayerModel;
 
     function setup() {
-        requiredQuality = -1,
-        currentQuality = -1,
-        isBufferingCompleted = false,
-        bufferLevel = 0,
-        bufferTarget = 0,
-        criticalBufferLevel = Number.POSITIVE_INFINITY,
-        maxAppendedIndex = -1,
-        lastIndex = -1,
+        requiredQuality = -1;
+        currentQuality = -1;
+        isBufferingCompleted = false;
+        bufferLevel = 0;
+        bufferTarget = 0;
+        criticalBufferLevel = Number.POSITIVE_INFINITY;
+        maxAppendedIndex = -1;
+        lastIndex = -1;
         buffer = null;
         bufferState = BUFFER_EMPTY;
         wallclockTicked = 0;
-        appendingMediaChunk = false,
+        appendingMediaChunk = false;
         isAppendingInProgress = false;
         isPruningInProgress = false;
         inbandEventFound = false;
@@ -678,7 +643,7 @@ function BufferController(config) {
     }
 
     function onWallclockTimeUpdated() {
-         //constantly prune buffer every x seconds
+        //constantly prune buffer every x seconds
         wallclockTicked += 1;
         if ((wallclockTicked % mediaPlayerModel.getBufferPruningInterval()) === 0 && !isAppendingInProgress) {
             pruneBuffer();
@@ -783,4 +748,39 @@ function BufferController(config) {
 
         buffer = null;
     }
-};
+
+    instance = {
+        initialize               :initialize,
+        createBuffer             :createBuffer,
+        getType                  :getType,
+        getStreamProcessor       :getStreamProcessor,
+        setStreamProcessor       :setStreamProcessor,
+        getBuffer                :getBuffer,
+        setBuffer                :setBuffer,
+        getBufferLevel           :getBufferLevel,
+        getMinBufferTime         :getMinBufferTime,
+        setMinBufferTime         :setMinBufferTime,
+        getCriticalBufferLevel   :getCriticalBufferLevel,
+        setMediaSource           :setMediaSource,
+        getMediaSource           :getMediaSource,
+        getIsBufferingCompleted  :getIsBufferingCompleted,
+        getIsAppendingInProgress :getIsAppendingInProgress,
+        reset                    :reset
+    };
+
+    setup();
+
+    return instance;
+}
+
+let factory = FactoryMaker.getClassFactory(BufferController);
+
+factory.DEFAULT_MIN_BUFFER_TIME = DEFAULT_MIN_BUFFER_TIME;
+factory.BUFFER_TIME_AT_TOP_QUALITY = BUFFER_TIME_AT_TOP_QUALITY;
+factory.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM;
+factory.LONG_FORM_CONTENT_DURATION_THRESHOLD = LONG_FORM_CONTENT_DURATION_THRESHOLD;
+factory.RICH_BUFFER_THRESHOLD = RICH_BUFFER_THRESHOLD;
+factory.BUFFER_LOADED = BUFFER_LOADED;
+factory.BUFFER_EMPTY = BUFFER_EMPTY;
+
+export default factory;

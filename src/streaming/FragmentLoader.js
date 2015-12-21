@@ -34,8 +34,6 @@ import Events from "./../core/events/Events.js";
 import FactoryMaker from '../core/FactoryMaker.js';
 import Debug from '../core/Debug.js';
 
-export default FactoryMaker.getClassFactory(FragmentLoader);
-
 function FragmentLoader(config) {
 
     const RETRY_ATTEMPTS = 3;
@@ -49,15 +47,8 @@ function FragmentLoader(config) {
     let errHandler = config.errHandler;
     let requestModifierExt = config.requestModifierExt;
 
-    let instance = {
-        checkForExistence: checkForExistence,
-        load: load,
-        abort: abort
-    };
-
-    return instance;
-
-    let xhrs;
+    let instance,
+        xhrs;
 
     function doLoad(request, remainingAttempts) {
         var req = new XMLHttpRequest(),
@@ -259,4 +250,14 @@ function FragmentLoader(config) {
 
         xhrs = [];
     }
+
+    instance = {
+        checkForExistence: checkForExistence,
+        load: load,
+        abort: abort
+    };
+
+    return instance;
 }
+
+export default FactoryMaker.getClassFactory(FragmentLoader);

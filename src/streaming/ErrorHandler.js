@@ -32,24 +32,10 @@ import EventBus from './../core/EventBus.js';
 import Events from './../core/events/Events.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
-export default FactoryMaker.getSingletonFactory(ErrorHandler);
-
 function ErrorHandler() {
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
-
-    var instance = {
-        capabilityError: capabilityError,
-        downloadError: downloadError,
-        manifestError: manifestError,
-        timedTextError: timedTextError,
-        mediaSourceError: mediaSourceError,
-        mediaKeySessionError: mediaKeySessionError,
-        mediaKeyMessageError: mediaKeyMessageError
-    };
-
-    return instance;
 
     // "mediasource"|"mediakeys"
     function capabilityError(err) {
@@ -81,4 +67,18 @@ function ErrorHandler() {
     function mediaKeyMessageError(err) {
         eventBus.trigger(Events.ERROR, {error: "key_message", event: err});
     }
+
+    var instance = {
+        capabilityError: capabilityError,
+        downloadError: downloadError,
+        manifestError: manifestError,
+        timedTextError: timedTextError,
+        mediaSourceError: mediaSourceError,
+        mediaKeySessionError: mediaKeySessionError,
+        mediaKeyMessageError: mediaKeyMessageError
+    };
+
+    return instance;
 }
+
+export default FactoryMaker.getSingletonFactory(ErrorHandler);

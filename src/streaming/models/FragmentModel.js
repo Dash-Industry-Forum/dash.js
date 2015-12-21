@@ -41,16 +41,6 @@ const FRAGMENT_MODEL_EXECUTED = "executed";
 const FRAGMENT_MODEL_CANCELED = "canceled";
 const FRAGMENT_MODEL_FAILED = "failed";
 
-
-let factory = FactoryMaker.getClassFactory(FragmentModel);
-
-factory.FRAGMENT_MODEL_LOADING = FRAGMENT_MODEL_LOADING;
-factory.FRAGMENT_MODEL_EXECUTED = FRAGMENT_MODEL_EXECUTED;
-factory.FRAGMENT_MODEL_CANCELED = FRAGMENT_MODEL_CANCELED;
-factory.FRAGMENT_MODEL_FAILED = FRAGMENT_MODEL_FAILED;
-
-export default factory;
-
 function FragmentModel(config) {
 
     let context = this.context;
@@ -59,22 +49,8 @@ function FragmentModel(config) {
 
     let metricsModel = config.metricsModel;
 
-    let instance = {
-        setLoader: setLoader,
-        setScheduleController: setScheduleController,
-        getScheduleController: getScheduleController,
-        getRequests: getRequests,
-        isFragmentLoaded: isFragmentLoaded,
-        removeExecutedRequestsBeforeTime: removeExecutedRequestsBeforeTime,
-        abortRequests: abortRequests,
-        executeRequest: executeRequest,
-        reset: reset
-    };
-
-    setup();
-    return instance;
-
-    let scheduleController,
+    let instance,
+        scheduleController,
         executedRequests,
         loadingRequests,
         delayLoadingTimeout,
@@ -99,13 +75,13 @@ function FragmentModel(config) {
     }
 
     function getScheduleController() {
-        return scheduleController
+        return scheduleController;
     }
 
     function isFragmentLoaded(request) {
         var isEqualComplete = function(req1, req2) {
-                return ((req1.action === FragmentRequest.ACTION_COMPLETE) && (req1.action === req2.action));
-            },
+            return ((req1.action === FragmentRequest.ACTION_COMPLETE) && (req1.action === req2.action));
+        },
 
             isEqualMedia = function(req1, req2) {
                 return ((req1.url === req2.url) && (req1.startTime === req2.startTime));
@@ -345,7 +321,7 @@ function FragmentModel(config) {
         }
 
         addSchedulingInfoMetrics(request, error ? FRAGMENT_MODEL_FAILED : FRAGMENT_MODEL_EXECUTED);
-        eventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, {request: request, response: response, error:error, sender:this})
+        eventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, { request: request, response: response, error: error, sender: this });
     }
 
     function onPlaybackSeeking (){
@@ -353,4 +329,28 @@ function FragmentModel(config) {
             clearTimeout(delayLoadingTimeout);
         }
     }
-};
+
+    instance = {
+        setLoader: setLoader,
+        setScheduleController: setScheduleController,
+        getScheduleController: getScheduleController,
+        getRequests: getRequests,
+        isFragmentLoaded: isFragmentLoaded,
+        removeExecutedRequestsBeforeTime: removeExecutedRequestsBeforeTime,
+        abortRequests: abortRequests,
+        executeRequest: executeRequest,
+        reset: reset
+    };
+
+    setup();
+    return instance;
+}
+
+let factory = FactoryMaker.getClassFactory(FragmentModel);
+
+factory.FRAGMENT_MODEL_LOADING = FRAGMENT_MODEL_LOADING;
+factory.FRAGMENT_MODEL_EXECUTED = FRAGMENT_MODEL_EXECUTED;
+factory.FRAGMENT_MODEL_CANCELED = FRAGMENT_MODEL_CANCELED;
+factory.FRAGMENT_MODEL_FAILED = FRAGMENT_MODEL_FAILED;
+
+export default factory;

@@ -30,22 +30,9 @@
 */
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-export default FactoryMaker.getClassFactory(CustomTimeRanges);
-
 function CustomTimeRanges(/*config*/) {
     let customTimeRangeArray = [],
         length =0;
-
-    return {
-        customTimeRangeArray: customTimeRangeArray,
-        length: length,
-        add: add,
-        clear: clear,
-        remove: remove,
-        mergeRanges: mergeRanges,
-        start: start,
-        end: end
-    };
 
     function add(start,end){
         var i=0;
@@ -145,4 +132,17 @@ function CustomTimeRanges(/*config*/) {
     function end(index) {
         return this.customTimeRangeArray[index].end;
     }
+
+    return {
+        customTimeRangeArray: customTimeRangeArray,
+        length: length,
+        add: add,
+        clear: clear,
+        remove: remove,
+        mergeRanges: mergeRanges,
+        start: start,
+        end: end
+    };
 }
+
+export default FactoryMaker.getClassFactory(CustomTimeRanges);

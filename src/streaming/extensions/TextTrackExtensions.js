@@ -32,30 +32,10 @@ import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-export default FactoryMaker.getSingletonFactory(TextTrackExtensions);
-
 function TextTrackExtensions() {
     let context = this.context;
 
     let eventBus = EventBus(context).getInstance();
-
-    let instance = {
-        initialize          :initialize,
-        displayCConTop      :displayCConTop,
-        addTextTrack        :addTextTrack,
-        addCaptions         :addCaptions,
-        getTextTrack        :getTextTrack,
-        getCurrentTextTrack :getCurrentTextTrack,
-        getCurrentTrackIdx  :getCurrentTrackIdx,
-        setCurrentTrackIdx  :setCurrentTrackIdx,
-        deleteTrackCues     :deleteTrackCues,
-        deleteAllTextTracks :deleteAllTextTracks,
-        deleteTextTrack     :deleteTextTrack,
-        setConfig           :setConfig
-    };
-    
-    return instance;
-
 
     let Cue,
         videoModel,
@@ -508,6 +488,24 @@ function TextTrackExtensions() {
         if (config.videoModel){
             videoModel = config.videoModel;
         }
-
     }
+
+    let instance = {
+        initialize          :initialize,
+        displayCConTop      :displayCConTop,
+        addTextTrack        :addTextTrack,
+        addCaptions         :addCaptions,
+        getTextTrack        :getTextTrack,
+        getCurrentTextTrack :getCurrentTextTrack,
+        getCurrentTrackIdx  :getCurrentTrackIdx,
+        setCurrentTrackIdx  :setCurrentTrackIdx,
+        deleteTrackCues     :deleteTrackCues,
+        deleteAllTextTracks :deleteAllTextTracks,
+        deleteTextTrack     :deleteTextTrack,
+        setConfig           :setConfig
+    };
+    
+    return instance;
 }
+
+export default FactoryMaker.getSingletonFactory(TextTrackExtensions);

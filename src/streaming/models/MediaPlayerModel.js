@@ -5,41 +5,11 @@ const BUFFER_TO_KEEP = 30;
 const BUFFER_PRUNING_INTERVAL = 30;
 const LIVE_DELAY_FRAGMENT_COUNT = 4;
 
-let factory = FactoryMaker.getSingletonFactory(MediaPlayerModel);
-factory.DEFAULT_UTC_TIMING_SOURCE = DEFAULT_UTC_TIMING_SOURCE;
-export default factory;
-
 function MediaPlayerModel() {
-
-    let instance = {
-        setBufferToKeep: setBufferToKeep,
-        getBufferToKeep: getBufferToKeep,
-        setBufferPruningInterval: setBufferPruningInterval,
-        getBufferPruningInterval: getBufferPruningInterval,
-        setScheduleWhilePaused: setScheduleWhilePaused,
-        getScheduleWhilePaused: getScheduleWhilePaused,
-        getUseSuggestedPresentationDelay: getUseSuggestedPresentationDelay,
-        setUseSuggestedPresentationDelay: setUseSuggestedPresentationDelay,
-        setLiveDelayFragmentCount: setLiveDelayFragmentCount,
-        getLiveDelayFragmentCount: getLiveDelayFragmentCount,
-        setUseManifestDateHeaderTimeSource: setUseManifestDateHeaderTimeSource,
-        getUseManifestDateHeaderTimeSource: getUseManifestDateHeaderTimeSource,
-        setUTCTimingSources:setUTCTimingSources,
-        getUTCTimingSources:getUTCTimingSources,
-        reset: reset
-    };
-
-    setup();
-
-    return instance;
-
-
     /*
      BUFFER_TIME_AT_TOP_QUALITY
 
     * */
-
-
     let useManifestDateHeaderTimeSource,
         useSuggestedPresentationDelay,
         UTCTimingSources,
@@ -118,4 +88,30 @@ function MediaPlayerModel() {
     function reset() {
         setup();
     }
+
+    let instance = {
+        setBufferToKeep: setBufferToKeep,
+        getBufferToKeep: getBufferToKeep,
+        setBufferPruningInterval: setBufferPruningInterval,
+        getBufferPruningInterval: getBufferPruningInterval,
+        setScheduleWhilePaused: setScheduleWhilePaused,
+        getScheduleWhilePaused: getScheduleWhilePaused,
+        getUseSuggestedPresentationDelay: getUseSuggestedPresentationDelay,
+        setUseSuggestedPresentationDelay: setUseSuggestedPresentationDelay,
+        setLiveDelayFragmentCount: setLiveDelayFragmentCount,
+        getLiveDelayFragmentCount: getLiveDelayFragmentCount,
+        setUseManifestDateHeaderTimeSource: setUseManifestDateHeaderTimeSource,
+        getUseManifestDateHeaderTimeSource: getUseManifestDateHeaderTimeSource,
+        setUTCTimingSources:setUTCTimingSources,
+        getUTCTimingSources:getUTCTimingSources,
+        reset: reset
+    };
+
+    setup();
+
+    return instance;
 }
+
+let factory = FactoryMaker.getSingletonFactory(MediaPlayerModel);
+factory.DEFAULT_UTC_TIMING_SOURCE = DEFAULT_UTC_TIMING_SOURCE;
+export default factory;

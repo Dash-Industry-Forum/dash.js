@@ -36,15 +36,6 @@ const DEFAULT = 0.5;
 const STRONG = 1;
 const WEAK = 0;
 
-let factory = FactoryMaker.getClassFactory(SwitchRequest);
-
-factory.NO_CHANGE = NO_CHANGE;
-factory.DEFAULT = DEFAULT;
-factory.STRONG = STRONG;
-factory.WEAK = WEAK;
-
-export default factory;
-
 function SwitchRequest (v, p) {
     //TODO refactor all the calls to this to use config to be like everything else.
     let value = (v === undefined) ? NO_CHANGE : v;
@@ -57,3 +48,12 @@ function SwitchRequest (v, p) {
 
     return instance;
 }
+
+let factory = FactoryMaker.getClassFactory(SwitchRequest);
+
+factory.NO_CHANGE = NO_CHANGE;
+factory.DEFAULT = DEFAULT;
+factory.STRONG = STRONG;
+factory.WEAK = WEAK;
+
+export default factory;

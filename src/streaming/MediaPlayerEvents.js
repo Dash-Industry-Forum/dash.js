@@ -31,37 +31,38 @@
 import EventsBase from '../core/events/EventsBase.js';
 
 class MediaPlayerEvents extends EventsBase {
-	constructor () {
-		super();
-		this.BUFFER_EMPTY = "bufferstalled";
-		this.BUFFER_LOADED = "bufferloaded";
-		this.ERROR = "error";
-		this.LOG = "log";
-		this.MANIFEST_LOADED = "manifestloaded";
-		this.METRICS_CHANGED = "metricschanged";
-		this.METRIC_ADDED = "metricadded";
-		this.METRIC_CHANGED = "metricchanged";
-		this.METRIC_UPDATED = "metricupdated";
-		this.PERIOD_SWITCH_COMPLETED = "streamswitchcompleted";
-		this.PERIOD_SWITCH_STARTED = "streamswitchstarted";
-		this.STREAM_INITIALIZED = "streaminitialized";
-		this.TEXT_TRACKS_ADDED = "alltexttracksadded";
-		this.TEXT_TRACK_ADDED = "texttrackadded";
+    constructor () {
+        super();
+        this.BUFFER_EMPTY = "bufferstalled";
+        this.BUFFER_LOADED = "bufferloaded";
+        this.ERROR = "error";
+        this.LOG = "log";
+        this.MANIFEST_LOADED = "manifestloaded";
+        this.METRICS_CHANGED = "metricschanged";
+        this.METRIC_ADDED = "metricadded";
+        this.METRIC_CHANGED = "metricchanged";
+        this.METRIC_UPDATED = "metricupdated";
+        this.PERIOD_SWITCH_COMPLETED = "streamswitchcompleted";
+        this.PERIOD_SWITCH_STARTED = "streamswitchstarted";
+        this.STREAM_INITIALIZED = "streaminitialized";
+        this.TEXT_TRACKS_ADDED = "alltexttracksadded";
+        this.TEXT_TRACK_ADDED = "texttrackadded";
 
-		//Video Element Events.
-		this.CAN_PLAY = "canPlay";
-		this.PLAYBACK_ENDED = "playbackEnded";
-		this.PLAYBACK_ERROR = "playbackError";
-		this.PLAYBACK_METADATA_LOADED = "playbackMetaDataLoaded";
-		this.PLAYBACK_PAUSED = "playbackPaused";
-		this.PLAYBACK_PLAYING = "playbackPlaying";
-		this.PLAYBACK_PROGRESS = "playbackProgress";
-		this.PLAYBACK_RATE_CHANGED = "playbackRateChanged";
-		this.PLAYBACK_SEEKED = "playbackSeeked";
-		this.PLAYBACK_SEEKING = "playbackSeeking";
-		this.PLAYBACK_STARTED = "playbackStarted";
-		this.PLAYBACK_TIME_UPDATED = "playbackTimeUpdated";
-	}
+        //Video Element Events.
+        this.CAN_PLAY = "canPlay";
+        this.PLAYBACK_ENDED = "playbackEnded";
+        this.PLAYBACK_ERROR = "playbackError";
+        this.PLAYBACK_METADATA_LOADED = "playbackMetaDataLoaded";
+        this.PLAYBACK_PAUSED = "playbackPaused";
+        this.PLAYBACK_PLAYING = "playbackPlaying";
+        this.PLAYBACK_PROGRESS = "playbackProgress";
+        this.PLAYBACK_RATE_CHANGED = "playbackRateChanged";
+        this.PLAYBACK_SEEKED = "playbackSeeked";
+        this.PLAYBACK_SEEKING = "playbackSeeking";
+        this.PLAYBACK_STARTED = "playbackStarted";
+        this.PLAYBACK_TIME_UPDATED = "playbackTimeUpdated";
+    }
 }
+
 let mediaPlayerEvents = new MediaPlayerEvents();
-export {mediaPlayerEvents as default};
+export default mediaPlayerEvents;

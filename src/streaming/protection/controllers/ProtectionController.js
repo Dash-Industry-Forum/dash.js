@@ -44,40 +44,18 @@
  */
 
 import CommonEncryption from '../CommonEncryption.js';
-import EventBus from '../../../core/EventBus.js';
 import Events from '../../../core/events/Events.js';
 import MediaCapability from '../vo/MediaCapability.js';
 import KeySystemConfiguration from '../vo/KeySystemConfiguration.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
-import Protection from '../Protection.js'
-export default FactoryMaker.getClassFactory(ProtectionController);
+import Protection from '../Protection.js';
 
 function ProtectionController(config) {
-
-    let context = this.context;
     let protectionExt = config.protectionExt;
     let protectionModel = config.protectionModel;
     let adapter = config.adapter;
-    let eventBus = config.eventBus
+    let eventBus = config.eventBus;
     let log = config.log;
-
-    let instance = {
-        initialize :initialize,
-        createKeySession :createKeySession,
-        loadKeySession :loadKeySession,
-        removeKeySession :removeKeySession,
-        closeKeySession :closeKeySession,
-        setServerCertificate :setServerCertificate,
-        setMediaElement :setMediaElement,
-        setSessionType :setSessionType,
-        setProtectionData :setProtectionData,
-        reset :reset
-    };
-
-    setup();
-    return instance;
-
-
 
     let keySystems,
         pendingNeedKeyData,
@@ -558,7 +536,25 @@ function ProtectionController(config) {
 
         selectKeySystem(supportedKS, false);
     }
-};
+
+    let instance = {
+        initialize :initialize,
+        createKeySession :createKeySession,
+        loadKeySession :loadKeySession,
+        removeKeySession :removeKeySession,
+        closeKeySession :closeKeySession,
+        setServerCertificate :setServerCertificate,
+        setMediaElement :setMediaElement,
+        setSessionType :setSessionType,
+        setProtectionData :setProtectionData,
+        reset :reset
+    };
+
+    setup();
+    return instance;
+}
+
+export default FactoryMaker.getClassFactory(ProtectionController);
 
 /**
  * Key system selection event

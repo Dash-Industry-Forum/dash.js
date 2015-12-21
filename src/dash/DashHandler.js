@@ -32,16 +32,12 @@ import Segment from './vo/Segment.js';
 import FragmentRequest from '../streaming/vo/FragmentRequest.js';
 import Error from '../streaming/vo/Error.js';
 import HTTPRequest from '../streaming/vo/metrics/HTTPRequest.js';
-import MetricsModel from '../streaming/models/MetricsModel.js';
 import Events from '../core/events/Events.js';
 import EventBus from '../core/EventBus.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 import Debug from '../core/Debug.js';
 
 const SEGMENTS_UNAVAILABLE_ERROR_CODE = 1;
-let factory = FactoryMaker.getClassFactory(DashHandler);
-factory.SEGMENTS_UNAVAILABLE_ERROR_CODE = SEGMENTS_UNAVAILABLE_ERROR_CODE;
-export default factory;
 
 function DashHandler(config) {
 
@@ -54,25 +50,8 @@ function DashHandler(config) {
     let metricsExt = config.metricsExt;
     let metricsModel = config.metricsModel;
 
-    let instance = {
-        initialize:initialize,
-        getStreamProcessor:getStreamProcessor,
-        getInitRequest: getInitRequest,
-        getSegmentRequestForTime: getSegmentRequestForTime,
-        getNextSegmentRequest: getNextSegmentRequest,
-        generateSegmentRequestForTime: generateSegmentRequestForTime,
-        updateRepresentation: updateRepresentation,
-        setCurrentTime:setCurrentTime,
-        getCurrentTime:getCurrentTime,
-        getCurrentIndex:getCurrentIndex,
-        reset:reset
-    }
-
-    setup();
-
-    return instance;
-
-    let index,
+    let instance,
+        index,
         requestedTime,
         isDynamic,
         type,
@@ -991,4 +970,26 @@ function DashHandler(config) {
 
         eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender:this, representation: representation});
     }
-};
+
+    instance = {
+        initialize: initialize,
+        getStreamProcessor: getStreamProcessor,
+        getInitRequest: getInitRequest,
+        getSegmentRequestForTime: getSegmentRequestForTime,
+        getNextSegmentRequest: getNextSegmentRequest,
+        generateSegmentRequestForTime: generateSegmentRequestForTime,
+        updateRepresentation: updateRepresentation,
+        setCurrentTime: setCurrentTime,
+        getCurrentTime: getCurrentTime,
+        getCurrentIndex: getCurrentIndex,
+        reset: reset
+    };
+
+    setup();
+
+    return instance;
+}
+
+let factory = FactoryMaker.getClassFactory(DashHandler);
+factory.SEGMENTS_UNAVAILABLE_ERROR_CODE = SEGMENTS_UNAVAILABLE_ERROR_CODE;
+export default factory;

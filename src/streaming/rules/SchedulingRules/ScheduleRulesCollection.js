@@ -41,22 +41,8 @@ import VirtualBuffer from '../../utils/VirtualBuffer.js';
 const FRAGMENTS_TO_SCHEDULE_RULES = "fragmentsToScheduleRules";
 const NEXT_FRAGMENT_RULES = "nextFragmentRules";
 
-let factory = FactoryMaker.getSingletonFactory(ScheduleRulesCollection);
-
-factory.FRAGMENTS_TO_SCHEDULE_RULES = FRAGMENTS_TO_SCHEDULE_RULES;
-factory.NEXT_FRAGMENT_RULES = NEXT_FRAGMENT_RULES;
-
-export default factory;
-
 function ScheduleRulesCollection() {
     let context = this.context;
-
-    let instance = {
-        initialize:initialize,
-        getRules: getRules
-    };
-
-    return instance;
 
     let fragmentsToScheduleRules,
         nextFragmentRules;
@@ -89,4 +75,18 @@ function ScheduleRulesCollection() {
                 return null;
         }
     }
+
+    let instance = {
+        initialize:initialize,
+        getRules: getRules
+    };
+
+    return instance;
 }
+
+let factory = FactoryMaker.getSingletonFactory(ScheduleRulesCollection);
+
+factory.FRAGMENTS_TO_SCHEDULE_RULES = FRAGMENTS_TO_SCHEDULE_RULES;
+factory.NEXT_FRAGMENT_RULES = NEXT_FRAGMENT_RULES;
+
+export default factory;

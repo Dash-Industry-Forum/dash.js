@@ -45,32 +45,10 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 
 const QUOTA_EXCEEDED_ERROR_CODE = 22;
 
-let factory = FactoryMaker.getSingletonFactory(SourceBufferExtensions);
-
-factory.QUOTA_EXCEEDED_ERROR_CODE = QUOTA_EXCEEDED_ERROR_CODE;
-
-export default factory;
-
 function SourceBufferExtensions() {
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
-
-    let instance = {
-        append: append,
-        remove: remove,
-        abort: abort,
-        createSourceBuffer: createSourceBuffer,
-        removeSourceBuffer: removeSourceBuffer,
-        getBufferRange: getBufferRange,
-        getAllRanges: getAllRanges,
-        getTotalBufferedTime: getTotalBufferedTime,
-        getBufferLength: getBufferLength,
-        getRangeDifference: getRangeDifference,
-        setConfig: setConfig
-    };
-
-    return instance;
 
     let manifestExt;
 
@@ -388,4 +366,26 @@ function SourceBufferExtensions() {
             intervalId = setInterval(checkIsUpdateEnded, CHECK_INTERVAL);
         }
     }
-};
+    
+    let instance = {
+        append: append,
+        remove: remove,
+        abort: abort,
+        createSourceBuffer: createSourceBuffer,
+        removeSourceBuffer: removeSourceBuffer,
+        getBufferRange: getBufferRange,
+        getAllRanges: getAllRanges,
+        getTotalBufferedTime: getTotalBufferedTime,
+        getBufferLength: getBufferLength,
+        getRangeDifference: getRangeDifference,
+        setConfig: setConfig
+    };
+
+    return instance;
+}
+
+let factory = FactoryMaker.getSingletonFactory(SourceBufferExtensions);
+
+factory.QUOTA_EXCEEDED_ERROR_CODE = QUOTA_EXCEEDED_ERROR_CODE;
+
+export default factory;

@@ -35,7 +35,6 @@
  * @class ProtectionExtensions
  */
 import CommonEncryption from './CommonEncryption.js';
-import KeySystemConfiguration from './vo/KeySystemConfiguration.js';
 import KeySystemClearKey from './drm/KeySystemClearKey.js';
 import KeySystemWidevine from './drm/KeySystemWidevine.js';
 import KeySystemPlayReady from './drm/KeySystemPlayReady.js';
@@ -45,27 +44,8 @@ import Widevine from './servers/Widevine.js';
 import ClearKey from './servers/ClearKey.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-export default FactoryMaker.getSingletonFactory(ProtectionExtensions);
-
 function  ProtectionExtensions() {
-
     let context = this.context;
-
-    let instance = {
-        initialize: initialize,
-        isClearKey: isClearKey,
-        initDataEquals: initDataEquals,
-        getKeySystems: getKeySystems,
-        getKeySystemBySystemString: getKeySystemBySystemString,
-        getSupportedKeySystemsFromContentProtection: getSupportedKeySystemsFromContentProtection,
-        getSupportedKeySystems: getSupportedKeySystems,
-        getLicenseServer: getLicenseServer,
-        processClearKeyLicenseRequest: processClearKeyLicenseRequest,
-        setConfig: setConfig
-    };
-
-    return instance;
-
     let log,
         keySystems,
         clearkeyKeySystem;
@@ -292,4 +272,21 @@ function  ProtectionExtensions() {
             return null;
         }
     }
-};
+
+    let instance = {
+        initialize: initialize,
+        isClearKey: isClearKey,
+        initDataEquals: initDataEquals,
+        getKeySystems: getKeySystems,
+        getKeySystemBySystemString: getKeySystemBySystemString,
+        getSupportedKeySystemsFromContentProtection: getSupportedKeySystemsFromContentProtection,
+        getSupportedKeySystems: getSupportedKeySystems,
+        getLicenseServer: getLicenseServer,
+        processClearKeyLicenseRequest: processClearKeyLicenseRequest,
+        setConfig: setConfig
+    };
+
+    return instance;
+}
+
+export default FactoryMaker.getSingletonFactory(ProtectionExtensions);

@@ -32,21 +32,7 @@
 import URIFragmentData from '../vo/URIFragmentData.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-export default FactoryMaker.getSingletonFactory(URIQueryAndFragmentModel);
-
 function URIQueryAndFragmentModel() {
-
-    let instance = {
-        initialize: initialize,
-        parseURI: parseURI,
-        getURIFragmentData: getURIFragmentData,
-        getURIQueryData: getURIQueryData,
-        isManifestHTTPS: isManifestHTTPS
-    };
-
-    return instance;
-
-
     let URIFragmentDataVO,
         URIQueryData,
         isHTTPS;
@@ -80,7 +66,8 @@ function URIQueryAndFragmentModel() {
         var testHTTPS = new RegExp(/^(https:)?\/\//i);
         var isQuery = testQuery.test(uri);
         var isFragment = testFragment.test(uri);
-        var isHTTPS = testHTTPS.test(uri);
+        
+        isHTTPS = testHTTPS.test(uri);
 
         function reduceArray(previousValue, currentValue, index, array) {
             var arr =  array[0].split(/[=]/);
@@ -117,4 +104,16 @@ function URIQueryAndFragmentModel() {
 
         return uri;
     }
+
+    let instance = {
+        initialize: initialize,
+        parseURI: parseURI,
+        getURIFragmentData: getURIFragmentData,
+        getURIQueryData: getURIQueryData,
+        isManifestHTTPS: isManifestHTTPS
+    };
+
+    return instance;
 }
+
+export default FactoryMaker.getSingletonFactory(URIQueryAndFragmentModel);

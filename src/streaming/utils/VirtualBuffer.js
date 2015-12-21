@@ -39,26 +39,10 @@ import EventBus from './../../core/EventBus.js';
 import Events from "../../core/events/Events.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-export default FactoryMaker.getSingletonFactory(VirtualBuffer);
-
 function VirtualBuffer() {
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
-
-    let instance = {
-        append: append,
-        extract: extract,
-        getChunks: getChunks,
-        storeAppendedChunk: storeAppendedChunk,
-        updateBufferedRanges: updateBufferedRanges,
-        getTotalBufferLevel: getTotalBufferLevel,
-        setConfig: setConfig,
-        reset: reset
-    };
-
-    setup();
-    return instance;
 
     let data,
         sourceBufferExt;
@@ -390,4 +374,20 @@ function VirtualBuffer() {
 
         return data;
     }
+
+    let instance = {
+        append: append,
+        extract: extract,
+        getChunks: getChunks,
+        storeAppendedChunk: storeAppendedChunk,
+        updateBufferedRanges: updateBufferedRanges,
+        getTotalBufferLevel: getTotalBufferLevel,
+        setConfig: setConfig,
+        reset: reset
+    };
+
+    setup();
+    return instance;
 }
+
+export default FactoryMaker.getSingletonFactory(VirtualBuffer);

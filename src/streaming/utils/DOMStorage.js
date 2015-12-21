@@ -43,32 +43,10 @@ const STORAGE_TYPE_SESSION = "sessionStorage";
 const BITRATE_EXPIRATION = 0;
 const MEDIA_SETTINGS_EXPIRATION = 1;
 
-let factory = FactoryMaker.getSingletonFactory(DOMStorage);
-
-factory.STORAGE_TYPE_LOCAL = STORAGE_TYPE_LOCAL;
-factory.STORAGE_TYPE_SESSION = STORAGE_TYPE_SESSION;
-factory.LOCAL_STORAGE_VIDEO_BITRATE_KEY = LOCAL_STORAGE_VIDEO_BITRATE_KEY;
-factory.LOCAL_STORAGE_AUDIO_BITRATE_KEY = LOCAL_STORAGE_AUDIO_BITRATE_KEY;
-factory.LOCAL_STORAGE_AUDIO_SETTINGS_KEY = LOCAL_STORAGE_AUDIO_SETTINGS_KEY;
-factory.LOCAL_STORAGE_VIDEO_SETTINGS_KEY = LOCAL_STORAGE_VIDEO_SETTINGS_KEY;
-
-export default factory;
-
 function DOMStorage() {
 
     let context = this.context;
     let log = Debug(context).getInstance().log;
-
-    let instance = {
-        checkInitialBitrate: checkInitialBitrate,
-        getSavedMediaSettings: getSavedMediaSettings,
-        enableLastMediaSettingsCaching: enableLastMediaSettingsCaching,
-        enableLastBitrateCaching: enableLastBitrateCaching,
-        isSupported: isSupported
-    };
-
-    setup();
-    return instance;
 
     let supported,
         abrController,
@@ -185,4 +163,26 @@ function DOMStorage() {
             experationDict[type] = ttl;
         }
     }
+    
+    let instance = {
+        checkInitialBitrate: checkInitialBitrate,
+        getSavedMediaSettings: getSavedMediaSettings,
+        enableLastMediaSettingsCaching: enableLastMediaSettingsCaching,
+        enableLastBitrateCaching: enableLastBitrateCaching,
+        isSupported: isSupported
+    };
+
+    setup();
+    return instance;
 }
+
+let factory = FactoryMaker.getSingletonFactory(DOMStorage);
+
+factory.STORAGE_TYPE_LOCAL = STORAGE_TYPE_LOCAL;
+factory.STORAGE_TYPE_SESSION = STORAGE_TYPE_SESSION;
+factory.LOCAL_STORAGE_VIDEO_BITRATE_KEY = LOCAL_STORAGE_VIDEO_BITRATE_KEY;
+factory.LOCAL_STORAGE_AUDIO_BITRATE_KEY = LOCAL_STORAGE_AUDIO_BITRATE_KEY;
+factory.LOCAL_STORAGE_AUDIO_SETTINGS_KEY = LOCAL_STORAGE_AUDIO_SETTINGS_KEY;
+factory.LOCAL_STORAGE_VIDEO_SETTINGS_KEY = LOCAL_STORAGE_VIDEO_SETTINGS_KEY;
+
+export default factory;

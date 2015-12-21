@@ -28,22 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from './FactoryMaker.js'
-
-export default FactoryMaker.getSingletonFactory(EventBus);
+import FactoryMaker from './FactoryMaker.js';
 
 function EventBus() {
     
     let handlers = {};
-
-    let instance = {
-        on: on,
-        off: off,
-        trigger: trigger,
-        reset: reset
-    };
-
-    return instance;
 
     function on(type, listener, scope) {
         if (!type) {
@@ -107,4 +96,15 @@ function EventBus() {
 
         return result;
     }
-};
+
+    let instance = {
+        on: on,
+        off: off,
+        trigger: trigger,
+        reset: reset
+    };
+
+    return instance;
+}
+
+export default FactoryMaker.getSingletonFactory(EventBus);

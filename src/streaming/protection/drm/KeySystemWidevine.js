@@ -43,22 +43,7 @@ const uuid = "edef8ba9-79d6-4ace-a3c8-27dcd51d21ed";
 const systemString = "com.widevine.alpha";
 const schemeIdURI = "urn:uuid:" + uuid;
 
-export default FactoryMaker.getSingletonFactory(KeySystemWidevine);
-
 function KeySystemWidevine() {
-
-    let instance = {
-        uuid: uuid,
-        schemeIdURI: schemeIdURI,
-        systemString: systemString,
-        getInitData: getInitData,
-        getRequestHeadersFromMessage: getRequestHeadersFromMessage,
-        getLicenseRequestFromMessage: getLicenseRequestFromMessage,
-        getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
-    };
-
-    return instance;
-
     function getInitData() {
         return CommonEncryption.parseInitDataFromContentProtection;
     }
@@ -74,4 +59,18 @@ function KeySystemWidevine() {
     function getLicenseServerURLFromInitData(/*initData*/) {
         return null;
     }
+
+    let instance = {
+        uuid: uuid,
+        schemeIdURI: schemeIdURI,
+        systemString: systemString,
+        getInitData: getInitData,
+        getRequestHeadersFromMessage: getRequestHeadersFromMessage,
+        getLicenseRequestFromMessage: getLicenseRequestFromMessage,
+        getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
+    };
+
+    return instance;
 }
+
+export default FactoryMaker.getSingletonFactory(KeySystemWidevine);

@@ -32,8 +32,6 @@
 import IsoBox from '../vo/IsoBox.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-export default FactoryMaker.getClassFactory(IsoFile);
-
 function IsoFile() {
 
     let parsedIsoFile,
@@ -46,18 +44,6 @@ function IsoFile() {
         tfdtProps,
         trunProps,
         trunSampleProps;
-
-    let instance = {
-            getBox: getBox,
-            getBoxes: getBoxes,
-            setData: setData,
-            getLastBox: getLastBox,
-            getOffset: getOffset
-        };
-
-    setup();
-
-    return instance;
 
     /**
     * @param {string} type
@@ -236,4 +222,18 @@ function IsoFile() {
 
         return box;
     }
+
+    let instance = {
+        getBox: getBox,
+        getBoxes: getBoxes,
+        setData: setData,
+        getLastBox: getLastBox,
+        getOffset: getOffset
+    };
+
+    setup();
+
+    return instance;
 }
+
+export default FactoryMaker.getClassFactory(IsoFile);

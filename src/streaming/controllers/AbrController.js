@@ -36,7 +36,6 @@ import FragmentModel from '../models/FragmentModel.js';
 import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
-import Debug from '../../core/Debug.js';
 
 const ABANDON_LOAD = "abandonload";
 const BANDWIDTH_SAFETY = 0.9;
@@ -45,49 +44,10 @@ const ALLOW_LOAD = "allowload";
 const DEFAULT_VIDEO_BITRATE = 1000;
 const DEFAULT_AUDIO_BITRATE = 100;
 
-let factory = FactoryMaker.getSingletonFactory(AbrController);
-
-factory.ABANDON_LOAD = ABANDON_LOAD;
-factory.BANDWIDTH_SAFETY = BANDWIDTH_SAFETY;
-factory.DEFAULT_VIDEO_BITRATE = DEFAULT_VIDEO_BITRATE;
-factory.DEFAULT_AUDIO_BITRATE = DEFAULT_AUDIO_BITRATE;
-
-export default factory;
-
 function AbrController() {
 
     let context = this.context;
-    let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
-
-    let instance = {
-        isPlayingAtTopQuality   :isPlayingAtTopQuality,
-        updateTopQualityIndex   :updateTopQualityIndex,
-        getAverageThroughput    :getAverageThroughput,
-        getBitrateList          :getBitrateList,
-        getQualityForBitrate    :getQualityForBitrate,
-        getMaxAllowedBitrateFor :getMaxAllowedBitrateFor,
-        setMaxAllowedBitrateFor :setMaxAllowedBitrateFor,
-        getInitialBitrateFor    :getInitialBitrateFor,
-        setInitialBitrateFor    :setInitialBitrateFor,
-        setAutoSwitchBitrate    :setAutoSwitchBitrate,
-        getAutoSwitchBitrate    :getAutoSwitchBitrate,
-        getConfidenceFor        :getConfidenceFor,
-        getQualityFor           :getQualityFor,
-        getAbandonmentStateFor  :getAbandonmentStateFor,
-        setAbandonmentStateFor  :setAbandonmentStateFor,
-        setPlaybackQuality      :setPlaybackQuality,
-        getPlaybackQuality      :getPlaybackQuality,
-        setAverageThroughput    :setAverageThroughput,
-        getTopQualityIndexFor   :getTopQualityIndexFor,
-        initialize              :initialize,
-        setConfig               :setConfig,
-        reset                   :reset
-    };
-
-    setup();
-
-    return instance;
 
     let abrRulesCollection,
         rulesController,
@@ -438,4 +398,42 @@ function AbrController() {
             });
         }
     }
-};
+
+    let instance = {
+        isPlayingAtTopQuality   :isPlayingAtTopQuality,
+        updateTopQualityIndex   :updateTopQualityIndex,
+        getAverageThroughput    :getAverageThroughput,
+        getBitrateList          :getBitrateList,
+        getQualityForBitrate    :getQualityForBitrate,
+        getMaxAllowedBitrateFor :getMaxAllowedBitrateFor,
+        setMaxAllowedBitrateFor :setMaxAllowedBitrateFor,
+        getInitialBitrateFor    :getInitialBitrateFor,
+        setInitialBitrateFor    :setInitialBitrateFor,
+        setAutoSwitchBitrate    :setAutoSwitchBitrate,
+        getAutoSwitchBitrate    :getAutoSwitchBitrate,
+        getConfidenceFor        :getConfidenceFor,
+        getQualityFor           :getQualityFor,
+        getAbandonmentStateFor  :getAbandonmentStateFor,
+        setAbandonmentStateFor  :setAbandonmentStateFor,
+        setPlaybackQuality      :setPlaybackQuality,
+        getPlaybackQuality      :getPlaybackQuality,
+        setAverageThroughput    :setAverageThroughput,
+        getTopQualityIndexFor   :getTopQualityIndexFor,
+        initialize              :initialize,
+        setConfig               :setConfig,
+        reset                   :reset
+    };
+
+    setup();
+
+    return instance;
+}
+
+let factory = FactoryMaker.getSingletonFactory(AbrController);
+
+factory.ABANDON_LOAD = ABANDON_LOAD;
+factory.BANDWIDTH_SAFETY = BANDWIDTH_SAFETY;
+factory.DEFAULT_VIDEO_BITRATE = DEFAULT_VIDEO_BITRATE;
+factory.DEFAULT_AUDIO_BITRATE = DEFAULT_AUDIO_BITRATE;
+
+export default factory;

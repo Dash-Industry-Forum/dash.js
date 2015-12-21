@@ -38,20 +38,8 @@
  * @class
  */
 import FactoryMaker from '../../../core/FactoryMaker.js';
-export default FactoryMaker.getSingletonFactory(PlayReady);
 
 function PlayReady() {
-
-    var instance = {
-        getServerURLFromMessage: getServerURLFromMessage,
-        getHTTPMethod: getHTTPMethod,
-        getResponseType: getResponseType,
-        getLicenseMessage: getLicenseMessage,
-        getErrorResponse: getErrorResponse,
-    };
-
-    return instance;
-
     function getServerURLFromMessage(url /*, message, messageType*/) {
         return url;
     }
@@ -71,4 +59,16 @@ function PlayReady() {
     function getErrorResponse(serverResponse/*, keySystemStr, messageType*/) {
         return String.fromCharCode.apply(null, new Uint8Array(serverResponse));
     }
+
+    var instance = {
+        getServerURLFromMessage: getServerURLFromMessage,
+        getHTTPMethod: getHTTPMethod,
+        getResponseType: getResponseType,
+        getLicenseMessage: getLicenseMessage,
+        getErrorResponse: getErrorResponse,
+    };
+
+    return instance;
 }
+
+export default FactoryMaker.getSingletonFactory(PlayReady);

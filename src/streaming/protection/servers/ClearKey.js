@@ -42,20 +42,7 @@ import KeyPair from '../vo/KeyPair.js';
 import ClearKeyKeySet from '../vo/ClearKeyKeySet.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
-export default FactoryMaker.getSingletonFactory(ClearKey);
-
 function ClearKey() {
-
-    var instance = {
-        getServerURLFromMessage: getServerURLFromMessage,
-        getHTTPMethod: getHTTPMethod,
-        getResponseType: getResponseType,
-        getLicenseMessage: getLicenseMessage,
-        getErrorResponse: getErrorResponse,
-    };
-
-    return instance;
-
     function getServerURLFromMessage(url, message/*, messageType*/) {
         // Build ClearKey server query string
         var jsonMsg = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(message)));
@@ -93,4 +80,16 @@ function ClearKey() {
     function getErrorResponse(serverResponse/*, keySystemStr, messageType*/) {
         return String.fromCharCode.apply(null, new Uint8Array(serverResponse));
     }
+
+    var instance = {
+        getServerURLFromMessage: getServerURLFromMessage,
+        getHTTPMethod: getHTTPMethod,
+        getResponseType: getResponseType,
+        getLicenseMessage: getLicenseMessage,
+        getErrorResponse: getErrorResponse,
+    };
+
+    return instance;
 }
+
+export default FactoryMaker.getSingletonFactory(ClearKey);

@@ -34,8 +34,6 @@ import AbrController from '../../controllers/AbrController.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 import Debug from '../../../core/Debug.js';
 
-export default FactoryMaker.getClassFactory(BufferOccupancyRule);
-
 function BufferOccupancyRule(config) {
 
     let context = this.context;
@@ -43,14 +41,7 @@ function BufferOccupancyRule(config) {
 
     let metricsModel = config.metricsModel;
 
-    let instance = {
-        execute: execute,
-        reset: reset
-    };
-
     let lastSwitchTime = 0;
-
-    return instance;
 
     function execute (rulesContext, callback) {
         var now = new Date().getTime() / 1000;
@@ -97,4 +88,13 @@ function BufferOccupancyRule(config) {
     function reset() {
         lastSwitchTime = 0;
     }
+
+    let instance = {
+        execute: execute,
+        reset: reset
+    };
+
+    return instance;
 }
+
+export default FactoryMaker.getClassFactory(BufferOccupancyRule);

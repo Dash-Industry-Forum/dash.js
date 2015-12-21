@@ -36,7 +36,6 @@
  * @class
  */
 import FactoryMaker from '../../../core/FactoryMaker.js';
-export default FactoryMaker.getSingletonFactory(DRMToday);
 
 function DRMToday() {
 
@@ -61,16 +60,6 @@ function DRMToday() {
         }
     };
 
-    var instance = {
-        getServerURLFromMessage: getServerURLFromMessage,
-        getHTTPMethod: getHTTPMethod,
-        getResponseType: getResponseType,
-        getLicenseMessage: getLicenseMessage,
-        getErrorResponse: getErrorResponse,
-    };
-
-    return instance;
-
     function getServerURLFromMessage(url /*, message, messageType*/) {
         return url;
     }
@@ -90,4 +79,16 @@ function DRMToday() {
     function getErrorResponse(serverResponse, keySystemStr/*, messageType*/) {
         return keySystems[keySystemStr].getErrorResponse(serverResponse);
     }
+
+    var instance = {
+        getServerURLFromMessage: getServerURLFromMessage,
+        getHTTPMethod: getHTTPMethod,
+        getResponseType: getResponseType,
+        getLicenseMessage: getLicenseMessage,
+        getErrorResponse: getErrorResponse,
+    };
+
+    return instance;
 }
+
+export default FactoryMaker.getSingletonFactory(DRMToday);

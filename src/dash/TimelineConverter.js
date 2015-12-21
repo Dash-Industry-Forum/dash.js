@@ -28,41 +28,15 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import LiveEdgeFinder from '../streaming/LiveEdgeFinder.js';
-import TimeSyncController from '../streaming/controllers/TimeSyncController.js';
 import EventBus from '../core/EventBus.js';
-import Events from "../core/events/Events.js";
+import Events from '../core/events/Events.js';
 
 import FactoryMaker from '../core/FactoryMaker.js';
-
-export default FactoryMaker.getSingletonFactory(TimelineConverter);
 
 function TimelineConverter() {
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
-
-    let instance = {
-        initialize:initialize,
-        isTimeSyncCompleted:isTimeSyncCompleted,
-        setTimeSyncCompleted:setTimeSyncCompleted,
-        getClientTimeOffset:getClientTimeOffset,
-        getExpectedLiveEdge:getExpectedLiveEdge,
-        setExpectedLiveEdge:setExpectedLiveEdge,
-        calcAvailabilityStartTimeFromPresentationTime: calcAvailabilityStartTimeFromPresentationTime,
-        calcAvailabilityEndTimeFromPresentationTime: calcAvailabilityEndTimeFromPresentationTime,
-        calcPresentationTimeFromWallTime: calcPresentationTimeFromWallTime,
-        calcPresentationTimeFromMediaTime: calcPresentationTimeFromMediaTime,
-        calcPeriodRelativeTimeFromMpdRelativeTime: calcPeriodRelativeTimeFromMpdRelativeTime,
-        calcMpdRelativeTimeFromPeriodRelativeTime: calcMpdRelativeTimeFromPeriodRelativeTime,
-        calcMediaTimeFromPresentationTime: calcMediaTimeFromPresentationTime,
-        calcSegmentAvailabilityRange: calcSegmentAvailabilityRange,
-        calcWallTimeForSegment: calcWallTimeForSegment,
-        calcMSETimeOffset: calcMSETimeOffset,
-        reset:reset
-    }
-
-    return instance;
 
     let clientServerTimeShift,
         isClientServerTimeSyncCompleted,
@@ -236,4 +210,28 @@ function TimelineConverter() {
         isClientServerTimeSyncCompleted = false;
         expectedLiveEdge = NaN;
     }
-};
+
+    let instance = {
+        initialize: initialize,
+        isTimeSyncCompleted: isTimeSyncCompleted,
+        setTimeSyncCompleted: setTimeSyncCompleted,
+        getClientTimeOffset: getClientTimeOffset,
+        getExpectedLiveEdge: getExpectedLiveEdge,
+        setExpectedLiveEdge: setExpectedLiveEdge,
+        calcAvailabilityStartTimeFromPresentationTime: calcAvailabilityStartTimeFromPresentationTime,
+        calcAvailabilityEndTimeFromPresentationTime: calcAvailabilityEndTimeFromPresentationTime,
+        calcPresentationTimeFromWallTime: calcPresentationTimeFromWallTime,
+        calcPresentationTimeFromMediaTime: calcPresentationTimeFromMediaTime,
+        calcPeriodRelativeTimeFromMpdRelativeTime: calcPeriodRelativeTimeFromMpdRelativeTime,
+        calcMpdRelativeTimeFromPeriodRelativeTime: calcMpdRelativeTimeFromPeriodRelativeTime,
+        calcMediaTimeFromPresentationTime: calcMediaTimeFromPresentationTime,
+        calcSegmentAvailabilityRange: calcSegmentAvailabilityRange,
+        calcWallTimeForSegment: calcWallTimeForSegment,
+        calcMSETimeOffset: calcMSETimeOffset,
+        reset: reset
+    };
+
+    return instance;
+}
+
+export default FactoryMaker.getSingletonFactory(TimelineConverter);

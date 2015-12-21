@@ -39,22 +39,8 @@ import DashAdapter from '../../../dash/DashAdapter.js';
 const TIME_SYNCHRONIZED_RULES = "withAccurateTimeSourceRules";
 const BEST_GUESS_RULES = "bestGuestRules";
 
-let factory = FactoryMaker.getSingletonFactory(SynchronizationRulesCollection);
-
-factory.TIME_SYNCHRONIZED_RULES = TIME_SYNCHRONIZED_RULES;
-factory.BEST_GUESS_RULES = BEST_GUESS_RULES;
-
-export default factory;
-
 function SynchronizationRulesCollection() {
     let context = this.context;
-
-    let instance = {
-        initialize: initialize,
-        getRules: getRules
-    };
-
-    return instance;
 
     let withAccurateTimeSourceRules,
         bestGuestRules;
@@ -83,4 +69,18 @@ function SynchronizationRulesCollection() {
                 return null;
         }
     }
+
+    let instance = {
+        initialize: initialize,
+        getRules: getRules
+    };
+
+    return instance;
 }
+
+let factory = FactoryMaker.getSingletonFactory(SynchronizationRulesCollection);
+
+factory.TIME_SYNCHRONIZED_RULES = TIME_SYNCHRONIZED_RULES;
+factory.BEST_GUESS_RULES = BEST_GUESS_RULES;
+
+export default factory;

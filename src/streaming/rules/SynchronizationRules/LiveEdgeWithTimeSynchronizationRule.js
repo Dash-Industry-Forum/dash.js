@@ -32,19 +32,11 @@
 import SwitchRequest from '../SwitchRequest.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
-export default FactoryMaker.getClassFactory(LiveEdgeWithTimeSynchronizationRule);
-
 function LiveEdgeWithTimeSynchronizationRule(config) {
 
     let context = this.context;
 
     let timelineConverter = config.timelineConverter;
-
-    let instance = {
-        execute: execute
-    };
-
-    return instance;
 
     // if the time has been synchronized correctly (which it must have been
     // to end up executing this rule), the last entry in the DVR window
@@ -69,4 +61,12 @@ function LiveEdgeWithTimeSynchronizationRule(config) {
             callback(SwitchRequest(context).create(liveEdgeInitialSearchPosition, p));
         }
     }
+
+    let instance = {
+        execute: execute
+    };
+
+    return instance;
 }
+
+export default FactoryMaker.getClassFactory(LiveEdgeWithTimeSynchronizationRule);

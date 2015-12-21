@@ -39,62 +39,10 @@ import Event from '../vo/Event.js';
 import EventStream from '../vo/EventStream.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-export default FactoryMaker.getSingletonFactory(DashManifestExtensions);
-
 function DashManifestExtensions() {
 
     let context = this.context;
     let timelineConverter = TimelineConverter(context).getInstance();//TODO Need to pass this in not bake in
-
-    let instance = {
-        getIsTypeOf: getIsTypeOf,
-        getIsAudio: getIsAudio,
-        getIsVideo: getIsVideo,
-        getIsText: getIsText,
-        getIsMuxed: getIsMuxed,
-        getIsTextTrack: getIsTextTrack,
-        getIsFragmentedText: getIsFragmentedText,
-        getIsMain: getIsMain,
-        getLanguageForAdaptation: getLanguageForAdaptation,
-        getViewpointForAdaptation: getViewpointForAdaptation,
-        getRolesForAdaptation: getRolesForAdaptation,
-        getAccessibilityForAdaptation: getAccessibilityForAdaptation,
-        getAudioChannelConfigurationForAdaptation: getAudioChannelConfigurationForAdaptation,
-        processAdaptation: processAdaptation,
-        getAdaptationForIndex: getAdaptationForIndex,
-        getIndexForAdaptation: getIndexForAdaptation,
-        getAdaptationForId: getAdaptationForId,
-        getAdaptationsForType: getAdaptationsForType,
-        getAdaptationForType: getAdaptationForType,
-        getCodec: getCodec,
-        getMimeType: getMimeType,
-        getKID: getKID,
-        getContentProtectionData: getContentProtectionData,
-        getIsDynamic: getIsDynamic,
-        getIsDVR: getIsDVR,
-        getIsOnDemand: getIsOnDemand,
-        getDuration: getDuration,
-        getBandwidth: getBandwidth,
-        getRefreshDelay: getRefreshDelay,
-        getRepresentationCount: getRepresentationCount,
-        getBitrateListForAdaptation: getBitrateListForAdaptation,
-        getRepresentationFor: getRepresentationFor,
-        getRepresentationsForAdaptation: getRepresentationsForAdaptation,
-        getAdaptationsForPeriod: getAdaptationsForPeriod,
-        getRegularPeriods: getRegularPeriods,
-        getPeriodId: getPeriodId,
-        getMpd: getMpd,
-        getFetchTime: getFetchTime,
-        getCheckTime: getCheckTime,
-        getEndTimeForLastPeriod: getEndTimeForLastPeriod,
-        getEventsForPeriod: getEventsForPeriod,
-        getEventStreams: getEventStreams,
-        getEventStreamForAdaptationSet: getEventStreamForAdaptationSet,
-        getEventStreamForRepresentation: getEventStreamForRepresentation,
-        getUTCTimingSources: getUTCTimingSources
-    }
-
-    return instance;
 
     function getIsTypeOf(adaptation, type) {
 
@@ -823,4 +771,55 @@ function DashManifestExtensions() {
         return utcTimingEntries;
     }
 
-};
+    let instance = {
+        getIsTypeOf: getIsTypeOf,
+        getIsAudio: getIsAudio,
+        getIsVideo: getIsVideo,
+        getIsText: getIsText,
+        getIsMuxed: getIsMuxed,
+        getIsTextTrack: getIsTextTrack,
+        getIsFragmentedText: getIsFragmentedText,
+        getIsMain: getIsMain,
+        getLanguageForAdaptation: getLanguageForAdaptation,
+        getViewpointForAdaptation: getViewpointForAdaptation,
+        getRolesForAdaptation: getRolesForAdaptation,
+        getAccessibilityForAdaptation: getAccessibilityForAdaptation,
+        getAudioChannelConfigurationForAdaptation: getAudioChannelConfigurationForAdaptation,
+        processAdaptation: processAdaptation,
+        getAdaptationForIndex: getAdaptationForIndex,
+        getIndexForAdaptation: getIndexForAdaptation,
+        getAdaptationForId: getAdaptationForId,
+        getAdaptationsForType: getAdaptationsForType,
+        getAdaptationForType: getAdaptationForType,
+        getCodec: getCodec,
+        getMimeType: getMimeType,
+        getKID: getKID,
+        getContentProtectionData: getContentProtectionData,
+        getIsDynamic: getIsDynamic,
+        getIsDVR: getIsDVR,
+        getIsOnDemand: getIsOnDemand,
+        getDuration: getDuration,
+        getBandwidth: getBandwidth,
+        getRefreshDelay: getRefreshDelay,
+        getRepresentationCount: getRepresentationCount,
+        getBitrateListForAdaptation: getBitrateListForAdaptation,
+        getRepresentationFor: getRepresentationFor,
+        getRepresentationsForAdaptation: getRepresentationsForAdaptation,
+        getAdaptationsForPeriod: getAdaptationsForPeriod,
+        getRegularPeriods: getRegularPeriods,
+        getPeriodId: getPeriodId,
+        getMpd: getMpd,
+        getFetchTime: getFetchTime,
+        getCheckTime: getCheckTime,
+        getEndTimeForLastPeriod: getEndTimeForLastPeriod,
+        getEventsForPeriod: getEventsForPeriod,
+        getEventStreams: getEventStreams,
+        getEventStreamForAdaptationSet: getEventStreamForAdaptationSet,
+        getEventStreamForRepresentation: getEventStreamForRepresentation,
+        getUTCTimingSources: getUTCTimingSources
+    };
+
+    return instance;
+}
+
+export default FactoryMaker.getSingletonFactory(DashManifestExtensions);

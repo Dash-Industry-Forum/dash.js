@@ -43,11 +43,9 @@ import KeyError from '../vo/KeyError.js';
 import KeyMessage from '../vo/KeyMessage.js';
 import KeySystemConfiguration from '../vo/KeySystemConfiguration.js';
 import KeySystemAccess from '../vo/KeySystemAccess.js';
-import SessionToken from '../vo/SessionToken.js';
 import Events from '../../../core/events/Events.js';
 import ErrorHandler from '../../ErrorHandler.js';
-import FactoryMaker from '../../../core/FactoryMaker.js'
-export default FactoryMaker.getClassFactory(ProtectionModel_01b);
+import FactoryMaker from '../../../core/FactoryMaker.js';
 
 function  ProtectionModel_01b(config) {
 
@@ -55,36 +53,6 @@ function  ProtectionModel_01b(config) {
     let eventBus = config.eventBus;//Need to pass in here so we can use same instance since this is optional module
     let log = config.log;
     let api = config.api;
-
-    let instance = {
-        getAllInitData:getAllInitData,
-        requestKeySystemAccess:requestKeySystemAccess,
-        selectKeySystem:selectKeySystem,
-        setMediaElement:setMediaElement,
-        createKeySession:createKeySession,
-        updateKeySession:updateKeySession,
-        closeKeySession:closeKeySession,
-        setServerCertificate:setServerCertificate,
-        loadKeySession:loadKeySession,
-        removeKeySession:removeKeySession,
-        reset:reset
-    };
-
-    setup();
-
-    return instance;
-
-
-    function setup() {
-        videoElement = null;
-        keySystem = null;
-        pendingSessions = [];
-        sessions = [];
-        protectionExt = ProtectionExtensions(context).getInstance();
-        errHandler = ErrorHandler(context).getInstance();
-        eventHandler = createEventHandler();
-    }
-
 
     let videoElement,
         keySystem,
@@ -114,6 +82,15 @@ function  ProtectionModel_01b(config) {
         // versions of the same events
         eventHandler;
 
+    function setup() {
+        videoElement = null;
+        keySystem = null;
+        pendingSessions = [];
+        sessions = [];
+        protectionExt = ProtectionExtensions(context).getInstance();
+        errHandler = ErrorHandler(context).getInstance();
+        eventHandler = createEventHandler();
+    }
 
     function reset() {
         if (videoElement) {
@@ -178,7 +155,7 @@ function  ProtectionModel_01b(config) {
                 found = true;
                 var ksConfig = new KeySystemConfiguration(supportedAudio, supportedVideo);
                 var ks = protectionExt.getKeySystemBySystemString(systemString);
-                eventBus.trigger(Events.KEY_SYSTEM_ACCESS_COMPLETE, {data:new KeySystemAccess(ks, ksConfig)})
+                eventBus.trigger(Events.KEY_SYSTEM_ACCESS_COMPLETE, { data: new KeySystemAccess(ks, ksConfig) });
                 break;
             }
         }
@@ -272,9 +249,9 @@ function  ProtectionModel_01b(config) {
         videoElement[api.cancelKeyRequest](keySystem.systemString, sessionToken.sessionID);
     }
 
-    function setServerCertificate(/*serverCertificate*/) { /* Not supported */ };
-    function loadKeySession(/*sessionID*/) { /* Not supported */ };
-    function removeKeySession(/*sessionToken*/) { /* Not supported */ };
+    function setServerCertificate(/*serverCertificate*/) { /* Not supported */ }
+    function loadKeySession(/*sessionID*/) { /* Not supported */ }
+    function removeKeySession(/*sessionToken*/) { /* Not supported */ }
 
     function createEventHandler() {
         return {
@@ -413,5 +390,25 @@ function  ProtectionModel_01b(config) {
         videoElement.removeEventListener(api.needkey, eventHandler);
         videoElement.removeEventListener(api.keymessage, eventHandler);
         videoElement.removeEventListener(api.keyadded, eventHandler);
+    }
+
+    let instance = {
+        getAllInitData:getAllInitData,
+        requestKeySystemAccess:requestKeySystemAccess,
+        selectKeySystem:selectKeySystem,
+        setMediaElement:setMediaElement,
+        createKeySession:createKeySession,
+        updateKeySession:updateKeySession,
+        closeKeySession:closeKeySession,
+        setServerCertificate:setServerCertificate,
+        loadKeySession:loadKeySession,
+        removeKeySession:removeKeySession,
+        reset:reset
     };
-};
+
+    setup();
+
+    return instance;
+}
+
+export default FactoryMaker.getClassFactory(ProtectionModel_01b);

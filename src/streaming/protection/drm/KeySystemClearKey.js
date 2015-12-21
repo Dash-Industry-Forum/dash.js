@@ -38,23 +38,7 @@ const uuid = "1077efec-c0b2-4d02-ace3-3c1e52e2fb4b";
 const systemString = "org.w3.clearkey";
 const schemeIdURI = "urn:uuid:" + uuid;
 
-export default FactoryMaker.getSingletonFactory(KeySystemClearKey);
-
 function KeySystemClearKey() {
-
-    let instance = {
-        uuid: uuid,
-        schemeIdURI: schemeIdURI,
-        systemString: systemString,
-        getInitData: getInitData,
-        getRequestHeadersFromMessage: getRequestHeadersFromMessage,
-        getLicenseRequestFromMessage: getLicenseRequestFromMessage,
-        getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
-        getClearKeysFromProtectionData: getClearKeysFromProtectionData
-    };
-
-    return instance;
-
     /**
      * Returns desired clearkeys (as specified in the CDM message) from protection data
      *
@@ -101,4 +85,19 @@ function KeySystemClearKey() {
     function getLicenseServerURLFromInitData(/*initData*/) {
         return null;
     }
+
+    let instance = {
+        uuid: uuid,
+        schemeIdURI: schemeIdURI,
+        systemString: systemString,
+        getInitData: getInitData,
+        getRequestHeadersFromMessage: getRequestHeadersFromMessage,
+        getLicenseRequestFromMessage: getLicenseRequestFromMessage,
+        getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
+        getClearKeysFromProtectionData: getClearKeysFromProtectionData
+    };
+
+    return instance;
 }
+
+export default FactoryMaker.getSingletonFactory(KeySystemClearKey);
