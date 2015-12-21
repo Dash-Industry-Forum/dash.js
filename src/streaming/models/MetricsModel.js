@@ -45,11 +45,12 @@ import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 function  MetricsModel() {
-    let context = this.context;
 
+    let context = this.context;
     let eventBus = EventBus(context).getInstance();
 
-    let adapter,
+    let instance,
+        adapter,
         streamMetrics;
 
     function setup() {
@@ -390,7 +391,7 @@ function  MetricsModel() {
         return vo;
     }
     
-    let instance = {
+    instance = {
         metricsChanged: metricsChanged,
         metricChanged: metricChanged,
         metricUpdated: metricUpdated,

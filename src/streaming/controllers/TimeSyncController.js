@@ -44,7 +44,8 @@ function TimeSyncController() {
     let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
 
-    let offsetToDeviceTimeMs,
+    let instance,
+        offsetToDeviceTimeMs,
         isSynchronizing,
         isInitialised,
         useManifestDateHeaderTimeSource,
@@ -343,7 +344,7 @@ function TimeSyncController() {
         setIsSynchronizing(false);
     }
     
-    let instance = {
+    instance = {
         initialize: initialize,
         getOffsetToDeviceTimeMs: getOffsetToDeviceTimeMs,
         setConfig: setConfig,

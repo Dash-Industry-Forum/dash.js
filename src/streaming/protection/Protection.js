@@ -101,6 +101,8 @@ const APIS_ProtectionModel_3Feb2014 = [
 ];
 
 function Protection() {
+
+    let instance;
     let context = this.context;
 
     /**
@@ -194,7 +196,7 @@ function Protection() {
         return null;
     }
 
-    let instance = {
+    instance = {
         createProtectionSystem: createProtectionSystem
     };
 

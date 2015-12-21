@@ -43,7 +43,8 @@ function RulesController() {
 
     let context = this.context;
 
-    let rules,
+    let instance,
+        rules,
         ruleMandatoryProperties;
 
     function initialize() {
@@ -238,7 +239,7 @@ function RulesController() {
         }
     }
 
-    let instance = {
+    instance = {
         initialize:initialize,
         setConfig: setConfig,
         setRules: setRules,

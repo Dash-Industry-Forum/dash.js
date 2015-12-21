@@ -43,6 +43,9 @@ import ClearKeyKeySet from '../vo/ClearKeyKeySet.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
 function ClearKey() {
+
+    let instance;
+
     function getServerURLFromMessage(url, message/*, messageType*/) {
         // Build ClearKey server query string
         var jsonMsg = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(message)));
@@ -81,7 +84,7 @@ function ClearKey() {
         return String.fromCharCode.apply(null, new Uint8Array(serverResponse));
     }
 
-    var instance = {
+    instance = {
         getServerURLFromMessage: getServerURLFromMessage,
         getHTTPMethod: getHTTPMethod,
         getResponseType: getResponseType,

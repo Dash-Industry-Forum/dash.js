@@ -42,12 +42,13 @@ import Debug from '../../core/Debug.js';
 function StreamController() {
 
     const STREAM_END_THRESHOLD = 0.2;
-    let instance;
+
     let context = this.context;
     let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
 
-    let capabilities,
+    let instance,
+        capabilities,
         manifestUpdater,
         manifestLoader,
         manifestModel,

@@ -43,7 +43,8 @@ function InsufficientBufferRule(config) {
 
     let metricsModel = config.metricsModel;
 
-    let bufferStateDict,
+    let instance,
+        bufferStateDict,
         lastSwitchTime,
         waitToSwitchTime;
 
@@ -102,7 +103,7 @@ function InsufficientBufferRule(config) {
         lastSwitchTime = 0;
     }
 
-    let instance = {
+    instance = {
         execute: execute,
         reset: reset
     };

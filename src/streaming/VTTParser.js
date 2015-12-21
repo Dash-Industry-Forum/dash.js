@@ -35,7 +35,8 @@ function VTTParser() {
     let context = this.context;
     let log = Debug(context).getInstance().log;
 
-    let regExNewLine,
+    let instance,
+        regExNewLine,
         regExToken,
         regExWhiteSpace,
         regExWhiteSpaceWordBoundry;
@@ -182,7 +183,7 @@ function VTTParser() {
         return decodeURI(subline);
     }
 
-    let instance = {
+    instance = {
         parse: parse
     };
 

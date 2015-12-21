@@ -32,7 +32,8 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 
 function Capabilities() {
 
-    let encryptedMediaSupported;
+    let instance,
+        encryptedMediaSupported;
 
     function setup(){
         encryptedMediaSupported = false;
@@ -69,7 +70,7 @@ function Capabilities() {
         return (canPlay === "probably" || canPlay === "maybe");
     }
 
-    let instance = {
+    instance = {
         supportsMediaSource: supportsMediaSource,
         supportsEncryptedMedia: supportsEncryptedMedia,
         supportsCodec: supportsCodec,

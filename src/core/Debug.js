@@ -37,7 +37,8 @@ function Debug() {
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
 
-    let logToBrowserConsole,
+    let instance,
+        logToBrowserConsole,
         showLogTimestamp,
         //showCalleeName,
         startTime;
@@ -122,7 +123,7 @@ function Debug() {
         eventBus.trigger(Events.LOG, {message: message});
     }
 
-    let instance = {
+    instance = {
         log: log,
         setLogTimestampVisible: setLogTimestampVisible,
         setLogToBrowserConsole: setLogToBrowserConsole,

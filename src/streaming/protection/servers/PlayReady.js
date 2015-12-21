@@ -40,6 +40,9 @@
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
 function PlayReady() {
+
+    let instance;
+
     function getServerURLFromMessage(url /*, message, messageType*/) {
         return url;
     }
@@ -60,7 +63,7 @@ function PlayReady() {
         return String.fromCharCode.apply(null, new Uint8Array(serverResponse));
     }
 
-    var instance = {
+    instance = {
         getServerURLFromMessage: getServerURLFromMessage,
         getHTTPMethod: getHTTPMethod,
         getResponseType: getResponseType,

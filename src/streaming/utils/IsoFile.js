@@ -34,7 +34,8 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 
 function IsoFile() {
 
-    let parsedIsoFile,
+    let instance,
+        parsedIsoFile,
         commonProps,
         sidxProps,
         sidxRefProps,
@@ -223,7 +224,7 @@ function IsoFile() {
         return box;
     }
 
-    let instance = {
+    instance = {
         getBox: getBox,
         getBoxes: getBoxes,
         setData: setData,

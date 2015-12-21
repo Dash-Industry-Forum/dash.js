@@ -34,6 +34,7 @@ import FactoryMaker from '../core/FactoryMaker.js';
 
 function ErrorHandler() {
 
+    let instance;
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
 
@@ -68,7 +69,7 @@ function ErrorHandler() {
         eventBus.trigger(Events.ERROR, {error: "key_message", event: err});
     }
 
-    var instance = {
+    instance = {
         capabilityError: capabilityError,
         downloadError: downloadError,
         manifestError: manifestError,

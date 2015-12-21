@@ -39,7 +39,8 @@ function ManifestUpdater() {
     let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
 
-    let refreshDelay,
+    let instance,
+        refreshDelay,
         refreshTimer,
         isStopped,
         isUpdating,
@@ -166,7 +167,7 @@ function ManifestUpdater() {
         isUpdating = false;
     }
 
-    let instance = {
+    instance = {
         initialize: initialize,
         setManifest: setManifest,
         getManifestLoader: getManifestLoader,

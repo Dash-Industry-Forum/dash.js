@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 let FactoryMaker = (function() {
+
     let instance;
     let extensions = [];
     let singletonContexts = [];
@@ -143,6 +144,7 @@ let FactoryMaker = (function() {
     };
 
     return instance;
+
 }());
 
 export default FactoryMaker;

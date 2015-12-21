@@ -42,7 +42,8 @@ function LiveEdgeFinder() {
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
 
-    let timelineConverter,
+    let instance,
+        timelineConverter,
         streamProcessor,
         rulesController,
         isSearchStarted,
@@ -106,7 +107,7 @@ function LiveEdgeFinder() {
         });
     }
 
-    let instance = {
+    instance = {
         initialize:initialize,
         abortSearch: abortSearch,
         getLiveEdge: getLiveEdge,

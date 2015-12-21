@@ -57,7 +57,8 @@ function ScheduleController(config) {
     let rulesController = config.rulesController;
     let mediaPlayerModel = config.mediaPlayerModel;
 
-    let fragmentsToLoad,
+    let instance,
+        fragmentsToLoad,
         type,
         ready,
         fragmentModel,
@@ -463,7 +464,7 @@ function ScheduleController(config) {
         playbackController = null;
     }
 
-    let instance = {
+    instance = {
         initialize:initialize,
         getStreamProcessor:getStreamProcessor,
         getSeekTarget:getSeekTarget,

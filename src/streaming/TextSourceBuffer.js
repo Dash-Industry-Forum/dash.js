@@ -35,9 +35,11 @@ import CustomTimeRanges from './utils/CustomTimeRanges.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
 function  TextSourceBuffer() {
+
     let context = this.context;
 
-    let errHandler,
+    let instance,
+        errHandler,
         adapter,
         manifestExt,
         mediaController,
@@ -263,7 +265,7 @@ function  TextSourceBuffer() {
         return parser;
     }
     
-    let instance = {
+    instance = {
         initialize :initialize,
         append :append,
         abort:abort,

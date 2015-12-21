@@ -45,7 +45,8 @@ function DashParser(/*config*/) {
     let context = this.context;
     let log = Debug(context).getInstance().log;
 
-    let durationRegex,
+    let instance,
+        durationRegex,
         datetimeRegex,
         numericRegex,
         httpOrHttpsRegex,
@@ -420,7 +421,7 @@ function DashParser(/*config*/) {
         return manifest;
     }
 
-    let instance = {
+    instance = {
         parse: parse
     };
 

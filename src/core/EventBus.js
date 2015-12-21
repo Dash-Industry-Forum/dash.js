@@ -31,8 +31,10 @@
 import FactoryMaker from './FactoryMaker.js';
 
 function EventBus() {
-    
+
+    let instance;
     let handlers = {};
+
 
     function on(type, listener, scope) {
         if (!type) {
@@ -97,7 +99,7 @@ function EventBus() {
         return result;
     }
 
-    let instance = {
+    instance = {
         on: on,
         off: off,
         trigger: trigger,

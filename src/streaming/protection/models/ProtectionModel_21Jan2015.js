@@ -51,7 +51,8 @@ function ProtectionModel_21Jan2015(config) {
     let eventBus = config.eventBus;//Need to pass in here so we can use same instance since this is optional module
     let log = config.log;
 
-    var keySystem,
+    var instance,
+        keySystem,
         videoElement,
         mediaKeys,
         sessions,
@@ -364,7 +365,7 @@ function ProtectionModel_21Jan2015(config) {
         return token;
     }
 
-    let instance = {
+    instance = {
         getAllInitData:getAllInitData,
         requestKeySystemAccess:requestKeySystemAccess,
         getKeySystem:getKeySystem,

@@ -45,8 +45,11 @@ import ClearKey from './servers/ClearKey.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 function  ProtectionExtensions() {
+
     let context = this.context;
-    let log,
+
+    let instance,
+        log,
         keySystems,
         clearkeyKeySystem;
 
@@ -273,7 +276,7 @@ function  ProtectionExtensions() {
         }
     }
 
-    let instance = {
+    instance = {
         initialize: initialize,
         isClearKey: isClearKey,
         initDataEquals: initDataEquals,

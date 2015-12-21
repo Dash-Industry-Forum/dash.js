@@ -51,13 +51,15 @@ import FactoryMaker from '../../../core/FactoryMaker.js';
 import Protection from '../Protection.js';
 
 function ProtectionController(config) {
+
     let protectionExt = config.protectionExt;
     let protectionModel = config.protectionModel;
     let adapter = config.adapter;
     let eventBus = config.eventBus;
     let log = config.log;
 
-    let keySystems,
+    let instance,
+        keySystems,
         pendingNeedKeyData,
         audioInfo,
         videoInfo,
@@ -537,7 +539,7 @@ function ProtectionController(config) {
         selectKeySystem(supportedKS, false);
     }
 
-    let instance = {
+    instance = {
         initialize :initialize,
         createKeySession :createKeySession,
         loadKeySession :loadKeySession,

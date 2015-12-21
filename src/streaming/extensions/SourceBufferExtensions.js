@@ -50,7 +50,8 @@ function SourceBufferExtensions() {
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
 
-    let manifestExt;
+    let instance,
+        manifestExt;
 
     function createSourceBuffer(mediaSource, mediaInfo) {
 
@@ -367,7 +368,7 @@ function SourceBufferExtensions() {
         }
     }
     
-    let instance = {
+    instance = {
         append: append,
         remove: remove,
         abort: abort,

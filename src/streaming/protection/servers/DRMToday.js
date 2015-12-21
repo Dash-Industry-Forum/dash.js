@@ -60,6 +60,8 @@ function DRMToday() {
         }
     };
 
+    let instance;
+
     function getServerURLFromMessage(url /*, message, messageType*/) {
         return url;
     }
@@ -80,7 +82,7 @@ function DRMToday() {
         return keySystems[keySystemStr].getErrorResponse(serverResponse);
     }
 
-    var instance = {
+    instance = {
         getServerURLFromMessage: getServerURLFromMessage,
         getHTTPMethod: getHTTPMethod,
         getResponseType: getResponseType,

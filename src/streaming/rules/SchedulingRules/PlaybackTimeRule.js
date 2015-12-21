@@ -35,6 +35,7 @@ import FragmentRequest from '../../vo/FragmentRequest.js';
 
 function PlaybackTimeRule(config) {
 
+    let instance;
     let context = this.context;
 
     let adapter = config.adapter;
@@ -99,7 +100,7 @@ function PlaybackTimeRule(config) {
         callback(SwitchRequest(context).create(request, p));
     }
 
-    let instance = {
+    instance = {
         execute: execute
     };
 

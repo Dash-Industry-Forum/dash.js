@@ -33,7 +33,9 @@ import URIFragmentData from '../vo/URIFragmentData.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 function URIQueryAndFragmentModel() {
-    let URIFragmentDataVO,
+
+    let instance,
+        URIFragmentDataVO,
         URIQueryData,
         isHTTPS;
 
@@ -105,7 +107,7 @@ function URIQueryAndFragmentModel() {
         return uri;
     }
 
-    let instance = {
+    instance = {
         initialize: initialize,
         parseURI: parseURI,
         getURIFragmentData: getURIFragmentData,

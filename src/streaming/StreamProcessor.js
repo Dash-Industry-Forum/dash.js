@@ -61,7 +61,8 @@ function StreamProcessor(config) {
     let adapter = config.adapter;
     let manifestModel = config.manifestModel;
 
-    let dynamic,
+    let instance,
+        dynamic,
         mediaInfo,
         type,
         mediaInfoArr,
@@ -285,7 +286,7 @@ function StreamProcessor(config) {
         return controller;
     }
 
-    let instance = {
+    instance = {
         initialize: initialize,
         isUpdating: isUpdating,
         getType: getType,

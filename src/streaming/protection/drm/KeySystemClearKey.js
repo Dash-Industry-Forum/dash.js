@@ -39,6 +39,8 @@ const systemString = "org.w3.clearkey";
 const schemeIdURI = "urn:uuid:" + uuid;
 
 function KeySystemClearKey() {
+
+    let instance;
     /**
      * Returns desired clearkeys (as specified in the CDM message) from protection data
      *
@@ -86,7 +88,7 @@ function KeySystemClearKey() {
         return null;
     }
 
-    let instance = {
+    instance = {
         uuid: uuid,
         schemeIdURI: schemeIdURI,
         systemString: systemString,

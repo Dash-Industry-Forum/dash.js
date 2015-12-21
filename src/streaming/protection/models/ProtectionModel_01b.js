@@ -54,7 +54,8 @@ function  ProtectionModel_01b(config) {
     let log = config.log;
     let api = config.api;
 
-    let videoElement,
+    let instance,
+        videoElement,
         keySystem,
         protectionExt,
         errHandler,
@@ -203,9 +204,8 @@ function  ProtectionModel_01b(config) {
             var newSession = { // Implements SessionToken
                 sessionID: null,
                 initData: initData,
-
                 getSessionID: function() {
-                    return sessionID;
+                    return this.sessionID;
                 },
 
                 getExpirationTime: function() {
@@ -392,7 +392,7 @@ function  ProtectionModel_01b(config) {
         videoElement.removeEventListener(api.keyadded, eventHandler);
     }
 
-    let instance = {
+    instance = {
         getAllInitData:getAllInitData,
         requestKeySystemAccess:requestKeySystemAccess,
         selectKeySystem:selectKeySystem,

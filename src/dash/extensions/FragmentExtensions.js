@@ -32,7 +32,9 @@
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 function FragmentExtensions(/*config*/) {
-    let boxParser;
+
+    let instance,
+        boxParser;
 
     function setConfig(config) {
         if (!config) return;
@@ -87,7 +89,7 @@ function FragmentExtensions(/*config*/) {
         return mdhdBox ? mdhdBox.timescale : NaN;
     }
 
-    let instance = {
+    instance = {
         getSamplesInfo: getSamplesInfo,
         getMediaTimescaleFromMoov: getMediaTimescaleFromMoov,
         setConfig: setConfig

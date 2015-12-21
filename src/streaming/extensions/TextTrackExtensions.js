@@ -33,11 +33,12 @@ import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 function TextTrackExtensions() {
-    let context = this.context;
 
+    let context = this.context;
     let eventBus = EventBus(context).getInstance();
 
-    let Cue,
+    let instance,
+        Cue,
         videoModel,
         video,
         textTrackQueue,
@@ -490,7 +491,7 @@ function TextTrackExtensions() {
         }
     }
 
-    let instance = {
+    instance = {
         initialize          :initialize,
         displayCConTop      :displayCConTop,
         addTextTrack        :addTextTrack,

@@ -44,7 +44,8 @@ function VirtualBuffer() {
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
 
-    let data,
+    let instance,
+        data,
         sourceBufferExt;
 
     function setup(){
@@ -375,7 +376,7 @@ function VirtualBuffer() {
         return data;
     }
 
-    let instance = {
+    instance = {
         append: append,
         extract: extract,
         getChunks: getChunks,

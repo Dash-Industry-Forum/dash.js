@@ -6,11 +6,9 @@ const BUFFER_PRUNING_INTERVAL = 30;
 const LIVE_DELAY_FRAGMENT_COUNT = 4;
 
 function MediaPlayerModel() {
-    /*
-     BUFFER_TIME_AT_TOP_QUALITY
 
-    * */
-    let useManifestDateHeaderTimeSource,
+    let instance,
+        useManifestDateHeaderTimeSource,
         useSuggestedPresentationDelay,
         UTCTimingSources,
         liveDelayFragmentCount,
@@ -89,7 +87,7 @@ function MediaPlayerModel() {
         setup();
     }
 
-    let instance = {
+    instance = {
         setBufferToKeep: setBufferToKeep,
         getBufferToKeep: getBufferToKeep,
         setBufferPruningInterval: setBufferPruningInterval,

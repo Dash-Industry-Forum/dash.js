@@ -42,9 +42,11 @@ const FRAGMENTS_TO_SCHEDULE_RULES = "fragmentsToScheduleRules";
 const NEXT_FRAGMENT_RULES = "nextFragmentRules";
 
 function ScheduleRulesCollection() {
+
     let context = this.context;
 
-    let fragmentsToScheduleRules,
+    let instance,
+        fragmentsToScheduleRules,
         nextFragmentRules;
 
     function initialize() {
@@ -76,7 +78,7 @@ function ScheduleRulesCollection() {
         }
     }
 
-    let instance = {
+    instance = {
         initialize:initialize,
         getRules: getRules
     };

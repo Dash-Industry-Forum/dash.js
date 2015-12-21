@@ -36,11 +36,10 @@ import Debug from '../../../core/Debug.js';
 
 function BufferOccupancyRule(config) {
 
+    let instance;
     let context = this.context;
     let log = Debug(context).getInstance().log;
-
     let metricsModel = config.metricsModel;
-
     let lastSwitchTime = 0;
 
     function execute (rulesContext, callback) {
@@ -89,7 +88,7 @@ function BufferOccupancyRule(config) {
         lastSwitchTime = 0;
     }
 
-    let instance = {
+    instance = {
         execute: execute,
         reset: reset
     };

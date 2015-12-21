@@ -44,7 +44,8 @@ function  BaseURLExtensions() {
     let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
 
-    let errHandler,
+    let instance,
+        errHandler,
         boxParser,
         requestModifierExt;
 
@@ -290,7 +291,7 @@ function  BaseURLExtensions() {
         }
     }
 
-    let instance = {
+    instance = {
         initialize: initialize,
         loadInitialization: loadInitialization,
         loadSegments: loadSegments,

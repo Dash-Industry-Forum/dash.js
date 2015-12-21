@@ -44,6 +44,9 @@ const systemString = "com.widevine.alpha";
 const schemeIdURI = "urn:uuid:" + uuid;
 
 function KeySystemWidevine() {
+
+    let instance;
+
     function getInitData() {
         return CommonEncryption.parseInitDataFromContentProtection;
     }
@@ -60,7 +63,7 @@ function KeySystemWidevine() {
         return null;
     }
 
-    let instance = {
+    instance = {
         uuid: uuid,
         schemeIdURI: schemeIdURI,
         systemString: systemString,

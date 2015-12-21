@@ -41,7 +41,8 @@ function EventController() {
     let context = this.context;
     let log = Debug(context).getInstance().log;
 
-    let inlineEvents, // Holds all Inline Events not triggered yet
+    let instance,
+        inlineEvents, // Holds all Inline Events not triggered yet
         inbandEvents, // Holds all Inband Events not triggered yet
         activeEvents, // Holds all Events currently running
         eventInterval, // variable holding the setInterval
@@ -191,7 +192,7 @@ function EventController() {
         activeEvents = null;
     }
 
-    let instance = {
+    instance = {
         initialize: initialize,
         addInlineEvents : addInlineEvents,
         addInbandEvents : addInbandEvents,

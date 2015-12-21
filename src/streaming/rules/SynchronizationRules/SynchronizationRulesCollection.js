@@ -40,9 +40,11 @@ const TIME_SYNCHRONIZED_RULES = "withAccurateTimeSourceRules";
 const BEST_GUESS_RULES = "bestGuestRules";
 
 function SynchronizationRulesCollection() {
+
     let context = this.context;
 
-    let withAccurateTimeSourceRules,
+    let instance,
+        withAccurateTimeSourceRules,
         bestGuestRules;
 
     function initialize(){
@@ -70,7 +72,7 @@ function SynchronizationRulesCollection() {
         }
     }
 
-    let instance = {
+    instance = {
         initialize: initialize,
         getRules: getRules
     };

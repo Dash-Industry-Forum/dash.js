@@ -33,6 +33,7 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 
 function RulesContext(config) {
 
+    let instance;
     let representationInfo = config.streamProcessor.getCurrentRepresentationInfo();
     let sp = config.streamProcessor;
     let currentValue = config.currentValue;
@@ -61,7 +62,7 @@ function RulesContext(config) {
         return sp;
     }
 
-    let instance = {
+    instance = {
         getStreamInfo: getStreamInfo,
         getMediaInfo: getMediaInfo,
         getTrackInfo: getTrackInfo,

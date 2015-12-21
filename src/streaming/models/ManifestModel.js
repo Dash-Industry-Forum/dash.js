@@ -33,10 +33,12 @@ import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 function  ManifestModel() {
-    let context = this.context;
 
+    let context = this.context;
     let eventBus = EventBus(context).getInstance();
-    let manifest;
+
+    let instance,
+        manifest;
 
     function getValue() {
         return manifest;
@@ -47,7 +49,7 @@ function  ManifestModel() {
         eventBus.trigger(Events.MANIFEST_LOADED,  {data: value});
     }
 
-    let instance = {
+    instance = {
         getValue: getValue,
         setValue: setValue
     };

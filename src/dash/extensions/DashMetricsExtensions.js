@@ -36,6 +36,7 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 
 function DashMetricsExtensions() {
 
+    let instance;
     let context = this.context;
     let manifestModel = ManifestModel(context).getInstance();//TODO Need to pass this in not bake in
 
@@ -410,7 +411,7 @@ function DashMetricsExtensions() {
         return -1;
     }
 
-    let instance = {
+    instance = {
         getBandwidthForRepresentation: getBandwidthForRepresentation,
         getIndexForRepresentation: getIndexForRepresentation,
         getMaxIndexForBufferType: getMaxIndexForBufferType,

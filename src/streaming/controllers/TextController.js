@@ -40,7 +40,8 @@ function TextController(config) {
     let sourceBufferExt = config.sourceBufferExt;
     let errHandler = config.errHandler;
 
-    let initialized,
+    let instance,
+        initialized,
         mediaSource,
         buffer,
         type,
@@ -126,7 +127,7 @@ function TextController(config) {
         sourceBufferExt.append(buffer, e.chunk);
     }
 
-    let instance = {
+    instance = {
         initialize :initialize,
         createBuffer :createBuffer,
         getBuffer :getBuffer,

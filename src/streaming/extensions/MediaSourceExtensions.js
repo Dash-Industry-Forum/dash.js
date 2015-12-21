@@ -31,6 +31,9 @@
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 function MediaSourceExtensions() {
+
+    let instance;
+
     function createMediaSource() {
 
         var hasWebKit = ("WebKitMediaSource" in window);
@@ -83,7 +86,7 @@ function MediaSourceExtensions() {
         source.endOfStream();
     }
     
-    let instance = {
+    instance = {
         createMediaSource: createMediaSource,
         attachMediaSource: attachMediaSource,
         detachMediaSource: detachMediaSource,

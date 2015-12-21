@@ -31,6 +31,9 @@
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
 function Widevine() {
+
+    let instance;
+
     function getServerURLFromMessage(url /*, message, messageType*/) {
         return url;
     }
@@ -51,7 +54,7 @@ function Widevine() {
         return String.fromCharCode.apply(null, new Uint8Array(serverResponse));
     }
 
-    var instance = {
+    instance = {
         getServerURLFromMessage: getServerURLFromMessage,
         getHTTPMethod: getHTTPMethod,
         getResponseType: getResponseType,

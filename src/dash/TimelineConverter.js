@@ -38,7 +38,8 @@ function TimelineConverter() {
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
 
-    let clientServerTimeShift,
+    let instance,
+        clientServerTimeShift,
         isClientServerTimeSyncCompleted,
         expectedLiveEdge;
 
@@ -211,7 +212,7 @@ function TimelineConverter() {
         expectedLiveEdge = NaN;
     }
 
-    let instance = {
+    instance = {
         initialize: initialize,
         isTimeSyncCompleted: isTimeSyncCompleted,
         setTimeSyncCompleted: setTimeSyncCompleted,

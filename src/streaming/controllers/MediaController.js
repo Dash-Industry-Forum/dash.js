@@ -45,7 +45,8 @@ function MediaController() {
     let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
 
-    let tracks,
+    let instance,
+        tracks,
         initialSettings,
         selectionMode,
         switchMode,
@@ -450,7 +451,7 @@ function MediaController() {
         };
     }
 
-    let instance = {
+    instance = {
         initialize:initialize,
         checkInitialMediaSettings :checkInitialMediaSettings,
         addTrack :addTrack,

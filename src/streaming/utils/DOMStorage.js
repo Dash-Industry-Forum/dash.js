@@ -48,7 +48,8 @@ function DOMStorage() {
     let context = this.context;
     let log = Debug(context).getInstance().log;
 
-    let supported,
+    let instance,
+        supported,
         abrController,
         lastBitrateCachingEnabled,
         lastMediaSettingsCachingEnabled,
@@ -164,7 +165,7 @@ function DOMStorage() {
         }
     }
     
-    let instance = {
+    instance = {
         checkInitialBitrate: checkInitialBitrate,
         getSavedMediaSettings: getSavedMediaSettings,
         enableLastMediaSettingsCaching: enableLastMediaSettingsCaching,

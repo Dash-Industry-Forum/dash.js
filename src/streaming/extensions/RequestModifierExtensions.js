@@ -32,6 +32,9 @@
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 function RequestModifierExtensions() {
+
+    let instance;
+
     function modifyRequestURL(url) {
         return url;
     }
@@ -40,7 +43,7 @@ function RequestModifierExtensions() {
         return request;
     }
 
-    let instance = {
+    instance = {
         modifyRequestURL: modifyRequestURL,
         modifyRequestHeader: modifyRequestHeader
     };

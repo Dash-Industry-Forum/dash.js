@@ -41,6 +41,7 @@ function XlinkLoader(config) {
     const RETRY_INTERVAL = 500;
     const RESOLVE_TO_ZERO = 'urn:mpeg:dash:resolve-to-zero:2013';
 
+    let instance;
     let context  = this.context;
     let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
@@ -167,7 +168,7 @@ function XlinkLoader(config) {
         }
     }
 
-    let instance = {
+    instance = {
         load:load
     };
 

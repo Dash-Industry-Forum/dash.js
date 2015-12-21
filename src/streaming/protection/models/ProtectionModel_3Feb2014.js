@@ -55,7 +55,8 @@ function ProtectionModel_3Feb2014(config) {
     let api = config.api;
 
 
-    let videoElement,
+    let instance,
+        videoElement,
         keySystem,
         mediaKeys,
         keySystemAccess,
@@ -301,6 +302,17 @@ function ProtectionModel_3Feb2014(config) {
             session: keySession,
             initData: initData,
 
+            getSessionID: function() {
+                return this.session.sessionId;
+            },
+
+            getExpirationTime: function() {
+                return NaN;
+            },
+
+            getSessionType: function() {
+                return "temporary";
+            },
             // This is our main event handler for all desired MediaKeySession events
             // These events are translated into our API-independent versions of the
             // same events
@@ -321,27 +333,15 @@ function ProtectionModel_3Feb2014(config) {
                         break;
 
                     case api.close:
-                        log("DRM: Session closed.  SessionID = " + getSessionID());
-                        eventBus.trigger(Events.KEY_SESSION_CLOSED, { data: getSessionID() });
+                        log("DRM: Session closed.  SessionID = " + this.getSessionID());
+                        eventBus.trigger(Events.KEY_SESSION_CLOSED, { data: this.getSessionID() });
                         break;
                 }
-            },
-
-            getSessionID: function() {
-                return session.sessionId;
-            },
-
-            getExpirationTime: function() {
-                return NaN;
-            },
-
-            getSessionType: function() {
-                return "temporary";
             }
         };
     }
 
-    let instance = {
+    instance = {
         getAllInitData:getAllInitData,
         requestKeySystemAccess:requestKeySystemAccess,
         selectKeySystem:selectKeySystem,

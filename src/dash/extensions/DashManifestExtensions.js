@@ -41,6 +41,7 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 
 function DashManifestExtensions() {
 
+    let instance;
     let context = this.context;
     let timelineConverter = TimelineConverter(context).getInstance();//TODO Need to pass this in not bake in
 
@@ -771,7 +772,7 @@ function DashManifestExtensions() {
         return utcTimingEntries;
     }
 
-    let instance = {
+    instance = {
         getIsTypeOf: getIsTypeOf,
         getIsAudio: getIsAudio,
         getIsVideo: getIsVideo,

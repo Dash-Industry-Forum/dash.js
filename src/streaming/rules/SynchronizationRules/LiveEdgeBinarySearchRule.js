@@ -43,7 +43,8 @@ function LiveEdgeBinarySearchRule(config) {
     let adapter = config.adapter;
     let timelineConverter = config.timelineConverter;
 
-    let liveEdgeInitialSearchPosition,
+    let instance,
+        liveEdgeInitialSearchPosition,
         liveEdgeSearchRange,
         liveEdgeSearchStep,
         representationInfo,
@@ -217,7 +218,7 @@ function LiveEdgeBinarySearchRule(config) {
         }
     }
 
-    let instance = {
+    instance = {
         execute: execute,
         reset: reset
     };

@@ -32,7 +32,9 @@
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 function VideoModel() {
-    let element,
+
+    let instance,
+        element,
         TTMLRenderingDiv,
         videoContainer,
         stalledStreams;
@@ -182,7 +184,7 @@ function VideoModel() {
         }
     }
 
-    let instance = {
+    instance = {
         initialize:initialize,
         play: play,
         pause: pause,

@@ -37,10 +37,12 @@ const GRACE_TIME_THRESHOLD = 500;
 const ABANDON_MULTIPLIER = 1.5;
 
 function AbandonRequestsRule(/*config*/) {
+
     let context = this.context;
     let log = Debug(context).getInstance().log;
 
-    let fragmentDict,
+    let instance,
+        fragmentDict,
         abandonDict;
 
     function setup() {
@@ -115,7 +117,7 @@ function AbandonRequestsRule(/*config*/) {
         abandonDict = {};
     }
 
-    let instance = {
+    instance = {
         execute: execute,
         reset: reset
     };

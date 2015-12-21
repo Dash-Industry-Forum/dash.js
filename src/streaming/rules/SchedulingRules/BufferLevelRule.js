@@ -35,6 +35,7 @@ import FactoryMaker from '../../../core/FactoryMaker.js';
 
 function BufferLevelRule(config) {
 
+    let instance;
     let context = this.context;
 
     let metricsExt = config.metricsExt;
@@ -81,7 +82,7 @@ function BufferLevelRule(config) {
         return bufferTarget;
     }
 
-    let instance = {
+    instance = {
         execute: execute,
         reset: reset
     };

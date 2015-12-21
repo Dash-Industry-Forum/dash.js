@@ -40,9 +40,11 @@ const QUALITY_SWITCH_RULES = "qualitySwitchRules";
 const ABANDON_FRAGMENT_RULES = "abandonFragmentRules";
 
 function ABRRulesCollection() {
+
     let context = this.context;
 
-    let qualitySwitchRules,
+    let instance,
+        qualitySwitchRules,
         abandonFragmentRules;
 
     function initialize() {
@@ -72,7 +74,7 @@ function ABRRulesCollection() {
         }
     }
 
-    let instance = {
+    instance = {
         initialize:initialize,
         getRules:getRules
     };

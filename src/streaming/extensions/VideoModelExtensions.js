@@ -31,6 +31,9 @@
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 function VideoModelExtensions() {
+
+    let instance;
+
     function getPlaybackQuality(videoElement) {
         var hasWebKit = ("webkitDroppedFrameCount" in videoElement);
         var hasQuality = ("getVideoPlaybackQuality" in videoElement);
@@ -46,7 +49,7 @@ function VideoModelExtensions() {
         return result;
     }
 
-    let instance = {
+    instance = {
         getPlaybackQuality: getPlaybackQuality
     };
 

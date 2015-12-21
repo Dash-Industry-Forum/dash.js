@@ -34,8 +34,8 @@ import FactoryMaker from '../../../core/FactoryMaker.js';
 
 function LiveEdgeWithTimeSynchronizationRule(config) {
 
+    let instance;
     let context = this.context;
-
     let timelineConverter = config.timelineConverter;
 
     // if the time has been synchronized correctly (which it must have been
@@ -62,7 +62,7 @@ function LiveEdgeWithTimeSynchronizationRule(config) {
         }
     }
 
-    let instance = {
+    instance = {
         execute: execute
     };
 

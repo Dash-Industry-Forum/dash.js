@@ -40,7 +40,8 @@ function TTMLParser() {
     /*
      * This TTML parser follows "EBU-TT-D SUBTITLING DISTRIBUTION FORMAT - tech3380" spec - https://tech.ebu.ch/docs/tech/tech3380.pdf.
      * */
-    let timingRegex,
+    let instance,
+        timingRegex,
         ttml, // contains the whole ttml document received
         ttmlStyling, // contains the styling information from the document
         ttmlLayout, // contains the positioning information from the document
@@ -1157,7 +1158,7 @@ function TTMLParser() {
         }
     }
 
-    let instance = {
+    instance = {
         parse: parse,
         setConfig: setConfig
     };

@@ -56,7 +56,11 @@ const METRIC_LIST = {
 };
 
 function DashAdapter() {
-    let manifestExt,
+
+    //let context = this.context;
+
+    let instance,
+        manifestExt,
         periods,
         adaptations;
 
@@ -344,7 +348,7 @@ function DashAdapter() {
         adaptations = {};
     }
 
-    let instance = {
+    instance = {
         initialize: initialize,
         convertDataToTrack: convertRepresentationToTrackInfo,
         convertDataToMedia: convertAdaptationToMediaInfo,

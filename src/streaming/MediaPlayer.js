@@ -1206,6 +1206,7 @@ function MediaPlayer() {
         if (protectionController){
             return protectionController;
         }
+        /* jshint ignore:start */
         if(typeof Protection == "function") {//TODO need a better way to register/detect plugin components
             let protection = Protection(context).create();
             Events.extend(Protection.events);
@@ -1219,6 +1220,7 @@ function MediaPlayer() {
             });
             return protectionController;
         }
+        /* jshint ignore:end */
         return null;
     }
 

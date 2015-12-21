@@ -49,7 +49,8 @@ function AbrController() {
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
 
-    let abrRulesCollection,
+    let instance,
+        abrRulesCollection,
         rulesController,
         streamController,
         autoSwitchBitrate,
@@ -399,7 +400,7 @@ function AbrController() {
         }
     }
 
-    let instance = {
+    instance = {
         isPlayingAtTopQuality   :isPlayingAtTopQuality,
         updateTopQualityIndex   :updateTopQualityIndex,
         getAverageThroughput    :getAverageThroughput,

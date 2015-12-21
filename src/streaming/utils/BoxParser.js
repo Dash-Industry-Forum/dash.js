@@ -33,6 +33,8 @@ import IsoFile from './IsoFile.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 function BoxParser(/*config*/) {
+
+    let instance;
     let context = this.context;
 
     /**
@@ -55,7 +57,7 @@ function BoxParser(/*config*/) {
         return dashIsoFile;
     }
 
-    let instance = {
+    instance = {
         parse: parse
     };
 

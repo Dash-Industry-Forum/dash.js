@@ -9,6 +9,8 @@ function MediaPlayerFactory() {
      */
     const SUPPORTED_MIME_TYPE = "application/dash+xml";
 
+    let instance;
+
     /**
      *  A new MediaPlayer is instantiated for the supplied videoElement and optional source and context.  If no context is provided,
      *  a default DashContext is used. If no source is provided, the videoElement is interrogated to extract the first source whose
@@ -65,7 +67,7 @@ function MediaPlayerFactory() {
         return aPlayers;
     }
 
-    let instance = {
+    instance = {
         create: create,
         createAll: createAll
     };

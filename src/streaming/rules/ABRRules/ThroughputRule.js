@@ -42,11 +42,11 @@ function ThroughputRule(config) {
 
     let context = this.context;
     let log = Debug(context).getInstance().log;
-
     let metricsExt = config.metricsExt;
     let metricsModel = config.metricsModel;
 
-    let throughputArray;
+    let instance,
+        throughputArray;
 
     function storeLastRequestThroughputByType(type, lastRequestThroughput) {
         throughputArray[type] = throughputArray[type] || [];
@@ -138,7 +138,7 @@ function ThroughputRule(config) {
         throughputArray = [];
     }
 
-    let instance = {
+    instance = {
         execute: execute,
         reset: reset
     };

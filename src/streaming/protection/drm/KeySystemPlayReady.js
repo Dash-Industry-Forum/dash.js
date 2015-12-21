@@ -45,6 +45,8 @@ const systemString = "com.microsoft.playready";
 const schemeIdURI = "urn:uuid:" + uuid;
 
 function KeySystemPlayReady() {
+
+    let instance;
     let messageFormat = "utf16";
 
     function getRequestHeadersFromMessage(message) {
@@ -210,7 +212,7 @@ function KeySystemPlayReady() {
         messageFormat = format;
     }
 
-    let instance = {
+    instance = {
         uuid: uuid,
         schemeIdURI: schemeIdURI,
         systemString: systemString,
