@@ -87,10 +87,13 @@ module.exports = function (grunt) {
             dist: {
                 expand: true,
                 cwd: 'build/temp/',
-                src: ['dash.min.js', 'dash.min.js.map',
-                      'dash.all.min.js', 'dash.all.min.js.map',
-                      'dash.protection.min.js', 'dash.protection.min.js.map',
-                      'dash.debug.js', 'dash.debug.js.map'],
+                src: [
+                    'dash.all.min.js', 'dash.all.min.js.map',
+                    'dash.min.js', 'dash.min.js.map',
+                    'dash.protection.min.js', 'dash.protection.min.js.map',
+                    'dash.protection.debug.js', 'dash.protection..debug.js.map',
+                    'dash.debug.js', 'dash.debug.js.map'
+                ],
                 dest: 'dist/',
                 filter: 'isFile'
             }
