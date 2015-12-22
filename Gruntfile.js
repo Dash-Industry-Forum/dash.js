@@ -1,7 +1,6 @@
 module.exports = function (grunt) {
     require('time-grunt')(grunt);
 
-    // Project configuration.
     grunt.initConfig({
         clean: {
             build: ['build/temp'],
@@ -17,7 +16,7 @@ module.exports = function (grunt) {
         },
         concat: {
             all: {
-                src: ['build/temp/MediaPlayer.js', './externals/*.js'],
+                src: ['./build/temp/MediaPlayer.js', './build/temp/Protection.js', './externals/*.js'],
                 dest: 'build/temp/Dash.all.js',
             },
         },
@@ -42,26 +41,12 @@ module.exports = function (grunt) {
             build: {
                 files: {
                     'build/temp/dash.min.js': 'build/temp/MediaPlayer.js',
+                    'build/temp/dash.protection.min.js': 'build/temp/Protection.js',
                     'build/temp/dash.all.min.js': 'build/temp/Dash.all.js'
                 }
             },
 
-            buildprotection: {
-                options: {
-                    sourceMap: true,
-                    sourceMapIn: 'build/temp/Protection.js.map',
-                    sourceMapRoot: './src/streaming/',
-                    beautify: true,
-                    compress: false,
-                    mangle: false
-                },
-                files: {
-                    'build/temp/dash.protection.min.js': 'build/temp/Protection.js',
-                }
-
-            },
-
-            debug: {
+            core_debug: {
                 options: {
                     beautify: true,
                     compress: false,
@@ -73,14 +58,31 @@ module.exports = function (grunt) {
                 files: {
                     'build/temp/dash.debug.js': 'build/temp/Dash.all.js'
                 }
+            },
+
+            protection_debug: {
+                options: {
+                    sourceMap: true,
+                    sourceMapIn: 'build/temp/Protection.js.map',
+                    sourceMapRoot: './src/streaming/',
+                    beautify: true,
+                    compress: false,
+                    mangle: false
+                },
+                files: {
+                    'build/temp/dash.protection.debug.js': 'build/temp/Protection.js',
+                }
             }
         },
-        watch: {
-            default: {
-                files: ['src/**/*', 'Gruntfile.js'],
-                tasks: 'dev'
-            }
-        },
+
+        //watch: {
+        //    default: {
+        //        files: ['src/**/*', 'Gruntfile.js'],
+        //        tasks: 'dev'
+        //    }
+        //},
+
+
         copy: {
             dist: {
                 expand: true,
@@ -97,14 +99,20 @@ module.exports = function (grunt) {
             build: {
                 options: {},
                 files: {
+                    'build/temp/Dash.all.js.map': ['build/temp/Dash.all.js']
+                }
+            },
+
+            debug: {
+                options: {},
+                files: {
                     'build/temp/MediaPlayer.js.map': ['build/temp/MediaPlayer.js'],
                     'build/temp/Protection.js.map': ['build/temp/Protection.js'],
-                    'build/temp/Dash.all.js.map': ['build/temp/Dash.all.js']
                 }
             }
         },
         browserify: {
-            build: {
+            build_core: {
                 files: {
                     'build/temp/MediaPlayer.js': ['src/streaming/MediaPlayer.js']
                 },
@@ -119,7 +127,7 @@ module.exports = function (grunt) {
                     transform: ['babelify']
                 }
             },
-            buildprotection: {
+            build_protection: {
                 files: {
                     'build/temp/Protection.js': ['src/streaming/protection/Protection.js']
                 },
@@ -173,41 +181,22 @@ module.exports = function (grunt) {
         },
     });
 
-    // load all the npm grunt tasks
     require('load-grunt-tasks')(grunt);
+    grunt.registerTask('default',  ['dist', 'test']);
+    grunt.registerTask('release',  ['dist', 'test', 'jsdoc']);
+    grunt.registerTask('dist',     ['build', 'minimize', 'copy:dist']);
+    grunt.registerTask('build',    ['clean', 'jshint', 'browserify:build_core', 'browserify:build_protection', 'concat']);
+    grunt.registerTask('minimize', ['exorcise', 'uglify']);
+    grunt.registerTask('test',     ['mocha_istanbul:test']);
+    grunt.registerTask('watch',    ['browserify:watch']);
 
-    grunt.registerTask('build', [
-      'clean:build',
-      //'jshint', //TODO: lots of failures heres
-        'browserify:build',
-        'browserify:buildprotection',
-        'concat:all'
-    ]);
-
-    grunt.registerTask('minimize', [
-      'exorcise',
-      'uglify'
-    ]);
-
-    grunt.registerTask('dist', [
-      'clean:dist',
-      'build',
-      'minimize',
-      'copy:dist'
-    ]);
-
-    grunt.registerTask('test', [
-        'mocha_istanbul:test'
-    ]);
-
-    // Default task.
-    //grunt.registerTask('default', [
-    //  'dist',
-    //  'test',
-    //  'jsdoc'
+    //grunt.registerTask('debug', [
+    //    'clean',
+    //    'browserify',
+    //    "concat",
+    //    'exorcise:debug',
+    //    'uglify:core_debug',
+    //    'uglify:protection_debug'
     //]);
 
-    //grunt.registerTask('watch', [
-    //  'browserify:watch'
-    //]);
 };
