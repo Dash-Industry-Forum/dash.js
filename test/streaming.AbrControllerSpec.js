@@ -1,83 +1,93 @@
-describe("AbrController", function () {
-    /*var helper = window.Helpers.getSpecHelper(),
-        objectsHelper = window.Helpers.getObjectsHelper(),
-        abrCtrl = objectsHelper.getAbrController(),
-        testedType = "video",
-        defaultQuality = helper.getDefaultQuality(),
-        dummyMediaInfo = window.Helpers.getVOHelper().getDummyMediaInfo("video"),
-        streamInfo = {id: "id1"},
-        representationCount = dummyMediaInfo.representationCount;
+import SpecHelper from './helpers/SpecHelper.js';
+import VoHelper from './helpers/VOHelper.js';
+import AbrController from '../src/streaming/controllers/AbrController.js';
 
-    dummyMediaInfo.streamInfo = streamInfo;
+const expect = require('chai').expect;
+
+describe("AbrController", function () {
+    const context = {};
+    const testType = 'video';
+    const voHelper = new VoHelper();
+    const defaultQuality = new SpecHelper().getDefaultQuality();
+    const abrCtrl = AbrController(context).getInstance();
+    const dummyMediaInfo = voHelper.getDummyMediaInfo('video');
+    const representationCount = dummyMediaInfo.representationCount;
 
     it("should update top quality index", function () {
-        var expectedTopQuality = representationCount - 1,
-            actualTopQuality;
+        const expectedTopQuality = representationCount - 1;
+        let actualTopQuality;
 
         actualTopQuality = abrCtrl.updateTopQualityIndex(dummyMediaInfo);
 
-        expect(actualTopQuality).toEqual(expectedTopQuality);
+        expect(actualTopQuality).to.be.equal(expectedTopQuality);
     });
 
     it("should set a quality in a range between zero and a top quality index", function () {
-        var testQuality = 1,
-            newQuality;
+        const testQuality = 1;
+        let newQuality;
 
-        abrCtrl.setPlaybackQuality(testedType, streamInfo, testQuality);
-        newQuality = abrCtrl.getQualityFor(testedType, streamInfo);
-        expect(newQuality).toEqual(testQuality);
+        abrCtrl.setPlaybackQuality(testType, dummyMediaInfo.streamInfo, testQuality);
+        newQuality = abrCtrl.getQualityFor(testType, dummyMediaInfo.streamInfo);
+        expect(newQuality).to.be.equal(testQuality);
     });
 
     it("should throw an exception when attempting to set not a number value for a quality", function () {
-        var testQuality = "a";
-        expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testedType, streamInfo, testQuality)).toThrow("argument is not an integer");
+        let testQuality = 'a';
+        expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testType, dummyMediaInfo.streamInfo, testQuality)).to.throw("argument is not an integer");
+        
         testQuality = null;
-        expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testedType, streamInfo, testQuality)).toThrow("argument is not an integer");
+        expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testType, dummyMediaInfo.streamInfo, testQuality)).to.throw("argument is not an integer");
+        
         testQuality = 2.5;
-        expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testedType, streamInfo, testQuality)).toThrow("argument is not an integer");
+        expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testType, dummyMediaInfo.streamInfo, testQuality)).to.throw("argument is not an integer");
+        
         testQuality = {};
-        expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testedType, streamInfo, testQuality)).toThrow("argument is not an integer");
+        expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testType, dummyMediaInfo.streamInfo, testQuality)).to.throw("argument is not an integer");
     });
 
     it("should ignore an attempt to set a negative quality value", function () {
-        var negativeQuality = -1,
-            oldQuality = abrCtrl.getQualityFor(testedType, streamInfo),
-            newQuality;
-        abrCtrl.setPlaybackQuality(testedType, streamInfo, negativeQuality);
-        newQuality = abrCtrl.getQualityFor(testedType, streamInfo);
-        expect(newQuality).toEqual(oldQuality);
+        const negativeQuality = -1;
+        const oldQuality = abrCtrl.getQualityFor(testType, dummyMediaInfo.streamInfo);
+        let newQuality;
+
+        abrCtrl.setPlaybackQuality(testType, dummyMediaInfo.streamInfo, negativeQuality);
+        newQuality = abrCtrl.getQualityFor(testType, dummyMediaInfo.streamInfo);
+        expect(newQuality).to.be.equal(oldQuality);
     });
 
     it("should ignore an attempt to set a quality greater than top quality index", function () {
-        var greaterThanTopQualityValue = representationCount,
-            oldQuality = abrCtrl.getQualityFor(testedType, streamInfo),
-            newQuality;
-        abrCtrl.setPlaybackQuality(testedType, streamInfo, greaterThanTopQualityValue);
-        newQuality = abrCtrl.getQualityFor(testedType, streamInfo);
-        expect(newQuality).toEqual(oldQuality);
+        const greaterThanTopQualityValue = representationCount;
+        const oldQuality = abrCtrl.getQualityFor(testType, dummyMediaInfo.streamInfo);
+        let newQuality;
+
+        abrCtrl.setPlaybackQuality(testType, dummyMediaInfo.streamInfo, greaterThanTopQualityValue);
+        newQuality = abrCtrl.getQualityFor(testType, dummyMediaInfo.streamInfo);
+
+        expect(newQuality).to.be.equal(oldQuality);
     });
 
     it("should restore a default quality value after reset", function () {
-        var newQuality,
-            testQuality = 1;
-        abrCtrl.setPlaybackQuality(testedType, streamInfo, testQuality);
+        const testQuality = 1;
+        let newQuality;
+
+        abrCtrl.setPlaybackQuality(testType, dummyMediaInfo.streamInfo, testQuality);
         abrCtrl.reset();
-        newQuality = abrCtrl.getQualityFor(testedType, streamInfo);
-        expect(newQuality).toEqual(defaultQuality);
+        newQuality = abrCtrl.getQualityFor(testType, dummyMediaInfo.streamInfo);
+        expect(newQuality).to.be.equal(defaultQuality);
     });
 
     it("should compose a list of available bitrates", function () {
-        var expectedBitrates = dummyMediaInfo.bitrateList,
-            actualBitrates = abrCtrl.getBitrateList(dummyMediaInfo),
-            item,
+        const expectedBitrates = dummyMediaInfo.bitrateList;
+        const actualBitrates = abrCtrl.getBitrateList(dummyMediaInfo);
+        let item,
             match;
 
-        match = expectedBitrates.filter(function(val, idx/*, arr#1#) {
+        match = expectedBitrates.filter(function(val, idx) {
             item = actualBitrates[idx];
 
             return (item && (item.qualityIndex === idx) && (item.bitrate === val) && (item.mediaType === dummyMediaInfo.type));
         });
 
-        expect(match.length).toEqual(expectedBitrates.length);
-    });*/
+        expect(match.length).to.be.equal(expectedBitrates.length);
+    });
 });

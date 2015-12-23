@@ -1,6 +1,8 @@
-import MpdHelper from './MPDHelper.js'
-import SpecHelper from './SpecHelper.js'
-import Representation from '../../src/dash/vo/Representation.js'
+import StreamInfo from '../../src/streaming/vo/StreamInfo.js';
+import MediaInfo from '../../src/streaming/vo/MediaInfo.js';
+import MpdHelper from './MPDHelper.js';
+import SpecHelper from './SpecHelper.js';
+import Representation from '../../src/dash/vo/Representation.js';
 import FragmentRequest from '../../src/streaming/vo/FragmentRequest.js';
 
 class VoHelper {
@@ -124,12 +126,24 @@ class VoHelper {
         return this.createRequest(FragmentRequest.ACTION_COMPLETE);
     }
 
+    getDummyStreamInfo() {
+        const streamInfo = new StreamInfo();
+
+        streamInfo.id = 'DUMMY_STREAM-01';
+        
+        return streamInfo;
+    }
+
     getDummyMediaInfo(type) {
-        return {
-            type: type,
-            bitrateList: [1000, 2000, 3000],
-            representationCount: 3
-        }
+        const mediaInfo = new MediaInfo();
+
+        mediaInfo.id = 'DUMMY_MEDIA-01';
+        mediaInfo.type = type;
+        mediaInfo.bitrateList = [1000, 2000, 3000];
+        mediaInfo.representationCount = 3;
+        mediaInfo.streamInfo = this.getDummyStreamInfo(); 
+
+        return mediaInfo;
     }
 }
 
