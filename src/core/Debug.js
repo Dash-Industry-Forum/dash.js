@@ -32,6 +32,9 @@ import EventBus from "./EventBus.js";
 import Events from './events/Events.js';
 import FactoryMaker from './FactoryMaker.js';
 
+/**
+ * @module Debug
+ */
 function Debug() {
 
     let context = this.context;
@@ -54,7 +57,8 @@ function Debug() {
      * Prepends a timestamp in milliseconds to each log message.
      * @param {boolean} value Set to true if you want to see a timestamp in each log message.
      * @default false
-     * @memberof Debug#
+     * @memberof module:Debug
+     * @instance
      */
     function setLogTimestampVisible(value) {
         showLogTimestamp = value;
@@ -63,7 +67,8 @@ function Debug() {
      * Prepends the callee object name, and media type if available, to each log message.
      * @param {boolean} value Set to true if you want to see a object name and media type in each log message.
      * @default false
-     * @memberof Debug#
+     * @memberof module:Debug
+     * @instance
      */
     //function showCalleeName(value) {
     //    showCalleeName = value;
@@ -72,7 +77,8 @@ function Debug() {
      * Toggles logging to the browser's javascript console.  If you set to false you will still receive a log event with the same message.
      * @param {boolean} value Set to false if you want to turn off logging to the browser's console.
      * @default true
-     * @memberof Debug#
+     * @memberof module:Debug
+     * @instance
      */
     function setLogToBrowserConsole(value) {
         logToBrowserConsole = value;
@@ -80,7 +86,8 @@ function Debug() {
     /**
      * Use this method to get the state of logToBrowserConsole.
      * @returns {boolean} The current value of logToBrowserConsole
-     * @memberof Debug#
+     * @memberof module:Debug
+     * @instance
      */
     function getLogToBrowserConsole() {
         return logToBrowserConsole;
@@ -88,7 +95,8 @@ function Debug() {
     /**
      * This method will allow you send log messages to either the browser's console and/or dispatch an event to capture at the media player level.
      * @param arguments The message you want to log. The Arguments object is supported for this method so you can send in comma separated logging items.
-     * @memberof Debug#
+     * @memberof module:Debug
+     * @instance
      */
     function log() {
 

@@ -29,10 +29,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
-*  Represents a data structure that keep all the necessary info about a single init/media segment
-* */
+/**
+ * @class
+ * @ignore
+ */
 class DataChunk {
+    //Represents a data structure that keep all the necessary info about a single init/media segment
     constructor() {
         this.streamId = null;
         this.mediaInfo = null;

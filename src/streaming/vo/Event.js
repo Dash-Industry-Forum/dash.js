@@ -28,7 +28,10 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
+/**
+ * @class
+ * @ignore
+ */
 class Event {
     constructor() {
         this.type = null; // event type/name. mandatory

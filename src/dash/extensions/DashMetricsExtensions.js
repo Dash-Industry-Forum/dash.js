@@ -88,7 +88,7 @@ function DashMetricsExtensions() {
      * @param bufferType - String 'audio' or 'video',
      * @param periodId - Make sure this is the period id not index.
      * @return int
-     * @see {@link MediaPlayer#setMaxAllowedBitrateFor setMaxAllowedBitrateFor()}
+     * @see {@link module:MediaPlayer#setMaxAllowedBitrateFor setMaxAllowedBitrateFor()}
      * @see {@link DashMetricsExtensions#getMaxIndexForBufferType getMaxIndexForBufferType()}
      * @memberof DashMetricsExtensions#
      * @method

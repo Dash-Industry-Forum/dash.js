@@ -109,8 +109,8 @@ function Protection() {
      * Create a ProtectionController and associated ProtectionModel for use with
      * a single piece of content.
      *
-     * @return {MediaPlayer.dependencies.ProtectionController} protection controller
-     * @memberof MediaPlayer#
+     * @return {ProtectionController} protection controller
+     *
      */
     function createProtectionSystem(config) {
 

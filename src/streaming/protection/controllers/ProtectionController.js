@@ -85,7 +85,7 @@ function ProtectionController(config) {
      *
      * @param {Object} manifest the json version of the manifest XML document for the
      * desired content.  Applications can download their manifest using
-     * {@link MediaPlayer#retrieveManifest}
+     * {@link module:MediaPlayer#retrieveManifest}
      * @param {StreamInfo} [aInfo] audio stream information
      * @param {StreamInfo} [vInfo] video stream information
      * @memberof ProtectionController
