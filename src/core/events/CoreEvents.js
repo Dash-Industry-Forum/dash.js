@@ -30,6 +30,10 @@
  */
 import EventsBase from './EventsBase.js';
 
+/**
+ * @class
+ * @ignore
+ */
 class CoreEvents extends EventsBase {
     constructor () {
         super();

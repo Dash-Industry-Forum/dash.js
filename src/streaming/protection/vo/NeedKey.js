@@ -29,13 +29,14 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * EME-independent NeedKey
- *
- * @param {ArrayBuffer} initData the initialization data
- * @param {String} [initDataType] initialization data type
- * @constructor
+ * @class
  */
 class NeedKey {
+    /**
+     * @param {ArrayBuffer} initData the initialization data
+     * @param {String} [initDataType] initialization data type
+     * @constructor
+     */
     constructor(initData, initDataType) {
         this.initData = initData;
         this.initDataType = initDataType;

@@ -29,13 +29,31 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import EventsBase from '../core/events/EventsBase.js';
-
+/**
+ * @Class
+ */
 class MediaPlayerEvents extends EventsBase {
     constructor () {
         super();
+        /**
+         * Triggered when the video element's buffer state changes to stalled.
+         * @event MediaPlayerEvents#BUFFER_EMPTY
+         */
         this.BUFFER_EMPTY = "bufferstalled";
+        /**
+         * Triggered when the video element's buffer state changes to loaded.
+         * @event MediaPlayerEvents#BUFFER_LOADED
+         */
         this.BUFFER_LOADED = "bufferloaded";
+        /**
+         * Triggered when
+         * @event MediaPlayerEvents#ERROR
+         */
         this.ERROR = "error";
+        /**
+         * Triggered when {@link module:Debug} log method is called.
+         * @event MediaPlayerEvents#LOG
+         */
         this.LOG = "log";
         this.MANIFEST_LOADED = "manifestloaded";
         this.METRICS_CHANGED = "metricschanged";
