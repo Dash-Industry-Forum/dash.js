@@ -9,5 +9,6 @@
     "requireSpaceBeforeBinaryOperators": true,
     "requireSpaceAfterBinaryOperators": true,
     "requireSpacesInConditionalExpression": true, // Ternary if
-    "requireSpaceBeforeBlockStatements": true
+    "requireSpaceBeforeBlockStatements": true,
+    "requireSpacesInForStatement": true
 }

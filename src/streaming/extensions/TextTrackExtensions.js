@@ -316,7 +316,7 @@ function TextTrackExtensions() {
                         container = video.parentNode;
                     }
                     imgs = container.childNodes;
-                    for (i = 0;i < imgs.length;i++) {
+                    for (i = 0; i < imgs.length; i++) {
                         if (imgs[i].id == 'ttmlImage_' + this.id) {
                             container.removeChild(imgs[i]);
                         }

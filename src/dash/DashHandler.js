@@ -467,7 +467,7 @@ function DashHandler(config) {
         startIdx = segmentRange.start;
         endIdx = segmentRange.end;
 
-        for (periodSegIdx = startIdx;periodSegIdx <= endIdx; periodSegIdx++) {
+        for (periodSegIdx = startIdx; periodSegIdx <= endIdx; periodSegIdx++) {
 
             seg = getIndexBasedSegment(representation, periodSegIdx);
             seg.replacementTime = (start + periodSegIdx - 1) * representation.segmentDuration;
