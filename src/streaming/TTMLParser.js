@@ -587,7 +587,7 @@ function TTMLParser() {
      * **/
 
 
-        // Compute the style properties to return an array with the cleaned properties.
+    // Compute the style properties to return an array with the cleaned properties.
     function processStyle(cueStyle, cellUnit) {
         var properties = [];
 
@@ -766,7 +766,7 @@ function TTMLParser() {
      * - getProcessedRegion: Return the processed region(s) from the ID(s) received in entry.
      ***/
 
-        // Compute the region properties to return an array with the cleaned properties.
+    // Compute the region properties to return an array with the cleaned properties.
     function processRegion(cueRegion, cellUnit) {
         var properties = [];
 

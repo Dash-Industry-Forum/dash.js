@@ -203,7 +203,7 @@ function XlinkController(config) {
                 delete element.originalContent['xlink:href'];
                 resolvedElements.push(element.originalContent);
             }
-                // Element was successfully resolved
+            // Element was successfully resolved
             else if (element.resolvedContent) {
                 for (j = 0; j < element.resolvedContent[type].length; j++) {
                     //TODO Contains another Xlink attribute with xlink:actuate set to onload. Remove all xLink attributes

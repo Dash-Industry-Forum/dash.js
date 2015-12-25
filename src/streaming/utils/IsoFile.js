@@ -83,7 +83,7 @@ function IsoFile() {
     * @memberof IsoFile#
     */
     function setData(value) {
-            parsedIsoFile = value;
+        parsedIsoFile = value;
     }
 
     /**
