@@ -7,5 +7,6 @@
     "disallowTrailingWhitespace": true,
     "requireSpaceAfterKeywords": true,
     "requireSpaceBeforeBinaryOperators": true,
-    "requireSpaceAfterBinaryOperators": true
+    "requireSpaceAfterBinaryOperators": true,
+    "requireSpacesInConditionalExpression": true, // Ternary if
 }

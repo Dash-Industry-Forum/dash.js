@@ -235,7 +235,7 @@ function Stream(config) {
     }
 
     function getMimeTypeOrType(mediaInfo) {
-        return mediaInfo.type === 'text'? mediaInfo.mimeType : mediaInfo.type;
+        return mediaInfo.type === 'text' ? mediaInfo.mimeType : mediaInfo.type;
     }
 
     function isMediaSupported(mediaInfo, mediaSource, manifest) {

@@ -301,7 +301,7 @@ function DashAdapter() {
 
     function getCurrentRepresentationInfo(manifest, representationController) {
         var representation = representationController.getCurrentRepresentation();
-        return representation ? convertRepresentationToTrackInfo(manifest, representation): null;
+        return representation ? convertRepresentationToTrackInfo(manifest, representation) : null;
     }
 
     function getEvent(eventBox, eventStreams, startTime) {
