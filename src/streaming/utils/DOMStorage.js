@@ -122,7 +122,7 @@ function DOMStorage() {
         var isExpired = (new Date().getTime() - parseInt(obj.timestamp)) >= experationDict[MEDIA_SETTINGS_EXPIRATION] || false;
         var settings = obj.settings;
 
-        if (isExpired){
+        if (isExpired) {
             localStorage.removeItem(key);
             settings = null;
         }
@@ -146,7 +146,7 @@ function DOMStorage() {
                     if (!isNaN(bitrate) && !isExpired) {
                         abrController.setInitialBitrateFor(value, bitrate);
                         log('Last bitrate played for ' + value + ' was ' + bitrate);
-                    } else if (isExpired){
+                    } else if (isExpired) {
                         localStorage.removeItem(key);
                     }
                 }
@@ -160,7 +160,7 @@ function DOMStorage() {
     }
 
     function setExpiration(type, ttl) {
-        if (ttl !== undefined && !isNaN(ttl) && typeof (ttl) === 'number'){
+        if (ttl !== undefined && !isNaN(ttl) && typeof (ttl) === 'number') {
             experationDict[type] = ttl;
         }
     }

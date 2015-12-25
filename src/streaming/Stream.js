@@ -115,7 +115,7 @@ function Stream(config) {
      * @param mediaSource {MediaSource}
      * @memberof Stream#
      */
-    function activate(mediaSource){
+    function activate(mediaSource) {
         if (!isStreamActivated) {
             eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
             initializeMedia(mediaSource);
@@ -192,7 +192,7 @@ function Stream(config) {
         return streamInfo;
     }
 
-    function hasMedia(type){
+    function hasMedia(type) {
         return (getMediaInfo(type) !== null);
     }
 
@@ -280,7 +280,7 @@ function Stream(config) {
         var idx = streamProcessors.indexOf(processor);
         var mediaSource = processor.getMediaSource();
 
-        if (mediaInfo.type !== 'fragmentedText'){
+        if (mediaInfo.type !== 'fragmentedText') {
             processor.reset(true);
             createStreamProcessor(mediaInfo, manifest, mediaSource, {buffer: buffer, replaceIdx: idx, currentTime: currentTime});
             playbackController.seek(playbackController.getTime());
@@ -326,13 +326,13 @@ function Stream(config) {
 
         if ((mediaInfo.type === 'text' || mediaInfo.type === 'fragmentedText')) {
             var idx;
-            for (var i = 0; i < allMediaForType.length; i++){
+            for (var i = 0; i < allMediaForType.length; i++) {
                 if (allMediaForType[i].index === mediaInfo.index) {
                     idx = i;
                 }
                 streamProcessor.updateMediaInfo(manifest, allMediaForType[i]);//creates text tracks for all adaptations in one stream processor
             }
-            if (mediaInfo.type === 'fragmentedText'){
+            if (mediaInfo.type === 'fragmentedText') {
                 streamProcessor.updateMediaInfo(manifest, allMediaForType[idx]);//sets the initial media info
             }
         }else {
@@ -425,7 +425,7 @@ function Stream(config) {
         eventBus.trigger(Events.STREAM_INITIALIZED, {streamInfo: streamInfo, error:error});
 
         if (!isMediaInitialized || isStreamActivated) return;
-        if (protectionController){
+        if (protectionController) {
             protectionController.initialize(manifestModel.getValue(), getMediaInfo('audio'), getMediaInfo('video'));
         }
         isStreamActivated = true;
@@ -479,7 +479,7 @@ function Stream(config) {
 
         var processors = getProcessors();
 
-        return processors.filter(function (processor){
+        return processors.filter(function (processor) {
             return (processor.getType() === mediaInfo.type);
         })[0];
     }

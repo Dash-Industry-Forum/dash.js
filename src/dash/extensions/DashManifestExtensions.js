@@ -58,7 +58,7 @@ function DashManifestExtensions() {
 
         if ((adaptation.Representation_asArray.length > 0) &&
             (adaptation.Representation_asArray[0].hasOwnProperty('codecs')) &&
-            (adaptation.Representation_asArray[0].codecs == 'stpp')){
+            (adaptation.Representation_asArray[0].codecs == 'stpp')) {
             return type == 'fragmentedText';
         }
 
@@ -147,7 +147,7 @@ function DashManifestExtensions() {
     }
 
     function getIsMain(adaptation) {
-        return getRolesForAdaptation(adaptation).filter(function (role){
+        return getRolesForAdaptation(adaptation).filter(function (role) {
             return role.value === 'main';
         })[0];
     }
@@ -356,10 +356,10 @@ function DashManifestExtensions() {
                 representation.id = r.id;
             }
 
-            if (r.hasOwnProperty('bandwidth')){
+            if (r.hasOwnProperty('bandwidth')) {
                 representation.bandwidth = r.bandwidth;
             }
-            if (r.hasOwnProperty('maxPlayoutRate')){
+            if (r.hasOwnProperty('maxPlayoutRate')) {
                 representation.maxPlayoutRate = r.maxPlayoutRate;
             }
             if (r.hasOwnProperty('SegmentBase')) {
@@ -453,11 +453,11 @@ function DashManifestExtensions() {
 
             if (getIsMuxed(a)) {
                 adaptationSet.type = 'muxed';
-            } else if (getIsAudio(a)){
+            } else if (getIsAudio(a)) {
                 adaptationSet.type = 'audio';
-            }else if (getIsVideo(a)){
+            }else if (getIsVideo(a)) {
                 adaptationSet.type = 'video';
-            }else if (getIsFragmentedText(a)){
+            }else if (getIsFragmentedText(a)) {
                 adaptationSet.type = 'fragmentedText';
             }else {
                 adaptationSet.type = 'text';
@@ -485,7 +485,7 @@ function DashManifestExtensions() {
             // If the attribute @start is present in the Period, then the
             // Period is a regular Period and the PeriodStart is equal
             // to the value of this attribute.
-            if (p.hasOwnProperty('start')){
+            if (p.hasOwnProperty('start')) {
                 vo = new Period();
                 vo.start = p.start;
             }
@@ -495,7 +495,7 @@ function DashManifestExtensions() {
             // Period PeriodStart is the sum of the start time of the previous
             // Period PeriodStart and the value of the attribute @duration
             // of the previous Period.
-            else if (p1 !== null && p.hasOwnProperty('duration') && vo1 !== null){
+            else if (p1 !== null && p.hasOwnProperty('duration') && vo1 !== null) {
                 vo = new Period();
                 vo.start = vo1.start + vo1.duration;
                 vo.duration = p.duration;
@@ -520,11 +520,11 @@ function DashManifestExtensions() {
                 vo.id = getPeriodId(p);
             }
 
-            if (vo !== null && p.hasOwnProperty('duration')){
+            if (vo !== null && p.hasOwnProperty('duration')) {
                 vo.duration = p.duration;
             }
 
-            if (vo !== null){
+            if (vo !== null) {
                 vo.index = i;
                 vo.mpd = mpd;
                 periods.push(vo);

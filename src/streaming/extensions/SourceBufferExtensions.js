@@ -95,7 +95,7 @@ function SourceBufferExtensions() {
     function removeSourceBuffer(mediaSource, buffer) {
         try {
             mediaSource.removeSourceBuffer(buffer);
-        } catch (ex){
+        } catch (ex) {
         }
     }
 
@@ -319,14 +319,14 @@ function SourceBufferExtensions() {
             if (mediaSource.readyState === 'open') {
                 buffer.abort();
             }
-        } catch (ex){
+        } catch (ex) {
         }
     }
 
-    function setConfig(config){
+    function setConfig(config) {
         if (!config) return;
 
-        if (config.manifestExt){
+        if (config.manifestExt) {
             manifestExt = config.manifestExt;
         }
     }

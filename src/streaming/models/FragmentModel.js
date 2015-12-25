@@ -56,7 +56,7 @@ function FragmentModel(config) {
         delayLoadingTimeout,
         fragmentLoader;
 
-    function setup(){
+    function setup() {
         scheduleController = null;
         fragmentLoader = null;
         executedRequests = [];
@@ -187,7 +187,7 @@ function FragmentModel(config) {
 
         //Adds the ability to delay single fragment loading time to control buffer. Needed for Advanced ABR rules.
         if (now < request.delayLoadingTime ) {
-            delayLoadingTimeout = setTimeout(function (){
+            delayLoadingTimeout = setTimeout(function () {
                 executeRequest(request);
             }, (request.delayLoadingTime - now) );
             return;
@@ -324,8 +324,8 @@ function FragmentModel(config) {
         eventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, { request: request, response: response, error: error, sender: this });
     }
 
-    function onPlaybackSeeking (){
-        if (delayLoadingTimeout !== undefined){
+    function onPlaybackSeeking () {
+        if (delayLoadingTimeout !== undefined) {
             clearTimeout(delayLoadingTimeout);
         }
     }

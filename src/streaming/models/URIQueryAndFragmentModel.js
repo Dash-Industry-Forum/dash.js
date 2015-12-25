@@ -45,15 +45,15 @@ function URIQueryAndFragmentModel() {
         isHTTPS = false;
     }
 
-    function getURIFragmentData(){
+    function getURIFragmentData() {
         return URIFragmentDataVO;
     }
 
-    function getURIQueryData(){
+    function getURIQueryData() {
         return URIQueryData;
     }
 
-    function isManifestHTTPS(){
+    function isManifestHTTPS() {
         return isHTTPS;
     }
 

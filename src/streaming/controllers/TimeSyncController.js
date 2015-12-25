@@ -260,7 +260,7 @@ function TimeSyncController() {
         httpHandler(rfc1123Decoder, url, onSuccessCB, onFailureCB, true);
     }
 
-    function checkForDateHeader(){
+    function checkForDateHeader() {
         var metrics = metricsModel.getReadOnlyMetricsFor('stream');
         var dateHeaderValue = metricsExt.getLatestMPDRequestHeaderValueByID(metrics, 'Date');
         var dateHeaderTime = dateHeaderValue !== null ? new Date(dateHeaderValue).getTime() : Number.NaN;
@@ -273,7 +273,7 @@ function TimeSyncController() {
         }
     }
 
-    function completeTimeSyncSequence(failed, time, offset){
+    function completeTimeSyncSequence(failed, time, offset) {
         setIsSynchronizing(false);
         eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED, { time: time, offset: offset, error: failed ? new Error(TIME_SYNC_FAILED_ERROR_CODE) : null });
     }

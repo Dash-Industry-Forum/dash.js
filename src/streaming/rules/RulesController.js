@@ -198,7 +198,7 @@ function RulesController() {
         };
 
         if (typeof (rule.reset) !== 'function') {
-            rule.reset = function (){
+            rule.reset = function () {
                 //TODO do some default clearing
             };
         }

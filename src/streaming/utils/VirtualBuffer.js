@@ -48,7 +48,7 @@ function VirtualBuffer() {
         data,
         sourceBufferExt;
 
-    function setup(){
+    function setup() {
         data = {};
     }
 
@@ -278,7 +278,7 @@ function VirtualBuffer() {
     function setConfig(config) {
         if (!config) return;
 
-        if (config.sourceBufferExt){
+        if (config.sourceBufferExt) {
             sourceBufferExt = config.sourceBufferExt;
         }
     }
@@ -291,7 +291,7 @@ function VirtualBuffer() {
     }
 
     function sortArrayByProperty(array, sortProp) {
-        var compare = function (obj1, obj2){
+        var compare = function (obj1, obj2) {
             if (obj1[sortProp] < obj2[sortProp]) return -1;
             if (obj1[sortProp] > obj2[sortProp]) return 1;
             return 0;

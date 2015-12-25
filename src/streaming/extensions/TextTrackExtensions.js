@@ -86,7 +86,7 @@ function TextTrackExtensions() {
         }
     }
 
-    function createTrackForUserAgent (i){
+    function createTrackForUserAgent (i) {
         var kind = textTrackQueue[i].kind;
         var label = textTrackQueue[i].label !== undefined ? textTrackQueue[i].label : textTrackQueue[i].lang;
         var lang = textTrackQueue[i].lang;
@@ -132,7 +132,7 @@ function TextTrackExtensions() {
                     track.default = true;
                     defaultIndex = i;
                 }
-                if (!isIE11orEdge){
+                if (!isIE11orEdge) {
                     video.appendChild(track);
                 }
                 var textTrack = video.textTracks[i];
@@ -288,7 +288,7 @@ function TextTrackExtensions() {
             }
 
             //image subtitle extracted from TTML
-            if (currentItem.type == 'image'){
+            if (currentItem.type == 'image') {
                 cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, '');
                 cue.image = currentItem.data;
                 cue.id = currentItem.id;
@@ -316,8 +316,8 @@ function TextTrackExtensions() {
                         container = video.parentNode;
                     }
                     imgs = container.childNodes;
-                    for (i = 0;i < imgs.length;i++){
-                        if (imgs[i].id == 'ttmlImage_' + this.id){
+                    for (i = 0;i < imgs.length;i++) {
+                        if (imgs[i].id == 'ttmlImage_' + this.id) {
                             container.removeChild(imgs[i]);
                         }
                     }
@@ -359,7 +359,7 @@ function TextTrackExtensions() {
             }
             else {
                 cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, currentItem.data);
-                if (currentItem.styles){
+                if (currentItem.styles) {
                     if (currentItem.styles.align !== undefined && cue.hasOwnProperty('align')) {
                         cue.align = currentItem.styles.align;
                     }
@@ -378,20 +378,20 @@ function TextTrackExtensions() {
             track.addCue(cue);
         }
 
-        if (!textTrackQueue[currentTrackIdx].isFragmented){
+        if (!textTrackQueue[currentTrackIdx].isFragmented) {
             track.mode = textTrackQueue[currentTrackIdx].defaultTrack ? 'showing' : 'hidden';
         }
     }
 
-    function getCurrentTextTrack(){
+    function getCurrentTextTrack() {
         return currentTrackIdx >= 0 ? video.textTracks[currentTrackIdx] : null;
     }
 
-    function getCurrentTrackIdx(){
+    function getCurrentTrackIdx() {
         return currentTrackIdx;
     }
 
-    function setCurrentTrackIdx(idx){
+    function setCurrentTrackIdx(idx) {
         currentTrackIdx = idx;
         clearCues.call(this);
         if (idx >= 0) {
@@ -411,7 +411,7 @@ function TextTrackExtensions() {
     }
 
     function deleteTrackCues(track) {
-        if (track.cues){
+        if (track.cues) {
             var cues = track.cues;
             var lastIdx = cues.length - 1;
 
@@ -425,7 +425,7 @@ function TextTrackExtensions() {
 
     function deleteAllTextTracks() {
         var ln = trackElementArr.length;
-        for (var i = 0; i < ln; i++){
+        for (var i = 0; i < ln; i++) {
             if (isIE11orEdge) {
                 deleteTrackCues.call(this, getTextTrack.call(this, i));
             }else {
@@ -435,7 +435,7 @@ function TextTrackExtensions() {
         }
         trackElementArr = [];
         textTrackQueue = [];
-        if (videoSizeCheckInterval){
+        if (videoSizeCheckInterval) {
             clearInterval(videoSizeCheckInterval);
             videoSizeCheckInterval = null;
         }
@@ -483,10 +483,10 @@ function TextTrackExtensions() {
         }
     }
 
-    function setConfig(config){
+    function setConfig(config) {
         if (!config) return;
 
-        if (config.videoModel){
+        if (config.videoModel) {
             videoModel = config.videoModel;
         }
     }

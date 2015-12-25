@@ -35,7 +35,7 @@ function MediaPlayerFactory() {
         } else if (source === undefined && !video.src) {
             return null;
         }
-        if (context === undefined){
+        if (context === undefined) {
             context = {};
         }
         player = MediaPlayer(context).create();

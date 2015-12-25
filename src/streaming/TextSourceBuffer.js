@@ -76,7 +76,7 @@ function TextSourceBuffer() {
         textTrackExtensions.initialize();
         isFragmented = !manifestExt.getIsTextTrack(type);
 
-        if (isFragmented){
+        if (isFragmented) {
             fragmentExt = FragmentExtensions(context).getInstance();
             fragmentExt.setConfig({boxParser: BoxParser(context).getInstance()});
             fragmentModel = streamProcessor.getFragmentModel();
@@ -125,17 +125,17 @@ function TextSourceBuffer() {
             textTrackExtensions.addTextTrack(textTrackInfo, mediaInfos.length);
         }
 
-        if (mediaType === 'fragmentedText'){
-            if (!initializationSegmentReceived){
+        if (mediaType === 'fragmentedText') {
+            if (!initializationSegmentReceived) {
                 initializationSegmentReceived = true;
-                for (i = 0; i < mediaInfos.length; i++){
+                for (i = 0; i < mediaInfos.length; i++) {
                     createTextTrackFromMediaInfo(null, mediaInfos[i]);
                 }
                 timescale = fragmentExt.getMediaTimescaleFromMoov(bytes);
             }else {
                 samplesInfo = fragmentExt.getSamplesInfo(bytes);
                 for (i = 0 ; i < samplesInfo.length ; i++) {
-                    if (!firstSubtitleStart){
+                    if (!firstSubtitleStart) {
                         firstSubtitleStart = samplesInfo[0].cts - chunk.start * timescale;
                     }
                     samplesInfo[i].cts -= firstSubtitleStart;
@@ -178,7 +178,7 @@ function TextSourceBuffer() {
         streamController = null;
     }
 
-    function getAllTracksAreDisabled(){
+    function getAllTracksAreDisabled() {
         return allTracksAreDisabled;
     }
 
@@ -242,7 +242,7 @@ function TextSourceBuffer() {
             }
         }
 
-        if (allTracksAreDisabled){
+        if (allTracksAreDisabled) {
             textTrackExtensions.setCurrentTrackIdx(-1);
         }
     }

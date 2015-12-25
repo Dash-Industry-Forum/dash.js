@@ -67,7 +67,7 @@ function DashAdapter() {
     function setConfig(config) {
         if (!config) return;
 
-        if (config.manifestExt){
+        if (config.manifestExt) {
             manifestExt = config.manifestExt;
         }
     }
@@ -130,13 +130,13 @@ function DashAdapter() {
         mediaInfo.lang = manifestExt.getLanguageForAdaptation(a);
         viewpoint = manifestExt.getViewpointForAdaptation(a);
         mediaInfo.viewpoint = viewpoint ? viewpoint.value : undefined;
-        mediaInfo.accessibility = manifestExt.getAccessibilityForAdaptation(a).map(function (accessibility){
+        mediaInfo.accessibility = manifestExt.getAccessibilityForAdaptation(a).map(function (accessibility) {
             return accessibility.value;
         });
-        mediaInfo.audioChannelConfiguration =  manifestExt.getAudioChannelConfigurationForAdaptation(a).map(function (audioChannelConfiguration){
+        mediaInfo.audioChannelConfiguration =  manifestExt.getAudioChannelConfigurationForAdaptation(a).map(function (audioChannelConfiguration) {
             return audioChannelConfiguration.value;
         });
-        mediaInfo.roles = manifestExt.getRolesForAdaptation(a).map(function (role){
+        mediaInfo.roles = manifestExt.getRolesForAdaptation(a).map(function (role) {
             return role.value;
         });
         mediaInfo.codec = manifestExt.getCodec(a);
@@ -145,7 +145,7 @@ function DashAdapter() {
         mediaInfo.bitrateList = manifestExt.getBitrateListForAdaptation(a);
 
         if (mediaInfo.contentProtection) {
-            mediaInfo.contentProtection.forEach(function (item){
+            mediaInfo.contentProtection.forEach(function (item) {
                 item.KID = manifestExt.getKID(item);
             });
         }

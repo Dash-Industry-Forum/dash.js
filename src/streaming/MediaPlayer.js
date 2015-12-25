@@ -133,7 +133,7 @@ function MediaPlayer() {
         restoreDefaultUTCTimingSources();
         setAutoPlay(AutoPlay !== undefined ? AutoPlay : true);
 
-        if (view){
+        if (view) {
             attachView(view);
         }
 
@@ -1005,7 +1005,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
-    function getBufferToKeep(){
+    function getBufferToKeep() {
         return mediaPlayerModel.getBufferToKeep();
     }
 
@@ -1022,7 +1022,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
-    function getBufferPruningInterval(){
+    function getBufferPruningInterval() {
         return mediaPlayerModel.getBufferPruningInterval();
     }
 
@@ -1133,7 +1133,7 @@ function MediaPlayer() {
             source = urlOrManifest;
         }
 
-        if (protectionCtrl){
+        if (protectionCtrl) {
             protectionController = protectionCtrl;
         }
         protectionData = data;
@@ -1267,7 +1267,7 @@ function MediaPlayer() {
     }
 
     function detectProtection() {
-        if (protectionController){
+        if (protectionController) {
             return protectionController;
         }
         /* jshint ignore:start */

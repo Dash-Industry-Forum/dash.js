@@ -81,16 +81,16 @@ function AbrController() {
         eventBus.on(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
     }
 
-    function setConfig(config){
+    function setConfig(config) {
         if (!config) return;
 
-        if (config.abrRulesCollection){
+        if (config.abrRulesCollection) {
             abrRulesCollection = config.abrRulesCollection;
         }
-        if (config.rulesController){
+        if (config.rulesController) {
             rulesController = config.rulesController;
         }
-        if (config.streamController){
+        if (config.streamController) {
             streamController = config.streamController;
         }
     }
@@ -126,7 +126,7 @@ function AbrController() {
     }
 
     function getMaxAllowedBitrateFor(type) {
-        if (bitrateDict.hasOwnProperty('max') && bitrateDict.max.hasOwnProperty(type)){
+        if (bitrateDict.hasOwnProperty('max') && bitrateDict.max.hasOwnProperty(type)) {
             return bitrateDict.max[type];
         }
         return NaN;
@@ -352,7 +352,7 @@ function AbrController() {
         topQualities[id][type] = value;
     }
 
-    function checkMaxBitrate(idx, type){
+    function checkMaxBitrate(idx, type) {
         var maxBitrate = getMaxAllowedBitrateFor(type);
         if (isNaN(maxBitrate)) {
             return idx;

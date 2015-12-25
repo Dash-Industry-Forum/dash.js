@@ -48,7 +48,7 @@ function ManifestUpdater() {
         manifestModel,
         manifestExt;
 
-    function setConfig(config){
+    function setConfig(config) {
         if (!config) return;
 
         if (config.manifestModel) {

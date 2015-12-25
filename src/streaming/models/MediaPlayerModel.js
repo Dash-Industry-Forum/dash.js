@@ -31,7 +31,7 @@ function MediaPlayerModel() {
         bufferToKeep = value;
     }
 
-    function getBufferToKeep(){
+    function getBufferToKeep() {
         return bufferToKeep;
     }
 
@@ -39,7 +39,7 @@ function MediaPlayerModel() {
         bufferPruningInterval = value;
     }
 
-    function getBufferPruningInterval(){
+    function getBufferPruningInterval() {
         return bufferPruningInterval;
     }
 
@@ -47,7 +47,7 @@ function MediaPlayerModel() {
         scheduleWhilePaused = value;
     }
 
-    function getScheduleWhilePaused(){
+    function getScheduleWhilePaused() {
         return scheduleWhilePaused;
     }
 

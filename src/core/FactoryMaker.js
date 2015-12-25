@@ -113,8 +113,8 @@ let FactoryMaker = (function () {
 
         if (extension) {
             extension = extension.apply({ context:context, factory:instance, parent:classConstructor});
-            for (const prop in extension){
-                if (classConstructor.hasOwnProperty(prop)){
+            for (const prop in extension) {
+                if (classConstructor.hasOwnProperty(prop)) {
                     classConstructor[prop] = extension[prop];
                 }
             }

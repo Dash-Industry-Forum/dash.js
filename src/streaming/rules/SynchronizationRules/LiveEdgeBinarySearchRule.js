@@ -182,7 +182,7 @@ function LiveEdgeBinarySearchRule(config) {
                 req = adapter.getFragmentRequestForTime(streamProcessor, representationInfo, searchTime, {ignoreIsFinished: true});
                 findLiveEdge(searchTime, function () {
                     binarySearch(true, searchTime);
-                }, function (){
+                }, function () {
                     callback(SwitchRequest(context).create(searchTime, p));
                 }, req);
 

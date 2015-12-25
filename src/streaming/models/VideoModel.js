@@ -85,7 +85,7 @@ function VideoModel() {
             element.currentTime = currentTime;
         } catch (e) {
             if (element.readyState === 0 && e.code === e.INVALID_STATE_ERR) {
-                setTimeout(function (){
+                setTimeout(function () {
                     element.currentTime = currentTime;
                 }, 400);
             }

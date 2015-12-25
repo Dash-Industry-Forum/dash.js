@@ -35,7 +35,7 @@ function Capabilities() {
     let instance,
         encryptedMediaSupported;
 
-    function setup(){
+    function setup() {
         encryptedMediaSupported = false;
     }
 

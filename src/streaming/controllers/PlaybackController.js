@@ -115,7 +115,7 @@ function PlaybackController() {
         return videoModel.getElement().played;
     }
 
-    function getIsDynamic(){
+    function getIsDynamic() {
         return isDynamic;
     }
 
@@ -161,7 +161,7 @@ function PlaybackController() {
         }
     }
 
-    function isSeeking(){
+    function isSeeking() {
         return videoModel.getElement().seeking;
     }
 

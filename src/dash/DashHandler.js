@@ -74,7 +74,7 @@ function DashHandler(config) {
         isDynamic = streamProcessor.isDynamic();
     }
 
-    function getStreamProcessor(){
+    function getStreamProcessor() {
         return streamProcessor;
     }
 
@@ -86,7 +86,7 @@ function DashHandler(config) {
         return currentTime;
     }
 
-    function getCurrentIndex (){
+    function getCurrentIndex () {
         return index;
     }
 

@@ -106,7 +106,7 @@ function ScheduleController(config) {
         isDynamic = streamProcessor.isDynamic();
         scheduleWhilePaused = mediaPlayerModel.getScheduleWhilePaused();
 
-        if (manifestExt.getIsTextTrack(type)){
+        if (manifestExt.getIsTextTrack(type)) {
             eventBus.on(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
         }
 
@@ -221,7 +221,7 @@ function ScheduleController(config) {
             isFragmentLoading = true;
             abrController.getPlaybackQuality(streamProcessor,  getNextFragment(onGetNextFragment));
         } else {
-            validateTimeout = setTimeout(function (){
+            validateTimeout = setTimeout(function () {
                 //log("timeout going back to validate")
                 validate();
             }, 1000); //TODO should this be something based on fragment duration?
@@ -281,7 +281,7 @@ function ScheduleController(config) {
     function onFragmentLoadingCompleted(e) {
         if (e.sender !== fragmentModel) return;
 
-        if (!isNaN(e.request.index)){
+        if (!isNaN(e.request.index)) {
             isFragmentLoading = false;
         }
         if (!e.error) return;
@@ -372,7 +372,7 @@ function ScheduleController(config) {
 
         metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentRepresentationInfo.DVRWindow.end - playbackController.getTime()});
 
-        if (isDynamic){ // need to validate again for dynamic after first seek
+        if (isDynamic) { // need to validate again for dynamic after first seek
             validate();
         }
     }
@@ -421,11 +421,11 @@ function ScheduleController(config) {
         return fragmentModel;
     }
 
-    function setTimeToLoadDelay(value){
+    function setTimeToLoadDelay(value) {
         timeToloadDelay = value;
     }
 
-    function getTimeToLoadDelay(){
+    function getTimeToLoadDelay() {
         return timeToloadDelay;
     }
 
@@ -451,7 +451,7 @@ function ScheduleController(config) {
         eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
 
 
-        if (manifestExt.getIsTextTrack(type)){
+        if (manifestExt.getIsTextTrack(type)) {
             eventBus.off(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
         }
 

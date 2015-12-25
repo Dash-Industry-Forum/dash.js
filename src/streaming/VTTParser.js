@@ -73,7 +73,7 @@ function VTTParser() {
                     var endTime = convertCuePointTimes(cuePoints[1].replace(regExWhiteSpace, ''));
 
                     if ((!isNaN(startTime) && !isNaN(endTime)) && startTime >= lastStartTime && endTime > startTime) {
-                        if (text !== ''){
+                        if (text !== '') {
                             lastStartTime = startTime;
                             //TODO Make VO external so other parsers can use.
                             captionArray.push({
@@ -122,21 +122,21 @@ function VTTParser() {
     function getCaptionStyles(arr) {
         var styleObject = {};
         arr.forEach(function (element) {
-            if (element.split(/:/).length > 1){
+            if (element.split(/:/).length > 1) {
                 var val = element.split(/:/)[1];
-                if (val && val.search(/%/) != -1){
+                if (val && val.search(/%/) != -1) {
                     val = parseInt(val.replace(/%/, ''));
                 }
-                if (element.match(/align/) || element.match(/A/)){
+                if (element.match(/align/) || element.match(/A/)) {
                     styleObject.align = val;
                 }
-                if (element.match(/line/) || element.match(/L/) ){
+                if (element.match(/line/) || element.match(/L/) ) {
                     styleObject.line = val;
                 }
-                if (element.match(/position/) || element.match(/P/) ){
+                if (element.match(/position/) || element.match(/P/) ) {
                     styleObject.position = val;
                 }
-                if (element.match(/size/) || element.match(/S/)){
+                if (element.match(/size/) || element.match(/S/)) {
                     styleObject.size = val;
                 }
             }
@@ -160,10 +160,10 @@ function VTTParser() {
         }
 
         lineCount = i - idx;
-        if (lineCount > 1){
-            for (var j = 0; j < lineCount; j++){
+        if (lineCount > 1) {
+            for (var j = 0; j < lineCount; j++) {
                 lineData = data[(idx + j)];
-                if (!lineData.match(regExToken)){
+                if (!lineData.match(regExToken)) {
                     subline += lineData;
                     if (j !== lineCount - 1) {
                         subline += '\n';

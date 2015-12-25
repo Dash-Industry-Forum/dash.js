@@ -304,7 +304,7 @@ function RepresentationController() {
     }
 
     function onWallclockTimeUpdated(e) {
-        if (e.isDynamic){
+        if (e.isDynamic) {
             updateAvailabilityWindow(e.isDynamic);
         }
     }
@@ -336,7 +336,7 @@ function RepresentationController() {
     function onQualityChanged(e) {
         if (e.mediaType !== streamProcessor.getType() || streamProcessor.getStreamInfo().id !== e.streamInfo.id) return;
 
-        if (e.oldQuality !== e.newQuality){
+        if (e.oldQuality !== e.newQuality) {
             currentRepresentation = getRepresentationForQuality(e.newQuality);
             setLocalStorage(e.mediaType, currentRepresentation.bandwidth);
             addRepresentationSwitch();

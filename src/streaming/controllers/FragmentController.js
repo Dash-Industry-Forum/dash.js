@@ -66,7 +66,7 @@ function FragmentController(/*config*/) {
         // Wrap the buffer controller into model and store it to track the loading state and execute the requests
         var model = findModel(scheduleController);
 
-        if (!model){
+        if (!model) {
             model = FragmentModel(context).create({metricsModel: MetricsModel(context).getInstance()});
             model.setScheduleController(scheduleController);
             fragmentModels.push(model);
@@ -83,7 +83,7 @@ function FragmentController(/*config*/) {
         }
     }
 
-    function isInitializationRequest(request){
+    function isInitializationRequest(request) {
         return (request && request.type && request.type === HTTPRequest.INIT_SEGMENT_TYPE);
     }
 

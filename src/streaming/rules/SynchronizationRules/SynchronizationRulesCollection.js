@@ -47,7 +47,7 @@ function SynchronizationRulesCollection() {
         withAccurateTimeSourceRules,
         bestGuestRules;
 
-    function initialize(){
+    function initialize() {
         withAccurateTimeSourceRules = [];
         bestGuestRules = [];
 

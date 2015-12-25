@@ -66,7 +66,7 @@ function MediaController() {
      */
     function checkInitialMediaSettings(streamInfo) {
 
-        ['audio', 'video', 'text', 'fragmentedText'].forEach(function (type){
+        ['audio', 'video', 'text', 'fragmentedText'].forEach(function (type) {
             var settings = getInitialSettings(type);
             var tracksForType = getTracksFor(type, streamInfo);
             var isSet = false;
@@ -79,7 +79,7 @@ function MediaController() {
             if (!tracksForType || (tracksForType.length === 0)) return;
 
             if (settings) {
-                tracksForType.forEach(function (track){
+                tracksForType.forEach(function (track) {
                     if (!isSet && matchSettings(settings, track)) {
                         setTrack(track);
                         isSet = true;
@@ -293,13 +293,13 @@ function MediaController() {
         return (sameId && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration);
     }
 
-    function setConfig(config){
+    function setConfig(config) {
         if (!config) return;
 
-        if (config.errHandler){
+        if (config.errHandler) {
             errHandler = config.errHandler;
         }
-        if (config.DOMStorage){
+        if (config.DOMStorage) {
             DOMStorage = config.DOMStorage;
         }
     }

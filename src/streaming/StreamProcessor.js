@@ -166,7 +166,7 @@ function StreamProcessor(config) {
         return fragmentLoader;
     }
 
-    function getIndexHandler(){
+    function getIndexHandler() {
         return indexHandler;
     }
 
@@ -182,7 +182,7 @@ function StreamProcessor(config) {
         bufferController.setBuffer(buffer);
     }
 
-    function getBufferController(){
+    function getBufferController() {
         return bufferController;
     }
 
@@ -198,7 +198,7 @@ function StreamProcessor(config) {
         if (newMediaInfo !== mediaInfo && (!newMediaInfo || !mediaInfo || (newMediaInfo.type === mediaInfo.type))) {
             mediaInfo = newMediaInfo;
         }
-        if (mediaInfoArr.indexOf(newMediaInfo) === -1){
+        if (mediaInfoArr.indexOf(newMediaInfo) === -1) {
             mediaInfoArr.push(newMediaInfo);
         }
         adapter.updateData(manifest, this);
@@ -256,7 +256,7 @@ function StreamProcessor(config) {
         return (bufferController.getBuffer() || bufferController.createBuffer(mediaInfo));
     }
 
-    function isDynamic(){
+    function isDynamic() {
         return dynamic;
     }
 

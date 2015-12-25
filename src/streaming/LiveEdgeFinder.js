@@ -68,11 +68,11 @@ function LiveEdgeFinder() {
         searchStartTime = NaN;
     }
 
-    function getLiveEdge(){
+    function getLiveEdge() {
         return liveEdge;
     }
 
-    function reset(){
+    function reset() {
         eventBus.off(Events.STREAM_INITIALIZED, onStreamInitialized, this);
         abortSearch();
         liveEdge = null;

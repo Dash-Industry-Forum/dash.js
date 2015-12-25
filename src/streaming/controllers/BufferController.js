@@ -686,7 +686,7 @@ function BufferController(config) {
         minBufferTime = value;
     }
 
-    function getCriticalBufferLevel(){
+    function getCriticalBufferLevel() {
         return criticalBufferLevel;
     }
 
@@ -702,7 +702,7 @@ function BufferController(config) {
         return isBufferingCompleted;
     }
 
-    function getIsAppendingInProgress(){
+    function getIsAppendingInProgress() {
         return isAppendingInProgress;
     }
 
