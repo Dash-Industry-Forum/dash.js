@@ -55,15 +55,15 @@ import ScheduleRulesCollection from './rules/SchedulingRules/ScheduleRulesCollec
 import SynchronizationRulesCollection from './rules/SynchronizationRules/SynchronizationRulesCollection.js';
 import MediaSourceExtensions from './extensions/MediaSourceExtensions.js';
 import VideoModelExtensions from './extensions/VideoModelExtensions.js';
-import Debug from "./../core/Debug.js";
-import EventBus from "./../core/EventBus.js";
+import Debug from './../core/Debug.js';
+import EventBus from './../core/EventBus.js';
 import Events from './../core/events/Events.js';
 import MediaPlayerEvents from './MediaPlayerEvents.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 //Dash
 import DashAdapter from '../dash/DashAdapter.js';
 import DashParser from '../dash/DashParser.js';
-import DashManifestExtensions from "../dash/extensions/DashManifestExtensions.js";
+import DashManifestExtensions from '../dash/extensions/DashManifestExtensions.js';
 import DashMetricsExtensions from '../dash/extensions/DashMetricsExtensions.js';
 import TimelineConverter from '../dash/TimelineConverter.js';
 import MediaPlayerFactory from '../streaming/MediaPlayerFactory.js';
@@ -74,7 +74,7 @@ import MediaPlayerFactory from '../streaming/MediaPlayerFactory.js';
  */
 function MediaPlayer() {
 
-    const VERSION = "2.0.0";
+    const VERSION = '2.0.0';
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
@@ -141,7 +141,7 @@ function MediaPlayer() {
             attachSource(source);
         }
 
-        log("[dash.js " + VERSION + "] " + "new MediaPlayer instance has been created");
+        log('[dash.js ' + VERSION + '] ' + 'new MediaPlayer instance has been created');
     }
 
     /**
@@ -166,23 +166,23 @@ function MediaPlayer() {
      */
     function play() {
         if (!initialized) {
-            throw "MediaPlayer not initialized!";
+            throw 'MediaPlayer not initialized!';
         }
 
         if (!capabilities.supportsMediaSource()) {
-            errHandler.capabilityError("mediasource");
+            errHandler.capabilityError('mediasource');
             return;
         }
 
         if (!element || !source) {
-            throw "Missing view or source.";
+            throw 'Missing view or source.';
         }
         playing = true;
-        log("Playback initiated!");
+        log('Playback initiated!');
 
         createControllers();
         domStorage.checkInitialBitrate();
-        if (typeof source === "string") {
+        if (typeof source === 'string') {
             streamController.load(source);
         } else {
             streamController.loadWithManifest(source);
@@ -352,7 +352,7 @@ function MediaPlayer() {
         var h = Math.floor(value / 3600);
         var m = Math.floor((value % 3600) / 60);
         var s = Math.floor((value % 3600) % 60);
-        return (h === 0 ? "" : (h < 10 ? "0" + h.toString() + ":" : h.toString() + ":")) + (m < 10 ? "0" + m.toString() : m.toString()) + ":" + (s < 10 ? "0" + s.toString() : s.toString());
+        return (h === 0 ? '' : (h < 10 ? '0' + h.toString() + ':' : h.toString() + ':')) + (m < 10 ? '0' + m.toString() : m.toString()) + ':' + (s < 10 ? '0' + s.toString() : s.toString());
     }
 
     function getActiveStream() {
@@ -625,7 +625,7 @@ function MediaPlayer() {
 
         for (var i = 0; i < ln; i++) {
             var track = tracks[i];
-            var mode = idx === i ? "showing" : "hidden";
+            var mode = idx === i ? 'showing' : 'hidden';
 
             if (track.mode !== mode) { //checking that mode is not already set by 3rd Party player frameworks that set mode to prevent event retrigger.
                 track.mode = mode;
@@ -1057,7 +1057,7 @@ function MediaPlayer() {
      */
     function attachVideoContainer(container) {
         if (!videoModel) {
-            throw "Must call attachView with video element before you attach container element";
+            throw 'Must call attachView with video element before you attach container element';
         }
 
         videoModel.setVideoContainer(container);
@@ -1072,7 +1072,7 @@ function MediaPlayer() {
      */
     function attachView(view) {
         if (!initialized) {
-            throw "MediaPlayer not initialized!";
+            throw 'MediaPlayer not initialized!';
         }
 
         element = view;
@@ -1083,7 +1083,7 @@ function MediaPlayer() {
             videoModel.initialize();
             videoModel.setElement(element);
             // Workaround to force Firefox to fire the canplay event.
-            element.preload = "auto";
+            element.preload = 'auto';
 
             detectProtection();
         }
@@ -1098,7 +1098,7 @@ function MediaPlayer() {
      */
     function attachTTMLRenderingDiv(div) {
         if (!videoModel) {
-            throw "Must call attachView with video element before you attach TTML Rendering Div";
+            throw 'Must call attachView with video element before you attach TTML Rendering Div';
         }
         videoModel.setTTMLRenderingDiv(div);
     }
@@ -1122,10 +1122,10 @@ function MediaPlayer() {
      */
     function attachSource(urlOrManifest, protectionCtrl, data) {
         if (!initialized) {
-            throw "MediaPlayer not initialized!";
+            throw 'MediaPlayer not initialized!';
         }
 
-        if (typeof urlOrManifest === "string") {
+        if (typeof urlOrManifest === 'string') {
             var uriQueryFragModel = URIQueryAndFragmentModel(context).getInstance();
             uriQueryFragModel.initialize();
             source = uriQueryFragModel.parseURI(urlOrManifest);
@@ -1271,7 +1271,7 @@ function MediaPlayer() {
             return protectionController;
         }
         /* jshint ignore:start */
-        if(typeof Protection == "function") {//TODO need a better way to register/detect plugin components
+        if(typeof Protection == 'function') {//TODO need a better way to register/detect plugin components
             let protection = Protection(context).create();
             Events.extend(Protection.events);
             MediaPlayerEvents.extend(Protection.events, { publicOnly: true });

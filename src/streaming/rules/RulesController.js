@@ -49,7 +49,7 @@ function RulesController() {
 
     function initialize() {
         rules = {};
-        ruleMandatoryProperties = ["execute"];
+        ruleMandatoryProperties = ['execute'];
     }
 
     function setConfig(config) {
@@ -159,7 +159,7 @@ function RulesController() {
         for (i = 0; i < ln; i += 1) {
             rule = allRules[i];
 
-            if (typeof (rule.reset) !== "function") continue;
+            if (typeof (rule.reset) !== 'function') continue;
 
             rule.reset();
         }
@@ -197,7 +197,7 @@ function RulesController() {
             exec(context, normalizedCallback);
         };
 
-        if (typeof(rule.reset) !== "function") {
+        if (typeof(rule.reset) !== 'function') {
             rule.reset = function(){
                 //TODO do some default clearing
             };

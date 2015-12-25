@@ -36,8 +36,8 @@ import LiveEdgeWithTimeSynchronizationRule from './LiveEdgeWithTimeSynchronizati
 import DashAdapter from '../../../dash/DashAdapter.js';
 
 
-const TIME_SYNCHRONIZED_RULES = "withAccurateTimeSourceRules";
-const BEST_GUESS_RULES = "bestGuestRules";
+const TIME_SYNCHRONIZED_RULES = 'withAccurateTimeSourceRules';
+const BEST_GUESS_RULES = 'bestGuestRules';
 
 function SynchronizationRulesCollection() {
 

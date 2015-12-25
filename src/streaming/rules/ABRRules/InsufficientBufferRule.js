@@ -31,7 +31,7 @@
 import SwitchRequest from '../SwitchRequest.js';
 import BufferController from '../../controllers/BufferController.js';
 import EventBus from '../../../core/EventBus.js';
-import Events from "../../../core/events/Events.js";
+import Events from '../../../core/events/Events.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 import Debug from '../../../core/Debug.js';
 
@@ -76,9 +76,9 @@ function InsufficientBufferRule(config) {
         }
 
         if (switchRequest.value !== SwitchRequest.NO_CHANGE && switchRequest.value !== current) {
-            log("InsufficientBufferRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " Priority: ",
-                switchRequest.priority === SwitchRequest.DEFAULT ? "Default" :
-                    switchRequest.priority === SwitchRequest.STRONG ? "Strong" : "Weak");
+            log('InsufficientBufferRule requesting switch to index: ', switchRequest.value, 'type: ',mediaType, ' Priority: ',
+                switchRequest.priority === SwitchRequest.DEFAULT ? 'Default' :
+                    switchRequest.priority === SwitchRequest.STRONG ? 'Strong' : 'Weak');
         }
 
         lastSwitchTime = now;

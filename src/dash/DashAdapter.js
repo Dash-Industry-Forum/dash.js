@@ -38,21 +38,21 @@ import FactoryMaker from '../core/FactoryMaker.js';
 
 const METRIC_LIST = {
     //TODO need to refactor all that reference to be able to export like all other const on factory object.
-    TCP_CONNECTION: "TcpConnection",
-    HTTP_REQUEST: "HttpRequest",
-    HTTP_REQUEST_TRACE: "HttpRequestTrace",
-    TRACK_SWITCH: "RepresentationSwitch",
-    BUFFER_LEVEL: "BufferLevel",
-    BUFFER_STATE: "BufferState",
-    DVR_INFO: "DVRInfo",
-    DROPPED_FRAMES: "DroppedFrames",
-    SCHEDULING_INFO: "SchedulingInfo",
-    REQUESTS_QUEUE: "RequestsQueue",
-    MANIFEST_UPDATE: "ManifestUpdate",
-    MANIFEST_UPDATE_STREAM_INFO: "ManifestUpdatePeriodInfo",
-    MANIFEST_UPDATE_TRACK_INFO: "ManifestUpdateRepresentationInfo",
-    PLAY_LIST: "PlayList",
-    PLAY_LIST_TRACE: "PlayListTrace"
+    TCP_CONNECTION: 'TcpConnection',
+    HTTP_REQUEST: 'HttpRequest',
+    HTTP_REQUEST_TRACE: 'HttpRequestTrace',
+    TRACK_SWITCH: 'RepresentationSwitch',
+    BUFFER_LEVEL: 'BufferLevel',
+    BUFFER_STATE: 'BufferState',
+    DVR_INFO: 'DVRInfo',
+    DROPPED_FRAMES: 'DroppedFrames',
+    SCHEDULING_INFO: 'SchedulingInfo',
+    REQUESTS_QUEUE: 'RequestsQueue',
+    MANIFEST_UPDATE: 'ManifestUpdate',
+    MANIFEST_UPDATE_STREAM_INFO: 'ManifestUpdatePeriodInfo',
+    MANIFEST_UPDATE_TRACK_INFO: 'ManifestUpdateRepresentationInfo',
+    PLAY_LIST: 'PlayList',
+    PLAY_LIST_TRACE: 'PlayListTrace'
 };
 
 function DashAdapter() {

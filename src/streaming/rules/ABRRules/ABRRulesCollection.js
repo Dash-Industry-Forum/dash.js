@@ -36,8 +36,8 @@ import MetricsModel from '../../models/MetricsModel.js';
 import DashMetricsExtensions from '../../../dash/extensions/DashMetricsExtensions.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
-const QUALITY_SWITCH_RULES = "qualitySwitchRules";
-const ABANDON_FRAGMENT_RULES = "abandonFragmentRules";
+const QUALITY_SWITCH_RULES = 'qualitySwitchRules';
+const ABANDON_FRAGMENT_RULES = 'abandonFragmentRules';
 
 function ABRRulesCollection() {
 

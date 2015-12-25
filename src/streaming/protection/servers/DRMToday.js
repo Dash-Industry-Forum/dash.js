@@ -40,8 +40,8 @@ import FactoryMaker from '../../../core/FactoryMaker.js';
 function DRMToday() {
 
     const keySystems = {
-        "com.widevine.alpha": {
-            responseType: "json",
+        'com.widevine.alpha': {
+            responseType: 'json',
             getLicenseMessage: function(response) {
                 return BASE64.decodeArray(response.license);
             },
@@ -49,8 +49,8 @@ function DRMToday() {
                 return response;
             }
         },
-        "com.microsoft.playready": {
-            responseType: "arraybuffer",
+        'com.microsoft.playready': {
+            responseType: 'arraybuffer',
             getLicenseMessage: function(response) {
                 return response;
             },

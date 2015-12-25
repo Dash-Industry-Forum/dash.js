@@ -35,7 +35,7 @@ import Debug from '../../core/Debug.js';
 
 function EventController() {
 
-    const MPD_RELOAD_SCHEME = "urn:mpeg:dash:event:2012";
+    const MPD_RELOAD_SCHEME = 'urn:mpeg:dash:event:2012';
     const MPD_RELOAD_VALUE = 1;
 
     let context = this.context;
@@ -68,7 +68,7 @@ function EventController() {
     }
 
     function start() {
-        log("Start Event Controller");
+        log('Start Event Controller');
         if (!isNaN(refreshDelay)) {
             eventInterval = setInterval(onEventTimer, refreshDelay);
         }
@@ -85,10 +85,10 @@ function EventController() {
             for(var i = 0; i < values.length; i++) {
                 var event = values[i];
                 inlineEvents[event.id] = event;
-                log("Add inline event with id " + event.id);
+                log('Add inline event with id ' + event.id);
             }
         }
-        log("Added " + values.length + " inline events");
+        log('Added ' + values.length + ' inline events');
     }
 
     /**
@@ -100,9 +100,9 @@ function EventController() {
             var event = values[i];
             if (!(event.id in inbandEvents)) {
                 inbandEvents[event.id] = event;
-                log("Add inband event with id " + event.id);
+                log('Add inband event with id ' + event.id);
             } else {
-                log("Repeated event with id " + event.id);
+                log('Repeated event with id ' + event.id);
             }
 
         }
@@ -131,7 +131,7 @@ function EventController() {
                 if (curr !== undefined) {
                     presentationTime = curr.presentationTime / curr.eventStream.timescale;
                     if (presentationTime === 0 || (presentationTime <= currentVideoTime && presentationTime + presentationTimeThreshold > currentVideoTime)) {
-                        log("Start Event " + eventId + " at " + currentVideoTime);
+                        log('Start Event ' + eventId + ' at ' + currentVideoTime);
                         if (curr.duration > 0) activeEvents[eventId] = curr;
                         if (curr.eventStream.schemeIdUri == MPD_RELOAD_SCHEME && curr.eventStream.value == MPD_RELOAD_VALUE) refreshManifest();
                         delete events[eventId];
@@ -153,7 +153,7 @@ function EventController() {
                 var eventId = eventIds[i];
                 var curr = activeEvents[eventId];
                 if (curr !== null && (curr.duration + curr.presentationTime) / curr.eventStream.timescale < currentVideoTime) {
-                    log("Remove Event " + eventId + " at time " + currentVideoTime);
+                    log('Remove Event ' + eventId + ' at time ' + currentVideoTime);
                     curr = null;
                     delete activeEvents[eventId];
                 }
@@ -166,10 +166,10 @@ function EventController() {
         var manifest = manifestModel.getValue();
         var url = manifest.url;
 
-        if (manifest.hasOwnProperty("Location")) {
+        if (manifest.hasOwnProperty('Location')) {
             url = manifest.Location;
         }
-        log("Refresh manifest @ " + url);
+        log('Refresh manifest @ ' + url);
         manifestUpdater.getManifestLoader().load(url);
     }
 

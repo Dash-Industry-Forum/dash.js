@@ -38,7 +38,7 @@ import PlaybackController from './PlaybackController.js';
 import MediaController from './MediaController.js';
 import CustomTimeRanges from '../utils/CustomTimeRanges.js';
 import EventBus from '../../core/EventBus.js';
-import Events from "../../core/events/Events.js";
+import Events from '../../core/events/Events.js';
 import BoxParser from '../utils/BoxParser.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
@@ -48,8 +48,8 @@ const BUFFER_TIME_AT_TOP_QUALITY = 30;
 const BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 60;
 const LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;
 const RICH_BUFFER_THRESHOLD = 20;
-const BUFFER_LOADED = "bufferLoaded";
-const BUFFER_EMPTY = "bufferStalled";
+const BUFFER_LOADED = 'bufferLoaded';
+const BUFFER_EMPTY = 'bufferStalled';
 const STALL_THRESHOLD = 0.5;
 
 function BufferController(config) {
@@ -150,11 +150,11 @@ function BufferController(config) {
         try {
             sourceBuffer = sourceBufferExt.createSourceBuffer(mediaSource, mediaInfo);
 
-            if (sourceBuffer && sourceBuffer.hasOwnProperty("initialize")) {
+            if (sourceBuffer && sourceBuffer.hasOwnProperty('initialize')) {
                 sourceBuffer.initialize(type, this);
             }
         } catch (e) {
-            errHandler.mediaSourceError("Error creating " + type +" source buffer.");
+            errHandler.mediaSourceError('Error creating ' + type +' source buffer.');
         }
 
         setBuffer(sourceBuffer);
@@ -181,7 +181,7 @@ function BufferController(config) {
 
         if (e.fragmentModel !== streamProcessor.getFragmentModel()) return;
 
-        log("Initialization finished loading");
+        log('Initialization finished loading');
         chunk = e.chunk;
         // cache the initialization data to use it next time the quality has changed
         virtualBuffer.append(chunk);
@@ -314,7 +314,7 @@ function BufferController(config) {
 
                 //log("Number of buffered ranges: " + ranges.length);
                 for (i = 0, len = ranges.length; i < len; i += 1) {
-                    log("Buffered Range: " + ranges.start(i) + " - " + ranges.end(i));
+                    log('Buffered Range: ' + ranges.start(i) + ' - ' + ranges.end(i));
                 }
             }
         }
@@ -402,12 +402,12 @@ function BufferController(config) {
     }
 
     function notifyBufferStateChanged(state) {
-        if (bufferState === state || (type === "fragmentedText" && textSourceBuffer.getAllTracksAreDisabled())) return;
+        if (bufferState === state || (type === 'fragmentedText' && textSourceBuffer.getAllTracksAreDisabled())) return;
 
         bufferState = state;
         addBufferMetrics();
         eventBus.trigger(Events.BUFFER_LEVEL_STATE_CHANGED, {sender: instance, state:state, mediaType:type, streamInfo:streamProcessor.getStreamInfo()});
-        log(state === BUFFER_LOADED ? ("Got enough buffer to start.") : ("Waiting for more buffer before starting playback."));
+        log(state === BUFFER_LOADED ? ('Got enough buffer to start.') : ('Waiting for more buffer before starting playback.'));
     }
 
 
@@ -428,7 +428,7 @@ function BufferController(config) {
         }
 
         isoFile = BoxParser(context).getInstance().parse(data);
-        eventBoxes = isoFile.getBoxes("emsg");
+        eventBoxes = isoFile.getBoxes('emsg');
 
         for (var i = 0, ln = eventBoxes.length; i < ln; i += 1) {
             event = adapter.getEvent(eventBoxes[i], eventStreams, fragmentStarttime);
@@ -462,7 +462,7 @@ function BufferController(config) {
             identifier = String.fromCharCode(data[i+4],data[i+5],data[i+6],data[i+7]);
             size = data[i]*expThree + data[i+1]*expTwo + data[i+2]*256 + data[i+3]*1;
 
-            if(identifier != "emsg" ) {
+            if(identifier != 'emsg' ) {
                 for(var l = i ; l < i + size; l++) {
                     modData[j] = data[l];
                     j += 1;
@@ -482,7 +482,7 @@ function BufferController(config) {
 
     /* prune buffer on our own in background to avoid browsers pruning buffer silently */
     function pruneBuffer() {
-        if (type === "fragmentedText") return;
+        if (type === 'fragmentedText') return;
 
         var bufferToPrune = 0;
         var currentTime = playbackController.getTime();
@@ -638,7 +638,7 @@ function BufferController(config) {
             case MediaController.TRACK_SWITCH_MODE_NEVER_REPLACE:
                 break;
             default:
-                log("track switch mode is not supported: " + switchMode);
+                log('track switch mode is not supported: ' + switchMode);
         }
     }
 

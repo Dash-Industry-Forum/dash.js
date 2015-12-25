@@ -54,24 +54,24 @@ function DashManifestExtensions() {
             found = false;
 
         var col = adaptation.ContentComponent_asArray;
-        var mimeTypeRegEx = (type !== "text") ? new RegExp(type) : new RegExp("(vtt|ttml)");
+        var mimeTypeRegEx = (type !== 'text') ? new RegExp(type) : new RegExp('(vtt|ttml)');
 
         if((adaptation.Representation_asArray.length>0)&&
-            (adaptation.Representation_asArray[0].hasOwnProperty("codecs"))&&
-            (adaptation.Representation_asArray[0].codecs=="stpp")){
-            return type == "fragmentedText";
+            (adaptation.Representation_asArray[0].hasOwnProperty('codecs'))&&
+            (adaptation.Representation_asArray[0].codecs=='stpp')){
+            return type == 'fragmentedText';
         }
 
         if (col) {
             if (col.length > 1) {
-                return (type == "muxed");
+                return (type == 'muxed');
             } else if (col[0] && col[0].contentType === type) {
                 result = true;
                 found = true;
             }
         }
 
-        if (adaptation.hasOwnProperty("mimeType")) {
+        if (adaptation.hasOwnProperty('mimeType')) {
             result = mimeTypeRegEx.test(adaptation.mimeType);
             found = true;
         }
@@ -83,7 +83,7 @@ function DashManifestExtensions() {
             while (!found && i < len) {
                 representation = adaptation.Representation_asArray[i];
 
-                if (representation.hasOwnProperty("mimeType")) {
+                if (representation.hasOwnProperty('mimeType')) {
                     result = mimeTypeRegEx.test(representation.mimeType);
                     found = true;
                 }
@@ -96,59 +96,59 @@ function DashManifestExtensions() {
     }
 
     function getIsAudio(adaptation) {
-        return getIsTypeOf(adaptation, "audio");
+        return getIsTypeOf(adaptation, 'audio');
     }
 
     function getIsVideo(adaptation) {
-        return getIsTypeOf(adaptation, "video");
+        return getIsTypeOf(adaptation, 'video');
     }
 
     function getIsFragmentedText(adaptation) {
-        return getIsTypeOf(adaptation, "fragmentedText");
+        return getIsTypeOf(adaptation, 'fragmentedText');
     }
 
     function getIsText(adaptation) {
-        return getIsTypeOf(adaptation, "text");
+        return getIsTypeOf(adaptation, 'text');
     }
 
     function getIsMuxed(adaptation) {
-        return getIsTypeOf(adaptation, "muxed");
+        return getIsTypeOf(adaptation, 'muxed');
     }
 
     function getIsTextTrack(type) {
-        return (type === "text/vtt" || type === "application/ttml+xml");
+        return (type === 'text/vtt' || type === 'application/ttml+xml');
     }
 
     function getLanguageForAdaptation(adaptation) {
-        var lang = "";
+        var lang = '';
 
-        if (adaptation.hasOwnProperty("lang")) {
+        if (adaptation.hasOwnProperty('lang')) {
             //Filter out any other characters not allowed according to RFC5646
-            lang = adaptation.lang.replace(/[^A-Za-z0-9-]/g,"");
+            lang = adaptation.lang.replace(/[^A-Za-z0-9-]/g,'');
         }
 
         return lang;
     }
 
     function getViewpointForAdaptation(adaptation) {
-        return adaptation.hasOwnProperty("Viewpoint") ? adaptation.Viewpoint : null;
+        return adaptation.hasOwnProperty('Viewpoint') ? adaptation.Viewpoint : null;
     }
 
     function getRolesForAdaptation(adaptation) {
-        return adaptation.hasOwnProperty("Role_asArray") ? adaptation.Role_asArray : [];
+        return adaptation.hasOwnProperty('Role_asArray') ? adaptation.Role_asArray : [];
     }
 
     function getAccessibilityForAdaptation(adaptation) {
-        return adaptation.hasOwnProperty("Accessibility_asArray") ? adaptation.Accessibility_asArray : [];
+        return adaptation.hasOwnProperty('Accessibility_asArray') ? adaptation.Accessibility_asArray : [];
     }
 
     function getAudioChannelConfigurationForAdaptation(adaptation) {
-        return adaptation.hasOwnProperty("AudioChannelConfiguration_asArray") ? adaptation.AudioChannelConfiguration_asArray : [];
+        return adaptation.hasOwnProperty('AudioChannelConfiguration_asArray') ? adaptation.AudioChannelConfiguration_asArray : [];
     }
 
     function getIsMain(adaptation) {
         return getRolesForAdaptation(adaptation).filter(function(role){
-            return role.value === "main";
+            return role.value === 'main';
         })[0];
     }
 
@@ -169,7 +169,7 @@ function DashManifestExtensions() {
             len;
 
         for (i = 0, len = adaptations.length; i < len; i += 1) {
-            if (adaptations[i].hasOwnProperty("id") && adaptations[i].id === id) {
+            if (adaptations[i].hasOwnProperty('id') && adaptations[i].id === id) {
                 return adaptations[i];
             }
         }
@@ -239,14 +239,14 @@ function DashManifestExtensions() {
     }
 
     function getKID(adaptation) {
-        if (!adaptation || !adaptation.hasOwnProperty("cenc:default_KID")) {
+        if (!adaptation || !adaptation.hasOwnProperty('cenc:default_KID')) {
             return null;
         }
-        return adaptation["cenc:default_KID"];
+        return adaptation['cenc:default_KID'];
     }
 
     function getContentProtectionData(adaptation) {
-        if (!adaptation || !adaptation.hasOwnProperty("ContentProtection_asArray") || adaptation.ContentProtection_asArray.length === 0) {
+        if (!adaptation || !adaptation.hasOwnProperty('ContentProtection_asArray') || adaptation.ContentProtection_asArray.length === 0) {
             return null;
         }
         return adaptation.ContentProtection_asArray;
@@ -254,8 +254,8 @@ function DashManifestExtensions() {
 
     function getIsDynamic(manifest) {
         var isDynamic = false;
-        if (manifest.hasOwnProperty("type")) {
-            isDynamic = (manifest.type === "dynamic");
+        if (manifest.hasOwnProperty('type')) {
+            isDynamic = (manifest.type === 'dynamic');
         }
         return isDynamic;
     }
@@ -275,7 +275,7 @@ function DashManifestExtensions() {
         var isOnDemand = false;
 
         if (manifest.profiles && manifest.profiles.length > 0) {
-            isOnDemand = (manifest.profiles.indexOf("urn:mpeg:dash:profile:isoff-on-demand:2011") !== -1);
+            isOnDemand = (manifest.profiles.indexOf('urn:mpeg:dash:profile:isoff-on-demand:2011') !== -1);
         }
 
         return isOnDemand;
@@ -285,7 +285,7 @@ function DashManifestExtensions() {
         var mpdDuration;
         //@mediaPresentationDuration specifies the duration of the entire Media Presentation.
         //If the attribute is not present, the duration of the Media Presentation is unknown.
-        if (manifest.hasOwnProperty("mediaPresentationDuration")) {
+        if (manifest.hasOwnProperty('mediaPresentationDuration')) {
             mpdDuration = manifest.mediaPresentationDuration;
         } else {
             mpdDuration = Number.MAX_VALUE;
@@ -302,7 +302,7 @@ function DashManifestExtensions() {
         var delay = NaN,
             minDelay = 2;
 
-        if (manifest.hasOwnProperty("minimumUpdatePeriod")) {
+        if (manifest.hasOwnProperty('minimumUpdatePeriod')) {
             delay = Math.max(parseFloat(manifest.minimumUpdatePeriod), minDelay);
         }
 
@@ -352,7 +352,7 @@ function DashManifestExtensions() {
             representation.index = i;
             representation.adaptation = adaptation;
 
-            if (r.hasOwnProperty("id")) {
+            if (r.hasOwnProperty('id')) {
                 representation.id = r.id;
             }
 
@@ -362,54 +362,54 @@ function DashManifestExtensions() {
             if (r.hasOwnProperty('maxPlayoutRate')){
                 representation.maxPlayoutRate = r.maxPlayoutRate;
             }
-            if (r.hasOwnProperty("SegmentBase")) {
+            if (r.hasOwnProperty('SegmentBase')) {
                 segmentInfo = r.SegmentBase;
-                representation.segmentInfoType = "SegmentBase";
+                representation.segmentInfoType = 'SegmentBase';
             }
-            else if (r.hasOwnProperty("SegmentList")) {
+            else if (r.hasOwnProperty('SegmentList')) {
                 segmentInfo = r.SegmentList;
-                representation.segmentInfoType = "SegmentList";
+                representation.segmentInfoType = 'SegmentList';
                 representation.useCalculatedLiveEdgeTime = true;
             }
-            else if (r.hasOwnProperty("SegmentTemplate")) {
+            else if (r.hasOwnProperty('SegmentTemplate')) {
                 segmentInfo = r.SegmentTemplate;
 
-                if (segmentInfo.hasOwnProperty("SegmentTimeline")) {
-                    representation.segmentInfoType = "SegmentTimeline";
+                if (segmentInfo.hasOwnProperty('SegmentTimeline')) {
+                    representation.segmentInfoType = 'SegmentTimeline';
                     s = segmentInfo.SegmentTimeline.S_asArray[segmentInfo.SegmentTimeline.S_asArray.length -1];
-                    if (!s.hasOwnProperty("r") || s.r >= 0) {
+                    if (!s.hasOwnProperty('r') || s.r >= 0) {
                         representation.useCalculatedLiveEdgeTime = true;
                     }
                 } else {
-                    representation.segmentInfoType = "SegmentTemplate";
+                    representation.segmentInfoType = 'SegmentTemplate';
                 }
 
-                if (segmentInfo.hasOwnProperty("initialization")) {
-                    representation.initialization = segmentInfo.initialization.split("$Bandwidth$")
-                        .join(r.bandwidth).split("$RepresentationID$").join(r.id);
+                if (segmentInfo.hasOwnProperty('initialization')) {
+                    representation.initialization = segmentInfo.initialization.split('$Bandwidth$')
+                        .join(r.bandwidth).split('$RepresentationID$').join(r.id);
                 }
             } else {
                 segmentInfo = r.BaseURL;
-                representation.segmentInfoType = "BaseURL";
+                representation.segmentInfoType = 'BaseURL';
             }
 
-            if (segmentInfo.hasOwnProperty("Initialization")) {
+            if (segmentInfo.hasOwnProperty('Initialization')) {
                 initialization = segmentInfo.Initialization;
-                if (initialization.hasOwnProperty("sourceURL")) {
+                if (initialization.hasOwnProperty('sourceURL')) {
                     representation.initialization = initialization.sourceURL;
-                } else if (initialization.hasOwnProperty("range")) {
+                } else if (initialization.hasOwnProperty('range')) {
                     representation.initialization = r.BaseURL;
                     representation.range = initialization.range;
                 }
-            } else if (r.hasOwnProperty("mimeType") && getIsTextTrack(r.mimeType)) {
+            } else if (r.hasOwnProperty('mimeType') && getIsTextTrack(r.mimeType)) {
                 representation.initialization = r.BaseURL;
                 representation.range = 0;
             }
 
-            if (segmentInfo.hasOwnProperty("timescale")) {
+            if (segmentInfo.hasOwnProperty('timescale')) {
                 representation.timescale = segmentInfo.timescale;
             }
-            if (segmentInfo.hasOwnProperty("duration")) {
+            if (segmentInfo.hasOwnProperty('duration')) {
                 // TODO according to the spec @maxSegmentDuration specifies the maximum duration of any Segment in any Representation in the Media Presentation
                 // It is also said that for a SegmentTimeline any @d value shall not exceed the value of MPD@maxSegmentDuration, but nothing is said about
                 // SegmentTemplate @duration attribute. We need to find out if @maxSegmentDuration should be used instead of calculated duration if the the duration
@@ -417,13 +417,13 @@ function DashManifestExtensions() {
                 //representation.segmentDuration = Math.min(segmentInfo.duration / representation.timescale, adaptation.period.mpd.maxSegmentDuration);
                 representation.segmentDuration = segmentInfo.duration / representation.timescale;
             }
-            if (segmentInfo.hasOwnProperty("startNumber")) {
+            if (segmentInfo.hasOwnProperty('startNumber')) {
                 representation.startNumber = segmentInfo.startNumber;
             }
-            if (segmentInfo.hasOwnProperty("indexRange")) {
+            if (segmentInfo.hasOwnProperty('indexRange')) {
                 representation.indexRange = segmentInfo.indexRange;
             }
-            if (segmentInfo.hasOwnProperty("presentationTimeOffset")) {
+            if (segmentInfo.hasOwnProperty('presentationTimeOffset')) {
                 representation.presentationTimeOffset = segmentInfo.presentationTimeOffset / representation.timescale;
             }
 
@@ -444,7 +444,7 @@ function DashManifestExtensions() {
             a = p.AdaptationSet_asArray[i];
             adaptationSet = new AdaptationSet();
 
-            if (a.hasOwnProperty("id")) {
+            if (a.hasOwnProperty('id')) {
                 adaptationSet.id = a.id;
             }
 
@@ -452,15 +452,15 @@ function DashManifestExtensions() {
             adaptationSet.period = period;
 
             if (getIsMuxed(a)) {
-                adaptationSet.type = "muxed";
+                adaptationSet.type = 'muxed';
             } else if(getIsAudio(a)){
-                adaptationSet.type="audio";
+                adaptationSet.type='audio';
             }else if (getIsVideo(a)){
-                adaptationSet.type="video";
+                adaptationSet.type='video';
             }else if (getIsFragmentedText(a)){
-                adaptationSet.type="fragmentedText";
+                adaptationSet.type='fragmentedText';
             }else{
-                adaptationSet.type="text";
+                adaptationSet.type='text';
             }
 
             adaptations.push(adaptationSet);
@@ -485,7 +485,7 @@ function DashManifestExtensions() {
             // If the attribute @start is present in the Period, then the
             // Period is a regular Period and the PeriodStart is equal
             // to the value of this attribute.
-            if (p.hasOwnProperty("start")){
+            if (p.hasOwnProperty('start')){
                 vo = new Period();
                 vo.start = p.start;
             }
@@ -495,7 +495,7 @@ function DashManifestExtensions() {
             // Period PeriodStart is the sum of the start time of the previous
             // Period PeriodStart and the value of the attribute @duration
             // of the previous Period.
-            else if (p1 !== null && p.hasOwnProperty("duration") && vo1 !== null){
+            else if (p1 !== null && p.hasOwnProperty('duration') && vo1 !== null){
                 vo = new Period();
                 vo.start = vo1.start + vo1.duration;
                 vo.duration = p.duration;
@@ -520,7 +520,7 @@ function DashManifestExtensions() {
                 vo.id = getPeriodId(p);
             }
 
-            if (vo !== null && p.hasOwnProperty("duration")){
+            if (vo !== null && p.hasOwnProperty('duration')){
                 vo.duration = p.duration;
             }
 
@@ -552,12 +552,12 @@ function DashManifestExtensions() {
 
     function getPeriodId(p) {
         if (!p) {
-            throw new Error("Period cannot be null or undefined");
+            throw new Error('Period cannot be null or undefined');
         }
 
         var id = Period.DEFAULT_ID;
 
-        if (p.hasOwnProperty("id") && p.id !== "__proto__") {
+        if (p.hasOwnProperty('id') && p.id !== '__proto__') {
             id = p.id;
         }
 
@@ -569,25 +569,25 @@ function DashManifestExtensions() {
 
         mpd.manifest = manifest;
 
-        if (manifest.hasOwnProperty("availabilityStartTime")) {
+        if (manifest.hasOwnProperty('availabilityStartTime')) {
             mpd.availabilityStartTime = new Date(manifest.availabilityStartTime.getTime());
         } else {
             mpd.availabilityStartTime = new Date(manifest.loadedTime.getTime());
         }
 
-        if (manifest.hasOwnProperty("availabilityEndTime")) {
+        if (manifest.hasOwnProperty('availabilityEndTime')) {
             mpd.availabilityEndTime = new Date(manifest.availabilityEndTime.getTime());
         }
 
-        if (manifest.hasOwnProperty("suggestedPresentationDelay")) {
+        if (manifest.hasOwnProperty('suggestedPresentationDelay')) {
             mpd.suggestedPresentationDelay = manifest.suggestedPresentationDelay;
         }
 
-        if (manifest.hasOwnProperty("timeShiftBufferDepth")) {
+        if (manifest.hasOwnProperty('timeShiftBufferDepth')) {
             mpd.timeShiftBufferDepth = manifest.timeShiftBufferDepth;
         }
 
-        if (manifest.hasOwnProperty("maxSegmentDuration")) {
+        if (manifest.hasOwnProperty('maxSegmentDuration')) {
             mpd.maxSegmentDuration = manifest.maxSegmentDuration;
         }
 
@@ -610,7 +610,7 @@ function DashManifestExtensions() {
         // If the MPD@minimumUpdatePeriod attribute in the client is provided, then the check time is defined as the
         // sum of the fetch time of this operating MPD and the value of this attribute,
         // i.e. CheckTime = FetchTime + MPD@minimumUpdatePeriod.
-        if (manifest.hasOwnProperty("minimumUpdatePeriod")) {
+        if (manifest.hasOwnProperty('minimumUpdatePeriod')) {
             fetchTime = getFetchTime(manifest, period);
             checkTime = fetchTime + manifest.minimumUpdatePeriod;
         }
@@ -633,7 +633,7 @@ function DashManifestExtensions() {
             // in this case the Period End Time should match CheckTime
             periodEnd = checkTime;
         } else {
-            throw new Error("Must have @mediaPresentationDuration or @minimumUpdatePeriod on MPD or an explicit @duration on the last period.");
+            throw new Error('Must have @mediaPresentationDuration or @minimumUpdatePeriod on MPD or an explicit @duration on the last period.');
         }
 
         return periodEnd;
@@ -651,15 +651,15 @@ function DashManifestExtensions() {
                 eventStream.period = period;
                 eventStream.timescale = 1;
 
-                if(eventStreams[i].hasOwnProperty("schemeIdUri")) {
+                if(eventStreams[i].hasOwnProperty('schemeIdUri')) {
                     eventStream.schemeIdUri = eventStreams[i].schemeIdUri;
                 } else {
-                    throw "Invalid EventStream. SchemeIdUri has to be set";
+                    throw 'Invalid EventStream. SchemeIdUri has to be set';
                 }
-                if(eventStreams[i].hasOwnProperty("timescale")) {
+                if(eventStreams[i].hasOwnProperty('timescale')) {
                     eventStream.timescale = eventStreams[i].timescale;
                 }
-                if(eventStreams[i].hasOwnProperty("value")) {
+                if(eventStreams[i].hasOwnProperty('value')) {
                     eventStream.value = eventStreams[i].value;
                 }
                 for(var j = 0; j < eventStreams[i].Event_asArray.length; j += 1) {
@@ -667,13 +667,13 @@ function DashManifestExtensions() {
                     event.presentationTime = 0;
                     event.eventStream = eventStream;
 
-                    if(eventStreams[i].Event_asArray[j].hasOwnProperty("presentationTime")) {
+                    if(eventStreams[i].Event_asArray[j].hasOwnProperty('presentationTime')) {
                         event.presentationTime = eventStreams[i].Event_asArray[j].presentationTime;
                     }
-                    if(eventStreams[i].Event_asArray[j].hasOwnProperty("duration")) {
+                    if(eventStreams[i].Event_asArray[j].hasOwnProperty('duration')) {
                         event.duration = eventStreams[i].Event_asArray[j].duration;
                     }
-                    if(eventStreams[i].Event_asArray[j].hasOwnProperty("id")) {
+                    if(eventStreams[i].Event_asArray[j].hasOwnProperty('id')) {
                         event.id = eventStreams[i].Event_asArray[j].id;
                     }
                     events.push(event);
@@ -694,15 +694,15 @@ function DashManifestExtensions() {
             eventStream.timescale = 1;
             eventStream.representation =  representation;
 
-            if(inbandStreams[i].hasOwnProperty("schemeIdUri")) {
+            if(inbandStreams[i].hasOwnProperty('schemeIdUri')) {
                 eventStream.schemeIdUri = inbandStreams[i].schemeIdUri;
             } else {
-                throw "Invalid EventStream. SchemeIdUri has to be set";
+                throw 'Invalid EventStream. SchemeIdUri has to be set';
             }
-            if(inbandStreams[i].hasOwnProperty("timescale")) {
+            if(inbandStreams[i].hasOwnProperty('timescale')) {
                 eventStream.timescale = inbandStreams[i].timescale;
             }
-            if(inbandStreams[i].hasOwnProperty("value")) {
+            if(inbandStreams[i].hasOwnProperty('value')) {
                 eventStream.value = inbandStreams[i].value;
             }
             eventStreams.push(eventStream);
@@ -728,7 +728,7 @@ function DashManifestExtensions() {
     function getUTCTimingSources(manifest) {
 
         var isDynamic = getIsDynamic(manifest);
-        var hasAST = manifest.hasOwnProperty("availabilityStartTime");
+        var hasAST = manifest.hasOwnProperty('availabilityStartTime');
         var utcTimingsArray = manifest.UTCTiming_asArray;
         var utcTimingEntries = [];
 
@@ -742,7 +742,7 @@ function DashManifestExtensions() {
                 utcTimingsArray.forEach(function (utcTiming) {
                     var entry = new UTCTiming();
 
-                    if (utcTiming.hasOwnProperty("schemeIdUri")) {
+                    if (utcTiming.hasOwnProperty('schemeIdUri')) {
                         entry.schemeIdUri = utcTiming.schemeIdUri;
                     } else {
                         // entries of type DescriptorType with no schemeIdUri
@@ -753,7 +753,7 @@ function DashManifestExtensions() {
 
                     // this is (incorrectly) interpreted as a number - schema
                     // defines it as a string
-                    if (utcTiming.hasOwnProperty("value")) {
+                    if (utcTiming.hasOwnProperty('value')) {
                         entry.value = utcTiming.value.toString();
                     } else {
                         // without a value, there's not a lot we can do with

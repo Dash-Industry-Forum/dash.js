@@ -61,7 +61,7 @@ function VTTParser() {
         {
             var item = data[i];
 
-            if (item.length > 0 && item !== "WEBVTT")
+            if (item.length > 0 && item !== 'WEBVTT')
             {
                 if (item.match(regExToken))
                 {
@@ -73,7 +73,7 @@ function VTTParser() {
                     var endTime = convertCuePointTimes(cuePoints[1].replace(regExWhiteSpace, ''));
 
                     if((!isNaN(startTime) && !isNaN(endTime)) && startTime >= lastStartTime && endTime > startTime) {
-                        if (text !== ""){
+                        if (text !== ''){
                             lastStartTime = startTime;
                             //TODO Make VO external so other parsers can use.
                             captionArray.push({
@@ -84,11 +84,11 @@ function VTTParser() {
                             });
                         }
                         else {
-                            log("Skipping cue due to empty/malformed cue text");
+                            log('Skipping cue due to empty/malformed cue text');
                         }
                     }
                     else {
-                        log("Skipping cue due to incorrect cue timing");
+                        log('Skipping cue due to incorrect cue timing');
                     }
                 }
             }
@@ -98,7 +98,7 @@ function VTTParser() {
     }
 
     function convertCuePointTimes(time) {
-        var timeArray = time.split(":");
+        var timeArray = time.split(':');
         var len = timeArray.length - 1;
 
         time = parseInt( timeArray[len-1], 10 ) * 60 + parseFloat( timeArray[len]);
@@ -125,7 +125,7 @@ function VTTParser() {
             if (element.split(/:/).length > 1){
                 var val = element.split(/:/)[1];
                 if (val && val.search(/%/) != -1){
-                    val = parseInt(val.replace(/%/, ""));
+                    val = parseInt(val.replace(/%/, ''));
                 }
                 if (element.match(/align/) || element.match(/A/)){
                     styleObject.align = val;
@@ -152,10 +152,10 @@ function VTTParser() {
         var i = idx;
 
         var lineCount,
-            subline = "",
-            lineData = "";
+            subline = '',
+            lineData = '';
 
-        while(data[i] !== "" && i < data.length) {
+        while(data[i] !== '' && i < data.length) {
             i++;
         }
 
@@ -166,12 +166,12 @@ function VTTParser() {
                 if(!lineData.match(regExToken)){
                     subline += lineData;
                     if (j !== lineCount-1) {
-                        subline += "\n";
+                        subline += '\n';
                     }
                 }
                 else {
                     // caption text should not have '-->' in it
-                    subline = "";
+                    subline = '';
                     break;
                 }
             }

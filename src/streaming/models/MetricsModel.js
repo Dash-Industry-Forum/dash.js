@@ -294,7 +294,7 @@ function  MetricsModel() {
 
     function addManifestUpdate(mediaType, type, requestTime, fetchTime, availabilityStartTime, presentationStartTime, clientTimeOffset, currentTime, buffered, latency) {
         var vo = new ManifestUpdate();
-        var metrics = getMetricsFor("stream");
+        var metrics = getMetricsFor('stream');
 
         vo.mediaType = mediaType;
         vo.type = type;

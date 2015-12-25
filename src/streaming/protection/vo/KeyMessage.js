@@ -45,7 +45,7 @@ class KeyMessage {
         this.sessionToken = sessionToken;
         this.message = message;
         this.defaultURL = defaultURL;
-        this.messageType = messageType ? messageType : "license-request";
+        this.messageType = messageType ? messageType : 'license-request';
     }
 }
 

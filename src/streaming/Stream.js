@@ -235,7 +235,7 @@ function Stream(config) {
     }
 
     function getMimeTypeOrType(mediaInfo) {
-        return mediaInfo.type === "text"? mediaInfo.mimeType : mediaInfo.type;
+        return mediaInfo.type === 'text'? mediaInfo.mimeType : mediaInfo.type;
     }
 
     function isMediaSupported(mediaInfo, mediaSource, manifest) {
@@ -243,23 +243,23 @@ function Stream(config) {
         var codec,
             msg;
 
-        if (type === "muxed" && mediaInfo) {
-            msg = "Multiplexed representations are intentionally not supported, as they are not compliant with the DASH-AVC/264 guidelines";
+        if (type === 'muxed' && mediaInfo) {
+            msg = 'Multiplexed representations are intentionally not supported, as they are not compliant with the DASH-AVC/264 guidelines';
             log(msg);
-            errHandler.manifestError(msg, "multiplexedrep", manifestModel.getValue());
+            errHandler.manifestError(msg, 'multiplexedrep', manifestModel.getValue());
             return false;
         }
 
-        if ((type === "text") || (type === "fragmentedText")) return true;
+        if ((type === 'text') || (type === 'fragmentedText')) return true;
 
         codec = mediaInfo.codec;
-        log(type + " codec: " + codec);
+        log(type + ' codec: ' + codec);
 
         if (!!mediaInfo.contentProtection && !capabilities.supportsEncryptedMedia()) {
-            errHandler.capabilityError("encryptedmedia");
+            errHandler.capabilityError('encryptedmedia');
         } else if (!capabilities.supportsCodec(VideoModel(context).getInstance().getElement(), codec)) {
-            msg = type + "Codec (" + codec + ") is not supported.";
-            errHandler.manifestError(msg, "codec", manifest);
+            msg = type + 'Codec (' + codec + ') is not supported.';
+            errHandler.manifestError(msg, 'codec', manifest);
             log(msg);
             return false;
         }
@@ -280,7 +280,7 @@ function Stream(config) {
         var idx = streamProcessors.indexOf(processor);
         var mediaSource = processor.getMediaSource();
 
-        if (mediaInfo.type !== "fragmentedText"){
+        if (mediaInfo.type !== 'fragmentedText'){
             processor.reset(true);
             createStreamProcessor(mediaInfo, manifest, mediaSource, {buffer: buffer, replaceIdx: idx, currentTime: currentTime});
             playbackController.seek(playbackController.getTime());
@@ -324,7 +324,7 @@ function Stream(config) {
             streamProcessors.push(streamProcessor);
         }
 
-        if ((mediaInfo.type === "text" || mediaInfo.type === "fragmentedText")) {
+        if ((mediaInfo.type === 'text' || mediaInfo.type === 'fragmentedText')) {
             var idx;
             for(var i = 0; i < allMediaForType.length; i++){
                 if(allMediaForType[i].index === mediaInfo.index) {
@@ -332,7 +332,7 @@ function Stream(config) {
                 }
                 streamProcessor.updateMediaInfo(manifest, allMediaForType[i]);//creates text tracks for all adaptations in one stream processor
             }
-            if(mediaInfo.type === "fragmentedText"){
+            if(mediaInfo.type === 'fragmentedText'){
                 streamProcessor.updateMediaInfo(manifest, allMediaForType[idx]);//sets the initial media info
             }
         }else {
@@ -350,7 +350,7 @@ function Stream(config) {
             initialMediaInfo;
 
         if (!allMediaForType || allMediaForType.length === 0) {
-            log("No " + type + " data.");
+            log('No ' + type + ' data.');
             return;
         }
 
@@ -389,11 +389,11 @@ function Stream(config) {
         eventController.addInlineEvents(events);
 
         isUpdating = true;
-        initializeMediaForType("video", mediaSource);
-        initializeMediaForType("audio", mediaSource);
-        initializeMediaForType("text", mediaSource);
-        initializeMediaForType("fragmentedText", mediaSource);
-        initializeMediaForType("muxed", mediaSource);
+        initializeMediaForType('video', mediaSource);
+        initializeMediaForType('audio', mediaSource);
+        initializeMediaForType('text', mediaSource);
+        initializeMediaForType('fragmentedText', mediaSource);
+        initializeMediaForType('muxed', mediaSource);
 
         createBuffers();
 
@@ -401,8 +401,8 @@ function Stream(config) {
         isUpdating = false;
 
         if (streamProcessors.length === 0) {
-            var msg = "No streams to play.";
-            errHandler.manifestError(msg, "nostreams", manifest);
+            var msg = 'No streams to play.';
+            errHandler.manifestError(msg, 'nostreams', manifest);
             log(msg);
         } else {
             liveEdgeFinder.initialize(timelineConverter, streamProcessors[0]);
@@ -414,7 +414,7 @@ function Stream(config) {
     function checkIfInitializationCompleted() {
         var ln = streamProcessors.length;
         var hasError = !!updateError.audio || !!updateError.video;
-        var error = hasError ? new Error(DATA_UPDATE_FAILED_ERROR_CODE, "Data update failed", null) : null;
+        var error = hasError ? new Error(DATA_UPDATE_FAILED_ERROR_CODE, 'Data update failed', null) : null;
         var i = 0;
 
         for (i; i < ln; i += 1) {
@@ -426,7 +426,7 @@ function Stream(config) {
 
         if (!isMediaInitialized || isStreamActivated) return;
         if (protectionController){
-            protectionController.initialize(manifestModel.getValue(), getMediaInfo("audio"), getMediaInfo("video"));
+            protectionController.initialize(manifestModel.getValue(), getMediaInfo('audio'), getMediaInfo('video'));
         }
         isStreamActivated = true;
     }
@@ -495,7 +495,7 @@ function Stream(config) {
             controller = streamProcessors[i];
             type = controller.getType();
 
-            if (type === "audio" || type === "video" || type === "fragmentedText") {
+            if (type === 'audio' || type === 'video' || type === 'fragmentedText') {
                 arr.push(controller);
             }
         }
@@ -514,7 +514,7 @@ function Stream(config) {
 
         isStreamActivated = false;
         streamInfo = updatedStreamInfo;
-        log("Manifest updated... set new data on buffers.");
+        log('Manifest updated... set new data on buffers.');
 
         if (eventController) {
             events = adapter.getEventsFor(manifest, streamInfo);

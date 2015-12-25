@@ -240,18 +240,18 @@ function  ProtectionExtensions() {
 
         // Our default server implementations do not do anything with "license-release" or
         // "individualization-request" messages, so we just send a success event
-        if (messageType === "license-release" || messageType == "individualization-request") {
+        if (messageType === 'license-release' || messageType == 'individualization-request') {
             return null;
         }
 
         var licenseServerData = null;
-        if (protData && protData.hasOwnProperty("drmtoday")) {
+        if (protData && protData.hasOwnProperty('drmtoday')) {
             licenseServerData = DRMToday(context).getInstance();
-        } else if (keySystem.systemString === "com.widevine.alpha") {
+        } else if (keySystem.systemString === 'com.widevine.alpha') {
             licenseServerData = Widevine(context).getInstance();
-        } else if (keySystem.systemString === "com.microsoft.playready") {
+        } else if (keySystem.systemString === 'com.microsoft.playready') {
             licenseServerData = PlayReady(context).getInstance();
-        } else if (keySystem.systemString === "org.w3.clearkey") {
+        } else if (keySystem.systemString === 'org.w3.clearkey') {
             licenseServerData = ClearKey(context).getInstance();
         }
 
@@ -271,7 +271,7 @@ function  ProtectionExtensions() {
         try {
             return clearkeyKeySystem.getClearKeysFromProtectionData(protData, message);
         } catch (error) {
-            log("Failed to retrieve clearkeys from ProtectionData");
+            log('Failed to retrieve clearkeys from ProtectionData');
             return null;
         }
     }

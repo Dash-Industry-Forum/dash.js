@@ -57,7 +57,7 @@ class FragmentRequest {
     }
 }
 
-FragmentRequest.ACTION_DOWNLOAD = "download";
-FragmentRequest.ACTION_COMPLETE = "complete";
+FragmentRequest.ACTION_DOWNLOAD = 'download';
+FragmentRequest.ACTION_COMPLETE = 'complete';
 
 export default FragmentRequest;

@@ -33,7 +33,7 @@ import DataChunk from '../vo/DataChunk.js';
 import FragmentModel from '../models/FragmentModel.js';
 import MetricsModel from '../models/MetricsModel.js';
 import EventBus from '../../core/EventBus.js';
-import Events from "../../core/events/Events.js";
+import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
 
@@ -132,7 +132,7 @@ function FragmentController(/*config*/) {
         let chunk;
 
         if (!bytes) {
-            log("No " + request.mediaType + " bytes to push.");
+            log('No ' + request.mediaType + ' bytes to push.');
             return;
         }
 

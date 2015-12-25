@@ -95,7 +95,7 @@ function  TextSourceBuffer() {
 
         function createTextTrackFromMediaInfo(captionData, mediaInfo) {
             var textTrackInfo = new TextTrackInfo();
-            var trackKindMap = { subtitle: "subtitles", caption: "captions" }; //Dash Spec has no "s" on end of KIND but HTML needs plural.
+            var trackKindMap = { subtitle: 'subtitles', caption: 'captions' }; //Dash Spec has no "s" on end of KIND but HTML needs plural.
             var getKind = function() {
                 var kind = (mediaInfo.roles.length > 0) ? trackKindMap[mediaInfo.roles[0]] : trackKindMap.caption;
                 kind = (kind === trackKindMap.caption || kind === trackKindMap.subtitle) ? kind : trackKindMap.caption;
@@ -104,10 +104,10 @@ function  TextSourceBuffer() {
 
             var checkTTML = function() {
                 var ttml = false;
-                if (mediaInfo.codec && mediaInfo.codec.search("stpp") >= 0) {
+                if (mediaInfo.codec && mediaInfo.codec.search('stpp') >= 0) {
                     ttml = true;
                 }
-                if (mediaInfo.mimeType && mediaInfo.mimeType.search("ttml") >= 0) {
+                if (mediaInfo.mimeType && mediaInfo.mimeType.search('ttml') >= 0) {
                     ttml = true;
                 }
                 return ttml;
@@ -125,7 +125,7 @@ function  TextSourceBuffer() {
             textTrackExtensions.addTextTrack(textTrackInfo, mediaInfos.length);
         }
 
-        if(mediaType === "fragmentedText"){
+        if(mediaType === 'fragmentedText'){
             if(!initializationSegmentReceived){
                 initializationSegmentReceived=true;
                 for (i = 0; i < mediaInfos.length; i++){
@@ -157,7 +157,7 @@ function  TextSourceBuffer() {
                 result = getParser(mimeType).parse(ccContent);
                 createTextTrackFromMediaInfo(result, mediaInfo);
             } catch(e) {
-                errHandler.timedTextError(e, "parse", ccContent);
+                errHandler.timedTextError(e, 'parse', ccContent);
             }
         }
     }
@@ -221,13 +221,13 @@ function  TextSourceBuffer() {
         var ln = tracks.length;
 
         if (!allTracks) {
-            allTracks = mediaController.getTracksFor("fragmentedText", streamController.getActiveStreamInfo());
+            allTracks = mediaController.getTracksFor('fragmentedText', streamController.getActiveStreamInfo());
         }
 
         for (var i = 0; i < ln; i++ ) {
             var track = tracks[i];
-            allTracksAreDisabled = track.mode !== "showing";
-            if (track.mode === "showing") {
+            allTracksAreDisabled = track.mode !== 'showing';
+            if (track.mode === 'showing') {
                 if (textTrackExtensions.getCurrentTrackIdx() !== i) { // do not reset track if already the current track.  This happens when all captions get turned off via UI and then turned on again and with videojs.
                     textTrackExtensions.setCurrentTrackIdx(i);
                     if (isFragmented) {
@@ -256,9 +256,9 @@ function  TextSourceBuffer() {
 
     function getParser(mimeType) {
         var parser;
-        if (mimeType === "text/vtt") {
+        if (mimeType === 'text/vtt') {
             parser = VTTParser;
-        } else if (mimeType === "application/ttml+xml" || mimeType === "application/mp4") {
+        } else if (mimeType === 'application/ttml+xml' || mimeType === 'application/mp4') {
             parser = TTMLParser;
             parser.setConfig({videoModel: videoModel});
         }

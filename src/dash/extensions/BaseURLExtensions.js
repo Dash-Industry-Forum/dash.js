@@ -74,7 +74,7 @@ function  BaseURLExtensions() {
             request: request
         };
 
-        log("Start searching for initialization.");
+        log('Start searching for initialization.');
 
         request.onload = function () {
             if (request.status < 200 || request.status > 299) return;
@@ -100,16 +100,16 @@ function  BaseURLExtensions() {
             if (!needFailureReport) return;
             needFailureReport = false;
 
-            errHandler.downloadError("initialization", info.url, request);
+            errHandler.downloadError('initialization', info.url, request);
             eventBus.trigger(Events.INITIALIZATION_LOADED, {representation: representation});
         };
 
         sendRequest(request, info);
-        log("Perform init search: " + info.url);
+        log('Perform init search: ' + info.url);
     }
 
     function loadSegments(representation, type, range, loadingInfo, callback) {
-        var parts = range ? range.toString().split("-") : null;
+        var parts = range ? range.toString().split('-') : null;
 
         range = parts ? {start: parseFloat(parts[0]), end: parseFloat(parts[1])} : null;
         callback = !callback ? onLoaded : callback;
@@ -138,7 +138,7 @@ function  BaseURLExtensions() {
             needFailureReport = false;
             info.bytesLoaded = info.range.end - info.range.start;
             isoFile = boxParser.parse(request.response);
-            sidx = isoFile.getBox("sidx");
+            sidx = isoFile.getBox('sidx');
 
             if (!sidx || !sidx.isComplete) {
                 if (sidx) {
@@ -169,7 +169,7 @@ function  BaseURLExtensions() {
                 }
 
                 if (loadMultiSidx) {
-                    log("Initiate multiple SIDX load.");
+                    log('Initiate multiple SIDX load.');
                     info.range.end = info.range.start + sidx.size;
 
                     var j, len, ss, se, r, segs = [],
@@ -197,7 +197,7 @@ function  BaseURLExtensions() {
                     }
 
                 } else {
-                    log("Parsing segments from SIDX.");
+                    log('Parsing segments from SIDX.');
                     segments = getSegmentsForSidx(sidx, info);
                     callback(segments, representation, type);
                 }
@@ -208,12 +208,12 @@ function  BaseURLExtensions() {
             if (!needFailureReport) return;
 
             needFailureReport = false;
-            errHandler.downloadError("SIDX", info.url, request);
+            errHandler.downloadError('SIDX', info.url, request);
             callback(null, representation, type);
         };
 
         sendRequest(request, info);
-        log("Perform SIDX load: " + info.url);
+        log('Perform SIDX load: ' + info.url);
     }
 
     function reset() {
@@ -246,7 +246,7 @@ function  BaseURLExtensions() {
             segment.startTime = time;
             segment.timescale = timescale;
             end = start + size - 1;
-            segment.mediaRange = start + "-" + end;
+            segment.mediaRange = start + '-' + end;
             segments.push(segment);
             time += duration;
             start += size;
@@ -256,29 +256,29 @@ function  BaseURLExtensions() {
     }
 
     function findInitRange(isoFile) {
-        var ftyp = isoFile.getBox("ftyp");
-        var moov = isoFile.getBox("moov");
+        var ftyp = isoFile.getBox('ftyp');
+        var moov = isoFile.getBox('moov');
         var start,
             end,
             initRange = null;
 
-        log("Searching for initialization.");
+        log('Searching for initialization.');
 
         if (moov && moov.isComplete) {
             start = ftyp ? ftyp.offset : moov.offset;
             end = moov.offset + moov.size - 1;
-            initRange = start + "-" + end;
+            initRange = start + '-' + end;
 
-            log("Found the initialization.  Range: " + initRange);
+            log('Found the initialization.  Range: ' + initRange);
         }
 
         return initRange;
     }
 
     function sendRequest(request, info) {
-        request.open("GET", requestModifierExt.modifyRequestURL(info.url));
-        request.responseType = "arraybuffer";
-        request.setRequestHeader("Range", "bytes=" + info.range.start + "-" + info.range.end);
+        request.open('GET', requestModifierExt.modifyRequestURL(info.url));
+        request.responseType = 'arraybuffer';
+        request.setRequestHeader('Range', 'bytes=' + info.range.start + '-' + info.range.end);
         request = requestModifierExt.modifyRequestHeader(request);
         request.send(null);
     }
@@ -287,7 +287,7 @@ function  BaseURLExtensions() {
         if(segments) {
             eventBus.trigger(Events.SEGMENTS_LOADED, {segments: segments, representation: representation, mediaType: type});
         } else {
-            eventBus.trigger(Events.SEGMENTS_LOADED, {segments: null, representation: representation, mediaType: type, error: new Error(null, "error loading segments", null)});
+            eventBus.trigger(Events.SEGMENTS_LOADED, {segments: null, representation: representation, mediaType: type, error: new Error(null, 'error loading segments', null)});
         }
     }
 

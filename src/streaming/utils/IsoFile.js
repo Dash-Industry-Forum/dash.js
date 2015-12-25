@@ -109,65 +109,65 @@ function IsoFile() {
 
     function setup() {
         commonProps = {
-            offset: "_offset",
-            size: "size",
-            type: "type"
+            offset: '_offset',
+            size: 'size',
+            type: 'type'
         };
 
         sidxProps = {
-            references: "references",
-            timescale: "timescale",
-            earliest_presentation_time: "earliest_presentation_time",
-            first_offset: "first_offset"
+            references: 'references',
+            timescale: 'timescale',
+            earliest_presentation_time: 'earliest_presentation_time',
+            first_offset: 'first_offset'
         };
 
         sidxRefProps = {
-            reference_type: "reference_type",
-            referenced_size: "referenced_size",
-            subsegment_duration: "subsegment_duration"
+            reference_type: 'reference_type',
+            referenced_size: 'referenced_size',
+            subsegment_duration: 'subsegment_duration'
         };
 
         emsgProps = {
-            id: "id",
-            value: "value",
-            timescale: "timescale",
-            scheme_id_uri: "scheme_id_uri",
-            presentation_time_delta: "presentation_time_delta",
-            event_duration: "event_duration",
-            message_data: "message_data"
+            id: 'id',
+            value: 'value',
+            timescale: 'timescale',
+            scheme_id_uri: 'scheme_id_uri',
+            presentation_time_delta: 'presentation_time_delta',
+            event_duration: 'event_duration',
+            message_data: 'message_data'
         };
 
         mdhdProps = {
-            timescale: "timescale"
+            timescale: 'timescale'
         };
 
         tfhdProps = {
-            base_data_offset: "base_data_offset",
-            sample_description_index: "sample_description_index",
-            default_sample_duration: "default_sample_duration",
-            default_sample_size: "default_sample_size",
-            default_sample_flags: "default_sample_flags",
-            flags: "flags"
+            base_data_offset: 'base_data_offset',
+            sample_description_index: 'sample_description_index',
+            default_sample_duration: 'default_sample_duration',
+            default_sample_size: 'default_sample_size',
+            default_sample_flags: 'default_sample_flags',
+            flags: 'flags'
         };
 
         tfdtProps = {
-            version: "version",
-            baseMediaDecodeTime: "baseMediaDecodeTime",
-            flags: "flags"
+            version: 'version',
+            baseMediaDecodeTime: 'baseMediaDecodeTime',
+            flags: 'flags'
         };
 
         trunProps = {
-            sample_count: "sample_count",
-            first_sample_flags: "first_sample_flags",
-            data_offset: "data_offset",
-            flags: "flags",
-            samples: "samples"
+            sample_count: 'sample_count',
+            first_sample_flags: 'first_sample_flags',
+            data_offset: 'data_offset',
+            flags: 'flags',
+            samples: 'samples'
         };
 
         trunSampleProps = {
-            sample_size: "sample_size",
-            sample_duration: "sample_duration",
-            sample_composition_time_offset: "sample_composition_time_offset"
+            sample_size: 'sample_size',
+            sample_duration: 'sample_duration',
+            sample_composition_time_offset: 'sample_composition_time_offset'
         };
     }
 
@@ -186,12 +186,12 @@ function IsoFile() {
 
         copyProps(boxData, box, commonProps);
 
-        if (boxData.hasOwnProperty("_incomplete")) {
+        if (boxData.hasOwnProperty('_incomplete')) {
             box.isComplete = !boxData._incomplete;
         }
 
         switch (box.type) {
-            case "sidx":
+            case 'sidx':
                 copyProps(boxData, box, sidxProps);
                 if (box.references) {
                     for (i = 0, ln = box.references.length; i < ln; i +=1) {
@@ -199,19 +199,19 @@ function IsoFile() {
                     }
                 }
                 break;
-            case "emsg":
+            case 'emsg':
                 copyProps(boxData, box, emsgProps);
                 break;
-            case "mdhd":
+            case 'mdhd':
                 copyProps(boxData, box, mdhdProps);
                 break;
-            case "tfhd":
+            case 'tfhd':
                 copyProps(boxData, box, tfhdProps);
                 break;
-            case "tfdt":
+            case 'tfdt':
                 copyProps(boxData, box, tfdtProps);
                 break;
-            case "trun":
+            case 'trun':
                 copyProps(boxData, box, trunProps);
                 if (box.samples) {
                     for (i = 0, ln = box.samples.length; i < ln; i +=1) {

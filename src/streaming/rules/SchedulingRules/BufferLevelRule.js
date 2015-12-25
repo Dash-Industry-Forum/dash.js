@@ -75,7 +75,7 @@ function BufferLevelRule(config) {
             bufferTarget = PlaybackController(context).getInstance().getLiveDelay();
         }
 
-        if (type === "fragmentedText"){
+        if (type === 'fragmentedText'){
             bufferTarget = textSourceBuffer.getAllTracksAreDisabled() ? 0 : trackInfo.fragmentDuration;
         }
 

@@ -37,10 +37,10 @@ import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-const ABANDON_LOAD = "abandonload";
+const ABANDON_LOAD = 'abandonload';
 const BANDWIDTH_SAFETY = 0.9;
 const ABANDON_TIMEOUT = 10000;
-const ALLOW_LOAD = "allowload";
+const ALLOW_LOAD = 'allowload';
 const DEFAULT_VIDEO_BITRATE = 1000;
 const DEFAULT_AUDIO_BITRATE = 100;
 
@@ -126,7 +126,7 @@ function AbrController() {
     }
 
     function getMaxAllowedBitrateFor(type) {
-        if (bitrateDict.hasOwnProperty("max") && bitrateDict.max.hasOwnProperty(type)){
+        if (bitrateDict.hasOwnProperty('max') && bitrateDict.max.hasOwnProperty(type)){
             return bitrateDict.max[type];
         }
         return NaN;
@@ -209,7 +209,7 @@ function AbrController() {
         var quality = getQualityFor(type, streamInfo);
         var isInt = newPlaybackQuality !== null && !isNaN(newPlaybackQuality) && (newPlaybackQuality % 1 === 0);
 
-        if (!isInt) throw "argument is not an integer";
+        if (!isInt) throw 'argument is not an integer';
 
         if (newPlaybackQuality !== quality && newPlaybackQuality >= 0 && newPlaybackQuality <= getTopQualityIndexFor(type, id)) {
             setInternalQuality(type, id, newPlaybackQuality);
@@ -293,11 +293,11 @@ function AbrController() {
     function isPlayingAtTopQuality(streamInfo) {
         var isAtTop;
         var streamId = streamInfo.id;
-        var audioQuality = getQualityFor("audio", streamInfo);
-        var videoQuality = getQualityFor("video", streamInfo);
+        var audioQuality = getQualityFor('audio', streamInfo);
+        var videoQuality = getQualityFor('video', streamInfo);
 
-        isAtTop = (audioQuality === getTopQualityIndexFor("audio", streamId)) &&
-            (videoQuality === getTopQualityIndexFor("video", streamId));
+        isAtTop = (audioQuality === getTopQualityIndexFor('audio', streamId)) &&
+            (videoQuality === getTopQualityIndexFor('video', streamId));
 
         return isAtTop;
     }

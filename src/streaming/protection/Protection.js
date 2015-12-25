@@ -40,28 +40,28 @@ const APIS_ProtectionModel_01b = [
     // Un-prefixed as per spec
     {
         // Video Element
-        generateKeyRequest: "generateKeyRequest",
-        addKey: "addKey",
-        cancelKeyRequest: "cancelKeyRequest",
+        generateKeyRequest: 'generateKeyRequest',
+        addKey: 'addKey',
+        cancelKeyRequest: 'cancelKeyRequest',
 
         // Events
-        needkey: "needkey",
-        keyerror: "keyerror",
-        keyadded: "keyadded",
-        keymessage: "keymessage"
+        needkey: 'needkey',
+        keyerror: 'keyerror',
+        keyadded: 'keyadded',
+        keymessage: 'keymessage'
     },
     // Webkit-prefixed (early Chrome versions and Chrome with EME disabled in chrome://flags)
     {
         // Video Element
-        generateKeyRequest: "webkitGenerateKeyRequest",
-        addKey: "webkitAddKey",
-        cancelKeyRequest: "webkitCancelKeyRequest",
+        generateKeyRequest: 'webkitGenerateKeyRequest',
+        addKey: 'webkitAddKey',
+        cancelKeyRequest: 'webkitCancelKeyRequest',
 
         // Events
-        needkey: "webkitneedkey",
-        keyerror: "webkitkeyerror",
-        keyadded: "webkitkeyadded",
-        keymessage: "webkitkeymessage"
+        needkey: 'webkitneedkey',
+        keyerror: 'webkitkeyerror',
+        keyadded: 'webkitkeyadded',
+        keymessage: 'webkitkeymessage'
     }
 ];
 
@@ -70,33 +70,33 @@ const APIS_ProtectionModel_3Feb2014 = [
     // Chrome 38-39 (and some earlier versions) with chrome://flags -- Enable Encrypted Media Extensions
     {
         // Video Element
-        setMediaKeys: "setMediaKeys",
+        setMediaKeys: 'setMediaKeys',
         // MediaKeys
-        MediaKeys: "MediaKeys",
+        MediaKeys: 'MediaKeys',
         // MediaKeySession
-        release: "close",
+        release: 'close',
 
         // Events
-        needkey: "needkey",
-        error: "keyerror",
-        message: "keymessage",
-        ready: "keyadded",
-        close: "keyclose"
+        needkey: 'needkey',
+        error: 'keyerror',
+        message: 'keymessage',
+        ready: 'keyadded',
+        close: 'keyclose'
     },
     // MS-prefixed (IE11, Windows 8.1)
     {
         // Video Element
-        setMediaKeys: "msSetMediaKeys",
+        setMediaKeys: 'msSetMediaKeys',
         // MediaKeys
-        MediaKeys: "MSMediaKeys",
+        MediaKeys: 'MSMediaKeys',
         // MediaKeySession
-        release: "close",
+        release: 'close',
         // Events
-        needkey: "msneedkey",
-        error: "mskeyerror",
-        message: "mskeymessage",
-        ready: "mskeyadded",
-        close: "mskeyclose"
+        needkey: 'msneedkey',
+        error: 'mskeyerror',
+        message: 'mskeymessage',
+        ready: 'mskeyadded',
+        close: 'mskeyclose'
     }
 ];
 
@@ -148,22 +148,22 @@ function Protection() {
             navigator.requestMediaKeySystemAccess !== undefined &&
             typeof navigator.requestMediaKeySystemAccess === 'function') {
 
-            log("EME detected on this user agent! (ProtectionModel_21Jan2015)");
+            log('EME detected on this user agent! (ProtectionModel_21Jan2015)');
             return ProtectionModel_21Jan2015(context).create({log:log, eventBus:eventBus});
 
         } else if (getAPI(videoElement, APIS_ProtectionModel_3Feb2014)){
 
-            log("EME detected on this user agent! (ProtectionModel_3Feb2014)");
+            log('EME detected on this user agent! (ProtectionModel_3Feb2014)');
             return ProtectionModel_3Feb2014(context).create({log: log, eventBus:eventBus, api:getAPI(videoElement, APIS_ProtectionModel_3Feb2014)});
 
         } else if (getAPI(videoElement, APIS_ProtectionModel_01b)) {
 
-            log("EME detected on this user agent! (ProtectionModel_01b)");
+            log('EME detected on this user agent! (ProtectionModel_01b)');
             return ProtectionModel_01b(context).create({log: log, eventBus:eventBus, api:getAPI(videoElement, APIS_ProtectionModel_01b)});
 
         } else {
 
-            log("No supported version of EME detected on this user agent! - Attempts to play encrypted content will fail!");
+            log('No supported version of EME detected on this user agent! - Attempts to play encrypted content will fail!');
             return null;
 
         }

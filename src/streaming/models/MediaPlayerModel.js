@@ -1,6 +1,6 @@
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-const DEFAULT_UTC_TIMING_SOURCE = { scheme: "urn:mpeg:dash:utc:http-xsdate:2014", value: "http://time.akamai.com/?iso" };
+const DEFAULT_UTC_TIMING_SOURCE = { scheme: 'urn:mpeg:dash:utc:http-xsdate:2014', value: 'http://time.akamai.com/?iso' };
 const BUFFER_TO_KEEP = 30;
 const BUFFER_PRUNING_INTERVAL = 30;
 const LIVE_DELAY_FRAGMENT_COUNT = 4;

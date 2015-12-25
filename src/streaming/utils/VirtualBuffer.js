@@ -36,7 +36,7 @@ import MediaController from '../controllers/MediaController.js';
 import CustomTimeRanges from './CustomTimeRanges.js';
 import HTTPRequest from '../vo/metrics/HTTPRequest.js';
 import EventBus from './../../core/EventBus.js';
-import Events from "../../core/events/Events.js";
+import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 function VirtualBuffer() {
@@ -66,7 +66,7 @@ function VirtualBuffer() {
 
         data[streamId] = data[streamId] || createDataStorage();
         data[streamId][mediaType][segmentType].push(chunk);
-        sortArrayByProperty(data[streamId][mediaType][segmentType], "index");
+        sortArrayByProperty(data[streamId][mediaType][segmentType], 'index');
 
         if (!isNaN(start) && !isNaN(end)) {
             data[streamId][mediaType].calculatedBufferedRanges.add(start, end);
@@ -103,7 +103,7 @@ function VirtualBuffer() {
             data[streamId][mediaType].appended.push(chunk);
         }
 
-        sortArrayByProperty(data[streamId][mediaType].appended, "start");
+        sortArrayByProperty(data[streamId][mediaType].appended, 'start');
         diff = sourceBufferExt.getRangeDifference(bufferedRanges, buffer);
 
         if (!diff) {
@@ -220,7 +220,7 @@ function VirtualBuffer() {
             if (ln >= limit) return false;
 
             for (var prop in filter) {
-                if (prop === "mediaInfo") {
+                if (prop === 'mediaInfo') {
                     return mediaController.isTracksEqual(item[prop], filter[prop]);
                 }
 

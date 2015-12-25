@@ -31,15 +31,15 @@
 
 
 import EventBus from '../../core/EventBus.js';
-import Events from "../../core/events/Events.js";
+import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import FragmentRequest from '../vo/FragmentRequest.js';
 import Debug from '../../core/Debug.js';
 
-const FRAGMENT_MODEL_LOADING = "loading";
-const FRAGMENT_MODEL_EXECUTED = "executed";
-const FRAGMENT_MODEL_CANCELED = "canceled";
-const FRAGMENT_MODEL_FAILED = "failed";
+const FRAGMENT_MODEL_LOADING = 'loading';
+const FRAGMENT_MODEL_EXECUTED = 'executed';
+const FRAGMENT_MODEL_CANCELED = 'canceled';
+const FRAGMENT_MODEL_FAILED = 'failed';
 
 function FragmentModel(config) {
 
@@ -206,7 +206,7 @@ function FragmentModel(config) {
                 loadCurrentFragment(request);
                 break;
             default:
-                log("Unknown request action.");
+                log('Unknown request action.');
         }
     }
 
@@ -259,13 +259,13 @@ function FragmentModel(config) {
         if (!filter) return arr;
 
         // for time use a specific filtration function
-        if (filter.hasOwnProperty("time")) {
+        if (filter.hasOwnProperty('time')) {
             return [getRequestForTime(arr, filter.time, filter.threshold)];
         }
 
         return arr.filter(function(request/*, idx, arr*/) {
             for (var prop in filter) {
-                if (prop === "state") continue;
+                if (prop === 'state') continue;
 
                 if (filter.hasOwnProperty(prop) && request[prop] != filter[prop]) return false;
             }

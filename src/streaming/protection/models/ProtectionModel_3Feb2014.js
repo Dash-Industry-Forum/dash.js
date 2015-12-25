@@ -84,7 +84,7 @@ function ProtectionModel_3Feb2014(config) {
             }
             eventBus.trigger(Events.TEARDOWN_COMPLETE);
         } catch (error) {
-            eventBus.trigger(Events.TEARDOWN_COMPLETE, {error:"Error tearing down key sessions and MediaKeys! -- " + error.message});
+            eventBus.trigger(Events.TEARDOWN_COMPLETE, {error:'Error tearing down key sessions and MediaKeys! -- ' + error.message});
         }
     }
 
@@ -150,7 +150,7 @@ function ProtectionModel_3Feb2014(config) {
             }
         }
         if (!found) {
-            eventBus.trigger(Events.KEY_SYSTEM_ACCESS_COMPLETE, {error:"Key system access denied! -- No valid audio/video content configurations detected!"});
+            eventBus.trigger(Events.KEY_SYSTEM_ACCESS_COMPLETE, {error:'Key system access denied! -- No valid audio/video content configurations detected!'});
         }
     }
 
@@ -164,7 +164,7 @@ function ProtectionModel_3Feb2014(config) {
             }
             eventBus.trigger(Events.INTERNAL_KEY_SYSTEM_SELECTED);
         } catch (error) {
-            eventBus.trigger(Events.INTERNAL_KEY_SYSTEM_SELECTED, {error:"Error selecting keys system (" + keySystem.systemString + ")! Could not create MediaKeys -- TODO"});
+            eventBus.trigger(Events.INTERNAL_KEY_SYSTEM_SELECTED, {error:'Error selecting keys system (' + keySystem.systemString + ')! Could not create MediaKeys -- TODO'});
         }
     }
 
@@ -191,7 +191,7 @@ function ProtectionModel_3Feb2014(config) {
     function createKeySession(initData /*, keySystemType */) {
 
         if (!keySystem || !mediaKeys || !keySystemAccess) {
-            throw new Error("Can not create sessions until you have selected a key system");
+            throw new Error('Can not create sessions until you have selected a key system');
         }
 
         // Use the first video capability for the contentType.
@@ -208,7 +208,7 @@ function ProtectionModel_3Feb2014(config) {
 
         // Add to our session list
         sessions.push(sessionToken);
-        log("DRM: Session created.  SessionID = " + sessionToken.getSessionID());
+        log('DRM: Session created.  SessionID = ' + sessionToken.getSessionID());
         eventBus.trigger(Events.KEY_SESSION_CREATED, {data:sessionToken});
     }
 
@@ -266,7 +266,7 @@ function ProtectionModel_3Feb2014(config) {
                     case api.needkey:
                         if (event.initData) {
                             var initData = ArrayBuffer.isView(event.initData) ? event.initData.buffer : event.initData;
-                            eventBus.trigger(Events.NEED_KEY, {key:new NeedKey(initData, "cenc")});
+                            eventBus.trigger(Events.NEED_KEY, {key:new NeedKey(initData, 'cenc')});
                         }
                         break;
                 }
@@ -281,7 +281,7 @@ function ProtectionModel_3Feb2014(config) {
     function setMediaKeys() {
         var boundDoSetKeys = null;
         var doSetKeys = function() {
-            videoElement.removeEventListener("loadedmetadata", boundDoSetKeys);
+            videoElement.removeEventListener('loadedmetadata', boundDoSetKeys);
             videoElement[api.setMediaKeys](mediaKeys);
             eventBus.trigger(Events.VIDEO_ELEMENT_SELECTED);
         };
@@ -289,7 +289,7 @@ function ProtectionModel_3Feb2014(config) {
             doSetKeys();
         } else {
             boundDoSetKeys = doSetKeys.bind(this);
-            videoElement.addEventListener("loadedmetadata", boundDoSetKeys);
+            videoElement.addEventListener('loadedmetadata', boundDoSetKeys);
         }
 
     }
@@ -311,7 +311,7 @@ function ProtectionModel_3Feb2014(config) {
             },
 
             getSessionType: function() {
-                return "temporary";
+                return 'temporary';
             },
             // This is our main event handler for all desired MediaKeySession events
             // These events are translated into our API-independent versions of the
@@ -320,7 +320,7 @@ function ProtectionModel_3Feb2014(config) {
                 switch (event.type) {
 
                     case api.error:
-                        var errorStr = "KeyError"; // TODO: Make better string from event
+                        var errorStr = 'KeyError'; // TODO: Make better string from event
                         eventBus.trigger(Events.KEY_ERROR, { data: new KeyError(this, errorStr) });
                         break;
                     case api.message:
@@ -328,12 +328,12 @@ function ProtectionModel_3Feb2014(config) {
                         eventBus.trigger(Events.INTERNAL_KEY_MESSAGE, { data: new KeyMessage(this, message, event.destinationURL) });
                         break;
                     case api.ready:
-                        log("DRM: Key added.");
+                        log('DRM: Key added.');
                         eventBus.trigger(Events.KEY_ADDED);
                         break;
 
                     case api.close:
-                        log("DRM: Session closed.  SessionID = " + this.getSessionID());
+                        log('DRM: Session closed.  SessionID = ' + this.getSessionID());
                         eventBus.trigger(Events.KEY_SESSION_CLOSED, { data: this.getSessionID() });
                         break;
                 }

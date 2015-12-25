@@ -31,7 +31,7 @@
 import SynchronizationRulesCollection from './rules/SynchronizationRules/SynchronizationRulesCollection.js';
 import Error from './vo/Error.js';
 import EventBus from './../core/EventBus.js';
-import Events from "./../core/events/Events.js";
+import Events from './../core/events/Events.js';
 import RulesController from './rules/RulesController.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
@@ -87,7 +87,7 @@ function LiveEdgeFinder() {
     function onSearchCompleted(req) {
         var searchTime = (new Date().getTime() - searchStartTime) / 1000;
         liveEdge = req.value;
-        eventBus.trigger(Events.LIVE_EDGE_SEARCH_COMPLETED, {liveEdge: liveEdge, searchTime: searchTime, error:liveEdge === null ? new Error(LIVE_EDGE_NOT_FOUND_ERROR_CODE, "live edge has not been found", null) : null});
+        eventBus.trigger(Events.LIVE_EDGE_SEARCH_COMPLETED, {liveEdge: liveEdge, searchTime: searchTime, error:liveEdge === null ? new Error(LIVE_EDGE_NOT_FOUND_ERROR_CODE, 'live edge has not been found', null) : null});
     }
 
     function onStreamInitialized(e) {

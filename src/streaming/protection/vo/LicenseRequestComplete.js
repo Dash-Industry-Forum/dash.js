@@ -43,7 +43,7 @@ class LicenseRequestComplete {
     constructor(message, sessionToken, messageType) {
         this.message = message;
         this.sessionToken = sessionToken;
-        this.messageType = messageType ? messageType : "license-request";
+        this.messageType = messageType ? messageType : 'license-request';
     }
 }
 

@@ -30,7 +30,7 @@
  */
 import Error from './vo/Error.js';
 import EventBus from './../core/EventBus.js';
-import Events from "./../core/events/Events.js";
+import Events from './../core/events/Events.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 import Debug from '../core/Debug.js';
 
@@ -81,7 +81,7 @@ function FragmentLoader(config) {
                 latency = (requestVO.firstByteDate.getTime() - requestVO.requestStartDate.getTime());
                 download = (requestVO.requestEndDate.getTime() - requestVO.firstByteDate.getTime());
 
-                log((succeeded ? "loaded " : "failed ") + requestVO.mediaType + ":" + requestVO.type + ":" + requestVO.startTime + " (" + req.status + ", " + latency + "ms, " + download + "ms)");
+                log((succeeded ? 'loaded ' : 'failed ') + requestVO.mediaType + ':' + requestVO.type + ':' + requestVO.startTime + ' (' + req.status + ', ' + latency + 'ms, ' + download + 'ms)');
 
                 httpRequestMetrics = metricsModel.addHttpRequest(
                     request.mediaType,
@@ -121,8 +121,8 @@ function FragmentLoader(config) {
 
         lastTraceTime = request.requestStartDate;
 
-        req.open("GET", requestModifierExt.modifyRequestURL(request.url), true);
-        req.responseType = "arraybuffer";
+        req.open('GET', requestModifierExt.modifyRequestURL(request.url), true);
+        req.responseType = 'arraybuffer';
         req = requestModifierExt.modifyRequestHeader(req);
         /*
          req.setRequestHeader("Cache-Control", "no-cache");
@@ -130,7 +130,7 @@ function FragmentLoader(config) {
          req.setRequestHeader("If-Modified-Since", "Sat, 1 Jan 2000 00:00:00 GMT");
          */
         if (request.range) {
-            req.setRequestHeader("Range", "bytes=" + request.range);
+            req.setRequestHeader('Range', 'bytes=' + request.range);
         }
 
         req.onprogress = function (event) {
@@ -175,18 +175,18 @@ function FragmentLoader(config) {
             handleLoaded(request, false);
 
             if (remainingAttempts > 0) {
-                log("Failed loading fragment: " + request.mediaType + ":" + request.type + ":" + request.startTime + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
+                log('Failed loading fragment: ' + request.mediaType + ':' + request.type + ':' + request.startTime + ', retry in ' + RETRY_INTERVAL + 'ms' + ' attempts: ' + remainingAttempts);
                 remainingAttempts--;
                 setTimeout(function () {
                     doLoad.call(self, request, remainingAttempts);
                 }, RETRY_INTERVAL);
             } else {
-                log("Failed loading fragment: " + request.mediaType + ":" + request.type + ":" + request.startTime + " no retry attempts left");
-                errHandler.downloadError("content", request.url, req);
+                log('Failed loading fragment: ' + request.mediaType + ':' + request.type + ':' + request.startTime + ' no retry attempts left');
+                errHandler.downloadError('content', request.url, req);
                 eventBus.trigger(Events.LOADING_COMPLETED, {
                     request: request,
                     bytes: null,
-                    error: new Error(null, "failed loading fragment", null),
+                    error: new Error(null, 'failed loading fragment', null),
                     sender: self
                 });
             }
@@ -205,7 +205,7 @@ function FragmentLoader(config) {
         var req = new XMLHttpRequest(),
             isSuccessful = false;
 
-        req.open("HEAD", request.url, true);
+        req.open('HEAD', request.url, true);
 
         req.onload = function () {
             if (req.status < 200 || req.status > 299) return;
@@ -228,7 +228,7 @@ function FragmentLoader(config) {
             eventBus.trigger(Events.LOADING_COMPLETED, {
                 request: req,
                 bytes: null,
-                error: new Error(null, "request is null", null),
+                error: new Error(null, 'request is null', null),
                 sender: this
             });
         } else {

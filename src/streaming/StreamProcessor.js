@@ -46,7 +46,7 @@ import SourceBufferExtensions from './extensions/SourceBufferExtensions';
 import TextSourceBuffer from './TextSourceBuffer.js';
 import VirtualBuffer from './utils/VirtualBuffer.js';
 import MediaSourceExtensions from './extensions/MediaSourceExtensions.js';
-import DashManifestExtensions from "../dash/extensions/DashManifestExtensions.js";
+import DashManifestExtensions from '../dash/extensions/DashManifestExtensions.js';
 import DashMetricsExtensions from '../dash/extensions/DashMetricsExtensions.js';
 import RepresentationController from '../dash/controllers/RepresentationController.js';
 import ErrorHandler from './ErrorHandler.js';
@@ -263,7 +263,7 @@ function StreamProcessor(config) {
     function createBufferControllerForType(type) {
         var controller = null;
 
-        if (type === "video" || type === "audio" || type === "fragmentedText") {
+        if (type === 'video' || type === 'audio' || type === 'fragmentedText') {
             controller = BufferController(context).create({
                 metricsModel: MetricsModel(context).getInstance(),
                 manifestModel: manifestModel,

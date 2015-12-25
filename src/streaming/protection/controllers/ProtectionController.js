@@ -72,7 +72,7 @@ function ProtectionController(config) {
         keySystems = protectionExt.getKeySystems();
         pendingNeedKeyData = [];
         initialized = false;
-        sessionType = "temporary";
+        sessionType = 'temporary';
 
         Events.extend(Protection.events);
         eventBus.on(Events.NEED_KEY, onNeedKey, this);
@@ -110,8 +110,8 @@ function ProtectionController(config) {
                 streamInfo = adapter.getStreamsInfo(manifest)[0]; // TODO: Single period only for now. See TODO above
             }
 
-            audioInfo = aInfo || (streamInfo ? adapter.getMediaInfoForType(manifest, streamInfo, "audio") : null);
-            videoInfo = vInfo || (streamInfo ? adapter.getMediaInfoForType(manifest, streamInfo, "video") : null);
+            audioInfo = aInfo || (streamInfo ? adapter.getMediaInfoForType(manifest, streamInfo, 'audio') : null);
+            videoInfo = vInfo || (streamInfo ? adapter.getMediaInfoForType(manifest, streamInfo, 'video') : null);
 
             var mediaInfo = (videoInfo) ? videoInfo : audioInfo; // We could have audio or video only
 
@@ -147,17 +147,17 @@ function ProtectionController(config) {
             var currentInitData = protectionModel.getAllInitData();
             for (var i = 0; i < currentInitData.length; i++) {
                 if (protectionExt.initDataEquals(initDataForKS, currentInitData[i])) {
-                    log("Ignoring initData because we have already seen it!");
+                    log('Ignoring initData because we have already seen it!');
                     return;
                 }
             }
             try {
                 protectionModel.createKeySession(initDataForKS, sessionType);
             } catch (error) {
-                eventBus.trigger(Events.KEY_SESSION_CREATED, {data:null, error:"Error creating key session! " + error.message});
+                eventBus.trigger(Events.KEY_SESSION_CREATED, {data:null, error:'Error creating key session! ' + error.message});
             }
         } else {
-            eventBus.trigger(Events.KEY_SESSION_CREATED, {data:null, error:"Selected key system is " + keySystem.systemString + ".  needkey/encrypted event contains no initData corresponding to that key system!"});
+            eventBus.trigger(Events.KEY_SESSION_CREATED, {data:null, error:'Selected key system is ' + keySystem.systemString + '.  needkey/encrypted event contains no initData corresponding to that key system!'});
         }
     }
 
@@ -311,8 +311,8 @@ function ProtectionController(config) {
             audioCapabilities.push(new MediaCapability(audioInfo.codec));
         }
         var ksConfig = new KeySystemConfiguration(
-                audioCapabilities, videoCapabilities, "optional",
-                (sessionType === "temporary") ? "optional" : "required",
+                audioCapabilities, videoCapabilities, 'optional',
+                (sessionType === 'temporary') ? 'optional' : 'required',
                 [sessionType]);
         var requestedKeySystems = [];
 
@@ -330,10 +330,10 @@ function ProtectionController(config) {
                         eventBus.off(Events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
                         if (event.error) {
                             if (!fromManifest) {
-                                eventBus.trigger(Events.KEY_SYSTEM_SELECTED, {error: "DRM: KeySystem Access Denied! -- " + event.error});
+                                eventBus.trigger(Events.KEY_SYSTEM_SELECTED, {error: 'DRM: KeySystem Access Denied! -- ' + event.error});
                             }
                         } else {
-                            log("KeySystem Access Granted");
+                            log('KeySystem Access Granted');
                             eventBus.trigger(Events.KEY_SYSTEM_SELECTED, {data: event.data});
                             createKeySession(supportedKS[ksIdx].initData);
                         }
@@ -362,11 +362,11 @@ function ProtectionController(config) {
                     eventBus.off(Events.INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
 
                     if (!fromManifest) {
-                        eventBus.trigger(Events.KEY_SYSTEM_SELECTED, {data: null, error: "DRM: KeySystem Access Denied! -- " + event.error});
+                        eventBus.trigger(Events.KEY_SYSTEM_SELECTED, {data: null, error: 'DRM: KeySystem Access Denied! -- ' + event.error});
                     }
                 } else {
                     keySystemAccess = event.data;
-                    log("KeySystem Access Granted (" + keySystemAccess.keySystem.systemString + ")!  Selecting key system...");
+                    log('KeySystem Access Granted (' + keySystemAccess.keySystem.systemString + ')!  Selecting key system...');
                     protectionModel.selectKeySystem(keySystemAccess);
                 }
             };
@@ -387,7 +387,7 @@ function ProtectionController(config) {
                 } else {
                     keySystem = undefined;
                     if (!fromManifest) {
-                        eventBus.trigger(Events.KEY_SYSTEM_SELECTED, {data: null, error: "DRM: Error selecting key system! -- " + event.error});
+                        eventBus.trigger(Events.KEY_SYSTEM_SELECTED, {data: null, error: 'DRM: Error selecting key system! -- ' + event.error});
                     }
                 }
             };
@@ -413,7 +413,7 @@ function ProtectionController(config) {
         // Dispatch event to applications indicating we received a key message
         var keyMessage = e.data;
         eventBus.trigger(Events.KEY_MESSAGE, {data: keyMessage});
-        var messageType = (keyMessage.messageType) ? keyMessage.messageType : "license-request";
+        var messageType = (keyMessage.messageType) ? keyMessage.messageType : 'license-request';
         var message = keyMessage.message;
         var sessionToken = keyMessage.sessionToken;
         var protData = getProtData(keySystem);
@@ -423,7 +423,7 @@ function ProtectionController(config) {
 
         // Message not destined for license server
         if (!licenseServerData) {
-            log("DRM: License server request not required for this message (type = " + e.data.messageType + ").  Session ID = " + sessionToken.getSessionID());
+            log('DRM: License server request not required for this message (type = ' + e.data.messageType + ').  Session ID = ' + sessionToken.getSessionID());
             sendLicenseRequestCompleteEvent(eventData);
             return;
         }
@@ -432,7 +432,7 @@ function ProtectionController(config) {
         if (protectionExt.isClearKey(keySystem)) {
             var clearkeys = protectionExt.processClearKeyLicenseRequest(protData, message);
             if (clearkeys)  {
-                log("DRM: ClearKey license request handled by application!");
+                log('DRM: ClearKey license request handled by application!');
                 sendLicenseRequestCompleteEvent(eventData);
                 protectionModel.updateKeySession(sessionToken, clearkeys);
                 return;
@@ -447,12 +447,12 @@ function ProtectionController(config) {
         if (protData) {
             if (protData.serverURL) {
                 var serverURL = protData.serverURL;
-                if (typeof serverURL === "string" && serverURL !== "") {
+                if (typeof serverURL === 'string' && serverURL !== '') {
                     url = serverURL;
-                } else if (typeof serverURL === "object" && serverURL.hasOwnProperty(messageType)) {
+                } else if (typeof serverURL === 'object' && serverURL.hasOwnProperty(messageType)) {
                     url = serverURL[messageType];
                 }
-            } else if (protData.laURL && protData.laURL !== "") { // TODO: Deprecated!
+            } else if (protData.laURL && protData.laURL !== '') { // TODO: Deprecated!
                 url = protData.laURL;
             }
         } else {
@@ -481,7 +481,7 @@ function ProtectionController(config) {
                 sendLicenseRequestCompleteEvent(eventData,
                         'DRM: ' + keySystemString + ' update, XHR status is "' + this.statusText + '" (' + this.status +
                         '), expected to be 200. readyState is ' + this.readyState +
-                        ".  Response is " + ((this.response) ? licenseServerData.getErrorResponse(this.response, keySystemString, messageType) : "NONE"));
+                        '.  Response is ' + ((this.response) ? licenseServerData.getErrorResponse(this.response, keySystemString, messageType) : 'NONE'));
             }
         };
         xhr.onabort = function () {
@@ -518,8 +518,8 @@ function ProtectionController(config) {
 
     function onNeedKey(event) {
         // Ignore non-cenc initData
-        if (event.key.initDataType !== "cenc") {
-            log("DRM:  Only 'cenc' initData is supported!  Ignoring initData of type: " + event.key.initDataType);
+        if (event.key.initDataType !== 'cenc') {
+            log('DRM:  Only \'cenc\' initData is supported!  Ignoring initData of type: ' + event.key.initDataType);
             return;
         }
 
@@ -532,7 +532,7 @@ function ProtectionController(config) {
 
         var supportedKS = protectionExt.getSupportedKeySystems(abInitData);
         if (supportedKS.length === 0) {
-            log("Received needkey event with initData, but we don't support any of the key systems!");
+            log('Received needkey event with initData, but we don\'t support any of the key systems!');
             return;
         }
 

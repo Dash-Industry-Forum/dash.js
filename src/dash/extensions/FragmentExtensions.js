@@ -46,10 +46,10 @@ function FragmentExtensions(/*config*/) {
 
     function getSamplesInfo(ab) {
         var isoFile = boxParser.parse(ab),
-            tfhdBox = isoFile.getBox("tfhd"),
-            tfdtBox = isoFile.getBox("tfdt"),
-            trunBox = isoFile.getBox("trun"),
-            moofBox = isoFile.getBox("moof");
+            tfhdBox = isoFile.getBox('tfhd'),
+            tfdtBox = isoFile.getBox('tfdt'),
+            trunBox = isoFile.getBox('trun'),
+            moofBox = isoFile.getBox('moof');
         var sampleDuration,
             sampleCompostionTimeOffset,
             sampleCount,
@@ -84,7 +84,7 @@ function FragmentExtensions(/*config*/) {
 
     function getMediaTimescaleFromMoov(ab) {
         var isoFile = boxParser.parse(ab);
-        var mdhdBox = isoFile.getBox("mdhd");
+        var mdhdBox = isoFile.getBox('mdhd');
 
         return mdhdBox ? mdhdBox.timescale : NaN;
     }

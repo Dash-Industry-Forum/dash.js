@@ -37,7 +37,7 @@ import AbrController from './AbrController.js';
 import BufferController from './BufferController.js';
 import LiveEdgeFinder from '../LiveEdgeFinder.js';
 import EventBus from '../../core/EventBus.js';
-import Events from "../../core/events/Events.js";
+import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
 
@@ -149,7 +149,7 @@ function ScheduleController(config) {
         if (initialPlayback) {
             initialPlayback = false;
         }
-        log("start");
+        log('start');
         //if starting from a pause we want to call validate to kick off the cycle that was stopped by pausing stream.
         if (playbackController.getPlayedRanges().length > 0) {
             validate();
@@ -168,7 +168,7 @@ function ScheduleController(config) {
     function doStop() {
         if (isStopped) return;
         isStopped = true;
-        log("stop");
+        log('stop');
         clearInterval(validateTimeout);
         clearPlayListTraceMetrics(new Date(), PlayList.Trace.USER_REQUEST_STOP_REASON);
     }
@@ -247,7 +247,7 @@ function ScheduleController(config) {
 
         currentRepresentationInfo = streamProcessor.getRepresentationInfoForQuality(e.newQuality);
         if (currentRepresentationInfo === null || currentRepresentationInfo === undefined) {
-            throw "Unexpected error! - currentRepresentationInfo is null or undefined";
+            throw 'Unexpected error! - currentRepresentationInfo is null or undefined';
         }
 
         clearPlayListTraceMetrics(new Date(), PlayList.Trace.REPRESENTATION_SWITCH_STOP_REASON);
@@ -274,7 +274,7 @@ function ScheduleController(config) {
 
     function onStreamCompleted(e) {
         if (e.fragmentModel !== fragmentModel) return;
-        log("Stream is complete");
+        log('Stream is complete');
         clearPlayListTraceMetrics(new Date(), PlayList.Trace.END_OF_CONTENT_STOP_REASON);
     }
 
@@ -319,7 +319,7 @@ function ScheduleController(config) {
 
     function onBufferLevelStateChanged(e) {
         if ((e.sender.getStreamProcessor() === streamProcessor) && e.state === BufferController.BUFFER_EMPTY && !playbackController.isSeeking()) {
-            log("Stalling Buffer");
+            log('Stalling Buffer');
             clearPlayListTraceMetrics(new Date(), PlayList.Trace.REBUFFERING_REASON);
         }
     }
@@ -363,11 +363,11 @@ function ScheduleController(config) {
             isFragmentLoading = false;
         }
 
-        var metrics = metricsModel.getMetricsFor("stream");
+        var metrics = metricsModel.getMetricsFor('stream');
         var manifestUpdateInfo = metricsExt.getCurrentManifestUpdate(metrics);
 
         seekTarget = e.seekTime;
-        log("seek: " + seekTarget);
+        log('seek: ' + seekTarget);
         addPlaylistMetrics(PlayList.SEEK_START_REASON);
 
         metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentRepresentationInfo.DVRWindow.end - playbackController.getTime()});
@@ -388,7 +388,7 @@ function ScheduleController(config) {
         var liveEdgeTime = e.liveEdge;
         var manifestInfo = currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo;
         var startTime = liveEdgeTime - Math.min((playbackController.getLiveDelay(currentRepresentationInfo.fragmentDuration)), manifestInfo.DVRWindowSize / 2);
-        var metrics = metricsModel.getMetricsFor("stream");
+        var metrics = metricsModel.getMetricsFor('stream');
         var manifestUpdateInfo = metricsExt.getCurrentManifestUpdate(metrics);
         var currentLiveStart = playbackController.getLiveStartTime();
 

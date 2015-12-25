@@ -117,7 +117,7 @@ function  ProtectionModel_01b(config) {
     function requestKeySystemAccess(ksConfigurations) {
         var ve = videoElement;
         if (!ve) { // Must have a video element to do this capability tests
-            ve = document.createElement("video");
+            ve = document.createElement('video');
         }
 
         // Try key systems in order, first one with supported key system configuration
@@ -138,7 +138,7 @@ function  ProtectionModel_01b(config) {
                 if (videos && videos.length !== 0) {
                     supportedVideo = []; // Indicates that we have a requested video config
                     for (var videoIdx = 0; videoIdx < videos.length; videoIdx++) {
-                        if (ve.canPlayType(videos[videoIdx].contentType, systemString) !== "") {
+                        if (ve.canPlayType(videos[videoIdx].contentType, systemString) !== '') {
                             supportedVideo.push(videos[videoIdx]);
                         }
                     }
@@ -161,7 +161,7 @@ function  ProtectionModel_01b(config) {
             }
         }
         if (!found) {
-            eventBus.trigger(Events.KEY_SYSTEM_ACCESS_COMPLETE, {error:"Key system access denied! -- No valid audio/video content configurations detected!"});
+            eventBus.trigger(Events.KEY_SYSTEM_ACCESS_COMPLETE, {error:'Key system access denied! -- No valid audio/video content configurations detected!'});
         }
     }
 
@@ -195,7 +195,7 @@ function  ProtectionModel_01b(config) {
     function createKeySession(initData /*, keySystemType */) {
 
         if (!keySystem) {
-            throw new Error("Can not create sessions until you have selected a key system");
+            throw new Error('Can not create sessions until you have selected a key system');
         }
 
         // Determine if creating a new session is allowed
@@ -213,7 +213,7 @@ function  ProtectionModel_01b(config) {
                 },
 
                 getSessionType: function() {
-                    return "temporary";
+                    return 'temporary';
                 }
             };
             pendingSessions.push(newSession);
@@ -224,7 +224,7 @@ function  ProtectionModel_01b(config) {
             return newSession;
 
         } else {
-            throw new Error("Multiple sessions not allowed!");
+            throw new Error('Multiple sessions not allowed!');
         }
 
     }
@@ -261,7 +261,7 @@ function  ProtectionModel_01b(config) {
 
                     case api.needkey:
                         var initData = ArrayBuffer.isView(event.initData) ? event.initData.buffer : event.initData;
-                        eventBus.trigger(Events.NEED_KEY, {key:new NeedKey(initData, "cenc")});
+                        eventBus.trigger(Events.NEED_KEY, {key:new NeedKey(initData, 'cenc')});
                         break;
 
                     case api.keyerror:
@@ -271,32 +271,32 @@ function  ProtectionModel_01b(config) {
                         }
 
                         if (sessionToken) {
-                            var msg = "";
+                            var msg = '';
                             switch (event.errorCode.code) {
                                 case 1:
-                                    msg += "MEDIA_KEYERR_UNKNOWN - An unspecified error occurred. This value is used for errors that don't match any of the other codes.";
+                                    msg += 'MEDIA_KEYERR_UNKNOWN - An unspecified error occurred. This value is used for errors that don\'t match any of the other codes.';
                                     break;
                                 case 2:
-                                    msg += "MEDIA_KEYERR_CLIENT - The Key System could not be installed or updated.";
+                                    msg += 'MEDIA_KEYERR_CLIENT - The Key System could not be installed or updated.';
                                     break;
                                 case 3:
-                                    msg += "MEDIA_KEYERR_SERVICE - The message passed into update indicated an error from the license service.";
+                                    msg += 'MEDIA_KEYERR_SERVICE - The message passed into update indicated an error from the license service.';
                                     break;
                                 case 4:
-                                    msg += "MEDIA_KEYERR_OUTPUT - There is no available output device with the required characteristics for the content protection system.";
+                                    msg += 'MEDIA_KEYERR_OUTPUT - There is no available output device with the required characteristics for the content protection system.';
                                     break;
                                 case 5:
-                                    msg += "MEDIA_KEYERR_HARDWARECHANGE - A hardware configuration change caused a content protection error.";
+                                    msg += 'MEDIA_KEYERR_HARDWARECHANGE - A hardware configuration change caused a content protection error.';
                                     break;
                                 case 6:
-                                    msg += "MEDIA_KEYERR_DOMAIN - An error occurred in a multi-device domain licensing configuration. The most common error is a failure to join the domain.";
+                                    msg += 'MEDIA_KEYERR_DOMAIN - An error occurred in a multi-device domain licensing configuration. The most common error is a failure to join the domain.';
                                     break;
                             }
-                            msg += "  System Code = " + event.systemCode;
+                            msg += '  System Code = ' + event.systemCode;
                             // TODO: Build error string based on key error
                             eventBus.trigger(Events.KEY_ERROR, {data:new KeyError(sessionToken, msg)});
                         } else {
-                            log("No session token found for key error");
+                            log('No session token found for key error');
                         }
                         break;
 
@@ -307,10 +307,10 @@ function  ProtectionModel_01b(config) {
                         }
 
                         if (sessionToken) {
-                            log("DRM: Key added.");
+                            log('DRM: Key added.');
                             eventBus.trigger(Events.KEY_ADDED, {data:sessionToken});//TODO not sure anything is using sessionToken? why there?
                         } else {
-                            log("No session token found for key added");
+                            log('No session token found for key added');
                         }
                         break;
 
@@ -339,7 +339,7 @@ function  ProtectionModel_01b(config) {
                             sessions.push(sessionToken);
 
                             if (pendingSessions.length !== 0) {
-                                errHandler.mediaKeyMessageError("Multiple key sessions were creates with a user-agent that does not support sessionIDs!! Unpredictable behavior ahead!");
+                                errHandler.mediaKeyMessageError('Multiple key sessions were creates with a user-agent that does not support sessionIDs!! Unpredictable behavior ahead!');
                             }
                         }
 
@@ -353,7 +353,7 @@ function  ProtectionModel_01b(config) {
                             eventBus.trigger(Events.KEY_MESSAGE, {data:new KeyMessage(sessionToken, message, event.defaultURL)});
 
                         } else {
-                            log("No session token found for key message");
+                            log('No session token found for key message');
                         }
                         break;
                 }

@@ -32,7 +32,7 @@ import BufferController from './BufferController.js';
 import URIQueryAndFragmentModel from '../models/URIQueryAndFragmentModel.js';
 import MediaPlayerModel from '../../streaming/models/MediaPlayerModel.js';
 import EventBus from '../../core/EventBus.js';
-import Events from "../../core/events/Events.js";
+import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
 
@@ -136,7 +136,7 @@ function PlaybackController() {
         var delay;
         var mpd = manifestExt.getMpd(manifestModel.getValue());
 
-        if (mediaPlayerModel.getUseSuggestedPresentationDelay() && mpd.hasOwnProperty("suggestedPresentationDelay")) {
+        if (mediaPlayerModel.getUseSuggestedPresentationDelay() && mpd.hasOwnProperty('suggestedPresentationDelay')) {
             delay = mpd.suggestedPresentationDelay;
         } else if (!isNaN(fragmentDuration)) {
             delay = fragmentDuration * mediaPlayerModel.getLiveDelayFragmentCount();
@@ -167,7 +167,7 @@ function PlaybackController() {
 
     function seek(time) {
         if (!videoModel || time === getTime()) return;
-        log("Do seek: " + time);
+        log('Do seek: ' + time);
         videoModel.setCurrentTime(time);
     }
 
@@ -257,7 +257,7 @@ function PlaybackController() {
     }
 
     function getActualPresentationTime(currentTime) {
-        var metrics = metricsModel.getReadOnlyMetricsFor("video") || metricsModel.getReadOnlyMetricsFor("audio");
+        var metrics = metricsModel.getReadOnlyMetricsFor('video') || metricsModel.getReadOnlyMetricsFor('audio');
         var DVRMetrics = metricsExt.getCurrentDVRInfo(metrics);
         var DVRWindow = DVRMetrics ? DVRMetrics.range : null;
         var actualTime;
@@ -292,7 +292,7 @@ function PlaybackController() {
         if (firstAppended[streamInfo.id] || isSeeking()) return;
         var initialSeekTime = getStreamStartTime(streamInfo);
         eventBus.trigger(Events.PLAYBACK_SEEKING, {seekTime: initialSeekTime});
-        log("Starting playback at offset: " + initialSeekTime);
+        log('Starting playback at offset: ' + initialSeekTime);
     }
 
     function updateCurrentTime() {
@@ -328,18 +328,18 @@ function PlaybackController() {
     function removeAllListeners() {
         if (!videoModel) return;
 
-        videoModel.unlisten("canplay", onCanPlay);
-        videoModel.unlisten("play", onPlaybackStart);
-        videoModel.unlisten("playing", onPlaybackPlaying);
-        videoModel.unlisten("pause", onPlaybackPaused);
-        videoModel.unlisten("error", onPlaybackError);
-        videoModel.unlisten("seeking", onPlaybackSeeking);
-        videoModel.unlisten("seeked", onPlaybackSeeked);
-        videoModel.unlisten("timeupdate", onPlaybackTimeUpdated);
-        videoModel.unlisten("progress", onPlaybackProgress);
-        videoModel.unlisten("ratechange", onPlaybackRateChanged);
-        videoModel.unlisten("loadedmetadata", onPlaybackMetaDataLoaded);
-        videoModel.unlisten("ended", onPlaybackEnded);
+        videoModel.unlisten('canplay', onCanPlay);
+        videoModel.unlisten('play', onPlaybackStart);
+        videoModel.unlisten('playing', onPlaybackPlaying);
+        videoModel.unlisten('pause', onPlaybackPaused);
+        videoModel.unlisten('error', onPlaybackError);
+        videoModel.unlisten('seeking', onPlaybackSeeking);
+        videoModel.unlisten('seeked', onPlaybackSeeked);
+        videoModel.unlisten('timeupdate', onPlaybackTimeUpdated);
+        videoModel.unlisten('progress', onPlaybackProgress);
+        videoModel.unlisten('ratechange', onPlaybackRateChanged);
+        videoModel.unlisten('loadedmetadata', onPlaybackMetaDataLoaded);
+        videoModel.unlisten('ended', onPlaybackEnded);
     }
 
     function onCanPlay(/*e*/) {
@@ -347,19 +347,19 @@ function PlaybackController() {
     }
 
     function onPlaybackStart() {
-        log("Native video element event: play");
+        log('Native video element event: play');
         updateCurrentTime();
         startUpdatingWallclockTime();
         eventBus.trigger(Events.PLAYBACK_STARTED, {startTime: getTime()});
     }
 
     function onPlaybackPlaying() {
-        log("Native video element event: playing");
+        log('Native video element event: playing');
         eventBus.trigger(Events.PLAYBACK_PLAYING, {playingTime: getTime()});
     }
 
     function onPlaybackPaused() {
-        log("Native video element event: pause");
+        log('Native video element event: pause');
         eventBus.trigger(Events.PLAYBACK_PAUSED);
     }
 
@@ -369,7 +369,7 @@ function PlaybackController() {
     }
 
     function onPlaybackSeeked() {
-        log("Native video element event: seeked");
+        log('Native video element event: seeked');
         eventBus.trigger(Events.PLAYBACK_SEEKED);
     }
 
@@ -397,12 +397,12 @@ function PlaybackController() {
     }
 
     function onPlaybackRateChanged() {
-        log("Native video element event: ratechange: ", getPlaybackRate());
+        log('Native video element event: ratechange: ', getPlaybackRate());
         eventBus.trigger(Events.PLAYBACK_RATE_CHANGED);
     }
 
     function onPlaybackMetaDataLoaded() {
-        log("Native video element event: loadedmetadata");
+        log('Native video element event: loadedmetadata');
         if (!isDynamic || timelineConverter.isTimeSyncCompleted()) {
             initialStart();
         }
@@ -411,7 +411,7 @@ function PlaybackController() {
     }
 
     function onPlaybackEnded() {
-        log("Native video element event: ended");
+        log('Native video element event: ended');
         stopUpdatingWallclockTime();
         eventBus.trigger(Events.PLAYBACK_ENDED);
     }
@@ -442,7 +442,7 @@ function PlaybackController() {
         if (segStart === streamStart) {
             firstAppended[id] = firstAppended[id] || {};
             firstAppended[id][type] = true;
-            firstAppended[id].ready = !((stream.hasMedia("audio") && !firstAppended[id].audio) || (stream.hasMedia("video") && !firstAppended[id].video));
+            firstAppended[id].ready = !((stream.hasMedia('audio') && !firstAppended[id].audio) || (stream.hasMedia('video') && !firstAppended[id].video));
         }
 
         if (!ranges || !ranges.length || (firstAppended[id] && firstAppended[id].seekCompleted)) return;
@@ -473,18 +473,18 @@ function PlaybackController() {
     }
 
     function setupVideoModel() {
-        videoModel.listen("canplay", onCanPlay);
-        videoModel.listen("play", onPlaybackStart);
-        videoModel.listen("playing", onPlaybackPlaying);
-        videoModel.listen("pause", onPlaybackPaused);
-        videoModel.listen("error", onPlaybackError);
-        videoModel.listen("seeking", onPlaybackSeeking);
-        videoModel.listen("seeked", onPlaybackSeeked);
-        videoModel.listen("timeupdate", onPlaybackTimeUpdated);
-        videoModel.listen("progress", onPlaybackProgress);
-        videoModel.listen("ratechange", onPlaybackRateChanged);
-        videoModel.listen("loadedmetadata", onPlaybackMetaDataLoaded);
-        videoModel.listen("ended", onPlaybackEnded);
+        videoModel.listen('canplay', onCanPlay);
+        videoModel.listen('play', onPlaybackStart);
+        videoModel.listen('playing', onPlaybackPlaying);
+        videoModel.listen('pause', onPlaybackPaused);
+        videoModel.listen('error', onPlaybackError);
+        videoModel.listen('seeking', onPlaybackSeeking);
+        videoModel.listen('seeked', onPlaybackSeeked);
+        videoModel.listen('timeupdate', onPlaybackTimeUpdated);
+        videoModel.listen('progress', onPlaybackProgress);
+        videoModel.listen('ratechange', onPlaybackRateChanged);
+        videoModel.listen('loadedmetadata', onPlaybackMetaDataLoaded);
+        videoModel.listen('ended', onPlaybackEnded);
     }
 
     instance = {

@@ -125,9 +125,9 @@ function ThroughputRule(config) {
             }
 
             if (switchRequest.value !== SwitchRequest.NO_CHANGE && switchRequest.value !== current) {
-                log("ThroughputRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " Priority: ",
-                    switchRequest.priority === SwitchRequest.DEFAULT ? "Default" :
-                        switchRequest.priority === SwitchRequest.STRONG ? "Strong" : "Weak", "Average throughput", Math.round(averageThroughput), "kbps");
+                log('ThroughputRule requesting switch to index: ', switchRequest.value, 'type: ',mediaType, ' Priority: ',
+                    switchRequest.priority === SwitchRequest.DEFAULT ? 'Default' :
+                        switchRequest.priority === SwitchRequest.STRONG ? 'Strong' : 'Weak', 'Average throughput', Math.round(averageThroughput), 'kbps');
             }
         }
 

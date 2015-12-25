@@ -39,7 +39,7 @@ import TTMLParser from '../TTMLParser.js';
 import VideoModel from '../models/VideoModel.js';
 import Error from '../vo/Error.js';
 import EventBus from '../../core/EventBus.js';
-import Events from "../../core/events/Events.js";
+import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 
@@ -64,7 +64,7 @@ function SourceBufferExtensions() {
             // - currently no browser does, so check for it and use our own
             // implementation.
             if (codec.match(/application\/mp4;\s*codecs="stpp"/i)) {
-                throw new Error("not really supported");
+                throw new Error('not really supported');
             }
 
             buffer = mediaSource.addSourceBuffer(codec);
@@ -270,11 +270,11 @@ function SourceBufferExtensions() {
 
     function append(buffer, chunk) {
         var bytes = chunk.bytes;
-        var appendMethod = ("append" in buffer) ? "append" : (("appendBuffer" in buffer) ? "appendBuffer" : null);
+        var appendMethod = ('append' in buffer) ? 'append' : (('appendBuffer' in buffer) ? 'appendBuffer' : null);
         // our user-defined sourcebuffer-like object has Object as its
         // prototype whereas built-in SourceBuffers will have something
         // more sensible. do not pass chunk to built-in append.
-        var acceptsChunk = Object.prototype.toString.call(buffer).slice(8, -1) === "Object";
+        var acceptsChunk = Object.prototype.toString.call(buffer).slice(8, -1) === 'Object';
 
         if (!appendMethod) return;
 
@@ -301,7 +301,7 @@ function SourceBufferExtensions() {
         try {
             // make sure that the given time range is correct. Otherwise we will get InvalidAccessError
             waitForUpdateEnd(buffer, function() {
-                if ((start >= 0) && (end > start) && (mediaSource.readyState !== "ended")) {
+                if ((start >= 0) && (end > start) && (mediaSource.readyState !== 'ended')) {
                     buffer.remove(start, end);
                 }
                 // updating is in progress, we should wait for it to complete before signaling that this operation is done
@@ -316,7 +316,7 @@ function SourceBufferExtensions() {
 
     function abort(mediaSource, buffer) {
         try {
-            if (mediaSource.readyState === "open") {
+            if (mediaSource.readyState === 'open') {
                 buffer.abort();
             }
         } catch(ex){
@@ -345,7 +345,7 @@ function SourceBufferExtensions() {
         var updateEndHandler = function() {
             if (buffer.updating) return;
 
-            buffer.removeEventListener("updateend", updateEndHandler, false);
+            buffer.removeEventListener('updateend', updateEndHandler, false);
             callback();
         };
 
@@ -355,9 +355,9 @@ function SourceBufferExtensions() {
         }
 
         // use updateend event if possible
-        if (typeof buffer.addEventListener === "function") {
+        if (typeof buffer.addEventListener === 'function') {
             try {
-                buffer.addEventListener("updateend", updateEndHandler, false);
+                buffer.addEventListener('updateend', updateEndHandler, false);
             } catch (err) {
                 // use setInterval to periodically check if updating has been completed
                 intervalId = setInterval(checkIsUpdateEnded, CHECK_INTERVAL);

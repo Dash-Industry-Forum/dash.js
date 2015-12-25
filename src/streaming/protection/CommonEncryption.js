@@ -42,8 +42,8 @@ class CommonEncryption {
         var retVal = null;
         for (var i = 0; i < cpArray.length; ++i) {
             var cp = cpArray[i];
-            if (cp.schemeIdUri.toLowerCase() === "urn:mpeg:dash:mp4protection:2011" &&
-                    cp.value.toLowerCase() === "cenc")
+            if (cp.schemeIdUri.toLowerCase() === 'urn:mpeg:dash:mp4protection:2011' &&
+                    cp.value.toLowerCase() === 'cenc')
                 retVal = cp;
         }
         return retVal;
@@ -98,7 +98,7 @@ class CommonEncryption {
      * @returns {ArrayBuffer} the init data or null if not found
      */
     static parseInitDataFromContentProtection(cpData) {
-        if ("pssh" in cpData) {
+        if ('pssh' in cpData) {
             return BASE64.decodeArray(cpData.pssh.__text).buffer;
         }
         return null;
@@ -159,35 +159,35 @@ class CommonEncryption {
             byteCursor += 3; /* skip flags */
 
             // 16-byte UUID/SystemID
-            systemID = "";
+            systemID = '';
             var i, val;
             for (i = 0; i < 4; i++) {
                 val = dv.getUint8(byteCursor+i).toString(16);
-                systemID += (val.length === 1) ? "0" + val : val;
+                systemID += (val.length === 1) ? '0' + val : val;
             }
             byteCursor+=4;
-            systemID += "-";
+            systemID += '-';
             for (i = 0; i < 2; i++) {
                 val = dv.getUint8(byteCursor+i).toString(16);
-                systemID += (val.length === 1) ? "0" + val : val;
+                systemID += (val.length === 1) ? '0' + val : val;
             }
             byteCursor+=2;
-            systemID += "-";
+            systemID += '-';
             for (i = 0; i < 2; i++) {
                 val = dv.getUint8(byteCursor+i).toString(16);
-                systemID += (val.length === 1) ? "0" + val : val;
+                systemID += (val.length === 1) ? '0' + val : val;
             }
             byteCursor+=2;
-            systemID += "-";
+            systemID += '-';
             for (i = 0; i < 2; i++) {
                 val = dv.getUint8(byteCursor+i).toString(16);
-                systemID += (val.length === 1) ? "0" + val : val;
+                systemID += (val.length === 1) ? '0' + val : val;
             }
             byteCursor+=2;
-            systemID += "-";
+            systemID += '-';
             for (i = 0; i < 6; i++) {
                 val = dv.getUint8(byteCursor+i).toString(16);
-                systemID += (val.length === 1) ? "0" + val : val;
+                systemID += (val.length === 1) ? '0' + val : val;
             }
             byteCursor+=6;
 

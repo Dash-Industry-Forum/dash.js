@@ -96,7 +96,7 @@ function XlinkController(config) {
         }
         for (i = 0; i < resolveObject.elements.length; i += 1) {
             element = resolveObject.elements[i];
-            if (element.url.indexOf("http://") !== -1) {
+            if (element.url.indexOf('http://') !== -1) {
                 url = element.url;
             } else {
                 url = element.originalContent.BaseURL + element.url;
@@ -169,15 +169,15 @@ function XlinkController(config) {
         // first remove all the resolve-to-zero elements
         for (i = elements.length - 1; i >= 0; i -= 1) {
             element = elements[i];
-            if (element.hasOwnProperty("xlink:href") && element["xlink:href"] === RESOLVE_TO_ZERO) {
+            if (element.hasOwnProperty('xlink:href') && element['xlink:href'] === RESOLVE_TO_ZERO) {
                 elements.splice(i, 1);
             }
         }
         // now get the elements with the right resolve type
         for (i = 0; i < elements.length; i++) {
             element = elements[i];
-            if (element.hasOwnProperty("xlink:href") && element.hasOwnProperty("xlink:actuate") && element["xlink:actuate"] === resolveType) {
-                xlinkObject = createXlinkObject(element["xlink:href"], parentElement, type, i, resolveType, element);
+            if (element.hasOwnProperty('xlink:href') && element.hasOwnProperty('xlink:actuate') && element['xlink:actuate'] === resolveType) {
+                xlinkObject = createXlinkObject(element['xlink:href'], parentElement, type, i, resolveType, element);
                 toResolve.push(xlinkObject);
             }
         }

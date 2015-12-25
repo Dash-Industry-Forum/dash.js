@@ -61,7 +61,7 @@ function PlaybackTimeRule(config) {
             range = null,
             request;
 
-        if (isNaN(time) || (mediaType === "fragmentedText" && textSourceBuffer.getAllTracksAreDisabled())) {
+        if (isNaN(time) || (mediaType === 'fragmentedText' && textSourceBuffer.getAllTracksAreDisabled())) {
             callback(SwitchRequest(context).create(null, p));
             return;
         }

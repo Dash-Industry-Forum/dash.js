@@ -152,7 +152,7 @@ function StreamController() {
 
     function onPlaybackError(e) {
         var code = e.error ? e.error.code : 0;
-        var msg = "";
+        var msg = '';
 
         if (code === -1) {
             // not an error!
@@ -161,28 +161,28 @@ function StreamController() {
 
         switch (code) {
             case 1:
-                msg = "MEDIA_ERR_ABORTED";
+                msg = 'MEDIA_ERR_ABORTED';
                 break;
             case 2:
-                msg = "MEDIA_ERR_NETWORK";
+                msg = 'MEDIA_ERR_NETWORK';
                 break;
             case 3:
-                msg = "MEDIA_ERR_DECODE";
+                msg = 'MEDIA_ERR_DECODE';
                 break;
             case 4:
-                msg = "MEDIA_ERR_SRC_NOT_SUPPORTED";
+                msg = 'MEDIA_ERR_SRC_NOT_SUPPORTED';
                 break;
             case 5:
-                msg = "MEDIA_ERR_ENCRYPTED";
+                msg = 'MEDIA_ERR_ENCRYPTED';
                 break;
             default:
-                msg = "UNKNOWN";
+                msg = 'UNKNOWN';
                 break;
         }
 
         hasMediaError = true;
 
-        log("Video Element Error: " + msg);
+        log('Video Element Error: ' + msg);
         if (e.error) {
             log(e.error);
         }
@@ -197,7 +197,7 @@ function StreamController() {
     function onPlaybackTimeUpdated(e) {
         var playbackQuality = videoModelExt.getPlaybackQuality(videoModel.getElement());
         if (playbackQuality) {
-            metricsModel.addDroppedFrames("video", playbackQuality);
+            metricsModel.addDroppedFrames('video', playbackQuality);
         }
 
         // Sometimes after seeking timeUpdateHandler is called before seekingHandler and a new stream starts
@@ -299,12 +299,12 @@ function StreamController() {
         var sourceUrl;
 
         var onMediaSourceOpen = function(e) {
-            log("MediaSource is open!");
+            log('MediaSource is open!');
             log(e);
             window.URL.revokeObjectURL(sourceUrl);
 
-            mediaSource.removeEventListener("sourceopen", onMediaSourceOpen);
-            mediaSource.removeEventListener("webkitsourceopen", onMediaSourceOpen);
+            mediaSource.removeEventListener('sourceopen', onMediaSourceOpen);
+            mediaSource.removeEventListener('webkitsourceopen', onMediaSourceOpen);
 
             //log("MediaSource set up.");
             setMediaDuration();
@@ -324,8 +324,8 @@ function StreamController() {
             mediaSourceExt.detachMediaSource(videoModel);
         }
 
-        mediaSource.addEventListener("sourceopen", onMediaSourceOpen, false);
-        mediaSource.addEventListener("webkitsourceopen", onMediaSourceOpen, false);
+        mediaSource.addEventListener('sourceopen', onMediaSourceOpen, false);
+        mediaSource.addEventListener('webkitsourceopen', onMediaSourceOpen, false);
         sourceUrl = mediaSourceExt.attachMediaSource(mediaSource, videoModel);
         //log("MediaSource attached to video.  Waiting on open...");
     }
@@ -336,12 +336,12 @@ function StreamController() {
 
         manifestDuration = activeStream.getStreamInfo().manifestInfo.duration;
         mediaDuration = mediaSourceExt.setDuration(mediaSource, manifestDuration);
-        log("Duration successfully set to: " + mediaDuration);
+        log('Duration successfully set to: ' + mediaDuration);
     }
 
     function composeStreams() {
         var manifest = manifestModel.getValue();
-        var metrics = metricsModel.getMetricsFor("stream");
+        var metrics = metricsModel.getMetricsFor('stream');
         var manifestUpdateInfo = metricsExt.getCurrentManifestUpdate(metrics);
         var remainingStreams = [],
             streamInfo,
@@ -365,7 +365,7 @@ function StreamController() {
 
         try {
             if (streamsInfo.length === 0) {
-                throw new Error("There are no streams");
+                throw new Error('There are no streams');
             }
 
             metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: videoModel.getCurrentTime(),
@@ -426,7 +426,7 @@ function StreamController() {
             isUpdating = false;
             checkIfUpdateCompleted();
         } catch(e) {
-            errHandler.manifestError(e.message, "nostreamscomposed", manifest);
+            errHandler.manifestError(e.message, 'nostreamscomposed', manifest);
             reset();
         }
     }
@@ -461,8 +461,8 @@ function StreamController() {
             var manifest = e.manifest;
             var streamInfo = adapter.getStreamsInfo(manifest)[0];
             var mediaInfo = (
-                adapter.getMediaInfoForType(manifest, streamInfo, "video") ||
-                    adapter.getMediaInfoForType(manifest, streamInfo, "audio")
+                adapter.getMediaInfoForType(manifest, streamInfo, 'video') ||
+                    adapter.getMediaInfoForType(manifest, streamInfo, 'audio')
             );
 
             var adaptation,
@@ -473,7 +473,7 @@ function StreamController() {
                 useCalculatedLiveEdgeTime = manifestExt.getRepresentationsForAdaptation(manifest, adaptation)[0].useCalculatedLiveEdgeTime;
 
                 if (useCalculatedLiveEdgeTime) {
-                    log("SegmentTimeline detected using calculated Live Edge Time");
+                    log('SegmentTimeline detected using calculated Live Edge Time');
                     mediaPlayerModel.setUseManifestDateHeaderTimeSource(false);
                 }
             }
@@ -484,9 +484,9 @@ function StreamController() {
 
             //If https is detected on manifest then lets apply that protocol to only the default time source(s). In the future we may find the need to apply this to more then just default so left code at this level instead of in MediaPlayer.
             allUTCTimingSources.forEach(function(item){
-                if (item.value.replace(/.*?:\/\//g, "") === MediaPlayerModel.DEFAULT_UTC_TIMING_SOURCE.value.replace(/.*?:\/\//g, "")){
-                    item.value = item.value.replace(isHTTPS ? new RegExp(/^(http:)?\/\//i) : new RegExp(/^(https:)?\/\//i), isHTTPS ? "https://" : "http://");
-                    log("Matching default timing source protocol to manifest protocol: " , item.value);
+                if (item.value.replace(/.*?:\/\//g, '') === MediaPlayerModel.DEFAULT_UTC_TIMING_SOURCE.value.replace(/.*?:\/\//g, '')){
+                    item.value = item.value.replace(isHTTPS ? new RegExp(/^(http:)?\/\//i) : new RegExp(/^(https:)?\/\//i), isHTTPS ? 'https://' : 'http://');
+                    log('Matching default timing source protocol to manifest protocol: ' , item.value);
                 }
             });
 

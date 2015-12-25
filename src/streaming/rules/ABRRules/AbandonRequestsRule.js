@@ -101,7 +101,7 @@ function AbandonRequestsRule(/*config*/) {
                     var newQuality = abrController.getQualityForBitrate(mediaInfo, fragmentInfo.measuredBandwidthInKbps * AbrController.BANDWIDTH_SAFETY);
                     switchRequest = SwitchRequest(context).create(newQuality, SwitchRequest.STRONG);
                     abandonDict[fragmentInfo.id] = fragmentInfo;
-                    log("AbandonRequestsRule ( ", mediaType, "frag id",fragmentInfo.id,") is asking to abandon and switch to quality to ", newQuality, " measured bandwidth was", fragmentInfo.measuredBandwidthInKbps);
+                    log('AbandonRequestsRule ( ', mediaType, 'frag id',fragmentInfo.id,') is asking to abandon and switch to quality to ', newQuality, ' measured bandwidth was', fragmentInfo.measuredBandwidthInKbps);
                     delete fragmentDict[mediaType][fragmentInfo.id];
                 }
             }else if (fragmentInfo.bytesLoaded === fragmentInfo.bytesTotal) {

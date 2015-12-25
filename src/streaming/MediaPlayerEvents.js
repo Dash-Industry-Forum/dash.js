@@ -39,46 +39,46 @@ class MediaPlayerEvents extends EventsBase {
          * Triggered when the video element's buffer state changes to stalled.
          * @event MediaPlayerEvents#BUFFER_EMPTY
          */
-        this.BUFFER_EMPTY = "bufferstalled";
+        this.BUFFER_EMPTY = 'bufferstalled';
         /**
          * Triggered when the video element's buffer state changes to loaded.
          * @event MediaPlayerEvents#BUFFER_LOADED
          */
-        this.BUFFER_LOADED = "bufferloaded";
+        this.BUFFER_LOADED = 'bufferloaded';
         /**
          * Triggered when
          * @event MediaPlayerEvents#ERROR
          */
-        this.ERROR = "error";
+        this.ERROR = 'error';
         /**
          * Triggered when {@link module:Debug} log method is called.
          * @event MediaPlayerEvents#LOG
          */
-        this.LOG = "log";
-        this.MANIFEST_LOADED = "manifestloaded";
-        this.METRICS_CHANGED = "metricschanged";
-        this.METRIC_ADDED = "metricadded";
-        this.METRIC_CHANGED = "metricchanged";
-        this.METRIC_UPDATED = "metricupdated";
-        this.PERIOD_SWITCH_COMPLETED = "streamswitchcompleted";
-        this.PERIOD_SWITCH_STARTED = "streamswitchstarted";
-        this.STREAM_INITIALIZED = "streaminitialized";
-        this.TEXT_TRACKS_ADDED = "alltexttracksadded";
-        this.TEXT_TRACK_ADDED = "texttrackadded";
+        this.LOG = 'log';
+        this.MANIFEST_LOADED = 'manifestloaded';
+        this.METRICS_CHANGED = 'metricschanged';
+        this.METRIC_ADDED = 'metricadded';
+        this.METRIC_CHANGED = 'metricchanged';
+        this.METRIC_UPDATED = 'metricupdated';
+        this.PERIOD_SWITCH_COMPLETED = 'streamswitchcompleted';
+        this.PERIOD_SWITCH_STARTED = 'streamswitchstarted';
+        this.STREAM_INITIALIZED = 'streaminitialized';
+        this.TEXT_TRACKS_ADDED = 'alltexttracksadded';
+        this.TEXT_TRACK_ADDED = 'texttrackadded';
 
         //Video Element Events.
-        this.CAN_PLAY = "canPlay";
-        this.PLAYBACK_ENDED = "playbackEnded";
-        this.PLAYBACK_ERROR = "playbackError";
-        this.PLAYBACK_METADATA_LOADED = "playbackMetaDataLoaded";
-        this.PLAYBACK_PAUSED = "playbackPaused";
-        this.PLAYBACK_PLAYING = "playbackPlaying";
-        this.PLAYBACK_PROGRESS = "playbackProgress";
-        this.PLAYBACK_RATE_CHANGED = "playbackRateChanged";
-        this.PLAYBACK_SEEKED = "playbackSeeked";
-        this.PLAYBACK_SEEKING = "playbackSeeking";
-        this.PLAYBACK_STARTED = "playbackStarted";
-        this.PLAYBACK_TIME_UPDATED = "playbackTimeUpdated";
+        this.CAN_PLAY = 'canPlay';
+        this.PLAYBACK_ENDED = 'playbackEnded';
+        this.PLAYBACK_ERROR = 'playbackError';
+        this.PLAYBACK_METADATA_LOADED = 'playbackMetaDataLoaded';
+        this.PLAYBACK_PAUSED = 'playbackPaused';
+        this.PLAYBACK_PLAYING = 'playbackPlaying';
+        this.PLAYBACK_PROGRESS = 'playbackProgress';
+        this.PLAYBACK_RATE_CHANGED = 'playbackRateChanged';
+        this.PLAYBACK_SEEKED = 'playbackSeeked';
+        this.PLAYBACK_SEEKING = 'playbackSeeking';
+        this.PLAYBACK_STARTED = 'playbackStarted';
+        this.PLAYBACK_TIME_UPDATED = 'playbackTimeUpdated';
     }
 }
 

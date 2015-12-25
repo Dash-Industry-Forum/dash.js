@@ -1,4 +1,6 @@
 {
     esnext: true,
     verbose: true,
+
+    "validateQuoteMarks": "'"
 }

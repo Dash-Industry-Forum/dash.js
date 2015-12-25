@@ -72,13 +72,13 @@ PlayList.Trace = class {
 };
 
 /* Public Static Constants */
-PlayList.INITIAL_PLAY_START_REASON = "initial_start";
-PlayList.SEEK_START_REASON = "seek";
+PlayList.INITIAL_PLAY_START_REASON = 'initial_start';
+PlayList.SEEK_START_REASON = 'seek';
 
 /* Public Static Constants */
-PlayList.Trace.USER_REQUEST_STOP_REASON = "user_request";
-PlayList.Trace.REPRESENTATION_SWITCH_STOP_REASON = "representation_switch";
-PlayList.Trace.END_OF_CONTENT_STOP_REASON = "end_of_content";
-PlayList.Trace.REBUFFERING_REASON = "rebuffering";
+PlayList.Trace.USER_REQUEST_STOP_REASON = 'user_request';
+PlayList.Trace.REPRESENTATION_SWITCH_STOP_REASON = 'representation_switch';
+PlayList.Trace.END_OF_CONTENT_STOP_REASON = 'end_of_content';
+PlayList.Trace.REBUFFERING_REASON = 'rebuffering';
 
 export default PlayList;

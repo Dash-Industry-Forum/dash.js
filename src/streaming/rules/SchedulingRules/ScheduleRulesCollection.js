@@ -38,8 +38,8 @@ import DashMetricsExtensions from '../../../dash/extensions/DashMetricsExtension
 import SourceBufferExtensions from '../../extensions/SourceBufferExtensions.js';
 import VirtualBuffer from '../../utils/VirtualBuffer.js';
 
-const FRAGMENTS_TO_SCHEDULE_RULES = "fragmentsToScheduleRules";
-const NEXT_FRAGMENT_RULES = "nextFragmentRules";
+const FRAGMENTS_TO_SCHEDULE_RULES = 'fragmentsToScheduleRules';
+const NEXT_FRAGMENT_RULES = 'nextFragmentRules';
 
 function ScheduleRulesCollection() {
 

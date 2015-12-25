@@ -33,10 +33,10 @@ import EventBus from '../../core/EventBus.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
 
-const TRACK_SWITCH_MODE_NEVER_REPLACE = "neverReplace";
-const TRACK_SWITCH_MODE_ALWAYS_REPLACE = "alwaysReplace";
-const TRACK_SELECTION_MODE_HIGHEST_BITRATE = "highestBitrate";
-const TRACK_SELECTION_MODE_WIDEST_RANGE = "widestRange";
+const TRACK_SWITCH_MODE_NEVER_REPLACE = 'neverReplace';
+const TRACK_SWITCH_MODE_ALWAYS_REPLACE = 'alwaysReplace';
+const TRACK_SELECTION_MODE_HIGHEST_BITRATE = 'highestBitrate';
+const TRACK_SELECTION_MODE_WIDEST_RANGE = 'widestRange';
 const DEFAULT_INIT_TRACK_SELECTION_MODE = TRACK_SELECTION_MODE_HIGHEST_BITRATE;
 
 function MediaController() {
@@ -66,7 +66,7 @@ function MediaController() {
      */
     function checkInitialMediaSettings(streamInfo) {
 
-        ["audio", "video", "text", "fragmentedText"].forEach(function(type){
+        ['audio', 'video', 'text', 'fragmentedText'].forEach(function(type){
             var settings = getInitialSettings(type);
             var tracksForType = getTracksFor(type, streamInfo);
             var isSet = false;
@@ -229,7 +229,7 @@ function MediaController() {
         var isModeSupported = !!MediaController[mode];
 
         if (!isModeSupported) {
-            log("track switch mode is not supported: " + mode);
+            log('track switch mode is not supported: ' + mode);
             return;
         }
 
@@ -253,7 +253,7 @@ function MediaController() {
         var isModeSupported = !!MediaController.trackSelectionModes[mode];
 
         if (!isModeSupported) {
-            log("track selection mode is not supported: " + mode);
+            log('track selection mode is not supported: ' + mode);
             return;
         }
         selectionMode = mode;
@@ -273,7 +273,7 @@ function MediaController() {
      * @memberof MediaController#
      */
     function isMultiTrackSupportedByType(type) {
-        return (type === "audio" || type === "video" || type === "text" || type === "fragmentedText");
+        return (type === 'audio' || type === 'video' || type === 'text' || type === 'fragmentedText');
     }
 
     /**
@@ -314,8 +314,8 @@ function MediaController() {
     }
 
     function storeLastSettings(type, value) {
-        if (DOMStorage.isSupported(DOMStorage.STORAGE_TYPE_LOCAL) && (type === "video" || type === "audio")) {
-            localStorage.setItem(DOMStorage["LOCAL_STORAGE_"+type.toUpperCase()+"_SETTINGS_KEY"], JSON.stringify({settings: value, timestamp:new Date().getTime()}));
+        if (DOMStorage.isSupported(DOMStorage.STORAGE_TYPE_LOCAL) && (type === 'video' || type === 'audio')) {
+            localStorage.setItem(DOMStorage['LOCAL_STORAGE_'+type.toUpperCase()+'_SETTINGS_KEY'], JSON.stringify({settings: value, timestamp:new Date().getTime()}));
         }
     }
 
@@ -419,7 +419,7 @@ function MediaController() {
                 }
                 break;
             default:
-                log("track selection mode is not supported: " + mode);
+                log('track selection mode is not supported: ' + mode);
                 break;
         }
 
