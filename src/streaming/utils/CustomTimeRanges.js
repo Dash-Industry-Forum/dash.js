@@ -34,7 +34,7 @@ function CustomTimeRanges(/*config*/) {
     let customTimeRangeArray = [],
         length = 0;
 
-    function add(start,end) {
+    function add(start, end) {
         var i = 0;
 
         for (i = 0; (i < this.customTimeRangeArray.length) && (start > this.customTimeRangeArray[i].start); i++);
@@ -54,7 +54,7 @@ function CustomTimeRanges(/*config*/) {
         this.length = 0;
     }
 
-    function remove(start,end) {
+    function remove(start, end) {
         for (var i = 0; i < this.customTimeRangeArray.length; i++) {
             if (start <= this.customTimeRangeArray[i].start && end >= this.customTimeRangeArray[i].end) {
                 //      |--------------Range i-------|
@@ -94,7 +94,7 @@ function CustomTimeRanges(/*config*/) {
         this.length = this.customTimeRangeArray.length;
     }
 
-    function mergeRanges(rangeIndex1,rangeIndex2) {
+    function mergeRanges(rangeIndex1, rangeIndex2) {
         var range1 = this.customTimeRangeArray[rangeIndex1];
         var range2 = this.customTimeRangeArray[rangeIndex2];
 

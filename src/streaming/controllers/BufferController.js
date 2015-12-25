@@ -411,7 +411,7 @@ function BufferController(config) {
     }
 
 
-    function handleInbandEvents(data,request,mediaInbandEvents,trackInbandEvents) {
+    function handleInbandEvents(data, request, mediaInbandEvents, trackInbandEvents) {
         var fragmentStarttime = Math.max(isNaN(request.startTime) ? 0 : request.startTime, 0);
         var eventStreams = [],
             events = [],

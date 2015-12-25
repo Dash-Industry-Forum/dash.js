@@ -16,5 +16,6 @@
     },
     "disallowSpaceAfterObjectKeys": true,
     "requireSpaceBeforeObjectValues": true,
-    "requireSemicolons": true
+    "requireSemicolons": true,
+    "validateParameterSeparator": ", "
 }

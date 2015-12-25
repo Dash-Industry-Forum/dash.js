@@ -639,7 +639,7 @@ function DashManifestExtensions() {
         return periodEnd;
     }
 
-    function getEventsForPeriod(manifest,period) {
+    function getEventsForPeriod(manifest, period) {
 
         var periodArray = manifest.Period_asArray;
         var eventStreams = periodArray[period.index].EventStream_asArray;

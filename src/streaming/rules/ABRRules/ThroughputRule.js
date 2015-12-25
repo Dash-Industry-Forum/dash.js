@@ -56,7 +56,7 @@ function ThroughputRule(config) {
         }
     }
 
-    function getAverageThroughput(type,  isDynamic) {
+    function getAverageThroughput(type, isDynamic) {
         var averageThroughput = 0;
         var sampleAmount = isDynamic ? AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE : AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD;
         var arr = throughputArray[type];
