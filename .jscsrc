@@ -15,5 +15,6 @@
         "beforeOpeningCurlyBrace": true
     },
     "disallowSpaceAfterObjectKeys": true,
-    "requireSpaceBeforeObjectValues": true
+    "requireSpaceBeforeObjectValues": true,
+    "requireSemicolons": true
 }
