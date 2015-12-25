@@ -257,7 +257,7 @@ function AbrController() {
 
         var bitrateList = mediaInfo.bitrateList;
         var type = mediaInfo.type;
-        
+
         var infoList = [],
             bitrateInfo;
 

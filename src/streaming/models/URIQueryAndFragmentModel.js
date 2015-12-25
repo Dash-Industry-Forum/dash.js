@@ -68,7 +68,7 @@ function URIQueryAndFragmentModel() {
         var testHTTPS = new RegExp(/^(https:)?\/\//i);
         var isQuery = testQuery.test(uri);
         var isFragment = testFragment.test(uri);
-        
+
         isHTTPS = testHTTPS.test(uri);
 
         function reduceArray(previousValue, currentValue, index, array) {

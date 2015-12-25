@@ -45,16 +45,16 @@ class Segment {
         this.replacementNumber = NaN;
         // This is supposed to match the time encoded in the media Segment
         this.mediaStartTime = NaN;
-        // When the source buffer timeOffset is set to MSETimeOffset this is the 
+        // When the source buffer timeOffset is set to MSETimeOffset this is the
         // time that will match the seekTarget and video.currentTime
         this.presentationStartTime = NaN;
-        // Do not schedule this segment until 
+        // Do not schedule this segment until
         this.availabilityStartTime = NaN;
         // Ignore and  discard this segment after
         this.availabilityEndTime = NaN;
         // The index of the segment inside the availability window
         this.availabilityIdx = NaN;
-        // For dynamic mpd's, this is the wall clock time that the video   
+        // For dynamic mpd's, this is the wall clock time that the video
         // element currentTime should be presentationStartTime
         this.wallStartTime = NaN;
         this.representation = null;

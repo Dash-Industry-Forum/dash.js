@@ -124,7 +124,7 @@ let FactoryMaker = (function() {
 
     function getExtensionContext(context) {
         let extensionContext;
-        
+
         extensions.forEach(function(obj) {
             if (obj === context) {
                 extensionContext = obj;

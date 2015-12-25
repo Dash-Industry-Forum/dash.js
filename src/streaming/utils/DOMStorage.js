@@ -164,7 +164,7 @@ function DOMStorage() {
             experationDict[type] = ttl;
         }
     }
-    
+
     instance = {
         checkInitialBitrate: checkInitialBitrate,
         getSavedMediaSettings: getSavedMediaSettings,

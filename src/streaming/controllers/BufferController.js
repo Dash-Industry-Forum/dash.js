@@ -563,11 +563,11 @@ function BufferController(config) {
 
     function removeOldTrackData() {
         var allAppendedChunks = virtualBuffer.getChunks({ streamId: getStreamId(), mediaType: type, segmentType: HTTPRequest.MEDIA_SEGMENT_TYPE, appended: true });
-        
+
         const customTimeRangesFactory = CustomTimeRanges(context);
         var rangesToClear = customTimeRangesFactory.create();
         var rangesToLeave = customTimeRangesFactory.create();
-        
+
         var currentTime = playbackController.getTime();
         var safeBufferLength = streamProcessor.getCurrentRepresentationInfo().fragmentDuration * 2;
 

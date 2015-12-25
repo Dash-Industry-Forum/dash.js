@@ -3,5 +3,6 @@
     "verbose": true,
 
     "validateQuoteMarks": "'",
-    "disallowMixedSpacesAndTabs": true
+    "disallowMixedSpacesAndTabs": true,
+    "disallowTrailingWhitespace": true
 }

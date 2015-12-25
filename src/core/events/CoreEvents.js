@@ -75,7 +75,7 @@ class CoreEvents extends EventsBase {
         this.XLINK_ALL_ELEMENTS_LOADED = 'xlinkAllElementsLoaded';
         this.XLINK_ELEMENT_LOADED = 'xlinkElementLoaded';
         this.XLINK_READY = 'xlinkReady';
-    } 
+    }
 }
 
 export default CoreEvents;

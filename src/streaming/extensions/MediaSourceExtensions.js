@@ -85,7 +85,7 @@ function MediaSourceExtensions() {
 
         source.endOfStream();
     }
-    
+
     instance = {
         createMediaSource: createMediaSource,
         attachMediaSource: attachMediaSource,

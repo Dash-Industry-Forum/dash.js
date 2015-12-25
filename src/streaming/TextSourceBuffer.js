@@ -264,7 +264,7 @@ function  TextSourceBuffer() {
         }
         return parser;
     }
-    
+
     instance = {
         initialize :initialize,
         append :append,

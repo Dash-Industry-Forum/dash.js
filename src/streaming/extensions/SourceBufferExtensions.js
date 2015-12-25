@@ -367,7 +367,7 @@ function SourceBufferExtensions() {
             intervalId = setInterval(checkIsUpdateEnded, CHECK_INTERVAL);
         }
     }
-    
+
     instance = {
         append: append,
         remove: remove,

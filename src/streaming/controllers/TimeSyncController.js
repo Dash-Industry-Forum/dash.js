@@ -343,7 +343,7 @@ function TimeSyncController() {
         setIsInitialised(false);
         setIsSynchronizing(false);
     }
-    
+
     instance = {
         initialize: initialize,
         getOffsetToDeviceTimeMs: getOffsetToDeviceTimeMs,

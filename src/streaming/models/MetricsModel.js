@@ -390,7 +390,7 @@ function  MetricsModel() {
         metricUpdated(playList.stream, adapter.metricsList.PLAY_LIST_TRACE, playList);
         return vo;
     }
-    
+
     instance = {
         metricsChanged: metricsChanged,
         metricChanged: metricChanged,

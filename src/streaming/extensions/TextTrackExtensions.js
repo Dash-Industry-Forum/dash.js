@@ -505,7 +505,7 @@ function TextTrackExtensions() {
         deleteTextTrack     :deleteTextTrack,
         setConfig           :setConfig
     };
-    
+
     return instance;
 }
 
