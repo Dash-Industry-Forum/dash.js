@@ -75,7 +75,7 @@ function PlaybackTimeRule(config) {
             if (range !== null) {
                 appendedChunks = virtualBuffer.getChunks({streamId: streamId, mediaType: mediaType, appended: true, mediaInfo: mediaInfo, forRange: range});
                 if (appendedChunks && appendedChunks.length > 0) {
-                    time = appendedChunks[appendedChunks.length-1].bufferedRange.end;
+                    time = appendedChunks[appendedChunks.length - 1].bufferedRange.end;
                 }
             }
         }

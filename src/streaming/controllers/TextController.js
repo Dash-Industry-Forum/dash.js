@@ -84,7 +84,7 @@ function TextController(config) {
                 initialized = true;
             }
         } catch (e) {
-            errHandler.mediaSourceError('Error creating ' + type +' source buffer.');
+            errHandler.mediaSourceError('Error creating ' + type + ' source buffer.');
         }
 
         return buffer;

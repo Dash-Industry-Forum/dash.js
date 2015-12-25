@@ -236,15 +236,15 @@ function AbrController() {
         var ln = bitrateList.length;
         var bitrateInfo;
 
-        for (var i = 0; i < ln; i +=1) {
+        for (var i = 0; i < ln; i += 1) {
             bitrateInfo = bitrateList[i];
 
-            if (bitrate*1000 <= bitrateInfo.bitrate) {
-                return Math.max(i-1, 0);
+            if (bitrate * 1000 <= bitrateInfo.bitrate) {
+                return Math.max(i - 1, 0);
             }
         }
 
-        return (ln-1);
+        return (ln - 1);
     }
 
     /**

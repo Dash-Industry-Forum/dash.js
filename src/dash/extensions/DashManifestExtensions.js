@@ -56,9 +56,9 @@ function DashManifestExtensions() {
         var col = adaptation.ContentComponent_asArray;
         var mimeTypeRegEx = (type !== 'text') ? new RegExp(type) : new RegExp('(vtt|ttml)');
 
-        if ((adaptation.Representation_asArray.length>0)&&
-            (adaptation.Representation_asArray[0].hasOwnProperty('codecs'))&&
-            (adaptation.Representation_asArray[0].codecs=='stpp')){
+        if ((adaptation.Representation_asArray.length > 0) &&
+            (adaptation.Representation_asArray[0].hasOwnProperty('codecs')) &&
+            (adaptation.Representation_asArray[0].codecs == 'stpp')){
             return type == 'fragmentedText';
         }
 
@@ -376,7 +376,7 @@ function DashManifestExtensions() {
 
                 if (segmentInfo.hasOwnProperty('SegmentTimeline')) {
                     representation.segmentInfoType = 'SegmentTimeline';
-                    s = segmentInfo.SegmentTimeline.S_asArray[segmentInfo.SegmentTimeline.S_asArray.length -1];
+                    s = segmentInfo.SegmentTimeline.S_asArray[segmentInfo.SegmentTimeline.S_asArray.length - 1];
                     if (!s.hasOwnProperty('r') || s.r >= 0) {
                         representation.useCalculatedLiveEdgeTime = true;
                     }
@@ -454,13 +454,13 @@ function DashManifestExtensions() {
             if (getIsMuxed(a)) {
                 adaptationSet.type = 'muxed';
             } else if (getIsAudio(a)){
-                adaptationSet.type='audio';
+                adaptationSet.type = 'audio';
             }else if (getIsVideo(a)){
-                adaptationSet.type='video';
+                adaptationSet.type = 'video';
             }else if (getIsFragmentedText(a)){
-                adaptationSet.type='fragmentedText';
+                adaptationSet.type = 'fragmentedText';
             }else {
-                adaptationSet.type='text';
+                adaptationSet.type = 'text';
             }
 
             adaptations.push(adaptationSet);

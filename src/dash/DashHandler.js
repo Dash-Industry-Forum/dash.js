@@ -374,7 +374,7 @@ function DashHandler(config) {
             //This is a special case: "A negative value of the @r attribute of the S element indicates that the duration indicated in @d attribute repeats until the start of the next S element, the end of the Period or until the
             // next MPD update."
             if (repeat < 0) {
-                nextFrag = fragments[i+1];
+                nextFrag = fragments[i + 1];
 
                 if (nextFrag && nextFrag.hasOwnProperty('t')) {
                     repeatEndTime = nextFrag.t / fTimescale;
@@ -384,7 +384,7 @@ function DashHandler(config) {
                     representation.segmentDuration = frag.d / fTimescale;
                 }
 
-                repeat = Math.ceil((repeatEndTime - scaledTime)/(frag.d/fTimescale)) - 1;
+                repeat = Math.ceil((repeatEndTime - scaledTime) / (frag.d / fTimescale)) - 1;
             }
 
             // if we have enough segments in the list, but we have not calculated the total number of the segments yet we
@@ -422,7 +422,7 @@ function DashHandler(config) {
                     // is 50% of segment duration.
                     if (isStartSegmentForRequestedTimeFound) {
                         segments.push(createSegment(frag));
-                    }  else if (scaledTime >= (requiredMediaTime - (frag.d / fTimescale)*1.5)) {
+                    }  else if (scaledTime >= (requiredMediaTime - (frag.d / fTimescale) * 1.5)) {
                         isStartSegmentForRequestedTimeFound = true;
                         segments.push(createSegment(frag));
                     }
@@ -754,7 +754,7 @@ function DashHandler(config) {
                 frag = segments[i];
                 ft = frag.presentationStartTime;
                 fd = frag.duration;
-                epsilon = (timeThreshold === undefined || timeThreshold === null) ? fd/2 : timeThreshold;
+                epsilon = (timeThreshold === undefined || timeThreshold === null) ? fd / 2 : timeThreshold;
 
                 if ((time + epsilon) >= ft &&
                     (time - epsilon) < (ft + fd)) {
@@ -795,7 +795,7 @@ function DashHandler(config) {
             updateRequired = true;
         } else {
             lowerIdx = segments[0].availabilityIdx;
-            upperIdx = segments[segments.length -1].availabilityIdx;
+            upperIdx = segments[segments.length - 1].availabilityIdx;
             updateRequired = (index < lowerIdx) || (index > upperIdx);
         }
 
@@ -944,7 +944,7 @@ function DashHandler(config) {
             count = 0,
             seg;
 
-        for (i = 0, len = fragments.length; i < len; i+=1) {
+        for (i = 0, len = fragments.length; i < len; i += 1) {
             s = fragments[i];
 
             seg = getTimeBasedSegment(

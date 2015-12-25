@@ -157,7 +157,7 @@ function FragmentModel(config) {
             i;
 
         // loop through the executed requests and remove the ones for which startTime is less than the given time
-        for (i = lastIdx; i >= 0; i -=1) {
+        for (i = lastIdx; i >= 0; i -= 1) {
             req = executedRequests[i];
             start = req.startTime;
             if (!isNaN(start) && (start < time)) {
@@ -242,7 +242,7 @@ function FragmentModel(config) {
             i;
 
         // loop through the executed requests and pick the one for which the playback interval matches the given time
-        for (i = lastIdx; i >= 0; i -=1) {
+        for (i = lastIdx; i >= 0; i -= 1) {
             req = arr[i];
             start = req.startTime;
             end = start + req.duration;

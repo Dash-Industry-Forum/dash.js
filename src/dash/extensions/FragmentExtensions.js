@@ -61,10 +61,10 @@ function FragmentExtensions(/*config*/) {
             dataOffset;
 
         sampleCount = trunBox.sample_count;
-        sampleDts= tfdtBox.baseMediaDecodeTime;
+        sampleDts = tfdtBox.baseMediaDecodeTime;
         dataOffset = (tfhdBox.base_data_offset || 0) + (trunBox.data_offset || 0);
 
-        sampleList=[];
+        sampleList = [];
         for (i = 0; i < sampleCount; i++) {
             sample = trunBox.samples[i];
             sampleDuration = (sample.sample_duration !== undefined) ? sample.sample_duration : tfhdBox.default_sample_duration;

@@ -255,8 +255,8 @@ function SourceBufferExtensions() {
             // 0|---range1---|4  8|--range2--|12  16|---range3---|
             // new ranges
             // 0|-----------range1-----------|12  16|---range3--|
-            nextCurrentRange = currentRanges.length > (i+1) ? {start: currentRanges.start(i+1), end: currentRanges.end(i+1)} : null;
-            nextNewRange = (i+1) < ln ? {start: newRanges.start(i+1), end: newRanges.end(i+1)} : null;
+            nextCurrentRange = currentRanges.length > (i + 1) ? {start: currentRanges.start(i + 1), end: currentRanges.end(i + 1)} : null;
+            nextNewRange = (i + 1) < ln ? {start: newRanges.start(i + 1), end: newRanges.end(i + 1)} : null;
 
             if (nextCurrentRange && (!nextNewRange || (nextNewRange.start !== nextCurrentRange.start || nextNewRange.end !== nextCurrentRange.end))) {
                 diff.end = nextCurrentRange.start;

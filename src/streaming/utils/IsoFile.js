@@ -96,7 +96,7 @@ function IsoFile() {
         var type = parsedIsoFile.boxes[parsedIsoFile.boxes.length - 1].type;
         var boxes = getBoxes(type);
 
-        return boxes[boxes.length-1];
+        return boxes[boxes.length - 1];
     }
 
     /**
@@ -194,7 +194,7 @@ function IsoFile() {
             case 'sidx':
                 copyProps(boxData, box, sidxProps);
                 if (box.references) {
-                    for (i = 0, ln = box.references.length; i < ln; i +=1) {
+                    for (i = 0, ln = box.references.length; i < ln; i += 1) {
                         copyProps(boxData.references[i], box.references[i], sidxRefProps);
                     }
                 }
@@ -214,7 +214,7 @@ function IsoFile() {
             case 'trun':
                 copyProps(boxData, box, trunProps);
                 if (box.samples) {
-                    for (i = 0, ln = box.samples.length; i < ln; i +=1) {
+                    for (i = 0, ln = box.samples.length; i < ln; i += 1) {
                         copyProps(boxData.samples[i], box.samples[i], trunSampleProps);
                     }
                 }

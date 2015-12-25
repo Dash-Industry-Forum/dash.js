@@ -64,7 +64,7 @@ function TextSourceBuffer() {
         parser = null;
         fragmentExt = null;
         fragmentModel = null;
-        initializationSegmentReceived= false;
+        initializationSegmentReceived = false;
         timescale = NaN;
         allTracks = null;
         firstSubtitleStart = null;
@@ -127,20 +127,20 @@ function TextSourceBuffer() {
 
         if (mediaType === 'fragmentedText'){
             if (!initializationSegmentReceived){
-                initializationSegmentReceived=true;
+                initializationSegmentReceived = true;
                 for (i = 0; i < mediaInfos.length; i++){
                     createTextTrackFromMediaInfo(null, mediaInfos[i]);
                 }
                 timescale = fragmentExt.getMediaTimescaleFromMoov(bytes);
             }else {
                 samplesInfo = fragmentExt.getSamplesInfo(bytes);
-                for (i= 0 ; i < samplesInfo.length ; i++) {
+                for (i = 0 ; i < samplesInfo.length ; i++) {
                     if (!firstSubtitleStart){
                         firstSubtitleStart = samplesInfo[0].cts - chunk.start * timescale;
                     }
                     samplesInfo[i].cts -= firstSubtitleStart;
                     this.buffered.add(samplesInfo[i].cts / timescale,(samplesInfo[i].cts + samplesInfo[i].duration) / timescale);
-                    ccContent = window.UTF8.decode(new Uint8Array(bytes.slice(samplesInfo[i].offset, samplesInfo[i].offset+samplesInfo[i].size)));
+                    ccContent = window.UTF8.decode(new Uint8Array(bytes.slice(samplesInfo[i].offset, samplesInfo[i].offset + samplesInfo[i].size)));
                     parser = parser !== null ? parser : getParser(mimeType);
                     try {
                         result = parser.parse(ccContent);
@@ -152,7 +152,7 @@ function TextSourceBuffer() {
             }
         }else {
             bytes = new Uint8Array(bytes);
-            ccContent=window.UTF8.decode(bytes);
+            ccContent = window.UTF8.decode(bytes);
             try {
                 result = getParser(mimeType).parse(ccContent);
                 createTextTrackFromMediaInfo(result, mediaInfo);
@@ -171,7 +171,7 @@ function TextSourceBuffer() {
         textTrackExtensions = null;
         isFragmented = false;
         fragmentModel = null;
-        initializationSegmentReceived= false;
+        initializationSegmentReceived = false;
         timescale = NaN;
         allTracks = null;
         videoModel = null;

@@ -524,7 +524,7 @@ function Stream(config) {
         isUpdating = true;
         initialized = false;
 
-        for (i; i < ln; i +=1) {
+        for (i; i < ln; i += 1) {
             controller = streamProcessors[i];
             mediaInfo = adapter.getMediaInfoForType(manifest, streamInfo, controller.getType());
             abrController.updateTopQualityIndex(mediaInfo);

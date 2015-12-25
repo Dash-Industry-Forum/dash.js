@@ -53,7 +53,7 @@ function ClearKey() {
         for (var i = 0; i < jsonMsg.kids.length; i++) {
             url += jsonMsg.kids[i] + '&';
         }
-        url = url.substring(0, url.length-1);
+        url = url.substring(0, url.length - 1);
         return url;
     }
 

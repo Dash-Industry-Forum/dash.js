@@ -154,7 +154,7 @@ function BufferController(config) {
                 sourceBuffer.initialize(type, this);
             }
         } catch (e) {
-            errHandler.mediaSourceError('Error creating ' + type +' source buffer.');
+            errHandler.mediaSourceError('Error creating ' + type + ' source buffer.');
         }
 
         setBuffer(sourceBuffer);
@@ -457,10 +457,10 @@ function BufferController(config) {
             i = 0,
             j = 0;
 
-        while (i<length) {
+        while (i < length) {
 
-            identifier = String.fromCharCode(data[i+4],data[i+5],data[i+6],data[i+7]);
-            size = data[i]*expThree + data[i+1]*expTwo + data[i+2]*256 + data[i+3]*1;
+            identifier = String.fromCharCode(data[i + 4],data[i + 5],data[i + 6],data[i + 7]);
+            size = data[i] * expThree + data[i + 1] * expTwo + data[i + 2] * 256 + data[i + 3] * 1;
 
             if (identifier != 'emsg' ) {
                 for (var l = i ; l < i + size; l++) {
@@ -516,7 +516,7 @@ function BufferController(config) {
         range = sourceBufferExt.getBufferRange(buffer, currentTime);
 
         if ((range === null) && (buffer.buffered.length > 0)) {
-            removeEnd = buffer.buffered.end(buffer.buffered.length -1 );
+            removeEnd = buffer.buffered.end(buffer.buffered.length - 1 );
         }
 
         removeStart = buffer.buffered.start(0);
@@ -586,7 +586,7 @@ function BufferController(config) {
 
         if (currentTrackBufferLength < safeBufferLength) return;
 
-        for (var i = 0, ln = rangesToClear.length; i < ln; i +=1) {
+        for (var i = 0, ln = rangesToClear.length; i < ln; i += 1) {
             range = {start: rangesToClear.start(i), end: rangesToClear.end(i)};
             if (mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE || range.start > currentTime) {
                 clearBuffer(range);

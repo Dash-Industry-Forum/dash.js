@@ -145,14 +145,14 @@ function DOMStorage() {
 
                     if (!isNaN(bitrate) && !isExpired) {
                         abrController.setInitialBitrateFor(value, bitrate);
-                        log('Last bitrate played for '+value+' was '+bitrate);
+                        log('Last bitrate played for ' + value + ' was ' + bitrate);
                     } else if (isExpired){
                         localStorage.removeItem(key);
                     }
                 }
                 //check again to see if local storage value was set, if not set default value for startup.
                 if (abrController.getInitialBitrateFor(value) === undefined) {
-                    abrController.setInitialBitrateFor(value, AbrController['DEFAULT_'+value.toUpperCase()+'_BITRATE']);
+                    abrController.setInitialBitrateFor(value, AbrController['DEFAULT_' + value.toUpperCase() + '_BITRATE']);
                 }
             }
 

@@ -235,7 +235,7 @@ function PlaybackController() {
 
             if (!isNaN(startTimeOffset) && startTimeOffset > 1262304000) {
 
-                presentationStartTime = startTimeOffset - (streamInfo.manifestInfo.availableFrom.getTime()/1000);
+                presentationStartTime = startTimeOffset - (streamInfo.manifestInfo.availableFrom.getTime() / 1000);
 
                 if (presentationStartTime > liveStartTime ||
                     presentationStartTime < (liveStartTime - streamInfo.manifestInfo.DVRWindowSize)) {
@@ -389,7 +389,7 @@ function PlaybackController() {
          remainingUnbufferedDuration;
 
         if (ranges.length) {
-            lastRange = ranges.length -1;
+            lastRange = ranges.length - 1;
             bufferEndTime = ranges.end(lastRange);
             remainingUnbufferedDuration = getStreamStartTime(streamInfo) + streamInfo.duration - bufferEndTime;
         }

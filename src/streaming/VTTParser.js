@@ -101,7 +101,7 @@ function VTTParser() {
         var timeArray = time.split(':');
         var len = timeArray.length - 1;
 
-        time = parseInt( timeArray[len-1], 10 ) * 60 + parseFloat( timeArray[len]);
+        time = parseInt( timeArray[len - 1], 10 ) * 60 + parseFloat( timeArray[len]);
 
         if ( len === 2 ) {
             time += parseInt( timeArray[0], 10 ) * 3600;
@@ -165,7 +165,7 @@ function VTTParser() {
                 lineData = data[(idx + j)];
                 if (!lineData.match(regExToken)){
                     subline += lineData;
-                    if (j !== lineCount-1) {
+                    if (j !== lineCount - 1) {
                         subline += '\n';
                     }
                 }

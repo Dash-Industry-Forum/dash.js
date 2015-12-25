@@ -283,20 +283,20 @@ function TextTrackExtensions() {
             var cue;
             var currentItem = captionData[item];
 
-            if (!videoSizeCheckInterval && currentItem.type=='html') {
+            if (!videoSizeCheckInterval && currentItem.type == 'html') {
                 videoSizeCheckInterval = setInterval(checkVideoSize.bind(this), 500);
             }
 
             //image subtitle extracted from TTML
-            if (currentItem.type=='image'){
-                cue = new Cue(currentItem.start-timeOffset, currentItem.end-timeOffset, '');
-                cue.image=currentItem.data;
-                cue.id=currentItem.id;
-                cue.size=0; //discard the native display for this subtitles
-                cue.type='image'; // active image overlay
+            if (currentItem.type == 'image'){
+                cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, '');
+                cue.image = currentItem.data;
+                cue.id = currentItem.id;
+                cue.size = 0; //discard the native display for this subtitles
+                cue.type = 'image'; // active image overlay
                 cue.onenter =  function () {
                     var img = new Image();
-                    img.id = 'ttmlImage_'+this.id;
+                    img.id = 'ttmlImage_' + this.id;
                     img.src = this.image;
                     img.className = 'cue-image';
                     if (captionContainer) {
@@ -316,19 +316,19 @@ function TextTrackExtensions() {
                         container = video.parentNode;
                     }
                     imgs = container.childNodes;
-                    for (i=0;i<imgs.length;i++){
-                        if (imgs[i].id=='ttmlImage_'+this.id){
+                    for (i = 0;i < imgs.length;i++){
+                        if (imgs[i].id == 'ttmlImage_' + this.id){
                             container.removeChild(imgs[i]);
                         }
                     }
                 };
             }
             else if (currentItem.type === 'html') {
-                cue = new Cue(currentItem.start-timeOffset, currentItem.end-timeOffset, '');
+                cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, '');
                 cue.cueHTMLElement = currentItem.cueHTMLElement;
                 cue.regions = currentItem.regions;
                 cue.regionID = currentItem.regionID;
-                cue.cueID=currentItem.cueID;
+                cue.cueID = currentItem.cueID;
                 cue.videoWidth = currentItem.videoWidth;
                 cue.videoHeight = currentItem.videoHeight;
                 cue.cellResolution = currentItem.cellResolution;
@@ -358,7 +358,7 @@ function TextTrackExtensions() {
                 };
             }
             else {
-                cue = new Cue(currentItem.start-timeOffset, currentItem.end-timeOffset, currentItem.data);
+                cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, currentItem.data);
                 if (currentItem.styles){
                     if (currentItem.styles.align !== undefined && cue.hasOwnProperty('align')) {
                         cue.align = currentItem.styles.align;

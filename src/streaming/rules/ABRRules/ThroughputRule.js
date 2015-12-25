@@ -51,7 +51,7 @@ function ThroughputRule(config) {
     function storeLastRequestThroughputByType(type, lastRequestThroughput) {
         throughputArray[type] = throughputArray[type] || [];
         if (lastRequestThroughput !== Infinity &&
-            lastRequestThroughput !== throughputArray[type][throughputArray[type].length-1]) {
+            lastRequestThroughput !== throughputArray[type][throughputArray[type].length - 1]) {
             throughputArray[type].push(lastRequestThroughput);
         }
     }
@@ -92,7 +92,7 @@ function ThroughputRule(config) {
             metrics = metricsModel.getReadOnlyMetricsFor(mediaType),
             streamProcessor = rulesContext.getStreamProcessor(),
             abrController = streamProcessor.getABRController(),
-            isDynamic= streamProcessor.isDynamic(),
+            isDynamic = streamProcessor.isDynamic(),
             lastRequest = metricsExt.getCurrentHttpRequest(metrics),
             bufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null,
             bufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null,

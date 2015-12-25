@@ -171,15 +171,15 @@ function TTMLParser() {
                     throw errorMsg;
                 }
 
-                if (cue['smpte:backgroundImage']!== undefined) {
+                if (cue['smpte:backgroundImage'] !== undefined) {
                     var images = ttml.tt.head.metadata.image_asArray;
                     for (var j = 0; j < images.length; j += 1) {
-                        if (('#'+images[j]['xml:id']) == cue['smpte:backgroundImage']) {
+                        if (('#' + images[j]['xml:id']) == cue['smpte:backgroundImage']) {
                             captionArray.push({
                                 start: spanStartTime || pStartTime,
                                 end: spanEndTime || pEndTime,
                                 id: images[j]['xml:id'],
-                                data: 'data:image/'+images[j].imagetype.toLowerCase()+';base64, ' + images[j].__text,
+                                data: 'data:image/' + images[j].imagetype.toLowerCase() + ';base64, ' + images[j].__text,
                                 type: 'image'
                             });
                         }

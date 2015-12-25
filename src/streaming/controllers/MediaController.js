@@ -315,7 +315,7 @@ function MediaController() {
 
     function storeLastSettings(type, value) {
         if (DOMStorage.isSupported(DOMStorage.STORAGE_TYPE_LOCAL) && (type === 'video' || type === 'audio')) {
-            localStorage.setItem(DOMStorage['LOCAL_STORAGE_'+type.toUpperCase()+'_SETTINGS_KEY'], JSON.stringify({settings: value, timestamp:new Date().getTime()}));
+            localStorage.setItem(DOMStorage['LOCAL_STORAGE_' + type.toUpperCase() + '_SETTINGS_KEY'], JSON.stringify({settings: value, timestamp:new Date().getTime()}));
         }
     }
 

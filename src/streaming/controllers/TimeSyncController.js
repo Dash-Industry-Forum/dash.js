@@ -267,7 +267,7 @@ function TimeSyncController() {
 
         if (!isNaN(dateHeaderTime)) {
             setOffsetMs(dateHeaderTime - new Date().getTime());
-            completeTimeSyncSequence(false, dateHeaderTime/1000, offsetToDeviceTimeMs);
+            completeTimeSyncSequence(false, dateHeaderTime / 1000, offsetToDeviceTimeMs);
         }else {
             completeTimeSyncSequence(true);
         }

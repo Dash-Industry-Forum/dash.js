@@ -232,7 +232,7 @@ function VirtualBuffer() {
                 arr.splice(idx, 1);
             }
 
-            ln +=1;
+            ln += 1;
 
             return true;
         });

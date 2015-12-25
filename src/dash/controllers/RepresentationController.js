@@ -228,7 +228,7 @@ function RepresentationController() {
     function updateAvailabilityWindow(isDynamic) {
         var rep;
 
-        for (var i = 0, ln = availableRepresentations.length; i < ln; i +=1) {
+        for (var i = 0, ln = availableRepresentations.length; i < ln; i += 1) {
             rep = availableRepresentations[i];
             rep.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(rep, isDynamic);
         }
@@ -345,7 +345,7 @@ function RepresentationController() {
 
     function setLocalStorage(type, bitrate) {
         if (domStorage.isSupported(DOMStorage.STORAGE_TYPE_LOCAL) && (type === 'video' || type === 'audio')) {
-            localStorage.setItem(DOMStorage['LOCAL_STORAGE_'+type.toUpperCase()+'_BITRATE_KEY'], JSON.stringify({bitrate:bitrate/1000, timestamp:new Date().getTime()}));
+            localStorage.setItem(DOMStorage['LOCAL_STORAGE_' + type.toUpperCase() + '_BITRATE_KEY'], JSON.stringify({bitrate:bitrate / 1000, timestamp:new Date().getTime()}));
         }
     }
 

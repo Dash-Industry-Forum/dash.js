@@ -5,5 +5,7 @@
     "validateQuoteMarks": "'",
     "disallowMixedSpacesAndTabs": true,
     "disallowTrailingWhitespace": true,
-    "requireSpaceAfterKeywords": true
+    "requireSpaceAfterKeywords": true,
+    "requireSpaceBeforeBinaryOperators": true,
+    "requireSpaceAfterBinaryOperators": true
 }

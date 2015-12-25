@@ -162,34 +162,34 @@ class CommonEncryption {
             systemID = '';
             var i, val;
             for (i = 0; i < 4; i++) {
-                val = dv.getUint8(byteCursor+i).toString(16);
+                val = dv.getUint8(byteCursor + i).toString(16);
                 systemID += (val.length === 1) ? '0' + val : val;
             }
-            byteCursor+=4;
+            byteCursor += 4;
             systemID += '-';
             for (i = 0; i < 2; i++) {
-                val = dv.getUint8(byteCursor+i).toString(16);
+                val = dv.getUint8(byteCursor + i).toString(16);
                 systemID += (val.length === 1) ? '0' + val : val;
             }
-            byteCursor+=2;
+            byteCursor += 2;
             systemID += '-';
             for (i = 0; i < 2; i++) {
-                val = dv.getUint8(byteCursor+i).toString(16);
+                val = dv.getUint8(byteCursor + i).toString(16);
                 systemID += (val.length === 1) ? '0' + val : val;
             }
-            byteCursor+=2;
+            byteCursor += 2;
             systemID += '-';
             for (i = 0; i < 2; i++) {
-                val = dv.getUint8(byteCursor+i).toString(16);
+                val = dv.getUint8(byteCursor + i).toString(16);
                 systemID += (val.length === 1) ? '0' + val : val;
             }
-            byteCursor+=2;
+            byteCursor += 2;
             systemID += '-';
             for (i = 0; i < 6; i++) {
-                val = dv.getUint8(byteCursor+i).toString(16);
+                val = dv.getUint8(byteCursor + i).toString(16);
                 systemID += (val.length === 1) ? '0' + val : val;
             }
-            byteCursor+=6;
+            byteCursor += 6;
 
             systemID = systemID.toLowerCase();
 
