@@ -326,7 +326,7 @@ function ProtectionController(config) {
 
                     // Ensure that we would be granted key system access using the key
                     // system and codec information
-                    let onKeySystemAccessComplete = function(event) {
+                    let onKeySystemAccessComplete = function (event) {
                         eventBus.off(Events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
                         if (event.error) {
                             if (!fromManifest) {
@@ -355,7 +355,7 @@ function ProtectionController(config) {
             }
 
             var keySystemAccess;
-            var onKeySystemAccessComplete = function(event) {
+            var onKeySystemAccessComplete = function (event) {
                 eventBus.off(Events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
                 if (event.error) {
                     keySystem = undefined;
@@ -370,7 +370,7 @@ function ProtectionController(config) {
                     protectionModel.selectKeySystem(keySystemAccess);
                 }
             };
-            var onKeySystemSelected = function(event) {
+            var onKeySystemSelected = function (event) {
                 eventBus.off(Events.INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
                 eventBus.off(Events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
                 if (!event.error) {
@@ -472,7 +472,7 @@ function ProtectionController(config) {
 
         xhr.open(licenseServerData.getHTTPMethod(messageType), url, true);
         xhr.responseType = licenseServerData.getResponseType(keySystemString, messageType);
-        xhr.onload = function() {
+        xhr.onload = function () {
             if (this.status == 200) {
                 sendLicenseRequestCompleteEvent(eventData);
                 protectionModel.updateKeySession(sessionToken,
@@ -492,7 +492,7 @@ function ProtectionController(config) {
         };
 
         // Set optional XMLHttpRequest headers from protection data and message
-        var updateHeaders = function(headers) {
+        var updateHeaders = function (headers) {
             var key;
             if (headers) {
                 for (key in headers) {

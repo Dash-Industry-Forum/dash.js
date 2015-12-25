@@ -81,11 +81,11 @@ function VideoModel() {
         // Initially it is 0, but soon after 'open' event it goes to 1 and setting currentTime is allowed. Chrome allows to
         // set currentTime even if readyState = 0.
         // setTimeout is used to workaround InvalidStateError in IE11
-        try{
+        try {
             element.currentTime = currentTime;
         } catch (e) {
             if (element.readyState === 0 && e.code === e.INVALID_STATE_ERR) {
-                setTimeout(function(){
+                setTimeout(function (){
                     element.currentTime = currentTime;
                 }, 400);
             }

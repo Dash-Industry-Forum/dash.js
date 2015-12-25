@@ -150,7 +150,7 @@ function ManifestLoader(config) {
             if (remainingAttempts > 0) {
                 log('Failed loading manifest: ' + url + ', retry in ' + RETRY_INTERVAL + 'ms' + ' attempts: ' + remainingAttempts);
                 remainingAttempts--;
-                setTimeout(function() {
+                setTimeout(function () {
                     load(url);
                 }, RETRY_INTERVAL);
             } else {
@@ -177,7 +177,7 @@ function ManifestLoader(config) {
             request.onprogress = progress;
             request.open('GET', requestModifierExt.modifyRequestURL(url), true);
             request.send();
-        } catch(e) {
+        } catch (e) {
             request.onerror();
         }
     }

@@ -260,7 +260,7 @@ function ProtectionModel_3Feb2014(config) {
 
     function createEventHandler() {
         return {
-            handleEvent: function(event) {
+            handleEvent: function (event) {
                 switch (event.type) {
 
                     case api.needkey:
@@ -280,7 +280,7 @@ function ProtectionModel_3Feb2014(config) {
     // too early
     function setMediaKeys() {
         var boundDoSetKeys = null;
-        var doSetKeys = function() {
+        var doSetKeys = function () {
             videoElement.removeEventListener('loadedmetadata', boundDoSetKeys);
             videoElement[api.setMediaKeys](mediaKeys);
             eventBus.trigger(Events.VIDEO_ELEMENT_SELECTED);
@@ -302,21 +302,21 @@ function ProtectionModel_3Feb2014(config) {
             session: keySession,
             initData: initData,
 
-            getSessionID: function() {
+            getSessionID: function () {
                 return this.session.sessionId;
             },
 
-            getExpirationTime: function() {
+            getExpirationTime: function () {
                 return NaN;
             },
 
-            getSessionType: function() {
+            getSessionType: function () {
                 return 'temporary';
             },
             // This is our main event handler for all desired MediaKeySession events
             // These events are translated into our API-independent versions of the
             // same events
-            handleEvent: function(event) {
+            handleEvent: function (event) {
                 switch (event.type) {
 
                     case api.error:

@@ -124,7 +124,7 @@ function Protection() {
 
         let protectionModel =  getProtectionModel(config);
 
-        if(!controller && protectionModel) {//TODO add ability to set external controller if still needed at all?
+        if (!controller && protectionModel) {//TODO add ability to set external controller if still needed at all?
             controller = ProtectionController(context).create({
                 protectionModel:protectionModel,
                 protectionExt: protectionExt,

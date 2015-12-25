@@ -89,7 +89,7 @@ function RulesController() {
         var ln = rulesCount;
         var rulesContext = getRulesContext(streamProcessor, current);
 
-        var callbackFunc = function(result) {
+        var callbackFunc = function (result) {
             var value,
                 confidence;
 
@@ -189,16 +189,16 @@ function RulesController() {
     function normalizeRule(rule) {
         var exec = rule.execute.bind(rule);
 
-        rule.execute = function(context, callback) {
-            var normalizedCallback = function(result) {
+        rule.execute = function (context, callback) {
+            var normalizedCallback = function (result) {
                 callback.call(rule, SwitchRequest(context).create(result.value, result.priority));
             };
 
             exec(context, normalizedCallback);
         };
 
-        if (typeof(rule.reset) !== 'function') {
-            rule.reset = function(){
+        if (typeof (rule.reset) !== 'function') {
+            rule.reset = function (){
                 //TODO do some default clearing
             };
         }

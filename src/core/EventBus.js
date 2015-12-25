@@ -41,7 +41,7 @@ function EventBus() {
             throw new Error('event type cannot be null or undefined');
         }
 
-        if (!listener || typeof(listener) !== 'function') {
+        if (!listener || typeof (listener) !== 'function') {
             throw new Error('listener must be a function: ' + listener);
         }
 
@@ -77,7 +77,7 @@ function EventBus() {
 
         args.type = type;
 
-        handlers[type].forEach(function(handler) {
+        handlers[type].forEach(function (handler) {
             handler.callback.call(handler.scope, args);
         });
     }

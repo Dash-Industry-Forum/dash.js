@@ -139,7 +139,7 @@ function AbrController() {
         bitrateDict.max[type] = value;
     }
 
-    function  getAutoSwitchBitrate() {
+    function getAutoSwitchBitrate() {
         return autoSwitchBitrate;
     }
 
@@ -155,7 +155,7 @@ function AbrController() {
             oldQuality,
             rules,
             confidence;
-        var callback = function(res) {
+        var callback = function (res) {
             var topQualityIdx = getTopQualityIndexFor(type, streamId);
 
             quality = res.value;
@@ -197,7 +197,7 @@ function AbrController() {
             }
         } else {
             rules = abrRulesCollection.getRules(ABRRulesCollection.QUALITY_SWITCH_RULES);
-            rulesController.applyRules(rules, streamProcessor, callback, quality, function(currentValue, newValue) {
+            rulesController.applyRules(rules, streamProcessor, callback, quality, function (currentValue, newValue) {
                 currentValue = currentValue === SwitchRequest.NO_CHANGE ? 0 : currentValue;
                 return Math.max(currentValue, newValue);
             });
@@ -328,7 +328,7 @@ function AbrController() {
         qualityDict[id][type] = value;
     }
 
-    function  getConfidenceFor(type, id) {
+    function getConfidenceFor(type, id) {
         var confidence;
 
         confidenceDict[id] = confidenceDict[id] || {};
@@ -369,10 +369,10 @@ function AbrController() {
             var rules = abrRulesCollection.getRules(ABRRulesCollection.ABANDON_FRAGMENT_RULES);
             var scheduleController = streamProcessorDict[type].getScheduleController();
             var fragmentModel = scheduleController.getFragmentModel();
-            var callback = function(switchRequest) {
+            var callback = function (switchRequest) {
 
                 function setupTimeout(type) {
-                    abandonmentTimeout = setTimeout(function() {
+                    abandonmentTimeout = setTimeout(function () {
                         setAbandonmentStateFor(type, ALLOW_LOAD);
                     }, ABANDON_TIMEOUT);
                 }
@@ -394,7 +394,7 @@ function AbrController() {
                 }
             };
 
-            rulesController.applyRules(rules, streamProcessorDict[type], callback, e, function(currentValue, newValue) {
+            rulesController.applyRules(rules, streamProcessorDict[type], callback, e, function (currentValue, newValue) {
                 return newValue;
             });
         }

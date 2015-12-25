@@ -120,7 +120,7 @@ function Debug() {
             message += ' ';
         }
 
-        Array.apply(null, arguments).forEach(function(item) {
+        Array.apply(null, arguments).forEach(function (item) {
             message += item + ' ';
         });
 

@@ -114,13 +114,13 @@ function TextTrackExtensions() {
             video = textTrackInfoVO.video;
         }
 
-        if(textTrackQueue.length === totalTextTracks) {
-            textTrackQueue.sort(function(a, b) { //Sort in same order as in manifest
+        if (textTrackQueue.length === totalTextTracks) {
+            textTrackQueue.sort(function (a, b) { //Sort in same order as in manifest
                 return a.index - b.index;
             });
             captionContainer = videoModel.getTTMLRenderingDiv();
             var defaultIndex = 0;
-            for(var i = 0 ; i < textTrackQueue.length; i++) {
+            for (var i = 0 ; i < textTrackQueue.length; i++) {
                 var track = createTrackForUserAgent.call(this, i);
                 currentTrackIdx = i;//set to i for external track setup. rest to default value at end of loop
                 trackElementArr.push(track); //used to remove tracks from video element when added manually
@@ -237,7 +237,7 @@ function TextTrackExtensions() {
             }
         }
 
-        if(activeCue.fontSize) {
+        if (activeCue.fontSize) {
             for (key in activeCue.fontSize) {
                 if (activeCue.fontSize.hasOwnProperty(key)) {
                     var valueFontSize = activeCue.fontSize[key] / 100;
@@ -275,11 +275,11 @@ function TextTrackExtensions() {
         var track = getCurrentTextTrack.call(this);
         var self = this;
 
-        if(!track) return;
+        if (!track) return;
 
         track.mode = 'showing';//make sure tracks are showing to be able to add the cue...
 
-        for(var item in captionData) {
+        for (var item in captionData) {
             var cue;
             var currentItem = captionData[item];
 
@@ -288,7 +288,7 @@ function TextTrackExtensions() {
             }
 
             //image subtitle extracted from TTML
-            if(currentItem.type=='image'){
+            if (currentItem.type=='image'){
                 cue = new Cue(currentItem.start-timeOffset, currentItem.end-timeOffset, '');
                 cue.image=currentItem.data;
                 cue.id=currentItem.id;
@@ -316,8 +316,8 @@ function TextTrackExtensions() {
                         container = video.parentNode;
                     }
                     imgs = container.childNodes;
-                    for(i=0;i<imgs.length;i++){
-                        if(imgs[i].id=='ttmlImage_'+this.id){
+                    for (i=0;i<imgs.length;i++){
+                        if (imgs[i].id=='ttmlImage_'+this.id){
                             container.removeChild(imgs[i]);
                         }
                     }
@@ -357,9 +357,9 @@ function TextTrackExtensions() {
                     }
                 };
             }
-            else{
+            else {
                 cue = new Cue(currentItem.start-timeOffset, currentItem.end-timeOffset, currentItem.data);
-                if(currentItem.styles){
+                if (currentItem.styles){
                     if (currentItem.styles.align !== undefined && cue.hasOwnProperty('align')) {
                         cue.align = currentItem.styles.align;
                     }
@@ -425,7 +425,7 @@ function TextTrackExtensions() {
 
     function deleteAllTextTracks() {
         var ln = trackElementArr.length;
-        for(var i = 0; i < ln; i++){
+        for (var i = 0; i < ln; i++){
             if (isIE11orEdge) {
                 deleteTrackCues.call(this, getTextTrack.call(this, i));
             }else {
@@ -457,9 +457,9 @@ function TextTrackExtensions() {
         styleElement.id  = 'native-cue-style';
         document.head.appendChild(styleElement);
         var stylesheet = styleElement.sheet;
-        if(video.id) {
+        if (video.id) {
             stylesheet.insertRule('#' + video.id + '::cue {background: transparent}', 0);
-        } else if(video.classList.length !== 0) {
+        } else if (video.classList.length !== 0) {
             stylesheet.insertRule('.' + video.className + '::cue {background: transparent}', 0);
         } else {
             stylesheet.insertRule('video::cue {background: transparent}', 0);
@@ -477,7 +477,7 @@ function TextTrackExtensions() {
 
     function clearCues() {
         if (captionContainer) {
-            while(captionContainer.firstChild) {
+            while (captionContainer.firstChild) {
                 captionContainer.removeChild(captionContainer.firstChild);
             }
         }

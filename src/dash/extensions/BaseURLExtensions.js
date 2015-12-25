@@ -38,7 +38,7 @@ import BoxParser from '../../streaming/utils/BoxParser.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
 
-function  BaseURLExtensions() {
+function BaseURLExtensions() {
 
     let context = this.context;
     let log = Debug(context).getInstance().log;
@@ -175,7 +175,7 @@ function  BaseURLExtensions() {
                     var j, len, ss, se, r, segs = [],
                         count = 0;
                     var offset = (sidx.offset || info.range.start) + sidx.size;
-                    var tmpCallback = function(result) {
+                    var tmpCallback = function (result) {
                         if (result) {
                             segs = segs.concat(result);
                             count += 1;
@@ -223,7 +223,7 @@ function  BaseURLExtensions() {
         log = null;
     }
 
-    function  getSegmentsForSidx(sidx, info) {
+    function getSegmentsForSidx(sidx, info) {
 
         var refs = sidx.references;
         var len = refs.length;
@@ -284,7 +284,7 @@ function  BaseURLExtensions() {
     }
 
     function onLoaded(segments, representation, type) {
-        if(segments) {
+        if (segments) {
             eventBus.trigger(Events.SEGMENTS_LOADED, {segments: segments, representation: representation, mediaType: type});
         } else {
             eventBus.trigger(Events.SEGMENTS_LOADED, {segments: null, representation: representation, mediaType: type, error: new Error(null, 'error loading segments', null)});

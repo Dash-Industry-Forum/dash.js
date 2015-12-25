@@ -44,7 +44,7 @@ import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-function  RepresentationController() {
+function RepresentationController() {
 
     const SEGMENTS_UPDATE_FAILED_ERROR_CODE = 1;
 
@@ -236,7 +236,7 @@ function  RepresentationController() {
 
     function postponeUpdate(availabilityDelay) {
         var delay = (availabilityDelay + (currentRepresentation.segmentDuration * mediaPlayerModel.getLiveDelayFragmentCount())) * 1000;
-        var update = function() {
+        var update = function () {
             if (isUpdating()) return;
 
             updating = true;

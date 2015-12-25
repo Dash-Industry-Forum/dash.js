@@ -37,12 +37,12 @@ function CustomTimeRanges(/*config*/) {
     function add(start,end){
         var i=0;
 
-        for(i=0;(i<this.customTimeRangeArray.length)&&(start>this.customTimeRangeArray[i].start);i++);
+        for (i=0;(i<this.customTimeRangeArray.length)&&(start>this.customTimeRangeArray[i].start);i++);
 
         this.customTimeRangeArray.splice(i, 0, {start:start,end:end});
 
-        for(i=0;i<this.customTimeRangeArray.length-1;i++){
-            if(this.mergeRanges(i,i+1)){
+        for (i=0;i<this.customTimeRangeArray.length-1;i++){
+            if (this.mergeRanges(i,i+1)){
                 i--;
             }
         }
@@ -55,8 +55,8 @@ function CustomTimeRanges(/*config*/) {
     }
 
     function remove(start,end){
-        for(var i=0;i<this.customTimeRangeArray.length;i++){
-            if(start<=this.customTimeRangeArray[i].start && end>=this.customTimeRangeArray[i].end) {
+        for (var i=0;i<this.customTimeRangeArray.length;i++){
+            if (start<=this.customTimeRangeArray[i].start && end>=this.customTimeRangeArray[i].end) {
                 //      |--------------Range i-------|
                 //|---------------Range to remove ---------------|
                 //    or
@@ -68,20 +68,20 @@ function CustomTimeRanges(/*config*/) {
                 this.customTimeRangeArray.splice(i,1);
                 i--;
 
-            }else if(start>this.customTimeRangeArray[i].start && end<this.customTimeRangeArray[i].end) {
+            }else if (start>this.customTimeRangeArray[i].start && end<this.customTimeRangeArray[i].end) {
                 //|-----------------Range i----------------|
                 //        |-------Range to remove -----|
                 this.customTimeRangeArray.splice(i+1, 0, {start:end,end:this.customTimeRangeArray[i].end});
                 this.customTimeRangeArray[i].end=start;
                 break;
-            }else if( start>this.customTimeRangeArray[i].start && start<this.customTimeRangeArray[i].end) {
+            }else if ( start>this.customTimeRangeArray[i].start && start<this.customTimeRangeArray[i].end) {
                 //|-----------Range i----------|
                 //                    |---------Range to remove --------|
                 //    or
                 //|-----------------Range i----------------|
                 //            |-------Range to remove -----|
                 this.customTimeRangeArray[i].end=start;
-            }else if( end>this.customTimeRangeArray[i].start && end<this.customTimeRangeArray[i].end) {
+            }else if ( end>this.customTimeRangeArray[i].start && end<this.customTimeRangeArray[i].end) {
                 //                     |-----------Range i----------|
                 //|---------Range to remove --------|
                 //            or

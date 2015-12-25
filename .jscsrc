@@ -4,5 +4,6 @@
 
     "validateQuoteMarks": "'",
     "disallowMixedSpacesAndTabs": true,
-    "disallowTrailingWhitespace": true
+    "disallowTrailingWhitespace": true,
+    "requireSpaceAfterKeywords": true
 }

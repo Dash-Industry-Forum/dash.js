@@ -1271,7 +1271,7 @@ function MediaPlayer() {
             return protectionController;
         }
         /* jshint ignore:start */
-        if(typeof Protection == 'function') {//TODO need a better way to register/detect plugin components
+        if (typeof Protection == 'function') {//TODO need a better way to register/detect plugin components
             let protection = Protection(context).create();
             Events.extend(Protection.events);
             MediaPlayerEvents.extend(Protection.events, { publicOnly: true });

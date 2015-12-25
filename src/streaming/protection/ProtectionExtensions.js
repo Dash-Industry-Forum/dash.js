@@ -44,7 +44,7 @@ import Widevine from './servers/Widevine.js';
 import ClearKey from './servers/ClearKey.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-function  ProtectionExtensions() {
+function ProtectionExtensions() {
 
     let context = this.context;
 
@@ -169,9 +169,9 @@ function  ProtectionExtensions() {
         var cp, ks, ksIdx, cpIdx, supportedKS = [];
 
         if (cps) {
-            for(ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
+            for (ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
                 ks = keySystems[ksIdx];
-                for(cpIdx = 0; cpIdx < cps.length; ++cpIdx) {
+                for (cpIdx = 0; cpIdx < cps.length; ++cpIdx) {
                     cp = cps[cpIdx];
                     if (cp.schemeIdUri.toLowerCase() === ks.schemeIdURI) {
 

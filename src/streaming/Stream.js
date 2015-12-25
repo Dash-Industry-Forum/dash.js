@@ -326,13 +326,13 @@ function Stream(config) {
 
         if ((mediaInfo.type === 'text' || mediaInfo.type === 'fragmentedText')) {
             var idx;
-            for(var i = 0; i < allMediaForType.length; i++){
-                if(allMediaForType[i].index === mediaInfo.index) {
+            for (var i = 0; i < allMediaForType.length; i++){
+                if (allMediaForType[i].index === mediaInfo.index) {
                     idx = i;
                 }
                 streamProcessor.updateMediaInfo(manifest, allMediaForType[i]);//creates text tracks for all adaptations in one stream processor
             }
-            if(mediaInfo.type === 'fragmentedText'){
+            if (mediaInfo.type === 'fragmentedText'){
                 streamProcessor.updateMediaInfo(manifest, allMediaForType[idx]);//sets the initial media info
             }
         }else {
@@ -479,7 +479,7 @@ function Stream(config) {
 
         var processors = getProcessors();
 
-        return processors.filter(function(processor){
+        return processors.filter(function (processor){
             return (processor.getType() === mediaInfo.type);
         })[0];
     }

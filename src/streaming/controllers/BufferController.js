@@ -202,7 +202,7 @@ function BufferController(config) {
         var eventStreamMedia = adapter.getEventsFor(manifest, currentRepresentation.mediaInfo, streamProcessor);
         var eventStreamTrack = adapter.getEventsFor(manifest, currentRepresentation, streamProcessor);
 
-        if(eventStreamMedia.length > 0 || eventStreamTrack.length > 0) {
+        if (eventStreamMedia.length > 0 || eventStreamTrack.length > 0) {
             events = handleInbandEvents(bytes, request, eventStreamMedia, eventStreamTrack);
             streamProcessor.getEventController().addInbandEvents(events);
         }
@@ -328,7 +328,7 @@ function BufferController(config) {
             checkIfBufferingCompleted();
         } else {
             currentQuality = appendedBytesInfo.quality;
-            if(!streamProcessor.isDynamic()) {
+            if (!streamProcessor.isDynamic()) {
                 appendNext();
             }
         }
@@ -423,7 +423,7 @@ function BufferController(config) {
         inbandEventFound = false;
         /* Extract the possible schemeIdUri : If a DASH client detects an event message box with a scheme that is not defined in MPD, the client is expected to ignore it */
         inbandEvents = mediaInbandEvents.concat(trackInbandEvents);
-        for(var loop = 0; loop < inbandEvents.length; loop++) {
+        for (var loop = 0; loop < inbandEvents.length; loop++) {
             eventStreams[inbandEvents[loop].schemeIdUri] = inbandEvents[loop];
         }
 
@@ -443,7 +443,7 @@ function BufferController(config) {
 
     function deleteInbandEvents(data) {
 
-        if(!inbandEventFound) {
+        if (!inbandEventFound) {
             return data;
         }
 
@@ -457,13 +457,13 @@ function BufferController(config) {
             i = 0,
             j = 0;
 
-        while(i<length) {
+        while (i<length) {
 
             identifier = String.fromCharCode(data[i+4],data[i+5],data[i+6],data[i+7]);
             size = data[i]*expThree + data[i+1]*expTwo + data[i+2]*256 + data[i+3]*1;
 
-            if(identifier != 'emsg' ) {
-                for(var l = i ; l < i + size; l++) {
+            if (identifier != 'emsg' ) {
+                for (var l = i ; l < i + size; l++) {
                     modData[j] = data[l];
                     j += 1;
                 }
@@ -575,7 +575,7 @@ function BufferController(config) {
             ranges,
             range;
 
-        allAppendedChunks.forEach(function(chunk) {
+        allAppendedChunks.forEach(function (chunk) {
             ranges = mediaController.isCurrentTrack(chunk.mediaInfo) ? rangesToLeave : rangesToClear;
             ranges.add(chunk.bufferedRange.start, chunk.bufferedRange.end);
         });
@@ -616,7 +616,7 @@ function BufferController(config) {
     }
 
     function onChunkAppended(e) {
-        if(e.sender !== virtualBuffer) return;
+        if (e.sender !== virtualBuffer) return;
         addBufferMetrics();
     }
 

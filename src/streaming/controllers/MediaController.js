@@ -66,7 +66,7 @@ function MediaController() {
      */
     function checkInitialMediaSettings(streamInfo) {
 
-        ['audio', 'video', 'text', 'fragmentedText'].forEach(function(type){
+        ['audio', 'video', 'text', 'fragmentedText'].forEach(function (type){
             var settings = getInitialSettings(type);
             var tracksForType = getTracksFor(type, streamInfo);
             var isSet = false;
@@ -79,7 +79,7 @@ function MediaController() {
             if (!tracksForType || (tracksForType.length === 0)) return;
 
             if (settings) {
-                tracksForType.forEach(function(track){
+                tracksForType.forEach(function (track){
                     if (!isSet && matchSettings(settings, track)) {
                         setTrack(track);
                         isSet = true;
@@ -336,13 +336,13 @@ function MediaController() {
     function matchSettings(settings, track) {
         var matchLang = !settings.lang || (settings.lang === track.lang);
         var matchViewPoint = !settings.viewpoint || (settings.viewpoint === track.viewpoint);
-        var matchRole = !settings.role || !!track.roles.filter(function(item) {
+        var matchRole = !settings.role || !!track.roles.filter(function (item) {
             return item === settings.role;
         })[0];
-        var matchAccessibility = !settings.accessibility || !!track.accessibility.filter(function(item) {
+        var matchAccessibility = !settings.accessibility || !!track.accessibility.filter(function (item) {
             return item === settings.accessibility;
         })[0];
-        var matchAudioChannelConfiguration = !settings.audioChannelConfiguration || !!track.audioChannelConfiguration.filter(function(item) {
+        var matchAudioChannelConfiguration = !settings.audioChannelConfiguration || !!track.audioChannelConfiguration.filter(function (item) {
             return item === settings.audioChannelConfiguration;
         })[0];
 
@@ -366,12 +366,12 @@ function MediaController() {
     function selectInitialTrack(tracks) {
         var mode = getSelectionModeForInitialTrack();
         var tmpArr = [];
-        var getTracksWithHighestBitrate = function(trackArr) {
+        var getTracksWithHighestBitrate = function (trackArr) {
             var max = 0,
                 result = [],
                 tmp;
 
-            trackArr.forEach(function(track) {
+            trackArr.forEach(function (track) {
                 tmp = Math.max.apply(Math, track.bitrateList);
 
                 if (tmp > max) {
@@ -384,12 +384,12 @@ function MediaController() {
 
             return result;
         };
-        var getTracksWithWidestRange = function(trackArr) {
+        var getTracksWithWidestRange = function (trackArr) {
             var max = 0,
                 result = [],
                 tmp;
 
-            trackArr.forEach(function(track) {
+            trackArr.forEach(function (track) {
                 tmp = track.representationCount;
 
                 if (tmp > max) {

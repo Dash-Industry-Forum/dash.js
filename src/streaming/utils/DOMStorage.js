@@ -131,7 +131,7 @@ function DOMStorage() {
     }
 
     function checkInitialBitrate() {
-        ['video', 'audio'].forEach(function(value) {
+        ['video', 'audio'].forEach(function (value) {
             //first make sure player has not explicitly set a starting bit rate
             if (abrController.getInitialBitrateFor(value) === undefined) {
                 //Checks local storage to see if there is valid, non-expired bit rate
@@ -160,7 +160,7 @@ function DOMStorage() {
     }
 
     function setExpiration(type, ttl) {
-        if (ttl !== undefined && !isNaN(ttl) && typeof(ttl) === 'number'){
+        if (ttl !== undefined && !isNaN(ttl) && typeof (ttl) === 'number'){
             experationDict[type] = ttl;
         }
     }

@@ -216,7 +216,7 @@ function VirtualBuffer() {
 
         sourceArr = appended ? originData.appended : (segmentType ? originData[segmentType] : []);
 
-        result = sourceArr.filter(function(item, idx, arr) {
+        result = sourceArr.filter(function (item, idx, arr) {
             if (ln >= limit) return false;
 
             for (var prop in filter) {
@@ -319,7 +319,7 @@ function VirtualBuffer() {
             isStartIncluded,
             isEndIncluded;
 
-        chunks.forEach(function(chunk) {
+        chunks.forEach(function (chunk) {
             chunkStart = chunk.bufferedRange.start;
             chunkEnd = chunk.bufferedRange.end;
             isStartIncluded = (chunkStart >= rangeStart && chunkStart < rangeEnd);

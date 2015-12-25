@@ -248,7 +248,7 @@ function PlaybackController() {
         } else {
             if (!isNaN(startTimeOffset) && startTimeOffset < streamInfo.duration && startTimeOffset >= 0) {
                 presentationStartTime = startTimeOffset;
-            }else{
+            }else {
                 presentationStartTime = streamInfo.start;
             }
         }
@@ -276,7 +276,7 @@ function PlaybackController() {
     function startUpdatingWallclockTime() {
         if (wallclockTimeIntervalId !== null) return;
 
-        var tick = function() {
+        var tick = function () {
             onWallclockTime();
         };
 

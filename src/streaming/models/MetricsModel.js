@@ -44,7 +44,7 @@ import RequestsQueue from '../vo/metrics/RequestsQueue.js';
 import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-function  MetricsModel() {
+function MetricsModel() {
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();

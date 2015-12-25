@@ -79,19 +79,19 @@ function FragmentModel(config) {
     }
 
     function isFragmentLoaded(request) {
-        var isEqualComplete = function(req1, req2) {
+        var isEqualComplete = function (req1, req2) {
             return ((req1.action === FragmentRequest.ACTION_COMPLETE) && (req1.action === req2.action));
         },
 
-            isEqualMedia = function(req1, req2) {
+            isEqualMedia = function (req1, req2) {
                 return ((req1.url === req2.url) && (req1.startTime === req2.startTime));
             },
 
-            isEqualInit = function(req1, req2) {
+            isEqualInit = function (req1, req2) {
                 return isNaN(req1.index) && isNaN(req2.index) && (req1.quality === req2.quality);
             },
 
-            check = function(arr) {
+            check = function (arr) {
                 var req,
                     isLoaded = false,
                     i;
@@ -142,7 +142,7 @@ function FragmentModel(config) {
             states = [filter.state];
         }
 
-        for(var i = 0; i < ln; i += 1) {
+        for (var i = 0; i < ln; i += 1) {
             requests = getRequestsForState(states[i]);
             filteredRequests = filteredRequests.concat(filterRequests(requests, filter));
         }
@@ -187,7 +187,7 @@ function FragmentModel(config) {
 
         //Adds the ability to delay single fragment loading time to control buffer. Needed for Advanced ABR rules.
         if (now < request.delayLoadingTime ) {
-            delayLoadingTimeout = setTimeout(function(){
+            delayLoadingTimeout = setTimeout(function (){
                 executeRequest(request);
             }, (request.delayLoadingTime - now) );
             return;
@@ -263,7 +263,7 @@ function FragmentModel(config) {
             return [getRequestForTime(arr, filter.time, filter.threshold)];
         }
 
-        return arr.filter(function(request/*, idx, arr*/) {
+        return arr.filter(function (request/*, idx, arr*/) {
             for (var prop in filter) {
                 if (prop === 'state') continue;
 

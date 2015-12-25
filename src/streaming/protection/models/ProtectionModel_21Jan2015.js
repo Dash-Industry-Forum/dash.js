@@ -74,7 +74,7 @@ function ProtectionModel_21Jan2015(config) {
 
         if (numSessions !== 0) {
             // Called when we are done closing a session.  Success or fail
-            var done = function(session) {
+            var done = function (session) {
                 removeSession(session);
                 if (sessions.length === 0) {
                     if (videoElement) {
@@ -124,7 +124,7 @@ function ProtectionModel_21Jan2015(config) {
     }
 
     function selectKeySystem(keySystemAccess) {
-        keySystemAccess.mksa.createMediaKeys().then(function(mkeys) {
+        keySystemAccess.mksa.createMediaKeys().then(function (mkeys) {
             keySystem = keySystemAccess.keySystem;
             mediaKeys = mkeys;
             if (videoElement) {
@@ -132,7 +132,7 @@ function ProtectionModel_21Jan2015(config) {
             }
             eventBus.trigger(Events.INTERNAL_KEY_SYSTEM_SELECTED);
 
-        }).catch(function() {
+        }).catch(function () {
             eventBus.trigger(Events.INTERNAL_KEY_SYSTEM_SELECTED, {error:'Error selecting keys system (' + keySystemAccess.keySystem.systemString + ')! Could not create MediaKeys -- TODO'});
         });
     }
@@ -162,10 +162,10 @@ function ProtectionModel_21Jan2015(config) {
         if (!keySystem || !mediaKeys) {
             throw new Error('Can not set server certificate until you have selected a key system');
         }
-        mediaKeys.setServerCertificate(serverCertificate).then(function() {
+        mediaKeys.setServerCertificate(serverCertificate).then(function () {
             log('DRM: License server certificate successfully updated.');
             eventBus.trigger(Events.SERVER_CERTIFICATE_UPDATED);
-        }).catch(function(error) {
+        }).catch(function (error) {
             eventBus.trigger(Events.SERVER_CERTIFICATE_UPDATED, {error:'Error updating server certificate -- ' + error.name});
         });
     }
@@ -180,10 +180,10 @@ function ProtectionModel_21Jan2015(config) {
         var sessionToken = createSessionToken(session, initData, sessionType);
 
         // Generate initial key request
-        session.generateRequest('cenc', initData).then(function() {
+        session.generateRequest('cenc', initData).then(function () {
             log('DRM: Session created.  SessionID = ' + sessionToken.getSessionID());
             eventBus.trigger(Events.KEY_SESSION_CREATED, {data:sessionToken});
-        }).catch(function(error) {
+        }).catch(function (error) {
             // TODO: Better error string
             removeSession(sessionToken);
             eventBus.trigger(Events.KEY_SESSION_CREATED, {data:null, error:'Error generating key request -- ' + error.name});
@@ -238,17 +238,17 @@ function ProtectionModel_21Jan2015(config) {
 
     function closeKeySession(sessionToken) {
         // Send our request to the key session
-        closeKeySessionInternal(sessionToken).catch(function(error) {
+        closeKeySessionInternal(sessionToken).catch(function (error) {
             removeSession(sessionToken);
             eventBus.trigger(Events.KEY_SESSION_CLOSED, {data:null, error:'Error closing session (' + sessionToken.getSessionID() + ') ' + error.name});
         });
     }
 
     function requestKeySystemAccessInternal(ksConfigurations, idx) {
-        (function(i) {
+        (function (i) {
             var keySystem = ksConfigurations[i].ks;
             var configs = ksConfigurations[i].configs;
-            navigator.requestMediaKeySystemAccess(keySystem.systemString, configs).then(function(mediaKeySystemAccess) {
+            navigator.requestMediaKeySystemAccess(keySystem.systemString, configs).then(function (mediaKeySystemAccess) {
 
                 // Chrome 40 does not currently implement MediaKeySystemAccess.getConfiguration()
                 var configuration = (typeof mediaKeySystemAccess.getConfiguration === 'function') ?
@@ -257,7 +257,7 @@ function ProtectionModel_21Jan2015(config) {
                 keySystemAccess.mksa = mediaKeySystemAccess;
                 eventBus.trigger(Events.KEY_SYSTEM_ACCESS_COMPLETE, {data:keySystemAccess});
 
-            }).catch(function() {
+            }).catch(function () {
                 if (++i < ksConfigurations.length) {
                     requestKeySystemAccessInternal(ksConfigurations, i);
                 } else {
@@ -283,7 +283,7 @@ function ProtectionModel_21Jan2015(config) {
     // versions of the same events
     function createEventHandler() {
         return {
-            handleEvent: function(event) {
+            handleEvent: function (event) {
                 switch (event.type) {
 
                     case 'encrypted':
@@ -318,7 +318,7 @@ function ProtectionModel_21Jan2015(config) {
             // This is our main event handler for all desired MediaKeySession events
             // These events are translated into our API-independent versions of the
             // same events
-            handleEvent: function(event) {
+            handleEvent: function (event) {
                 switch (event.type) {
                     case 'keystatuseschange':
                         eventBus.trigger(Events.KEY_STATUSES_CHANGED, {data:this});
@@ -331,19 +331,19 @@ function ProtectionModel_21Jan2015(config) {
                 }
             },
 
-            getSessionID: function() {
+            getSessionID: function () {
                 return session.sessionId;
             },
 
-            getExpirationTime: function() {
+            getExpirationTime: function () {
                 return session.expiration;
             },
 
-            getKeyStatuses: function() {
+            getKeyStatuses: function () {
                 return session.keyStatuses;
             },
 
-            getSessionType: function() {
+            getSessionType: function () {
                 return sessionType;
             }
         };

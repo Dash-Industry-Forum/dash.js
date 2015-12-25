@@ -289,7 +289,7 @@ function TimeSyncController() {
         var source = sources[index];
 
         // callback to emit event to listeners
-        var onComplete = function(time, offset) {
+        var onComplete = function (time, offset) {
             var failed = !time || !offset;
             if (failed && useManifestDateHeaderTimeSource) {
                 //Before falling back to binary search , check if date header exists on MPD. if so, use for a time source.

@@ -56,7 +56,7 @@ function DashManifestExtensions() {
         var col = adaptation.ContentComponent_asArray;
         var mimeTypeRegEx = (type !== 'text') ? new RegExp(type) : new RegExp('(vtt|ttml)');
 
-        if((adaptation.Representation_asArray.length>0)&&
+        if ((adaptation.Representation_asArray.length>0)&&
             (adaptation.Representation_asArray[0].hasOwnProperty('codecs'))&&
             (adaptation.Representation_asArray[0].codecs=='stpp')){
             return type == 'fragmentedText';
@@ -147,14 +147,14 @@ function DashManifestExtensions() {
     }
 
     function getIsMain(adaptation) {
-        return getRolesForAdaptation(adaptation).filter(function(role){
+        return getRolesForAdaptation(adaptation).filter(function (role){
             return role.value === 'main';
         })[0];
     }
 
     function processAdaptation(adaptation) {
         if (adaptation.Representation_asArray !== undefined && adaptation.Representation_asArray !== null) {
-            adaptation.Representation_asArray.sort(function(a, b) {
+            adaptation.Representation_asArray.sort(function (a, b) {
                 return a.bandwidth - b.bandwidth;
             });
         }
@@ -453,13 +453,13 @@ function DashManifestExtensions() {
 
             if (getIsMuxed(a)) {
                 adaptationSet.type = 'muxed';
-            } else if(getIsAudio(a)){
+            } else if (getIsAudio(a)){
                 adaptationSet.type='audio';
             }else if (getIsVideo(a)){
                 adaptationSet.type='video';
             }else if (getIsFragmentedText(a)){
                 adaptationSet.type='fragmentedText';
-            }else{
+            }else {
                 adaptationSet.type='text';
             }
 
@@ -645,35 +645,35 @@ function DashManifestExtensions() {
         var eventStreams = periodArray[period.index].EventStream_asArray;
         var events = [];
 
-        if(eventStreams) {
-            for(var i = 0; i < eventStreams.length; i += 1) {
+        if (eventStreams) {
+            for (var i = 0; i < eventStreams.length; i += 1) {
                 var eventStream = new EventStream();
                 eventStream.period = period;
                 eventStream.timescale = 1;
 
-                if(eventStreams[i].hasOwnProperty('schemeIdUri')) {
+                if (eventStreams[i].hasOwnProperty('schemeIdUri')) {
                     eventStream.schemeIdUri = eventStreams[i].schemeIdUri;
                 } else {
                     throw 'Invalid EventStream. SchemeIdUri has to be set';
                 }
-                if(eventStreams[i].hasOwnProperty('timescale')) {
+                if (eventStreams[i].hasOwnProperty('timescale')) {
                     eventStream.timescale = eventStreams[i].timescale;
                 }
-                if(eventStreams[i].hasOwnProperty('value')) {
+                if (eventStreams[i].hasOwnProperty('value')) {
                     eventStream.value = eventStreams[i].value;
                 }
-                for(var j = 0; j < eventStreams[i].Event_asArray.length; j += 1) {
+                for (var j = 0; j < eventStreams[i].Event_asArray.length; j += 1) {
                     var event = new Event();
                     event.presentationTime = 0;
                     event.eventStream = eventStream;
 
-                    if(eventStreams[i].Event_asArray[j].hasOwnProperty('presentationTime')) {
+                    if (eventStreams[i].Event_asArray[j].hasOwnProperty('presentationTime')) {
                         event.presentationTime = eventStreams[i].Event_asArray[j].presentationTime;
                     }
-                    if(eventStreams[i].Event_asArray[j].hasOwnProperty('duration')) {
+                    if (eventStreams[i].Event_asArray[j].hasOwnProperty('duration')) {
                         event.duration = eventStreams[i].Event_asArray[j].duration;
                     }
-                    if(eventStreams[i].Event_asArray[j].hasOwnProperty('id')) {
+                    if (eventStreams[i].Event_asArray[j].hasOwnProperty('id')) {
                         event.id = eventStreams[i].Event_asArray[j].id;
                     }
                     events.push(event);
@@ -687,22 +687,22 @@ function DashManifestExtensions() {
     function getEventStreams(inbandStreams, representation) {
         var eventStreams = [];
 
-        if(!inbandStreams) return eventStreams;
+        if (!inbandStreams) return eventStreams;
 
-        for(var i = 0; i < inbandStreams.length ; i++ ) {
+        for (var i = 0; i < inbandStreams.length ; i++ ) {
             var eventStream = new EventStream();
             eventStream.timescale = 1;
             eventStream.representation =  representation;
 
-            if(inbandStreams[i].hasOwnProperty('schemeIdUri')) {
+            if (inbandStreams[i].hasOwnProperty('schemeIdUri')) {
                 eventStream.schemeIdUri = inbandStreams[i].schemeIdUri;
             } else {
                 throw 'Invalid EventStream. SchemeIdUri has to be set';
             }
-            if(inbandStreams[i].hasOwnProperty('timescale')) {
+            if (inbandStreams[i].hasOwnProperty('timescale')) {
                 eventStream.timescale = inbandStreams[i].timescale;
             }
-            if(inbandStreams[i].hasOwnProperty('value')) {
+            if (inbandStreams[i].hasOwnProperty('value')) {
                 eventStream.value = inbandStreams[i].value;
             }
             eventStreams.push(eventStream);

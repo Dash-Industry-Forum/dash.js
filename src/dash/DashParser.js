@@ -62,7 +62,7 @@ function DashParser(/*config*/) {
         matchers = [
             {
                 type: 'duration',
-                test: function(attr) {
+                test: function (attr) {
 
                     var attributeList = [
                         'minBufferTime', 'mediaPresentationDuration',
@@ -79,7 +79,7 @@ function DashParser(/*config*/) {
                     }
                     return false;
                 },
-                converter: function(str) {
+                converter: function (str) {
                     //str = "P10Y10M10DT10H10M10.1S";
                     var match = durationRegex.exec(str);
                     var result = (parseFloat(match[2] || 0) * SECONDS_IN_YEAR +
@@ -98,10 +98,10 @@ function DashParser(/*config*/) {
             },
             {
                 type: 'datetime',
-                test: function(attr) {
+                test: function (attr) {
                     return datetimeRegex.test(attr.value);
                 },
-                converter: function(str) {
+                converter: function (str) {
                     var match = datetimeRegex.exec(str);
                     var utcDate;
                     // If the string does not contain a timezone offset different browsers can interpret it either
@@ -126,10 +126,10 @@ function DashParser(/*config*/) {
             },
             {
                 type: 'numeric',
-                test: function(attr) {
+                test: function (attr) {
                     return numericRegex.test(attr.value);
                 },
-                converter: function(str) {
+                converter: function (str) {
                     return parseFloat(str);
                 }
             }

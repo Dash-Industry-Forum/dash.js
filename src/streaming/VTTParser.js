@@ -72,7 +72,7 @@ function VTTParser() {
                     var startTime = convertCuePointTimes(cuePoints[0].replace(regExWhiteSpace, ''));
                     var endTime = convertCuePointTimes(cuePoints[1].replace(regExWhiteSpace, ''));
 
-                    if((!isNaN(startTime) && !isNaN(endTime)) && startTime >= lastStartTime && endTime > startTime) {
+                    if ((!isNaN(startTime) && !isNaN(endTime)) && startTime >= lastStartTime && endTime > startTime) {
                         if (text !== ''){
                             lastStartTime = startTime;
                             //TODO Make VO external so other parsers can use.
@@ -155,15 +155,15 @@ function VTTParser() {
             subline = '',
             lineData = '';
 
-        while(data[i] !== '' && i < data.length) {
+        while (data[i] !== '' && i < data.length) {
             i++;
         }
 
         lineCount = i - idx;
         if (lineCount > 1){
-            for(var j = 0; j < lineCount; j++){
+            for (var j = 0; j < lineCount; j++){
                 lineData = data[(idx + j)];
-                if(!lineData.match(regExToken)){
+                if (!lineData.match(regExToken)){
                     subline += lineData;
                     if (j !== lineCount-1) {
                         subline += '\n';
@@ -177,7 +177,7 @@ function VTTParser() {
             }
         } else {
             lineData = data[idx];
-            if(!lineData.match(regExToken))
+            if (!lineData.match(regExToken))
                 subline = lineData;
         }
         return decodeURI(subline);

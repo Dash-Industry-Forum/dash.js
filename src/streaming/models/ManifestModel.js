@@ -32,7 +32,7 @@ import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-function  ManifestModel() {
+function ManifestModel() {
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();

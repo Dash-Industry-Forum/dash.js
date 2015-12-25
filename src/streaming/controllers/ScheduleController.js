@@ -209,7 +209,7 @@ function ScheduleController(config) {
     function getRequiredFragmentCount(callback) {
         var rules = scheduleRulesCollection.getRules(ScheduleRulesCollection.FRAGMENTS_TO_SCHEDULE_RULES);
 
-        rulesController.applyRules(rules, streamProcessor, callback, fragmentsToLoad, function(currentValue, newValue) {
+        rulesController.applyRules(rules, streamProcessor, callback, fragmentsToLoad, function (currentValue, newValue) {
             currentValue = currentValue === SwitchRequest.NO_CHANGE ? 0 : currentValue;
             return Math.max(currentValue, newValue);
         });
@@ -221,7 +221,7 @@ function ScheduleController(config) {
             isFragmentLoading = true;
             abrController.getPlaybackQuality(streamProcessor,  getNextFragment(onGetNextFragment));
         } else {
-            validateTimeout = setTimeout(function(){
+            validateTimeout = setTimeout(function (){
                 //log("timeout going back to validate")
                 validate();
             }, 1000); //TODO should this be something based on fragment duration?
@@ -231,7 +231,7 @@ function ScheduleController(config) {
     function getNextFragment(callback) {
         var rules = scheduleRulesCollection.getRules(ScheduleRulesCollection.NEXT_FRAGMENT_RULES);
 
-        rulesController.applyRules(rules, streamProcessor, callback, null, function(currentValue, newValue) {
+        rulesController.applyRules(rules, streamProcessor, callback, null, function (currentValue, newValue) {
             return newValue;
         });
     }

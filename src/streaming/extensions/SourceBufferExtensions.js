@@ -95,7 +95,7 @@ function SourceBufferExtensions() {
     function removeSourceBuffer(mediaSource, buffer) {
         try {
             mediaSource.removeSourceBuffer(buffer);
-        } catch(ex){
+        } catch (ex){
         }
     }
 
@@ -113,7 +113,7 @@ function SourceBufferExtensions() {
 
         try {
             ranges = buffer.buffered;
-        } catch(ex) {
+        } catch (ex) {
             return null;
         }
 
@@ -154,7 +154,7 @@ function SourceBufferExtensions() {
     function getAllRanges(buffer) {
         var ranges = null;
 
-        try{
+        try {
             ranges = buffer.buffered;
             return ranges;
         } catch (ex) {
@@ -279,7 +279,7 @@ function SourceBufferExtensions() {
         if (!appendMethod) return;
 
         try {
-            waitForUpdateEnd(buffer, function() {
+            waitForUpdateEnd(buffer, function () {
                 if (acceptsChunk) {
                     // chunk.start is used in calculations by TextSourceBuffer
                     buffer[appendMethod](bytes, chunk);
@@ -287,7 +287,7 @@ function SourceBufferExtensions() {
                     buffer[appendMethod](bytes);
                 }
                 // updating is in progress, we should wait for it to complete before signaling that this operation is done
-                waitForUpdateEnd(buffer, function() {
+                waitForUpdateEnd(buffer, function () {
                     eventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes});
                 });
             });
@@ -300,12 +300,12 @@ function SourceBufferExtensions() {
 
         try {
             // make sure that the given time range is correct. Otherwise we will get InvalidAccessError
-            waitForUpdateEnd(buffer, function() {
+            waitForUpdateEnd(buffer, function () {
                 if ((start >= 0) && (end > start) && (mediaSource.readyState !== 'ended')) {
                     buffer.remove(start, end);
                 }
                 // updating is in progress, we should wait for it to complete before signaling that this operation is done
-                waitForUpdateEnd(buffer, function() {
+                waitForUpdateEnd(buffer, function () {
                     eventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end});
                 });
             });
@@ -319,7 +319,7 @@ function SourceBufferExtensions() {
             if (mediaSource.readyState === 'open') {
                 buffer.abort();
             }
-        } catch(ex){
+        } catch (ex){
         }
     }
 
@@ -335,14 +335,14 @@ function SourceBufferExtensions() {
     function waitForUpdateEnd(buffer, callback) {
         var intervalId,
             CHECK_INTERVAL = 50;
-        var checkIsUpdateEnded = function() {
+        var checkIsUpdateEnded = function () {
             // if undating is still in progress do nothing and wait for the next check again.
             if (buffer.updating) return;
             // updating is completed, now we can stop checking and resolve the promise
             clearInterval(intervalId);
             callback();
         };
-        var updateEndHandler = function() {
+        var updateEndHandler = function () {
             if (buffer.updating) return;
 
             buffer.removeEventListener('updateend', updateEndHandler, false);

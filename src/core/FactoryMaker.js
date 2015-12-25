@@ -31,7 +31,7 @@
 /**
  * @ignore
  */
-let FactoryMaker = (function() {
+let FactoryMaker = (function () {
 
     let instance;
     let extensions = [];
@@ -49,7 +49,7 @@ let FactoryMaker = (function() {
         for (let i in singletonContexts) {
             const obj = singletonContexts[i];
             if (obj.context === context && obj.name === className) {
-                return  obj.instance;
+                return obj.instance;
             }
         }
 
@@ -69,14 +69,14 @@ let FactoryMaker = (function() {
     }
 
     function getClassFactory(classConstructor) {
-        return function(context) {
+        return function (context) {
 
             if (context === undefined) {
                 context = {};
             }
 
             return {
-                create: function() {
+                create: function () {
                     return merge(classConstructor.name, classConstructor.apply({ context: context }, arguments), context);
                 }
             };
@@ -84,7 +84,7 @@ let FactoryMaker = (function() {
     }
 
     function getSingletonFactory(classConstructor) {
-        return function(context) {
+        return function (context) {
             if (context === undefined) {
                 context = {};
             }
@@ -92,7 +92,7 @@ let FactoryMaker = (function() {
             let instance = getSingletonInstance(context, classConstructor.name);
 
             return {
-                getInstance: function() {
+                getInstance: function () {
                     if (instance) {
                         return instance;
                     }
@@ -113,7 +113,7 @@ let FactoryMaker = (function() {
 
         if (extension) {
             extension = extension.apply({ context:context, factory:instance, parent:classConstructor});
-            for(const prop in extension){
+            for (const prop in extension){
                 if (classConstructor.hasOwnProperty(prop)){
                     classConstructor[prop] = extension[prop];
                 }
@@ -125,13 +125,13 @@ let FactoryMaker = (function() {
     function getExtensionContext(context) {
         let extensionContext;
 
-        extensions.forEach(function(obj) {
+        extensions.forEach(function (obj) {
             if (obj === context) {
                 extensionContext = obj;
             }
         });
 
-        if(!extensionContext) {
+        if (!extensionContext) {
             extensionContext = extensions.push(context);
         }
 

@@ -42,19 +42,19 @@ function DRMToday() {
     const keySystems = {
         'com.widevine.alpha': {
             responseType: 'json',
-            getLicenseMessage: function(response) {
+            getLicenseMessage: function (response) {
                 return BASE64.decodeArray(response.license);
             },
-            getErrorResponse: function(response) {
+            getErrorResponse: function (response) {
                 return response;
             }
         },
         'com.microsoft.playready': {
             responseType: 'arraybuffer',
-            getLicenseMessage: function(response) {
+            getLicenseMessage: function (response) {
                 return response;
             },
-            getErrorResponse: function(response) {
+            getErrorResponse: function (response) {
                 return String.fromCharCode.apply(null, new Uint8Array(response));
             }
         }

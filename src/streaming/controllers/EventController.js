@@ -61,7 +61,7 @@ function EventController() {
     }
 
     function clear() {
-        if(eventInterval !== null) {
+        if (eventInterval !== null) {
             clearInterval(eventInterval);
             eventInterval = null;
         }
@@ -81,8 +81,8 @@ function EventController() {
     function addInlineEvents(values) {
         inlineEvents = {};
 
-        if(values) {
-            for(var i = 0; i < values.length; i++) {
+        if (values) {
+            for (var i = 0; i < values.length; i++) {
                 var event = values[i];
                 inlineEvents[event.id] = event;
                 log('Add inline event with id ' + event.id);
@@ -96,7 +96,7 @@ function EventController() {
      * @param values
      */
     function addInbandEvents(values) {
-        for(var i = 0; i < values.length; i++) {
+        for (var i = 0; i < values.length; i++) {
             var event = values[i];
             if (!(event.id in inbandEvents)) {
                 inbandEvents[event.id] = event;
@@ -122,7 +122,7 @@ function EventController() {
         var presentationTime;
 
         /* == Trigger events that are ready == */
-        if(events) {
+        if (events) {
             var eventIds = Object.keys(events);
             for (var i = 0; i < eventIds.length; i++) {
                 var eventId = eventIds[i];
@@ -145,7 +145,7 @@ function EventController() {
      * Remove events from the list that are over
      */
     function removeEvents() {
-        if(activeEvents) {
+        if (activeEvents) {
             var currentVideoTime = VideoModel(context).getInstance().getCurrentTime();
             var eventIds = Object.keys(activeEvents);
 

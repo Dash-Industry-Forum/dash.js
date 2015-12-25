@@ -74,7 +74,7 @@ function TextController(config) {
      * @memberof BufferController#
      */
     function createBuffer(mediaInfo) {
-        try{
+        try {
             buffer = sourceBufferExt.createSourceBuffer(mediaSource, mediaInfo);
 
             if (!initialized) {

@@ -34,7 +34,7 @@ import BoxParser from './utils/BoxParser.js';
 import CustomTimeRanges from './utils/CustomTimeRanges.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
-function  TextSourceBuffer() {
+function TextSourceBuffer() {
 
     let context = this.context;
 
@@ -96,13 +96,13 @@ function  TextSourceBuffer() {
         function createTextTrackFromMediaInfo(captionData, mediaInfo) {
             var textTrackInfo = new TextTrackInfo();
             var trackKindMap = { subtitle: 'subtitles', caption: 'captions' }; //Dash Spec has no "s" on end of KIND but HTML needs plural.
-            var getKind = function() {
+            var getKind = function () {
                 var kind = (mediaInfo.roles.length > 0) ? trackKindMap[mediaInfo.roles[0]] : trackKindMap.caption;
                 kind = (kind === trackKindMap.caption || kind === trackKindMap.subtitle) ? kind : trackKindMap.caption;
                 return kind;
             };
 
-            var checkTTML = function() {
+            var checkTTML = function () {
                 var ttml = false;
                 if (mediaInfo.codec && mediaInfo.codec.search('stpp') >= 0) {
                     ttml = true;
@@ -125,8 +125,8 @@ function  TextSourceBuffer() {
             textTrackExtensions.addTextTrack(textTrackInfo, mediaInfos.length);
         }
 
-        if(mediaType === 'fragmentedText'){
-            if(!initializationSegmentReceived){
+        if (mediaType === 'fragmentedText'){
+            if (!initializationSegmentReceived){
                 initializationSegmentReceived=true;
                 for (i = 0; i < mediaInfos.length; i++){
                     createTextTrackFromMediaInfo(null, mediaInfos[i]);
@@ -134,29 +134,29 @@ function  TextSourceBuffer() {
                 timescale = fragmentExt.getMediaTimescaleFromMoov(bytes);
             }else {
                 samplesInfo = fragmentExt.getSamplesInfo(bytes);
-                for(i= 0 ; i < samplesInfo.length ; i++) {
-                    if(!firstSubtitleStart){
+                for (i= 0 ; i < samplesInfo.length ; i++) {
+                    if (!firstSubtitleStart){
                         firstSubtitleStart = samplesInfo[0].cts - chunk.start * timescale;
                     }
                     samplesInfo[i].cts -= firstSubtitleStart;
                     this.buffered.add(samplesInfo[i].cts / timescale,(samplesInfo[i].cts + samplesInfo[i].duration) / timescale);
                     ccContent = window.UTF8.decode(new Uint8Array(bytes.slice(samplesInfo[i].offset, samplesInfo[i].offset+samplesInfo[i].size)));
                     parser = parser !== null ? parser : getParser(mimeType);
-                    try{
+                    try {
                         result = parser.parse(ccContent);
                         textTrackExtensions.addCaptions(firstSubtitleStart / timescale,result);
-                    } catch(e) {
+                    } catch (e) {
                         //empty cue ?
                     }
                 }
             }
-        }else{
+        }else {
             bytes = new Uint8Array(bytes);
             ccContent=window.UTF8.decode(bytes);
             try {
                 result = getParser(mimeType).parse(ccContent);
                 createTextTrackFromMediaInfo(result, mediaInfo);
-            } catch(e) {
+            } catch (e) {
                 errHandler.timedTextError(e, 'parse', ccContent);
             }
         }

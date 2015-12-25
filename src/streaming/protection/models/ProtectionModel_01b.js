@@ -47,7 +47,7 @@ import Events from '../../../core/events/Events.js';
 import ErrorHandler from '../../ErrorHandler.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
-function  ProtectionModel_01b(config) {
+function ProtectionModel_01b(config) {
 
     let context = this.context;
     let eventBus = config.eventBus;//Need to pass in here so we can use same instance since this is optional module
@@ -204,15 +204,15 @@ function  ProtectionModel_01b(config) {
             var newSession = { // Implements SessionToken
                 sessionID: null,
                 initData: initData,
-                getSessionID: function() {
+                getSessionID: function () {
                     return this.sessionID;
                 },
 
-                getExpirationTime: function() {
+                getExpirationTime: function () {
                     return NaN;
                 },
 
-                getSessionType: function() {
+                getSessionType: function () {
                     return 'temporary';
                 }
             };
@@ -255,7 +255,7 @@ function  ProtectionModel_01b(config) {
 
     function createEventHandler() {
         return {
-            handleEvent: function(event) {
+            handleEvent: function (event) {
                 var sessionToken = null;
                 switch (event.type) {
 

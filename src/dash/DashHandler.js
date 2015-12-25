@@ -332,7 +332,7 @@ function DashHandler(config) {
             startIdx,
             endIdx,
             fTimescale,
-            createSegment = function(s) {
+            createSegment = function (s) {
                 return getTimeBasedSegment(
                     representation,
                     time,
@@ -557,7 +557,7 @@ function DashHandler(config) {
             return range;
         }
 
-        if((!isDynamic && requestedTime) || index < 0) return null;
+        if ((!isDynamic && requestedTime) || index < 0) return null;
 
         // segment list should not be out of the availability window range
         start = Math.max(index - availabilityLowerLimit, firstIdx);
