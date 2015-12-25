@@ -1,6 +1,7 @@
 {
-    esnext: true,
-    verbose: true,
+    "esnext": true,
+    "verbose": true,
 
-    "validateQuoteMarks": "'"
+    "validateQuoteMarks": "'",
+    "disallowMixedSpacesAndTabs": true
 }
