@@ -183,7 +183,7 @@ class MpdHelper {
         adaptation.SegmentTemplate = objSegmentTemplate;
         adaptation.SegmentTemplate_asArray = objSegmentTemplate;
 
-        for (i; i < ln; i += 1) {
+        for (i; i < ln; i++) {
             r = reps[i];
             r.SegmentTemplate = objSegmentTemplate;
         }

@@ -195,7 +195,7 @@ function DashMetricsExtensions() {
                 currentHttpList = httpList[httpListLastIndex];
                 break;
             }
-            httpListLastIndex -= 1;
+            httpListLastIndex--;
         }
         return currentHttpList;
     }
@@ -300,7 +300,7 @@ function DashMetricsExtensions() {
 
         httpRequestList = getHttpRequests(metrics);
 
-        for (i = httpRequestList.length - 1; i >= 0; i -= 1) {
+        for (i = httpRequestList.length - 1; i >= 0; i--) {
             httpRequest = httpRequestList[i];
 
             if (httpRequest.type === HTTPRequest.MPD_TYPE) {

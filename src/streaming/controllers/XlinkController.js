@@ -94,7 +94,7 @@ function XlinkController(config) {
         if (resolveObject.elements.length === 0) {
             onXlinkAllElementsLoaded(resolveObject);
         }
-        for (i = 0; i < resolveObject.elements.length; i += 1) {
+        for (i = 0; i < resolveObject.elements.length; i++) {
             element = resolveObject.elements[i];
             if (element.url.indexOf('http://') !== -1) {
                 url = element.url;
@@ -167,7 +167,7 @@ function XlinkController(config) {
             i,
             xlinkObject;
         // first remove all the resolve-to-zero elements
-        for (i = elements.length - 1; i >= 0; i -= 1) {
+        for (i = elements.length - 1; i >= 0; i--) {
             element = elements[i];
             if (element.hasOwnProperty('xlink:href') && element['xlink:href'] === RESOLVE_TO_ZERO) {
                 elements.splice(i, 1);

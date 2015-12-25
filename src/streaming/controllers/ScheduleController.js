@@ -192,7 +192,7 @@ function ScheduleController(config) {
             time,
             i;
 
-        for (i = 0; i < ln; i += 1) {
+        for (i = 0; i < ln; i++) {
             request = canceledRequests[i];
             time = request.startTime + (request.duration / 2) + EPSILON;
             request = adapter.getFragmentRequestForTime(streamProcessor, currentRepresentationInfo, time, {timeThreshold: 0, ignoreIsFinished: true});

@@ -91,7 +91,7 @@ function DashAdapter() {
         var period,
             i = 0;
 
-        for (i; i < ln; i += 1) {
+        for (i; i < ln; i++) {
             period = periods[i];
 
             if (streamInfo.id === period.id) return period;
@@ -212,7 +212,7 @@ function DashAdapter() {
 
         adaptations[periodId] = adaptations[periodId] || manifestExt.getAdaptationsForPeriod(manifest, periodInfo);
 
-        for (var i = 0, ln = adaptationsForType.length; i < ln; i += 1) {
+        for (var i = 0, ln = adaptationsForType.length; i < ln; i++) {
             data = adaptationsForType[i];
             idx = manifestExt.getIndexForAdaptation(data, manifest, streamInfo.index);
             media = convertAdaptationToMediaInfo(manifest, adaptations[periodId][idx]);
@@ -239,7 +239,7 @@ function DashAdapter() {
         adaptations = {};
         ln = periods.length;
 
-        for (i = 0; i < ln; i += 1) {
+        for (i = 0; i < ln; i++) {
             streams.push(convertPeriodToStreamInfo(manifest, periods[i]));
         }
 

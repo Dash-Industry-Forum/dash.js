@@ -374,9 +374,9 @@ function StreamController() {
 
             isUpdating = true;
 
-            for (pIdx = 0, pLen = streamsInfo.length; pIdx < pLen; pIdx += 1) {
+            for (pIdx = 0, pLen = streamsInfo.length; pIdx < pLen; pIdx++) {
                 streamInfo = streamsInfo[pIdx];
-                for (sIdx = 0, sLen = streams.length; sIdx < sLen; sIdx += 1) {
+                for (sIdx = 0, sLen = streams.length; sIdx < sLen; sIdx++) {
                     // If the stream already exists we just need to update the values we got from the updated manifest
                     if (streams[sIdx].getId() === streamInfo.id) {
                         stream = streams[sIdx];
@@ -439,7 +439,7 @@ function StreamController() {
 
         startAutoPlay();
 
-        for (i; i < ln; i += 1) {
+        for (i; i < ln; i++) {
             if (!streams[i].isInitialized()) return;
         }
 

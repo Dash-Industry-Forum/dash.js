@@ -132,7 +132,7 @@ function Stream(config) {
         var ln = streamProcessors.length;
         var i = 0;
 
-        for (i; i < ln; i += 1) {
+        for (i; i < ln; i++) {
             streamProcessors[i].reset();
         }
 
@@ -354,7 +354,7 @@ function Stream(config) {
             return;
         }
 
-        for (var i = 0, ln = allMediaForType.length; i < ln; i += 1) {
+        for (var i = 0, ln = allMediaForType.length; i < ln; i++) {
             mediaInfo = allMediaForType[i];
 
             if (!isMediaSupported(mediaInfo, mediaSource, manifest)) continue;
@@ -417,7 +417,7 @@ function Stream(config) {
         var error = hasError ? new Error(DATA_UPDATE_FAILED_ERROR_CODE, 'Data update failed', null) : null;
         var i = 0;
 
-        for (i; i < ln; i += 1) {
+        for (i; i < ln; i++) {
             if (streamProcessors[i].isUpdating() || isUpdating) return;
         }
 
@@ -435,7 +435,7 @@ function Stream(config) {
         var ln = streamProcessors.length;
         var mediaCtrl = null;
 
-        for (var i = 0; i < ln; i += 1) {
+        for (var i = 0; i < ln; i++) {
             mediaCtrl = streamProcessors[i];
 
             if (mediaCtrl.getType() === type) return mediaCtrl.getMediaInfo();
@@ -445,7 +445,7 @@ function Stream(config) {
     }
 
     function createBuffers() {
-        for (var i = 0, ln = streamProcessors.length; i < ln; i += 1) {
+        for (var i = 0, ln = streamProcessors.length; i < ln; i++) {
             streamProcessors[i].createBuffer();
         }
     }
@@ -458,7 +458,7 @@ function Stream(config) {
         var i = 0;
 
         // if there is at least one buffer controller that has not completed buffering yet do nothing
-        for (i; i < ln; i += 1) {
+        for (i; i < ln; i++) {
             if (!processors[i].isBufferingCompleted()) return;
         }
 
@@ -491,7 +491,7 @@ function Stream(config) {
             type,
             controller;
 
-        for (i; i < ln; i += 1) {
+        for (i; i < ln; i++) {
             controller = streamProcessors[i];
             type = controller.getType();
 
@@ -524,7 +524,7 @@ function Stream(config) {
         isUpdating = true;
         initialized = false;
 
-        for (i; i < ln; i += 1) {
+        for (i; i < ln; i++) {
             controller = streamProcessors[i];
             mediaInfo = adapter.getMediaInfoForType(manifest, streamInfo, controller.getType());
             abrController.updateTopQualityIndex(mediaInfo);

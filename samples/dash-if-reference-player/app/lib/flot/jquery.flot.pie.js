@@ -283,7 +283,7 @@ More detail and specific examples can be found in the included HTML file.
 				redraw = false;
 				if (attempts>0)
 					maxRadius *= shrink;
-				attempts += 1;
+				attempts++;
 				clear();
 				if (options.series.pie.tilt<=0.8)
 					drawShadow();

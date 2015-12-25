@@ -118,7 +118,7 @@ function SourceBufferExtensions() {
         }
 
         if (ranges !== null && ranges !== undefined) {
-            for (i = 0, len = ranges.length; i < len; i += 1) {
+            for (i = 0, len = ranges.length; i < len; i++) {
                 start = ranges.start(i);
                 end = ranges.end(i);
                 if (firstStart === null) {
@@ -170,7 +170,7 @@ function SourceBufferExtensions() {
 
         if (!ranges) return totalBufferedTime;
 
-        for (i = 0, ln = ranges.length; i < ln; i += 1) {
+        for (i = 0, ln = ranges.length; i < ln; i++) {
             totalBufferedTime += ranges.end(i) - ranges.start(i);
         }
 
@@ -212,7 +212,7 @@ function SourceBufferExtensions() {
 
         if (!newRanges) return null;
 
-        for (var i = 0, ln = newRanges.length; i < ln; i += 1) {
+        for (var i = 0, ln = newRanges.length; i < ln; i++) {
             hasRange = currentRanges.length > i;
             currentRange = hasRange ? {start: currentRanges.start(i), end: currentRanges.end(i)} : null;
             newStart = newRanges.start(i);

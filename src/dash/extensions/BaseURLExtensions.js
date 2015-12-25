@@ -178,7 +178,7 @@ function BaseURLExtensions() {
                     var tmpCallback = function (result) {
                         if (result) {
                             segs = segs.concat(result);
-                            count += 1;
+                            count++;
 
                             if (count >= len) {
                                 callback(segs, representation, type);
@@ -188,7 +188,7 @@ function BaseURLExtensions() {
                         }
                     };
 
-                    for (j = 0, len = ref.length; j < len; j += 1) {
+                    for (j = 0, len = ref.length; j < len; j++) {
                         ss = offset;
                         se = offset + ref[j].referenced_size - 1;
                         offset = offset + ref[j].referenced_size;
@@ -236,7 +236,7 @@ function BaseURLExtensions() {
             duration,
             size;
 
-        for (var i = 0; i < len; i += 1) {
+        for (var i = 0; i < len; i++) {
             duration = refs[i].subsegment_duration;
             size = refs[i].referenced_size;
 

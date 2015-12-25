@@ -358,7 +358,7 @@ function DashHandler(config) {
             requiredMediaTime = timelineConverter.calcMediaTimeFromPresentationTime(requestedTime || 0, representation);
         }
 
-        for (i = 0, len = fragments.length; i < len; i += 1) {
+        for (i = 0, len = fragments.length; i < len; i++) {
             frag = fragments[i];
             repeat = 0;
             if (frag.hasOwnProperty('r')) {
@@ -395,8 +395,8 @@ function DashHandler(config) {
                 continue;
             }
 
-            for (j = 0; j <= repeat; j += 1) {
-                availabilityIdx += 1;
+            for (j = 0; j <= repeat; j++) {
+                availabilityIdx++;
 
                 if (calculatedRange) {
                     if (availabilityIdx > endIdx) {
@@ -467,7 +467,7 @@ function DashHandler(config) {
         startIdx = segmentRange.start;
         endIdx = segmentRange.end;
 
-        for (periodSegIdx = startIdx;periodSegIdx <= endIdx; periodSegIdx += 1) {
+        for (periodSegIdx = startIdx;periodSegIdx <= endIdx; periodSegIdx++) {
 
             seg = getIndexBasedSegment(representation, periodSegIdx);
             seg.replacementTime = (start + periodSegIdx - 1) * representation.segmentDuration;
@@ -629,7 +629,7 @@ function DashHandler(config) {
         startIdx = Math.max(range.start, 0);
         endIdx = Math.min(range.end, list.SegmentURL_asArray.length - 1);
 
-        for (periodSegIdx = startIdx; periodSegIdx <= endIdx; periodSegIdx += 1) {
+        for (periodSegIdx = startIdx; periodSegIdx <= endIdx; periodSegIdx++) {
             s = list.SegmentURL_asArray[periodSegIdx];
 
             seg = getIndexBasedSegment(representation, periodSegIdx);
@@ -750,7 +750,7 @@ function DashHandler(config) {
             i;
 
         if (segments && ln > 0) {
-            for (i = 0; i < ln; i += 1) {
+            for (i = 0; i < ln; i++) {
                 frag = segments[i];
                 ft = frag.presentationStartTime;
                 fd = frag.duration;
@@ -774,7 +774,7 @@ function DashHandler(config) {
         var seg,
             i;
 
-        for (i = 0; i < ln; i += 1) {
+        for (i = 0; i < ln; i++) {
             seg = representation.segments[i];
 
             if (seg.availabilityIdx === index) {
@@ -903,7 +903,7 @@ function DashHandler(config) {
         }
 
         requestedTime = null;
-        index += 1;
+        index++;
         idx = index;
         log('Getting the next request at index: ' + index);
 
@@ -944,7 +944,7 @@ function DashHandler(config) {
             count = 0,
             seg;
 
-        for (i = 0, len = fragments.length; i < len; i += 1) {
+        for (i = 0, len = fragments.length; i < len; i++) {
             s = fragments[i];
 
             seg = getTimeBasedSegment(
@@ -958,7 +958,7 @@ function DashHandler(config) {
 
             segments.push(seg);
             seg = null;
-            count += 1;
+            count++;
         }
 
         representation.segmentAvailabilityRange = {start: segments[0].presentationStartTime, end: segments[len - 1].presentationStartTime};

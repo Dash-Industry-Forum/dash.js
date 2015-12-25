@@ -313,7 +313,7 @@ function BufferController(config) {
                     len;
 
                 //log("Number of buffered ranges: " + ranges.length);
-                for (i = 0, len = ranges.length; i < len; i += 1) {
+                for (i = 0, len = ranges.length; i < len; i++) {
                     log('Buffered Range: ' + ranges.start(i) + ' - ' + ranges.end(i));
                 }
             }
@@ -430,7 +430,7 @@ function BufferController(config) {
         isoFile = BoxParser(context).getInstance().parse(data);
         eventBoxes = isoFile.getBoxes('emsg');
 
-        for (var i = 0, ln = eventBoxes.length; i < ln; i += 1) {
+        for (var i = 0, ln = eventBoxes.length; i < ln; i++) {
             event = adapter.getEvent(eventBoxes[i], eventStreams, fragmentStarttime);
 
             if (event) {
@@ -465,7 +465,7 @@ function BufferController(config) {
             if (identifier != 'emsg' ) {
                 for (var l = i ; l < i + size; l++) {
                     modData[j] = data[l];
-                    j += 1;
+                    j++;
                 }
             }
             i += size;
@@ -586,7 +586,7 @@ function BufferController(config) {
 
         if (currentTrackBufferLength < safeBufferLength) return;
 
-        for (var i = 0, ln = rangesToClear.length; i < ln; i += 1) {
+        for (var i = 0, ln = rangesToClear.length; i < ln; i++) {
             range = {start: rangesToClear.start(i), end: rangesToClear.end(i)};
             if (mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE || range.start > currentTime) {
                 clearBuffer(range);
@@ -644,7 +644,7 @@ function BufferController(config) {
 
     function onWallclockTimeUpdated() {
         //constantly prune buffer every x seconds
-        wallclockTicked += 1;
+        wallclockTicked++;
         if ((wallclockTicked % mediaPlayerModel.getBufferPruningInterval()) === 0 && !isAppendingInProgress) {
             pruneBuffer();
         }

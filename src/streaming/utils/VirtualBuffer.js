@@ -176,7 +176,7 @@ function VirtualBuffer() {
             return;
         }
 
-        for (var i = 0, ln = ranges.length; i < ln; i += 1) {
+        for (var i = 0, ln = ranges.length; i < ln; i++) {
             start = ranges.start(i);
             end = ranges.end(i);
             data[streamId][mediaType].actualBufferedRanges.add(start, end);
@@ -232,7 +232,7 @@ function VirtualBuffer() {
                 arr.splice(idx, 1);
             }
 
-            ln += 1;
+            ln++;
 
             return true;
         });

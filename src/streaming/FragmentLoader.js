@@ -241,7 +241,7 @@ function FragmentLoader(config) {
             req;
         var ln = xhrs.length;
 
-        for (i = 0; i < ln; i += 1) {
+        for (i = 0; i < ln; i++) {
             req = xhrs[i];
             xhrs[i] = null;
             req.abort();

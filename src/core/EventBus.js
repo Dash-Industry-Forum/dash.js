@@ -92,7 +92,7 @@ function EventBus() {
 
         if (!handlersForType || handlersForType.length === 0) return result;
 
-        for (var i = 0; i < handlersForType.length; i += 1) {
+        for (var i = 0; i < handlersForType.length; i++) {
             if (handlersForType[i].callback === listener && (!scope || scope === handlersForType[i].scope)) return i;
         }
 

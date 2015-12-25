@@ -176,7 +176,7 @@ function RepresentationController() {
             return;
         }
 
-        for (var i = 0; i < availableRepresentations.length; i += 1) {
+        for (var i = 0; i < availableRepresentations.length; i++) {
             indexHandler.updateRepresentation(availableRepresentations[i], true);
         }
     }
@@ -203,7 +203,7 @@ function RepresentationController() {
     }
 
     function isAllRepresentationsUpdated() {
-        for (var i = 0, ln = availableRepresentations.length; i < ln; i += 1) {
+        for (var i = 0, ln = availableRepresentations.length; i < ln; i++) {
             var segmentInfoType = availableRepresentations[i].segmentInfoType;
             if (availableRepresentations[i].segmentAvailabilityRange === null || availableRepresentations[i].initialization === null ||
                     ((segmentInfoType === 'SegmentBase' || segmentInfoType === 'BaseURL') && !availableRepresentations[i].segments)
@@ -228,7 +228,7 @@ function RepresentationController() {
     function updateAvailabilityWindow(isDynamic) {
         var rep;
 
-        for (var i = 0, ln = availableRepresentations.length; i < ln; i += 1) {
+        for (var i = 0, ln = availableRepresentations.length; i < ln; i++) {
             rep = availableRepresentations[i];
             rep.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(rep, isDynamic);
         }
@@ -242,7 +242,7 @@ function RepresentationController() {
             updating = true;
             eventBus.trigger(Events.DATA_UPDATE_STARTED, { sender: instance });
 
-            for (var i = 0; i < availableRepresentations.length; i += 1) {
+            for (var i = 0; i < availableRepresentations.length; i++) {
                 indexHandler.updateRepresentation(availableRepresentations[i], true);
             }
         };
@@ -274,7 +274,7 @@ function RepresentationController() {
         }
 
         if (manifestUpdateInfo) {
-            for (var i = 0; i < manifestUpdateInfo.trackInfo.length; i += 1) {
+            for (var i = 0; i < manifestUpdateInfo.trackInfo.length; i++) {
                 repInfo = manifestUpdateInfo.trackInfo[i];
                 if (repInfo.index === r.index && repInfo.mediaType === streamProcessor.getType()) {
                     alreadyAdded = true;

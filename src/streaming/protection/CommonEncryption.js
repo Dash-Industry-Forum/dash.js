@@ -154,7 +154,7 @@ class CommonEncryption {
                 byteCursor = nextBox;
                 continue;
             }
-            byteCursor += 1;
+            byteCursor++;
 
             byteCursor += 3; /* skip flags */
 

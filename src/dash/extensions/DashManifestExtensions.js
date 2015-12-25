@@ -88,7 +88,7 @@ function DashManifestExtensions() {
                     found = true;
                 }
 
-                i += 1;
+                i++;
             }
         }
 
@@ -168,7 +168,7 @@ function DashManifestExtensions() {
         var i,
             len;
 
-        for (i = 0, len = adaptations.length; i < len; i += 1) {
+        for (i = 0, len = adaptations.length; i < len; i++) {
             if (adaptations[i].hasOwnProperty('id') && adaptations[i].id === id) {
                 return adaptations[i];
             }
@@ -188,7 +188,7 @@ function DashManifestExtensions() {
         var i,
             len;
 
-        for (i = 0, len = adaptations.length; i < len; i += 1) {
+        for (i = 0, len = adaptations.length; i < len; i++) {
             if (adaptations[i] === adaptation) {
                 return i;
             }
@@ -204,7 +204,7 @@ function DashManifestExtensions() {
             len,
             adaptations = [];
 
-        for (i = 0, len = adaptationSet.length; i < len; i += 1) {
+        for (i = 0, len = adaptationSet.length; i < len; i++) {
             if (getIsTypeOf(adaptationSet[i], type)) {
                 adaptations.push(processAdaptation(adaptationSet[i]));
             }
@@ -222,7 +222,7 @@ function DashManifestExtensions() {
 
         if (!adaptations || adaptations.length === 0) return null;
 
-        for (i = 0, len = adaptations.length; i < len; i += 1) {
+        for (i = 0, len = adaptations.length; i < len; i++) {
             if (getIsMain(adaptations[i])) return adaptations[i];
         }
 
@@ -326,7 +326,7 @@ function DashManifestExtensions() {
             ln = reps.length;
         var bitrateList = [];
 
-        for (var i = 0; i < ln; i += 1) {
+        for (var i = 0; i < ln; i++) {
             bitrateList.push(reps[i].bandwidth);
         }
 
@@ -346,7 +346,7 @@ function DashManifestExtensions() {
             r,
             s;
 
-        for (var i = 0; i < a.Representation_asArray.length; i += 1) {
+        for (var i = 0; i < a.Representation_asArray.length; i++) {
             r = a.Representation_asArray[i];
             representation = new Representation();
             representation.index = i;
@@ -440,7 +440,7 @@ function DashManifestExtensions() {
             adaptationSet,
             a;
 
-        for (var i = 0; i < p.AdaptationSet_asArray.length; i += 1) {
+        for (var i = 0; i < p.AdaptationSet_asArray.length; i++) {
             a = p.AdaptationSet_asArray[i];
             adaptationSet = new AdaptationSet();
 
@@ -479,7 +479,7 @@ function DashManifestExtensions() {
             vo1 = null,
             vo = null;
 
-        for (i = 0, len = manifest.Period_asArray.length; i < len; i += 1) {
+        for (i = 0, len = manifest.Period_asArray.length; i < len; i++) {
             p = manifest.Period_asArray[i];
 
             // If the attribute @start is present in the Period, then the
@@ -646,7 +646,7 @@ function DashManifestExtensions() {
         var events = [];
 
         if (eventStreams) {
-            for (var i = 0; i < eventStreams.length; i += 1) {
+            for (var i = 0; i < eventStreams.length; i++) {
                 var eventStream = new EventStream();
                 eventStream.period = period;
                 eventStream.timescale = 1;
@@ -662,7 +662,7 @@ function DashManifestExtensions() {
                 if (eventStreams[i].hasOwnProperty('value')) {
                     eventStream.value = eventStreams[i].value;
                 }
-                for (var j = 0; j < eventStreams[i].Event_asArray.length; j += 1) {
+                for (var j = 0; j < eventStreams[i].Event_asArray.length; j++) {
                     var event = new Event();
                     event.presentationTime = 0;
                     event.eventStream = eventStream;

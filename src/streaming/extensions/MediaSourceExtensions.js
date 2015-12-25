@@ -79,7 +79,7 @@ function MediaSourceExtensions() {
 
         if (source.readyState !== 'open') return;
 
-        for (i; i < ln; i += 1) {
+        for (i; i < ln; i++) {
             if (buffers[i].updating) return;
         }
 

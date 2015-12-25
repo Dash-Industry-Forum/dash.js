@@ -98,7 +98,7 @@ function FragmentModel(config) {
 
                 var ln = arr.length;
 
-                for (i = 0; i < ln; i += 1) {
+                for (i = 0; i < ln; i++) {
                     req = arr[i];
 
                     if (isEqualMedia(request, req) || isEqualInit(request, req) || isEqualComplete(request, req)) {
@@ -142,7 +142,7 @@ function FragmentModel(config) {
             states = [filter.state];
         }
 
-        for (var i = 0; i < ln; i += 1) {
+        for (var i = 0; i < ln; i++) {
             requests = getRequestsForState(states[i]);
             filteredRequests = filteredRequests.concat(filterRequests(requests, filter));
         }
@@ -157,7 +157,7 @@ function FragmentModel(config) {
             i;
 
         // loop through the executed requests and remove the ones for which startTime is less than the given time
-        for (i = lastIdx; i >= 0; i -= 1) {
+        for (i = lastIdx; i >= 0; i--) {
             req = executedRequests[i];
             start = req.startTime;
             if (!isNaN(start) && (start < time)) {
@@ -242,7 +242,7 @@ function FragmentModel(config) {
             i;
 
         // loop through the executed requests and pick the one for which the playback interval matches the given time
-        for (i = lastIdx; i >= 0; i -= 1) {
+        for (i = lastIdx; i >= 0; i--) {
             req = arr[i];
             start = req.startTime;
             end = start + req.duration;

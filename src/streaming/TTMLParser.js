@@ -173,7 +173,7 @@ function TTMLParser() {
 
                 if (cue['smpte:backgroundImage'] !== undefined) {
                     var images = ttml.tt.head.metadata.image_asArray;
-                    for (var j = 0; j < images.length; j += 1) {
+                    for (var j = 0; j < images.length; j++) {
                         if (('#' + images[j]['xml:id']) == cue['smpte:backgroundImage']) {
                             captionArray.push({
                                 start: spanStartTime || pStartTime,

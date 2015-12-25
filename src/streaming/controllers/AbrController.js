@@ -236,7 +236,7 @@ function AbrController() {
         var ln = bitrateList.length;
         var bitrateInfo;
 
-        for (var i = 0; i < ln; i += 1) {
+        for (var i = 0; i < ln; i++) {
             bitrateInfo = bitrateList[i];
 
             if (bitrate * 1000 <= bitrateInfo.bitrate) {
@@ -261,7 +261,7 @@ function AbrController() {
         var infoList = [],
             bitrateInfo;
 
-        for (var i = 0, ln = bitrateList.length; i < ln; i += 1) {
+        for (var i = 0, ln = bitrateList.length; i < ln; i++) {
             bitrateInfo = new BitrateInfo();
             bitrateInfo.mediaType = type;
             bitrateInfo.qualityIndex = i;
