@@ -287,21 +287,21 @@ function TTMLParser() {
 
                     // We add all the cue information in captionArray.
                     captionArray.push({
-                        start         : spanStartTime || pStartTime,
-                        end           : spanEndTime || pEndTime,
-                        type          : 'html',
+                        start: spanStartTime || pStartTime,
+                        end: spanEndTime || pEndTime,
+                        type: 'html',
                         cueHTMLElement: finalCue,
-                        regions       : regions,
-                        regionID      : regionID,
-                        cueID         : cueID,
-                        videoHeight   : videoHeight,
-                        videoWidth    : videoWidth,
+                        regions: regions,
+                        regionID: regionID,
+                        cueID: cueID,
+                        videoHeight: videoHeight,
+                        videoWidth: videoWidth,
                         cellResolution: cellResolution,
-                        fontSize      : fontSize || {
+                        fontSize: fontSize || {
                             defaultFontSize: '100'
                         },
-                        lineHeight    : lineHeight,
-                        linePadding   : linePadding
+                        lineHeight: lineHeight,
+                        linePadding: linePadding
                     });
 
                 } else {
@@ -334,8 +334,8 @@ function TTMLParser() {
                     }
 
                     captionArray.push({
-                        start         : spanStartTime || pStartTime,
-                        end           : spanEndTime || pEndTime,
+                        start: spanStartTime || pStartTime,
+                        end: spanEndTime || pEndTime,
                         data:   text,
                         type:   'text'
                     });

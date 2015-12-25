@@ -65,7 +65,7 @@ let FactoryMaker = (function () {
             }
         }
 
-        singletonContexts.push({ name:className, context : context, instance : instance });
+        singletonContexts.push({ name: className, context: context, instance: instance });
     }
 
     function getClassFactory(classConstructor) {
@@ -112,7 +112,7 @@ let FactoryMaker = (function () {
         let extension = extensionContext[name];
 
         if (extension) {
-            extension = extension.apply({ context:context, factory:instance, parent:classConstructor});
+            extension = extension.apply({ context: context, factory: instance, parent: classConstructor});
             for (const prop in extension) {
                 if (classConstructor.hasOwnProperty(prop)) {
                     classConstructor[prop] = extension[prop];

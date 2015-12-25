@@ -71,11 +71,11 @@ function FragmentExtensions(/*config*/) {
             sampleSize = (sample.sample_size !== undefined) ? sample.sample_size : tfhdBox.default_sample_size;
             sampleCompostionTimeOffset = (sample.sample_composition_time_offset !== undefined) ? sample.sample_composition_time_offset : 0;
 
-            sampleList.push({'dts' : sampleDts,
-                'cts' : (sampleDts + sampleCompostionTimeOffset),
-                'duration' :sampleDuration,
+            sampleList.push({'dts': sampleDts,
+                'cts': (sampleDts + sampleCompostionTimeOffset),
+                'duration': sampleDuration,
                 'offset': moofBox.offset + dataOffset,
-                'size' :sampleSize});
+                'size': sampleSize});
             dataOffset += sampleSize;
             sampleDts += sampleDuration;
         }

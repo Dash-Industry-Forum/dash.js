@@ -70,7 +70,7 @@ function VirtualBuffer() {
 
         if (!isNaN(start) && !isNaN(end)) {
             data[streamId][mediaType].calculatedBufferedRanges.add(start, end);
-            eventBus.trigger(Events.CHUNK_APPENDED, {chunk: chunk, sender:this});
+            eventBus.trigger(Events.CHUNK_APPENDED, {chunk: chunk, sender: this});
         }
     }
 

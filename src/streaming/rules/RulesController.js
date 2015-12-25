@@ -240,7 +240,7 @@ function RulesController() {
     }
 
     instance = {
-        initialize:initialize,
+        initialize: initialize,
         setConfig: setConfig,
         setRules: setRules,
         addRules: addRules,

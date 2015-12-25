@@ -315,7 +315,7 @@ function MediaController() {
 
     function storeLastSettings(type, value) {
         if (DOMStorage.isSupported(DOMStorage.STORAGE_TYPE_LOCAL) && (type === 'video' || type === 'audio')) {
-            localStorage.setItem(DOMStorage['LOCAL_STORAGE_' + type.toUpperCase() + '_SETTINGS_KEY'], JSON.stringify({settings: value, timestamp:new Date().getTime()}));
+            localStorage.setItem(DOMStorage['LOCAL_STORAGE_' + type.toUpperCase() + '_SETTINGS_KEY'], JSON.stringify({settings: value, timestamp: new Date().getTime()}));
         }
     }
 
@@ -429,22 +429,22 @@ function MediaController() {
     function createTrackInfo() {
         return {
             audio: {
-                list : [],
+                list: [],
                 storeLastSettings: true,
                 current: null
             },
             video: {
-                list : [],
+                list: [],
                 storeLastSettings: true,
                 current: null
             },
             text: {
-                list : [],
+                list: [],
                 storeLastSettings: true,
                 current: null
             },
             fragmentedText: {
-                list : [],
+                list: [],
                 storeLastSettings: true,
                 current: null
             }
@@ -452,23 +452,23 @@ function MediaController() {
     }
 
     instance = {
-        initialize:initialize,
-        checkInitialMediaSettings :checkInitialMediaSettings,
-        addTrack :addTrack,
-        getTracksFor:getTracksFor,
-        getCurrentTrackFor:getCurrentTrackFor,
-        isCurrentTrack:isCurrentTrack,
-        setTrack:setTrack,
-        setInitialSettings:setInitialSettings,
-        getInitialSettings:getInitialSettings,
-        setSwitchMode:setSwitchMode,
-        getSwitchMode:getSwitchMode,
-        setSelectionModeForInitialTrack:setSelectionModeForInitialTrack,
-        getSelectionModeForInitialTrack:getSelectionModeForInitialTrack,
-        isMultiTrackSupportedByType:isMultiTrackSupportedByType,
-        isTracksEqual:isTracksEqual,
-        setConfig :setConfig,
-        reset :reset
+        initialize: initialize,
+        checkInitialMediaSettings: checkInitialMediaSettings,
+        addTrack: addTrack,
+        getTracksFor: getTracksFor,
+        getCurrentTrackFor: getCurrentTrackFor,
+        isCurrentTrack: isCurrentTrack,
+        setTrack: setTrack,
+        setInitialSettings: setInitialSettings,
+        getInitialSettings: getInitialSettings,
+        setSwitchMode: setSwitchMode,
+        getSwitchMode: getSwitchMode,
+        setSelectionModeForInitialTrack: setSelectionModeForInitialTrack,
+        getSelectionModeForInitialTrack: getSelectionModeForInitialTrack,
+        isMultiTrackSupportedByType: isMultiTrackSupportedByType,
+        isTracksEqual: isTracksEqual,
+        setConfig: setConfig,
+        reset: reset
     };
 
     return instance;

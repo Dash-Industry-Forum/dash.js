@@ -101,7 +101,7 @@ function XlinkLoader(config) {
                     {
                         element: element,
                         resolveObject: resolveObject,
-                        error:new Error(null, 'Failed loading Xlink element: ' + url, null)
+                        error: new Error(null, 'Failed loading Xlink element: ' + url, null)
                     });
             }
         };
@@ -140,7 +140,7 @@ function XlinkLoader(config) {
                     {
                         element: element,
                         resolveObject: resolveObject,
-                        error:new Error('Failed loading xlink Element: ' + url + ' no retry attempts left')
+                        error: new Error('Failed loading xlink Element: ' + url + ' no retry attempts left')
                     });
             }
         };
@@ -169,7 +169,7 @@ function XlinkLoader(config) {
     }
 
     instance = {
-        load:load
+        load: load
     };
 
     return instance;

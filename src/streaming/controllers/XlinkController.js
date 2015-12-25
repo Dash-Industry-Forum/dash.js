@@ -255,10 +255,10 @@ function XlinkController(config) {
     }
 
     instance = {
-        resolveManifestOnLoad :resolveManifestOnLoad,
-        setMatchers :setMatchers,
-        setIron :setIron,
-        reset :reset
+        resolveManifestOnLoad: resolveManifestOnLoad,
+        setMatchers: setMatchers,
+        setIron: setIron,
+        reset: reset
     };
 
     setup();

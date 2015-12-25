@@ -141,11 +141,11 @@ function FragmentController(/*config*/) {
     }
 
     instance = {
-        process :process,
-        getModel :getModel,
-        detachModel :detachModel,
-        isInitializationRequest:isInitializationRequest,
-        reset :reset
+        process: process,
+        getModel: getModel,
+        detachModel: detachModel,
+        isInitializationRequest: isInitializationRequest,
+        reset: reset
     };
 
     setup();

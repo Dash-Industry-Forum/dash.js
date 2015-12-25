@@ -266,12 +266,12 @@ function TextSourceBuffer() {
     }
 
     instance = {
-        initialize :initialize,
-        append :append,
-        abort:abort,
-        getAllTracksAreDisabled:getAllTracksAreDisabled,
+        initialize: initialize,
+        append: append,
+        abort: abort,
+        getAllTracksAreDisabled: getAllTracksAreDisabled,
         setTextTrack: setTextTrack,
-        setConfig :setConfig
+        setConfig: setConfig
     };
 
     return instance;

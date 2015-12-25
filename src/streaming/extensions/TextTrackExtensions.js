@@ -145,7 +145,7 @@ function TextTrackExtensions() {
                 eventBus.trigger(Events.TEXT_TRACK_ADDED);
             }
             setCurrentTrackIdx.call(this, defaultIndex);
-            eventBus.trigger(Events.TEXT_TRACKS_ADDED, {index:currentTrackIdx, tracks:textTrackQueue});//send default idx.
+            eventBus.trigger(Events.TEXT_TRACKS_ADDED, {index: currentTrackIdx, tracks: textTrackQueue});//send default idx.
         }
     }
 
@@ -170,10 +170,10 @@ function TextTrackExtensions() {
             videoPictureY = (viewHeight - videoPictureHeight) / 2;
         }
 
-        return { x:videoPictureX,
-            y:videoPictureY,
-            w:videoPictureWidth,
-            h:videoPictureHeight }; /* Maximal picture size in videos aspect ratio */
+        return { x: videoPictureX,
+            y: videoPictureY,
+            w: videoPictureWidth,
+            h: videoPictureHeight }; /* Maximal picture size in videos aspect ratio */
     }
 
 
@@ -492,18 +492,18 @@ function TextTrackExtensions() {
     }
 
     instance = {
-        initialize          :initialize,
-        displayCConTop      :displayCConTop,
-        addTextTrack        :addTextTrack,
-        addCaptions         :addCaptions,
-        getTextTrack        :getTextTrack,
-        getCurrentTextTrack :getCurrentTextTrack,
-        getCurrentTrackIdx  :getCurrentTrackIdx,
-        setCurrentTrackIdx  :setCurrentTrackIdx,
-        deleteTrackCues     :deleteTrackCues,
-        deleteAllTextTracks :deleteAllTextTracks,
-        deleteTextTrack     :deleteTextTrack,
-        setConfig           :setConfig
+        initialize: initialize,
+        displayCConTop: displayCConTop,
+        addTextTrack: addTextTrack,
+        addCaptions: addCaptions,
+        getTextTrack: getTextTrack,
+        getCurrentTextTrack: getCurrentTextTrack,
+        getCurrentTrackIdx: getCurrentTrackIdx,
+        setCurrentTrackIdx: setCurrentTrackIdx,
+        deleteTrackCues: deleteTrackCues,
+        deleteAllTextTracks: deleteAllTextTracks,
+        deleteTextTrack: deleteTextTrack,
+        setConfig: setConfig
     };
 
     return instance;

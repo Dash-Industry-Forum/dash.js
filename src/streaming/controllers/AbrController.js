@@ -379,7 +379,7 @@ function AbrController() {
 
                 if (switchRequest.confidence === SwitchRequest.STRONG) {
 
-                    var requests = fragmentModel.getRequests({ state:FragmentModel.FRAGMENT_MODEL_LOADING});
+                    var requests = fragmentModel.getRequests({ state: FragmentModel.FRAGMENT_MODEL_LOADING});
                     var newQuality = switchRequest.value;
                     var currentQuality = getQualityFor(type, streamController.getActiveStreamInfo());
 
@@ -401,28 +401,28 @@ function AbrController() {
     }
 
     instance = {
-        isPlayingAtTopQuality   :isPlayingAtTopQuality,
-        updateTopQualityIndex   :updateTopQualityIndex,
-        getAverageThroughput    :getAverageThroughput,
-        getBitrateList          :getBitrateList,
-        getQualityForBitrate    :getQualityForBitrate,
-        getMaxAllowedBitrateFor :getMaxAllowedBitrateFor,
-        setMaxAllowedBitrateFor :setMaxAllowedBitrateFor,
-        getInitialBitrateFor    :getInitialBitrateFor,
-        setInitialBitrateFor    :setInitialBitrateFor,
-        setAutoSwitchBitrate    :setAutoSwitchBitrate,
-        getAutoSwitchBitrate    :getAutoSwitchBitrate,
-        getConfidenceFor        :getConfidenceFor,
-        getQualityFor           :getQualityFor,
-        getAbandonmentStateFor  :getAbandonmentStateFor,
-        setAbandonmentStateFor  :setAbandonmentStateFor,
-        setPlaybackQuality      :setPlaybackQuality,
-        getPlaybackQuality      :getPlaybackQuality,
-        setAverageThroughput    :setAverageThroughput,
-        getTopQualityIndexFor   :getTopQualityIndexFor,
-        initialize              :initialize,
-        setConfig               :setConfig,
-        reset                   :reset
+        isPlayingAtTopQuality: isPlayingAtTopQuality,
+        updateTopQualityIndex: updateTopQualityIndex,
+        getAverageThroughput: getAverageThroughput,
+        getBitrateList: getBitrateList,
+        getQualityForBitrate: getQualityForBitrate,
+        getMaxAllowedBitrateFor: getMaxAllowedBitrateFor,
+        setMaxAllowedBitrateFor: setMaxAllowedBitrateFor,
+        getInitialBitrateFor: getInitialBitrateFor,
+        setInitialBitrateFor: setInitialBitrateFor,
+        setAutoSwitchBitrate: setAutoSwitchBitrate,
+        getAutoSwitchBitrate: getAutoSwitchBitrate,
+        getConfidenceFor: getConfidenceFor,
+        getQualityFor: getQualityFor,
+        getAbandonmentStateFor: getAbandonmentStateFor,
+        setAbandonmentStateFor: setAbandonmentStateFor,
+        setPlaybackQuality: setPlaybackQuality,
+        getPlaybackQuality: getPlaybackQuality,
+        setAverageThroughput: setAverageThroughput,
+        getTopQualityIndexFor: getTopQualityIndexFor,
+        initialize: initialize,
+        setConfig: setConfig,
+        reset: reset
     };
 
     setup();

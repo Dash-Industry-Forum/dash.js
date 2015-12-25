@@ -87,7 +87,7 @@ function LiveEdgeFinder() {
     function onSearchCompleted(req) {
         var searchTime = (new Date().getTime() - searchStartTime) / 1000;
         liveEdge = req.value;
-        eventBus.trigger(Events.LIVE_EDGE_SEARCH_COMPLETED, {liveEdge: liveEdge, searchTime: searchTime, error:liveEdge === null ? new Error(LIVE_EDGE_NOT_FOUND_ERROR_CODE, 'live edge has not been found', null) : null});
+        eventBus.trigger(Events.LIVE_EDGE_SEARCH_COMPLETED, {liveEdge: liveEdge, searchTime: searchTime, error: liveEdge === null ? new Error(LIVE_EDGE_NOT_FOUND_ERROR_CODE, 'live edge has not been found', null) : null});
     }
 
     function onStreamInitialized(e) {
@@ -108,7 +108,7 @@ function LiveEdgeFinder() {
     }
 
     instance = {
-        initialize:initialize,
+        initialize: initialize,
         abortSearch: abortSearch,
         getLiveEdge: getLiveEdge,
         reset: reset

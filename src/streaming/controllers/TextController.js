@@ -128,13 +128,13 @@ function TextController(config) {
     }
 
     instance = {
-        initialize :initialize,
-        createBuffer :createBuffer,
-        getBuffer :getBuffer,
-        setBuffer :setBuffer,
-        getStreamProcessor:getStreamProcessor,
-        setMediaSource :setMediaSource,
-        reset :reset
+        initialize: initialize,
+        createBuffer: createBuffer,
+        getBuffer: getBuffer,
+        setBuffer: setBuffer,
+        getStreamProcessor: getStreamProcessor,
+        setMediaSource: setMediaSource,
+        reset: reset
     };
 
     setup();

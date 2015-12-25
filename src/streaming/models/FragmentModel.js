@@ -198,7 +198,7 @@ function FragmentModel(config) {
                 // Stream has completed, execute the corresponding callback
                 executedRequests.push(request);
                 addSchedulingInfoMetrics(request, FRAGMENT_MODEL_EXECUTED);
-                eventBus.trigger(Events.STREAM_COMPLETED, {request: request, fragmentModel:this});
+                eventBus.trigger(Events.STREAM_COMPLETED, {request: request, fragmentModel: this});
                 break;
             case FragmentRequest.ACTION_DOWNLOAD:
                 loadingRequests.push(request);

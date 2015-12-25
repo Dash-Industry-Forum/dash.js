@@ -406,7 +406,7 @@ function BufferController(config) {
 
         bufferState = state;
         addBufferMetrics();
-        eventBus.trigger(Events.BUFFER_LEVEL_STATE_CHANGED, {sender: instance, state:state, mediaType:type, streamInfo:streamProcessor.getStreamInfo()});
+        eventBus.trigger(Events.BUFFER_LEVEL_STATE_CHANGED, {sender: instance, state: state, mediaType: type, streamInfo: streamProcessor.getStreamInfo()});
         log(state === BUFFER_LOADED ? ('Got enough buffer to start.') : ('Waiting for more buffer before starting playback.'));
     }
 
@@ -750,22 +750,22 @@ function BufferController(config) {
     }
 
     instance = {
-        initialize               :initialize,
-        createBuffer             :createBuffer,
-        getType                  :getType,
-        getStreamProcessor       :getStreamProcessor,
-        setStreamProcessor       :setStreamProcessor,
-        getBuffer                :getBuffer,
-        setBuffer                :setBuffer,
-        getBufferLevel           :getBufferLevel,
-        getMinBufferTime         :getMinBufferTime,
-        setMinBufferTime         :setMinBufferTime,
-        getCriticalBufferLevel   :getCriticalBufferLevel,
-        setMediaSource           :setMediaSource,
-        getMediaSource           :getMediaSource,
-        getIsBufferingCompleted  :getIsBufferingCompleted,
-        getIsAppendingInProgress :getIsAppendingInProgress,
-        reset                    :reset
+        initialize: initialize,
+        createBuffer: createBuffer,
+        getType: getType,
+        getStreamProcessor: getStreamProcessor,
+        setStreamProcessor: setStreamProcessor,
+        getBuffer: getBuffer,
+        setBuffer: setBuffer,
+        getBufferLevel: getBufferLevel,
+        getMinBufferTime: getMinBufferTime,
+        setMinBufferTime: setMinBufferTime,
+        getCriticalBufferLevel: getCriticalBufferLevel,
+        setMediaSource: setMediaSource,
+        getMediaSource: getMediaSource,
+        getIsBufferingCompleted: getIsBufferingCompleted,
+        getIsAppendingInProgress: getIsAppendingInProgress,
+        reset: reset
     };
 
     setup();

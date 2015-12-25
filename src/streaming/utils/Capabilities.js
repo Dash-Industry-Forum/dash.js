@@ -74,7 +74,7 @@ function Capabilities() {
         supportsMediaSource: supportsMediaSource,
         supportsEncryptedMedia: supportsEncryptedMedia,
         supportsCodec: supportsCodec,
-        setEncryptedMediaSupported:setEncryptedMediaSupported
+        setEncryptedMediaSupported: setEncryptedMediaSupported
     };
 
     setup();

@@ -10,5 +10,10 @@
     "requireSpaceAfterBinaryOperators": true,
     "requireSpacesInConditionalExpression": true, // Ternary if
     "requireSpaceBeforeBlockStatements": true,
-    "requireSpacesInForStatement": true
+    "requireSpacesInForStatement": true,
+    "requireSpacesInFunctionExpression": {
+        "beforeOpeningCurlyBrace": true
+    },
+    "disallowSpaceAfterObjectKeys": true,
+    "requireSpaceBeforeObjectValues": true
 }

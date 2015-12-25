@@ -126,7 +126,7 @@ function Protection() {
 
         if (!controller && protectionModel) {//TODO add ability to set external controller if still needed at all?
             controller = ProtectionController(context).create({
-                protectionModel:protectionModel,
+                protectionModel: protectionModel,
                 protectionExt: protectionExt,
                 adapter: config.adapter,
                 eventBus: config.eventBus,
@@ -149,17 +149,17 @@ function Protection() {
             typeof navigator.requestMediaKeySystemAccess === 'function') {
 
             log('EME detected on this user agent! (ProtectionModel_21Jan2015)');
-            return ProtectionModel_21Jan2015(context).create({log:log, eventBus:eventBus});
+            return ProtectionModel_21Jan2015(context).create({log: log, eventBus: eventBus});
 
         } else if (getAPI(videoElement, APIS_ProtectionModel_3Feb2014)) {
 
             log('EME detected on this user agent! (ProtectionModel_3Feb2014)');
-            return ProtectionModel_3Feb2014(context).create({log: log, eventBus:eventBus, api:getAPI(videoElement, APIS_ProtectionModel_3Feb2014)});
+            return ProtectionModel_3Feb2014(context).create({log: log, eventBus: eventBus, api: getAPI(videoElement, APIS_ProtectionModel_3Feb2014)});
 
         } else if (getAPI(videoElement, APIS_ProtectionModel_01b)) {
 
             log('EME detected on this user agent! (ProtectionModel_01b)');
-            return ProtectionModel_01b(context).create({log: log, eventBus:eventBus, api:getAPI(videoElement, APIS_ProtectionModel_01b)});
+            return ProtectionModel_01b(context).create({log: log, eventBus: eventBus, api: getAPI(videoElement, APIS_ProtectionModel_01b)});
 
         } else {
 

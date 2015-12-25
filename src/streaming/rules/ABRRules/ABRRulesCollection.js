@@ -54,12 +54,12 @@ function ABRRulesCollection() {
         let metricsModel = MetricsModel(context).getInstance();
 
         qualitySwitchRules.push(ThroughputRule(context).create({
-                metricsModel:metricsModel,
-                metricsExt:DashMetricsExtensions(context).getInstance()
+                metricsModel: metricsModel,
+                metricsExt: DashMetricsExtensions(context).getInstance()
             })
         );
-        qualitySwitchRules.push(BufferOccupancyRule(context).create({metricsModel:metricsModel}));
-        qualitySwitchRules.push(InsufficientBufferRule(context).create({metricsModel:metricsModel}));
+        qualitySwitchRules.push(BufferOccupancyRule(context).create({metricsModel: metricsModel}));
+        qualitySwitchRules.push(InsufficientBufferRule(context).create({metricsModel: metricsModel}));
         abandonFragmentRules.push(AbandonRequestsRule(context).create());
     }
 
@@ -75,8 +75,8 @@ function ABRRulesCollection() {
     }
 
     instance = {
-        initialize:initialize,
-        getRules:getRules
+        initialize: initialize,
+        getRules: getRules
     };
 
     return instance;

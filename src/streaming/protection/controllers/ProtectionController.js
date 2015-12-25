@@ -154,10 +154,10 @@ function ProtectionController(config) {
             try {
                 protectionModel.createKeySession(initDataForKS, sessionType);
             } catch (error) {
-                eventBus.trigger(Events.KEY_SESSION_CREATED, {data:null, error:'Error creating key session! ' + error.message});
+                eventBus.trigger(Events.KEY_SESSION_CREATED, {data: null, error: 'Error creating key session! ' + error.message});
             }
         } else {
-            eventBus.trigger(Events.KEY_SESSION_CREATED, {data:null, error:'Selected key system is ' + keySystem.systemString + '.  needkey/encrypted event contains no initData corresponding to that key system!'});
+            eventBus.trigger(Events.KEY_SESSION_CREATED, {data: null, error: 'Selected key system is ' + keySystem.systemString + '.  needkey/encrypted event contains no initData corresponding to that key system!'});
         }
     }
 
@@ -540,16 +540,16 @@ function ProtectionController(config) {
     }
 
     instance = {
-        initialize :initialize,
-        createKeySession :createKeySession,
-        loadKeySession :loadKeySession,
-        removeKeySession :removeKeySession,
-        closeKeySession :closeKeySession,
-        setServerCertificate :setServerCertificate,
-        setMediaElement :setMediaElement,
-        setSessionType :setSessionType,
-        setProtectionData :setProtectionData,
-        reset :reset
+        initialize: initialize,
+        createKeySession: createKeySession,
+        loadKeySession: loadKeySession,
+        removeKeySession: removeKeySession,
+        closeKeySession: closeKeySession,
+        setServerCertificate: setServerCertificate,
+        setMediaElement: setMediaElement,
+        setSessionType: setSessionType,
+        setProtectionData: setProtectionData,
+        reset: reset
     };
 
     setup();

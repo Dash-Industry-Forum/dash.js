@@ -96,9 +96,9 @@ function StreamController() {
 
         manifestUpdater = ManifestUpdater(context).getInstance();
         manifestUpdater.setConfig({
-            log :log,
+            log: log,
             manifestModel: manifestModel,
-            manifestExt :manifestExt
+            manifestExt: manifestExt
         });
         manifestUpdater.initialize(manifestLoader);
 
@@ -633,15 +633,15 @@ function StreamController() {
     }
 
     instance = {
-        initialize          :initialize,
-        getAutoPlay         :getAutoPlay,
-        getActiveStreamInfo :getActiveStreamInfo,
-        isStreamActive      :isStreamActive,
-        getStreamById       :getStreamById,
-        load                :load,
-        loadWithManifest    :loadWithManifest,
-        setConfig           :setConfig,
-        reset               :reset
+        initialize: initialize,
+        getAutoPlay: getAutoPlay,
+        getActiveStreamInfo: getActiveStreamInfo,
+        isStreamActive: isStreamActive,
+        getStreamById: getStreamById,
+        load: load,
+        loadWithManifest: loadWithManifest,
+        setConfig: setConfig,
+        reset: reset
     };
 
     setup();

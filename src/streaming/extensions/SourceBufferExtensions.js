@@ -292,7 +292,7 @@ function SourceBufferExtensions() {
                 });
             });
         } catch (err) {
-            eventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes, error:new Error(err.code, err.message, null)});
+            eventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes, error: new Error(err.code, err.message, null)});
         }
     }
 
@@ -310,7 +310,7 @@ function SourceBufferExtensions() {
                 });
             });
         } catch (err) {
-            eventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end, error:new Error(err.code, err.message, null)});
+            eventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end, error: new Error(err.code, err.message, null)});
         }
     }
 

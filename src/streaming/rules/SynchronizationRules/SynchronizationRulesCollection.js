@@ -52,11 +52,11 @@ function SynchronizationRulesCollection() {
         bestGuestRules = [];
 
         withAccurateTimeSourceRules.push(LiveEdgeWithTimeSynchronizationRule(context).create({
-            timelineConverter:TimelineConverter(context).getInstance()
+            timelineConverter: TimelineConverter(context).getInstance()
         }));
 
         bestGuestRules.push(LiveEdgeBinarySearchRule(context).create({
-            timelineConverter:TimelineConverter(context).getInstance(),
+            timelineConverter: TimelineConverter(context).getInstance(),
             adapter: DashAdapter(context).getInstance()
         }));
     }

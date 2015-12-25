@@ -161,7 +161,7 @@ function ProtectionModel_01b(config) {
             }
         }
         if (!found) {
-            eventBus.trigger(Events.KEY_SYSTEM_ACCESS_COMPLETE, {error:'Key system access denied! -- No valid audio/video content configurations detected!'});
+            eventBus.trigger(Events.KEY_SYSTEM_ACCESS_COMPLETE, {error: 'Key system access denied! -- No valid audio/video content configurations detected!'});
         }
     }
 
@@ -261,7 +261,7 @@ function ProtectionModel_01b(config) {
 
                     case api.needkey:
                         var initData = ArrayBuffer.isView(event.initData) ? event.initData.buffer : event.initData;
-                        eventBus.trigger(Events.NEED_KEY, {key:new NeedKey(initData, 'cenc')});
+                        eventBus.trigger(Events.NEED_KEY, {key: new NeedKey(initData, 'cenc')});
                         break;
 
                     case api.keyerror:
@@ -294,7 +294,7 @@ function ProtectionModel_01b(config) {
                             }
                             msg += '  System Code = ' + event.systemCode;
                             // TODO: Build error string based on key error
-                            eventBus.trigger(Events.KEY_ERROR, {data:new KeyError(sessionToken, msg)});
+                            eventBus.trigger(Events.KEY_ERROR, {data: new KeyError(sessionToken, msg)});
                         } else {
                             log('No session token found for key error');
                         }
@@ -308,7 +308,7 @@ function ProtectionModel_01b(config) {
 
                         if (sessionToken) {
                             log('DRM: Key added.');
-                            eventBus.trigger(Events.KEY_ADDED, {data:sessionToken});//TODO not sure anything is using sessionToken? why there?
+                            eventBus.trigger(Events.KEY_ADDED, {data: sessionToken});//TODO not sure anything is using sessionToken? why there?
                         } else {
                             log('No session token found for key added');
                         }
@@ -350,7 +350,7 @@ function ProtectionModel_01b(config) {
                             // addKey method, so we always save it to the token since there is no
                             // way to tell which key system is in use
                             sessionToken.keyMessage = message;
-                            eventBus.trigger(Events.KEY_MESSAGE, {data:new KeyMessage(sessionToken, message, event.defaultURL)});
+                            eventBus.trigger(Events.KEY_MESSAGE, {data: new KeyMessage(sessionToken, message, event.defaultURL)});
 
                         } else {
                             log('No session token found for key message');
@@ -393,17 +393,17 @@ function ProtectionModel_01b(config) {
     }
 
     instance = {
-        getAllInitData:getAllInitData,
-        requestKeySystemAccess:requestKeySystemAccess,
-        selectKeySystem:selectKeySystem,
-        setMediaElement:setMediaElement,
-        createKeySession:createKeySession,
-        updateKeySession:updateKeySession,
-        closeKeySession:closeKeySession,
-        setServerCertificate:setServerCertificate,
-        loadKeySession:loadKeySession,
-        removeKeySession:removeKeySession,
-        reset:reset
+        getAllInitData: getAllInitData,
+        requestKeySystemAccess: requestKeySystemAccess,
+        selectKeySystem: selectKeySystem,
+        setMediaElement: setMediaElement,
+        createKeySession: createKeySession,
+        updateKeySession: updateKeySession,
+        closeKeySession: closeKeySession,
+        setServerCertificate: setServerCertificate,
+        loadKeySession: loadKeySession,
+        removeKeySession: removeKeySession,
+        reset: reset
     };
 
     setup();

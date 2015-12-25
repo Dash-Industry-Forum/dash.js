@@ -185,7 +185,7 @@ function VideoModel() {
     }
 
     instance = {
-        initialize:initialize,
+        initialize: initialize,
         play: play,
         pause: pause,
         isPaused: isPaused,

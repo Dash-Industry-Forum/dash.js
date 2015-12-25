@@ -56,7 +56,7 @@ function ScheduleRulesCollection() {
         fragmentsToScheduleRules.push(BufferLevelRule(context).create({
             metricsExt: DashMetricsExtensions(context).getInstance(),
             metricsModel: MetricsModel(context).getInstance(),
-            textSourceBuffer:TextSourceBuffer(context).getInstance()
+            textSourceBuffer: TextSourceBuffer(context).getInstance()
         }));
         nextFragmentRules.push(PlaybackTimeRule(context).create({
             adapter: DashAdapter(context).getInstance(),
@@ -79,7 +79,7 @@ function ScheduleRulesCollection() {
     }
 
     instance = {
-        initialize:initialize,
+        initialize: initialize,
         getRules: getRules
     };
 

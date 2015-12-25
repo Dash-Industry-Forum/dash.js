@@ -295,10 +295,10 @@ function Stream(config) {
         baseUrlExt.initialize();
 
         let handler = DashHandler(context).create({
-            baseURLExt:baseUrlExt,
+            baseURLExt: baseUrlExt,
             timelineConverter: timelineConverter,
-            metricsExt:DashMetricsExtensions(context).getInstance(),
-            metricsModel:MetricsModel(context).getInstance()
+            metricsExt: DashMetricsExtensions(context).getInstance(),
+            metricsModel: MetricsModel(context).getInstance()
         });
 
         return handler;
@@ -422,7 +422,7 @@ function Stream(config) {
         }
 
         initialized = true;
-        eventBus.trigger(Events.STREAM_INITIALIZED, {streamInfo: streamInfo, error:error});
+        eventBus.trigger(Events.STREAM_INITIALIZED, {streamInfo: streamInfo, error: error});
 
         if (!isMediaInitialized || isStreamActivated) return;
         if (protectionController) {

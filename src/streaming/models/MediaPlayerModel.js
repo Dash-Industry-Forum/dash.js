@@ -100,8 +100,8 @@ function MediaPlayerModel() {
         getLiveDelayFragmentCount: getLiveDelayFragmentCount,
         setUseManifestDateHeaderTimeSource: setUseManifestDateHeaderTimeSource,
         getUseManifestDateHeaderTimeSource: getUseManifestDateHeaderTimeSource,
-        setUTCTimingSources:setUTCTimingSources,
-        getUTCTimingSources:getUTCTimingSources,
+        setUTCTimingSources: setUTCTimingSources,
+        getUTCTimingSources: getUTCTimingSources,
         reset: reset
     };
 

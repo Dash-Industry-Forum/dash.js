@@ -77,10 +77,10 @@ function VTTParser() {
                             lastStartTime = startTime;
                             //TODO Make VO external so other parsers can use.
                             captionArray.push({
-                                start:startTime,
-                                end:endTime,
-                                data:text,
-                                styles:styles
+                                start: startTime,
+                                end: endTime,
+                                data: text,
+                                styles: styles
                             });
                         }
                         else {
@@ -116,7 +116,7 @@ function VTTParser() {
         arr.shift(); //remove first array index it is empty...
         vttCuePoints[1] = arr[0];
         arr.shift();
-        return {cuePoints:vttCuePoints, styles:getCaptionStyles(arr)};
+        return {cuePoints: vttCuePoints, styles: getCaptionStyles(arr)};
     }
 
     function getCaptionStyles(arr) {

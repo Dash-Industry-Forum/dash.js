@@ -39,7 +39,7 @@ function CustomTimeRanges(/*config*/) {
 
         for (i = 0; (i < this.customTimeRangeArray.length) && (start > this.customTimeRangeArray[i].start); i++);
 
-        this.customTimeRangeArray.splice(i, 0, {start:start,end:end});
+        this.customTimeRangeArray.splice(i, 0, {start: start,end: end});
 
         for (i = 0; i < this.customTimeRangeArray.length - 1; i++) {
             if (this.mergeRanges(i,i + 1)) {
@@ -71,7 +71,7 @@ function CustomTimeRanges(/*config*/) {
             }else if (start > this.customTimeRangeArray[i].start && end < this.customTimeRangeArray[i].end) {
                 //|-----------------Range i----------------|
                 //        |-------Range to remove -----|
-                this.customTimeRangeArray.splice(i + 1, 0, {start:end,end:this.customTimeRangeArray[i].end});
+                this.customTimeRangeArray.splice(i + 1, 0, {start: end,end: this.customTimeRangeArray[i].end});
                 this.customTimeRangeArray[i].end = start;
                 break;
             }else if ( start > this.customTimeRangeArray[i].start && start < this.customTimeRangeArray[i].end) {

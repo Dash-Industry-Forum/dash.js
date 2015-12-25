@@ -194,12 +194,12 @@ function EventController() {
 
     instance = {
         initialize: initialize,
-        addInlineEvents : addInlineEvents,
-        addInbandEvents : addInbandEvents,
-        clear : clear,
+        addInlineEvents: addInlineEvents,
+        addInbandEvents: addInbandEvents,
+        clear: clear,
         start: start,
         setConfig: setConfig,
-        reset : reset
+        reset: reset
     };
 
     return instance;

@@ -125,7 +125,7 @@ function MediaPlayer() {
         metricsExt = DashMetricsExtensions(context).getInstance();
         domStorage = DOMStorage(context).getInstance();
         metricsModel = MetricsModel(context).getInstance();
-        metricsModel.setConfig({adapter:createAdaptor()});
+        metricsModel.setConfig({adapter: createAdaptor()});
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
         errHandler = ErrorHandler(context).getInstance();
         capabilities = Capabilities(context).getInstance();
@@ -1043,7 +1043,7 @@ function MediaPlayer() {
      */
     function displayCaptionsOnTop(value) {
         var textTrackExt = TextTrackExtensions(context).getInstance();
-        textTrackExt.setConfig({videoModel:videoModel});
+        textTrackExt.setConfig({videoModel: videoModel});
         textTrackExt.initialize();
         textTrackExt.displayCConTop(value);
     }
@@ -1191,19 +1191,19 @@ function MediaPlayer() {
         scheduleRulesCollection.initialize();
 
         let sourceBufferExt = SourceBufferExtensions(context).getInstance();
-        sourceBufferExt.setConfig({manifestExt:manifestExt});
+        sourceBufferExt.setConfig({manifestExt: manifestExt});
 
 
         let virtualBuffer = VirtualBuffer(context).getInstance();
         virtualBuffer.setConfig({
-            sourceBufferExt:sourceBufferExt
+            sourceBufferExt: sourceBufferExt
         });
 
         mediaController = MediaController(context).getInstance();
         mediaController.initialize();
         mediaController.setConfig({
-            DOMStorage :domStorage,
-            errHandler :errHandler
+            DOMStorage: domStorage,
+            errHandler: errHandler
         });
 
         playbackController = PlaybackController(context).getInstance();
@@ -1211,8 +1211,8 @@ function MediaPlayer() {
         rulesController = RulesController(context).getInstance();
         rulesController.initialize();
         rulesController.setConfig({
-            abrRulesCollection:abrRulesCollection,
-            scheduleRulesCollection:scheduleRulesCollection,
+            abrRulesCollection: abrRulesCollection,
+            scheduleRulesCollection: scheduleRulesCollection,
             synchronizationRulesCollection: synchronizationRulesCollection
         });
 
@@ -1232,7 +1232,7 @@ function MediaPlayer() {
             timeSyncController: TimeSyncController(context).getInstance(),
             virtualBuffer: virtualBuffer,
             errHandler: errHandler,
-            timelineConverter:TimelineConverter(context).getInstance()
+            timelineConverter: TimelineConverter(context).getInstance()
         });
         streamController.initialize(autoPlay, protectionData);
 
@@ -1246,10 +1246,10 @@ function MediaPlayer() {
 
     function createManifestLoader() {
         return ManifestLoader(context).create({
-            errHandler : errHandler,
-            parser :createManifestParser(),
-            metricsModel :metricsModel,
-            requestModifierExt:RequestModifierExtensions(context).getInstance()
+            errHandler: errHandler,
+            parser: createManifestParser(),
+            metricsModel: metricsModel,
+            requestModifierExt: RequestModifierExtensions(context).getInstance()
         });
     }
 
@@ -1276,11 +1276,11 @@ function MediaPlayer() {
             Events.extend(Protection.events);
             MediaPlayerEvents.extend(Protection.events, { publicOnly: true });
             protectionController = protection.createProtectionSystem({
-                log:log,
-                videoModel:videoModel,
-                capabilities:capabilities,
-                eventBus:eventBus,
-                adapter:adapter
+                log: log,
+                videoModel: videoModel,
+                capabilities: capabilities,
+                eventBus: eventBus,
+                adapter: adapter
             });
             return protectionController;
         }
@@ -1289,7 +1289,7 @@ function MediaPlayer() {
     }
 
     instance = {
-        initialize:initialize,
+        initialize: initialize,
         on: on,
         off: off,
         extend: extend,
@@ -1351,7 +1351,7 @@ function MediaPlayer() {
         getBufferToKeep: getBufferToKeep,
         setBufferPruningInterval: setBufferPruningInterval,
         getBufferPruningInterval: getBufferPruningInterval,
-        getProtectionController:getProtectionController,
+        getProtectionController: getProtectionController,
         enableManifestDateHeaderTimeSource: enableManifestDateHeaderTimeSource,
         displayCaptionsOnTop: displayCaptionsOnTop,
         attachVideoContainer: attachVideoContainer,

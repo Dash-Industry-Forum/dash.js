@@ -73,7 +73,7 @@ function URIQueryAndFragmentModel() {
 
         function reduceArray(previousValue, currentValue, index, array) {
             var arr =  array[0].split(/[=]/);
-            array.push({key:arr[0], value:arr[1]});
+            array.push({key: arr[0], value: arr[1]});
             array.shift();
             return array;
         }

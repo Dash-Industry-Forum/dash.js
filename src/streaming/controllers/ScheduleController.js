@@ -465,17 +465,17 @@ function ScheduleController(config) {
     }
 
     instance = {
-        initialize:initialize,
-        getStreamProcessor:getStreamProcessor,
-        getSeekTarget:getSeekTarget,
-        setSeekTarget:setSeekTarget,
-        getFragmentModel:getFragmentModel,
-        setTimeToLoadDelay:setTimeToLoadDelay,
-        getTimeToLoadDelay:getTimeToLoadDelay,
-        replaceCanceledRequests:replaceCanceledRequests,
+        initialize: initialize,
+        getStreamProcessor: getStreamProcessor,
+        getSeekTarget: getSeekTarget,
+        setSeekTarget: setSeekTarget,
+        getFragmentModel: getFragmentModel,
+        setTimeToLoadDelay: setTimeToLoadDelay,
+        getTimeToLoadDelay: getTimeToLoadDelay,
+        replaceCanceledRequests: replaceCanceledRequests,
         start: doStart,
         stop: doStop,
-        reset:reset
+        reset: reset
     };
 
     setup();
