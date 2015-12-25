@@ -51,63 +51,64 @@ function FragmentLoader(config) {
         xhrs;
 
     function doLoad(request, remainingAttempts) {
-        var req = new XMLHttpRequest(),
-            traces = [],
-            firstProgress = true,
-            needFailureReport = true,
-            lastTraceTime = null,
-            self = this,
-            handleLoaded = function (requestVO, succeeded) {
-                needFailureReport = false;
+        var req = new XMLHttpRequest();
+        var traces = [];
+        var firstProgress = true;
+        var needFailureReport = true;
+        var lastTraceTime = null;
+        var self = this;
+        var handleLoaded = function (requestVO, succeeded) {
+            needFailureReport = false;
 
-                var currentTime = new Date();
-                var bytes = req.response;
+            var currentTime = new Date();
+            var bytes = req.response;
 
-                var latency,
-                    download,
-                    httpRequestMetrics = null;
+            var httpRequestMetrics = null;
 
-                traces.push({
-                    s: currentTime,
-                    d: currentTime.getTime() - lastTraceTime.getTime(),
-                    b: [bytes ? bytes.byteLength : 0]
+            var latency,
+                download;
+
+            traces.push({
+                s: currentTime,
+                d: currentTime.getTime() - lastTraceTime.getTime(),
+                b: [bytes ? bytes.byteLength : 0]
+            });
+
+            if (!requestVO.firstByteDate) {
+                requestVO.firstByteDate = requestVO.requestStartDate;
+            }
+            requestVO.requestEndDate = currentTime;
+
+            latency = (requestVO.firstByteDate.getTime() - requestVO.requestStartDate.getTime());
+            download = (requestVO.requestEndDate.getTime() - requestVO.firstByteDate.getTime());
+
+            log((succeeded ? 'loaded ' : 'failed ') + requestVO.mediaType + ':' + requestVO.type + ':' + requestVO.startTime + ' (' + req.status + ', ' + latency + 'ms, ' + download + 'ms)');
+
+            httpRequestMetrics = metricsModel.addHttpRequest(
+                request.mediaType,
+                null,
+                request.type,
+                request.url,
+                req.responseURL || null,
+                request.range,
+                request.requestStartDate,
+                requestVO.firstByteDate,
+                requestVO.requestEndDate,
+                req.status,
+                request.duration,
+                req.getAllResponseHeaders()
+            );
+
+            if (succeeded) {
+                // trace is only for successful requests
+                traces.forEach(function (trace) {
+                    metricsModel.appendHttpTrace(httpRequestMetrics,
+                        trace.s,
+                        trace.d,
+                        trace.b);
                 });
-
-                if (!requestVO.firstByteDate) {
-                    requestVO.firstByteDate = requestVO.requestStartDate;
-                }
-                requestVO.requestEndDate = currentTime;
-
-                latency = (requestVO.firstByteDate.getTime() - requestVO.requestStartDate.getTime());
-                download = (requestVO.requestEndDate.getTime() - requestVO.firstByteDate.getTime());
-
-                log((succeeded ? 'loaded ' : 'failed ') + requestVO.mediaType + ':' + requestVO.type + ':' + requestVO.startTime + ' (' + req.status + ', ' + latency + 'ms, ' + download + 'ms)');
-
-                httpRequestMetrics = metricsModel.addHttpRequest(
-                    request.mediaType,
-                    null,
-                    request.type,
-                    request.url,
-                    req.responseURL || null,
-                    request.range,
-                    request.requestStartDate,
-                    requestVO.firstByteDate,
-                    requestVO.requestEndDate,
-                    req.status,
-                    request.duration,
-                    req.getAllResponseHeaders()
-                );
-
-                if (succeeded) {
-                    // trace is only for successful requests
-                    traces.forEach(function (trace) {
-                        metricsModel.appendHttpTrace(httpRequestMetrics,
-                            trace.s,
-                            trace.d,
-                            trace.b);
-                    });
-                }
-            };
+            }
+        };
 
 
         xhrs.push(req);
@@ -202,8 +203,8 @@ function FragmentLoader(config) {
             return;
         }
 
-        var req = new XMLHttpRequest(),
-            isSuccessful = false;
+        var req = new XMLHttpRequest();
+        var isSuccessful = false;
 
         req.open('HEAD', request.url, true);
 

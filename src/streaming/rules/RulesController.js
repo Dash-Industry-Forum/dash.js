@@ -81,9 +81,9 @@ function RulesController() {
     }
 
     function applyRules(rulesArr, streamProcessor, callback, current, overrideFunc) {
-        var values = {},
-               rule,
-               i;
+        var values = {};
+        var rule,
+            i;
 
         var rulesCount = rulesArr.length;
         var ln = rulesCount;

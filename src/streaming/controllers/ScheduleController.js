@@ -129,8 +129,8 @@ function ScheduleController(config) {
     }
 
     function clearPlayListTraceMetrics(endTime, stopreason) {
-        var duration = 0,
-            startTime = null;
+        var duration = 0;
+        var startTime = null;
 
         if (playListTraceMetricsClosed === false) {
             startTime = playListTraceMetrics.start;
@@ -187,8 +187,8 @@ function ScheduleController(config) {
         var ln = canceledRequests.length;
         // EPSILON is used to avoid javascript floating point issue, e.g. if request.startTime = 19.2,
         // request.duration = 3.83, than request.startTime + request.startTime = 19.2 + 1.92 = 21.119999999999997
-        var EPSILON = 0.1,
-            request,
+        var EPSILON = 0.1;
+        var request,
             time,
             i;
 

@@ -367,9 +367,9 @@ function MediaController() {
         var mode = getSelectionModeForInitialTrack();
         var tmpArr = [];
         var getTracksWithHighestBitrate = function (trackArr) {
-            var max = 0,
-                result = [],
-                tmp;
+            var max = 0;
+            var result = [];
+            var tmp;
 
             trackArr.forEach(function (track) {
                 tmp = Math.max.apply(Math, track.bitrateList);
@@ -385,9 +385,9 @@ function MediaController() {
             return result;
         };
         var getTracksWithWidestRange = function (trackArr) {
-            var max = 0,
-                result = [],
-                tmp;
+            var max = 0;
+            var result = [];
+            var tmp;
 
             trackArr.forEach(function (track) {
                 tmp = track.representationCount;

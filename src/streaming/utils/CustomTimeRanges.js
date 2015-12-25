@@ -31,8 +31,8 @@
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 function CustomTimeRanges(/*config*/) {
-    let customTimeRangeArray = [],
-        length = 0;
+    let customTimeRangeArray = [];
+    let length = 0;
 
     function add(start, end) {
         var i = 0;

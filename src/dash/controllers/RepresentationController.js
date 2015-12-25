@@ -143,12 +143,12 @@ function RepresentationController() {
     }
 
     function updateData(dataValue, adaptation, type) {
-        var bitrate = null,
-            quality,
+        var quality,
             averageThroughput;
 
-        var streamInfo = streamProcessor.getStreamInfo(),
-            maxQuality = abrController.getTopQualityIndexFor(type, streamInfo.id);
+        var bitrate = null;
+        var streamInfo = streamProcessor.getStreamInfo();
+        var maxQuality = abrController.getTopQualityIndexFor(type, streamInfo.id);
 
         updating = true;
         eventBus.trigger(Events.DATA_UPDATE_STARTED, {sender: this});
@@ -254,15 +254,15 @@ function RepresentationController() {
     function onRepresentationUpdated(e) {
         if (e.sender.getStreamProcessor() !== streamProcessor || !isUpdating()) return;
 
-        var r = e.representation,
-            streamMetrics = metricsModel.getMetricsFor('stream'),
-            metrics = metricsModel.getMetricsFor(getCurrentRepresentation().adaptation.type),
-            manifestUpdateInfo = metricsExt.getCurrentManifestUpdate(streamMetrics);
+        var r = e.representation;
+        var streamMetrics = metricsModel.getMetricsFor('stream');
+        var metrics = metricsModel.getMetricsFor(getCurrentRepresentation().adaptation.type);
+        var manifestUpdateInfo = metricsExt.getCurrentManifestUpdate(streamMetrics);
 
         var repInfo,
             err,
-            alreadyAdded = false,
             repSwitch;
+        var alreadyAdded = false;
 
         if (e.error && e.error.code === DashHandler.SEGMENTS_UNAVAILABLE_ERROR_CODE) {
             addDVRMetric();

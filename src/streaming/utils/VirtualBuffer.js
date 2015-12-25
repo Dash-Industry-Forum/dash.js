@@ -165,8 +165,8 @@ function VirtualBuffer() {
         var mediaType = filter.mediaType;
         var appendedChunks = getChunks({ streamId: streamId, mediaType: mediaType, appended: true });
 
-        var remainingChunks = [],
-            start,
+        var remainingChunks = [];
+        var start,
             end;
 
         data[streamId][mediaType].actualBufferedRanges = CustomTimeRanges(context).create();
@@ -201,9 +201,9 @@ function VirtualBuffer() {
         var limit = filter.limit || Number.POSITIVE_INFINITY;
         var mediaController = MediaController(context).getInstance();
 
-        var ln = 0,
-            result = [],
-            sourceArr;
+        var ln = 0;
+        var result = [];
+        var sourceArr;
 
         if (!originData) return result;
 
@@ -312,9 +312,9 @@ function VirtualBuffer() {
     function findChunksForRange(chunks, range, truncateChunk) {
         var rangeStart = range.start;
         var rangeEnd = range.end;
+        var chunksForRange = [];
 
-        var chunksForRange = [],
-            chunkStart,
+        var chunkStart,
             chunkEnd,
             isStartIncluded,
             isEndIncluded;

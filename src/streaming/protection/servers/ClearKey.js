@@ -69,8 +69,8 @@ function ClearKey() {
         if (!serverResponse.hasOwnProperty('keys')) {
             return null;
         }
-        var i, keyPairs = [];
-        for (i = 0; i < serverResponse.keys.length; i++) {
+        var keyPairs = [];
+        for (let i = 0; i < serverResponse.keys.length; i++) {
             var keypair = serverResponse.keys[i];
             var keyid = keypair.kid.replace(/=/g, '');
             var key = keypair.k.replace(/=/g, '');

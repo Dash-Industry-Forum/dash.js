@@ -81,35 +81,35 @@ function FragmentModel(config) {
     function isFragmentLoaded(request) {
         var isEqualComplete = function (req1, req2) {
             return ((req1.action === FragmentRequest.ACTION_COMPLETE) && (req1.action === req2.action));
-        },
+        };
 
-            isEqualMedia = function (req1, req2) {
-                return ((req1.url === req2.url) && (req1.startTime === req2.startTime));
-            },
+        var isEqualMedia = function (req1, req2) {
+            return ((req1.url === req2.url) && (req1.startTime === req2.startTime));
+        };
 
-            isEqualInit = function (req1, req2) {
-                return isNaN(req1.index) && isNaN(req2.index) && (req1.quality === req2.quality);
-            },
+        var isEqualInit = function (req1, req2) {
+            return isNaN(req1.index) && isNaN(req2.index) && (req1.quality === req2.quality);
+        };
 
-            check = function (arr) {
-                var req,
-                    isLoaded = false,
-                    i;
+        var check = function (arr) {
+            var req,
+                i;
+            var isLoaded = false;
 
-                var ln = arr.length;
+            var ln = arr.length;
 
-                for (i = 0; i < ln; i++) {
-                    req = arr[i];
+            for (i = 0; i < ln; i++) {
+                req = arr[i];
 
-                    if (isEqualMedia(request, req) || isEqualInit(request, req) || isEqualComplete(request, req)) {
-                        //log(request.mediaType + "Fragment already loaded for time: " + request.startTime);
-                        isLoaded = true;
-                        break;
-                    }
+                if (isEqualMedia(request, req) || isEqualInit(request, req) || isEqualComplete(request, req)) {
+                    //log(request.mediaType + "Fragment already loaded for time: " + request.startTime);
+                    isLoaded = true;
+                    break;
                 }
+            }
 
-                return isLoaded;
-            };
+            return isLoaded;
+        };
 
         return (check(loadingRequests) || check(executedRequests));
     }
@@ -128,10 +128,10 @@ function FragmentModel(config) {
      * @memberof FragmentModel#
      */
     function getRequests(filter) {
-        var requests = [],
-            filteredRequests = [],
-            states,
-            ln = 1;
+        var requests = [];
+        var filteredRequests = [];
+        var ln = 1;
+        var states;
 
         if (!filter || !filter.state) return requests;
 
@@ -152,9 +152,9 @@ function FragmentModel(config) {
 
     function removeExecutedRequestsBeforeTime(time) {
         var lastIdx = executedRequests.length - 1;
-        var start = NaN,
-            req = null,
-            i;
+        var start = NaN;
+        var req = null;
+        var i;
 
         // loop through the executed requests and remove the ones for which startTime is less than the given time
         for (i = lastIdx; i >= 0; i--) {
@@ -236,10 +236,10 @@ function FragmentModel(config) {
 
     function getRequestForTime(arr, time, threshold) {
         var lastIdx = arr.length - 1;
-        var start = NaN,
-            end = NaN,
-            req = null,
-            i;
+        var start = NaN;
+        var end = NaN;
+        var req = null;
+        var i;
 
         // loop through the executed requests and pick the one for which the playback interval matches the given time
         for (i = lastIdx; i >= 0; i--) {

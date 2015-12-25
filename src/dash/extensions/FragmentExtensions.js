@@ -45,11 +45,12 @@ function FragmentExtensions(/*config*/) {
     }
 
     function getSamplesInfo(ab) {
-        var isoFile = boxParser.parse(ab),
-            tfhdBox = isoFile.getBox('tfhd'),
-            tfdtBox = isoFile.getBox('tfdt'),
-            trunBox = isoFile.getBox('trun'),
-            moofBox = isoFile.getBox('moof');
+        var isoFile = boxParser.parse(ab);
+        var tfhdBox = isoFile.getBox('tfhd');
+        var tfdtBox = isoFile.getBox('tfdt');
+        var trunBox = isoFile.getBox('trun');
+        var moofBox = isoFile.getBox('moof');
+
         var sampleDuration,
             sampleCompostionTimeOffset,
             sampleCount,

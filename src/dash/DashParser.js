@@ -374,9 +374,9 @@ function DashParser(/*config*/) {
         var iron = new ObjectIron(getDashMap());
         var start = new Date();
 
-        var manifest,
-            json = null,
-            ironed = null;
+        var manifest;
+        var json = null;
+        var ironed = null;
 
         try {
             //log("Converting from XML.");

@@ -60,8 +60,8 @@ function URIQueryAndFragmentModel() {
     function parseURI(uri) {
         if (!uri) return null;
 
-        var URIFragmentData = [],
-            mappedArr;
+        var URIFragmentData = [];
+        var mappedArr;
 
         var testQuery = new RegExp(/[?]/);
         var testFragment = new RegExp(/[#]/);

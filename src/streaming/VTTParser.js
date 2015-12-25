@@ -49,8 +49,8 @@ function VTTParser() {
     }
 
     function parse(data) {
-        var captionArray = [],
-            len,
+        var captionArray = [];
+        var len,
             lastStartTime;
 
         data = data.split( regExNewLine );
@@ -151,9 +151,9 @@ function VTTParser() {
     function getSublines(data, idx) {
         var i = idx;
 
-        var lineCount,
-            subline = '',
-            lineData = '';
+        var subline = '';
+        var lineData = '';
+        var lineCount;
 
         while (data[i] !== '' && i < data.length) {
             i++;

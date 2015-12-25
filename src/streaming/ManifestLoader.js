@@ -71,19 +71,21 @@ function ManifestLoader(config) {
 
     function load (url) {
         var baseUrl = parseBaseUrl(url);
-        var request = new XMLHttpRequest(),
-            requestTime = new Date(),
-            loadedTime = null,
-            needFailureReport = true,
-            manifest,
+
+        var request = new XMLHttpRequest();
+        var requestTime = new Date();
+        var loadedTime = null;
+        var needFailureReport = true;
+
+        var manifest,
             onload,
             report,
             progress,
             firstProgressCall;
 
         onload = function () {
-            var actualUrl = null,
-                errorMsg;
+            var actualUrl = null;
+            var errorMsg;
 
             if (request.status < 200 || request.status > 299) {
                 return;

@@ -131,11 +131,12 @@ function TimeSyncController() {
     // which is natively understood by javascript Date parser
     function alternateXsdatetimeDecoder(xsdatetimeStr) {
         // taken from DashParser - should probably refactor both uses
-        var SECONDS_IN_MIN = 60,
-            MINUTES_IN_HOUR = 60,
-            MILLISECONDS_IN_SECONDS = 1000,
-            datetimeRegex = /^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2})(?::([0-9]*)(\.[0-9]*)?)?(?:([+\-])([0-9]{2})([0-9]{2}))?/,
-            utcDate,
+        var SECONDS_IN_MIN = 60;
+        var MINUTES_IN_HOUR = 60;
+        var MILLISECONDS_IN_SECONDS = 1000;
+        var datetimeRegex = /^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2})(?::([0-9]*)(\.[0-9]*)?)?(?:([+\-])([0-9]{2})([0-9]{2}))?/;
+
+        var utcDate,
             timezoneOffset;
 
         var match = datetimeRegex.exec(xsdatetimeStr);
@@ -202,9 +203,9 @@ function TimeSyncController() {
 
     function httpHandler(decoder, url, onSuccessCB, onFailureCB, isHeadRequest) {
         var oncomplete,
-            onload,
-            complete = false,
-            req = new XMLHttpRequest();
+            onload;
+        var complete = false;
+        var req = new XMLHttpRequest();
 
         var verb = isHeadRequest ? 'HEAD' : 'GET';
         var urls = url.match(/\S+/g);

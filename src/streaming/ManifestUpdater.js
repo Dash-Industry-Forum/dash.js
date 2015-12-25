@@ -108,10 +108,10 @@ function ManifestUpdater() {
     }
 
     function update(manifest) {
-
         var delay,
-            timeSinceLastUpdate,
-            date = new Date();
+            timeSinceLastUpdate;
+
+        var date = new Date();
 
         manifestModel.setValue(manifest);
         log('Manifest has been refreshed at ' + date + '[' + date.getTime() + '] ');

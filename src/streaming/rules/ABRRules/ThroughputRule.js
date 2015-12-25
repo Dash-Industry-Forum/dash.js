@@ -86,17 +86,17 @@ function ThroughputRule(config) {
         var averageThroughput;
         var lastRequestThroughput;
 
-        var mediaInfo = rulesContext.getMediaInfo(),
-            mediaType = mediaInfo.type,
-            current = rulesContext.getCurrentValue(),
-            metrics = metricsModel.getReadOnlyMetricsFor(mediaType),
-            streamProcessor = rulesContext.getStreamProcessor(),
-            abrController = streamProcessor.getABRController(),
-            isDynamic = streamProcessor.isDynamic(),
-            lastRequest = metricsExt.getCurrentHttpRequest(metrics),
-            bufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null,
-            bufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null,
-            switchRequest =  SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
+        var mediaInfo = rulesContext.getMediaInfo();
+        var mediaType = mediaInfo.type;
+        var current = rulesContext.getCurrentValue();
+        var metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
+        var streamProcessor = rulesContext.getStreamProcessor();
+        var abrController = streamProcessor.getABRController();
+        var isDynamic = streamProcessor.isDynamic();
+        var lastRequest = metricsExt.getCurrentHttpRequest(metrics);
+        var bufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
+        var bufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null;
+        var switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
 
         if (!metrics || !lastRequest || lastRequest.type !== HTTPRequest.MEDIA_SEGMENT_TYPE ||
             !bufferStateVO || !bufferLevelVO ) {

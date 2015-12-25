@@ -88,11 +88,9 @@ function DashAdapter() {
 
     function getPeriodForStreamInfo(streamInfo) {
         var ln = periods.length;
-        var period,
-            i = 0;
 
-        for (i; i < ln; i++) {
-            period = periods[i];
+        for (let i = 0; i < ln; i++) {
+            const period = periods[i];
 
             if (streamInfo.id === period.id) return period;
         }
@@ -203,8 +201,9 @@ function DashAdapter() {
         var periodId = periodInfo.id;
         var adaptationsForType = manifestExt.getAdaptationsForType(manifest, streamInfo.index, type);
 
+        var mediaArr = [];
+
         var data,
-            mediaArr = [],
             media,
             idx;
 
@@ -226,8 +225,8 @@ function DashAdapter() {
     }
 
     function getStreamsInfo(manifest) {
+        var streams = [];
         var mpd,
-            streams = [],
             ln,
             i;
 

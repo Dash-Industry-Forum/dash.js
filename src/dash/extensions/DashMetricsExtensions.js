@@ -179,9 +179,10 @@ function DashMetricsExtensions() {
         }
 
         var httpList = metrics.HttpList;
+        var currentHttpList = null;
+
         var httpListLength,
-            httpListLastIndex,
-            currentHttpList = null;
+            httpListLastIndex;
 
         if (httpList === null || httpList.length <= 0) {
             return null;
@@ -288,10 +289,9 @@ function DashMetricsExtensions() {
     }
 
     function getLatestMPDRequestHeaderValueByID(metrics, id) {
-
+        var headers = {};
         var httpRequestList,
             httpRequest,
-            headers = {},
             i;
 
         if (metrics === null) {

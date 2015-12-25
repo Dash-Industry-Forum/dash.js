@@ -100,13 +100,14 @@ function SourceBufferExtensions() {
     }
 
     function getBufferRange(buffer, time, tolerance) {
-        var ranges = null,
-            start = 0,
-            end = 0,
-            firstStart = null,
-            lastEnd = null,
-            gap = 0,
-            len,
+        var ranges = null;
+        var start = 0;
+        var end = 0;
+        var firstStart = null;
+        var lastEnd = null;
+        var gap = 0;
+
+        var len,
             i;
 
         var toler = (tolerance || 0.15);
@@ -164,9 +165,9 @@ function SourceBufferExtensions() {
 
     function getTotalBufferedTime(buffer) {
         var ranges = getAllRanges(buffer);
-        var totalBufferedTime = 0,
-         ln,
-         i;
+        var totalBufferedTime = 0;
+        var ln,
+            i;
 
         if (!ranges) return totalBufferedTime;
 
@@ -333,8 +334,9 @@ function SourceBufferExtensions() {
 
     //private
     function waitForUpdateEnd(buffer, callback) {
-        var intervalId,
-            CHECK_INTERVAL = 50;
+        var intervalId;
+        var CHECK_INTERVAL = 50;
+
         var checkIsUpdateEnded = function () {
             // if undating is still in progress do nothing and wait for the next check again.
             if (buffer.updating) return;
@@ -342,6 +344,7 @@ function SourceBufferExtensions() {
             clearInterval(intervalId);
             callback();
         };
+
         var updateEndHandler = function () {
             if (buffer.updating) return;
 

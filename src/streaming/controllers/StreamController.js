@@ -249,8 +249,8 @@ function StreamController() {
     }
 
     function getStreamForTime(time) {
-        var duration = 0,
-            stream = null;
+        var duration = 0;
+        var stream = null;
 
         var ln = streams.length;
 
@@ -343,8 +343,8 @@ function StreamController() {
         var manifest = manifestModel.getValue();
         var metrics = metricsModel.getMetricsFor('stream');
         var manifestUpdateInfo = metricsExt.getCurrentManifestUpdate(metrics);
-        var remainingStreams = [],
-            streamInfo,
+        var remainingStreams = [];
+        var streamInfo,
             pLen,
             sLen,
             pIdx,
@@ -434,8 +434,8 @@ function StreamController() {
     function checkIfUpdateCompleted() {
         if (isUpdating) return;
 
-        var ln = streams.length,
-            i = 0;
+        var ln = streams.length;
+        var i = 0;
 
         startAutoPlay();
 

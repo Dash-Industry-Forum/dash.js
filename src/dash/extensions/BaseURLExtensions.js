@@ -56,9 +56,9 @@ function BaseURLExtensions() {
     }
 
     function loadInitialization(representation, loadingInfo) {
-        var needFailureReport = true,
-            initRange = null,
-            isoFile = null;
+        var needFailureReport = true;
+        var initRange = null;
+        var isoFile = null;
         var request = new XMLHttpRequest();
         var media = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
                     AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL;
@@ -113,9 +113,9 @@ function BaseURLExtensions() {
 
         range = parts ? {start: parseFloat(parts[0]), end: parseFloat(parts[1])} : null;
         callback = !callback ? onLoaded : callback;
-        var needFailureReport = true,
-            isoFile = null,
-            sidx = null;
+        var needFailureReport = true;
+        var isoFile = null;
+        var sidx = null;
         var hasRange = range !== null;
         var request = new XMLHttpRequest();
         var media = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
@@ -172,8 +172,9 @@ function BaseURLExtensions() {
                     log('Initiate multiple SIDX load.');
                     info.range.end = info.range.start + sidx.size;
 
-                    var j, len, ss, se, r, segs = [],
-                        count = 0;
+                    var j, len, ss, se, r;
+                    var segs = [];
+                    var count = 0;
                     var offset = (sidx.offset || info.range.start) + sidx.size;
                     var tmpCallback = function (result) {
                         if (result) {
@@ -230,8 +231,8 @@ function BaseURLExtensions() {
         var timescale = sidx.timescale;
         var time = sidx.earliest_presentation_time;
         var start = info.range.start + sidx.first_offset + sidx.size;
-        var segments = [],
-            segment,
+        var segments = [];
+        var segment,
             end,
             duration,
             size;
@@ -258,9 +259,10 @@ function BaseURLExtensions() {
     function findInitRange(isoFile) {
         var ftyp = isoFile.getBox('ftyp');
         var moov = isoFile.getBox('moov');
+
+        var initRange = null;
         var start,
-            end,
-            initRange = null;
+            end;
 
         log('Searching for initialization.');
 

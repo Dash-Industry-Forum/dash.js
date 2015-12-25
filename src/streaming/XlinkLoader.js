@@ -61,14 +61,15 @@ function XlinkLoader(config) {
     }
 
     function doLoad(url, element, resolveObject, remainingAttempts) {
-        var request = new XMLHttpRequest(),
-            report,
+        var request = new XMLHttpRequest();
+        var needFailureReport = true;
+        var firstProgressCall = true;
+        var requestTime = new Date();
+
+        var report,
             onload,
             progress,
-            firstProgressCall = true,
-            content,
-            needFailureReport = true,
-            requestTime = new Date();
+            content;
 
         onload = function () {
             if (request.status < 200 || request.status > 299) {

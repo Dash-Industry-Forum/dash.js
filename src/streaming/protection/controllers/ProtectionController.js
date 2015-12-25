@@ -303,7 +303,9 @@ function ProtectionController(config) {
         var self = this;
 
         // Build our request object for requestKeySystemAccess
-        var audioCapabilities = [], videoCapabilities = [];
+        var audioCapabilities = [];
+        var videoCapabilities = [];
+
         if (videoInfo) {
             videoCapabilities.push(new MediaCapability(videoInfo.codec));
         }

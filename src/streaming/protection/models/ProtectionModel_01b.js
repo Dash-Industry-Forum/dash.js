@@ -104,11 +104,11 @@ function ProtectionModel_01b(config) {
     }
 
     function getAllInitData() {
-        var i, retVal = [];
-        for (i = 0; i < pendingSessions.length; i++) {
+        var retVal = [];
+        for (let i = 0; i < pendingSessions.length; i++) {
             retVal.push(pendingSessions[i].initData);
         }
-        for (i = 0; i < sessions.length; i++) {
+        for (let i = 0; i < sessions.length; i++) {
             retVal.push(sessions[i].initData);
         }
         return retVal;

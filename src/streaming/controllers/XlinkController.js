@@ -82,9 +82,9 @@ function XlinkController(config) {
     }
 
     function resolve(elements, type, resolveType) {
+        var resolveObject = {};
         var element,
             url,
-            resolveObject = {},
             i;
 
         resolveObject.elements = elements;
@@ -108,10 +108,11 @@ function XlinkController(config) {
     function onXlinkElementLoaded(event) {
         var element,
             resolveObject,
-            index,
-            openingTag = '<response>',
-            closingTag = '</response>',
-            mergedContent = '';
+            index;
+
+        var openingTag = '<response>';
+        var closingTag = '</response>';
+        var mergedContent = '';
 
         element = event.element;
         resolveObject = event.resolveObject;
@@ -129,8 +130,8 @@ function XlinkController(config) {
 
     // We got to wait till all elements of the current queue are resolved before merging back
     function onXlinkAllElementsLoaded (resolveObject) {
-        var elements = [],
-            i,
+        var elements = [];
+        var i,
             obj;
 
         mergeElementsBack(resolveObject);
@@ -162,8 +163,8 @@ function XlinkController(config) {
 
     // Returns the elements with the specific resolve Type
     function getElementsToResolve(elements, parentElement, type, resolveType) {
-        var toResolve = [],
-            element,
+        var toResolve = [];
+        var element,
             i,
             xlinkObject;
         // first remove all the resolve-to-zero elements
@@ -185,9 +186,9 @@ function XlinkController(config) {
     }
 
     function mergeElementsBack(resolveObject) {
+        var resolvedElements = [];
         var element,
             type,
-            resolvedElements = [],
             obj,
             i,
             j,

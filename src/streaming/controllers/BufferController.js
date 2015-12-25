@@ -413,9 +413,10 @@ function BufferController(config) {
 
     function handleInbandEvents(data, request, mediaInbandEvents, trackInbandEvents) {
         var fragmentStarttime = Math.max(isNaN(request.startTime) ? 0 : request.startTime, 0);
-        var eventStreams = [],
-            events = [],
-            eventBoxes,
+        var eventStreams = [];
+        var events = [];
+
+        var eventBoxes,
             event,
             isoFile,
             inbandEvents;
@@ -453,9 +454,9 @@ function BufferController(config) {
         var modData = new Uint8Array(data.length);
 
         var identifier,
-            size,
-            i = 0,
-            j = 0;
+            size;
+        var i = 0;
+        var j = 0;
 
         while (i < length) {
 

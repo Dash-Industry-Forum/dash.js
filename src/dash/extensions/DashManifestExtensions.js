@@ -49,9 +49,9 @@ function DashManifestExtensions() {
 
         var i,
             len,
-            representation,
-            result = false,
-            found = false;
+            representation;
+        var result = false;
+        var found = false;
 
         var col = adaptation.ContentComponent_asArray;
         var mimeTypeRegEx = (type !== 'text') ? new RegExp(type) : new RegExp('(vtt|ttml)');
@@ -201,8 +201,8 @@ function DashManifestExtensions() {
 
         var adaptationSet = manifest.Period_asArray[periodIndex].AdaptationSet_asArray;
         var i,
-            len,
-            adaptations = [];
+            len;
+        var adaptations = [];
 
         for (i = 0, len = adaptationSet.length; i < len; i++) {
             if (getIsTypeOf(adaptationSet[i], type)) {
@@ -299,8 +299,8 @@ function DashManifestExtensions() {
     }
 
     function getRefreshDelay(manifest) {
-        var delay = NaN,
-            minDelay = 2;
+        var delay = NaN;
+        var minDelay = 2;
 
         if (manifest.hasOwnProperty('minimumUpdatePeriod')) {
             delay = Math.max(parseFloat(manifest.minimumUpdatePeriod), minDelay);
@@ -321,9 +321,9 @@ function DashManifestExtensions() {
     function getBitrateListForAdaptation(adaptation) {
         if (!adaptation || !adaptation.Representation_asArray || !adaptation.Representation_asArray.length) return null;
 
-        var a = processAdaptation(adaptation),
-            reps = a.Representation_asArray,
-            ln = reps.length;
+        var a = processAdaptation(adaptation);
+        var reps = a.Representation_asArray;
+        var ln = reps.length;
         var bitrateList = [];
 
         for (var i = 0; i < ln; i++) {
@@ -339,8 +339,8 @@ function DashManifestExtensions() {
 
     function getRepresentationsForAdaptation(manifest, adaptation) {
         var a = processAdaptation(manifest.Period_asArray[adaptation.period.index].AdaptationSet_asArray[adaptation.index]);
-        var representations = [],
-            representation,
+        var representations = [];
+        var representation,
             initialization,
             segmentInfo,
             r,
@@ -436,8 +436,8 @@ function DashManifestExtensions() {
 
     function getAdaptationsForPeriod(manifest, period) {
         var p = manifest.Period_asArray[period.index];
-        var adaptations = [],
-            adaptationSet,
+        var adaptations = [];
+        var adaptationSet,
             a;
 
         for (var i = 0; i < p.AdaptationSet_asArray.length; i++) {
@@ -471,13 +471,13 @@ function DashManifestExtensions() {
 
     function getRegularPeriods(manifest, mpd) {
         var isDynamic = getIsDynamic(manifest);
-        var periods = [],
-            i,
-            len,
-            p1 = null,
-            p = null,
-            vo1 = null,
-            vo = null;
+        var periods = [];
+        var p1 = null;
+        var p = null;
+        var vo1 = null;
+        var vo = null;
+        var len,
+            i;
 
         for (i = 0, len = manifest.Period_asArray.length; i < len; i++) {
             p = manifest.Period_asArray[i];
@@ -604,8 +604,8 @@ function DashManifestExtensions() {
     }
 
     function getCheckTime(manifest, period) {
-        var checkTime = NaN,
-            fetchTime;
+        var checkTime = NaN;
+        var fetchTime;
 
         // If the MPD@minimumUpdatePeriod attribute in the client is provided, then the check time is defined as the
         // sum of the fetch time of this operating MPD and the value of this attribute,

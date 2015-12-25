@@ -36,8 +36,8 @@ class EventsBase {
     extend (events, config) {
         if (!events) return;
 
-        let override = config ? config.override : false,
-            publicOnly = config ? config.publicOnly : false;
+        let override = config ? config.override : false;
+        let publicOnly = config ? config.publicOnly : false;
 
 
         for (const evt in events) {

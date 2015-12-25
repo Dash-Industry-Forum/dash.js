@@ -18,5 +18,9 @@
     "disallowSpaceAfterObjectKeys": true,
     "requireSpaceBeforeObjectValues": true,
     "requireSemicolons": true,
-    "validateParameterSeparator": ", "
+    "validateParameterSeparator": ", ",
+    "disallowMultipleVarDecl": {
+        "allExcept": ["undefined"]
+    },
+    "fix": true
 }

@@ -166,7 +166,8 @@ function ProtectionExtensions() {
      * from the ContentProtection element
      */
     function getSupportedKeySystemsFromContentProtection(cps) {
-        var cp, ks, ksIdx, cpIdx, supportedKS = [];
+        var cp, ks, ksIdx, cpIdx;
+        var supportedKS = [];
 
         if (cps) {
             for (ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
@@ -207,7 +208,8 @@ function ProtectionExtensions() {
      * associated with the key system
      */
     function getSupportedKeySystems(initData) {
-        var ksIdx, supportedKS = [];
+        var ksIdx;
+        var supportedKS = [];
         var pssh = CommonEncryption.parsePSSHList(initData);
 
         for (ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {

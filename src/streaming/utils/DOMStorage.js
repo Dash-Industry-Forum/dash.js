@@ -82,9 +82,9 @@ function DOMStorage() {
 
         supported = false;
 
-        var testKey = '1',
-            testValue = '1',
-            storage;
+        var testKey = '1';
+        var testValue = '1';
+        var storage;
 
         try {
             storage = window[type];

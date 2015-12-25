@@ -52,9 +52,10 @@ class ClearKeyKeySet {
      * @return {ArrayBuffer} JWK object UTF-8 encoded as ArrayBuffer
      */
     toJWK() {
-        var i, numKeys = this.keyPairs.length,
-            jwk = {};
-        jwk.keys = [];
+        var i;
+        var numKeys = this.keyPairs.length;
+        var jwk = {keys: []};
+
         for (i = 0; i < numKeys; i++) {
             var key = {
                 kty: 'oct',

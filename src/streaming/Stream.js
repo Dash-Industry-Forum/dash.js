@@ -346,8 +346,8 @@ function Stream(config) {
         var manifest = manifestModel.getValue();
         var allMediaForType = adapter.getAllMediaInfoForType(manifest, streamInfo, type);
 
-        var mediaInfo = null,
-            initialMediaInfo;
+        var mediaInfo = null;
+        var initialMediaInfo;
 
         if (!allMediaForType || allMediaForType.length === 0) {
             log('No ' + type + ' data.');
@@ -486,9 +486,10 @@ function Stream(config) {
 
     function getProcessors() {
         var ln = streamProcessors.length;
-        var arr = [],
-            i = 0,
-            type,
+        var arr = [];
+        var i = 0;
+
+        var type,
             controller;
 
         for (i; i < ln; i++) {
@@ -507,8 +508,8 @@ function Stream(config) {
         var ln = streamProcessors.length;
         var manifest = manifestModel.getValue();
 
-        var i = 0,
-           mediaInfo,
+        var i = 0;
+        var mediaInfo,
            events,
            controller;
 

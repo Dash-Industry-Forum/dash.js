@@ -64,8 +64,8 @@ function IsoFile() {
     */
     function getBoxes(type) {
         var boxData = parsedIsoFile.fetchAll(type);
-        var boxes = [],
-            box;
+        var boxes = [];
+        var box;
 
         for (var i = 0, ln = boxData.length; i < ln; i++) {
             box = convertToDashIsoBox(boxData[i]);
