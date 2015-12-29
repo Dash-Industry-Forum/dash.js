@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Live delay comparison</title>
+
+    <script src="../../dist/dash.debug.js"></script>
+    <!--dash.all.js should be used in production over dash.debug.js. dash.debug.js is not compressed or obfuscated and the file size is much larger compared with dash.all.js-->
+    <!--<script src="../../dist/dash.all.js"></script>-->
+
+    <script>
+        function init()
+        {
+            var player1,player2,player3,player4,player5,player6, video;
+            var MPD_2S_SEGMENTS = "http://vm2.dashif.org/livesim/testpic_2s/Manifest.mpd";
+            var MPD_6S_SEGMENTS = "http://vm2.dashif.org/livesim/testpic_6s/Manifest.mpd";
+
+
+            video = document.querySelector("#video1");
+            player1 = MediaPlayer().create();
+            player1.initialize(video,MPD_2S_SEGMENTS ,true);
+            player1.setLiveDelayFragmentCount(0);
+
+            video = document.querySelector("#video2");
+            player2 = MediaPlayer().create();
+            player2.initialize(video,MPD_2S_SEGMENTS ,true);
+            player2.setLiveDelayFragmentCount(2);
+
+            video = document.querySelector("#video3");
+            player3 = MediaPlayer().create();
+            player3.initialize(video,MPD_2S_SEGMENTS ,true);
+            player3.setLiveDelayFragmentCount(4);
+
+            video = document.querySelector("#video4");
+            player4 = MediaPlayer().create();
+            player4.initialize(video,MPD_6S_SEGMENTS ,true);
+            player4.setLiveDelayFragmentCount(0);
+
+            video = document.querySelector("#video5");
+            player5 = MediaPlayer().create();
+            player5.initialize(video,MPD_6S_SEGMENTS ,true);
+            player5.setLiveDelayFragmentCount(2);
+
+            video = document.querySelector("#video6");
+            player6 = MediaPlayer().create();
+            player6.initialize(video,MPD_6S_SEGMENTS ,true);
+            player6.setLiveDelayFragmentCount(4);
+
+
+            setInterval( function() {
+                var d = new Date();
+                var seconds = d.getSeconds();
+                document.querySelector("#sec").innerHTML = ( seconds < 10 ? "0" : "" ) + seconds;
+                var minutes = d.getMinutes();
+                document.querySelector("#min").innerHTML = ( minutes < 10 ? "0" : "" ) + minutes;
+                for (var i=1;i < 7;i++)
+                {
+                    var p = eval("player"+i);
+                    document.querySelector("#video" + i + "delay").innerHTML = Math.round((d.getTime()/1000) - Number(p.timeAsUTC()));
+                }
+
+            },1000);
+
+        }
+    </script>
+    <style>
+
+        table {
+            border-spacing: 10px;
+        }
+        video {
+            width: 320px;
+            height: 180px;
+        }
+        .clock { border:1px solid #333; color:#000; font-size: 60pt}
+    </style>
+
+<body onload="init()">
+This sample illustrates the combined effects of segment duration and the "setLiveDelayFragmentCount" MediaPlayer method on the latency of live stream playback.
+The upper layer of videos are all playing a live stream with 2s segment duration. The lower layer use 6s segment duration. For each stream, the playback position
+behind live is varied between 0, 2 and 4 segments. Note that the default value for dash.js is 4 segments, which is a trade off between stability and latency.
+Lowest latency is achieved with shorter segments and with a lower liveDelayFragmentCount. Higher stability/robustness is achieved with a higher liveDelayFragmentCount.
+<table>
+    <tr><td>
+    2s segment, 0 segments behind live<br/>
+        <video id="video1" controls="true">
+        </video><br/>
+        Seconds behind live: <span id="video1delay"></span>
+    </td><td>
+        2s segment, 2 segments behind live<br/>
+        <video id="video2" controls="true">
+        </video><br/>
+        Seconds behind live: <span id="video2delay"></span>
+    </td><td>
+        2s segment, 4 segments behind live (default)<br/>
+        <video id="video3" controls="true">
+        </video><br/>
+        Seconds behind live: <span id="video3delay"></span>
+    </td>
+    <td>Wall clock time
+        <div class="clock">
+            <span id="min"> </span>:<span id="sec"></span>
+        </div>
+    </td></tr>
+    <tr><td>
+        6s segment, 0 segments behind live<br/>
+        <video id="video4" controls="true">
+        </video><br/>
+        Seconds behind live: <span id="video4delay"></span>
+    </td><td>
+        6s segment, 2 segments behind live<br/>
+        <video id="video5" controls="true">
+        </video><br/>
+        Seconds behind live: <span id="video5delay"></span>
+    </td><td>
+        6s segment, 4 segments behind live (default)<br/>
+        <video id="video6" controls="true">
+        </video><br/>
+        Seconds behind live: <span id="video6delay"></span>
+    </td></tr>
+    </div>
+</div>
+</body>
+</html>
+
