@@ -59,31 +59,33 @@ function ManifestLoader(config) {
     function setup() {
         remainingAttempts = RETRY_ATTEMPTS;
         let xlinkLoader = XlinkLoader(context).create({
-            errHandler:errHandler,
-            metricsModel:metricsModel,
-            requestModifierExt:requestModifierExt
+            errHandler: errHandler,
+            metricsModel: metricsModel,
+            requestModifierExt: requestModifierExt
         });
         xlinkController = XlinkController(context).create({
-            xlinkLoader:xlinkLoader
+            xlinkLoader: xlinkLoader
         });
         eventBus.on(Events.XLINK_READY, onXlinkReady, instance);
     }
 
     function load (url) {
         var baseUrl = parseBaseUrl(url);
-        var request = new XMLHttpRequest(),
-            requestTime = new Date(),
-            loadedTime = null,
-            needFailureReport = true,
-            manifest,
+
+        var request = new XMLHttpRequest();
+        var requestTime = new Date();
+        var loadedTime = null;
+        var needFailureReport = true;
+
+        var manifest,
             onload,
             report,
             progress,
             firstProgressCall;
 
         onload = function () {
-            var actualUrl = null,
-                errorMsg;
+            var actualUrl = null;
+            var errorMsg;
 
             if (request.status < 200 || request.status > 299) {
                 return;
@@ -100,7 +102,7 @@ function ManifestLoader(config) {
                 actualUrl = request.responseURL;
             }
 
-            metricsModel.addHttpRequest("stream",
+            metricsModel.addHttpRequest('stream',
                 null,
                 HTTPRequest.MPD_TYPE,
                 url,
@@ -118,11 +120,11 @@ function ManifestLoader(config) {
             if (manifest) {
                 manifest.url = actualUrl || url;
                 manifest.loadedTime = loadedTime;
-                metricsModel.addManifestUpdate("stream", manifest.type, requestTime, loadedTime, manifest.availabilityStartTime);
+                metricsModel.addManifestUpdate('stream', manifest.type, requestTime, loadedTime, manifest.availabilityStartTime);
                 xlinkController.resolveManifestOnLoad(manifest);
             } else {
-                errorMsg = "Failed loading manifest: " + url + ", parsing failed";
-                eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {manifest: null, error:new Error(PARSERERROR_ERROR_CODE, errorMsg, null)});
+                errorMsg = 'Failed loading manifest: ' + url + ', parsing failed';
+                eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {manifest: null, error: new Error(PARSERERROR_ERROR_CODE, errorMsg, null)});
                 log(errorMsg);
             }
         };
@@ -134,7 +136,7 @@ function ManifestLoader(config) {
             }
             needFailureReport = false;
 
-            metricsModel.addHttpRequest("stream",
+            metricsModel.addHttpRequest('stream',
                 null,
                 HTTPRequest.MPD_TYPE,
                 url,
@@ -148,15 +150,15 @@ function ManifestLoader(config) {
                 request.getAllResponseHeaders());
 
             if (remainingAttempts > 0) {
-                log("Failed loading manifest: " + url + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
+                log('Failed loading manifest: ' + url + ', retry in ' + RETRY_INTERVAL + 'ms' + ' attempts: ' + remainingAttempts);
                 remainingAttempts--;
-                setTimeout(function() {
+                setTimeout(function () {
                     load(url);
                 }, RETRY_INTERVAL);
             } else {
-                log("Failed loading manifest: " + url + " no retry attempts left");
-                errHandler.downloadError("manifest", url, request);
-                eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {error:new Error("Failed loading manifest: " + url + " no retry attempts left")});
+                log('Failed loading manifest: ' + url + ' no retry attempts left');
+                errHandler.downloadError('manifest', url, request);
+                eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {error: new Error('Failed loading manifest: ' + url + ' no retry attempts left')});
             }
         };
 
@@ -175,9 +177,9 @@ function ManifestLoader(config) {
             request.onloadend = report;
             request.onerror = report;
             request.onprogress = progress;
-            request.open("GET", requestModifierExt.modifyRequestURL(url), true);
+            request.open('GET', requestModifierExt.modifyRequestURL(url), true);
             request.send();
-        } catch(e) {
+        } catch (e) {
             request.onerror();
         }
     }
@@ -189,14 +191,14 @@ function ManifestLoader(config) {
     }
 
     function parseBaseUrl(url) {
-        var base = "";
+        var base = '';
 
-        if (url.indexOf("/") !== -1)
+        if (url.indexOf('/') !== -1)
         {
-            if (url.indexOf("?") !== -1) {
-                url = url.substring(0, url.indexOf("?"));
+            if (url.indexOf('?') !== -1) {
+                url = url.substring(0, url.indexOf('?'));
             }
-            base = url.substring(0, url.lastIndexOf("/") + 1);
+            base = url.substring(0, url.lastIndexOf('/') + 1);
         }
 
         return base;

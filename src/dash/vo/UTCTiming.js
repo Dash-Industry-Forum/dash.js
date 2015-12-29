@@ -35,8 +35,8 @@
 class UTCTiming {
     constructor() {
         // UTCTiming is a DescriptorType and doesn't have any additional fields
-        this.schemeIdUri = "";
-        this.value = "";
+        this.schemeIdUri = '';
+        this.value = '';
     }
 }
 

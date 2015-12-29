@@ -37,7 +37,7 @@ class Event {
         this.duration = NaN;
         this.presentationTime = NaN;
         this.id = NaN;
-        this.messageData = "";
+        this.messageData = '';
         this.eventStream = null;
         this.presentationTimeDelta = NaN; // Specific EMSG Box parameter
     }

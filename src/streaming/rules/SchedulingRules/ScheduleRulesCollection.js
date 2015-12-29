@@ -38,8 +38,8 @@ import DashMetricsExtensions from '../../../dash/extensions/DashMetricsExtension
 import SourceBufferExtensions from '../../extensions/SourceBufferExtensions.js';
 import VirtualBuffer from '../../utils/VirtualBuffer.js';
 
-const FRAGMENTS_TO_SCHEDULE_RULES = "fragmentsToScheduleRules";
-const NEXT_FRAGMENT_RULES = "nextFragmentRules";
+const FRAGMENTS_TO_SCHEDULE_RULES = 'fragmentsToScheduleRules';
+const NEXT_FRAGMENT_RULES = 'nextFragmentRules';
 
 function ScheduleRulesCollection() {
 
@@ -56,7 +56,7 @@ function ScheduleRulesCollection() {
         fragmentsToScheduleRules.push(BufferLevelRule(context).create({
             metricsExt: DashMetricsExtensions(context).getInstance(),
             metricsModel: MetricsModel(context).getInstance(),
-            textSourceBuffer:TextSourceBuffer(context).getInstance()
+            textSourceBuffer: TextSourceBuffer(context).getInstance()
         }));
         nextFragmentRules.push(PlaybackTimeRule(context).create({
             adapter: DashAdapter(context).getInstance(),
@@ -79,7 +79,7 @@ function ScheduleRulesCollection() {
     }
 
     instance = {
-        initialize:initialize,
+        initialize: initialize,
         getRules: getRules
     };
 

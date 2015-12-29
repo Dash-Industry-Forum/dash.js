@@ -42,6 +42,6 @@ class Period {
     }
 }
 
-Period.DEFAULT_ID = "defaultId";
+Period.DEFAULT_ID = 'defaultId';
 
 export default Period;

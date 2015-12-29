@@ -36,7 +36,7 @@ import MediaController from '../controllers/MediaController.js';
 import CustomTimeRanges from './CustomTimeRanges.js';
 import HTTPRequest from '../vo/metrics/HTTPRequest.js';
 import EventBus from './../../core/EventBus.js';
-import Events from "../../core/events/Events.js";
+import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 function VirtualBuffer() {
@@ -48,7 +48,7 @@ function VirtualBuffer() {
         data,
         sourceBufferExt;
 
-    function setup(){
+    function setup() {
         data = {};
     }
 
@@ -66,11 +66,11 @@ function VirtualBuffer() {
 
         data[streamId] = data[streamId] || createDataStorage();
         data[streamId][mediaType][segmentType].push(chunk);
-        sortArrayByProperty(data[streamId][mediaType][segmentType], "index");
+        sortArrayByProperty(data[streamId][mediaType][segmentType], 'index');
 
         if (!isNaN(start) && !isNaN(end)) {
             data[streamId][mediaType].calculatedBufferedRanges.add(start, end);
-            eventBus.trigger(Events.CHUNK_APPENDED, {chunk: chunk, sender:this});
+            eventBus.trigger(Events.CHUNK_APPENDED, {chunk: chunk, sender: this});
         }
     }
 
@@ -103,7 +103,7 @@ function VirtualBuffer() {
             data[streamId][mediaType].appended.push(chunk);
         }
 
-        sortArrayByProperty(data[streamId][mediaType].appended, "start");
+        sortArrayByProperty(data[streamId][mediaType].appended, 'start');
         diff = sourceBufferExt.getRangeDifference(bufferedRanges, buffer);
 
         if (!diff) {
@@ -165,8 +165,8 @@ function VirtualBuffer() {
         var mediaType = filter.mediaType;
         var appendedChunks = getChunks({ streamId: streamId, mediaType: mediaType, appended: true });
 
-        var remainingChunks = [],
-            start,
+        var remainingChunks = [];
+        var start,
             end;
 
         data[streamId][mediaType].actualBufferedRanges = CustomTimeRanges(context).create();
@@ -176,7 +176,7 @@ function VirtualBuffer() {
             return;
         }
 
-        for (var i = 0, ln = ranges.length; i < ln; i += 1) {
+        for (var i = 0, ln = ranges.length; i < ln; i++) {
             start = ranges.start(i);
             end = ranges.end(i);
             data[streamId][mediaType].actualBufferedRanges.add(start, end);
@@ -201,9 +201,9 @@ function VirtualBuffer() {
         var limit = filter.limit || Number.POSITIVE_INFINITY;
         var mediaController = MediaController(context).getInstance();
 
-        var ln = 0,
-            result = [],
-            sourceArr;
+        var ln = 0;
+        var result = [];
+        var sourceArr;
 
         if (!originData) return result;
 
@@ -216,11 +216,11 @@ function VirtualBuffer() {
 
         sourceArr = appended ? originData.appended : (segmentType ? originData[segmentType] : []);
 
-        result = sourceArr.filter(function(item, idx, arr) {
+        result = sourceArr.filter(function (item, idx, arr) {
             if (ln >= limit) return false;
 
             for (var prop in filter) {
-                if (prop === "mediaInfo") {
+                if (prop === 'mediaInfo') {
                     return mediaController.isTracksEqual(item[prop], filter[prop]);
                 }
 
@@ -232,7 +232,7 @@ function VirtualBuffer() {
                 arr.splice(idx, 1);
             }
 
-            ln +=1;
+            ln++;
 
             return true;
         });
@@ -278,7 +278,7 @@ function VirtualBuffer() {
     function setConfig(config) {
         if (!config) return;
 
-        if (config.sourceBufferExt){
+        if (config.sourceBufferExt) {
             sourceBufferExt = config.sourceBufferExt;
         }
     }
@@ -291,7 +291,7 @@ function VirtualBuffer() {
     }
 
     function sortArrayByProperty(array, sortProp) {
-        var compare = function (obj1, obj2){
+        var compare = function (obj1, obj2) {
             if (obj1[sortProp] < obj2[sortProp]) return -1;
             if (obj1[sortProp] > obj2[sortProp]) return 1;
             return 0;
@@ -312,14 +312,14 @@ function VirtualBuffer() {
     function findChunksForRange(chunks, range, truncateChunk) {
         var rangeStart = range.start;
         var rangeEnd = range.end;
+        var chunksForRange = [];
 
-        var chunksForRange = [],
-            chunkStart,
+        var chunkStart,
             chunkEnd,
             isStartIncluded,
             isEndIncluded;
 
-        chunks.forEach(function(chunk) {
+        chunks.forEach(function (chunk) {
             chunkStart = chunk.bufferedRange.start;
             chunkEnd = chunk.bufferedRange.end;
             isStartIncluded = (chunkStart >= rangeStart && chunkStart < rangeEnd);

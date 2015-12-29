@@ -312,7 +312,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
 
         if (ln === 0) return null;
 
-        for (i; i < ln; i += 1) {
+        for (i; i < ln; i++) {
             info = manifestInfo[i];
             item = {};
 
@@ -348,7 +348,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
             if (ranges && ranges.length > 0) {
                 rangeLn = ranges.length;
                 item.buffered = [];
-                for (k = 0; k < rangeLn; k += 1) {
+                for (k = 0; k < rangeLn; k++) {
                     range = {};
                     range.start = ranges.start(k).toFixed(2);
                     range.end = ranges.end(k).toFixed(2);
@@ -359,7 +359,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
                 item.buffered = [{start: "-", end: "-", size: "-"}];
             }
 
-            for (k = 0; k < info.streamInfo.length; k += 1) {
+            for (k = 0; k < info.streamInfo.length; k++) {
                 stream = item.streamInfo[k];
 
                 if (!prevInfo) break;
@@ -372,7 +372,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
                 stream.durationDelta = "(" + (stream.duration - prevStream.duration).toFixed(2) + ")";
             }
 
-            for (k = 0; k < info.trackInfo.length; k += 1) {
+            for (k = 0; k < info.trackInfo.length; k++) {
                 track = item.trackInfo[k];
 
                 if (!prevInfo) break;
@@ -400,7 +400,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
             bufferedRanges = [];
 
         // get current buffered ranges of video element and keep them up to date
-        for (var i = 0; i < video.buffered.length; i += 1) {
+        for (var i = 0; i < video.buffered.length; i++) {
             bufferedRanges.push(video.buffered.start(i) + ' - ' + video.buffered.end(i));
         }
         $scope.bufferedRanges = bufferedRanges;

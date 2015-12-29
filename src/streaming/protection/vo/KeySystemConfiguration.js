@@ -49,7 +49,7 @@
  */
 class KeySystemConfiguration {
     constructor(audioCapabilities, videoCapabilities, distinctiveIdentifier, persistentState, sessionTypes) {
-        this.initDataTypes = [ "cenc" ];
+        this.initDataTypes = [ 'cenc' ];
         this.audioCapabilities = audioCapabilities;
         this.videoCapabilities = videoCapabilities;
         this.distinctiveIdentifier = distinctiveIdentifier;

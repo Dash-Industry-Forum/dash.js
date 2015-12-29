@@ -35,13 +35,13 @@ function Capabilities() {
     let instance,
         encryptedMediaSupported;
 
-    function setup(){
+    function setup() {
         encryptedMediaSupported = false;
     }
 
     function supportsMediaSource() {
-        let hasWebKit = ("WebKitMediaSource" in window);
-        let hasMediaSource = ("MediaSource" in window);
+        let hasWebKit = ('WebKitMediaSource' in window);
+        let hasMediaSource = ('MediaSource' in window);
 
         return (hasWebKit || hasMediaSource);
     }
@@ -63,18 +63,18 @@ function Capabilities() {
     function supportsCodec(element, codec) {
 
         if (!(element instanceof HTMLMediaElement)) {
-            throw "element must be of type HTMLMediaElement.";
+            throw 'element must be of type HTMLMediaElement.';
         }
 
         var canPlay = element.canPlayType(codec);
-        return (canPlay === "probably" || canPlay === "maybe");
+        return (canPlay === 'probably' || canPlay === 'maybe');
     }
 
     instance = {
         supportsMediaSource: supportsMediaSource,
         supportsEncryptedMedia: supportsEncryptedMedia,
         supportsCodec: supportsCodec,
-        setEncryptedMediaSupported:setEncryptedMediaSupported
+        setEncryptedMediaSupported: setEncryptedMediaSupported
     };
 
     setup();

@@ -82,9 +82,9 @@ function XlinkController(config) {
     }
 
     function resolve(elements, type, resolveType) {
+        var resolveObject = {};
         var element,
             url,
-            resolveObject = {},
             i;
 
         resolveObject.elements = elements;
@@ -94,9 +94,9 @@ function XlinkController(config) {
         if (resolveObject.elements.length === 0) {
             onXlinkAllElementsLoaded(resolveObject);
         }
-        for (i = 0; i < resolveObject.elements.length; i += 1) {
+        for (i = 0; i < resolveObject.elements.length; i++) {
             element = resolveObject.elements[i];
-            if (element.url.indexOf("http://") !== -1) {
+            if (element.url.indexOf('http://') !== -1) {
                 url = element.url;
             } else {
                 url = element.originalContent.BaseURL + element.url;
@@ -108,10 +108,11 @@ function XlinkController(config) {
     function onXlinkElementLoaded(event) {
         var element,
             resolveObject,
-            index,
-            openingTag = '<response>',
-            closingTag = '</response>',
-            mergedContent = '';
+            index;
+
+        var openingTag = '<response>';
+        var closingTag = '</response>';
+        var mergedContent = '';
 
         element = event.element;
         resolveObject = event.resolveObject;
@@ -129,8 +130,8 @@ function XlinkController(config) {
 
     // We got to wait till all elements of the current queue are resolved before merging back
     function onXlinkAllElementsLoaded (resolveObject) {
-        var elements = [],
-            i,
+        var elements = [];
+        var i,
             obj;
 
         mergeElementsBack(resolveObject);
@@ -162,22 +163,22 @@ function XlinkController(config) {
 
     // Returns the elements with the specific resolve Type
     function getElementsToResolve(elements, parentElement, type, resolveType) {
-        var toResolve = [],
-            element,
+        var toResolve = [];
+        var element,
             i,
             xlinkObject;
         // first remove all the resolve-to-zero elements
-        for (i = elements.length - 1; i >= 0; i -= 1) {
+        for (i = elements.length - 1; i >= 0; i--) {
             element = elements[i];
-            if (element.hasOwnProperty("xlink:href") && element["xlink:href"] === RESOLVE_TO_ZERO) {
+            if (element.hasOwnProperty('xlink:href') && element['xlink:href'] === RESOLVE_TO_ZERO) {
                 elements.splice(i, 1);
             }
         }
         // now get the elements with the right resolve type
         for (i = 0; i < elements.length; i++) {
             element = elements[i];
-            if (element.hasOwnProperty("xlink:href") && element.hasOwnProperty("xlink:actuate") && element["xlink:actuate"] === resolveType) {
-                xlinkObject = createXlinkObject(element["xlink:href"], parentElement, type, i, resolveType, element);
+            if (element.hasOwnProperty('xlink:href') && element.hasOwnProperty('xlink:actuate') && element['xlink:actuate'] === resolveType) {
+                xlinkObject = createXlinkObject(element['xlink:href'], parentElement, type, i, resolveType, element);
                 toResolve.push(xlinkObject);
             }
         }
@@ -185,9 +186,9 @@ function XlinkController(config) {
     }
 
     function mergeElementsBack(resolveObject) {
+        var resolvedElements = [];
         var element,
             type,
-            resolvedElements = [],
             obj,
             i,
             j,
@@ -203,7 +204,7 @@ function XlinkController(config) {
                 delete element.originalContent['xlink:href'];
                 resolvedElements.push(element.originalContent);
             }
-                // Element was successfully resolved
+            // Element was successfully resolved
             else if (element.resolvedContent) {
                 for (j = 0; j < element.resolvedContent[type].length; j++) {
                     //TODO Contains another Xlink attribute with xlink:actuate set to onload. Remove all xLink attributes
@@ -255,10 +256,10 @@ function XlinkController(config) {
     }
 
     instance = {
-        resolveManifestOnLoad :resolveManifestOnLoad,
-        setMatchers :setMatchers,
-        setIron :setIron,
-        reset :reset
+        resolveManifestOnLoad: resolveManifestOnLoad,
+        setMatchers: setMatchers,
+        setIron: setIron,
+        reset: reset
     };
 
     setup();

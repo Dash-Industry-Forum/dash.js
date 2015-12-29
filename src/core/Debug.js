@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventBus from "./EventBus.js";
+import EventBus from './EventBus.js';
 import Events from './events/Events.js';
 import FactoryMaker from './FactoryMaker.js';
 
@@ -100,12 +100,12 @@ function Debug() {
      */
     function log() {
 
-        var message = "",
-            logTime = null;
+        var message = '';
+        var logTime = null;
 
         if (showLogTimestamp) {
             logTime = new Date().getTime();
-            message += "[" + (logTime - startTime) + "]";
+            message += '[' + (logTime - startTime) + ']';
         }
 
         //if (showCalleeName && this.getName) {
@@ -117,11 +117,11 @@ function Debug() {
         //}
 
         if (message.length > 0) {
-            message += " ";
+            message += ' ';
         }
 
-        Array.apply(null, arguments).forEach(function(item) {
-            message += item + " ";
+        Array.apply(null, arguments).forEach(function (item) {
+            message += item + ' ';
         });
 
         if (logToBrowserConsole) {

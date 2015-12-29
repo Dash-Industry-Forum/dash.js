@@ -96,9 +96,9 @@ function StreamController() {
 
         manifestUpdater = ManifestUpdater(context).getInstance();
         manifestUpdater.setConfig({
-            log :log,
+            log: log,
             manifestModel: manifestModel,
-            manifestExt :manifestExt
+            manifestExt: manifestExt
         });
         manifestUpdater.initialize(manifestLoader);
 
@@ -152,7 +152,7 @@ function StreamController() {
 
     function onPlaybackError(e) {
         var code = e.error ? e.error.code : 0;
-        var msg = "";
+        var msg = '';
 
         if (code === -1) {
             // not an error!
@@ -161,28 +161,28 @@ function StreamController() {
 
         switch (code) {
             case 1:
-                msg = "MEDIA_ERR_ABORTED";
+                msg = 'MEDIA_ERR_ABORTED';
                 break;
             case 2:
-                msg = "MEDIA_ERR_NETWORK";
+                msg = 'MEDIA_ERR_NETWORK';
                 break;
             case 3:
-                msg = "MEDIA_ERR_DECODE";
+                msg = 'MEDIA_ERR_DECODE';
                 break;
             case 4:
-                msg = "MEDIA_ERR_SRC_NOT_SUPPORTED";
+                msg = 'MEDIA_ERR_SRC_NOT_SUPPORTED';
                 break;
             case 5:
-                msg = "MEDIA_ERR_ENCRYPTED";
+                msg = 'MEDIA_ERR_ENCRYPTED';
                 break;
             default:
-                msg = "UNKNOWN";
+                msg = 'UNKNOWN';
                 break;
         }
 
         hasMediaError = true;
 
-        log("Video Element Error: " + msg);
+        log('Video Element Error: ' + msg);
         if (e.error) {
             log(e.error);
         }
@@ -197,7 +197,7 @@ function StreamController() {
     function onPlaybackTimeUpdated(e) {
         var playbackQuality = videoModelExt.getPlaybackQuality(videoModel.getElement());
         if (playbackQuality) {
-            metricsModel.addDroppedFrames("video", playbackQuality);
+            metricsModel.addDroppedFrames('video', playbackQuality);
         }
 
         // Sometimes after seeking timeUpdateHandler is called before seekingHandler and a new stream starts
@@ -243,14 +243,14 @@ function StreamController() {
         var start = activeStream.getStreamInfo().start;
         var duration = activeStream.getStreamInfo().duration;
 
-        return streams.filter(function(stream){
+        return streams.filter(function (stream) {
             return (stream.getStreamInfo().start === (start + duration));
         })[0];
     }
 
     function getStreamForTime(time) {
-        var duration = 0,
-            stream = null;
+        var duration = 0;
+        var stream = null;
 
         var ln = streams.length;
 
@@ -272,12 +272,12 @@ function StreamController() {
 
     function switchStream(from, to, seekTo) {
 
-        if(isStreamSwitchingInProgress || !from || !to || from === to) return;
+        if (isStreamSwitchingInProgress || !from || !to || from === to) return;
 
         fireSwitchEvent(Events.PERIOD_SWITCH_STARTED, from, to);
         isStreamSwitchingInProgress = true;
 
-        var onMediaSourceReady = function() {
+        var onMediaSourceReady = function () {
             if (seekTo !== undefined) {
                 playbackController.seek(seekTo);
             }
@@ -298,13 +298,13 @@ function StreamController() {
     function setupMediaSource(callback) {
         var sourceUrl;
 
-        var onMediaSourceOpen = function(e) {
-            log("MediaSource is open!");
+        var onMediaSourceOpen = function (e) {
+            log('MediaSource is open!');
             log(e);
             window.URL.revokeObjectURL(sourceUrl);
 
-            mediaSource.removeEventListener("sourceopen", onMediaSourceOpen);
-            mediaSource.removeEventListener("webkitsourceopen", onMediaSourceOpen);
+            mediaSource.removeEventListener('sourceopen', onMediaSourceOpen);
+            mediaSource.removeEventListener('webkitsourceopen', onMediaSourceOpen);
 
             //log("MediaSource set up.");
             setMediaDuration();
@@ -324,8 +324,8 @@ function StreamController() {
             mediaSourceExt.detachMediaSource(videoModel);
         }
 
-        mediaSource.addEventListener("sourceopen", onMediaSourceOpen, false);
-        mediaSource.addEventListener("webkitsourceopen", onMediaSourceOpen, false);
+        mediaSource.addEventListener('sourceopen', onMediaSourceOpen, false);
+        mediaSource.addEventListener('webkitsourceopen', onMediaSourceOpen, false);
         sourceUrl = mediaSourceExt.attachMediaSource(mediaSource, videoModel);
         //log("MediaSource attached to video.  Waiting on open...");
     }
@@ -336,15 +336,15 @@ function StreamController() {
 
         manifestDuration = activeStream.getStreamInfo().manifestInfo.duration;
         mediaDuration = mediaSourceExt.setDuration(mediaSource, manifestDuration);
-        log("Duration successfully set to: " + mediaDuration);
+        log('Duration successfully set to: ' + mediaDuration);
     }
 
     function composeStreams() {
         var manifest = manifestModel.getValue();
-        var metrics = metricsModel.getMetricsFor("stream");
+        var metrics = metricsModel.getMetricsFor('stream');
         var manifestUpdateInfo = metricsExt.getCurrentManifestUpdate(metrics);
-        var remainingStreams = [],
-            streamInfo,
+        var remainingStreams = [];
+        var streamInfo,
             pLen,
             sLen,
             pIdx,
@@ -365,7 +365,7 @@ function StreamController() {
 
         try {
             if (streamsInfo.length === 0) {
-                throw new Error("There are no streams");
+                throw new Error('There are no streams');
             }
 
             metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: videoModel.getCurrentTime(),
@@ -374,9 +374,9 @@ function StreamController() {
 
             isUpdating = true;
 
-            for (pIdx = 0, pLen = streamsInfo.length; pIdx < pLen; pIdx += 1) {
+            for (pIdx = 0, pLen = streamsInfo.length; pIdx < pLen; pIdx++) {
                 streamInfo = streamsInfo[pIdx];
-                for (sIdx = 0, sLen = streams.length; sIdx < sLen; sIdx += 1) {
+                for (sIdx = 0, sLen = streams.length; sIdx < sLen; sIdx++) {
                     // If the stream already exists we just need to update the values we got from the updated manifest
                     if (streams[sIdx].getId() === streamInfo.id) {
                         stream = streams[sIdx];
@@ -425,8 +425,8 @@ function StreamController() {
 
             isUpdating = false;
             checkIfUpdateCompleted();
-        } catch(e) {
-            errHandler.manifestError(e.message, "nostreamscomposed", manifest);
+        } catch (e) {
+            errHandler.manifestError(e.message, 'nostreamscomposed', manifest);
             reset();
         }
     }
@@ -434,12 +434,12 @@ function StreamController() {
     function checkIfUpdateCompleted() {
         if (isUpdating) return;
 
-        var ln = streams.length,
-            i = 0;
+        var ln = streams.length;
+        var i = 0;
 
         startAutoPlay();
 
-        for (i; i < ln; i += 1) {
+        for (i; i < ln; i++) {
             if (!streams[i].isInitialized()) return;
         }
 
@@ -461,8 +461,8 @@ function StreamController() {
             var manifest = e.manifest;
             var streamInfo = adapter.getStreamsInfo(manifest)[0];
             var mediaInfo = (
-                adapter.getMediaInfoForType(manifest, streamInfo, "video") ||
-                    adapter.getMediaInfoForType(manifest, streamInfo, "audio")
+                adapter.getMediaInfoForType(manifest, streamInfo, 'video') ||
+                    adapter.getMediaInfoForType(manifest, streamInfo, 'audio')
             );
 
             var adaptation,
@@ -473,7 +473,7 @@ function StreamController() {
                 useCalculatedLiveEdgeTime = manifestExt.getRepresentationsForAdaptation(manifest, adaptation)[0].useCalculatedLiveEdgeTime;
 
                 if (useCalculatedLiveEdgeTime) {
-                    log("SegmentTimeline detected using calculated Live Edge Time");
+                    log('SegmentTimeline detected using calculated Live Edge Time');
                     mediaPlayerModel.setUseManifestDateHeaderTimeSource(false);
                 }
             }
@@ -483,10 +483,10 @@ function StreamController() {
             var isHTTPS = URIQueryAndFragmentModel(context).getInstance().isManifestHTTPS();
 
             //If https is detected on manifest then lets apply that protocol to only the default time source(s). In the future we may find the need to apply this to more then just default so left code at this level instead of in MediaPlayer.
-            allUTCTimingSources.forEach(function(item){
-                if (item.value.replace(/.*?:\/\//g, "") === MediaPlayerModel.DEFAULT_UTC_TIMING_SOURCE.value.replace(/.*?:\/\//g, "")){
-                    item.value = item.value.replace(isHTTPS ? new RegExp(/^(http:)?\/\//i) : new RegExp(/^(https:)?\/\//i), isHTTPS ? "https://" : "http://");
-                    log("Matching default timing source protocol to manifest protocol: " , item.value);
+            allUTCTimingSources.forEach(function (item) {
+                if (item.value.replace(/.*?:\/\//g, '') === MediaPlayerModel.DEFAULT_UTC_TIMING_SOURCE.value.replace(/.*?:\/\//g, '')) {
+                    item.value = item.value.replace(isHTTPS ? new RegExp(/^(http:)?\/\//i) : new RegExp(/^(https:)?\/\//i), isHTTPS ? 'https://' : 'http://');
+                    log('Matching default timing source protocol to manifest protocol: ' , item.value);
                 }
             });
 
@@ -513,7 +513,7 @@ function StreamController() {
     }
 
     function getStreamById(id) {
-        return streams.filter(function(item){
+        return streams.filter(function (item) {
             return item.getId() === id;
         })[0];
     }
@@ -526,52 +526,52 @@ function StreamController() {
         manifestUpdater.setManifest(manifest);
     }
 
-    function setConfig(config){
+    function setConfig(config) {
         if (!config) return;
 
-        if (config.capabilities){
+        if (config.capabilities) {
             capabilities = config.capabilities;
         }
-        if (config.manifestLoader){
+        if (config.manifestLoader) {
             manifestLoader = config.manifestLoader;
         }
-        if (config.manifestModel){
+        if (config.manifestModel) {
             manifestModel = config.manifestModel;
         }
-        if (config.manifestExt){
+        if (config.manifestExt) {
             manifestExt = config.manifestExt;
         }
-        if (config.protectionController){
+        if (config.protectionController) {
             protectionController = config.protectionController;
         }
-        if (config.adapter){
+        if (config.adapter) {
             adapter = config.adapter;
         }
-        if (config.metricsModel){
+        if (config.metricsModel) {
             metricsModel = config.metricsModel;
         }
-        if (config.metricsExt){
+        if (config.metricsExt) {
             metricsExt = config.metricsExt;
         }
-        if (config.videoModelExt){
+        if (config.videoModelExt) {
             videoModelExt = config.videoModelExt;
         }
-        if (config.liveEdgeFinder){
+        if (config.liveEdgeFinder) {
             liveEdgeFinder = config.liveEdgeFinder;
         }
-        if (config.mediaSourceExt){
+        if (config.mediaSourceExt) {
             mediaSourceExt = config.mediaSourceExt;
         }
-        if (config.timeSyncController){
+        if (config.timeSyncController) {
             timeSyncController = config.timeSyncController;
         }
-        if (config.virtualBuffer){
+        if (config.virtualBuffer) {
             virtualBuffer = config.virtualBuffer;
         }
-        if (config.errHandler){
+        if (config.errHandler) {
             errHandler = config.errHandler;
         }
-        if (config.timelineConverter){
+        if (config.timelineConverter) {
             timelineConverter = config.timelineConverter;
         }
     }
@@ -633,15 +633,15 @@ function StreamController() {
     }
 
     instance = {
-        initialize          :initialize,
-        getAutoPlay         :getAutoPlay,
-        getActiveStreamInfo :getActiveStreamInfo,
-        isStreamActive      :isStreamActive,
-        getStreamById       :getStreamById,
-        load                :load,
-        loadWithManifest    :loadWithManifest,
-        setConfig           :setConfig,
-        reset               :reset
+        initialize: initialize,
+        getAutoPlay: getAutoPlay,
+        getActiveStreamInfo: getActiveStreamInfo,
+        isStreamActive: isStreamActive,
+        getStreamById: getStreamById,
+        load: load,
+        loadWithManifest: loadWithManifest,
+        setConfig: setConfig,
+        reset: reset
     };
 
     setup();

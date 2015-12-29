@@ -9,7 +9,7 @@ MetricsTreeConverter = function () {
                 levelMetric,
                 i;
 
-            for (i = 0; i < bufferLevelMetrics.length; i += 1) {
+            for (i = 0; i < bufferLevelMetrics.length; i++) {
                 bufferMetric = bufferLevelMetrics[i];
 
                 treeMetric = {};
@@ -44,7 +44,7 @@ MetricsTreeConverter = function () {
                 stopreasonMetric,
                 i;
 
-            for (i = 0; i < playListTrace.length; i += 1) {
+            for (i = 0; i < playListTrace.length; i++) {
                 bufferMetric = playListTrace[i];
 
                 treeMetric = {};
@@ -93,7 +93,7 @@ MetricsTreeConverter = function () {
                 traceMetric,
                 i;
 
-            for (i = 0; i < playListMetrics.length; i += 1) {
+            for (i = 0; i < playListMetrics.length; i++) {
                 bufferMetric = playListMetrics[i];
 
                 treeMetric = {};
@@ -135,7 +135,7 @@ MetricsTreeConverter = function () {
                 ltoMetric,
                 i;
 
-            for (i = 0; i < representationSwitch.length; i += 1) {
+            for (i = 0; i < representationSwitch.length; i++) {
                 bufferMetric = representationSwitch[i];
 
                 treeMetric = {};
@@ -174,7 +174,7 @@ MetricsTreeConverter = function () {
                 droppedFramesMetric,
                 i;
 
-            for (i = 0; i < droppedFrames.length; i += 1) {
+            for (i = 0; i < droppedFrames.length; i++) {
                 bufferMetric = droppedFrames[i];
 
                 treeMetric = {};
@@ -206,7 +206,7 @@ MetricsTreeConverter = function () {
                 bMetric,
                 i;
 
-            for (i = 0; i < httpRequestTrace.length; i += 1) {
+            for (i = 0; i < httpRequestTrace.length; i++) {
                 bufferMetric = httpRequestTrace[i];
 
                 treeMetric = {};
@@ -250,7 +250,7 @@ MetricsTreeConverter = function () {
                 traceMetric,
                 i;
 
-            for (i = 0; i < httpRequest.length; i += 1) {
+            for (i = 0; i < httpRequest.length; i++) {
                 bufferMetric = httpRequest[i];
 
                 treeMetric = {};
@@ -321,7 +321,7 @@ MetricsTreeConverter = function () {
                 tconnectMetric,
                 i;
 
-            for (i = 0; i < tcpConnection.length; i += 1) {
+            for (i = 0; i < tcpConnection.length; i++) {
                 bufferMetric = tcpConnection[i];
 
                 treeMetric = {};

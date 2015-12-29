@@ -44,7 +44,7 @@ import RequestsQueue from '../vo/metrics/RequestsQueue.js';
 import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-function  MetricsModel() {
+function MetricsModel() {
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
@@ -294,7 +294,7 @@ function  MetricsModel() {
 
     function addManifestUpdate(mediaType, type, requestTime, fetchTime, availabilityStartTime, presentationStartTime, clientTimeOffset, currentTime, buffered, latency) {
         var vo = new ManifestUpdate();
-        var metrics = getMetricsFor("stream");
+        var metrics = getMetricsFor('stream');
 
         vo.mediaType = mediaType;
         vo.type = type;
@@ -390,7 +390,7 @@ function  MetricsModel() {
         metricUpdated(playList.stream, adapter.metricsList.PLAY_LIST_TRACE, playList);
         return vo;
     }
-    
+
     instance = {
         metricsChanged: metricsChanged,
         metricChanged: metricChanged,

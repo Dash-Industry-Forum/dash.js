@@ -48,7 +48,7 @@ function ManifestUpdater() {
         manifestModel,
         manifestExt;
 
-    function setConfig(config){
+    function setConfig(config) {
         if (!config) return;
 
         if (config.manifestModel) {
@@ -102,19 +102,19 @@ function ManifestUpdater() {
     function start() {
         clear();
         if (!isNaN(refreshDelay)) {
-            log("Refresh manifest in " + refreshDelay + " seconds.");
+            log('Refresh manifest in ' + refreshDelay + ' seconds.');
             refreshTimer = setTimeout(onRefreshTimer, Math.min(refreshDelay * 1000, Math.pow(2, 31) - 1), this);
         }
     }
 
     function update(manifest) {
-
         var delay,
-            timeSinceLastUpdate,
-            date = new Date();
+            timeSinceLastUpdate;
+
+        var date = new Date();
 
         manifestModel.setValue(manifest);
-        log("Manifest has been refreshed at " + date + "[" + date.getTime() + "] ");
+        log('Manifest has been refreshed at ' + date + '[' + date.getTime() + '] ');
 
         delay = manifestExt.getRefreshDelay(manifest);
         timeSinceLastUpdate = (new Date().getTime() - manifest.loadedTime.getTime()) / 1000;
@@ -137,7 +137,7 @@ function ManifestUpdater() {
         manifest = manifestModel.getValue();
         url = manifest.url;
 
-        if (manifest.hasOwnProperty("Location")) {
+        if (manifest.hasOwnProperty('Location')) {
             url = manifest.Location;
         }
 

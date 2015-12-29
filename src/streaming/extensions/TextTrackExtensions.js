@@ -76,17 +76,17 @@ function TextTrackExtensions() {
         isIE11orEdge = !!navigator.userAgent.match(/Trident.*rv[ :]*11\./) || navigator.userAgent.match(/Edge/);
         isChrome = !!navigator.userAgent.match(/Chrome/) && !navigator.userAgent.match(/Edge/);
         if (document.fullscreenElement !== undefined) {
-            fullscreenAttribute = "fullscreenElement"; // Standard and Edge
+            fullscreenAttribute = 'fullscreenElement'; // Standard and Edge
         } else if (document.webkitIsFullScreen !== undefined) {
-            fullscreenAttribute = "webkitIsFullScreen"; // Chrome and Safari (and Edge)
+            fullscreenAttribute = 'webkitIsFullScreen'; // Chrome and Safari (and Edge)
         } else if (document.msFullscreenElement) { // IE11
-            fullscreenAttribute = "msFullscreenElement";
+            fullscreenAttribute = 'msFullscreenElement';
         } else if (document.mozFullScreen) { // Firefox
-            fullscreenAttribute = "mozFullScreen";
+            fullscreenAttribute = 'mozFullScreen';
         }
     }
 
-    function createTrackForUserAgent (i){
+    function createTrackForUserAgent (i) {
         var kind = textTrackQueue[i].kind;
         var label = textTrackQueue[i].label !== undefined ? textTrackQueue[i].label : textTrackQueue[i].lang;
         var lang = textTrackQueue[i].lang;
@@ -114,13 +114,13 @@ function TextTrackExtensions() {
             video = textTrackInfoVO.video;
         }
 
-        if(textTrackQueue.length === totalTextTracks) {
-            textTrackQueue.sort(function(a, b) { //Sort in same order as in manifest
+        if (textTrackQueue.length === totalTextTracks) {
+            textTrackQueue.sort(function (a, b) { //Sort in same order as in manifest
                 return a.index - b.index;
             });
             captionContainer = videoModel.getTTMLRenderingDiv();
             var defaultIndex = 0;
-            for(var i = 0 ; i < textTrackQueue.length; i++) {
+            for (var i = 0 ; i < textTrackQueue.length; i++) {
                 var track = createTrackForUserAgent.call(this, i);
                 currentTrackIdx = i;//set to i for external track setup. rest to default value at end of loop
                 trackElementArr.push(track); //used to remove tracks from video element when added manually
@@ -132,20 +132,20 @@ function TextTrackExtensions() {
                     track.default = true;
                     defaultIndex = i;
                 }
-                if (!isIE11orEdge){
+                if (!isIE11orEdge) {
                     video.appendChild(track);
                 }
                 var textTrack = video.textTracks[i];
                 if (captionContainer && textTrackQueue[i].isTTML) {
-                    textTrack.renderingType = "html";
+                    textTrack.renderingType = 'html';
                 } else {
-                    textTrack.renderingType = "default";
+                    textTrack.renderingType = 'default';
                 }
                 this.addCaptions(0, textTrackQueue[i].captionData);
                 eventBus.trigger(Events.TEXT_TRACK_ADDED);
             }
             setCurrentTrackIdx.call(this, defaultIndex);
-            eventBus.trigger(Events.TEXT_TRACKS_ADDED, {index:currentTrackIdx, tracks:textTrackQueue});//send default idx.
+            eventBus.trigger(Events.TEXT_TRACKS_ADDED, {index: currentTrackIdx, tracks: textTrackQueue});//send default idx.
         }
     }
 
@@ -170,16 +170,16 @@ function TextTrackExtensions() {
             videoPictureY = (viewHeight - videoPictureHeight) / 2;
         }
 
-        return { x:videoPictureX,
-            y:videoPictureY,
-            w:videoPictureWidth,
-            h:videoPictureHeight }; /* Maximal picture size in videos aspect ratio */
+        return { x: videoPictureX,
+            y: videoPictureY,
+            w: videoPictureWidth,
+            h: videoPictureHeight }; /* Maximal picture size in videos aspect ratio */
     }
 
 
     function checkVideoSize() {
         var track = this.getCurrentTextTrack();
-        if (track && track.renderingType === "html") {
+        if (track && track.renderingType === 'html') {
             var newVideoWidth = video.clientWidth;
             var newVideoHeight = video.clientHeight;
 
@@ -193,10 +193,10 @@ function TextTrackExtensions() {
                 actualVideoTop = realVideoSize.y;
                 actualVideoWidth = newVideoWidth;
                 actualVideoHeight = newVideoHeight;
-                captionContainer.style.left = actualVideoLeft + "px";
-                captionContainer.style.top = actualVideoTop + "px";
-                captionContainer.style.width = actualVideoWidth + "px";
-                captionContainer.style.height = actualVideoHeight + "px";
+                captionContainer.style.left = actualVideoLeft + 'px';
+                captionContainer.style.top = actualVideoTop + 'px';
+                captionContainer.style.width = actualVideoWidth + 'px';
+                captionContainer.style.height = actualVideoHeight + 'px';
 
                 // Video view has changed size, so resize all active cues
                 for (var i = 0; i < track.activeCues.length; ++i) {
@@ -230,14 +230,14 @@ function TextTrackExtensions() {
                     // Compute the CellResolution unit in order to process properties using sizing (fontSize, linePadding, etc).
                     var elementsSpan = document.getElementsByClassName('spanPadding');
                     for (var i = 0; i < elementsSpan.length; i++) {
-                        elementsSpan[i].style.cssText = elementsSpan[i].style.cssText.replace(/(padding-left\s*:\s*)[\d.,]+(?=\s*px)/gi, "$1" + replaceValue);
-                        elementsSpan[i].style.cssText = elementsSpan[i].style.cssText.replace(/(padding-right\s*:\s*)[\d.,]+(?=\s*px)/gi, "$1" + replaceValue);
+                        elementsSpan[i].style.cssText = elementsSpan[i].style.cssText.replace(/(padding-left\s*:\s*)[\d.,]+(?=\s*px)/gi, '$1' + replaceValue);
+                        elementsSpan[i].style.cssText = elementsSpan[i].style.cssText.replace(/(padding-right\s*:\s*)[\d.,]+(?=\s*px)/gi, '$1' + replaceValue);
                     }
                 }
             }
         }
 
-        if(activeCue.fontSize) {
+        if (activeCue.fontSize) {
             for (key in activeCue.fontSize) {
                 if (activeCue.fontSize.hasOwnProperty(key)) {
                     var valueFontSize = activeCue.fontSize[key] / 100;
@@ -250,7 +250,7 @@ function TextTrackExtensions() {
                     }
 
                     for (var j = 0; j < elements.length; j++) {
-                        elements[j].style.cssText = elements[j].style.cssText.replace(/(font-size\s*:\s*)[\d.,]+(?=\s*px)/gi, "$1" + replaceValue);
+                        elements[j].style.cssText = elements[j].style.cssText.replace(/(font-size\s*:\s*)[\d.,]+(?=\s*px)/gi, '$1' + replaceValue);
                     }
                 }
             }
@@ -263,7 +263,7 @@ function TextTrackExtensions() {
                     replaceValue = (valueLineHeight * cellUnit[1]).toString();
                     elements = document.getElementsByClassName(key);
                     for (var k = 0; k < elements.length; k++) {
-                        elements[k].style.cssText = elements[k].style.cssText.replace(/(line-height\s*:\s*)[\d.,]+(?=\s*px)/gi, "$1" + replaceValue);
+                        elements[k].style.cssText = elements[k].style.cssText.replace(/(line-height\s*:\s*)[\d.,]+(?=\s*px)/gi, '$1' + replaceValue);
                     }
                 }
             }
@@ -275,28 +275,28 @@ function TextTrackExtensions() {
         var track = getCurrentTextTrack.call(this);
         var self = this;
 
-        if(!track) return;
+        if (!track) return;
 
-        track.mode = "showing";//make sure tracks are showing to be able to add the cue...
+        track.mode = 'showing';//make sure tracks are showing to be able to add the cue...
 
-        for(var item in captionData) {
+        for (var item in captionData) {
             var cue;
             var currentItem = captionData[item];
 
-            if (!videoSizeCheckInterval && currentItem.type=="html") {
+            if (!videoSizeCheckInterval && currentItem.type == 'html') {
                 videoSizeCheckInterval = setInterval(checkVideoSize.bind(this), 500);
             }
 
             //image subtitle extracted from TTML
-            if(currentItem.type=="image"){
-                cue = new Cue(currentItem.start-timeOffset, currentItem.end-timeOffset, "");
-                cue.image=currentItem.data;
-                cue.id=currentItem.id;
-                cue.size=0; //discard the native display for this subtitles
-                cue.type="image"; // active image overlay
+            if (currentItem.type == 'image') {
+                cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, '');
+                cue.image = currentItem.data;
+                cue.id = currentItem.id;
+                cue.size = 0; //discard the native display for this subtitles
+                cue.type = 'image'; // active image overlay
                 cue.onenter =  function () {
                     var img = new Image();
-                    img.id = 'ttmlImage_'+this.id;
+                    img.id = 'ttmlImage_' + this.id;
                     img.src = this.image;
                     img.className = 'cue-image';
                     if (captionContainer) {
@@ -316,19 +316,19 @@ function TextTrackExtensions() {
                         container = video.parentNode;
                     }
                     imgs = container.childNodes;
-                    for(i=0;i<imgs.length;i++){
-                        if(imgs[i].id=='ttmlImage_'+this.id){
+                    for (i = 0; i < imgs.length; i++) {
+                        if (imgs[i].id == 'ttmlImage_' + this.id) {
                             container.removeChild(imgs[i]);
                         }
                     }
                 };
             }
-            else if (currentItem.type === "html") {
-                cue = new Cue(currentItem.start-timeOffset, currentItem.end-timeOffset, "");
+            else if (currentItem.type === 'html') {
+                cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, '');
                 cue.cueHTMLElement = currentItem.cueHTMLElement;
                 cue.regions = currentItem.regions;
                 cue.regionID = currentItem.regionID;
-                cue.cueID=currentItem.cueID;
+                cue.cueID = currentItem.cueID;
                 cue.videoWidth = currentItem.videoWidth;
                 cue.videoHeight = currentItem.videoHeight;
                 cue.cellResolution = currentItem.cellResolution;
@@ -336,13 +336,13 @@ function TextTrackExtensions() {
                 cue.lineHeight = currentItem.lineHeight;
                 cue.linePadding = currentItem.linePadding;
                 cue.scaleCue = scaleCue.bind(self);
-                captionContainer.style.left = actualVideoLeft + "px";
-                captionContainer.style.top = actualVideoTop + "px";
-                captionContainer.style.width = actualVideoWidth + "px";
-                captionContainer.style.height = actualVideoHeight + "px";
+                captionContainer.style.left = actualVideoLeft + 'px';
+                captionContainer.style.top = actualVideoTop + 'px';
+                captionContainer.style.width = actualVideoWidth + 'px';
+                captionContainer.style.height = actualVideoHeight + 'px';
 
                 cue.onenter =  function () {
-                    if (track.mode == "showing") {
+                    if (track.mode == 'showing') {
                         captionContainer.appendChild(this.cueHTMLElement);
                         scaleCue.call(self, this);
                     }
@@ -351,25 +351,25 @@ function TextTrackExtensions() {
                 cue.onexit =  function () {
                     var divs = captionContainer.childNodes;
                     for (var i = 0; i < divs.length; ++i) {
-                        if (divs[i].id == "subtitle_" + this.cueID) {
+                        if (divs[i].id == 'subtitle_' + this.cueID) {
                             captionContainer.removeChild(divs[i]);
                         }
                     }
                 };
             }
-            else{
-                cue = new Cue(currentItem.start-timeOffset, currentItem.end-timeOffset, currentItem.data);
-                if(currentItem.styles){
-                    if (currentItem.styles.align !== undefined && cue.hasOwnProperty("align")) {
+            else {
+                cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, currentItem.data);
+                if (currentItem.styles) {
+                    if (currentItem.styles.align !== undefined && cue.hasOwnProperty('align')) {
                         cue.align = currentItem.styles.align;
                     }
-                    if (currentItem.styles.line !== undefined && cue.hasOwnProperty("line")) {
+                    if (currentItem.styles.line !== undefined && cue.hasOwnProperty('line')) {
                         cue.line = currentItem.styles.line;
                     }
-                    if (currentItem.styles.position !== undefined && cue.hasOwnProperty("position")) {
+                    if (currentItem.styles.position !== undefined && cue.hasOwnProperty('position')) {
                         cue.position = currentItem.styles.position ;
                     }
-                    if (currentItem.styles.size !== undefined && cue.hasOwnProperty("size")) {
+                    if (currentItem.styles.size !== undefined && cue.hasOwnProperty('size')) {
                         cue.size = currentItem.styles.size;
                     }
                 }
@@ -378,25 +378,25 @@ function TextTrackExtensions() {
             track.addCue(cue);
         }
 
-        if (!textTrackQueue[currentTrackIdx].isFragmented){
-            track.mode = textTrackQueue[currentTrackIdx].defaultTrack ? "showing" : "hidden";
+        if (!textTrackQueue[currentTrackIdx].isFragmented) {
+            track.mode = textTrackQueue[currentTrackIdx].defaultTrack ? 'showing' : 'hidden';
         }
     }
 
-    function getCurrentTextTrack(){
+    function getCurrentTextTrack() {
         return currentTrackIdx >= 0 ? video.textTracks[currentTrackIdx] : null;
     }
 
-    function getCurrentTrackIdx(){
+    function getCurrentTrackIdx() {
         return currentTrackIdx;
     }
 
-    function setCurrentTrackIdx(idx){
+    function setCurrentTrackIdx(idx) {
         currentTrackIdx = idx;
         clearCues.call(this);
         if (idx >= 0) {
             var track = video.textTracks[idx];
-            if (track.renderingType === "html") {
+            if (track.renderingType === 'html') {
                 setNativeCueStyle.call(this);
             } else {
                 removeNativeCueStyle.call(this);
@@ -411,7 +411,7 @@ function TextTrackExtensions() {
     }
 
     function deleteTrackCues(track) {
-        if (track.cues){
+        if (track.cues) {
             var cues = track.cues;
             var lastIdx = cues.length - 1;
 
@@ -419,13 +419,13 @@ function TextTrackExtensions() {
                 track.removeCue(cues[r]);
             }
 
-            track.mode = "disabled";
+            track.mode = 'disabled';
         }
     }
 
     function deleteAllTextTracks() {
         var ln = trackElementArr.length;
-        for(var i = 0; i < ln; i++){
+        for (var i = 0; i < ln; i++) {
             if (isIE11orEdge) {
                 deleteTrackCues.call(this, getTextTrack.call(this, i));
             }else {
@@ -435,7 +435,7 @@ function TextTrackExtensions() {
         }
         trackElementArr = [];
         textTrackQueue = [];
-        if (videoSizeCheckInterval){
+        if (videoSizeCheckInterval) {
             clearInterval(videoSizeCheckInterval);
             videoSizeCheckInterval = null;
         }
@@ -457,10 +457,10 @@ function TextTrackExtensions() {
         styleElement.id  = 'native-cue-style';
         document.head.appendChild(styleElement);
         var stylesheet = styleElement.sheet;
-        if(video.id) {
-            stylesheet.insertRule("#" + video.id + '::cue {background: transparent}', 0);
-        } else if(video.classList.length !== 0) {
-            stylesheet.insertRule("." + video.className + '::cue {background: transparent}', 0);
+        if (video.id) {
+            stylesheet.insertRule('#' + video.id + '::cue {background: transparent}', 0);
+        } else if (video.classList.length !== 0) {
+            stylesheet.insertRule('.' + video.className + '::cue {background: transparent}', 0);
         } else {
             stylesheet.insertRule('video::cue {background: transparent}', 0);
         }
@@ -477,35 +477,35 @@ function TextTrackExtensions() {
 
     function clearCues() {
         if (captionContainer) {
-            while(captionContainer.firstChild) {
+            while (captionContainer.firstChild) {
                 captionContainer.removeChild(captionContainer.firstChild);
             }
         }
     }
 
-    function setConfig(config){
+    function setConfig(config) {
         if (!config) return;
 
-        if (config.videoModel){
+        if (config.videoModel) {
             videoModel = config.videoModel;
         }
     }
 
     instance = {
-        initialize          :initialize,
-        displayCConTop      :displayCConTop,
-        addTextTrack        :addTextTrack,
-        addCaptions         :addCaptions,
-        getTextTrack        :getTextTrack,
-        getCurrentTextTrack :getCurrentTextTrack,
-        getCurrentTrackIdx  :getCurrentTrackIdx,
-        setCurrentTrackIdx  :setCurrentTrackIdx,
-        deleteTrackCues     :deleteTrackCues,
-        deleteAllTextTracks :deleteAllTextTracks,
-        deleteTextTrack     :deleteTextTrack,
-        setConfig           :setConfig
+        initialize: initialize,
+        displayCConTop: displayCConTop,
+        addTextTrack: addTextTrack,
+        addCaptions: addCaptions,
+        getTextTrack: getTextTrack,
+        getCurrentTextTrack: getCurrentTextTrack,
+        getCurrentTrackIdx: getCurrentTrackIdx,
+        setCurrentTrackIdx: setCurrentTrackIdx,
+        deleteTrackCues: deleteTrackCues,
+        deleteAllTextTracks: deleteAllTextTracks,
+        deleteTextTrack: deleteTextTrack,
+        setConfig: setConfig
     };
-    
+
     return instance;
 }
 

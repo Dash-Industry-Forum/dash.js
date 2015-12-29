@@ -45,35 +45,35 @@ function URIQueryAndFragmentModel() {
         isHTTPS = false;
     }
 
-    function getURIFragmentData(){
+    function getURIFragmentData() {
         return URIFragmentDataVO;
     }
 
-    function getURIQueryData(){
+    function getURIQueryData() {
         return URIQueryData;
     }
 
-    function isManifestHTTPS(){
+    function isManifestHTTPS() {
         return isHTTPS;
     }
 
     function parseURI(uri) {
         if (!uri) return null;
 
-        var URIFragmentData = [],
-            mappedArr;
+        var URIFragmentData = [];
+        var mappedArr;
 
         var testQuery = new RegExp(/[?]/);
         var testFragment = new RegExp(/[#]/);
         var testHTTPS = new RegExp(/^(https:)?\/\//i);
         var isQuery = testQuery.test(uri);
         var isFragment = testFragment.test(uri);
-        
+
         isHTTPS = testHTTPS.test(uri);
 
         function reduceArray(previousValue, currentValue, index, array) {
             var arr =  array[0].split(/[=]/);
-            array.push({key:arr[0], value:arr[1]});
+            array.push({key: arr[0], value: arr[1]});
             array.shift();
             return array;
         }

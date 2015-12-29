@@ -32,14 +32,14 @@ import AbrController from '../controllers/AbrController.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
 
-const LOCAL_STORAGE_VIDEO_BITRATE_KEY = "dashjs_vbitrate";
-const LOCAL_STORAGE_AUDIO_BITRATE_KEY = "dashjs_abitrate";
-const LOCAL_STORAGE_AUDIO_SETTINGS_KEY = "dashjs_asettings";
-const LOCAL_STORAGE_VIDEO_SETTINGS_KEY = "dashjs_vsettings";
+const LOCAL_STORAGE_VIDEO_BITRATE_KEY = 'dashjs_vbitrate';
+const LOCAL_STORAGE_AUDIO_BITRATE_KEY = 'dashjs_abitrate';
+const LOCAL_STORAGE_AUDIO_SETTINGS_KEY = 'dashjs_asettings';
+const LOCAL_STORAGE_VIDEO_SETTINGS_KEY = 'dashjs_vsettings';
 const DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION = 360000;
 const DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION = 360000;
-const STORAGE_TYPE_LOCAL = "localStorage";
-const STORAGE_TYPE_SESSION = "sessionStorage";
+const STORAGE_TYPE_LOCAL = 'localStorage';
+const STORAGE_TYPE_SESSION = 'sessionStorage';
 const BITRATE_EXPIRATION = 0;
 const MEDIA_SETTINGS_EXPIRATION = 1;
 
@@ -57,8 +57,8 @@ function DOMStorage() {
 
     function setup() {
         experationDict = {
-            BITRATE_EXPIRATION :DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION,
-            MEDIA_SETTINGS_EXPIRATION :DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION
+            BITRATE_EXPIRATION: DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION,
+            MEDIA_SETTINGS_EXPIRATION: DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION
         };
 
         lastBitrateCachingEnabled = true;
@@ -82,14 +82,14 @@ function DOMStorage() {
 
         supported = false;
 
-        var testKey = '1',
-            testValue = "1",
-            storage;
+        var testKey = '1';
+        var testValue = '1';
+        var storage;
 
         try {
             storage = window[type];
         } catch (error) {
-            log("Warning: DOMStorage access denied: " + error.message);
+            log('Warning: DOMStorage access denied: ' + error.message);
             return supported;
         }
 
@@ -107,7 +107,7 @@ function DOMStorage() {
             storage.removeItem(testKey);
             supported = true;
         } catch (error) {
-            log("Warning: DOMStorage is supported, but cannot be used: " + error.message);
+            log('Warning: DOMStorage is supported, but cannot be used: ' + error.message);
         }
 
         return supported;
@@ -122,7 +122,7 @@ function DOMStorage() {
         var isExpired = (new Date().getTime() - parseInt(obj.timestamp)) >= experationDict[MEDIA_SETTINGS_EXPIRATION] || false;
         var settings = obj.settings;
 
-        if (isExpired){
+        if (isExpired) {
             localStorage.removeItem(key);
             settings = null;
         }
@@ -131,7 +131,7 @@ function DOMStorage() {
     }
 
     function checkInitialBitrate() {
-        ['video', 'audio'].forEach(function(value) {
+        ['video', 'audio'].forEach(function (value) {
             //first make sure player has not explicitly set a starting bit rate
             if (abrController.getInitialBitrateFor(value) === undefined) {
                 //Checks local storage to see if there is valid, non-expired bit rate
@@ -145,14 +145,14 @@ function DOMStorage() {
 
                     if (!isNaN(bitrate) && !isExpired) {
                         abrController.setInitialBitrateFor(value, bitrate);
-                        log("Last bitrate played for "+value+" was "+bitrate);
-                    } else if (isExpired){
+                        log('Last bitrate played for ' + value + ' was ' + bitrate);
+                    } else if (isExpired) {
                         localStorage.removeItem(key);
                     }
                 }
                 //check again to see if local storage value was set, if not set default value for startup.
                 if (abrController.getInitialBitrateFor(value) === undefined) {
-                    abrController.setInitialBitrateFor(value, AbrController["DEFAULT_"+value.toUpperCase()+"_BITRATE"]);
+                    abrController.setInitialBitrateFor(value, AbrController['DEFAULT_' + value.toUpperCase() + '_BITRATE']);
                 }
             }
 
@@ -160,11 +160,11 @@ function DOMStorage() {
     }
 
     function setExpiration(type, ttl) {
-        if (ttl !== undefined && !isNaN(ttl) && typeof(ttl) === "number"){
+        if (ttl !== undefined && !isNaN(ttl) && typeof (ttl) === 'number') {
             experationDict[type] = ttl;
         }
     }
-    
+
     instance = {
         checkInitialBitrate: checkInitialBitrate,
         getSavedMediaSettings: getSavedMediaSettings,

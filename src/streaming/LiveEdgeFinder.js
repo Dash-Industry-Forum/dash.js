@@ -31,7 +31,7 @@
 import SynchronizationRulesCollection from './rules/SynchronizationRules/SynchronizationRulesCollection.js';
 import Error from './vo/Error.js';
 import EventBus from './../core/EventBus.js';
-import Events from "./../core/events/Events.js";
+import Events from './../core/events/Events.js';
 import RulesController from './rules/RulesController.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
@@ -68,11 +68,11 @@ function LiveEdgeFinder() {
         searchStartTime = NaN;
     }
 
-    function getLiveEdge(){
+    function getLiveEdge() {
         return liveEdge;
     }
 
-    function reset(){
+    function reset() {
         eventBus.off(Events.STREAM_INITIALIZED, onStreamInitialized, this);
         abortSearch();
         liveEdge = null;
@@ -87,7 +87,7 @@ function LiveEdgeFinder() {
     function onSearchCompleted(req) {
         var searchTime = (new Date().getTime() - searchStartTime) / 1000;
         liveEdge = req.value;
-        eventBus.trigger(Events.LIVE_EDGE_SEARCH_COMPLETED, {liveEdge: liveEdge, searchTime: searchTime, error:liveEdge === null ? new Error(LIVE_EDGE_NOT_FOUND_ERROR_CODE, "live edge has not been found", null) : null});
+        eventBus.trigger(Events.LIVE_EDGE_SEARCH_COMPLETED, {liveEdge: liveEdge, searchTime: searchTime, error: liveEdge === null ? new Error(LIVE_EDGE_NOT_FOUND_ERROR_CODE, 'live edge has not been found', null) : null});
     }
 
     function onStreamInitialized(e) {
@@ -102,13 +102,13 @@ function LiveEdgeFinder() {
         isSearchStarted = true;
         searchStartTime = new Date().getTime();
 
-        rulesController.applyRules(rules, streamProcessor, onSearchCompleted, null, function(currentValue, newValue) {
+        rulesController.applyRules(rules, streamProcessor, onSearchCompleted, null, function (currentValue, newValue) {
             return newValue;
         });
     }
 
     instance = {
-        initialize:initialize,
+        initialize: initialize,
         abortSearch: abortSearch,
         getLiveEdge: getLiveEdge,
         reset: reset

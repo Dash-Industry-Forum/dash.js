@@ -90,8 +90,8 @@ function AbandonRequestsRule(/*config*/) {
             if (fragmentInfo.bytesLoaded < fragmentInfo.bytesTotal &&
                 fragmentInfo.elapsedTime >= GRACE_TIME_THRESHOLD) {
 
-                fragmentInfo.measuredBandwidthInKbps = Math.round(fragmentInfo.bytesLoaded*8/fragmentInfo.elapsedTime);
-                fragmentInfo.estimatedTimeOfDownload = (fragmentInfo.bytesTotal*8*0.001/fragmentInfo.measuredBandwidthInKbps).toFixed(2);
+                fragmentInfo.measuredBandwidthInKbps = Math.round(fragmentInfo.bytesLoaded * 8 / fragmentInfo.elapsedTime);
+                fragmentInfo.estimatedTimeOfDownload = (fragmentInfo.bytesTotal * 8 * 0.001 / fragmentInfo.measuredBandwidthInKbps).toFixed(2);
                 //log("XXX","id: ",fragmentInfo.id,  "kbps: ", fragmentInfo.measuredBandwidthInKbps, "etd: ",fragmentInfo.estimatedTimeOfDownload, "et: ", fragmentInfo.elapsedTime/1000);
 
                 if (fragmentInfo.estimatedTimeOfDownload < (fragmentInfo.segmentDuration * ABANDON_MULTIPLIER) || representationInfo.quality === 0) {
@@ -101,7 +101,7 @@ function AbandonRequestsRule(/*config*/) {
                     var newQuality = abrController.getQualityForBitrate(mediaInfo, fragmentInfo.measuredBandwidthInKbps * AbrController.BANDWIDTH_SAFETY);
                     switchRequest = SwitchRequest(context).create(newQuality, SwitchRequest.STRONG);
                     abandonDict[fragmentInfo.id] = fragmentInfo;
-                    log("AbandonRequestsRule ( ", mediaType, "frag id",fragmentInfo.id,") is asking to abandon and switch to quality to ", newQuality, " measured bandwidth was", fragmentInfo.measuredBandwidthInKbps);
+                    log('AbandonRequestsRule ( ', mediaType, 'frag id',fragmentInfo.id,') is asking to abandon and switch to quality to ', newQuality, ' measured bandwidth was', fragmentInfo.measuredBandwidthInKbps);
                     delete fragmentDict[mediaType][fragmentInfo.id];
                 }
             }else if (fragmentInfo.bytesLoaded === fragmentInfo.bytesTotal) {

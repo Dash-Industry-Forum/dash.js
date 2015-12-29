@@ -39,7 +39,7 @@ import TTMLParser from '../TTMLParser.js';
 import VideoModel from '../models/VideoModel.js';
 import Error from '../vo/Error.js';
 import EventBus from '../../core/EventBus.js';
-import Events from "../../core/events/Events.js";
+import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 
@@ -64,7 +64,7 @@ function SourceBufferExtensions() {
             // - currently no browser does, so check for it and use our own
             // implementation.
             if (codec.match(/application\/mp4;\s*codecs="stpp"/i)) {
-                throw new Error("not really supported");
+                throw new Error('not really supported');
             }
 
             buffer = mediaSource.addSourceBuffer(codec);
@@ -95,30 +95,31 @@ function SourceBufferExtensions() {
     function removeSourceBuffer(mediaSource, buffer) {
         try {
             mediaSource.removeSourceBuffer(buffer);
-        } catch(ex){
+        } catch (ex) {
         }
     }
 
     function getBufferRange(buffer, time, tolerance) {
-        var ranges = null,
-            start = 0,
-            end = 0,
-            firstStart = null,
-            lastEnd = null,
-            gap = 0,
-            len,
+        var ranges = null;
+        var start = 0;
+        var end = 0;
+        var firstStart = null;
+        var lastEnd = null;
+        var gap = 0;
+
+        var len,
             i;
 
         var toler = (tolerance || 0.15);
 
         try {
             ranges = buffer.buffered;
-        } catch(ex) {
+        } catch (ex) {
             return null;
         }
 
         if (ranges !== null && ranges !== undefined) {
-            for (i = 0, len = ranges.length; i < len; i += 1) {
+            for (i = 0, len = ranges.length; i < len; i++) {
                 start = ranges.start(i);
                 end = ranges.end(i);
                 if (firstStart === null) {
@@ -154,7 +155,7 @@ function SourceBufferExtensions() {
     function getAllRanges(buffer) {
         var ranges = null;
 
-        try{
+        try {
             ranges = buffer.buffered;
             return ranges;
         } catch (ex) {
@@ -164,13 +165,13 @@ function SourceBufferExtensions() {
 
     function getTotalBufferedTime(buffer) {
         var ranges = getAllRanges(buffer);
-        var totalBufferedTime = 0,
-         ln,
-         i;
+        var totalBufferedTime = 0;
+        var ln,
+            i;
 
         if (!ranges) return totalBufferedTime;
 
-        for (i = 0, ln = ranges.length; i < ln; i += 1) {
+        for (i = 0, ln = ranges.length; i < ln; i++) {
             totalBufferedTime += ranges.end(i) - ranges.start(i);
         }
 
@@ -212,7 +213,7 @@ function SourceBufferExtensions() {
 
         if (!newRanges) return null;
 
-        for (var i = 0, ln = newRanges.length; i < ln; i += 1) {
+        for (var i = 0, ln = newRanges.length; i < ln; i++) {
             hasRange = currentRanges.length > i;
             currentRange = hasRange ? {start: currentRanges.start(i), end: currentRanges.end(i)} : null;
             newStart = newRanges.start(i);
@@ -255,8 +256,8 @@ function SourceBufferExtensions() {
             // 0|---range1---|4  8|--range2--|12  16|---range3---|
             // new ranges
             // 0|-----------range1-----------|12  16|---range3--|
-            nextCurrentRange = currentRanges.length > (i+1) ? {start: currentRanges.start(i+1), end: currentRanges.end(i+1)} : null;
-            nextNewRange = (i+1) < ln ? {start: newRanges.start(i+1), end: newRanges.end(i+1)} : null;
+            nextCurrentRange = currentRanges.length > (i + 1) ? {start: currentRanges.start(i + 1), end: currentRanges.end(i + 1)} : null;
+            nextNewRange = (i + 1) < ln ? {start: newRanges.start(i + 1), end: newRanges.end(i + 1)} : null;
 
             if (nextCurrentRange && (!nextNewRange || (nextNewRange.start !== nextCurrentRange.start || nextNewRange.end !== nextCurrentRange.end))) {
                 diff.end = nextCurrentRange.start;
@@ -270,16 +271,16 @@ function SourceBufferExtensions() {
 
     function append(buffer, chunk) {
         var bytes = chunk.bytes;
-        var appendMethod = ("append" in buffer) ? "append" : (("appendBuffer" in buffer) ? "appendBuffer" : null);
+        var appendMethod = ('append' in buffer) ? 'append' : (('appendBuffer' in buffer) ? 'appendBuffer' : null);
         // our user-defined sourcebuffer-like object has Object as its
         // prototype whereas built-in SourceBuffers will have something
         // more sensible. do not pass chunk to built-in append.
-        var acceptsChunk = Object.prototype.toString.call(buffer).slice(8, -1) === "Object";
+        var acceptsChunk = Object.prototype.toString.call(buffer).slice(8, -1) === 'Object';
 
         if (!appendMethod) return;
 
         try {
-            waitForUpdateEnd(buffer, function() {
+            waitForUpdateEnd(buffer, function () {
                 if (acceptsChunk) {
                     // chunk.start is used in calculations by TextSourceBuffer
                     buffer[appendMethod](bytes, chunk);
@@ -287,12 +288,12 @@ function SourceBufferExtensions() {
                     buffer[appendMethod](bytes);
                 }
                 // updating is in progress, we should wait for it to complete before signaling that this operation is done
-                waitForUpdateEnd(buffer, function() {
+                waitForUpdateEnd(buffer, function () {
                     eventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes});
                 });
             });
         } catch (err) {
-            eventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes, error:new Error(err.code, err.message, null)});
+            eventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes, error: new Error(err.code, err.message, null)});
         }
     }
 
@@ -300,52 +301,54 @@ function SourceBufferExtensions() {
 
         try {
             // make sure that the given time range is correct. Otherwise we will get InvalidAccessError
-            waitForUpdateEnd(buffer, function() {
-                if ((start >= 0) && (end > start) && (mediaSource.readyState !== "ended")) {
+            waitForUpdateEnd(buffer, function () {
+                if ((start >= 0) && (end > start) && (mediaSource.readyState !== 'ended')) {
                     buffer.remove(start, end);
                 }
                 // updating is in progress, we should wait for it to complete before signaling that this operation is done
-                waitForUpdateEnd(buffer, function() {
+                waitForUpdateEnd(buffer, function () {
                     eventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end});
                 });
             });
         } catch (err) {
-            eventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end, error:new Error(err.code, err.message, null)});
+            eventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end, error: new Error(err.code, err.message, null)});
         }
     }
 
     function abort(mediaSource, buffer) {
         try {
-            if (mediaSource.readyState === "open") {
+            if (mediaSource.readyState === 'open') {
                 buffer.abort();
             }
-        } catch(ex){
+        } catch (ex) {
         }
     }
 
-    function setConfig(config){
+    function setConfig(config) {
         if (!config) return;
 
-        if (config.manifestExt){
+        if (config.manifestExt) {
             manifestExt = config.manifestExt;
         }
     }
 
     //private
     function waitForUpdateEnd(buffer, callback) {
-        var intervalId,
-            CHECK_INTERVAL = 50;
-        var checkIsUpdateEnded = function() {
+        var intervalId;
+        var CHECK_INTERVAL = 50;
+
+        var checkIsUpdateEnded = function () {
             // if undating is still in progress do nothing and wait for the next check again.
             if (buffer.updating) return;
             // updating is completed, now we can stop checking and resolve the promise
             clearInterval(intervalId);
             callback();
         };
-        var updateEndHandler = function() {
+
+        var updateEndHandler = function () {
             if (buffer.updating) return;
 
-            buffer.removeEventListener("updateend", updateEndHandler, false);
+            buffer.removeEventListener('updateend', updateEndHandler, false);
             callback();
         };
 
@@ -355,9 +358,9 @@ function SourceBufferExtensions() {
         }
 
         // use updateend event if possible
-        if (typeof buffer.addEventListener === "function") {
+        if (typeof buffer.addEventListener === 'function') {
             try {
-                buffer.addEventListener("updateend", updateEndHandler, false);
+                buffer.addEventListener('updateend', updateEndHandler, false);
             } catch (err) {
                 // use setInterval to periodically check if updating has been completed
                 intervalId = setInterval(checkIsUpdateEnded, CHECK_INTERVAL);
@@ -367,7 +370,7 @@ function SourceBufferExtensions() {
             intervalId = setInterval(checkIsUpdateEnded, CHECK_INTERVAL);
         }
     }
-    
+
     instance = {
         append: append,
         remove: remove,

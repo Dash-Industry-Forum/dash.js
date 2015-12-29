@@ -40,33 +40,33 @@ function ErrorHandler() {
 
     // "mediasource"|"mediakeys"
     function capabilityError(err) {
-        eventBus.trigger(Events.ERROR, {error: "capability", event: err});
+        eventBus.trigger(Events.ERROR, {error: 'capability', event: err});
     }
 
     // {id: "manifest"|"SIDX"|"content"|"initialization", url: "", request: {XMLHttpRequest instance}}
     function downloadError(id, url, request) {
-        eventBus.trigger(Events.ERROR, {error: "download", event: {id: id, url: url, request: request}});
+        eventBus.trigger(Events.ERROR, {error: 'download', event: {id: id, url: url, request: request}});
     }
 
     // {message: "", id: "codec"|"parse"|"nostreams", manifest: {parsed manifest}}
     function manifestError(message, id, manifest) {
-        eventBus.trigger(Events.ERROR, {error: "manifestError", event: {message: message, id: id, manifest: manifest}});
+        eventBus.trigger(Events.ERROR, {error: 'manifestError', event: {message: message, id: id, manifest: manifest}});
     }
 
     function timedTextError(message, id, ccContent) {
-        eventBus.trigger(Events.ERROR, {error: "cc", event: {message: message, id: id, cc: ccContent}});
+        eventBus.trigger(Events.ERROR, {error: 'cc', event: {message: message, id: id, cc: ccContent}});
     }
 
     function mediaSourceError(err) {
-        eventBus.trigger(Events.ERROR, {error: "mediasource", event: err});
+        eventBus.trigger(Events.ERROR, {error: 'mediasource', event: err});
     }
 
     function mediaKeySessionError(err) {
-        eventBus.trigger(Events.ERROR, {error: "key_session", event: err});
+        eventBus.trigger(Events.ERROR, {error: 'key_session', event: err});
     }
 
     function mediaKeyMessageError(err) {
-        eventBus.trigger(Events.ERROR, {error: "key_message", event: err});
+        eventBus.trigger(Events.ERROR, {error: 'key_message', event: err});
     }
 
     instance = {

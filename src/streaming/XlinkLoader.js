@@ -61,14 +61,15 @@ function XlinkLoader(config) {
     }
 
     function doLoad(url, element, resolveObject, remainingAttempts) {
-        var request = new XMLHttpRequest(),
-            report,
+        var request = new XMLHttpRequest();
+        var needFailureReport = true;
+        var firstProgressCall = true;
+        var requestTime = new Date();
+
+        var report,
             onload,
             progress,
-            firstProgressCall = true,
-            content,
-            needFailureReport = true,
-            requestTime = new Date();
+            content;
 
         onload = function () {
             if (request.status < 200 || request.status > 299) {
@@ -76,7 +77,7 @@ function XlinkLoader(config) {
             }
             needFailureReport = false;
 
-            metricsModel.addHttpRequest("stream",
+            metricsModel.addHttpRequest('stream',
                 null,
                 HTTPRequest.XLINK_EXPANSION_TYPE,
                 url,
@@ -101,7 +102,7 @@ function XlinkLoader(config) {
                     {
                         element: element,
                         resolveObject: resolveObject,
-                        error:new Error(null, "Failed loading Xlink element: " + url, null)
+                        error: new Error(null, 'Failed loading Xlink element: ' + url, null)
                     });
             }
         };
@@ -112,7 +113,7 @@ function XlinkLoader(config) {
             }
             needFailureReport = false;
 
-            metricsModel.addHttpRequest("stream",
+            metricsModel.addHttpRequest('stream',
                 null,
                 HTTPRequest.XLINK_EXPANSION_TYPE,
                 url,
@@ -126,21 +127,21 @@ function XlinkLoader(config) {
                 request.getAllResponseHeaders());
 
             if (remainingAttempts > 0) {
-                log("Failed loading xLink content: " + url + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
+                log('Failed loading xLink content: ' + url + ', retry in ' + RETRY_INTERVAL + 'ms' + ' attempts: ' + remainingAttempts);
                 remainingAttempts--;
                 setTimeout(function () {
                     doLoad(url, element, resolveObject, remainingAttempts);
                 }, RETRY_INTERVAL);
             } else {
-                log("Failed loading Xlink content: " + url + " no retry attempts left");
-                errHandler.downloadError("xlink", url, request);
+                log('Failed loading Xlink content: ' + url + ' no retry attempts left');
+                errHandler.downloadError('xlink', url, request);
                 element.resolved = true;
                 element.resolvedContent = null;
                 eventBus.trigger(Events.XLINK_ELEMENT_LOADED,
                     {
                         element: element,
                         resolveObject: resolveObject,
-                        error:new Error("Failed loading xlink Element: " + url + " no retry attempts left")
+                        error: new Error('Failed loading xlink Element: ' + url + ' no retry attempts left')
                     });
             }
         };
@@ -160,16 +161,16 @@ function XlinkLoader(config) {
             request.onloadend = report;
             request.onerror = report;
             request.onprogress = progress;
-            request.open("GET", requestModifierExt.modifyRequestURL(url), true);
+            request.open('GET', requestModifierExt.modifyRequestURL(url), true);
             request.send();
         } catch (e) {
-            log("Xlink loading Error");
+            log('Xlink loading Error');
             request.onerror();
         }
     }
 
     instance = {
-        load:load
+        load: load
     };
 
     return instance;

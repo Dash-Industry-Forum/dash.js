@@ -40,7 +40,7 @@ class ProtectionEvents extends EventsBase {
          *
          * @constant
          */
-        this.INTERNAL_KEY_MESSAGE = "internalKeyMessage";
+        this.INTERNAL_KEY_MESSAGE = 'internalKeyMessage';
 
         /**
          * Event ID for events delivered when a key system selection procedure
@@ -49,7 +49,7 @@ class ProtectionEvents extends EventsBase {
          * @constant
          * @public
          */
-        this.INTERNAL_KEY_SYSTEM_SELECTED = "internalKeySystemSelected";
+        this.INTERNAL_KEY_SYSTEM_SELECTED = 'internalKeySystemSelected';
 
         /**
          * Event ID for events delivered when a new key has been added
@@ -61,14 +61,14 @@ class ProtectionEvents extends EventsBase {
          *
          * @public
          */
-        this.KEY_ADDED = "public_keyAdded";
+        this.KEY_ADDED = 'public_keyAdded';
         /**
          * Event ID for events delivered when an error is encountered by the CDM
          * while processing a license server response message
          *
          * @constant
          */
-        this.KEY_ERROR = "public_keyError";
+        this.KEY_ERROR = 'public_keyError';
 
         /**
          * Event ID for events delivered when the protection set receives
@@ -77,7 +77,7 @@ class ProtectionEvents extends EventsBase {
          * @constant
          * @public
          */
-        this.KEY_MESSAGE = "public_keyMessage";
+        this.KEY_MESSAGE = 'public_keyMessage';
 
         /**
          * Event ID for events delivered when a key session close
@@ -86,7 +86,7 @@ class ProtectionEvents extends EventsBase {
          * @constant
          * @public
          */
-        this.KEY_SESSION_CLOSED = "public_keySessionClosed";
+        this.KEY_SESSION_CLOSED = 'public_keySessionClosed';
 
         /**
          * Event ID for events delivered when a new key sessions creation
@@ -95,7 +95,7 @@ class ProtectionEvents extends EventsBase {
          * @constant
          * @public
          */
-        this.KEY_SESSION_CREATED = "public_keySessionCreated";
+        this.KEY_SESSION_CREATED = 'public_keySessionCreated';
 
         /**
          * Event ID for events delivered when a key session removal
@@ -104,7 +104,7 @@ class ProtectionEvents extends EventsBase {
          * @constant
          * @public
          */
-        this.KEY_SESSION_REMOVED = "public_keySessionRemoved";
+        this.KEY_SESSION_REMOVED = 'public_keySessionRemoved';
 
 
         /**
@@ -114,7 +114,7 @@ class ProtectionEvents extends EventsBase {
          * @constant
          * @public
          */
-        this.KEY_STATUSES_CHANGED = "public_keyStatusesChanged";
+        this.KEY_STATUSES_CHANGED = 'public_keyStatusesChanged';
 
         /**
          * Event ID for events delivered when a key system access procedure
@@ -122,7 +122,7 @@ class ProtectionEvents extends EventsBase {
          *
          * @constant
          */
-        this.KEY_SYSTEM_ACCESS_COMPLETE = "keySystemAccessComplete";
+        this.KEY_SYSTEM_ACCESS_COMPLETE = 'keySystemAccessComplete';
 
         /**
          * Event ID for events delivered when a key system selection procedure
@@ -131,7 +131,7 @@ class ProtectionEvents extends EventsBase {
          * @constant
          * @public
          */
-        this.KEY_SYSTEM_SELECTED = "public_keySystemSelected";
+        this.KEY_SYSTEM_SELECTED = 'public_keySystemSelected';
 
         /**
          * Event ID for events delivered when a license request procedure
@@ -140,14 +140,14 @@ class ProtectionEvents extends EventsBase {
          * @constant
          * @public
          */
-        this.LICENSE_REQUEST_COMPLETE = "public_licenseRequestComplete";
+        this.LICENSE_REQUEST_COMPLETE = 'public_licenseRequestComplete';
 
         /**
          * Event ID for needkey/encrypted events
          *
          * @constant
          */
-        this.NEED_KEY = "needkey";
+        this.NEED_KEY = 'needkey';
 
         /**
          * Event ID for events delivered when the Protection system is detected and created.
@@ -155,7 +155,7 @@ class ProtectionEvents extends EventsBase {
          * @constant
          * @public
          */
-        this.PROTECTION_CREATED = "public_protectioncreated";
+        this.PROTECTION_CREATED = 'public_protectioncreated';
 
         /**
          * Event ID for events delivered when the Protection system is destroyed.
@@ -163,7 +163,7 @@ class ProtectionEvents extends EventsBase {
          * @constant
          * @public
          */
-        this.PROTECTION_DESTROYED = "public_protectiondestroyed";
+        this.PROTECTION_DESTROYED = 'public_protectiondestroyed';
 
         /**
          * Event ID for events delivered when a new server certificate has
@@ -171,7 +171,7 @@ class ProtectionEvents extends EventsBase {
          *
          * @constant
          */
-        this.SERVER_CERTIFICATE_UPDATED = "serverCertificateUpdated";
+        this.SERVER_CERTIFICATE_UPDATED = 'serverCertificateUpdated';
 
         /**
          * Event ID for events delivered when the process of shutting down
@@ -179,7 +179,7 @@ class ProtectionEvents extends EventsBase {
          *
          * @constant
          */
-        this.TEARDOWN_COMPLETE =  "protectionTeardownComplete";
+        this.TEARDOWN_COMPLETE =  'protectionTeardownComplete';
 
         /**
          * Event ID for events delivered when a HTMLMediaElement has been
@@ -187,7 +187,7 @@ class ProtectionEvents extends EventsBase {
          *
          * @constant
          */
-        this.VIDEO_ELEMENT_SELECTED = "videoElementSelected";
+        this.VIDEO_ELEMENT_SELECTED = 'videoElementSelected';
     }
 }
 

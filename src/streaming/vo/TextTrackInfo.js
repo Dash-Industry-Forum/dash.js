@@ -35,7 +35,7 @@
 class TextTrackInfo {
     constructor() {
         this.video = null;
-        this.captionData= null;
+        this.captionData = null;
         this.label = null;
         this.lang = null;
         this.defaultTrack = false;

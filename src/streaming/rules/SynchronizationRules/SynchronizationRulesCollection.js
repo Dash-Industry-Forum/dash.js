@@ -36,8 +36,8 @@ import LiveEdgeWithTimeSynchronizationRule from './LiveEdgeWithTimeSynchronizati
 import DashAdapter from '../../../dash/DashAdapter.js';
 
 
-const TIME_SYNCHRONIZED_RULES = "withAccurateTimeSourceRules";
-const BEST_GUESS_RULES = "bestGuestRules";
+const TIME_SYNCHRONIZED_RULES = 'withAccurateTimeSourceRules';
+const BEST_GUESS_RULES = 'bestGuestRules';
 
 function SynchronizationRulesCollection() {
 
@@ -47,16 +47,16 @@ function SynchronizationRulesCollection() {
         withAccurateTimeSourceRules,
         bestGuestRules;
 
-    function initialize(){
+    function initialize() {
         withAccurateTimeSourceRules = [];
         bestGuestRules = [];
 
         withAccurateTimeSourceRules.push(LiveEdgeWithTimeSynchronizationRule(context).create({
-            timelineConverter:TimelineConverter(context).getInstance()
+            timelineConverter: TimelineConverter(context).getInstance()
         }));
 
         bestGuestRules.push(LiveEdgeBinarySearchRule(context).create({
-            timelineConverter:TimelineConverter(context).getInstance(),
+            timelineConverter: TimelineConverter(context).getInstance(),
             adapter: DashAdapter(context).getInstance()
         }));
     }

@@ -61,14 +61,14 @@ function DashParser(/*config*/) {
         //TODO-Refactor clean this up and move into its own util or somewhere else.
         matchers = [
             {
-                type: "duration",
-                test: function(attr) {
+                type: 'duration',
+                test: function (attr) {
 
                     var attributeList = [
-                        "minBufferTime", "mediaPresentationDuration",
-                        "minimumUpdatePeriod", "timeShiftBufferDepth", "maxSegmentDuration",
-                        "maxSubsegmentDuration", "suggestedPresentationDelay", "start",
-                        "starttime", "duration"
+                        'minBufferTime', 'mediaPresentationDuration',
+                        'minimumUpdatePeriod', 'timeShiftBufferDepth', 'maxSegmentDuration',
+                        'maxSubsegmentDuration', 'suggestedPresentationDelay', 'start',
+                        'starttime', 'duration'
                     ];
                     var len = attributeList.length;
 
@@ -79,7 +79,7 @@ function DashParser(/*config*/) {
                     }
                     return false;
                 },
-                converter: function(str) {
+                converter: function (str) {
                     //str = "P10Y10M10DT10H10M10.1S";
                     var match = durationRegex.exec(str);
                     var result = (parseFloat(match[2] || 0) * SECONDS_IN_YEAR +
@@ -97,11 +97,11 @@ function DashParser(/*config*/) {
                 }
             },
             {
-                type: "datetime",
-                test: function(attr) {
+                type: 'datetime',
+                test: function (attr) {
                     return datetimeRegex.test(attr.value);
                 },
-                converter: function(str) {
+                converter: function (str) {
                     var match = datetimeRegex.exec(str);
                     var utcDate;
                     // If the string does not contain a timezone offset different browsers can interpret it either
@@ -125,11 +125,11 @@ function DashParser(/*config*/) {
                 }
             },
             {
-                type: "numeric",
-                test: function(attr) {
+                type: 'numeric',
+                test: function (attr) {
                     return numericRegex.test(attr.value);
                 },
-                converter: function(str) {
+                converter: function (str) {
                     return parseFloat(str);
                 }
             }
@@ -216,7 +216,7 @@ function DashParser(/*config*/) {
         ];
 
         adaptationSet = {};
-        adaptationSet.name = "AdaptationSet";
+        adaptationSet.name = 'AdaptationSet';
         adaptationSet.isRoot = false;
         adaptationSet.isArray = true;
         adaptationSet.parent = null;
@@ -224,7 +224,7 @@ function DashParser(/*config*/) {
         adaptationSet.properties = common;
 
         representation = {};
-        representation.name = "Representation";
+        representation.name = 'Representation';
         representation.isRoot = false;
         representation.isArray = true;
         representation.parent = adaptationSet;
@@ -233,7 +233,7 @@ function DashParser(/*config*/) {
         adaptationSet.children.push(representation);
 
         subRepresentation = {};
-        subRepresentation.name = "SubRepresentation";
+        subRepresentation.name = 'SubRepresentation';
         subRepresentation.isRoot = false;
         subRepresentation.isArray = true;
         subRepresentation.parent = representation;
@@ -266,7 +266,7 @@ function DashParser(/*config*/) {
         ];
 
         period = {};
-        period.name = "Period";
+        period.name = 'Period';
         period.isRoot = false;
         period.isArray = true;
         period.parent = null;
@@ -274,7 +274,7 @@ function DashParser(/*config*/) {
         period.properties = common;
 
         adaptationSet = {};
-        adaptationSet.name = "AdaptationSet";
+        adaptationSet.name = 'AdaptationSet';
         adaptationSet.isRoot = false;
         adaptationSet.isArray = true;
         adaptationSet.parent = period;
@@ -283,7 +283,7 @@ function DashParser(/*config*/) {
         period.children.push(adaptationSet);
 
         representation = {};
-        representation.name = "Representation";
+        representation.name = 'Representation';
         representation.isRoot = false;
         representation.isArray = true;
         representation.parent = adaptationSet;
@@ -321,7 +321,7 @@ function DashParser(/*config*/) {
         ];
 
         mpd = {};
-        mpd.name = "mpd";
+        mpd.name = 'mpd';
         mpd.isRoot = true;
         mpd.isArray = true;
         mpd.parent = null;
@@ -329,7 +329,7 @@ function DashParser(/*config*/) {
         mpd.properties = common;
 
         period = {};
-        period.name = "Period";
+        period.name = 'Period';
         period.isRoot = false;
         period.isArray = true;
         period.parent = null;
@@ -338,7 +338,7 @@ function DashParser(/*config*/) {
         mpd.children.push(period);
 
         adaptationSet = {};
-        adaptationSet.name = "AdaptationSet";
+        adaptationSet.name = 'AdaptationSet';
         adaptationSet.isRoot = false;
         adaptationSet.isArray = true;
         adaptationSet.parent = period;
@@ -347,7 +347,7 @@ function DashParser(/*config*/) {
         period.children.push(adaptationSet);
 
         representation = {};
-        representation.name = "Representation";
+        representation.name = 'Representation';
         representation.isRoot = false;
         representation.isArray = true;
         representation.parent = adaptationSet;
@@ -374,33 +374,33 @@ function DashParser(/*config*/) {
         var iron = new ObjectIron(getDashMap());
         var start = new Date();
 
-        var manifest,
-            json = null,
-            ironed = null;
+        var manifest;
+        var json = null;
+        var ironed = null;
 
         try {
             //log("Converting from XML.");
             manifest = converter.xml_str2json(data);
 
             if (!manifest) {
-                throw "parser error";
+                throw 'parser error';
             }
 
             json = new Date();
 
-            if (!manifest.hasOwnProperty("BaseURL")) {
+            if (!manifest.hasOwnProperty('BaseURL')) {
                 //log("Setting baseURL: " + baseUrl);
                 manifest.BaseURL = baseUrl;
             } else {
                 // Setting manifest's BaseURL to the first BaseURL
                 manifest.BaseURL = manifest.BaseURL_asArray[0];
 
-                if (manifest.BaseURL.toString().indexOf("http") !== 0) {
+                if (manifest.BaseURL.toString().indexOf('http') !== 0) {
                     manifest.BaseURL = baseUrl + manifest.BaseURL;
                 }
             }
 
-            if (manifest.hasOwnProperty("Location")) {
+            if (manifest.hasOwnProperty('Location')) {
                 // for now, do not support multiple Locations -
                 // just set Location to the first Location.
                 manifest.Location = manifest.Location_asArray[0];
@@ -413,9 +413,9 @@ function DashParser(/*config*/) {
             xlinkController.setMatchers(matchers);
             xlinkController.setIron(iron);
 
-            log("Parsing complete: ( xml2json: " + (json.getTime() - start.getTime()) + "ms, objectiron: " + (ironed.getTime() - json.getTime()) + "ms, total: " + ((ironed.getTime() - start.getTime()) / 1000) + "s)");
+            log('Parsing complete: ( xml2json: ' + (json.getTime() - start.getTime()) + 'ms, objectiron: ' + (ironed.getTime() - json.getTime()) + 'ms, total: ' + ((ironed.getTime() - start.getTime()) / 1000) + 's)');
         } catch (err) {
-            ErrorHandler(context).getInstance().manifestError("parsing the manifest failed", "parse", data);
+            ErrorHandler(context).getInstance().manifestError('parsing the manifest failed', 'parse', data);
             return null;
         }
         return manifest;

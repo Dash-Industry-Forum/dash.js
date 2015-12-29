@@ -37,10 +37,10 @@ import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-const ABANDON_LOAD = "abandonload";
+const ABANDON_LOAD = 'abandonload';
 const BANDWIDTH_SAFETY = 0.9;
 const ABANDON_TIMEOUT = 10000;
-const ALLOW_LOAD = "allowload";
+const ALLOW_LOAD = 'allowload';
 const DEFAULT_VIDEO_BITRATE = 1000;
 const DEFAULT_AUDIO_BITRATE = 100;
 
@@ -81,16 +81,16 @@ function AbrController() {
         eventBus.on(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
     }
 
-    function setConfig(config){
+    function setConfig(config) {
         if (!config) return;
 
-        if (config.abrRulesCollection){
+        if (config.abrRulesCollection) {
             abrRulesCollection = config.abrRulesCollection;
         }
-        if (config.rulesController){
+        if (config.rulesController) {
             rulesController = config.rulesController;
         }
-        if (config.streamController){
+        if (config.streamController) {
             streamController = config.streamController;
         }
     }
@@ -126,7 +126,7 @@ function AbrController() {
     }
 
     function getMaxAllowedBitrateFor(type) {
-        if (bitrateDict.hasOwnProperty("max") && bitrateDict.max.hasOwnProperty(type)){
+        if (bitrateDict.hasOwnProperty('max') && bitrateDict.max.hasOwnProperty(type)) {
             return bitrateDict.max[type];
         }
         return NaN;
@@ -139,7 +139,7 @@ function AbrController() {
         bitrateDict.max[type] = value;
     }
 
-    function  getAutoSwitchBitrate() {
+    function getAutoSwitchBitrate() {
         return autoSwitchBitrate;
     }
 
@@ -155,7 +155,7 @@ function AbrController() {
             oldQuality,
             rules,
             confidence;
-        var callback = function(res) {
+        var callback = function (res) {
             var topQualityIdx = getTopQualityIndexFor(type, streamId);
 
             quality = res.value;
@@ -197,7 +197,7 @@ function AbrController() {
             }
         } else {
             rules = abrRulesCollection.getRules(ABRRulesCollection.QUALITY_SWITCH_RULES);
-            rulesController.applyRules(rules, streamProcessor, callback, quality, function(currentValue, newValue) {
+            rulesController.applyRules(rules, streamProcessor, callback, quality, function (currentValue, newValue) {
                 currentValue = currentValue === SwitchRequest.NO_CHANGE ? 0 : currentValue;
                 return Math.max(currentValue, newValue);
             });
@@ -209,7 +209,7 @@ function AbrController() {
         var quality = getQualityFor(type, streamInfo);
         var isInt = newPlaybackQuality !== null && !isNaN(newPlaybackQuality) && (newPlaybackQuality % 1 === 0);
 
-        if (!isInt) throw "argument is not an integer";
+        if (!isInt) throw 'argument is not an integer';
 
         if (newPlaybackQuality !== quality && newPlaybackQuality >= 0 && newPlaybackQuality <= getTopQualityIndexFor(type, id)) {
             setInternalQuality(type, id, newPlaybackQuality);
@@ -236,15 +236,15 @@ function AbrController() {
         var ln = bitrateList.length;
         var bitrateInfo;
 
-        for (var i = 0; i < ln; i +=1) {
+        for (var i = 0; i < ln; i++) {
             bitrateInfo = bitrateList[i];
 
-            if (bitrate*1000 <= bitrateInfo.bitrate) {
-                return Math.max(i-1, 0);
+            if (bitrate * 1000 <= bitrateInfo.bitrate) {
+                return Math.max(i - 1, 0);
             }
         }
 
-        return (ln-1);
+        return (ln - 1);
     }
 
     /**
@@ -257,11 +257,11 @@ function AbrController() {
 
         var bitrateList = mediaInfo.bitrateList;
         var type = mediaInfo.type;
-        
-        var infoList = [],
-            bitrateInfo;
 
-        for (var i = 0, ln = bitrateList.length; i < ln; i += 1) {
+        var infoList = [];
+        var bitrateInfo;
+
+        for (var i = 0, ln = bitrateList.length; i < ln; i++) {
             bitrateInfo = new BitrateInfo();
             bitrateInfo.mediaType = type;
             bitrateInfo.qualityIndex = i;
@@ -293,11 +293,11 @@ function AbrController() {
     function isPlayingAtTopQuality(streamInfo) {
         var isAtTop;
         var streamId = streamInfo.id;
-        var audioQuality = getQualityFor("audio", streamInfo);
-        var videoQuality = getQualityFor("video", streamInfo);
+        var audioQuality = getQualityFor('audio', streamInfo);
+        var videoQuality = getQualityFor('video', streamInfo);
 
-        isAtTop = (audioQuality === getTopQualityIndexFor("audio", streamId)) &&
-            (videoQuality === getTopQualityIndexFor("video", streamId));
+        isAtTop = (audioQuality === getTopQualityIndexFor('audio', streamId)) &&
+            (videoQuality === getTopQualityIndexFor('video', streamId));
 
         return isAtTop;
     }
@@ -328,7 +328,7 @@ function AbrController() {
         qualityDict[id][type] = value;
     }
 
-    function  getConfidenceFor(type, id) {
+    function getConfidenceFor(type, id) {
         var confidence;
 
         confidenceDict[id] = confidenceDict[id] || {};
@@ -352,7 +352,7 @@ function AbrController() {
         topQualities[id][type] = value;
     }
 
-    function checkMaxBitrate(idx, type){
+    function checkMaxBitrate(idx, type) {
         var maxBitrate = getMaxAllowedBitrateFor(type);
         if (isNaN(maxBitrate)) {
             return idx;
@@ -369,17 +369,17 @@ function AbrController() {
             var rules = abrRulesCollection.getRules(ABRRulesCollection.ABANDON_FRAGMENT_RULES);
             var scheduleController = streamProcessorDict[type].getScheduleController();
             var fragmentModel = scheduleController.getFragmentModel();
-            var callback = function(switchRequest) {
+            var callback = function (switchRequest) {
 
                 function setupTimeout(type) {
-                    abandonmentTimeout = setTimeout(function() {
+                    abandonmentTimeout = setTimeout(function () {
                         setAbandonmentStateFor(type, ALLOW_LOAD);
                     }, ABANDON_TIMEOUT);
                 }
 
                 if (switchRequest.confidence === SwitchRequest.STRONG) {
 
-                    var requests = fragmentModel.getRequests({ state:FragmentModel.FRAGMENT_MODEL_LOADING});
+                    var requests = fragmentModel.getRequests({ state: FragmentModel.FRAGMENT_MODEL_LOADING});
                     var newQuality = switchRequest.value;
                     var currentQuality = getQualityFor(type, streamController.getActiveStreamInfo());
 
@@ -394,35 +394,35 @@ function AbrController() {
                 }
             };
 
-            rulesController.applyRules(rules, streamProcessorDict[type], callback, e, function(currentValue, newValue) {
+            rulesController.applyRules(rules, streamProcessorDict[type], callback, e, function (currentValue, newValue) {
                 return newValue;
             });
         }
     }
 
     instance = {
-        isPlayingAtTopQuality   :isPlayingAtTopQuality,
-        updateTopQualityIndex   :updateTopQualityIndex,
-        getAverageThroughput    :getAverageThroughput,
-        getBitrateList          :getBitrateList,
-        getQualityForBitrate    :getQualityForBitrate,
-        getMaxAllowedBitrateFor :getMaxAllowedBitrateFor,
-        setMaxAllowedBitrateFor :setMaxAllowedBitrateFor,
-        getInitialBitrateFor    :getInitialBitrateFor,
-        setInitialBitrateFor    :setInitialBitrateFor,
-        setAutoSwitchBitrate    :setAutoSwitchBitrate,
-        getAutoSwitchBitrate    :getAutoSwitchBitrate,
-        getConfidenceFor        :getConfidenceFor,
-        getQualityFor           :getQualityFor,
-        getAbandonmentStateFor  :getAbandonmentStateFor,
-        setAbandonmentStateFor  :setAbandonmentStateFor,
-        setPlaybackQuality      :setPlaybackQuality,
-        getPlaybackQuality      :getPlaybackQuality,
-        setAverageThroughput    :setAverageThroughput,
-        getTopQualityIndexFor   :getTopQualityIndexFor,
-        initialize              :initialize,
-        setConfig               :setConfig,
-        reset                   :reset
+        isPlayingAtTopQuality: isPlayingAtTopQuality,
+        updateTopQualityIndex: updateTopQualityIndex,
+        getAverageThroughput: getAverageThroughput,
+        getBitrateList: getBitrateList,
+        getQualityForBitrate: getQualityForBitrate,
+        getMaxAllowedBitrateFor: getMaxAllowedBitrateFor,
+        setMaxAllowedBitrateFor: setMaxAllowedBitrateFor,
+        getInitialBitrateFor: getInitialBitrateFor,
+        setInitialBitrateFor: setInitialBitrateFor,
+        setAutoSwitchBitrate: setAutoSwitchBitrate,
+        getAutoSwitchBitrate: getAutoSwitchBitrate,
+        getConfidenceFor: getConfidenceFor,
+        getQualityFor: getQualityFor,
+        getAbandonmentStateFor: getAbandonmentStateFor,
+        setAbandonmentStateFor: setAbandonmentStateFor,
+        setPlaybackQuality: setPlaybackQuality,
+        getPlaybackQuality: getPlaybackQuality,
+        setAverageThroughput: setAverageThroughput,
+        getTopQualityIndexFor: getTopQualityIndexFor,
+        initialize: initialize,
+        setConfig: setConfig,
+        reset: reset
     };
 
     setup();

@@ -34,9 +34,9 @@ import ClearKeyKeySet from '../vo/ClearKeyKeySet.js';
 import CommonEncryption from '../CommonEncryption.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
-const uuid = "1077efec-c0b2-4d02-ace3-3c1e52e2fb4b";
-const systemString = "org.w3.clearkey";
-const schemeIdURI = "urn:uuid:" + uuid;
+const uuid = '1077efec-c0b2-4d02-ace3-3c1e52e2fb4b';
+const systemString = 'org.w3.clearkey';
+const schemeIdURI = 'urn:uuid:' + uuid;
 
 function KeySystemClearKey() {
 
@@ -62,7 +62,7 @@ function KeySystemClearKey() {
                 var clearkeyID = jsonMsg.kids[i];
                 var clearkey = (protectionData.clearkeys.hasOwnProperty(clearkeyID)) ? protectionData.clearkeys[clearkeyID] : null;
                 if (!clearkey) {
-                    throw new Error("DRM: ClearKey keyID (" + clearkeyID + ") is not known!");
+                    throw new Error('DRM: ClearKey keyID (' + clearkeyID + ') is not known!');
                 }
                 // KeyIDs from CDM are not base64 padded.  Keys may or may not be padded
                 keyPairs.push(new KeyPair(clearkeyID, clearkey));

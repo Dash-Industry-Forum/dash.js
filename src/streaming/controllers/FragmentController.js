@@ -33,7 +33,7 @@ import DataChunk from '../vo/DataChunk.js';
 import FragmentModel from '../models/FragmentModel.js';
 import MetricsModel from '../models/MetricsModel.js';
 import EventBus from '../../core/EventBus.js';
-import Events from "../../core/events/Events.js";
+import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
 
@@ -66,7 +66,7 @@ function FragmentController(/*config*/) {
         // Wrap the buffer controller into model and store it to track the loading state and execute the requests
         var model = findModel(scheduleController);
 
-        if (!model){
+        if (!model) {
             model = FragmentModel(context).create({metricsModel: MetricsModel(context).getInstance()});
             model.setScheduleController(scheduleController);
             fragmentModels.push(model);
@@ -83,7 +83,7 @@ function FragmentController(/*config*/) {
         }
     }
 
-    function isInitializationRequest(request){
+    function isInitializationRequest(request) {
         return (request && request.type && request.type === HTTPRequest.INIT_SEGMENT_TYPE);
     }
 
@@ -132,7 +132,7 @@ function FragmentController(/*config*/) {
         let chunk;
 
         if (!bytes) {
-            log("No " + request.mediaType + " bytes to push.");
+            log('No ' + request.mediaType + ' bytes to push.');
             return;
         }
 
@@ -141,11 +141,11 @@ function FragmentController(/*config*/) {
     }
 
     instance = {
-        process :process,
-        getModel :getModel,
-        detachModel :detachModel,
-        isInitializationRequest:isInitializationRequest,
-        reset :reset
+        process: process,
+        getModel: getModel,
+        detachModel: detachModel,
+        isInitializationRequest: isInitializationRequest,
+        reset: reset
     };
 
     setup();

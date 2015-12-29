@@ -38,21 +38,21 @@ import FactoryMaker from '../core/FactoryMaker.js';
 
 const METRIC_LIST = {
     //TODO need to refactor all that reference to be able to export like all other const on factory object.
-    TCP_CONNECTION: "TcpConnection",
-    HTTP_REQUEST: "HttpRequest",
-    HTTP_REQUEST_TRACE: "HttpRequestTrace",
-    TRACK_SWITCH: "RepresentationSwitch",
-    BUFFER_LEVEL: "BufferLevel",
-    BUFFER_STATE: "BufferState",
-    DVR_INFO: "DVRInfo",
-    DROPPED_FRAMES: "DroppedFrames",
-    SCHEDULING_INFO: "SchedulingInfo",
-    REQUESTS_QUEUE: "RequestsQueue",
-    MANIFEST_UPDATE: "ManifestUpdate",
-    MANIFEST_UPDATE_STREAM_INFO: "ManifestUpdatePeriodInfo",
-    MANIFEST_UPDATE_TRACK_INFO: "ManifestUpdateRepresentationInfo",
-    PLAY_LIST: "PlayList",
-    PLAY_LIST_TRACE: "PlayListTrace"
+    TCP_CONNECTION: 'TcpConnection',
+    HTTP_REQUEST: 'HttpRequest',
+    HTTP_REQUEST_TRACE: 'HttpRequestTrace',
+    TRACK_SWITCH: 'RepresentationSwitch',
+    BUFFER_LEVEL: 'BufferLevel',
+    BUFFER_STATE: 'BufferState',
+    DVR_INFO: 'DVRInfo',
+    DROPPED_FRAMES: 'DroppedFrames',
+    SCHEDULING_INFO: 'SchedulingInfo',
+    REQUESTS_QUEUE: 'RequestsQueue',
+    MANIFEST_UPDATE: 'ManifestUpdate',
+    MANIFEST_UPDATE_STREAM_INFO: 'ManifestUpdatePeriodInfo',
+    MANIFEST_UPDATE_TRACK_INFO: 'ManifestUpdateRepresentationInfo',
+    PLAY_LIST: 'PlayList',
+    PLAY_LIST_TRACE: 'PlayListTrace'
 };
 
 function DashAdapter() {
@@ -65,9 +65,9 @@ function DashAdapter() {
         adaptations;
 
     function setConfig(config) {
-        if(!config) return;
+        if (!config) return;
 
-        if(config.manifestExt){
+        if (config.manifestExt) {
             manifestExt = config.manifestExt;
         }
     }
@@ -88,11 +88,9 @@ function DashAdapter() {
 
     function getPeriodForStreamInfo(streamInfo) {
         var ln = periods.length;
-        var period,
-            i = 0;
 
-        for (i; i < ln; i += 1) {
-            period = periods[i];
+        for (let i = 0; i < ln; i++) {
+            const period = periods[i];
 
             if (streamInfo.id === period.id) return period;
         }
@@ -130,13 +128,13 @@ function DashAdapter() {
         mediaInfo.lang = manifestExt.getLanguageForAdaptation(a);
         viewpoint = manifestExt.getViewpointForAdaptation(a);
         mediaInfo.viewpoint = viewpoint ? viewpoint.value : undefined;
-        mediaInfo.accessibility = manifestExt.getAccessibilityForAdaptation(a).map(function(accessibility){
+        mediaInfo.accessibility = manifestExt.getAccessibilityForAdaptation(a).map(function (accessibility) {
             return accessibility.value;
         });
-        mediaInfo.audioChannelConfiguration =  manifestExt.getAudioChannelConfigurationForAdaptation(a).map(function(audioChannelConfiguration){
+        mediaInfo.audioChannelConfiguration =  manifestExt.getAudioChannelConfigurationForAdaptation(a).map(function (audioChannelConfiguration) {
             return audioChannelConfiguration.value;
         });
-        mediaInfo.roles = manifestExt.getRolesForAdaptation(a).map(function(role){
+        mediaInfo.roles = manifestExt.getRolesForAdaptation(a).map(function (role) {
             return role.value;
         });
         mediaInfo.codec = manifestExt.getCodec(a);
@@ -145,7 +143,7 @@ function DashAdapter() {
         mediaInfo.bitrateList = manifestExt.getBitrateListForAdaptation(a);
 
         if (mediaInfo.contentProtection) {
-            mediaInfo.contentProtection.forEach(function(item){
+            mediaInfo.contentProtection.forEach(function (item) {
                 item.KID = manifestExt.getKID(item);
             });
         }
@@ -203,8 +201,9 @@ function DashAdapter() {
         var periodId = periodInfo.id;
         var adaptationsForType = manifestExt.getAdaptationsForType(manifest, streamInfo.index, type);
 
+        var mediaArr = [];
+
         var data,
-            mediaArr = [],
             media,
             idx;
 
@@ -212,7 +211,7 @@ function DashAdapter() {
 
         adaptations[periodId] = adaptations[periodId] || manifestExt.getAdaptationsForPeriod(manifest, periodInfo);
 
-        for (var i = 0, ln = adaptationsForType.length; i < ln; i += 1) {
+        for (var i = 0, ln = adaptationsForType.length; i < ln; i++) {
             data = adaptationsForType[i];
             idx = manifestExt.getIndexForAdaptation(data, manifest, streamInfo.index);
             media = convertAdaptationToMediaInfo(manifest, adaptations[periodId][idx]);
@@ -226,8 +225,8 @@ function DashAdapter() {
     }
 
     function getStreamsInfo(manifest) {
+        var streams = [];
         var mpd,
-            streams = [],
             ln,
             i;
 
@@ -239,7 +238,7 @@ function DashAdapter() {
         adaptations = {};
         ln = periods.length;
 
-        for(i = 0; i < ln; i += 1) {
+        for (i = 0; i < ln; i++) {
             streams.push(convertPeriodToStreamInfo(manifest, periods[i]));
         }
 
@@ -301,7 +300,7 @@ function DashAdapter() {
 
     function getCurrentRepresentationInfo(manifest, representationController) {
         var representation = representationController.getCurrentRepresentation();
-        return representation ? convertRepresentationToTrackInfo(manifest, representation): null;
+        return representation ? convertRepresentationToTrackInfo(manifest, representation) : null;
     }
 
     function getEvent(eventBox, eventStreams, startTime) {

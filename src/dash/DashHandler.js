@@ -74,7 +74,7 @@ function DashHandler(config) {
         isDynamic = streamProcessor.isDynamic();
     }
 
-    function getStreamProcessor(){
+    function getStreamProcessor() {
         return streamProcessor;
     }
 
@@ -86,7 +86,7 @@ function DashHandler(config) {
         return currentTime;
     }
 
-    function getCurrentIndex (){
+    function getCurrentIndex () {
         return index;
     }
 
@@ -103,15 +103,16 @@ function DashHandler(config) {
 
     function zeroPadToLength(numStr, minStrLength) {
         while (numStr.length < minStrLength) {
-            numStr = "0" + numStr;
+            numStr = '0' + numStr;
         }
         return numStr;
     }
 
     function replaceTokenForTemplate(url, token, value) {
+        var formatTag = '%0';
+
         var startPos,
             endPos,
-            formatTag = "%0",
             formatTagPos,
             specifier,
             width,
@@ -127,14 +128,14 @@ function DashHandler(config) {
 
             // check if there is a valid $<token>...$ identifier
             // if not, return the url as is.
-            startPos = url.indexOf("$" + token);
+            startPos = url.indexOf('$' + token);
             if (startPos < 0) {
                 return url;
             }
 
             // the next '$' must be the end of the identifier
             // if there isn't one, return the url as is.
-            endPos = url.indexOf("$", startPos + tokenLen);
+            endPos = url.indexOf('$', startPos + tokenLen);
             if (endPos < 0) {
                 return url;
             }
@@ -167,7 +168,7 @@ function DashHandler(config) {
                         paddedValue = zeroPadToLength(value.toString(8), width);
                         break;
                     default:
-                        log("Unsupported/invalid IEEE 1003.1 format identifier string in URL");
+                        log('Unsupported/invalid IEEE 1003.1 format identifier string in URL');
                         return url;
                 }
             } else {
@@ -179,13 +180,13 @@ function DashHandler(config) {
     }
 
     function unescapeDollarsInTemplate(url) {
-        return url.split("$$").join("$");
+        return url.split('$$').join('$');
     }
 
     function replaceIDForTemplate(url, value) {
-        if (value === null || url.indexOf("$RepresentationID$") === -1) { return url; }
+        if (value === null || url.indexOf('$RepresentationID$') === -1) { return url; }
         var v = value.toString();
-        return url.split("$RepresentationID$").join(v);
+        return url.split('$RepresentationID$').join(v);
     }
 
     function getNumberForSegment(segment, segmentIndex) {
@@ -243,8 +244,9 @@ function DashHandler(config) {
         var period = representation.adaptation.period;
         var segmentInfoType = representation.segmentInfoType;
 
+        var isFinished = false;
+
         var sDuration,
-            isFinished = false,
             seg,
             fTime;
 
@@ -256,8 +258,8 @@ function DashHandler(config) {
             if (seg) {
                 fTime = seg.presentationStartTime - period.start;
                 sDuration = representation.adaptation.period.duration;
-                log(representation.segmentInfoType + ": " + fTime + " / " + sDuration);
-                isFinished = segmentInfoType === "SegmentTimeline" ? false : (fTime >= sDuration);
+                log(representation.segmentInfoType + ': ' + fTime + ' / ' + sDuration);
+                isFinished = segmentInfoType === 'SegmentTimeline' ? false : (fTime >= sDuration);
             }
         } else {
             isFinished = true;
@@ -312,9 +314,14 @@ function DashHandler(config) {
         var timeline = template.SegmentTimeline;
         var isAvailableSegmentNumberCalculated = representation.availableSegmentsNumber > 0;
 
-        var maxSegmentsAhead = 10,
-            segments = [],
-            fragments,
+        var maxSegmentsAhead = 10;
+        var time = 0;
+        var scaledTime = 0;
+        var availabilityIdx = -1;
+        var segments = [];
+        var isStartSegmentForRequestedTimeFound = false;
+
+        var fragments,
             frag,
             i,
             len,
@@ -322,26 +329,23 @@ function DashHandler(config) {
             repeat,
             repeatEndTime,
             nextFrag,
-            time = 0,
-            scaledTime = 0,
-            availabilityIdx = -1,
             calculatedRange,
             hasEnoughSegments,
             requiredMediaTime,
-            isStartSegmentForRequestedTimeFound = false,
             startIdx,
             endIdx,
-            fTimescale,
-            createSegment = function(s) {
-                return getTimeBasedSegment(
-                    representation,
-                    time,
-                    s.d,
-                    fTimescale,
-                    template.media,
-                    s.mediaRange,
-                    availabilityIdx);
-            };
+            fTimescale;
+
+        var createSegment = function (s) {
+            return getTimeBasedSegment(
+                representation,
+                time,
+                s.d,
+                fTimescale,
+                template.media,
+                s.mediaRange,
+                availabilityIdx);
+        };
 
         fTimescale = representation.timescale;
 
@@ -358,15 +362,15 @@ function DashHandler(config) {
             requiredMediaTime = timelineConverter.calcMediaTimeFromPresentationTime(requestedTime || 0, representation);
         }
 
-        for (i = 0, len = fragments.length; i < len; i += 1) {
+        for (i = 0, len = fragments.length; i < len; i++) {
             frag = fragments[i];
             repeat = 0;
-            if (frag.hasOwnProperty("r")) {
+            if (frag.hasOwnProperty('r')) {
                 repeat = frag.r;
             }
 
             //For a repeated S element, t belongs only to the first segment
-            if (frag.hasOwnProperty("t")) {
+            if (frag.hasOwnProperty('t')) {
                 time = frag.t;
                 scaledTime = time / fTimescale;
             }
@@ -374,9 +378,9 @@ function DashHandler(config) {
             //This is a special case: "A negative value of the @r attribute of the S element indicates that the duration indicated in @d attribute repeats until the start of the next S element, the end of the Period or until the
             // next MPD update."
             if (repeat < 0) {
-                nextFrag = fragments[i+1];
+                nextFrag = fragments[i + 1];
 
-                if (nextFrag && nextFrag.hasOwnProperty("t")) {
+                if (nextFrag && nextFrag.hasOwnProperty('t')) {
                     repeatEndTime = nextFrag.t / fTimescale;
                 } else {
                     var availabilityEnd = representation.segmentAvailabilityRange ? representation.segmentAvailabilityRange.end : (timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic).end);
@@ -384,7 +388,7 @@ function DashHandler(config) {
                     representation.segmentDuration = frag.d / fTimescale;
                 }
 
-                repeat = Math.ceil((repeatEndTime - scaledTime)/(frag.d/fTimescale)) - 1;
+                repeat = Math.ceil((repeatEndTime - scaledTime) / (frag.d / fTimescale)) - 1;
             }
 
             // if we have enough segments in the list, but we have not calculated the total number of the segments yet we
@@ -395,8 +399,8 @@ function DashHandler(config) {
                 continue;
             }
 
-            for (j = 0; j <= repeat; j += 1) {
-                availabilityIdx += 1;
+            for (j = 0; j <= repeat; j++) {
+                availabilityIdx++;
 
                 if (calculatedRange) {
                     if (availabilityIdx > endIdx) {
@@ -422,7 +426,7 @@ function DashHandler(config) {
                     // is 50% of segment duration.
                     if (isStartSegmentForRequestedTimeFound) {
                         segments.push(createSegment(frag));
-                    }  else if (scaledTime >= (requiredMediaTime - (frag.d / fTimescale)*1.5)) {
+                    }  else if (scaledTime >= (requiredMediaTime - (frag.d / fTimescale) * 1.5)) {
                         isStartSegmentForRequestedTimeFound = true;
                         segments.push(createSegment(frag));
                     }
@@ -446,14 +450,15 @@ function DashHandler(config) {
         var duration = representation.segmentDuration;
         var availabilityWindow = representation.segmentAvailabilityRange;
 
-        var segments = [],
-            segmentRange,
+        var segments = [];
+        var url = null;
+        var seg = null;
+
+        var segmentRange,
             periodSegIdx,
             startIdx,
             endIdx,
-            seg = null,
-            start,
-            url = null;
+            start;
 
         start = representation.startNumber;
 
@@ -467,13 +472,13 @@ function DashHandler(config) {
         startIdx = segmentRange.start;
         endIdx = segmentRange.end;
 
-        for (periodSegIdx = startIdx;periodSegIdx <= endIdx; periodSegIdx += 1) {
+        for (periodSegIdx = startIdx; periodSegIdx <= endIdx; periodSegIdx++) {
 
             seg = getIndexBasedSegment(representation, periodSegIdx);
             seg.replacementTime = (start + periodSegIdx - 1) * representation.segmentDuration;
             url = template.media;
-            url = replaceTokenForTemplate(url, "Number", seg.replacementNumber);
-            url = replaceTokenForTemplate(url, "Time", seg.replacementTime);
+            url = replaceTokenForTemplate(url, 'Number', seg.replacementNumber);
+            url = replaceTokenForTemplate(url, 'Time', seg.replacementTime);
             seg.media = url;
 
             segments.push(seg);
@@ -502,9 +507,10 @@ function DashHandler(config) {
         var availabilityLowerLimit = 2 * duration;
         var availabilityUpperLimit = Math.max(2 * minBufferTime, 10 * duration);
 
-        var originAvailabilityTime = NaN,
-            originSegment = null,
-            start,
+        var originAvailabilityTime = NaN;
+        var originSegment = null;
+
+        var start,
             end,
             range;
 
@@ -544,11 +550,12 @@ function DashHandler(config) {
     }
 
     function decideSegmentListRangeForTimeline(/*representation*/) {
-        var availabilityLowerLimit = 2,
-            availabilityUpperLimit = 10,
-            firstIdx = 0,
-            lastIdx = Number.POSITIVE_INFINITY,
-            start,
+        var availabilityLowerLimit = 2;
+        var availabilityUpperLimit = 10;
+        var firstIdx = 0;
+        var lastIdx = Number.POSITIVE_INFINITY;
+
+        var start,
             end,
             range;
 
@@ -557,7 +564,7 @@ function DashHandler(config) {
             return range;
         }
 
-        if((!isDynamic && requestedTime) || index < 0) return null;
+        if ((!isDynamic && requestedTime) || index < 0) return null;
 
         // segment list should not be out of the availability window range
         start = Math.max(index - availabilityLowerLimit, firstIdx);
@@ -598,8 +605,8 @@ function DashHandler(config) {
 
         seg.replacementNumber = getNumberForSegment(seg, index);
 
-        url = replaceTokenForTemplate(url, "Number", seg.replacementNumber);
-        url = replaceTokenForTemplate(url, "Time", seg.replacementTime);
+        url = replaceTokenForTemplate(url, 'Number', seg.replacementNumber);
+        url = replaceTokenForTemplate(url, 'Time', seg.replacementTime);
         seg.media = url;
         seg.mediaRange = range;
         seg.availabilityIdx = index;
@@ -614,8 +621,9 @@ function DashHandler(config) {
             AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL;
         var len = list.SegmentURL_asArray.length;
 
-        var segments = [],
-            periodSegIdx,
+        var segments = [];
+
+        var periodSegIdx,
             seg,
             s,
             range,
@@ -629,7 +637,7 @@ function DashHandler(config) {
         startIdx = Math.max(range.start, 0);
         endIdx = Math.min(range.end, list.SegmentURL_asArray.length - 1);
 
-        for (periodSegIdx = startIdx; periodSegIdx <= endIdx; periodSegIdx += 1) {
+        for (periodSegIdx = startIdx; periodSegIdx <= endIdx; periodSegIdx++) {
             s = list.SegmentURL_asArray[periodSegIdx];
 
             seg = getIndexBasedSegment(representation, periodSegIdx);
@@ -653,14 +661,14 @@ function DashHandler(config) {
         var type = representation.segmentInfoType;
 
         // Already figure out the segments.
-        if (type === "SegmentBase" || type === "BaseURL" || !isSegmentListUpdateRequired(representation)) {
+        if (type === 'SegmentBase' || type === 'BaseURL' || !isSegmentListUpdateRequired(representation)) {
             segments = representation.segments;
         } else {
-            if (type === "SegmentTimeline") {
+            if (type === 'SegmentTimeline') {
                 segments = getSegmentsFromTimeline(representation);
-            } else if (type === "SegmentTemplate") {
+            } else if (type === 'SegmentTemplate') {
                 segments = getSegmentsFromTemplate(representation);
-            } else if (type === "SegmentList") {
+            } else if (type === 'SegmentList') {
                 segments = getSegmentsFromList(representation);
             }
 
@@ -681,7 +689,7 @@ function DashHandler(config) {
         if (isDynamic && isNaN(timelineConverter.getExpectedLiveEdge())) {
             lastSegment = segments[lastIdx];
             liveEdge = lastSegment.presentationStartTime;
-            metrics = metricsModel.getMetricsFor("stream");
+            metrics = metricsModel.getMetricsFor('stream');
             // the last segment is supposed to be a live edge
             timelineConverter.setExpectedLiveEdge(liveEdge);
             metricsModel.updateManifestUpdateInfo(metricsExt.getCurrentManifestUpdate(metrics), {presentationStartTime: liveEdge});
@@ -691,7 +699,7 @@ function DashHandler(config) {
     function updateSegmentList(representation) {
 
         if (!representation) {
-            throw new Error("no representation");
+            throw new Error('no representation');
         }
 
         representation.segments = null;
@@ -703,7 +711,7 @@ function DashHandler(config) {
 
     function updateRepresentation(representation, keepIdx) {
         var hasInitialization = representation.initialization;
-        var hasSegments = representation.segmentInfoType !== "BaseURL" && representation.segmentInfoType !== "SegmentBase";
+        var hasSegments = representation.segmentInfoType !== 'BaseURL' && representation.segmentInfoType !== 'SegmentBase';
         var error;
 
         if (!representation.segmentDuration && !representation.segments) {
@@ -714,8 +722,8 @@ function DashHandler(config) {
         representation.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
 
         if ((representation.segmentAvailabilityRange.end < representation.segmentAvailabilityRange.start) && !representation.useCalculatedLiveEdgeTime) {
-            error = new Error(SEGMENTS_UNAVAILABLE_ERROR_CODE, "no segments are available yet", {availabilityDelay: representation.segmentAvailabilityRange.start - representation.segmentAvailabilityRange.end});
-            eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender:this, representation: representation, error: error});
+            error = new Error(SEGMENTS_UNAVAILABLE_ERROR_CODE, 'no segments are available yet', {availabilityDelay: representation.segmentAvailabilityRange.start - representation.segmentAvailabilityRange.end});
+            eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: representation, error: error});
             return;
         }
 
@@ -734,7 +742,7 @@ function DashHandler(config) {
         }
 
         if (hasInitialization && hasSegments) {
-            eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender:this, representation: representation});
+            eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: representation});
         }
     }
 
@@ -742,19 +750,19 @@ function DashHandler(config) {
         var segments = representation.segments;
         var ln = segments ? segments.length : null;
 
-        var idx = -1,
-            epsilon,
+        var idx = -1;
+        var epsilon,
             frag,
             ft,
             fd,
             i;
 
         if (segments && ln > 0) {
-            for (i = 0; i < ln; i += 1) {
+            for (i = 0; i < ln; i++) {
                 frag = segments[i];
                 ft = frag.presentationStartTime;
                 fd = frag.duration;
-                epsilon = (timeThreshold === undefined || timeThreshold === null) ? fd/2 : timeThreshold;
+                epsilon = (timeThreshold === undefined || timeThreshold === null) ? fd / 2 : timeThreshold;
 
                 if ((time + epsilon) >= ft &&
                     (time - epsilon) < (ft + fd)) {
@@ -774,7 +782,7 @@ function DashHandler(config) {
         var seg,
             i;
 
-        for (i = 0; i < ln; i += 1) {
+        for (i = 0; i < ln; i++) {
             seg = representation.segments[i];
 
             if (seg.availabilityIdx === index) {
@@ -787,15 +795,16 @@ function DashHandler(config) {
 
     function isSegmentListUpdateRequired(representation) {
         var segments = representation.segments;
-        var updateRequired = false,
-            upperIdx,
+        var updateRequired = false;
+
+        var upperIdx,
             lowerIdx;
 
         if (!segments || segments.length === 0) {
             updateRequired = true;
         } else {
             lowerIdx = segments[0].availabilityIdx;
-            upperIdx = segments[segments.length -1].availabilityIdx;
+            upperIdx = segments[segments.length - 1].availabilityIdx;
             updateRequired = (index < lowerIdx) || (index > upperIdx);
         }
 
@@ -814,9 +823,9 @@ function DashHandler(config) {
         var url;
 
         url = getRequestUrl(segment.media, representation);
-        url = replaceTokenForTemplate(url, "Number", segment.replacementNumber);
-        url = replaceTokenForTemplate(url, "Time", segment.replacementTime);
-        url = replaceTokenForTemplate(url, "Bandwidth", bandwidth);
+        url = replaceTokenForTemplate(url, 'Number', segment.replacementNumber);
+        url = replaceTokenForTemplate(url, 'Time', segment.replacementTime);
+        url = replaceTokenForTemplate(url, 'Bandwidth', bandwidth);
         url = replaceIDForTemplate(url, representation.id);
         url = unescapeDollarsInTemplate(url);
 
@@ -840,8 +849,9 @@ function DashHandler(config) {
     function getSegmentRequestForTime(representation, time, options) {
         var request,
             segment,
-            finished,
-            idx = index;
+            finished;
+
+        var idx = index;
 
         var keepIdx = options ? options.keepIdx : false;
         var timeThreshold = options ? options.timeThreshold : null;
@@ -853,7 +863,7 @@ function DashHandler(config) {
 
         requestedTime = time;
 
-        log("Getting the request for time: " + time);
+        log('Getting the request for time: ' + time);
         index = getIndexForSegments(time, representation, timeThreshold);
         //Index may be -1 if getSegments needs to update.  So after getSegments is called and updated then try to get index again.
         getSegments(representation);
@@ -861,7 +871,7 @@ function DashHandler(config) {
             index = getIndexForSegments(time, representation, timeThreshold);
         }
 
-        log("Index for time " + time + " is " + index);
+        log('Index for time ' + time + ' is ' + index);
 
         finished = !ignoreIsFinished ? isMediaFinished(representation) : false;
         if (finished) {
@@ -870,7 +880,7 @@ function DashHandler(config) {
             request.index = index;
             request.mediaType = type;
             request.mediaInfo = streamProcessor.getMediaInfo();
-            log("Signal complete.", request);
+            log('Signal complete.', request);
 
         } else {
             segment = getSegmentByIndex(index, representation);
@@ -903,9 +913,9 @@ function DashHandler(config) {
         }
 
         requestedTime = null;
-        index += 1;
+        index++;
         idx = index;
-        log("Getting the next request at index: " + index);
+        log('Getting the next request at index: ' + index);
 
         finished = isMediaFinished(representation);
         if (finished) {
@@ -914,7 +924,7 @@ function DashHandler(config) {
             request.index = idx;
             request.mediaType = type;
             request.mediaInfo = streamProcessor.getMediaInfo();
-            log("Signal complete.");
+            log('Signal complete.');
         } else {
             getSegments(representation);
             segment = getSegmentByIndex(idx, representation);
@@ -929,7 +939,7 @@ function DashHandler(config) {
         //log("Got an initialization.");
         if (!representation.segments) return;
 
-        eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender:this, representation: representation});
+        eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: representation});
     }
 
     function onSegmentsLoaded(e) {
@@ -937,14 +947,15 @@ function DashHandler(config) {
 
         var fragments = e.segments;
         var representation = e.representation;
+        var segments = [];
+        var count = 0;
+
         var i,
             len,
             s,
-            segments = [],
-            count = 0,
             seg;
 
-        for (i = 0, len = fragments.length; i < len; i+=1) {
+        for (i = 0, len = fragments.length; i < len; i++) {
             s = fragments[i];
 
             seg = getTimeBasedSegment(
@@ -958,7 +969,7 @@ function DashHandler(config) {
 
             segments.push(seg);
             seg = null;
-            count += 1;
+            count++;
         }
 
         representation.segmentAvailabilityRange = {start: segments[0].presentationStartTime, end: segments[len - 1].presentationStartTime};
@@ -968,7 +979,7 @@ function DashHandler(config) {
 
         if (!representation.initialization) return;
 
-        eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender:this, representation: representation});
+        eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: representation});
     }
 
     instance = {

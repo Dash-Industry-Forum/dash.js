@@ -7,7 +7,7 @@ function MediaPlayerFactory() {
      * mime-type identifier for any source content to be accepted as a dash manifest by the create() method.
      * @type {string}
      */
-    const SUPPORTED_MIME_TYPE = "application/dash+xml";
+    const SUPPORTED_MIME_TYPE = 'application/dash+xml';
 
     let instance;
 
@@ -21,26 +21,26 @@ function MediaPlayerFactory() {
      * @returns {MediaPlayer}
      */
     function create(video, source, context) {
-        if (video === null || typeof video === "undefined" || video.nodeName !== "VIDEO") return null;
+        if (video === null || typeof video === 'undefined' || video.nodeName !== 'VIDEO') return null;
 
         var player;
-        var videoID = (video.id || video.name || "video element");
+        var videoID = (video.id || video.name || 'video element');
 
-        source = source || [].slice.call(video.querySelectorAll("source")).filter(function (s) {
+        source = source || [].slice.call(video.querySelectorAll('source')).filter(function (s) {
                 return s.type == SUPPORTED_MIME_TYPE;
             })[0];
         if (source === undefined && video.src) {
-            source = document.createElement("source");
+            source = document.createElement('source');
             source.src = video.src;
         } else if (source === undefined && !video.src) {
             return null;
         }
-        if (context === undefined){
+        if (context === undefined) {
             context = {};
         }
         player = MediaPlayer(context).create();
         player.initialize(video, source.src, video.autoplay);
-        player.getDebug().log("Converted " + videoID + " to dash.js player and added content: " + source.src);
+        player.getDebug().log('Converted ' + videoID + ' to dash.js player and added content: ' + source.src);
         return player;
     }
 
@@ -57,7 +57,7 @@ function MediaPlayerFactory() {
      */
     function createAll(className, scope) {
         var aPlayers = [];
-        className = className || ".dashjs-player";
+        className = className || '.dashjs-player';
         scope = scope || document;
         var videos = scope.querySelectorAll(className);
         for (var i = 0; i < videos.length; i++) {

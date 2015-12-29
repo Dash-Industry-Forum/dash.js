@@ -40,27 +40,27 @@ import Error from '../../vo/Error.js';
 
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
-const uuid = "9a04f079-9840-4286-ab92-e65be0885f95";
-const systemString = "com.microsoft.playready";
-const schemeIdURI = "urn:uuid:" + uuid;
+const uuid = '9a04f079-9840-4286-ab92-e65be0885f95';
+const systemString = 'com.microsoft.playready';
+const schemeIdURI = 'urn:uuid:' + uuid;
 
 function KeySystemPlayReady() {
 
     let instance;
-    let messageFormat = "utf16";
+    let messageFormat = 'utf16';
 
     function getRequestHeadersFromMessage(message) {
         var msg,
-            xmlDoc,
-            headers = {};
-        var parser = new DOMParser(),
-            dataview = (messageFormat === "utf16") ? new Uint16Array(message) : new Uint8Array(message);
+            xmlDoc;
+        var headers = {};
+        var parser = new DOMParser();
+        var dataview = (messageFormat === 'utf16') ? new Uint16Array(message) : new Uint8Array(message);
 
         msg = String.fromCharCode.apply(null, dataview);
-        xmlDoc = parser.parseFromString(msg, "application/xml");
+        xmlDoc = parser.parseFromString(msg, 'application/xml');
 
-        var headerNameList = xmlDoc.getElementsByTagName("name");
-        var headerValueList = xmlDoc.getElementsByTagName("value");
+        var headerNameList = xmlDoc.getElementsByTagName('name');
+        var headerValueList = xmlDoc.getElementsByTagName('value');
         for (var i = 0; i < headerNameList.length; i++) {
             headers[headerNameList[i].childNodes[0].nodeValue] = headerValueList[i].childNodes[0].nodeValue;
         }
@@ -76,16 +76,16 @@ function KeySystemPlayReady() {
 
     function getLicenseRequestFromMessage(message) {
         var msg,
-            xmlDoc,
-            licenseRequest = null;
-        var parser = new DOMParser(),
-            dataview = (messageFormat === "utf16") ? new Uint16Array(message) : new Uint8Array(message);
+            xmlDoc;
+        var licenseRequest = null;
+        var parser = new DOMParser();
+        var dataview = (messageFormat === 'utf16') ? new Uint16Array(message) : new Uint8Array(message);
 
         msg = String.fromCharCode.apply(null, dataview);
-        xmlDoc = parser.parseFromString(msg, "application/xml");
+        xmlDoc = parser.parseFromString(msg, 'application/xml');
 
-        if (xmlDoc.getElementsByTagName("Challenge")[0]) {
-            var Challenge = xmlDoc.getElementsByTagName("Challenge")[0].childNodes[0].nodeValue;
+        if (xmlDoc.getElementsByTagName('Challenge')[0]) {
+            var Challenge = xmlDoc.getElementsByTagName('Challenge')[0].childNodes[0].nodeValue;
             if (Challenge) {
                 licenseRequest = BASE64.decode(Challenge);
             }
@@ -113,19 +113,19 @@ function KeySystemPlayReady() {
 
                 var recordData = initData.slice(offset, offset + recordLength);
                 var record = String.fromCharCode.apply(null, new Uint16Array(recordData));
-                var xmlDoc = parser.parseFromString(record, "application/xml");
+                var xmlDoc = parser.parseFromString(record, 'application/xml');
 
                 // First try <LA_URL>
-                if (xmlDoc.getElementsByTagName("LA_URL")[0]) {
-                    var laurl = xmlDoc.getElementsByTagName("LA_URL")[0].childNodes[0].nodeValue;
+                if (xmlDoc.getElementsByTagName('LA_URL')[0]) {
+                    var laurl = xmlDoc.getElementsByTagName('LA_URL')[0].childNodes[0].nodeValue;
                     if (laurl) {
                         return laurl;
                     }
                 }
 
                 // Optionally, try <LUI_URL>
-                if (xmlDoc.getElementsByTagName("LUI_URL")[0]) {
-                    var luiurl = xmlDoc.getElementsByTagName("LUI_URL")[0].childNodes[0].nodeValue;
+                if (xmlDoc.getElementsByTagName('LUI_URL')[0]) {
+                    var luiurl = xmlDoc.getElementsByTagName('LUI_URL')[0].childNodes[0].nodeValue;
                     if (luiurl) {
                         return luiurl;
                     }
@@ -145,26 +145,27 @@ function KeySystemPlayReady() {
         // *   Protection SystemID (16)
         // *   protection system data size (4) - length of decoded PROHeader
         // *   decoded PROHeader data from MPD file
-        var PSSHBoxType = new Uint8Array([0x70, 0x73, 0x73, 0x68, 0x00, 0x00, 0x00, 0x00]), //'PSSH' 8 bytes
-            playreadySystemID = new Uint8Array([0x9a, 0x04, 0xf0, 0x79, 0x98, 0x40, 0x42, 0x86, 0xab, 0x92, 0xe6, 0x5b, 0xe0, 0x88, 0x5f, 0x95]);
+        var PSSHBoxType = new Uint8Array([0x70, 0x73, 0x73, 0x68, 0x00, 0x00, 0x00, 0x00]); //'PSSH' 8 bytes
+        var playreadySystemID = new Uint8Array([0x9a, 0x04, 0xf0, 0x79, 0x98, 0x40, 0x42, 0x86, 0xab, 0x92, 0xe6, 0x5b, 0xe0, 0x88, 0x5f, 0x95]);
 
-        var byteCursor = 0,
-            PROSize,
+        var byteCursor = 0;
+        var uint8arraydecodedPROHeader = null;
+
+        var PROSize,
             PSSHSize,
-            uint8arraydecodedPROHeader = null,
             PSSHBoxBuffer,
             PSSHBox,
             PSSHData;
 
         // Handle common encryption PSSH
-        if ("pssh" in cpData) {
+        if ('pssh' in cpData) {
             return CommonEncryption.parseInitDataFromContentProtection(cpData);
         }
         // Handle native MS PlayReady ContentProtection elements
-        if ("pro" in cpData) {
+        if ('pro' in cpData) {
             uint8arraydecodedPROHeader = BASE64.decodeArray(cpData.pro.__text);
         }
-        else if ("prheader" in cpData) {
+        else if ('prheader' in cpData) {
             uint8arraydecodedPROHeader = BASE64.decodeArray(cpData.prheader.__text);
         }
         else {
@@ -206,8 +207,8 @@ function KeySystemPlayReady() {
      * @throws {Error} Specified message format is not one of "utf8" or "utf16"
      */
     function setPlayReadyMessageFormat(format) {
-        if (format !== "utf8" && format !== "utf16") {
-            throw new Error("Illegal PlayReady message format! -- " + format);
+        if (format !== 'utf8' && format !== 'utf16') {
+            throw new Error('Illegal PlayReady message format! -- ' + format);
         }
         messageFormat = format;
     }

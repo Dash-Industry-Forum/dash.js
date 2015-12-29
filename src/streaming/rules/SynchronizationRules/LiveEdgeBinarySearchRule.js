@@ -121,7 +121,7 @@ function LiveEdgeBinarySearchRule(config) {
             req = adapter.generateFragmentRequestForTime(streamProcessor, representationInfo, searchTime);
             findLiveEdge(searchTime, onSuccess, onError, req);
         } else {
-            var handler = function(e) {
+            var handler = function (e) {
                 eventBus.off(Events.CHECK_FOR_EXISTENCE_COMPLETED, handler, this);
                 if (e.exists) {
                     onSuccess(e.request, searchTime);
@@ -180,9 +180,9 @@ function LiveEdgeBinarySearchRule(config) {
             if (lastSearchTime === liveEdgeInitialSearchPosition) {
                 searchTime = lastSearchTime + fragmentDuration;
                 req = adapter.getFragmentRequestForTime(streamProcessor, representationInfo, searchTime, {ignoreIsFinished: true});
-                findLiveEdge(searchTime, function() {
+                findLiveEdge(searchTime, function () {
                     binarySearch(true, searchTime);
-                }, function(){
+                }, function () {
                     callback(SwitchRequest(context).create(searchTime, p));
                 }, req);
 

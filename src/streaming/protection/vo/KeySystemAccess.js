@@ -41,7 +41,7 @@
  * @class
  */
 class KeySystemAccess {
-    constructor(keySystem, ksConfiguration){
+    constructor(keySystem, ksConfiguration) {
         this.keySystem = keySystem;
         this.ksConfiguration = ksConfiguration;
     }

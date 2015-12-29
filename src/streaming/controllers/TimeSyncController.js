@@ -61,27 +61,27 @@ function TimeSyncController() {
 
         // a list of known schemeIdUris and a method to call with @value
         handlers = {
-            "urn:mpeg:dash:utc:http-head:2014":     httpHeadHandler,
-            "urn:mpeg:dash:utc:http-xsdate:2014":   httpHandler.bind(null, xsdatetimeDecoder),
-            "urn:mpeg:dash:utc:http-iso:2014":      httpHandler.bind(null, iso8601Decoder),
-            "urn:mpeg:dash:utc:direct:2014":        directHandler,
+            'urn:mpeg:dash:utc:http-head:2014':     httpHeadHandler,
+            'urn:mpeg:dash:utc:http-xsdate:2014':   httpHandler.bind(null, xsdatetimeDecoder),
+            'urn:mpeg:dash:utc:http-iso:2014':      httpHandler.bind(null, iso8601Decoder),
+            'urn:mpeg:dash:utc:direct:2014':        directHandler,
 
             // some specs referencing early ISO23009-1 drafts incorrectly use
             // 2012 in the URI, rather than 2014. support these for now.
-            "urn:mpeg:dash:utc:http-head:2012":     httpHeadHandler,
-            "urn:mpeg:dash:utc:http-xsdate:2012":   httpHandler.bind(null, xsdatetimeDecoder),
-            "urn:mpeg:dash:utc:http-iso:2012":      httpHandler.bind(null, iso8601Decoder),
-            "urn:mpeg:dash:utc:direct:2012":        directHandler,
+            'urn:mpeg:dash:utc:http-head:2012':     httpHeadHandler,
+            'urn:mpeg:dash:utc:http-xsdate:2012':   httpHandler.bind(null, xsdatetimeDecoder),
+            'urn:mpeg:dash:utc:http-iso:2012':      httpHandler.bind(null, iso8601Decoder),
+            'urn:mpeg:dash:utc:direct:2012':        directHandler,
 
             // it isn't clear how the data returned would be formatted, and
             // no public examples available so http-ntp not supported for now.
             // presumably you would do an arraybuffer type xhr and decode the
             // binary data returned but I would want to see a sample first.
-            "urn:mpeg:dash:utc:http-ntp:2014":      notSupportedHandler,
+            'urn:mpeg:dash:utc:http-ntp:2014':      notSupportedHandler,
 
             // not clear how this would be supported in javascript (in browser)
-            "urn:mpeg:dash:utc:ntp:2014":           notSupportedHandler,
-            "urn:mpeg:dash:utc:sntp:2014":          notSupportedHandler
+            'urn:mpeg:dash:utc:ntp:2014':           notSupportedHandler,
+            'urn:mpeg:dash:utc:sntp:2014':          notSupportedHandler
         };
 
         if (!getIsSynchronizing()) {
@@ -131,11 +131,12 @@ function TimeSyncController() {
     // which is natively understood by javascript Date parser
     function alternateXsdatetimeDecoder(xsdatetimeStr) {
         // taken from DashParser - should probably refactor both uses
-        var SECONDS_IN_MIN = 60,
-            MINUTES_IN_HOUR = 60,
-            MILLISECONDS_IN_SECONDS = 1000,
-            datetimeRegex = /^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2})(?::([0-9]*)(\.[0-9]*)?)?(?:([+\-])([0-9]{2})([0-9]{2}))?/,
-            utcDate,
+        var SECONDS_IN_MIN = 60;
+        var MINUTES_IN_HOUR = 60;
+        var MILLISECONDS_IN_SECONDS = 1000;
+        var datetimeRegex = /^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2})(?::([0-9]*)(\.[0-9]*)?)?(?:([+\-])([0-9]{2})([0-9]{2}))?/;
+
+        var utcDate,
             timezoneOffset;
 
         var match = datetimeRegex.exec(xsdatetimeStr);
@@ -202,9 +203,9 @@ function TimeSyncController() {
 
     function httpHandler(decoder, url, onSuccessCB, onFailureCB, isHeadRequest) {
         var oncomplete,
-            onload,
-            complete = false,
-            req = new XMLHttpRequest();
+            onload;
+        var complete = false;
+        var req = new XMLHttpRequest();
 
         var verb = isHeadRequest ? 'HEAD' : 'GET';
         var urls = url.match(/\S+/g);
@@ -224,7 +225,7 @@ function TimeSyncController() {
 
             // if there are more urls to try, call self.
             if (urls.length) {
-                httpHandler(decoder, urls.join(" "), onSuccessCB, onFailureCB, isHeadRequest);
+                httpHandler(decoder, urls.join(' '), onSuccessCB, onFailureCB, isHeadRequest);
             } else {
                 onFailureCB();
             }
@@ -236,7 +237,7 @@ function TimeSyncController() {
 
             if (req.status === 200) {
                 time = isHeadRequest ?
-                        req.getResponseHeader("Date") :
+                        req.getResponseHeader('Date') :
                         req.response;
 
                 result = decoder(time);
@@ -260,20 +261,20 @@ function TimeSyncController() {
         httpHandler(rfc1123Decoder, url, onSuccessCB, onFailureCB, true);
     }
 
-    function checkForDateHeader(){
-        var metrics = metricsModel.getReadOnlyMetricsFor("stream");
-        var dateHeaderValue = metricsExt.getLatestMPDRequestHeaderValueByID(metrics, "Date");
+    function checkForDateHeader() {
+        var metrics = metricsModel.getReadOnlyMetricsFor('stream');
+        var dateHeaderValue = metricsExt.getLatestMPDRequestHeaderValueByID(metrics, 'Date');
         var dateHeaderTime = dateHeaderValue !== null ? new Date(dateHeaderValue).getTime() : Number.NaN;
 
         if (!isNaN(dateHeaderTime)) {
             setOffsetMs(dateHeaderTime - new Date().getTime());
-            completeTimeSyncSequence(false, dateHeaderTime/1000, offsetToDeviceTimeMs);
+            completeTimeSyncSequence(false, dateHeaderTime / 1000, offsetToDeviceTimeMs);
         }else {
             completeTimeSyncSequence(true);
         }
     }
 
-    function completeTimeSyncSequence(failed, time, offset){
+    function completeTimeSyncSequence(failed, time, offset) {
         setIsSynchronizing(false);
         eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED, { time: time, offset: offset, error: failed ? new Error(TIME_SYNC_FAILED_ERROR_CODE) : null });
     }
@@ -289,7 +290,7 @@ function TimeSyncController() {
         var source = sources[index];
 
         // callback to emit event to listeners
-        var onComplete = function(time, offset) {
+        var onComplete = function (time, offset) {
             var failed = !time || !offset;
             if (failed && useManifestDateHeaderTimeSource) {
                 //Before falling back to binary search , check if date header exists on MPD. if so, use for a time source.
@@ -314,9 +315,9 @@ function TimeSyncController() {
 
                         setOffsetMs(offset);
 
-                        log("Local time:      " + new Date(deviceTime));
-                        log("Server time:     " + new Date(serverTime));
-                        log("Difference (ms): " + offset);
+                        log('Local time:      ' + new Date(deviceTime));
+                        log('Server time:     ' + new Date(serverTime));
+                        log('Difference (ms): ' + offset);
 
                         onComplete(serverTime, offset);
                     },
@@ -343,7 +344,7 @@ function TimeSyncController() {
         setIsInitialised(false);
         setIsSynchronizing(false);
     }
-    
+
     instance = {
         initialize: initialize,
         getOffsetToDeviceTimeMs: getOffsetToDeviceTimeMs,

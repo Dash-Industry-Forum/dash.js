@@ -49,8 +49,8 @@ function VTTParser() {
     }
 
     function parse(data) {
-        var captionArray = [],
-            len,
+        var captionArray = [];
+        var len,
             lastStartTime;
 
         data = data.split( regExNewLine );
@@ -61,7 +61,7 @@ function VTTParser() {
         {
             var item = data[i];
 
-            if (item.length > 0 && item !== "WEBVTT")
+            if (item.length > 0 && item !== 'WEBVTT')
             {
                 if (item.match(regExToken))
                 {
@@ -72,23 +72,23 @@ function VTTParser() {
                     var startTime = convertCuePointTimes(cuePoints[0].replace(regExWhiteSpace, ''));
                     var endTime = convertCuePointTimes(cuePoints[1].replace(regExWhiteSpace, ''));
 
-                    if((!isNaN(startTime) && !isNaN(endTime)) && startTime >= lastStartTime && endTime > startTime) {
-                        if (text !== ""){
+                    if ((!isNaN(startTime) && !isNaN(endTime)) && startTime >= lastStartTime && endTime > startTime) {
+                        if (text !== '') {
                             lastStartTime = startTime;
                             //TODO Make VO external so other parsers can use.
                             captionArray.push({
-                                start:startTime,
-                                end:endTime,
-                                data:text,
-                                styles:styles
+                                start: startTime,
+                                end: endTime,
+                                data: text,
+                                styles: styles
                             });
                         }
                         else {
-                            log("Skipping cue due to empty/malformed cue text");
+                            log('Skipping cue due to empty/malformed cue text');
                         }
                     }
                     else {
-                        log("Skipping cue due to incorrect cue timing");
+                        log('Skipping cue due to incorrect cue timing');
                     }
                 }
             }
@@ -98,10 +98,10 @@ function VTTParser() {
     }
 
     function convertCuePointTimes(time) {
-        var timeArray = time.split(":");
+        var timeArray = time.split(':');
         var len = timeArray.length - 1;
 
-        time = parseInt( timeArray[len-1], 10 ) * 60 + parseFloat( timeArray[len]);
+        time = parseInt( timeArray[len - 1], 10 ) * 60 + parseFloat( timeArray[len]);
 
         if ( len === 2 ) {
             time += parseInt( timeArray[0], 10 ) * 3600;
@@ -116,27 +116,27 @@ function VTTParser() {
         arr.shift(); //remove first array index it is empty...
         vttCuePoints[1] = arr[0];
         arr.shift();
-        return {cuePoints:vttCuePoints, styles:getCaptionStyles(arr)};
+        return {cuePoints: vttCuePoints, styles: getCaptionStyles(arr)};
     }
 
     function getCaptionStyles(arr) {
         var styleObject = {};
         arr.forEach(function (element) {
-            if (element.split(/:/).length > 1){
+            if (element.split(/:/).length > 1) {
                 var val = element.split(/:/)[1];
-                if (val && val.search(/%/) != -1){
-                    val = parseInt(val.replace(/%/, ""));
+                if (val && val.search(/%/) != -1) {
+                    val = parseInt(val.replace(/%/, ''));
                 }
-                if (element.match(/align/) || element.match(/A/)){
+                if (element.match(/align/) || element.match(/A/)) {
                     styleObject.align = val;
                 }
-                if (element.match(/line/) || element.match(/L/) ){
+                if (element.match(/line/) || element.match(/L/) ) {
                     styleObject.line = val;
                 }
-                if (element.match(/position/) || element.match(/P/) ){
+                if (element.match(/position/) || element.match(/P/) ) {
                     styleObject.position = val;
                 }
-                if (element.match(/size/) || element.match(/S/)){
+                if (element.match(/size/) || element.match(/S/)) {
                     styleObject.size = val;
                 }
             }
@@ -151,33 +151,33 @@ function VTTParser() {
     function getSublines(data, idx) {
         var i = idx;
 
-        var lineCount,
-            subline = "",
-            lineData = "";
+        var subline = '';
+        var lineData = '';
+        var lineCount;
 
-        while(data[i] !== "" && i < data.length) {
+        while (data[i] !== '' && i < data.length) {
             i++;
         }
 
         lineCount = i - idx;
-        if (lineCount > 1){
-            for(var j = 0; j < lineCount; j++){
+        if (lineCount > 1) {
+            for (var j = 0; j < lineCount; j++) {
                 lineData = data[(idx + j)];
-                if(!lineData.match(regExToken)){
+                if (!lineData.match(regExToken)) {
                     subline += lineData;
-                    if (j !== lineCount-1) {
-                        subline += "\n";
+                    if (j !== lineCount - 1) {
+                        subline += '\n';
                     }
                 }
                 else {
                     // caption text should not have '-->' in it
-                    subline = "";
+                    subline = '';
                     break;
                 }
             }
         } else {
             lineData = data[idx];
-            if(!lineData.match(regExToken))
+            if (!lineData.match(regExToken))
                 subline = lineData;
         }
         return decodeURI(subline);

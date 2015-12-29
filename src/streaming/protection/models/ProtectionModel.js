@@ -46,7 +46,7 @@
  * @interface MediaPlayer.models.ProtectionModel
  */
 
-let ProtectionModel = function() { };
+let ProtectionModel = function () { };
 
 /**
  * Returns an array of all initialization data currently used by

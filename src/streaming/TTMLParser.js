@@ -75,13 +75,13 @@ function TTMLParser() {
 
     function parse(data) {
         var type;
-        var converter = new X2JS([], "", false);
+        var converter = new X2JS([], '', false);
 
         // Parse the TTML in a JSON object.
         ttml = converter.xml_str2json(data);
 
         if (!ttml) {
-            throw "TTML document could not be parsed";
+            throw 'TTML document could not be parsed';
         }
 
         if (videoModel.getTTMLRenderingDiv()) {
@@ -89,7 +89,7 @@ function TTMLParser() {
         }
 
         // Get the namespace if there is one defined in the JSON object.
-        var ttNS = getNamespacePrefix(ttml, "http://www.w3.org/ns/ttml");
+        var ttNS = getNamespacePrefix(ttml, 'http://www.w3.org/ns/ttml');
 
         // Remove the namespace before each node if it exists:
         if (ttNS) {
@@ -102,7 +102,7 @@ function TTMLParser() {
 
         // Check if the document is conform to the specification.
         if (!passStructuralConstraints()) {
-            var errorMsg = "TTML document has incorrect structure";
+            var errorMsg = 'TTML document has incorrect structure';
             throw errorMsg;
         }
 
@@ -123,22 +123,22 @@ function TTMLParser() {
         }
 
         // Get the namespace prefixe.
-        var nsttp = getNamespacePrefix(ttml.tt, "http://www.w3.org/ns/ttml#parameter");
+        var nsttp = getNamespacePrefix(ttml.tt, 'http://www.w3.org/ns/ttml#parameter');
 
         // Set the framerate.
-        if (ttml.tt.hasOwnProperty(nsttp + ":frameRate")) {
-            ttml.tt.frameRate = parseInt(ttml.tt[nsttp + ":frameRate"], 10);
+        if (ttml.tt.hasOwnProperty(nsttp + ':frameRate')) {
+            ttml.tt.frameRate = parseInt(ttml.tt[nsttp + ':frameRate'], 10);
         }
         var captionArray = [];
         // Extract the div
         var divs = ttml.tt.body_asArray[0].__children;
 
-        divs.forEach(function(div) {
+        divs.forEach(function (div) {
             var cues = div.div.p_asArray;
 
             // Check if cues is not empty or undefined.
             if (!cues || cues.length === 0) {
-                var errorMsg = "TTML document does not contain any cues";
+                var errorMsg = 'TTML document does not contain any cues';
                 throw errorMsg;
             }
 
@@ -157,7 +157,7 @@ function TTMLParser() {
             var pEndTime;
             var spanStartTime;
             var spanEndTime;
-            cues.forEach(function(cue) {
+            cues.forEach(function (cue) {
 
                 // Obtain the start and end time of the cue.
                 if (cue.hasOwnProperty('begin') && cue.hasOwnProperty('end')) {
@@ -167,20 +167,20 @@ function TTMLParser() {
                     spanStartTime = parseTimings(cue.span.begin);
                     spanEndTime   = parseTimings(cue.span.end);
                 } else {
-                    errorMsg = "TTML document has incorrect timing value";
+                    errorMsg = 'TTML document has incorrect timing value';
                     throw errorMsg;
                 }
 
-                if(cue["smpte:backgroundImage"]!== undefined) {
+                if (cue['smpte:backgroundImage'] !== undefined) {
                     var images = ttml.tt.head.metadata.image_asArray;
-                    for (var j = 0; j < images.length; j += 1) {
-                        if(("#"+images[j]["xml:id"]) == cue["smpte:backgroundImage"]) {
+                    for (var j = 0; j < images.length; j++) {
+                        if (('#' + images[j]['xml:id']) == cue['smpte:backgroundImage']) {
                             captionArray.push({
                                 start: spanStartTime || pStartTime,
                                 end: spanEndTime || pEndTime,
-                                id: images[j]["xml:id"],
-                                data: "data:image/"+images[j].imagetype.toLowerCase()+";base64, " + images[j].__text,
-                                type: "image"
+                                id: images[j]['xml:id'],
+                                data: 'data:image/' + images[j].imagetype.toLowerCase() + ';base64, ' + images[j].__text,
+                                type: 'image'
                             });
                         }
                     }
@@ -188,14 +188,14 @@ function TTMLParser() {
                     lineHeight  = {};
                     linePadding = {};
                     fontSize    = {};
-                    var cueID = "";
+                    var cueID = '';
                     if (cue.hasOwnProperty('id') || cue.hasOwnProperty('xml:id')) {
                         cueID = cue['xml:id'] || cue.id;
                     }
                     // Error if timing is not specified.
                     // TODO: check with the specification what is allowed.
                     if ((isNaN(pStartTime) || isNaN(pEndTime)) && (isNaN(spanStartTime) || isNaN(spanEndTime))) {
-                        errorMsg = "TTML document has incorrect timing value";
+                        errorMsg = 'TTML document has incorrect timing value';
                         throw errorMsg;
                     }
 
@@ -257,7 +257,7 @@ function TTMLParser() {
                     }
 
                     // Remove the ID of the region from being added at the "paragraph" element level.
-                    var regionID = "";
+                    var regionID = '';
                     if (arrayContains('regionID', cueRegionProperties)) {
                         var wholeRegionID = getPropertyFromArray('regionID', cueRegionProperties);
                         regionID          = wholeRegionID.slice(wholeRegionID.indexOf(':') + 1, wholeRegionID.length - 1);
@@ -265,47 +265,47 @@ function TTMLParser() {
 
                     // We link the p style to the finale cueParagraph element.
                     if (cueStyleProperties) {
-                        cueParagraph.style.cssText = cueStyleProperties.join(" ") + "display:flex;";
+                        cueParagraph.style.cssText = cueStyleProperties.join(' ') + 'display:flex;';
                     }
                     // We define the CSS style for the cue region.
                     if (cueRegionProperties) {
-                        cueRegionProperties = cueRegionProperties.join(" ");
+                        cueRegionProperties = cueRegionProperties.join(' ');
                     }
 
                     // We then place the cue wrapper inside the paragraph element.
                     cueParagraph.appendChild(cueDirUniWrapper);
 
                     // Final cue.
-                    var finalCue = document.createElement("div");
+                    var finalCue = document.createElement('div');
                     finalCue.appendChild(cueParagraph);
-                    finalCue.id = "subtitle_" + cueID;
-                    finalCue.style.cssText = "position: absolute; margin: 0; display: flex; box-sizing: border-box; pointer-events: none;" + cueRegionProperties;
+                    finalCue.id = 'subtitle_' + cueID;
+                    finalCue.style.cssText = 'position: absolute; margin: 0; display: flex; box-sizing: border-box; pointer-events: none;' + cueRegionProperties;
 
-                    if(Object.keys(fontSize).length === 0) {
+                    if (Object.keys(fontSize).length === 0) {
                         fontSize.defaultFontSize = '100';
                     }
 
                     // We add all the cue information in captionArray.
                     captionArray.push({
-                        start         : spanStartTime || pStartTime,
-                        end           : spanEndTime || pEndTime,
-                        type          : "html",
+                        start: spanStartTime || pStartTime,
+                        end: spanEndTime || pEndTime,
+                        type: 'html',
                         cueHTMLElement: finalCue,
-                        regions       : regions,
-                        regionID      : regionID,
-                        cueID         : cueID,
-                        videoHeight   : videoHeight,
-                        videoWidth    : videoWidth,
+                        regions: regions,
+                        regionID: regionID,
+                        cueID: cueID,
+                        videoHeight: videoHeight,
+                        videoWidth: videoWidth,
                         cellResolution: cellResolution,
-                        fontSize      : fontSize || {
+                        fontSize: fontSize || {
                             defaultFontSize: '100'
                         },
-                        lineHeight    : lineHeight,
-                        linePadding   : linePadding
+                        lineHeight: lineHeight,
+                        linePadding: linePadding
                     });
 
                 } else {
-                    var text = "";
+                    var text = '';
                     var textElements = cue.__children;
                     if (textElements.length) {
                         textElements.forEach(function (el) {
@@ -318,26 +318,26 @@ function TTMLParser() {
                                     }
                                     // If the element is a string
                                     if (spanEl.hasOwnProperty('#text')) {
-                                        text += spanEl['#text'].replace(/[\r\n]+/gm, " ").trim();
+                                        text += spanEl['#text'].replace(/[\r\n]+/gm, ' ').trim();
                                         // If the element is a 'br' tag
                                     } else if ('br' in spanEl) {
                                         // Create a br element.
-                                        text += "\n";
+                                        text += '\n';
                                     }
                                 });
                             } else if (el.hasOwnProperty('br')) {
-                                text += "\n";
+                                text += '\n';
                             } else {
-                                text += el['#text'].replace(/[\r\n]+/gm, " ").trim();
+                                text += el['#text'].replace(/[\r\n]+/gm, ' ').trim();
                             }
                         });
                     }
 
                     captionArray.push({
-                        start         : spanStartTime || pStartTime,
-                        end           : spanEndTime || pEndTime,
+                        start: spanStartTime || pStartTime,
+                        end: spanEndTime || pEndTime,
                         data:   text,
-                        type:   "text"
+                        type:   'text'
                     });
 
                 }
@@ -392,56 +392,56 @@ function TTMLParser() {
             'default': 'font-family: monospace, sans-serif;'
         };
         textAlign = {
-            right: ["justify-content: flex-end;", "text-align: right;"],
-            start: ["justify-content: flex-start;", "text-align: start;"],
-            center: ["justify-content: center;", "text-align: center;"],
-            end: ["justify-content: flex-end;", "text-align: end;"],
-            left: ["justify-content: flex-start;", "text-align: left;"]
+            right: ['justify-content: flex-end;', 'text-align: right;'],
+            start: ['justify-content: flex-start;', 'text-align: start;'],
+            center: ['justify-content: center;', 'text-align: center;'],
+            end: ['justify-content: flex-end;', 'text-align: end;'],
+            left: ['justify-content: flex-start;', 'text-align: left;']
         };
         multiRowAlign = {
-            start: "text-align: start;",
-            center: "text-align: center;",
-            end: "text-align: end;",
-            auto: ""
+            start: 'text-align: start;',
+            center: 'text-align: center;',
+            end: 'text-align: end;',
+            auto: ''
         };
         wrapOption = {
-            wrap: "white-space: normal;",
-            noWrap: "white-space: nowrap;"
+            wrap: 'white-space: normal;',
+            noWrap: 'white-space: nowrap;'
         };
         unicodeBidi = {
-            normal: "unicode-bidi: normal;",
-            embed: "unicode-bidi: embed;",
-            bidiOverride: "unicode-bidi: bidi-override;"
+            normal: 'unicode-bidi: normal;',
+            embed: 'unicode-bidi: embed;',
+            bidiOverride: 'unicode-bidi: bidi-override;'
         };
         displayAlign = {
-            before: "align-items: flex-start;",
-            center: "align-items: center;",
-            after: "align-items: flex-end;"
+            before: 'align-items: flex-start;',
+            center: 'align-items: center;',
+            after: 'align-items: flex-end;'
         };
         writingMode = {
-            lrtb: "-webkit-writing-mode: horizontal-tb;" +
-            "writing-mode: horizontal-tb;",
-            rltb: "-webkit-writing-mode: horizontal-tb;" +
-            "writing-mode: horizontal-tb;" +
-            "direction: rtl;" +
-            "unicode-bidi: bidi-override;",
-            tbrl: "-webkit-writing-mode: vertical-rl;" +
-            "writing-mode: vertical-rl;" +
-            "-webkit-text-orientation: upright;" +
-            "text-orientation: upright;",
-            tblr: "-webkit-writing-mode: vertical-lr;" +
-            "writing-mode: vertical-lr;" +
-            "-webkit-text-orientation: upright;" +
-            "text-orientation: upright;",
-            lr: "-webkit-writing-mode: horizontal-tb;" +
-            "writing-mode: horizontal-tb;",
-            rl: "-webkit-writing-mode: horizontal-tb;" +
-            "writing-mode: horizontal-tb;" +
-            "direction: rtl;",
-            tb: "-webkit-writing-mode: vertical-rl;" +
-            "writing-mode: vertical-rl;" +
-            "-webkit-text-orientation: upright;" +
-            "text-orientation: upright;"
+            lrtb: '-webkit-writing-mode: horizontal-tb;' +
+            'writing-mode: horizontal-tb;',
+            rltb: '-webkit-writing-mode: horizontal-tb;' +
+            'writing-mode: horizontal-tb;' +
+            'direction: rtl;' +
+            'unicode-bidi: bidi-override;',
+            tbrl: '-webkit-writing-mode: vertical-rl;' +
+            'writing-mode: vertical-rl;' +
+            '-webkit-text-orientation: upright;' +
+            'text-orientation: upright;',
+            tblr: '-webkit-writing-mode: vertical-lr;' +
+            'writing-mode: vertical-lr;' +
+            '-webkit-text-orientation: upright;' +
+            'text-orientation: upright;',
+            lr: '-webkit-writing-mode: horizontal-tb;' +
+            'writing-mode: horizontal-tb;',
+            rl: '-webkit-writing-mode: horizontal-tb;' +
+            'writing-mode: horizontal-tb;' +
+            'direction: rtl;',
+            tb: '-webkit-writing-mode: vertical-rl;' +
+            'writing-mode: vertical-rl;' +
+            '-webkit-text-orientation: upright;' +
+            'text-orientation: upright;'
         };
     }
 
@@ -457,7 +457,7 @@ function TTMLParser() {
             return NaN;
         }
 
-        timeParts = timingStr.split(":");
+        timeParts = timingStr.split(':');
 
         // Process the timings by decomposing it and converting it in numbers.
         parsedTime = (parseFloat(timeParts[0]) * SECONDS_IN_HOUR +
@@ -478,11 +478,11 @@ function TTMLParser() {
 
     function passStructuralConstraints() {
         // Check if the ttml document provide all the necessary elements.
-        var hasTt = ttml.hasOwnProperty("tt");
-        var hasHead = hasTt ? ttml.tt.hasOwnProperty("head") : false;
-        var hasLayout = hasHead ? ttml.tt.head.hasOwnProperty("layout") : false;
-        var hasStyling = hasHead ? ttml.tt.head.hasOwnProperty("styling") : false;
-        var hasBody = hasTt ? ttml.tt.hasOwnProperty("body") : false;
+        var hasTt = ttml.hasOwnProperty('tt');
+        var hasHead = hasTt ? ttml.tt.hasOwnProperty('head') : false;
+        var hasLayout = hasHead ? ttml.tt.head.hasOwnProperty('layout') : false;
+        var hasStyling = hasHead ? ttml.tt.head.hasOwnProperty('styling') : false;
+        var hasBody = hasTt ? ttml.tt.hasOwnProperty('body') : false;
 
         // Check if the document contains all the nececessary information
         return (hasTt && hasHead && hasLayout && hasStyling && hasBody);
@@ -491,10 +491,10 @@ function TTMLParser() {
     function getNamespacePrefix(json, ns) {
         // Obtain the namespace prefix.
         var r = Object.keys(json)
-            .filter(function(k) {
-                return (k.split(":")[0] === "xmlns" || k.split(":")[1] === "xmlns") && json[k] === ns;
-            }).map(function(k) {
-                return k.split(":")[2] || k.split(":")[1];
+            .filter(function (k) {
+                return (k.split(':')[0] === 'xmlns' || k.split(':')[1] === 'xmlns') && json[k] === ns;
+            }).map(function (k) {
+                return k.split(':')[2] || k.split(':')[1];
             });
         if (r.length != 1) {
             return null;
@@ -533,7 +533,7 @@ function TTMLParser() {
         // Convert the alpha value in decimal between 0 and 1.
         var alpha = parseFloat(parseInt((parseInt(hexMatrice[3], 16) / 255) * 1000) / 1000);
         // Get the standard RGB value.
-        var rgb = hexMatrice.slice(0, 3).map(function(i) {
+        var rgb = hexMatrice.slice(0, 3).map(function (i) {
             return parseInt(i, 16);
         });
         // Return the RGBA value for CSS.
@@ -587,7 +587,7 @@ function TTMLParser() {
      * **/
 
 
-        // Compute the style properties to return an array with the cleaned properties.
+    // Compute the style properties to return an array with the cleaned properties.
     function processStyle(cueStyle, cellUnit) {
         var properties = [];
 
@@ -595,9 +595,9 @@ function TTMLParser() {
         for (var key in cueStyle) {
             if (cueStyle.hasOwnProperty(key)) {
                 //Clean the properties from the parsing.
-                var newKey = key.replace("ebutts:", "");
-                newKey = newKey.replace("xml:", "");
-                newKey = newKey.replace("tts:", "");
+                var newKey = key.replace('ebutts:', '');
+                newKey = newKey.replace('xml:', '');
+                newKey = newKey.replace('tts:', '');
 
                 // Clean the properties' names.
                 newKey = camelCaseToDash(newKey);
@@ -608,23 +608,23 @@ function TTMLParser() {
 
         // Line padding is computed from the cellResolution.
         if ('line-padding' in cueStyle) {
-            var valuePadding = parseFloat(cueStyle['line-padding'].slice(cueStyle['line-padding'].indexOf(":") + 1,
+            var valuePadding = parseFloat(cueStyle['line-padding'].slice(cueStyle['line-padding'].indexOf(':') + 1,
                 cueStyle['line-padding'].indexOf('c')));
             if ('id' in cueStyle) {
                 linePadding[cueStyle.id] = valuePadding;
             }
-            var valuePaddingInPx = valuePadding * cellUnit[0] + "px;";
-            properties.push("padding-left:" + valuePaddingInPx);
-            properties.push("padding-right:" + valuePaddingInPx);
+            var valuePaddingInPx = valuePadding * cellUnit[0] + 'px;';
+            properties.push('padding-left:' + valuePaddingInPx);
+            properties.push('padding-right:' + valuePaddingInPx);
         }
         // Font size is computed from the cellResolution.
         if ('font-size' in cueStyle) {
-            var valueFtSize = parseFloat(cueStyle['font-size'].slice(cueStyle['font-size'].indexOf(":") + 1,
+            var valueFtSize = parseFloat(cueStyle['font-size'].slice(cueStyle['font-size'].indexOf(':') + 1,
                 cueStyle['font-size'].indexOf('%')));
             if ('id' in cueStyle) {
                 fontSize[cueStyle.id] = valueFtSize;
             }
-            var valueFtSizeInPx = valueFtSize / 100 * cellUnit[1] + "px;";
+            var valueFtSizeInPx = valueFtSize / 100 * cellUnit[1] + 'px;';
             properties.push('font-size:' + valueFtSizeInPx);
         }
         // Line height is computed from the cellResolution.
@@ -632,12 +632,12 @@ function TTMLParser() {
             if (cueStyle['line-height'] === 'normal') {
                 properties.push('line-heigth: normal;');
             } else {
-                var valueLHSize = parseFloat(cueStyle['line-heigt'].slice(cueStyle['line-heigt'].indexOf(":") + 1,
+                var valueLHSize = parseFloat(cueStyle['line-heigt'].slice(cueStyle['line-heigt'].indexOf(':') + 1,
                     cueStyle['line-heigt'].indexOf('%')));
                 if ('id' in cueStyle) {
                     lineHeight[cueStyle.id] = valueLHSize;
                 }
-                var valueLHSizeInPx = valueLHSize / 100 * cellUnit[1] + "px;";
+                var valueLHSizeInPx = valueLHSize / 100 * cellUnit[1] + 'px;';
                 properties.push(key + ':' + valueLHSizeInPx);
             }
         }
@@ -675,7 +675,7 @@ function TTMLParser() {
                 rgbaValue = convertHexToRGBA(cueStyle['background-color']);
                 properties.push('background-color: ' + rgbaValue);
             } else {
-                properties.push('background-color:' + cueStyle['background-color'] + ";");
+                properties.push('background-color:' + cueStyle['background-color'] + ';');
             }
         }
         // Color can be specified from hexadecimal (RGB or RGBA) value.
@@ -684,7 +684,7 @@ function TTMLParser() {
                 rgbaValue = convertHexToRGBA(cueStyle.color);
                 properties.push('color: ' + rgbaValue);
             } else {
-                properties.push('color:' + cueStyle.color + ";");
+                properties.push('color:' + cueStyle.color + ';');
             }
         }
         // Wrap option is determined by the white-space CSS property.
@@ -746,7 +746,7 @@ function TTMLParser() {
     function getProcessedStyle(reference, cellUnit) {
         var styles = [];
         var ids = reference.match(/\S+/g);
-        ids.forEach(function(id) {
+        ids.forEach(function (id) {
             // Find the style for each id received.
             var cueStyle = findStyleFromID(ttmlStyling, id);
             if (cueStyle) {
@@ -766,34 +766,34 @@ function TTMLParser() {
      * - getProcessedRegion: Return the processed region(s) from the ID(s) received in entry.
      ***/
 
-        // Compute the region properties to return an array with the cleaned properties.
+    // Compute the region properties to return an array with the cleaned properties.
     function processRegion(cueRegion, cellUnit) {
         var properties = [];
 
         // Clean up from the xml2json parsing:
         for (var key in cueRegion) {
             //Clean the properties from the parsing.
-            var newKey = key.replace("tts:", "");
-            newKey = newKey.replace("xml:", "");
+            var newKey = key.replace('tts:', '');
+            newKey = newKey.replace('xml:', '');
 
             // Clean the properties' names.
             newKey = camelCaseToDash(newKey);
             cueRegion[newKey] = cueRegion[key];
-            if(newKey !== key) {
+            if (newKey !== key) {
                 delete cueRegion[key];
             }
         }
         // Extent property corresponds to width and height
         if ('extent' in cueRegion) {
             var coordsExtent = cueRegion.extent.split(/\s/);
-            properties.push("width: " + coordsExtent[0] + ';');
-            properties.push("height: " + coordsExtent[1] + ';');
+            properties.push('width: ' + coordsExtent[0] + ';');
+            properties.push('height: ' + coordsExtent[1] + ';');
         }
         // Origin property corresponds to top and left
         if ('origin' in cueRegion) {
             var coordsOrigin = cueRegion.origin.split(/\s/);
-            properties.push("left: " + coordsOrigin[0] + ';');
-            properties.push("top: " + coordsOrigin[1] + ';');
+            properties.push('left: ' + coordsOrigin[0] + ';');
+            properties.push('top: ' + coordsOrigin[1] + ';');
         }
         // DisplayAlign property corresponds to vertical-align
         if ('display-align' in cueRegion) {
@@ -845,7 +845,7 @@ function TTMLParser() {
     function getProcessedRegion(reference, cellUnit) {
         var regions = [];
         var ids = reference.match(/\S+/g);
-        ids.forEach(function(id) {
+        ids.forEach(function (id) {
             // Find the region for each id received.
             var cueRegion = findRegionFromID(ttmlLayout, id);
             if (cueRegion) {
@@ -861,8 +861,8 @@ function TTMLParser() {
     //Return the cellResolution defined by the TTML document.
     function getCellResolution() {
         var defaultCellResolution = [32, 15]; // Default cellResolution.
-        if (ttml.tt.hasOwnProperty("ttp:cellResolution")) {
-            return ttml.tt["ttp:cellResolution"].split(" ").map(parseFloat);
+        if (ttml.tt.hasOwnProperty('ttp:cellResolution')) {
+            return ttml.tt['ttp:cellResolution'].split(' ').map(parseFloat);
         } else {
             return defaultCellResolution;
         }
@@ -873,12 +873,12 @@ function TTMLParser() {
         // Extract the linePadding property from cueStyleProperties.
         var linePaddingLeft = getPropertyFromArray('padding-left', cueStyle);
         var linePaddingRight = getPropertyFromArray('padding-right', cueStyle);
-        var linePadding = linePaddingLeft.concat(" " + linePaddingRight);
+        var linePadding = linePaddingLeft.concat(' ' + linePaddingRight);
 
         // Declaration of the HTML elements to be used in the cue innerHTML construction.
-        var outerHTMLBeforeBr = "";
-        var outerHTMLAfterBr = "";
-        var cueInnerHTML = "";
+        var outerHTMLBeforeBr = '';
+        var outerHTMLAfterBr = '';
+        var cueInnerHTML = '';
 
         // List all the nodes of the subtitle.
         var nodeList = Array.prototype.slice.call(cueHTML.children);
@@ -895,17 +895,17 @@ function TTMLParser() {
         }
 
         // Strings for the cue innerHTML construction.
-        var spanStringEnd = "<\/span>";
-        var br = "<br>";
+        var spanStringEnd = '<\/span>';
+        var br = '<br>';
         var clonePropertyString = '<span' + ' class="spanPadding" ' + 'style="-webkit-box-decoration-break: clone; ';
 
         // If br elements are found:
         if (indices.length) {
             // For each index of a br element we compute the HTML coming before and/or after it.
-            indices.forEach(function(i, index) {
+            indices.forEach(function (i, index) {
                 // If this is the first line break, we compute the HTML of the element coming before.
                 if (index === 0) {
-                    var styleBefore = "";
+                    var styleBefore = '';
                     // for each element coming before the line break, we add its HTML.
                     for (var j = 0; j < i; j++) {
                         outerHTMLBeforeBr += nodeList[j].outerHTML;
@@ -919,7 +919,7 @@ function TTMLParser() {
                     outerHTMLBeforeBr = clonePropertyString + styleBefore + '">' + outerHTMLBeforeBr;
                 }
                 // For every element of the list, we compute the element coming after the line break.s
-                var styleAfter = "";
+                var styleAfter = '';
                 // for each element coming after the line break, we add its HTML.
                 for (var k = i + 1; k < nodeList.length; k++) {
                     outerHTMLAfterBr += nodeList[k].outerHTML;
@@ -949,7 +949,7 @@ function TTMLParser() {
             });
         } else {
             // If there is no line break in the subtitle, we simply wrap cue in a span indicating the linePadding.
-            var style = "";
+            var style = '';
             for (var k = 0; k < nodeList.length; k++) {
                 style += nodeList[k].style.cssText;
             }
@@ -967,7 +967,7 @@ function TTMLParser() {
 
     function constructCue(cueElements, cellUnit) {
         var cue = document.createElement('div');
-        cueElements.forEach(function(el) {
+        cueElements.forEach(function (el) {
             // If metadata is present, do not process.
             if (el.hasOwnProperty('metadata')) {
                 return;
@@ -986,13 +986,13 @@ function TTMLParser() {
                 // Extract the style of the span.
                 if (el.span.hasOwnProperty('style')) {
                     var spanStyle = getProcessedStyle(el.span.style, cellUnit);
-                    spanHTMLElement.className = "spanPadding " + el.span.style;
-                    spanHTMLElement.style.cssText = spanStyle.join(" ");
+                    spanHTMLElement.className = 'spanPadding ' + el.span.style;
+                    spanHTMLElement.style.cssText = spanStyle.join(' ');
                 }
 
 
                 // if the span has more than one element, we check for each of them their nature (br or text).
-                spanElements.forEach(function(spanEl) {
+                spanElements.forEach(function (spanEl) {
                     // If metadata is present, do not process.
                     if (spanElements.hasOwnProperty('metadata')) {
                         return;
@@ -1100,12 +1100,12 @@ function TTMLParser() {
         var bodyStyle;
         var divStyle;
         var pStyle;
-        var styleIDs = "";
+        var styleIDs = '';
 
         // If the body element reference a style.
         if (bodyStyleID) {
             bodyStyle = getProcessedStyle(bodyStyleID, cellUnit);
-            styleIDs = "paragraph " + bodyStyleID;
+            styleIDs = 'paragraph ' + bodyStyleID;
         }
 
         // If the div element reference a style.
@@ -1113,9 +1113,9 @@ function TTMLParser() {
             divStyle = getProcessedStyle(divStyleID, cellUnit);
             if (bodyStyle) {
                 divStyle = mergeArrays(bodyStyle, divStyle);
-                styleIDs += " " + divStyleID;
+                styleIDs += ' ' + divStyleID;
             } else {
-                styleIDs = "paragraph " + divStyleID;
+                styleIDs = 'paragraph ' + divStyleID;
             }
         }
 
@@ -1124,16 +1124,16 @@ function TTMLParser() {
             pStyle = getProcessedStyle(pStyleID, cellUnit);
             if (bodyStyle && divStyle) {
                 cueStyleProperties = mergeArrays(divStyle, pStyle);
-                styleIDs += " " + pStyleID;
+                styleIDs += ' ' + pStyleID;
             } else if (bodyStyle) {
                 cueStyleProperties = mergeArrays(bodyStyle, pStyle);
-                styleIDs += " " + pStyleID;
+                styleIDs += ' ' + pStyleID;
             } else if (divStyle) {
                 cueStyleProperties = mergeArrays(divStyle, pStyle);
-                styleIDs += " " + pStyleID;
+                styleIDs += ' ' + pStyleID;
             } else {
                 cueStyleProperties = pStyle;
-                styleIDs = "paragraph " + pStyleID;
+                styleIDs = 'paragraph ' + pStyleID;
             }
         } else if (bodyStyle && !divStyle) {
             cueStyleProperties = bodyStyle;

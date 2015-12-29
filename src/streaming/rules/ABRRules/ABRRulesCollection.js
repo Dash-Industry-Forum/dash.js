@@ -36,8 +36,8 @@ import MetricsModel from '../../models/MetricsModel.js';
 import DashMetricsExtensions from '../../../dash/extensions/DashMetricsExtensions.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
-const QUALITY_SWITCH_RULES = "qualitySwitchRules";
-const ABANDON_FRAGMENT_RULES = "abandonFragmentRules";
+const QUALITY_SWITCH_RULES = 'qualitySwitchRules';
+const ABANDON_FRAGMENT_RULES = 'abandonFragmentRules';
 
 function ABRRulesCollection() {
 
@@ -54,12 +54,12 @@ function ABRRulesCollection() {
         let metricsModel = MetricsModel(context).getInstance();
 
         qualitySwitchRules.push(ThroughputRule(context).create({
-                metricsModel:metricsModel,
-                metricsExt:DashMetricsExtensions(context).getInstance()
+                metricsModel: metricsModel,
+                metricsExt: DashMetricsExtensions(context).getInstance()
             })
         );
-        qualitySwitchRules.push(BufferOccupancyRule(context).create({metricsModel:metricsModel}));
-        qualitySwitchRules.push(InsufficientBufferRule(context).create({metricsModel:metricsModel}));
+        qualitySwitchRules.push(BufferOccupancyRule(context).create({metricsModel: metricsModel}));
+        qualitySwitchRules.push(InsufficientBufferRule(context).create({metricsModel: metricsModel}));
         abandonFragmentRules.push(AbandonRequestsRule(context).create());
     }
 
@@ -75,8 +75,8 @@ function ABRRulesCollection() {
     }
 
     instance = {
-        initialize:initialize,
-        getRules:getRules
+        initialize: initialize,
+        getRules: getRules
     };
 
     return instance;

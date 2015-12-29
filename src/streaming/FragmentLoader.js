@@ -30,7 +30,7 @@
  */
 import Error from './vo/Error.js';
 import EventBus from './../core/EventBus.js';
-import Events from "./../core/events/Events.js";
+import Events from './../core/events/Events.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 import Debug from '../core/Debug.js';
 
@@ -51,63 +51,64 @@ function FragmentLoader(config) {
         xhrs;
 
     function doLoad(request, remainingAttempts) {
-        var req = new XMLHttpRequest(),
-            traces = [],
-            firstProgress = true,
-            needFailureReport = true,
-            lastTraceTime = null,
-            self = this,
-            handleLoaded = function (requestVO, succeeded) {
-                needFailureReport = false;
+        var req = new XMLHttpRequest();
+        var traces = [];
+        var firstProgress = true;
+        var needFailureReport = true;
+        var lastTraceTime = null;
+        var self = this;
+        var handleLoaded = function (requestVO, succeeded) {
+            needFailureReport = false;
 
-                var currentTime = new Date();
-                var bytes = req.response;
+            var currentTime = new Date();
+            var bytes = req.response;
 
-                var latency,
-                    download,
-                    httpRequestMetrics = null;
+            var httpRequestMetrics = null;
 
-                traces.push({
-                    s: currentTime,
-                    d: currentTime.getTime() - lastTraceTime.getTime(),
-                    b: [bytes ? bytes.byteLength : 0]
+            var latency,
+                download;
+
+            traces.push({
+                s: currentTime,
+                d: currentTime.getTime() - lastTraceTime.getTime(),
+                b: [bytes ? bytes.byteLength : 0]
+            });
+
+            if (!requestVO.firstByteDate) {
+                requestVO.firstByteDate = requestVO.requestStartDate;
+            }
+            requestVO.requestEndDate = currentTime;
+
+            latency = (requestVO.firstByteDate.getTime() - requestVO.requestStartDate.getTime());
+            download = (requestVO.requestEndDate.getTime() - requestVO.firstByteDate.getTime());
+
+            log((succeeded ? 'loaded ' : 'failed ') + requestVO.mediaType + ':' + requestVO.type + ':' + requestVO.startTime + ' (' + req.status + ', ' + latency + 'ms, ' + download + 'ms)');
+
+            httpRequestMetrics = metricsModel.addHttpRequest(
+                request.mediaType,
+                null,
+                request.type,
+                request.url,
+                req.responseURL || null,
+                request.range,
+                request.requestStartDate,
+                requestVO.firstByteDate,
+                requestVO.requestEndDate,
+                req.status,
+                request.duration,
+                req.getAllResponseHeaders()
+            );
+
+            if (succeeded) {
+                // trace is only for successful requests
+                traces.forEach(function (trace) {
+                    metricsModel.appendHttpTrace(httpRequestMetrics,
+                        trace.s,
+                        trace.d,
+                        trace.b);
                 });
-
-                if (!requestVO.firstByteDate) {
-                    requestVO.firstByteDate = requestVO.requestStartDate;
-                }
-                requestVO.requestEndDate = currentTime;
-
-                latency = (requestVO.firstByteDate.getTime() - requestVO.requestStartDate.getTime());
-                download = (requestVO.requestEndDate.getTime() - requestVO.firstByteDate.getTime());
-
-                log((succeeded ? "loaded " : "failed ") + requestVO.mediaType + ":" + requestVO.type + ":" + requestVO.startTime + " (" + req.status + ", " + latency + "ms, " + download + "ms)");
-
-                httpRequestMetrics = metricsModel.addHttpRequest(
-                    request.mediaType,
-                    null,
-                    request.type,
-                    request.url,
-                    req.responseURL || null,
-                    request.range,
-                    request.requestStartDate,
-                    requestVO.firstByteDate,
-                    requestVO.requestEndDate,
-                    req.status,
-                    request.duration,
-                    req.getAllResponseHeaders()
-                );
-
-                if (succeeded) {
-                    // trace is only for successful requests
-                    traces.forEach(function (trace) {
-                        metricsModel.appendHttpTrace(httpRequestMetrics,
-                            trace.s,
-                            trace.d,
-                            trace.b);
-                    });
-                }
-            };
+            }
+        };
 
 
         xhrs.push(req);
@@ -121,8 +122,8 @@ function FragmentLoader(config) {
 
         lastTraceTime = request.requestStartDate;
 
-        req.open("GET", requestModifierExt.modifyRequestURL(request.url), true);
-        req.responseType = "arraybuffer";
+        req.open('GET', requestModifierExt.modifyRequestURL(request.url), true);
+        req.responseType = 'arraybuffer';
         req = requestModifierExt.modifyRequestHeader(req);
         /*
          req.setRequestHeader("Cache-Control", "no-cache");
@@ -130,7 +131,7 @@ function FragmentLoader(config) {
          req.setRequestHeader("If-Modified-Since", "Sat, 1 Jan 2000 00:00:00 GMT");
          */
         if (request.range) {
-            req.setRequestHeader("Range", "bytes=" + request.range);
+            req.setRequestHeader('Range', 'bytes=' + request.range);
         }
 
         req.onprogress = function (event) {
@@ -175,18 +176,18 @@ function FragmentLoader(config) {
             handleLoaded(request, false);
 
             if (remainingAttempts > 0) {
-                log("Failed loading fragment: " + request.mediaType + ":" + request.type + ":" + request.startTime + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
+                log('Failed loading fragment: ' + request.mediaType + ':' + request.type + ':' + request.startTime + ', retry in ' + RETRY_INTERVAL + 'ms' + ' attempts: ' + remainingAttempts);
                 remainingAttempts--;
                 setTimeout(function () {
                     doLoad.call(self, request, remainingAttempts);
                 }, RETRY_INTERVAL);
             } else {
-                log("Failed loading fragment: " + request.mediaType + ":" + request.type + ":" + request.startTime + " no retry attempts left");
-                errHandler.downloadError("content", request.url, req);
+                log('Failed loading fragment: ' + request.mediaType + ':' + request.type + ':' + request.startTime + ' no retry attempts left');
+                errHandler.downloadError('content', request.url, req);
                 eventBus.trigger(Events.LOADING_COMPLETED, {
                     request: request,
                     bytes: null,
-                    error: new Error(null, "failed loading fragment", null),
+                    error: new Error(null, 'failed loading fragment', null),
                     sender: self
                 });
             }
@@ -202,10 +203,10 @@ function FragmentLoader(config) {
             return;
         }
 
-        var req = new XMLHttpRequest(),
-            isSuccessful = false;
+        var req = new XMLHttpRequest();
+        var isSuccessful = false;
 
-        req.open("HEAD", request.url, true);
+        req.open('HEAD', request.url, true);
 
         req.onload = function () {
             if (req.status < 200 || req.status > 299) return;
@@ -228,7 +229,7 @@ function FragmentLoader(config) {
             eventBus.trigger(Events.LOADING_COMPLETED, {
                 request: req,
                 bytes: null,
-                error: new Error(null, "request is null", null),
+                error: new Error(null, 'request is null', null),
                 sender: this
             });
         } else {
@@ -241,7 +242,7 @@ function FragmentLoader(config) {
             req;
         var ln = xhrs.length;
 
-        for (i = 0; i < ln; i += 1) {
+        for (i = 0; i < ln; i++) {
             req = xhrs[i];
             xhrs[i] = null;
             req.abort();

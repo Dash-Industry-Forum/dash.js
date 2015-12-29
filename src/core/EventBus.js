@@ -38,11 +38,11 @@ function EventBus() {
 
     function on(type, listener, scope) {
         if (!type) {
-            throw new Error("event type cannot be null or undefined");
+            throw new Error('event type cannot be null or undefined');
         }
 
-        if (!listener || typeof(listener) !== "function") {
-            throw new Error("listener must be a function: " + listener);
+        if (!listener || typeof (listener) !== 'function') {
+            throw new Error('listener must be a function: ' + listener);
         }
 
         if (getHandlerIdx(type, listener, scope) >= 0) return;
@@ -71,13 +71,13 @@ function EventBus() {
 
         args = args || {};
 
-        if (args.hasOwnProperty("type")) {
-            throw new Error("'type' is a reserved word for event dispatching");
+        if (args.hasOwnProperty('type')) {
+            throw new Error('\'type\' is a reserved word for event dispatching');
         }
 
         args.type = type;
 
-        handlers[type].forEach(function(handler) {
+        handlers[type].forEach(function (handler) {
             handler.callback.call(handler.scope, args);
         });
     }
@@ -92,7 +92,7 @@ function EventBus() {
 
         if (!handlersForType || handlersForType.length === 0) return result;
 
-        for (var i = 0; i < handlersForType.length; i += 1) {
+        for (var i = 0; i < handlersForType.length; i++) {
             if (handlersForType[i].callback === listener && (!scope || scope === handlersForType[i].scope)) return i;
         }
 

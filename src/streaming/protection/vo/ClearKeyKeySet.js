@@ -40,8 +40,8 @@
  */
 class ClearKeyKeySet {
     constructor(keyPairs, type) {
-        if (type && type !== "persistent" && type !== "temporary")
-            throw new Error("Invalid ClearKey key set type!  Must be one of 'persistent' or 'temporary'");
+        if (type && type !== 'persistent' && type !== 'temporary')
+            throw new Error('Invalid ClearKey key set type!  Must be one of \'persistent\' or \'temporary\'');
         this.keyPairs = keyPairs;
         this.type = type;
     }
@@ -52,13 +52,14 @@ class ClearKeyKeySet {
      * @return {ArrayBuffer} JWK object UTF-8 encoded as ArrayBuffer
      */
     toJWK() {
-        var i, numKeys = this.keyPairs.length,
-            jwk = {};
-        jwk.keys = [];
+        var i;
+        var numKeys = this.keyPairs.length;
+        var jwk = {keys: []};
+
         for (i = 0; i < numKeys; i++) {
             var key = {
-                kty: "oct",
-                alg: "A128KW",
+                kty: 'oct',
+                alg: 'A128KW',
                 kid: this.keyPairs[i].keyID,
                 k: this.keyPairs[i].key
             };

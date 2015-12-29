@@ -44,7 +44,7 @@ import Widevine from './servers/Widevine.js';
 import ClearKey from './servers/ClearKey.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-function  ProtectionExtensions() {
+function ProtectionExtensions() {
 
     let context = this.context;
 
@@ -166,12 +166,13 @@ function  ProtectionExtensions() {
      * from the ContentProtection element
      */
     function getSupportedKeySystemsFromContentProtection(cps) {
-        var cp, ks, ksIdx, cpIdx, supportedKS = [];
+        var cp, ks, ksIdx, cpIdx;
+        var supportedKS = [];
 
         if (cps) {
-            for(ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
+            for (ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
                 ks = keySystems[ksIdx];
-                for(cpIdx = 0; cpIdx < cps.length; ++cpIdx) {
+                for (cpIdx = 0; cpIdx < cps.length; ++cpIdx) {
                     cp = cps[cpIdx];
                     if (cp.schemeIdUri.toLowerCase() === ks.schemeIdURI) {
 
@@ -207,7 +208,8 @@ function  ProtectionExtensions() {
      * associated with the key system
      */
     function getSupportedKeySystems(initData) {
-        var ksIdx, supportedKS = [];
+        var ksIdx;
+        var supportedKS = [];
         var pssh = CommonEncryption.parsePSSHList(initData);
 
         for (ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
@@ -240,18 +242,18 @@ function  ProtectionExtensions() {
 
         // Our default server implementations do not do anything with "license-release" or
         // "individualization-request" messages, so we just send a success event
-        if (messageType === "license-release" || messageType == "individualization-request") {
+        if (messageType === 'license-release' || messageType == 'individualization-request') {
             return null;
         }
 
         var licenseServerData = null;
-        if (protData && protData.hasOwnProperty("drmtoday")) {
+        if (protData && protData.hasOwnProperty('drmtoday')) {
             licenseServerData = DRMToday(context).getInstance();
-        } else if (keySystem.systemString === "com.widevine.alpha") {
+        } else if (keySystem.systemString === 'com.widevine.alpha') {
             licenseServerData = Widevine(context).getInstance();
-        } else if (keySystem.systemString === "com.microsoft.playready") {
+        } else if (keySystem.systemString === 'com.microsoft.playready') {
             licenseServerData = PlayReady(context).getInstance();
-        } else if (keySystem.systemString === "org.w3.clearkey") {
+        } else if (keySystem.systemString === 'org.w3.clearkey') {
             licenseServerData = ClearKey(context).getInstance();
         }
 
@@ -271,7 +273,7 @@ function  ProtectionExtensions() {
         try {
             return clearkeyKeySystem.getClearKeysFromProtectionData(protData, message);
         } catch (error) {
-            log("Failed to retrieve clearkeys from ProtectionData");
+            log('Failed to retrieve clearkeys from ProtectionData');
             return null;
         }
     }

@@ -46,7 +46,7 @@ import SourceBufferExtensions from './extensions/SourceBufferExtensions';
 import TextSourceBuffer from './TextSourceBuffer.js';
 import VirtualBuffer from './utils/VirtualBuffer.js';
 import MediaSourceExtensions from './extensions/MediaSourceExtensions.js';
-import DashManifestExtensions from "../dash/extensions/DashManifestExtensions.js";
+import DashManifestExtensions from '../dash/extensions/DashManifestExtensions.js';
 import DashMetricsExtensions from '../dash/extensions/DashMetricsExtensions.js';
 import RepresentationController from '../dash/controllers/RepresentationController.js';
 import ErrorHandler from './ErrorHandler.js';
@@ -166,7 +166,7 @@ function StreamProcessor(config) {
         return fragmentLoader;
     }
 
-    function getIndexHandler(){
+    function getIndexHandler() {
         return indexHandler;
     }
 
@@ -182,7 +182,7 @@ function StreamProcessor(config) {
         bufferController.setBuffer(buffer);
     }
 
-    function getBufferController(){
+    function getBufferController() {
         return bufferController;
     }
 
@@ -198,7 +198,7 @@ function StreamProcessor(config) {
         if (newMediaInfo !== mediaInfo && (!newMediaInfo || !mediaInfo || (newMediaInfo.type === mediaInfo.type))) {
             mediaInfo = newMediaInfo;
         }
-        if (mediaInfoArr.indexOf(newMediaInfo) === -1){
+        if (mediaInfoArr.indexOf(newMediaInfo) === -1) {
             mediaInfoArr.push(newMediaInfo);
         }
         adapter.updateData(manifest, this);
@@ -256,14 +256,14 @@ function StreamProcessor(config) {
         return (bufferController.getBuffer() || bufferController.createBuffer(mediaInfo));
     }
 
-    function isDynamic(){
+    function isDynamic() {
         return dynamic;
     }
 
     function createBufferControllerForType(type) {
         var controller = null;
 
-        if (type === "video" || type === "audio" || type === "fragmentedText") {
+        if (type === 'video' || type === 'audio' || type === 'fragmentedText') {
             controller = BufferController(context).create({
                 metricsModel: MetricsModel(context).getInstance(),
                 manifestModel: manifestModel,

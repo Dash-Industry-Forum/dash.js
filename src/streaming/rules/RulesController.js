@@ -49,7 +49,7 @@ function RulesController() {
 
     function initialize() {
         rules = {};
-        ruleMandatoryProperties = ["execute"];
+        ruleMandatoryProperties = ['execute'];
     }
 
     function setConfig(config) {
@@ -81,15 +81,15 @@ function RulesController() {
     }
 
     function applyRules(rulesArr, streamProcessor, callback, current, overrideFunc) {
-        var values = {},
-               rule,
-               i;
+        var values = {};
+        var rule,
+            i;
 
         var rulesCount = rulesArr.length;
         var ln = rulesCount;
         var rulesContext = getRulesContext(streamProcessor, current);
 
-        var callbackFunc = function(result) {
+        var callbackFunc = function (result) {
             var value,
                 confidence;
 
@@ -129,7 +129,7 @@ function RulesController() {
         values[SwitchRequest.WEAK] = SwitchRequest.NO_CHANGE;
         values[SwitchRequest.DEFAULT] = SwitchRequest.NO_CHANGE;
 
-        for (i = 0; i < ln; i += 1) {
+        for (i = 0; i < ln; i++) {
             rule = rulesArr[i];
 
             if (!isRule(rule)) {
@@ -156,10 +156,10 @@ function RulesController() {
         var rule,
             i;
 
-        for (i = 0; i < ln; i += 1) {
+        for (i = 0; i < ln; i++) {
             rule = allRules[i];
 
-            if (typeof (rule.reset) !== "function") continue;
+            if (typeof (rule.reset) !== 'function') continue;
 
             rule.reset();
         }
@@ -175,7 +175,7 @@ function RulesController() {
         var ln = ruleMandatoryProperties.length;
         var i = 0;
 
-        for (i; i < ln; i += 1) {
+        for (i; i < ln; i++) {
             if (!obj.hasOwnProperty(ruleMandatoryProperties[i])) return false;
         }
 
@@ -189,16 +189,16 @@ function RulesController() {
     function normalizeRule(rule) {
         var exec = rule.execute.bind(rule);
 
-        rule.execute = function(context, callback) {
-            var normalizedCallback = function(result) {
+        rule.execute = function (context, callback) {
+            var normalizedCallback = function (result) {
                 callback.call(rule, SwitchRequest(context).create(result.value, result.priority));
             };
 
             exec(context, normalizedCallback);
         };
 
-        if (typeof(rule.reset) !== "function") {
-            rule.reset = function(){
+        if (typeof (rule.reset) !== 'function') {
+            rule.reset = function () {
                 //TODO do some default clearing
             };
         }
@@ -220,7 +220,7 @@ function RulesController() {
 
             if (!ln) continue;
 
-            for (i = 0; i < ln; i += 1) {
+            for (i = 0; i < ln; i++) {
                 rule = ruleArr[i];
 
                 if (!isRule(rule)) continue;
@@ -240,7 +240,7 @@ function RulesController() {
     }
 
     instance = {
-        initialize:initialize,
+        initialize: initialize,
         setConfig: setConfig,
         setRules: setRules,
         addRules: addRules,

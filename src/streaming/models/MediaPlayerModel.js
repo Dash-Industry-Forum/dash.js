@@ -1,6 +1,6 @@
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-const DEFAULT_UTC_TIMING_SOURCE = { scheme: "urn:mpeg:dash:utc:http-xsdate:2014", value: "http://time.akamai.com/?iso" };
+const DEFAULT_UTC_TIMING_SOURCE = { scheme: 'urn:mpeg:dash:utc:http-xsdate:2014', value: 'http://time.akamai.com/?iso' };
 const BUFFER_TO_KEEP = 30;
 const BUFFER_PRUNING_INTERVAL = 30;
 const LIVE_DELAY_FRAGMENT_COUNT = 4;
@@ -31,7 +31,7 @@ function MediaPlayerModel() {
         bufferToKeep = value;
     }
 
-    function getBufferToKeep(){
+    function getBufferToKeep() {
         return bufferToKeep;
     }
 
@@ -39,7 +39,7 @@ function MediaPlayerModel() {
         bufferPruningInterval = value;
     }
 
-    function getBufferPruningInterval(){
+    function getBufferPruningInterval() {
         return bufferPruningInterval;
     }
 
@@ -47,7 +47,7 @@ function MediaPlayerModel() {
         scheduleWhilePaused = value;
     }
 
-    function getScheduleWhilePaused(){
+    function getScheduleWhilePaused() {
         return scheduleWhilePaused;
     }
 
@@ -100,8 +100,8 @@ function MediaPlayerModel() {
         getLiveDelayFragmentCount: getLiveDelayFragmentCount,
         setUseManifestDateHeaderTimeSource: setUseManifestDateHeaderTimeSource,
         getUseManifestDateHeaderTimeSource: getUseManifestDateHeaderTimeSource,
-        setUTCTimingSources:setUTCTimingSources,
-        getUTCTimingSources:getUTCTimingSources,
+        setUTCTimingSources: setUTCTimingSources,
+        getUTCTimingSources: getUTCTimingSources,
         reset: reset
     };
 

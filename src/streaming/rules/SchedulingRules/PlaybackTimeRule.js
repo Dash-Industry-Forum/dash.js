@@ -57,11 +57,11 @@ function PlaybackTimeRule(config) {
         var time = hasSeekTarget ? seekTarget : adapter.getIndexHandlerTime(streamProcessor);
         var buffer = streamProcessor.getBuffer();
 
-        var appendedChunks,
-            range = null,
-            request;
+        var appendedChunks;
+        var range = null;
+        var request;
 
-        if (isNaN(time) || (mediaType === "fragmentedText" && textSourceBuffer.getAllTracksAreDisabled())) {
+        if (isNaN(time) || (mediaType === 'fragmentedText' && textSourceBuffer.getAllTracksAreDisabled())) {
             callback(SwitchRequest(context).create(null, p));
             return;
         }
@@ -75,7 +75,7 @@ function PlaybackTimeRule(config) {
             if (range !== null) {
                 appendedChunks = virtualBuffer.getChunks({streamId: streamId, mediaType: mediaType, appended: true, mediaInfo: mediaInfo, forRange: range});
                 if (appendedChunks && appendedChunks.length > 0) {
-                    time = appendedChunks[appendedChunks.length-1].bufferedRange.end;
+                    time = appendedChunks[appendedChunks.length - 1].bufferedRange.end;
                 }
             }
         }

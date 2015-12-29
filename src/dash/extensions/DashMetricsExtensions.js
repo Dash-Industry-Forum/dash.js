@@ -29,9 +29,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import HTTPRequest from '../../streaming/vo/metrics/HTTPRequest.js';
-import AbrController from "../../streaming/controllers/AbrController.js";
-import ManifestModel from "../../streaming/models/ManifestModel.js";
-import DashManifestExtensions from "../../dash/extensions/DashManifestExtensions.js";
+import AbrController from '../../streaming/controllers/AbrController.js';
+import ManifestModel from '../../streaming/models/ManifestModel.js';
+import DashManifestExtensions from '../../dash/extensions/DashManifestExtensions.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 function DashMetricsExtensions() {
@@ -179,9 +179,10 @@ function DashMetricsExtensions() {
         }
 
         var httpList = metrics.HttpList;
+        var currentHttpList = null;
+
         var httpListLength,
-            httpListLastIndex,
-            currentHttpList = null;
+            httpListLastIndex;
 
         if (httpList === null || httpList.length <= 0) {
             return null;
@@ -195,7 +196,7 @@ function DashMetricsExtensions() {
                 currentHttpList = httpList[httpListLastIndex];
                 break;
             }
-            httpListLastIndex -= 1;
+            httpListLastIndex--;
         }
         return currentHttpList;
     }
@@ -288,10 +289,9 @@ function DashMetricsExtensions() {
     }
 
     function getLatestMPDRequestHeaderValueByID(metrics, id) {
-
+        var headers = {};
         var httpRequestList,
             httpRequest,
-            headers = {},
             i;
 
         if (metrics === null) {
@@ -300,7 +300,7 @@ function DashMetricsExtensions() {
 
         httpRequestList = getHttpRequests(metrics);
 
-        for (i = httpRequestList.length - 1; i >= 0; i -= 1) {
+        for (i = httpRequestList.length - 1; i >= 0; i--) {
             httpRequest = httpRequestList[i];
 
             if (httpRequest.type === HTTPRequest.MPD_TYPE) {

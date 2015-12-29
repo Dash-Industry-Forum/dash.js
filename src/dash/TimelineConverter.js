@@ -142,7 +142,7 @@ function TimelineConverter() {
         var end = start + representation.adaptation.period.duration;
         var range = { start: start, end: end };
         var d = representation.segmentDuration || ((representation.segments && representation.segments.length) ? representation.segments[representation.segments.length - 1].duration : 0);
-        
+
         var checkTime,
             now;
 

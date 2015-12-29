@@ -49,11 +49,11 @@ function ClearKey() {
     function getServerURLFromMessage(url, message/*, messageType*/) {
         // Build ClearKey server query string
         var jsonMsg = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(message)));
-        url += "/?";
+        url += '/?';
         for (var i = 0; i < jsonMsg.kids.length; i++) {
-            url += jsonMsg.kids[i] + "&";
+            url += jsonMsg.kids[i] + '&';
         }
-        url = url.substring(0, url.length-1);
+        url = url.substring(0, url.length - 1);
         return url;
     }
 
@@ -66,14 +66,14 @@ function ClearKey() {
     }
 
     function getLicenseMessage(serverResponse/*, keySystemStr, messageType*/) {
-        if (!serverResponse.hasOwnProperty("keys")) {
+        if (!serverResponse.hasOwnProperty('keys')) {
             return null;
         }
-        var i, keyPairs = [];
-        for (i = 0; i < serverResponse.keys.length; i++) {
+        var keyPairs = [];
+        for (let i = 0; i < serverResponse.keys.length; i++) {
             var keypair = serverResponse.keys[i];
-            var keyid = keypair.kid.replace(/=/g, "");
-            var key = keypair.k.replace(/=/g, "");
+            var keyid = keypair.kid.replace(/=/g, '');
+            var key = keypair.k.replace(/=/g, '');
 
             keyPairs.push(new KeyPair(keyid, key));
         }

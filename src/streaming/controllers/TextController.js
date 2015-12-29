@@ -74,7 +74,7 @@ function TextController(config) {
      * @memberof BufferController#
      */
     function createBuffer(mediaInfo) {
-        try{
+        try {
             buffer = sourceBufferExt.createSourceBuffer(mediaSource, mediaInfo);
 
             if (!initialized) {
@@ -84,7 +84,7 @@ function TextController(config) {
                 initialized = true;
             }
         } catch (e) {
-            errHandler.mediaSourceError("Error creating " + type +" source buffer.");
+            errHandler.mediaSourceError('Error creating ' + type + ' source buffer.');
         }
 
         return buffer;
@@ -128,13 +128,13 @@ function TextController(config) {
     }
 
     instance = {
-        initialize :initialize,
-        createBuffer :createBuffer,
-        getBuffer :getBuffer,
-        setBuffer :setBuffer,
-        getStreamProcessor:getStreamProcessor,
-        setMediaSource :setMediaSource,
-        reset :reset
+        initialize: initialize,
+        createBuffer: createBuffer,
+        getBuffer: getBuffer,
+        setBuffer: setBuffer,
+        getStreamProcessor: getStreamProcessor,
+        setMediaSource: setMediaSource,
+        reset: reset
     };
 
     setup();
