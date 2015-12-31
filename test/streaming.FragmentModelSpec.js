@@ -1,117 +1,114 @@
-describe("FragmentModel", function () {
-    /*var helper = window.Helpers.getSpecHelper(),
-        voHelper = window.Helpers.getVOHelper(),
-        objectsHelper = window.Helpers.getObjectsHelper(),
-        context,
-        fragmentModel = objectsHelper.getFragmentModel(),
-        initRequest = voHelper.getInitRequest(),
-        mediaRequest = voHelper.getMediaRequest(),
-        loader = objectsHelper.getFragmentLoader(),
-        loadingCompletedEventName = MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_LOADING_COMPLETED,
-        completeRequest = voHelper.getCompleteRequest(),
-        timeout = helper.getTimeoutDelay();
+import SpecHelper from './helpers/SpecHelper.js';
+import VoHelper from './helpers/VOHelper.js';
+import EventBus from '../src/core/EventBus.js';
+import Events from '../src/core/events/Events.js';
+import FragmentModel from '../src/streaming/models/FragmentModel.js';
 
-    it("should have listener for loadingCompleted event", function () {
-        expect(typeof fragmentModel[loadingCompletedEventName]).toEqual("function");
+const chai = require('chai');
+const spies = require('chai-spies');
+const sinon = require('sinon');
+const expect = chai.expect;
+
+chai.use(spies);
+
+describe("FragmentModel", function () {
+    const specHelper = new SpecHelper();
+    const voHelper = new VoHelper();
+    const initRequest = voHelper.getInitRequest();
+    const mediaRequest = voHelper.getMediaRequest();
+    const completeRequest = voHelper.getCompleteRequest();
+    const context = {};
+    const eventBus = EventBus(context).getInstance();
+    const metricsModel = {
+        addSchedulingInfo: () => {},
+        addRequestsQueue: () => {}
+    }
+    let fragmentModel = FragmentModel(context).create({metricsModel: metricsModel});
+
+    it.skip("should not be postponed after creation", function () {
+        // There is no getIsPostponed method anymore, not sure if this test it still relevant
+        expect(fragmentModel.getIsPostponed()).to.not.be.ok;
     });
 
-    //it("should not be postponed after creation", function () {
-    //    expect(fragmentModel.getIsPostponed()).toBeFalsy();
-    //});
+    it("should not have any loading, executed, canceled or failed requests", function () {
+        const expectedValue = 0;
 
-    it("should not have any loading, pending, executed or rejected requests", function () {
-        var expectedValue = 0;
-
-        expect(fragmentModel.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.PENDING}).length).toEqual(expectedValue);
-        expect(fragmentModel.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.LOADING}).length).toEqual(expectedValue);
-        expect(fragmentModel.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.EXECUTED}).length).toEqual(expectedValue);
-        expect(fragmentModel.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.REJECTED}).length).toEqual(expectedValue);
+        expect(fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_LOADING}).length).to.be.equal(expectedValue);
+        expect(fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED}).length).to.be.equal(expectedValue);
+        expect(fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_CANCELED}).length).to.be.equal(expectedValue);
+        expect(fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_FAILED}).length).to.be.equal(expectedValue);
     });
 
     describe("when a request has been added", function () {
-        beforeEach(function () {
-            fragmentModel = objectsHelper.getFragmentModel();
-            context = {streamProcessor:{getType:function(){return "video";}}};
-            fragmentModel.setContext(context);
-        });
-
         it("should fire streamCompleted event for a complete request", function () {
-            var observer = {},
-                isFired = false;
+            const spy = chai.spy();
 
-            observer[MediaPlayer.dependencies.FragmentModel.eventList.ENAME_STREAM_COMPLETED] = function(/*e#1#) {
-                isFired = true;
-            };
+            eventBus.on(Events.STREAM_COMPLETED, spy);
 
-            fragmentModel.subscribe(MediaPlayer.dependencies.FragmentModel.eventList.ENAME_STREAM_COMPLETED, observer);
             fragmentModel.executeRequest(completeRequest);
-            expect(fragmentModel.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.LOADING}).length).toBe(0);
-            expect(fragmentModel.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.EXECUTED}).length).toBe(1);
-            expect(isFired).toBeTruthy();
+            expect(fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_LOADING}).length).to.be.equal(0);
+            expect(fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED}).length).to.be.equal(1);
+            expect(spy).to.have.been.called.exactly(1);
+
+            eventBus.off(Events.STREAM_COMPLETED, spy);
         });
 
         describe("when a request has been passed for executing", function () {
-            var loader = {load: function(){}, abort: function(){}},
-                delay = helper.getExecutionDelay(),
-                isCompleted = false;
+            const loader = { load: () => {}, abort: () => {} };
+            const delay = specHelper.getExecutionDelay();
+            let clock;
 
             beforeEach(function () {
-                isCompleted = false;
+                fragmentModel = FragmentModel(context).create({metricsModel: metricsModel});
                 fragmentModel.setLoader(loader);
-                jasmine.clock().install();
+                clock = sinon.useFakeTimers();
 
                 setTimeout(function(){
                     fragmentModel.executeRequest(initRequest);
                     fragmentModel.executeRequest(mediaRequest);
-                    isCompleted = true;
                 }, delay);
             });
 
             afterEach(function(){
-                jasmine.clock().uninstall();
+                clock.restore();
             });
 
             it("should fire loadingStarted event a request", function () {
-                var observer = {},
-                    isFired = false;
+                const spy = chai.spy();
 
-                observer[MediaPlayer.dependencies.FragmentModel.eventList.ENAME_FRAGMENT_LOADING_STARTED] = function(/*e#1#) {
-                    isFired = true;
-                };
+                eventBus.on(Events.FRAGMENT_LOADING_STARTED, spy);
 
-                fragmentModel.subscribe(MediaPlayer.dependencies.FragmentModel.eventList.ENAME_FRAGMENT_LOADING_STARTED, observer);
+                clock.tick(delay + 1);
+                eventBus.off(Events.FRAGMENT_LOADING_STARTED, spy);
 
-                jasmine.clock().tick(delay + 1);
-
-                expect(isFired).toBeTruthy();
+                expect(spy).to.have.been.called();
             });
 
-            it("should remove the request from pending requests", function () {
-                jasmine.clock().tick(delay + 1);
+            // There is no PENDING state anymore, don't know if this test is still relevant
+            it.skip("should remove the request from pending requests", function () {
+                clock.tick(delay + 1);
 
-                var expectedValue = 0,
-                    pendingRequests = fragmentModel.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.PENDING});
-                expect(pendingRequests.length).toEqual(expectedValue);
+                const pendingRequests = fragmentModel.getRequests({ state: FragmentModel.FRAGMENT_MODEL_PENDING });
+                
+                expect(pendingRequests.length).to.be.equal(0);
             });
 
             it("should add the request to loading requests", function () {
-                jasmine.clock().tick(delay + 1);
+                clock.tick(delay + 1);
 
-                var expectedValue = 2,
-                    loadingRequests = fragmentModel.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.LOADING});
+                const loadingRequests = fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_LOADING});
 
-                expect(loadingRequests.length).toEqual(expectedValue);
+                expect(loadingRequests.length).to.be.equal(2);
             });
 
             it("should be able to abort loading requests", function () {
-                jasmine.clock().tick(delay + 1);
-
-                var expectedValue = 0,
-                    loadingRequests;
+                clock.tick(delay + 1);
+                
                 fragmentModel.abortRequests();
-                loadingRequests = fragmentModel.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.LOADING});
-                expect(loadingRequests.length).toEqual(expectedValue);
+                const loadingRequests = fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_LOADING});
+
+                expect(loadingRequests.length).to.be.equal(0);
             });
         });
-    });*/
+    });
 });
