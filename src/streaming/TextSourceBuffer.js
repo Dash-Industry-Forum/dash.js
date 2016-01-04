@@ -33,10 +33,16 @@ import FragmentExtensions from '../dash/extensions/FragmentExtensions.js';
 import BoxParser from './utils/BoxParser.js';
 import CustomTimeRanges from './utils/CustomTimeRanges.js';
 import FactoryMaker from '../core/FactoryMaker.js';
+import Debug from '../core/Debug.js';
 
 function TextSourceBuffer() {
 
     let context = this.context;
+    let embeddedCcTracks = [];
+    //let embeddedCcTimescale = 0;
+    //let embeddedSegmentNumbers = [];
+    
+    let log = Debug(context).getInstance().log;
 
     let instance,
         errHandler,
@@ -86,7 +92,7 @@ function TextSourceBuffer() {
 
     function append(bytes, chunk) {
         var result,
-            samplesInfo,
+            sampleList,
             i,
             ccContent;
         var mediaInfo = chunk.mediaInfo;
@@ -133,14 +139,15 @@ function TextSourceBuffer() {
                 }
                 timescale = fragmentExt.getMediaTimescaleFromMoov(bytes);
             }else {
-                samplesInfo = fragmentExt.getSamplesInfo(bytes);
-                for (i = 0 ; i < samplesInfo.length ; i++) {
+                var samplesInfo = fragmentExt.getSamplesInfo(bytes);
+                sampleList = samplesInfo.sampleList;
+                for (i = 0 ; i < sampleList.length ; i++) {
                     if (!firstSubtitleStart) {
-                        firstSubtitleStart = samplesInfo[0].cts - chunk.start * timescale;
+                        firstSubtitleStart = sampleList[0].cts - chunk.start * timescale;
                     }
-                    samplesInfo[i].cts -= firstSubtitleStart;
-                    this.buffered.add(samplesInfo[i].cts / timescale,(samplesInfo[i].cts + samplesInfo[i].duration) / timescale);
-                    ccContent = window.UTF8.decode(new Uint8Array(bytes.slice(samplesInfo[i].offset, samplesInfo[i].offset + samplesInfo[i].size)));
+                    sampleList[i].cts -= firstSubtitleStart;
+                    this.buffered.add(sampleList[i].cts / timescale,(sampleList[i].cts + sampleList[i].duration) / timescale);
+                    ccContent = window.UTF8.decode(new Uint8Array(bytes.slice(sampleList[i].offset, sampleList[i].offset + sampleList[i].size)));
                     parser = parser !== null ? parser : getParser(mimeType);
                     try {
                         result = parser.parse(ccContent);
@@ -176,6 +183,15 @@ function TextSourceBuffer() {
         allTracks = null;
         videoModel = null;
         streamController = null;
+    }
+    
+    function addEmbeddedTrack(mediaInfo) {
+        log("TOBBE added embedded " + mediaInfo.id);
+        if (mediaInfo.id === "CC1" || mediaInfo.id === "CC3") {
+            embeddedCcTracks.push(mediaInfo);
+        } else {
+            log("Warning: Embedded track " + mediaInfo.id + " not supported!");
+        }
     }
 
     function getAllTracksAreDisabled() {
@@ -271,7 +287,8 @@ function TextSourceBuffer() {
         abort: abort,
         getAllTracksAreDisabled: getAllTracksAreDisabled,
         setTextTrack: setTextTrack,
-        setConfig: setConfig
+        setConfig: setConfig,
+        addEmbeddedTrack: addEmbeddedTrack
     };
 
     return instance;
