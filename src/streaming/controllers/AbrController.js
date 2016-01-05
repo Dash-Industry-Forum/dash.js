@@ -428,7 +428,7 @@ function AbrController() {
 
     function checkMaxRepresentationRatio(idx, type, maxIdx){
         var maxRepresentationRatio = getMaxAllowedRepresentationRatioFor(type);
-        if (isNaN(maxRepresentationRatio) || maxRepresentationRatio >= 1) {
+        if (isNaN(maxRepresentationRatio) || maxRepresentationRatio >= 1 || maxRepresentationRatio < 0) {
             return idx;
         }
         return Math.min( idx , Math.round(maxIdx * maxRepresentationRatio) );
