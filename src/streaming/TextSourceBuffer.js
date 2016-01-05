@@ -34,15 +34,14 @@ import BoxParser from './utils/BoxParser.js';
 import CustomTimeRanges from './utils/CustomTimeRanges.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 import Debug from '../core/Debug.js';
+import VideoModel from './models/VideoModel.js';
+import TextTrackExtensions from './extensions/TextTrackExtensions.js';
 
 function TextSourceBuffer() {
 
-    let context = this.context;
-    let embeddedCcTracks = [];
-    //let embeddedCcTimescale = 0;
-    //let embeddedSegmentNumbers = [];
-    
+    let context = this.context;    
     let log = Debug(context).getInstance().log;
+    let embeddedInitialized = false;
 
     let instance,
         errHandler,
@@ -60,20 +59,29 @@ function TextSourceBuffer() {
         fragmentModel,
         initializationSegmentReceived,
         timescale,
-        allTracks,
+        fragmentedTracks,
         videoModel,
         streamController,
-        firstSubtitleStart;
+        firstSubtitleStart,
+        currFragmentedTrackIdx,
+        embeddedTracks,
+        embeddedInitializationSegmentReceived,
+        embeddedTimescale;
 
     function initialize(type, bufferController) {
+        log("TOBBE: TextSourceBuffer: initialize");
         allTracksAreDisabled = false;
         parser = null;
         fragmentExt = null;
         fragmentModel = null;
         initializationSegmentReceived = false;
         timescale = NaN;
-        allTracks = null;
+        fragmentedTracks = [];
         firstSubtitleStart = null;
+        
+        if (!embeddedInitialized) {
+            initEmbedded();
+        }
 
         let streamProcessor = bufferController.getStreamProcessor();
 
@@ -81,16 +89,41 @@ function TextSourceBuffer() {
         textTrackExtensions.setConfig({videoModel: videoModel});
         textTrackExtensions.initialize();
         isFragmented = !manifestExt.getIsTextTrack(type);
-
+        fragmentExt = FragmentExtensions(context).getInstance();
+        fragmentExt.setConfig({boxParser: BoxParser(context).getInstance()});
         if (isFragmented) {
-            fragmentExt = FragmentExtensions(context).getInstance();
-            fragmentExt.setConfig({boxParser: BoxParser(context).getInstance()});
             fragmentModel = streamProcessor.getFragmentModel();
             this.buffered =  CustomTimeRanges(context).create();
+            fragmentedTracks = mediaController.getTracksFor("fragmentedText", streamController.getActiveStreamInfo());
+            var currFragTrack = mediaController.getCurrentTrackFor("fragmentedText", streamController.getActiveStreamInfo());
+            for (var i = 0 ; i < fragmentedTracks.length; i++) {
+               if (fragmentedTracks[i] === currFragTrack) {
+                   currFragmentedTrackIdx = i;
+                   break;
+               }
+            }
         }
+    }
+    
+    function initEmbedded() {
+        log("TOBBE initEmbedded");
+        embeddedTracks = [];
+        mediaInfos = [];
+        videoModel = VideoModel(context).getInstance();
+        textTrackExtensions = TextTrackExtensions(context).getInstance();
+        textTrackExtensions.setConfig({videoModel: videoModel});
+        textTrackExtensions.initialize();
+        fragmentExt = FragmentExtensions(context).getInstance();
+        fragmentExt.setConfig({boxParser: BoxParser(context).getInstance()});
+        isFragmented = false;
+        currFragmentedTrackIdx = null;
+        embeddedInitializationSegmentReceived = false;
+        embeddedTimescale = 0;
+        embeddedInitialized = true;
     }
 
     function append(bytes, chunk) {
+        log("TOBBE TextSourceBuffer:append()");
         var result,
             sampleList,
             i,
@@ -100,6 +133,7 @@ function TextSourceBuffer() {
         var mimeType = mediaInfo.mimeType;
 
         function createTextTrackFromMediaInfo(captionData, mediaInfo) {
+            log("TOBBE createTextTrackFromMediaInfo");
             var textTrackInfo = new TextTrackInfo();
             var trackKindMap = { subtitle: 'subtitles', caption: 'captions' }; //Dash Spec has no "s" on end of KIND but HTML needs plural.
             var getKind = function () {
@@ -118,7 +152,7 @@ function TextSourceBuffer() {
                 }
                 return ttml;
             };
-
+            
             textTrackInfo.captionData = captionData;
             textTrackInfo.lang = mediaInfo.lang;
             textTrackInfo.label = mediaInfo.id; // AdaptationSet id (an unsigned int)
@@ -127,8 +161,11 @@ function TextSourceBuffer() {
             textTrackInfo.video = videoModel.getElement();
             textTrackInfo.defaultTrack = getIsDefault(mediaInfo);
             textTrackInfo.isFragmented = isFragmented;
+            textTrackInfo.isEmbedded = mediaInfo.isEmbedded ? true : false;
             textTrackInfo.kind = getKind();
-            textTrackExtensions.addTextTrack(textTrackInfo, mediaInfos.length);
+            log("TOBBE: Adding " + mediaInfo.id);
+            var totalNrTracks = (mediaInfos ? mediaInfos.length : 0) + embeddedTracks.length;
+            textTrackExtensions.addTextTrack(textTrackInfo, totalNrTracks);
         }
 
         if (mediaType === 'fragmentedText') {
@@ -138,7 +175,7 @@ function TextSourceBuffer() {
                     createTextTrackFromMediaInfo(null, mediaInfos[i]);
                 }
                 timescale = fragmentExt.getMediaTimescaleFromMoov(bytes);
-            }else {
+            } else {
                 var samplesInfo = fragmentExt.getSamplesInfo(bytes);
                 sampleList = samplesInfo.sampleList;
                 for (i = 0 ; i < sampleList.length ; i++) {
@@ -151,13 +188,13 @@ function TextSourceBuffer() {
                     parser = parser !== null ? parser : getParser(mimeType);
                     try {
                         result = parser.parse(ccContent);
-                        textTrackExtensions.addCaptions(firstSubtitleStart / timescale,result);
+                        textTrackExtensions.addCaptions(currFragmentedTrackIdx, firstSubtitleStart / timescale, result);
                     } catch (e) {
                         //empty cue ?
                     }
                 }
             }
-        }else {
+        } else if (mediaType === 'text') {
             bytes = new Uint8Array(bytes);
             ccContent = window.UTF8.decode(bytes);
             try {
@@ -166,6 +203,23 @@ function TextSourceBuffer() {
             } catch (e) {
                 errHandler.timedTextError(e, 'parse', ccContent);
             }
+        } else if (mediaType === 'video') { //embedded text
+            if (chunk.segmentType === "Initialization Segment") {
+                if (embeddedTimescale === 0) {
+                    embeddedTimescale = fragmentExt.getMediaTimescaleFromMoov(bytes);
+                    for (i = 0 ; i < embeddedTracks.length ; i++) {
+                        createTextTrackFromMediaInfo(null, embeddedTracks[i]);
+                    }
+                }
+            } else { // MediaSegment
+                if (embeddedTimescale === 0) {
+                    log("CEA-608: No timescale for embeddedTextTrack yet");
+                    return;
+                }
+                log("TOBBE: Media segment");
+            } 
+        } else {
+            log("Warning: Non-supported text type: " + mediaType);
         }
     }
 
@@ -180,18 +234,29 @@ function TextSourceBuffer() {
         fragmentModel = null;
         initializationSegmentReceived = false;
         timescale = NaN;
-        allTracks = null;
+        fragmentedTracks = [];
         videoModel = null;
         streamController = null;
+        embeddedInitialized = false;
+        embeddedTracks = null;
     }
     
     function addEmbeddedTrack(mediaInfo) {
         log("TOBBE added embedded " + mediaInfo.id);
+        if (!embeddedInitialized) {
+            initEmbedded();
+        }
         if (mediaInfo.id === "CC1" || mediaInfo.id === "CC3") {
-            embeddedCcTracks.push(mediaInfo);
+            embeddedTracks.push(mediaInfo);
         } else {
             log("Warning: Embedded track " + mediaInfo.id + " not supported!");
         }
+    }
+    
+    function resetEmbedded() {
+        log("TOBBE: resetEmbedded");
+        embeddedInitialized = false;
+        embeddedTracks = [];
     }
 
     function getAllTracksAreDisabled() {
@@ -235,22 +300,24 @@ function TextSourceBuffer() {
         var el = videoModel.getElement();
         var tracks = el.textTracks;
         var ln = tracks.length;
-
-        if (!allTracks) {
-            allTracks = mediaController.getTracksFor('fragmentedText', streamController.getActiveStreamInfo());
-        }
+        var nrNonEmbeddedTracks = ln - embeddedTracks.length;
+        var oldTrackIdx = textTrackExtensions.getCurrentTrackIdx();
 
         for (var i = 0; i < ln; i++ ) {
             var track = tracks[i];
             allTracksAreDisabled = track.mode !== 'showing';
             if (track.mode === 'showing') {
-                if (textTrackExtensions.getCurrentTrackIdx() !== i) { // do not reset track if already the current track.  This happens when all captions get turned off via UI and then turned on again and with videojs.
+                if (oldTrackIdx !== i) { // do not reset track if already the current track.  This happens when all captions get turned off via UI and then turned on again and with videojs.
                     textTrackExtensions.setCurrentTrackIdx(i);
-                    if (isFragmented) {
-                        if (!mediaController.isCurrentTrack(allTracks[i])) {
+                    textTrackExtensions.addCaptions(i, 0, null); // Make sure that previously queued captions are added as cues
+                    if (isFragmented && i < nrNonEmbeddedTracks) {
+                        var currentFragTrack = mediaController.getCurrentTrackFor("fragmentedText", streamController.getActiveStreamInfo());
+                        var newFragTrack = fragmentedTracks[i];
+                        if (newFragTrack !== currentFragTrack) {
                             fragmentModel.abortRequests();
-                            textTrackExtensions.deleteTrackCues(textTrackExtensions.getCurrentTextTrack());
-                            mediaController.setTrack(allTracks[i]);
+                            textTrackExtensions.deleteTrackCues(currentFragTrack);
+                            mediaController.setTrack(newFragTrack);
+                            currFragmentedTrackIdx = i;
                         }
                     }
                 }
@@ -267,7 +334,17 @@ function TextSourceBuffer() {
         //TODO How to tag default. currently same order as listed in manifest.
         // Is there a way to mark a text adaptation set as the default one? DASHIF meeting talk about using role which is being used for track KIND
         // Eg subtitles etc. You can have multiple role tags per adaptation Not defined in the spec yet.
-        return mediaInfo.index === mediaInfos[0].index;
+        var isDefault = false;
+        if (embeddedTracks.length > 1) {
+            isDefault = (mediaInfo.id && mediaInfo.id === "CC1"); // CC1 if both CC1 and CC3 exist
+        } else if (embeddedTracks.length === 1) {
+            if (mediaInfo.id && mediaInfo.id.substring(0, 2) === "CC") {// Either CC1 or CC3
+                isDefault = true;
+            }
+        } else {
+            isDefault = (mediaInfo.index === mediaInfos[0].index);
+        }
+        return isDefault;
     }
 
     function getParser(mimeType) {
@@ -288,7 +365,8 @@ function TextSourceBuffer() {
         getAllTracksAreDisabled: getAllTracksAreDisabled,
         setTextTrack: setTextTrack,
         setConfig: setConfig,
-        addEmbeddedTrack: addEmbeddedTrack
+        addEmbeddedTrack: addEmbeddedTrack,
+        resetEmbedded: resetEmbedded
     };
 
     return instance;

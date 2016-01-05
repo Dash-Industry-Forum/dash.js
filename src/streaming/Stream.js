@@ -406,6 +406,8 @@ function Stream(config) {
         initializeMediaForType('muxed', mediaSource);
 
         createBuffers();
+        
+        //TODO. Consider initialization of TextSourceBuffer here if embeddedText, but no sideloadedText.
 
         isMediaInitialized = true;
         isUpdating = false;

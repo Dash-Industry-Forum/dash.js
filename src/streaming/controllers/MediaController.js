@@ -32,6 +32,7 @@ import Events from '../../core/events/Events.js';
 import EventBus from '../../core/EventBus.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
+import TextSourceBuffer from '../TextSourceBuffer.js';
 
 const TRACK_SWITCH_MODE_NEVER_REPLACE = 'neverReplace';
 const TRACK_SWITCH_MODE_ALWAYS_REPLACE = 'alwaysReplace';
@@ -44,6 +45,7 @@ function MediaController() {
     let context = this.context;
     let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
+    let textSourceBuffer = TextSourceBuffer(context).getInstance();
 
     let instance,
         tracks,
@@ -57,7 +59,6 @@ function MediaController() {
         tracks = {};
         resetInitialSettings();
         resetSwitchMode();
-
     }
 
     /**
@@ -311,6 +312,7 @@ function MediaController() {
         resetInitialSettings();
         resetSwitchMode();
         tracks = {};
+        textSourceBuffer.resetEmbedded();
     }
 
     function storeLastSettings(type, value) {
