@@ -14,16 +14,10 @@ module.exports = function (grunt) {
                 }
             }
         },
-        concat: {
-            all: {
-                src: ['./build/temp/MediaPlayer.js', './build/temp/Protection.js', './externals/*.js'],
-                dest: 'build/temp/Dash.all.js',
-            },
-        },
         uglify: {
             options: {
                 sourceMap: true,
-                sourceMapIn: 'build/temp/Dash.all.js.map',
+                sourceMapIncludeSources: true,
                 sourceMapRoot: './src/',
                 preserveComments: 'some',
                 mangle: true,
@@ -38,31 +32,84 @@ module.exports = function (grunt) {
                     drop_console: true
                 }
             },
-            build: {
+
+            build_all: {
+                options: {
+                    sourceMapIn: 'build/temp/All.js.map'
+                },
                 files: {
-                    'build/temp/dash.min.js': 'build/temp/MediaPlayer.js',
-                    'build/temp/dash.protection.min.js': 'build/temp/Protection.js',
-                    'build/temp/dash.all.min.js': 'build/temp/Dash.all.js'
+                    'build/temp/dash.all.min.js': ['build/temp/All.js', 'externals/*.js']
+                }
+            },
+            build_core: {
+                options: {
+                    sourceMapIn: 'build/temp/MediaPlayer.js.map'
+                },
+                files: {
+                    'build/temp/dash.mediaplayer.min.js': 'build/temp/MediaPlayer.js'
+                }
+            },
+            build_external: {
+                files: {
+                    'build/temp/dash.externals.min.js': 'externals/*.js',
+                }
+            },
+            build_protection: {
+                options: {
+                    sourceMapIn: 'build/temp/Protection.js.map'
+                },
+                files: {
+                    'build/temp/dash.protection.min.js': 'build/temp/Protection.js'
                 }
             },
 
-            core_debug: {
+            /**
+             * BEWARE: It looks like when the beautify option is included the source maps that are
+             * generated don't work properly. The result is all of the source files loaded, but setting
+             * breakpoints in one file results in breakpoints being set in random other files.
+             * As a result sourcemaps have been disabled for beautified builds.
+             */
+            debug_all: {
                 options: {
+                    sourceMap: false,
                     beautify: true,
                     compress: false,
                     mangle: false,
-                    sourceMap: true,
-                    sourceMapIn: 'build/temp/Dash.all.js.map',
+                    sourceMapIn: 'build/temp/All.js.map',
                     sourceMapRoot: './src/',
                 },
                 files: {
-                    'build/temp/dash.debug.js': 'build/temp/Dash.all.js'
+                    'build/temp/dash.all.debug.js': ['build/temp/All.js', 'externals/*.js']
                 }
             },
-
-            protection_debug: {
+            debug_core: {
                 options: {
-                    sourceMap: true,
+                    sourceMap: false,
+                    beautify: true,
+                    compress: false,
+                    mangle: false,
+                    sourceMapIn: 'build/temp/MediaPlayer.js.map',
+                    sourceMapRoot: './src/',
+                },
+                files: {
+                    'build/temp/dash.mediaplayer.debug.js': 'build/temp/MediaPlayer.js'
+                }
+            },
+            debug_external: {
+                options: {
+                    sourceMap: false,
+                    sourceMapRoot: './externals',
+                    beautify: true,
+                    compress: false,
+                    mangle: false
+                },
+                files: {
+                    'build/temp/dash.externals.debug.js': 'externals/*.js'
+                }
+            },
+            debug_protection: {
+                options: {
+                    sourceMap: false,
                     sourceMapIn: 'build/temp/Protection.js.map',
                     sourceMapRoot: './src/streaming/',
                     beautify: true,
@@ -89,10 +136,13 @@ module.exports = function (grunt) {
                 cwd: 'build/temp/',
                 src: [
                     'dash.all.min.js', 'dash.all.min.js.map',
-                    'dash.min.js', 'dash.min.js.map',
+                    'dash.externals.min.js', 'dash.externals.min.js.map',
+                    'dash.mediaplayer.min.js', 'dash.mediaplayer.min.js.map',
                     'dash.protection.min.js', 'dash.protection.min.js.map',
-                    'dash.protection.debug.js', 'dash.protection..debug.js.map',
-                    'dash.debug.js', 'dash.debug.js.map'
+                    'dash.all.debug.js', 'dash.all.debug.js.map',
+                    'dash.externals.debug.js', 'dash.externals.debug.js.map',
+                    'dash.mediaplayer.debug.js', 'dash.mediaplayer.debug.js.map',
+                    'dash.protection.debug.js', 'dash.protection.debug.js.map'
                 ],
                 dest: 'dist/',
                 filter: 'isFile'
@@ -102,7 +152,7 @@ module.exports = function (grunt) {
             build: {
                 options: {},
                 files: {
-                    'build/temp/Dash.all.js.map': ['build/temp/Dash.all.js']
+                    'build/temp/All.js.map': ['build/temp/All.js']
                 }
             },
 
@@ -138,6 +188,21 @@ module.exports = function (grunt) {
                     browserifyOptions: {
                         debug: true,
                         standalone: 'Protection'
+                    },
+                    plugin: [
+                        ['browserify-derequire']
+                    ],
+                    transform: ['babelify']
+                }
+            },
+            build_all: {
+                files: {
+                    'build/temp/All.js': ['src/All.js']
+                },
+                options: {
+                    browserifyOptions: {
+                        debug: true,
+                        standalone: 'DashjsAll'
                     },
                     plugin: [
                         ['browserify-derequire']
@@ -194,7 +259,7 @@ module.exports = function (grunt) {
     grunt.registerTask('default',  ['dist', 'test']);
     grunt.registerTask('release',  ['dist', 'test', 'jsdoc']);
     grunt.registerTask('dist',     ['build', 'minimize', 'copy:dist']);
-    grunt.registerTask('build',    ['clean', 'jshint', 'browserify:build_core', 'browserify:build_protection', 'concat']);
+    grunt.registerTask('build',    ['clean', 'jshint', 'browserify:build_core', 'browserify:build_protection', 'browserify:build_all']);
     grunt.registerTask('minimize', ['exorcise', 'uglify']);
     grunt.registerTask('test',     ['mocha_istanbul:test']);
     grunt.registerTask('watch',    ['browserify:watch']);
