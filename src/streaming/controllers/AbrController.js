@@ -36,8 +36,9 @@ import FragmentModel from '../models/FragmentModel.js';
 import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
-import ManifestModel from '../models/ManifestMOdel.js';
+import ManifestModel from '../models/ManifestModel.js';
 import DashManifestExtensions from '../../dash/extensions/DashManifestExtensions.js';
+import VideoModel from '../models/VideoModel.js';
 
 const ABANDON_LOAD = 'abandonload';
 const BANDWIDTH_SAFETY = 0.9;
@@ -67,10 +68,11 @@ function AbrController() {
         abandonmentTimeout,
         limitBitrateByPortal,
         manifestModel,
-        manifestExt;
+        manifestExt,
+        videoModel;
 
     function setup() {
-        autoSwitchBitrate = true;
+        autoSwitchBitrate = {video: true, audio: true};
         topQualities = {};
         qualityDict = {};
         confidenceDict = {};
@@ -82,6 +84,7 @@ function AbrController() {
         limitBitrateByPortal = true;
         manifestModel = ManifestModel(context).getInstance();
         manifestExt = DashManifestExtensions(context).getInstance();
+        videoModel = VideoModel(context).getInstance();
     }
 
     function initialize(type, streamProcessor) {
@@ -193,12 +196,12 @@ function AbrController() {
         ratioDict.max[type] = value;
     }
 
-    function getAutoSwitchBitrate() {
-        return autoSwitchBitrate;
+    function getAutoSwitchBitrateFor(type) {
+        return autoSwitchBitrate[type];
     }
 
-    function setAutoSwitchBitrate(value) {
-        autoSwitchBitrate = value;
+    function setAutoSwitchBitrateFor(type, value) {
+        autoSwitchBitrate[type] = value;
     }
 
     function getLimitBitrateByPortal() {
@@ -253,7 +256,7 @@ function AbrController() {
         confidence = getConfidenceFor(type, streamId);
 
         //log("ABR enabled? (" + autoSwitchBitrate + ")");
-        if (!autoSwitchBitrate) {
+        if (!getAutoSwitchBitrateFor(type)) {
             if (completedCallback !== undefined) {
                 completedCallback();
             }
@@ -436,7 +439,7 @@ function AbrController() {
             return idx;
         }
 
-        var element = streamProcessorDict[type].videoModel.getElement(),
+        var element = videoModel.getElement(),
             elementWidth = element.clientWidth,
             elementHeight = element.clientHeight,
             manifest = manifestModel.getValue(),
@@ -461,10 +464,9 @@ function AbrController() {
     }
 
     function onFragmentLoadProgress(e) {
+        var type = e.request.mediaType;
+        if (getAutoSwitchBitrateFor(type)) { //check to see if there are parallel request or just one at a time.
 
-        if (autoSwitchBitrate) { //check to see if there are parallel request or just one at a time.
-
-            var type = e.request.mediaType;
             var rules = abrRulesCollection.getRules(ABRRulesCollection.ABANDON_FRAGMENT_RULES);
             var scheduleController = streamProcessorDict[type].getScheduleController();
             var fragmentModel = scheduleController.getFragmentModel();
@@ -513,8 +515,8 @@ function AbrController() {
         setInitialBitrateFor: setInitialBitrateFor,
         getInitialRepresentationRatioFor: getInitialRepresentationRatioFor,
         setInitialRepresentationRatioFor: setInitialRepresentationRatioFor,
-        setAutoSwitchBitrate: setAutoSwitchBitrate,
-        getAutoSwitchBitrate: getAutoSwitchBitrate,
+        setAutoSwitchBitrateFor: setAutoSwitchBitrateFor,
+        getAutoSwitchBitrateFor: getAutoSwitchBitrateFor,
         setLimitBitrateByPortal: setLimitBitrateByPortal,
         getLimitBitrateByPortal: getLimitBitrateByPortal,
         getConfidenceFor: getConfidenceFor,

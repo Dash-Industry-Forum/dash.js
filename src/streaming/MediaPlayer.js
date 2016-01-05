@@ -903,7 +903,7 @@ function MediaPlayer() {
      *
      */
     function getAutoSwitchQuality() {
-        return abrController.getAutoSwitchBitrate();
+        return abrController.getAutoSwitchBitrateFor("video") || abrController.getAutoSwitchBitrateFor("audio");
     }
 
     /**
@@ -915,7 +915,30 @@ function MediaPlayer() {
      * @instance
      */
     function setAutoSwitchQuality(value) {
-        abrController.setAutoSwitchBitrate(value);
+        abrController.setAutoSwitchBitrateFor("video", value);
+        abrController.setAutoSwitchBitrateFor("audio", value);
+    }
+
+    /**
+     * @returns {boolean} Current state of adaptive bitrate switching
+     * @memberof module:MediaPlayer
+     * @instance
+     *
+     */
+    function getAutoSwitchQualityFor(type) {
+        return abrController.getAutoSwitchBitrateFor(type);
+    }
+
+    /**
+     * Set to false to switch off adaptive bitrate switching.
+     *
+     * @param value {boolean}
+     * @default {boolean} true
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setAutoSwitchQualityFor(type, value) {
+        abrController.setAutoSwitchBitrateFor(type, value);
     }
 
 
@@ -1419,6 +1442,8 @@ function MediaPlayer() {
         getSelectionModeForInitialTrack: getSelectionModeForInitialTrack,
         getAutoSwitchQuality: getAutoSwitchQuality,
         setAutoSwitchQuality: setAutoSwitchQuality,
+        getAutoSwitchQualityFor: getAutoSwitchQualityFor,
+        setAutoSwitchQualityFor: setAutoSwitchQualityFor,
         retrieveManifest: retrieveManifest,
         addUTCTimingSource: addUTCTimingSource,
         removeUTCTimingSource: removeUTCTimingSource,
