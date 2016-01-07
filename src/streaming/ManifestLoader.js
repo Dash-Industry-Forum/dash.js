@@ -178,6 +178,7 @@ function ManifestLoader(config) {
             request.onerror = report;
             request.onprogress = progress;
             request.open('GET', requestModifierExt.modifyRequestURL(url), true);
+            request = requestModifierExt.modifyRequestHeader(request);
             request.send();
         } catch (e) {
             request.onerror();
