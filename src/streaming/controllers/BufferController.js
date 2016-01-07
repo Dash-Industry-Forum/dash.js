@@ -485,20 +485,16 @@ function BufferController(config) {
     function pruneBuffer() {
         if (type === 'fragmentedText') return;
 
-        var bufferToPrune = 0;
+        var start = buffer.buffered.length ? buffer.buffered.start(0) : 0;
         var currentTime = playbackController.getTime();
-        var currentRange = sourceBufferExt.getBufferRange(buffer, currentTime);
+        var bufferToPrune = currentTime - start - mediaPlayerModel.getBufferToKeep();
 
-        // we want to get rid off buffer that is more than x seconds behind current time
-        if (currentRange !== null) {
-            bufferToPrune = currentTime - currentRange.start - mediaPlayerModel.getBufferToKeep();
-            if (bufferToPrune > 0) {
-                isPruningInProgress = true;
-                sourceBufferExt.remove(buffer, 0, Math.round(currentRange.start + bufferToPrune), mediaSource);
-            }
+        bufferToPrune = currentTime - start - mediaPlayerModel.getBufferToKeep();
+        if (bufferToPrune > 0) {
+            isPruningInProgress = true;
+            sourceBufferExt.remove(buffer, 0, Math.round(start + bufferToPrune), mediaSource);
         }
     }
-
 
     function getClearRange() {
         var currentTime,
