@@ -414,3 +414,5 @@ function X2JS(matchers, attrPrefix, ignoreRoot) {
 		escapeMode = enabled;
 	}
 }
+
+export default X2JS;
