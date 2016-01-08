@@ -30,5 +30,6 @@
         "MediaKeys",
         "Caster",
         "TextTrackCue",
-        "HTMLMediaElement"]
+        "HTMLMediaElement",
+        "cea608parser"]
 }

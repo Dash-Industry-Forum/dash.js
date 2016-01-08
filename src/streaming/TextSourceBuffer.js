@@ -44,6 +44,7 @@ function TextSourceBuffer() {
     let embeddedInitialized = false;
 
     let instance,
+        boxParser,
         errHandler,
         adapter,
         manifestExt,
@@ -66,7 +67,10 @@ function TextSourceBuffer() {
         currFragmentedTrackIdx,
         embeddedTracks,
         embeddedInitializationSegmentReceived,
-        embeddedTimescale;
+        embeddedTimescale,
+        embeddedLastSequenceNumber,
+        embeddedSequenceNumbers,
+        embeddedCea608FieldParsers;
 
     function initialize(type, bufferController) {
         log("TOBBE: TextSourceBuffer: initialize");
@@ -89,8 +93,9 @@ function TextSourceBuffer() {
         textTrackExtensions.setConfig({videoModel: videoModel});
         textTrackExtensions.initialize();
         isFragmented = !manifestExt.getIsTextTrack(type);
+        boxParser = BoxParser(context).getInstance();
         fragmentExt = FragmentExtensions(context).getInstance();
-        fragmentExt.setConfig({boxParser: BoxParser(context).getInstance()});
+        fragmentExt.setConfig({boxParser: boxParser});
         if (isFragmented) {
             fragmentModel = streamProcessor.getFragmentModel();
             this.buffered =  CustomTimeRanges(context).create();
@@ -113,12 +118,16 @@ function TextSourceBuffer() {
         textTrackExtensions = TextTrackExtensions(context).getInstance();
         textTrackExtensions.setConfig({videoModel: videoModel});
         textTrackExtensions.initialize();
+        boxParser = BoxParser(context).getInstance();
         fragmentExt = FragmentExtensions(context).getInstance();
-        fragmentExt.setConfig({boxParser: BoxParser(context).getInstance()});
+        fragmentExt.setConfig({boxParser: boxParser});
         isFragmented = false;
         currFragmentedTrackIdx = null;
         embeddedInitializationSegmentReceived = false;
         embeddedTimescale = 0;
+        embeddedCea608FieldParsers = [];
+        embeddedSequenceNumbers = [];
+        embeddedLastSequenceNumber = null;
         embeddedInitialized = true;
     }
 
@@ -127,6 +136,7 @@ function TextSourceBuffer() {
         var result,
             sampleList,
             i,
+            samplesInfo,
             ccContent;
         var mediaInfo = chunk.mediaInfo;
         var mediaType = mediaInfo.type;
@@ -176,7 +186,7 @@ function TextSourceBuffer() {
                 }
                 timescale = fragmentExt.getMediaTimescaleFromMoov(bytes);
             } else {
-                var samplesInfo = fragmentExt.getSamplesInfo(bytes);
+                samplesInfo = fragmentExt.getSamplesInfo(bytes);
                 sampleList = samplesInfo.sampleList;
                 for (i = 0 ; i < sampleList.length ; i++) {
                     if (!firstSubtitleStart) {
@@ -207,7 +217,7 @@ function TextSourceBuffer() {
             if (chunk.segmentType === "Initialization Segment") {
                 if (embeddedTimescale === 0) {
                     embeddedTimescale = fragmentExt.getMediaTimescaleFromMoov(bytes);
-                    for (i = 0 ; i < embeddedTracks.length ; i++) {
+                    for (i = 0; i < embeddedTracks.length; i++) {
                         createTextTrackFromMediaInfo(null, embeddedTracks[i]);
                     }
                 }
@@ -216,11 +226,233 @@ function TextSourceBuffer() {
                     log("CEA-608: No timescale for embeddedTextTrack yet");
                     return;
                 }
-                log("TOBBE: Media segment");
-            } 
-        } else {
-            log("Warning: Non-supported text type: " + mediaType);
+                var makeCueAdderForIndex = function (self, trackIndex) {
+                    function newCue(startTime, endTime, captionScreen) {
+                        var captionsArray = null;
+                        /*if (self.videoModel.getTTMLRenderingDiv()) {
+                            captionsArray = createHTMLCaptionsFromScreen(self.videoModel.getElement(), startTime, endTime, captionScreen);
+                        } else { */
+                        var text = captionScreen.getDisplayText();
+                        //console.log("CEA text: " + startTime + "-" + endTime + "  '" + text + "'");
+                        captionsArray = [{ start: startTime, end: endTime, data: text, styles: {} }];
+                        /* } */
+                        if (captionsArray) {
+                            textTrackExtensions.addCaptions(trackIndex, 0, captionsArray);
+                        }
+                    }
+                    return newCue;
+                };
+                
+            
+                samplesInfo = fragmentExt.getSamplesInfo(bytes);
+                var sequenceNumber = samplesInfo.sequenceNumber;
+                log("TOBBE: CEA-608 sequence number: " + sequenceNumber);
+
+                if (!embeddedCea608FieldParsers[0] && !embeddedCea608FieldParsers[1]) {
+                    // Time to setup the CEA-608 parsing
+                    let field, handler, trackIdx;
+                    for (i = 0; i < embeddedTracks.length; i++) {
+                        if (embeddedTracks[i].id === "CC1") {
+                            field = 0;
+                            trackIdx = textTrackExtensions.getTrackIdxForId("CC1");
+                        } else if (embeddedTracks[i].id === "CC3") {
+                            field = 1;
+                            trackIdx = textTrackExtensions.getTrackIdxForId("CC3");
+                        }
+                        if (trackIdx === -1) {
+                            console.log("CEA-608: data before track is ready.");
+                            return;
+                        }
+                        handler = makeCueAdderForIndex(this, trackIdx);
+                        embeddedCea608FieldParsers[i] = new cea608parser.Cea608Parser(i, { 'newCue': handler }, null);
+                    }
+                }
+
+                if (embeddedTimescale && embeddedSequenceNumbers.indexOf(sequenceNumber) == -1) {
+                    if (embeddedLastSequenceNumber !== null && sequenceNumber !== embeddedLastSequenceNumber + 1) {
+                        for (i = 0; i < embeddedCea608FieldParsers.length; i++) {
+                            if (embeddedCea608FieldParsers[i]) {
+                                embeddedCea608FieldParsers[i].reset();
+                            }
+                        }
+                    }
+                    var allCcData = checkCC(bytes);
+
+                    for (var fieldNr = 0; fieldNr < embeddedCea608FieldParsers.length; fieldNr++) {
+                        var ccData = allCcData.fields[fieldNr];
+                        var fieldParser = embeddedCea608FieldParsers[fieldNr];
+                        if (fieldParser) {
+                            /*if (ccData.length > 0 ) {
+                                console.log("CEA-608 adding Data to field " + fieldNr + " " + ccData.length + "bytes");
+                            }*/
+                            for (i = 0; i < ccData.length; i++) {
+                                fieldParser.addData(ccData[i][0] / embeddedTimescale, ccData[i][1]);
+                            }
+                            if (allCcData.endTime) {
+                                fieldParser.cueSplitAtTime(allCcData.endTime / embeddedTimescale);
+                            }
+                        }
+                    }
+                    embeddedLastSequenceNumber = sequenceNumber;
+                    embeddedSequenceNumbers.push(sequenceNumber);
+                }
+            }
         }
+        log("Warning: Non-supported text type: " + mediaType);
+    }
+    
+    function checkCC(data) {
+        /** Insert [time, data] pairs in order into array. */
+        var insertInOrder = function (arr, time, data) {
+            var len = arr.length;
+            if (len > 0) {
+                if (time >= arr[len - 1][0]) {
+                    arr.push([time, data]);
+                } else {
+                    for (var pos = len - 1; pos >= 0; pos--) {
+                        if (time < arr[pos][0]) {
+                            arr.splice(pos, 0, [time, data]);
+                            break;
+                        }
+                    }
+                }
+            } else {
+                arr.push([time, data]);
+            }
+        };
+
+        var isoFile = boxParser.parse(data);
+        var moof = isoFile.getBox('moof');
+        var mfhd = isoFile.getBox('mfhd');
+        log("TOBBE CEA: segment #: " + mfhd.sequence_number);
+        var tfdt = isoFile.getBox('tfdt');
+        //var tfhd = isoFile.getBox('tfhd'); //Can have a base_data_offset and other default values
+        //console.log("tfhd: " + tfhd);
+        //var saio = isoFile.getBox('saio'); // Offset possibly
+        //var saiz = isoFile.getBox('saiz'); // Possible sizes
+        var truns = isoFile.getBoxes('trun'); //
+        var trun = null;
+
+        if (truns.length === 0) {
+            return null;
+        }
+        trun = truns[0];
+        if (truns.length > 1) {
+            console.log("Too many truns");
+        }
+        var baseOffset = moof.offset + trun.data_offset;
+        //Doublecheck that trun.offset == moof.size + 8
+        var sampleCount = trun.sample_count;
+        var startPos = baseOffset;
+        var baseSampleTime = tfdt.baseMediaDecodeTime;
+        var raw = new DataView(data);
+        var allCcData = { 'startTime': null, 'endTime': null, fields: [[], []] };
+        var accDuration = 0;
+        for (var i = 0; i < sampleCount; i++) {
+            var sample = trun.samples[i];
+            var sampleTime = baseSampleTime + accDuration + sample.sample_composition_time_offset;
+            var ccDataWindows = checkNalus(raw, startPos, sample.sample_size);
+            for (var j = 0; j < ccDataWindows.length; j++) {
+                var ccData = processCCWindow(raw, ccDataWindows[j]);
+                for (var k = 0; k < 2; k++) {
+                    if (ccData[k].length > 0) {
+                        insertInOrder(allCcData.fields[k], sampleTime, ccData[k]);
+                    }
+                }
+            }
+
+            accDuration += sample.sample_duration;
+            startPos += sample.sample_size;
+        }
+        var endSampleTime = baseSampleTime + accDuration;
+        allCcData.startTime = baseSampleTime;
+        allCcData.endTime = endSampleTime;
+        return allCcData;
+    }
+        
+    /**
+     * Check NAL Units for embedded CEA-608 data
+     */
+    function checkNalus(raw, startPos, size) {
+        var nalSize = 0,
+            _cursor = startPos,
+            nalType = 0,
+            cea608Data = [],
+            // Check SEI data according to ANSI-SCTE 128
+            isCEA608SEI = function (payloadType, payloadSize, raw, pos) {
+                if (payloadType !== 4 || payloadSize < 8) {
+                    return null;
+                }
+                var countryCode = raw.getUint8(pos);
+                var providerCode = raw.getUint16(pos + 1);
+                var userIdentifier = raw.getUint32(pos + 3);
+                var userDataTypeCode = raw.getUint8(pos + 7);
+                return countryCode == 0xB5 && providerCode == 0x31 && userIdentifier == 0x47413934 && userDataTypeCode == 0x3;
+            };
+        while (_cursor < startPos + size) {
+            nalSize = raw.getUint32(_cursor);
+            nalType = raw.getUint8(_cursor + 4) & 0x1F;
+            //console.log(time + "  NAL " + nalType);
+            if (nalType === 6) {
+                // SEI NAL. The NAL header is the first byte
+                //console.log("SEI NALU of size " + nalSize + " at time " + time);
+                var pos = _cursor + 5;
+                var payloadType = -1;
+                while (pos < _cursor + 4 + nalSize - 1) { // The last byte should be rbsp_trailing_bits
+                    payloadType = 0;
+                    var b = 0xFF;
+                    while (b === 0xFF) {
+                        b = raw.getUint8(pos);
+                        payloadType += b;
+                        pos++;
+                    }
+                    var payloadSize = 0;
+                    b = 0xFF;
+                    while (b === 0xFF) {
+                        b = raw.getUint8(pos);
+                        payloadSize += b;
+                        pos++;
+                    }
+                    if (isCEA608SEI(payloadType, payloadSize, raw, pos)) {
+                        //console.log("CEA608 SEI " + time + " " + payloadSize);
+                        cea608Data.push([pos, payloadSize]);
+                    }
+                    pos += payloadSize;
+                }
+            }
+            _cursor += nalSize + 4;
+        }
+        return cea608Data;
+    }
+
+    function processCCWindow(raw, ccDataWindow) {
+        var pos = ccDataWindow[0];
+        var fieldData = [[], []];
+
+        pos += 8; // Skip the identifier up to userDataTypeCode
+        var ccCount = raw.getUint8(pos) & 0x1f;
+        pos += 2; // Advance 1 and skip reserved byte
+          
+        for (var i = 0; i < ccCount; i++) {
+            var byte = raw.getUint8(pos);
+            var ccValid = byte & 0x4;
+            var ccType = byte & 0x3;
+            pos++;
+            var ccData1 = raw.getUint8(pos);// & 0x7f; // Skip parity bit
+            pos++;
+            var ccData2 = raw.getUint8(pos);// & 0x7f; // Skip parity bit
+            pos++;
+            if (ccValid && ((ccData1 & 0x7f) + (ccData2 & 0x7f) !== 0)) { //Check validity and non-empty data
+                if (ccType === 0) {
+                    fieldData[0].push(ccData1);
+                    fieldData[0].push(ccData2);
+                } else if (ccType === 1) {
+                    fieldData[1].push(ccData1);
+                    fieldData[1].push(ccData2);
+                }
+            }
+        }
+        return fieldData;
     }
 
     function abort() {
@@ -257,6 +489,9 @@ function TextSourceBuffer() {
         log("TOBBE: resetEmbedded");
         embeddedInitialized = false;
         embeddedTracks = [];
+        embeddedCea608FieldParsers = [null, null];
+        embeddedSequenceNumbers = [];
+        embeddedLastSequenceNumber = null;
     }
 
     function getAllTracksAreDisabled() {
