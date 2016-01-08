@@ -51,7 +51,7 @@ function ObjectIron(map) {
 
     // create a list of top level items to search for
     lookup = [];
-    for (i = 0, len = map.length; i < len; i += 1) {
+    for (var i = 0, len = map.length; i < len; i += 1) {
         if (map[i].isRoot) {
             lookup.push("root");
         } else {
