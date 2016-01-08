@@ -210,3 +210,5 @@ function ObjectIron(map) {
         run: performMapping
     };
 }
+
+export default ObjectIron;
