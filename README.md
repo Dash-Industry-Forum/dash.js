@@ -11,31 +11,13 @@ If your goal is to improve or extend the code and contribute back to this projec
 
 All new work should be in the development branch. Master is now reserved for tagged builds.
 
-
-## Quick Start for Users
-If you just want a DASH player to use and don't need to see the code or commit to this project, then follow the instructions below. If you are a developer and want to work with this code base, then skip down to the "Quick Start for Developers" section.
-
-Put the following code in your web page
-```
-<script src="http://cdn.dashjs.org/latest/dash.all.min.js"></script>
-...
-<body onLoad="MediaPlayer.MediaPlayerFactory.createAll()">
-   <div>
-       <video class="dashjs-player" autoplay preload="none" controls="true">
-              <source src="http://dash.edgesuite.net/envivio/Envivio-dash2/manifest.mpd" type="application/dash+xml"/>
-       </video>
-   </div>
-</body>
-```
-Then place your page under a web server (do not try to run from the file system) and load it via http in a MSE-enabled browser. The video will start automatically. Switch out the manifest URL to your own manifest once you have everything working. If you prefer to use the latest code from this project (versus the last tagged release) then download dash.all.min.js file from the development/dist folder, mount it on a web server and change your script tag to refer to it.
-
 View the /samples folder for many other examples of embedding and using the player. For help, join our [email list](https://groups.google.com/d/forum/dashjs) and read our [wiki](https://github.com/Dash-Industry-Forum/dash.js/wiki) .
 
 
-## Quick Start for Developers
+## Quick Start for Developers with 2.0 refactor
 
 ### Reference Player
-1. Download 'master' or latest tagged release.
+1. Download 'development' branch
 2. Extract dash.js and move the entire folder to localhost (or run any http server instance such as python's SimpleHTTPServer at the root of the dash.js folder).
 3. Open samples/dash-if-reference-player/index.html in your MSE capable web browser.
 

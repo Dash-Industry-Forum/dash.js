@@ -81,6 +81,7 @@ function MediaSourceExtensions() {
 
         for (i; i < ln; i++) {
             if (buffers[i].updating) return;
+            if (buffers[i].buffered.length===0) return;
         }
 
         source.endOfStream();
