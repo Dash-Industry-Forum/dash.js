@@ -248,6 +248,7 @@ function RepresentationController() {
         };
 
         updating = false;
+        eventBus.trigger(Events.AST_IN_FUTURE, { delay: delay });
         setTimeout(update, delay);
     }
 
