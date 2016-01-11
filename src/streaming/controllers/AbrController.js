@@ -419,7 +419,7 @@ function AbrController() {
 
     function checkMaxBitrate(idx, type) {
         var maxBitrate = getMaxAllowedBitrateFor(type);
-        if (isNaN(maxBitrate)) {
+        if (isNaN(maxBitrate) || !streamProcessorDict[type]) {
             return idx;
         }
         var maxIdx = getQualityForBitrate(streamProcessorDict[type].getMediaInfo(), maxBitrate);
