@@ -36,6 +36,9 @@ import FragmentModel from '../models/FragmentModel.js';
 import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
+import ManifestModel from '../models/ManifestModel.js';
+import DashManifestExtensions from '../../dash/extensions/DashManifestExtensions.js';
+import VideoModel from '../models/VideoModel.js';
 
 const ABANDON_LOAD = 'abandonload';
 const BANDWIDTH_SAFETY = 0.9;
@@ -58,20 +61,30 @@ function AbrController() {
         qualityDict,
         confidenceDict,
         bitrateDict,
+        ratioDict,
         averageThroughputDict,
         streamProcessorDict,
         abandonmentStateDict,
-        abandonmentTimeout;
+        abandonmentTimeout,
+        limitBitrateByPortal,
+        manifestModel,
+        manifestExt,
+        videoModel;
 
     function setup() {
-        autoSwitchBitrate = true;
+        autoSwitchBitrate = {video: true, audio: true};
         topQualities = {};
         qualityDict = {};
         confidenceDict = {};
         bitrateDict = {};
+        ratioDict = {};
         averageThroughputDict = {};
         abandonmentStateDict = {};
         streamProcessorDict = {};
+        limitBitrateByPortal = true;
+        manifestModel = ManifestModel(context).getInstance();
+        manifestExt = DashManifestExtensions(context).getInstance();
+        videoModel = VideoModel(context).getInstance();
     }
 
     function initialize(type, streamProcessor) {
@@ -104,6 +117,8 @@ function AbrController() {
         }
 
         idx = checkMaxBitrate(topQualities[id][type], type);
+        idx = checkMaxRepresentationRatio(idx, type, topQualities[id][type]);
+        idx = checkPortalSize(idx, type);
         return idx;
     }
 
@@ -113,7 +128,25 @@ function AbrController() {
      * @memberof AbrController#
      */
     function getInitialBitrateFor(type) {
-        return bitrateDict[type];
+        var initialBitrate;
+
+        if (!bitrateDict.hasOwnProperty(type)) {
+            if (!ratioDict.hasOwnProperty(type)) {
+                bitrateDict[type] = (type === "video") ? DEFAULT_VIDEO_BITRATE : DEFAULT_AUDIO_BITRATE;
+            } else {
+                var manifest = manifestModel.getValue(),
+                    representation = manifestExt.getAdaptationForType(manifest, 0, type).Representation;
+                if (Array.isArray(representation)) {
+                    bitrateDict[type] = representation[Math.round(representation.length * ratioDict[type])-1].bandwidth;
+                } else {
+                    bitrateDict[type] = 0;
+                }
+            }
+        }
+
+        initialBitrate = bitrateDict[type];
+
+        return initialBitrate;
     }
 
     /**
@@ -123,6 +156,18 @@ function AbrController() {
      */
     function setInitialBitrateFor(type, value) {
         bitrateDict[type] = value;
+    }
+
+    function getInitialRepresentationRatioFor(type) {
+        if (!ratioDict.hasOwnProperty(type)) {
+            return null;
+        }
+
+        return ratioDict[type];
+    }
+
+    function setInitialRepresentationRatioFor(type, value) {
+        ratioDict[type] = value;
     }
 
     function getMaxAllowedBitrateFor(type) {
@@ -139,12 +184,32 @@ function AbrController() {
         bitrateDict.max[type] = value;
     }
 
-    function getAutoSwitchBitrate() {
-        return autoSwitchBitrate;
+    function getMaxAllowedRepresentationRatioFor(type) {
+        if (ratioDict.hasOwnProperty("max") && ratioDict.max.hasOwnProperty(type)){
+            return ratioDict.max[type];
+        }
+        return 1;
     }
 
-    function setAutoSwitchBitrate(value) {
-        autoSwitchBitrate = value;
+    function setMaxAllowedRepresentationRatioFor(type, value) {
+        ratioDict.max = ratioDict.max || {};
+        ratioDict.max[type] = value;
+    }
+
+    function getAutoSwitchBitrateFor(type) {
+        return autoSwitchBitrate[type];
+    }
+
+    function setAutoSwitchBitrateFor(type, value) {
+        autoSwitchBitrate[type] = value;
+    }
+
+    function getLimitBitrateByPortal() {
+        return limitBitrateByPortal;
+    }
+
+    function setLimitBitrateByPortal(value) {
+        limitBitrateByPortal = value;
     }
 
     function getPlaybackQuality(streamProcessor, completedCallback) {
@@ -191,7 +256,7 @@ function AbrController() {
         confidence = getConfidenceFor(type, streamId);
 
         //log("ABR enabled? (" + autoSwitchBitrate + ")");
-        if (!autoSwitchBitrate) {
+        if (!getAutoSwitchBitrateFor(type)) {
             if (completedCallback !== undefined) {
                 completedCallback();
             }
@@ -361,11 +426,47 @@ function AbrController() {
         return Math.min (idx , maxIdx);
     }
 
+    function checkMaxRepresentationRatio(idx, type, maxIdx){
+        var maxRepresentationRatio = getMaxAllowedRepresentationRatioFor(type);
+        if (isNaN(maxRepresentationRatio) || maxRepresentationRatio >= 1 || maxRepresentationRatio < 0) {
+            return idx;
+        }
+        return Math.min( idx , Math.round(maxIdx * maxRepresentationRatio) );
+    }
+
+    function checkPortalSize(idx, type) {
+        if (type !== 'video' || !limitBitrateByPortal || !streamProcessorDict[type]) {
+            return idx;
+        }
+
+        var element = videoModel.getElement(),
+            elementWidth = element.clientWidth,
+            elementHeight = element.clientHeight,
+            manifest = manifestModel.getValue(),
+            representation = manifestExt.getAdaptationForType(manifest, 0, type).Representation,
+            newIdx = idx;
+
+        if (elementWidth > 0 && elementHeight > 0) {
+            while (
+                newIdx > 0 &&
+                elementWidth < representation[newIdx].width &&
+                elementWidth - representation[newIdx-1].width < representation[newIdx].width - elementWidth
+            ) {
+                newIdx = newIdx - 1;
+            }
+
+            if (representation.length - 2 >= newIdx && representation[newIdx].width === representation[newIdx+1].width) {
+                newIdx = Math.min(idx, newIdx+1);
+            }
+        }
+
+        return newIdx;
+    }
+
     function onFragmentLoadProgress(e) {
+        var type = e.request.mediaType;
+        if (getAutoSwitchBitrateFor(type)) { //check to see if there are parallel request or just one at a time.
 
-        if (autoSwitchBitrate) { //check to see if there are parallel request or just one at a time.
-
-            var type = e.request.mediaType;
             var rules = abrRulesCollection.getRules(ABRRulesCollection.ABANDON_FRAGMENT_RULES);
             var scheduleController = streamProcessorDict[type].getScheduleController();
             var fragmentModel = scheduleController.getFragmentModel();
@@ -408,10 +509,16 @@ function AbrController() {
         getQualityForBitrate: getQualityForBitrate,
         getMaxAllowedBitrateFor: getMaxAllowedBitrateFor,
         setMaxAllowedBitrateFor: setMaxAllowedBitrateFor,
+        getMaxAllowedRepresentationRatioFor: getMaxAllowedRepresentationRatioFor,
+        setMaxAllowedRepresentationRatioFor: setMaxAllowedRepresentationRatioFor,
         getInitialBitrateFor: getInitialBitrateFor,
         setInitialBitrateFor: setInitialBitrateFor,
-        setAutoSwitchBitrate: setAutoSwitchBitrate,
-        getAutoSwitchBitrate: getAutoSwitchBitrate,
+        getInitialRepresentationRatioFor: getInitialRepresentationRatioFor,
+        setInitialRepresentationRatioFor: setInitialRepresentationRatioFor,
+        setAutoSwitchBitrateFor: setAutoSwitchBitrateFor,
+        getAutoSwitchBitrateFor: getAutoSwitchBitrateFor,
+        setLimitBitrateByPortal: setLimitBitrateByPortal,
+        getLimitBitrateByPortal: getLimitBitrateByPortal,
         getConfidenceFor: getConfidenceFor,
         getQualityFor: getQualityFor,
         getAbandonmentStateFor: getAbandonmentStateFor,

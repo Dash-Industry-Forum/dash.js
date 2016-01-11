@@ -521,6 +521,38 @@ function MediaPlayer() {
     }
 
     /**
+     * When switching multi-bitrate content (auto or manual mode) this property specifies the maximum representation allowed,
+     * as a proportion of the size of the representation set.
+     *
+     * You can set or remove this cap at anytime before or during playback. To clear this setting you must use the API
+     * and set the value param to NaN.
+     *
+     * If both this and maxAllowedBitrate are defined, maxAllowedBitrate is evaluated first, then maxAllowedRepresentation,
+     * i.e. the lowest value from executing these rules is used.
+     *
+     * This feature is typically used to reserve higher representations for playback only when connected over a fast connection.
+     *
+     * @param type String 'video' or 'audio' are the type options.
+     * @param value number between 0 and 1, where 1 is allow all representations, and 0 is allow only the lowest.
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setMaxAllowedRepresentationRatioFor(type, value) {
+        abrController.setMaxAllowedRepresentationRatioFor(type, value);
+    }
+
+    /**
+     * @param type String 'video' or 'audio' are the type options.
+     * @returns {number} The current representation ratio cap.
+     * @memberof module:MediaPlayer
+     * @see {@link MediaPlayer#setMaxAllowedRepresentationRatioFor setMaxAllowedRepresentationRatioFor()}
+     * @instance
+     */
+    function getMaxAllowedRepresentationRatioFor(type) {
+        return abrController.getMaxAllowedRepresentationRatioFor(type);
+    }
+
+    /**
      * <p>Set to false to prevent stream from auto-playing when the view is attached.</p>
      *
      * @param value {boolean}
@@ -603,6 +635,25 @@ function MediaPlayer() {
         abrController.setPlaybackQuality(type, streamController.getActiveStreamInfo(), value);
     }
 
+    /**
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getLimitBitrateByPortal() {
+        return abrController.getLimitBitrateByPortal();
+    }
+
+    /**
+     * Sets whether to limit the representation used based on the size of the playback area
+     *
+     * @param value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setLimitBitrateByPortal(value) {
+        abrController.setLimitBitrateByPortal(value);
+    }
+
 
     /**
      * Use this method to change the current text track for both external time text files and fragmented text tracks. There is no need to
@@ -664,6 +715,26 @@ function MediaPlayer() {
      */
     function getInitialBitrateFor(type) {
         return abrController.getInitialBitrateFor(type);
+    }
+
+    /**
+     * @param type
+     * @param {number} value A value of the initial Representation Ratio
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setInitialRepresentationRatioFor(type, value) {
+        abrController.setInitialRepresentationRatioFor(type, value);
+    }
+
+    /**
+     * @param type
+     * @returns {number} A value of the initial Representation Ratio
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getInitialRepresentationRatioFor(type) {
+        return abrController.getInitialRepresentationRatioFor(type);
     }
 
     /**
@@ -832,7 +903,7 @@ function MediaPlayer() {
      *
      */
     function getAutoSwitchQuality() {
-        return abrController.getAutoSwitchBitrate();
+        return abrController.getAutoSwitchBitrateFor("video") || abrController.getAutoSwitchBitrateFor("audio");
     }
 
     /**
@@ -844,7 +915,30 @@ function MediaPlayer() {
      * @instance
      */
     function setAutoSwitchQuality(value) {
-        abrController.setAutoSwitchBitrate(value);
+        abrController.setAutoSwitchBitrateFor("video", value);
+        abrController.setAutoSwitchBitrateFor("audio", value);
+    }
+
+    /**
+     * @returns {boolean} Current state of adaptive bitrate switching
+     * @memberof module:MediaPlayer
+     * @instance
+     *
+     */
+    function getAutoSwitchQualityFor(type) {
+        return abrController.getAutoSwitchBitrateFor(type);
+    }
+
+    /**
+     * Set to false to switch off adaptive bitrate switching.
+     *
+     * @param value {boolean}
+     * @default {boolean} true
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setAutoSwitchQualityFor(type, value) {
+        abrController.setAutoSwitchBitrateFor(type, value);
     }
 
 
@@ -1317,6 +1411,8 @@ function MediaPlayer() {
         enableLastMediaSettingsCaching: enableLastMediaSettingsCaching,
         setMaxAllowedBitrateFor: setMaxAllowedBitrateFor,
         getMaxAllowedBitrateFor: getMaxAllowedBitrateFor,
+        setMaxAllowedRepresentationRatioFor: setMaxAllowedRepresentationRatioFor,
+        getMaxAllowedRepresentationRatioFor: getMaxAllowedRepresentationRatioFor,
         setAutoPlay: setAutoPlay,
         getAutoPlay: getAutoPlay,
         setScheduleWhilePaused: setScheduleWhilePaused,
@@ -1325,10 +1421,14 @@ function MediaPlayer() {
         getMetricsFor: getMetricsFor,
         getQualityFor: getQualityFor,
         setQualityFor: setQualityFor,
+        getLimitBitrateByPortal: getLimitBitrateByPortal,
+        setLimitBitrateByPortal: setLimitBitrateByPortal,
         setTextTrack: setTextTrack,
         getBitrateInfoListFor: getBitrateInfoListFor,
         setInitialBitrateFor: setInitialBitrateFor,
         getInitialBitrateFor: getInitialBitrateFor,
+        setInitialRepresentationRatioFor: setInitialRepresentationRatioFor,
+        getInitialRepresentationRatioFor: getInitialRepresentationRatioFor,
         getStreamsFromManifest: getStreamsFromManifest,
         getTracksFor: getTracksFor,
         getTracksForTypeFromManifest: getTracksForTypeFromManifest,
@@ -1342,6 +1442,8 @@ function MediaPlayer() {
         getSelectionModeForInitialTrack: getSelectionModeForInitialTrack,
         getAutoSwitchQuality: getAutoSwitchQuality,
         setAutoSwitchQuality: setAutoSwitchQuality,
+        getAutoSwitchQualityFor: getAutoSwitchQualityFor,
+        setAutoSwitchQualityFor: setAutoSwitchQualityFor,
         retrieveManifest: retrieveManifest,
         addUTCTimingSource: addUTCTimingSource,
         removeUTCTimingSource: removeUTCTimingSource,
