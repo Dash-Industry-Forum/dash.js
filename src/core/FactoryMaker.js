@@ -37,11 +37,11 @@ let FactoryMaker = (function () {
     let extensions = [];
     let singletonContexts = [];
 
-    function extend(name, childInstance, context) {
+    function extend(name, childInstance, override, context) {
         let extensionContext = getExtensionContext(context);
 
         if (!extensionContext[name] && childInstance) {
-            extensionContext[name] = childInstance;
+            extensionContext[name] = {instance: childInstance, override: override};
         }
     }
 
@@ -109,14 +109,18 @@ let FactoryMaker = (function () {
     function merge(name, classConstructor, context) {
 
         let extensionContext = getExtensionContext(context);
-        let extension = extensionContext[name];
-
-        if (extension) {
-            extension = extension.apply({ context: context, factory: instance, parent: classConstructor});
-            for (const prop in extension) {
-                if (classConstructor.hasOwnProperty(prop)) {
-                    classConstructor[prop] = extension[prop];
+        let extensionObject = extensionContext[name];
+        if (extensionObject) {
+            let extension = extensionObject.instance;
+            if (extensionObject.override) { //Override public methods in parent but keep parent.
+                extension = extension.apply({ context: context, factory: instance, parent: classConstructor});
+                for (const prop in extension) {
+                    if (classConstructor.hasOwnProperty(prop)) {
+                        classConstructor[prop] = extension[prop];
+                    }
                 }
+            } else { //replace parent object completely with new object. Same as dijon.
+                return extension.apply({ context: context, factory: instance});
             }
         }
         return classConstructor;

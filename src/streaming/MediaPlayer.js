@@ -367,8 +367,8 @@ function MediaPlayer() {
     /**
      * TODO Need Docs
      */
-    function extend(parentNameString, childInstance) {
-        FactoryMaker.extend(parentNameString, childInstance, context);
+    function extend(parentNameString, childInstance, override) {
+        FactoryMaker.extend(parentNameString, childInstance, override, context);
     }
 
     /**
@@ -907,7 +907,7 @@ function MediaPlayer() {
      *
      */
     function getAutoSwitchQuality() {
-        return abrController.getAutoSwitchBitrateFor("video") || abrController.getAutoSwitchBitrateFor("audio");
+        return abrController.getAutoSwitchBitrateFor('video') || abrController.getAutoSwitchBitrateFor('audio');
     }
 
     /**
@@ -919,8 +919,8 @@ function MediaPlayer() {
      * @instance
      */
     function setAutoSwitchQuality(value) {
-        abrController.setAutoSwitchBitrateFor("video", value);
-        abrController.setAutoSwitchBitrateFor("audio", value);
+        abrController.setAutoSwitchBitrateFor('video', value);
+        abrController.setAutoSwitchBitrateFor('audio', value);
     }
 
     /**
