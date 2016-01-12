@@ -132,12 +132,12 @@ function AbrController() {
 
         if (!bitrateDict.hasOwnProperty(type)) {
             if (!ratioDict.hasOwnProperty(type)) {
-                bitrateDict[type] = (type === "video") ? DEFAULT_VIDEO_BITRATE : DEFAULT_AUDIO_BITRATE;
+                bitrateDict[type] = (type === 'video') ? DEFAULT_VIDEO_BITRATE : DEFAULT_AUDIO_BITRATE;
             } else {
-                var manifest = manifestModel.getValue(),
-                    representation = manifestExt.getAdaptationForType(manifest, 0, type).Representation;
+                var manifest = manifestModel.getValue();
+                var representation = manifestExt.getAdaptationForType(manifest, 0, type).Representation;
                 if (Array.isArray(representation)) {
-                    bitrateDict[type] = representation[Math.round(representation.length * ratioDict[type])-1].bandwidth;
+                    bitrateDict[type] = representation[Math.round(representation.length * ratioDict[type]) - 1].bandwidth;
                 } else {
                     bitrateDict[type] = 0;
                 }
@@ -185,7 +185,7 @@ function AbrController() {
     }
 
     function getMaxAllowedRepresentationRatioFor(type) {
-        if (ratioDict.hasOwnProperty("max") && ratioDict.max.hasOwnProperty(type)){
+        if (ratioDict.hasOwnProperty('max') && ratioDict.max.hasOwnProperty(type)) {
             return ratioDict.max[type];
         }
         return 1;
@@ -426,7 +426,7 @@ function AbrController() {
         return Math.min (idx , maxIdx);
     }
 
-    function checkMaxRepresentationRatio(idx, type, maxIdx){
+    function checkMaxRepresentationRatio(idx, type, maxIdx) {
         var maxRepresentationRatio = getMaxAllowedRepresentationRatioFor(type);
         if (isNaN(maxRepresentationRatio) || maxRepresentationRatio >= 1 || maxRepresentationRatio < 0) {
             return idx;
@@ -439,24 +439,24 @@ function AbrController() {
             return idx;
         }
 
-        var element = videoModel.getElement(),
-            elementWidth = element.clientWidth,
-            elementHeight = element.clientHeight,
-            manifest = manifestModel.getValue(),
-            representation = manifestExt.getAdaptationForType(manifest, 0, type).Representation,
-            newIdx = idx;
+        var element = videoModel.getElement();
+        var elementWidth = element.clientWidth;
+        var elementHeight = element.clientHeight;
+        var manifest = manifestModel.getValue();
+        var representation = manifestExt.getAdaptationForType(manifest, 0, type).Representation;
+        var newIdx = idx;
 
         if (elementWidth > 0 && elementHeight > 0) {
             while (
                 newIdx > 0 &&
                 elementWidth < representation[newIdx].width &&
-                elementWidth - representation[newIdx-1].width < representation[newIdx].width - elementWidth
+                elementWidth - representation[newIdx - 1].width < representation[newIdx].width - elementWidth
             ) {
                 newIdx = newIdx - 1;
             }
 
-            if (representation.length - 2 >= newIdx && representation[newIdx].width === representation[newIdx+1].width) {
-                newIdx = Math.min(idx, newIdx+1);
+            if (representation.length - 2 >= newIdx && representation[newIdx].width === representation[newIdx + 1].width) {
+                newIdx = Math.min(idx, newIdx + 1);
             }
         }
 
