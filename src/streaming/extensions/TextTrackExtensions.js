@@ -143,7 +143,7 @@ function TextTrackExtensions() {
                 }
                 var textTrack = video.textTracks[i];
                 textTrack.nonAddedCues = [];
-                if (captionContainer && (textTrackQueue[i].isTTML || textTrackQueue[i].isCEA608)) {
+                if (captionContainer && (textTrackQueue[i].isTTML || textTrackQueue[i].isEmbedded)) {
                     textTrack.renderingType = 'html';
                 } else {
                     textTrack.renderingType = 'default';
@@ -160,7 +160,7 @@ function TextTrackExtensions() {
         }
     }
 
-    function getVideoVisibleVideoSize(viewWidth, viewHeight, videoWidth, videoHeight) {
+    function getVideoVisibleVideoSize(viewWidth, viewHeight, videoWidth, videoHeight, aspectRatio, use80Percent) {
         var viewAspectRatio = viewWidth / viewHeight;
         var videoAspectRatio = videoWidth / videoHeight;
 
@@ -181,10 +181,35 @@ function TextTrackExtensions() {
             videoPictureY = (viewHeight - videoPictureHeight) / 2;
         }
 
-        return { x: videoPictureX,
-            y: videoPictureY,
-            w: videoPictureWidth,
-            h: videoPictureHeight }; /* Maximal picture size in videos aspect ratio */
+        var videoPictureXAspect = 0;
+        var videoPictureYAspect = 0;
+        var videoPictureWidthAspect = 0;
+        var videoPictureHeightAspect = 0;
+        var videoPictureAspect = videoPictureWidth / videoPictureHeight;
+
+        if (videoPictureAspect > aspectRatio) {
+            videoPictureHeightAspect = videoPictureHeight;
+            videoPictureWidthAspect = videoPictureHeight / (1 / aspectRatio);
+            videoPictureXAspect = (viewWidth - videoPictureWidthAspect) / 2;
+            videoPictureYAspect = 0;
+        } else {
+            videoPictureWidthAspect = videoPictureWidth;
+            videoPictureHeightAspect = videoPictureWidth / aspectRatio;
+            videoPictureXAspect = 0;
+            videoPictureYAspect = (viewHeight - videoPictureHeightAspect) / 2;
+        }
+
+        if (use80Percent) {
+            return { x:videoPictureXAspect + (videoPictureWidthAspect * 0.1),
+                     y:videoPictureYAspect + (videoPictureHeightAspect * 0.1),
+                     w:videoPictureWidthAspect * 0.8,
+                     h:videoPictureHeightAspect* 0.8 }; /* Maximal picture size in videos aspect ratio */
+        } else {
+            return { x:videoPictureXAspect,
+                     y:videoPictureYAspect,
+                     w:videoPictureWidthAspect,
+                     h:videoPictureHeightAspect }; /* Maximal picture size in videos aspect ratio */
+        }
     }
 
 
@@ -197,7 +222,19 @@ function TextTrackExtensions() {
             var newVideoWidth = video.clientWidth;
             var newVideoHeight = video.clientHeight;
 
-            var realVideoSize = getVideoVisibleVideoSize.call(this, video.clientWidth, video.clientHeight, video.videoWidth, video.videoHeight);
+            // Create aspect ratio from cellResolutions
+            let aspectRatio = 1;
+            if (track.cellResolution) {
+                aspectRatio = track.cellResolution[0] / track.cellResolution[1];
+            }
+            let use80Percent = false;
+            if (track.isFromCEA608) {
+                // If this is CEA608 then use predefined aspect ratio
+                aspectRatio = 3.5 / 3.0;
+                use80Percent = true;
+            }
+
+            var realVideoSize = getVideoVisibleVideoSize.call(this, video.clientWidth, video.clientHeight, video.videoWidth, video.videoHeight, aspectRatio, use80Percent);
 
             newVideoWidth = realVideoSize.w;
             newVideoHeight = realVideoSize.h;
@@ -311,6 +348,9 @@ function TextTrackExtensions() {
         for (var item in captionData) {
             var cue;
             var currentItem = captionData[item];
+
+            track.cellResolution = currentItem.cellResolution;
+            track.isFromCEA608 = currentItem.isFromCEA608;
 
             if (!videoSizeCheckInterval && currentItem.type == 'html') {
                 videoSizeCheckInterval = setInterval(checkVideoSize.bind(this), 500);
