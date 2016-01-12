@@ -245,3 +245,7 @@ chart {
     font-size: 22px;
     color: #555;
 }
+
+#videoContainer {
+    position:relative;
+}
