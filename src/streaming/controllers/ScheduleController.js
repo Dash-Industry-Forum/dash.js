@@ -149,7 +149,7 @@ function ScheduleController(config) {
         if (initialPlayback) {
             initialPlayback = false;
         }
-        log('start');
+        log('Schedule controller starting for ' + type);
         //if starting from a pause we want to call validate to kick off the cycle that was stopped by pausing stream.
         if (playbackController.getPlayedRanges().length > 0) {
             validate();
@@ -168,7 +168,7 @@ function ScheduleController(config) {
     function doStop() {
         if (isStopped) return;
         isStopped = true;
-        log('stop');
+        log('Schedule controller stopping for ' + type);
         clearInterval(validateTimeout);
         clearPlayListTraceMetrics(new Date(), PlayList.Trace.USER_REQUEST_STOP_REASON);
     }
