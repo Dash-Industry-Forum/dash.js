@@ -59,7 +59,6 @@ function TextTrackExtensions() {
         topZIndex;
 
     function initialize () {
-        log("TOBBE: TextTrackExtensions: initialize");
         Cue = window.VTTCue || window.TextTrackCue;
         textTrackQueue = [];
         trackElementArr = [];
@@ -113,7 +112,7 @@ function TextTrackExtensions() {
     function addTextTrack(textTrackInfoVO, totalTextTracks) {
         
         if (textTrackQueue.length === totalTextTracks) {
-            log("TOBBE cannot add another text track since there are already " + totalTextTracks);
+            log("Trying to add too many tracks.");
             return;
         }
 
@@ -121,8 +120,6 @@ function TextTrackExtensions() {
         if (video === undefined) {
             video = textTrackInfoVO.video;
         }
-        
-        log("TOBBE: addTextTrack " + textTrackQueue.length + " " + totalTextTracks);
 
         if (textTrackQueue.length === totalTextTracks) {
             textTrackQueue.sort(function (a, b) { //Sort in same order as in manifest

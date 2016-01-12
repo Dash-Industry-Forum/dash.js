@@ -1,3 +1,33 @@
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2015-2016, DASH Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  1. Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  2. Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
 (function(exports) {
 
     "use strict";
@@ -1107,9 +1137,100 @@
         },
     };
 
+    /**
+     * Find ranges corresponding to SEA CEA-608 NALUS in sizeprepended NALU array.
+     * @param {raw} dataView of binary data
+     * @param {startPos} start position in raw
+     * @param {size} total size of data in raw to consider
+     * @returns 
+     */
+    var findCea608Nalus = function(raw, startPos, size) {
+        var nalSize = 0,
+            cursor = startPos,
+            nalType = 0,
+            cea608NaluRanges = [],
+            // Check SEI data according to ANSI-SCTE 128
+            isCEA608SEI = function (payloadType, payloadSize, raw, pos) {
+                if (payloadType !== 4 || payloadSize < 8) {
+                    return null;
+                }
+                var countryCode = raw.getUint8(pos);
+                var providerCode = raw.getUint16(pos + 1);
+                var userIdentifier = raw.getUint32(pos + 3);
+                var userDataTypeCode = raw.getUint8(pos + 7);
+                return countryCode == 0xB5 && providerCode == 0x31 && userIdentifier == 0x47413934 && userDataTypeCode == 0x3;
+            };
+        while (cursor < startPos + size) {
+            nalSize = raw.getUint32(cursor);
+            nalType = raw.getUint8(cursor + 4) & 0x1F;
+            //console.log(time + "  NAL " + nalType);
+            if (nalType === 6) {
+                // SEI NAL Unit. The NAL header is the first byte
+                //console.log("SEI NALU of size " + nalSize + " at time " + time);
+                var pos = cursor + 5;
+                var payloadType = -1;
+                while (pos < cursor + 4 + nalSize - 1) { // The last byte should be rbsp_trailing_bits
+                    payloadType = 0;
+                    var b = 0xFF;
+                    while (b === 0xFF) {
+                        b = raw.getUint8(pos);
+                        payloadType += b;
+                        pos++;
+                    }
+                    var payloadSize = 0;
+                    b = 0xFF;
+                    while (b === 0xFF) {
+                        b = raw.getUint8(pos);
+                        payloadSize += b;
+                        pos++;
+                    }
+                    if (isCEA608SEI(payloadType, payloadSize, raw, pos)) {
+                        //console.log("CEA608 SEI " + time + " " + payloadSize);
+                        cea608NaluRanges.push([pos, payloadSize]);
+                    }
+                    pos += payloadSize;
+                }
+            }
+            cursor += nalSize + 4;
+        }
+        return cea608NaluRanges;
+    };
+    
+    var extractCea608DataFromRange = function(raw, cea608Range) {
+        var pos = cea608Range[0];
+        var fieldData = [[], []];
+
+        pos += 8; // Skip the identifier up to userDataTypeCode
+        var ccCount = raw.getUint8(pos) & 0x1f;
+        pos += 2; // Advance 1 and skip reserved byte
+          
+        for (var i = 0; i < ccCount; i++) {
+            var byte = raw.getUint8(pos);
+            var ccValid = byte & 0x4;
+            var ccType = byte & 0x3;
+            pos++;
+            var ccData1 = raw.getUint8(pos); // Keep parity bit
+            pos++;
+            var ccData2 = raw.getUint8(pos); // Keep parity bit
+            pos++;
+            if (ccValid && ((ccData1 & 0x7f) + (ccData2 & 0x7f) !== 0)) { //Check validity and non-empty data
+                if (ccType === 0) {
+                    fieldData[0].push(ccData1);
+                    fieldData[0].push(ccData2);
+                } else if (ccType === 1) {
+                    fieldData[1].push(ccData1);
+                    fieldData[1].push(ccData2);
+                }
+            }
+        }
+        return fieldData;
+    };
+
     exports.logger = logger;
     exports.PenState = PenState;
     exports.CaptionScreen = CaptionScreen;  
     exports.Cea608Parser = Cea608Parser;
+    exports.findCea608Nalus = findCea608Nalus;
+    exports.extractCea608DataFromRange = extractCea608DataFromRange;
 
 }(typeof exports === 'undefined' ? this.cea608parser = {} : exports));

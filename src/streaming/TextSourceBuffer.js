@@ -73,7 +73,6 @@ function TextSourceBuffer() {
         embeddedCea608FieldParsers;
 
     function initialize(type, bufferController) {
-        log("TOBBE: TextSourceBuffer: initialize");
         allTracksAreDisabled = false;
         parser = null;
         fragmentExt = null;
@@ -111,7 +110,6 @@ function TextSourceBuffer() {
     }
     
     function initEmbedded() {
-        log("TOBBE initEmbedded");
         embeddedTracks = [];
         mediaInfos = [];
         videoModel = VideoModel(context).getInstance();
@@ -132,7 +130,6 @@ function TextSourceBuffer() {
     }
 
     function append(bytes, chunk) {
-        log("TOBBE TextSourceBuffer:append()");
         var result,
             sampleList,
             i,
@@ -143,7 +140,6 @@ function TextSourceBuffer() {
         var mimeType = mediaInfo.mimeType;
 
         function createTextTrackFromMediaInfo(captionData, mediaInfo) {
-            log("TOBBE createTextTrackFromMediaInfo");
             var textTrackInfo = new TextTrackInfo();
             var trackKindMap = { subtitle: 'subtitles', caption: 'captions' }; //Dash Spec has no "s" on end of KIND but HTML needs plural.
             var getKind = function () {
@@ -173,7 +169,6 @@ function TextSourceBuffer() {
             textTrackInfo.isFragmented = isFragmented;
             textTrackInfo.isEmbedded = mediaInfo.isEmbedded ? true : false;
             textTrackInfo.kind = getKind();
-            log("TOBBE: Adding " + mediaInfo.id);
             var totalNrTracks = (mediaInfos ? mediaInfos.length : 0) + embeddedTracks.length;
             textTrackExtensions.addTextTrack(textTrackInfo, totalNrTracks);
         }
@@ -246,7 +241,6 @@ function TextSourceBuffer() {
             
                 samplesInfo = fragmentExt.getSamplesInfo(bytes);
                 var sequenceNumber = samplesInfo.sequenceNumber;
-                log("TOBBE: CEA-608 sequence number: " + sequenceNumber);
 
                 if (!embeddedCea608FieldParsers[0] && !embeddedCea608FieldParsers[1]) {
                     // Time to setup the CEA-608 parsing
@@ -276,7 +270,7 @@ function TextSourceBuffer() {
                             }
                         }
                     }
-                    var allCcData = checkCC(bytes);
+                    var allCcData = extractCea608Data(bytes);
 
                     for (var fieldNr = 0; fieldNr < embeddedCea608FieldParsers.length; fieldNr++) {
                         var ccData = allCcData.fields[fieldNr];
@@ -300,8 +294,13 @@ function TextSourceBuffer() {
         }
         log("Warning: Non-supported text type: " + mediaType);
     }
-    
-    function checkCC(data) {
+    /**
+     * Extract CEA-608 data from a buffer of data.
+     * @parameter(data) ArrayBuffer of data
+     * @returns ccData corresponding to one segment.
+    */
+    function extractCea608Data(data) {
+        
         /** Insert [time, data] pairs in order into array. */
         var insertInOrder = function (arr, time, data) {
             var len = arr.length;
@@ -323,8 +322,6 @@ function TextSourceBuffer() {
 
         var isoFile = boxParser.parse(data);
         var moof = isoFile.getBox('moof');
-        var mfhd = isoFile.getBox('mfhd');
-        log("TOBBE CEA: segment #: " + mfhd.sequence_number);
         var tfdt = isoFile.getBox('tfdt');
         //var tfhd = isoFile.getBox('tfhd'); //Can have a base_data_offset and other default values
         //console.log("tfhd: " + tfhd);
@@ -338,7 +335,7 @@ function TextSourceBuffer() {
         }
         trun = truns[0];
         if (truns.length > 1) {
-            console.log("Too many truns");
+            console.log("Warning: Too many truns");
         }
         var baseOffset = moof.offset + trun.data_offset;
         //Doublecheck that trun.offset == moof.size + 8
@@ -351,9 +348,9 @@ function TextSourceBuffer() {
         for (var i = 0; i < sampleCount; i++) {
             var sample = trun.samples[i];
             var sampleTime = baseSampleTime + accDuration + sample.sample_composition_time_offset;
-            var ccDataWindows = checkNalus(raw, startPos, sample.sample_size);
-            for (var j = 0; j < ccDataWindows.length; j++) {
-                var ccData = processCCWindow(raw, ccDataWindows[j]);
+            var cea608Ranges = cea608parser.findCea608Nalus(raw, startPos, sample.sample_size);
+            for (var j = 0; j < cea608Ranges.length; j++) {
+                var ccData = cea608parser.extractCea608DataFromRange(raw, cea608Ranges[j]);
                 for (var k = 0; k < 2; k++) {
                     if (ccData[k].length > 0) {
                         insertInOrder(allCcData.fields[k], sampleTime, ccData[k]);
@@ -369,92 +366,7 @@ function TextSourceBuffer() {
         allCcData.endTime = endSampleTime;
         return allCcData;
     }
-        
-    /**
-     * Check NAL Units for embedded CEA-608 data
-     */
-    function checkNalus(raw, startPos, size) {
-        var nalSize = 0,
-            _cursor = startPos,
-            nalType = 0,
-            cea608Data = [],
-            // Check SEI data according to ANSI-SCTE 128
-            isCEA608SEI = function (payloadType, payloadSize, raw, pos) {
-                if (payloadType !== 4 || payloadSize < 8) {
-                    return null;
-                }
-                var countryCode = raw.getUint8(pos);
-                var providerCode = raw.getUint16(pos + 1);
-                var userIdentifier = raw.getUint32(pos + 3);
-                var userDataTypeCode = raw.getUint8(pos + 7);
-                return countryCode == 0xB5 && providerCode == 0x31 && userIdentifier == 0x47413934 && userDataTypeCode == 0x3;
-            };
-        while (_cursor < startPos + size) {
-            nalSize = raw.getUint32(_cursor);
-            nalType = raw.getUint8(_cursor + 4) & 0x1F;
-            //console.log(time + "  NAL " + nalType);
-            if (nalType === 6) {
-                // SEI NAL. The NAL header is the first byte
-                //console.log("SEI NALU of size " + nalSize + " at time " + time);
-                var pos = _cursor + 5;
-                var payloadType = -1;
-                while (pos < _cursor + 4 + nalSize - 1) { // The last byte should be rbsp_trailing_bits
-                    payloadType = 0;
-                    var b = 0xFF;
-                    while (b === 0xFF) {
-                        b = raw.getUint8(pos);
-                        payloadType += b;
-                        pos++;
-                    }
-                    var payloadSize = 0;
-                    b = 0xFF;
-                    while (b === 0xFF) {
-                        b = raw.getUint8(pos);
-                        payloadSize += b;
-                        pos++;
-                    }
-                    if (isCEA608SEI(payloadType, payloadSize, raw, pos)) {
-                        //console.log("CEA608 SEI " + time + " " + payloadSize);
-                        cea608Data.push([pos, payloadSize]);
-                    }
-                    pos += payloadSize;
-                }
-            }
-            _cursor += nalSize + 4;
-        }
-        return cea608Data;
-    }
-
-    function processCCWindow(raw, ccDataWindow) {
-        var pos = ccDataWindow[0];
-        var fieldData = [[], []];
-
-        pos += 8; // Skip the identifier up to userDataTypeCode
-        var ccCount = raw.getUint8(pos) & 0x1f;
-        pos += 2; // Advance 1 and skip reserved byte
-          
-        for (var i = 0; i < ccCount; i++) {
-            var byte = raw.getUint8(pos);
-            var ccValid = byte & 0x4;
-            var ccType = byte & 0x3;
-            pos++;
-            var ccData1 = raw.getUint8(pos);// & 0x7f; // Skip parity bit
-            pos++;
-            var ccData2 = raw.getUint8(pos);// & 0x7f; // Skip parity bit
-            pos++;
-            if (ccValid && ((ccData1 & 0x7f) + (ccData2 & 0x7f) !== 0)) { //Check validity and non-empty data
-                if (ccType === 0) {
-                    fieldData[0].push(ccData1);
-                    fieldData[0].push(ccData2);
-                } else if (ccType === 1) {
-                    fieldData[1].push(ccData1);
-                    fieldData[1].push(ccData2);
-                }
-            }
-        }
-        return fieldData;
-    }
-
+ 
     function abort() {
         textTrackExtensions.deleteAllTextTracks();
         allTracksAreDisabled = false;
@@ -474,7 +386,6 @@ function TextSourceBuffer() {
     }
     
     function addEmbeddedTrack(mediaInfo) {
-        log("TOBBE added embedded " + mediaInfo.id);
         if (!embeddedInitialized) {
             initEmbedded();
         }
@@ -486,7 +397,6 @@ function TextSourceBuffer() {
     }
     
     function resetEmbedded() {
-        log("TOBBE: resetEmbedded");
         embeddedInitialized = false;
         embeddedTracks = [];
         embeddedCea608FieldParsers = [null, null];
