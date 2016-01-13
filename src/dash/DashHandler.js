@@ -863,7 +863,7 @@ function DashHandler(config) {
 
         requestedTime = time;
 
-        log('Getting the request for time: ' + time);
+        log('Getting the request for ' + type + ' time : ' + time);
         index = getIndexForSegments(time, representation, timeThreshold);
         //Index may be -1 if getSegments needs to update.  So after getSegments is called and updated then try to get index again.
         getSegments(representation);
@@ -871,7 +871,7 @@ function DashHandler(config) {
             index = getIndexForSegments(time, representation, timeThreshold);
         }
 
-        log('Index for time ' + time + ' is ' + index);
+        log('Index for ' + type + ' time ' + time + ' is ' + index);
 
         finished = !ignoreIsFinished ? isMediaFinished(representation) : false;
         if (finished) {

@@ -48,8 +48,8 @@ function Debug() {
 
     function setup() {
         logToBrowserConsole = true;
-        showLogTimestamp = false;
-        //showCalleeName = false,
+        showLogTimestamp = true;
+        //showCalleeName = true;
         startTime = new Date().getTime();
     }
 
@@ -108,11 +108,11 @@ function Debug() {
             message += '[' + (logTime - startTime) + ']';
         }
 
-        //if (showCalleeName && this.getName) {
-        //    message += "[" + this.getName() + "]";
+        //if (showCalleeName && this) {
+            //message += "[" + this + "]";
         //}
 
-        //if (this.getMediaType && this.getMediaType()) {
+    //if (this.getMediaType && this.getMediaType()) {
         //    message += "[" + this.getMediaType() + "]";
         //}
 
