@@ -200,13 +200,13 @@ function ProtectionModel_3Feb2014(config) {
         // If player is trying to playback Audio only stream - don't error out.
         var capabilities = null;
 
-        if (keySystemAccess.ksConfiguration.videoCapabilities != null && keySystemAccess.ksConfiguration.videoCapabilities.length > 0)
+        if (keySystemAccess.ksConfiguration.videoCapabilities !== null && keySystemAccess.ksConfiguration.videoCapabilities.length > 0)
           capabilities = keySystemAccess.ksConfiguration.videoCapabilities[0];
 
-        if (capabilities == null && keySystemAccess.ksConfiguration.audioCapabilities != null && keySystemAccess.ksConfiguration.audioCapabilities.length > 0)
+        if (capabilities === null && keySystemAccess.ksConfiguration.audioCapabilities !== null && keySystemAccess.ksConfiguration.audioCapabilities.length > 0)
           capabilities = keySystemAccess.ksConfiguration.audioCapabilities[0];
 
-        if (capabilities == null)
+        if (capabilities === null)
           throw new Error("Can not create sessions for unknown content types.");
 
         var contentType = capabilities.contentType;
