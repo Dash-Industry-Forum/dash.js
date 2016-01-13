@@ -43,13 +43,11 @@ function Debug() {
     let instance,
         logToBrowserConsole,
         showLogTimestamp,
-        //showCalleeName,
         startTime;
 
     function setup() {
         logToBrowserConsole = true;
         showLogTimestamp = true;
-        //showCalleeName = true;
         startTime = new Date().getTime();
     }
 
@@ -63,16 +61,6 @@ function Debug() {
     function setLogTimestampVisible(value) {
         showLogTimestamp = value;
     }
-    /**
-     * Prepends the callee object name, and media type if available, to each log message.
-     * @param {boolean} value Set to true if you want to see a object name and media type in each log message.
-     * @default false
-     * @memberof module:Debug
-     * @instance
-     */
-    //function showCalleeName(value) {
-    //    showCalleeName = value;
-    //}
     /**
      * Toggles logging to the browser's javascript console.  If you set to false you will still receive a log event with the same message.
      * @param {boolean} value Set to false if you want to turn off logging to the browser's console.
@@ -108,14 +96,6 @@ function Debug() {
             message += '[' + (logTime - startTime) + ']';
         }
 
-        //if (showCalleeName && this) {
-            //message += "[" + this + "]";
-        //}
-
-    //if (this.getMediaType && this.getMediaType()) {
-        //    message += "[" + this.getMediaType() + "]";
-        //}
-
         if (message.length > 0) {
             message += ' ';
         }
@@ -143,4 +123,5 @@ function Debug() {
     return instance;
 }
 
+Debug.__dashjs_factory_name = "Debug";
 export default FactoryMaker.getSingletonFactory(Debug);

@@ -774,8 +774,8 @@ function BufferController(config) {
     return instance;
 }
 
+BufferController.__dashjs_factory_name = "BufferController";
 let factory = FactoryMaker.getClassFactory(BufferController);
-
 factory.DEFAULT_MIN_BUFFER_TIME = DEFAULT_MIN_BUFFER_TIME;
 factory.BUFFER_TIME_AT_TOP_QUALITY = BUFFER_TIME_AT_TOP_QUALITY;
 factory.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM;
@@ -783,5 +783,4 @@ factory.LONG_FORM_CONTENT_DURATION_THRESHOLD = LONG_FORM_CONTENT_DURATION_THRESH
 factory.RICH_BUFFER_THRESHOLD = RICH_BUFFER_THRESHOLD;
 factory.BUFFER_LOADED = BUFFER_LOADED;
 factory.BUFFER_EMPTY = BUFFER_EMPTY;
-
 export default factory;

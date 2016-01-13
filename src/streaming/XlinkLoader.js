@@ -175,5 +175,5 @@ function XlinkLoader(config) {
 
     return instance;
 }
-
+XlinkLoader.__dashjs_factory_name = "XlinkLoader";
 export default FactoryMaker.getClassFactory(XlinkLoader);

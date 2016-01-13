@@ -80,9 +80,8 @@ function SynchronizationRulesCollection() {
     return instance;
 }
 
+SynchronizationRulesCollection.__dashjs_factory_name = "SynchronizationRulesCollection";
 let factory = FactoryMaker.getSingletonFactory(SynchronizationRulesCollection);
-
 factory.TIME_SYNCHRONIZED_RULES = TIME_SYNCHRONIZED_RULES;
 factory.BEST_GUESS_RULES = BEST_GUESS_RULES;
-
 export default factory;

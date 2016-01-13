@@ -429,4 +429,5 @@ function DashParser(/*config*/) {
     return instance;
 }
 
+DashParser.__dashjs_factory_name = "DashParser";
 export default FactoryMaker.getClassFactory(DashParser);

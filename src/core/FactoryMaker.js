@@ -77,7 +77,7 @@ let FactoryMaker = (function () {
 
             return {
                 create: function () {
-                    return merge(classConstructor.name, classConstructor.apply({ context: context }, arguments), context);
+                    return merge(classConstructor.__dashjs_factory_name, classConstructor.apply({ context: context }, arguments), context);
                 }
             };
         };
@@ -85,20 +85,22 @@ let FactoryMaker = (function () {
 
     function getSingletonFactory(classConstructor) {
         return function (context) {
+
             if (context === undefined) {
                 context = {};
             }
 
-            let instance = getSingletonInstance(context, classConstructor.name);
+            let instance = getSingletonInstance(context, classConstructor.__dashjs_factory_name);
 
             return {
                 getInstance: function () {
+
                     if (instance) {
                         return instance;
                     }
 
-                    instance = merge(classConstructor.name, classConstructor.apply({ context: context }, arguments), context);
-                    singletonContexts.push({ name: classConstructor.name, context: context, instance: instance });
+                    instance = merge(classConstructor.__dashjs_factory_name, classConstructor.apply({ context: context }, arguments), context);
+                    singletonContexts.push({ name: classConstructor.__dashjs_factory_name, context: context, instance: instance });
 
                     return instance;
                 }

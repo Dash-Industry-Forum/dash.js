@@ -107,4 +107,5 @@ function PlaybackTimeRule(config) {
     return instance;
 }
 
+PlaybackTimeRule.__dashjs_factory_name = "PlaybackTimeRule";
 export default FactoryMaker.getClassFactory(PlaybackTimeRule);

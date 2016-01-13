@@ -98,4 +98,5 @@ function MediaSourceExtensions() {
     return instance;
 }
 
+MediaSourceExtensions.__dashjs_factory_name = "MediaSourceExtensions";
 export default FactoryMaker.getSingletonFactory(MediaSourceExtensions);

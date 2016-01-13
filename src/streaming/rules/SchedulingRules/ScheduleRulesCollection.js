@@ -86,9 +86,8 @@ function ScheduleRulesCollection() {
     return instance;
 }
 
+ScheduleRulesCollection.__dashjs_factory_name = "ScheduleRulesCollection";
 let factory = FactoryMaker.getSingletonFactory(ScheduleRulesCollection);
-
 factory.FRAGMENTS_TO_SCHEDULE_RULES = FRAGMENTS_TO_SCHEDULE_RULES;
 factory.NEXT_FRAGMENT_RULES = NEXT_FRAGMENT_RULES;
-
 export default factory;

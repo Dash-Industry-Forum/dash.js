@@ -474,12 +474,11 @@ function MediaController() {
     return instance;
 }
 
+MediaController.__dashjs_factory_name = "MediaController";
 let factory = FactoryMaker.getSingletonFactory(MediaController);
-
 factory.TRACK_SWITCH_MODE_NEVER_REPLACE = TRACK_SWITCH_MODE_NEVER_REPLACE;
 factory.TRACK_SWITCH_MODE_ALWAYS_REPLACE = TRACK_SWITCH_MODE_ALWAYS_REPLACE;
 factory.TRACK_SELECTION_MODE_HIGHEST_BITRATE = TRACK_SELECTION_MODE_HIGHEST_BITRATE;
 factory.TRACK_SELECTION_MODE_WIDEST_RANGE = TRACK_SELECTION_MODE_WIDEST_RANGE;
 factory.DEFAULT_INIT_TRACK_SELECTION_MODE = DEFAULT_INIT_TRACK_SELECTION_MODE;
-
 export default factory;

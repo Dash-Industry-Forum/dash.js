@@ -509,4 +509,5 @@ function TextTrackExtensions() {
     return instance;
 }
 
+TextTrackExtensions.__dashjs_factory_name = "TextTrackExtensions";
 export default FactoryMaker.getSingletonFactory(TextTrackExtensions);

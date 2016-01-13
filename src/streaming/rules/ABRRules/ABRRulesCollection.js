@@ -82,9 +82,8 @@ function ABRRulesCollection() {
     return instance;
 }
 
+ABRRulesCollection.__dashjs_factory_name = "ABRRulesCollection";
 let factory =  FactoryMaker.getSingletonFactory(ABRRulesCollection);
-
 factory.QUALITY_SWITCH_RULES = QUALITY_SWITCH_RULES;
 factory.ABANDON_FRAGMENT_RULES = ABANDON_FRAGMENT_RULES;
-
 export default factory;

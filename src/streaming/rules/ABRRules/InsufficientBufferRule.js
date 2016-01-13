@@ -113,4 +113,5 @@ function InsufficientBufferRule(config) {
     return instance;
 }
 
+InsufficientBufferRule.__dashjs_factory_name = "InsufficientBufferRule";
 export default FactoryMaker.getClassFactory(InsufficientBufferRule);
