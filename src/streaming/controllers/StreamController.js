@@ -140,7 +140,7 @@ function StreamController() {
         if (activeStream.getStreamInfo().index === 0) {
             activeStream.startEventController();
             if (autoPlay) {
-                playbackController.start();
+                playbackController.play();
             }
         }
     }
@@ -282,7 +282,7 @@ function StreamController() {
                 playbackController.seek(seekTo);
             }
 
-            playbackController.start();
+            playbackController.play();
             activeStream.startEventController();
             isStreamSwitchingInProgress = false;
             fireSwitchEvent(Events.PERIOD_SWITCH_COMPLETED, from, to);
@@ -368,9 +368,12 @@ function StreamController() {
                 throw new Error('There are no streams');
             }
 
-            metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: videoModel.getCurrentTime(),
-                buffered: videoModel.getElement().buffered, presentationStartTime: streamsInfo[0].start,
-                clientTimeOffset: timelineConverter.getClientTimeOffset()});
+            metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {
+                currentTime: playbackController.getTime(),
+                buffered: videoModel.getElement().buffered,
+                presentationStartTime: streamsInfo[0].start,
+                clientTimeOffset: timelineConverter.getClientTimeOffset()
+            });
 
             isUpdating = true;
 
@@ -618,18 +621,16 @@ function StreamController() {
 
         videoModel = null;
 
-        if (!protectionController) {
-            eventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
-        }
-        else {
+        if (protectionController) {
             protectionController.setMediaElement(null);
             protectionController = null;
             protectionData = null;
             if (manifestModel.getValue()) {
                 eventBus.trigger(Events.PROTECTION_DESTROYED, {data: manifestModel.getValue().url});
             }
-            eventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
         }
+
+        eventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
     }
 
     instance = {
@@ -650,4 +651,5 @@ function StreamController() {
 }
 
 StreamController.__dashjs_factory_name = 'StreamController';
+
 export default FactoryMaker.getSingletonFactory(StreamController);

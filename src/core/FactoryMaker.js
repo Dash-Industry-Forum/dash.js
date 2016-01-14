@@ -86,11 +86,11 @@ let FactoryMaker = (function () {
             }
             return {
                 getInstance: function () {
-                    if (instance) {
-                        return instance;
-                    } else {
+                    // If we don't have an instance yet check for one on the context
+                    if (!instance) {
                         instance = getSingletonInstance(context, classConstructor.__dashjs_factory_name);
                     }
+                    // If there's no instance on the context then create one
                     if (!instance) {
                         instance = merge(classConstructor.__dashjs_factory_name, classConstructor.apply({ context: context }, arguments), context);
                         singletonContexts.push({ name: classConstructor.__dashjs_factory_name, context: context, instance: instance });

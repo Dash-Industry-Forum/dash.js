@@ -43,32 +43,12 @@ function VideoModel() {
         stalledStreams = [];
     }
 
-    function play() {
-        element.play();
-    }
-
-    function pause() {
-        element.pause();
-    }
-
-    function isPaused() {
-        return element.paused;
-    }
-
-    function getPlaybackRate() {
-        return element.playbackRate;
-    }
-
     function setPlaybackRate(value) {
         if (!element || element.readyState < 2) return;
-
         element.playbackRate = value;
     }
 
-    function getCurrentTime() {
-        return element.currentTime;
-    }
-
+    //TODO Move the DVR window calculations from MediaPlayer to Here.
     function setCurrentTime(currentTime) {
         //_currentTime = currentTime;
 
@@ -92,24 +72,20 @@ function VideoModel() {
         }
     }
 
-    function setStallState(type, state) {
-        stallStream.call(this, type, state);
-    }
-
-    function listen(type, callback) {
-        element.addEventListener(type, callback, false);
-    }
-
-    function unlisten(type, callback) {
-        element.removeEventListener(type, callback, false);
-    }
-
     function getElement() {
         return element;
     }
 
     function setElement(value) {
         element = value;
+    }
+
+    function setSource(source) {
+        element.src = source;
+    }
+
+    function getSource(source) {
+        return element.src;
     }
 
     function getVideoContainer() {
@@ -135,8 +111,8 @@ function VideoModel() {
         TTMLRenderingDiv.style.left = 0;
     }
 
-    function setSource(source) {
-        element.src = source;
+    function setStallState(type, state) {
+        stallStream(type, state);
     }
 
     function isStalled() {
@@ -149,7 +125,7 @@ function VideoModel() {
         }
 
         // Halt playback until nothing is stalled.
-        this.setPlaybackRate(0);
+        setPlaybackRate(0);
 
         if (stalledStreams[type] === true) {
             return;
@@ -172,37 +148,32 @@ function VideoModel() {
 
         // If nothing is stalled resume playback.
         if (isStalled() === false) {
-            this.setPlaybackRate(1);
+            setPlaybackRate(1);
         }
     }
 
     function stallStream(type, isStalled) {
         if (isStalled) {
-            addStalledStream.call(this, type);
+            addStalledStream(type);
         } else {
-            removeStalledStream.call(this, type);
+            removeStalledStream(type);
         }
     }
 
+
+
     instance = {
         initialize: initialize,
-        play: play,
-        pause: pause,
-        isPaused: isPaused,
-        getPlaybackRate: getPlaybackRate,
-        setPlaybackRate: setPlaybackRate,
-        getCurrentTime: getCurrentTime,
         setCurrentTime: setCurrentTime,
         setStallState: setStallState,
-        listen: listen,
-        unlisten: unlisten,
         getElement: getElement,
         setElement: setElement,
+        setSource: setSource,
+        getSource: getSource,
         getVideoContainer: getVideoContainer,
         setVideoContainer: setVideoContainer,
         getTTMLRenderingDiv: getTTMLRenderingDiv,
         setTTMLRenderingDiv: setTTMLRenderingDiv,
-        setSource: setSource
     };
 
     return instance;
