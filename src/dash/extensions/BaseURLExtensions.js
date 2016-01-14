@@ -303,4 +303,5 @@ function BaseURLExtensions() {
     return instance;
 }
 
+BaseURLExtensions.__dashjs_factory_name = "BaseURLExtensions";
 export default FactoryMaker.getSingletonFactory(BaseURLExtensions);

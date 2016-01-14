@@ -147,4 +147,5 @@ function ThroughputRule(config) {
     return instance;
 }
 
+ThroughputRule.__dashjs_factory_name = "ThroughputRule";
 export default FactoryMaker.getClassFactory(ThroughputRule);

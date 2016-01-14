@@ -208,4 +208,5 @@ function VideoModel() {
     return instance;
 }
 
+VideoModel.__dashjs_factory_name = "VideoModel";
 export default FactoryMaker.getSingletonFactory(VideoModel);

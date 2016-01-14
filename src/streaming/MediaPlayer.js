@@ -1469,6 +1469,7 @@ function MediaPlayer() {
     return instance;
 }
 
+MediaPlayer.__dashjs_factory_name = "MediaPlayer";
 let factory = FactoryMaker.getClassFactory(MediaPlayer);
 factory.MediaPlayerFactory = MediaPlayerFactory().getInstance();
 factory.events = MediaPlayerEvents;

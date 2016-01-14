@@ -260,5 +260,5 @@ function FragmentLoader(config) {
 
     return instance;
 }
-
+FragmentLoader.__dashjs_factory_name = "FragmentLoader";
 export default FactoryMaker.getClassFactory(FragmentLoader);

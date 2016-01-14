@@ -378,4 +378,5 @@ function DashAdapter() {
     return instance;
 }
 
+DashAdapter.__dashjs_factory_name = "DashAdapter";
 export default FactoryMaker.getSingletonFactory(DashAdapter);

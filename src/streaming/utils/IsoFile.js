@@ -236,5 +236,5 @@ function IsoFile() {
 
     return instance;
 }
-
+IsoFile.__dashjs_factory_name = "IsoFile";
 export default FactoryMaker.getClassFactory(IsoFile);

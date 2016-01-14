@@ -99,4 +99,5 @@ function FragmentExtensions(/*config*/) {
     return instance;
 }
 
+FragmentExtensions.__dashjs_factory_name = "FragmentExtensions";
 export default FactoryMaker.getSingletonFactory(FragmentExtensions);
