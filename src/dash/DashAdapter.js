@@ -131,13 +131,13 @@ function DashAdapter() {
         mediaInfo.accessibility = manifestExt.getAccessibilityForAdaptation(a).map(function (accessibility) {
             let accessibilityValue = accessibility.value;
             let accessiblityData = accessibilityValue;
-            if (accessibility.schemeIdUri && (accessibility.schemeIdUri.search("cea-608") >= 0)) {
+            if (accessibility.schemeIdUri && (accessibility.schemeIdUri.search('cea-608') >= 0) && typeof (cea608parser) !== 'undefined') {
                 if (accessibilityValue) {
-                    accessiblityData = "cea-608:" + accessibilityValue;
-               } else {
-                    accessiblityData = "cea-608";
-               }
-               mediaInfo.embeddedCaptions = true;
+                    accessiblityData = 'cea-608:' + accessibilityValue;
+                } else {
+                    accessiblityData = 'cea-608';
+                }
+                mediaInfo.embeddedCaptions = true;
             }
             return accessiblityData;
         });
@@ -162,15 +162,15 @@ function DashAdapter() {
 
         return mediaInfo;
     }
-    
+
     function convertVideoInfoToEmbeddedTextInfo(mediaInfo, channel, lang) {
         mediaInfo.id = channel; // CC1, CC2, CC3, or CC4
         mediaInfo.index = 100 + parseInt(channel.substring(2, 3));
-        mediaInfo.type = "embeddedText";
-        mediaInfo.codec = "cea-608-in-SEI";
+        mediaInfo.type = 'embeddedText';
+        mediaInfo.codec = 'cea-608-in-SEI';
         mediaInfo.isText = true;
         mediaInfo.isEmbedded = true;
-        mediaInfo.lang = channel + " " + lang;
+        mediaInfo.lang = channel + ' ' + lang;
         mediaInfo.roles = ['caption'];
     }
 
@@ -220,7 +220,7 @@ function DashAdapter() {
     function getAllMediaInfoForType(manifest, streamInfo, type) {
         var periodInfo = getPeriodForStreamInfo(streamInfo);
         var periodId = periodInfo.id;
-        var adaptationsForType = manifestExt.getAdaptationsForType(manifest, streamInfo.index, type !== "embeddedText" ? type : "video");
+        var adaptationsForType = manifestExt.getAdaptationsForType(manifest, streamInfo.index, type !== 'embeddedText' ? type : 'video');
 
         var mediaArr = [];
 
@@ -240,17 +240,17 @@ function DashAdapter() {
             idx = manifestExt.getIndexForAdaptation(data, manifest, streamInfo.index);
             media = convertAdaptationToMediaInfo(manifest, adaptations[periodId][idx]);
 
-            if (type === "embeddedText") {
+            if (type === 'embeddedText') {
                 var accessibilityLength = media.accessibility.length;
                 for (j = 0; j < accessibilityLength; j++) {
                     if (!media) {
                         continue;
                     }
                     var accessibility = media.accessibility[j];
-                    if (accessibility.indexOf("cea-608:") === 0) {
+                    if (accessibility.indexOf('cea-608:') === 0) {
                         var value = accessibility.substring(8);
-                        var parts = value.split(";");
-                        if (parts[0].substring(0, 2) === "CC") {
+                        var parts = value.split(';');
+                        if (parts[0].substring(0, 2) === 'CC') {
                             for (j = 0; j < parts.length; j++) {
                                 if (!media) {
                                     media = convertAdaptationToMediaInfo.call(this, manifest, adaptations[periodId][idx]);
@@ -264,19 +264,19 @@ function DashAdapter() {
                                 if (!media) {
                                     media = convertAdaptationToMediaInfo.call(this, manifest, adaptations[periodId][idx]);
                                 }
-                                convertVideoInfoToEmbeddedTextInfo(media, "CC" + (j + 1), parts[j]);
+                                convertVideoInfoToEmbeddedTextInfo(media, 'CC' + (j + 1), parts[j]);
                                 mediaArr.push(media);
                                 media = null;
                             }
                         }
-                    } else if (accessibility.indexOf("cea-608") === 0) { // Nothing known. We interpret it as CC1=eng                        
-                        convertVideoInfoToEmbeddedTextInfo(media, "CC1", "eng");
+                    } else if (accessibility.indexOf('cea-608') === 0) { // Nothing known. We interpret it as CC1=eng
+                        convertVideoInfoToEmbeddedTextInfo(media, 'CC1', 'eng');
                         mediaArr.push(media);
                         media = null;
                     }
                 }
             }
-            if (media && type !== "embeddedText") {
+            if (media && type !== 'embeddedText') {
                 mediaArr.push(media);
             }
         }

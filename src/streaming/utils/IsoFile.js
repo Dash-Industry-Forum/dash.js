@@ -141,7 +141,7 @@ function IsoFile() {
         mdhdProps = {
             timescale: 'timescale'
         };
-        
+
         mfhdProps = {
             sequence_number: 'sequence_number'
         };

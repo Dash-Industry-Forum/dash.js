@@ -110,9 +110,9 @@ function TextTrackExtensions() {
     }
 
     function addTextTrack(textTrackInfoVO, totalTextTracks) {
-        
+
         if (textTrackQueue.length === totalTextTracks) {
-            log("Trying to add too many tracks.");
+            log('Trying to add too many tracks.');
             return;
         }
 
@@ -153,7 +153,7 @@ function TextTrackExtensions() {
             }
             setCurrentTrackIdx.call(this, defaultIndex);
             if (defaultIndex >= 0) {
-                video.textTracks[defaultIndex].mode = "showing";
+                video.textTracks[defaultIndex].mode = 'showing';
                 this.addCaptions(defaultIndex, 0, null);
             }
             eventBus.trigger(Events.TEXT_TRACKS_ADDED, {index: currentTrackIdx, tracks: textTrackQueue});//send default idx.
@@ -200,15 +200,15 @@ function TextTrackExtensions() {
         }
 
         if (use80Percent) {
-            return { x:videoPictureXAspect + (videoPictureWidthAspect * 0.1),
-                     y:videoPictureYAspect + (videoPictureHeightAspect * 0.1),
-                     w:videoPictureWidthAspect * 0.8,
-                     h:videoPictureHeightAspect* 0.8 }; /* Maximal picture size in videos aspect ratio */
+            return { x: videoPictureXAspect + (videoPictureWidthAspect * 0.1),
+                     y: videoPictureYAspect + (videoPictureHeightAspect * 0.1),
+                     w: videoPictureWidthAspect * 0.8,
+                     h: videoPictureHeightAspect * 0.8 }; /* Maximal picture size in videos aspect ratio */
         } else {
-            return { x:videoPictureXAspect,
-                     y:videoPictureYAspect,
-                     w:videoPictureWidthAspect,
-                     h:videoPictureHeightAspect }; /* Maximal picture size in videos aspect ratio */
+            return { x: videoPictureXAspect,
+                     y: videoPictureYAspect,
+                     w: videoPictureWidthAspect,
+                     h: videoPictureHeightAspect }; /* Maximal picture size in videos aspect ratio */
         }
     }
 
@@ -329,13 +329,13 @@ function TextTrackExtensions() {
         var self = this;
 
         if (!track) return;
-        if (track.mode !== "showing") {
+        if (track.mode !== 'showing') {
             if (captionData && captionData.length > 0) {
                 track.nonAddedCues = track.nonAddedCues.concat(captionData);
             }
             return;
         }
-        
+
         if (!captionData) {
             captionData = track.nonAddedCues;
             track.nonAddedCues = [];
@@ -455,7 +455,7 @@ function TextTrackExtensions() {
     function getCurrentTrackIdx() {
         return currentTrackIdx;
     }
-    
+
     function getTrackIdxForId(trackId) {
         var idx = -1;
         for (var i = 0; i < video.textTracks.length; i++) {

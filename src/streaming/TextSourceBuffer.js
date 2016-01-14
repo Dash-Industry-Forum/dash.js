@@ -39,7 +39,7 @@ import TextTrackExtensions from './extensions/TextTrackExtensions.js';
 
 function TextSourceBuffer() {
 
-    let context = this.context;    
+    let context = this.context;
     let log = Debug(context).getInstance().log;
     let embeddedInitialized = false;
     let captionId = 0;
@@ -82,7 +82,7 @@ function TextSourceBuffer() {
         timescale = NaN;
         fragmentedTracks = [];
         firstSubtitleStart = null;
-        
+
         if (!embeddedInitialized) {
             initEmbedded();
         }
@@ -99,17 +99,17 @@ function TextSourceBuffer() {
         if (isFragmented) {
             fragmentModel = streamProcessor.getFragmentModel();
             this.buffered =  CustomTimeRanges(context).create();
-            fragmentedTracks = mediaController.getTracksFor("fragmentedText", streamController.getActiveStreamInfo());
-            var currFragTrack = mediaController.getCurrentTrackFor("fragmentedText", streamController.getActiveStreamInfo());
+            fragmentedTracks = mediaController.getTracksFor('fragmentedText', streamController.getActiveStreamInfo());
+            var currFragTrack = mediaController.getCurrentTrackFor('fragmentedText', streamController.getActiveStreamInfo());
             for (var i = 0 ; i < fragmentedTracks.length; i++) {
-               if (fragmentedTracks[i] === currFragTrack) {
-                   currFragmentedTrackIdx = i;
-                   break;
-               }
+                if (fragmentedTracks[i] === currFragTrack) {
+                    currFragmentedTrackIdx = i;
+                    break;
+                }
             }
         }
     }
-    
+
     function initEmbedded() {
         embeddedTracks = [];
         mediaInfos = [];
@@ -159,7 +159,7 @@ function TextSourceBuffer() {
                 }
                 return ttml;
             };
-            
+
             textTrackInfo.captionData = captionData;
             textTrackInfo.lang = mediaInfo.lang;
             textTrackInfo.label = mediaInfo.id; // AdaptationSet id (an unsigned int)
@@ -210,7 +210,7 @@ function TextSourceBuffer() {
                 errHandler.timedTextError(e, 'parse', ccContent);
             }
         } else if (mediaType === 'video') { //embedded text
-            if (chunk.segmentType === "Initialization Segment") {
+            if (chunk.segmentType === 'Initialization Segment') {
                 if (embeddedTimescale === 0) {
                     embeddedTimescale = fragmentExt.getMediaTimescaleFromMoov(bytes);
                     for (i = 0; i < embeddedTracks.length; i++) {
@@ -219,7 +219,7 @@ function TextSourceBuffer() {
                 }
             } else { // MediaSegment
                 if (embeddedTimescale === 0) {
-                    log("CEA-608: No timescale for embeddedTextTrack yet");
+                    log('CEA-608: No timescale for embeddedTextTrack yet');
                     return;
                 }
                 var makeCueAdderForIndex = function (self, trackIndex) {
@@ -227,19 +227,19 @@ function TextSourceBuffer() {
                         var captionsArray = null;
                         if (videoModel.getTTMLRenderingDiv()) {
                             captionsArray = createHTMLCaptionsFromScreen(videoModel.getElement(), startTime, endTime, captionScreen);
-                        } else { 
+                        } else {
                             var text = captionScreen.getDisplayText();
                             //console.log("CEA text: " + startTime + "-" + endTime + "  '" + text + "'");
                             captionsArray = [{ start: startTime, end: endTime, data: text, styles: {} }];
-                        } 
+                        }
                         if (captionsArray) {
                             textTrackExtensions.addCaptions(trackIndex, 0, captionsArray);
                         }
                     }
                     return newCue;
                 };
-                
-            
+
+
                 samplesInfo = fragmentExt.getSamplesInfo(bytes);
                 var sequenceNumber = samplesInfo.sequenceNumber;
 
@@ -247,15 +247,15 @@ function TextSourceBuffer() {
                     // Time to setup the CEA-608 parsing
                     let field, handler, trackIdx;
                     for (i = 0; i < embeddedTracks.length; i++) {
-                        if (embeddedTracks[i].id === "CC1") {
+                        if (embeddedTracks[i].id === 'CC1') {
                             field = 0;
-                            trackIdx = textTrackExtensions.getTrackIdxForId("CC1");
-                        } else if (embeddedTracks[i].id === "CC3") {
+                            trackIdx = textTrackExtensions.getTrackIdxForId('CC1');
+                        } else if (embeddedTracks[i].id === 'CC3') {
                             field = 1;
-                            trackIdx = textTrackExtensions.getTrackIdxForId("CC3");
+                            trackIdx = textTrackExtensions.getTrackIdxForId('CC3');
                         }
                         if (trackIdx === -1) {
-                            console.log("CEA-608: data before track is ready.");
+                            console.log('CEA-608: data before track is ready.');
                             return;
                         }
                         handler = makeCueAdderForIndex(this, trackIdx);
@@ -293,7 +293,7 @@ function TextSourceBuffer() {
                 }
             }
         }
-        log("Warning: Non-supported text type: " + mediaType);
+        log('Warning: Non-supported text type: ' + mediaType);
     }
     /**
      * Extract CEA-608 data from a buffer of data.
@@ -301,7 +301,7 @@ function TextSourceBuffer() {
      * @returns ccData corresponding to one segment.
     */
     function extractCea608Data(data) {
-        
+
         /** Insert [time, data] pairs in order into array. */
         var insertInOrder = function (arr, time, data) {
             var len = arr.length;
@@ -336,7 +336,7 @@ function TextSourceBuffer() {
         }
         trun = truns[0];
         if (truns.length > 1) {
-            console.log("Warning: Too many truns");
+            console.log('Warning: Too many truns');
         }
         var baseOffset = moof.offset + trun.data_offset;
         //Doublecheck that trun.offset == moof.size + 8
@@ -372,37 +372,37 @@ function TextSourceBuffer() {
     function checkIndent(chars) {
         var line = '';
 
-        for (var c=0; c < chars.length; ++c) {
+        for (var c = 0; c < chars.length; ++c) {
             var uc = chars[c];
             line += uc.uchar;
         }
 
         var l = line.length;
-        var ll = line.replace(/^\s+/,"").length;
-        return l-ll;
+        var ll = line.replace(/^\s+/,'').length;
+        return l - ll;
     }
 
     function getRegionProperties(region) {
-        return "left: " + (region.x * 3.125) + "%; top: " + (region.y1 * 6.66) + "%; width: " + (100 - (region.x * 3.125)) + "%; height: " + (Math.max((region.y2 - 1) - region.y1, 1) * 6.66) + "%; align-items: flex-start; overflow: visible; -webkit-writing-mode: horizontal-tb;";
+        return 'left: ' + (region.x * 3.125) + '%; top: ' + (region.y1 * 6.66) + '%; width: ' + (100 - (region.x * 3.125)) + '%; height: ' + (Math.max((region.y2 - 1) - region.y1, 1) * 6.66) + '%; align-items: flex-start; overflow: visible; -webkit-writing-mode: horizontal-tb;';
     }
 
     function createRGB(color) {
-        if (color == "red") {
-            return "rgb(255, 0, 0)";
-        } else if (color == "green") {
-            return "rgb(0, 255, 0)";
-        } else if (color == "blue") {
-            return "rgb(0, 0, 255)";
-        } else if (color == "cyan") {
-            return "rgb(0, 255, 255)";
-        } else if (color == "magenta") {
-            return "rgb(255, 0, 255)";
-        } else if (color == "yellow") {
-            return "rgb(255, 255, 0)";
-        } else if (color == "white") {
-            return "rgb(255, 255, 255)";
-        } else if (color == "black") {
-            return "rgb(0, 0, 0)";
+        if (color == 'red') {
+            return 'rgb(255, 0, 0)';
+        } else if (color == 'green') {
+            return 'rgb(0, 255, 0)';
+        } else if (color == 'blue') {
+            return 'rgb(0, 0, 255)';
+        } else if (color == 'cyan') {
+            return 'rgb(0, 255, 255)';
+        } else if (color == 'magenta') {
+            return 'rgb(255, 0, 255)';
+        } else if (color == 'yellow') {
+            return 'rgb(255, 255, 0)';
+        } else if (color == 'white') {
+            return 'rgb(255, 255, 255)';
+        } else if (color == 'black') {
+            return 'rgb(0, 0, 0)';
         }
         return color;
     }
@@ -410,12 +410,12 @@ function TextSourceBuffer() {
     function getStyle(videoElement, style) {
         var fontSize = videoElement.videoHeight / 15.0;
         if (style) {
-            return "font-size: " + fontSize + "px; font-family: Menlo, Consolas, 'Cutive Mono', monospace; color: " + ((style.foreground) ? createRGB(style.foreground) : "rgb(255, 255, 255)") + "; font-style: " + (style.italics ? "italic" : "normal") + "; text-decoration: " + (style.underline ? "underline" : "none") + "; white-space: pre; background-color: " + ((style.background) ? createRGB(style.background) : "trasparent") + ";";
+            return 'font-size: ' + fontSize + 'px; font-family: Menlo, Consolas, \'Cutive Mono\', monospace; color: ' + ((style.foreground) ? createRGB(style.foreground) : 'rgb(255, 255, 255)') + '; font-style: ' + (style.italics ? 'italic' : 'normal') + '; text-decoration: ' + (style.underline ? 'underline' : 'none') + '; white-space: pre; background-color: ' + ((style.background) ? createRGB(style.background) : 'trasparent') + ';';
         } else {
-            return "font-size: " + fontSize + "px; font-family: Menlo, Consolas, 'Cutive Mono', monospace; justify-content: flex-start; text-align: left; color: rgb(255, 255, 255); font-style: normal; white-space: pre; line-height: normal; font-weight: normal; text-decoration: none; width: 100%; display: flex;";
+            return 'font-size: ' + fontSize + 'px; font-family: Menlo, Consolas, \'Cutive Mono\', monospace; justify-content: flex-start; text-align: left; color: rgb(255, 255, 255); font-style: normal; white-space: pre; line-height: normal; font-weight: normal; text-decoration: none; width: 100%; display: flex;';
         }
     }
-    
+
     function ltrim(s) {
         var trimmed = s.replace(/^\s+/g, '');
         return trimmed;
@@ -432,8 +432,8 @@ function TextSourceBuffer() {
         let existingRegion = null;
         let lastRowHasText = false;
         let lastRowIndentL = -1;
-        let currP = { start:startTime, end:endTime, spans:[] };
-        let currentStyle = "style_cea608_white_black";
+        let currP = { start: startTime, end: endTime, spans: [] };
+        let currentStyle = 'style_cea608_white_black';
         let seenRegions = { };
         let styleStates = { };
         let regions = [];
@@ -452,15 +452,15 @@ function TextSourceBuffer() {
 
                 /* Create a new region is there is none */
                 if (currRegion === null) {
-                    currRegion = { x:rowIndent, y1:r, y2:(r+1), p:[] };
+                    currRegion = { x: rowIndent, y1: r, y2: (r + 1), p: [] };
                 }
 
                 /* Check if indentation has changed and we had text of last row */
                 if ((rowIndent !== lastRowIndentL) && lastRowHasText) {
                     currRegion.p.push(currP);
-                    currP = { start:startTime, end:endTime, spans:[] };
+                    currP = { start: startTime, end: endTime, spans: [] };
                     currRegion.y2 = r;
-                    currRegion.name = 'region_' + currRegion.x + "_" + currRegion.y1 + "_" + currRegion.y2;
+                    currRegion.name = 'region_' + currRegion.x + '_' + currRegion.y1 + '_' + currRegion.y2;
                     if (false === seenRegions.hasOwnProperty(currRegion.name)) {
                         regions.push(currRegion);
                         seenRegions[currRegion.name] = currRegion;
@@ -469,7 +469,7 @@ function TextSourceBuffer() {
                         existingRegion.p.contat(currRegion.p);
                     }
 
-                    currRegion = { x:rowIndent, y1:r, y2:(r+1), p:[] };
+                    currRegion = { x: rowIndent, y1: r, y2: (r + 1), p: [] };
                 }
 
                 for (let c = 0; c < row.chars.length; ++c) {
@@ -477,16 +477,16 @@ function TextSourceBuffer() {
                     let currPenState = uc.penState;
                     if ((prevPenState === null) || (!currPenState.equals(prevPenState))) {
                         if (line.trim().length > 0) {
-                            currP.spans.push({ name:currentStyle, line:line, row:r });
+                            currP.spans.push({ name: currentStyle, line: line, row: r });
                             line = '';
                         }
 
-                        let currPenStateString = "style_cea608_" + currPenState.foreground + "_" + currPenState.background;
+                        let currPenStateString = 'style_cea608_' + currPenState.foreground + '_' + currPenState.background;
                         if (currPenState.underline) {
-                            currPenStateString += "_underline";
+                            currPenStateString += '_underline';
                         }
                         if (currPenState.italics) {
-                            currPenStateString += "_italics";
+                            currPenStateString += '_italics';
                         }
 
                         if (!styleStates.hasOwnProperty(currPenStateString)) {
@@ -502,7 +502,7 @@ function TextSourceBuffer() {
                 }
 
                 if (line.trim().length > 0) {
-                    currP.spans.push({ name:currentStyle, line:line, row:r });
+                    currP.spans.push({ name: currentStyle, line: line, row: r });
                 }
 
                 lastRowHasText = true;
@@ -514,9 +514,9 @@ function TextSourceBuffer() {
 
                 if (currRegion) {
                     currRegion.p.push(currP);
-                    currP = { start:startTime, end:endTime, spans:[] };
+                    currP = { start: startTime, end: endTime, spans: [] };
                     currRegion.y2 = r;
-                    currRegion.name = 'region_' + currRegion.x + "_" + currRegion.y1 + "_" + currRegion.y2;
+                    currRegion.name = 'region_' + currRegion.x + '_' + currRegion.y1 + '_' + currRegion.y2;
                     if (false === seenRegions.hasOwnProperty(currRegion.name)) {
                         regions.push(currRegion);
                         seenRegions[currRegion.name] = currRegion;
@@ -534,7 +534,7 @@ function TextSourceBuffer() {
         if (currRegion) {
             currRegion.p.push(currP);
             currRegion.y2 = r + 1;
-            currRegion.name = 'region_' + currRegion.x + "_" + currRegion.y1 + "_" + currRegion.y2;
+            currRegion.name = 'region_' + currRegion.x + '_' + currRegion.y1 + '_' + currRegion.y2;
             if (false === seenRegions.hasOwnProperty(currRegion.name)) {
                 regions.push(currRegion);
                 seenRegions[currRegion.name] = currRegion;
@@ -550,24 +550,24 @@ function TextSourceBuffer() {
         //console.log(regions);
 
         let captionsArray = [];
-    
+
         /* Loop thru regions */
         for (r = 0; r < regions.length; ++r) {
             let region = regions[r];
 
-            let cueID = "sub_" + (captionId++);
+            let cueID = 'sub_' + (captionId++);
             let finalDiv = document.createElement('div');
-            finalDiv.id = "subtitle_" + cueID;
+            finalDiv.id = 'subtitle_' + cueID;
             let cueRegionProperties = getRegionProperties(region);
-            finalDiv.style.cssText = "position: absolute; margin: 0; display: flex; box-sizing: border-box; pointer-events: none;" + cueRegionProperties;
+            finalDiv.style.cssText = 'position: absolute; margin: 0; display: flex; box-sizing: border-box; pointer-events: none;' + cueRegionProperties;
 
             let bodyDiv = document.createElement('div');
-            bodyDiv.className = "paragraph bodyStyle";
+            bodyDiv.className = 'paragraph bodyStyle';
             bodyDiv.style.cssText = getStyle(videoElement);
 
             let cueUniWrapper = document.createElement('div');
-            cueUniWrapper.className = "cueUniWrapper";
-            cueUniWrapper.style.cssText = "unicode-bidi: normal; direction: ltr;";
+            cueUniWrapper.className = 'cueUniWrapper';
+            cueUniWrapper.style.cssText = 'unicode-bidi: normal; direction: ltr;';
 
             for (let p = 0; p < region.p.length; ++p) {
                 let ptag = region.p[p];
@@ -577,7 +577,7 @@ function TextSourceBuffer() {
                     if (span.line.length > 0) {
                         if ((s !== 0) && lastSpanRow != span.row) {
                             let brElement = document.createElement('br');
-                            brElement.className = "lineBreak";
+                            brElement.className = 'lineBreak';
                             cueUniWrapper.appendChild(brElement);
                         }
                         let sameRow = false;
@@ -587,7 +587,7 @@ function TextSourceBuffer() {
                         lastSpanRow = span.row;
                         let spanStyle = styleStates[span.name];
                         let spanElement = document.createElement('span');
-                        spanElement.className = "spanPadding " + span.name + " customSpanColor";
+                        spanElement.className = 'spanPadding ' + span.name + ' customSpanColor';
                         spanElement.style.cssText = getStyle(videoElement, spanStyle);
                         if ((s !== 0) && sameRow) {
                             if (s === ptag.spans.length - 1) {
@@ -622,34 +622,34 @@ function TextSourceBuffer() {
 
             finalDiv.appendChild(bodyDiv);
 
-            let fontSize = { 'bodyStyle':90 };
+            let fontSize = { 'bodyStyle': 90 };
             for (s in styleStates) {
                 if (styleStates.hasOwnProperty(s)) {
                     fontSize[s] = 90;
                 }
             }
 
-            captionsArray.push({ type:'html',
-                                 start:startTime,
-                                 end:endTime,
-                                 cueHTMLElement:finalDiv,
-                                 cueID:cueID,
-                                 cellResolution:[32, 15],
+            captionsArray.push({ type: 'html',
+                                 start: startTime,
+                                 end: endTime,
+                                 cueHTMLElement: finalDiv,
+                                 cueID: cueID,
+                                 cellResolution: [32, 15],
                                  isFromCEA608: true,
                                  regions: regions,
                                  regionID: region.name,
-                                 videoHeight   : videoElement.videoHeight,
-                                 videoWidth    : videoElement.videoWidth,
-                                 fontSize      : fontSize || {
+                                 videoHeight: videoElement.videoHeight,
+                                 videoWidth: videoElement.videoWidth,
+                                 fontSize: fontSize || {
                                      defaultFontSize: '100'
                                  },
-                                 lineHeight    : {},
-                                 linePadding   : {},
+                                 lineHeight: {},
+                                 linePadding: {},
                                });
         }
         return captionsArray;
     }
- 
+
     function abort() {
         textTrackExtensions.deleteAllTextTracks();
         allTracksAreDisabled = false;
@@ -667,18 +667,18 @@ function TextSourceBuffer() {
         embeddedInitialized = false;
         embeddedTracks = null;
     }
-    
+
     function addEmbeddedTrack(mediaInfo) {
         if (!embeddedInitialized) {
             initEmbedded();
         }
-        if (mediaInfo.id === "CC1" || mediaInfo.id === "CC3") {
+        if (mediaInfo.id === 'CC1' || mediaInfo.id === 'CC3') {
             embeddedTracks.push(mediaInfo);
         } else {
-            log("Warning: Embedded track " + mediaInfo.id + " not supported!");
+            log('Warning: Embedded track ' + mediaInfo.id + ' not supported!');
         }
     }
-    
+
     function resetEmbedded() {
         embeddedInitialized = false;
         embeddedTracks = [];
@@ -739,7 +739,7 @@ function TextSourceBuffer() {
                     textTrackExtensions.setCurrentTrackIdx(i);
                     textTrackExtensions.addCaptions(i, 0, null); // Make sure that previously queued captions are added as cues
                     if (isFragmented && i < nrNonEmbeddedTracks) {
-                        var currentFragTrack = mediaController.getCurrentTrackFor("fragmentedText", streamController.getActiveStreamInfo());
+                        var currentFragTrack = mediaController.getCurrentTrackFor('fragmentedText', streamController.getActiveStreamInfo());
                         var newFragTrack = fragmentedTracks[i];
                         if (newFragTrack !== currentFragTrack) {
                             fragmentModel.abortRequests();
@@ -764,9 +764,9 @@ function TextSourceBuffer() {
         // Eg subtitles etc. You can have multiple role tags per adaptation Not defined in the spec yet.
         var isDefault = false;
         if (embeddedTracks.length > 1) {
-            isDefault = (mediaInfo.id && mediaInfo.id === "CC1"); // CC1 if both CC1 and CC3 exist
+            isDefault = (mediaInfo.id && mediaInfo.id === 'CC1'); // CC1 if both CC1 and CC3 exist
         } else if (embeddedTracks.length === 1) {
-            if (mediaInfo.id && mediaInfo.id.substring(0, 2) === "CC") {// Either CC1 or CC3
+            if (mediaInfo.id && mediaInfo.id.substring(0, 2) === 'CC') {// Either CC1 or CC3
                 isDefault = true;
             }
         } else {

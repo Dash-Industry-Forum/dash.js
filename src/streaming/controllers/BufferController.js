@@ -270,7 +270,7 @@ function BufferController(config) {
         isAppendingInProgress = true;
         appendedBytesInfo = chunk;
         sourceBufferExt.append(buffer, chunk);
-        
+
         if (chunk.mediaInfo.type === 'video') {
             if (chunk.mediaInfo.embeddedCaptions) {
                 textSourceBuffer.append(chunk.bytes, chunk);

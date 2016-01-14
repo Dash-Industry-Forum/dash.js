@@ -85,7 +85,7 @@ function FragmentExtensions(/*config*/) {
             sampleDts += sampleDuration;
         }
         totalDuration = sampleDts - tfdtBox.baseMediaDecodeTime;
-        return {sampleList : sampleList, sequenceNumber : sequenceNumber, totalDuration : totalDuration};
+        return {sampleList: sampleList, sequenceNumber: sequenceNumber, totalDuration: totalDuration};
     }
 
     function getMediaTimescaleFromMoov(ab) {
