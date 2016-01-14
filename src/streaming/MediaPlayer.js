@@ -178,13 +178,15 @@ function MediaPlayer() {
             throw 'Missing view or source.';
         }
         playing = true;
-        log('Playback initiated!');
 
         createControllers();
         domStorage.checkInitialBitrate();
         if (typeof source === 'string') {
+            log('Playback initiated for: ' + source);
             streamController.load(source);
+
         } else {
+            log('Playback initiated for a manifest object ');
             streamController.loadWithManifest(source);
         }
     }
