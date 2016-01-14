@@ -276,5 +276,5 @@ function TextSourceBuffer() {
 
     return instance;
 }
-TextSourceBuffer.__dashjs_factory_name = "TextSourceBuffer";
+TextSourceBuffer.__dashjs_factory_name = 'TextSourceBuffer';
 export default FactoryMaker.getSingletonFactory(TextSourceBuffer);

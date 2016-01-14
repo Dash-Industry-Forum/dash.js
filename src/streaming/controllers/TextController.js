@@ -142,5 +142,5 @@ function TextController(config) {
     return instance;
 }
 
-TextController.__dashjs_factory_name = "TextController";
+TextController.__dashjs_factory_name = 'TextController';
 export default FactoryMaker.getClassFactory(TextController);

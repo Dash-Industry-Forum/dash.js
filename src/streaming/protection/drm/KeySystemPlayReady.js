@@ -227,5 +227,5 @@ function KeySystemPlayReady() {
     return instance;
 }
 
-KeySystemPlayReady.__dashjs_factory_name = "KeySystemPlayReady";
+KeySystemPlayReady.__dashjs_factory_name = 'KeySystemPlayReady';
 export default FactoryMaker.getSingletonFactory(KeySystemPlayReady);

@@ -515,5 +515,5 @@ function PlaybackController() {
     return instance;
 }
 
-PlaybackController.__dashjs_factory_name = "PlaybackController";
+PlaybackController.__dashjs_factory_name = 'PlaybackController';
 export default FactoryMaker.getSingletonFactory(PlaybackController);

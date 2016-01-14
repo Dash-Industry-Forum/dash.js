@@ -177,5 +177,5 @@ function ManifestUpdater() {
 
     return instance;
 }
-ManifestUpdater.__dashjs_factory_name = "ManifestUpdater";
+ManifestUpdater.__dashjs_factory_name = 'ManifestUpdater';
 export default FactoryMaker.getSingletonFactory(ManifestUpdater);

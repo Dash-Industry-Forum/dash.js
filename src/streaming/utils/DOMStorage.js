@@ -177,7 +177,7 @@ function DOMStorage() {
     return instance;
 }
 
-DOMStorage.__dashjs_factory_name = "DOMStorage";
+DOMStorage.__dashjs_factory_name = 'DOMStorage';
 let factory = FactoryMaker.getSingletonFactory(DOMStorage);
 factory.STORAGE_TYPE_LOCAL = STORAGE_TYPE_LOCAL;
 factory.STORAGE_TYPE_SESSION = STORAGE_TYPE_SESSION;

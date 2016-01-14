@@ -203,7 +203,7 @@ function Protection() {
     return instance;
 }
 
-Protection.__dashjs_factory_name = "Protection";
+Protection.__dashjs_factory_name = 'Protection';
 let factory = FactoryMaker.getClassFactory(Protection);
 factory.events = ProtectionEvents;
 export default factory;

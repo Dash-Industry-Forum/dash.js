@@ -96,5 +96,5 @@ function BufferOccupancyRule(config) {
     return instance;
 }
 
-BufferOccupancyRule.__dashjs_factory_name = "BufferOccupancyRule";
+BufferOccupancyRule.__dashjs_factory_name = 'BufferOccupancyRule';
 export default FactoryMaker.getClassFactory(BufferOccupancyRule);

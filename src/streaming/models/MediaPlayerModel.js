@@ -110,7 +110,7 @@ function MediaPlayerModel() {
     return instance;
 }
 
-MediaPlayerModel.__dashjs_factory_name = "MediaPlayerModel";
+MediaPlayerModel.__dashjs_factory_name = 'MediaPlayerModel';
 let factory = FactoryMaker.getSingletonFactory(MediaPlayerModel);
 factory.DEFAULT_UTC_TIMING_SOURCE = DEFAULT_UTC_TIMING_SOURCE;
 export default factory;

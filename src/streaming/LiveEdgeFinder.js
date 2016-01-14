@@ -116,7 +116,7 @@ function LiveEdgeFinder() {
 
     return instance;
 }
-LiveEdgeFinder.__dashjs_factory_name = "LiveEdgeFinder";
+LiveEdgeFinder.__dashjs_factory_name = 'LiveEdgeFinder';
 let factory = FactoryMaker.getSingletonFactory(LiveEdgeFinder);
 factory.LIVE_EDGE_NOT_FOUND_ERROR_CODE = LIVE_EDGE_NOT_FOUND_ERROR_CODE;
 export default factory;

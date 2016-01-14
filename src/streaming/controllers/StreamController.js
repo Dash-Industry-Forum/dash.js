@@ -649,5 +649,5 @@ function StreamController() {
     return instance;
 }
 
-StreamController.__dashjs_factory_name = "StreamController";
+StreamController.__dashjs_factory_name = 'StreamController';
 export default FactoryMaker.getSingletonFactory(StreamController);

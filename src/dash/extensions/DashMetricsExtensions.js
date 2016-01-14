@@ -433,5 +433,5 @@ function DashMetricsExtensions() {
     return instance;
 }
 
-DashMetricsExtensions.__dashjs_factory_name = "DashMetricsExtensions";
+DashMetricsExtensions.__dashjs_factory_name = 'DashMetricsExtensions';
 export default FactoryMaker.getSingletonFactory(DashMetricsExtensions);

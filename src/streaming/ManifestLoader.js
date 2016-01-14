@@ -217,5 +217,5 @@ function ManifestLoader(config) {
     setup();
     return instance;
 }
-ManifestLoader.__dashjs_factory_name = "ManifestLoader";
+ManifestLoader.__dashjs_factory_name = 'ManifestLoader';
 export default FactoryMaker.getClassFactory(ManifestLoader);

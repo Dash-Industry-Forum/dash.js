@@ -63,5 +63,5 @@ function BoxParser(/*config*/) {
 
     return instance;
 }
-BoxParser.__dashjs_factory_name = "BoxParser";
+BoxParser.__dashjs_factory_name = 'BoxParser';
 export default FactoryMaker.getSingletonFactory(BoxParser);

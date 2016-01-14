@@ -29,8 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import MediaPlayer from "./streaming/MediaPlayer.js";
-import Protection from "./streaming/protection/Protection.js";
+import MediaPlayer from './streaming/MediaPlayer.js';
+import Protection from './streaming/protection/Protection.js';
 
 
 // Shove both of these into the global scope

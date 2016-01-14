@@ -558,5 +558,5 @@ function Stream(config) {
     setup();
     return instance;
 }
-Stream.__dashjs_factory_name = "Stream";
+Stream.__dashjs_factory_name = 'Stream';
 export default FactoryMaker.getClassFactory(Stream);

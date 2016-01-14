@@ -474,7 +474,7 @@ function MediaController() {
     return instance;
 }
 
-MediaController.__dashjs_factory_name = "MediaController";
+MediaController.__dashjs_factory_name = 'MediaController';
 let factory = FactoryMaker.getSingletonFactory(MediaController);
 factory.TRACK_SWITCH_MODE_NEVER_REPLACE = TRACK_SWITCH_MODE_NEVER_REPLACE;
 factory.TRACK_SWITCH_MODE_ALWAYS_REPLACE = TRACK_SWITCH_MODE_ALWAYS_REPLACE;

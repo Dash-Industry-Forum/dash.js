@@ -266,5 +266,5 @@ function XlinkController(config) {
     return instance;
 }
 
-XlinkController.__dashjs_factory_name = "XlinkController";
+XlinkController.__dashjs_factory_name = 'XlinkController';
 export default FactoryMaker.getClassFactory(XlinkController);

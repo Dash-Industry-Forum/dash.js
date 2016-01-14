@@ -65,5 +65,5 @@ function Widevine() {
     return instance;
 }
 
-Widevine.__dashjs_factory_name = "Widevine";
+Widevine.__dashjs_factory_name = 'Widevine';
 export default FactoryMaker.getSingletonFactory(Widevine);

@@ -321,5 +321,5 @@ function StreamProcessor(config) {
     setup();
     return instance;
 }
-StreamProcessor.__dashjs_factory_name = "StreamProcessor";
+StreamProcessor.__dashjs_factory_name = 'StreamProcessor';
 export default FactoryMaker.getClassFactory(StreamProcessor);

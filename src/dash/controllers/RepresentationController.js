@@ -366,5 +366,5 @@ function RepresentationController() {
     return instance;
 }
 
-RepresentationController.__dashjs_factory_name = "RepresentationController";
+RepresentationController.__dashjs_factory_name = 'RepresentationController';
 export default FactoryMaker.getClassFactory(RepresentationController);

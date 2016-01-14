@@ -95,5 +95,5 @@ function ClearKey() {
     return instance;
 }
 
-ClearKey.__dashjs_factory_name = "ClearKey";
+ClearKey.__dashjs_factory_name = 'ClearKey';
 export default FactoryMaker.getSingletonFactory(ClearKey);

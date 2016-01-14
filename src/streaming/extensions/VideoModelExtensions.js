@@ -56,5 +56,5 @@ function VideoModelExtensions() {
     return instance;
 }
 
-VideoModelExtensions.__dashjs_factory_name = "VideoModelExtensions";
+VideoModelExtensions.__dashjs_factory_name = 'VideoModelExtensions';
 export default FactoryMaker.getSingletonFactory(VideoModelExtensions);

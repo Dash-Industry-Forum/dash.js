@@ -127,5 +127,5 @@ function AbandonRequestsRule(/*config*/) {
     return instance;
 }
 
-AbandonRequestsRule.__dashjs_factory_name = "AbandonRequestsRule";
+AbandonRequestsRule.__dashjs_factory_name = 'AbandonRequestsRule';
 export default FactoryMaker.getClassFactory(AbandonRequestsRule);

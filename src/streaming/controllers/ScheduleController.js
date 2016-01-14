@@ -483,5 +483,5 @@ function ScheduleController(config) {
     return instance;
 }
 
-ScheduleController.__dashjs_factory_name = "ScheduleController";
+ScheduleController.__dashjs_factory_name = 'ScheduleController';
 export default FactoryMaker.getClassFactory(ScheduleController);

@@ -123,5 +123,5 @@ function Debug() {
     return instance;
 }
 
-Debug.__dashjs_factory_name = "Debug";
+Debug.__dashjs_factory_name = 'Debug';
 export default FactoryMaker.getSingletonFactory(Debug);

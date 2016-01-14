@@ -43,5 +43,5 @@ function KeySystemAdobeAccess() {
     return instance;
 }
 
-KeySystemAdobeAccess.__dashjs_factory_name = "KeySystemAdobeAccess";
+KeySystemAdobeAccess.__dashjs_factory_name = 'KeySystemAdobeAccess';
 export default FactoryMaker.getSingletonFactory(KeySystemAdobeAccess);

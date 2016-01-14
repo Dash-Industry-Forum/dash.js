@@ -538,7 +538,7 @@ function AbrController() {
     return instance;
 }
 
-AbrController.__dashjs_factory_name = "AbrController";
+AbrController.__dashjs_factory_name = 'AbrController';
 let factory = FactoryMaker.getSingletonFactory(AbrController);
 factory.ABANDON_LOAD = ABANDON_LOAD;
 factory.BANDWIDTH_SAFETY = BANDWIDTH_SAFETY;

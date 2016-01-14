@@ -49,7 +49,7 @@ function SwitchRequest (v, p) {
     return instance;
 }
 
-SwitchRequest.__dashjs_factory_name = "SwitchRequest";
+SwitchRequest.__dashjs_factory_name = 'SwitchRequest';
 let factory = FactoryMaker.getClassFactory(SwitchRequest);
 factory.NO_CHANGE = NO_CHANGE;
 factory.DEFAULT = DEFAULT;

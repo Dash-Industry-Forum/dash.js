@@ -190,5 +190,5 @@ function VTTParser() {
     setup();
     return instance;
 }
-VTTParser.__dashjs_factory_name = "VTTParser";
+VTTParser.__dashjs_factory_name = 'VTTParser';
 export default FactoryMaker.getSingletonFactory(VTTParser);

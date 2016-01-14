@@ -90,5 +90,5 @@ function BufferLevelRule(config) {
     return instance;
 }
 
-BufferLevelRule.__dashjs_factory_name = "BufferLevelRule";
+BufferLevelRule.__dashjs_factory_name = 'BufferLevelRule';
 export default FactoryMaker.getClassFactory(BufferLevelRule);

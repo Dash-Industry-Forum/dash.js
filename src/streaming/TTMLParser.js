@@ -1166,5 +1166,5 @@ function TTMLParser() {
     setup();
     return instance;
 }
-TTMLParser.__dashjs_factory_name = "TTMLParser";
+TTMLParser.__dashjs_factory_name = 'TTMLParser';
 export default FactoryMaker.getSingletonFactory(TTMLParser);

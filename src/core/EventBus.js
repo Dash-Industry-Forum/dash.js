@@ -109,5 +109,5 @@ function EventBus() {
     return instance;
 }
 
-EventBus.__dashjs_factory_name = "EventBus";
+EventBus.__dashjs_factory_name = 'EventBus';
 export default FactoryMaker.getSingletonFactory(EventBus);

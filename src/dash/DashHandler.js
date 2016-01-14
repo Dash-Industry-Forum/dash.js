@@ -1001,7 +1001,7 @@ function DashHandler(config) {
     return instance;
 }
 
-DashHandler.__dashjs_factory_name = "DashHandler";
+DashHandler.__dashjs_factory_name = 'DashHandler';
 let factory = FactoryMaker.getClassFactory(DashHandler);
 factory.SEGMENTS_UNAVAILABLE_ERROR_CODE = SEGMENTS_UNAVAILABLE_ERROR_CODE;
 export default factory;

@@ -251,7 +251,7 @@ function RulesController() {
     return instance;
 }
 
-RulesController.__dashjs_factory_name = "RulesController";
+RulesController.__dashjs_factory_name = 'RulesController';
 let factory =  FactoryMaker.getSingletonFactory(RulesController);
 factory.SCHEDULING_RULE = SCHEDULING_RULE;
 factory.ABR_RULE = ABR_RULE;

@@ -423,5 +423,5 @@ function MetricsModel() {
     return instance;
 }
 
-MetricsModel.__dashjs_factory_name = "MetricsModel";
+MetricsModel.__dashjs_factory_name = 'MetricsModel';
 export default FactoryMaker.getSingletonFactory(MetricsModel);
