@@ -87,7 +87,6 @@ module.exports = function (grunt) {
                     'dash.mediaplayer.min.js', 'dash.mediaplayer.min.js.map',
                     'dash.protection.min.js', 'dash.protection.min.js.map',
                     'dash.no-externals.debug.js', 'dash.no-externals.debug.js.map',
-                    'dash.all.debug.js', 'dash.all.debug.js.map',
                     'dash.externals.debug.js', 'dash.externals.debug.js.map',
                     'dash.mediaplayer.debug.js', 'dash.mediaplayer.debug.js.map',
                     'dash.protection.debug.js', 'dash.protection.debug.js.map'
