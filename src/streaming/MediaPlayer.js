@@ -172,7 +172,7 @@ function MediaPlayer() {
      */
     function play() {
 
-        if (!playbackInitiated){
+        if (!playbackInitiated) {
             if (!initialized) {
                 throw 'MediaPlayer not initialized!';
             }
@@ -1438,10 +1438,10 @@ function MediaPlayer() {
         pause: pause,
         isSeeking: isSeeking,
         seek: seek,
-        setMute:setMute,
-        isMuted:isMuted,
-        setVolume:setVolume,
-        getVolume:getVolume,
+        setMute: setMute,
+        isMuted: isMuted,
+        setVolume: setVolume,
+        getVolume: getVolume,
         time: time,
         duration: duration,
         timeAsUTC: timeAsUTC,

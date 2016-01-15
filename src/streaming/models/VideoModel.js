@@ -135,7 +135,7 @@ function VideoModel() {
             // Halt playback until nothing is stalled.
             event = document.createEvent('Event');
             event.initEvent('waiting', true, false);
-            previousPlaybackRate = getPlaybackRate();
+            previousPlaybackRate = element.playbackRate;
             setPlaybackRate(0);
             element.dispatchEvent(event);
         }
