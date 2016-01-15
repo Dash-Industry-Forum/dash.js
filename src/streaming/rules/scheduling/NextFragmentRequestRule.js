@@ -33,7 +33,7 @@ import SwitchRequest from '../SwitchRequest.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 import FragmentRequest from '../../vo/FragmentRequest.js';
 
-function PlaybackTimeRule(config) {
+function NextFragmentRequestRule(config) {
 
     let instance;
     let context = this.context;
@@ -107,5 +107,5 @@ function PlaybackTimeRule(config) {
     return instance;
 }
 
-PlaybackTimeRule.__dashjs_factory_name = 'PlaybackTimeRule';
-export default FactoryMaker.getClassFactory(PlaybackTimeRule);
+NextFragmentRequestRule.__dashjs_factory_name = 'NextFragmentRequestRule';
+export default FactoryMaker.getClassFactory(NextFragmentRequestRule);

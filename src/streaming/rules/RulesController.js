@@ -30,9 +30,9 @@
  */
 import RulesContext from './RulesContext.js';
 import SwitchRequest from './SwitchRequest.js';
-import ABRRulesCollection from './ABRRules/ABRRulesCollection.js';
-import ScheduleRulesCollection from './SchedulingRules/ScheduleRulesCollection.js';
-import SynchronizationRulesCollection from './SynchronizationRules/SynchronizationRulesCollection.js';
+import ABRRulesCollection from './abr/ABRRulesCollection.js';
+import ScheduleRulesCollection from './scheduling/ScheduleRulesCollection.js';
+import SynchronizationRulesCollection from './synchronization/SynchronizationRulesCollection.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 const SCHEDULING_RULE = 0;

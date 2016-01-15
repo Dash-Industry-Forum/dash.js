@@ -48,11 +48,11 @@ import MediaPlayerModel from './models/MediaPlayerModel.js';
 import MetricsModel from './models/MetricsModel.js';
 import AbrController from './controllers/AbrController.js';
 import TimeSyncController from './controllers/TimeSyncController.js';
-import ABRRulesCollection from './rules/ABRRules/ABRRulesCollection.js';
+import ABRRulesCollection from './rules/abr/ABRRulesCollection.js';
 import VideoModel from './models/VideoModel.js';
 import RulesController from './rules/RulesController.js';
-import ScheduleRulesCollection from './rules/SchedulingRules/ScheduleRulesCollection.js';
-import SynchronizationRulesCollection from './rules/SynchronizationRules/SynchronizationRulesCollection.js';
+import ScheduleRulesCollection from './rules/scheduling/ScheduleRulesCollection.js';
+import SynchronizationRulesCollection from './rules/synchronization/SynchronizationRulesCollection.js';
 import MediaSourceExtensions from './extensions/MediaSourceExtensions.js';
 import VideoModelExtensions from './extensions/VideoModelExtensions.js';
 import Debug from './../core/Debug.js';
@@ -1394,9 +1394,6 @@ function MediaPlayer() {
 
     function createAdaptor() {
         //TODO-Refactor Need to be able to switch this create out so will need API to set which adapter to use? Handler is created is inside streamProcessor so need to figure that out as well
-
-
-
         adapter = DashAdapter(context).getInstance();
         adapter.initialize();
         adapter.setConfig({manifestExt: manifestExt});

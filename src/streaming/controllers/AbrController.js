@@ -31,7 +31,7 @@
 
 import SwitchRequest from '../rules/SwitchRequest';
 import BitrateInfo from '../vo/BitrateInfo.js';
-import ABRRulesCollection from '../rules/ABRRules/ABRRulesCollection.js';
+import ABRRulesCollection from '../rules/abr/ABRRulesCollection.js';
 import FragmentModel from '../models/FragmentModel.js';
 import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';

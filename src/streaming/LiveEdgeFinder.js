@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import SynchronizationRulesCollection from './rules/SynchronizationRules/SynchronizationRulesCollection.js';
+import SynchronizationRulesCollection from './rules/synchronization/SynchronizationRulesCollection.js';
 import Error from './vo/Error.js';
 import EventBus from './../core/EventBus.js';
 import Events from './../core/events/Events.js';

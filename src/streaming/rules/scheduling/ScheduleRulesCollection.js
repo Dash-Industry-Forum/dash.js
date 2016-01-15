@@ -30,7 +30,7 @@
  */
 import FactoryMaker from '../../../core/FactoryMaker.js';
 import BufferLevelRule from './BufferLevelRule.js';
-import PlaybackTimeRule from './PlaybackTimeRule.js';
+import NextFragmentRequestRule from './NextFragmentRequestRule.js';
 import TextSourceBuffer from '../../TextSourceBuffer.js';
 import MetricsModel from '../../models/MetricsModel.js';
 import DashAdapter from '../../../dash/DashAdapter.js';
@@ -58,7 +58,7 @@ function ScheduleRulesCollection() {
             metricsModel: MetricsModel(context).getInstance(),
             textSourceBuffer: TextSourceBuffer(context).getInstance()
         }));
-        nextFragmentRules.push(PlaybackTimeRule(context).create({
+        nextFragmentRules.push(NextFragmentRequestRule(context).create({
             adapter: DashAdapter(context).getInstance(),
             sourceBufferExt: SourceBufferExtensions(context).getInstance(),
             virtualBuffer: VirtualBuffer(context).getInstance(),

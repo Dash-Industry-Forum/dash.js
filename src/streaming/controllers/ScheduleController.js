@@ -30,7 +30,7 @@
  */
 
 import PlayList from '../vo/metrics/PlayList.js';
-import ScheduleRulesCollection from '../rules/SchedulingRules/ScheduleRulesCollection.js';
+import ScheduleRulesCollection from '../rules/scheduling/ScheduleRulesCollection.js';
 import SwitchRequest from '../rules/SwitchRequest.js';
 import PlaybackController from './PlaybackController.js';
 import AbrController from './AbrController.js';
