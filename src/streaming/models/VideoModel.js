@@ -44,32 +44,12 @@ function VideoModel() {
         stalledStreams = [];
     }
 
-    function play() {
-        element.play();
-    }
-
-    function pause() {
-        element.pause();
-    }
-
-    function isPaused() {
-        return element.paused;
-    }
-
-    function getPlaybackRate() {
-        return element.playbackRate;
-    }
-
     function setPlaybackRate(value) {
         if (!element || element.readyState < 2) return;
-
         element.playbackRate = value;
     }
 
-    function getCurrentTime() {
-        return element.currentTime;
-    }
-
+    //TODO Move the DVR window calculations from MediaPlayer to Here.
     function setCurrentTime(currentTime) {
         //_currentTime = currentTime;
 
@@ -93,24 +73,22 @@ function VideoModel() {
         }
     }
 
-    function setStallState(type, state) {
-        stallStream.call(this, type, state);
-    }
-
-    function listen(type, callback) {
-        element.addEventListener(type, callback, false);
-    }
-
-    function unlisten(type, callback) {
-        element.removeEventListener(type, callback, false);
-    }
-
     function getElement() {
         return element;
     }
 
     function setElement(value) {
         element = value;
+    }
+
+    function setSource(source) {
+        if (source) {
+            element.src = source;
+        }
+    }
+
+    function getSource() {
+        return element.src;
     }
 
     function getVideoContainer() {
@@ -136,10 +114,8 @@ function VideoModel() {
         TTMLRenderingDiv.style.left = 0;
     }
 
-    function setSource(source) {
-        if (source) {
-            element.src = source;
-        }
+    function setStallState(type, state) {
+        stallStream(type, state);
     }
 
     function isStalled() {
@@ -147,70 +123,63 @@ function VideoModel() {
     }
 
     function addStalledStream(type) {
-        var event;
+
+        let event;
+
         if (type === null || element.seeking || stalledStreams.indexOf(type) !== -1) {
             return;
         }
 
         stalledStreams.push(type);
-
         if (stalledStreams.length === 1) {
             // Halt playback until nothing is stalled.
             event = document.createEvent('Event');
             event.initEvent('waiting', true, false);
-            previousPlaybackRate = this.getPlaybackRate();
-            this.setPlaybackRate(0);
+            previousPlaybackRate = element.playbackRate;
+            setPlaybackRate(0);
             element.dispatchEvent(event);
         }
     }
 
     function removeStalledStream(type) {
-        var index = stalledStreams.indexOf(type),
-            event;
+        let index = stalledStreams.indexOf(type);
+        let event;
+
         if (type === null) {
             return;
         }
-
         if (index !== -1) {
             stalledStreams.splice(index, 1);
         }
-
         // If nothing is stalled resume playback.
         if (isStalled() === false && element.playbackRate === 0) {
             event = document.createEvent('Event');
             event.initEvent('playing', true, false);
-            this.setPlaybackRate(previousPlaybackRate || 1);
+            setPlaybackRate(previousPlaybackRate || 1);
             element.dispatchEvent(event);
         }
     }
 
     function stallStream(type, isStalled) {
         if (isStalled) {
-            addStalledStream.call(this, type);
+            addStalledStream(type);
         } else {
-            removeStalledStream.call(this, type);
+            removeStalledStream(type);
         }
     }
 
     instance = {
         initialize: initialize,
-        play: play,
-        pause: pause,
-        isPaused: isPaused,
-        getPlaybackRate: getPlaybackRate,
-        setPlaybackRate: setPlaybackRate,
-        getCurrentTime: getCurrentTime,
         setCurrentTime: setCurrentTime,
         setStallState: setStallState,
-        listen: listen,
-        unlisten: unlisten,
         getElement: getElement,
         setElement: setElement,
+        setSource: setSource,
+        getSource: getSource,
         getVideoContainer: getVideoContainer,
         setVideoContainer: setVideoContainer,
         getTTMLRenderingDiv: getTTMLRenderingDiv,
         setTTMLRenderingDiv: setTTMLRenderingDiv,
-        setSource: setSource
     };
 
     return instance;

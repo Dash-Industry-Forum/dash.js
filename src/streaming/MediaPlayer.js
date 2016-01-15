@@ -87,7 +87,7 @@ function MediaPlayer() {
         protectionData,
         initialized,
         resetting,
-        playing,
+        playbackInitiated,
         autoPlay,
         abrController,
         mediaController,
@@ -109,7 +109,7 @@ function MediaPlayer() {
     function setup() {
         initialized = false;
         resetting = false;
-        playing = false;
+        playbackInitiated = false;
         autoPlay = true;
         protectionController = null;
         protectionData = null;
@@ -118,6 +118,13 @@ function MediaPlayer() {
     }
 
     function initialize(view, source, AutoPlay) {
+
+        capabilities = Capabilities(context).getInstance();
+        if (!capabilities.supportsMediaSource()) {
+            errHandler.capabilityError('mediasource');
+            return;
+        }
+
         if (initialized) return;
         initialized = true;
 
@@ -128,7 +135,6 @@ function MediaPlayer() {
         metricsModel.setConfig({adapter: createAdaptor()});
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
         errHandler = ErrorHandler(context).getInstance();
-        capabilities = Capabilities(context).getInstance();
 
         restoreDefaultUTCTimingSources();
         setAutoPlay(AutoPlay !== undefined ? AutoPlay : true);
@@ -165,28 +171,58 @@ function MediaPlayer() {
      * @instance
      */
     function play() {
-        if (!initialized) {
-            throw 'MediaPlayer not initialized!';
+
+        if (!playbackInitiated) {
+            if (!initialized) {
+                throw 'MediaPlayer not initialized!';
+            }
+            if (!element || !source) {
+                throw 'Missing view or source.';
+            }
+
+            playbackInitiated = true;
+            log('Playback initiated!');
+
+            createControllers();
+            domStorage.checkInitialBitrate();
+            if (typeof source === 'string') {
+                streamController.load(source);
+            } else {
+                streamController.loadWithManifest(source);
+            }
         }
 
-        if (!capabilities.supportsMediaSource()) {
-            errHandler.capabilityError('mediasource');
-            return;
+        if (!autoPlay || (isPaused() && playbackInitiated)) {
+            playbackController.play();
         }
+    }
 
-        if (!element || !source) {
-            throw 'Missing view or source.';
-        }
-        playing = true;
-        log('Playback initiated!');
+    function pause() {
+        playbackController.pause();
+    }
 
-        createControllers();
-        domStorage.checkInitialBitrate();
-        if (typeof source === 'string') {
-            streamController.load(source);
-        } else {
-            streamController.loadWithManifest(source);
-        }
+    function isPaused() {
+        return playbackController.isPaused();
+    }
+
+    function isSeeking() {
+        return playbackController.isSeeking();
+    }
+
+    function setMute(value) {
+        element.muted = value;
+    }
+
+    function isMuted() {
+        return element.muted;
+    }
+
+    function setVolume(value) {
+        element.volume = value;
+    }
+
+    function getVolume() {
+        return element.volume;
     }
 
     function getDVRInfoMetric() {
@@ -242,7 +278,7 @@ function MediaPlayer() {
      */
     function seek(value) {
         var s = playbackController.getIsDynamic() ? getDVRSeekOffset(value) : value;
-        getVideoModel().setCurrentTime(s);
+        playbackController.seek(s);
     }
 
 
@@ -254,8 +290,7 @@ function MediaPlayer() {
      * @instance
      */
     function time() {
-        var t = videoModel.getCurrentTime();
-
+        var t = element.currentTime;
         if (playbackController.getIsDynamic()) {
             var metric = getDVRInfoMetric();
             t = (metric === null) ? 0 : duration() - (metric.range.end - metric.time);
@@ -271,7 +306,7 @@ function MediaPlayer() {
      * @instance
      */
     function duration() {
-        var d = videoModel.getElement().duration;
+        var d = element.duration;
 
         if (playbackController.getIsDynamic()) {
 
@@ -1172,17 +1207,15 @@ function MediaPlayer() {
         if (!initialized) {
             throw 'MediaPlayer not initialized!';
         }
-
-        element = view;
-
         videoModel = null;
+        element = view;
         if (element) {
             videoModel = VideoModel(context).getInstance();
             videoModel.initialize();
             videoModel.setElement(element);
             // Workaround to force Firefox to fire the canplay event.
             element.preload = 'auto';
-
+            //Todo figure out a better place for this!
             detectProtection();
         }
     }
@@ -1218,7 +1251,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
-    function attachSource(urlOrManifest, protectionCtrl, data) {
+    function attachSource(urlOrManifest, protectionCtrl, data) {//TODO way too overloaded with protection.  Break out all protection and only accept source.
         if (!initialized) {
             throw 'MediaPlayer not initialized!';
         }
@@ -1231,6 +1264,7 @@ function MediaPlayer() {
             source = urlOrManifest;
         }
 
+        //TODO figure out a better place for this. see attachView.
         if (protectionCtrl) {
             protectionController = protectionCtrl;
         }
@@ -1253,13 +1287,13 @@ function MediaPlayer() {
 
     function resetAndPlay() {
         adapter.reset();
-        if (playing && streamController) {
+        if (playbackInitiated && streamController) {
             if (!resetting) {
                 resetting = true;
                 eventBus.on(Events.STREAM_TEARDOWN_COMPLETE, onStreamTeardownComplete, this);
                 streamController.reset();
             }
-        } else {
+        } else if (autoPlay) {
             play();
         }
     }
@@ -1271,10 +1305,12 @@ function MediaPlayer() {
         playbackController.reset();
         mediaController.reset();
         streamController = null;
-        playing = false;
+        playbackInitiated = false;
         eventBus.off(Events.STREAM_TEARDOWN_COMPLETE, onStreamTeardownComplete, this);
         resetting = false;
-        play();
+        if (autoPlay) {
+            play();
+        }
     }
 
     function createControllers() {
@@ -1358,6 +1394,9 @@ function MediaPlayer() {
 
     function createAdaptor() {
         //TODO-Refactor Need to be able to switch this create out so will need API to set which adapter to use? Handler is created is inside streamProcessor so need to figure that out as well
+
+
+
         adapter = DashAdapter(context).getInstance();
         adapter.initialize();
         adapter.setConfig({manifestExt: manifestExt});
@@ -1395,7 +1434,14 @@ function MediaPlayer() {
         attachSource: attachSource,
         isReady: isReady,
         play: play,
+        isPaused: isPaused,
+        pause: pause,
+        isSeeking: isSeeking,
         seek: seek,
+        setMute: setMute,
+        isMuted: isMuted,
+        setVolume: setVolume,
+        getVolume: getVolume,
         time: time,
         duration: duration,
         timeAsUTC: timeAsUTC,
@@ -1404,7 +1450,6 @@ function MediaPlayer() {
         getDVRSeekOffset: getDVRSeekOffset,
         convertToTimeCode: convertToTimeCode,
         formatUTC: formatUTC,
-        reset: reset,
         getVersion: getVersion,
         getDebug: getDebug,
         getVideoModel: getVideoModel,
@@ -1461,7 +1506,8 @@ function MediaPlayer() {
         enableManifestDateHeaderTimeSource: enableManifestDateHeaderTimeSource,
         displayCaptionsOnTop: displayCaptionsOnTop,
         attachVideoContainer: attachVideoContainer,
-        attachTTMLRenderingDiv: attachTTMLRenderingDiv
+        attachTTMLRenderingDiv: attachTTMLRenderingDiv,
+        reset: reset
     };
 
     setup();
