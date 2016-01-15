@@ -564,11 +564,13 @@ function Stream(config) {
         isActivated: isActivated,
         isInitialized: isInitialized,
         updateData: updateData,
-        reset: reset
+        reset: reset,
+        getProcessors: getProcessors
     };
 
     setup();
     return instance;
 }
+
 Stream.__dashjs_factory_name = 'Stream';
 export default FactoryMaker.getClassFactory(Stream);

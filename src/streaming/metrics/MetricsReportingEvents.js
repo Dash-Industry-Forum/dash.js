@@ -28,25 +28,16 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-/**
- * @class
- * @ignore
- */
-class MetricsList {
-    constructor() {
-        this.TcpList = [];
-        this.HttpList = [];
-        this.RepSwitchList = [];
-        this.BufferLevel = [];
-        this.BufferState = [];
-        this.PlayList = [];
-        this.DroppedFrames = [];
-        this.SchedulingInfo = [];
-        this.DVRInfo = [];
-        this.ManifestUpdate = [];
-        this.RequestsQueue = null;
-        this.DVBErrors = [];
+import EventsBase from '../../core/events/EventsBase.js';
+
+class MetricsReportingEvents extends EventsBase {
+    constructor () {
+        super();
+
+        this.METRICS_INITIALISATION_COMPLETE = 'internal_metricsReportingInitialized';
+        this.BECAME_REPORTING_PLAYER = 'internal_becameReportingPlayer';
     }
 }
 
-export default MetricsList;
+let metricsReportingEvents = new MetricsReportingEvents();
+export default metricsReportingEvents;

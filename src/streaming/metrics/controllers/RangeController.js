@@ -28,25 +28,76 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-/**
- * @class
- * @ignore
- */
-class MetricsList {
-    constructor() {
-        this.TcpList = [];
-        this.HttpList = [];
-        this.RepSwitchList = [];
-        this.BufferLevel = [];
-        this.BufferState = [];
-        this.PlayList = [];
-        this.DroppedFrames = [];
-        this.SchedulingInfo = [];
-        this.DVRInfo = [];
-        this.ManifestUpdate = [];
-        this.RequestsQueue = null;
-        this.DVBErrors = [];
+
+import FactoryMaker from '../../../core/FactoryMaker.js';
+import CustomTimeRanges from '../../utils/CustomTimeRanges.js';
+
+function RangeController(config) {
+
+    let useWallClockTime = false;
+    let context = this.context;
+    let instance,
+        ranges;
+
+    let mediaElement = config.mediaElement;
+
+    function initialize(rs) {
+        if (rs && rs.length) {
+            rs.forEach(r => {
+                var start = r.starttime;
+                var end = start + r.duration;
+
+                ranges.add(start, end);
+            });
+
+            useWallClockTime = !!rs[0]._useWallClockTime;
+        }
     }
+
+    function reset() {
+        ranges.clear();
+    }
+
+    function setup() {
+        ranges = CustomTimeRanges(context).create();
+    }
+
+    function isEnabled() {
+        var numRanges = ranges.length;
+        var time;
+
+        if (!numRanges) {
+            return true;
+        }
+
+        // When not present, DASH Metrics reporting is requested
+        // for the whole duration of the content.
+        time = useWallClockTime ?
+                (new Date().getTime() / 1000) :
+                mediaElement.currentTime;
+
+        for (var i = 0; i < numRanges; i += 1) {
+            let start = ranges.start(i);
+            let end = ranges.end(i);
+
+            if ((start <= time) && (time < end)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    instance = {
+        initialize: initialize,
+        reset:      reset,
+        isEnabled:  isEnabled
+    };
+
+    setup();
+
+    return instance;
 }
 
-export default MetricsList;
+RangeController.__dashjs_factory_name = 'RangeController';
+export default FactoryMaker.getClassFactory(RangeController);

@@ -4,16 +4,17 @@ import MpdHelper from './MPDHelper.js';
 import SpecHelper from './SpecHelper.js';
 import Representation from '../../src/dash/vo/Representation.js';
 import FragmentRequest from '../../src/streaming/vo/FragmentRequest.js';
+import HTTPRequest from '../../src/streaming/vo/metrics/HTTPRequest.js';
 
 class VoHelper {
     constructor() {
         this.mpdHelper = new MpdHelper();
         this.specHelper = new SpecHelper();
-        this.voRep;
-        this.voAdaptation;
+        this.voRep = undefined;
+        this.voAdaptation = undefined;
         this.unixTime = this.specHelper.getUnixTime();
-        this.adaptation;
-        this.defaultMpdType = "static";
+        this.adaptation = undefined;
+        this.defaultMpdType = 'static';
     }
 
     createMpd(type) {
@@ -36,7 +37,7 @@ class VoHelper {
         period.mpd = this.createMpd();
         period.start = 0;
 
-        period.id = "id1";
+        period.id = 'id1';
         period.index = 0;
         period.duration = 100;
         period.liveEdge = 50;
@@ -56,14 +57,13 @@ class VoHelper {
     }
 
     createRepresentation(type) {
-        var rep = new Representation(),
-            data = this.adaptation || this.mpdHelper.getAdaptationWithSegmentTemplate(type);
+        var rep = new Representation();
 
         rep.id = null;
         rep.index = 0;
         rep.adaptation = this.createAdaptation(type);
         rep.fragmentInfoType = null;
-        rep.initialization = "http://dash.edgesuite.net/envivio/dashpr/clear/video4/Header.m4s";
+        rep.initialization = 'http://dash.edgesuite.net/envivio/dashpr/clear/video4/Header.m4s';
         rep.segmentDuration = 1;
         rep.timescale = 1;
         rep.startNumber = 1;
@@ -82,14 +82,14 @@ class VoHelper {
         var req = {};
         req.action = FragmentRequest.ACTION_DOWNLOAD;
         req.quality = 0;
-        req.mediaType = "video";
+        req.mediaType = 'video';
         req.type = type;
-        req.url = "http://dash.edgesuite.net/envivio/dashpr/clear/video4/Header.m4s";
+        req.url = 'http://dash.edgesuite.net/envivio/dashpr/clear/video4/Header.m4s';
         req.startTime = NaN;
         req.duration = NaN;
 
-        if (type === "Media Segment") {
-            req.url = "http://dash.edgesuite.net/envivio/dashpr/clear/video4/0.m4s";
+        if (type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
+            req.url = 'http://dash.edgesuite.net/envivio/dashpr/clear/video4/0.m4s';
             req.startTime = 0;
             req.duration = 4;
             req.index = 0;
@@ -115,11 +115,11 @@ class VoHelper {
     }
 
     getMediaRequest() {
-        return this.createRequest("Media Segment");
+        return this.createRequest(HTTPRequest.MEDIA_SEGMENT_TYPE);
     }
 
     getInitRequest() {
-        return this.createRequest("Initialization Segment");
+        return this.createRequest(HTTPRequest.INIT_SEGMENT_TYPE);
     }
 
     getCompleteRequest() {
@@ -130,7 +130,7 @@ class VoHelper {
         const streamInfo = new StreamInfo();
 
         streamInfo.id = 'DUMMY_STREAM-01';
-        
+
         return streamInfo;
     }
 
@@ -141,7 +141,7 @@ class VoHelper {
         mediaInfo.type = type;
         mediaInfo.bitrateList = [1000, 2000, 3000];
         mediaInfo.representationCount = 3;
-        mediaInfo.streamInfo = this.getDummyStreamInfo(); 
+        mediaInfo.streamInfo = this.getDummyStreamInfo();
 
         return mediaInfo;
     }

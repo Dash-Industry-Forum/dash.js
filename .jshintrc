@@ -27,5 +27,6 @@
         "Caster",
         "TextTrackCue",
         "HTMLMediaElement",
+        "MediaError",
         "cea608parser"]
 }

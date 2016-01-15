@@ -28,71 +28,75 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import ThroughputRule from './ThroughputRule.js';
-import BufferOccupancyRule from './BufferOccupancyRule.js';
-import InsufficientBufferRule from './InsufficientBufferRule.js';
-import AbandonRequestsRule from './AbandonRequestsRule.js';
-import MetricsModel from '../../models/MetricsModel.js';
-import DashMetricsExtensions from '../../../dash/extensions/DashMetricsExtensions.js';
+
 import FactoryMaker from '../../../core/FactoryMaker.js';
+import BufferLevel from './handlers/BufferLevelHandler.js';
+import DVBErrors from './handlers/DVBErrorsHandler.js';
+import HttpList from './handlers/HttpListHandler.js';
+import GenericMetricHandler from './handlers/GenericMetricHandler.js';
 
-const QUALITY_SWITCH_RULES = 'qualitySwitchRules';
-const ABANDON_FRAGMENT_RULES = 'abandonFragmentRules';
+function MetricsHandlerFactory(config) {
 
-function ABRRulesCollection() {
+    let instance;
+    let log = config.log;
+
+    // group 1: key, [group 3: n [, group 5: type]]
+    let keyRegex = /([a-zA-Z]*)(\(([0-9]*)(\,\s*([a-zA-Z]*))?\))?/;
 
     let context = this.context;
+    let knownFactoryProducts = {
+        BufferLevel:    BufferLevel,
+        DVBErrors:      DVBErrors,
+        HttpList:       HttpList,
+        PlayList:       GenericMetricHandler,
+        RepSwitchList:  GenericMetricHandler,
+        TcpList:        GenericMetricHandler
+    };
 
-    let instance,
-        qualitySwitchRules,
-        abandonFragmentRules;
+    function create(listType, reportingController) {
+        var matches = listType.match(keyRegex);
+        var handler;
 
-    function initialize() {
-        qualitySwitchRules = [];
-        abandonFragmentRules = [];
+        if (!matches) {
+            return;
+        }
 
-        let metricsModel = MetricsModel(context).getInstance();
-        let metricsExt = DashMetricsExtensions(context).getInstance();
+        try {
+            handler = knownFactoryProducts[matches[1]](context).create({
+                eventBus: config.eventBus
+            });
 
-        qualitySwitchRules.push(
-            ThroughputRule(context).create({
-                metricsModel: metricsModel,
-                metricsExt: metricsExt
-            })
-        );
+            handler.initialize(
+                matches[1],
+                reportingController,
+                matches[3],
+                matches[5]
+            );
+        } catch (e) {
+            handler = null;
 
-        qualitySwitchRules.push(
-            BufferOccupancyRule(context).create({
-                metricsModel: metricsModel,
-                metricsExt: metricsExt
-            })
-        );
+            log(`MetricsHandlerFactory: Could not create handler for type ${matches[1]} with args ${matches[3]}, ${matches[5]} (${e.message})`);
+        }
 
-        qualitySwitchRules.push(InsufficientBufferRule(context).create({metricsModel: metricsModel}));
-        abandonFragmentRules.push(AbandonRequestsRule(context).create());
+        return handler;
     }
 
-    function getRules (type) {
-        switch (type) {
-            case QUALITY_SWITCH_RULES:
-                return qualitySwitchRules;
-            case ABANDON_FRAGMENT_RULES:
-                return abandonFragmentRules;
-            default:
-                return null;
-        }
+    function register(key, handler) {
+        knownFactoryProducts[key] = handler;
+    }
+
+    function unregister(key) {
+        delete knownFactoryProducts[key];
     }
 
     instance = {
-        initialize: initialize,
-        getRules: getRules
+        create:     create,
+        register:   register,
+        unregister: unregister
     };
 
     return instance;
 }
 
-ABRRulesCollection.__dashjs_factory_name = 'ABRRulesCollection';
-let factory =  FactoryMaker.getSingletonFactory(ABRRulesCollection);
-factory.QUALITY_SWITCH_RULES = QUALITY_SWITCH_RULES;
-factory.ABANDON_FRAGMENT_RULES = ABANDON_FRAGMENT_RULES;
-export default factory;
+MetricsHandlerFactory.__dashjs_factory_name = 'MetricsHandlerFactory';
+export default FactoryMaker.getSingletonFactory(MetricsHandlerFactory);

@@ -184,9 +184,9 @@ function RepresentationController() {
     function addRepresentationSwitch() {
         var now = new Date();
         var currentRepresentation = getCurrentRepresentation();
-        var currentVideoTime = playbackController.getTime();
+        var currentVideoTimeMs = playbackController.getTime() * 1000;
 
-        metricsModel.addRepresentationSwitch(currentRepresentation.adaptation.type, now, currentVideoTime, currentRepresentation.id);
+        metricsModel.addRepresentationSwitch(currentRepresentation.adaptation.type, now, currentVideoTimeMs, currentRepresentation.id);
     }
 
     function addDVRMetric() {

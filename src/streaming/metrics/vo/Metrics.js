@@ -32,21 +32,13 @@
  * @class
  * @ignore
  */
-class MetricsList {
+class Metrics {
     constructor() {
-        this.TcpList = [];
-        this.HttpList = [];
-        this.RepSwitchList = [];
-        this.BufferLevel = [];
-        this.BufferState = [];
-        this.PlayList = [];
-        this.DroppedFrames = [];
-        this.SchedulingInfo = [];
-        this.DVRInfo = [];
-        this.ManifestUpdate = [];
-        this.RequestsQueue = null;
-        this.DVBErrors = [];
+
+        this.metrics = '';
+        this.Range = [];
+        this.Reporting = [];
     }
 }
 
-export default MetricsList;
+export default Metrics;

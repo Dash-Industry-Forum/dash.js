@@ -28,25 +28,64 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-/**
- * @class
- * @ignore
- */
-class MetricsList {
-    constructor() {
-        this.TcpList = [];
-        this.HttpList = [];
-        this.RepSwitchList = [];
-        this.BufferLevel = [];
-        this.BufferState = [];
-        this.PlayList = [];
-        this.DroppedFrames = [];
-        this.SchedulingInfo = [];
-        this.DVRInfo = [];
-        this.ManifestUpdate = [];
-        this.RequestsQueue = null;
-        this.DVBErrors = [];
+
+import FactoryMaker from '../../../../core/FactoryMaker.js';
+import MetricsReportingEvents from '../../MetricsReportingEvents.js';
+
+function DVBErrorsHandler(config) {
+
+    let instance,
+        reportingController;
+
+    let eventBus = config.eventBus;
+
+    function onInitialisationComplete() {
+        // we only want to report this once per call to initialize
+        eventBus.off(
+            MetricsReportingEvents.METRICS_INITIALISATION_COMPLETE,
+            onInitialisationComplete,
+            this
+        );
+
+        // Note: A Player becoming a reporting Player is itself
+        // something which is recorded by the DVBErrors metric.
+        eventBus.trigger(
+            MetricsReportingEvents.BECAME_REPORTING_PLAYER
+        );
     }
+
+    function initialize(unused, rc) {
+        if (rc) {
+            reportingController = rc;
+
+            eventBus.on(
+                MetricsReportingEvents.METRICS_INITIALISATION_COMPLETE,
+                onInitialisationComplete,
+                this
+            );
+        }
+    }
+
+    function reset() {
+        reportingController = null;
+    }
+
+    function handleNewMetric(metric, vo) {
+        // simply pass metric straight through
+        if (metric === 'DVBErrors') {
+            if (reportingController) {
+                reportingController.report(metric, vo);
+            }
+        }
+    }
+
+    instance = {
+        initialize:         initialize,
+        reset:              reset,
+        handleNewMetric:    handleNewMetric
+    };
+
+    return instance;
 }
 
-export default MetricsList;
+export default FactoryMaker.getClassFactory(DVBErrorsHandler);

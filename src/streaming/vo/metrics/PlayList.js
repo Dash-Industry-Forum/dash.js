@@ -31,35 +31,35 @@
 
 class PlayList {
     constructor() {
-        this.stream = null;     // type of stream ("audio" | "video" etc..)
         this.start = null;      // Real-Time | Timestamp of the user action that starts the playback stream...
         this.mstart = null;     // Media-Time | Presentation time at which playout was requested by the user...
-        this.starttype = null;  // Type of user action which triggered playout
-        //      - New playout request (e.g. initial playout or seeking)
-        //      - Resume from pause
-        //        - Other user request (e.g. user-requested quality change)
-        //        - Start of a metrics collection stream (hence earlier entries in the play list not collected)
-        this.trace = [];        // List of streams of continuous rendering of decoded samples.
+        this.starttype = null;  /* Enum | Type of user action which triggered playout
+                                 *  - New playout request (e.g. initial playout or seeking)
+                                 *  - Resume from pause
+                                 *  - Other user request (e.g. user-requested quality change)
+                                 *  - Start of a metrics collection stream (hence earlier entries in the play list not collected) */
+        this.trace = [];        // List | List of streams of continuous rendering of decoded samples.
     }
 }
 
 PlayList.Trace = class {
     constructor() {
         /*
-         * representationid - The value of the Representation@id of the Representation from which the samples were taken.
-         * subreplevel      - If not present, this metrics concerns the Representation as a whole. If present, subreplevel indicates the greatest value of any Subrepresentation@level being rendered.
+         * representationid - String | The value of the Representation@id of the Representation from which the samples were taken.
+         * subreplevel      - Integer | If not present, this metrics concerns the Representation as a whole. If present, subreplevel indicates the greatest value of any Subrepresentation@level being rendered.
          * start            - Real-Time | The time at which the first sample was rendered.
          * mstart           - Media-Time | The presentation time of the first sample rendered.
-         * duration         - The duration of the continuously presented samples (which is the same in real time and media time). ―Continuously presented‖ means that the media clock continued to advance at the playout speed throughout the interval.
-         * playbackspeed    - The playback speed relative to normal playback speed (i.e.normal forward playback speed is 1.0).
-         * stopreason       - The reason why continuous presentation of this Representation was stopped.
+         * duration         - Integer | The duration of the continuously presented samples (which is the same in real time and media time). "Continuously presented" means that the media clock continued to advance at the playout speed throughout the interval. NOTE: the spec does not call out the units, but all other durations etc are in ms, and we use ms too.
+         * playbackspeed    - Real | The playback speed relative to normal playback speed (i.e.normal forward playback speed is 1.0).
+         * stopreason       - Enum | The reason why continuous presentation of this Representation was stopped.
          *                    Either:
          *                    representation switch
          *                    rebuffering
          *                    user request
+         *                    end of Period
          *                    end of Stream
          *                    end of content
-         *                    end of a metrics collection stream
+         *                    end of a metrics collection period
          */
         this.representationid = null;
         this.subreplevel = null;
@@ -71,14 +71,19 @@ PlayList.Trace = class {
     }
 };
 
-/* Public Static Constants */
-PlayList.INITIAL_PLAY_START_REASON = 'initial_start';
-PlayList.SEEK_START_REASON = 'seek';
 
 /* Public Static Constants */
-PlayList.Trace.USER_REQUEST_STOP_REASON = 'user_request';
+PlayList.INITIAL_PLAYOUT_START_REASON = 'initial_playout';
+PlayList.SEEK_START_REASON = 'seek';
+PlayList.RESUME_FROM_PAUSE_START_REASON = 'resume';
+PlayList.METRICS_COLLECTION_START_REASON = 'metrics_collection_start';
+
 PlayList.Trace.REPRESENTATION_SWITCH_STOP_REASON = 'representation_switch';
-PlayList.Trace.END_OF_CONTENT_STOP_REASON = 'end_of_content';
 PlayList.Trace.REBUFFERING_REASON = 'rebuffering';
+PlayList.Trace.USER_REQUEST_STOP_REASON = 'user_request';
+PlayList.Trace.END_OF_PERIOD_STOP_REASON = 'end_of_period';
+PlayList.Trace.END_OF_CONTENT_STOP_REASON = 'end_of_content';
+PlayList.Trace.METRICS_COLLECTION_STOP_REASON = 'metrics_collection_end';
+PlayList.Trace.FAILURE_STOP_REASON = 'failure';
 
 export default PlayList;
