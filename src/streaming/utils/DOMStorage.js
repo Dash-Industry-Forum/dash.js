@@ -119,7 +119,7 @@ function DOMStorage() {
 
         var key = type === 'video' ? LOCAL_STORAGE_VIDEO_SETTINGS_KEY : LOCAL_STORAGE_AUDIO_SETTINGS_KEY;
         var obj = JSON.parse(localStorage.getItem(key)) || {};
-        var isExpired = (new Date().getTime() - parseInt(obj.timestamp)) >= experationDict[MEDIA_SETTINGS_EXPIRATION] || false;
+        var isExpired = (new Date().getTime() - parseInt(obj.timestamp, 10)) >= experationDict[MEDIA_SETTINGS_EXPIRATION] || false;
         var settings = obj.settings;
 
         if (isExpired) {
@@ -140,8 +140,8 @@ function DOMStorage() {
                 if (isSupported(STORAGE_TYPE_LOCAL) && lastBitrateCachingEnabled) {
                     var key = value === 'video' ? LOCAL_STORAGE_VIDEO_BITRATE_KEY : LOCAL_STORAGE_AUDIO_BITRATE_KEY;
                     var obj = JSON.parse(localStorage.getItem(key)) || {};
-                    var isExpired = (new Date().getTime() - parseInt(obj.timestamp)) >= experationDict[BITRATE_EXPIRATION] || false;
-                    var bitrate = parseInt(obj.bitrate);
+                    var isExpired = (new Date().getTime() - parseInt(obj.timestamp, 10)) >= experationDict[BITRATE_EXPIRATION] || false;
+                    var bitrate = parseInt(obj.bitrate, 10);
 
                     if (!isNaN(bitrate) && !isExpired) {
                         abrController.setInitialBitrateFor(value, bitrate);

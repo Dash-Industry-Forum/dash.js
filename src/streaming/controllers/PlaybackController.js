@@ -227,7 +227,7 @@ function PlaybackController() {
      */
     function getStreamStartTime(streamInfo) {
         var presentationStartTime;
-        var startTimeOffset = parseInt(URIQueryAndFragmentModel(context).getInstance().getURIFragmentData().s);
+        var startTimeOffset = parseInt(URIQueryAndFragmentModel(context).getInstance().getURIFragmentData().s, 10);
 
         if (isDynamic) {
 
