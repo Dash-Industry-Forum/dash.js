@@ -195,7 +195,7 @@ function MetricsModel() {
         }
 
         httpRequest.interval += d;
-        httpRequest.bytes += b;
+        httpRequest.bytes += parseInt(b, 10);
 
         metricUpdated(httpRequest.stream, adapter.metricsList.HTTP_REQUEST_TRACE, httpRequest);
         return vo;

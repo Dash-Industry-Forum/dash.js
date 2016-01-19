@@ -223,7 +223,7 @@ function DashMetricsExtensions() {
             return -1;
         }
 
-        for (i=httpList.length-1; (i>=0 && interested.length<length); i--)
+        for (i = httpList.length - 1; (i >= 0 && interested.length < length); i--)
         {
             response = httpList[i];
             // only care about MediaSegments
@@ -240,14 +240,14 @@ function DashMetricsExtensions() {
             if (segmentCount > 5) {
                 // this implies all were thought of as in the cache,
                 // just return the considered from cache time
-                log("latency likely all cached:" + PROBABLY_IN_CACHE_MS);
+                log('latency likely all cached:' + PROBABLY_IN_CACHE_MS);
                 return PROBABLY_IN_CACHE_MS;
             }
             return -1;
         }
 
         total = 0;
-        for (i=0; i<interested.length; i++) {
+        for (i = 0; i < interested.length; i++) {
             total += interested[i];
         }
         return total / interested.length;
