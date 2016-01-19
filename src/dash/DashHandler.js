@@ -781,13 +781,6 @@ function DashHandler(config) {
         var seg,
             i;
 
-        if (index < ln) {
-            seg = representation.segments[index];
-            if (seg && seg.availabilityIdx === index) {
-                return seg;
-            }
-        }
-
         for (i = 0; i < ln; i++) {
             seg = representation.segments[i];
 
