@@ -112,7 +112,6 @@ function BufferController(config) {
         isAppendingInProgress = false;
         isPruningInProgress = false;
         inbandEventFound = false;
-
     }
 
     function initialize(Type, Source, StreamProcessor) {
@@ -271,6 +270,12 @@ function BufferController(config) {
         isAppendingInProgress = true;
         appendedBytesInfo = chunk;
         sourceBufferExt.append(buffer, chunk);
+
+        if (chunk.mediaInfo.type === 'video') {
+            if (chunk.mediaInfo.embeddedCaptions) {
+                textSourceBuffer.append(chunk.bytes, chunk);
+            }
+        }
     }
 
     function onAppended(e) {

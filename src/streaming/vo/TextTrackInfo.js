@@ -41,6 +41,7 @@ class TextTrackInfo {
         this.defaultTrack = false;
         this.kind = null;
         this.isFragmented = false;
+        this.isEmbedded = false;
     }
 }
 

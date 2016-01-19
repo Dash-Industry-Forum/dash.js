@@ -41,6 +41,7 @@ function IsoFile() {
         sidxRefProps,
         emsgProps,
         mdhdProps,
+        mfhdProps,
         tfhdProps,
         tfdtProps,
         trunProps,
@@ -141,6 +142,10 @@ function IsoFile() {
             timescale: 'timescale'
         };
 
+        mfhdProps = {
+            sequence_number: 'sequence_number'
+        };
+
         tfhdProps = {
             base_data_offset: 'base_data_offset',
             sample_description_index: 'sample_description_index',
@@ -204,6 +209,9 @@ function IsoFile() {
                 break;
             case 'mdhd':
                 copyProps(boxData, box, mdhdProps);
+                break;
+            case 'mfhd':
+                copyProps(boxData, box, mfhdProps);
                 break;
             case 'tfhd':
                 copyProps(boxData, box, tfhdProps);
