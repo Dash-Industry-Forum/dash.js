@@ -69,7 +69,7 @@ function MediaController() {
         ['audio', 'video', 'text', 'fragmentedText'].forEach(function (type) {
             var settings = getInitialSettings(type);
             var tracksForType = getTracksFor(type, streamInfo);
-            var isSet = false;
+            var tracks = [];
 
             if (!settings) {
                 settings = DOMStorage.getSavedMediaSettings(type);
@@ -80,15 +80,20 @@ function MediaController() {
 
             if (settings) {
                 tracksForType.forEach(function (track) {
-                    if (!isSet && matchSettings(settings, track)) {
-                        setTrack(track);
-                        isSet = true;
+                    if (!matchSettings(settings, track)) {
+                        tracks.push(track);
                     }
                 });
             }
 
-            if (!isSet) {
+            if (tracks.length === 0) {
                 setTrack(selectInitialTrack(tracksForType));
+            } else {
+                if (tracks.length > 1) {
+                    setTrack(selectInitialTrack(tracks));
+                } else {
+                    setTrack(tracks[0]);
+                }
             }
         });
     }
