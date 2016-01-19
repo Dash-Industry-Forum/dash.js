@@ -172,6 +172,9 @@ function MetricsModel() {
         vo.responsecode = responsecode;
         vo.mediaduration = mediaduration;
         vo.responseHeaders = responseHeaders;
+        vo.latency = tresponse - trequest;
+        vo.time = tfinish - tresponse;
+
         getMetricsFor(mediaType).HttpList.push(vo);
 
         metricAdded(mediaType, adapter.metricsList.HTTP_REQUEST, vo);
@@ -192,6 +195,7 @@ function MetricsModel() {
         }
 
         httpRequest.interval += d;
+        httpRequest.bytes += b;
 
         metricUpdated(httpRequest.stream, adapter.metricsList.HTTP_REQUEST_TRACE, httpRequest);
         return vo;

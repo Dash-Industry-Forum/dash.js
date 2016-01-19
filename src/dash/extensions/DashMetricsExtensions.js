@@ -33,12 +33,14 @@ import AbrController from '../../streaming/controllers/AbrController.js';
 import ManifestModel from '../../streaming/models/ManifestModel.js';
 import DashManifestExtensions from '../../dash/extensions/DashManifestExtensions.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
 
 function DashMetricsExtensions() {
 
     let instance;
     let context = this.context;
     let manifestModel = ManifestModel(context).getInstance();//TODO Need to pass this in not bake in
+    let log = Debug(context).getInstance().log;
 
     function getBandwidthForRepresentation(representationId, periodId) {
         var representation;
@@ -199,6 +201,64 @@ function DashMetricsExtensions() {
             httpListLastIndex--;
         }
         return currentHttpList;
+    }
+
+    function getRecentThroughput(metrics, length) {
+
+        var httpList = metrics.HttpList;
+        var interested = [];
+        var throughput,
+            i;
+
+        if (httpList === null) {
+            log('throughput no http list yet');
+            return -1;
+        }
+        var segmentCount = 0;
+
+        for (i = httpList.length - 1; (i >= 0 && interested.length < length); i--)
+        {
+            var response = httpList[i];
+            // only care about MediaSegments
+            if (response.responsecode && response.type == HTTPRequest.MEDIA_SEGMENT_TYPE) {
+                segmentCount++;
+                var downloadTime = response.interval;
+                var latency = (response.tresponse - response.trequest);
+                // Without a rule specific to latency we should
+                // include both as that is what is actually
+                // important.
+                throughput = (response._bytes * 8) / (downloadTime + latency);
+                // probably from cache simplified to just low
+                // latency and low download for now, should be
+                // more generalised into radically different
+                // latency and download time from the average,
+                // could also use logic about the progress events,
+                // on chrome for example first progress event is
+                // after exactly 32768 bytes
+                var probalyFromCache = downloadTime < 100 && latency < 100;
+                if (!probalyFromCache) {
+                    interested.push(throughput);
+                }
+            }
+        }
+
+        if (interested.length === 0 ) {
+            if (segmentCount > 5) {
+                // this implies all were thought of as in the cache,
+                // just return the last throughput, it's likely to be
+                // higher than any of our manifests
+                log('throughput likely all cached is:' + throughput);
+                return throughput;
+            }
+            log('throughput not enough valid data');
+            return -1;
+        }
+        var total = 0;
+        for (i = 0; i < interested.length; i++) {
+            total += interested[i];
+        }
+        log('averageThroughput is:' + (total / interested.length));
+        return total / interested.length;
     }
 
     function getHttpRequests(metrics) {
@@ -420,6 +480,7 @@ function DashMetricsExtensions() {
         getCurrentBufferLevel: getCurrentBufferLevel,
         getCurrentPlaybackRate: getCurrentPlaybackRate,
         getCurrentHttpRequest: getCurrentHttpRequest,
+        getRecentThroughput: getRecentThroughput,
         getHttpRequests: getHttpRequests,
         getCurrentDroppedFrames: getCurrentDroppedFrames,
         getCurrentSchedulingInfo: getCurrentSchedulingInfo,

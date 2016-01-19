@@ -32,7 +32,6 @@ import SwitchRequest from '../SwitchRequest.js';
 import BufferController from '../../controllers/BufferController.js';
 import AbrController from '../../controllers/AbrController.js';
 import MediaPlayerModel from '../../models/MediaPlayerModel.js';
-import HTTPRequest from '../../vo/metrics/HTTPRequest.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 import Debug from '../../../core/Debug.js';
 
@@ -47,51 +46,14 @@ function ThroughputRule(config) {
     let metricsModel = config.metricsModel;
 
     let instance,
-        throughputArray,
         mediaPlayerModel;
 
     function setup() {
-        throughputArray = [];
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
     }
 
-    function storeLastRequestThroughputByType(type, lastRequestThroughput) {
-        throughputArray[type] = throughputArray[type] || [];
-        if (lastRequestThroughput !== Infinity &&
-            lastRequestThroughput !== throughputArray[type][throughputArray[type].length - 1]) {
-            throughputArray[type].push(lastRequestThroughput);
-        }
-    }
-
-    function getAverageThroughput(type, isDynamic) {
-        var averageThroughput = 0;
-        var sampleAmount = isDynamic ? AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE : AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD;
-        var arr = throughputArray[type];
-        var len = arr.length;
-
-        sampleAmount = len < sampleAmount ? len : sampleAmount;
-
-        if (len > 0) {
-            var startValue = len - sampleAmount;
-            var totalSampledValue = 0;
-
-            for (var i = startValue; i < len; i++) {
-                totalSampledValue += arr[i];
-            }
-            averageThroughput = totalSampledValue / sampleAmount;
-        }
-
-        if (arr.length > sampleAmount) {
-            arr.shift();
-        }
-
-        return (averageThroughput / 1000 ) * mediaPlayerModel.getBandwidthSafetyFactor();
-    }
-
     function execute (rulesContext, callback) {
-        var downloadTime;
         var averageThroughput;
-        var lastRequestThroughput;
 
         var mediaInfo = rulesContext.getMediaInfo();
         var mediaType = mediaInfo.type;
@@ -100,27 +62,20 @@ function ThroughputRule(config) {
         var streamProcessor = rulesContext.getStreamProcessor();
         var abrController = streamProcessor.getABRController();
         var isDynamic = streamProcessor.isDynamic();
-        var lastRequest = metricsExt.getCurrentHttpRequest(metrics);
         var bufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
         var bufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null;
         var switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
 
-        if (!metrics || !lastRequest || lastRequest.type !== HTTPRequest.MEDIA_SEGMENT_TYPE ||
-            !bufferStateVO || !bufferLevelVO ) {
+        if (!metrics || !bufferStateVO || !bufferLevelVO ) {
 
             callback(switchRequest);
             return;
 
         }
 
-        downloadTime = (lastRequest.tfinish.getTime() - lastRequest.tresponse.getTime()) / 1000;
+        averageThroughput = metricsExt.getRecentThroughput(metrics, (isDynamic ? AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE : AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD));
+        averageThroughput = Math.round((averageThroughput * mediaPlayerModel.getBandwidthSafetyFactor()) / 1000);
 
-        if (lastRequest.trace.length) {
-            lastRequestThroughput = Math.round((lastRequest.trace[lastRequest.trace.length - 1].b * 8 ) / downloadTime);
-            storeLastRequestThroughputByType(mediaType, lastRequestThroughput);
-        }
-
-        averageThroughput = Math.round(getAverageThroughput(mediaType, isDynamic));
         abrController.setAverageThroughput(mediaType, averageThroughput);
 
         if (abrController.getAbandonmentStateFor(mediaType) !== AbrController.ABANDON_LOAD) {
