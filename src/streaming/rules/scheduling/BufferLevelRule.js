@@ -91,7 +91,7 @@ function BufferLevelRule(config) {
             bufferTarget = textSourceBuffer.getAllTracksAreDisabled() ? 0 : trackInfo.fragmentDuration;
         }
 
-        recentLatency = Math.max(metricsExt.getRecentLatency(metrics, 4), MINIMUM_LATENCY_BUFFER);
+        recentLatency = Math.floor( Math.max(metricsExt.getRecentLatency(metrics, 4), MINIMUM_LATENCY_BUFFER) / 1000);
 
         return bufferTarget + recentLatency;
     }
