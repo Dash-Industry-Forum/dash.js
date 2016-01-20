@@ -450,6 +450,7 @@ function AbrController() {
         if (elementWidth > 0 && elementHeight > 0) {
             while (
                 newIdx > 0 &&
+                representation[newIdx] &&
                 elementWidth < representation[newIdx].width &&
                 elementWidth - representation[newIdx - 1].width < representation[newIdx].width - elementWidth
             ) {
