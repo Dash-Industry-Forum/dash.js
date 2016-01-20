@@ -85,14 +85,13 @@ function NextFragmentRequestRule(config) {
         while (request && streamProcessor.getFragmentModel().isFragmentLoaded(request)) {
             if (request.action === FragmentRequest.ACTION_COMPLETE) {
                 request = null;
-                streamProcessor.setIndexHandlerTime(NaN);
                 break;
             }
 
             request = adapter.getNextFragmentRequest(streamProcessor, representationInfo);
         }
 
-        if (request ) {
+        if (request) {
             streamProcessor.setIndexHandlerTime(request.startTime + request.duration);
             request.delayLoadingTime = new Date().getTime() + scheduleController.getTimeToLoadDelay();
         }
