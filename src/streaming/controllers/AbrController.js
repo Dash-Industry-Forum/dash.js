@@ -443,6 +443,10 @@ function AbrController() {
         let element = videoModel.getElement();
         let elementWidth = element.clientWidth;
         let elementHeight = element.clientHeight;
+        if (window.devicePixelRatio) {
+            elementWidth = elementWidth * window.devicePixelRatio;
+            elementHeight = elementHeight * window.devicePixelRatio;
+        }
         let manifest = manifestModel.getValue();
         let representation = manifestExt.getAdaptationForType(manifest, 0, type).Representation;
         let newIdx = idx;
