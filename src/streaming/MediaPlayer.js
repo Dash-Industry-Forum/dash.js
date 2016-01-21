@@ -1402,7 +1402,7 @@ function MediaPlayer() {
         virtualBuffer.setConfig({
             sourceBufferExt: sourceBufferExt
         });
-
+        
         mediaController.initialize();
         mediaController.setConfig({
             DOMStorage: domStorage,
