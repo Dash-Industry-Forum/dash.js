@@ -314,9 +314,7 @@ function MediaController() {
      * @memberof MediaController#
      */
     function reset() {
-        resetInitialSettings();
-        resetSwitchMode();
-        tracks = {};
+        initialize();
         textSourceBuffer.resetEmbedded();
     }
 
