@@ -37,7 +37,7 @@ import Debug from '../core/Debug.js';
 function FragmentLoader(config) {
 
     const RETRY_ATTEMPTS = 3;
-    const RETRY_INTERVAL = 3;
+    const RETRY_INTERVAL = 1000; // milliseconds
 
     let context = this.context;
     let log = Debug(context).getInstance().log;
@@ -82,7 +82,7 @@ function FragmentLoader(config) {
             latency = (requestVO.firstByteDate.getTime() - requestVO.requestStartDate.getTime());
             download = (requestVO.requestEndDate.getTime() - requestVO.firstByteDate.getTime());
 
-            log((succeeded ? 'loaded ' : 'failed ') + requestVO.mediaType + ':' + requestVO.type + ':' + requestVO.startTime + ' (' + req.status + ', ' + latency + 'ms, ' + download + 'ms)');
+            log((succeeded ? 'loaded ' : 'failed ') + requestVO.mediaType + ':' + requestVO.type + ':' + (isNaN(requestVO.startTime) ? '' : requestVO.startTime) + ' (' + req.status + ', ' + latency + 'ms, ' + download + 'ms)');
 
             httpRequestMetrics = metricsModel.addHttpRequest(
                 request.mediaType,
