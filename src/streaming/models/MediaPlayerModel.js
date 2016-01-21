@@ -5,6 +5,9 @@ const BUFFER_TO_KEEP = 30;
 const BUFFER_PRUNING_INTERVAL = 30;
 const LIVE_DELAY_FRAGMENT_COUNT = 4;
 
+const DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION = 360000;
+const DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION = 360000;
+
 function MediaPlayerModel() {
 
     let instance,
@@ -14,13 +17,17 @@ function MediaPlayerModel() {
         liveDelayFragmentCount,
         scheduleWhilePaused,
         bufferToKeep,
-        bufferPruningInterval;
+        bufferPruningInterval,
+        lastBitrateCachingInfo,
+        lastMediaSettingsCachingInfo;
 
     function setup() {
         UTCTimingSources = [];
         useSuggestedPresentationDelay = false;
         useManifestDateHeaderTimeSource = true;
         scheduleWhilePaused = false;
+        lastBitrateCachingInfo = {enabled: true , ttl: DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION};
+        lastMediaSettingsCachingInfo = {enabled: true , ttl: DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION};
         liveDelayFragmentCount = LIVE_DELAY_FRAGMENT_COUNT;
         bufferToKeep = BUFFER_TO_KEEP;
         bufferPruningInterval = BUFFER_PRUNING_INTERVAL;
@@ -33,6 +40,28 @@ function MediaPlayerModel() {
 
     function getBufferToKeep() {
         return bufferToKeep;
+    }
+
+    function setLastBitrateCachingInfo(enable, ttl) {
+        lastBitrateCachingInfo.enabled = enable;
+        if (ttl !== undefined && !isNaN(ttl) && typeof (ttl) === 'number') {
+            lastBitrateCachingInfo.ttl = ttl;
+        }
+    }
+
+    function getLastBitrateCachingInfo() {
+        return lastBitrateCachingInfo;
+    }
+
+    function setLastMediaSettingsCachingInfo(enable, ttl) {
+        lastMediaSettingsCachingInfo.enabled = enable;
+        if (ttl !== undefined && !isNaN(ttl) && typeof (ttl) === 'number') {
+            lastMediaSettingsCachingInfo.ttl = ttl;
+        }
+    }
+
+    function getLastMediaSettingsCachingInfo() {
+        return lastMediaSettingsCachingInfo;
     }
 
     function setBufferPruningInterval(value) {
@@ -88,6 +117,10 @@ function MediaPlayerModel() {
     }
 
     instance = {
+        setLastBitrateCachingInfo: setLastBitrateCachingInfo,
+        getLastBitrateCachingInfo: getLastBitrateCachingInfo,
+        setLastMediaSettingsCachingInfo: setLastMediaSettingsCachingInfo,
+        getLastMediaSettingsCachingInfo: getLastMediaSettingsCachingInfo,
         setBufferToKeep: setBufferToKeep,
         getBufferToKeep: getBufferToKeep,
         setBufferPruningInterval: setBufferPruningInterval,
