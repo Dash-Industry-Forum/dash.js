@@ -207,7 +207,7 @@ function ProtectionModel_3Feb2014(config) {
           capabilities = keySystemAccess.ksConfiguration.audioCapabilities[0];
 
         if (capabilities === null)
-          throw new Error("Can not create sessions for unknown content types.");
+          throw new Error('Can not create sessions for unknown content types.');
 
         var contentType = capabilities.contentType;
         var session = mediaKeys.createSession(contentType, new Uint8Array(initData));
