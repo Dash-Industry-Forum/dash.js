@@ -1260,6 +1260,32 @@ function MediaPlayer() {
         mediaPlayerModel.setRichBufferThreshold(value);
     }
 
+    /**
+     * @param value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setBandwidthSafetyFactor(value) {
+        mediaPlayerModel.setBandwidthSafetyFactor(value);
+    }
+
+    /**
+     * @return value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getBandwidthSafetyFactor() {
+        return mediaPlayerModel.getBandwidthSafetyFactor();
+    }
+
+    /**
+     * @param value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setAbandonLoadTimeout(value) {
+        mediaPlayerModel.setAbandonLoadTimeout(value);
+    }
 
     /**
      * @memberof module:MediaPlayer
@@ -1586,6 +1612,9 @@ function MediaPlayer() {
         setAutoSwitchQuality: setAutoSwitchQuality,
         getAutoSwitchQualityFor: getAutoSwitchQualityFor,
         setAutoSwitchQualityFor: setAutoSwitchQualityFor,
+        setBandwidthSafetyFactor: setBandwidthSafetyFactor,
+        getBandwidthSafetyFactor: getBandwidthSafetyFactor,
+        setAbandonLoadTimeout: setAbandonLoadTimeout,
         retrieveManifest: retrieveManifest,
         addUTCTimingSource: addUTCTimingSource,
         removeUTCTimingSource: removeUTCTimingSource,

@@ -32,6 +32,7 @@
 import SwitchRequest from '../rules/SwitchRequest';
 import BitrateInfo from '../vo/BitrateInfo.js';
 import ABRRulesCollection from '../rules/abr/ABRRulesCollection.js';
+import MediaPlayerModel from '../models/MediaPlayerModel.js';
 import FragmentModel from '../models/FragmentModel.js';
 import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
@@ -41,8 +42,6 @@ import DashManifestExtensions from '../../dash/extensions/DashManifestExtensions
 import VideoModel from '../models/VideoModel.js';
 
 const ABANDON_LOAD = 'abandonload';
-const BANDWIDTH_SAFETY = 0.9;
-const ABANDON_TIMEOUT = 10000;
 const ALLOW_LOAD = 'allowload';
 const DEFAULT_VIDEO_BITRATE = 1000;
 const DEFAULT_AUDIO_BITRATE = 100;
@@ -69,7 +68,8 @@ function AbrController() {
         limitBitrateByPortal,
         manifestModel,
         manifestExt,
-        videoModel;
+        videoModel,
+        mediaPlayerModel;
 
     function setup() {
         autoSwitchBitrate = {video: true, audio: true};
@@ -81,7 +81,8 @@ function AbrController() {
         averageThroughputDict = {};
         abandonmentStateDict = {};
         streamProcessorDict = {};
-        limitBitrateByPortal = true;
+        limitBitrateByPortal = false;
+        mediaPlayerModel = MediaPlayerModel(context).getInstance();
         manifestModel = ManifestModel(context).getInstance();
         manifestExt = DashManifestExtensions(context).getInstance();
         videoModel = VideoModel(context).getInstance();
@@ -477,7 +478,7 @@ function AbrController() {
                 function setupTimeout(type) {
                     abandonmentTimeout = setTimeout(function () {
                         setAbandonmentStateFor(type, ALLOW_LOAD);
-                    }, ABANDON_TIMEOUT);
+                    }, mediaPlayerModel.getAbandonLoadTimeout());
                 }
 
                 if (switchRequest.confidence === SwitchRequest.STRONG) {
@@ -542,7 +543,4 @@ function AbrController() {
 AbrController.__dashjs_factory_name = 'AbrController';
 let factory = FactoryMaker.getSingletonFactory(AbrController);
 factory.ABANDON_LOAD = ABANDON_LOAD;
-factory.BANDWIDTH_SAFETY = BANDWIDTH_SAFETY;
-factory.DEFAULT_VIDEO_BITRATE = DEFAULT_VIDEO_BITRATE;
-factory.DEFAULT_AUDIO_BITRATE = DEFAULT_AUDIO_BITRATE;
 export default factory;

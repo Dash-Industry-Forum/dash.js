@@ -6,6 +6,8 @@ const LIVE_DELAY_FRAGMENT_COUNT = 4;
 const DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION = 360000;
 const DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION = 360000;
 
+const BANDWIDTH_SAFETY_FACTOR = 0.9;
+const ABANDON_LOAD_TIMEOUT = 10000;
 
 const BUFFER_TO_KEEP = 30;
 const BUFFER_PRUNING_INTERVAL = 30;
@@ -31,7 +33,9 @@ function MediaPlayerModel() {
         bufferTimeAtTopQuality,
         bufferTimeAtTopQualityLongForm,
         longFormContentDurationThreshold,
-        richBufferThreshold;
+        richBufferThreshold,
+        bandwidthSafetyFactor,
+        abandonLoadTimeout;
 
     function setup() {
         UTCTimingSources = [];
@@ -48,8 +52,27 @@ function MediaPlayerModel() {
         bufferTimeAtTopQualityLongForm = BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM;
         longFormContentDurationThreshold = LONG_FORM_CONTENT_DURATION_THRESHOLD;
         richBufferThreshold = RICH_BUFFER_THRESHOLD;
+        bandwidthSafetyFactor = BANDWIDTH_SAFETY_FACTOR;
+        abandonLoadTimeout = ABANDON_LOAD_TIMEOUT;
     }
+
     //TODO Should we use Object.define to have setters/getters? makes more readable code on other side.
+
+    function setBandwidthSafetyFactor(value) {
+        bandwidthSafetyFactor = value;
+    }
+
+    function getBandwidthSafetyFactor() {
+        return bandwidthSafetyFactor;
+    }
+
+    function setAbandonLoadTimeout(value) {
+        abandonLoadTimeout = value;
+    }
+
+    function getAbandonLoadTimeout() {
+        return abandonLoadTimeout;
+    }
 
     function setStableBufferTime (value) {
         stableBufferTime = value;
@@ -176,6 +199,10 @@ function MediaPlayerModel() {
     }
 
     instance = {
+        setBandwidthSafetyFactor: setBandwidthSafetyFactor,
+        getBandwidthSafetyFactor: getBandwidthSafetyFactor,
+        setAbandonLoadTimeout: setAbandonLoadTimeout,
+        getAbandonLoadTimeout: getAbandonLoadTimeout,
         setLastBitrateCachingInfo: setLastBitrateCachingInfo,
         getLastBitrateCachingInfo: getLastBitrateCachingInfo,
         setLastMediaSettingsCachingInfo: setLastMediaSettingsCachingInfo,

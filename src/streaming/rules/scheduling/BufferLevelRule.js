@@ -42,10 +42,12 @@ function BufferLevelRule(config) {
     let metricsModel = config.metricsModel;
     let textSourceBuffer = config.textSourceBuffer;
 
-    let mediaPlayerModel;
+    let mediaPlayerModel,
+        playbackController;
 
     function setup() {
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
+        playbackController = PlaybackController(context).getInstance();
     }
 
     function execute(rulesContext, callback) {
@@ -78,7 +80,7 @@ function BufferLevelRule(config) {
             //General VOD target non top quality and not stabilized on a given quality.
             bufferTarget = mediaPlayerModel.getStableBufferTime();
         } else {
-            bufferTarget = PlaybackController(context).getInstance().getLiveDelay();
+            bufferTarget = playbackController.getLiveDelay();
         }
 
         if (type === 'fragmentedText') {
