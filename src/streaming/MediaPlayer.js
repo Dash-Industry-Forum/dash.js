@@ -1207,14 +1207,6 @@ function MediaPlayer() {
     }
 
     /**
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getBufferToKeep() {
-        return mediaPlayerModel.getBufferToKeep();
-    }
-
-    /**
      * @param value
      * @memberof module:MediaPlayer
      * @instance
@@ -1224,12 +1216,50 @@ function MediaPlayer() {
     }
 
     /**
+     * @param value
      * @memberof module:MediaPlayer
      * @instance
      */
-    function getBufferPruningInterval() {
-        return mediaPlayerModel.getBufferPruningInterval();
+    function setStableBufferTime(value) {
+        mediaPlayerModel.setStableBufferTime(value);
     }
+
+    /**
+     * @param value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setBufferTimeAtTopQuality (value) {
+        mediaPlayerModel.setBufferTimeAtTopQuality(value);
+    }
+
+    /**
+     * @param value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setBufferTimeAtTopQualityLongForm (value) {
+        mediaPlayerModel.setBufferTimeAtTopQualityLongForm(value);
+    }
+
+    /**
+     * @param value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setLongFormContentDurationThreshold (value) {
+        mediaPlayerModel.setLongFormContentDurationThreshold(value);
+    }
+
+    /**
+     * @param value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setRichBufferThreshold (value) {
+        mediaPlayerModel.setRichBufferThreshold(value);
+    }
+
 
     /**
      * @memberof module:MediaPlayer
@@ -1402,7 +1432,7 @@ function MediaPlayer() {
         virtualBuffer.setConfig({
             sourceBufferExt: sourceBufferExt
         });
-        
+
         mediaController.initialize();
         mediaController.setConfig({
             DOMStorage: domStorage,
@@ -1562,9 +1592,12 @@ function MediaPlayer() {
         clearDefaultUTCTimingSources: clearDefaultUTCTimingSources,
         restoreDefaultUTCTimingSources: restoreDefaultUTCTimingSources,
         setBufferToKeep: setBufferToKeep,
-        getBufferToKeep: getBufferToKeep,
         setBufferPruningInterval: setBufferPruningInterval,
-        getBufferPruningInterval: getBufferPruningInterval,
+        setStableBufferTime: setStableBufferTime,
+        setBufferTimeAtTopQuality: setBufferTimeAtTopQuality,
+        setBufferTimeAtTopQualityLongForm: setBufferTimeAtTopQualityLongForm,
+        setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,
+        setRichBufferThreshold: setRichBufferThreshold,
         getProtectionController: getProtectionController,
         enableManifestDateHeaderTimeSource: enableManifestDateHeaderTimeSource,
         displayCaptionsOnTop: displayCaptionsOnTop,

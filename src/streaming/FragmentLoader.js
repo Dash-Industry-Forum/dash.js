@@ -37,7 +37,7 @@ import Debug from '../core/Debug.js';
 function FragmentLoader(config) {
 
     const RETRY_ATTEMPTS = 3;
-    const RETRY_INTERVAL = 3;
+    const RETRY_INTERVAL = 1000;
 
     let context = this.context;
     let log = Debug(context).getInstance().log;

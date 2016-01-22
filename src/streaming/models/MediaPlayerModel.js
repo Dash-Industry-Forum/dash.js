@@ -1,12 +1,19 @@
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 const DEFAULT_UTC_TIMING_SOURCE = { scheme: 'urn:mpeg:dash:utc:http-xsdate:2014', value: 'http://time.akamai.com/?iso' };
-const BUFFER_TO_KEEP = 30;
-const BUFFER_PRUNING_INTERVAL = 30;
 const LIVE_DELAY_FRAGMENT_COUNT = 4;
 
 const DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION = 360000;
 const DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION = 360000;
+
+
+const BUFFER_TO_KEEP = 30;
+const BUFFER_PRUNING_INTERVAL = 30;
+const DEFAULT_MIN_BUFFER_TIME = 12;
+const BUFFER_TIME_AT_TOP_QUALITY = 30;
+const BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 60;
+const LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;
+const RICH_BUFFER_THRESHOLD = 20;
 
 function MediaPlayerModel() {
 
@@ -19,7 +26,12 @@ function MediaPlayerModel() {
         bufferToKeep,
         bufferPruningInterval,
         lastBitrateCachingInfo,
-        lastMediaSettingsCachingInfo;
+        lastMediaSettingsCachingInfo,
+        stableBufferTime,
+        bufferTimeAtTopQuality,
+        bufferTimeAtTopQualityLongForm,
+        longFormContentDurationThreshold,
+        richBufferThreshold;
 
     function setup() {
         UTCTimingSources = [];
@@ -31,8 +43,54 @@ function MediaPlayerModel() {
         liveDelayFragmentCount = LIVE_DELAY_FRAGMENT_COUNT;
         bufferToKeep = BUFFER_TO_KEEP;
         bufferPruningInterval = BUFFER_PRUNING_INTERVAL;
+        stableBufferTime = DEFAULT_MIN_BUFFER_TIME;
+        bufferTimeAtTopQuality = BUFFER_TIME_AT_TOP_QUALITY;
+        bufferTimeAtTopQualityLongForm = BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM;
+        longFormContentDurationThreshold = LONG_FORM_CONTENT_DURATION_THRESHOLD;
+        richBufferThreshold = RICH_BUFFER_THRESHOLD;
     }
-    //TODO Can we use Object.define to have setters/getters
+    //TODO Should we use Object.define to have setters/getters? makes more readable code on other side.
+
+    function setStableBufferTime (value) {
+        stableBufferTime = value;
+    }
+
+    function getStableBufferTime() {
+        return stableBufferTime;
+    }
+
+    function setBufferTimeAtTopQuality(value) {
+        bufferTimeAtTopQuality = value;
+    }
+
+    function getBufferTimeAtTopQuality() {
+        return bufferTimeAtTopQuality;
+    }
+
+    function setBufferTimeAtTopQualityLongForm(value) {
+        bufferTimeAtTopQualityLongForm = value;
+    }
+
+    function getBufferTimeAtTopQualityLongForm() {
+        return bufferTimeAtTopQualityLongForm;
+    }
+
+    function setLongFormContentDurationThreshold(value) {
+        longFormContentDurationThreshold = value;
+    }
+
+    function getLongFormContentDurationThreshold() {
+        return longFormContentDurationThreshold;
+    }
+
+    function setRichBufferThreshold(value) {
+        richBufferThreshold = value;
+    }
+
+    function getRichBufferThreshold() {
+        return richBufferThreshold;
+    }
+
 
     function setBufferToKeep(value) {
         bufferToKeep = value;
@@ -113,7 +171,8 @@ function MediaPlayerModel() {
     }
 
     function reset() {
-        setup();
+        //TODO need to figure out what props to persist across sessions and which to reset if any.
+        //setup();
     }
 
     instance = {
@@ -121,6 +180,16 @@ function MediaPlayerModel() {
         getLastBitrateCachingInfo: getLastBitrateCachingInfo,
         setLastMediaSettingsCachingInfo: setLastMediaSettingsCachingInfo,
         getLastMediaSettingsCachingInfo: getLastMediaSettingsCachingInfo,
+        setStableBufferTime: setStableBufferTime,
+        getStableBufferTime: getStableBufferTime,
+        setBufferTimeAtTopQuality: setBufferTimeAtTopQuality,
+        getBufferTimeAtTopQuality: getBufferTimeAtTopQuality,
+        setBufferTimeAtTopQualityLongForm: setBufferTimeAtTopQualityLongForm,
+        getBufferTimeAtTopQualityLongForm: getBufferTimeAtTopQualityLongForm,
+        setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,
+        getLongFormContentDurationThreshold: getLongFormContentDurationThreshold,
+        setRichBufferThreshold: setRichBufferThreshold,
+        getRichBufferThreshold: getRichBufferThreshold,
         setBufferToKeep: setBufferToKeep,
         getBufferToKeep: getBufferToKeep,
         setBufferPruningInterval: setBufferPruningInterval,
@@ -143,6 +212,7 @@ function MediaPlayerModel() {
     return instance;
 }
 
+//TODO see if you can move this and not export and just getter to get default value.
 MediaPlayerModel.__dashjs_factory_name = 'MediaPlayerModel';
 let factory = FactoryMaker.getSingletonFactory(MediaPlayerModel);
 factory.DEFAULT_UTC_TIMING_SOURCE = DEFAULT_UTC_TIMING_SOURCE;
