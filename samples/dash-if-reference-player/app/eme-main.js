@@ -125,7 +125,8 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
         if ($scope.selectedItem.hasOwnProperty("protData")) {
             protectionData = $scope.selectedItem.protData;
         }
-        player.attachSource($scope.selectedItem.url, null, protectionData);
+        player.setProtectionData(protectionData);
+        player.attachSource($scope.selectedItem.url);
         player.setAutoSwitchQuality($scope.abrEnabled);
         controlbar.reset();
         controlbar.enable();
@@ -350,7 +351,8 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     };
 
     $scope.play = function(data) {
-        player.attachSource(data.manifest, data.protCtrl);
+        player.attachProtectionController(data.protCtrl)
+        player.attachSource(data.manifest);
         for (var i = 0; i < $scope.drmData.length; i++) {
             var drmData = $scope.drmData[i];
             drmData.isPlaying = !!(drmData === data);

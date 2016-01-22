@@ -653,12 +653,12 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     }
 
     $scope.doLoad = function () {
-        var protData = null,
-            initialSettings;
+        var protData = null;
         if ($scope.selectedItem.hasOwnProperty("protData")) {
             protData = $scope.selectedItem.protData;
         }
-        player.attachSource($scope.selectedItem.url, null, protData);
+        player.setProtectionData(protData);
+        player.attachSource($scope.selectedItem.url);
         player.setAutoSwitchQuality($scope.abrEnabled);
         controlbar.reset();
         controlbar.enable();

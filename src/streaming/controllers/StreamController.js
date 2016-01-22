@@ -580,16 +580,12 @@ function StreamController() {
     }
 
     function reset() {
-
-        var stream;
         timeSyncController.reset();
-
-        for (var i = 0, ln = streams.length; i < ln; i++) {
-            stream = streams[i];
+        for (let i = 0, ln = streams.length; i < ln; i++) {
+            let stream = streams[i];
             eventBus.off(Events.STREAM_INITIALIZED, onStreamInitialized, this);
             stream.reset(hasMediaError);
         }
-
         streams = [];
 
         eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
@@ -613,14 +609,11 @@ function StreamController() {
         activeStream = null;
         canPlay = false;
         hasMediaError = false;
-
         if (mediaSource) {
             mediaSourceExt.detachMediaSource(videoModel);
             mediaSource = null;
         }
-
         videoModel = null;
-
         if (protectionController) {
             protectionController.setMediaElement(null);
             protectionController = null;
@@ -629,8 +622,6 @@ function StreamController() {
                 eventBus.trigger(Events.PROTECTION_DESTROYED, {data: manifestModel.getValue().url});
             }
         }
-
-        eventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
     }
 
     instance = {

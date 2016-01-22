@@ -72,7 +72,7 @@ let FactoryMaker = (function () {
             }
             return {
                 create: function () {
-                    return merge(classConstructor.__dashjs_factory_name, classConstructor.apply({ context: context }, arguments), context);
+                    return merge(classConstructor.__dashjs_factory_name, classConstructor.apply({ context: context }, arguments), context, arguments);
                 }
             };
         };
@@ -92,7 +92,7 @@ let FactoryMaker = (function () {
                     }
                     // If there's no instance on the context then create one
                     if (!instance) {
-                        instance = merge(classConstructor.__dashjs_factory_name, classConstructor.apply({ context: context }, arguments), context);
+                        instance = merge(classConstructor.__dashjs_factory_name, classConstructor.apply({ context: context }, arguments), context, arguments);
                         singletonContexts.push({ name: classConstructor.__dashjs_factory_name, context: context, instance: instance });
                     }
                     return instance;
@@ -101,20 +101,20 @@ let FactoryMaker = (function () {
         };
     }
 
-    function merge(name, classConstructor, context) {
+    function merge(name, classConstructor, context, args) {
         let extensionContext = getExtensionContext(context);
         let extensionObject = extensionContext[name];
         if (extensionObject) {
             let extension = extensionObject.instance;
             if (extensionObject.override) { //Override public methods in parent but keep parent.
-                extension = extension.apply({ context: context, factory: instance, parent: classConstructor});
+                extension = extension.apply({ context: context, factory: instance, parent: classConstructor}, args);
                 for (const prop in extension) {
                     if (classConstructor.hasOwnProperty(prop)) {
                         classConstructor[prop] = extension[prop];
                     }
                 }
             } else { //replace parent object completely with new object. Same as dijon.
-                return extension.apply({ context: context, factory: instance});
+                return extension.apply({ context: context, factory: instance}, args);
             }
         }
         return classConstructor;
