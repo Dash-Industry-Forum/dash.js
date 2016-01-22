@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import SwitchRequest from '../SwitchRequest.js';
-import BufferController from '../../controllers/BufferController.js';
+import MediaPlayerModel from '../../models/MediaPlayerModel.js';
 import PlaybackController from '../../controllers/PlaybackController.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
@@ -41,6 +41,14 @@ function BufferLevelRule(config) {
     let metricsExt = config.metricsExt;
     let metricsModel = config.metricsModel;
     let textSourceBuffer = config.textSourceBuffer;
+
+    let mediaPlayerModel,
+        playbackController;
+
+    function setup() {
+        mediaPlayerModel = MediaPlayerModel(context).getInstance();
+        playbackController = PlaybackController(context).getInstance();
+    }
 
     function execute(rulesContext, callback) {
         var mediaInfo = rulesContext.getMediaInfo();
@@ -63,16 +71,16 @@ function BufferLevelRule(config) {
         var duration = streamInfo.manifestInfo.duration;
         var trackInfo = rulesContext.getTrackInfo();
         var isDynamic = streamProcessor.isDynamic(); //TODO make is dynamic false if live stream is playing more than X seconds from live edge in DVR window. So it will act like VOD.
-        var isLongFormContent = (duration >= BufferController.LONG_FORM_CONTENT_DURATION_THRESHOLD);
+        var isLongFormContent = (duration >= mediaPlayerModel.getLongFormContentDurationThreshold());
         var bufferTarget = NaN;
 
         if (!isDynamic && abrController.isPlayingAtTopQuality(streamInfo)) {//TODO || allow larger buffer targets if we stabilize on a non top quality for more than 30 seconds.
-            bufferTarget = isLongFormContent ? BufferController.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM : BufferController.BUFFER_TIME_AT_TOP_QUALITY;
+            bufferTarget = isLongFormContent ? mediaPlayerModel.getBufferTimeAtTopQualityLongForm() : mediaPlayerModel.getBufferTimeAtTopQuality();
         }else if (!isDynamic) {
             //General VOD target non top quality and not stabilized on a given quality.
-            bufferTarget = BufferController.DEFAULT_MIN_BUFFER_TIME;
+            bufferTarget = mediaPlayerModel.getStableBufferTime();
         } else {
-            bufferTarget = PlaybackController(context).getInstance().getLiveDelay();
+            bufferTarget = playbackController.getLiveDelay();
         }
 
         if (type === 'fragmentedText') {
@@ -86,7 +94,7 @@ function BufferLevelRule(config) {
         execute: execute,
         reset: reset
     };
-
+    setup();
     return instance;
 }
 

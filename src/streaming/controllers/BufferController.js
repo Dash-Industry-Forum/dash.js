@@ -43,11 +43,6 @@ import BoxParser from '../utils/BoxParser.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
 
-const DEFAULT_MIN_BUFFER_TIME = 12;
-const BUFFER_TIME_AT_TOP_QUALITY = 30;
-const BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 60;
-const LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;
-const RICH_BUFFER_THRESHOLD = 20;
 const BUFFER_LOADED = 'bufferLoaded';
 const BUFFER_EMPTY = 'bufferStalled';
 const STALL_THRESHOLD = 0.5;
@@ -781,11 +776,6 @@ function BufferController(config) {
 
 BufferController.__dashjs_factory_name = 'BufferController';
 let factory = FactoryMaker.getClassFactory(BufferController);
-factory.DEFAULT_MIN_BUFFER_TIME = DEFAULT_MIN_BUFFER_TIME;
-factory.BUFFER_TIME_AT_TOP_QUALITY = BUFFER_TIME_AT_TOP_QUALITY;
-factory.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM;
-factory.LONG_FORM_CONTENT_DURATION_THRESHOLD = LONG_FORM_CONTENT_DURATION_THRESHOLD;
-factory.RICH_BUFFER_THRESHOLD = RICH_BUFFER_THRESHOLD;
 factory.BUFFER_LOADED = BUFFER_LOADED;
 factory.BUFFER_EMPTY = BUFFER_EMPTY;
 export default factory;

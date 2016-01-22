@@ -1207,14 +1207,6 @@ function MediaPlayer() {
     }
 
     /**
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getBufferToKeep() {
-        return mediaPlayerModel.getBufferToKeep();
-    }
-
-    /**
      * @param value
      * @memberof module:MediaPlayer
      * @instance
@@ -1224,11 +1216,75 @@ function MediaPlayer() {
     }
 
     /**
+     * @param value
      * @memberof module:MediaPlayer
      * @instance
      */
-    function getBufferPruningInterval() {
-        return mediaPlayerModel.getBufferPruningInterval();
+    function setStableBufferTime(value) {
+        mediaPlayerModel.setStableBufferTime(value);
+    }
+
+    /**
+     * @param value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setBufferTimeAtTopQuality (value) {
+        mediaPlayerModel.setBufferTimeAtTopQuality(value);
+    }
+
+    /**
+     * @param value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setBufferTimeAtTopQualityLongForm (value) {
+        mediaPlayerModel.setBufferTimeAtTopQualityLongForm(value);
+    }
+
+    /**
+     * @param value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setLongFormContentDurationThreshold (value) {
+        mediaPlayerModel.setLongFormContentDurationThreshold(value);
+    }
+
+    /**
+     * @param value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setRichBufferThreshold (value) {
+        mediaPlayerModel.setRichBufferThreshold(value);
+    }
+
+    /**
+     * @param value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setBandwidthSafetyFactor(value) {
+        mediaPlayerModel.setBandwidthSafetyFactor(value);
+    }
+
+    /**
+     * @return value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getBandwidthSafetyFactor() {
+        return mediaPlayerModel.getBandwidthSafetyFactor();
+    }
+
+    /**
+     * @param value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setAbandonLoadTimeout(value) {
+        mediaPlayerModel.setAbandonLoadTimeout(value);
     }
 
     /**
@@ -1402,7 +1458,7 @@ function MediaPlayer() {
         virtualBuffer.setConfig({
             sourceBufferExt: sourceBufferExt
         });
-        
+
         mediaController.initialize();
         mediaController.setConfig({
             DOMStorage: domStorage,
@@ -1556,15 +1612,21 @@ function MediaPlayer() {
         setAutoSwitchQuality: setAutoSwitchQuality,
         getAutoSwitchQualityFor: getAutoSwitchQualityFor,
         setAutoSwitchQualityFor: setAutoSwitchQualityFor,
+        setBandwidthSafetyFactor: setBandwidthSafetyFactor,
+        getBandwidthSafetyFactor: getBandwidthSafetyFactor,
+        setAbandonLoadTimeout: setAbandonLoadTimeout,
         retrieveManifest: retrieveManifest,
         addUTCTimingSource: addUTCTimingSource,
         removeUTCTimingSource: removeUTCTimingSource,
         clearDefaultUTCTimingSources: clearDefaultUTCTimingSources,
         restoreDefaultUTCTimingSources: restoreDefaultUTCTimingSources,
         setBufferToKeep: setBufferToKeep,
-        getBufferToKeep: getBufferToKeep,
         setBufferPruningInterval: setBufferPruningInterval,
-        getBufferPruningInterval: getBufferPruningInterval,
+        setStableBufferTime: setStableBufferTime,
+        setBufferTimeAtTopQuality: setBufferTimeAtTopQuality,
+        setBufferTimeAtTopQualityLongForm: setBufferTimeAtTopQualityLongForm,
+        setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,
+        setRichBufferThreshold: setRichBufferThreshold,
         getProtectionController: getProtectionController,
         enableManifestDateHeaderTimeSource: enableManifestDateHeaderTimeSource,
         displayCaptionsOnTop: displayCaptionsOnTop,
