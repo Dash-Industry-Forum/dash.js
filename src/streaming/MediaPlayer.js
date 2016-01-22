@@ -89,7 +89,6 @@ function MediaPlayer() {
         source,
         protectionData,
         initialized,
-        resetting,
         playbackInitiated,
         autoPlay,
         abrController,
@@ -111,7 +110,6 @@ function MediaPlayer() {
 
     function setup() {
         initialized = false;
-        resetting = false;
         playbackInitiated = false;
         autoPlay = true;
         protectionController = null;
@@ -167,7 +165,7 @@ function MediaPlayer() {
      * @instance
      */
     function isReady() {
-        return (!!element && !!source && !resetting);
+        return (!!element && !!source);
     }
 
     /**
@@ -1296,6 +1294,26 @@ function MediaPlayer() {
     }
 
     /**
+     * @param {ProtectionController} [value] valid protection controller instance.
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function attachProtectionController(value) {
+        protectionController = value;
+    }
+
+    /**
+     * @param {ProtectionData} [value] object containing
+     * property names corresponding to key system name strings and associated
+     * values being instances of
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setProtectionData(value) {
+        protectionData = value;
+    }
+
+    /**
      * This method serves to control captions z-index value. If 'true' is passed, the captions will have the highest z-index and be
      * displayed on top of other html elements. Default value is 'false' (z-index is not set).
      * @param value {Boolean}
@@ -1342,9 +1360,9 @@ function MediaPlayer() {
             videoModel.setElement(element);
             // Workaround to force Firefox to fire the canplay event.
             element.preload = 'auto';
-            //Todo figure out a better place for this!
             detectProtection();
         }
+        resetAndCheckAutoPlay();
     }
 
     /**
@@ -1368,17 +1386,14 @@ function MediaPlayer() {
      *
      * @param {string | object} urlOrManifest A URL to a valid MPD manifest file, or a
      * parsed manifest object.
-     * @param {MediaPlayer.dependencies.ProtectionController} [protectionCtrl] optional
-     * protection controller
-     * @param {MediaPlayer.vo.protection.ProtectionData} [data] object containing
-     * property names corresponding to key system name strings and associated
-     * values being instances of
+     *
+     *
      * @throw "MediaPlayer not initialized!"
      *
      * @memberof module:MediaPlayer
      * @instance
      */
-    function attachSource(urlOrManifest, protectionCtrl, data) {//TODO way too overloaded with protection.  Break out all protection and only accept source.
+    function attachSource(urlOrManifest) {
         if (!initialized) {
             throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
         }
@@ -1391,13 +1406,14 @@ function MediaPlayer() {
             source = urlOrManifest;
         }
 
-        //TODO figure out a better place for this. see attachView.
-        if (protectionCtrl) {
-            protectionController = protectionCtrl;
-        }
-        protectionData = data;
-        resetAndPlay();
+        resetAndCheckAutoPlay();
     }
+
+    /**
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    //function destroy() {}
 
     /**
      * Sets the MPD source and the video element to null.
@@ -1405,36 +1421,26 @@ function MediaPlayer() {
      * @instance
      */
     function reset() {
-        //todo add all vars in reset that need to be in here
         attachSource(null);
         attachView(null);
-        protectionController = null;
-        protectionData = null;
     }
 
-    function resetAndPlay() {
-        adapter.reset();
-        if (playbackInitiated && streamController) {
-            if (!resetting) {
-                resetting = true;
-                eventBus.on(Events.STREAM_TEARDOWN_COMPLETE, onStreamTeardownComplete, this);
-                streamController.reset();
+    function resetAndCheckAutoPlay() {
+        if (playbackInitiated) {
+            playbackInitiated = false;
+            adapter.reset();
+            streamController.reset();
+            playbackController.reset();
+            abrController.reset();
+            rulesController.reset();
+            mediaController.reset();
+            streamController = null;
+            protectionController = null;
+            protectionData = null;
+            if (autoPlay && isReady()) {
+                play();
             }
-        } else if (autoPlay) {
-            play();
-        }
-    }
-
-    function onStreamTeardownComplete() { //TODO see if we really need to be async here in streamController.reset() and resetAndPlay above.
-        abrController.reset();
-        rulesController.reset();
-        playbackController.reset();
-        mediaController.reset();
-        streamController = null;
-        playbackInitiated = false;
-        eventBus.off(Events.STREAM_TEARDOWN_COMPLETE, onStreamTeardownComplete, this);
-        resetting = false;
-        if (autoPlay) {
+        } else if (autoPlay && isReady()) {
             play();
         }
     }
@@ -1628,6 +1634,8 @@ function MediaPlayer() {
         setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,
         setRichBufferThreshold: setRichBufferThreshold,
         getProtectionController: getProtectionController,
+        attachProtectionController: attachProtectionController,
+        setProtectionData: setProtectionData,
         enableManifestDateHeaderTimeSource: enableManifestDateHeaderTimeSource,
         displayCaptionsOnTop: displayCaptionsOnTop,
         attachVideoContainer: attachVideoContainer,
