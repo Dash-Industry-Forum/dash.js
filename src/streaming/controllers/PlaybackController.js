@@ -176,20 +176,20 @@ function PlaybackController() {
     }
 
     function reset() {
-        eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
-        eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
-        eventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
-        eventBus.off(Events.BYTES_APPENDED, onBytesAppended, this);
-
-        stopUpdatingWallclockTime();
-        removeAllListeners();
+        if (videoModel && element) {
+            eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+            eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
+            eventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
+            eventBus.off(Events.BYTES_APPENDED, onBytesAppended, this);
+            stopUpdatingWallclockTime();
+            removeAllListeners();
+        }
         videoModel = null;
         streamInfo = null;
         element = null;
         isDynamic = null;
         setup();
     }
-
 
     function setConfig(config) {
         if (!config) return;
