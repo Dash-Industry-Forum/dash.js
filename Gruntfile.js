@@ -50,6 +50,14 @@ module.exports = function (grunt) {
                     'build/temp/dash.protection.min.js': 'build/temp/dash.protection.debug.js'
                 }
             },
+            build_all: {
+                options: {
+                    sourceMapIn: 'build/temp/dash.all.debug.js.map'
+                },
+                files: {
+                    'build/temp/dash.all.min.js': 'build/temp/dash.all.debug.js'
+                }
+            },
 
         },
         copy: {
@@ -78,6 +86,12 @@ module.exports = function (grunt) {
                 options: {},
                 files: {
                     'build/temp/dash.protection.debug.js.map': ['build/temp/dash.protection.debug.js']
+                }
+            },
+            all: {
+                options: {},
+                files: {
+                    'build/temp/dash.all.debug.js.map': ['build/temp/dash.all.debug.js']
                 }
             }
         },
@@ -114,7 +128,7 @@ module.exports = function (grunt) {
             },
             all: {
                 files: {
-                    'build/temp/dash.all.min.js': ['src/All.js']
+                    'build/temp/dash.all.debug.js': ['src/All.js']
                 },
                 options: {
                     browserifyOptions: {
