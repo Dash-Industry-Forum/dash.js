@@ -400,6 +400,7 @@ function PlaybackController() {
 
     function onPlaybackEnded() {
         log('Native video element event: ended');
+        element.autoplay = false;
         stopUpdatingWallclockTime();
         eventBus.trigger(Events.PLAYBACK_ENDED);
     }
