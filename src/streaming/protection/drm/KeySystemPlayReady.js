@@ -39,6 +39,7 @@ import CommonEncryption from '../CommonEncryption.js';
 import Error from '../../vo/Error.js';
 
 import FactoryMaker from '../../../core/FactoryMaker.js';
+import BASE64 from '../../../../externals/base64.js';
 
 const uuid = '9a04f079-9840-4286-ab92-e65be0885f95';
 const systemString = 'com.microsoft.playready';

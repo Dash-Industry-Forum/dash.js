@@ -36,6 +36,7 @@
  * @class
  */
 import FactoryMaker from '../../../core/FactoryMaker.js';
+import BASE64 from '../../../../externals/base64.js';
 
 function DRMToday() {
 

@@ -31,6 +31,7 @@
 
 import IsoFile from './IsoFile.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
+import ISOBoxer from 'codem-isoboxer';
 
 function BoxParser(/*config*/) {
 
