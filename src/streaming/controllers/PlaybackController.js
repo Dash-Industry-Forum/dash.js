@@ -246,8 +246,12 @@ function PlaybackController() {
         } else {
             if (!isNaN(startTimeOffset) && startTimeOffset < streamInfo.duration && startTimeOffset >= 0) {
                 presentationStartTime = startTimeOffset;
-            }else {
-                presentationStartTime = streamInfo.start;
+            } else {
+                if (videoModel.getElement().currentTime != streamInfo.start) {
+                    presentationStartTime = videoModel.getElement().currentTime;
+                } else {
+                    presentationStartTime = streamInfo.start;
+                }
             }
         }
 
