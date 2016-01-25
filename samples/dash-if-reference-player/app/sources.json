@@ -212,7 +212,7 @@
         },
         {
             "name": "Envivio",
-            "url": "http://dash.edgesuite.net/envivio/Envivio-dash2/manifest.mpd",
+            "url": "http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd",
             "browsers": "cdsbi"
         },
         {
@@ -309,6 +309,11 @@
         {
             "name": "BBC R&D EBU-TT-D Subtitling Test",
             "url": "http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/1/client_manifest-all.mpd",
+            "browsers": ""
+        },
+         {
+            "name": "Emedded CEA-608 captions and segmented subs (VoD)",
+            "url": "http://vm2.dashif.org/dash/vod/testpic_2s/cea608_and_segs.mpd",
             "browsers": ""
         }
     ]

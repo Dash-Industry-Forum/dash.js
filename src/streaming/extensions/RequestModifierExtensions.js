@@ -51,4 +51,5 @@ function RequestModifierExtensions() {
     return instance;
 }
 
+RequestModifierExtensions.__dashjs_factory_name = 'RequestModifierExtensions';
 export default FactoryMaker.getSingletonFactory(RequestModifierExtensions);

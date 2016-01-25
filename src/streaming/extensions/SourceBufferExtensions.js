@@ -388,8 +388,7 @@ function SourceBufferExtensions() {
     return instance;
 }
 
+SourceBufferExtensions.__dashjs_factory_name = 'SourceBufferExtensions';
 let factory = FactoryMaker.getSingletonFactory(SourceBufferExtensions);
-
 factory.QUOTA_EXCEEDED_ERROR_CODE = QUOTA_EXCEEDED_ERROR_CODE;
-
 export default factory;

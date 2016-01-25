@@ -69,4 +69,5 @@ function LiveEdgeWithTimeSynchronizationRule(config) {
     return instance;
 }
 
+LiveEdgeWithTimeSynchronizationRule.__dashjs_factory_name = 'LiveEdgeWithTimeSynchronizationRule';
 export default FactoryMaker.getClassFactory(LiveEdgeWithTimeSynchronizationRule);

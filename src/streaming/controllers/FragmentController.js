@@ -153,4 +153,5 @@ function FragmentController(/*config*/) {
     return instance;
 }
 
+FragmentController.__dashjs_factory_name = 'FragmentController';
 export default FactoryMaker.getClassFactory(FragmentController);

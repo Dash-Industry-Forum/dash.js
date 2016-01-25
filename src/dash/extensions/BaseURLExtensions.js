@@ -109,14 +109,16 @@ function BaseURLExtensions() {
     }
 
     function loadSegments(representation, type, range, loadingInfo, callback) {
-        var parts = range ? range.toString().split('-') : null;
+        if (range && (range.start === undefined || range.end === undefined)) {
+            var parts = range ? range.toString().split('-') : null;
+            range = parts ? {start: parseFloat(parts[0]), end: parseFloat(parts[1])} : null;
+        }
 
-        range = parts ? {start: parseFloat(parts[0]), end: parseFloat(parts[1])} : null;
         callback = !callback ? onLoaded : callback;
         var needFailureReport = true;
         var isoFile = null;
         var sidx = null;
-        var hasRange = range !== null;
+        var hasRange = !!range;
         var request = new XMLHttpRequest();
         var media = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
             AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL;
@@ -303,4 +305,5 @@ function BaseURLExtensions() {
     return instance;
 }
 
+BaseURLExtensions.__dashjs_factory_name = 'BaseURLExtensions';
 export default FactoryMaker.getSingletonFactory(BaseURLExtensions);

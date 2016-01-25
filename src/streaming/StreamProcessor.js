@@ -37,7 +37,7 @@ import MediaController from './controllers/MediaController.js';
 import TextController from './controllers/TextController.js';
 import ScheduleController from './controllers/ScheduleController.js';
 import RulesController from './rules/RulesController.js';
-import ScheduleRulesCollection from './rules/SchedulingRules/ScheduleRulesCollection.js';
+import ScheduleRulesCollection from './rules/scheduling/ScheduleRulesCollection.js';
 import MediaPlayerModel from './models/MediaPlayerModel.js';
 import MetricsModel from './models/MetricsModel.js';
 import FragmentLoader from './FragmentLoader.js';
@@ -321,5 +321,5 @@ function StreamProcessor(config) {
     setup();
     return instance;
 }
-
+StreamProcessor.__dashjs_factory_name = 'StreamProcessor';
 export default FactoryMaker.getClassFactory(StreamProcessor);

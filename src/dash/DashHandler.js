@@ -782,10 +782,17 @@ function DashHandler(config) {
         var seg,
             i;
 
+        if (index < ln) {
+            seg = representation.segments[index];
+            if (seg && seg.availabilityIdx === index) {
+                return seg;
+            }
+        }
+
         for (i = 0; i < ln; i++) {
             seg = representation.segments[i];
 
-            if (seg.availabilityIdx === index) {
+            if (seg && seg.availabilityIdx === index) {
                 return seg;
             }
         }
@@ -863,7 +870,7 @@ function DashHandler(config) {
 
         requestedTime = time;
 
-        log('Getting the request for time: ' + time);
+        log('Getting the request for ' + type + ' time : ' + time);
         index = getIndexForSegments(time, representation, timeThreshold);
         //Index may be -1 if getSegments needs to update.  So after getSegments is called and updated then try to get index again.
         getSegments(representation);
@@ -871,7 +878,7 @@ function DashHandler(config) {
             index = getIndexForSegments(time, representation, timeThreshold);
         }
 
-        log('Index for time ' + time + ' is ' + index);
+        log('Index for ' + type + ' time ' + time + ' is ' + index);
 
         finished = !ignoreIsFinished ? isMediaFinished(representation) : false;
         if (finished) {
@@ -1001,6 +1008,7 @@ function DashHandler(config) {
     return instance;
 }
 
+DashHandler.__dashjs_factory_name = 'DashHandler';
 let factory = FactoryMaker.getClassFactory(DashHandler);
 factory.SEGMENTS_UNAVAILABLE_ERROR_CODE = SEGMENTS_UNAVAILABLE_ERROR_CODE;
 export default factory;

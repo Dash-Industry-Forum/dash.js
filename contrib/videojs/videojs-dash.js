@@ -126,7 +126,7 @@
    * to reset MediaKeys in resetSrc_
    */
   Html5DashJS.hideErrors = function (el) {
-    el.className += 'vjs-dashjs-hide-errors';
+    el.className += ' vjs-dashjs-hide-errors';
   };
 
   /*

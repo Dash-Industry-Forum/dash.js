@@ -178,6 +178,7 @@ function ManifestLoader(config) {
             request.onerror = report;
             request.onprogress = progress;
             request.open('GET', requestModifierExt.modifyRequestURL(url), true);
+            request = requestModifierExt.modifyRequestHeader(request);
             request.send();
         } catch (e) {
             request.onerror();
@@ -216,5 +217,5 @@ function ManifestLoader(config) {
     setup();
     return instance;
 }
-
+ManifestLoader.__dashjs_factory_name = 'ManifestLoader';
 export default FactoryMaker.getClassFactory(ManifestLoader);

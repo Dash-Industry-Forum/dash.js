@@ -50,6 +50,7 @@ function FragmentExtensions(/*config*/) {
         var tfdtBox = isoFile.getBox('tfdt');
         var trunBox = isoFile.getBox('trun');
         var moofBox = isoFile.getBox('moof');
+        var mfhdBox = isoFile.getBox('mfhd');
 
         var sampleDuration,
             sampleCompostionTimeOffset,
@@ -59,8 +60,11 @@ function FragmentExtensions(/*config*/) {
             sampleList,
             sample,
             i,
-            dataOffset;
+            dataOffset,
+            sequenceNumber,
+            totalDuration;
 
+        sequenceNumber = mfhdBox.sequence_number;
         sampleCount = trunBox.sample_count;
         sampleDts = tfdtBox.baseMediaDecodeTime;
         dataOffset = (tfhdBox.base_data_offset || 0) + (trunBox.data_offset || 0);
@@ -80,7 +84,8 @@ function FragmentExtensions(/*config*/) {
             dataOffset += sampleSize;
             sampleDts += sampleDuration;
         }
-        return sampleList;
+        totalDuration = sampleDts - tfdtBox.baseMediaDecodeTime;
+        return {sampleList: sampleList, sequenceNumber: sequenceNumber, totalDuration: totalDuration};
     }
 
     function getMediaTimescaleFromMoov(ab) {
@@ -99,4 +104,5 @@ function FragmentExtensions(/*config*/) {
     return instance;
 }
 
+FragmentExtensions.__dashjs_factory_name = 'FragmentExtensions';
 export default FactoryMaker.getSingletonFactory(FragmentExtensions);

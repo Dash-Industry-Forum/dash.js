@@ -196,7 +196,20 @@ function ProtectionModel_3Feb2014(config) {
 
         // Use the first video capability for the contentType.
         // TODO:  Not sure if there is a way to concatenate all capability data into a RFC6386-compatible format
-        var contentType = keySystemAccess.ksConfiguration.videoCapabilities[0].contentType;
+
+        // If player is trying to playback Audio only stream - don't error out.
+        var capabilities = null;
+
+        if (keySystemAccess.ksConfiguration.videoCapabilities !== null && keySystemAccess.ksConfiguration.videoCapabilities.length > 0)
+          capabilities = keySystemAccess.ksConfiguration.videoCapabilities[0];
+
+        if (capabilities === null && keySystemAccess.ksConfiguration.audioCapabilities !== null && keySystemAccess.ksConfiguration.audioCapabilities.length > 0)
+          capabilities = keySystemAccess.ksConfiguration.audioCapabilities[0];
+
+        if (capabilities === null)
+          throw new Error('Can not create sessions for unknown content types.');
+
+        var contentType = capabilities.contentType;
         var session = mediaKeys.createSession(contentType, new Uint8Array(initData));
         var sessionToken = createSessionToken(session, initData);
 
@@ -360,4 +373,5 @@ function ProtectionModel_3Feb2014(config) {
     return instance;
 }
 
+ProtectionModel_3Feb2014.__dashjs_factory_name = 'ProtectionModel_3Feb2014';
 export default FactoryMaker.getClassFactory(ProtectionModel_3Feb2014);

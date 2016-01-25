@@ -81,5 +81,5 @@ function ErrorHandler() {
 
     return instance;
 }
-
+ErrorHandler.__dashjs_factory_name = 'ErrorHandler';
 export default FactoryMaker.getSingletonFactory(ErrorHandler);

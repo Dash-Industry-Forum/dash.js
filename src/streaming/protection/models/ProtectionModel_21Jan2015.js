@@ -385,4 +385,5 @@ function ProtectionModel_21Jan2015(config) {
     return instance;
 }
 
+ProtectionModel_21Jan2015.__dashjs_factory_name = 'ProtectionModel_21Jan2015';
 export default FactoryMaker.getClassFactory(ProtectionModel_21Jan2015);

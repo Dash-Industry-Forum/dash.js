@@ -28,40 +28,62 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import ThroughputRule from './ThroughputRule.js';
+import BufferOccupancyRule from './BufferOccupancyRule.js';
+import InsufficientBufferRule from './InsufficientBufferRule.js';
+import AbandonRequestsRule from './AbandonRequestsRule.js';
+import MetricsModel from '../../models/MetricsModel.js';
+import DashMetricsExtensions from '../../../dash/extensions/DashMetricsExtensions.js';
+import FactoryMaker from '../../../core/FactoryMaker.js';
 
-import IsoFile from './IsoFile.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
+const QUALITY_SWITCH_RULES = 'qualitySwitchRules';
+const ABANDON_FRAGMENT_RULES = 'abandonFragmentRules';
 
-function BoxParser(/*config*/) {
+function ABRRulesCollection() {
 
-    let instance;
     let context = this.context;
 
-    /**
-     * @param {ArrayBuffer} data
-     * @returns {@link IsoFile}
-     * @memberof BoxParser#
-     */
-    function parse(data) {
-        if (!data) return null;
+    let instance,
+        qualitySwitchRules,
+        abandonFragmentRules;
 
-        if (data.fileStart === undefined) {
-            data.fileStart = 0;
+    function initialize() {
+        qualitySwitchRules = [];
+        abandonFragmentRules = [];
+
+        let metricsModel = MetricsModel(context).getInstance();
+
+        qualitySwitchRules.push(ThroughputRule(context).create({
+                metricsModel: metricsModel,
+                metricsExt: DashMetricsExtensions(context).getInstance()
+            })
+        );
+        qualitySwitchRules.push(BufferOccupancyRule(context).create({metricsModel: metricsModel}));
+        qualitySwitchRules.push(InsufficientBufferRule(context).create({metricsModel: metricsModel}));
+        abandonFragmentRules.push(AbandonRequestsRule(context).create());
+    }
+
+    function getRules (type) {
+        switch (type) {
+            case QUALITY_SWITCH_RULES:
+                return qualitySwitchRules;
+            case ABANDON_FRAGMENT_RULES:
+                return abandonFragmentRules;
+            default:
+                return null;
         }
-
-        var parsedFile = ISOBoxer.parseBuffer(data);
-        var dashIsoFile = IsoFile(context).create();
-
-        dashIsoFile.setData(parsedFile);
-
-        return dashIsoFile;
     }
 
     instance = {
-        parse: parse
+        initialize: initialize,
+        getRules: getRules
     };
 
     return instance;
 }
-BoxParser.__dashjs_factory_name = 'BoxParser';
-export default FactoryMaker.getSingletonFactory(BoxParser);
+
+ABRRulesCollection.__dashjs_factory_name = 'ABRRulesCollection';
+let factory =  FactoryMaker.getSingletonFactory(ABRRulesCollection);
+factory.QUALITY_SWITCH_RULES = QUALITY_SWITCH_RULES;
+factory.ABANDON_FRAGMENT_RULES = ABANDON_FRAGMENT_RULES;
+export default factory;

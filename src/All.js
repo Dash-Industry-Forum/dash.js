@@ -29,60 +29,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../../core/FactoryMaker.js';
-import TimelineConverter from '../../../dash/TimelineConverter.js';
-import LiveEdgeBinarySearchRule from './LiveEdgeBinarySearchRule.js';
-import LiveEdgeWithTimeSynchronizationRule from './LiveEdgeWithTimeSynchronizationRule.js';
-import DashAdapter from '../../../dash/DashAdapter.js';
+import MediaPlayer from './streaming/MediaPlayer.js';
+import Protection from './streaming/protection/Protection.js';
 
 
-const TIME_SYNCHRONIZED_RULES = 'withAccurateTimeSourceRules';
-const BEST_GUESS_RULES = 'bestGuestRules';
-
-function SynchronizationRulesCollection() {
-
-    let context = this.context;
-
-    let instance,
-        withAccurateTimeSourceRules,
-        bestGuestRules;
-
-    function initialize() {
-        withAccurateTimeSourceRules = [];
-        bestGuestRules = [];
-
-        withAccurateTimeSourceRules.push(LiveEdgeWithTimeSynchronizationRule(context).create({
-            timelineConverter: TimelineConverter(context).getInstance()
-        }));
-
-        bestGuestRules.push(LiveEdgeBinarySearchRule(context).create({
-            timelineConverter: TimelineConverter(context).getInstance(),
-            adapter: DashAdapter(context).getInstance()
-        }));
-    }
-
-    function getRules(type) {
-        switch (type) {
-            case TIME_SYNCHRONIZED_RULES:
-                return withAccurateTimeSourceRules;
-            case BEST_GUESS_RULES:
-                return bestGuestRules;
-            default:
-                return null;
-        }
-    }
-
-    instance = {
-        initialize: initialize,
-        getRules: getRules
-    };
-
-    return instance;
-}
-
-let factory = FactoryMaker.getSingletonFactory(SynchronizationRulesCollection);
-
-factory.TIME_SYNCHRONIZED_RULES = TIME_SYNCHRONIZED_RULES;
-factory.BEST_GUESS_RULES = BEST_GUESS_RULES;
-
-export default factory;
+// Shove both of these into the global scope
+var context = window || global;
+context.MediaPlayer = MediaPlayer;
+context.Protection = Protection;

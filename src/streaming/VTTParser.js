@@ -125,7 +125,7 @@ function VTTParser() {
             if (element.split(/:/).length > 1) {
                 var val = element.split(/:/)[1];
                 if (val && val.search(/%/) != -1) {
-                    val = parseInt(val.replace(/%/, ''));
+                    val = parseInt(val.replace(/%/, ''), 10);
                 }
                 if (element.match(/align/) || element.match(/A/)) {
                     styleObject.align = val;
@@ -190,5 +190,5 @@ function VTTParser() {
     setup();
     return instance;
 }
-
+VTTParser.__dashjs_factory_name = 'VTTParser';
 export default FactoryMaker.getSingletonFactory(VTTParser);

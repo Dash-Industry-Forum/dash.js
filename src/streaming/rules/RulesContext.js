@@ -74,4 +74,5 @@ function RulesContext(config) {
     return instance;
 }
 
+RulesContext.__dashjs_factory_name = 'RulesContext';
 export default FactoryMaker.getClassFactory(RulesContext);

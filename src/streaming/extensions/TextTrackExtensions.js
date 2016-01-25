@@ -31,11 +31,13 @@
 import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
 
 function TextTrackExtensions() {
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
+    let log = Debug(context).getInstance().log;
 
     let instance,
         Cue,
@@ -109,6 +111,11 @@ function TextTrackExtensions() {
 
     function addTextTrack(textTrackInfoVO, totalTextTracks) {
 
+        if (textTrackQueue.length === totalTextTracks) {
+            log('Trying to add too many tracks.');
+            return;
+        }
+
         textTrackQueue.push(textTrackInfoVO);
         if (video === undefined) {
             video = textTrackInfoVO.video;
@@ -119,10 +126,9 @@ function TextTrackExtensions() {
                 return a.index - b.index;
             });
             captionContainer = videoModel.getTTMLRenderingDiv();
-            var defaultIndex = 0;
+            var defaultIndex = -1;
             for (var i = 0 ; i < textTrackQueue.length; i++) {
                 var track = createTrackForUserAgent.call(this, i);
-                currentTrackIdx = i;//set to i for external track setup. rest to default value at end of loop
                 trackElementArr.push(track); //used to remove tracks from video element when added manually
 
                 if (textTrackQueue[i].defaultTrack) {
@@ -136,20 +142,25 @@ function TextTrackExtensions() {
                     video.appendChild(track);
                 }
                 var textTrack = video.textTracks[i];
-                if (captionContainer && textTrackQueue[i].isTTML) {
+                textTrack.nonAddedCues = [];
+                if (captionContainer && (textTrackQueue[i].isTTML || textTrackQueue[i].isEmbedded)) {
                     textTrack.renderingType = 'html';
                 } else {
                     textTrack.renderingType = 'default';
                 }
-                this.addCaptions(0, textTrackQueue[i].captionData);
+                this.addCaptions(i, 0, textTrackQueue[i].captionData);
                 eventBus.trigger(Events.TEXT_TRACK_ADDED);
             }
             setCurrentTrackIdx.call(this, defaultIndex);
+            if (defaultIndex >= 0) {
+                video.textTracks[defaultIndex].mode = 'showing';
+                this.addCaptions(defaultIndex, 0, null);
+            }
             eventBus.trigger(Events.TEXT_TRACKS_ADDED, {index: currentTrackIdx, tracks: textTrackQueue});//send default idx.
         }
     }
 
-    function getVideoVisibleVideoSize(viewWidth, viewHeight, videoWidth, videoHeight) {
+    function getVideoVisibleVideoSize(viewWidth, viewHeight, videoWidth, videoHeight, aspectRatio, use80Percent) {
         var viewAspectRatio = viewWidth / viewHeight;
         var videoAspectRatio = videoWidth / videoHeight;
 
@@ -170,20 +181,60 @@ function TextTrackExtensions() {
             videoPictureY = (viewHeight - videoPictureHeight) / 2;
         }
 
-        return { x: videoPictureX,
-            y: videoPictureY,
-            w: videoPictureWidth,
-            h: videoPictureHeight }; /* Maximal picture size in videos aspect ratio */
+        var videoPictureXAspect = 0;
+        var videoPictureYAspect = 0;
+        var videoPictureWidthAspect = 0;
+        var videoPictureHeightAspect = 0;
+        var videoPictureAspect = videoPictureWidth / videoPictureHeight;
+
+        if (videoPictureAspect > aspectRatio) {
+            videoPictureHeightAspect = videoPictureHeight;
+            videoPictureWidthAspect = videoPictureHeight / (1 / aspectRatio);
+            videoPictureXAspect = (viewWidth - videoPictureWidthAspect) / 2;
+            videoPictureYAspect = 0;
+        } else {
+            videoPictureWidthAspect = videoPictureWidth;
+            videoPictureHeightAspect = videoPictureWidth / aspectRatio;
+            videoPictureXAspect = 0;
+            videoPictureYAspect = (viewHeight - videoPictureHeightAspect) / 2;
+        }
+
+        if (use80Percent) {
+            return { x: videoPictureXAspect + (videoPictureWidthAspect * 0.1),
+                     y: videoPictureYAspect + (videoPictureHeightAspect * 0.1),
+                     w: videoPictureWidthAspect * 0.8,
+                     h: videoPictureHeightAspect * 0.8 }; /* Maximal picture size in videos aspect ratio */
+        } else {
+            return { x: videoPictureXAspect,
+                     y: videoPictureYAspect,
+                     w: videoPictureWidthAspect,
+                     h: videoPictureHeightAspect }; /* Maximal picture size in videos aspect ratio */
+        }
     }
 
 
     function checkVideoSize() {
         var track = this.getCurrentTextTrack();
         if (track && track.renderingType === 'html') {
+            if (!track.activeCues || track.activeCues.length === 0) {
+                return;
+            }
             var newVideoWidth = video.clientWidth;
             var newVideoHeight = video.clientHeight;
 
-            var realVideoSize = getVideoVisibleVideoSize.call(this, video.clientWidth, video.clientHeight, video.videoWidth, video.videoHeight);
+            // Create aspect ratio from cellResolutions
+            let aspectRatio = 1;
+            if (track.cellResolution) {
+                aspectRatio = track.cellResolution[0] / track.cellResolution[1];
+            }
+            let use80Percent = false;
+            if (track.isFromCEA608) {
+                // If this is CEA608 then use predefined aspect ratio
+                aspectRatio = 3.5 / 3.0;
+                use80Percent = true;
+            }
+
+            var realVideoSize = getVideoVisibleVideoSize.call(this, video.clientWidth, video.clientHeight, video.videoWidth, video.videoHeight, aspectRatio, use80Percent);
 
             newVideoWidth = realVideoSize.w;
             newVideoHeight = realVideoSize.h;
@@ -270,18 +321,36 @@ function TextTrackExtensions() {
         }
     }
 
-
-    function addCaptions(timeOffset, captionData) {
-        var track = getCurrentTextTrack.call(this);
+    /**
+    * Add captions to track, store for later adding, or add captions added before
+    */
+    function addCaptions(trackIdx, timeOffset, captionData) {
+        var track = trackIdx >= 0 ?  video.textTracks[trackIdx] : null;
         var self = this;
 
         if (!track) return;
+        if (track.mode !== 'showing') {
+            if (captionData && captionData.length > 0) {
+                track.nonAddedCues = track.nonAddedCues.concat(captionData);
+            }
+            return;
+        }
 
-        track.mode = 'showing';//make sure tracks are showing to be able to add the cue...
+        if (!captionData) {
+            captionData = track.nonAddedCues;
+            track.nonAddedCues = [];
+        }
+
+        if (!captionData || captionData.length === 0) {
+            return;
+        }
 
         for (var item in captionData) {
             var cue;
             var currentItem = captionData[item];
+
+            track.cellResolution = currentItem.cellResolution;
+            track.isFromCEA608 = currentItem.isFromCEA608;
 
             if (!videoSizeCheckInterval && currentItem.type == 'html') {
                 videoSizeCheckInterval = setInterval(checkVideoSize.bind(this), 500);
@@ -377,10 +446,6 @@ function TextTrackExtensions() {
 
             track.addCue(cue);
         }
-
-        if (!textTrackQueue[currentTrackIdx].isFragmented) {
-            track.mode = textTrackQueue[currentTrackIdx].defaultTrack ? 'showing' : 'hidden';
-        }
     }
 
     function getCurrentTextTrack() {
@@ -389,6 +454,17 @@ function TextTrackExtensions() {
 
     function getCurrentTrackIdx() {
         return currentTrackIdx;
+    }
+
+    function getTrackIdxForId(trackId) {
+        var idx = -1;
+        for (var i = 0; i < video.textTracks.length; i++) {
+            if (video.textTracks[i].label === trackId) {
+                idx = i;
+                break;
+            }
+        }
+        return idx;
     }
 
     function setCurrentTrackIdx(idx) {
@@ -427,7 +503,9 @@ function TextTrackExtensions() {
         var ln = trackElementArr.length;
         for (var i = 0; i < ln; i++) {
             if (isIE11orEdge) {
-                deleteTrackCues.call(this, getTextTrack.call(this, i));
+                var track = getTextTrack.call(this, i);
+                track.nonAddedCues = [];
+                deleteTrackCues.call(this, track);
             }else {
                 video.removeChild(trackElementArr[i]);
             }
@@ -500,6 +578,7 @@ function TextTrackExtensions() {
         getCurrentTextTrack: getCurrentTextTrack,
         getCurrentTrackIdx: getCurrentTrackIdx,
         setCurrentTrackIdx: setCurrentTrackIdx,
+        getTrackIdxForId: getTrackIdxForId,
         deleteTrackCues: deleteTrackCues,
         deleteAllTextTracks: deleteAllTextTracks,
         deleteTextTrack: deleteTextTrack,
@@ -509,4 +588,5 @@ function TextTrackExtensions() {
     return instance;
 }
 
+TextTrackExtensions.__dashjs_factory_name = 'TextTrackExtensions';
 export default FactoryMaker.getSingletonFactory(TextTrackExtensions);

@@ -50,6 +50,7 @@ function DashParser(/*config*/) {
         datetimeRegex,
         numericRegex,
         httpOrHttpsRegex,
+        originRegex,
         matchers;
 
     function setup() {
@@ -58,6 +59,7 @@ function DashParser(/*config*/) {
         datetimeRegex = /^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2})(?::([0-9]*)(\.[0-9]*)?)?(?:([+-])([0-9]{2})([0-9]{2}))?/;
         numericRegex = /^[-+]?[0-9]+[.]?[0-9]*([eE][-+]?[0-9]+)?$/;
         httpOrHttpsRegex = /^https?:\/\//i;
+        originRegex = /^(https?:\/\/[^\/]+)\/?/i;
         //TODO-Refactor clean this up and move into its own util or somewhere else.
         matchers = [
             {
@@ -306,11 +308,15 @@ function DashParser(/*config*/) {
                 name: 'BaseURL',
                 merge: true,
                 mergeFunction: function (parentValue, childValue) {
-                    var mergedValue;
+                    var mergedValue,
+                        origin;
 
                     // child is absolute, don't merge
                     if (httpOrHttpsRegex.test(childValue)) {
                         mergedValue = childValue;
+                    } else if (childValue.charAt(0) === '/' && originRegex.test(parentValue)) {
+                        origin = parentValue.match(originRegex);
+                        mergedValue = origin[1] + childValue;
                     } else {
                         mergedValue = parentValue + childValue;
                     }
@@ -429,4 +435,5 @@ function DashParser(/*config*/) {
     return instance;
 }
 
+DashParser.__dashjs_factory_name = 'DashParser';
 export default FactoryMaker.getClassFactory(DashParser);

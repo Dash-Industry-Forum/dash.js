@@ -558,4 +558,5 @@ function ProtectionController(config) {
     return instance;
 }
 
+ProtectionController.__dashjs_factory_name = 'ProtectionController';
 export default FactoryMaker.getClassFactory(ProtectionController);

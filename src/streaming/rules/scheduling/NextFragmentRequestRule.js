@@ -33,7 +33,7 @@ import SwitchRequest from '../SwitchRequest.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 import FragmentRequest from '../../vo/FragmentRequest.js';
 
-function PlaybackTimeRule(config) {
+function NextFragmentRequestRule(config) {
 
     let instance;
     let context = this.context;
@@ -85,14 +85,13 @@ function PlaybackTimeRule(config) {
         while (request && streamProcessor.getFragmentModel().isFragmentLoaded(request)) {
             if (request.action === FragmentRequest.ACTION_COMPLETE) {
                 request = null;
-                streamProcessor.setIndexHandlerTime(NaN);
                 break;
             }
 
             request = adapter.getNextFragmentRequest(streamProcessor, representationInfo);
         }
 
-        if (request ) {
+        if (request) {
             streamProcessor.setIndexHandlerTime(request.startTime + request.duration);
             request.delayLoadingTime = new Date().getTime() + scheduleController.getTimeToLoadDelay();
         }
@@ -107,4 +106,5 @@ function PlaybackTimeRule(config) {
     return instance;
 }
 
-export default FactoryMaker.getClassFactory(PlaybackTimeRule);
+NextFragmentRequestRule.__dashjs_factory_name = 'NextFragmentRequestRule';
+export default FactoryMaker.getClassFactory(NextFragmentRequestRule);

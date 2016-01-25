@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import VideoModel from '../models/VideoModel.js';
+import PlaybackController from '../controllers/PlaybackController.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
 
@@ -49,7 +49,8 @@ function EventController() {
         refreshDelay, // refreshTime for the setInterval
         presentationTimeThreshold,
         manifestModel,
-        manifestUpdater;
+        manifestUpdater,
+        playbackController;
 
     function initialize() {
         inlineEvents = {};
@@ -58,6 +59,7 @@ function EventController() {
         eventInterval = null;
         refreshDelay = 100;
         presentationTimeThreshold = refreshDelay / 1000;
+        playbackController = PlaybackController(context).getInstance();
     }
 
     function clear() {
@@ -118,7 +120,7 @@ function EventController() {
     }
 
     function triggerEvents(events) {
-        var currentVideoTime = VideoModel(context).getInstance().getCurrentTime();
+        var currentVideoTime = playbackController.getTime();
         var presentationTime;
 
         /* == Trigger events that are ready == */
@@ -146,7 +148,7 @@ function EventController() {
      */
     function removeEvents() {
         if (activeEvents) {
-            var currentVideoTime = VideoModel(context).getInstance().getCurrentTime();
+            var currentVideoTime = playbackController.getTime();
             var eventIds = Object.keys(activeEvents);
 
             for (var i = 0; i < eventIds.length; i++) {
@@ -190,6 +192,7 @@ function EventController() {
         inlineEvents = null;
         inbandEvents = null;
         activeEvents = null;
+        playbackController = null;
     }
 
     instance = {
@@ -205,4 +208,5 @@ function EventController() {
     return instance;
 }
 
+EventController.__dashjs_factory_name = 'EventController';
 export default FactoryMaker.getSingletonFactory(EventController);

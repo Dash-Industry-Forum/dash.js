@@ -31,6 +31,7 @@
 import SwitchRequest from '../SwitchRequest.js';
 import BufferController from '../../controllers/BufferController.js';
 import AbrController from '../../controllers/AbrController.js';
+import MediaPlayerModel from '../../models/MediaPlayerModel.js';
 import HTTPRequest from '../../vo/metrics/HTTPRequest.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 import Debug from '../../../core/Debug.js';
@@ -46,7 +47,13 @@ function ThroughputRule(config) {
     let metricsModel = config.metricsModel;
 
     let instance,
-        throughputArray;
+        throughputArray,
+        mediaPlayerModel;
+
+    function setup() {
+        throughputArray = [];
+        mediaPlayerModel = MediaPlayerModel(context).getInstance();
+    }
 
     function storeLastRequestThroughputByType(type, lastRequestThroughput) {
         throughputArray[type] = throughputArray[type] || [];
@@ -78,7 +85,7 @@ function ThroughputRule(config) {
             arr.shift();
         }
 
-        return (averageThroughput / 1000 ) * AbrController.BANDWIDTH_SAFETY;
+        return (averageThroughput / 1000 ) * mediaPlayerModel.getBandwidthSafetyFactor();
     }
 
     function execute (rulesContext, callback) {
@@ -135,7 +142,7 @@ function ThroughputRule(config) {
     }
 
     function reset() {
-        throughputArray = [];
+        setup();
     }
 
     instance = {
@@ -143,8 +150,9 @@ function ThroughputRule(config) {
         reset: reset
     };
 
-    reset();
+    setup();
     return instance;
 }
 
+ThroughputRule.__dashjs_factory_name = 'ThroughputRule';
 export default FactoryMaker.getClassFactory(ThroughputRule);

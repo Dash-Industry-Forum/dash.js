@@ -823,4 +823,5 @@ function DashManifestExtensions() {
     return instance;
 }
 
+DashManifestExtensions.__dashjs_factory_name = 'DashManifestExtensions';
 export default FactoryMaker.getSingletonFactory(DashManifestExtensions);

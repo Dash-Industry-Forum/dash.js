@@ -2,7 +2,7 @@
   "name": "dashjs",
   "version": "2.0.0",
   "description": "A reference client implementation for the playback of MPEG DASH via Javascript and compliant browsers.",
-  "main": "dist/dash.all.js",
+  "main": "dist/dash.all.min.js",
   "scripts": {
     "test": "mocha --require mochahook",
     "prepublish": "grunt dist",
@@ -19,7 +19,6 @@
     "grunt-browserify": "^4.0.0",
     "grunt-cli": "^0.1.13",
     "grunt-contrib-clean": "^0.6.0",
-    "grunt-contrib-concat": "^0.5.1",
     "grunt-contrib-connect": "^0.10.1",
     "grunt-contrib-copy": "^0.8.0",
     "grunt-contrib-jshint": "^0.11.2",
@@ -35,6 +34,7 @@
     "jsdoc": "^3.4.0",
     "load-grunt-tasks": "^3.1.0",
     "mocha": "^2.3.4",
+    "sinon": "^1.17.2",
     "time-grunt": "^1.2.0",
     "uglify-js": "^2.4.21"
   },

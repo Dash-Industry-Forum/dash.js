@@ -30,7 +30,7 @@
  */
 
 import PlayList from '../vo/metrics/PlayList.js';
-import ScheduleRulesCollection from '../rules/SchedulingRules/ScheduleRulesCollection.js';
+import ScheduleRulesCollection from '../rules/scheduling/ScheduleRulesCollection.js';
 import SwitchRequest from '../rules/SwitchRequest.js';
 import PlaybackController from './PlaybackController.js';
 import AbrController from './AbrController.js';
@@ -149,7 +149,7 @@ function ScheduleController(config) {
         if (initialPlayback) {
             initialPlayback = false;
         }
-        log('start');
+        log('Schedule controller starting for ' + type);
         //if starting from a pause we want to call validate to kick off the cycle that was stopped by pausing stream.
         if (playbackController.getPlayedRanges().length > 0) {
             validate();
@@ -168,7 +168,7 @@ function ScheduleController(config) {
     function doStop() {
         if (isStopped) return;
         isStopped = true;
-        log('stop');
+        log('Schedule controller stopping for ' + type);
         clearInterval(validateTimeout);
         clearPlayListTraceMetrics(new Date(), PlayList.Trace.USER_REQUEST_STOP_REASON);
     }
@@ -483,4 +483,5 @@ function ScheduleController(config) {
     return instance;
 }
 
+ScheduleController.__dashjs_factory_name = 'ScheduleController';
 export default FactoryMaker.getClassFactory(ScheduleController);

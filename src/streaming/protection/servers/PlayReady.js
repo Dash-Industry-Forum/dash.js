@@ -74,4 +74,5 @@ function PlayReady() {
     return instance;
 }
 
+PlayReady.__dashjs_factory_name = 'PlayReady';
 export default FactoryMaker.getSingletonFactory(PlayReady);

@@ -93,4 +93,5 @@ function DRMToday() {
     return instance;
 }
 
+DRMToday.__dashjs_factory_name = 'DRMToday';
 export default FactoryMaker.getSingletonFactory(DRMToday);

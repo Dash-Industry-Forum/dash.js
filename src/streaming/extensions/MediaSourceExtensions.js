@@ -81,6 +81,7 @@ function MediaSourceExtensions() {
 
         for (i; i < ln; i++) {
             if (buffers[i].updating) return;
+            if (buffers[i].buffered.length === 0) return;
         }
 
         source.endOfStream();
@@ -97,4 +98,5 @@ function MediaSourceExtensions() {
     return instance;
 }
 
+MediaSourceExtensions.__dashjs_factory_name = 'MediaSourceExtensions';
 export default FactoryMaker.getSingletonFactory(MediaSourceExtensions);

@@ -12,7 +12,7 @@ npm-debug.log
 .grunt
 _SpecRunner.html
 reports
-jsdocs
+jsdoc
 dist
 build/temp
 coverage/

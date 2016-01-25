@@ -55,6 +55,7 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#LOG
          */
         this.LOG = 'log';
+        //TODO refactor with internal event
         this.MANIFEST_LOADED = 'manifestloaded';
         this.METRICS_CHANGED = 'metricschanged';
         this.METRIC_ADDED = 'metricadded';

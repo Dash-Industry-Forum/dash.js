@@ -48,11 +48,11 @@ import MediaPlayerModel from './models/MediaPlayerModel.js';
 import MetricsModel from './models/MetricsModel.js';
 import AbrController from './controllers/AbrController.js';
 import TimeSyncController from './controllers/TimeSyncController.js';
-import ABRRulesCollection from './rules/ABRRules/ABRRulesCollection.js';
+import ABRRulesCollection from './rules/abr/ABRRulesCollection.js';
 import VideoModel from './models/VideoModel.js';
 import RulesController from './rules/RulesController.js';
-import ScheduleRulesCollection from './rules/SchedulingRules/ScheduleRulesCollection.js';
-import SynchronizationRulesCollection from './rules/SynchronizationRules/SynchronizationRulesCollection.js';
+import ScheduleRulesCollection from './rules/scheduling/ScheduleRulesCollection.js';
+import SynchronizationRulesCollection from './rules/synchronization/SynchronizationRulesCollection.js';
 import MediaSourceExtensions from './extensions/MediaSourceExtensions.js';
 import VideoModelExtensions from './extensions/VideoModelExtensions.js';
 import Debug from './../core/Debug.js';
@@ -75,6 +75,9 @@ import MediaPlayerFactory from '../streaming/MediaPlayerFactory.js';
 function MediaPlayer() {
 
     const VERSION = '2.0.0';
+    const PLAYBACK_NOT_INITIALIZED_ERROR = 'You must first call play() to init playback before calling this method';
+    const ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the video element before calling this method';
+    const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
@@ -86,8 +89,7 @@ function MediaPlayer() {
         source,
         protectionData,
         initialized,
-        resetting,
-        playing,
+        playbackInitiated,
         autoPlay,
         abrController,
         mediaController,
@@ -108,8 +110,7 @@ function MediaPlayer() {
 
     function setup() {
         initialized = false;
-        resetting = false;
-        playing = false;
+        playbackInitiated = false;
         autoPlay = true;
         protectionController = null;
         protectionData = null;
@@ -118,17 +119,27 @@ function MediaPlayer() {
     }
 
     function initialize(view, source, AutoPlay) {
+
+        capabilities = Capabilities(context).getInstance();
+        if (!capabilities.supportsMediaSource()) {
+            errHandler.capabilityError('mediasource');
+            return;
+        }
+
         if (initialized) return;
         initialized = true;
 
+        abrController = AbrController(context).getInstance();
+        mediaPlayerModel = MediaPlayerModel(context).getInstance();
+        playbackController = PlaybackController(context).getInstance();
+        mediaController = MediaController(context).getInstance();
+        mediaController.initialize();
         manifestExt = DashManifestExtensions(context).getInstance();
         metricsExt = DashMetricsExtensions(context).getInstance();
         domStorage = DOMStorage(context).getInstance();
         metricsModel = MetricsModel(context).getInstance();
         metricsModel.setConfig({adapter: createAdaptor()});
-        mediaPlayerModel = MediaPlayerModel(context).getInstance();
         errHandler = ErrorHandler(context).getInstance();
-        capabilities = Capabilities(context).getInstance();
 
         restoreDefaultUTCTimingSources();
         setAutoPlay(AutoPlay !== undefined ? AutoPlay : true);
@@ -154,7 +165,7 @@ function MediaPlayer() {
      * @instance
      */
     function isReady() {
-        return (!!element && !!source && !resetting);
+        return (!!element && !!source);
     }
 
     /**
@@ -165,28 +176,81 @@ function MediaPlayer() {
      * @instance
      */
     function play() {
-        if (!initialized) {
-            throw 'MediaPlayer not initialized!';
+
+        if (!playbackInitiated) {
+            if (!initialized) {
+                throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+            }
+            if (!element || !source) {
+                throw 'Missing view or source.';
+            }
+
+            playbackInitiated = true;
+            log('Playback initiated!');
+
+            createControllers();
+            domStorage.checkInitialBitrate();
+            if (typeof source === 'string') {
+                streamController.load(source);
+            } else {
+                streamController.loadWithManifest(source);
+            }
+            element.autoplay = true;
         }
 
-        if (!capabilities.supportsMediaSource()) {
-            errHandler.capabilityError('mediasource');
-            return;
+        if (!autoPlay || (isPaused() && playbackInitiated)) {
+            playbackController.play();
         }
+    }
 
-        if (!element || !source) {
-            throw 'Missing view or source.';
+    function pause() {
+        if (!playbackInitiated) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
-        playing = true;
-        log('Playback initiated!');
+        playbackController.pause();
+        element.autoplay = false;
+    }
 
-        createControllers();
-        domStorage.checkInitialBitrate();
-        if (typeof source === 'string') {
-            streamController.load(source);
-        } else {
-            streamController.loadWithManifest(source);
+    function isPaused() {
+        if (!playbackInitiated) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
+        return playbackController.isPaused();
+    }
+
+    function isSeeking() {
+        if (!playbackInitiated) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
+        return playbackController.isSeeking();
+    }
+
+    function setMute(value) {
+        if (!element) {
+            throw ELEMENT_NOT_ATTACHED_ERROR;
+        }
+        element.muted = value;
+    }
+
+    function isMuted() {
+        if (!element) {
+            throw ELEMENT_NOT_ATTACHED_ERROR;
+        }
+        return element.muted;
+    }
+
+    function setVolume(value) {
+        if (!element) {
+            throw ELEMENT_NOT_ATTACHED_ERROR;
+        }
+        element.volume = value;
+    }
+
+    function getVolume() {
+        if (!element) {
+            throw ELEMENT_NOT_ATTACHED_ERROR;
+        }
+        return element.volume;
     }
 
     function getDVRInfoMetric() {
@@ -202,7 +266,11 @@ function MediaPlayer() {
      * @instance
      */
     function getDVRWindowSize() {
-        return getDVRInfoMetric().manifestInfo.DVRWindowSize;
+        var metric = getDVRInfoMetric();
+        if (!metric) {
+            return 0;
+        }
+        return metric.manifestInfo.DVRWindowSize;
     }
 
     /**
@@ -218,6 +286,11 @@ function MediaPlayer() {
      */
     function getDVRSeekOffset(value) {
         var metric = getDVRInfoMetric();
+
+        if (!metric) {
+            return 0;
+        }
+
         var val = metric.range.start + value;
 
         if (val > metric.range.end) {
@@ -237,8 +310,11 @@ function MediaPlayer() {
      * @instance
      */
     function seek(value) {
+        if (!playbackInitiated) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
         var s = playbackController.getIsDynamic() ? getDVRSeekOffset(value) : value;
-        getVideoModel().setCurrentTime(s);
+        playbackController.seek(s);
     }
 
 
@@ -250,8 +326,10 @@ function MediaPlayer() {
      * @instance
      */
     function time() {
-        var t = videoModel.getCurrentTime();
-
+        if (!playbackInitiated) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
+        var t = element.currentTime;
         if (playbackController.getIsDynamic()) {
             var metric = getDVRInfoMetric();
             t = (metric === null) ? 0 : duration() - (metric.range.end - metric.time);
@@ -267,14 +345,17 @@ function MediaPlayer() {
      * @instance
      */
     function duration() {
-        var d = videoModel.getElement().duration;
+        if (!playbackInitiated) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
+        var d = element.duration;
 
         if (playbackController.getIsDynamic()) {
 
             var metric = getDVRInfoMetric();
             var range;
 
-            if (metric === null) {
+            if (!metric) {
                 return 0;
             }
 
@@ -289,7 +370,7 @@ function MediaPlayer() {
         var availableFrom,
             utcValue;
 
-        if (metric === null) {
+        if (!metric) {
             return 0;
         }
         availableFrom = metric.manifestInfo.availableFrom.getTime() / 1000;
@@ -306,6 +387,9 @@ function MediaPlayer() {
      * @instance
      */
     function timeAsUTC() {
+        if (!playbackInitiated) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
         return getAsUTC(time());
     }
 
@@ -318,6 +402,9 @@ function MediaPlayer() {
      * @instance
      */
     function durationAsUTC() {
+        if (!playbackInitiated) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
         return getAsUTC(duration());
     }
 
@@ -356,6 +443,9 @@ function MediaPlayer() {
     }
 
     function getActiveStream() {
+        if (!playbackInitiated) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
         var streamInfo = streamController.getActiveStreamInfo();
         return streamInfo ? streamController.getStreamById(streamInfo.id) : null;
     }
@@ -363,8 +453,8 @@ function MediaPlayer() {
     /**
      * TODO Need Docs
      */
-    function extend(parentNameString, childInstance) {
-        FactoryMaker.extend(parentNameString, childInstance, context);
+    function extend(parentNameString, childInstance, override) {
+        FactoryMaker.extend(parentNameString, childInstance, override, context);
     }
 
     /**
@@ -415,6 +505,9 @@ function MediaPlayer() {
      * @instance
      */
     function getVideoModel() {
+        if (!element) {
+            throw ELEMENT_NOT_ATTACHED_ERROR;
+        }
         return videoModel;
     }
 
@@ -469,7 +562,7 @@ function MediaPlayer() {
      *
      */
     function enableLastBitrateCaching(enable, ttl) {
-        domStorage.enableLastBitrateCaching(enable, ttl);
+        mediaPlayerModel.setLastBitrateCachingInfo(enable, ttl);
     }
 
     /**
@@ -487,7 +580,7 @@ function MediaPlayer() {
      *
      */
     function enableLastMediaSettingsCaching(enable, ttl) {
-        domStorage.enableLastMediaSettingsCaching(enable, ttl);
+        mediaPlayerModel.setLastMediaSettingsCachingInfo(enable, ttl);
     }
 
     /**
@@ -518,6 +611,38 @@ function MediaPlayer() {
      */
     function getMaxAllowedBitrateFor(type) {
         return abrController.getMaxAllowedBitrateFor(type);
+    }
+
+    /**
+     * When switching multi-bitrate content (auto or manual mode) this property specifies the maximum representation allowed,
+     * as a proportion of the size of the representation set.
+     *
+     * You can set or remove this cap at anytime before or during playback. To clear this setting you must use the API
+     * and set the value param to NaN.
+     *
+     * If both this and maxAllowedBitrate are defined, maxAllowedBitrate is evaluated first, then maxAllowedRepresentation,
+     * i.e. the lowest value from executing these rules is used.
+     *
+     * This feature is typically used to reserve higher representations for playback only when connected over a fast connection.
+     *
+     * @param type String 'video' or 'audio' are the type options.
+     * @param value number between 0 and 1, where 1 is allow all representations, and 0 is allow only the lowest.
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setMaxAllowedRepresentationRatioFor(type, value) {
+        abrController.setMaxAllowedRepresentationRatioFor(type, value);
+    }
+
+    /**
+     * @param type String 'video' or 'audio' are the type options.
+     * @returns {number} The current representation ratio cap.
+     * @memberof module:MediaPlayer
+     * @see {@link MediaPlayer#setMaxAllowedRepresentationRatioFor setMaxAllowedRepresentationRatioFor()}
+     * @instance
+     */
+    function getMaxAllowedRepresentationRatioFor(type) {
+        return abrController.getMaxAllowedRepresentationRatioFor(type);
     }
 
     /**
@@ -588,6 +713,9 @@ function MediaPlayer() {
      * @instance
      */
     function getQualityFor(type) {
+        if (!playbackInitiated) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
         return abrController.getQualityFor(type, streamController.getActiveStreamInfo());
     }
 
@@ -600,7 +728,29 @@ function MediaPlayer() {
      * @instance
      */
     function setQualityFor(type, value) {
+        if (!playbackInitiated) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
         abrController.setPlaybackQuality(type, streamController.getActiveStreamInfo(), value);
+    }
+
+    /**
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getLimitBitrateByPortal() {
+        return abrController.getLimitBitrateByPortal();
+    }
+
+    /**
+     * Sets whether to limit the representation used based on the size of the playback area
+     *
+     * @param value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setLimitBitrateByPortal(value) {
+        abrController.setLimitBitrateByPortal(value);
     }
 
 
@@ -614,6 +764,9 @@ function MediaPlayer() {
      * @instance
      */
     function setTextTrack(idx) {
+        if (!playbackInitiated) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
         //For external time text file,  the only action needed to change a track is marking the track mode to showing.
         // Fragmented text tracks need the additional step of calling textSourceBuffer.setTextTrack();
         if (textSourceBuffer === undefined) {
@@ -642,6 +795,9 @@ function MediaPlayer() {
      * @instance
      */
     function getBitrateInfoListFor(type) {
+        if (!playbackInitiated) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
         var stream = getActiveStream();
         return stream ? stream.getBitrateListFor(type) : [];
     }
@@ -663,7 +819,30 @@ function MediaPlayer() {
      * @instance
      */
     function getInitialBitrateFor(type) {
+        if (!playbackInitiated) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR; //abrController.getInitialBitrateFor is overloaded with ratioDict logic that needs manifest force it to not be callable pre play.
+        }
         return abrController.getInitialBitrateFor(type);
+    }
+
+    /**
+     * @param type
+     * @param {number} value A value of the initial Representation Ratio
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setInitialRepresentationRatioFor(type, value) {
+        abrController.setInitialRepresentationRatioFor(type, value);
+    }
+
+    /**
+     * @param type
+     * @returns {number} A value of the initial Representation Ratio
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getInitialRepresentationRatioFor(type) {
+        return abrController.getInitialRepresentationRatioFor(type);
     }
 
     /**
@@ -674,6 +853,9 @@ function MediaPlayer() {
      * @instance
      */
     function getStreamsFromManifest(manifest) {
+        if (!playbackInitiated) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
         return adapter.getStreamsInfo(manifest);
     }
 
@@ -685,10 +867,11 @@ function MediaPlayer() {
      * @instance
      */
     function getTracksFor(type) {
-        var streamInfo = streamController ? streamController.getActiveStreamInfo() : null;
-
+        if (!playbackInitiated) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
+        let streamInfo = streamController.getActiveStreamInfo();
         if (!streamInfo) return [];
-
         return mediaController.getTracksFor(type, streamInfo);
     }
 
@@ -702,6 +885,10 @@ function MediaPlayer() {
      * @instance
      */
     function getTracksForTypeFromManifest(type, manifest, streamInfo) {
+        if (!playbackInitiated) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
+
         streamInfo = streamInfo || adapter.getStreamsInfo(manifest)[0];
 
         return streamInfo ? adapter.getAllMediaInfoForType(manifest, streamInfo, type) : [];
@@ -714,7 +901,10 @@ function MediaPlayer() {
      * @instance
      */
     function getCurrentTrackFor(type) {
-        var streamInfo = streamController ? streamController.getActiveStreamInfo() : null;
+        if (!playbackInitiated) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
+        var streamInfo = streamController.getActiveStreamInfo();
 
         if (!streamInfo) return null;
 
@@ -763,6 +953,9 @@ function MediaPlayer() {
      * @instance
      */
     function setCurrentTrack(track) {
+        if (!playbackInitiated) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
         mediaController.setTrack(track);
     }
 
@@ -832,7 +1025,7 @@ function MediaPlayer() {
      *
      */
     function getAutoSwitchQuality() {
-        return abrController.getAutoSwitchBitrate();
+        return abrController.getAutoSwitchBitrateFor('video') || abrController.getAutoSwitchBitrateFor('audio');
     }
 
     /**
@@ -844,26 +1037,38 @@ function MediaPlayer() {
      * @instance
      */
     function setAutoSwitchQuality(value) {
-        abrController.setAutoSwitchBitrate(value);
+        abrController.setAutoSwitchBitrateFor('video', value);
+        abrController.setAutoSwitchBitrateFor('audio', value);
     }
 
-
+    /**
+     * @returns {boolean} Current state of adaptive bitrate switching
+     * @memberof module:MediaPlayer
+     * @instance
+     *
+     */
+    function getAutoSwitchQualityFor(type) {
+        return abrController.getAutoSwitchBitrateFor(type);
+    }
 
     /**
-     * A Callback function provided when retrieving manifests
+     * Set to false to switch off adaptive bitrate switching.
      *
-     * @callback MediaPlayer~retrieveManifestCallback
-     * @param {Object} manifest JSON version of the manifest XML data or null if an
-     * error was encountered
-     * @param {String} error An error string or null if the operation was successful
+     * @param value {boolean}
+     * @default {boolean} true
+     * @memberof module:MediaPlayer
+     * @instance
      */
+    function setAutoSwitchQualityFor(type, value) {
+        abrController.setAutoSwitchBitrateFor(type, value);
+    }
 
     /**
      * Allows application to retrieve a manifest.  Manifest loading is asynchronous and
      * requires the app-provided callback function
      *
-     * @param {string} url the manifest url
-     * @param {MediaPlayer~retrieveManifestCallback} callback manifest retrieval callback
+     * @param url {string} url the manifest url
+     * @param callback {function} A Callback function provided when retrieving manifests
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1002,14 +1207,6 @@ function MediaPlayer() {
     }
 
     /**
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getBufferToKeep() {
-        return mediaPlayerModel.getBufferToKeep();
-    }
-
-    /**
      * @param value
      * @memberof module:MediaPlayer
      * @instance
@@ -1019,11 +1216,75 @@ function MediaPlayer() {
     }
 
     /**
+     * @param value
      * @memberof module:MediaPlayer
      * @instance
      */
-    function getBufferPruningInterval() {
-        return mediaPlayerModel.getBufferPruningInterval();
+    function setStableBufferTime(value) {
+        mediaPlayerModel.setStableBufferTime(value);
+    }
+
+    /**
+     * @param value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setBufferTimeAtTopQuality (value) {
+        mediaPlayerModel.setBufferTimeAtTopQuality(value);
+    }
+
+    /**
+     * @param value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setBufferTimeAtTopQualityLongForm (value) {
+        mediaPlayerModel.setBufferTimeAtTopQualityLongForm(value);
+    }
+
+    /**
+     * @param value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setLongFormContentDurationThreshold (value) {
+        mediaPlayerModel.setLongFormContentDurationThreshold(value);
+    }
+
+    /**
+     * @param value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setRichBufferThreshold (value) {
+        mediaPlayerModel.setRichBufferThreshold(value);
+    }
+
+    /**
+     * @param value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setBandwidthSafetyFactor(value) {
+        mediaPlayerModel.setBandwidthSafetyFactor(value);
+    }
+
+    /**
+     * @return value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getBandwidthSafetyFactor() {
+        return mediaPlayerModel.getBandwidthSafetyFactor();
+    }
+
+    /**
+     * @param value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setAbandonLoadTimeout(value) {
+        mediaPlayerModel.setAbandonLoadTimeout(value);
     }
 
     /**
@@ -1035,6 +1296,26 @@ function MediaPlayer() {
     }
 
     /**
+     * @param {ProtectionController} [value] valid protection controller instance.
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function attachProtectionController(value) {
+        protectionController = value;
+    }
+
+    /**
+     * @param {ProtectionData} [value] object containing
+     * property names corresponding to key system name strings and associated
+     * values being instances of
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setProtectionData(value) {
+        protectionData = value;
+    }
+
+    /**
      * This method serves to control captions z-index value. If 'true' is passed, the captions will have the highest z-index and be
      * displayed on top of other html elements. Default value is 'false' (z-index is not set).
      * @param value {Boolean}
@@ -1042,7 +1323,7 @@ function MediaPlayer() {
      * @instance
      */
     function displayCaptionsOnTop(value) {
-        var textTrackExt = TextTrackExtensions(context).getInstance();
+        let textTrackExt = TextTrackExtensions(context).getInstance();
         textTrackExt.setConfig({videoModel: videoModel});
         textTrackExt.initialize();
         textTrackExt.displayCConTop(value);
@@ -1057,9 +1338,8 @@ function MediaPlayer() {
      */
     function attachVideoContainer(container) {
         if (!videoModel) {
-            throw 'Must call attachView with video element before you attach container element';
+            throw ELEMENT_NOT_ATTACHED_ERROR;
         }
-
         videoModel.setVideoContainer(container);
     }
 
@@ -1072,21 +1352,19 @@ function MediaPlayer() {
      */
     function attachView(view) {
         if (!initialized) {
-            throw 'MediaPlayer not initialized!';
+            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
         }
-
-        element = view;
-
         videoModel = null;
+        element = view;
         if (element) {
             videoModel = VideoModel(context).getInstance();
             videoModel.initialize();
             videoModel.setElement(element);
             // Workaround to force Firefox to fire the canplay event.
             element.preload = 'auto';
-
             detectProtection();
         }
+        resetAndCheckAutoPlay();
     }
 
     /**
@@ -1098,7 +1376,7 @@ function MediaPlayer() {
      */
     function attachTTMLRenderingDiv(div) {
         if (!videoModel) {
-            throw 'Must call attachView with video element before you attach TTML Rendering Div';
+            throw ELEMENT_NOT_ATTACHED_ERROR;
         }
         videoModel.setTTMLRenderingDiv(div);
     }
@@ -1110,19 +1388,16 @@ function MediaPlayer() {
      *
      * @param {string | object} urlOrManifest A URL to a valid MPD manifest file, or a
      * parsed manifest object.
-     * @param {MediaPlayer.dependencies.ProtectionController} [protectionCtrl] optional
-     * protection controller
-     * @param {MediaPlayer.vo.protection.ProtectionData} [data] object containing
-     * property names corresponding to key system name strings and associated
-     * values being instances of
+     *
+     *
      * @throw "MediaPlayer not initialized!"
      *
      * @memberof module:MediaPlayer
      * @instance
      */
-    function attachSource(urlOrManifest, protectionCtrl, data) {
+    function attachSource(urlOrManifest) {
         if (!initialized) {
-            throw 'MediaPlayer not initialized!';
+            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
         }
 
         if (typeof urlOrManifest === 'string') {
@@ -1133,12 +1408,14 @@ function MediaPlayer() {
             source = urlOrManifest;
         }
 
-        if (protectionCtrl) {
-            protectionController = protectionCtrl;
-        }
-        protectionData = data;
-        resetAndPlay();
+        resetAndCheckAutoPlay();
     }
+
+    /**
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    //function destroy() {}
 
     /**
      * Sets the MPD source and the video element to null.
@@ -1146,37 +1423,28 @@ function MediaPlayer() {
      * @instance
      */
     function reset() {
-        //todo add all vars in reset that need to be in here
         attachSource(null);
         attachView(null);
-        protectionController = null;
-        protectionData = null;
     }
 
-    function resetAndPlay() {
-        adapter.reset();
-        if (playing && streamController) {
-            if (!resetting) {
-                resetting = true;
-                eventBus.on(Events.STREAM_TEARDOWN_COMPLETE, onStreamTeardownComplete, this);
-                streamController.reset();
+    function resetAndCheckAutoPlay() {
+        if (playbackInitiated) {
+            playbackInitiated = false;
+            adapter.reset();
+            streamController.reset();
+            playbackController.reset();
+            abrController.reset();
+            rulesController.reset();
+            mediaController.reset();
+            streamController = null;
+            protectionController = null;
+            protectionData = null;
+            if (autoPlay && isReady()) {
+                play();
             }
-        } else {
+        } else if (autoPlay && isReady()) {
             play();
         }
-    }
-
-    function onStreamTeardownComplete(/* e */) {
-        // Finish rest of shutdown process
-        abrController.reset();
-        rulesController.reset();
-        playbackController.reset();
-        mediaController.reset();
-        streamController = null;
-        playing = false;
-        eventBus.off(Events.STREAM_TEARDOWN_COMPLETE, onStreamTeardownComplete, this);
-        resetting = false;
-        play();
     }
 
     function createControllers() {
@@ -1199,14 +1467,11 @@ function MediaPlayer() {
             sourceBufferExt: sourceBufferExt
         });
 
-        mediaController = MediaController(context).getInstance();
         mediaController.initialize();
         mediaController.setConfig({
             DOMStorage: domStorage,
             errHandler: errHandler
         });
-
-        playbackController = PlaybackController(context).getInstance();
 
         rulesController = RulesController(context).getInstance();
         rulesController.initialize();
@@ -1236,7 +1501,6 @@ function MediaPlayer() {
         });
         streamController.initialize(autoPlay, protectionData);
 
-        abrController = AbrController(context).getInstance();
         abrController.setConfig({
             abrRulesCollection: abrRulesCollection,
             rulesController: rulesController,
@@ -1297,7 +1561,14 @@ function MediaPlayer() {
         attachSource: attachSource,
         isReady: isReady,
         play: play,
+        isPaused: isPaused,
+        pause: pause,
+        isSeeking: isSeeking,
         seek: seek,
+        setMute: setMute,
+        isMuted: isMuted,
+        setVolume: setVolume,
+        getVolume: getVolume,
         time: time,
         duration: duration,
         timeAsUTC: timeAsUTC,
@@ -1306,7 +1577,6 @@ function MediaPlayer() {
         getDVRSeekOffset: getDVRSeekOffset,
         convertToTimeCode: convertToTimeCode,
         formatUTC: formatUTC,
-        reset: reset,
         getVersion: getVersion,
         getDebug: getDebug,
         getVideoModel: getVideoModel,
@@ -1317,6 +1587,8 @@ function MediaPlayer() {
         enableLastMediaSettingsCaching: enableLastMediaSettingsCaching,
         setMaxAllowedBitrateFor: setMaxAllowedBitrateFor,
         getMaxAllowedBitrateFor: getMaxAllowedBitrateFor,
+        setMaxAllowedRepresentationRatioFor: setMaxAllowedRepresentationRatioFor,
+        getMaxAllowedRepresentationRatioFor: getMaxAllowedRepresentationRatioFor,
         setAutoPlay: setAutoPlay,
         getAutoPlay: getAutoPlay,
         setScheduleWhilePaused: setScheduleWhilePaused,
@@ -1325,10 +1597,14 @@ function MediaPlayer() {
         getMetricsFor: getMetricsFor,
         getQualityFor: getQualityFor,
         setQualityFor: setQualityFor,
+        getLimitBitrateByPortal: getLimitBitrateByPortal,
+        setLimitBitrateByPortal: setLimitBitrateByPortal,
         setTextTrack: setTextTrack,
         getBitrateInfoListFor: getBitrateInfoListFor,
         setInitialBitrateFor: setInitialBitrateFor,
         getInitialBitrateFor: getInitialBitrateFor,
+        setInitialRepresentationRatioFor: setInitialRepresentationRatioFor,
+        getInitialRepresentationRatioFor: getInitialRepresentationRatioFor,
         getStreamsFromManifest: getStreamsFromManifest,
         getTracksFor: getTracksFor,
         getTracksForTypeFromManifest: getTracksForTypeFromManifest,
@@ -1342,20 +1618,31 @@ function MediaPlayer() {
         getSelectionModeForInitialTrack: getSelectionModeForInitialTrack,
         getAutoSwitchQuality: getAutoSwitchQuality,
         setAutoSwitchQuality: setAutoSwitchQuality,
+        getAutoSwitchQualityFor: getAutoSwitchQualityFor,
+        setAutoSwitchQualityFor: setAutoSwitchQualityFor,
+        setBandwidthSafetyFactor: setBandwidthSafetyFactor,
+        getBandwidthSafetyFactor: getBandwidthSafetyFactor,
+        setAbandonLoadTimeout: setAbandonLoadTimeout,
         retrieveManifest: retrieveManifest,
         addUTCTimingSource: addUTCTimingSource,
         removeUTCTimingSource: removeUTCTimingSource,
         clearDefaultUTCTimingSources: clearDefaultUTCTimingSources,
         restoreDefaultUTCTimingSources: restoreDefaultUTCTimingSources,
         setBufferToKeep: setBufferToKeep,
-        getBufferToKeep: getBufferToKeep,
         setBufferPruningInterval: setBufferPruningInterval,
-        getBufferPruningInterval: getBufferPruningInterval,
+        setStableBufferTime: setStableBufferTime,
+        setBufferTimeAtTopQuality: setBufferTimeAtTopQuality,
+        setBufferTimeAtTopQualityLongForm: setBufferTimeAtTopQualityLongForm,
+        setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,
+        setRichBufferThreshold: setRichBufferThreshold,
         getProtectionController: getProtectionController,
+        attachProtectionController: attachProtectionController,
+        setProtectionData: setProtectionData,
         enableManifestDateHeaderTimeSource: enableManifestDateHeaderTimeSource,
         displayCaptionsOnTop: displayCaptionsOnTop,
         attachVideoContainer: attachVideoContainer,
-        attachTTMLRenderingDiv: attachTTMLRenderingDiv
+        attachTTMLRenderingDiv: attachTTMLRenderingDiv,
+        reset: reset
     };
 
     setup();
@@ -1363,6 +1650,7 @@ function MediaPlayer() {
     return instance;
 }
 
+MediaPlayer.__dashjs_factory_name = 'MediaPlayer';
 let factory = FactoryMaker.getClassFactory(MediaPlayer);
 factory.MediaPlayerFactory = MediaPlayerFactory().getInstance();
 factory.events = MediaPlayerEvents;

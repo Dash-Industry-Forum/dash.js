@@ -30,9 +30,9 @@
  */
 import RulesContext from './RulesContext.js';
 import SwitchRequest from './SwitchRequest.js';
-import ABRRulesCollection from './ABRRules/ABRRulesCollection.js';
-import ScheduleRulesCollection from './SchedulingRules/ScheduleRulesCollection.js';
-import SynchronizationRulesCollection from './SynchronizationRules/SynchronizationRulesCollection.js';
+import ABRRulesCollection from './abr/ABRRulesCollection.js';
+import ScheduleRulesCollection from './scheduling/ScheduleRulesCollection.js';
+import SynchronizationRulesCollection from './synchronization/SynchronizationRulesCollection.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 const SCHEDULING_RULE = 0;
@@ -251,9 +251,9 @@ function RulesController() {
     return instance;
 }
 
+RulesController.__dashjs_factory_name = 'RulesController';
 let factory =  FactoryMaker.getSingletonFactory(RulesController);
 factory.SCHEDULING_RULE = SCHEDULING_RULE;
 factory.ABR_RULE = ABR_RULE;
 factory.SYNC_RULE = SYNC_RULE;
-
 export default factory;

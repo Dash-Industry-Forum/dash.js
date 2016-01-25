@@ -140,14 +140,13 @@ function StreamController() {
         if (activeStream.getStreamInfo().index === 0) {
             activeStream.startEventController();
             if (autoPlay) {
-                playbackController.start();
+                playbackController.play();
             }
         }
     }
 
     function onCanPlay(/*e*/) {
         canPlay = true;
-        startAutoPlay();
     }
 
     function onPlaybackError(e) {
@@ -282,7 +281,7 @@ function StreamController() {
                 playbackController.seek(seekTo);
             }
 
-            playbackController.start();
+            playbackController.play();
             activeStream.startEventController();
             isStreamSwitchingInProgress = false;
             fireSwitchEvent(Events.PERIOD_SWITCH_COMPLETED, from, to);
@@ -368,9 +367,12 @@ function StreamController() {
                 throw new Error('There are no streams');
             }
 
-            metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: videoModel.getCurrentTime(),
-                buffered: videoModel.getElement().buffered, presentationStartTime: streamsInfo[0].start,
-                clientTimeOffset: timelineConverter.getClientTimeOffset()});
+            metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {
+                currentTime: playbackController.getTime(),
+                buffered: videoModel.getElement().buffered,
+                presentationStartTime: streamsInfo[0].start,
+                clientTimeOffset: timelineConverter.getClientTimeOffset()
+            });
 
             isUpdating = true;
 
@@ -577,16 +579,12 @@ function StreamController() {
     }
 
     function reset() {
-
-        var stream;
         timeSyncController.reset();
-
-        for (var i = 0, ln = streams.length; i < ln; i++) {
-            stream = streams[i];
+        for (let i = 0, ln = streams.length; i < ln; i++) {
+            let stream = streams[i];
             eventBus.off(Events.STREAM_INITIALIZED, onStreamInitialized, this);
             stream.reset(hasMediaError);
         }
-
         streams = [];
 
         eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
@@ -610,25 +608,18 @@ function StreamController() {
         activeStream = null;
         canPlay = false;
         hasMediaError = false;
-
         if (mediaSource) {
             mediaSourceExt.detachMediaSource(videoModel);
             mediaSource = null;
         }
-
         videoModel = null;
-
-        if (!protectionController) {
-            eventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
-        }
-        else {
+        if (protectionController) {
             protectionController.setMediaElement(null);
             protectionController = null;
             protectionData = null;
             if (manifestModel.getValue()) {
                 eventBus.trigger(Events.PROTECTION_DESTROYED, {data: manifestModel.getValue().url});
             }
-            eventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
         }
     }
 
@@ -648,5 +639,7 @@ function StreamController() {
 
     return instance;
 }
+
+StreamController.__dashjs_factory_name = 'StreamController';
 
 export default FactoryMaker.getSingletonFactory(StreamController);

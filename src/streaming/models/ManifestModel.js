@@ -57,4 +57,5 @@ function ManifestModel() {
     return instance;
 }
 
+ManifestModel.__dashjs_factory_name = 'ManifestModel';
 export default FactoryMaker.getSingletonFactory(ManifestModel);

@@ -118,4 +118,5 @@ function URIQueryAndFragmentModel() {
     return instance;
 }
 
+URIQueryAndFragmentModel.__dashjs_factory_name = 'URIQueryAndFragmentModel';
 export default FactoryMaker.getSingletonFactory(URIQueryAndFragmentModel);

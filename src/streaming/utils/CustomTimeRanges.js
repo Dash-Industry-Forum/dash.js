@@ -144,5 +144,5 @@ function CustomTimeRanges(/*config*/) {
         end: end
     };
 }
-
+CustomTimeRanges.__dashjs_factory_name = 'CustomTimeRanges';
 export default FactoryMaker.getClassFactory(CustomTimeRanges);

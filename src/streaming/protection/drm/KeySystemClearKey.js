@@ -102,4 +102,5 @@ function KeySystemClearKey() {
     return instance;
 }
 
+KeySystemClearKey.__dashjs_factory_name = 'KeySystemClearKey';
 export default FactoryMaker.getSingletonFactory(KeySystemClearKey);

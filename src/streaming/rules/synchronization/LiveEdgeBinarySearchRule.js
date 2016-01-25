@@ -228,4 +228,5 @@ function LiveEdgeBinarySearchRule(config) {
     return instance;
 }
 
+LiveEdgeBinarySearchRule.__dashjs_factory_name = 'LiveEdgeBinarySearchRule';
 export default FactoryMaker.getClassFactory(LiveEdgeBinarySearchRule);

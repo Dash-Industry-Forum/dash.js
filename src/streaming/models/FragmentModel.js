@@ -346,11 +346,10 @@ function FragmentModel(config) {
     return instance;
 }
 
+FragmentModel.__dashjs_factory_name = 'FragmentModel';
 let factory = FactoryMaker.getClassFactory(FragmentModel);
-
 factory.FRAGMENT_MODEL_LOADING = FRAGMENT_MODEL_LOADING;
 factory.FRAGMENT_MODEL_EXECUTED = FRAGMENT_MODEL_EXECUTED;
 factory.FRAGMENT_MODEL_CANCELED = FRAGMENT_MODEL_CANCELED;
 factory.FRAGMENT_MODEL_FAILED = FRAGMENT_MODEL_FAILED;
-
 export default factory;

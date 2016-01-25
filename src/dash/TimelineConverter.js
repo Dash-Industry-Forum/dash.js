@@ -235,4 +235,5 @@ function TimelineConverter() {
     return instance;
 }
 
+TimelineConverter.__dashjs_factory_name = 'TimelineConverter';
 export default FactoryMaker.getSingletonFactory(TimelineConverter);

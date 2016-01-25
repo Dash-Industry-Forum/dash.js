@@ -294,4 +294,5 @@ function ProtectionExtensions() {
     return instance;
 }
 
+ProtectionExtensions.__dashjs_factory_name = 'ProtectionExtensions';
 export default FactoryMaker.getSingletonFactory(ProtectionExtensions);

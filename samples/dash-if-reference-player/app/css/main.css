@@ -38,7 +38,7 @@
     height: 100%; 
     top: 0px; 
     visibility: visible !important; 
-    position: absolute !important;
+    position: relative !important;
 }
 
 body {
@@ -244,4 +244,8 @@ chart {
 .contributor {
     font-size: 22px;
     color: #555;
+}
+
+#videoContainer {
+    position:relative;
 }

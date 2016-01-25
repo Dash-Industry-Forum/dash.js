@@ -44,6 +44,7 @@ import EventBus from '../core/EventBus.js';
 import Events from '../core/events/Events.js';
 import Debug from '../core/Debug.js';
 import FactoryMaker from '../core/FactoryMaker.js';
+import TextSourceBuffer from './TextSourceBuffer.js';
 
 function Stream(config) {
 
@@ -74,7 +75,8 @@ function Stream(config) {
         mediaController,
         fragmentController,
         eventController,
-        abrController;
+        abrController,
+        textSourceBuffer;
 
 
     function setup() {
@@ -91,6 +93,7 @@ function Stream(config) {
         abrController = AbrController(context).getInstance();
         mediaController = MediaController(context).getInstance();
         fragmentController = FragmentController(context).create();
+        textSourceBuffer = TextSourceBuffer(context).getInstance();
 
         eventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
@@ -250,7 +253,7 @@ function Stream(config) {
             return false;
         }
 
-        if ((type === 'text') || (type === 'fragmentedText')) return true;
+        if ((type === 'text') || (type === 'fragmentedText') || (type === 'embeddedText')) return true;
 
         codec = mediaInfo.codec;
         log(type + ' codec: ' + codec);
@@ -357,14 +360,20 @@ function Stream(config) {
         for (var i = 0, ln = allMediaForType.length; i < ln; i++) {
             mediaInfo = allMediaForType[i];
 
-            if (!isMediaSupported(mediaInfo, mediaSource, manifest)) continue;
+            if (type === 'embeddedText') {
+                textSourceBuffer.addEmbeddedTrack(mediaInfo);
+            } else {
+                if (!isMediaSupported(mediaInfo, mediaSource, manifest)) continue;
 
-            if (mediaController.isMultiTrackSupportedByType(mediaInfo.type)) {
-                mediaController.addTrack(mediaInfo, streamInfo);
+                if (mediaController.isMultiTrackSupportedByType(mediaInfo.type)) {
+                    mediaController.addTrack(mediaInfo, streamInfo);
+                }
             }
         }
 
-        if (mediaController.getTracksFor(type, streamInfo).length === 0) return;
+        if (type === 'embeddedText' || mediaController.getTracksFor(type, streamInfo).length === 0) {
+            return;
+        }
 
         mediaController.checkInitialMediaSettings(streamInfo);
         initialMediaInfo = mediaController.getCurrentTrackFor(type, streamInfo);
@@ -393,9 +402,12 @@ function Stream(config) {
         initializeMediaForType('audio', mediaSource);
         initializeMediaForType('text', mediaSource);
         initializeMediaForType('fragmentedText', mediaSource);
+        initializeMediaForType('embeddedText', mediaSource);
         initializeMediaForType('muxed', mediaSource);
 
         createBuffers();
+
+        //TODO. Consider initialization of TextSourceBuffer here if embeddedText, but no sideloadedText.
 
         isMediaInitialized = true;
         isUpdating = false;
@@ -558,5 +570,5 @@ function Stream(config) {
     setup();
     return instance;
 }
-
+Stream.__dashjs_factory_name = 'Stream';
 export default FactoryMaker.getClassFactory(Stream);

@@ -248,6 +248,7 @@ function RepresentationController() {
         };
 
         updating = false;
+        eventBus.trigger(Events.AST_IN_FUTURE, { delay: delay });
         setTimeout(update, delay);
     }
 
@@ -365,4 +366,5 @@ function RepresentationController() {
     return instance;
 }
 
+RepresentationController.__dashjs_factory_name = 'RepresentationController';
 export default FactoryMaker.getClassFactory(RepresentationController);

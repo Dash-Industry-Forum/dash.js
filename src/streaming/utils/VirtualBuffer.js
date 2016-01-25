@@ -390,5 +390,5 @@ function VirtualBuffer() {
     setup();
     return instance;
 }
-
+VirtualBuffer.__dashjs_factory_name = 'VirtualBuffer';
 export default FactoryMaker.getSingletonFactory(VirtualBuffer);
