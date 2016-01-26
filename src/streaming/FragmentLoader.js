@@ -33,11 +33,9 @@ import EventBus from './../core/EventBus.js';
 import Events from './../core/events/Events.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 import Debug from '../core/Debug.js';
+import MediaPlayerModel from './models/MediaPlayerModel.js';
 
 function FragmentLoader(config) {
-
-    const RETRY_ATTEMPTS = 3;
-    const RETRY_INTERVAL = 1000;
 
     let context = this.context;
     let log = Debug(context).getInstance().log;
@@ -46,6 +44,8 @@ function FragmentLoader(config) {
     let metricsModel = config.metricsModel;
     let errHandler = config.errHandler;
     let requestModifierExt = config.requestModifierExt;
+
+    let mediaPlayerModel = MediaPlayerModel(context).getInstance();
 
     let instance,
         xhrs;
@@ -176,11 +176,11 @@ function FragmentLoader(config) {
             handleLoaded(request, false);
 
             if (remainingAttempts > 0) {
-                log('Failed loading fragment: ' + request.mediaType + ':' + request.type + ':' + request.startTime + ', retry in ' + RETRY_INTERVAL + 'ms' + ' attempts: ' + remainingAttempts);
+                log('Failed loading fragment: ' + request.mediaType + ':' + request.type + ':' + request.startTime + ', retry in ' + mediaPlayerModel.getFragmentRetryInterval() + 'ms' + ' attempts: ' + remainingAttempts);
                 remainingAttempts--;
                 setTimeout(function () {
                     doLoad.call(self, request, remainingAttempts);
-                }, RETRY_INTERVAL);
+                }, mediaPlayerModel.getFragmentRetryInterval());
             } else {
                 log('Failed loading fragment: ' + request.mediaType + ':' + request.type + ':' + request.startTime + ' no retry attempts left');
                 errHandler.downloadError('content', request.url, req);
@@ -233,7 +233,7 @@ function FragmentLoader(config) {
                 sender: this
             });
         } else {
-            doLoad(req, RETRY_ATTEMPTS);
+            doLoad(req, mediaPlayerModel.getFragmentRetryAttempts());
         }
     }
 

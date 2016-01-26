@@ -1238,6 +1238,24 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
+    function setFragmentLoaderRetryAttempts (value) {
+        mediaPlayerModel.setFragmentRetryAttempts(value);
+    }
+
+    /**
+     * @param value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setFragmentLoaderRetryInterval (value) {
+        mediaPlayerModel.setFragmentRetryInterval(value);
+    }
+
+    /**
+     * @param value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
     function setBufferTimeAtTopQualityLongForm (value) {
         mediaPlayerModel.setBufferTimeAtTopQualityLongForm(value);
     }
@@ -1632,6 +1650,8 @@ function MediaPlayer() {
         setBufferPruningInterval: setBufferPruningInterval,
         setStableBufferTime: setStableBufferTime,
         setBufferTimeAtTopQuality: setBufferTimeAtTopQuality,
+        setFragmentLoaderRetryAttempts: setFragmentLoaderRetryAttempts,
+        setFragmentLoaderRetryInterval: setFragmentLoaderRetryInterval,
         setBufferTimeAtTopQualityLongForm: setBufferTimeAtTopQualityLongForm,
         setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,
         setRichBufferThreshold: setRichBufferThreshold,

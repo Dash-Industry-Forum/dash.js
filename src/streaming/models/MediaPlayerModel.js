@@ -17,6 +17,9 @@ const BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 60;
 const LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;
 const RICH_BUFFER_THRESHOLD = 20;
 
+const FRAGMENT_RETRY_ATTEMPTS = 3;
+const FRAGMENT_RETRY_INTERVAL = 1000;
+
 function MediaPlayerModel() {
 
     let instance,
@@ -35,7 +38,9 @@ function MediaPlayerModel() {
         longFormContentDurationThreshold,
         richBufferThreshold,
         bandwidthSafetyFactor,
-        abandonLoadTimeout;
+        abandonLoadTimeout,
+        fragmentRetryAttempts,
+        fragmentRetryInterval;
 
     function setup() {
         UTCTimingSources = [];
@@ -54,6 +59,8 @@ function MediaPlayerModel() {
         richBufferThreshold = RICH_BUFFER_THRESHOLD;
         bandwidthSafetyFactor = BANDWIDTH_SAFETY_FACTOR;
         abandonLoadTimeout = ABANDON_LOAD_TIMEOUT;
+        fragmentRetryAttempts = FRAGMENT_RETRY_ATTEMPTS;
+        fragmentRetryInterval = FRAGMENT_RETRY_INTERVAL;
     }
 
     //TODO Should we use Object.define to have setters/getters? makes more readable code on other side.
@@ -153,6 +160,22 @@ function MediaPlayerModel() {
         return bufferPruningInterval;
     }
 
+    function setFragmentRetryAttempts(value) {
+        fragmentRetryAttempts = value;
+    }
+
+    function getFragmentRetryAttempts() {
+        return fragmentRetryAttempts;
+    }
+
+    function setFragmentRetryInterval(value) {
+        fragmentRetryInterval = value;
+    }
+
+    function getFragmentRetryInterval() {
+        return fragmentRetryInterval;
+    }
+
     function setScheduleWhilePaused(value) {
         scheduleWhilePaused = value;
     }
@@ -221,6 +244,10 @@ function MediaPlayerModel() {
         getBufferToKeep: getBufferToKeep,
         setBufferPruningInterval: setBufferPruningInterval,
         getBufferPruningInterval: getBufferPruningInterval,
+        setFragmentRetryAttempts: setFragmentRetryAttempts,
+        getFragmentRetryAttempts: getFragmentRetryAttempts,
+        setFragmentRetryInterval: setFragmentRetryInterval,
+        getFragmentRetryInterval: getFragmentRetryInterval,
         setScheduleWhilePaused: setScheduleWhilePaused,
         getScheduleWhilePaused: getScheduleWhilePaused,
         getUseSuggestedPresentationDelay: getUseSuggestedPresentationDelay,
