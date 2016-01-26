@@ -217,7 +217,7 @@ function ScheduleController(config) {
 
     function onGetRequiredFragmentCount(result) {
         fragmentsToLoad = result.value;
-        if (fragmentsToLoad > 0 && !bufferController.getIsAppendingInProgress() && !isFragmentLoading) {
+        if (fragmentsToLoad > 0 && !isFragmentLoading && (manifestExt.getIsTextTrack(type) || !bufferController.getIsAppendingInProgress())) {
             isFragmentLoading = true;
             abrController.getPlaybackQuality(streamProcessor,  getNextFragment(onGetNextFragment));
         } else {
@@ -358,19 +358,18 @@ function ScheduleController(config) {
     }
 
     function onPlaybackSeeking(e) {
-
         if (!initialPlayback) {
             isFragmentLoading = false;
         }
 
-        var metrics = metricsModel.getMetricsFor('stream');
-        var manifestUpdateInfo = metricsExt.getCurrentManifestUpdate(metrics);
+        let metrics = metricsModel.getMetricsFor('stream');
+        let manifestUpdateInfo = metricsExt.getCurrentManifestUpdate(metrics);
 
         seekTarget = e.seekTime;
-        log('seek: ' + seekTarget);
         addPlaylistMetrics(PlayList.SEEK_START_REASON);
 
-        metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentRepresentationInfo.DVRWindow.end - playbackController.getTime()});
+        let latency = currentRepresentationInfo.DVRWindow ? currentRepresentationInfo.DVRWindow.end - playbackController.getTime() : NaN;
+        metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: latency});
 
         if (isDynamic) { // need to validate again for dynamic after first seek
             validate();

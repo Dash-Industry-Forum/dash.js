@@ -352,8 +352,10 @@ function PlaybackController() {
     }
 
     function onPlaybackSeeking() {
+        let seekTime = getTime();
+        log('Seeking to: ' + seekTime);
         startUpdatingWallclockTime();
-        eventBus.trigger(Events.PLAYBACK_SEEKING, {seekTime: getTime()});
+        eventBus.trigger(Events.PLAYBACK_SEEKING, {seekTime: seekTime});
     }
 
     function onPlaybackSeeked() {
