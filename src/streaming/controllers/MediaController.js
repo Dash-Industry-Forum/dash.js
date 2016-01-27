@@ -33,6 +33,7 @@ import EventBus from '../../core/EventBus.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
 import TextSourceBuffer from '../TextSourceBuffer.js';
+import DOMStorage from '../utils/DOMStorage.js';
 
 const TRACK_SWITCH_MODE_NEVER_REPLACE = 'neverReplace';
 const TRACK_SWITCH_MODE_ALWAYS_REPLACE = 'alwaysReplace';
@@ -46,14 +47,14 @@ function MediaController() {
     let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
     let textSourceBuffer = TextSourceBuffer(context).getInstance();
+    let domStorage = DOMStorage(context).getInstance();
 
     let instance,
         tracks,
         initialSettings,
         selectionMode,
         switchMode,
-        errHandler,
-        DOMStorage;
+        errHandler;
 
     function initialize() {
         tracks = {};
@@ -73,7 +74,7 @@ function MediaController() {
             var tracks = [];
 
             if (!settings) {
-                settings = DOMStorage.getSavedMediaSettings(type);
+                settings = domStorage.getSavedMediaSettings(type);
                 setInitialSettings(type, settings);
             }
 
@@ -305,9 +306,6 @@ function MediaController() {
         if (config.errHandler) {
             errHandler = config.errHandler;
         }
-        if (config.DOMStorage) {
-            DOMStorage = config.DOMStorage;
-        }
     }
 
     /**
@@ -319,7 +317,7 @@ function MediaController() {
     }
 
     function storeLastSettings(type, value) {
-        if (DOMStorage.isSupported(DOMStorage.STORAGE_TYPE_LOCAL) && (type === 'video' || type === 'audio')) {
+        if (domStorage.isSupported(DOMStorage.STORAGE_TYPE_LOCAL) && (type === 'video' || type === 'audio')) {
             localStorage.setItem(DOMStorage['LOCAL_STORAGE_' + type.toUpperCase() + '_SETTINGS_KEY'], JSON.stringify({settings: value, timestamp: new Date().getTime()}));
         }
     }
