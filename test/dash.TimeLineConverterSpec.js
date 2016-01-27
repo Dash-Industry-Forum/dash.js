@@ -6,6 +6,7 @@ import Events from '../src/core/events/Events.js';
 import SpecHelper from './helpers/SpecHelper.js';
 
 const expect = require('chai').expect;
+const sinon = require('sinon');
 
 describe("TimelineConverter", function () {
     const context = {},
@@ -17,7 +18,7 @@ describe("TimelineConverter", function () {
         eventBus = EventBus(context).getInstance(),
         representation = voHelper.getDummyRepresentation(testType),
         timeLineConverter = TimeLineConverter(context).getInstance();
-    
+
     timeLineConverter.initialize();
 
     it("should calculate timestamp offset", function () {
@@ -28,7 +29,7 @@ describe("TimelineConverter", function () {
 
     it("should set an expected live edge", function () {
         var expectedValue = 10;
-    
+
         timeLineConverter.setExpectedLiveEdge(expectedValue);
         expect(timeLineConverter.getExpectedLiveEdge()).to.be.equal(expectedValue);
     });
@@ -36,17 +37,17 @@ describe("TimelineConverter", function () {
     it("should calculate presentation time from media time", function () {
         var expectedValue = 0,
             mediaTime = 10;
-    
+
         expect(timeLineConverter.calcPresentationTimeFromMediaTime(mediaTime, representation)).to.be.equal(expectedValue);
     });
-    
+
     it("should calculate media time from representation time", function () {
         var expectedValue = 10,
             representationTime = 0;
-    
+
         expect(timeLineConverter.calcMediaTimeFromPresentationTime(representationTime, representation)).to.be.equal(expectedValue);
     });
-    
+
     it("should calculate presentation time from wall-clock time", function () {
         //representation.adaptation.period.start = 10;
         //representation.adaptation.period.mpd.manifest.type = "static";
@@ -54,8 +55,8 @@ describe("TimelineConverter", function () {
             wallClock = new Date(specHelper.getUnixTime().getTime() + expectedValue * 1000);
         expect(timeLineConverter.calcPresentationTimeFromWallTime(wallClock, representation.adaptation.period)).to.be.equal(expectedValue);
     });
-    
-   
+
+
     it("should calculate availability window for static mpd", function () {
         //representation.adaptation.period.start = 0;
         //representation.adaptation.period.duration = 100;
@@ -63,7 +64,7 @@ describe("TimelineConverter", function () {
         var expectedValue = representation.adaptation.period.start,
             isDynamic = false,
             range = timeLineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
-    
+
         expect(range.start).to.be.equal(expectedValue);
         expectedValue = 100;
         expect(range.end).to.be.equal(expectedValue);
@@ -72,11 +73,11 @@ describe("TimelineConverter", function () {
     describe("when the live edge is found", function () {
         var updateCompleted,
              eventDelay = specHelper.getExecutionDelay();
- 
+
         beforeEach(function (done) {
             updateCompleted = false;
             timeLineConverter.setExpectedLiveEdge(100);
- 
+
             setTimeout(function(){
                 eventBus.trigger(Events.LIVE_EDGE_SEARCH_COMPLETED, {liveEdge: testActualLiveEdge, searchTime: searchTime});
                 updateCompleted = true;
@@ -89,6 +90,10 @@ describe("TimelineConverter", function () {
         });
 
         it("should calculate availability window for dynamic mpd", function () {
+            // useFakeTimers ensure availabilityStartTime below and
+            // calcSegmentAvailabilityRange get the same value.
+            var clock = sinon.useFakeTimers(new Date().getTime());
+
             //representation.adaptation.period.start = 0;
             //representation.adaptation.period.duration = 100;
             //representation.adaptation.period.mpd.manifest.type = "static";
@@ -102,6 +107,8 @@ describe("TimelineConverter", function () {
             expect(range.start).to.be.equal(expectedValue);
             expectedValue = 9;
             expect(range.end).to.be.equal(expectedValue);
+
+            clock.restore();
         });
     });
 });
