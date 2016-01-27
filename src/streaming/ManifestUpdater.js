@@ -114,7 +114,7 @@ function ManifestUpdater() {
         var date = new Date();
 
         manifestModel.setValue(manifest);
-        log('Manifest has been refreshed at ' + date + '[' + date.getTime() + '] ');
+        log('Manifest has been refreshed at ' + date + '[' + date.getTime() / 1000 + '] ');
 
         delay = manifestExt.getRefreshDelay(manifest);
         timeSinceLastUpdate = (new Date().getTime() - manifest.loadedTime.getTime()) / 1000;

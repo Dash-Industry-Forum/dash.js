@@ -58,7 +58,6 @@ function ScheduleController(config) {
     let mediaPlayerModel = config.mediaPlayerModel;
 
     let instance,
-        fragmentsToLoad,
         type,
         ready,
         fragmentModel,
@@ -83,7 +82,6 @@ function ScheduleController(config) {
 
 
     function setup() {
-        fragmentsToLoad = 0;
         initialPlayback = true;
         isStopped = false;
         playListMetrics = null;
@@ -143,7 +141,7 @@ function ScheduleController(config) {
         }
     }
 
-    function doStart() {
+    function start() {
         if (!ready) return;
         isStopped = false;
         if (initialPlayback) {
@@ -162,10 +160,10 @@ function ScheduleController(config) {
             addPlaylistMetrics(PlayList.INITIAL_PLAY_START_REASON);
         }
 
-        doStart();
+        start();
     }
 
-    function doStop() {
+    function stop() {
         if (isStopped) return;
         isStopped = true;
         log('Schedule controller stopping for ' + type);
@@ -202,36 +200,30 @@ function ScheduleController(config) {
 
     function validate() {
         if (isStopped || (playbackController.isPaused() && (playbackController.getPlayedRanges().length > 0) && !scheduleWhilePaused)) return;
-        getRequiredFragmentCount(onGetRequiredFragmentCount);
+        getRequiredFragmentCount();
         //log("validate", type);
     }
 
-    function getRequiredFragmentCount(callback) {
-        var rules = scheduleRulesCollection.getRules(ScheduleRulesCollection.FRAGMENTS_TO_SCHEDULE_RULES);
-
-        rulesController.applyRules(rules, streamProcessor, callback, fragmentsToLoad, function (currentValue, newValue) {
+    function getRequiredFragmentCount() {
+        let rules = scheduleRulesCollection.getRules(ScheduleRulesCollection.FRAGMENTS_TO_SCHEDULE_RULES);
+        rulesController.applyRules(rules, streamProcessor, onGetRequiredFragmentCount, 0, function (currentValue, newValue) {
             currentValue = currentValue === SwitchRequest.NO_CHANGE ? 0 : currentValue;
             return Math.max(currentValue, newValue);
         });
     }
 
     function onGetRequiredFragmentCount(result) {
-        fragmentsToLoad = result.value;
-        if (fragmentsToLoad > 0 && !isFragmentLoading && (manifestExt.getIsTextTrack(type) || !bufferController.getIsAppendingInProgress())) {
+        if (result.value === 1 && !isFragmentLoading && (manifestExt.getIsTextTrack(type) || !bufferController.getIsAppendingInProgress())) {
             isFragmentLoading = true;
-            abrController.getPlaybackQuality(streamProcessor,  getNextFragment(onGetNextFragment));
+            abrController.getPlaybackQuality(streamProcessor,  getNextFragment());
         } else {
-            validateTimeout = setTimeout(function () {
-                //log("timeout going back to validate")
-                validate();
-            }, 1000); //TODO should this be something based on fragment duration?
+            startValidateTimer(1000);
         }
     }
 
-    function getNextFragment(callback) {
-        var rules = scheduleRulesCollection.getRules(ScheduleRulesCollection.NEXT_FRAGMENT_RULES);
-
-        rulesController.applyRules(rules, streamProcessor, callback, null, function (currentValue, newValue) {
+    function getNextFragment() {
+        let rules = scheduleRulesCollection.getRules(ScheduleRulesCollection.NEXT_FRAGMENT_RULES);
+        rulesController.applyRules(rules, streamProcessor, onGetNextFragment, null, function (currentValue, newValue) {
             return newValue;
         });
     }
@@ -239,7 +231,17 @@ function ScheduleController(config) {
     function onGetNextFragment(result) {
         if (result.value) {
             fragmentModel.executeRequest(result.value);
+        } else {
+            isFragmentLoading = false;
+            startValidateTimer(1000);
         }
+    }
+
+    function startValidateTimer(value) {
+        validateTimeout = setTimeout(function () {
+            //log("timeout going back to validate")
+            validate();
+        }, value);
     }
 
     function onQualityChanged(e) {
@@ -285,7 +287,7 @@ function ScheduleController(config) {
             isFragmentLoading = false;
         }
         if (!e.error) return;
-        doStop();
+        stop();
     }
 
     function onBytesAppended(e) {
@@ -297,7 +299,7 @@ function ScheduleController(config) {
 
     function onDataUpdateStarted(e) {
         if (e.sender.getStreamProcessor() !== streamProcessor) return;
-        doStop();
+        stop();
     }
 
     function onInitRequested(e) {
@@ -313,7 +315,7 @@ function ScheduleController(config) {
         fragmentModel.removeExecutedRequestsBeforeTime(e.to);
 
         if (e.hasEnoughSpaceToAppend && !bufferController.getIsBufferingCompleted()) {
-            doStart();
+            start();
         }
     }
 
@@ -326,7 +328,7 @@ function ScheduleController(config) {
 
     function onQuotaExceeded(e) {
         if (e.sender.getStreamProcessor() !== streamProcessor) return;
-        doStop();
+        stop();
     }
 
     function addPlaylistMetrics(stopReason) {
@@ -354,7 +356,7 @@ function ScheduleController(config) {
     }
 
     function onPlaybackStarted() {
-        doStart();
+        start();
     }
 
     function onPlaybackSeeking(e) {
@@ -454,10 +456,9 @@ function ScheduleController(config) {
             eventBus.off(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
         }
 
-        doStop();
+        stop();
         fragmentController.detachModel(fragmentModel);
         isFragmentLoading = false;
-        fragmentsToLoad = 0;
         timeToloadDelay = 0;
         seekTarget = NaN;
         playbackController = null;
@@ -472,8 +473,8 @@ function ScheduleController(config) {
         setTimeToLoadDelay: setTimeToLoadDelay,
         getTimeToLoadDelay: getTimeToLoadDelay,
         replaceCanceledRequests: replaceCanceledRequests,
-        start: doStart,
-        stop: doStop,
+        start: start,
+        stop: stop,
         reset: reset
     };
 
