@@ -185,7 +185,7 @@ function FragmentModel(config) {
 
         if (!request) return;
 
-        //Adds the ability to delay single fragment loading time to control buffer. Needed for Advanced ABR rules.
+        //Adds the ability to delay single fragment loading time to control buffer.
         if (now < request.delayLoadingTime ) {
             delayLoadingTimeout = setTimeout(function () {
                 executeRequest(request);
@@ -201,8 +201,8 @@ function FragmentModel(config) {
                 eventBus.trigger(Events.STREAM_COMPLETED, {request: request, fragmentModel: this});
                 break;
             case FragmentRequest.ACTION_DOWNLOAD:
-                loadingRequests.push(request);
                 addSchedulingInfoMetrics(request, FRAGMENT_MODEL_LOADING);
+                loadingRequests.push(request);
                 loadCurrentFragment(request);
                 break;
             default:

@@ -31,19 +31,18 @@
 
 import SwitchRequest from '../SwitchRequest.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
-import FragmentRequest from '../../vo/FragmentRequest.js';
 
 function NextFragmentRequestRule(config) {
 
     let instance;
     let context = this.context;
-
     let adapter = config.adapter;
     let sourceBufferExt = config.sourceBufferExt;
     let virtualBuffer = config.virtualBuffer;
     let textSourceBuffer = config.textSourceBuffer;
 
     function execute(rulesContext, callback) {
+
         var mediaType = rulesContext.getMediaInfo().type;
         var mediaInfo = rulesContext.getMediaInfo();
         var streamId = rulesContext.getStreamInfo().id;
@@ -81,13 +80,7 @@ function NextFragmentRequestRule(config) {
         }
 
         request = adapter.getFragmentRequestForTime(streamProcessor, representationInfo, time, {keepIdx: keepIdx});
-
-        while (request && streamProcessor.getFragmentModel().isFragmentLoaded(request)) {
-            if (request.action === FragmentRequest.ACTION_COMPLETE) {
-                request = null;
-                break;
-            }
-
+        if (request && streamProcessor.getFragmentModel().isFragmentLoaded(request)) {
             request = adapter.getNextFragmentRequest(streamProcessor, representationInfo);
         }
 

@@ -83,7 +83,7 @@ function AbandonRequestsRule(/*config*/) {
                 fragmentInfo.segmentDuration = req.duration;
                 fragmentInfo.bytesTotal = req.bytesTotal;
                 fragmentInfo.id = req.index;
-                //log("XXX FRAG ID : " ,fragmentInfo.id, " *****************");
+                //log("FRAG ID : " ,fragmentInfo.id, " *****************");
             }
             //update info base on subsequent progress events until completed.
             fragmentInfo.bytesLoaded = req.bytesLoaded;
@@ -94,7 +94,7 @@ function AbandonRequestsRule(/*config*/) {
 
                 fragmentInfo.measuredBandwidthInKbps = Math.round(fragmentInfo.bytesLoaded * 8 / fragmentInfo.elapsedTime);
                 fragmentInfo.estimatedTimeOfDownload = (fragmentInfo.bytesTotal * 8 * 0.001 / fragmentInfo.measuredBandwidthInKbps).toFixed(2);
-                //log("XXX","id: ",fragmentInfo.id,  "kbps: ", fragmentInfo.measuredBandwidthInKbps, "etd: ",fragmentInfo.estimatedTimeOfDownload, "et: ", fragmentInfo.elapsedTime/1000);
+                //log("id: ",fragmentInfo.id,  "kbps: ", fragmentInfo.measuredBandwidthInKbps, "etd: ",fragmentInfo.estimatedTimeOfDownload, "et: ", fragmentInfo.elapsedTime/1000);
 
                 if (fragmentInfo.estimatedTimeOfDownload < (fragmentInfo.segmentDuration * ABANDON_MULTIPLIER) || representationInfo.quality === 0) {
                     callback(switchRequest);
