@@ -25,11 +25,6 @@ describe("FragmentModel", function () {
     }
     let fragmentModel = FragmentModel(context).create({metricsModel: metricsModel});
 
-    it.skip("should not be postponed after creation", function () {
-        // There is no getIsPostponed method anymore, not sure if this test it still relevant
-        expect(fragmentModel.getIsPostponed()).to.not.be.ok;
-    });
-
     it("should not have any loading, executed, canceled or failed requests", function () {
         const expectedValue = 0;
 
@@ -84,15 +79,6 @@ describe("FragmentModel", function () {
                 expect(spy).to.have.been.called();
             });
 
-            // There is no PENDING state anymore, don't know if this test is still relevant
-            it.skip("should remove the request from pending requests", function () {
-                clock.tick(delay + 1);
-
-                const pendingRequests = fragmentModel.getRequests({ state: FragmentModel.FRAGMENT_MODEL_PENDING });
-                
-                expect(pendingRequests.length).to.be.equal(0);
-            });
-
             it("should add the request to loading requests", function () {
                 clock.tick(delay + 1);
 
@@ -103,7 +89,7 @@ describe("FragmentModel", function () {
 
             it("should be able to abort loading requests", function () {
                 clock.tick(delay + 1);
-                
+
                 fragmentModel.abortRequests();
                 const loadingRequests = fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_LOADING});
 
