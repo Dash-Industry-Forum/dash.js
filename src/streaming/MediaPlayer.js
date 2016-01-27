@@ -121,6 +121,8 @@ function MediaPlayer() {
     function initialize(view, source, AutoPlay) {
 
         capabilities = Capabilities(context).getInstance();
+        errHandler = ErrorHandler(context).getInstance();
+
         if (!capabilities.supportsMediaSource()) {
             errHandler.capabilityError('mediasource');
             return;
@@ -139,7 +141,6 @@ function MediaPlayer() {
         domStorage = DOMStorage(context).getInstance();
         metricsModel = MetricsModel(context).getInstance();
         metricsModel.setConfig({adapter: createAdaptor()});
-        errHandler = ErrorHandler(context).getInstance();
 
         restoreDefaultUTCTimingSources();
         setAutoPlay(AutoPlay !== undefined ? AutoPlay : true);
