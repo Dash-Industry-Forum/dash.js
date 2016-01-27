@@ -1487,7 +1487,6 @@ function MediaPlayer() {
 
         mediaController.initialize();
         mediaController.setConfig({
-            DOMStorage: domStorage,
             errHandler: errHandler
         });
 
