@@ -261,6 +261,22 @@ function MediaPlayer() {
     }
 
     /**
+     * The length of the buffer for a given media type, in seconds. Valid media types are "video" and "audio". If no type
+     * is passed in, then the video buffer length is returned. The value is returned to a precision of two decimal places.
+     *
+     * @returns {number} The length of the buffer for the given media type, in seconds.
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getBufferLength(type) {
+        if (!type)
+        {
+            type = 'video';
+        }
+        return getMetricsExt().getCurrentBufferLevel(getMetricsFor(type)).level.toPrecision(3);
+    }
+
+    /**
      * The timeShiftBufferLength (DVR Window), in seconds.
      *
      * @returns {number} The window of allowable play time behind the live point of a live stream.
@@ -1599,6 +1615,7 @@ function MediaPlayer() {
         formatUTC: formatUTC,
         getVersion: getVersion,
         getDebug: getDebug,
+        getBufferLength: getBufferLength,
         getVideoModel: getVideoModel,
         getVideoContainer: getVideoContainer,
         setLiveDelayFragmentCount: setLiveDelayFragmentCount,

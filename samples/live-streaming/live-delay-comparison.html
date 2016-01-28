@@ -59,7 +59,9 @@
                 {
                     var p = eval("player"+i);
                     document.querySelector("#video" + i + "delay").innerHTML = Math.round((d.getTime()/1000) - Number(p.timeAsUTC()));
+                    document.querySelector("#video" + i + "buffer").innerHTML = p.getBufferLength()+ "s";
                 }
+
 
             },1000);
 
@@ -87,17 +89,20 @@ Lowest latency is achieved with shorter segments and with a lower liveDelayFragm
     2s segment, 0 segments behind live<br/>
         <video id="video1" controls="true">
         </video><br/>
-        Seconds behind live: <span id="video1delay"></span>
+        Seconds behind live: <span id="video1delay"></span><br/>
+        Buffer length: <span id="video1buffer"></span>
     </td><td>
         2s segment, 2 segments behind live<br/>
         <video id="video2" controls="true">
         </video><br/>
-        Seconds behind live: <span id="video2delay"></span>
+        Seconds behind live: <span id="video2delay"></span><br/>
+        Buffer length: <span id="video2buffer"></span>
     </td><td>
         2s segment, 4 segments behind live (default)<br/>
         <video id="video3" controls="true">
         </video><br/>
-        Seconds behind live: <span id="video3delay"></span>
+        Seconds behind live: <span id="video3delay"></span><br/>
+        Buffer length: <span id="video3buffer"></span>
     </td>
     <td>Wall clock time
         <div class="clock">
@@ -108,17 +113,20 @@ Lowest latency is achieved with shorter segments and with a lower liveDelayFragm
         6s segment, 0 segments behind live<br/>
         <video id="video4" controls="true">
         </video><br/>
-        Seconds behind live: <span id="video4delay"></span>
+        Seconds behind live: <span id="video4delay"></span><br/>
+        Buffer length: <span id="video4buffer"></span>
     </td><td>
         6s segment, 2 segments behind live<br/>
         <video id="video5" controls="true">
         </video><br/>
-        Seconds behind live: <span id="video5delay"></span>
+        Seconds behind live: <span id="video5delay"></span><br/>
+        Buffer length: <span id="video5buffer"></span>
     </td><td>
         6s segment, 4 segments behind live (default)<br/>
         <video id="video6" controls="true">
         </video><br/>
-        Seconds behind live: <span id="video6delay"></span>
+        Seconds behind live: <span id="video6delay"></span><br/>
+        Buffer length: <span id="video6buffer"></span>
     </td></tr>
     </div>
 </div>
