@@ -762,8 +762,7 @@ function DashHandler(config) {
                 frag = segments[i];
                 ft = frag.presentationStartTime;
                 fd = frag.duration;
-                epsilon = (timeThreshold === undefined || timeThreshold === null) ? 0 : timeThreshold;
-                //Changing epsilon from fd/2 to 0 but leaving ability to send timeThreshold in to override. May break misaligned demuxed segments.
+                epsilon = (timeThreshold === undefined || timeThreshold === null) ? fd/2 : timeThreshold;
                 if ((time + epsilon) >= ft &&
                     (time - epsilon) < (ft + fd)) {
                     idx = frag.availabilityIdx;
