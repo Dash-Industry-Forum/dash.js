@@ -15,11 +15,7 @@
     "predef" : [
         "it",
         "describe",
-        "ISOBoxer",
-        "ObjectIron",
-        "X2JS",
         "kendo",
-        "BASE64",
         "utils",
         "MediaPlayer",
         "Dash",

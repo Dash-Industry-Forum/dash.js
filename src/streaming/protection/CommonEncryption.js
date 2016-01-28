@@ -29,6 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+import BASE64 from '../../../externals/base64.js';
+
 class CommonEncryption {
     /**
      * Find and return the ContentProtection element in the given array

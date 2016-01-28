@@ -34,25 +34,12 @@ module.exports = function (grunt) {
                 }
             },
 
-            build_all: {
-                options: {
-                    sourceMap: false,
-                },
-                files: {
-                    'build/temp/dash.all.min.js': ['build/temp/dash.no-externals.debug.js', 'externals/*.js']
-                }
-            },
             build_core: {
                 options: {
                     sourceMapIn: 'build/temp/dash.mediaplayer.debug.js.map'
                 },
                 files: {
                     'build/temp/dash.mediaplayer.min.js': 'build/temp/dash.mediaplayer.debug.js'
-                }
-            },
-            build_external: {
-                files: {
-                    'build/temp/dash.externals.min.js': 'externals/*.js',
                 }
             },
             build_protection: {
@@ -63,19 +50,15 @@ module.exports = function (grunt) {
                     'build/temp/dash.protection.min.js': 'build/temp/dash.protection.debug.js'
                 }
             },
-
-            debug_external: {
+            build_all: {
                 options: {
-                    sourceMap: true,
-                    sourceMapRoot: './externals',
-                    beautify: false,
-                    compress: false,
-                    mangle: false
+                    sourceMapIn: 'build/temp/dash.all.debug.js.map'
                 },
                 files: {
-                    'build/temp/dash.externals.debug.js': 'externals/*.js'
+                    'build/temp/dash.all.min.js': 'build/temp/dash.all.debug.js'
                 }
-            }
+            },
+
         },
         copy: {
             dist: {
@@ -83,11 +66,8 @@ module.exports = function (grunt) {
                 cwd: 'build/temp/',
                 src: [
                     'dash.all.min.js', 'dash.all.min.js.map',
-                    'dash.externals.min.js', 'dash.externals.min.js.map',
                     'dash.mediaplayer.min.js', 'dash.mediaplayer.min.js.map',
                     'dash.protection.min.js', 'dash.protection.min.js.map',
-                    'dash.no-externals.debug.js', 'dash.no-externals.debug.js.map',
-                    'dash.externals.debug.js', 'dash.externals.debug.js.map',
                     'dash.mediaplayer.debug.js', 'dash.mediaplayer.debug.js.map',
                     'dash.protection.debug.js', 'dash.protection.debug.js.map'
                 ],
@@ -96,12 +76,6 @@ module.exports = function (grunt) {
             }
         },
         exorcise: {
-            no_externals: {
-                options: {},
-                files: {
-                    'build/temp/dash.no-externals.debug.js.map': ['build/temp/dash.no-externals.debug.js']
-                }
-            },
             mediaplayer: {
                 options: {},
                 files: {
@@ -112,6 +86,12 @@ module.exports = function (grunt) {
                 options: {},
                 files: {
                     'build/temp/dash.protection.debug.js.map': ['build/temp/dash.protection.debug.js']
+                }
+            },
+            all: {
+                options: {},
+                files: {
+                    'build/temp/dash.all.debug.js.map': ['build/temp/dash.all.debug.js']
                 }
             }
         },
@@ -148,7 +128,7 @@ module.exports = function (grunt) {
             },
             all: {
                 files: {
-                    'build/temp/dash.no-externals.debug.js': ['src/All.js']
+                    'build/temp/dash.all.debug.js': ['src/All.js']
                 },
                 options: {
                     browserifyOptions: {
