@@ -144,18 +144,18 @@ module.exports = function (grunt) {
 
             watch: {
                 files: {
-                    'build/temp/dash.mediaplayer.debug.js': ['src/js/MediaPlayer.js']
+                    'build/temp/dash.all.debug.js': ['src/All.js']
                 },
                 options: {
                     watch: true,
                     keepAlive: true,
                     browserifyOptions: {
-                        standalone: 'MediaPlayer'
+                        debug:true
                     },
-                    transform: ['babelify'],
                     plugin: [
                       ['browserify-derequire']
-                    ]
+                    ],
+                    transform: ['babelify']
                 }
             }
         },
@@ -194,6 +194,6 @@ module.exports = function (grunt) {
     grunt.registerTask('test',      ['mocha_istanbul:test']);
     grunt.registerTask('watch',     ['browserify:watch']);
     grunt.registerTask('release',   ['default', 'jsdoc']);
-    grunt.registerTask('debug', ['clean', 'browserify:all', 'exorcise:no_externals', 'uglify:debug_external', 'copy:dist']);
+    grunt.registerTask('debug', ['clean', 'browserify:all', 'exorcise:all', 'copy:dist']);
 
 };
