@@ -150,7 +150,7 @@ module.exports = function (grunt) {
                     watch: true,
                     keepAlive: true,
                     browserifyOptions: {
-                        debug:true
+                        debug: true
                     },
                     plugin: [
                       ['browserify-derequire']
@@ -184,6 +184,11 @@ module.exports = function (grunt) {
             options: {
                 config: '.jscsrc'
             }
+        },
+        githooks: {
+            all: {
+                'pre-commit': 'jscs'
+            }
         }
     });
 
@@ -195,5 +200,5 @@ module.exports = function (grunt) {
     grunt.registerTask('watch',     ['browserify:watch']);
     grunt.registerTask('release',   ['default', 'jsdoc']);
     grunt.registerTask('debug', ['clean', 'browserify:all', 'exorcise:all', 'copy:dist']);
-
+    grunt.registerTask('prepublish', ['githooks', 'dist']);
 };

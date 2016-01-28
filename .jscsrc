@@ -21,6 +21,5 @@
     "validateParameterSeparator": ", ",
     "disallowMultipleVarDecl": {
         "allExcept": ["undefined"]
-    },
-    "fix": true
+    }
 }
