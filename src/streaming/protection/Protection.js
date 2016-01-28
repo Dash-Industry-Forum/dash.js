@@ -173,20 +173,9 @@ function Protection() {
 
         for (var i = 0; i < apis.length; i++) {
             var api = apis[i];
-            if (typeof videoElement[api.generateKeyRequest] !== 'function') {
-                continue;
-            }
-            if (typeof videoElement[api.addKey] !== 'function') {
-                continue;
-            }
-            if (typeof videoElement[api.cancelKeyRequest] !== 'function') {
-                continue;
-            }
-
-            if (typeof videoElement[api.setMediaKeys] !== 'function') {
-                continue;
-            }
-            if (typeof window[api.MediaKeys] !== 'function')  {
+            // detect if api is supported by browser
+            // check only first function in api -> should be fine
+            if (typeof videoElement[api[Object.keys(api)[0]]] !== 'function') {
                 continue;
             }
 
