@@ -7,8 +7,10 @@
 
     <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
     <script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
-    <script src="../../dist/dash.externals.debug.js"></script>
-    <script src="../../dist/dash.no-externals.debug.js"></script>
+    <script src="../../dist/dash.all.debug.js"></script>
+    <!--dash.all.min.js should be used in production over dash.all.debug.js
+        Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
+    <!--<script src="../../dist/dash.all.min.js"></script>-->
 
     <script>
         var EXTERNAL_CAPTION_URL = "http://dash.edgesuite.net/dash264/TestCases/4b/qualcomm/1/ED_OnDemand_5SecSeg_Subtitles.mpd", // need to manually seek to get stream to start... issue with MPD but only sample with multi adaptations for external sidecar caption text xml

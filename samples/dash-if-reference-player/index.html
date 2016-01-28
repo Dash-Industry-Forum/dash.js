@@ -39,8 +39,10 @@
     <!-- https://github.com/eu81273/angular.treeview -->
     <script src="app/lib/angular.treeview/angular.treeview.min.js"></script>
 
-    <script src="../../dist/dash.externals.debug.js"></script>
-    <script src="../../dist/dash.no-externals.debug.js"></script>
+    <script src="../../dist/dash.all.debug.js"></script>
+    <!--dash.all.min.js should be used in production over dash.all.debug.js
+        Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
+    <!--<script src="../../dist/dash.all.min.js"></script>-->
 
     <!-- App -->
     <script src="app/metrics.js"></script>
