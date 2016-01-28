@@ -39,11 +39,11 @@ View the /samples folder for many other examples of embedding and using the play
 
 ## Getting Started
 Create a video element somewhere in your html. For our purposes, make sure to set the controls property to true.
-```
+```html
 <video id="videoPlayer" controls="true"></video>
 ```
 Add dash.all.min.js to the end of the body.
-```
+```html
 <body>
   ...
   <script src="yourPathToDash/dash.all.min.js"></script>
@@ -59,7 +59,7 @@ Now comes the good stuff. We need to create a MediaPlayer and initialize it.  We
 ```
 
 When it is all done, it should look similar to this:
-```
+```html
 <!doctype html>
 <html>
     <head>
