@@ -762,7 +762,7 @@ function DashHandler(config) {
                 frag = segments[i];
                 ft = frag.presentationStartTime;
                 fd = frag.duration;
-                epsilon = (timeThreshold === undefined || timeThreshold === null) ? fd/2 : timeThreshold;
+                epsilon = (timeThreshold === undefined || timeThreshold === null) ? fd / 2 : timeThreshold;
                 if ((time + epsilon) >= ft &&
                     (time - epsilon) < (ft + fd)) {
                     idx = frag.availabilityIdx;
