@@ -33,6 +33,8 @@ import MediaPlayerModel from '../../models/MediaPlayerModel.js';
 import PlaybackController from '../../controllers/PlaybackController.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
+const MINIMUM_LATENCY_BUFFER = 500;
+
 function BufferLevelRule(config) {
 
     let instance;
@@ -72,7 +74,9 @@ function BufferLevelRule(config) {
         var trackInfo = rulesContext.getTrackInfo();
         var isDynamic = streamProcessor.isDynamic(); //TODO make is dynamic false if live stream is playing more than X seconds from live edge in DVR window. So it will act like VOD.
         var isLongFormContent = (duration >= mediaPlayerModel.getLongFormContentDurationThreshold());
+        var metrics = metricsModel.getReadOnlyMetricsFor(type);
         var bufferTarget = NaN;
+        var recentLatency;
 
         if (!isDynamic && abrController.isPlayingAtTopQuality(streamInfo)) {//TODO || allow larger buffer targets if we stabilize on a non top quality for more than 30 seconds.
             bufferTarget = isLongFormContent ? mediaPlayerModel.getBufferTimeAtTopQualityLongForm() : mediaPlayerModel.getBufferTimeAtTopQuality();
@@ -87,7 +91,9 @@ function BufferLevelRule(config) {
             bufferTarget = textSourceBuffer.getAllTracksAreDisabled() ? 0 : trackInfo.fragmentDuration;
         }
 
-        return bufferTarget;
+        recentLatency = Math.floor( Math.max(metricsExt.getRecentLatency(metrics, 4), MINIMUM_LATENCY_BUFFER) / 1000);
+
+        return bufferTarget + recentLatency;
     }
 
     instance = {

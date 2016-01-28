@@ -53,6 +53,9 @@ class HTTPRequest {
         this.mediaduration = null;  // The duration of the media requests, if available, in milliseconds.
         this.responseHeaders = null; // all the response headers from request.
         this.trace = [];            // Throughput traces, for successful requests only.
+        this.latency = null;        // Latency of the request (time between sent and receipt of first byte)
+        this.time = null;           // Download time of the request (time between receipt of first and last byte)
+        this.bytes = null;          // The number of bytes received
     }
 }
 

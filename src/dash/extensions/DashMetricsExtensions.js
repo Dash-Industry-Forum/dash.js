@@ -33,12 +33,16 @@ import AbrController from '../../streaming/controllers/AbrController.js';
 import ManifestModel from '../../streaming/models/ManifestModel.js';
 import DashManifestExtensions from '../../dash/extensions/DashManifestExtensions.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
+
+const PROBABLY_IN_CACHE_MS = 200;
 
 function DashMetricsExtensions() {
 
     let instance;
     let context = this.context;
     let manifestModel = ManifestModel(context).getInstance();//TODO Need to pass this in not bake in
+    let log = Debug(context).getInstance().log;
 
     function getBandwidthForRepresentation(representationId, periodId) {
         var representation;
@@ -199,6 +203,114 @@ function DashMetricsExtensions() {
             httpListLastIndex--;
         }
         return currentHttpList;
+    }
+
+    function getRecentLatency(metrics, length) {
+        // Should be merged with the getRecentThroughput code as
+        // it's a copy really, also possibly could be calculated
+        // when new things arrive, rather than on request, could
+        // also then discard old requests, deal with known network
+        // changes etc.
+        var httpList = metrics.HttpList;
+        var interested = [];
+        var segmentCount = 0;
+        var i,
+            response,
+            probablyFromCache,
+            total;
+
+        if (httpList === null) {
+            return -1;
+        }
+
+        for (i = httpList.length - 1; (i >= 0 && interested.length < length); i--)
+        {
+            response = httpList[i];
+            // only care about MediaSegments
+            if (response.responsecode && response.type == HTTPRequest.MEDIA_SEGMENT_TYPE) {
+                segmentCount++;
+                probablyFromCache = response.latency < PROBABLY_IN_CACHE_MS && response.time < PROBABLY_IN_CACHE_MS;
+                if (!probablyFromCache) {
+                    interested.push(response.latency);
+                }
+            }
+        }
+
+        if (interested.length === 0 ) {
+            if (segmentCount > 5) {
+                // this implies all were thought of as in the cache,
+                // just return the considered from cache time
+                log('latency likely all cached:' + PROBABLY_IN_CACHE_MS);
+                return PROBABLY_IN_CACHE_MS;
+            }
+            return -1;
+        }
+
+        total = 0;
+        for (i = 0; i < interested.length; i++) {
+            total += interested[i];
+        }
+        return total / interested.length;
+    }
+
+    function getRecentThroughput(metrics, length) {
+
+        var httpList = metrics.HttpList;
+        var interested = [];
+        var segmentCount = 0;
+        var throughput,
+            i,
+            response,
+            probablyFromCache,
+            total;
+
+        if (httpList === null) {
+            log('throughput no http list yet');
+            return -1;
+        }
+
+        for (i = httpList.length - 1; (i >= 0 && interested.length < length); i--)
+        {
+            response = httpList[i];
+            // only care about MediaSegments
+            if (response.responsecode && response.type == HTTPRequest.MEDIA_SEGMENT_TYPE) {
+                segmentCount++;
+                // Without a rule specific to latency we should
+                // include both as that is what is actually
+                // important.
+                throughput = (response.bytes * 8) / (response.time + response.latency);
+                // probably from cache simplified to just low
+                // latency and low download for now, should be
+                // more generalised into radically different
+                // latency and download time from the average,
+                // could also use logic about the progress events,
+                // on chrome for example first progress event is
+                // after exactly 32768 bytes
+                probablyFromCache = response.time < PROBABLY_IN_CACHE_MS && response.latency < PROBABLY_IN_CACHE_MS;
+                if (!probablyFromCache) {
+                    interested.push(throughput);
+                }
+            }
+        }
+
+        if (interested.length === 0 ) {
+            if (segmentCount > 5) {
+                // this implies all were thought of as in the cache,
+                // just return the last throughput, it's likely to be
+                // higher than any of our manifests
+                log('throughput likely all cached is:' + throughput);
+                return throughput;
+            }
+            log('throughput not enough valid data');
+            return -1;
+        }
+
+        total = 0;
+        for (i = 0; i < interested.length; i++) {
+            total += interested[i];
+        }
+        log('averageThroughput is:' + (total / interested.length));
+        return total / interested.length;
     }
 
     function getHttpRequests(metrics) {
@@ -420,6 +532,8 @@ function DashMetricsExtensions() {
         getCurrentBufferLevel: getCurrentBufferLevel,
         getCurrentPlaybackRate: getCurrentPlaybackRate,
         getCurrentHttpRequest: getCurrentHttpRequest,
+        getRecentLatency: getRecentLatency,
+        getRecentThroughput: getRecentThroughput,
         getHttpRequests: getHttpRequests,
         getCurrentDroppedFrames: getCurrentDroppedFrames,
         getCurrentSchedulingInfo: getCurrentSchedulingInfo,
