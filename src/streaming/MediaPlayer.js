@@ -261,19 +261,39 @@ function MediaPlayer() {
     }
 
     /**
-     * The length of the buffer for a given media type, in seconds. Valid media types are "video" and "audio". If no type
-     * is passed in, then the video buffer length is returned. The value is returned to a precision of two decimal places.
+     * The length of the buffer for a given media type, in seconds. Valid media types are "video", "audio" and "fragmentedText". If no type
+     * is passed in, then the minimum of the video and the audio buffer length is returned. The value is returned to a precision of two decimal places.
+     * NaN is returned if an invalid type is requested, or if the presentation does not contain that type or if no arguments are passed and the
+     * presentation doers not include any audio or video adaption sets.
      *
      * @returns {number} The length of the buffer for the given media type, in seconds.
      * @memberof module:MediaPlayer
      * @instance
      */
     function getBufferLength(type) {
+
         if (!type)
         {
-            type = 'video';
+            let videoBuffer = getMetricsExt().getCurrentBufferLevel(getMetricsFor('video'));
+            let audioBuffer = getMetricsExt().getCurrentBufferLevel(getMetricsFor('audio'));
+            videoBuffer = videoBuffer === null ? Number.MAX_SAFE_INTEGER :  videoBuffer.level;
+            audioBuffer = audioBuffer === null ? Number.MAX_SAFE_INTEGER :  audioBuffer.level;
+            return Math.min(videoBuffer,audioBuffer).toPrecision(3);
         }
-        return getMetricsExt().getCurrentBufferLevel(getMetricsFor(type)).level.toPrecision(3);
+        else
+        {
+            if (type === 'video' || type === 'audio' || type === 'fragmentedText')
+            {
+                let buffer = getMetricsExt().getCurrentBufferLevel(getMetricsFor(type));
+                return buffer ? buffer.level.toPrecision(3) : NaN;
+            }
+            else
+            {
+                log('Warning  - getBufferLength requested for invalid type');
+                return NaN;
+            }
+        }
+
     }
 
     /**

@@ -293,7 +293,10 @@ function TextSourceBuffer() {
                 }
             }
         }
-        log('Warning: Non-supported text type: ' + mediaType);
+        else {
+            log('Warning: Non-supported text type: ' + mediaType);
+        }
+
     }
     /**
      * Extract CEA-608 data from a buffer of data.
