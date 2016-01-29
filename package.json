@@ -5,7 +5,7 @@
   "main": "dist/dash.all.min.js",
   "scripts": {
     "test": "mocha --require mochahook",
-    "prepublish": "grunt dist",
+    "prepublish": "grunt prepublish",
     "debug": "iron-mocha --require mochahook",
     "coverage": "istanbul cover node_modules/mocha/bin/_mocha --require mochahook -- test/"
   },
@@ -25,6 +25,7 @@
     "grunt-contrib-uglify": "^0.9.1",
     "grunt-contrib-watch": "^0.6.1",
     "grunt-exorcise": "^2.1.0",
+    "grunt-githooks": "^0.5.0",
     "grunt-jscs": "^2.5.0",
     "grunt-jsdoc": "^0.5.8",
     "grunt-mocha-istanbul": "^3.0.1",
