@@ -897,7 +897,7 @@ function DashHandler(config) {
             request = getRequestForSegment(segment);
         }
 
-        if (keepIdx && idx >= 0) {
+        if (keepIdx && idx >= 0 && representation.segmentInfoType !== 'SegmentTimeline') {
             index = idx;
         }
 
@@ -945,7 +945,7 @@ function DashHandler(config) {
                  which triggers the validate loop to rerun and the next time the segment should be
                  available.
                  */
-                index--;
+                index-- ;
             }
         }
 
