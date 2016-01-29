@@ -213,14 +213,14 @@ module.exports = function (grunt) {
             }
         },
         jscs: {
-            src: './src/**/*.js',
+            src: ['./src/**/*.js', 'Gruntfile.js'],
             options: {
                 config: '.jscsrc'
             }
         },
         githooks: {
             all: {
-                'pre-commit': 'jscs'
+                'pre-commit': 'lint'
             }
         }
     });
@@ -232,6 +232,7 @@ module.exports = function (grunt) {
     grunt.registerTask('test',      ['mocha_istanbul:test']);
     grunt.registerTask('watch',     ['browserify:watch']);
     grunt.registerTask('release',   ['default', 'jsdoc']);
-    grunt.registerTask('debug', ['clean', 'browserify:all', 'exorcise:all', 'copy:dist']);
+    grunt.registerTask('debug',     ['clean', 'browserify:all', 'exorcise:all', 'copy:dist']);
+    grunt.registerTask('lint',      ['jshint', 'jscs']);
     grunt.registerTask('prepublish', ['githooks', 'dist']);
 };
