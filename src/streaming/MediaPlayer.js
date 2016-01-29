@@ -270,11 +270,10 @@ function MediaPlayer() {
      * @instance
      */
     function getBufferLength(type) {
-        if (!type)
-        {
+        if (!type) {
             type = 'video';
         }
-        return getMetricsExt().getCurrentBufferLevel(getMetricsFor(type)).level.toPrecision(3);
+        return getMetricsExt().getCurrentBufferLevel(getMetricsFor(type)).toPrecision(3);
     }
 
     /**
