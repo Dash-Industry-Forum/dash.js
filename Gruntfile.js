@@ -150,7 +150,7 @@ module.exports = function (grunt) {
                     watch: true,
                     keepAlive: true,
                     browserifyOptions: {
-                        debug:true
+                        debug: true
                     },
                     plugin: [
                       ['browserify-derequire']
@@ -180,20 +180,26 @@ module.exports = function (grunt) {
             }
         },
         jscs: {
-            src: './src/**/*.js',
+            src: ['./src/**/*.js', 'Gruntfile.js'],
             options: {
                 config: '.jscsrc'
+            }
+        },
+        githooks: {
+            all: {
+                'pre-commit': 'lint'
             }
         }
     });
 
     require('load-grunt-tasks')(grunt);
-    grunt.registerTask('default',   ['dist', 'test']);
-    grunt.registerTask('dist',      ['clean', 'jshint', 'jscs', 'browserify:mediaplayer' , 'browserify:protection', 'browserify:all', 'minimize', 'copy:dist']);
+    grunt.registerTask('default',   ['lint', 'dist', 'test']);
+    grunt.registerTask('dist',      ['clean', 'browserify:mediaplayer' , 'browserify:protection', 'browserify:all', 'minimize', 'copy:dist']);
     grunt.registerTask('minimize',  ['exorcise', 'uglify']);
     grunt.registerTask('test',      ['mocha_istanbul:test']);
     grunt.registerTask('watch',     ['browserify:watch']);
     grunt.registerTask('release',   ['default', 'jsdoc']);
-    grunt.registerTask('debug', ['clean', 'browserify:all', 'exorcise:all', 'copy:dist']);
-
+    grunt.registerTask('debug',     ['clean', 'browserify:all', 'exorcise:all', 'copy:dist']);
+    grunt.registerTask('lint',      ['jshint', 'jscs']);
+    grunt.registerTask('prepublish', ['githooks', 'dist']);
 };
