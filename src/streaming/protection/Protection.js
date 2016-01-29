@@ -33,37 +33,7 @@ import ProtectionExtensions from './ProtectionExtensions.js';
 import ProtectionEvents from './ProtectionEvents.js';
 import ProtectionModel_21Jan2015 from './models/ProtectionModel_21Jan2015.js';
 import ProtectionModel_3Feb2014 from './models/ProtectionModel_3Feb2014.js';
-import ProtectionModel_01b from './models/ProtectionModel_01b.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
-
-const APIS_ProtectionModel_01b = [
-    // Un-prefixed as per spec
-    {
-        // Video Element
-        generateKeyRequest: 'generateKeyRequest',
-        addKey: 'addKey',
-        cancelKeyRequest: 'cancelKeyRequest',
-
-        // Events
-        needkey: 'needkey',
-        keyerror: 'keyerror',
-        keyadded: 'keyadded',
-        keymessage: 'keymessage'
-    },
-    // Webkit-prefixed (early Chrome versions and Chrome with EME disabled in chrome://flags)
-    {
-        // Video Element
-        generateKeyRequest: 'webkitGenerateKeyRequest',
-        addKey: 'webkitAddKey',
-        cancelKeyRequest: 'webkitCancelKeyRequest',
-
-        // Events
-        needkey: 'webkitneedkey',
-        keyerror: 'webkitkeyerror',
-        keyadded: 'webkitkeyadded',
-        keymessage: 'webkitkeymessage'
-    }
-];
 
 const APIS_ProtectionModel_3Feb2014 = [
     // Un-prefixed as per spec
@@ -156,11 +126,6 @@ function Protection() {
             log('EME detected on this user agent! (ProtectionModel_3Feb2014)');
             return ProtectionModel_3Feb2014(context).create({log: log, eventBus: eventBus, api: getAPI(videoElement, APIS_ProtectionModel_3Feb2014)});
 
-        } else if (getAPI(videoElement, APIS_ProtectionModel_01b)) {
-
-            log('EME detected on this user agent! (ProtectionModel_01b)');
-            return ProtectionModel_01b(context).create({log: log, eventBus: eventBus, api: getAPI(videoElement, APIS_ProtectionModel_01b)});
-
         } else {
 
             log('No supported version of EME detected on this user agent! - Attempts to play encrypted content will fail!');
@@ -173,15 +138,6 @@ function Protection() {
 
         for (var i = 0; i < apis.length; i++) {
             var api = apis[i];
-            if (typeof videoElement[api.generateKeyRequest] !== 'function') {
-                continue;
-            }
-            if (typeof videoElement[api.addKey] !== 'function') {
-                continue;
-            }
-            if (typeof videoElement[api.cancelKeyRequest] !== 'function') {
-                continue;
-            }
 
             if (typeof videoElement[api.setMediaKeys] !== 'function') {
                 continue;
