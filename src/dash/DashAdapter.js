@@ -38,10 +38,9 @@ import FactoryMaker from '../core/FactoryMaker.js';
 
 const METRIC_LIST = {
     //TODO need to refactor all that reference to be able to export like all other const on factory object.
-    TCP_CONNECTION: 'TcpConnection',
-    HTTP_REQUEST: 'HttpRequest',
-    HTTP_REQUEST_TRACE: 'HttpRequestTrace',
-    TRACK_SWITCH: 'RepresentationSwitch',
+    TCP_CONNECTION: 'TcpList',
+    HTTP_REQUEST: 'HttpList',
+    TRACK_SWITCH: 'RepSwitchList',
     BUFFER_LEVEL: 'BufferLevel',
     BUFFER_STATE: 'BufferState',
     DVR_INFO: 'DVRInfo',
@@ -52,7 +51,7 @@ const METRIC_LIST = {
     MANIFEST_UPDATE_STREAM_INFO: 'ManifestUpdatePeriodInfo',
     MANIFEST_UPDATE_TRACK_INFO: 'ManifestUpdateRepresentationInfo',
     PLAY_LIST: 'PlayList',
-    PLAY_LIST_TRACE: 'PlayListTrace'
+    DVB_ERRORS: 'DVBErrors'
 };
 
 function DashAdapter() {

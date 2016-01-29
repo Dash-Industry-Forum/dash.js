@@ -28,25 +28,68 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-/**
- * @class
- * @ignore
- */
-class MetricsList {
-    constructor() {
-        this.TcpList = [];
-        this.HttpList = [];
-        this.RepSwitchList = [];
-        this.BufferLevel = [];
-        this.BufferState = [];
-        this.PlayList = [];
-        this.DroppedFrames = [];
-        this.SchedulingInfo = [];
-        this.DVRInfo = [];
-        this.ManifestUpdate = [];
-        this.RequestsQueue = null;
-        this.DVBErrors = [];
+
+import FactoryMaker from '../../../core/FactoryMaker.js';
+import RangeController from './RangeController.js';
+import ReportingController from './ReportingController.js';
+import MetricsHandlersController from './MetricsHandlersController.js';
+
+function MetricsController(config) {
+
+    let metricsHandlersController,
+        reportingController,
+        rangeController,
+        instance;
+
+    let context = this.context;
+
+    function initialize(metricsEntry) {
+        try {
+            rangeController = RangeController(context).create({
+                mediaElement: config.mediaElement
+            });
+
+            rangeController.initialize(metricsEntry.Range);
+
+            reportingController = ReportingController(context).create({
+                log: config.log
+            });
+
+            reportingController.initialize(metricsEntry.Reporting, rangeController);
+
+            metricsHandlersController = MetricsHandlersController(context).create({
+                log: config.log,
+                eventBus: config.eventBus,
+            });
+
+            metricsHandlersController.initialize(metricsEntry.metrics, reportingController);
+        } catch (e) {
+            reset();
+            throw e;
+        }
     }
+
+    function reset() {
+        if (metricsHandlersController) {
+            metricsHandlersController.reset();
+        }
+
+        if (reportingController) {
+            reportingController.reset();
+        }
+
+        if (rangeController) {
+            rangeController.reset();
+        }
+    }
+
+    instance = {
+        initialize: initialize,
+        reset:      reset
+    };
+
+    return instance;
 }
 
-export default MetricsList;
+MetricsController.__dashjs_factory_name = 'MetricsController';
+export default FactoryMaker.getClassFactory(MetricsController);

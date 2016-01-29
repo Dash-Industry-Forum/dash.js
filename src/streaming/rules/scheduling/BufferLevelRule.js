@@ -54,7 +54,7 @@ function BufferLevelRule(config) {
         var mediaInfo = rulesContext.getMediaInfo();
         var mediaType = mediaInfo.type;
         var metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
-        var bufferLevel = metricsExt.getCurrentBufferLevel(metrics) ? metricsExt.getCurrentBufferLevel(metrics).level : 0;
+        var bufferLevel = metricsExt.getCurrentBufferLevel(metrics);
         var fragmentCount;
 
         fragmentCount = bufferLevel < getBufferTarget(rulesContext, mediaType) ? 1 : 0;

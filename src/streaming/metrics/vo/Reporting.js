@@ -32,21 +32,12 @@
  * @class
  * @ignore
  */
-class MetricsList {
+class Reporting {
     constructor() {
-        this.TcpList = [];
-        this.HttpList = [];
-        this.RepSwitchList = [];
-        this.BufferLevel = [];
-        this.BufferState = [];
-        this.PlayList = [];
-        this.DroppedFrames = [];
-        this.SchedulingInfo = [];
-        this.DVRInfo = [];
-        this.ManifestUpdate = [];
-        this.RequestsQueue = null;
-        this.DVBErrors = [];
+        // Reporting is a DescriptorType and doesn't have any additional fields
+        this.schemeIdUri = '';
+        this.value = '';
     }
 }
 
-export default MetricsList;
+export default Reporting;

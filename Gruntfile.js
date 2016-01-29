@@ -50,6 +50,16 @@ module.exports = function (grunt) {
                     'build/temp/dash.protection.min.js': 'build/temp/dash.protection.debug.js'
                 }
             },
+
+            build_reporting: {
+                options: {
+                    sourceMapIn: 'build/temp/dash.reporting.debug.js.map'
+                },
+                files: {
+                    'build/temp/dash.reporting.min.js': 'build/temp/dash.reporting.debug.js'
+                }
+            },
+
             build_all: {
                 options: {
                     sourceMapIn: 'build/temp/dash.all.debug.js.map'
@@ -69,8 +79,10 @@ module.exports = function (grunt) {
                     'dash.mediaplayer.min.js', 'dash.mediaplayer.min.js.map',
                     'dash.protection.min.js', 'dash.protection.min.js.map',
                     'dash.all.debug.js', 'dash.all.debug.js.map',
+                    'dash.reporting.min.js', 'dash.reporting.min.js.map',
                     'dash.mediaplayer.debug.js', 'dash.mediaplayer.debug.js.map',
-                    'dash.protection.debug.js', 'dash.protection.debug.js.map'
+                    'dash.protection.debug.js', 'dash.protection.debug.js.map',
+                    'dash.reporting.debug.js', 'dash.reporting.debug.js.map'
                 ],
                 dest: 'dist/',
                 filter: 'isFile'
@@ -93,6 +105,12 @@ module.exports = function (grunt) {
                 options: {},
                 files: {
                     'build/temp/dash.all.debug.js.map': ['build/temp/dash.all.debug.js']
+                }
+            },
+            reporting: {
+                options: {},
+                files: {
+                    'build/temp/dash.reporting.debug.js.map': ['build/temp/dash.reporting.debug.js']
                 }
             }
         },
@@ -127,6 +145,21 @@ module.exports = function (grunt) {
                     transform: ['babelify']
                 }
             },
+            reporting: {
+                files: {
+                    'build/temp/dash.reporting.debug.js': ['src/streaming/metrics/MetricsReporting.js']
+                },
+                options: {
+                    browserifyOptions: {
+                        debug: true,
+                        standalone: 'MetricsReporting'
+                    },
+                    plugin: [
+                        ['browserify-derequire']
+                    ],
+                    transform: ['babelify']
+                }
+            },
             all: {
                 files: {
                     'build/temp/dash.all.debug.js': ['src/All.js']
@@ -150,7 +183,7 @@ module.exports = function (grunt) {
                     watch: true,
                     keepAlive: true,
                     browserifyOptions: {
-                        debug:true
+                        debug: true
                     },
                     plugin: [
                       ['browserify-derequire']
@@ -189,7 +222,7 @@ module.exports = function (grunt) {
 
     require('load-grunt-tasks')(grunt);
     grunt.registerTask('default',   ['dist', 'test']);
-    grunt.registerTask('dist',      ['clean', 'jshint', 'jscs', 'browserify:mediaplayer' , 'browserify:protection', 'browserify:all', 'minimize', 'copy:dist']);
+    grunt.registerTask('dist',      ['clean', 'jshint', 'jscs', 'browserify:mediaplayer' , 'browserify:protection', 'browserify:reporting', 'browserify:all', 'minimize', 'copy:dist']);
     grunt.registerTask('minimize',  ['exorcise', 'uglify']);
     grunt.registerTask('test',      ['mocha_istanbul:test']);
     grunt.registerTask('watch',     ['browserify:watch']);

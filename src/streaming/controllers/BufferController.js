@@ -381,7 +381,7 @@ function BufferController(config) {
         //    level += virtualLevel;
         //}
 
-        metricsModel.addBufferLevel(type, new Date(), bufferLevel);
+        metricsModel.addBufferLevel(type, new Date(), bufferLevel * 1000);
     }
 
     function checkIfBufferingCompleted() {

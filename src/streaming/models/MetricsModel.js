@@ -38,7 +38,6 @@ import DVRInfo from '../vo/metrics/DVRInfo.js';
 import DroppedFrames from '../vo/metrics/DroppedFrames.js';
 import ManifestUpdate from '../vo/metrics/ManifestUpdate.js';
 import SchedulingInfo from '../vo/metrics/SchedulingInfo.js';
-import PlayList from '../vo/metrics/PlayList.js';
 import EventBus from '../../core/EventBus.js';
 import RequestsQueue from '../vo/metrics/RequestsQueue.js';
 import Events from '../../core/events/Events.js';
@@ -130,7 +129,7 @@ function MetricsModel() {
         return vo;
     }
 
-    function addHttpRequest(mediaType, tcpid, type, url, actualurl, range, trequest, tresponse, tfinish, responsecode, mediaduration, responseHeaders) {
+    function addHttpRequest(mediaType, tcpid, type, url, actualurl, range, trequest, tresponse, tfinish, responsecode, mediaduration, responseHeaders, traces) {
         var vo = new HTTPRequest();
 
         // ISO 23009-1 D.4.3 NOTE 2:
@@ -155,23 +154,36 @@ function MetricsModel() {
                 null, // unknown
                 null, // unknown, probably a 302
                 mediaduration,
+                null,
                 null
             );
 
             vo.actualurl = actualurl;
         }
 
-        vo.stream = mediaType;
         vo.tcpid = tcpid;
         vo.type = type;
         vo.url = url;
         vo.range = range;
         vo.trequest = trequest;
         vo.tresponse = tresponse;
-        vo.tfinish = tfinish;
         vo.responsecode = responsecode;
-        vo.mediaduration = mediaduration;
-        vo.responseHeaders = responseHeaders;
+
+        vo._tfinish = tfinish;
+        vo._stream = mediaType;
+        vo._mediaduration = mediaduration;
+        vo._responseHeaders = responseHeaders;
+
+        if (traces) {
+            traces.forEach(trace => {
+                appendHttpTrace(vo, trace.s, trace.d, trace.b);
+            });
+        } else {
+            // The interval and trace shall be absent for redirect and failure records.
+            delete vo.interval;
+            delete vo.trace;
+        }
+
         getMetricsFor(mediaType).HttpList.push(vo);
 
         metricAdded(mediaType, adapter.metricsList.HTTP_REQUEST, vo);
@@ -193,7 +205,6 @@ function MetricsModel() {
 
         httpRequest.interval += d;
 
-        metricUpdated(httpRequest.stream, adapter.metricsList.HTTP_REQUEST_TRACE, httpRequest);
         return vo;
     }
 
@@ -203,7 +214,12 @@ function MetricsModel() {
         vo.t = t;
         vo.mt = mt;
         vo.to = to;
-        vo.lto = lto;
+
+        if (lto) {
+            vo.lto = lto;
+        } else {
+            delete vo.lto;
+        }
 
         getMetricsFor(mediaType).RepSwitchList.push(vo);
 
@@ -360,34 +376,32 @@ function MetricsModel() {
         return null;
     }
 
-    function addPlayList(mediaType, start, mstart, starttype) {
-        var vo = new PlayList();
+    function addPlayList(vo) {
+        var type = 'stream';
 
-        vo.stream = mediaType;
-        vo.start = start;
-        vo.mstart = mstart;
-        vo.starttype = starttype;
+        if (vo.trace && Array.isArray(vo.trace)) {
+            vo.trace.forEach(trace => {
+                if (trace.hasOwnProperty('subreplevel') && !trace.subreplevel) {
+                    delete trace.subreplevel;
+                }
+            });
+        } else {
+            delete vo.trace;
+        }
 
-        getMetricsFor(mediaType).PlayList.push(vo);
+        getMetricsFor(type).PlayList.push(vo);
 
-        metricAdded(mediaType, adapter.metricsList.PLAY_LIST, vo);
+        metricAdded(type, adapter.metricsList.PLAY_LIST, vo);
         return vo;
     }
 
-    function appendPlayListTrace(playList, trackId, subreplevel, start, mstart, duration, playbackspeed, stopreason) {
-        var vo = new PlayList.Trace();
+    function addDVBErrors(vo) {
+        var type = 'stream';
 
-        vo.representationid = trackId;
-        vo.subreplevel = subreplevel;
-        vo.start = start;
-        vo.mstart = mstart;
-        vo.duration = duration;
-        vo.playbackspeed = playbackspeed;
-        vo.stopreason = stopreason;
+        getMetricsFor(type).DVBErrors.push(vo);
 
-        playList.trace.push(vo);
+        metricAdded(type, adapter.metricsList.DVB_ERRORS, vo);
 
-        metricUpdated(playList.stream, adapter.metricsList.PLAY_LIST_TRACE, playList);
         return vo;
     }
 
@@ -402,7 +416,6 @@ function MetricsModel() {
         getMetricsFor: getMetricsFor,
         addTcpConnection: addTcpConnection,
         addHttpRequest: addHttpRequest,
-        appendHttpTrace: appendHttpTrace,
         addRepresentationSwitch: addRepresentationSwitch,
         addBufferLevel: addBufferLevel,
         addBufferState: addBufferState,
@@ -415,7 +428,7 @@ function MetricsModel() {
         addManifestUpdateStreamInfo: addManifestUpdateStreamInfo,
         addManifestUpdateRepresentationInfo: addManifestUpdateRepresentationInfo,
         addPlayList: addPlayList,
-        appendPlayListTrace: appendPlayListTrace,
+        addDVBErrors: addDVBErrors,
         setConfig: setConfig
     };
 

@@ -56,23 +56,14 @@ function FragmentLoader(config) {
         var firstProgress = true;
         var needFailureReport = true;
         var lastTraceTime = null;
+        var lastTraceReceivedCount = 0;
         var self = this;
         var handleLoaded = function (requestVO, succeeded) {
             needFailureReport = false;
 
             var currentTime = new Date();
-            var bytes = req.response;
-
-            var httpRequestMetrics = null;
-
             var latency,
                 download;
-
-            traces.push({
-                s: currentTime,
-                d: currentTime.getTime() - lastTraceTime.getTime(),
-                b: [bytes ? bytes.byteLength : 0]
-            });
 
             if (!requestVO.firstByteDate) {
                 requestVO.firstByteDate = requestVO.requestStartDate;
@@ -84,7 +75,7 @@ function FragmentLoader(config) {
 
             log((succeeded ? 'loaded ' : 'failed ') + requestVO.mediaType + ':' + requestVO.type + ':' + requestVO.startTime + ' (' + req.status + ', ' + latency + 'ms, ' + download + 'ms)');
 
-            httpRequestMetrics = metricsModel.addHttpRequest(
+            metricsModel.addHttpRequest(
                 request.mediaType,
                 null,
                 request.type,
@@ -96,30 +87,13 @@ function FragmentLoader(config) {
                 requestVO.requestEndDate,
                 req.status,
                 request.duration,
-                req.getAllResponseHeaders()
+                req.getAllResponseHeaders(),
+                succeeded ? traces : null
             );
-
-            if (succeeded) {
-                // trace is only for successful requests
-                traces.forEach(function (trace) {
-                    metricsModel.appendHttpTrace(httpRequestMetrics,
-                        trace.s,
-                        trace.d,
-                        trace.b);
-                });
-            }
         };
-
 
         xhrs.push(req);
         request.requestStartDate = new Date();
-
-        traces.push({
-            s: request.requestStartDate,
-            d: 0,
-            b: [0]
-        });
-
         lastTraceTime = request.requestStartDate;
 
         req.open('GET', requestModifierExt.modifyRequestURL(request.url), true);
@@ -136,9 +110,10 @@ function FragmentLoader(config) {
 
         req.onprogress = function (event) {
             var currentTime = new Date();
+
             if (firstProgress) {
                 firstProgress = false;
-                if (!event.lengthComputable || (event.lengthComputable && event.total != event.loaded)) {
+                if (!event.lengthComputable || (event.lengthComputable && event.total !== event.loaded)) {
                     request.firstByteDate = currentTime;
                 }
             }
@@ -149,12 +124,13 @@ function FragmentLoader(config) {
             }
 
             traces.push({
-                s: currentTime,
+                s: lastTraceTime,
                 d: currentTime.getTime() - lastTraceTime.getTime(),
-                b: [req.response ? req.response.byteLength : 0]
+                b: [event.loaded ? event.loaded - lastTraceReceivedCount : 0]
             });
 
             lastTraceTime = currentTime;
+            lastTraceReceivedCount = event.loaded;
             eventBus.trigger(Events.LOADING_PROGRESS, {request: request});
         };
 
@@ -260,5 +236,6 @@ function FragmentLoader(config) {
 
     return instance;
 }
+
 FragmentLoader.__dashjs_factory_name = 'FragmentLoader';
 export default FactoryMaker.getClassFactory(FragmentLoader);

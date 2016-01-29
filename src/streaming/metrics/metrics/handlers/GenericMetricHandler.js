@@ -28,25 +28,42 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-/**
- * @class
- * @ignore
- */
-class MetricsList {
-    constructor() {
-        this.TcpList = [];
-        this.HttpList = [];
-        this.RepSwitchList = [];
-        this.BufferLevel = [];
-        this.BufferState = [];
-        this.PlayList = [];
-        this.DroppedFrames = [];
-        this.SchedulingInfo = [];
-        this.DVRInfo = [];
-        this.ManifestUpdate = [];
-        this.RequestsQueue = null;
-        this.DVBErrors = [];
+
+import FactoryMaker from '../../../../core/FactoryMaker.js';
+
+function GenericMetricHandler() {
+
+    let instance,
+        metricName,
+        reportingController;
+
+    function initialize(name, rc) {
+        metricName = name;
+        reportingController = rc;
     }
+
+    function reset() {
+        reportingController = null;
+        metricName = undefined;
+    }
+
+    function handleNewMetric(metric, vo) {
+        // simply pass metric straight through
+        if (metric === metricName) {
+            if (reportingController) {
+                reportingController.report(metricName, vo);
+            }
+        }
+    }
+
+    instance = {
+        initialize:         initialize,
+        reset:              reset,
+        handleNewMetric:    handleNewMetric
+    };
+
+    return instance;
 }
 
-export default MetricsList;
+GenericMetricHandler.__dashjs_factory_name = 'GenericMetricHandler';
+export default FactoryMaker.getClassFactory(GenericMetricHandler);

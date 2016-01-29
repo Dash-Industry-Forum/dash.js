@@ -95,6 +95,7 @@ function MediaPlayer() {
         abrController,
         mediaController,
         protectionController,
+        metricsReportingController,
         adapter,
         domStorage,
         metricsModel,
@@ -269,11 +270,10 @@ function MediaPlayer() {
      * @instance
      */
     function getBufferLength(type) {
-        if (!type)
-        {
+        if (!type) {
             type = 'video';
         }
-        return getMetricsExt().getCurrentBufferLevel(getMetricsFor(type)).level.toPrecision(3);
+        return getMetricsExt().getCurrentBufferLevel(getMetricsFor(type)).toPrecision(3);
     }
 
     /**
@@ -1400,6 +1400,7 @@ function MediaPlayer() {
             // Workaround to force Firefox to fire the canplay event.
             element.preload = 'auto';
             detectProtection();
+            detectMetricsReporting();
         }
         resetAndCheckAutoPlay();
     }
@@ -1474,6 +1475,7 @@ function MediaPlayer() {
             rulesController.reset();
             mediaController.reset();
             streamController = null;
+            metricsReportingController = null;
             protectionController = null;
             protectionData = null;
             if (autoPlay && isReady()) {
@@ -1583,6 +1585,29 @@ function MediaPlayer() {
                 adapter: adapter
             });
             return protectionController;
+        }
+        /* jshint ignore:end */
+        return null;
+    }
+
+    function detectMetricsReporting() {
+        if (metricsReportingController) {
+            return metricsReportingController;
+        }
+
+        /* jshint ignore:start */
+        if (typeof MetricsReporting === 'function') {//TODO need a better way to register/detect plugin components
+            let metricsReporting = MetricsReporting(context).create();
+
+            metricsReportingController = metricsReporting.createMetricsReporting({
+                log: log,
+                eventBus: eventBus,
+                mediaElement: videoModel.getElement(),
+                manifestExt: manifestExt,
+                metricsModel: metricsModel
+            });
+
+            return metricsReportingController;
         }
         /* jshint ignore:end */
         return null;

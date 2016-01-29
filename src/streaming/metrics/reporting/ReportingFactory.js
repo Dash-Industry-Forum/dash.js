@@ -28,25 +28,52 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-/**
- * @class
- * @ignore
- */
-class MetricsList {
-    constructor() {
-        this.TcpList = [];
-        this.HttpList = [];
-        this.RepSwitchList = [];
-        this.BufferLevel = [];
-        this.BufferState = [];
-        this.PlayList = [];
-        this.DroppedFrames = [];
-        this.SchedulingInfo = [];
-        this.DVRInfo = [];
-        this.ManifestUpdate = [];
-        this.RequestsQueue = null;
-        this.DVBErrors = [];
+
+import FactoryMaker from '../../../core/FactoryMaker.js';
+import DVBReporting from './reporters/DVBReporting.js';
+
+function ReportingFactory(config) {
+
+    let knownReportingSchemeIdUris = {
+        'urn:dvb:dash:reporting:2014': DVBReporting
+    };
+
+    let context = this.context;
+    let log = config.log;
+    let instance;
+
+    function create(entry, rangeController) {
+        var reporting;
+
+        try {
+            reporting = knownReportingSchemeIdUris[entry.schemeIdUri](context).create();
+
+            reporting.initialize(entry, rangeController);
+        } catch (e) {
+            reporting = null;
+
+            log(`ReportingFactory: could not create Reporting with schemeIdUri ${entry.schemeIdUri} (${e.message})`);
+        }
+
+        return reporting;
     }
+
+    function register(schemeIdUri, moduleName) {
+        knownReportingSchemeIdUris[schemeIdUri] = moduleName;
+    }
+
+    function unregister(schemeIdUri) {
+        delete knownReportingSchemeIdUris[schemeIdUri];
+    }
+
+    instance = {
+        create:     create,
+        register:   register,
+        unregister: unregister
+    };
+
+    return instance;
 }
 
-export default MetricsList;
+ReportingFactory.__dashjs_factory_name = 'ReportingFactory';
+export default FactoryMaker.getSingletonFactory(ReportingFactory);

@@ -37,6 +37,7 @@ import URIQueryAndFragmentModel from '../models/URIQueryAndFragmentModel.js';
 import VideoModel from '../models/VideoModel.js';
 import MediaPlayerModel from '../models/MediaPlayerModel.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
+import PlayList from '../vo/metrics/PlayList.js';
 import Debug from '../../core/Debug.js';
 
 function StreamController() {
@@ -72,11 +73,14 @@ function StreamController() {
         isStreamSwitchingInProgress,
         isUpdating,
         hasMediaError,
+        hasInitialisationError,
         mediaSource,
         videoModel,
         playbackController,
-        mediaPlayerModel;
-
+        mediaPlayerModel,
+        isPaused,
+        initialPlayback,
+        playListMetrics;
 
     function setup() {
         protectionController = null;
@@ -86,7 +90,11 @@ function StreamController() {
         canPlay = false;
         isStreamSwitchingInProgress = false;
         isUpdating = false;
+        isPaused = false;
+        initialPlayback = true;
+        playListMetrics = null;
         hasMediaError = false;
+        hasInitialisationError = false;
     }
 
     function initialize(autoPl, protData) {
@@ -121,10 +129,49 @@ function StreamController() {
         eventBus.on(Events.PLAYBACK_ENDED, onEnded, this);
         eventBus.on(Events.CAN_PLAY, onCanPlay, this);
         eventBus.on(Events.PLAYBACK_ERROR, onPlaybackError, this);
+        eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
+        eventBus.on(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
         eventBus.on(Events.MANIFEST_UPDATED, onManifestUpdated, this);
         eventBus.on(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
     }
 
+    function flushPlaylistMetrics(reason, time) {
+        time = time || new Date();
+
+        if (playListMetrics) {
+            if (activeStream) {
+                activeStream.getProcessors().forEach(p => {
+                    var ctrlr = p.getScheduleController();
+                    if (ctrlr) {
+                        ctrlr.finalisePlayList(
+                            time,
+                            reason
+                        );
+                    }
+                });
+            }
+
+            metricsModel.addPlayList(playListMetrics);
+
+            playListMetrics = null;
+        }
+    }
+
+    function addPlaylistMetrics(startReason) {
+        playListMetrics = new PlayList();
+        playListMetrics.start = new Date();
+        playListMetrics.mstart = playbackController.getTime() * 1000;
+        playListMetrics.starttype = startReason;
+
+        if (activeStream) {
+            activeStream.getProcessors().forEach(p => {
+                var ctrlr = p.getScheduleController();
+                if (ctrlr) {
+                    ctrlr.setPlayList(playListMetrics);
+                }
+            });
+        }
+    }
     /*
      * StreamController aggregates all streams defined in the manifest file
      * and implements corresponding logic to switch between them.
@@ -214,14 +261,46 @@ function StreamController() {
     }
 
     function onEnded(/*e*/) {
-        switchStream(activeStream, getNextStream());
+        var nextStream = getNextStream();
+
+        switchStream(activeStream, nextStream);
+
+        flushPlaylistMetrics(
+            nextStream ?
+                PlayList.Trace.END_OF_PERIOD_STOP_REASON :
+                PlayList.Trace.END_OF_CONTENT_STOP_REASON
+        );
     }
 
     function onPlaybackSeeking(e) {
         var seekingStream = getStreamForTime(e.seekTime);
 
         if (seekingStream && seekingStream !== activeStream) {
+            flushPlaylistMetrics(PlayList.Trace.END_OF_PERIOD_STOP_REASON);
             switchStream(activeStream, seekingStream, e.seekTime);
+        } else {
+            flushPlaylistMetrics(PlayList.Trace.USER_REQUEST_STOP_REASON);
+        }
+
+        addPlaylistMetrics(PlayList.SEEK_START_REASON);
+    }
+
+    function onPlaybackStarted(/*e*/) {
+        if (initialPlayback) {
+            initialPlayback = false;
+            addPlaylistMetrics(PlayList.INITIAL_PLAYOUT_START_REASON);
+        } else {
+            if (isPaused) {
+                isPaused = false;
+                addPlaylistMetrics(PlayList.RESUME_FROM_PAUSE_START_REASON);
+            }
+        }
+    }
+
+    function onPlaybackPaused(e) {
+        if (!e.ended) {
+            isPaused = true;
+            flushPlaylistMetrics(PlayList.Trace.USER_REQUEST_STOP_REASON);
         }
     }
 
@@ -433,6 +512,7 @@ function StreamController() {
             checkIfUpdateCompleted();
         } catch (e) {
             errHandler.manifestError(e.message, 'nostreamscomposed', manifest);
+            hasInitialisationError = true;
             reset();
         }
     }
@@ -502,6 +582,7 @@ function StreamController() {
             });
             timeSyncController.initialize(allUTCTimingSources, mediaPlayerModel.getUseManifestDateHeaderTimeSource());
         } else {
+            hasInitialisationError = true;
             reset();
         }
     }
@@ -584,17 +665,27 @@ function StreamController() {
 
     function reset() {
         timeSyncController.reset();
+
+        flushPlaylistMetrics(
+            hasMediaError || hasInitialisationError ?
+                PlayList.Trace.FAILURE_STOP_REASON :
+                PlayList.Trace.USER_REQUEST_STOP_REASON
+        );
+
         for (let i = 0, ln = streams.length; i < ln; i++) {
             let stream = streams[i];
             eventBus.off(Events.STREAM_INITIALIZED, onStreamInitialized, this);
             stream.reset(hasMediaError);
         }
+
         streams = [];
 
         eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
         eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
         eventBus.off(Events.CAN_PLAY, onCanPlay, this);
         eventBus.off(Events.PLAYBACK_ERROR, onPlaybackError, this);
+        eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
+        eventBus.off(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
         eventBus.off(Events.PLAYBACK_ENDED, onEnded, this);
         eventBus.off(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
         eventBus.off(Events.MANIFEST_UPDATED, onManifestUpdated, this);
@@ -612,6 +703,10 @@ function StreamController() {
         activeStream = null;
         canPlay = false;
         hasMediaError = false;
+        hasInitialisationError = false;
+        initialPlayback = true;
+        isPaused = false;
+
         if (mediaSource) {
             mediaSourceExt.detachMediaSource(videoModel);
             mediaSource = null;

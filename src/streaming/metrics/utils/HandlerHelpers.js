@@ -28,25 +28,46 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-/**
- * @class
- * @ignore
- */
-class MetricsList {
-    constructor() {
-        this.TcpList = [];
-        this.HttpList = [];
-        this.RepSwitchList = [];
-        this.BufferLevel = [];
-        this.BufferState = [];
-        this.PlayList = [];
-        this.DroppedFrames = [];
-        this.SchedulingInfo = [];
-        this.DVRInfo = [];
-        this.ManifestUpdate = [];
-        this.RequestsQueue = null;
-        this.DVBErrors = [];
-    }
+
+import FactoryMaker from '../../../core/FactoryMaker.js';
+
+function HandlerHelpers() {
+    return {
+        reconstructFullMetricName: function (key, n, type) {
+            var mn = key;
+
+            if (n) {
+                mn += '(' + n;
+
+                if (type && type.length) {
+                    mn += ',' + type;
+                }
+
+                mn += ')';
+            }
+
+            return mn;
+        },
+
+        validateN: function (n_ms) {
+            if (!n_ms) {
+                throw 'missing n';
+            }
+
+            if (isNaN(n_ms)) {
+                throw 'n is NaN';
+            }
+
+            // n is a positive integer is defined to refer to the metric
+            // in which the buffer level is recorded every n ms.
+            if (n_ms < 0) {
+                throw 'n must be positive';
+            }
+
+            return n_ms;
+        }
+    };
 }
 
-export default MetricsList;
+HandlerHelpers.__dashjs_factory_name = 'HandlerHelpers';
+export default FactoryMaker.getSingletonFactory(HandlerHelpers);

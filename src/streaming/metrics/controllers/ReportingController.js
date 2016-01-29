@@ -28,25 +28,51 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-/**
- * @class
- * @ignore
- */
-class MetricsList {
-    constructor() {
-        this.TcpList = [];
-        this.HttpList = [];
-        this.RepSwitchList = [];
-        this.BufferLevel = [];
-        this.BufferState = [];
-        this.PlayList = [];
-        this.DroppedFrames = [];
-        this.SchedulingInfo = [];
-        this.DVRInfo = [];
-        this.ManifestUpdate = [];
-        this.RequestsQueue = null;
-        this.DVBErrors = [];
+
+import FactoryMaker from '../../../core/FactoryMaker.js';
+import ReportingFactory from '../reporting/ReportingFactory.js';
+
+function ReportingController(config) {
+
+    let reporters = [];
+    let instance;
+
+    let reportingFactory = ReportingFactory(this.context).getInstance({
+        log: config.log
+    });
+
+    function initialize(reporting, rangeController) {
+        // "if multiple Reporting elements are present, it is expected that
+        // the client processes one of the recognized reporting schemes."
+        // to ignore this, and support multiple Reporting per Metric,
+        // simply change the 'some' below to 'forEach'
+        reporting.some(r => {
+            var reporter = reportingFactory.create(r, rangeController);
+
+            if (reporter) {
+                reporters.push(reporter);
+                return true;
+            }
+        });
     }
+
+    function reset() {
+        reporters.forEach(r => r.reset());
+        reporters = [];
+    }
+
+    function report(type, vos) {
+        reporters.forEach(r => r.report(type, vos));
+    }
+
+    instance = {
+        initialize: initialize,
+        reset:      reset,
+        report:     report
+    };
+
+    return instance;
 }
 
-export default MetricsList;
+ReportingController.__dashjs_factory_name = 'ReportingController';
+export default FactoryMaker.getClassFactory(ReportingController);

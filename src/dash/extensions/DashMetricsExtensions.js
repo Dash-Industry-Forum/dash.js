@@ -125,52 +125,34 @@ function DashMetricsExtensions() {
         return currentRepSwitch;
     }
 
-    function getCurrentBufferLevel(metrics) {
+    function getLatestBufferLevelVO(metrics) {
         if (metrics === null) {
             return null;
         }
 
         var bufferLevel = metrics.BufferLevel;
-        var bufferLevelLength,
-            bufferLevelLastIndex,
-            currentBufferLevel;
-
         if (bufferLevel === null || bufferLevel.length <= 0) {
             return null;
         }
 
-        bufferLevelLength = bufferLevel.length;
-        bufferLevelLastIndex = bufferLevelLength - 1;
+        return bufferLevel[bufferLevel.length - 1];
+    }
 
-        currentBufferLevel = bufferLevel[bufferLevelLastIndex];
-        return currentBufferLevel;
+    function getCurrentBufferLevel(metrics) {
+        if (metrics === null) {
+            return 0;
+        }
+
+        var bufferLevel = metrics.BufferLevel;
+        if (bufferLevel === null || bufferLevel.length <= 0) {
+            return 0;
+        }
+
+        return bufferLevel[bufferLevel.length - 1].level / 1000;
     }
 
     function getRequestsQueue(metrics) {
         return metrics.RequestsQueue;
-    }
-
-    function getCurrentPlaybackRate(metrics) {
-        if (metrics === null) {
-            return null;
-        }
-
-        var playList = metrics.PlayList;
-        var trace,
-            currentRate;
-
-        if (playList === null || playList.length <= 0) {
-            return null;
-        }
-
-        trace = playList[playList.length - 1].trace;
-
-        if (trace === null || trace.length <= 0) {
-            return null;
-        }
-
-        currentRate = trace[trace.length - 1].playbackspeed;
-        return currentRate;
     }
 
     function getCurrentHttpRequest(metrics) {
@@ -304,7 +286,7 @@ function DashMetricsExtensions() {
             httpRequest = httpRequestList[i];
 
             if (httpRequest.type === HTTPRequest.MPD_TYPE) {
-                headers = parseResponseHeaders(httpRequest.responseHeaders);
+                headers = parseResponseHeaders(httpRequest._responseHeaders);
                 break;
             }
         }
@@ -319,9 +301,9 @@ function DashMetricsExtensions() {
         var httpRequest = getCurrentHttpRequest(metrics);
         var headers;
 
-        if (httpRequest === null || httpRequest.responseHeaders === null) return null;
+        if (httpRequest === null || httpRequest._responseHeaders === null) return null;
 
-        headers = parseResponseHeaders(httpRequest.responseHeaders);
+        headers = parseResponseHeaders(httpRequest._responseHeaders);
         return headers[id] === undefined ? null :  headers[id];
     }
 
@@ -417,8 +399,8 @@ function DashMetricsExtensions() {
         getMaxIndexForBufferType: getMaxIndexForBufferType,
         getMaxAllowedIndexForBufferType: getMaxAllowedIndexForBufferType,
         getCurrentRepresentationSwitch: getCurrentRepresentationSwitch,
+        getLatestBufferLevelVO: getLatestBufferLevelVO,
         getCurrentBufferLevel: getCurrentBufferLevel,
-        getCurrentPlaybackRate: getCurrentPlaybackRate,
         getCurrentHttpRequest: getCurrentHttpRequest,
         getHttpRequests: getHttpRequests,
         getCurrentDroppedFrames: getCurrentDroppedFrames,
