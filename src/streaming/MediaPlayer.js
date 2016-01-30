@@ -272,20 +272,20 @@ function MediaPlayer() {
      * @instance
      */
     function getBufferLength(type) {
+
         if (!type)
         {
-            let videoBuffer = getMetricsExt().getCurrentBufferLevel(getMetricsFor('video'));
-            let audioBuffer = getMetricsExt().getCurrentBufferLevel(getMetricsFor('audio'));
-            videoBuffer = videoBuffer === null ? Number.MAX_SAFE_INTEGER :  videoBuffer.level;
-            audioBuffer = audioBuffer === null ? Number.MAX_SAFE_INTEGER :  audioBuffer.level;
-            return Math.min(videoBuffer,audioBuffer).toPrecision(3);
+            let videoBuffer = getTracksFor('video').length > 0 ? getMetricsExt().getCurrentBufferLevel(getMetricsFor('video')) : Number.MAX_SAFE_INTEGER;
+            let audioBuffer = getTracksFor('audio').length > 0 ? getMetricsExt().getCurrentBufferLevel(getMetricsFor('audio')) : Number.MAX_SAFE_INTEGER;
+            let textBuffer = getTracksFor('fragmentedText').length > 0 ? getMetricsExt().getCurrentBufferLevel(getMetricsFor('fragmentedText')) : Number.MAX_SAFE_INTEGER;
+            return Math.min(videoBuffer,audioBuffer,textBuffer).toPrecision(3);
         }
         else
         {
             if (type === 'video' || type === 'audio' || type === 'fragmentedText')
             {
                 let buffer = getMetricsExt().getCurrentBufferLevel(getMetricsFor(type));
-                return buffer ? buffer.level.toPrecision(3) : NaN;
+                return buffer ? buffer.toPrecision(3) : NaN;
             }
             else
             {
