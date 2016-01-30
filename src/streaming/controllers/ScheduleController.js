@@ -328,7 +328,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
             this.log("seek: " + e.data.seekTime);
             addPlaylistMetrics.call(this, MediaPlayer.vo.metrics.PlayList.SEEK_START_REASON);
 
-            this.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentRepresentationInfo.DVRWindow.end - this.playbackController.getTime()});
+            var latency = currentRepresentationInfo ? currentRepresentationInfo.DVRWindow.end - this.playbackController.getTime() : NaN;
+            this.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: latency});
         },
 
         onPlaybackRateChanged = function(/*e*/) {
