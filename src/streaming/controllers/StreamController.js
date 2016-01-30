@@ -69,7 +69,6 @@ function StreamController() {
         protectionController,
         protectionData,
         autoPlay,
-        canPlay,
         isStreamSwitchingInProgress,
         isUpdating,
         hasMediaError,
@@ -87,7 +86,6 @@ function StreamController() {
         streams = [];
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
         autoPlay = true;
-        canPlay = false;
         isStreamSwitchingInProgress = false;
         isUpdating = false;
         isPaused = false;
@@ -127,7 +125,6 @@ function StreamController() {
         eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
         eventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
         eventBus.on(Events.PLAYBACK_ENDED, onEnded, this);
-        eventBus.on(Events.CAN_PLAY, onCanPlay, this);
         eventBus.on(Events.PLAYBACK_ERROR, onPlaybackError, this);
         eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
         eventBus.on(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
@@ -181,8 +178,7 @@ function StreamController() {
     }
 
     function startAutoPlay() {
-        if (!activeStream.isActivated() || !canPlay) return;
-
+        if (!activeStream.isActivated()) return;
         // only first stream must be played automatically during playback initialization
         if (activeStream.getStreamInfo().index === 0) {
             activeStream.startEventController();
@@ -190,10 +186,6 @@ function StreamController() {
                 playbackController.play();
             }
         }
-    }
-
-    function onCanPlay(/*e*/) {
-        canPlay = true;
     }
 
     function onPlaybackError(e) {
@@ -523,6 +515,7 @@ function StreamController() {
         var ln = streams.length;
         var i = 0;
 
+
         startAutoPlay();
 
         for (i; i < ln; i++) {
@@ -530,6 +523,7 @@ function StreamController() {
         }
 
         eventBus.trigger(Events.STREAMS_COMPOSED);
+
     }
 
     function onStreamInitialized(/*e*/) {
@@ -682,7 +676,6 @@ function StreamController() {
 
         eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
         eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
-        eventBus.off(Events.CAN_PLAY, onCanPlay, this);
         eventBus.off(Events.PLAYBACK_ERROR, onPlaybackError, this);
         eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
         eventBus.off(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
@@ -701,7 +694,6 @@ function StreamController() {
         isStreamSwitchingInProgress = false;
         isUpdating = false;
         activeStream = null;
-        canPlay = false;
         hasMediaError = false;
         hasInitialisationError = false;
         initialPlayback = true;

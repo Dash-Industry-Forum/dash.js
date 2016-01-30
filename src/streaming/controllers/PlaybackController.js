@@ -62,7 +62,8 @@ function PlaybackController() {
         firstAppended,
         streamInfo,
         isDynamic,
-        mediaPlayerModel;
+        mediaPlayerModel,
+        playOnceInitialized;
 
     function setup() {
         currentTime = 0;
@@ -71,12 +72,14 @@ function PlaybackController() {
         isDynamic = null;
         commonEarliestTime = {};
         firstAppended = {};
+        playOnceInitialized = false;
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
     }
 
     function initialize(StreamInfo) {
         streamInfo = StreamInfo;
-        setupVideoModel();
+        element = videoModel.getElement();
+        addAllListeners();
         isDynamic = streamInfo.manifestInfo.isDynamic;
         liveStartTime = streamInfo.start;
 
@@ -84,6 +87,11 @@ function PlaybackController() {
         eventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
         eventBus.on(Events.BYTES_APPENDED, onBytesAppended, this);
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
+
+        if (playOnceInitialized) {
+            playOnceInitialized = false;
+            play();
+        }
     }
 
     function getTimeToStreamEnd() {
@@ -103,8 +111,12 @@ function PlaybackController() {
     }
 
     function play() {
-        if (!element) return;
-        element.play();
+        if (element) {
+            element.autoplay = true;
+            element.play();
+        } else {
+            playOnceInitialized = true;
+        }
     }
 
     function isPaused() {
@@ -115,6 +127,7 @@ function PlaybackController() {
     function pause() {
         if (!element) return;
         element.pause();
+        element.autoplay = false;
     }
 
     function isSeeking() {
@@ -468,8 +481,7 @@ function PlaybackController() {
         videoModel.setStallState(e.mediaType, e.state === BufferController.BUFFER_EMPTY);
     }
 
-    function setupVideoModel() {
-        element = videoModel.getElement();
+    function addAllListeners() {
         element.addEventListener('canplay', onCanPlay);
         element.addEventListener('play', onPlaybackStart);
         element.addEventListener('playing', onPlaybackPlaying);
