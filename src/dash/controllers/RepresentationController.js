@@ -250,8 +250,8 @@ function  RepresentationController() {
         }
     }
 
-    function postponeUpdate(availabilityDelay) {
-        var delay = (availabilityDelay + (currentRepresentation.segmentDuration * mediaPlayerModel.getLiveDelayFragmentCount())) * 1000;
+    function postponeUpdate(postponeTimePeriod) {
+            var delay = postponeTimePeriod;
         var update = function() {
             if (isUpdating()) return;
 
@@ -280,9 +280,22 @@ function  RepresentationController() {
             alreadyAdded = false,
             repSwitch;
 
-        if (e.error && e.error.code === DashHandler.SEGMENTS_UNAVAILABLE_ERROR_CODE) {
+        var postponeTimePeriod = 0;
+        
+        if(r.adaptation.period.mpd.manifest.type == "dynamic")
+        {
+            var segmentAvailabilityTimePeriod = r.segmentAvailabilityRange.end - r.segmentAvailabilityRange.start;
+            // We must put things to sleep unless till e.g. the startTime calculation in ScheduleController.onLiveEdgeSearchCompleted fall after the segmentAvailabilityRange.start
+            postponeTimePeriod = ((currentRepresentation.segmentDuration * mediaPlayerModel.getLiveDelayFragmentCount()) - segmentAvailabilityTimePeriod) * 1000;
+        }
+        else if (e.error && e.error.code === DashHandler.SEGMENTS_UNAVAILABLE_ERROR_CODE)
+        {
+            postponeTimePeriod = (e.error.data.availabilityDelay + (currentRepresentation.segmentDuration * mediaPlayerModel.getLiveDelayFragmentCount())) * 1000;
+        }
+
+        if (postponeTimePeriod > 0) {
             addDVRMetric();
-            postponeUpdate(e.error.data.availabilityDelay);
+            postponeUpdate(postponeTimePeriod);
             err = new Error(SEGMENTS_UPDATE_FAILED_ERROR_CODE, "Segments update failed", null);
             eventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: this, data: data, currentRepresentation: currentRepresentation, error: err});
 
