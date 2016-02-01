@@ -487,9 +487,9 @@ function BufferController(config) {
 
         var start = buffer.buffered.length ? buffer.buffered.start(0) : 0;
         var currentTime = playbackController.getTime();
+        // we want to get rid off buffer that is more than x seconds behind current time
         var bufferToPrune = currentTime - start - mediaPlayerModel.getBufferToKeep();
 
-        bufferToPrune = currentTime - start - mediaPlayerModel.getBufferToKeep();
         if (bufferToPrune > 0) {
             isPruningInProgress = true;
             sourceBufferExt.remove(buffer, 0, Math.round(start + bufferToPrune), mediaSource);
