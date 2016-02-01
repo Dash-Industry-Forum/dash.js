@@ -40,16 +40,18 @@ function FragmentLoader(config) {
     let context = this.context;
     let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
-
     let metricsModel = config.metricsModel;
     let errHandler = config.errHandler;
     let requestModifierExt = config.requestModifierExt;
 
-    let mediaPlayerModel = MediaPlayerModel(context).getInstance();
+    let instance,
+        mediaPlayerModel,
+        xhrs;
 
-    let instance;
-
-    let xhrs = [];
+    function setup() {
+        mediaPlayerModel = MediaPlayerModel(context).getInstance();
+        xhrs = [];
+    }
 
     function doLoad(request, remainingAttempts) {
         var req = new XMLHttpRequest();
@@ -201,7 +203,6 @@ function FragmentLoader(config) {
     }
 
     function load(req) {
-        xhrs = xhrs || [];
         if (!req) {
             eventBus.trigger(Events.LOADING_COMPLETED, {
                 request: req,
@@ -222,6 +223,7 @@ function FragmentLoader(config) {
         for (i = 0; i < ln; i++) {
             req = xhrs[i];
             xhrs[i] = null;
+            if (!req) continue;
             req.abort();
             req = null;
         }
@@ -234,6 +236,8 @@ function FragmentLoader(config) {
         load: load,
         abort: abort
     };
+
+    setup();
 
     return instance;
 }

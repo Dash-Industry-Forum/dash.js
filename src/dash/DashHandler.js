@@ -879,7 +879,7 @@ function DashHandler(config) {
             index = getIndexForSegments(time, representation, timeThreshold);
         }
 
-        if (requestedTime !== time) {
+        if (index > 0) {
             log('Index for ' + type + ' time ' + time + ' is ' + index );
         }
 
