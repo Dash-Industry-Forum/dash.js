@@ -114,7 +114,7 @@ function ThroughputRule(config) {
 
         }
 
-        if (lastRequest.trace.length) {
+        if (lastRequest.trace && lastRequest.trace.length) {
             downloadTime = (lastRequest._tfinish.getTime() - lastRequest.tresponse.getTime()) / 1000;
 
             bytes = lastRequest.trace.reduce(function (a, b) {
