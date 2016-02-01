@@ -434,13 +434,12 @@ function Stream(config) {
         }
 
         initialized = true;
+        isStreamActivated = true;
         eventBus.trigger(Events.STREAM_INITIALIZED, {streamInfo: streamInfo, error: error});
-
-        if (!isMediaInitialized || isStreamActivated) return;
+        if (!isMediaInitialized) return;
         if (protectionController) {
             protectionController.initialize(manifestModel.getValue(), getMediaInfo('audio'), getMediaInfo('video'));
         }
-        isStreamActivated = true;
     }
 
     function getMediaInfo(type) {
