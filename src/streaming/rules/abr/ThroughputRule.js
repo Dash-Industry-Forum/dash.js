@@ -74,22 +74,25 @@ function ThroughputRule(config) {
         }
 
         averageThroughput = metricsExt.getRecentThroughput(metrics, (isDynamic ? AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE : AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD));
-        averageThroughput = Math.round((averageThroughput * mediaPlayerModel.getBandwidthSafetyFactor()) / 1000);
 
-        abrController.setAverageThroughput(mediaType, averageThroughput);
+        if (averageThroughput !== -1) {
+            averageThroughput = Math.round(averageThroughput * mediaPlayerModel.getBandwidthSafetyFactor());
 
-        if (abrController.getAbandonmentStateFor(mediaType) !== AbrController.ABANDON_LOAD) {
+            abrController.setAverageThroughput(mediaType, averageThroughput);
 
-            if (bufferStateVO.state === BufferController.BUFFER_LOADED || isDynamic) {
-                var newQuality = abrController.getQualityForBitrate(mediaInfo, averageThroughput);
-                streamProcessor.getScheduleController().setTimeToLoadDelay(0); // TODO Watch out for seek event - no delay when seeking.!!
-                switchRequest = SwitchRequest(context).create(newQuality, SwitchRequest.DEFAULT);
-            }
+            if (abrController.getAbandonmentStateFor(mediaType) !== AbrController.ABANDON_LOAD) {
 
-            if (switchRequest.value !== SwitchRequest.NO_CHANGE && switchRequest.value !== current) {
-                log('ThroughputRule requesting switch to index: ', switchRequest.value, 'type: ',mediaType, ' Priority: ',
-                    switchRequest.priority === SwitchRequest.DEFAULT ? 'Default' :
-                        switchRequest.priority === SwitchRequest.STRONG ? 'Strong' : 'Weak', 'Average throughput', Math.round(averageThroughput), 'kbps');
+                if (bufferStateVO.state === BufferController.BUFFER_LOADED || isDynamic) {
+                    var newQuality = abrController.getQualityForBitrate(mediaInfo, averageThroughput);
+                    streamProcessor.getScheduleController().setTimeToLoadDelay(0); // TODO Watch out for seek event - no delay when seeking.!!
+                    switchRequest = SwitchRequest(context).create(newQuality, SwitchRequest.DEFAULT);
+                }
+
+                if (switchRequest.value !== SwitchRequest.NO_CHANGE && switchRequest.value !== current) {
+                    log('ThroughputRule requesting switch to index: ', switchRequest.value, 'type: ',mediaType, ' Priority: ',
+                        switchRequest.priority === SwitchRequest.DEFAULT ? 'Default' :
+                            switchRequest.priority === SwitchRequest.STRONG ? 'Strong' : 'Weak', 'Average throughput', Math.round(averageThroughput), 'kbps');
+                }
             }
         }
 
