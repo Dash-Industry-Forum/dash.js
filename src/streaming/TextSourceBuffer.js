@@ -36,6 +36,7 @@ import FactoryMaker from '../core/FactoryMaker.js';
 import Debug from '../core/Debug.js';
 import VideoModel from './models/VideoModel.js';
 import TextTrackExtensions from './extensions/TextTrackExtensions.js';
+import ISOBoxer from 'codem-isoboxer';
 
 function TextSourceBuffer() {
 
@@ -190,7 +191,8 @@ function TextSourceBuffer() {
                     }
                     sampleList[i].cts -= firstSubtitleStart;
                     this.buffered.add(sampleList[i].cts / timescale,(sampleList[i].cts + sampleList[i].duration) / timescale);
-                    ccContent = window.UTF8.decode(new Uint8Array(bytes.slice(sampleList[i].offset, sampleList[i].offset + sampleList[i].size)));
+                    let dataView = new DataView(bytes, sampleList[i].offset, sampleList[i].size);
+                    ccContent = ISOBoxer.Utils.dataViewToString(dataView, 'utf-8');
                     parser = parser !== null ? parser : getParser(mimeType);
                     try {
                         result = parser.parse(ccContent);
@@ -201,8 +203,8 @@ function TextSourceBuffer() {
                 }
             }
         } else if (mediaType === 'text') {
-            bytes = new Uint8Array(bytes);
-            ccContent = window.UTF8.decode(bytes);
+            let dataView = new DataView(bytes, 0, bytes.byteLength);
+            ccContent = ISOBoxer.Utils.dataViewToString(dataView, 'utf-8');
             try {
                 result = getParser(mimeType).parse(ccContent);
                 createTextTrackFromMediaInfo(result, mediaInfo);
