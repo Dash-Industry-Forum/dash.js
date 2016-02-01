@@ -47,8 +47,9 @@ function FragmentLoader(config) {
 
     let mediaPlayerModel = MediaPlayerModel(context).getInstance();
 
-    let instance,
-        xhrs;
+    let instance;
+
+    let xhrs = [];
 
     function doLoad(request, remainingAttempts) {
         var req = new XMLHttpRequest();
