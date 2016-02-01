@@ -720,6 +720,8 @@ function StreamController() {
                 eventBus.trigger(Events.PROTECTION_DESTROYED, {data: manifestModel.getValue().url});
             }
         }
+
+        eventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
     }
 
     instance = {
