@@ -28,7 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import DashHandler from '../DashHandler.js';
 import DashManifestExtensions from '../extensions/DashManifestExtensions.js';
 import DashMetricsExtensions from '../extensions/DashMetricsExtensions.js';
 import TimelineConverter from '../TimelineConverter.js';
@@ -272,10 +271,6 @@ function RepresentationController() {
             var segmentAvailabilityTimePeriod = r.segmentAvailabilityRange.end - r.segmentAvailabilityRange.start;
             // We must put things to sleep unless till e.g. the startTime calculation in ScheduleController.onLiveEdgeSearchCompleted fall after the segmentAvailabilityRange.start
             postponeTimePeriod = ((currentRepresentation.segmentDuration * mediaPlayerModel.getLiveDelayFragmentCount()) - segmentAvailabilityTimePeriod) * 1000;
-        }
-        else if (e.error && e.error.code === DashHandler.SEGMENTS_UNAVAILABLE_ERROR_CODE)
-        {
-            postponeTimePeriod = (e.error.data.availabilityDelay + (currentRepresentation.segmentDuration * mediaPlayerModel.getLiveDelayFragmentCount())) * 1000;
         }
 
         if (postponeTimePeriod > 0) {
