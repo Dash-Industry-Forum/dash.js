@@ -52,7 +52,6 @@ function TextTrackExtensions() {
         actualVideoHeight,
         captionContainer,
         videoSizeCheckInterval,
-        isIE11orEdge,
         isChrome,
         fullscreenAttribute,
         displayCCOnTop,
@@ -75,7 +74,9 @@ function TextTrackExtensions() {
         //TODO Check if IE has resolved issues: Then revert to not using the addTextTrack API for all browsers.
         // https://connect.microsoft.com/IE/feedbackdetail/view/1660701/text-tracks-do-not-fire-change-addtrack-or-removetrack-events
         // https://connect.microsoft.com/IE/feedback/details/1573380/htmltrackelement-track-addcue-throws-invalidstateerror-when-adding-new-cue
-        isIE11orEdge = !!navigator.userAgent.match(/Trident.*rv[ :]*11\./) || navigator.userAgent.match(/Edge/);
+        // Same issue with Firefox.
+        //isIE11orEdge = !!navigator.userAgent.match(/Trident.*rv[ :]*11\./) || navigator.userAgent.match(/Edge/);
+        //isFirefox = !!navigator.userAgent.match(/Firefox/);
         isChrome = !!navigator.userAgent.match(/Chrome/) && !navigator.userAgent.match(/Edge/);
         if (document.fullscreenElement !== undefined) {
             fullscreenAttribute = 'fullscreenElement'; // Standard and Edge
@@ -92,9 +93,9 @@ function TextTrackExtensions() {
         var kind = textTrackQueue[i].kind;
         var label = textTrackQueue[i].label !== undefined ? textTrackQueue[i].label : textTrackQueue[i].lang;
         var lang = textTrackQueue[i].lang;
-        var track = isIE11orEdge ? video.addTextTrack(kind, label, lang) : document.createElement('track');
+        var track = isChrome ? document.createElement('track') : video.addTextTrack(kind, label, lang);
 
-        if (!isIE11orEdge) {
+        if (isChrome) {
             track.kind = kind;
             track.label = label;
             track.srclang = lang;
@@ -138,7 +139,7 @@ function TextTrackExtensions() {
                     track.default = true;
                     defaultIndex = i;
                 }
-                if (!isIE11orEdge) {
+                if (isChrome) {
                     video.appendChild(track);
                 }
                 var textTrack = video.textTracks[i];
@@ -502,12 +503,12 @@ function TextTrackExtensions() {
     function deleteAllTextTracks() {
         var ln = trackElementArr.length;
         for (var i = 0; i < ln; i++) {
-            if (isIE11orEdge) {
+            if (isChrome) {
+                video.removeChild(trackElementArr[i]);
+            }else {
                 var track = getTextTrack.call(this, i);
                 track.nonAddedCues = [];
                 deleteTrackCues.call(this, track);
-            }else {
-                video.removeChild(trackElementArr[i]);
             }
 
         }
