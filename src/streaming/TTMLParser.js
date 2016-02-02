@@ -629,17 +629,17 @@ function TTMLParser() {
             properties.push('font-size:' + valueFtSizeInPx);
         }
         // Line height is computed from the cellResolution.
-        if ('line-heigt' in cueStyle) {
+        if ('line-height' in cueStyle) {
             if (cueStyle['line-height'] === 'normal') {
-                properties.push('line-heigth: normal;');
+                properties.push('line-height: normal;');
             } else {
-                var valueLHSize = parseFloat(cueStyle['line-heigt'].slice(cueStyle['line-heigt'].indexOf(':') + 1,
-                    cueStyle['line-heigt'].indexOf('%')));
+                var valueLHSize = parseFloat(cueStyle['line-height'].slice(cueStyle['line-height'].indexOf(':') + 1,
+                    cueStyle['line-height'].indexOf('%')));
                 if ('id' in cueStyle) {
                     lineHeight[cueStyle.id] = valueLHSize;
                 }
                 var valueLHSizeInPx = valueLHSize / 100 * cellUnit[1] + 'px;';
-                properties.push(key + ':' + valueLHSizeInPx);
+                properties.push('line-height' + ':' + valueLHSizeInPx);
             }
         }
         // Font-family can be specified by a generic family name or a custom family name.
