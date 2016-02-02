@@ -375,7 +375,7 @@ function Stream(config) {
             return;
         }
 
-        mediaController.checkInitialMediaSettings(streamInfo);
+        mediaController.checkInitialMediaSettingsForType(type, streamInfo);
         initialMediaInfo = mediaController.getCurrentTrackFor(type, streamInfo);
 
         // TODO : How to tell index handler live/duration?
