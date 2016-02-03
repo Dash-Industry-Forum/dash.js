@@ -155,7 +155,7 @@ function RepresentationController() {
 
         availableRepresentations = updateRepresentations(adaptation);
 
-        if (data === null) {
+        if (data === null && type !== 'fragmentedText') {
             averageThroughput = abrController.getAverageThroughput(type);
             bitrate = averageThroughput || abrController.getInitialBitrateFor(type, streamInfo);
             quality = abrController.getQualityForBitrate(streamProcessor.getMediaInfo(), bitrate);
