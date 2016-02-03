@@ -28,7 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import AbrController from '../controllers/AbrController.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import MediaPlayerModel from '../models/MediaPlayerModel.js';
 import Debug from '../../core/Debug.js';
@@ -47,12 +46,10 @@ function DOMStorage() {
 
     let instance,
         supported,
-        abrController,
         mediaPlayerModel;
 
     function setup() {
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
-        abrController = AbrController(context).getInstance();
     }
 
     //type can be local, session
@@ -109,37 +106,28 @@ function DOMStorage() {
         return settings;
     }
 
-    function checkInitialBitrate() {
-        ['video', 'audio'].forEach(function (value) {
-            //first make sure player has not explicitly set a starting bit rate
-            if (abrController.getInitialBitrateFor(value) === undefined) {
-                //Checks local storage to see if there is valid, non-expired bit rate
-                //hinting from the last play session to use as a starting bit rate. if not,
-                // it uses the default video and audio value in AbrController
-                if (isSupported(STORAGE_TYPE_LOCAL) && mediaPlayerModel.getLastBitrateCachingInfo().enabled ) {
-                    var key = value === 'video' ? LOCAL_STORAGE_VIDEO_BITRATE_KEY : LOCAL_STORAGE_AUDIO_BITRATE_KEY;
-                    var obj = JSON.parse(localStorage.getItem(key)) || {};
-                    var isExpired = (new Date().getTime() - parseInt(obj.timestamp, 10)) >= mediaPlayerModel.getLastBitrateCachingInfo().ttl || false;
-                    var bitrate = parseInt(obj.bitrate, 10);
+    function getSavedBitrateSettings(type) {
+        let savedBitrate = NaN;
+        //Checks local storage to see if there is valid, non-expired bit rate
+        //hinting from the last play session to use as a starting bit rate.
+        if (isSupported(STORAGE_TYPE_LOCAL) && mediaPlayerModel.getLastBitrateCachingInfo().enabled ) {
+            var key = type === 'video' ? LOCAL_STORAGE_VIDEO_BITRATE_KEY : LOCAL_STORAGE_AUDIO_BITRATE_KEY;
+            var obj = JSON.parse(localStorage.getItem(key)) || {};
+            var isExpired = (new Date().getTime() - parseInt(obj.timestamp, 10)) >= mediaPlayerModel.getLastBitrateCachingInfo().ttl || false;
+            var bitrate = parseInt(obj.bitrate, 10);
 
-                    if (!isNaN(bitrate) && !isExpired) {
-                        abrController.setInitialBitrateFor(value, bitrate);
-                        log('Last bitrate played for ' + value + ' was ' + bitrate);
-                    } else if (isExpired) {
-                        localStorage.removeItem(key);
-                    }
-                }
-                //check again to see if local storage value was set, if not set default value for startup.
-                if (abrController.getInitialBitrateFor(value) === undefined) {
-                    abrController.setInitialBitrateFor(value, AbrController['DEFAULT_' + value.toUpperCase() + '_BITRATE']);
-                }
+            if (!isNaN(bitrate) && !isExpired) {
+                savedBitrate = bitrate;
+                log('Last save bitrate for ' + type + ' was ' + bitrate);
+            } else if (isExpired) {
+                localStorage.removeItem(key);
             }
-
-        }, this);
+        }
+        return savedBitrate;
     }
 
     instance = {
-        checkInitialBitrate: checkInitialBitrate,
+        getSavedBitrateSettings: getSavedBitrateSettings,
         getSavedMediaSettings: getSavedMediaSettings,
         isSupported: isSupported
     };

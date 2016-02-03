@@ -31,6 +31,7 @@
 
 import SwitchRequest from '../rules/SwitchRequest';
 import BitrateInfo from '../vo/BitrateInfo.js';
+import DOMStorage from '../utils/DOMStorage.js';
 import ABRRulesCollection from '../rules/abr/ABRRulesCollection.js';
 import MediaPlayerModel from '../models/MediaPlayerModel.js';
 import FragmentModel from '../models/FragmentModel.js';
@@ -69,7 +70,8 @@ function AbrController() {
         manifestModel,
         manifestExt,
         videoModel,
-        mediaPlayerModel;
+        mediaPlayerModel,
+        domStorage;
 
     function setup() {
         autoSwitchBitrate = {video: true, audio: true};
@@ -82,6 +84,7 @@ function AbrController() {
         abandonmentStateDict = {};
         streamProcessorDict = {};
         limitBitrateByPortal = false;
+        domStorage = DOMStorage(context).getInstance();
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
         manifestModel = ManifestModel(context).getInstance();
         manifestExt = DashManifestExtensions(context).getInstance();
@@ -129,13 +132,11 @@ function AbrController() {
      * @memberof AbrController#
      */
     function getInitialBitrateFor(type) {
-        let initialBitrate;
+
+        let saveBitrate = domStorage.getSavedBitrateSettings(type);
 
         if (!bitrateDict.hasOwnProperty(type)) {
-            if (!ratioDict.hasOwnProperty(type)) {
-                bitrateDict[type] = (type === 'video') ? DEFAULT_VIDEO_BITRATE : DEFAULT_AUDIO_BITRATE;
-            } else {
-
+            if (ratioDict.hasOwnProperty(type)) {
                 let manifest = manifestModel.getValue();
                 let representation = manifestExt.getAdaptationForType(manifest, 0, type).Representation;
 
@@ -144,11 +145,14 @@ function AbrController() {
                 } else {
                     bitrateDict[type] = 0;
                 }
+            } else if (!isNaN(saveBitrate)) {
+                bitrateDict[type] = saveBitrate;
+            } else {
+                bitrateDict[type] = (type === 'video') ? DEFAULT_VIDEO_BITRATE : DEFAULT_AUDIO_BITRATE;
             }
         }
 
-        initialBitrate = bitrateDict[type];
-        return initialBitrate;
+        return bitrateDict[type];
     }
 
     /**
