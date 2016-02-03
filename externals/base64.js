@@ -150,3 +150,8 @@ if (undefined === btoa) {
 if (undefined === atob) {
     var atob = BASE64.decode;
 }
+
+if (typeof exports !== 'undefined') {
+    exports.decode = BASE64.decode;
+    exports.decodeArray = BASE64.decodeArray;
+}
