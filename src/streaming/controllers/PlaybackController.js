@@ -176,7 +176,6 @@ function PlaybackController() {
         } else {
             delay = streamInfo.manifestInfo.minBufferTime * 2;
         }
-
         return delay;
     }
 
@@ -307,12 +306,11 @@ function PlaybackController() {
 
     function updateCurrentTime() {
         if (isPaused() || !isDynamic || element.readyState === 0) return;
-
         var currentTime = getTime();
         var actualTime = getActualPresentationTime(currentTime);
         var timeChanged = (!isNaN(actualTime) && actualTime !== currentTime);
-
-        if (timeChanged) {
+        // we trap for a startTime of 0 due to issue #1089
+        if (timeChanged &&  currentTime > 0) {
             seek(actualTime);
         }
     }

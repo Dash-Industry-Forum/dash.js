@@ -417,7 +417,7 @@ function MediaPlayer() {
 
     /**
      * Use this method to get the current playhead time as an absolute value, the time in seconds since midnight UTC, Jan 1 1970.
-     * Note - this property only has meaning for live streams
+     * Note - this property only has meaning for live streams. If called before play() has begun, it will return a value of NaN.
      *
      * @returns {number} The current playhead time as UTC timestamp.
      * @memberof module:MediaPlayer
@@ -426,6 +426,9 @@ function MediaPlayer() {
     function timeAsUTC() {
         if (!playbackInitiated) {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
+        if (time() < 0) {
+            return NaN;
         }
         return getAsUTC(time());
     }
