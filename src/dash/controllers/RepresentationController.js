@@ -234,6 +234,12 @@ function RepresentationController() {
         }
     }
 
+    function resetAvailabilityWindow() {
+        availableRepresentations.forEach(rep => {
+            rep.segmentAvailabilityRange = null;
+        });
+    }
+
     function postponeUpdate(availabilityDelay) {
         var delay = (availabilityDelay + (currentRepresentation.segmentDuration * mediaPlayerModel.getLiveDelayFragmentCount())) * 1000;
         var update = function () {
@@ -241,6 +247,10 @@ function RepresentationController() {
 
             updating = true;
             eventBus.trigger(Events.DATA_UPDATE_STARTED, { sender: instance });
+
+            // clear the segmentAvailabilityRange for all reps.
+            // this ensures all are updated before the live edge search starts
+            resetAvailabilityWindow();
 
             for (var i = 0; i < availableRepresentations.length; i++) {
                 indexHandler.updateRepresentation(availableRepresentations[i], true);
