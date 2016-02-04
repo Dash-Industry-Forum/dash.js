@@ -322,8 +322,7 @@ function PlaybackController() {
         var currentTime = getTime();
         var actualTime = getActualPresentationTime(currentTime);
         var timeChanged = (!isNaN(actualTime) && actualTime !== currentTime);
-        // we trap for a startTime of 0 due to issue #1089
-        if (timeChanged &&  currentTime > 0) {
+        if (timeChanged) {
             seek(actualTime);
         }
     }
