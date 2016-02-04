@@ -213,6 +213,7 @@ function ManifestLoader(config) {
     function reset() {
         eventBus.off(Events.XLINK_READY, onXlinkReady, instance);
         requestModifierExt = null;
+        xlinkController.reset();
         xlinkController = null;
     }
 
