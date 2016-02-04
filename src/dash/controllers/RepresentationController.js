@@ -91,6 +91,7 @@ function RepresentationController() {
         eventBus.on(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
         eventBus.on(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
+        eventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, instance);
     }
 
     function initialize(StreamProcessor) {
@@ -122,6 +123,7 @@ function RepresentationController() {
 
         eventBus.off(Events.QUALITY_CHANGED, onQualityChanged, instance);
         eventBus.off(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
+        eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
         eventBus.off(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
         eventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, instance);
 
