@@ -309,6 +309,19 @@
             "name": "BBC R&D EBU-TT-D Subtitling Test",
             "url": "http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/1/client_manifest-all.mpd",
             "browsers": ""
+        },
+        {
+            "name": "maxdome Cenc Adobe Primetime",
+            "url": "http://dash-pdl.maxdome.de.edgesuite.net/content/adobept/media/Alice.mpd",
+            "browsers": "",
+            "protData": {
+                "com.adobe.primetime": {
+                    "serverURL": {
+                        "license-request": "http://drmtest2.adobe.com:8080/flashaccess/req",
+                        "individualization-request": "http://individualization.adobe.com/flashaccess/i15n/v5"
+                    }
+                }
+            }
         }
     ]
 }

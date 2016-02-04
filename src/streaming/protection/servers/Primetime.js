@@ -34,12 +34,7 @@ MediaPlayer.dependencies.protection.servers.Primetime = function() {
 
     return {
 
-        getServerURLFromMessage: function(url, message, messageType) {
-            if (messageType === "individualization-request") {
-                url = 'http://individualization.adobe.com/flashaccess/i15n/v5';
-            }
-            return url;
-        },
+        getServerURLFromMessage: function(url /*, message, messageType*/) { return url; },
 
         getHTTPMethod: function(/*messageType*/) { return 'POST'; },
 
