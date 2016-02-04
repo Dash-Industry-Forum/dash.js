@@ -133,7 +133,7 @@ function AbrController() {
      */
     function getInitialBitrateFor(type) {
 
-        let saveBitrate = domStorage.getSavedBitrateSettings(type);
+        let savedBitrate = domStorage.getSavedBitrateSettings(type);
 
         if (!bitrateDict.hasOwnProperty(type)) {
             if (ratioDict.hasOwnProperty(type)) {
@@ -145,8 +145,8 @@ function AbrController() {
                 } else {
                     bitrateDict[type] = 0;
                 }
-            } else if (!isNaN(saveBitrate)) {
-                bitrateDict[type] = saveBitrate;
+            } else if (!isNaN(savedBitrate)) {
+                bitrateDict[type] = savedBitrate;
             } else {
                 bitrateDict[type] = (type === 'video') ? DEFAULT_VIDEO_BITRATE : DEFAULT_AUDIO_BITRATE;
             }
