@@ -118,7 +118,7 @@ function DOMStorage() {
 
             if (!isNaN(bitrate) && !isExpired) {
                 savedBitrate = bitrate;
-                log('Last save bitrate for ' + type + ' was ' + bitrate);
+                log('Last saved bitrate for ' + type + ' was ' + bitrate);
             } else if (isExpired) {
                 localStorage.removeItem(key);
             }
