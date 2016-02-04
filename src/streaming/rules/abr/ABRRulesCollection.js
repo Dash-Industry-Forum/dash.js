@@ -32,6 +32,8 @@ import ThroughputRule from './ThroughputRule.js';
 import BufferOccupancyRule from './BufferOccupancyRule.js';
 import InsufficientBufferRule from './InsufficientBufferRule.js';
 import AbandonRequestsRule from './AbandonRequestsRule.js';
+import BolaRule from './BolaRule.js';
+import BolaAbandonRule from './BolaAbandonRule.js';
 import MetricsModel from '../../models/MetricsModel.js';
 import DashMetricsExtensions from '../../../dash/extensions/DashMetricsExtensions.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
@@ -54,22 +56,39 @@ function ABRRulesCollection() {
         let metricsModel = MetricsModel(context).getInstance();
         let metricsExt = DashMetricsExtensions(context).getInstance();
 
-        qualitySwitchRules.push(
-            ThroughputRule(context).create({
-                metricsModel: metricsModel,
-                metricsExt: metricsExt
-            })
-        );
+        let useBola = false;
 
-        qualitySwitchRules.push(
-            BufferOccupancyRule(context).create({
-                metricsModel: metricsModel,
-                metricsExt: metricsExt
-            })
-        );
+        if (useBola) {
+            qualitySwitchRules.push(
+                BolaRule(context).create({
+                    metricsModel: metricsModel,
+                    metricsExt: DashMetricsExtensions(context).getInstance()
+                })
+            );
+            abandonFragmentRules.push(
+                BolaAbandonRule(context).create({
+                    metricsModel: metricsModel,
+                    metricsExt: DashMetricsExtensions(context).getInstance()
+                })
+            );
+        } else { // !useBola
+            qualitySwitchRules.push(
+                ThroughputRule(context).create({
+                    metricsModel: metricsModel,
+                    metricsExt: metricsExt
+                })
+            );
 
-        qualitySwitchRules.push(InsufficientBufferRule(context).create({metricsModel: metricsModel}));
-        abandonFragmentRules.push(AbandonRequestsRule(context).create());
+            qualitySwitchRules.push(
+                BufferOccupancyRule(context).create({
+                    metricsModel: metricsModel,
+                    metricsExt: metricsExt
+                })
+            );
+
+            qualitySwitchRules.push(InsufficientBufferRule(context).create({metricsModel: metricsModel}));
+            abandonFragmentRules.push(AbandonRequestsRule(context).create());
+        } // !useBola
     }
 
     function getRules (type) {
