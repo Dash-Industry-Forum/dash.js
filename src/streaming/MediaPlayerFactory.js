@@ -75,4 +75,5 @@ function MediaPlayerFactory() {
     return instance;
 }
 MediaPlayerFactory.__dashjs_factory_name = 'MediaPlayerFactory';
-export default FactoryMaker.getSingletonFactory(MediaPlayerFactory);
+var factoryFactory = FactoryMaker.getSingletonFactory(MediaPlayerFactory);
+export default factoryFactory().getInstance();

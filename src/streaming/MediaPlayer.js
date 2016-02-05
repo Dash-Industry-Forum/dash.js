@@ -65,7 +65,6 @@ import DashParser from '../dash/DashParser.js';
 import DashManifestExtensions from '../dash/extensions/DashManifestExtensions.js';
 import DashMetricsExtensions from '../dash/extensions/DashMetricsExtensions.js';
 import TimelineConverter from '../dash/TimelineConverter.js';
-import MediaPlayerFactory from '../streaming/MediaPlayerFactory.js';
 
 
 /**
@@ -1750,6 +1749,5 @@ function MediaPlayer() {
 
 MediaPlayer.__dashjs_factory_name = 'MediaPlayer';
 let factory = FactoryMaker.getClassFactory(MediaPlayer);
-factory.MediaPlayerFactory = MediaPlayerFactory().getInstance();
 factory.events = MediaPlayerEvents;
 export default factory;
