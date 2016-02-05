@@ -493,7 +493,7 @@ function BufferController(config) {
         var bufferToPrune = currentTime - start - mediaPlayerModel.getBufferToKeep();
 
         if (bufferToPrune > 0) {
-            og('pruning buffer: ' + bufferToPrune + ' seconds');
+            log('pruning buffer: ' + bufferToPrune + ' seconds');
             isPruningInProgress = true;
             sourceBufferExt.remove(buffer, 0, Math.round(start + bufferToPrune), mediaSource);
         }
