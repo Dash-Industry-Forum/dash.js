@@ -3,7 +3,7 @@
         "allowUnknownTags": true
     },
     "source": {
-        "include": ["./src/"]
+        "include": ["./src/", "README.md"]
     },
     "plugins": [ "plugins/markdown" ],
     "templates": {

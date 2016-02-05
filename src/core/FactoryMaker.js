@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * @ignore
+ * @Module FactoryMaker
  */
 let FactoryMaker = (function () {
 
@@ -44,6 +44,18 @@ let FactoryMaker = (function () {
         }
     }
 
+    /**
+     * Use this method from your extended object.  this.factory is injected into your object.
+     * this.factory.getSingletonInstance(this.context, 'VideoModel')
+     * will return the video model for use in the extended object.
+     *
+     * @param context {Object} injected into extended object as this.context
+     * @param className {String} string name found in all dash.js objects with
+     * name __dashjs_factory_name Will be at the bottom. Will be the same as the object's name.
+     * @returns {*} Context aware instance of specified singleton name.
+     * @memberof module:FactoryMaker#getSingletonInstance
+     * @instance
+     */
     function getSingletonInstance(context, className) {
         for (let i in singletonContexts) {
             let obj = singletonContexts[i];
@@ -54,6 +66,12 @@ let FactoryMaker = (function () {
         return null;
     }
 
+    /**
+     *
+     * @param context
+     * @param className
+     * @param instance
+     */
     function setSingletonInstance(context, className, instance) {
         for (let i in singletonContexts) {
             let obj = singletonContexts[i];
