@@ -485,12 +485,15 @@ function BufferController(config) {
     function pruneBuffer() {
         if (type === 'fragmentedText') return;
 
+        log('try to prune buffer');
+
         var start = buffer.buffered.length ? buffer.buffered.start(0) : 0;
         var currentTime = playbackController.getTime();
         // we want to get rid off buffer that is more than x seconds behind current time
         var bufferToPrune = currentTime - start - mediaPlayerModel.getBufferToKeep();
 
         if (bufferToPrune > 0) {
+            og('pruning buffer: ' + bufferToPrune + ' seconds');
             isPruningInProgress = true;
             sourceBufferExt.remove(buffer, 0, Math.round(start + bufferToPrune), mediaSource);
         }
@@ -640,9 +643,12 @@ function BufferController(config) {
     }
 
     function onWallclockTimeUpdated() {
+        var secondsElapsed;
         //constantly prune buffer every x seconds
         wallclockTicked++;
-        if ((wallclockTicked % mediaPlayerModel.getBufferPruningInterval()) === 0 && !isAppendingInProgress) {
+        secondsElapsed = (wallclockTicked * (mediaPlayerModel.getWallclockTimeUpdateInterval() / 1000));
+        if ((secondsElapsed >= mediaPlayerModel.getBufferPruningInterval()) && !isAppendingInProgress) {
+            wallclockTicked = 0;
             pruneBuffer();
         }
     }

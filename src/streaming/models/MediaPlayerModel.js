@@ -20,6 +20,9 @@ const RICH_BUFFER_THRESHOLD = 20;
 const FRAGMENT_RETRY_ATTEMPTS = 3;
 const FRAGMENT_RETRY_INTERVAL = 1000;
 
+//This value influences the startup time for live (in ms).
+const WALLCLOCK_TIME_UPDATE_INTERVAL = 50;
+
 function MediaPlayerModel() {
 
     let instance,
@@ -41,6 +44,7 @@ function MediaPlayerModel() {
         abandonLoadTimeout,
         fragmentRetryAttempts,
         fragmentRetryInterval,
+        wallclockTimeUpdateInterval,
         bufferOccupancyABREnabled;
 
     function setup() {
@@ -63,6 +67,7 @@ function MediaPlayerModel() {
         abandonLoadTimeout = ABANDON_LOAD_TIMEOUT;
         fragmentRetryAttempts = FRAGMENT_RETRY_ATTEMPTS;
         fragmentRetryInterval = FRAGMENT_RETRY_INTERVAL;
+        wallclockTimeUpdateInterval = WALLCLOCK_TIME_UPDATE_INTERVAL;
     }
 
     //TODO Should we use Object.define to have setters/getters? makes more readable code on other side.
@@ -185,6 +190,14 @@ function MediaPlayerModel() {
         return fragmentRetryInterval;
     }
 
+    function setWallclockTimeUpdateInterval(value) {
+        wallclockTimeUpdateInterval = value;
+    }
+
+    function getWallclockTimeUpdateInterval() {
+        return wallclockTimeUpdateInterval;
+    }
+
     function setScheduleWhilePaused(value) {
         scheduleWhilePaused = value;
     }
@@ -259,6 +272,8 @@ function MediaPlayerModel() {
         getFragmentRetryAttempts: getFragmentRetryAttempts,
         setFragmentRetryInterval: setFragmentRetryInterval,
         getFragmentRetryInterval: getFragmentRetryInterval,
+        setWallclockTimeUpdateInterval: setWallclockTimeUpdateInterval,
+        getWallclockTimeUpdateInterval: getWallclockTimeUpdateInterval,
         setScheduleWhilePaused: setScheduleWhilePaused,
         getScheduleWhilePaused: getScheduleWhilePaused,
         getUseSuggestedPresentationDelay: getUseSuggestedPresentationDelay,
