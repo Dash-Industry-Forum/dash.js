@@ -23,7 +23,7 @@
             var url = FRAGMENTED_CAPTION_URL;
 
             videoElement = document.querySelector(".videoContainer video");
-            player = MediaPlayer({}).create();
+            player = dashjs.MediaPlayer().create();
             player.initialize(videoElement, url, true);
             controlbar = new ControlBar(player); // Checkout ControlBar.js for more info on how to target/add text tracks to UI
             controlbar.initialize();

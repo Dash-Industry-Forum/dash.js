@@ -19,18 +19,18 @@
 
             // Example specifying only the video element, where the video element has a child source element
             video = document.querySelector("#video1");
-            player = MediaPlayer.MediaPlayerFactory.create(video);
+            player = dashjs.MediaPlayerFactory.create(video);
 
             // Example specifying only the video element, where the video element has a src attribute
             video = document.querySelector("#video2");
-            player = MediaPlayer.MediaPlayerFactory.create(video);
+            player = dashjs.MediaPlayerFactory.create(video);
 
             //Example adding video and source
             video = document.querySelector("#video3");
             source = document.createElement("source");
             source.src = "http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd";
             source.type = "application/dash+xml";
-            player = MediaPlayer.MediaPlayerFactory.create(video, source);
+            player = dashjs.MediaPlayerFactory.create(video, source);
 
             //Example adding video, source and context
             video = document.querySelector("#video4");
@@ -38,7 +38,7 @@
             source.src = "http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd";
             source.type = "application/dash+xml";
             context = {}
-            player = MediaPlayer.MediaPlayerFactory.create(video, source, context);
+            player = dashjs.MediaPlayerFactory.create(video, source, context);
         }
     </script>
     <style>

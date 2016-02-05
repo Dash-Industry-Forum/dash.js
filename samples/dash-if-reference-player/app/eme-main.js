@@ -76,7 +76,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     ////////////////////////////////////////
 
     video = document.querySelector(".dash-video-player video");
-    player = MediaPlayer({}).create();
+    player = dashjs.MediaPlayer().create();
     player.initialize(video, null, true);
     player.on(MediaPlayer.events.ERROR, onError.bind(this));
     player.attachVideoContainer(document.getElementById("videoContainer"));
