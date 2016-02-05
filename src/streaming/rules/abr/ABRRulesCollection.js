@@ -34,6 +34,7 @@ import InsufficientBufferRule from './InsufficientBufferRule.js';
 import AbandonRequestsRule from './AbandonRequestsRule.js';
 import BolaRule from './BolaRule.js';
 import BolaAbandonRule from './BolaAbandonRule.js';
+import MediaPlayerModel from '../../models/MediaPlayerModel.js';
 import MetricsModel from '../../models/MetricsModel.js';
 import DashMetricsExtensions from '../../../dash/extensions/DashMetricsExtensions.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
@@ -55,10 +56,9 @@ function ABRRulesCollection() {
 
         let metricsModel = MetricsModel(context).getInstance();
         let metricsExt = DashMetricsExtensions(context).getInstance();
+        let mediaPlayerModel = MediaPlayerModel(context).getInstance();
 
-        let useBola = false;
-
-        if (useBola) {
+        if (mediaPlayerModel.getBufferOccupancyABREnabled()) {
             qualitySwitchRules.push(
                 BolaRule(context).create({
                     metricsModel: metricsModel,
@@ -71,7 +71,7 @@ function ABRRulesCollection() {
                     metricsExt: DashMetricsExtensions(context).getInstance()
                 })
             );
-        } else { // !useBola
+        } else {
             qualitySwitchRules.push(
                 ThroughputRule(context).create({
                     metricsModel: metricsModel,
@@ -88,7 +88,7 @@ function ABRRulesCollection() {
 
             qualitySwitchRules.push(InsufficientBufferRule(context).create({metricsModel: metricsModel}));
             abandonFragmentRules.push(AbandonRequestsRule(context).create());
-        } // !useBola
+        }
     }
 
     function getRules (type) {

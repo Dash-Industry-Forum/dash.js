@@ -38,9 +38,6 @@ import Debug from '../../core/Debug.js';
 
 function PlaybackController() {
 
-    //This value influences the startup time for live.
-    const WALLCLOCK_TIME_UPDATE_INTERVAL = 50;
-
     let context = this.context;
     let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
@@ -299,7 +296,7 @@ function PlaybackController() {
             onWallclockTime();
         };
 
-        wallclockTimeIntervalId = setInterval(tick, WALLCLOCK_TIME_UPDATE_INTERVAL);
+        wallclockTimeIntervalId = setInterval(tick, mediaPlayerModel.getWallclockTimeUpdateInterval());
     }
 
     function stopUpdatingWallclockTime() {
@@ -322,8 +319,7 @@ function PlaybackController() {
         var currentTime = getTime();
         var actualTime = getActualPresentationTime(currentTime);
         var timeChanged = (!isNaN(actualTime) && actualTime !== currentTime);
-        // we trap for a startTime of 0 due to issue #1089
-        if (timeChanged &&  currentTime > 0) {
+        if (timeChanged) {
             seek(actualTime);
         }
     }

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
  * rights, including patent rights, and no such rights are granted under this license.
@@ -52,7 +52,7 @@ function InsufficientBufferRule(config) {
         bufferStateDict = {};
         lastSwitchTime = 0;
         waitToSwitchTime = 1000;
-        eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
+        eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
     }
 
     function execute (rulesContext, callback) {
@@ -98,7 +98,7 @@ function InsufficientBufferRule(config) {
     }
 
     function reset() {
-        eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
+        eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
         bufferStateDict = {};
         lastSwitchTime = 0;
     }

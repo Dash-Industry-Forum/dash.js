@@ -28,7 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import DashHandler from '../DashHandler.js';
 import DashManifestExtensions from '../extensions/DashManifestExtensions.js';
 import DashMetricsExtensions from '../extensions/DashMetricsExtensions.js';
 import TimelineConverter from '../TimelineConverter.js';
@@ -91,6 +90,7 @@ function RepresentationController() {
         eventBus.on(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
         eventBus.on(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
+        eventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, instance);
     }
 
     function initialize(StreamProcessor) {
@@ -122,6 +122,7 @@ function RepresentationController() {
 
         eventBus.off(Events.QUALITY_CHANGED, onQualityChanged, instance);
         eventBus.off(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
+        eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
         eventBus.off(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
         eventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, instance);
 
@@ -234,13 +235,23 @@ function RepresentationController() {
         }
     }
 
-    function postponeUpdate(availabilityDelay) {
-        var delay = (availabilityDelay + (currentRepresentation.segmentDuration * mediaPlayerModel.getLiveDelayFragmentCount())) * 1000;
+    function resetAvailabilityWindow() {
+        availableRepresentations.forEach(rep => {
+            rep.segmentAvailabilityRange = null;
+        });
+    }
+
+    function postponeUpdate(postponeTimePeriod) {
+        var delay = postponeTimePeriod;
         var update = function () {
             if (isUpdating()) return;
 
             updating = true;
             eventBus.trigger(Events.DATA_UPDATE_STARTED, { sender: instance });
+
+            // clear the segmentAvailabilityRange for all reps.
+            // this ensures all are updated before the live edge search starts
+            resetAvailabilityWindow();
 
             for (var i = 0; i < availableRepresentations.length; i++) {
                 indexHandler.updateRepresentation(availableRepresentations[i], true);
@@ -265,9 +276,18 @@ function RepresentationController() {
             repSwitch;
         var alreadyAdded = false;
 
-        if (e.error && e.error.code === DashHandler.SEGMENTS_UNAVAILABLE_ERROR_CODE) {
+        var postponeTimePeriod = 0;
+
+        if (r.adaptation.period.mpd.manifest.type == 'dynamic')
+        {
+            var segmentAvailabilityTimePeriod = r.segmentAvailabilityRange.end - r.segmentAvailabilityRange.start;
+            // We must put things to sleep unless till e.g. the startTime calculation in ScheduleController.onLiveEdgeSearchCompleted fall after the segmentAvailabilityRange.start
+            postponeTimePeriod = ((currentRepresentation.segmentDuration * mediaPlayerModel.getLiveDelayFragmentCount()) - segmentAvailabilityTimePeriod) * 1000;
+        }
+
+        if (postponeTimePeriod > 0) {
             addDVRMetric();
-            postponeUpdate(e.error.data.availabilityDelay);
+            postponeUpdate(postponeTimePeriod);
             err = new Error(SEGMENTS_UPDATE_FAILED_ERROR_CODE, 'Segments update failed', null);
             eventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: this, data: data, currentRepresentation: currentRepresentation, error: err});
 
