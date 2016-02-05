@@ -29,13 +29,21 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import MediaPlayer from './streaming/MediaPlayer.js';
-import Protection from './streaming/protection/Protection.js';
-import MetricsReporting from './streaming/metrics/MetricsReporting.js';
+import MediaPlayer from './src/streaming/MediaPlayer.js';
+import Protection from './src/streaming/protection/Protection.js';
+import MetricsReporting from './src/streaming/metrics/MetricsReporting.js';
+import MediaPlayerFactory from './src/streaming/MediaPlayerFactory.js';
 
 
 // Shove both of these into the global scope
 var context = window || global;
-context.MediaPlayer = MediaPlayer;
-context.Protection = Protection;
-context.MetricsReporting = MetricsReporting;
+
+context.dashjs = {
+    MediaPlayer: MediaPlayer,
+    Protection: Protection,
+    MetricsReporting: MetricsReporting,
+    MediaPlayerFactory: MediaPlayerFactory
+};
+
+export default context.dashjs;
+export { MediaPlayer, Protection, MetricsReporting, MediaPlayerFactory };

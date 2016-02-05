@@ -20,6 +20,9 @@ const RICH_BUFFER_THRESHOLD = 20;
 const FRAGMENT_RETRY_ATTEMPTS = 3;
 const FRAGMENT_RETRY_INTERVAL = 1000;
 
+//This value influences the startup time for live (in ms).
+const WALLCLOCK_TIME_UPDATE_INTERVAL = 50;
+
 function MediaPlayerModel() {
 
     let instance,
@@ -40,13 +43,16 @@ function MediaPlayerModel() {
         bandwidthSafetyFactor,
         abandonLoadTimeout,
         fragmentRetryAttempts,
-        fragmentRetryInterval;
+        fragmentRetryInterval,
+        wallclockTimeUpdateInterval,
+        bufferOccupancyABREnabled;
 
     function setup() {
         UTCTimingSources = [];
         useSuggestedPresentationDelay = false;
         useManifestDateHeaderTimeSource = true;
         scheduleWhilePaused = false;
+        bufferOccupancyABREnabled = false;
         lastBitrateCachingInfo = {enabled: true , ttl: DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION};
         lastMediaSettingsCachingInfo = {enabled: true , ttl: DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION};
         liveDelayFragmentCount = LIVE_DELAY_FRAGMENT_COUNT;
@@ -61,9 +67,17 @@ function MediaPlayerModel() {
         abandonLoadTimeout = ABANDON_LOAD_TIMEOUT;
         fragmentRetryAttempts = FRAGMENT_RETRY_ATTEMPTS;
         fragmentRetryInterval = FRAGMENT_RETRY_INTERVAL;
+        wallclockTimeUpdateInterval = WALLCLOCK_TIME_UPDATE_INTERVAL;
     }
 
     //TODO Should we use Object.define to have setters/getters? makes more readable code on other side.
+    function setBufferOccupancyABREnabled(value) {
+        bufferOccupancyABREnabled = value;
+    }
+
+    function getBufferOccupancyABREnabled() {
+        return bufferOccupancyABREnabled;
+    }
 
     function setBandwidthSafetyFactor(value) {
         bandwidthSafetyFactor = value;
@@ -176,6 +190,14 @@ function MediaPlayerModel() {
         return fragmentRetryInterval;
     }
 
+    function setWallclockTimeUpdateInterval(value) {
+        wallclockTimeUpdateInterval = value;
+    }
+
+    function getWallclockTimeUpdateInterval() {
+        return wallclockTimeUpdateInterval;
+    }
+
     function setScheduleWhilePaused(value) {
         scheduleWhilePaused = value;
     }
@@ -222,6 +244,8 @@ function MediaPlayerModel() {
     }
 
     instance = {
+        setBufferOccupancyABREnabled: setBufferOccupancyABREnabled,
+        getBufferOccupancyABREnabled: getBufferOccupancyABREnabled,
         setBandwidthSafetyFactor: setBandwidthSafetyFactor,
         getBandwidthSafetyFactor: getBandwidthSafetyFactor,
         setAbandonLoadTimeout: setAbandonLoadTimeout,
@@ -248,6 +272,8 @@ function MediaPlayerModel() {
         getFragmentRetryAttempts: getFragmentRetryAttempts,
         setFragmentRetryInterval: setFragmentRetryInterval,
         getFragmentRetryInterval: getFragmentRetryInterval,
+        setWallclockTimeUpdateInterval: setWallclockTimeUpdateInterval,
+        getWallclockTimeUpdateInterval: getWallclockTimeUpdateInterval,
         setScheduleWhilePaused: setScheduleWhilePaused,
         getScheduleWhilePaused: getScheduleWhilePaused,
         getUseSuggestedPresentationDelay: getUseSuggestedPresentationDelay,

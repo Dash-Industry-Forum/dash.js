@@ -38,9 +38,6 @@ import Debug from '../../core/Debug.js';
 
 function PlaybackController() {
 
-    //This value influences the startup time for live.
-    const WALLCLOCK_TIME_UPDATE_INTERVAL = 50;
-
     let context = this.context;
     let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
@@ -299,7 +296,7 @@ function PlaybackController() {
             onWallclockTime();
         };
 
-        wallclockTimeIntervalId = setInterval(tick, WALLCLOCK_TIME_UPDATE_INTERVAL);
+        wallclockTimeIntervalId = setInterval(tick, mediaPlayerModel.getWallclockTimeUpdateInterval());
     }
 
     function stopUpdatingWallclockTime() {

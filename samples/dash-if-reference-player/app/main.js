@@ -561,16 +561,16 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     ////////////////////////////////////////
 
     video = document.querySelector(".dash-video-player video");
-    player = MediaPlayer().create();
+    player = dashjs.MediaPlayer().create();
 
     $scope.version = player.getVersion();
 
     player.initialize();
-    player.on(MediaPlayer.events.ERROR, onError.bind(this));
-    player.on(MediaPlayer.events.METRIC_CHANGED, metricChanged.bind(this));
-    player.on(MediaPlayer.events.METRIC_UPDATED, metricUpdated.bind(this));
-    player.on(MediaPlayer.events.PERIOD_SWITCH_COMPLETED, streamSwitch.bind(this));
-    player.on(MediaPlayer.events.STREAM_INITIALIZED, streamInitialized.bind(this));
+    player.on(dashjs.MediaPlayer.events.ERROR, onError.bind(this));
+    player.on(dashjs.MediaPlayer.events.METRIC_CHANGED, metricChanged.bind(this));
+    player.on(dashjs.MediaPlayer.events.METRIC_UPDATED, metricUpdated.bind(this));
+    player.on(dashjs.MediaPlayer.events.PERIOD_SWITCH_COMPLETED, streamSwitch.bind(this));
+    player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, streamInitialized.bind(this));
     player.attachView(video);
     player.attachVideoContainer(document.getElementById("videoContainer"));
 
