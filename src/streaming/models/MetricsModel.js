@@ -42,6 +42,7 @@ import EventBus from '../../core/EventBus.js';
 import RequestsQueue from '../vo/metrics/RequestsQueue.js';
 import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
+import BolaState from '../vo/metrics/BolaState.js';
 
 function MetricsModel() {
 
@@ -405,6 +406,15 @@ function MetricsModel() {
         return vo;
     }
 
+    function updateBolaState(mediaType, s) {
+        var vo = new BolaState();
+        vo.s = s;
+        getMetricsFor(mediaType).BolaState = [vo];
+
+        metricAdded(mediaType, 'BolaState', vo);
+        return vo;
+    }
+
     instance = {
         metricsChanged: metricsChanged,
         metricChanged: metricChanged,
@@ -429,6 +439,7 @@ function MetricsModel() {
         addManifestUpdateRepresentationInfo: addManifestUpdateRepresentationInfo,
         addPlayList: addPlayList,
         addDVBErrors: addDVBErrors,
+        updateBolaState: updateBolaState,
         setConfig: setConfig
     };
 
