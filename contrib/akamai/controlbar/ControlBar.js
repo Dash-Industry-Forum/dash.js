@@ -380,11 +380,11 @@ var ControlBar = function(dashjsMediaPlayer) {
             videoContainer = player.getVideoContainer();
             captionBtn.classList.add("hide");
 
-            player.on(MediaPlayer.events.PLAYBACK_STARTED, onPlayStart);
-            player.on(MediaPlayer.events.PLAYBACK_PAUSED, onPlaybackPaused);
-            player.on(MediaPlayer.events.PLAYBACK_TIME_UPDATED, onPlayTimeUpdate);
-            player.on(MediaPlayer.events.PLAYBACK_SEEKED, onSeeked);
-            player.on(MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded);
+            player.on(dashjs.MediaPlayer.events.PLAYBACK_STARTED, onPlayStart);
+            player.on(dashjs.MediaPlayer.events.PLAYBACK_PAUSED, onPlaybackPaused);
+            player.on(dashjs.MediaPlayer.events.PLAYBACK_TIME_UPDATED, onPlayTimeUpdate);
+            player.on(dashjs.MediaPlayer.events.PLAYBACK_SEEKED, onSeeked);
+            player.on(dashjs.MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded);
 
             playPauseBtn.addEventListener("click", onPlayPauseClick);
             muteBtn.addEventListener("click", onMuteClick);
@@ -435,11 +435,11 @@ var ControlBar = function(dashjsMediaPlayer) {
             seekbar.removeEventListener("change", onSeekBarChange);
             seekbar.removeEventListener("input", onSeeking);
             volumebar.removeEventListener("input", setVolume);
-            player.off(MediaPlayer.events.PLAYBACK_STARTED, onPlayStart);
-            player.off(MediaPlayer.events.PLAYBACK_PAUSED, onPlaybackPaused);
-            player.off(MediaPlayer.events.PLAYBACK_TIME_UPDATED, onPlayTimeUpdate);
-            player.off(MediaPlayer.events.PLAYBACK_SEEKED, onSeeked);
-            player.off(MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded);off
+            player.off(dashjs.MediaPlayer.events.PLAYBACK_STARTED, onPlayStart);
+            player.off(dashjs.MediaPlayer.events.PLAYBACK_PAUSED, onPlaybackPaused);
+            player.off(dashjs.MediaPlayer.events.PLAYBACK_TIME_UPDATED, onPlayTimeUpdate);
+            player.off(dashjs.MediaPlayer.events.PLAYBACK_SEEKED, onSeeked);
+            player.off(dashjs.MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded);off
             document.removeEventListener("fullscreenchange", onFullScreenChange);
             document.removeEventListener("MSFullscreenChange", onFullScreenChange);
             document.removeEventListener("mozfullscreenchange", onFullScreenChange);
