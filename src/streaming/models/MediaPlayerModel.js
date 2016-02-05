@@ -40,13 +40,15 @@ function MediaPlayerModel() {
         bandwidthSafetyFactor,
         abandonLoadTimeout,
         fragmentRetryAttempts,
-        fragmentRetryInterval;
+        fragmentRetryInterval,
+        bufferOccupancyABREnabled;
 
     function setup() {
         UTCTimingSources = [];
         useSuggestedPresentationDelay = false;
         useManifestDateHeaderTimeSource = true;
         scheduleWhilePaused = false;
+        bufferOccupancyABREnabled = false;
         lastBitrateCachingInfo = {enabled: true , ttl: DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION};
         lastMediaSettingsCachingInfo = {enabled: true , ttl: DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION};
         liveDelayFragmentCount = LIVE_DELAY_FRAGMENT_COUNT;
@@ -64,6 +66,13 @@ function MediaPlayerModel() {
     }
 
     //TODO Should we use Object.define to have setters/getters? makes more readable code on other side.
+    function setBufferOccupancyABREnabled(value) {
+        bufferOccupancyABREnabled = value;
+    }
+
+    function getBufferOccupancyABREnabled() {
+        return bufferOccupancyABREnabled;
+    }
 
     function setBandwidthSafetyFactor(value) {
         bandwidthSafetyFactor = value;
@@ -222,6 +231,8 @@ function MediaPlayerModel() {
     }
 
     instance = {
+        setBufferOccupancyABREnabled: setBufferOccupancyABREnabled,
+        getBufferOccupancyABREnabled: getBufferOccupancyABREnabled,
         setBandwidthSafetyFactor: setBandwidthSafetyFactor,
         getBandwidthSafetyFactor: getBandwidthSafetyFactor,
         setAbandonLoadTimeout: setAbandonLoadTimeout,
