@@ -16,7 +16,7 @@
                 url = "http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd";
 
             video = document.querySelector("video");
-            player = MediaPlayer({}).create();
+            player = dashjs.MediaPlayer().create();
             player.initialize(video, url, true);
         }
     </script>

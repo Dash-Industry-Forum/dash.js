@@ -150,7 +150,7 @@ function ReceiverController($scope) {
 
                     var video = document.querySelector(".dash-video-player video");
 
-                    player = MediaPlayer({}).create();
+                    player = dashjs.MediaPlayer().create();
                     player.initialize(video, url, true)
                     //player.setIsLive(isLive);
                     $scope.showSpinner = false;

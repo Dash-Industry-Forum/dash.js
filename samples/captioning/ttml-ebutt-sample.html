@@ -31,7 +31,7 @@
             videoElement = document.querySelector(".videoContainer video");
             TTMLRenderingDiv = document.querySelector("#ttml-rendering-div");
 
-            player = MediaPlayer({}).create();
+            player = dashjs.MediaPlayer().create();
             player.initialize(videoElement, url, true);
             player.attachTTMLRenderingDiv(TTMLRenderingDiv);
             controlbar = new ControlBar(player); // Checkout ControlBar.js for more info on how to target/add text tracks to UI

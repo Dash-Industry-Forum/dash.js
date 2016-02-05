@@ -2,8 +2,8 @@
  * Created by dsi on 11.05.2015.
  */
 (function() {
-    var player = MediaPlayer().create();
-        playerAd = MediaPlayer().create();
+    var player = dashjs.MediaPlayer().create();
+        playerAd = dashjs.MediaPlayer().create();
         contentUrl = 'http://vm2.dashif.org/livesim/scte35_1/testpic_2s/Manifest.mpd ',
         adUrl = 'http://dash.edgesuite.net/fokus/adinsertion-samples/scte/dash.mpd',
         currentlyAd = false;

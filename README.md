@@ -53,7 +53,7 @@ Now comes the good stuff. We need to create a MediaPlayer and initialize it.  We
 ``` js
 (function(){
     var url = "http://dash.edgesuite.net/envivio/Envivio-dash2/manifest.mpd";
-    var player = MediaPlayer().create(); 
+    var player = dashjs.MediaPlayer().create();
     player.initialize(document.querySelector("#videoPlayer"), url, true);
 })();
 ```
@@ -73,7 +73,7 @@ When it is all done, it should look similar to this:
         <script>
             (function(){
                 var url = "http://dash.edgesuite.net/envivio/Envivio-dash2/manifest.mpd";
-                var player = MediaPlayer().create(); 
+                var player = dashjs.MediaPlayer().create();
                 player.initialize(document.querySelector("#videoPlayer"), url, true);
             })();
         </script>

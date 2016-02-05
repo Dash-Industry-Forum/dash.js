@@ -2,7 +2,7 @@
   "name": "dashjs",
   "version": "2.0.0",
   "description": "A reference client implementation for the playback of MPEG DASH via Javascript and compliant browsers.",
-  "main": "dist/dash.all.min.js",
+  "main": "index.js",
   "scripts": {
     "test": "mocha --require mochahook",
     "prepublish": "grunt prepublish",
