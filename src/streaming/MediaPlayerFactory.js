@@ -1,4 +1,3 @@
-import FactoryMaker from '../core/FactoryMaker.js';
 import MediaPlayer from './MediaPlayer.js';
 
 function MediaPlayerFactory() {
@@ -93,9 +92,7 @@ function MediaPlayerFactory() {
     };
 }
 
-MediaPlayerFactory.__dashjs_factory_name = 'MediaPlayerFactory';
-let factoryFactory = FactoryMaker.getSingletonFactory(MediaPlayerFactory);
-let instance = factoryFactory().getInstance();
+let instance = MediaPlayerFactory();
 
 function loadHandler() {
     window.removeEventListener('load', loadHandler);
@@ -104,7 +101,7 @@ function loadHandler() {
 
 let avoidAutoCreate = window && window.dashjs && window.dashjs.skipAutoCreate;
 
-if (window && window.addEventListener && !avoidAutoCreate) {
+if (!avoidAutoCreate && window && window.addEventListener) {
     if (window.document.readyState === 'complete') {
         instance.createAll();
     } else {
