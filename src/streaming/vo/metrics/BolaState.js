@@ -34,7 +34,7 @@ class BolaState {
          * number
          * @public
          */
-        this.s = undefined;
+        this._s = undefined;
     }
 }
 

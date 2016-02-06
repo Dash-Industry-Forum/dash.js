@@ -406,9 +406,9 @@ function MetricsModel() {
         return vo;
     }
 
-    function updateBolaState(mediaType, s) {
+    function updateBolaState(mediaType, _s) {
         var vo = new BolaState();
-        vo.s = s;
+        vo._s = _s;
         getMetricsFor(mediaType).BolaState = [vo];
 
         metricAdded(mediaType, 'BolaState', vo);

@@ -28,31 +28,51 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
+// For a description of the BOLA adaptive bitrate (ABR) algorithm, see http://arxiv.org/abs/1601.06748
+
 import SwitchRequest from '../SwitchRequest.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 import MediaPlayerModel from '../../models/MediaPlayerModel.js';
 import PlaybackController from '../../controllers/PlaybackController.js';
 import HTTPRequest from '../../vo/metrics/HTTPRequest.js';
 import DashAdapter from '../../../dash/DashAdapter.js';
+import EventBus from '../../../core/EventBus.js';
+import Events from '../../../core/events/Events.js';
+
+// BOLA_STATE_ONE_BITRATE   : If there is only one bitrate (or initialization failed), always return NO_CHANGE.
+// BOLA_STATE_STARTUP       : Download fragments at most recently measured throughput.
+// BOLA_STATE_STARTUP_NO_INC: If quality increased then decreased during startup, then quality cannot be increased.
+// BOLA_STATE_STEADY        : Buffer primed, we switch to steady operation.
+// TODO: add BOLA_STATE_SEEK and tune Bola behavior on seeking
+const BOLA_STATE_ONE_BITRATE    = 0;
+const BOLA_STATE_STARTUP        = 1;
+const BOLA_STATE_STARTUP_NO_INC = 2;
+const BOLA_STATE_STEADY         = 3;
+const BOLA_DEBUG = false; // TODO: remove
 
 function BolaRule(config) {
 
-    // When live streaming (as opposed to VOD), if the last HTTP request finish time happened more than LIVE_DELAY_DETECT_THRESHOLD_MS ago, and the buffer level is below the buffer target, then we guess that there was a delay because of fragment availability.
-    const LIVE_DELAY_DETECT_THRESHOLD_S = 0.1;
+    // Bola needs some space between buffer levels.
+    const MINIMUM_BUFFER_LEVEL_SPACING = 5.0;
 
     let context = this.context;
     let metricsExt = config.metricsExt;
     let metricsModel = config.metricsModel;
+    let eventBus = EventBus(context).getInstance();
 
     let instance,
+        seekMediaTypes,
         mediaPlayerModel,
         playbackController,
         adapter;
 
     function setup() {
+        seekMediaTypes = [];
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
         playbackController = PlaybackController(context).getInstance();
         adapter = DashAdapter(context).getInstance();
+        eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
     }
 
     function calculateInitialState(rulesContext) {
@@ -66,8 +86,8 @@ function BolaRule(config) {
         let bitrateCount = bitrate.length;
         if (bitrateCount < 2 || bitrate[0] >= bitrate[1] || bitrate[bitrateCount -  2] >= bitrate[bitrateCount - 1]) {
             // if bitrate list irregular, stick to lowest bitrate
-            // TODO: tolerate repeated bitrates
-            initialState.state = BolaRule.BOLA_STATE_ONE_BITRATE;
+            // TODO: should we tolerate repeated bitrates?
+            initialState.state = BOLA_STATE_ONE_BITRATE;
             return initialState;
         }
 
@@ -89,12 +109,13 @@ function BolaRule(config) {
             bufferMax = mediaPlayerModel.getBufferTimeAtTopQuality();
         }
 
-        if (bufferTarget < 3 * fragmentDuration) {
-            // bufferTarget is too small to have buffer levels work effectively: use live streaming mode instead
-            // TODO: maybe replace this hack by updating Buffer Controller to have higher buffer target, otherwise rename variable below from "live" to something else
-            isDynamic = true;
-            bufferTarget = 3 * fragmentDuration;
-            // TODO: while tests indicate 3*fragmentDuration is sufficient, this may need to be analyzed more rigorously
+        // During live streaming, there might not be enough fragments available to fill all the way to the buffer target. In such a case, Bola detects the lack of fragment availability and calculate a bitrate depending on what the buffer level would have been had more fragments been available. This is done by keeping an additional virtualBuffer level. Of course, in such a case Bola needs to also keep track of the real buffer to avoid rebuffering.
+
+        // Bola needs some space between buffer levels. If bolaBufferTarget is set to a level higher than the real bufferTarget, the Schedule Controller will still not fill up the buffer up to bolaBufferTarget. However, Bola will detect the effect of the Schedule Controller and calculate a bitrate depending on what the buffer level would have been had the Schedule Controller filled more buffer. This is handled similar to the live streaming scenario using the additional virtualBuffer level.
+        let bolaBufferTarget = bufferTarget;
+        if (bolaBufferTarget < fragmentDuration + MINIMUM_BUFFER_LEVEL_SPACING) {
+
+            bolaBufferTarget = fragmentDuration + MINIMUM_BUFFER_LEVEL_SPACING;
         }
 
         let utility = [];
@@ -105,33 +126,63 @@ function BolaRule(config) {
         // BOLA parameters V and gamma (multiplied by p === fragmentDuration):
         // Choose Vp and gp such that logarithmic utility would always prefer the lowest bitrate when bufferLevel === fragmentDuration and would always prefer the highest bitrate when bufferLevel === bufferTarget.
         // TODO: document arithmetic
-        let Vp = (bufferTarget - fragmentDuration) / utility[bitrateCount - 1];
-        let gp = 1.0 + utility[bitrateCount - 1] / (bufferTarget / fragmentDuration - 1.0);
+        let Vp = (bolaBufferTarget - fragmentDuration) / utility[bitrateCount - 1];
+        let gp = 1.0 + utility[bitrateCount - 1] / (bolaBufferTarget / fragmentDuration - 1.0);
 
-        // Make sure that if we prefer downloading at a not-lowest quality that matches the network bandwidth, then the by the time the buffer level drops to 1 fragment we have at most the size of the smallest fragment left to download. Thus we avoid starting a download that will very likely be abandoned.
-        // TODO: document the arithmetic
-        let maxRTT = 0.2;
-        for (let i = 1; i < bitrateCount; ++i) {
-            let threshold = Vp * (gp - bitrate[0] * utility[i] / (bitrate[i] - bitrate[0]));
-            let minThreshold = fragmentDuration * (2.0 - bitrate[0] / bitrate[i]) + maxRTT;
-            if (threshold < minThreshold) {
-                Vp *= (bufferTarget - minThreshold) / (bufferTarget - threshold);
-                gp = minThreshold / Vp + utility[i] * bitrate[0] / (bitrate[i] - bitrate[0]);
+        // If the bufferTarget (the real bufferTarget and not bolaBufferTarget) is large enough, we might guarantee that Bola will never rebuffer unless the network bandwidth drops below the lowest encoded bitrate level. For this to work Bola needs to use the real buffer level without the additional virtualBuffer. Also, for this to work efficiently, we need to make sure that if the buffer level drops to one fragment during a download, the current download does not have more bits remaining than the size of one fragment at the lowest quality.
+        let maxRtt = 0.2; // TODO: is this reasonable?
+        let safetyGuarantee = !isDynamic && bolaBufferTarget === bufferTarget;
+        if (safetyGuarantee) {
+            // TODO: document the arithmetic
+            // we might need to adjust Vp and gp
+            let VpNew = Vp;
+            let gpNew = gp;
+            for (let i = 1; i < bitrateCount; ++i) {
+                let threshold = VpNew * (gpNew - bitrate[0] * utility[i] / (bitrate[i] - bitrate[0]));
+                let minThreshold = fragmentDuration * (2.0 - bitrate[0] / bitrate[i]) + maxRtt;
+                if (minThreshold >= bufferTarget) {
+                    safetyGuarantee = false;
+                    break;
+                }
+                if (threshold < minThreshold) {
+                    VpNew *= (bufferTarget - minThreshold) / (bufferTarget - threshold);
+                    gpNew = minThreshold / VpNew + utility[i] * bitrate[0] / (bitrate[i] - bitrate[0]);
+                }
+            }
+            if (safetyGuarantee && (bufferTarget - fragmentDuration) * VpNew / Vp < MINIMUM_BUFFER_LEVEL_SPACING) {
+                safetyGuarantee = false;
+            }
+            if (safetyGuarantee) {
+                Vp = VpNew;
+                gp = gpNew;
             }
         }
 
-        initialState.state = BolaRule.BOLA_STATE_STARTUP;
-        initialState.bitrate = bitrate;
-        initialState.utility = utility;
-        initialState.fragmentDuration = fragmentDuration;
+        // When using the virtualBuffer, it must be capped.
+        // TODO: document arithmetic
+        let bolaBufferMax = Vp * (utility[bitrateCount - 1] + gp);
+
+        // Note: We either use the virtualBuffer or the safetyGuarantee, but not both.
+
+        initialState.state                 = BOLA_STATE_STARTUP;
+
+        initialState.bitrate               = bitrate;
+        initialState.utility               = utility;
+        initialState.Vp                    = Vp;
+        initialState.gp                    = gp;
+
+        initialState.fragmentDuration      = fragmentDuration;
         initialState.bandwidthSafetyFactor = mediaPlayerModel.getBandwidthSafetyFactor();
-        initialState.bufferTarget = bufferTarget;
-        initialState.bufferMax = bufferMax;
-        initialState.Vp = Vp;
-        initialState.gp = gp;
-        initialState.live = isDynamic;
-        initialState.lastQuality = 0;
-        initialState.virtualBuffer = 0.0; // used in live
+        initialState.bufferTarget          = bufferTarget;
+        initialState.bufferMax             = bufferMax;
+        initialState.bolaBufferTarget      = bolaBufferTarget;
+        initialState.bolaBufferMax         = bolaBufferMax;
+
+        initialState.isDynamic             = isDynamic;
+        initialState.safetyGuarantee       = safetyGuarantee;
+        initialState.lastQuality           = 0;
+        initialState.virtualBuffer         = 0.0;
+
         return initialState;
     }
 
@@ -160,14 +211,21 @@ function BolaRule(config) {
         return null;
     }
 
-    function getLastThroughput(metrics) {
+    function getLastThroughput(metrics, mediaType) { // TODO: mediaType only used for debugging, remove it
+        // TODO: Should we replace this with an average of the last few throughputs?
         let lastRequest = getLastHttpRequest(metrics);
         if (!lastRequest) {
             return 0.0;
         }
 
+        // The RTT delay results in a lower throughput. We can avoid this delay in the calculation, but we do not want to.
         let downloadSeconds = 0.001 * (lastRequest._tfinish.getTime() - lastRequest.trequest.getTime());
-        let downloadBits = 8 * lastRequest.trace[lastRequest.trace.length - 1].b;
+        let downloadBits = 8 * lastRequest.trace.reduce(function (a, b) {
+            return a + b.b[0];
+        }, 0);
+
+        if (BOLA_DEBUG) console.log('BolaDebug ' + mediaType + ' BolaRule last throughput = ' + (downloadBits / 1000000).toFixed(3) + '/' + downloadSeconds.toFixed(3) + '=' + (downloadBits / downloadSeconds / 1000000).toFixed(3));
+
         return downloadBits / downloadSeconds;
     }
 
@@ -195,10 +253,29 @@ function BolaRule(config) {
 
         if (delayMilliSeconds < 0.0)
             return 0.0;
-        return delayMilliSeconds;
+        return 0.001 * delayMilliSeconds;
+    }
+
+    function onPlaybackSeeking() {
+        // TODO: Verify what happens if we seek mid-fragment.
+        // TODO: If we have 10s fragments and seek, we would like to download the first fragment at a lower quality to restart playback quickly.
+        for (let i = 0; i < seekMediaTypes.length; ++i) {
+            let mediaType = seekMediaTypes[i];
+            let metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
+            if (metrics.BolaState.length !== 0) {
+                let bolaState = metrics.BolaState[0]._s;
+                if (bolaState.state !== BOLA_STATE_ONE_BITRATE) {
+                    bolaState.state = BOLA_STATE_STARTUP;
+                }
+                metricsModel.updateBolaState(mediaType, bolaState);
+            }
+        }
     }
 
     function execute(rulesContext, callback) {
+        let streamProcessor = rulesContext.getStreamProcessor();
+        streamProcessor.getScheduleController().setTimeToLoadDelay(0.0);
+
         let switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
 
         let mediaInfo = rulesContext.getMediaInfo();
@@ -206,126 +283,137 @@ function BolaRule(config) {
         let metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
 
         if (metrics.BolaState.length === 0) {
-            // startup
+            // initialization
 
-            // console.log('BolaDebug ' + mediaType + ' BolaRule for state=- fragmentStart=' + adapter.getIndexHandlerTime(rulesContext.getStreamProcessor()));
+            if (BOLA_DEBUG) console.log('BolaDebug ' + mediaType + '\nBolaDebug ' + mediaType + ' BolaRule for state=- fragmentStart=' + adapter.getIndexHandlerTime(rulesContext.getStreamProcessor()).toFixed(3));
 
-            let bolaState = calculateInitialState(rulesContext);
-            metricsModel.updateBolaState(mediaType, bolaState);
+            let initState = calculateInitialState(rulesContext);
+            metricsModel.updateBolaState(mediaType, initState);
 
-            if (bolaState.state !== BolaRule.BOLA_STATE_ONE_BITRATE) {
-                // bolaState.state === BolaRule.BOLA_STATE_STARTUP
+            let q = 0;
+            if (initState.state !== BOLA_STATE_ONE_BITRATE) {
+                // initState.state === BOLA_STATE_STARTUP
 
-                // download first fragment at lowest quality
-                // TODO: at some point, we may want to make algorithm redownload first fragment at a higher quality
-                switchRequest = SwitchRequest(context).create(0, SwitchRequest.DEFAULT);
+                seekMediaTypes.push(mediaType);
+
+                // Bola is not invoked by dash.js to determine the bitrate quality of the first fragment. We might estimate the throughput level here, but the metric related to the HTTP request for the first fragment is usually not available.
+                // TODO: at some point, we may want to consider a tweak that redownloads the first fragment at a higher quality
+
+                let initThroughput = getLastThroughput(metrics, mediaType);
+                q = getQualityFromThroughput(initState, initThroughput * initState.bandwidthSafetyFactor);
+                initState.lastQuality = q;
+                switchRequest = SwitchRequest(context).create(q, SwitchRequest.DEFAULT);
             }
 
-            // console.log('BolaDebug ' + mediaType + ' BolaRule quality 0 for INITIALIZE');
+            if (BOLA_DEBUG) console.log('BolaDebug ' + mediaType + ' BolaRule quality ' + q + ' for INITIALIZE');
             callback(switchRequest);
             return;
         }
 
         // metrics.BolaState.length > 0
-        let bolaState = metrics.BolaState[0].s;
-        // TODO: is it OK to change bolaState, or should we clone?
+        let bolaState = metrics.BolaState[0]._s;
+        // TODO: does changing bolaState conform to coding style, or should we clone?
 
-        if (bolaState.state === BolaRule.BOLA_STATE_ONE_BITRATE) {
-            // console.log('BolaDebug ' + mediaType + ' BolaRule quality 0 for ONE_BITRATE');
+        if (bolaState.state === BOLA_STATE_ONE_BITRATE) {
+            if (BOLA_DEBUG) console.log('BolaDebug ' + mediaType + ' BolaRule quality 0 for ONE_BITRATE');
             callback(switchRequest);
             return;
         }
 
-        // console.log('BolaDebug ' + mediaType + ' BolaRule for state=' + bolaState.state + ' fragmentStart=' + adapter.getIndexHandlerTime(rulesContext.getStreamProcessor()));
+        if (BOLA_DEBUG) console.log('BolaDebug ' + mediaType + '\nBolaDebug ' + mediaType + ' EXECUTE BolaRule for state=' + bolaState.state + ' fragmentStart=' + adapter.getIndexHandlerTime(rulesContext.getStreamProcessor()).toFixed(3));
 
         let bufferLevel = metricsExt.getCurrentBufferLevel(metrics) ? metricsExt.getCurrentBufferLevel(metrics) : 0.0;
         let bolaQuality = getQualityFromBufferLevel(bolaState, bufferLevel);
-        let lastThroughput = getLastThroughput(metrics);
+        let lastThroughput = getLastThroughput(metrics, mediaType);
 
-        // console.log('BolaDebug ' + mediaType + ' BolaRule bufferLevel=' + bufferLevel + '(+' + bolaState.virtualBuffer + ') lt=' + lastThroughput);
+        if (BOLA_DEBUG) console.log('BolaDebug ' + mediaType + ' BolaRule bufferLevel=' + bufferLevel.toFixed(3) + '(+' + bolaState.virtualBuffer.toFixed(3) + ') lastThroughput=' + (lastThroughput / 1000000.0).toFixed(3) + ' tentativeQuality=' + bolaQuality + ',' + getQualityFromBufferLevel(bolaState, bufferLevel + bolaState.virtualBuffer));
 
-        if (bufferLevel <= 0.001) {
-            // rebuffering event occured, reset virtual buffer
+        if (bufferLevel <= 0.1) {
+            // rebuffering occured, reset virtual buffer
             bolaState.virtualBuffer = 0.0;
         }
 
-        if (bolaState.live) {
-            // find out if there was delay because of lack of availability
-            // TODO: add metric that specifies this delay explicity
-            let liveDelaySeconds = getDelayFromLastFragmentInSeconds(metrics);
-            if (liveDelaySeconds >= LIVE_DELAY_DETECT_THRESHOLD_S) {
-                // Is it because bufferLevel is at target?
-                if (bufferLevel < bolaState.bufferTarget - bolaState.fragmentDuration) {
-                    // guess not
-                    bolaState.virtualBuffer += liveDelaySeconds;
-                }
+        if (!bolaState.safetyGuarantee) { // we can use virtualBuffer
+            // find out if there was delay because of lack of availability or because bolaBufferTarget > bufferTarget
+            let timeSinceLastDownload = getDelayFromLastFragmentInSeconds(metrics);
+            if (timeSinceLastDownload > 0.1) {
+                bolaState.virtualBuffer += timeSinceLastDownload;
+            }
+            if (bufferLevel + bolaState.virtualBuffer > bolaState.bolaBufferMax) {
+                bolaState.virtualBuffer = bolaState.bolaBufferMax - bufferLevel;
+            }
+            if (bolaState.virtualBuffer < 0.0) { // shouldn't really happen, but just making sure
+                bolaState.virtualBuffer = 0.0;
             }
 
-            // update bolaQuality for live: bufferLevel might be artificially low because of lack of availability
+            // update bolaQuality using virtualBuffer: bufferLevel might be artificially low because of lack of availability
 
             let bolaQualityVirtual = getQualityFromBufferLevel(bolaState, bufferLevel + bolaState.virtualBuffer);
             if (bolaQualityVirtual > bolaQuality) {
                 // May use quality higher than that indicated by real buffer level.
 
-                // In this case, make sure there is enough throughput to download fragment before real buffer runs out.
-                let newQuality = bolaQuality;
-                while (newQuality < bolaQualityVirtual &&
-                       (bolaState.bitrate[newQuality + 1] * bolaState.fragmentDuration) /
+                // In this case, make sure there is enough throughput to download a fragment before real buffer runs out.
+
+                let maxQuality = bolaQuality;
+                while (maxQuality < bolaQualityVirtual &&
+                       (bolaState.bitrate[maxQuality + 1] * bolaState.fragmentDuration) /
                        (lastThroughput * bolaState.bandwidthSafetyFactor) < bufferLevel
                       ) {
-                    ++newQuality;
+                    ++maxQuality;
                 }
 
-                if (newQuality > bolaQuality) {
+                // TODO: maybe we can use a more conservative level here, but this should be OK
+
+                if (maxQuality > bolaQuality) {
                     // We can (and will) download at a quality higher than that indicated by real buffer level.
-                    if (bolaQualityVirtual <= newQuality) {
+                    if (bolaQualityVirtual <= maxQuality) {
                         // we can download fragment indicated by real+virtual buffer without rebuffering
                         bolaQuality = bolaQualityVirtual;
                     } else {
                         // downloading fragment indicated by real+virtual rebuffers, use lower quality
-                        bolaQuality = newQuality;
+                        bolaQuality = maxQuality;
                         // deflate virtual buffer to match quality
                         // TODO: document the arithmetic
-                        let s  = bolaState.bitrate[newQuality];     // relative size
-                        let s1 = bolaState.bitrate[newQuality + 1]; // relative size
-                        let u  = bolaState.utility[newQuality];
-                        let u1 = bolaState.utility[newQuality + 1];
+                        let s  = bolaState.bitrate[maxQuality];     // relative size
+                        let s1 = bolaState.bitrate[maxQuality + 1]; // relative size
+                        let u  = bolaState.utility[maxQuality];
+                        let u1 = bolaState.utility[maxQuality + 1];
                         let targetBufferLevel = bolaState.Vp * (bolaState.gp + (s1 * u - s * u1) / (s1 - s));
                         if (bufferLevel + bolaState.virtualBuffer > targetBufferLevel) { // should be true
                             bolaState.virtualBuffer = targetBufferLevel - bufferLevel;
-                            if (bolaState.virtualBuffer < 0.0) {
+                            if (bolaState.virtualBuffer < 0.0) { // should be false
                                 bolaState.virtualBuffer = 0.0;
                             }
                         }
                     }
                 }
             }
-        } // bolaState.live
+        } // !bolaState.safetyGuarantee: we can use virtualBuffer
 
-        if (bolaState.state === BolaRule.BOLA_STATE_STARTUP || bolaState.state === BolaRule.BOLA_STATE_STARTUP_NO_INC) {
+        if (bolaState.state === BOLA_STATE_STARTUP || bolaState.state === BOLA_STATE_STARTUP_NO_INC) {
             // in startup phase, use some throughput estimation
 
             let q = getQualityFromThroughput(bolaState, lastThroughput * bolaState.bandwidthSafetyFactor);
 
             if (lastThroughput <= 0.0) {
                 // something went wrong - go to steady state
-                bolaState.state = BolaRule.BOLA_STATE_STEADY;
+                bolaState.state = BOLA_STATE_STEADY;
             }
-            if (bolaState.state === BolaRule.BOLA_STATE_STARTUP && q < bolaState.lastQuality) {
-                // Since the quality decreased during startup, it will not be allowed to increase again.
-                bolaState.state = BolaRule.BOLA_STATE_STARTUP_NO_INC;
+            if (bolaState.state === BOLA_STATE_STARTUP && q < bolaState.lastQuality) {
+                // Since the quality is decreasing during startup, it will not be allowed to increase again.
+                bolaState.state = BOLA_STATE_STARTUP_NO_INC;
             }
-            if (bolaState.state === BolaRule.BOLA_STATE_STARTUP_NO_INC && q > bolaState.lastQuality) {
+            if (bolaState.state === BOLA_STATE_STARTUP_NO_INC && q > bolaState.lastQuality) {
                 // In this state the quality is not allowed to increase until steady state.
                 q = bolaState.lastQuality;
             }
             if (q <= bolaQuality) {
-                // Since the buffer is full enough for steady state to match startup, switch over to steady state.
-                bolaState.state = BolaRule.BOLA_STATE_STEADY;
+                // Since the buffer is full enough for steady state operation to match startup operation, switch over to steady state.
+                bolaState.state = BOLA_STATE_STEADY;
             }
-            if (bolaState.state !== BolaRule.BOLA_STATE_STEADY) {
+            if (bolaState.state !== BOLA_STATE_STEADY) {
                 // still in startup mode
-                // console.log('BolaDebug ' + mediaType + ' BolaRule quality ' + q + '/' + bolaQuality + ' for STARTUP');
+                if (BOLA_DEBUG) console.log('BolaDebug ' + mediaType + ' BolaRule quality ' + q + '>' + bolaQuality + ' for STARTUP');
                 bolaState.lastQuality = q;
                 metricsModel.updateBolaState(mediaType, bolaState);
                 switchRequest = SwitchRequest(context).create(q, SwitchRequest.DEFAULT);
@@ -337,10 +425,10 @@ function BolaRule(config) {
         // steady state
 
         // we want to avoid oscillations
-        // We implement the "BOLA-O" variant: when network bandwidth lies between two bitrate levels, stick to the lowest level.
+        // We implement the "BOLA-O" variant: when network bandwidth lies between two encoded bitrate levels, stick to the lowest level.
         let delaySeconds = 0.0;
         if (bolaQuality > bolaState.lastQuality) {
-            // do not used bandwidthSafetyFactor here: we are not using throughput estimation but capping bitrate to avoid oscillations
+            // do not multiply throughput by bandwidthSafetyFactor here: we are not using throughput estimation but capping bitrate to avoid oscillations
             let q = getQualityFromThroughput(bolaState, lastThroughput);
             if (bolaQuality > q) {
                 // only intervene if we are trying to *increase* quality to an *unsustainable* level
@@ -349,21 +437,20 @@ function BolaRule(config) {
                     // we are only avoid oscillations - do not drop below last quality
                     q = bolaState.lastQuality;
                 } else {
-                    // since bitrates are quantized, quality q might lead to buffer inflation
-                    // deflate buffer to threshold where algorithm would choose quality q over quality q+1
+                    // We are dropping to an encoded bitrate which is a little less than the network bandwidth because bitrate levels are discrete. Quality q might lead to buffer inflation, so we deflate buffer to the threshold where algorithm would choose quality q over quality q+1.
                     // TODO: document the arithmetic
                     let s  = bolaState.bitrate[q];     // relative size
                     let s1 = bolaState.bitrate[q + 1]; // relative size
                     let u  = bolaState.utility[q];
                     let u1 = bolaState.utility[q + 1];
-                    let targetBufferLevel = bolaState.Vp * (bolaState.gp + (s1 * u - s * u1) / (s1 - s));
-                    delaySeconds = bufferLevel - targetBufferLevel;
+                    let wantBufferLevel = bolaState.Vp * (bolaState.gp + (s1 * u - s * u1) / (s1 - s));
+                    delaySeconds = bufferLevel - wantBufferLevel;
                 }
                 bolaQuality = q;
             }
         }
 
-        if (delaySeconds > 0.0 && bolaState.live) {
+        if (delaySeconds > 0.0) {
             // first reduce virtual buffer
             if (delaySeconds > bolaState.virtualBuffer) {
                 delaySeconds -= bolaState.virtualBuffer;
@@ -374,20 +461,18 @@ function BolaRule(config) {
             }
         }
         if (delaySeconds > 0.0) {
-            let streamProcessor = rulesContext.getStreamProcessor();
             streamProcessor.getScheduleController().setTimeToLoadDelay(1000.0 * delaySeconds);
-        } else {
-            let streamProcessor = rulesContext.getStreamProcessor();
-            streamProcessor.getScheduleController().setTimeToLoadDelay(0.0);
         }
 
+        bolaState.lastQuality = bolaQuality;
         metricsModel.updateBolaState(mediaType, bolaState);
         switchRequest = SwitchRequest(context).create(bolaQuality, SwitchRequest.DEFAULT);
-        // console.log('BolaDebug ' + mediaType + ' BolaRule quality ' + bolaQuality + ' for STEADY');
+        if (BOLA_DEBUG) console.log('BolaDebug ' + mediaType + ' BolaRule quality ' + bolaQuality + ' delay=' + delaySeconds.toFixed(3) + ' for STEADY');
         callback(switchRequest);
     }
 
     function reset() {
+        eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
         setup();
     }
 
@@ -400,14 +485,11 @@ function BolaRule(config) {
     return instance;
 }
 
-// BOLA_STATE_ONE_BITRATE   : If there is only one bitrate (or initialization failed), always return NO_CHANGE.
-// BOLA_STATE_STARTUP       : Download fragments at most recently measured throughput.
-// BOLA_STATE_STARTUP_NO_INC: If quality increased then decreased during startup, then quality cannot be increased.
-// BOLA_STATE_STEADY        : Buffer primed, we switch to steady operation.
-BolaRule.BOLA_STATE_ONE_BITRATE    = 0;
-BolaRule.BOLA_STATE_STARTUP        = 1;
-BolaRule.BOLA_STATE_STARTUP_NO_INC = 2;
-BolaRule.BOLA_STATE_STEADY         = 3;
-
 BolaRule.__dashjs_factory_name = 'BolaRule';
-export default FactoryMaker.getClassFactory(BolaRule);
+let factory = FactoryMaker.getClassFactory(BolaRule);
+factory.BOLA_STATE_ONE_BITRATE    = BOLA_STATE_ONE_BITRATE;
+factory.BOLA_STATE_STARTUP        = BOLA_STATE_STARTUP;
+factory.BOLA_STATE_STARTUP_NO_INC = BOLA_STATE_STARTUP_NO_INC;
+factory.BOLA_STATE_STEADY         = BOLA_STATE_STEADY;
+factory.BOLA_DEBUG = BOLA_DEBUG; // TODO: remove
+export default factory;
