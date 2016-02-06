@@ -28,46 +28,112 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 class HTTPRequest {
+    /**
+     * @description This Object holds reference to the HTTPRequest for manifest, fragment and xlink loading.
+     */
     constructor() {
-        this.tcpid = null;          // Identifier of the TCP connection on which the HTTP request was sent.
-        this.type = null;           /* This is an optional parameter and should not be included in HTTP request/response transactions for progressive download.
-                                     * The type of the request:
-                                     * - MPD
-                                     * - XLink expansion
-                                     * - Initialization Fragment
-                                     * - Index Fragment
-                                     * - Media Fragment
-                                     * - Bitstream Switching Fragment
-                                     * - other */
-        this.url = null;            // The original URL (before any redirects or failures)
-        this.actualurl = null;      // The actual URL requested, if different from above
-        this.range = null;          // The contents of the byte-range-spec part of the HTTP Range header.
-        this.trequest = null;       // Real-Time | The real time at which the request was sent.
-        this.tresponse = null;      // Real-Time | The real time at which the first byte of the response was received.
-        this.responsecode = null;   // The HTTP response code.
-        this.interval = null;       // The duration of the throughput trace intervals (ms), for successful requests only.
-        this.trace = [];            // Throughput traces, for successful requests only.
+        /**
+         * Identifier of the TCP connection on which the HTTP request was sent.
+         * @public
+         */
+        this.tcpid = null;
+        /**
+         * This is an optional parameter and should not be included in HTTP request/response transactions for progressive download.
+         * The type of the request:
+         * - MPD
+         * - XLink expansion
+         * - Initialization Fragment
+         * - Index Fragment
+         * - Media Fragment
+         * - Bitstream Switching Fragment
+         * - other
+         * @public
+         */
+        this.type = null;
+        /**
+         * The original URL (before any redirects or failures)
+         * @public
+         */
+        this.url = null;
+        /**
+         * The actual URL requested, if different from above
+         * @public
+         */
+        this.actualurl = null;
+        /**
+         * The contents of the byte-range-spec part of the HTTP Range header.
+         * @public
+         */
+        this.range = null;
+        /**
+         * Real-Time | The real time at which the request was sent.
+         * @public
+         */
+        this.trequest = null;
+        /**
+         * Real-Time | The real time at which the first byte of the response was received.
+         * @public
+         */
+        this.tresponse = null;
+        /**
+         * The HTTP response code.
+         * @public
+         */
+        this.responsecode = null;
+        /**
+         * The duration of the throughput trace intervals (ms), for successful requests only.
+         * @public
+         */
+        this.interval = null;
+        /**
+         * Throughput traces, for successful requests only.
+         * @public
+         */
+        this.trace = [];
 
-        // Additional metrics used internally which we do not want to report to the outside world
-        // Anything beginning with an _ will not be reported
-        this._stream = null;            // type of stream ("audio" | "video" etc..)
-        this._tfinish = null;           // Real-Time | The real time at which the request finshed.
-        this._mediaduration = null;     // The duration of the media requests, if available, in milliseconds.
-        this._responseHeaders = null;   // all the response headers from request.
+        /**
+         * Type of stream ("audio" | "video" etc..)
+         * @public
+         */
+        this._stream = null;
+        /**
+         * Real-Time | The real time at which the request finshed.
+         * @public
+         */
+        this._tfinish = null;
+        /**
+         * The duration of the media requests, if available, in milliseconds.
+         * @public
+         */
+        this._mediaduration = null;
+        /**
+         * all the response headers from request.
+         * @public
+         */
+        this._responseHeaders = null;
     }
 }
 
 HTTPRequest.Trace = class {
+    /**
+     * @description This Object holds reference to the progress of the HTTPRequest.
+     */
     constructor() {
-        /*
-         * s - Real-Time | Measurement stream start.
-         * d - Measurement stream duration (ms).
-         * b - List of integers counting the bytes received in each trace interval within the measurement stream.
+        /**
+         * Real-Time | Measurement stream start.
+         * @public
          */
         this.s = null;
+        /**
+         * Measurement stream duration (ms).
+         * @public
+         */
         this.d = null;
+        /**
+         * List of integers counting the bytes received in each trace interval within the measurement stream.
+         * @public
+         */
         this.b = [];
     }
 };

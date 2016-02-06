@@ -30,9 +30,26 @@
  */
 
 class DVRInfo {
+    /**
+     * @description This Object holds reference to DVR availability window information.
+     */
     constructor() {
+
+        /**
+         * The current time of the video element when this was created.
+         * @public
+         */
         this.time = null;
+        /**
+         * The current Segment Availability Range as an object with start and end properties.
+         * It's delta defined by the timeShiftBufferDepth MPD attribute.
+         * @public
+         */
         this.range = null;
+        /**
+         * Reference to the internal ManifestInfo.js VO.
+         * @public
+         */
         this.manifestInfo = null;
     }
 }
