@@ -746,11 +746,11 @@ function DashHandler(config) {
         }
     }
 
-    function getIndexForSegments(time, representation, timeThreshold) {
+    function getFragmentsForSegments(time, representation, timeThreshold) {
         var segments = representation.segments;
         var ln = segments ? segments.length : null;
 
-        var idx = -1;
+        var frags = [];
         var epsilon,
             frag,
             ft,
@@ -763,11 +763,41 @@ function DashHandler(config) {
                 ft = frag.presentationStartTime;
                 fd = frag.duration;
                 epsilon = (timeThreshold === undefined || timeThreshold === null) ? fd / 2 : timeThreshold;
-                if ((time + epsilon) >= ft &&
-                    (time - epsilon) < (ft + fd)) {
-                    idx = frag.availabilityIdx;
-                    break;
+                if (ft - epsilon <= time && time < ft + fd + epsilon) {
+                    frags.push(frag);
                 }
+            }
+        }
+
+        return frags;
+    }
+
+    function getIndexFromFragmentsForSegments(time, frags) {
+        // Find the fragment within frags that best matches time.
+        // A fragment that needs less tolerance epsilon (or none at all) is prefered to a fragment that needs higher tolerance.
+        // As a tiebreak, if time is close to the end of fragment 1 and is close to the beginning of fragment 2, choose fragment 2 because probably we're trying to locate a fragment based on its start.
+
+        let idx = -1;
+        let idxEpsilonNeeded = 0;
+        let idxDistanceFromStart = 0;
+        for (let i = 0; i < frags.length; ++i) {
+            let ft = frags[i].presentationStartTime;
+            let fd = frags[i].duration;
+            let epsilonNeededLow  = ft - time;
+            let epsilonNeededHigh = time - (ft + fd);
+            let epsilonNeeded = epsilonNeededLow > epsilonNeededHigh ? epsilonNeededLow : epsilonNeededHigh;
+            if (epsilonNeeded <= 0.0)
+                epsilonNeeded = 0.0;
+            let distanceFromStart = time - ft;
+            // we judge how good an entry is by seeing how small an epsilon it needs to match
+
+            if (idx === -1 || // no entry yet
+                epsilonNeeded + 0.1 < idxEpsilonNeeded || // this entry is significantly better than idx
+                (epsilonNeeded < idxEpsilonNeeded + 0.1 && distanceFromStart + 0.1 * fd < idxDistanceFromStart) // this entry is not significantly worse than idx and the time is significantly closer to its start time than it is to idx's start time
+               ) {
+                idx = frags[i].availabilityIdx;
+                idxEpsilonNeeded = epsilonNeeded;
+                idxDistanceFromStart = distanceFromStart;
             }
         }
 
@@ -872,12 +902,16 @@ function DashHandler(config) {
             log('Getting the request for ' + type + ' time : ' + time);
         }
 
-        index = getIndexForSegments(time, representation, timeThreshold);
-        //Index may be -1 if getSegments needs to update.  So after getSegments is called and updated then try to get index again.
+        // Rather than using the first fragment that matches (time), get a list of all matches and pick the best. This works around the issue when e.g. a fragment representing 10s-15s is chosen for time 16s even if there is a fragment representing 15s-20s because the tolerance is 2.5s.
+        let frags;
+
+        frags = getFragmentsForSegments(time, representation, timeThreshold);
+
+        //  Update using getSegments and recheck fragments.
         getSegments(representation);
-        if (index < 0) {
-            index = getIndexForSegments(time, representation, timeThreshold);
-        }
+
+        frags.concat(getFragmentsForSegments(time, representation, timeThreshold));
+        index = getIndexFromFragmentsForSegments(time, frags);
 
         if (index > 0) {
             log('Index for ' + type + ' time ' + time + ' is ' + index );
