@@ -30,43 +30,93 @@
  */
 
 class PlayList {
+    /**
+     * @description This Object holds reference to the playback session information
+     */
     constructor() {
-        this.start = null;      // Real-Time | Timestamp of the user action that starts the playback stream...
-        this.mstart = null;     // Media-Time | Presentation time at which playout was requested by the user...
-        this.starttype = null;  /* Enum | Type of user action which triggered playout
-                                 *  - New playout request (e.g. initial playout or seeking)
-                                 *  - Resume from pause
-                                 *  - Other user request (e.g. user-requested quality change)
-                                 *  - Start of a metrics collection stream (hence earlier entries in the play list not collected) */
-        this.trace = [];        // List | List of streams of continuous rendering of decoded samples.
+
+        /**
+         * Timestamp of the user action that starts the playback stream...
+         * @public
+         */
+        this.start = null;
+        /**
+         * Presentation time at which playout was requested by the user...
+         * @public
+         */
+        this.mstart = null;
+        /**
+         * Type of user action which triggered playout
+         * - New playout request (e.g. initial playout or seeking)
+         * - Resume from pause
+         * - Other user request (e.g. user-requested quality change)
+         * - Start of a metrics collection stream (hence earlier entries in the play list not collected)
+         * @public
+         */
+        this.starttype = null;
+
+        /**
+         * List of streams of continuous rendering of decoded samples.
+         * @public
+         */
+        this.trace = [];
+
     }
 }
 
 PlayList.Trace = class {
     constructor() {
-        /*
-         * representationid - String | The value of the Representation@id of the Representation from which the samples were taken.
-         * subreplevel      - Integer | If not present, this metrics concerns the Representation as a whole. If present, subreplevel indicates the greatest value of any Subrepresentation@level being rendered.
-         * start            - Real-Time | The time at which the first sample was rendered.
-         * mstart           - Media-Time | The presentation time of the first sample rendered.
-         * duration         - Integer | The duration of the continuously presented samples (which is the same in real time and media time). "Continuously presented" means that the media clock continued to advance at the playout speed throughout the interval. NOTE: the spec does not call out the units, but all other durations etc are in ms, and we use ms too.
-         * playbackspeed    - Real | The playback speed relative to normal playback speed (i.e.normal forward playback speed is 1.0).
-         * stopreason       - Enum | The reason why continuous presentation of this Representation was stopped.
-         *                    Either:
-         *                    representation switch
-         *                    rebuffering
-         *                    user request
-         *                    end of Period
-         *                    end of Stream
-         *                    end of content
-         *                    end of a metrics collection period
+        /**
+         * The value of the Representation@id of the Representation from which the samples were taken.
+         * @type {String}
+         * @public
          */
         this.representationid = null;
+        /**
+         * If not present, this metrics concerns the Representation as a whole.
+         * If present, subreplevel indicates the greatest value of any
+         * Subrepresentation@level being rendered.
+         * @type {Number}
+         * @public
+         */
         this.subreplevel = null;
+        /**
+         * The time at which the first sample was rendered
+         * @type {Number}
+         * @public
+         */
         this.start = null;
+        /**
+         * The presentation time of the first sample rendered.
+         * @type {Number}
+         * @public
+         */
         this.mstart = null;
+        /**
+         * The duration of the continuously presented samples (which is the same in real time and media time). "Continuously presented" means that the media clock continued to advance at the playout speed throughout the interval. NOTE: the spec does not call out the units, but all other durations etc are in ms, and we use ms too.
+         * @type {Number}
+         * @public
+         */
         this.duration = null;
+        /**
+         * The playback speed relative to normal playback speed (i.e.normal forward playback speed is 1.0).
+         * @type {Number}
+         * @public
+         */
         this.playbackspeed = null;
+        /**
+         * The reason why continuous presentation of this Representation was stopped.
+         * representation switch
+         * rebuffering
+         * user request
+         * end of Period
+         * end of Stream
+         * end of content
+         * end of a metrics collection period
+         *
+         * @type {String}
+         * @public
+         */
         this.stopreason = null;
     }
 };

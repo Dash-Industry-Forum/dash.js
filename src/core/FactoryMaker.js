@@ -50,10 +50,10 @@ let FactoryMaker = (function () {
      * will return the video model for use in the extended object.
      *
      * @param context {Object} injected into extended object as this.context
-     * @param className {String} string name found in all dash.js objects with
-     * name __dashjs_factory_name Will be at the bottom. Will be the same as the object's name.
+     * @param className {String} string name found in all dash.js objects
+     * with name __dashjs_factory_name Will be at the bottom. Will be the same as the object's name.
      * @returns {*} Context aware instance of specified singleton name.
-     * @memberof module:FactoryMaker#getSingletonInstance
+     * @memberof module:FactoryMaker
      * @instance
      */
     function getSingletonInstance(context, className) {
