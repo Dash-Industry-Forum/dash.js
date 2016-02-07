@@ -405,7 +405,7 @@ function ProtectionController(config) {
     }
 
     function onKeyMessage(e) {
-        log('DRM: onKeyMessage:', e);
+        log('DRM: onKeyMessage');
         if (e.error) {
             log(e.error);
             return;
@@ -518,7 +518,7 @@ function ProtectionController(config) {
     }
 
     function onNeedKey(event) {
-        log('DRM: onNeedKey:', event);
+        log('DRM: onNeedKey');
         // Ignore non-cenc initData
         if (event.key.initDataType !== 'cenc') {
             log('DRM:  Only \'cenc\' initData is supported!  Ignoring initData of type: ' + event.key.initDataType);
@@ -532,7 +532,7 @@ function ProtectionController(config) {
             abInitData = abInitData.buffer;
         }
 
-        console.log('DRM: initData:', String.fromCharCode.apply(null, new Uint8Array(abInitData)));
+        log('DRM: initData:', String.fromCharCode.apply(null, new Uint8Array(abInitData)));
 
         var supportedKS = protectionExt.getSupportedKeySystems(abInitData);
         if (supportedKS.length === 0) {
