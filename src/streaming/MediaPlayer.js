@@ -59,6 +59,8 @@ import EventBus from './../core/EventBus.js';
 import Events from './../core/events/Events.js';
 import MediaPlayerEvents from './MediaPlayerEvents.js';
 import FactoryMaker from '../core/FactoryMaker.js';
+import Protection from './protection/Protection.js';
+import MetricsReporting from './metrics/MetricsReporting.js';
 //Dash
 import DashAdapter from '../dash/DashAdapter.js';
 import DashParser from '../dash/DashParser.js';
@@ -1604,7 +1606,7 @@ function MediaPlayer() {
         if (protectionController) {
             return protectionController;
         }
-        /* jshint ignore:start */
+
         if (typeof Protection == 'function') {//TODO need a better way to register/detect plugin components
             let protection = Protection(context).create();
             Events.extend(Protection.events);
@@ -1618,7 +1620,7 @@ function MediaPlayer() {
             });
             return protectionController;
         }
-        /* jshint ignore:end */
+
         return null;
     }
 
@@ -1627,7 +1629,6 @@ function MediaPlayer() {
             return metricsReportingController;
         }
 
-        /* jshint ignore:start */
         if (typeof MetricsReporting === 'function') {//TODO need a better way to register/detect plugin components
             let metricsReporting = MetricsReporting(context).create();
 
@@ -1641,7 +1642,7 @@ function MediaPlayer() {
 
             return metricsReportingController;
         }
-        /* jshint ignore:end */
+
         return null;
     }
 
