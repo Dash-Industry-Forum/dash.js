@@ -88,16 +88,16 @@ When it is all done, it should look similar to this:
 
 ### MediaPlayerFactory Setup
 
-Create a video element somewhere in your html and provide the path to your `mpd` file as src. Also ensure that your video element has the `dashjs-player` class applied to it.
+Create a video element somewhere in your html and provide the path to your `mpd` file as src. Also ensure that your video element has the `data-dashjs-player` attribute on to it.
 ```html
-<video class="dashjs-player" autoplay src="http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd" controls="true">
+<video data-dashjs-player autoplay src="http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd" controls="true">
 </video>
 
 ```
 
-Add dash.all.min.js to the end of the body. And add an `onload` attribute to the body element.
+Add dash.all.min.js to the end of the body.
 ```html
-<body onload="dashjs.MediaPlayerFactory.createAll()">
+<body>
   ...
   <script src="yourPathToDash/dash.all.min.js"></script>
 </body>
@@ -110,16 +110,15 @@ When it is all done, it should look similar to this:
     <head>
         <title>Dash.js Rocks</title>
     </head>
-    <body onload="dashjs.MediaPlayerFactory.createAll()">
+    <body>
         <div>
-            <video class="dashjs-player" autoplay src="http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd" controls="true">
+            <video data-dashjs-player autoplay src="http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd" controls="true">
             </video>
         </div>
         <script src="yourPathToDash/dash.all.min.js"></script>
     </body>
 </html>
 ```
-
 
 ## Tested With
 
