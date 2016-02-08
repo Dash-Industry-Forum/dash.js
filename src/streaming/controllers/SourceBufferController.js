@@ -29,10 +29,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import TextSourceBuffer from '../TextSourceBuffer.js';
-import MediaController from '../controllers/MediaController.js';
+import MediaController from './MediaController.js';
 import DashAdapter from '../../dash/DashAdapter.js';
-import ErrorHandler from '../../streaming/ErrorHandler.js';
-import StreamController from '../controllers/StreamController.js';
+import ErrorHandler from '../ErrorHandler.js';
+import StreamController from './StreamController.js';
 import TextTrackExtensions from '../extensions/TextTrackExtensions.js';
 import VTTParser from '../VTTParser.js';
 import TTMLParser from '../TTMLParser.js';
@@ -45,7 +45,7 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 
 const QUOTA_EXCEEDED_ERROR_CODE = 22;
 
-function SourceBufferExtensions() {
+function SourceBufferController() {
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
@@ -388,7 +388,7 @@ function SourceBufferExtensions() {
     return instance;
 }
 
-SourceBufferExtensions.__dashjs_factory_name = 'SourceBufferExtensions';
-let factory = FactoryMaker.getSingletonFactory(SourceBufferExtensions);
+SourceBufferController.__dashjs_factory_name = 'SourceBufferController';
+let factory = FactoryMaker.getSingletonFactory(SourceBufferController);
 factory.QUOTA_EXCEEDED_ERROR_CODE = QUOTA_EXCEEDED_ERROR_CODE;
 export default factory;

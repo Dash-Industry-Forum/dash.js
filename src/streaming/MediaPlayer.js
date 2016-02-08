@@ -37,7 +37,7 @@ import LiveEdgeFinder from './LiveEdgeFinder.js';
 import ErrorHandler from './ErrorHandler.js';
 import Capabilities from './utils/Capabilities.js';
 import TextTrackExtensions from './extensions/TextTrackExtensions.js';
-import SourceBufferExtensions from './extensions/SourceBufferExtensions.js';
+import SourceBufferController from './controllers/SourceBufferController.js';
 import VirtualBuffer from './VirtualBuffer.js';
 import RequestModifier from './utils/RequestModifier.js';
 import TextSourceBuffer from './TextSourceBuffer.js';
@@ -1531,13 +1531,13 @@ function MediaPlayer() {
         let scheduleRulesCollection = ScheduleRulesCollection(context).getInstance();
         scheduleRulesCollection.initialize();
 
-        let sourceBufferExt = SourceBufferExtensions(context).getInstance();
-        sourceBufferExt.setConfig({dashManifestModel: dashManifestModel});
+        let sourceBufferController = SourceBufferController(context).getInstance();
+        sourceBufferController.setConfig({dashManifestModel: dashManifestModel});
 
 
         let virtualBuffer = VirtualBuffer(context).getInstance();
         virtualBuffer.setConfig({
-            sourceBufferExt: sourceBufferExt
+            sourceBufferController: sourceBufferController
         });
 
         mediaController.initialize();

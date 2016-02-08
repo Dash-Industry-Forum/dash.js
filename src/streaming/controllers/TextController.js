@@ -37,7 +37,7 @@ function TextController(config) {
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
 
-    let sourceBufferExt = config.sourceBufferExt;
+    let sourceBufferController = config.sourceBufferController;
     let errHandler = config.errHandler;
 
     let instance,
@@ -75,7 +75,7 @@ function TextController(config) {
      */
     function createBuffer(mediaInfo) {
         try {
-            buffer = sourceBufferExt.createSourceBuffer(mediaSource, mediaInfo);
+            buffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
 
             if (!initialized) {
                 if (buffer.hasOwnProperty('initialize')) {
@@ -112,8 +112,8 @@ function TextController(config) {
         eventBus.off(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
 
         if (!errored) {
-            sourceBufferExt.abort(mediaSource, buffer);
-            sourceBufferExt.removeSourceBuffer(mediaSource, buffer);
+            sourceBufferController.abort(mediaSource, buffer);
+            sourceBufferController.removeSourceBuffer(mediaSource, buffer);
         }
     }
 
@@ -124,7 +124,7 @@ function TextController(config) {
 
     function onInitFragmentLoaded(e) {
         if (e.fragmentModel !== streamProcessor.getFragmentModel() || (!e.chunk.bytes)) return;
-        sourceBufferExt.append(buffer, e.chunk);
+        sourceBufferController.append(buffer, e.chunk);
     }
 
     instance = {

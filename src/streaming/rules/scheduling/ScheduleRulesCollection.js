@@ -35,7 +35,7 @@ import TextSourceBuffer from '../../TextSourceBuffer.js';
 import MetricsModel from '../../models/MetricsModel.js';
 import DashAdapter from '../../../dash/DashAdapter.js';
 import DashMetrics from '../../../dash/DashMetrics.js';
-import SourceBufferExtensions from '../../extensions/SourceBufferExtensions.js';
+import SourceBufferController from '../../controllers/SourceBufferController.js';
 import VirtualBuffer from '../../VirtualBuffer.js';
 
 const FRAGMENTS_TO_SCHEDULE_RULES = 'fragmentsToScheduleRules';
@@ -60,7 +60,7 @@ function ScheduleRulesCollection() {
         }));
         nextFragmentRules.push(NextFragmentRequestRule(context).create({
             adapter: DashAdapter(context).getInstance(),
-            sourceBufferExt: SourceBufferExtensions(context).getInstance(),
+            sourceBufferController: SourceBufferController(context).getInstance(),
             virtualBuffer: VirtualBuffer(context).getInstance(),
             textSourceBuffer: TextSourceBuffer(context).getInstance()
 

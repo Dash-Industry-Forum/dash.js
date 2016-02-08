@@ -46,7 +46,7 @@ function VirtualBuffer() {
 
     let instance,
         data,
-        sourceBufferExt;
+        sourceBufferController;
 
     function setup() {
         data = {};
@@ -104,7 +104,7 @@ function VirtualBuffer() {
         }
 
         sortArrayByProperty(data[streamId][mediaType].appended, 'start');
-        diff = sourceBufferExt.getRangeDifference(bufferedRanges, buffer);
+        diff = sourceBufferController.getRangeDifference(bufferedRanges, buffer);
 
         if (!diff) {
             if (oldChunk) {
@@ -268,7 +268,7 @@ function VirtualBuffer() {
 
         for (var streamId in data) {
             if (data.hasOwnProperty(streamId)) {
-                level += sourceBufferExt.getTotalBufferedTime({buffered: data[streamId][mediaType].calculatedBufferedRanges});
+                level += sourceBufferController.getTotalBufferedTime({buffered: data[streamId][mediaType].calculatedBufferedRanges});
             }
         }
 
@@ -278,8 +278,8 @@ function VirtualBuffer() {
     function setConfig(config) {
         if (!config) return;
 
-        if (config.sourceBufferExt) {
-            sourceBufferExt = config.sourceBufferExt;
+        if (config.sourceBufferController) {
+            sourceBufferController = config.sourceBufferController;
         }
     }
 

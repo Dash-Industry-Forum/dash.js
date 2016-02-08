@@ -42,7 +42,7 @@ import MediaPlayerModel from './models/MediaPlayerModel.js';
 import MetricsModel from './models/MetricsModel.js';
 import FragmentLoader from './FragmentLoader.js';
 import RequestModifier from './utils/RequestModifier.js';
-import SourceBufferExtensions from './extensions/SourceBufferExtensions';
+import SourceBufferController from './controllers/SourceBufferController';
 import TextSourceBuffer from './TextSourceBuffer.js';
 import VirtualBuffer from './VirtualBuffer.js';
 import MediaSourceController from './controllers/MediaSourceController.js';
@@ -267,7 +267,7 @@ function StreamProcessor(config) {
             controller = BufferController(context).create({
                 metricsModel: MetricsModel(context).getInstance(),
                 manifestModel: manifestModel,
-                sourceBufferExt: SourceBufferExtensions(context).getInstance(),
+                sourceBufferController: SourceBufferController(context).getInstance(),
                 errHandler: ErrorHandler(context).getInstance(),
                 mediaSourceController: MediaSourceController(context).getInstance(),
                 streamController: StreamController(context).getInstance(),
@@ -279,7 +279,7 @@ function StreamProcessor(config) {
         }else {
             controller = TextController(context).create({
                 errHandler: ErrorHandler(context).getInstance(),
-                sourceBufferExt: SourceBufferExtensions(context).getInstance()
+                sourceBufferController: SourceBufferController(context).getInstance()
             });
         }
 
