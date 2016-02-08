@@ -36,7 +36,7 @@ import MetricsModel from '../../models/MetricsModel.js';
 import DashAdapter from '../../../dash/DashAdapter.js';
 import DashMetrics from '../../../dash/DashMetrics.js';
 import SourceBufferExtensions from '../../extensions/SourceBufferExtensions.js';
-import VirtualBuffer from '../../utils/VirtualBuffer.js';
+import VirtualBuffer from '../../VirtualBuffer.js';
 
 const FRAGMENTS_TO_SCHEDULE_RULES = 'fragmentsToScheduleRules';
 const NEXT_FRAGMENT_RULES = 'nextFragmentRules';

@@ -31,7 +31,7 @@
 
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-function RequestModifierExtensions() {
+function RequestModifier() {
 
     let instance;
 
@@ -51,5 +51,5 @@ function RequestModifierExtensions() {
     return instance;
 }
 
-RequestModifierExtensions.__dashjs_factory_name = 'RequestModifierExtensions';
-export default FactoryMaker.getSingletonFactory(RequestModifierExtensions);
+RequestModifier.__dashjs_factory_name = 'RequestModifier';
+export default FactoryMaker.getSingletonFactory(RequestModifier);

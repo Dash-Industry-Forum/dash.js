@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import RequestModifierExtensions from '../streaming/extensions/RequestModifierExtensions.js';
+import RequestModifier from '../streaming/utils/RequestModifier.js';
 import Segment from './vo/Segment.js';
 import Error from '../streaming/vo/Error.js';
 import ErrorHandler from '../streaming/ErrorHandler.js';
@@ -47,12 +47,12 @@ function SegmentBaseLoader() {
     let instance,
         errHandler,
         boxParser,
-        requestModifierExt;
+        requestModifier;
 
     function initialize() {
         errHandler = ErrorHandler(context).getInstance();
         boxParser = BoxParser(context).getInstance();
-        requestModifierExt = RequestModifierExtensions(context).getInstance();
+        requestModifier = RequestModifier(context).getInstance();
     }
 
     function loadInitialization(representation, loadingInfo) {
@@ -222,7 +222,7 @@ function SegmentBaseLoader() {
     function reset() {
         errHandler = null;
         boxParser = null;
-        requestModifierExt = null;
+        requestModifier = null;
         log = null;
     }
 
@@ -280,10 +280,10 @@ function SegmentBaseLoader() {
     }
 
     function sendRequest(request, info) {
-        request.open('GET', requestModifierExt.modifyRequestURL(info.url));
+        request.open('GET', requestModifier.modifyRequestURL(info.url));
         request.responseType = 'arraybuffer';
         request.setRequestHeader('Range', 'bytes=' + info.range.start + '-' + info.range.end);
-        request = requestModifierExt.modifyRequestHeader(request);
+        request = requestModifier.modifyRequestHeader(request);
         request.send(null);
     }
 

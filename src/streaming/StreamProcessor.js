@@ -41,10 +41,10 @@ import ScheduleRulesCollection from './rules/scheduling/ScheduleRulesCollection.
 import MediaPlayerModel from './models/MediaPlayerModel.js';
 import MetricsModel from './models/MetricsModel.js';
 import FragmentLoader from './FragmentLoader.js';
-import RequestModifierExtensions from './extensions/RequestModifierExtensions.js';
+import RequestModifier from './utils/RequestModifier.js';
 import SourceBufferExtensions from './extensions/SourceBufferExtensions';
 import TextSourceBuffer from './TextSourceBuffer.js';
-import VirtualBuffer from './utils/VirtualBuffer.js';
+import VirtualBuffer from './VirtualBuffer.js';
 import MediaSourceController from './controllers/MediaSourceController.js';
 import DashManifestModel from '../dash/models/DashManifestModel.js';
 import DashMetrics from '../dash/DashMetrics.js';
@@ -113,7 +113,7 @@ function StreamProcessor(config) {
         fragmentLoader = FragmentLoader(context).create({
             metricsModel: MetricsModel(context).getInstance(),
             errHandler: ErrorHandler(context).getInstance(),
-            requestModifierExt: RequestModifierExtensions(context).getInstance()
+            requestModifier: RequestModifier(context).getInstance()
         });
 
         indexHandler.initialize(this);

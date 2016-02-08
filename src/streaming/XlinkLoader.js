@@ -48,7 +48,7 @@ function XlinkLoader(config) {
 
     let errHandler = config.errHandler;
     let metricsModel = config.metricsModel;
-    let requestModifierExt = config.requestModifierExt;
+    let requestModifier = config.requestModifier;
 
     function load(url, element, resolveObject) {
         if (url === RESOLVE_TO_ZERO) {
@@ -182,7 +182,7 @@ function XlinkLoader(config) {
             request.onloadend = report;
             request.onerror = report;
             request.onprogress = progress;
-            request.open('GET', requestModifierExt.modifyRequestURL(url), true);
+            request.open('GET', requestModifier.modifyRequestURL(url), true);
             request.send();
         } catch (e) {
             log('Xlink loading Error');
