@@ -36,7 +36,7 @@ import ManifestLoader from './ManifestLoader.js';
 import LiveEdgeFinder from './LiveEdgeFinder.js';
 import ErrorHandler from './ErrorHandler.js';
 import Capabilities from './utils/Capabilities.js';
-import TextTrackExtensions from './extensions/TextTrackExtensions.js';
+import TextTracks from './TextTracks.js';
 import SourceBufferController from './controllers/SourceBufferController.js';
 import VirtualBuffer from './VirtualBuffer.js';
 import RequestModifier from './utils/RequestModifier.js';
@@ -1394,10 +1394,10 @@ function MediaPlayer() {
      * @instance
      */
     function displayCaptionsOnTop(value) {
-        let textTrackExt = TextTrackExtensions(context).getInstance();
-        textTrackExt.setConfig({videoModel: videoModel});
-        textTrackExt.initialize();
-        textTrackExt.displayCConTop(value);
+        let textTracks = TextTracks(context).getInstance();
+        textTracks.setConfig({videoModel: videoModel});
+        textTracks.initialize();
+        textTracks.displayCConTop(value);
     }
 
     /**

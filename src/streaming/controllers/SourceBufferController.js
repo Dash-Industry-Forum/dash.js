@@ -33,7 +33,7 @@ import MediaController from './MediaController.js';
 import DashAdapter from '../../dash/DashAdapter.js';
 import ErrorHandler from '../ErrorHandler.js';
 import StreamController from './StreamController.js';
-import TextTrackExtensions from '../extensions/TextTrackExtensions.js';
+import TextTracks from '../TextTracks.js';
 import VTTParser from '../VTTParser.js';
 import TTMLParser from '../TTMLParser.js';
 import VideoModel from '../models/VideoModel.js';
@@ -79,7 +79,7 @@ function SourceBufferController() {
                     mediaController: MediaController(context).getInstance(),
                     videoModel: VideoModel(context).getInstance(),
                     streamController: StreamController(context).getInstance(),
-                    textTrackExtensions: TextTrackExtensions(context).getInstance(),
+                    textTracks: TextTracks(context).getInstance(),
                     VTTParser: VTTParser(context).getInstance(),
                     TTMLParser: TTMLParser(context).getInstance()
 
