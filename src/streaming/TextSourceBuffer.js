@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import TextTrackInfo from './vo/TextTrackInfo.js';
-import FragmentExtensions from '../dash/extensions/FragmentExtensions.js';
+import FragmentedTextBoxParser from '../dash/utils/FragmentedTextBoxParser.js';
 import BoxParser from './utils/BoxParser.js';
 import CustomTimeRanges from './utils/CustomTimeRanges.js';
 import FactoryMaker from '../core/FactoryMaker.js';
@@ -55,7 +55,7 @@ function TextSourceBuffer() {
         parser,
         VTTParser,
         TTMLParser,
-        fragmentExt,
+        fragmentedTextBoxParser,
         mediaInfos,
         textTrackExtensions,
         isFragmented,
@@ -77,7 +77,6 @@ function TextSourceBuffer() {
     function initialize(type, bufferController) {
         allTracksAreDisabled = false;
         parser = null;
-        fragmentExt = null;
         fragmentModel = null;
         initializationSegmentReceived = false;
         timescale = NaN;
@@ -95,8 +94,9 @@ function TextSourceBuffer() {
         textTrackExtensions.initialize();
         isFragmented = !dashManifestModel.getIsTextTrack(type);
         boxParser = BoxParser(context).getInstance();
-        fragmentExt = FragmentExtensions(context).getInstance();
-        fragmentExt.setConfig({boxParser: boxParser});
+        fragmentedTextBoxParser = FragmentedTextBoxParser(context).getInstance();
+        fragmentedTextBoxParser.setConfig({boxParser: boxParser});
+
         if (isFragmented) {
             fragmentModel = streamProcessor.getFragmentModel();
             this.buffered =  CustomTimeRanges(context).create();
@@ -119,8 +119,8 @@ function TextSourceBuffer() {
         textTrackExtensions.setConfig({videoModel: videoModel});
         textTrackExtensions.initialize();
         boxParser = BoxParser(context).getInstance();
-        fragmentExt = FragmentExtensions(context).getInstance();
-        fragmentExt.setConfig({boxParser: boxParser});
+        fragmentedTextBoxParser = FragmentedTextBoxParser(context).getInstance();
+        fragmentedTextBoxParser.setConfig({boxParser: boxParser});
         isFragmented = false;
         currFragmentedTrackIdx = null;
         embeddedInitializationSegmentReceived = false;
@@ -181,9 +181,9 @@ function TextSourceBuffer() {
                 for (i = 0; i < mediaInfos.length; i++) {
                     createTextTrackFromMediaInfo(null, mediaInfos[i]);
                 }
-                timescale = fragmentExt.getMediaTimescaleFromMoov(bytes);
+                timescale = fragmentedTextBoxParser.getMediaTimescaleFromMoov(bytes);
             } else {
-                samplesInfo = fragmentExt.getSamplesInfo(bytes);
+                samplesInfo = fragmentedTextBoxParser.getSamplesInfo(bytes);
                 sampleList = samplesInfo.sampleList;
                 for (i = 0 ; i < sampleList.length ; i++) {
                     if (!firstSubtitleStart) {
@@ -214,7 +214,7 @@ function TextSourceBuffer() {
         } else if (mediaType === 'video') { //embedded text
             if (chunk.segmentType === 'Initialization Segment') {
                 if (embeddedTimescale === 0) {
-                    embeddedTimescale = fragmentExt.getMediaTimescaleFromMoov(bytes);
+                    embeddedTimescale = fragmentedTextBoxParser.getMediaTimescaleFromMoov(bytes);
                     for (i = 0; i < embeddedTracks.length; i++) {
                         createTextTrackFromMediaInfo(null, embeddedTracks[i]);
                     }
@@ -242,7 +242,7 @@ function TextSourceBuffer() {
                 };
 
 
-                samplesInfo = fragmentExt.getSamplesInfo(bytes);
+                samplesInfo = fragmentedTextBoxParser.getSamplesInfo(bytes);
                 var sequenceNumber = samplesInfo.sequenceNumber;
 
                 if (!embeddedCea608FieldParsers[0] && !embeddedCea608FieldParsers[1]) {
@@ -659,7 +659,7 @@ function TextSourceBuffer() {
         textTrackExtensions.deleteAllTextTracks();
         allTracksAreDisabled = false;
         parser = null;
-        fragmentExt = null;
+        fragmentedTextBoxParser = null;
         mediaInfos = null;
         textTrackExtensions = null;
         isFragmented = false;

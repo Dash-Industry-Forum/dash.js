@@ -29,15 +29,15 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import Representation from './vo/Representation.js';
-import AdaptationSet from './vo/AdaptationSet.js';
-import Period from './vo/Period.js';
-import Mpd from './vo/Mpd.js';
-import UTCTiming from './vo/UTCTiming.js';
-import TimelineConverter from './TimelineConverter.js';
-import Event from './vo/Event.js';
-import EventStream from './vo/EventStream.js';
-import FactoryMaker from '../core/FactoryMaker.js';
+import Representation from './../vo/Representation.js';
+import AdaptationSet from './../vo/AdaptationSet.js';
+import Period from './../vo/Period.js';
+import Mpd from './../vo/Mpd.js';
+import UTCTiming from './../vo/UTCTiming.js';
+import TimelineConverter from './../TimelineConverter.js';
+import Event from './../vo/Event.js';
+import EventStream from './../vo/EventStream.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
 function DashManifestModel() {
 

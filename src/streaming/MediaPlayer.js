@@ -62,9 +62,9 @@ import FactoryMaker from '../core/FactoryMaker.js';
 //Dash
 import DashAdapter from '../dash/DashAdapter.js';
 import DashParser from '../dash/DashParser.js';
-import DashManifestModel from '../dash/DashManifestModel.js';
+import DashManifestModel from '../dash/models/DashManifestModel.js';
 import DashMetrics from '../dash/DashMetrics.js';
-import TimelineConverter from '../dash/TimelineConverter.js';
+import TimelineConverter from '../dash/utils/TimelineConverter.js';
 
 
 /**

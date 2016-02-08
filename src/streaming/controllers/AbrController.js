@@ -39,7 +39,7 @@ import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import ManifestModel from '../models/ManifestModel.js';
-import DashManifestModel from '../../dash/DashManifestModel.js';
+import DashManifestModel from '../../dash/models/DashManifestModel.js';
 import VideoModel from '../models/VideoModel.js';
 
 const ABANDON_LOAD = 'abandonload';

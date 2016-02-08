@@ -30,7 +30,7 @@
  */
 
 import FactoryMaker from '../../../core/FactoryMaker.js';
-import TimelineConverter from '../../../dash/TimelineConverter.js';
+import TimelineConverter from '../../../dash/utils/TimelineConverter.js';
 import LiveEdgeBinarySearchRule from './LiveEdgeBinarySearchRule.js';
 import LiveEdgeWithTimeSynchronizationRule from './LiveEdgeWithTimeSynchronizationRule.js';
 import DashAdapter from '../../../dash/DashAdapter.js';

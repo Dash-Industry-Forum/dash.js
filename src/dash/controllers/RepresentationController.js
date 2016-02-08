@@ -28,9 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import DashManifestModel from '../DashManifestModel.js';
+import DashManifestModel from '../models/DashManifestModel.js';
 import DashMetrics from '../DashMetrics.js';
-import TimelineConverter from '../TimelineConverter.js';
+import TimelineConverter from '../utils/TimelineConverter.js';
 import AbrController from '../../streaming/controllers/AbrController.js';
 import PlaybackController from '../../streaming/controllers/PlaybackController.js';
 import StreamController from '../../streaming/controllers/StreamController.js';

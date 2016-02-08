@@ -31,7 +31,7 @@
 
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-function FragmentExtensions(/*config*/) {
+function FragmentedTextBoxParser() {
 
     let instance,
         boxParser;
@@ -104,5 +104,5 @@ function FragmentExtensions(/*config*/) {
     return instance;
 }
 
-FragmentExtensions.__dashjs_factory_name = 'FragmentExtensions';
-export default FactoryMaker.getSingletonFactory(FragmentExtensions);
+FragmentedTextBoxParser.__dashjs_factory_name = 'FragmentedTextBoxParser';
+export default FactoryMaker.getSingletonFactory(FragmentedTextBoxParser);
