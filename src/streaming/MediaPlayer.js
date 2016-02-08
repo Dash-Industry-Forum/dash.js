@@ -1604,7 +1604,8 @@ function MediaPlayer() {
         if (protectionController) {
             return protectionController;
         }
-        /* jshint ignore:start */
+        // do not require Protection as dependencies as this is optional and intended to be loaded separately
+        let Protection = dashjs.Protection; /* jshint ignore:line */
         if (typeof Protection == 'function') {//TODO need a better way to register/detect plugin components
             let protection = Protection(context).create();
             Events.extend(Protection.events);
@@ -1618,7 +1619,7 @@ function MediaPlayer() {
             });
             return protectionController;
         }
-        /* jshint ignore:end */
+
         return null;
     }
 
@@ -1626,8 +1627,8 @@ function MediaPlayer() {
         if (metricsReportingController) {
             return metricsReportingController;
         }
-
-        /* jshint ignore:start */
+        // do not require MetricsReporting as dependencies as this is optional and intended to be loaded separately
+        let MetricsReporting = dashjs.MetricsReporting; /* jshint ignore:line */
         if (typeof MetricsReporting === 'function') {//TODO need a better way to register/detect plugin components
             let metricsReporting = MetricsReporting(context).create();
 
@@ -1641,7 +1642,7 @@ function MediaPlayer() {
 
             return metricsReportingController;
         }
-        /* jshint ignore:end */
+
         return null;
     }
 
