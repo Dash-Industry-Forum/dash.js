@@ -65,12 +65,10 @@ import DashParser from '../dash/DashParser.js';
 import DashManifestExtensions from '../dash/extensions/DashManifestExtensions.js';
 import DashMetricsExtensions from '../dash/extensions/DashMetricsExtensions.js';
 import TimelineConverter from '../dash/TimelineConverter.js';
-import MediaPlayerFactory from '../streaming/MediaPlayerFactory.js';
 
 
 /**
  * @Module MediaPlayer
- * @return {{initialize: initialize, on: module.on, off: module.off, extend: extend, attachView: module.attachView, attachSource: module.attachSource, isReady: module.isReady, play: module.play, isPaused: isPaused, pause: pause, isSeeking: isSeeking, seek: module.seek, setMute: setMute, isMuted: isMuted, setVolume: setVolume, getVolume: getVolume, time: module.time, duration: module.duration, timeAsUTC: module.timeAsUTC, durationAsUTC: module.durationAsUTC, getDVRWindowSize: module.getDVRWindowSize, getDVRSeekOffset: module.getDVRSeekOffset, convertToTimeCode: module.convertToTimeCode, formatUTC: module.formatUTC, getVersion: module.getVersion, getDebug: module.getDebug, getVideoModel: module.getVideoModel, getVideoContainer: module.getVideoContainer, setLiveDelayFragmentCount: module.setLiveDelayFragmentCount, useSuggestedPresentationDelay: module.useSuggestedPresentationDelay, enableLastBitrateCaching: module.enableLastBitrateCaching, enableLastMediaSettingsCaching: module.enableLastMediaSettingsCaching, setMaxAllowedBitrateFor: module.setMaxAllowedBitrateFor, getMaxAllowedBitrateFor: module.getMaxAllowedBitrateFor, setMaxAllowedRepresentationRatioFor: module.setMaxAllowedRepresentationRatioFor, getMaxAllowedRepresentationRatioFor: module.getMaxAllowedRepresentationRatioFor, setAutoPlay: module.setAutoPlay, getAutoPlay: module.getAutoPlay, setScheduleWhilePaused: module.setScheduleWhilePaused, getScheduleWhilePaused: module.getScheduleWhilePaused, getMetricsExt: module.getMetricsExt, getMetricsFor: module.getMetricsFor, getQualityFor: module.getQualityFor, setQualityFor: module.setQualityFor, getLimitBitrateByPortal: module.getLimitBitrateByPortal, setLimitBitrateByPortal: module.setLimitBitrateByPortal, setTextTrack: module.setTextTrack, getBitrateInfoListFor: module.getBitrateInfoListFor, setInitialBitrateFor: module.setInitialBitrateFor, getInitialBitrateFor: module.getInitialBitrateFor, setInitialRepresentationRatioFor: module.setInitialRepresentationRatioFor, getInitialRepresentationRatioFor: module.getInitialRepresentationRatioFor, getStreamsFromManifest: module.getStreamsFromManifest, getTracksFor: module.getTracksFor, getTracksForTypeFromManifest: module.getTracksForTypeFromManifest, getCurrentTrackFor: module.getCurrentTrackFor, setInitialMediaSettingsFor: module.setInitialMediaSettingsFor, getInitialMediaSettingsFor: module.getInitialMediaSettingsFor, setCurrentTrack: module.setCurrentTrack, getTrackSwitchModeFor: module.getTrackSwitchModeFor, setTrackSwitchModeFor: module.setTrackSwitchModeFor, setSelectionModeForInitialTrack: module.setSelectionModeForInitialTrack, getSelectionModeForInitialTrack: module.getSelectionModeForInitialTrack, getAutoSwitchQuality: module.getAutoSwitchQuality, setAutoSwitchQuality: module.setAutoSwitchQuality, getAutoSwitchQualityFor: module.getAutoSwitchQualityFor, setAutoSwitchQualityFor: module.setAutoSwitchQualityFor, setBandwidthSafetyFactor: module.setBandwidthSafetyFactor, getBandwidthSafetyFactor: module.getBandwidthSafetyFactor, setAbandonLoadTimeout: module.setAbandonLoadTimeout, retrieveManifest: module.retrieveManifest, addUTCTimingSource: module.addUTCTimingSource, removeUTCTimingSource: module.removeUTCTimingSource, clearDefaultUTCTimingSources: module.clearDefaultUTCTimingSources, restoreDefaultUTCTimingSources: module.restoreDefaultUTCTimingSources, setBufferToKeep: module.setBufferToKeep, setBufferPruningInterval: module.setBufferPruningInterval, setStableBufferTime: module.setStableBufferTime, setBufferTimeAtTopQuality: module.setBufferTimeAtTopQuality, setFragmentLoaderRetryAttempts: module.setFragmentLoaderRetryAttempts, setFragmentLoaderRetryInterval: module.setFragmentLoaderRetryInterval, setBufferTimeAtTopQualityLongForm: module.setBufferTimeAtTopQualityLongForm, setLongFormContentDurationThreshold: module.setLongFormContentDurationThreshold, setRichBufferThreshold: module.setRichBufferThreshold, getProtectionController: module.getProtectionController, attachProtectionController: module.attachProtectionController, setProtectionData: module.setProtectionData, enableManifestDateHeaderTimeSource: module.enableManifestDateHeaderTimeSource, displayCaptionsOnTop: module.displayCaptionsOnTop, attachVideoContainer: module.attachVideoContainer, attachTTMLRenderingDiv: module.attachTTMLRenderingDiv, reset: module.reset}|*}
  */
 function MediaPlayer() {
 
@@ -116,6 +114,7 @@ function MediaPlayer() {
         protectionData = null;
         adapter = null;
         Events.extend(MediaPlayerEvents);
+        mediaPlayerModel = MediaPlayerModel(context).getInstance();
     }
 
     function initialize(view, source, AutoPlay) {
@@ -132,7 +131,7 @@ function MediaPlayer() {
         mediaPlayerInitialized = true;
 
         abrController = AbrController(context).getInstance();
-        mediaPlayerModel = MediaPlayerModel(context).getInstance();
+
         playbackController = PlaybackController(context).getInstance();
         mediaController = MediaController(context).getInstance();
         mediaController.initialize();
@@ -796,8 +795,8 @@ function MediaPlayer() {
      * Use this method to change the current text track for both external time text files and fragmented text tracks. There is no need to
      * set the track mode on the video object to switch a track when using this method.
      *
-     * @param idx - Index of track based on the order of the order the tracks are added Use -1 to disable all tracks. (turn captions off).  Use module:MediaPlayer#MediaPlayer.events.TEXT_TRACK_ADDED.
-     * @see {@link module:MediaPlayer#MediaPlayer.events.TEXT_TRACK_ADDED}
+     * @param idx - Index of track based on the order of the order the tracks are added Use -1 to disable all tracks. (turn captions off).  Use module:MediaPlayer#dashjs.MediaPlayer.events.TEXT_TRACK_ADDED.
+     * @see {@link module:MediaPlayer#dashjs.MediaPlayer.events.TEXT_TRACK_ADDED}
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1099,6 +1098,19 @@ function MediaPlayer() {
      */
     function setAutoSwitchQualityFor(type, value) {
         abrController.setAutoSwitchBitrateFor(type, value);
+    }
+
+
+    /**
+     * Need Doc
+     *
+     * @param value {boolean}
+     * @default {boolean} false
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function enableBufferOccupancyABR(value) {
+        mediaPlayerModel.setBufferOccupancyABREnabled(value);
     }
 
     /**
@@ -1702,6 +1714,7 @@ function MediaPlayer() {
         setAutoSwitchQuality: setAutoSwitchQuality,
         getAutoSwitchQualityFor: getAutoSwitchQualityFor,
         setAutoSwitchQualityFor: setAutoSwitchQualityFor,
+        enableBufferOccupancyABR: enableBufferOccupancyABR,
         setBandwidthSafetyFactor: setBandwidthSafetyFactor,
         getBandwidthSafetyFactor: getBandwidthSafetyFactor,
         setAbandonLoadTimeout: setAbandonLoadTimeout,
@@ -1736,6 +1749,5 @@ function MediaPlayer() {
 
 MediaPlayer.__dashjs_factory_name = 'MediaPlayer';
 let factory = FactoryMaker.getClassFactory(MediaPlayer);
-factory.MediaPlayerFactory = MediaPlayerFactory().getInstance();
 factory.events = MediaPlayerEvents;
 export default factory;

@@ -28,23 +28,22 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import BufferController from '../../controllers/BufferController.js';
-class BufferState {
-    /**
-     * @description This Object holds reference to the current buffer state of the video element.
-     */
-    constructor() {
-        /**
-         * The Buffer Level Target determined by the BufferLevelRule.
-         * @public
-         */
-        this.target = null;
-        /**
-         * Current buffer state. Will be BufferController.BUFFER_EMPTY or BufferController.BUFFER_LOADED.
-         * @public
-         */
-        this.state = BufferController.BUFFER_EMPTY;
-    }
-}
 
-export default BufferState;
+import MediaPlayer from './src/streaming/MediaPlayer.js';
+import Protection from './src/streaming/protection/Protection.js';
+import MetricsReporting from './src/streaming/metrics/MetricsReporting.js';
+import MediaPlayerFactory from './src/streaming/MediaPlayerFactory.js';
+
+
+// Shove both of these into the global scope
+var context = window || global;
+
+context.dashjs = {
+    MediaPlayer: MediaPlayer,
+    Protection: Protection,
+    MetricsReporting: MetricsReporting,
+    MediaPlayerFactory: MediaPlayerFactory
+};
+
+export default context.dashjs;
+export { MediaPlayer, Protection, MetricsReporting, MediaPlayerFactory };

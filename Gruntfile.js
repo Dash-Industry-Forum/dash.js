@@ -122,7 +122,7 @@ module.exports = function (grunt) {
                 options: {
                     browserifyOptions: {
                         debug: true,
-                        standalone: 'MediaPlayer'
+                        standalone: 'dashjs.MediaPlayer'
                     },
                     plugin: [
                       ['browserify-derequire']
@@ -137,7 +137,7 @@ module.exports = function (grunt) {
                 options: {
                     browserifyOptions: {
                         debug: true,
-                        standalone: 'Protection'
+                        standalone: 'dashjs.Protection'
                     },
                     plugin: [
                         ['browserify-derequire']
@@ -152,7 +152,7 @@ module.exports = function (grunt) {
                 options: {
                     browserifyOptions: {
                         debug: true,
-                        standalone: 'MetricsReporting'
+                        standalone: 'dashjs.MetricsReporting'
                     },
                     plugin: [
                         ['browserify-derequire']
@@ -162,11 +162,11 @@ module.exports = function (grunt) {
             },
             all: {
                 files: {
-                    'build/temp/dash.all.debug.js': ['src/All.js']
+                    'build/temp/dash.all.debug.js': ['index.js']
                 },
                 options: {
                     browserifyOptions: {
-                        debug: true,
+                        debug: true
                     },
                     plugin: [
                         ['browserify-derequire']
@@ -177,7 +177,7 @@ module.exports = function (grunt) {
 
             watch: {
                 files: {
-                    'build/temp/dash.all.debug.js': ['src/All.js']
+                    'build/temp/dash.all.debug.js': ['index.js']
                 },
                 options: {
                     watch: true,
@@ -195,7 +195,7 @@ module.exports = function (grunt) {
         jsdoc: {
             dist: {
                 options: {
-                    destination: 'docs/jsdocs',
+                    destination: 'docs/jsdoc',
                     configure: 'build/jsdoc/jsdoc_conf.json'
                 }
             }

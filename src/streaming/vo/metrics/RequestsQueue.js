@@ -30,8 +30,21 @@
  */
 
 class RequestsQueue {
+    /**
+     * @description This Object holds reference to Fragment Model's request queues
+     */
     constructor() {
+
+        /**
+         * Array of all of the requests that have begun to load
+         * This request may not make it into the executed queue if it is abandon due to ABR rules for example.
+         * @public
+         */
         this.loadingRequests = [];
+        /**
+         * Array of the The requests that have completed
+         * @public
+         */
         this.executedRequests = [];
     }
 }

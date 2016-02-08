@@ -29,6 +29,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 class BufferLevel {
+    /**
+     * @description This Object holds reference to the current buffer level and the time it was recorded.
+     */
     constructor() {
         /**
          * Real-Time | Time of the measurement of the buffer level.

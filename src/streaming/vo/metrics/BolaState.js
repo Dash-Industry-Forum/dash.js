@@ -3,7 +3,7 @@
  * included below. This software may be subject to other third party and contributor
  * rights, including patent rights, and no such rights are granted under this license.
  *
- * Copyright (c) 2013, Dash Industry Forum.
+ * Copyright (c) 2016, Dash Industry Forum.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -28,14 +28,18 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+/**
+ * @class
+ * @ignore
+ */
+class BolaState {
+    constructor() {
+        /**
+         * number
+         * @private
+         */
+        this.s = undefined;
+    }
+}
 
-import MediaPlayer from './streaming/MediaPlayer.js';
-import Protection from './streaming/protection/Protection.js';
-import MetricsReporting from './streaming/metrics/MetricsReporting.js';
-
-
-// Shove both of these into the global scope
-var context = window || global;
-context.MediaPlayer = MediaPlayer;
-context.Protection = Protection;
-context.MetricsReporting = MetricsReporting;
+export default BolaState;
