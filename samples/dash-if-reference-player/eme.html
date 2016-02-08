@@ -81,27 +81,25 @@
 
         <div class="row">
             <div class="input-group">
-                <div id="desktop-streams" class="input-group-btn">
-                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-                        Stream <span class="caret"></span>
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li
-                            ng-repeat="item in availableStreams"
-                            ng-click="setStream(item)">
-                            <a>{{item.name}}</a>
+                <div class="input-group-btn">
+                    <a role="button" data-toggle="dropdown" class="btn btn-primary" data-target="#" href="/page.html">
+                        Sample Streams <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu multi-level" role="menu" aria-labelledby="dropdownMenu">
+                        <li class="dropdown-submenu" ng-if="item.submenu" ng-repeat="item in availableStreams">
+
+                            <a tabindex="-1" href="#">{{item.name}}</a>
+                            <ul class="dropdown-menu">
+                                <li ng-repeat="subitem in item.submenu">
+                                    <a ng-click="setStream(subitem)">{{subitem.name}}</a>
+                                </li>
+                            </ul>
                         </li>
                     </ul>
                 </div>
-                <div id="mobile-streams" class="input-group-btn">
-                    <button type="button" class="btn btn-primary" data-toggle="modal" href="#streamModal">
-                        Stream <span class="caret"></span>
-                    </button>
-                </div>
-                <input type="text" class="form-control" placeholder="manifest" ng-model="selectedItem.url">
+                <input type="text" class="form-control" placeholder="Enter your manifest URL here" ng-model="selectedItem.url">
                 <span class="input-group-btn">
-                    <button class="btn btn-primary" type="button" ng-click="doLoad()">Play</button>
-                    <button class="btn btn-primary" type="button" ng-click="doLicenseFetch()">Fetch Licenses</button>
+                    <button class="btn btn-primary" type="button" ng-click="doLoad()">Load</button>
                 </span>
             </div>
         </div>
