@@ -53,7 +53,6 @@ import RulesController from './rules/RulesController.js';
 import ScheduleRulesCollection from './rules/scheduling/ScheduleRulesCollection.js';
 import SynchronizationRulesCollection from './rules/synchronization/SynchronizationRulesCollection.js';
 import MediaSourceController from './controllers/MediaSourceController.js';
-import VideoModelExtensions from './extensions/VideoModelExtensions.js';
 import Debug from './../core/Debug.js';
 import EventBus from './../core/EventBus.js';
 import Events from './../core/events/Events.js';
@@ -1564,7 +1563,6 @@ function MediaPlayer() {
             adapter: adapter,
             metricsModel: metricsModel,
             dashMetrics: dashMetrics,
-            videoModelExt: VideoModelExtensions(context).getInstance(),
             liveEdgeFinder: LiveEdgeFinder(context).getInstance(),
             mediaSourceController: MediaSourceController(context).getInstance(),
             timeSyncController: TimeSyncController(context).getInstance(),

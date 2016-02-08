@@ -32,10 +32,10 @@
 /**
  * Represents data structure to keep and drive {@link DataChunk}
  */
-import MediaController from 'controllers/MediaController.js';
+import MediaController from './controllers/MediaController.js';
 import CustomTimeRanges from './utils/CustomTimeRanges.js';
-import HTTPRequest from 'vo/metrics/HTTPRequest.js';
-import EventBus from './../core/EventBus.js';
+import HTTPRequest from './vo/metrics/HTTPRequest.js';
+import EventBus from '../core/EventBus.js';
 import Events from '../core/events/Events.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
