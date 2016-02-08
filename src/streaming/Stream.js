@@ -38,7 +38,7 @@ import VideoModel from './models/VideoModel.js';
 import MetricsModel from './models/MetricsModel.js';
 import PlaybackController from './controllers/PlaybackController.js';
 import DashHandler from '../dash/DashHandler.js';
-import BaseURLExtensions from '../dash/extensions/BaseURLExtensions.js';
+import SegmentBaseLoader from '../dash/SegmentBaseLoader.js';
 import DashMetricsExtensions from '../dash/extensions/DashMetricsExtensions.js';
 import EventBus from '../core/EventBus.js';
 import Events from '../core/events/Events.js';
@@ -294,11 +294,11 @@ function Stream(config) {
 
     function createIndexHandler() {
 
-        let baseUrlExt = BaseURLExtensions(context).getInstance();
-        baseUrlExt.initialize();
+        let segmentBaseLoader = SegmentBaseLoader(context).getInstance();
+        segmentBaseLoader.initialize();
 
         let handler = DashHandler(context).create({
-            baseURLExt: baseUrlExt,
+            segmentBaseLoader: segmentBaseLoader,
             timelineConverter: timelineConverter,
             metricsExt: DashMetricsExtensions(context).getInstance(),
             metricsModel: MetricsModel(context).getInstance()

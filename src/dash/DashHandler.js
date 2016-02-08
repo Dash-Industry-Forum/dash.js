@@ -45,7 +45,7 @@ function DashHandler(config) {
     let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
 
-    let baseURLExt = config.baseURLExt;
+    let segmentBaseLoader = config.segmentBaseLoader;
     let timelineConverter = config.timelineConverter;
     let metricsExt = config.metricsExt;
     let metricsModel = config.metricsModel;
@@ -734,11 +734,11 @@ function DashHandler(config) {
         }
 
         if (!hasInitialization) {
-            baseURLExt.loadInitialization(representation);
+            segmentBaseLoader.loadInitialization(representation);
         }
 
         if (!hasSegments) {
-            baseURLExt.loadSegments(representation, type, representation.indexRange);
+            segmentBaseLoader.loadSegments(representation, type, representation.indexRange);
         }
 
         if (hasInitialization && hasSegments) {
