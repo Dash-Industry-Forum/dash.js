@@ -41,7 +41,7 @@ function BufferOccupancyRule(config) {
     let log = Debug(context).getInstance().log;
 
     let metricsModel = config.metricsModel;
-    let metricsExt = config.metricsExt;
+    let dashMetrics = config.dashMetrics;
 
     let lastSwitchTime,
         mediaPlayerModel;
@@ -61,7 +61,7 @@ function BufferOccupancyRule(config) {
         var streamProcessor = rulesContext.getStreamProcessor();
         var abrController = streamProcessor.getABRController();
         var metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
-        var lastBufferLevel = metricsExt.getCurrentBufferLevel(metrics);
+        var lastBufferLevel = dashMetrics.getCurrentBufferLevel(metrics);
         var lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
         var isBufferRich = false;
         var maxIndex = mediaInfo.representationCount - 1;

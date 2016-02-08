@@ -39,7 +39,7 @@ function BolaAbandonRule(config) {
     const GRACE_PERIOD_MS = 250;
 
     let context = this.context;
-    let metricsExt = config.metricsExt;
+    let dashMetrics = config.dashMetrics;
     let metricsModel = config.metricsModel;
 
     let instance,
@@ -93,7 +93,7 @@ function BolaAbandonRule(config) {
         let bytesRemaining = bytesTotal - bytesLoaded;
 
         let estimateOtherBytesTotal = bytesTotal * bolaState.bitrate[0] / bolaState.bitrate[quality];
-        let bufferLevel = metricsExt.getCurrentBufferLevel(metrics) ? metricsExt.getCurrentBufferLevel(metrics) : 0.0;
+        let bufferLevel = dashMetrics.getCurrentBufferLevel(metrics) ? dashMetrics.getCurrentBufferLevel(metrics) : 0.0;
 
         if (elapsedTimeMilliSeconds < GRACE_PERIOD_MS || bytesRemaining <= estimateOtherBytesTotal || bufferLevel > bolaState.bufferTarget) {
             // Do not abandon if we need to download less bytes than the size of the lowest quality fragment.

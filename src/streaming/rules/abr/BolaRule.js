@@ -57,7 +57,7 @@ function BolaRule(config) {
     const MINIMUM_BUFFER_LEVEL_SPACING = 5.0;
 
     let context = this.context;
-    let metricsExt = config.metricsExt;
+    let dashMetrics = config.dashMetrics;
     let metricsModel = config.metricsModel;
     let eventBus = EventBus(context).getInstance();
 
@@ -201,7 +201,7 @@ function BolaRule(config) {
     }
 
     function getLastHttpRequest(metrics) {
-        let httpRequests = metricsExt.getHttpRequests(metrics);
+        let httpRequests = dashMetrics.getHttpRequests(metrics);
         for (let i = httpRequests.length - 1; i >= 0; --i) {
             let request = httpRequests[i];
             if (request.type === HTTPRequest.MEDIA_SEGMENT_TYPE && request._tfinish && request.tresponse) {
@@ -322,7 +322,7 @@ function BolaRule(config) {
 
         if (BOLA_DEBUG) console.log('BolaDebug ' + mediaType + '\nBolaDebug ' + mediaType + ' EXECUTE BolaRule for state=' + bolaState.state + ' fragmentStart=' + adapter.getIndexHandlerTime(rulesContext.getStreamProcessor()).toFixed(3));
 
-        let bufferLevel = metricsExt.getCurrentBufferLevel(metrics) ? metricsExt.getCurrentBufferLevel(metrics) : 0.0;
+        let bufferLevel = dashMetrics.getCurrentBufferLevel(metrics) ? dashMetrics.getCurrentBufferLevel(metrics) : 0.0;
         let bolaQuality = getQualityFromBufferLevel(bolaState, bufferLevel);
         let lastThroughput = getLastThroughput(metrics, mediaType);
 

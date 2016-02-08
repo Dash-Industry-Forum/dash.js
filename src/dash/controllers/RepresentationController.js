@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import DashManifestModel from '../DashManifestModel.js';
-import DashMetricsExtensions from '../extensions/DashMetricsExtensions.js';
+import DashMetrics from '../DashMetrics.js';
 import TimelineConverter from '../TimelineConverter.js';
 import AbrController from '../../streaming/controllers/AbrController.js';
 import PlaybackController from '../../streaming/controllers/PlaybackController.js';
@@ -66,7 +66,7 @@ function RepresentationController() {
         domStorage,
         timelineConverter,
         dashManifestModel,
-        metricsExt,
+        dashMetrics,
         mediaPlayerModel;
 
     function setup() {
@@ -83,7 +83,7 @@ function RepresentationController() {
         domStorage = DOMStorage(context).getInstance();
         timelineConverter = TimelineConverter(context).getInstance();
         dashManifestModel = DashManifestModel(context).getInstance();
-        metricsExt = DashMetricsExtensions(context).getInstance();
+        dashMetrics = DashMetrics(context).getInstance();
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
 
         eventBus.on(Events.QUALITY_CHANGED, onQualityChanged, instance);
@@ -138,7 +138,7 @@ function RepresentationController() {
         domStorage = null;
         timelineConverter = null;
         dashManifestModel = null;
-        metricsExt = null;
+        dashMetrics = null;
         mediaPlayerModel = null;
 
     }
@@ -269,7 +269,7 @@ function RepresentationController() {
         var r = e.representation;
         var streamMetrics = metricsModel.getMetricsFor('stream');
         var metrics = metricsModel.getMetricsFor(getCurrentRepresentation().adaptation.type);
-        var manifestUpdateInfo = metricsExt.getCurrentManifestUpdate(streamMetrics);
+        var manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(streamMetrics);
 
         var repInfo,
             err,
@@ -314,7 +314,7 @@ function RepresentationController() {
             abrController.setPlaybackQuality(streamProcessor.getType(), streamProcessor.getStreamInfo(), getQualityForRepresentation(currentRepresentation));
             metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentRepresentation.segmentAvailabilityRange.end - playbackController.getTime()});
 
-            repSwitch = metricsExt.getCurrentRepresentationSwitch(metrics);
+            repSwitch = dashMetrics.getCurrentRepresentationSwitch(metrics);
 
             if (!repSwitch) {
                 addRepresentationSwitch();

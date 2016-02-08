@@ -50,7 +50,7 @@ function ScheduleController(config) {
     let metricsModel = config.metricsModel;
     let manifestModel = config.manifestModel;
     let adapter = config.adapter;
-    let metricsExt = config.metricsExt;
+    let dashMetrics = config.dashMetrics;
     let dashManifestModel = config.dashManifestModel;
     let timelineConverter = config.timelineConverter;
     let scheduleRulesCollection = config.scheduleRulesCollection;
@@ -360,7 +360,7 @@ function ScheduleController(config) {
         }
 
         let metrics = metricsModel.getMetricsFor('stream');
-        let manifestUpdateInfo = metricsExt.getCurrentManifestUpdate(metrics);
+        let manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metrics);
 
         seekTarget = e.seekTime;
 
@@ -386,7 +386,7 @@ function ScheduleController(config) {
         var manifestInfo = currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo;
         var startTime = liveEdgeTime - Math.min((playbackController.getLiveDelay(currentRepresentationInfo.fragmentDuration)), manifestInfo.DVRWindowSize / 2);
         var metrics = metricsModel.getMetricsFor('stream');
-        var manifestUpdateInfo = metricsExt.getCurrentManifestUpdate(metrics);
+        var manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metrics);
         var currentLiveStart = playbackController.getLiveStartTime();
 
         var request,

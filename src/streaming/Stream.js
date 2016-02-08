@@ -39,7 +39,7 @@ import MetricsModel from './models/MetricsModel.js';
 import PlaybackController from './controllers/PlaybackController.js';
 import DashHandler from '../dash/DashHandler.js';
 import SegmentBaseLoader from '../dash/SegmentBaseLoader.js';
-import DashMetricsExtensions from '../dash/extensions/DashMetricsExtensions.js';
+import DashMetrics from '../dash/DashMetrics.js';
 import EventBus from '../core/EventBus.js';
 import Events from '../core/events/Events.js';
 import Debug from '../core/Debug.js';
@@ -300,7 +300,7 @@ function Stream(config) {
         let handler = DashHandler(context).create({
             segmentBaseLoader: segmentBaseLoader,
             timelineConverter: timelineConverter,
-            metricsExt: DashMetricsExtensions(context).getInstance(),
+            dashMetrics: DashMetrics(context).getInstance(),
             metricsModel: MetricsModel(context).getInstance()
         });
 

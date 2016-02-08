@@ -47,7 +47,7 @@ function PlaybackController() {
         streamController,
         timelineConverter,
         metricsModel,
-        metricsExt,
+        dashMetrics,
         manifestModel,
         dashManifestModel,
         adapter,
@@ -217,8 +217,8 @@ function PlaybackController() {
         if (config.metricsModel) {
             metricsModel = config.metricsModel;
         }
-        if (config.metricsExt) {
-            metricsExt = config.metricsExt;
+        if (config.dashMetrics) {
+            dashMetrics = config.dashMetrics;
         }
         if (config.manifestModel) {
             manifestModel = config.manifestModel;
@@ -274,7 +274,7 @@ function PlaybackController() {
 
     function getActualPresentationTime(currentTime) {
         var metrics = metricsModel.getReadOnlyMetricsFor('video') || metricsModel.getReadOnlyMetricsFor('audio');
-        var DVRMetrics = metricsExt.getCurrentDVRInfo(metrics);
+        var DVRMetrics = dashMetrics.getCurrentDVRInfo(metrics);
         var DVRWindow = DVRMetrics ? DVRMetrics.range : null;
         var actualTime;
 

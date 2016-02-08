@@ -47,7 +47,7 @@ function DashHandler(config) {
 
     let segmentBaseLoader = config.segmentBaseLoader;
     let timelineConverter = config.timelineConverter;
-    let metricsExt = config.metricsExt;
+    let dashMetrics = config.dashMetrics;
     let metricsModel = config.metricsModel;
 
     let instance,
@@ -692,7 +692,7 @@ function DashHandler(config) {
             metrics = metricsModel.getMetricsFor('stream');
             // the last segment is supposed to be a live edge
             timelineConverter.setExpectedLiveEdge(liveEdge);
-            metricsModel.updateManifestUpdateInfo(metricsExt.getCurrentManifestUpdate(metrics), {presentationStartTime: liveEdge});
+            metricsModel.updateManifestUpdateInfo(dashMetrics.getCurrentManifestUpdate(metrics), {presentationStartTime: liveEdge});
         }
     }
 

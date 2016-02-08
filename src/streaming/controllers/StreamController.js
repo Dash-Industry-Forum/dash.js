@@ -56,7 +56,7 @@ function StreamController() {
         dashManifestModel,
         adapter,
         metricsModel,
-        metricsExt,
+        dashMetrics,
         videoModelExt,
         liveEdgeFinder,
         mediaSourceExt,
@@ -114,7 +114,7 @@ function StreamController() {
             streamController: instance,
             timelineConverter: timelineConverter,
             metricsModel: metricsModel,
-            metricsExt: metricsExt,
+            dashMetrics: dashMetrics,
             manifestModel: manifestModel,
             dashManifestModel: dashManifestModel,
             adapter: adapter,
@@ -416,7 +416,7 @@ function StreamController() {
     function composeStreams() {
         var manifest = manifestModel.getValue();
         var metrics = metricsModel.getMetricsFor('stream');
-        var manifestUpdateInfo = metricsExt.getCurrentManifestUpdate(metrics);
+        var manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metrics);
         var remainingStreams = [];
         var streamInfo,
             pLen,
@@ -572,7 +572,7 @@ function StreamController() {
 
             timeSyncController.setConfig({
                 metricsModel: metricsModel,
-                metricsExt: metricsExt
+                dashMetrics: dashMetrics
             });
             timeSyncController.initialize(allUTCTimingSources, mediaPlayerModel.getUseManifestDateHeaderTimeSource());
         } else {
@@ -631,8 +631,8 @@ function StreamController() {
         if (config.metricsModel) {
             metricsModel = config.metricsModel;
         }
-        if (config.metricsExt) {
-            metricsExt = config.metricsExt;
+        if (config.dashMetrics) {
+            dashMetrics = config.dashMetrics;
         }
         if (config.videoModelExt) {
             videoModelExt = config.videoModelExt;

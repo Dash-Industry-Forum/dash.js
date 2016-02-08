@@ -63,7 +63,7 @@ import FactoryMaker from '../core/FactoryMaker.js';
 import DashAdapter from '../dash/DashAdapter.js';
 import DashParser from '../dash/DashParser.js';
 import DashManifestModel from '../dash/DashManifestModel.js';
-import DashMetricsExtensions from '../dash/extensions/DashMetricsExtensions.js';
+import DashMetrics from '../dash/DashMetrics.js';
 import TimelineConverter from '../dash/TimelineConverter.js';
 
 
@@ -101,7 +101,7 @@ function MediaPlayer() {
         streamController,
         rulesController,
         playbackController,
-        metricsExt,
+        dashMetrics,
         dashManifestModel,
         videoModel,
         textSourceBuffer;
@@ -136,7 +136,7 @@ function MediaPlayer() {
         mediaController = MediaController(context).getInstance();
         mediaController.initialize();
         dashManifestModel = DashManifestModel(context).getInstance();
-        metricsExt = DashMetricsExtensions(context).getInstance();
+        dashMetrics = DashMetrics(context).getInstance();
         metricsModel = MetricsModel(context).getInstance();
         metricsModel.setConfig({adapter: createAdaptor()});
 
@@ -254,7 +254,7 @@ function MediaPlayer() {
 
     function getDVRInfoMetric() {
         var metric = metricsModel.getReadOnlyMetricsFor('video') || metricsModel.getReadOnlyMetricsFor('audio');
-        return metricsExt.getCurrentDVRInfo(metric);
+        return dashMetrics.getCurrentDVRInfo(metric);
     }
 
     /**
@@ -271,16 +271,16 @@ function MediaPlayer() {
 
         if (!type)
         {
-            let videoBuffer = getTracksFor('video').length > 0 ? getMetricsExt().getCurrentBufferLevel(getMetricsFor('video')) : Number.MAX_SAFE_INTEGER;
-            let audioBuffer = getTracksFor('audio').length > 0 ? getMetricsExt().getCurrentBufferLevel(getMetricsFor('audio')) : Number.MAX_SAFE_INTEGER;
-            let textBuffer = getTracksFor('fragmentedText').length > 0 ? getMetricsExt().getCurrentBufferLevel(getMetricsFor('fragmentedText')) : Number.MAX_SAFE_INTEGER;
+            let videoBuffer = getTracksFor('video').length > 0 ? getDashMetrics().getCurrentBufferLevel(getMetricsFor('video')) : Number.MAX_SAFE_INTEGER;
+            let audioBuffer = getTracksFor('audio').length > 0 ? getDashMetrics().getCurrentBufferLevel(getMetricsFor('audio')) : Number.MAX_SAFE_INTEGER;
+            let textBuffer = getTracksFor('fragmentedText').length > 0 ? getDashMetrics().getCurrentBufferLevel(getMetricsFor('fragmentedText')) : Number.MAX_SAFE_INTEGER;
             return Math.min(videoBuffer,audioBuffer,textBuffer).toPrecision(3);
         }
         else
         {
             if (type === 'video' || type === 'audio' || type === 'fragmentedText')
             {
-                let buffer = getMetricsExt().getCurrentBufferLevel(getMetricsFor(type));
+                let buffer = getDashMetrics().getCurrentBufferLevel(getMetricsFor(type));
                 return buffer ? buffer.toPrecision(3) : NaN;
             }
             else
@@ -729,8 +729,8 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
-    function getMetricsExt() {
-        return metricsExt;
+    function getDashMetrics() {
+        return dashMetrics;
     }
 
     /**
@@ -1563,7 +1563,7 @@ function MediaPlayer() {
             protectionController: protectionController,
             adapter: adapter,
             metricsModel: metricsModel,
-            metricsExt: metricsExt,
+            dashMetrics: dashMetrics,
             videoModelExt: VideoModelExtensions(context).getInstance(),
             liveEdgeFinder: LiveEdgeFinder(context).getInstance(),
             mediaSourceExt: MediaSourceExtensions(context).getInstance(),
@@ -1691,7 +1691,7 @@ function MediaPlayer() {
         getAutoPlay: getAutoPlay,
         setScheduleWhilePaused: setScheduleWhilePaused,
         getScheduleWhilePaused: getScheduleWhilePaused,
-        getMetricsExt: getMetricsExt,
+        getDashMetrics: getDashMetrics,
         getMetricsFor: getMetricsFor,
         getQualityFor: getQualityFor,
         setQualityFor: setQualityFor,
