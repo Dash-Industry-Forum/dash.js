@@ -75,8 +75,6 @@ function ProtectionController(config) {
         sessionType = 'temporary';
 
         Events.extend(Protection.events);
-        eventBus.on(Events.NEED_KEY, onNeedKey, this);
-        eventBus.on(Events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
     }
 
     /**
@@ -147,7 +145,7 @@ function ProtectionController(config) {
             var currentInitData = protectionModel.getAllInitData();
             for (var i = 0; i < currentInitData.length; i++) {
                 if (protectionExt.initDataEquals(initDataForKS, currentInitData[i])) {
-                    log('Ignoring initData because we have already seen it!');
+                    log('DRM: Ignoring initData because we have already seen it!');
                     return;
                 }
             }
@@ -233,9 +231,11 @@ function ProtectionController(config) {
         if (element) {
             protectionModel.setMediaElement(element);
             eventBus.on(Events.NEED_KEY, onNeedKey, this);
+            eventBus.on(Events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
         } else if (element === null) {
             protectionModel.setMediaElement(element);
             eventBus.off(Events.NEED_KEY, onNeedKey, this);
+            eventBus.off(Events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
         }
     }
 
@@ -275,8 +275,6 @@ function ProtectionController(config) {
      */
     function reset() {
         setMediaElement(null);
-        eventBus.off(Events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
-        eventBus.off(Events.NEED_KEY, onNeedKey, this);
 
         keySystem = undefined;//TODO-Refactor look at why undefined is needed for this. refactor
 
@@ -335,7 +333,7 @@ function ProtectionController(config) {
                                 eventBus.trigger(Events.KEY_SYSTEM_SELECTED, {error: 'DRM: KeySystem Access Denied! -- ' + event.error});
                             }
                         } else {
-                            log('KeySystem Access Granted');
+                            log('DRM: KeySystem Access Granted');
                             eventBus.trigger(Events.KEY_SYSTEM_SELECTED, {data: event.data});
                             createKeySession(supportedKS[ksIdx].initData);
                         }
@@ -368,7 +366,7 @@ function ProtectionController(config) {
                     }
                 } else {
                     keySystemAccess = event.data;
-                    log('KeySystem Access Granted (' + keySystemAccess.keySystem.systemString + ')!  Selecting key system...');
+                    log('DRM: KeySystem Access Granted (' + keySystemAccess.keySystem.systemString + ')!  Selecting key system...');
                     protectionModel.selectKeySystem(keySystemAccess);
                 }
             };
@@ -407,6 +405,7 @@ function ProtectionController(config) {
     }
 
     function onKeyMessage(e) {
+        log('DRM: onKeyMessage');
         if (e.error) {
             log(e.error);
             return;
@@ -519,6 +518,7 @@ function ProtectionController(config) {
     }
 
     function onNeedKey(event) {
+        log('DRM: onNeedKey');
         // Ignore non-cenc initData
         if (event.key.initDataType !== 'cenc') {
             log('DRM:  Only \'cenc\' initData is supported!  Ignoring initData of type: ' + event.key.initDataType);
@@ -532,9 +532,11 @@ function ProtectionController(config) {
             abInitData = abInitData.buffer;
         }
 
+        log('DRM: initData:', String.fromCharCode.apply(null, new Uint8Array(abInitData)));
+
         var supportedKS = protectionExt.getSupportedKeySystems(abInitData);
         if (supportedKS.length === 0) {
-            log('Received needkey event with initData, but we don\'t support any of the key systems!');
+            log('DRM: Received needkey event with initData, but we don\'t support any of the key systems!');
             return;
         }
 

@@ -88,6 +88,10 @@ function ProtectionModel_3Feb2014(config) {
         }
     }
 
+    function getKeySystem() {
+        return keySystem;
+    }
+
     function getAllInitData() {
         var retVal = [];
         for (var i = 0; i < sessions.length; i++) {
@@ -357,6 +361,7 @@ function ProtectionModel_3Feb2014(config) {
     instance = {
         getAllInitData: getAllInitData,
         requestKeySystemAccess: requestKeySystemAccess,
+        getKeySystem: getKeySystem,
         selectKeySystem: selectKeySystem,
         setMediaElement: setMediaElement,
         createKeySession: createKeySession,

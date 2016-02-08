@@ -72,8 +72,8 @@ function KeySystemClearKey() {
         return clearkeySet;
     }
 
-    function getInitData() {
-        return CommonEncryption.parseInitDataFromContentProtection;
+    function getInitData(cp) {
+        return CommonEncryption.parseInitDataFromContentProtection(cp);
     }
 
     function getRequestHeadersFromMessage(/*message*/) {

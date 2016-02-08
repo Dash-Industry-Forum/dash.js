@@ -28,11 +28,15 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+/**
+ * @class
+ * @ignore
+ */
 class BolaState {
     constructor() {
         /**
          * number
-         * @public
+         * @private
          */
         this._s = undefined;
     }

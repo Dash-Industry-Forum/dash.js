@@ -38,6 +38,11 @@ View the /samples folder for many other examples of embedding and using the play
     
 
 ## Getting Started
+
+The standard setup method uses javascript to initialize and provide video details to dash.js. `MediaPlayerFactory` provides an alternative declarative setup syntax.
+
+### Standard Setup
+
 Create a video element somewhere in your html. For our purposes, make sure to set the controls property to true.
 ```html
 <video id="videoPlayer" controls="true"></video>
@@ -81,6 +86,39 @@ When it is all done, it should look similar to this:
 </html>
 ```
 
+### MediaPlayerFactory Setup
+
+Create a video element somewhere in your html and provide the path to your `mpd` file as src. Also ensure that your video element has the `data-dashjs-player` attribute on to it.
+```html
+<video data-dashjs-player autoplay src="http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd" controls="true">
+</video>
+
+```
+
+Add dash.all.min.js to the end of the body.
+```html
+<body>
+  ...
+  <script src="yourPathToDash/dash.all.min.js"></script>
+</body>
+```
+
+When it is all done, it should look similar to this:
+```html
+<!doctype html>
+<html>
+    <head>
+        <title>Dash.js Rocks</title>
+    </head>
+    <body>
+        <div>
+            <video data-dashjs-player autoplay src="http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd" controls="true">
+            </video>
+        </div>
+        <script src="yourPathToDash/dash.all.min.js"></script>
+    </body>
+</html>
+```
 
 ## Tested With
 

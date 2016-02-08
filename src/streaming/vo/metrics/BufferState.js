@@ -29,10 +29,20 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import BufferController from '../../controllers/BufferController.js';
-
 class BufferState {
+    /**
+     * @description This Object holds reference to the current buffer state of the video element.
+     */
     constructor() {
-        this.target = null; // Required Buffer Level determined by the BufferLevelRule.
+        /**
+         * The Buffer Level Target determined by the BufferLevelRule.
+         * @public
+         */
+        this.target = null;
+        /**
+         * Current buffer state. Will be BufferController.BUFFER_EMPTY or BufferController.BUFFER_LOADED.
+         * @public
+         */
         this.state = BufferController.BUFFER_EMPTY;
     }
 }

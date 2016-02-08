@@ -38,12 +38,15 @@ import MediaPlayerFactory from './src/streaming/MediaPlayerFactory.js';
 // Shove both of these into the global scope
 var context = window || global;
 
-context.dashjs = {
-    MediaPlayer: MediaPlayer,
-    Protection: Protection,
-    MetricsReporting: MetricsReporting,
-    MediaPlayerFactory: MediaPlayerFactory
-};
+var dashjs = context.dashjs;
+if (!dashjs) {
+    dashjs = context.dashjs = {};
+}
 
-export default context.dashjs;
+dashjs.MediaPlayer = MediaPlayer;
+dashjs.Protection = Protection;
+dashjs.MetricsReporting = MetricsReporting;
+dashjs.MediaPlayerFactory = MediaPlayerFactory;
+
+export default dashjs;
 export { MediaPlayer, Protection, MetricsReporting, MediaPlayerFactory };

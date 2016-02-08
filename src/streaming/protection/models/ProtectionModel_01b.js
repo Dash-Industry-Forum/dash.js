@@ -103,6 +103,10 @@ function ProtectionModel_01b(config) {
         eventBus.trigger(Events.TEARDOWN_COMPLETE);
     }
 
+    function getKeySystem() {
+        return keySystem;
+    }
+
     function getAllInitData() {
         var retVal = [];
         for (let i = 0; i < pendingSessions.length; i++) {
@@ -350,7 +354,7 @@ function ProtectionModel_01b(config) {
                             // addKey method, so we always save it to the token since there is no
                             // way to tell which key system is in use
                             sessionToken.keyMessage = message;
-                            eventBus.trigger(Events.KEY_MESSAGE, {data: new KeyMessage(sessionToken, message, event.defaultURL)});
+                            eventBus.trigger(Events.INTERNAL_KEY_MESSAGE, {data: new KeyMessage(sessionToken, message, event.defaultURL)});
 
                         } else {
                             log('No session token found for key message');
@@ -395,6 +399,7 @@ function ProtectionModel_01b(config) {
     instance = {
         getAllInitData: getAllInitData,
         requestKeySystemAccess: requestKeySystemAccess,
+        getKeySystem: getKeySystem,
         selectKeySystem: selectKeySystem,
         setMediaElement: setMediaElement,
         createKeySession: createKeySession,
