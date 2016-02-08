@@ -596,6 +596,13 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
         player.setAutoSwitchQuality(enabled);
     }
 
+    $scope.bolaEnabled = false;
+
+    $scope.setBolaEnabled = function (enabled) {
+        $scope.bolaEnabled = enabled;
+        player.enableBufferOccupancyABR(enabled);
+    }
+
     $scope.abrUp = function (type) {
         var newQuality,
             metricsExt = player.getMetricsExt(),
@@ -666,6 +673,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
         player.setProtectionData(protData);
         player.attachSource($scope.selectedItem.url);
         player.setAutoSwitchQuality($scope.abrEnabled);
+        player.enableBufferOccupancyABR($scope.bolaEnabled);
         controlbar.reset();
         controlbar.enable();
 
