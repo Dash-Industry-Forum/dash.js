@@ -32,19 +32,19 @@
 /**
  * Media protection functionality that can be modified/overridden by applications
  *
- * @class ProtectionExtensions
+ * @class ProtectionKeyController
  */
-import CommonEncryption from './CommonEncryption.js';
-import KeySystemClearKey from './drm/KeySystemClearKey.js';
-import KeySystemWidevine from './drm/KeySystemWidevine.js';
-import KeySystemPlayReady from './drm/KeySystemPlayReady.js';
-import DRMToday from './servers/DRMToday.js';
-import PlayReady from './servers/PlayReady.js';
-import Widevine from './servers/Widevine.js';
-import ClearKey from './servers/ClearKey.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
+import CommonEncryption from './../CommonEncryption.js';
+import KeySystemClearKey from './../drm/KeySystemClearKey.js';
+import KeySystemWidevine from './../drm/KeySystemWidevine.js';
+import KeySystemPlayReady from './../drm/KeySystemPlayReady.js';
+import DRMToday from './../servers/DRMToday.js';
+import PlayReady from './../servers/PlayReady.js';
+import Widevine from './../servers/Widevine.js';
+import ClearKey from './../servers/ClearKey.js';
+import FactoryMaker from '../../../core/FactoryMaker.js';
 
-function ProtectionExtensions() {
+function ProtectionKeyController() {
 
     let context = this.context;
 
@@ -294,5 +294,5 @@ function ProtectionExtensions() {
     return instance;
 }
 
-ProtectionExtensions.__dashjs_factory_name = 'ProtectionExtensions';
-export default FactoryMaker.getSingletonFactory(ProtectionExtensions);
+ProtectionKeyController.__dashjs_factory_name = 'ProtectionKeyController';
+export default FactoryMaker.getSingletonFactory(ProtectionKeyController);

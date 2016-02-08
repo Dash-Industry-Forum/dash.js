@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import ProtectionController from './controllers/ProtectionController.js';
-import ProtectionExtensions from './ProtectionExtensions.js';
+import ProtectionKeyController from './controllers/ProtectionKeyController.js';
 import ProtectionEvents from './ProtectionEvents.js';
 import ProtectionModel_21Jan2015 from './models/ProtectionModel_21Jan2015.js';
 import ProtectionModel_3Feb2014 from './models/ProtectionModel_3Feb2014.js';
@@ -116,18 +116,16 @@ function Protection() {
 
         let controller = null;
 
-        let protectionExt = ProtectionExtensions(context).getInstance();
-        protectionExt.setConfig({
-            log: config.log,
-        });
-        protectionExt.initialize();
+        let protectionKeyController = ProtectionKeyController(context).getInstance();
+        protectionKeyController.setConfig({log: config.log,});
+        protectionKeyController.initialize();
 
         let protectionModel =  getProtectionModel(config);
 
         if (!controller && protectionModel) {//TODO add ability to set external controller if still needed at all?
             controller = ProtectionController(context).create({
                 protectionModel: protectionModel,
-                protectionExt: protectionExt,
+                protectionKeyController: protectionKeyController,
                 adapter: config.adapter,
                 eventBus: config.eventBus,
                 log: config.log

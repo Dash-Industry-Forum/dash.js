@@ -38,7 +38,7 @@
  * @class
  */
 
-import ProtectionExtensions from '../ProtectionExtensions.js';
+import ProtectionKeyController from '../controllers/ProtectionKeyController.js';
 import NeedKey from '../vo/NeedKey.js';
 import KeyError from '../vo/KeyError.js';
 import KeyMessage from '../vo/KeyMessage.js';
@@ -62,7 +62,7 @@ function ProtectionModel_3Feb2014(config) {
         keySystemAccess,
         sessions,
         eventHandler,
-        protectionExt;
+        protectionKeyController;
 
     function setup() {
         videoElement = null;
@@ -70,7 +70,7 @@ function ProtectionModel_3Feb2014(config) {
         mediaKeys = null;
         keySystemAccess = null;
         sessions = [];
-        protectionExt = ProtectionExtensions(context).getInstance();
+        protectionKeyController = ProtectionKeyController(context).getInstance();
         eventHandler = createEventHandler();
     }
 
@@ -148,7 +148,7 @@ function ProtectionModel_3Feb2014(config) {
                 // This configuration is supported
                 found = true;
                 var ksConfig = new KeySystemConfiguration(supportedAudio, supportedVideo);
-                var ks = protectionExt.getKeySystemBySystemString(systemString);
+                var ks = protectionKeyController.getKeySystemBySystemString(systemString);
                 eventBus.trigger(Events.KEY_SYSTEM_ACCESS_COMPLETE, {data: new KeySystemAccess(ks, ksConfig)});
                 break;
             }
@@ -233,7 +233,7 @@ function ProtectionModel_3Feb2014(config) {
 
         var session = sessionToken.session;
 
-        if (!protectionExt.isClearKey(keySystem)) {
+        if (!protectionKeyController.isClearKey(keySystem)) {
             // Send our request to the key session
             session.update(new Uint8Array(message));
         } else {

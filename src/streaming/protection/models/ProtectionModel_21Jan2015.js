@@ -37,7 +37,7 @@
  * @implements ProtectionModel
  * @class
  */
-import ProtectionExtensions from '../ProtectionExtensions.js';
+import ProtectionKeyController from '../controllers/ProtectionKeyController.js';
 import NeedKey from '../vo/NeedKey.js';
 import KeyError from '../vo/KeyError.js';
 import KeyMessage from '../vo/KeyMessage.js';
@@ -57,14 +57,14 @@ function ProtectionModel_21Jan2015(config) {
         mediaKeys,
         sessions,
         eventHandler,
-        protectionExt;
+        protectionKeyController;
 
     function setup() {
         keySystem = null;
         videoElement = null;
         mediaKeys = null;
         sessions = [];
-        protectionExt = ProtectionExtensions(context).getInstance();
+        protectionKeyController = ProtectionKeyController(context).getInstance();
         eventHandler = createEventHandler();
     }
 
@@ -195,7 +195,7 @@ function ProtectionModel_21Jan2015(config) {
         var session = sessionToken.session;
 
         // Send our request to the key session
-        if (protectionExt.isClearKey(keySystem)) {
+        if (protectionKeyController.isClearKey(keySystem)) {
             message = message.toJWK();
         }
         session.update(message).catch(function (error) {
