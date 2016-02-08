@@ -335,7 +335,7 @@
             ]
         },
         {
-            "name":"Axinom DRM Test Content",
+            "name":"Axinom Test Content",
             "submenu":[
                 {
                     "name": "Axinom multi-DRM (1080p)",
