@@ -1102,7 +1102,10 @@ function MediaPlayer() {
 
 
     /**
-     * Need Doc
+     * When buffer occupancy ABR is enabled, the throughput-based ABR rule set
+     * (ThroughputRule, BufferOccupancyRule, InsufficientBufferRule and AbandonRequestsRule)
+     * is replaced by the buffer-occupancy-based BOLA rule set (BolaRule, BolaAbandonRule).
+     * The paper at http://arxiv.org/abs/1601.06748 shows the rationale behind BOLA.
      *
      * @param value {boolean}
      * @default {boolean} false
