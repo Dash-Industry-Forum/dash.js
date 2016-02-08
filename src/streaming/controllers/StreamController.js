@@ -59,7 +59,7 @@ function StreamController() {
         dashMetrics,
         videoModelExt,
         liveEdgeFinder,
-        mediaSourceExt,
+        mediaSourceController,
         timeSyncController,
         virtualBuffer,
         errHandler,
@@ -248,7 +248,7 @@ function StreamController() {
 
         // check if stream end is reached
         if (e.timeToEnd < STREAM_END_THRESHOLD) {
-            mediaSourceExt.signalEndOfStream(mediaSource);
+            mediaSourceController.signalEndOfStream(mediaSource);
         }
     }
 
@@ -305,7 +305,7 @@ function StreamController() {
 
         // buffering has been complted, now we can signal end of stream
         if (mediaSource && isLast) {
-            mediaSourceExt.signalEndOfStream(mediaSource);
+            mediaSourceController.signalEndOfStream(mediaSource);
         }
 
         if (!nextStream) return;
@@ -391,16 +391,16 @@ function StreamController() {
         };
 
         if (!mediaSource) {
-            mediaSource = mediaSourceExt.createMediaSource();
+            mediaSource = mediaSourceController.createMediaSource();
             //log("MediaSource created.");
             //log("MediaSource should be closed. The actual readyState is: " + mediaSource.readyState);
         } else {
-            mediaSourceExt.detachMediaSource(videoModel);
+            mediaSourceController.detachMediaSource(videoModel);
         }
 
         mediaSource.addEventListener('sourceopen', onMediaSourceOpen, false);
         mediaSource.addEventListener('webkitsourceopen', onMediaSourceOpen, false);
-        sourceUrl = mediaSourceExt.attachMediaSource(mediaSource, videoModel);
+        sourceUrl = mediaSourceController.attachMediaSource(mediaSource, videoModel);
         //log("MediaSource attached to video.  Waiting on open...");
     }
 
@@ -409,7 +409,7 @@ function StreamController() {
             mediaDuration;
 
         manifestDuration = activeStream.getStreamInfo().manifestInfo.duration;
-        mediaDuration = mediaSourceExt.setDuration(mediaSource, manifestDuration);
+        mediaDuration = mediaSourceController.setDuration(mediaSource, manifestDuration);
         log('Duration successfully set to: ' + mediaDuration);
     }
 
@@ -640,8 +640,8 @@ function StreamController() {
         if (config.liveEdgeFinder) {
             liveEdgeFinder = config.liveEdgeFinder;
         }
-        if (config.mediaSourceExt) {
-            mediaSourceExt = config.mediaSourceExt;
+        if (config.mediaSourceController) {
+            mediaSourceController = config.mediaSourceController;
         }
         if (config.timeSyncController) {
             timeSyncController = config.timeSyncController;
@@ -700,7 +700,7 @@ function StreamController() {
         isPaused = false;
 
         if (mediaSource) {
-            mediaSourceExt.detachMediaSource(videoModel);
+            mediaSourceController.detachMediaSource(videoModel);
             mediaSource = null;
         }
         videoModel = null;

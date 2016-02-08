@@ -57,7 +57,7 @@ function BufferController(config) {
     let manifestModel = config.manifestModel;
     let sourceBufferExt = config.sourceBufferExt;
     let errHandler = config.errHandler;
-    let mediaSourceExt = config.mediaSourceExt;
+    let mediaSourceController = config.mediaSourceController;
     let streamController = config.streamController;
     let mediaController = config.mediaController;
     let adapter = config.adapter;
@@ -279,7 +279,7 @@ function BufferController(config) {
         onPlaybackProgression();
 
         if (isBufferingCompleted && streamProcessor.getStreamInfo().isLast) {
-            mediaSourceExt.signalEndOfStream(mediaSource);
+            mediaSourceController.signalEndOfStream(mediaSource);
         }
 
         var ranges;

@@ -30,7 +30,7 @@
  */
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-function MediaSourceExtensions() {
+function MediaSourceController() {
 
     let instance;
 
@@ -98,5 +98,5 @@ function MediaSourceExtensions() {
     return instance;
 }
 
-MediaSourceExtensions.__dashjs_factory_name = 'MediaSourceExtensions';
-export default FactoryMaker.getSingletonFactory(MediaSourceExtensions);
+MediaSourceController.__dashjs_factory_name = 'MediaSourceController';
+export default FactoryMaker.getSingletonFactory(MediaSourceController);

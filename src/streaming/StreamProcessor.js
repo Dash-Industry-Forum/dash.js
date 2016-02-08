@@ -45,7 +45,7 @@ import RequestModifierExtensions from './extensions/RequestModifierExtensions.js
 import SourceBufferExtensions from './extensions/SourceBufferExtensions';
 import TextSourceBuffer from './TextSourceBuffer.js';
 import VirtualBuffer from './utils/VirtualBuffer.js';
-import MediaSourceExtensions from './extensions/MediaSourceExtensions.js';
+import MediaSourceController from './controllers/MediaSourceController.js';
 import DashManifestModel from '../dash/models/DashManifestModel.js';
 import DashMetrics from '../dash/DashMetrics.js';
 import RepresentationController from '../dash/controllers/RepresentationController.js';
@@ -269,7 +269,7 @@ function StreamProcessor(config) {
                 manifestModel: manifestModel,
                 sourceBufferExt: SourceBufferExtensions(context).getInstance(),
                 errHandler: ErrorHandler(context).getInstance(),
-                mediaSourceExt: MediaSourceExtensions(context).getInstance(),
+                mediaSourceController: MediaSourceController(context).getInstance(),
                 streamController: StreamController(context).getInstance(),
                 mediaController: MediaController(context).getInstance(),
                 adapter: adapter,
