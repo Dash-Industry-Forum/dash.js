@@ -53,7 +53,7 @@ function StreamController() {
         manifestUpdater,
         manifestLoader,
         manifestModel,
-        manifestExt,
+        dashManifestModel,
         adapter,
         metricsModel,
         metricsExt,
@@ -104,7 +104,7 @@ function StreamController() {
         manifestUpdater.setConfig({
             log: log,
             manifestModel: manifestModel,
-            manifestExt: manifestExt
+            dashManifestModel: dashManifestModel
         });
         manifestUpdater.initialize(manifestLoader);
 
@@ -116,7 +116,7 @@ function StreamController() {
             metricsModel: metricsModel,
             metricsExt: metricsExt,
             manifestModel: manifestModel,
-            manifestExt: manifestExt,
+            dashManifestModel: dashManifestModel,
             adapter: adapter,
             videoModel: videoModel
         });
@@ -550,7 +550,7 @@ function StreamController() {
 
             if (mediaInfo) {
                 adaptation = adapter.getDataForMedia(mediaInfo);
-                useCalculatedLiveEdgeTime = manifestExt.getRepresentationsForAdaptation(manifest, adaptation)[0].useCalculatedLiveEdgeTime;
+                useCalculatedLiveEdgeTime = dashManifestModel.getRepresentationsForAdaptation(manifest, adaptation)[0].useCalculatedLiveEdgeTime;
 
                 if (useCalculatedLiveEdgeTime) {
                     log('SegmentTimeline detected using calculated Live Edge Time');
@@ -558,8 +558,8 @@ function StreamController() {
                 }
             }
 
-            var manifestUTCTimingSources = manifestExt.getUTCTimingSources(e.manifest);
-            var allUTCTimingSources = (!manifestExt.getIsDynamic(manifest) || useCalculatedLiveEdgeTime) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(mediaPlayerModel.getUTCTimingSources());
+            var manifestUTCTimingSources = dashManifestModel.getUTCTimingSources(e.manifest);
+            var allUTCTimingSources = (!dashManifestModel.getIsDynamic(manifest) || useCalculatedLiveEdgeTime) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(mediaPlayerModel.getUTCTimingSources());
             var isHTTPS = URIQueryAndFragmentModel(context).getInstance().isManifestHTTPS();
 
             //If https is detected on manifest then lets apply that protocol to only the default time source(s). In the future we may find the need to apply this to more then just default so left code at this level instead of in MediaPlayer.
@@ -619,8 +619,8 @@ function StreamController() {
         if (config.manifestModel) {
             manifestModel = config.manifestModel;
         }
-        if (config.manifestExt) {
-            manifestExt = config.manifestExt;
+        if (config.dashManifestModel) {
+            dashManifestModel = config.dashManifestModel;
         }
         if (config.protectionController) {
             protectionController = config.protectionController;

@@ -62,7 +62,7 @@ import FactoryMaker from '../core/FactoryMaker.js';
 //Dash
 import DashAdapter from '../dash/DashAdapter.js';
 import DashParser from '../dash/DashParser.js';
-import DashManifestExtensions from '../dash/extensions/DashManifestExtensions.js';
+import DashManifestModel from '../dash/DashManifestModel.js';
 import DashMetricsExtensions from '../dash/extensions/DashMetricsExtensions.js';
 import TimelineConverter from '../dash/TimelineConverter.js';
 
@@ -102,7 +102,7 @@ function MediaPlayer() {
         rulesController,
         playbackController,
         metricsExt,
-        manifestExt,
+        dashManifestModel,
         videoModel,
         textSourceBuffer;
 
@@ -135,7 +135,7 @@ function MediaPlayer() {
         playbackController = PlaybackController(context).getInstance();
         mediaController = MediaController(context).getInstance();
         mediaController.initialize();
-        manifestExt = DashManifestExtensions(context).getInstance();
+        dashManifestModel = DashManifestModel(context).getInstance();
         metricsExt = DashMetricsExtensions(context).getInstance();
         metricsModel = MetricsModel(context).getInstance();
         metricsModel.setConfig({adapter: createAdaptor()});
@@ -1533,7 +1533,7 @@ function MediaPlayer() {
         scheduleRulesCollection.initialize();
 
         let sourceBufferExt = SourceBufferExtensions(context).getInstance();
-        sourceBufferExt.setConfig({manifestExt: manifestExt});
+        sourceBufferExt.setConfig({dashManifestModel: dashManifestModel});
 
 
         let virtualBuffer = VirtualBuffer(context).getInstance();
@@ -1559,7 +1559,7 @@ function MediaPlayer() {
             capabilities: capabilities,
             manifestLoader: createManifestLoader(),
             manifestModel: ManifestModel(context).getInstance(),
-            manifestExt: manifestExt,
+            dashManifestModel: dashManifestModel,
             protectionController: protectionController,
             adapter: adapter,
             metricsModel: metricsModel,
@@ -1599,7 +1599,7 @@ function MediaPlayer() {
         //TODO-Refactor Need to be able to switch this create out so will need API to set which adapter to use? Handler is created is inside streamProcessor so need to figure that out as well
         adapter = DashAdapter(context).getInstance();
         adapter.initialize();
-        adapter.setConfig({manifestExt: manifestExt});
+        adapter.setConfig({dashManifestModel: dashManifestModel});
         return adapter;
     }
 
@@ -1639,7 +1639,7 @@ function MediaPlayer() {
                 log: log,
                 eventBus: eventBus,
                 mediaElement: videoModel.getElement(),
-                manifestExt: manifestExt,
+                dashManifestModel: dashManifestModel,
                 metricsModel: metricsModel
             });
 

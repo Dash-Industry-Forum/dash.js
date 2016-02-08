@@ -49,7 +49,7 @@ function PlaybackController() {
         metricsModel,
         metricsExt,
         manifestModel,
-        manifestExt,
+        dashManifestModel,
         adapter,
         videoModel,
         currentTime,
@@ -177,7 +177,7 @@ function PlaybackController() {
      * */
     function getLiveDelay(fragmentDuration) {
         var delay;
-        var mpd = manifestExt.getMpd(manifestModel.getValue());
+        var mpd = dashManifestModel.getMpd(manifestModel.getValue());
 
         if (mediaPlayerModel.getUseSuggestedPresentationDelay() && mpd.hasOwnProperty('suggestedPresentationDelay')) {
             delay = mpd.suggestedPresentationDelay;
@@ -223,8 +223,8 @@ function PlaybackController() {
         if (config.manifestModel) {
             manifestModel = config.manifestModel;
         }
-        if (config.manifestExt) {
-            manifestExt = config.manifestExt;
+        if (config.dashManifestModel) {
+            dashManifestModel = config.dashManifestModel;
         }
         if (config.adapter) {
             adapter = config.adapter;

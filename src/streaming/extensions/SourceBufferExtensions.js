@@ -51,7 +51,7 @@ function SourceBufferExtensions() {
     let eventBus = EventBus(context).getInstance();
 
     let instance,
-        manifestExt;
+        dashManifestModel;
 
     function createSourceBuffer(mediaSource, mediaInfo) {
 
@@ -75,7 +75,7 @@ function SourceBufferExtensions() {
                 buffer.setConfig({
                     errHandler: ErrorHandler(context).getInstance(),
                     adapter: DashAdapter(context).getInstance(),
-                    manifestExt: manifestExt,
+                    dashManifestModel: dashManifestModel,
                     mediaController: MediaController(context).getInstance(),
                     videoModel: VideoModel(context).getInstance(),
                     streamController: StreamController(context).getInstance(),
@@ -327,8 +327,8 @@ function SourceBufferExtensions() {
     function setConfig(config) {
         if (!config) return;
 
-        if (config.manifestExt) {
-            manifestExt = config.manifestExt;
+        if (config.dashManifestModel) {
+            dashManifestModel = config.dashManifestModel;
         }
     }
 

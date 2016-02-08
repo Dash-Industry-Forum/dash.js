@@ -31,7 +31,7 @@
 import HTTPRequest from '../../streaming/vo/metrics/HTTPRequest.js';
 import AbrController from '../../streaming/controllers/AbrController.js';
 import ManifestModel from '../../streaming/models/ManifestModel.js';
-import DashManifestExtensions from '../../dash/extensions/DashManifestExtensions.js';
+import DashManifestModel from '../DashManifestModel.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 function DashMetricsExtensions() {
@@ -370,7 +370,7 @@ function DashMetricsExtensions() {
     }
 
     function adaptationIsType(adaptation, bufferType) {
-        return DashManifestExtensions(context).getInstance().getIsTypeOf(adaptation, bufferType);
+        return DashManifestModel(context).getInstance().getIsTypeOf(adaptation, bufferType);
     }
 
     function findMaxBufferIndex(period, bufferType) {

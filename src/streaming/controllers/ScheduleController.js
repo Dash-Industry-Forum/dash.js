@@ -51,7 +51,7 @@ function ScheduleController(config) {
     let manifestModel = config.manifestModel;
     let adapter = config.adapter;
     let metricsExt = config.metricsExt;
-    let manifestExt = config.manifestExt;
+    let dashManifestModel = config.dashManifestModel;
     let timelineConverter = config.timelineConverter;
     let scheduleRulesCollection = config.scheduleRulesCollection;
     let rulesController = config.rulesController;
@@ -104,7 +104,7 @@ function ScheduleController(config) {
         isDynamic = streamProcessor.isDynamic();
         scheduleWhilePaused = mediaPlayerModel.getScheduleWhilePaused();
 
-        if (manifestExt.getIsTextTrack(type)) {
+        if (dashManifestModel.getIsTextTrack(type)) {
             eventBus.on(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
         }
 
@@ -216,7 +216,7 @@ function ScheduleController(config) {
     }
 
     function onGetRequiredFragmentCount(result) {
-        if (result.value === 1 && !isFragmentLoading && (manifestExt.getIsTextTrack(type) || !bufferController.getIsAppendingInProgress())) {
+        if (result.value === 1 && !isFragmentLoading && (dashManifestModel.getIsTextTrack(type) || !bufferController.getIsAppendingInProgress())) {
             isFragmentLoading = true;
             abrController.getPlaybackQuality(streamProcessor,  getNextFragment());
         } else {
@@ -457,7 +457,7 @@ function ScheduleController(config) {
         eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
 
 
-        if (manifestExt.getIsTextTrack(type)) {
+        if (dashManifestModel.getIsTextTrack(type)) {
             eventBus.off(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
         }
 

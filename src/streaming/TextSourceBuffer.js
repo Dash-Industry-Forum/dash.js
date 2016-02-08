@@ -49,7 +49,7 @@ function TextSourceBuffer() {
         boxParser,
         errHandler,
         adapter,
-        manifestExt,
+        dashManifestModel,
         mediaController,
         allTracksAreDisabled,
         parser,
@@ -93,7 +93,7 @@ function TextSourceBuffer() {
         mediaInfos = streamProcessor.getMediaInfoArr();
         textTrackExtensions.setConfig({videoModel: videoModel});
         textTrackExtensions.initialize();
-        isFragmented = !manifestExt.getIsTextTrack(type);
+        isFragmented = !dashManifestModel.getIsTextTrack(type);
         boxParser = BoxParser(context).getInstance();
         fragmentExt = FragmentExtensions(context).getInstance();
         fragmentExt.setConfig({boxParser: boxParser});
@@ -705,8 +705,8 @@ function TextSourceBuffer() {
         if (config.adapter) {
             adapter = config.adapter;
         }
-        if (config.manifestExt) {
-            manifestExt = config.manifestExt;
+        if (config.dashManifestModel) {
+            dashManifestModel = config.dashManifestModel;
         }
         if (config.mediaController) {
             mediaController = config.mediaController;

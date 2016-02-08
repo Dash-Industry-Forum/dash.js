@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import RequestModifierExtensions from '../streaming/extensions/RequestModifierExtensions.js';
-import Segment from 'vo/Segment.js';
+import Segment from './vo/Segment.js';
 import Error from '../streaming/vo/Error.js';
 import ErrorHandler from '../streaming/ErrorHandler.js';
 import Events from '../core/events/Events.js';
@@ -38,7 +38,7 @@ import BoxParser from '../streaming/utils/BoxParser.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 import Debug from '../core/Debug.js';
 
-function BaseURLExtensions() {
+function SegmentBaseLoader() {
 
     let context = this.context;
     let log = Debug(context).getInstance().log;
@@ -305,5 +305,5 @@ function BaseURLExtensions() {
     return instance;
 }
 
-BaseURLExtensions.__dashjs_factory_name = 'BaseURLExtensions';
-export default FactoryMaker.getSingletonFactory(BaseURLExtensions);
+SegmentBaseLoader.__dashjs_factory_name = 'SegmentBaseLoader';
+export default FactoryMaker.getSingletonFactory(SegmentBaseLoader);

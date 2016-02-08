@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import DashManifestExtensions from '../extensions/DashManifestExtensions.js';
+import DashManifestModel from '../DashManifestModel.js';
 import DashMetricsExtensions from '../extensions/DashMetricsExtensions.js';
 import TimelineConverter from '../TimelineConverter.js';
 import AbrController from '../../streaming/controllers/AbrController.js';
@@ -65,7 +65,7 @@ function RepresentationController() {
         metricsModel,
         domStorage,
         timelineConverter,
-        manifestExt,
+        dashManifestModel,
         metricsExt,
         mediaPlayerModel;
 
@@ -82,7 +82,7 @@ function RepresentationController() {
         metricsModel = MetricsModel(context).getInstance();
         domStorage = DOMStorage(context).getInstance();
         timelineConverter = TimelineConverter(context).getInstance();
-        manifestExt = DashManifestExtensions(context).getInstance();
+        dashManifestModel = DashManifestModel(context).getInstance();
         metricsExt = DashMetricsExtensions(context).getInstance();
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
 
@@ -137,7 +137,7 @@ function RepresentationController() {
         metricsModel = null;
         domStorage = null;
         timelineConverter = null;
-        manifestExt = null;
+        dashManifestModel = null;
         metricsExt = null;
         mediaPlayerModel = null;
 
@@ -220,8 +220,8 @@ function RepresentationController() {
         var reps;
         var manifest = manifestModel.getValue();
 
-        dataIndex = manifestExt.getIndexForAdaptation(data, manifest, adaptation.period.index);
-        reps = manifestExt.getRepresentationsForAdaptation(manifest, adaptation);
+        dataIndex = dashManifestModel.getIndexForAdaptation(data, manifest, adaptation.period.index);
+        reps = dashManifestModel.getRepresentationsForAdaptation(manifest, adaptation);
 
         return reps;
     }
@@ -343,8 +343,8 @@ function RepresentationController() {
         var streamInfo = streamController.getActiveStreamInfo();
 
         if (streamInfo.isLast) {
-            period.mpd.checkTime = manifestExt.getCheckTime(manifest, period);
-            period.duration = manifestExt.getEndTimeForLastPeriod(manifestModel.getValue(), period) - period.start;
+            period.mpd.checkTime = dashManifestModel.getCheckTime(manifest, period);
+            period.duration = dashManifestModel.getEndTimeForLastPeriod(manifestModel.getValue(), period) - period.start;
             streamInfo.duration = period.duration;
         }
     }
