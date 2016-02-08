@@ -910,7 +910,7 @@ function DashHandler(config) {
         //  Update using getSegments and recheck fragments.
         getSegments(representation);
 
-        frags = frags.concat(getFragmentsForSegments(time, representation, timeThreshold));
+        frags.concat(getFragmentsForSegments(time, representation, timeThreshold));
         index = getIndexFromFragmentsForSegments(time, frags);
 
         if (index > 0) {
