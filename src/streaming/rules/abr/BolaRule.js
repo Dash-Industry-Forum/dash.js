@@ -72,7 +72,7 @@ function BolaRule(config) {
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
         playbackController = PlaybackController(context).getInstance();
         adapter = DashAdapter(context).getInstance();
-        eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
+        eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
     }
 
     function calculateInitialState(rulesContext) {
@@ -125,7 +125,7 @@ function BolaRule(config) {
 
         // BOLA parameters V and gamma (multiplied by p === fragmentDuration):
         // Choose Vp and gp such that logarithmic utility would always prefer the lowest bitrate when bufferLevel === fragmentDuration and would always prefer the highest bitrate when bufferLevel === bufferTarget.
-        // TODO: document arithmetic
+        // TODO: document the math
         let Vp = (bolaBufferTarget - fragmentDuration) / utility[bitrateCount - 1];
         let gp = 1.0 + utility[bitrateCount - 1] / (bolaBufferTarget / fragmentDuration - 1.0);
 
@@ -133,7 +133,7 @@ function BolaRule(config) {
         let maxRtt = 0.2; // TODO: is this reasonable?
         let safetyGuarantee = !isDynamic && bolaBufferTarget === bufferTarget;
         if (safetyGuarantee) {
-            // TODO: document the arithmetic
+            // TODO: document the math
             // we might need to adjust Vp and gp
             let VpNew = Vp;
             let gpNew = gp;
@@ -159,7 +159,7 @@ function BolaRule(config) {
         }
 
         // When using the virtualBuffer, it must be capped.
-        // TODO: document arithmetic
+        // TODO: document the math
         let bolaBufferMax = Vp * (utility[bitrateCount - 1] + gp);
 
         // Note: We either use the virtualBuffer or the safetyGuarantee, but not both.
@@ -373,7 +373,7 @@ function BolaRule(config) {
                         // downloading fragment indicated by real+virtual rebuffers, use lower quality
                         bolaQuality = maxQuality;
                         // deflate virtual buffer to match quality
-                        // TODO: document the arithmetic
+                        // TODO: document the math
                         let s  = bolaState.bitrate[maxQuality];     // relative size
                         let s1 = bolaState.bitrate[maxQuality + 1]; // relative size
                         let u  = bolaState.utility[maxQuality];
@@ -438,7 +438,7 @@ function BolaRule(config) {
                     q = bolaState.lastQuality;
                 } else {
                     // We are dropping to an encoded bitrate which is a little less than the network bandwidth because bitrate levels are discrete. Quality q might lead to buffer inflation, so we deflate buffer to the threshold where algorithm would choose quality q over quality q+1.
-                    // TODO: document the arithmetic
+                    // TODO: document the math
                     let s  = bolaState.bitrate[q];     // relative size
                     let s1 = bolaState.bitrate[q + 1]; // relative size
                     let u  = bolaState.utility[q];
@@ -472,7 +472,7 @@ function BolaRule(config) {
     }
 
     function reset() {
-        eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
+        eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
         setup();
     }
 
