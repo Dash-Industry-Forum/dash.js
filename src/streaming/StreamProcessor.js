@@ -49,7 +49,7 @@ import MediaSourceController from './controllers/MediaSourceController.js';
 import DashManifestModel from '../dash/models/DashManifestModel.js';
 import DashMetrics from '../dash/DashMetrics.js';
 import RepresentationController from '../dash/controllers/RepresentationController.js';
-import ErrorHandler from './ErrorHandler.js';
+import ErrorHandler from './utils/ErrorHandler.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
 function StreamProcessor(config) {

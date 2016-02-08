@@ -35,7 +35,7 @@ import SwitchRequest from '../rules/SwitchRequest.js';
 import PlaybackController from './PlaybackController.js';
 import AbrController from './AbrController.js';
 import BufferController from './BufferController.js';
-import LiveEdgeFinder from '../LiveEdgeFinder.js';
+import LiveEdgeFinder from '../utils/LiveEdgeFinder.js';
 import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';

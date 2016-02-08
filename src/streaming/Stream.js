@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import LiveEdgeFinder from './LiveEdgeFinder.js';
+import LiveEdgeFinder from './utils/LiveEdgeFinder.js';
 import StreamProcessor from './StreamProcessor.js';
 import MediaController from './controllers/MediaController.js';
 import EventController from './controllers/EventController.js';

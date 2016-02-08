@@ -44,7 +44,7 @@ import KeyMessage from '../vo/KeyMessage.js';
 import KeySystemConfiguration from '../vo/KeySystemConfiguration.js';
 import KeySystemAccess from '../vo/KeySystemAccess.js';
 import Events from '../../../core/events/Events.js';
-import ErrorHandler from '../../ErrorHandler.js';
+import ErrorHandler from '../../utils/ErrorHandler.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
 function ProtectionModel_01b(config) {
