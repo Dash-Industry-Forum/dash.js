@@ -602,6 +602,36 @@
             ]
         },
         {
+            "name":"Subtitles and Captions",
+            "submenu":[
+                {
+                    "name":"TTML Segmented Subtitles VoD",
+                    "url":"http://vm2.dashif.org/dash/vod/testpic_2s/multi_subs.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"TTML Segmented Subtitles Live",
+                    "url":"http://vm2.dashif.org/livesim/testpic_2s/multi_subs.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"TTML Sideloaded XML Subtitles",
+                    "url":"http://vm2.dashif.org/dash/vod/testpic_2s/xml_subs.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"Embedded CEA-608 Closed Captions and TTML segments VoD",
+                    "url":"http://vm2.dashif.org/dash/vod/testpic_2s/cea608_and_segs.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"Embedded CEA-608 Closed Captions and TTML segments Live",
+                    "url":"http://vm2.dashif.org/livesim/testpic_2s/cea608_and_segs.mpd",
+                    "browsers":"cdsbi"
+                }
+            ]
+        },
+        {
             "name":"Other samples",
             "submenu":[
                 {
