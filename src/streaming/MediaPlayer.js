@@ -1563,7 +1563,7 @@ function MediaPlayer() {
             detectProtection();
             detectMetricsReporting();
         }
-        resetAndIntializePlayback();
+        resetAndInitializePlayback();
     }
 
     /**
@@ -1607,7 +1607,7 @@ function MediaPlayer() {
             source = urlOrManifest;
         }
 
-        resetAndIntializePlayback();
+        resetAndInitializePlayback();
     }
 
     /**
@@ -1626,7 +1626,7 @@ function MediaPlayer() {
     // PRIVATE METHODS
     //***********************************
 
-    function resetAndIntializePlayback() {
+    function resetAndInitializePlayback() {
         if (playbackInitialized) {
             playbackInitialized = false;
             adapter.reset();
