@@ -157,8 +157,8 @@ function MediaPlayer() {
      * The ready state of the MediaPlayer based on both the video element and MPD source being defined.
      *
      * @returns {boolean} The current ready state of the MediaPlayer
-     * @see {@link module:module:MediaPlayer#attachView attachView()}
-     * @see {@link module:module:MediaPlayer#attachSource attachSource()}
+     * @see {@link module:MediaPlayer#attachView attachView()}
+     * @see {@link module:MediaPlayer#attachSource attachSource()}
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -188,6 +188,7 @@ function MediaPlayer() {
 
     /**
      * The play method initiates playback of the media defined by the {@link module:MediaPlayer#attachSource attachSource()} method.
+     * This method will call play on the native Video Element.
      *
      * @see {@link module:MediaPlayer#attachSource attachSource()}
      * @memberof module:MediaPlayer
@@ -202,6 +203,12 @@ function MediaPlayer() {
         }
     }
 
+    /**
+     * This method will call pause on the native Video Element.
+     *
+     * @memberof module:MediaPlayer
+     * @instance
+     */
     function pause() {
         if (!playbackInitialized) {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
@@ -209,6 +216,12 @@ function MediaPlayer() {
         playbackController.pause();
     }
 
+    /**
+     * Returns a Boolean that indicates whether the Video Element is paused.
+     * @return {Boolean}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
     function isPaused() {
         if (!playbackInitialized) {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
@@ -216,6 +229,12 @@ function MediaPlayer() {
         return playbackController.isPaused();
     }
 
+    /**
+     * Returns a Boolean that indicates whether the media is in the process of seeking to a new position.
+     * @return {Boolean}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
     function isSeeking() {
         if (!playbackInitialized) {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
@@ -223,6 +242,12 @@ function MediaPlayer() {
         return playbackController.isSeeking();
     }
 
+    /**
+     * Use this method to set the native Video Element's muted state. Takes a Boolean that determines whether audio is muted. true if the audio is muted and false otherwise.
+     * @param {Boolean} value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
     function setMute(value) {
         if (!element) {
             throw ELEMENT_NOT_ATTACHED_ERROR;
@@ -230,6 +255,12 @@ function MediaPlayer() {
         element.muted = value;
     }
 
+    /**
+     * A Boolean that determines whether audio is muted.
+     * @returns {Boolean}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
     function isMuted() {
         if (!element) {
             throw ELEMENT_NOT_ATTACHED_ERROR;
@@ -237,6 +268,12 @@ function MediaPlayer() {
         return element.muted;
     }
 
+    /**
+     * A double indicating the audio volume, from 0.0 (silent) to 1.0 (loudest).
+     * @param {Number} value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
     function setVolume(value) {
         if (!element) {
             throw ELEMENT_NOT_ATTACHED_ERROR;
@@ -244,16 +281,17 @@ function MediaPlayer() {
         element.volume = value;
     }
 
+    /**
+     * Returns the current audio volume, from 0.0 (silent) to 1.0 (loudest).
+     * @returns {Number}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
     function getVolume() {
         if (!element) {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
         return element.volume;
-    }
-
-    function getDVRInfoMetric() {
-        var metric = metricsModel.getReadOnlyMetricsFor('video') || metricsModel.getReadOnlyMetricsFor('audio');
-        return dashMetrics.getCurrentDVRInfo(metric);
     }
 
     /**
@@ -486,6 +524,20 @@ function MediaPlayer() {
     }
 
     /**
+     * This method should be used to extend or replace internal dash.js objects.
+     * There are two ways to extend dash.js (determined by the override argument):
+     * 1. If you set override to true any public method or property in your custom object will
+     * override the dash.js parent object's property(ies) and be used instead but the dashj.s parent will
+     * still be created.
+     *
+     * 2. If you set override to false your object will completely replace the dash.js object.
+     * (Note: This is how it was in 1.x of Dash.js with Dijon).
+     *  .
+     * When you extend you get access to this.context, this.factory and this.parent to operate with in your custom object.
+     * this.context can be used to pass context for singleton access.
+     * this.factory is ues to call factory.getSingletonInstance().
+     * this.parent is the reference of the parent object to call other public methods. (Excluded if you extend with override set to false or option 2)
+     *
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -494,9 +546,11 @@ function MediaPlayer() {
     }
 
     /**
-     * @param type
-     * @param listener
-     * @param scope
+     * Use the on method to listen for public events found in MediaPlayer.events. {@link class:MediaPlayerEvents}
+     *
+     * @param {String} type - {@link class:MediaPlayerEvents}
+     * @param {Function} listener - callback method when the event fires.
+     * @param {Object} scope - context of the listener so it can be removed properly.
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -505,9 +559,11 @@ function MediaPlayer() {
     }
 
     /**
-     * @param type
-     * @param listener
-     * @param scope
+     * Use the off method to remove listeners for public events found in MediaPlayer.events. {@link class:MediaPlayerEvents}
+     *
+     * @param {String} type - {@link class:MediaPlayerEvents}
+     * @param {Function} listener - callback method when the event fires.
+     * @param {Object} scope - context of the listener so it can be removed properly.
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -516,6 +572,7 @@ function MediaPlayer() {
     }
 
     /**
+     * Current version of Dash.js
      * @returns {string} the current dash.js version string.
      * @memberof module:MediaPlayer
      * @instance
@@ -705,6 +762,10 @@ function MediaPlayer() {
     }
 
     /**
+     * Set to true if you would like dash.js to keep downloading fragments in the background
+     * when the video element is paused.
+     *
+     * @default false
      * @param value
      * @memberof module:MediaPlayer
      * @instance
@@ -714,7 +775,9 @@ function MediaPlayer() {
     }
 
     /**
+     * Returns a boolean of the current state of ScheduleWhilePaused.
      * @returns {boolean}
+     * @see {@link module:MediaPlayer#setScheduleWhilePaused setScheduleWhilePaused()}
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -724,6 +787,10 @@ function MediaPlayer() {
 
 
     /**
+     * Returns the DashMetrics.js Module. You use this Module to get access to all the public metrics
+     * stored in dash.js
+     *
+     * @see {@link module:DashMetrics}
      * @returns {object}
      * @memberof module:MediaPlayer
      * @instance
@@ -733,6 +800,7 @@ function MediaPlayer() {
     }
 
     /**
+     *
      * @param type
      * @returns {object}
      * @memberof module:MediaPlayer
@@ -839,6 +907,8 @@ function MediaPlayer() {
     }
 
     /**
+     * Use this method to explicitly set the starting bitrate for audio | video
+     *
      * @param type
      * @param {number} value A value of the initial bitrate, kbps
      * @memberof module:MediaPlayer
@@ -1055,10 +1125,10 @@ function MediaPlayer() {
     }
 
     /**
+     * @deprecated since version 2.0 Instead use {@link module:MediaPlayer#getAutoSwitchQualityFor getAutoSwitchQualityFor()}.
      * @returns {boolean} Current state of adaptive bitrate switching
      * @memberof module:MediaPlayer
      * @instance
-     *
      */
     function getAutoSwitchQuality() {
         return abrController.getAutoSwitchBitrateFor('video') || abrController.getAutoSwitchBitrateFor('audio');
@@ -1067,6 +1137,7 @@ function MediaPlayer() {
     /**
      * Set to false to switch off adaptive bitrate switching.
      *
+     * @deprecated since version 2.0 Instead use {@link module:MediaPlayer#setAutoSwitchQualityFor setAutoSwitchQualityFor()}.
      * @param value {boolean}
      * @default {boolean} true
      * @memberof module:MediaPlayer
@@ -1078,10 +1149,10 @@ function MediaPlayer() {
     }
 
     /**
+     * @param type {string} 'audio' | 'video'
      * @returns {boolean} Current state of adaptive bitrate switching
      * @memberof module:MediaPlayer
      * @instance
-     *
      */
     function getAutoSwitchQualityFor(type) {
         return abrController.getAutoSwitchBitrateFor(type);
@@ -1090,6 +1161,7 @@ function MediaPlayer() {
     /**
      * Set to false to switch off adaptive bitrate switching.
      *
+     * @param type {string} 'audio' | 'video'
      * @param value {boolean}
      * @default {boolean} true
      * @memberof module:MediaPlayer
@@ -1105,6 +1177,9 @@ function MediaPlayer() {
      * (ThroughputRule, BufferOccupancyRule, InsufficientBufferRule and AbandonRequestsRule)
      * is replaced by the buffer-occupancy-based BOLA rule set (BolaRule, BolaAbandonRule).
      * The paper at http://arxiv.org/abs/1601.06748 shows the rationale behind BOLA.
+     *
+     * Note: This is a work in progress. There are still known issues that will
+     * most likely be resolved in the next release (2.1).
      *
      * @param value {boolean}
      * @default {boolean} false
@@ -1269,7 +1344,14 @@ function MediaPlayer() {
     }
 
     /**
-     * @param value
+     * The time that the internal buffer target will be set to post startup/seeks.
+     *
+     * When the time is set higher than the default you will have to wait longer
+     * to see automatic bitrate switches but will have a larger buffer which
+     * will increase stability.
+     *
+     * @default 12 seconds.
+     * @param {int} value
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1278,7 +1360,13 @@ function MediaPlayer() {
     }
 
     /**
-     * @param value
+     * The time that the internal buffer target will be set to once playing the top quality.
+     * If there are multiple bitrates in your adaptation, and the media is playing at the highest
+     * bitrate, then we try to build a larger buffer at the top quality to increase stability
+     * and to maintain media quality.
+     *
+     * @default 30 seconds.
+     * @param {int} value
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1287,25 +1375,12 @@ function MediaPlayer() {
     }
 
     /**
-     * @param value
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function setFragmentLoaderRetryAttempts (value) {
-        mediaPlayerModel.setFragmentRetryAttempts(value);
-    }
-
-    /**
-     * @param value
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function setFragmentLoaderRetryInterval (value) {
-        mediaPlayerModel.setFragmentRetryInterval(value);
-    }
-
-    /**
-     * @param value
+     * The time that the internal buffer target will be set to once playing the top quality for long form content.
+     *
+     * @default 60 seconds.
+     * @see {@link module:MediaPlayer#setLongFormContentDurationThreshold setLongFormContentDurationThreshold()}
+     * @see {@link module:MediaPlayer#setBufferTimeAtTopQuality setBufferTimeAtTopQuality()}
+     * @param {int} value
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1314,6 +1389,11 @@ function MediaPlayer() {
     }
 
     /**
+     * The threshold which defines if the media is considered long form content.
+     * This will directly affect the buffer targets when playing back at the top quality.
+     *
+     * @see {@link module:MediaPlayer#setBufferTimeAtTopQualityLongForm setBufferTimeAtTopQualityLongForm()}
+     * @default 600 seconds (10 minutes).
      * @param value
      * @memberof module:MediaPlayer
      * @instance
@@ -1323,6 +1403,12 @@ function MediaPlayer() {
     }
 
     /**
+     * A threshold, in seconds, of when dashjs abr becomes less conservative since we have a
+     * larger "rich" buffer.
+     * The BufferOccupancyRule,js rule will override the ThroughputRule's decision when the
+     * buffer level surpasses this value and while it remains greater than this value.
+     *
+     * @default 20 seconds
      * @param value
      * @memberof module:MediaPlayer
      * @instance
@@ -1332,6 +1418,11 @@ function MediaPlayer() {
     }
 
     /**
+     * A percentage between 0.0 and 1 to reduce the measured throughput calculations.
+     * The default is 0.9. The lower the value the more conservative and restricted the
+     * measured throughput calculations will be. please use carefully. This will directly
+     * affect the ABR logic in dash.js
+     *
      * @param value
      * @memberof module:MediaPlayer
      * @instance
@@ -1341,7 +1432,10 @@ function MediaPlayer() {
     }
 
     /**
-     * @return value
+     * Returns the number of the current BandwidthSafetyFactor
+     *
+     * @return {number} value
+     * @see {@link module:MediaPlayer#setBandwidthSafetyFactor setBandwidthSafetyFactor()}
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1350,6 +1444,10 @@ function MediaPlayer() {
     }
 
     /**
+     * A timeout value in seconds, which during,  the ABRController will block switch-up events.
+     * This will only take effect after an abandoned fragment event occurs.
+     *
+     * @default 10 seconds
      * @param value
      * @memberof module:MediaPlayer
      * @instance
@@ -1359,6 +1457,31 @@ function MediaPlayer() {
     }
 
     /**
+     * Total number of retry attempts that will occur on a fragment load before it fails.
+     *
+     * @default 3
+     * @param {int} value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setFragmentLoaderRetryAttempts (value) {
+        mediaPlayerModel.setFragmentRetryAttempts(value);
+    }
+
+    /**
+     * Time in milliseconds of which to reload a failed fragment load attempt.
+     *
+     * @default 1000
+     * @param value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setFragmentLoaderRetryInterval (value) {
+        mediaPlayerModel.setFragmentRetryInterval(value);
+    }
+
+    /**
+     * Detects if Protection is included and returns an instance of ProtectionController.js
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1367,6 +1490,9 @@ function MediaPlayer() {
     }
 
     /**
+     * Will override dash.js protection controller.
+     *
+     * @deprecated since version 2.0 Instead use {@link module:MediaPlayer#extend extend()}.
      * @param {ProtectionController} [value] valid protection controller instance.
      * @memberof module:MediaPlayer
      * @instance
@@ -1378,7 +1504,7 @@ function MediaPlayer() {
     /**
      * @param {ProtectionData} [value] object containing
      * property names corresponding to key system name strings and associated
-     * values being instances of
+     * values being instances of.
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1484,13 +1610,9 @@ function MediaPlayer() {
     }
 
     /**
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    //function destroy() {}
-
-    /**
-     * Sets the MPD source and the video element to null.
+     * Sets the MPD source and the video element to null. You can also reset the MediaPlayer by
+     * calling attachSource with a new source file.
+     *
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1498,6 +1620,10 @@ function MediaPlayer() {
         attachSource(null);
         attachView(null);
     }
+
+    //***********************************
+    // PRIVATE METHODS
+    //***********************************
 
     function resetAndIntializePlayback() {
         if (playbackInitialized) {
@@ -1645,6 +1771,11 @@ function MediaPlayer() {
         }
 
         return null;
+    }
+
+    function getDVRInfoMetric() {
+        var metric = metricsModel.getReadOnlyMetricsFor('video') || metricsModel.getReadOnlyMetricsFor('audio');
+        return dashMetrics.getCurrentDVRInfo(metric);
     }
 
     instance = {
