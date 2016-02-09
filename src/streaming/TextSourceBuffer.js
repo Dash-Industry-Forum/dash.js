@@ -203,7 +203,7 @@ function TextSourceBuffer() {
                         ccContent = ISOBoxer.Utils.dataViewToString(dataView, 'utf-8');
                         try {
                             result = parser.parse(ccContent);
-                            textTrackExtensions.addCaptions(currFragmentedTrackIdx, firstSubtitleStart / timescale, result);
+                            textTracks.addCaptions(currFragmentedTrackIdx, firstSubtitleStart / timescale, result);
                         } catch (e) {
                             //empty cue ?
                         }
@@ -248,7 +248,7 @@ function TextSourceBuffer() {
                         }
                     }
                     if (captionArray.length > 0) {
-                        textTrackExtensions.addCaptions(currFragmentedTrackIdx, 0, captionArray);
+                        textTracks.addCaptions(currFragmentedTrackIdx, 0, captionArray);
                     }
                 }
             }
