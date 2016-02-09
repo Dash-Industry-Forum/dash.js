@@ -33,7 +33,7 @@
  * Defines the public interface for all Key Systems (DRMs) supported
  * by the player.
  *
- * @interface
+ * @interface KeySystem
  */
 
 /**

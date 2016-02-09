@@ -38,6 +38,7 @@
  * with this object's response message.  Supported message types can be found
  * {@link https://w3c.github.io/encrypted-media/#idl-def-MediaKeyMessageType|here}.
  * @constructor
+ * @ignore
  */
 class LicenseRequestComplete {
     constructor(message, sessionToken, messageType) {

@@ -41,9 +41,9 @@
  *
  * Applications should not need direct access to this object.  All interactions with
  * the protection system should be performed with
- * {@link MediaPlayer.dependencies.ProtectionController}
+ * {@link module:ProtectionController}
  *
- * @interface MediaPlayer.models.ProtectionModel
+ * @interface ProtectionModel
  */
 
 let ProtectionModel = function () { };
@@ -51,9 +51,10 @@ let ProtectionModel = function () { };
 /**
  * Returns an array of all initialization data currently used by
  * active sessions.
- *
  * @function
- * @name MediaPlayer.models.ProtectionModel#getAllInitData
+ * @instance
+ * @name getAllInitData
+ * @memberof ProtectionModel
  * @returns {ArrayBuffer[]} an array of initialization data buffers
  */
 
@@ -63,7 +64,10 @@ let ProtectionModel = function () { };
  * with a KeySystemAccess object as event data
  *
  * @function
- * @name MediaPlayer.models.ProtectionModel#requestKeySystemAccess
+ * @instance
+ * @name requestKeySystemAccess
+ * @memberof ProtectionModel
+ *
  * @param {Object[]} ksConfigurations array of desired key system
  * configurations in priority order (highest priority first)
  * @param {MediaPlayer.dependencies.protection.KeySystem} ksConfigurations.ks
@@ -78,7 +82,9 @@ let ProtectionModel = function () { };
  * ProtectionModel.  Sends ENAME_KEY_SYSTEM_SELECTED with no data
  *
  * @function
- * @name MediaPlayer.models.ProtectionModel#selectKeySystem
+ * @instance
+ * @name selectKeySystem
+ * @memberof ProtectionModel
  * @param keySystemAccess {MediaPlayer.vo.protection.KeySystemAccess} the key
  * system access token representing a supported key system
  */
@@ -87,7 +93,9 @@ let ProtectionModel = function () { };
  * Associate this protection model with a HTMLMediaElement
  *
  * @function
- * @name MediaPlayer.models.ProtectionModel#setMediaElement
+ * @instance
+ * @name setMediaElement
+ * @memberof ProtectionModel
  * @param mediaElement {HTMLMediaElement} the media element to
  * which we should associate this protection model and all current
  * key sessions
@@ -99,7 +107,9 @@ let ProtectionModel = function () { };
  * as data.
  *
  * @function
- * @name MediaPlayer.models.ProtectionModel#createKeySession
+ * @instance
+ * @name createKeySession
+ * @memberof ProtectionModel
  * @param {ArrayBuffer} initData PSSH box for the currently selected
  * key system.
  * @param {string} sessionType the desired session type.  One of "temporary",
@@ -112,7 +122,9 @@ let ProtectionModel = function () { };
  * intended for the CDM)
  *
  * @function
- * @name MediaPlayer.models.ProtectionModel#updateKeySession
+ * @instance
+ * @name updateKeySession
+ * @memberof ProtectionModel
  * @param {MediaPlayer.vo.protection.SessionToken} sessionToken the session
  * token
  * @param {ArrayBuffer} message the message that should be delivered to the CDM
@@ -125,7 +137,9 @@ let ProtectionModel = function () { };
  * {@MediaPlayer.vo.protection.SessionToken} as data.
  *
  * @function
- * @name MediaPlayer.models.ProtectionModel#loadKeySession
+ * @instance
+ * @name loadKeySession
+ * @memberof ProtectionModel
  * @param {string} sessionID the session ID corresponding to the persisted
  * session data to be loaded
  */
@@ -136,8 +150,10 @@ let ProtectionModel = function () { };
  * ENAME_KEY_SESSION_CLOSED with sessionID as data
  *
  * @function
- * @name MediaPlayer.models.ProtectionModel#removeKeySession
- * @param {MediaPlayer.vo.protection.SessionToken} sessionToken the session
+ * @instance
+ * @name removeKeySession
+ * @memberof ProtectionModel
+ * @param {SessionToken} sessionToken the session
  * token
  */
 
@@ -147,7 +163,9 @@ let ProtectionModel = function () { };
  * with sessionID as data
  *
  * @function
- * @name MediaPlayer.models.ProtectionModel#closeKeySession
+ * @instance
+ * @name closeKeySession
+ * @memberof ProtectionModel
  * @param sessionToken the session token
  */
 
@@ -155,7 +173,9 @@ let ProtectionModel = function () { };
  * Sets the certificate to be used by the CDM for encrypting messages
  *
  * @function
- * @name MediaPlayer.models.ProtectionModel#setServerCertificate
+ * @instance
+ * @name setServerCertificate
+ * @memberof ProtectionModel
  * @param {ArrayBuffer} serverCertificate
  */
 
@@ -165,14 +185,9 @@ let ProtectionModel = function () { };
  *
  * @instance
  * @name keySystem
- * @memberof MediaPlayer.models.ProtectionModel
+ * @memberof ProtectionModel
  * @readonly
  * @type MediaPlayer.dependencies.protection.KeySystem
- */
-
-
-/**
- * needkey/encrypted event
  */
 
 export default ProtectionModel;

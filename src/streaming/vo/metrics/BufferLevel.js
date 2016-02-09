@@ -28,6 +28,10 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
+/**
+ * @class
+ */
 class BufferLevel {
     /**
      * @description This Object holds reference to the current buffer level and the time it was recorded.

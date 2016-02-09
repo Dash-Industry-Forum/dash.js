@@ -65,9 +65,11 @@ import DashManifestModel from '../dash/models/DashManifestModel.js';
 import DashMetrics from '../dash/DashMetrics.js';
 import TimelineConverter from '../dash/utils/TimelineConverter.js';
 
-
 /**
  * @Module MediaPlayer
+ * @description The MediaPlayer is the primary dash.js Module and a Facade to build your player around.
+ * It will allow you access to all the important dash.js properties/methods via the public API and all the
+ * events to build a robust DASH media player.
  */
 function MediaPlayer() {
 
@@ -116,6 +118,23 @@ function MediaPlayer() {
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
     }
 
+    /**
+     * Upon creating the MediaPlayer you must call initialize before you call anything else.
+     * There is one exception to this rule. It is crucial to call {@link module:MediaPlayer#extend extend()}
+     * with all your extensions prior to calling initialize.
+     *
+     * ALL arguments are optional and there are individual methods to set each argument later on.
+     * The args in this method are just for convenience and should only be used for a simple player setup.
+     *
+     * @param {HTML5MediaElement} view - Optional arg to set the video element. {@link module:MediaPlayer#attachView attachView()}
+     * @param {string} source - Optional arg to set the media source. {@link module:MediaPlayer#attachSource attachSource()}
+     * @param {boolean} AutoPlay - Optional arg to set auto play. {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
+     * @see {@link module:MediaPlayer#attachView attachView()}
+     * @see {@link module:MediaPlayer#attachSource attachSource()}
+     * @see {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
     function initialize(view, source, AutoPlay) {
 
         capabilities = Capabilities(context).getInstance();
@@ -166,26 +185,6 @@ function MediaPlayer() {
         return (!!element && !!source);
     }
 
-    function initializePlayback() {
-        if (!playbackInitialized) {
-            if (!mediaPlayerInitialized) {
-                throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
-            }
-            if (!element || !source) {
-                throw 'Missing view or source.';
-            }
-
-            playbackInitialized = true;
-            log('Playback Initialized');
-            createControllers();
-            if (typeof source === 'string') {
-                streamController.load(source);
-            } else {
-                streamController.loadWithManifest(source);
-            }
-        }
-    }
-
     /**
      * The play method initiates playback of the media defined by the {@link module:MediaPlayer#attachSource attachSource()} method.
      * This method will call play on the native Video Element.
@@ -218,7 +217,7 @@ function MediaPlayer() {
 
     /**
      * Returns a Boolean that indicates whether the Video Element is paused.
-     * @return {Boolean}
+     * @return {boolean}
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -231,7 +230,7 @@ function MediaPlayer() {
 
     /**
      * Returns a Boolean that indicates whether the media is in the process of seeking to a new position.
-     * @return {Boolean}
+     * @return {boolean}
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -244,7 +243,7 @@ function MediaPlayer() {
 
     /**
      * Use this method to set the native Video Element's muted state. Takes a Boolean that determines whether audio is muted. true if the audio is muted and false otherwise.
-     * @param {Boolean} value
+     * @param {boolean} value
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -257,7 +256,7 @@ function MediaPlayer() {
 
     /**
      * A Boolean that determines whether audio is muted.
-     * @returns {Boolean}
+     * @returns {boolean}
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -270,7 +269,7 @@ function MediaPlayer() {
 
     /**
      * A double indicating the audio volume, from 0.0 (silent) to 1.0 (loudest).
-     * @param {Number} value
+     * @param {number} value
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -283,7 +282,7 @@ function MediaPlayer() {
 
     /**
      * Returns the current audio volume, from 0.0 (silent) to 1.0 (loudest).
-     * @returns {Number}
+     * @returns {number}
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -435,19 +434,6 @@ function MediaPlayer() {
         return d;
     }
 
-    function getAsUTC(valToConvert) {
-        var metric = getDVRInfoMetric();
-        var availableFrom,
-            utcValue;
-
-        if (!metric) {
-            return 0;
-        }
-        availableFrom = metric.manifestInfo.availableFrom.getTime() / 1000;
-        utcValue = valToConvert + (availableFrom + metric.range.start);
-        return utcValue;
-    }
-
     /**
      * Use this method to get the current playhead time as an absolute value, the time in seconds since midnight UTC, Jan 1 1970.
      * Note - this property only has meaning for live streams. If called before play() has begun, it will return a value of NaN.
@@ -515,29 +501,25 @@ function MediaPlayer() {
         return (h === 0 ? '' : (h < 10 ? '0' + h.toString() + ':' : h.toString() + ':')) + (m < 10 ? '0' + m.toString() : m.toString()) + ':' + (s < 10 ? '0' + s.toString() : s.toString());
     }
 
-    function getActiveStream() {
-        if (!playbackInitialized) {
-            throw PLAYBACK_NOT_INITIALIZED_ERROR;
-        }
-        var streamInfo = streamController.getActiveStreamInfo();
-        return streamInfo ? streamController.getStreamById(streamInfo.id) : null;
-    }
-
     /**
      * This method should be used to extend or replace internal dash.js objects.
      * There are two ways to extend dash.js (determined by the override argument):
-     * 1. If you set override to true any public method or property in your custom object will
-     * override the dash.js parent object's property(ies) and be used instead but the dash.js parent will
-     * still be created.
+     * <ol>
+     * <li>If you set override to true any public method or property in your custom object will
+     * override the dash.js parent object's property(ies) and will be used instead but the
+     * dashj.s parent module will still be created.</li>
      *
-     * 2. If you set override to false your object will completely replace the dash.js object.
-     * (Note: This is how it was in 1.x of Dash.js with Dijon).
-     *  .
-     * When you extend you get access to this.context, this.factory and this.parent to operate with in your custom object.
-     * this.context can be used to pass context for singleton access.
-     * this.factory is ues to call factory.getSingletonInstance().
-     * this.parent is the reference of the parent object to call other public methods. (Excluded if you extend with override set to false or option 2)
-     *
+     * <li>If you set override to false your object will completely replace the dash.js object.
+     * (Note: This is how it was in 1.x of Dash.js with Dijon).</li>
+     * </ol>
+     * <b>When you extend you get access to this.context, this.factory and this.parent to operate with in your custom object.</b>
+     * <ul>
+     * <li><b>this.context</b> - can be used to pass context for singleton access.</li>
+     * <li><b>this.factory</b> - can be used to call factory.getSingletonInstance().</li>
+     * <li><b>this.parent</b> - is the reference of the parent object to call other public methods. (this.parent is excluded if you extend with override set to false or option 2)</li>
+     * </ul>
+     * <b>You must call extend before you call initialize</b>
+     * @see {@link module:MediaPlayer#initialize initialize()}
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -546,9 +528,9 @@ function MediaPlayer() {
     }
 
     /**
-     * Use the on method to listen for public events found in MediaPlayer.events. {@link class:MediaPlayerEvents}
+     * Use the on method to listen for public events found in MediaPlayer.events. {@link MediaPlayerEvents}
      *
-     * @param {String} type - {@link class:MediaPlayerEvents}
+     * @param {String} type - {@link MediaPlayerEvents}
      * @param {Function} listener - callback method when the event fires.
      * @param {Object} scope - context of the listener so it can be removed properly.
      * @memberof module:MediaPlayer
@@ -559,9 +541,9 @@ function MediaPlayer() {
     }
 
     /**
-     * Use the off method to remove listeners for public events found in MediaPlayer.events. {@link class:MediaPlayerEvents}
+     * Use the off method to remove listeners for public events found in MediaPlayer.events. {@link MediaPlayerEvents}
      *
-     * @param {String} type - {@link class:MediaPlayerEvents}
+     * @param {String} type - {@link MediaPlayerEvents}
      * @param {Function} listener - callback method when the event fires.
      * @param {Object} scope - context of the listener so it can be removed properly.
      * @memberof module:MediaPlayer
@@ -954,7 +936,7 @@ function MediaPlayer() {
     /**
      * This method returns the list of all available streams from a given manifest
      * @param manifest
-     * @returns {Array} list of {@link MediaPlayer.vo.StreamInfo}
+     * @returns {Array} list of {@link StreamInfo}
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -968,7 +950,7 @@ function MediaPlayer() {
     /**
      * This method returns the list of all available tracks for a given media type
      * @param type
-     * @returns {Array} list of {@link MediaPlayer.vo.MediaInfo}
+     * @returns {Array} list of {@link MediaInfo}
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -986,7 +968,7 @@ function MediaPlayer() {
      * @param type
      * @param manifest
      * @param streamInfo
-     * @returns {Array} list of {@link MediaPlayer.vo.MediaInfo}
+     * @returns {Array} list of {@link MediaInfo}
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1002,7 +984,7 @@ function MediaPlayer() {
 
     /**
      * @param type
-     * @returns {Object} {@link MediaPlayer.vo.MediaInfo}
+     * @returns {Object} {@link MediaInfo}
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1054,7 +1036,7 @@ function MediaPlayer() {
     }
 
     /**
-     * @param track instance of {@link MediaPlayer.vo.MediaInfo}
+     * @param track instance of {@link MediaInfo}
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1178,12 +1160,10 @@ function MediaPlayer() {
      * InsufficientBufferRule and AbandonRequestsRule) with the buffer-occupancy-based
      * BOLA rule set (BolaRule, BolaAbandonRule).
      *
-     * The paper at http://arxiv.org/abs/1601.06748 shows the rationale behind BOLA.
-     * The https://github.com/Dash-Industry-Forum/dash.js/wiki/BOLA-status page contains
-     * more details about the implementation status.
-     *
+     * @see {@link http://arxiv.org/abs/1601.06748 BOLA WhitePaper.}
+     * @see {@link https://github.com/Dash-Industry-Forum/dash.js/wiki/BOLA-status More details about the implementation status.}
      * @param value {boolean}
-     * @default {boolean} false
+     * @default false
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1788,6 +1768,47 @@ function MediaPlayer() {
     function getDVRInfoMetric() {
         var metric = metricsModel.getReadOnlyMetricsFor('video') || metricsModel.getReadOnlyMetricsFor('audio');
         return dashMetrics.getCurrentDVRInfo(metric);
+    }
+
+    function getAsUTC(valToConvert) {
+        var metric = getDVRInfoMetric();
+        var availableFrom,
+            utcValue;
+
+        if (!metric) {
+            return 0;
+        }
+        availableFrom = metric.manifestInfo.availableFrom.getTime() / 1000;
+        utcValue = valToConvert + (availableFrom + metric.range.start);
+        return utcValue;
+    }
+
+    function getActiveStream() {
+        if (!playbackInitialized) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
+        var streamInfo = streamController.getActiveStreamInfo();
+        return streamInfo ? streamController.getStreamById(streamInfo.id) : null;
+    }
+
+    function initializePlayback() {
+        if (!playbackInitialized) {
+            if (!mediaPlayerInitialized) {
+                throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+            }
+            if (!element || !source) {
+                throw 'Missing view or source.';
+            }
+
+            playbackInitialized = true;
+            log('Playback Initialized');
+            createControllers();
+            if (typeof source === 'string') {
+                streamController.load(source);
+            } else {
+                streamController.loadWithManifest(source);
+            }
+        }
     }
 
     instance = {
