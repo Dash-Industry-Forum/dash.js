@@ -302,7 +302,7 @@ function StreamController() {
         var nextStream = getNextStream();
         var isLast = e.streamInfo.isLast;
 
-        // buffering has been complted, now we can signal end of stream
+        // buffering has been completed, now we can signal end of stream
         if (mediaSource && isLast) {
             mediaSourceController.signalEndOfStream(mediaSource);
         }

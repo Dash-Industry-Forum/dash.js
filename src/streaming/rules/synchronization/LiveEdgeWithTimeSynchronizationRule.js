@@ -53,7 +53,7 @@ function LiveEdgeWithTimeSynchronizationRule(config) {
             // is used as an initial point for finding the actual live edge.
             // But for SegmentTimeline mpds (w/o a negative @r) the end of the
             // last segment is the actual live edge. At the same time, calculated live edge is an expected live edge.
-            // Thus, we need to switch an expected live edge and actual live edge for SegmentTimelne streams.
+            // Thus, we need to switch an expected live edge and actual live edge for SegmentTimeline streams.
             var actualLiveEdge = timelineConverter.getExpectedLiveEdge();
             timelineConverter.setExpectedLiveEdge(liveEdgeInitialSearchPosition);
             callback(SwitchRequest(context).create(actualLiveEdge, p));

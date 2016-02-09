@@ -130,16 +130,16 @@ function DashAdapter() {
         mediaInfo.viewpoint = viewpoint ? viewpoint.value : undefined;
         mediaInfo.accessibility = dashManifestModel.getAccessibilityForAdaptation(a).map(function (accessibility) {
             let accessibilityValue = accessibility.value;
-            let accessiblityData = accessibilityValue;
+            let accessibilityData = accessibilityValue;
             if (accessibility.schemeIdUri && (accessibility.schemeIdUri.search('cea-608') >= 0) && typeof (cea608parser) !== 'undefined') {
                 if (accessibilityValue) {
-                    accessiblityData = 'cea-608:' + accessibilityValue;
+                    accessibilityData = 'cea-608:' + accessibilityValue;
                 } else {
-                    accessiblityData = 'cea-608';
+                    accessibilityData = 'cea-608';
                 }
                 mediaInfo.embeddedCaptions = true;
             }
-            return accessiblityData;
+            return accessibilityData;
         });
         mediaInfo.audioChannelConfiguration =  dashManifestModel.getAudioChannelConfigurationForAdaptation(a).map(function (audioChannelConfiguration) {
             return audioChannelConfiguration.value;

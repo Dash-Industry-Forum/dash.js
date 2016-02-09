@@ -83,8 +83,8 @@ function VirtualBuffer() {
     function storeAppendedChunk(chunk, buffer) {
         if (!chunk || !buffer) return;
 
-        // after the media segment has bee appended we check how the buffred ranges of SourceBuffer have been change. The
-        // difference is the actual buffred range of the appended segment.
+        // after the media segment has bee appended we check how the buffered ranges of SourceBuffer have been change. The
+        // difference is the actual buffered range of the appended segment.
         // We need to update actualBufferedRanges so that it reflects SourceBuffer ranges.
         // Also we store the appended chunk so that any BufferController has access to the list
         // of appended chunks.
@@ -122,7 +122,7 @@ function VirtualBuffer() {
 
         if (!oldChunk) return;
 
-        // if there is an old chunk already appended for the same index, we may need to adjust buffredRange of a new chunk, because
+        // if there is an old chunk already appended for the same index, we may need to adjust bufferedRange of a new chunk, because
         // it may be not valid.
         //
         // Example:
@@ -325,7 +325,7 @@ function VirtualBuffer() {
             isStartIncluded = (chunkStart >= rangeStart && chunkStart < rangeEnd);
             isEndIncluded = (chunkEnd > rangeStart && chunkEnd <= rangeEnd);
 
-            // if a segment has been partially removed from SourceBuffer we select it as weel, but we
+            // if a segment has been partially removed from SourceBuffer we select it as well, but we
             // need to update its bufferedRange
             //
             // Example 1:

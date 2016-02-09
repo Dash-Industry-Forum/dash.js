@@ -98,7 +98,7 @@ class HTTPRequest {
          */
         this._stream = null;
         /**
-         * Real-Time | The real time at which the request finshed.
+         * Real-Time | The real time at which the request finished.
          * @public
          */
         this._tfinish = null;

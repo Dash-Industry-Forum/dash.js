@@ -69,7 +69,7 @@ function ScheduleController(config) {
         playListTraceMetrics,
         playListTraceMetricsClosed,
         isFragmentLoading,
-        timeToloadDelay,
+        timeToLoadDelay,
         validateTimeout,
         seekTarget,
         playbackController,
@@ -88,7 +88,7 @@ function ScheduleController(config) {
         playListTraceMetrics = null;
         playListTraceMetricsClosed = true;
         isFragmentLoading = false;
-        timeToloadDelay = 0;
+        timeToLoadDelay = 0;
         seekTarget = NaN;
     }
 
@@ -419,11 +419,11 @@ function ScheduleController(config) {
     }
 
     function setTimeToLoadDelay(value) {
-        timeToloadDelay = value;
+        timeToLoadDelay = value;
     }
 
     function getTimeToLoadDelay() {
-        return timeToloadDelay;
+        return timeToLoadDelay;
     }
 
     function getStreamProcessor() {
@@ -464,7 +464,7 @@ function ScheduleController(config) {
         stop();
         fragmentController.detachModel(fragmentModel);
         isFragmentLoading = false;
-        timeToloadDelay = 0;
+        timeToLoadDelay = 0;
         seekTarget = NaN;
         playbackController = null;
         playListMetrics = null;

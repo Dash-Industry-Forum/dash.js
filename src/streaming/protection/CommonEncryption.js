@@ -93,7 +93,7 @@ class CommonEncryption {
     }
 
     /**
-     * Parse a standard common encryption PSSH which contains a sinmple
+     * Parse a standard common encryption PSSH which contains a simple
      * base64-encoding of the init data
      *
      * @param cpData the ContentProtection element

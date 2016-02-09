@@ -162,7 +162,7 @@ function TimeSyncController() {
         return new Date(utcDate).getTime();
     }
 
-    // try to use the built in parser, since xsdate is a contrained ISO8601
+    // try to use the built in parser, since xsdate is a constrained ISO8601
     // which is supported natively by Date.parse. if that fails, try a
     // regex-based version used elsewhere in this application.
     function xsdatetimeDecoder(xsdatetimeStr) {

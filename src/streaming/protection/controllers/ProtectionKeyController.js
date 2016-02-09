@@ -150,7 +150,7 @@ function ProtectionKeyController() {
     }
 
     /**
-     * Returns a set of supported key systems and CENC intialization data
+     * Returns a set of supported key systems and CENC initialization data
      * from the given array of ContentProtection elements.  Only
      * key systems that are supported by this player will be returned.
      * Key systems are returned in priority order (highest first).

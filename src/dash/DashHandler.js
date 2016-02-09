@@ -867,7 +867,7 @@ function DashHandler(config) {
             return null;
         }
 
-        if (requestedTime !== time) { // When playing at live edge with 0 delay we may loop back with same time and index until it is available. Reduces verbosness of logs.
+        if (requestedTime !== time) { // When playing at live edge with 0 delay we may loop back with same time and index until it is available. Reduces verboseness of logs.
             requestedTime = time;
             log('Getting the request for ' + type + ' time : ' + time);
         }
