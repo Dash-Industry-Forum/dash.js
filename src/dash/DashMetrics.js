@@ -34,6 +34,9 @@ import ManifestModel from '../streaming/models/ManifestModel.js';
 import DashManifestModel from './models/DashManifestModel.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
+/**
+ * @Module DashMetrics
+ */
 function DashMetrics() {
 
     let instance;
@@ -54,6 +57,13 @@ function DashMetrics() {
         return representation.bandwidth;
     }
 
+
+    /**
+     *
+     * @param representationId
+     * @param periodIdx
+     * @returns {*}
+     */
     function getIndexForRepresentation(representationId, periodIdx) {
         var representationIndex;
         var manifest = manifestModel.getValue();
@@ -69,8 +79,8 @@ function DashMetrics() {
      * @param bufferType - String 'audio' or 'video',
      * @param periodIdx - Make sure this is the period index not id
      * @return int
-     * @memberof DashMetrics#
-     * @method
+     * @memberof module:DashMetrics
+     * @instance
      */
     function getMaxIndexForBufferType(bufferType, periodIdx) {
         var maxIndex;
@@ -90,8 +100,8 @@ function DashMetrics() {
      * @return int
      * @see {@link module:MediaPlayer#setMaxAllowedBitrateFor setMaxAllowedBitrateFor()}
      * @see {@link DashMetrics#getMaxIndexForBufferType getMaxIndexForBufferType()}
-     * @memberof DashMetrics#
-     * @method
+     * @memberof module:DashMetrics
+     * @instance
      */
     function getMaxAllowedIndexForBufferType(bufferType, periodId) {
         var idx = 0;
@@ -104,6 +114,12 @@ function DashMetrics() {
         return idx;
     }
 
+    /**
+     * @param metrics
+     * @returns {*}
+     * @memberof module:DashMetrics
+     * @instance
+     */
     function getCurrentRepresentationSwitch(metrics) {
         if (metrics === null) {
             return null;
@@ -125,6 +141,12 @@ function DashMetrics() {
         return currentRepSwitch;
     }
 
+    /**
+     * @param metrics
+     * @returns {*}
+     * @memberof module:DashMetrics
+     * @instance
+     */
     function getLatestBufferLevelVO(metrics) {
         if (metrics === null) {
             return null;
@@ -138,6 +160,12 @@ function DashMetrics() {
         return bufferLevel[bufferLevel.length - 1];
     }
 
+    /**
+     * @param metrics
+     * @returns {number}
+     * @memberof module:DashMetrics
+     * @instance
+     */
     function getCurrentBufferLevel(metrics) {
         if (metrics === null) {
             return 0;
@@ -151,10 +179,22 @@ function DashMetrics() {
         return bufferLevel[bufferLevel.length - 1].level / 1000;
     }
 
+    /**
+     * @param metrics
+     * @returns {null|*|vo}
+     * @memberof module:DashMetrics
+     * @instance
+     */
     function getRequestsQueue(metrics) {
         return metrics.RequestsQueue;
     }
 
+    /**
+     * @param metrics
+     * @returns {*}
+     * @memberof module:DashMetrics
+     * @instance
+     */
     function getCurrentHttpRequest(metrics) {
         if (metrics === null) {
             return null;
@@ -183,6 +223,12 @@ function DashMetrics() {
         return currentHttpList;
     }
 
+    /**
+     * @param metrics
+     * @returns {*}
+     * @memberof module:DashMetrics
+     * @instance
+     */
     function getHttpRequests(metrics) {
         if (metrics === null) {
             return [];
@@ -191,6 +237,12 @@ function DashMetrics() {
         return !!metrics.HttpList ? metrics.HttpList : [];
     }
 
+    /**
+     * @param metrics
+     * @returns {*}
+     * @memberof module:DashMetrics
+     * @instance
+     */
     function getCurrentDroppedFrames(metrics) {
         if (metrics === null) { return null; }
 
@@ -210,6 +262,12 @@ function DashMetrics() {
         return currentDroppedFrames;
     }
 
+    /**
+     * @param metrics
+     * @returns {*}
+     * @memberof module:DashMetrics
+     * @instance
+     */
     function getCurrentSchedulingInfo(metrics) {
         if (metrics === null) return null;
 
@@ -230,6 +288,12 @@ function DashMetrics() {
         return currentSchedulingInfo;
     }
 
+    /**
+     * @param metrics
+     * @returns {*}
+     * @memberof module:DashMetrics
+     * @instance
+     */
     function getCurrentManifestUpdate(metrics) {
         if (metrics === null) return null;
 
@@ -250,6 +314,12 @@ function DashMetrics() {
         return currentManifestUpdate;
     }
 
+    /**
+     * @param metrics
+     * @returns {*}
+     * @memberof module:DashMetrics
+     * @instance
+     */
     function getCurrentDVRInfo(metrics) {
 
         if (metrics === null) {
@@ -270,6 +340,13 @@ function DashMetrics() {
         return curentDVRInfo;
     }
 
+    /**
+     * @param metrics
+     * @param id
+     * @returns {*}
+     * @memberof module:DashMetrics
+     * @instance
+     */
     function getLatestMPDRequestHeaderValueByID(metrics, id) {
         var headers = {};
         var httpRequestList,
@@ -294,6 +371,13 @@ function DashMetrics() {
         return headers[id] === undefined ? null :  headers[id];
     }
 
+    /**
+     * @param metrics
+     * @param id
+     * @returns {*}
+     * @memberof module:DashMetrics
+     * @instance
+     */
     function getLatestFragmentRequestHeaderValueByID(metrics, id) {
 
         if (metrics === null) return null;

@@ -1173,13 +1173,14 @@ function MediaPlayer() {
 
 
     /**
-     * When buffer occupancy ABR is enabled, the throughput-based ABR rule set
-     * (ThroughputRule, BufferOccupancyRule, InsufficientBufferRule and AbandonRequestsRule)
-     * is replaced by the buffer-occupancy-based BOLA rule set (BolaRule, BolaAbandonRule).
-     * The paper at http://arxiv.org/abs/1601.06748 shows the rationale behind BOLA.
+     * Enabling buffer-occupancy ABR will switch to the *experimental* implementation of BOLA,
+     * replacing the throughput-based ABR rule set (ThroughputRule, BufferOccupancyRule,
+     * InsufficientBufferRule and AbandonRequestsRule) with the buffer-occupancy-based
+     * BOLA rule set (BolaRule, BolaAbandonRule).
      *
-     * Note: This is a work in progress. There are still known issues that will
-     * most likely be resolved in the next release (2.1).
+     * The paper at http://arxiv.org/abs/1601.06748 shows the rationale behind BOLA.
+     * The https://github.com/Dash-Industry-Forum/dash.js/wiki/BOLA-status page contains
+     * more details about the implementation status.
      *
      * @param value {boolean}
      * @default {boolean} false
