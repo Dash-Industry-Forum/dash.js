@@ -190,15 +190,16 @@ function TextSourceBuffer() {
             } else {
                 samplesInfo = fragmentedTextBoxParser.getSamplesInfo(bytes);
                 sampleList = samplesInfo.sampleList;
+                if (!firstSubtitleStart && sampleList.length > 0) {
+                    firstSubtitleStart = sampleList[0].cts - chunk.start * timescale;
+                }
                 if (codecType.search('stpp') >= 0) {
                     parser = parser !== null ? parser : getParser(codecType);
                     for (i = 0; i < sampleList.length; i++) {
-                        if (!firstSubtitleStart) {
-                            firstSubtitleStart = sampleList[0].cts - chunk.start * timescale;
-                        }
-                        sampleList[i].cts -= firstSubtitleStart;
-                        this.buffered.add(sampleList[i].cts / timescale, (sampleList[i].cts + sampleList[i].duration) / timescale);
-                        let dataView = new DataView(bytes, sampleList[i].offset, sampleList[i].size);
+                        let sample = sampleList[i];
+                        sample.cts -= firstSubtitleStart;
+                        this.buffered.add(sample.cts / timescale, (sample.cts + sample.duration) / timescale);
+                        let dataView = new DataView(bytes, sample.offset, sample.size);
                         ccContent = ISOBoxer.Utils.dataViewToString(dataView, 'utf-8');
                         try {
                             result = parser.parse(ccContent);
@@ -212,6 +213,8 @@ function TextSourceBuffer() {
                     var captionArray = [];
                     for (i = 0 ; i < sampleList.length; i++) {
                         var sample = sampleList[i];
+                        sample.cts -= firstSubtitleStart;
+                        this.buffered.add(sample.cts / timescale, (sample.cts + sample.duration) / timescale);
                         var sampleData = bytes.slice(sample.offset, sample.offset + sample.size);
                         // There are boxes inside the sampleData, so we need a ISOBoxer to get at it.
                         var sampleBoxes = ISOBoxer.parseBuffer(sampleData);
