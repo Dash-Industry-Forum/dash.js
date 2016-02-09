@@ -37,6 +37,7 @@ import Debug from '../core/Debug.js';
 import VideoModel from './models/VideoModel.js';
 import TextTracks from './TextTracks.js';
 import ISOBoxer from 'codem-isoboxer';
+import cea608parser from '../../externals/cea608-parser.js';
 
 function TextSourceBuffer() {
 
@@ -212,7 +213,7 @@ function TextSourceBuffer() {
                 errHandler.timedTextError(e, 'parse', ccContent);
             }
         } else if (mediaType === 'video') { //embedded text
-            if (chunk.segmentType === 'Initialization Segment') {
+            if (chunk.segmentType === 'InitializationSegment') {
                 if (embeddedTimescale === 0) {
                     embeddedTimescale = fragmentedTextBoxParser.getMediaTimescaleFromMoov(bytes);
                     for (i = 0; i < embeddedTracks.length; i++) {
