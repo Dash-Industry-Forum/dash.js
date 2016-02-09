@@ -1327,7 +1327,12 @@ function MediaPlayer() {
     }
 
     /**
-     * @param value
+     * This value influences the buffer pruning logic.
+     * Allows you to modify the buffer that is kept in source buffer in seconds.
+     *  0|-----------bufferToPrune-----------|-----bufferToKeep-----|currentTime|
+     *
+     * @default 30 seconds
+     * @param {int} value
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1336,7 +1341,11 @@ function MediaPlayer() {
     }
 
     /**
-     * @param value
+     * This value influences the buffer pruning logic.
+     * Allows you to modify the interval of pruning buffer in seconds.
+     *
+     * @default 30 seconds
+     * @param {int} value
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1345,7 +1354,7 @@ function MediaPlayer() {
     }
 
     /**
-     * The time that the internal buffer target will be set to post startup/seeks.
+     * The time that the internal buffer target will be set to post startup/seeks (NOT top quality).
      *
      * When the time is set higher than the default you will have to wait longer
      * to see automatic bitrate switches but will have a larger buffer which
@@ -1406,7 +1415,7 @@ function MediaPlayer() {
     /**
      * A threshold, in seconds, of when dashjs abr becomes less conservative since we have a
      * larger "rich" buffer.
-     * The BufferOccupancyRule,js rule will override the ThroughputRule's decision when the
+     * The BufferOccupancyRule.js rule will override the ThroughputRule's decision when the
      * buffer level surpasses this value and while it remains greater than this value.
      *
      * @default 20 seconds
@@ -1445,11 +1454,11 @@ function MediaPlayer() {
     }
 
     /**
-     * A timeout value in seconds, which during,  the ABRController will block switch-up events.
+     * A timeout value in seconds, which during the ABRController will block switch-up events.
      * This will only take effect after an abandoned fragment event occurs.
      *
      * @default 10 seconds
-     * @param value
+     * @param {int} value
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1459,6 +1468,8 @@ function MediaPlayer() {
 
     /**
      * Total number of retry attempts that will occur on a fragment load before it fails.
+     * Increase this value to a maximum in order to achieve an automatic playback resume
+     * in case of completely lost internet connection.
      *
      * @default 3
      * @param {int} value
@@ -1472,8 +1483,8 @@ function MediaPlayer() {
     /**
      * Time in milliseconds of which to reload a failed fragment load attempt.
      *
-     * @default 1000
-     * @param value
+     * @default 1000 milliseconds
+     * @param {int} value
      * @memberof module:MediaPlayer
      * @instance
      */
