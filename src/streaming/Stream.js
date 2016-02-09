@@ -102,7 +102,7 @@ function Stream(config) {
     function initialize(StreamInfo, ProtectionController) {
         streamInfo = StreamInfo;
 
-        //TODO will need to seperate this once DRM is optional.
+        //TODO will need to separate this once DRM is optional.
         protectionController = ProtectionController;
         if (protectionController) {
             eventBus.on(Events.KEY_ERROR, onProtectionError, instance);
@@ -114,7 +114,7 @@ function Stream(config) {
     }
 
     /**
-     * Activates Stream by re-initalizing some of its components
+     * Activates Stream by re-initializing some of its components
      * @param mediaSource {MediaSource}
      * @memberof Stream#
      */

@@ -101,7 +101,7 @@ function BolaRule(config) {
 
         let bufferTarget;
         let bufferMax;
-        // Note: If isDyanamic (live streaming) we keep the same target for cases where the user is playing behind live edge, but then make throughput-based decisions when the buffer level is low because of availability.
+        // Note: If isDynamic (live streaming) we keep the same target for cases where the user is playing behind live edge, but then make throughput-based decisions when the buffer level is low because of availability.
         bufferTarget = mediaPlayerModel.getStableBufferTime();
         if (duration >= mediaPlayerModel.getLongFormContentDurationThreshold()) {
             bufferMax = mediaPlayerModel.getBufferTimeAtTopQualityLongForm();
@@ -329,7 +329,7 @@ function BolaRule(config) {
         if (BOLA_DEBUG) console.log('BolaDebug ' + mediaType + ' BolaRule bufferLevel=' + bufferLevel.toFixed(3) + '(+' + bolaState.virtualBuffer.toFixed(3) + ') lastThroughput=' + (lastThroughput / 1000000.0).toFixed(3) + ' tentativeQuality=' + bolaQuality + ',' + getQualityFromBufferLevel(bolaState, bufferLevel + bolaState.virtualBuffer));
 
         if (bufferLevel <= 0.1) {
-            // rebuffering occured, reset virtual buffer
+            // rebuffering occurred, reset virtual buffer
             bolaState.virtualBuffer = 0.0;
         }
 

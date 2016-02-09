@@ -527,7 +527,7 @@ function MediaPlayer() {
      * This method should be used to extend or replace internal dash.js objects.
      * There are two ways to extend dash.js (determined by the override argument):
      * 1. If you set override to true any public method or property in your custom object will
-     * override the dash.js parent object's property(ies) and be used instead but the dashj.s parent will
+     * override the dash.js parent object's property(ies) and be used instead but the dash.js parent will
      * still be created.
      *
      * 2. If you set override to false your object will completely replace the dash.js object.
@@ -644,7 +644,7 @@ function MediaPlayer() {
      * Set to false if you would like to disable the last known bit rate from being stored during playback and used
      * to set the initial bit rate for subsequent playback within the expiration window.
      *
-     * The default expiration is one hour, defined in milliseconds. If expired, the default initial bit rate (closest to 1000 kpbs) will be used
+     * The default expiration is one hour, defined in milliseconds. If expired, the default initial bit rate (closest to 1000 kbps) will be used
      * for that session and a new bit rate will be stored during that session.
      *
      * @param enable - Boolean - Will toggle if feature is enabled. True to enable, False to disable.
@@ -824,7 +824,7 @@ function MediaPlayer() {
     }
 
     /**
-     * Sets the current quality for media type instead of letting the ABR Herstics automatically selecting it..
+     * Sets the current quality for media type instead of letting the ABR Heuristics automatically selecting it..
      *
      * @param type
      * @param value

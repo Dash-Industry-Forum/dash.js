@@ -171,7 +171,7 @@ function BolaAbandonRule(config) {
 
         // Abandon, but to which quality? Abandoning should not happen often, and it's OK to be more conservative when it does.
         while (newQuality > 0) {
-            // We want to make sure that if we download a fragment at newQuality, then the bufferLevel will be sufficient to support another download at newQaulity.
+            // We want to make sure that if we download a fragment at newQuality, then the bufferLevel will be sufficient to support another download at newQuality.
             // TODO: document the math
 
             let s  = bolaState.bitrate[newQuality];     // relative size

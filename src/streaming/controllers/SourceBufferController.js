@@ -338,7 +338,7 @@ function SourceBufferController() {
         var CHECK_INTERVAL = 50;
 
         var checkIsUpdateEnded = function () {
-            // if undating is still in progress do nothing and wait for the next check again.
+            // if updating is still in progress do nothing and wait for the next check again.
             if (buffer.updating) return;
             // updating is completed, now we can stop checking and resolve the promise
             clearInterval(intervalId);

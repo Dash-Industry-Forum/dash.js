@@ -85,7 +85,7 @@ function LiveEdgeBinarySearchRule(config) {
             // is used as an initial point for finding the actual live edge.
             // But for SegmentTimeline mpds (w/o a negative @r) the end of the
             // last segment is the actual live edge. At the same time, calculated live edge is an expected live edge.
-            // Thus, we need to switch an expected live edge and actual live edge for SegmentTimelne streams.
+            // Thus, we need to switch an expected live edge and actual live edge for SegmentTimeline streams.
             var actualLiveEdge = timelineConverter.getExpectedLiveEdge();
             timelineConverter.setExpectedLiveEdge(liveEdgeInitialSearchPosition);
             callback(SwitchRequest(context).create(actualLiveEdge, p));
@@ -147,7 +147,7 @@ function LiveEdgeBinarySearchRule(config) {
 
         // we have not found any available fragments yet, update the search interval
         searchInterval = lastSearchTime - liveEdgeInitialSearchPosition;
-        // we search forward and backward from the start position, increasing the search interval by the value of the half of the availability interavl - liveEdgeSearchStep
+        // we search forward and backward from the start position, increasing the search interval by the value of the half of the availability interval - liveEdgeSearchStep
         searchTime = searchInterval > 0 ? (liveEdgeInitialSearchPosition - searchInterval) : (liveEdgeInitialSearchPosition + Math.abs(searchInterval) + liveEdgeSearchStep);
 
         // if the search time is out of the range bounds we have not be able to find live edge, stop trying
@@ -207,8 +207,8 @@ function LiveEdgeBinarySearchRule(config) {
         isSearchCompleted = (Math.floor(liveEdgeSearchRange.end - liveEdgeSearchRange.start)) <= fragmentDuration;
 
         if (isSearchCompleted) {
-            // search completed, we should take the time of the last found fragment. If the last search succeded we
-            // take this time. Otherwise, we should subtract the time of the search step which is equal to fragment duaration
+            // search completed, we should take the time of the last found fragment. If the last search succeeded we
+            // take this time. Otherwise, we should subtract the time of the search step which is equal to fragment duration
             callback(SwitchRequest(context).create((lastSearchSucceeded ? lastSearchTime : (lastSearchTime - fragmentDuration)), p));
         } else {
             // update the search time and continue searching
