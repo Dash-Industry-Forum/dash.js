@@ -35,7 +35,7 @@
  * which encapsulates a set of protection information (EME APIs, selected key system,
  * key sessions).  The APIs of ProtectionController mostly align with the latest EME
  * APIs.  Key system selection is mostly automated when combined with app-overrideable
- * functionality provided in {@link ProtectionExtensions}.
+ * functionality provided in {@link ProtectionKeyController}.
  *
  * @class ProtectionController
  * @todo ProtectionController does almost all of its tasks automatically after init() is
@@ -52,7 +52,7 @@ import Protection from '../Protection.js';
 
 function ProtectionController(config) {
 
-    let protectionExt = config.protectionExt;
+    let protectionKeyController = config.protectionKeyController;
     let protectionModel = config.protectionModel;
     let adapter = config.adapter;
     let eventBus = config.eventBus;
@@ -69,7 +69,7 @@ function ProtectionController(config) {
         keySystem;
 
     function setup() {
-        keySystems = protectionExt.getKeySystems();
+        keySystems = protectionKeyController.getKeySystems();
         pendingNeedKeyData = [];
         initialized = false;
         sessionType = 'temporary';
@@ -115,7 +115,7 @@ function ProtectionController(config) {
 
             // ContentProtection elements are specified at the AdaptationSet level, so the CP for audio
             // and video will be the same.  Just use one valid MediaInfo object
-            var supportedKS = protectionExt.getSupportedKeySystemsFromContentProtection(mediaInfo.contentProtection);
+            var supportedKS = protectionKeyController.getSupportedKeySystemsFromContentProtection(mediaInfo.contentProtection);
             if (supportedKS && supportedKS.length > 0) {
                 selectKeySystem(supportedKS, true);
             }
@@ -144,7 +144,7 @@ function ProtectionController(config) {
             // Check for duplicate initData
             var currentInitData = protectionModel.getAllInitData();
             for (var i = 0; i < currentInitData.length; i++) {
-                if (protectionExt.initDataEquals(initDataForKS, currentInitData[i])) {
+                if (protectionKeyController.initDataEquals(initDataForKS, currentInitData[i])) {
                     log('DRM: Ignoring initData because we have already seen it!');
                     return;
                 }
@@ -419,7 +419,7 @@ function ProtectionController(config) {
         var sessionToken = keyMessage.sessionToken;
         var protData = getProtData(keySystem);
         var keySystemString = keySystem.systemString;
-        var licenseServerData = protectionExt.getLicenseServer(keySystem, protData, messageType);
+        var licenseServerData = protectionKeyController.getLicenseServer(keySystem, protData, messageType);
         var eventData = { sessionToken: sessionToken, messageType: messageType };
 
         // Message not destined for license server
@@ -430,8 +430,8 @@ function ProtectionController(config) {
         }
 
         // Perform any special handling for ClearKey
-        if (protectionExt.isClearKey(keySystem)) {
-            var clearkeys = protectionExt.processClearKeyLicenseRequest(protData, message);
+        if (protectionKeyController.isClearKey(keySystem)) {
+            var clearkeys = protectionKeyController.processClearKeyLicenseRequest(protData, message);
             if (clearkeys)  {
                 log('DRM: ClearKey license request handled by application!');
                 sendLicenseRequestCompleteEvent(eventData);
@@ -534,7 +534,7 @@ function ProtectionController(config) {
 
         log('DRM: initData:', String.fromCharCode.apply(null, new Uint8Array(abInitData)));
 
-        var supportedKS = protectionExt.getSupportedKeySystems(abInitData);
+        var supportedKS = protectionKeyController.getSupportedKeySystems(abInitData);
         if (supportedKS.length === 0) {
             log('DRM: Received needkey event with initData, but we don\'t support any of the key systems!');
             return;

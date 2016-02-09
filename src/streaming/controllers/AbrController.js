@@ -39,7 +39,7 @@ import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import ManifestModel from '../models/ManifestModel.js';
-import DashManifestExtensions from '../../dash/extensions/DashManifestExtensions.js';
+import DashManifestModel from '../../dash/models/DashManifestModel.js';
 import VideoModel from '../models/VideoModel.js';
 
 const ABANDON_LOAD = 'abandonload';
@@ -68,7 +68,7 @@ function AbrController() {
         abandonmentTimeout,
         limitBitrateByPortal,
         manifestModel,
-        manifestExt,
+        dashManifestModel,
         videoModel,
         mediaPlayerModel,
         domStorage;
@@ -87,7 +87,7 @@ function AbrController() {
         domStorage = DOMStorage(context).getInstance();
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
         manifestModel = ManifestModel(context).getInstance();
-        manifestExt = DashManifestExtensions(context).getInstance();
+        dashManifestModel = DashManifestModel(context).getInstance();
         videoModel = VideoModel(context).getInstance();
     }
 
@@ -138,7 +138,7 @@ function AbrController() {
         if (!bitrateDict.hasOwnProperty(type)) {
             if (ratioDict.hasOwnProperty(type)) {
                 let manifest = manifestModel.getValue();
-                let representation = manifestExt.getAdaptationForType(manifest, 0, type).Representation;
+                let representation = dashManifestModel.getAdaptationForType(manifest, 0, type).Representation;
 
                 if (Array.isArray(representation)) {
                     bitrateDict[type] = representation[Math.round(representation.length * ratioDict[type]) - 1].bandwidth;
@@ -449,7 +449,7 @@ function AbrController() {
         let elementWidth = element.clientWidth;
         let elementHeight = element.clientHeight;
         let manifest = manifestModel.getValue();
-        let representation = manifestExt.getAdaptationForType(manifest, 0, type).Representation;
+        let representation = dashManifestModel.getAdaptationForType(manifest, 0, type).Representation;
         let newIdx = idx;
 
         if (elementWidth > 0 && elementHeight > 0) {

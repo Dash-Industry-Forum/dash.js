@@ -29,13 +29,13 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import TextTrackInfo from './vo/TextTrackInfo.js';
-import FragmentExtensions from '../dash/extensions/FragmentExtensions.js';
+import FragmentedTextBoxParser from '../dash/utils/FragmentedTextBoxParser.js';
 import BoxParser from './utils/BoxParser.js';
 import CustomTimeRanges from './utils/CustomTimeRanges.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 import Debug from '../core/Debug.js';
 import VideoModel from './models/VideoModel.js';
-import TextTrackExtensions from './extensions/TextTrackExtensions.js';
+import TextTracks from './TextTracks.js';
 import ISOBoxer from 'codem-isoboxer';
 
 function TextSourceBuffer() {
@@ -49,15 +49,15 @@ function TextSourceBuffer() {
         boxParser,
         errHandler,
         adapter,
-        manifestExt,
+        dashManifestModel,
         mediaController,
         allTracksAreDisabled,
         parser,
         VTTParser,
         TTMLParser,
-        fragmentExt,
+        fragmentedTextBoxParser,
         mediaInfos,
-        textTrackExtensions,
+        textTracks,
         isFragmented,
         fragmentModel,
         initializationSegmentReceived,
@@ -77,7 +77,6 @@ function TextSourceBuffer() {
     function initialize(type, bufferController) {
         allTracksAreDisabled = false;
         parser = null;
-        fragmentExt = null;
         fragmentModel = null;
         initializationSegmentReceived = false;
         timescale = NaN;
@@ -91,12 +90,13 @@ function TextSourceBuffer() {
         let streamProcessor = bufferController.getStreamProcessor();
 
         mediaInfos = streamProcessor.getMediaInfoArr();
-        textTrackExtensions.setConfig({videoModel: videoModel});
-        textTrackExtensions.initialize();
-        isFragmented = !manifestExt.getIsTextTrack(type);
+        textTracks.setConfig({videoModel: videoModel});
+        textTracks.initialize();
+        isFragmented = !dashManifestModel.getIsTextTrack(type);
         boxParser = BoxParser(context).getInstance();
-        fragmentExt = FragmentExtensions(context).getInstance();
-        fragmentExt.setConfig({boxParser: boxParser});
+        fragmentedTextBoxParser = FragmentedTextBoxParser(context).getInstance();
+        fragmentedTextBoxParser.setConfig({boxParser: boxParser});
+
         if (isFragmented) {
             fragmentModel = streamProcessor.getFragmentModel();
             this.buffered =  CustomTimeRanges(context).create();
@@ -115,12 +115,12 @@ function TextSourceBuffer() {
         embeddedTracks = [];
         mediaInfos = [];
         videoModel = VideoModel(context).getInstance();
-        textTrackExtensions = TextTrackExtensions(context).getInstance();
-        textTrackExtensions.setConfig({videoModel: videoModel});
-        textTrackExtensions.initialize();
+        textTracks = TextTracks(context).getInstance();
+        textTracks.setConfig({videoModel: videoModel});
+        textTracks.initialize();
         boxParser = BoxParser(context).getInstance();
-        fragmentExt = FragmentExtensions(context).getInstance();
-        fragmentExt.setConfig({boxParser: boxParser});
+        fragmentedTextBoxParser = FragmentedTextBoxParser(context).getInstance();
+        fragmentedTextBoxParser.setConfig({boxParser: boxParser});
         isFragmented = false;
         currFragmentedTrackIdx = null;
         embeddedInitializationSegmentReceived = false;
@@ -172,7 +172,7 @@ function TextSourceBuffer() {
             textTrackInfo.isEmbedded = mediaInfo.isEmbedded ? true : false;
             textTrackInfo.kind = getKind();
             var totalNrTracks = (mediaInfos ? mediaInfos.length : 0) + embeddedTracks.length;
-            textTrackExtensions.addTextTrack(textTrackInfo, totalNrTracks);
+            textTracks.addTextTrack(textTrackInfo, totalNrTracks);
         }
 
         if (mediaType === 'fragmentedText') {
@@ -181,9 +181,9 @@ function TextSourceBuffer() {
                 for (i = 0; i < mediaInfos.length; i++) {
                     createTextTrackFromMediaInfo(null, mediaInfos[i]);
                 }
-                timescale = fragmentExt.getMediaTimescaleFromMoov(bytes);
+                timescale = fragmentedTextBoxParser.getMediaTimescaleFromMoov(bytes);
             } else {
-                samplesInfo = fragmentExt.getSamplesInfo(bytes);
+                samplesInfo = fragmentedTextBoxParser.getSamplesInfo(bytes);
                 sampleList = samplesInfo.sampleList;
                 for (i = 0 ; i < sampleList.length ; i++) {
                     if (!firstSubtitleStart) {
@@ -196,7 +196,7 @@ function TextSourceBuffer() {
                     parser = parser !== null ? parser : getParser(mimeType);
                     try {
                         result = parser.parse(ccContent);
-                        textTrackExtensions.addCaptions(currFragmentedTrackIdx, firstSubtitleStart / timescale, result);
+                        textTracks.addCaptions(currFragmentedTrackIdx, firstSubtitleStart / timescale, result);
                     } catch (e) {
                         //empty cue ?
                     }
@@ -214,7 +214,7 @@ function TextSourceBuffer() {
         } else if (mediaType === 'video') { //embedded text
             if (chunk.segmentType === 'Initialization Segment') {
                 if (embeddedTimescale === 0) {
-                    embeddedTimescale = fragmentExt.getMediaTimescaleFromMoov(bytes);
+                    embeddedTimescale = fragmentedTextBoxParser.getMediaTimescaleFromMoov(bytes);
                     for (i = 0; i < embeddedTracks.length; i++) {
                         createTextTrackFromMediaInfo(null, embeddedTracks[i]);
                     }
@@ -235,14 +235,14 @@ function TextSourceBuffer() {
                             captionsArray = [{ start: startTime, end: endTime, data: text, styles: {} }];
                         }
                         if (captionsArray) {
-                            textTrackExtensions.addCaptions(trackIndex, 0, captionsArray);
+                            textTracks.addCaptions(trackIndex, 0, captionsArray);
                         }
                     }
                     return newCue;
                 };
 
 
-                samplesInfo = fragmentExt.getSamplesInfo(bytes);
+                samplesInfo = fragmentedTextBoxParser.getSamplesInfo(bytes);
                 var sequenceNumber = samplesInfo.sequenceNumber;
 
                 if (!embeddedCea608FieldParsers[0] && !embeddedCea608FieldParsers[1]) {
@@ -251,10 +251,10 @@ function TextSourceBuffer() {
                     for (i = 0; i < embeddedTracks.length; i++) {
                         if (embeddedTracks[i].id === 'CC1') {
                             field = 0;
-                            trackIdx = textTrackExtensions.getTrackIdxForId('CC1');
+                            trackIdx = textTracks.getTrackIdxForId('CC1');
                         } else if (embeddedTracks[i].id === 'CC3') {
                             field = 1;
-                            trackIdx = textTrackExtensions.getTrackIdxForId('CC3');
+                            trackIdx = textTracks.getTrackIdxForId('CC3');
                         }
                         if (trackIdx === -1) {
                             console.log('CEA-608: data before track is ready.');
@@ -656,12 +656,12 @@ function TextSourceBuffer() {
     }
 
     function abort() {
-        textTrackExtensions.deleteAllTextTracks();
+        textTracks.deleteAllTextTracks();
         allTracksAreDisabled = false;
         parser = null;
-        fragmentExt = null;
+        fragmentedTextBoxParser = null;
         mediaInfos = null;
-        textTrackExtensions = null;
+        textTracks = null;
         isFragmented = false;
         fragmentModel = null;
         initializationSegmentReceived = false;
@@ -705,8 +705,8 @@ function TextSourceBuffer() {
         if (config.adapter) {
             adapter = config.adapter;
         }
-        if (config.manifestExt) {
-            manifestExt = config.manifestExt;
+        if (config.dashManifestModel) {
+            dashManifestModel = config.dashManifestModel;
         }
         if (config.mediaController) {
             mediaController = config.mediaController;
@@ -717,8 +717,8 @@ function TextSourceBuffer() {
         if (config.streamController) {
             streamController = config.streamController;
         }
-        if (config.textTrackExtensions) {
-            textTrackExtensions = config.textTrackExtensions;
+        if (config.textTracks) {
+            textTracks = config.textTracks;
         }
         if (config.VTTParser) {
             VTTParser = config.VTTParser;
@@ -734,21 +734,21 @@ function TextSourceBuffer() {
         var tracks = el.textTracks;
         var ln = tracks.length;
         var nrNonEmbeddedTracks = ln - embeddedTracks.length;
-        var oldTrackIdx = textTrackExtensions.getCurrentTrackIdx();
+        var oldTrackIdx = textTracks.getCurrentTrackIdx();
 
         for (var i = 0; i < ln; i++ ) {
             var track = tracks[i];
             allTracksAreDisabled = track.mode !== 'showing';
             if (track.mode === 'showing') {
                 if (oldTrackIdx !== i) { // do not reset track if already the current track.  This happens when all captions get turned off via UI and then turned on again and with videojs.
-                    textTrackExtensions.setCurrentTrackIdx(i);
-                    textTrackExtensions.addCaptions(i, 0, null); // Make sure that previously queued captions are added as cues
+                    textTracks.setCurrentTrackIdx(i);
+                    textTracks.addCaptions(i, 0, null); // Make sure that previously queued captions are added as cues
                     if (isFragmented && i < nrNonEmbeddedTracks) {
                         var currentFragTrack = mediaController.getCurrentTrackFor('fragmentedText', streamController.getActiveStreamInfo());
                         var newFragTrack = fragmentedTracks[i];
                         if (newFragTrack !== currentFragTrack) {
                             fragmentModel.abortRequests();
-                            textTrackExtensions.deleteTrackCues(currentFragTrack);
+                            textTracks.deleteTrackCues(currentFragTrack);
                             mediaController.setTrack(newFragTrack);
                             currFragmentedTrackIdx = i;
                         }
@@ -759,7 +759,7 @@ function TextSourceBuffer() {
         }
 
         if (allTracksAreDisabled) {
-            textTrackExtensions.setCurrentTrackIdx(-1);
+            textTracks.setCurrentTrackIdx(-1);
         }
     }
 

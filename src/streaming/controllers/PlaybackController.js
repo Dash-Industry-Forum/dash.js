@@ -47,9 +47,9 @@ function PlaybackController() {
         streamController,
         timelineConverter,
         metricsModel,
-        metricsExt,
+        dashMetrics,
         manifestModel,
-        manifestExt,
+        dashManifestModel,
         adapter,
         videoModel,
         currentTime,
@@ -177,7 +177,7 @@ function PlaybackController() {
      * */
     function getLiveDelay(fragmentDuration) {
         var delay;
-        var mpd = manifestExt.getMpd(manifestModel.getValue());
+        var mpd = dashManifestModel.getMpd(manifestModel.getValue());
 
         if (mediaPlayerModel.getUseSuggestedPresentationDelay() && mpd.hasOwnProperty('suggestedPresentationDelay')) {
             delay = mpd.suggestedPresentationDelay;
@@ -217,14 +217,14 @@ function PlaybackController() {
         if (config.metricsModel) {
             metricsModel = config.metricsModel;
         }
-        if (config.metricsExt) {
-            metricsExt = config.metricsExt;
+        if (config.dashMetrics) {
+            dashMetrics = config.dashMetrics;
         }
         if (config.manifestModel) {
             manifestModel = config.manifestModel;
         }
-        if (config.manifestExt) {
-            manifestExt = config.manifestExt;
+        if (config.dashManifestModel) {
+            dashManifestModel = config.dashManifestModel;
         }
         if (config.adapter) {
             adapter = config.adapter;
@@ -274,7 +274,7 @@ function PlaybackController() {
 
     function getActualPresentationTime(currentTime) {
         var metrics = metricsModel.getReadOnlyMetricsFor('video') || metricsModel.getReadOnlyMetricsFor('audio');
-        var DVRMetrics = metricsExt.getCurrentDVRInfo(metrics);
+        var DVRMetrics = dashMetrics.getCurrentDVRInfo(metrics);
         var DVRWindow = DVRMetrics ? DVRMetrics.range : null;
         var actualTime;
 

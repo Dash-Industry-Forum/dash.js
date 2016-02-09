@@ -51,7 +51,7 @@ function TimeSyncController() {
         useManifestDateHeaderTimeSource,
         handlers,
         metricsModel,
-        metricsExt;
+        dashMetrics;
 
     function initialize(timingSources, useManifestDateHeader) {
         useManifestDateHeaderTimeSource = useManifestDateHeader;
@@ -97,8 +97,8 @@ function TimeSyncController() {
             metricsModel = config.metricsModel;
         }
 
-        if (config.metricsExt) {
-            metricsExt = config.metricsExt;
+        if (config.dashMetrics) {
+            dashMetrics = config.dashMetrics;
         }
     }
 
@@ -263,7 +263,7 @@ function TimeSyncController() {
 
     function checkForDateHeader() {
         var metrics = metricsModel.getReadOnlyMetricsFor('stream');
-        var dateHeaderValue = metricsExt.getLatestMPDRequestHeaderValueByID(metrics, 'Date');
+        var dateHeaderValue = dashMetrics.getLatestMPDRequestHeaderValueByID(metrics, 'Date');
         var dateHeaderTime = dateHeaderValue !== null ? new Date(dateHeaderValue).getTime() : Number.NaN;
 
         if (!isNaN(dateHeaderTime)) {

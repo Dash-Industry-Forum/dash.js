@@ -37,14 +37,14 @@
  * @implements ProtectionModel
  * @class
  */
-import ProtectionExtensions from '../ProtectionExtensions.js';
+import ProtectionKeyController from '../controllers/ProtectionKeyController.js';
 import NeedKey from '../vo/NeedKey.js';
 import KeyError from '../vo/KeyError.js';
 import KeyMessage from '../vo/KeyMessage.js';
 import KeySystemConfiguration from '../vo/KeySystemConfiguration.js';
 import KeySystemAccess from '../vo/KeySystemAccess.js';
 import Events from '../../../core/events/Events.js';
-import ErrorHandler from '../../ErrorHandler.js';
+import ErrorHandler from '../../utils/ErrorHandler.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
 function ProtectionModel_01b(config) {
@@ -57,7 +57,7 @@ function ProtectionModel_01b(config) {
     let instance,
         videoElement,
         keySystem,
-        protectionExt,
+        protectionKeyController,
         errHandler,
 
         // With this version of the EME APIs, sessionIDs are not assigned to
@@ -88,7 +88,7 @@ function ProtectionModel_01b(config) {
         keySystem = null;
         pendingSessions = [];
         sessions = [];
-        protectionExt = ProtectionExtensions(context).getInstance();
+        protectionKeyController = ProtectionKeyController(context).getInstance();
         errHandler = ErrorHandler(context).getInstance();
         eventHandler = createEventHandler();
     }
@@ -159,7 +159,7 @@ function ProtectionModel_01b(config) {
                 // This configuration is supported
                 found = true;
                 var ksConfig = new KeySystemConfiguration(supportedAudio, supportedVideo);
-                var ks = protectionExt.getKeySystemBySystemString(systemString);
+                var ks = protectionKeyController.getKeySystemBySystemString(systemString);
                 eventBus.trigger(Events.KEY_SYSTEM_ACCESS_COMPLETE, { data: new KeySystemAccess(ks, ksConfig) });
                 break;
             }
@@ -235,7 +235,7 @@ function ProtectionModel_01b(config) {
 
     function updateKeySession(sessionToken, message) {
         var sessionID = sessionToken.sessionID;
-        if (!protectionExt.isClearKey(keySystem)) {
+        if (!protectionKeyController.isClearKey(keySystem)) {
             // Send our request to the CDM
             videoElement[api.addKey](keySystem.systemString,
                 new Uint8Array(message), sessionToken.initData, sessionID);

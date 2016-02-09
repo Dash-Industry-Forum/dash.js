@@ -42,7 +42,7 @@ function FragmentLoader(config) {
     let eventBus = EventBus(context).getInstance();
     let metricsModel = config.metricsModel;
     let errHandler = config.errHandler;
-    let requestModifierExt = config.requestModifierExt;
+    let requestModifier = config.requestModifier;
 
     let instance,
         mediaPlayerModel,
@@ -99,9 +99,9 @@ function FragmentLoader(config) {
         request.requestStartDate = new Date();
         lastTraceTime = request.requestStartDate;
 
-        req.open('GET', requestModifierExt.modifyRequestURL(request.url), true);
+        req.open('GET', requestModifier.modifyRequestURL(request.url), true);
         req.responseType = 'arraybuffer';
-        req = requestModifierExt.modifyRequestHeader(req);
+        req = requestModifier.modifyRequestHeader(req);
         /*
          req.setRequestHeader("Cache-Control", "no-cache");
          req.setRequestHeader("Pragma", "no-cache");

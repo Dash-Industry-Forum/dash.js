@@ -33,13 +33,13 @@ import PlaybackController from './controllers/PlaybackController.js';
 import StreamController from './controllers/StreamController.js';
 import MediaController from './controllers/MediaController.js';
 import ManifestLoader from './ManifestLoader.js';
-import LiveEdgeFinder from './LiveEdgeFinder.js';
-import ErrorHandler from './ErrorHandler.js';
+import LiveEdgeFinder from './utils/LiveEdgeFinder.js';
+import ErrorHandler from './utils/ErrorHandler.js';
 import Capabilities from './utils/Capabilities.js';
-import TextTrackExtensions from './extensions/TextTrackExtensions.js';
-import SourceBufferExtensions from './extensions/SourceBufferExtensions.js';
-import VirtualBuffer from './utils/VirtualBuffer.js';
-import RequestModifierExtensions from './extensions/RequestModifierExtensions.js';
+import TextTracks from './TextTracks.js';
+import SourceBufferController from './controllers/SourceBufferController.js';
+import VirtualBuffer from './VirtualBuffer.js';
+import RequestModifier from './utils/RequestModifier.js';
 import TextSourceBuffer from './TextSourceBuffer.js';
 import URIQueryAndFragmentModel from './models/URIQueryAndFragmentModel.js';
 import ManifestModel from './models/ManifestModel.js';
@@ -52,8 +52,7 @@ import VideoModel from './models/VideoModel.js';
 import RulesController from './rules/RulesController.js';
 import ScheduleRulesCollection from './rules/scheduling/ScheduleRulesCollection.js';
 import SynchronizationRulesCollection from './rules/synchronization/SynchronizationRulesCollection.js';
-import MediaSourceExtensions from './extensions/MediaSourceExtensions.js';
-import VideoModelExtensions from './extensions/VideoModelExtensions.js';
+import MediaSourceController from './controllers/MediaSourceController.js';
 import Debug from './../core/Debug.js';
 import EventBus from './../core/EventBus.js';
 import Events from './../core/events/Events.js';
@@ -62,9 +61,9 @@ import FactoryMaker from '../core/FactoryMaker.js';
 //Dash
 import DashAdapter from '../dash/DashAdapter.js';
 import DashParser from '../dash/DashParser.js';
-import DashManifestExtensions from '../dash/extensions/DashManifestExtensions.js';
-import DashMetricsExtensions from '../dash/extensions/DashMetricsExtensions.js';
-import TimelineConverter from '../dash/TimelineConverter.js';
+import DashManifestModel from '../dash/models/DashManifestModel.js';
+import DashMetrics from '../dash/DashMetrics.js';
+import TimelineConverter from '../dash/utils/TimelineConverter.js';
 
 
 /**
@@ -101,8 +100,8 @@ function MediaPlayer() {
         streamController,
         rulesController,
         playbackController,
-        metricsExt,
-        manifestExt,
+        dashMetrics,
+        dashManifestModel,
         videoModel,
         textSourceBuffer;
 
@@ -135,8 +134,8 @@ function MediaPlayer() {
         playbackController = PlaybackController(context).getInstance();
         mediaController = MediaController(context).getInstance();
         mediaController.initialize();
-        manifestExt = DashManifestExtensions(context).getInstance();
-        metricsExt = DashMetricsExtensions(context).getInstance();
+        dashManifestModel = DashManifestModel(context).getInstance();
+        dashMetrics = DashMetrics(context).getInstance();
         metricsModel = MetricsModel(context).getInstance();
         metricsModel.setConfig({adapter: createAdaptor()});
 
@@ -254,7 +253,7 @@ function MediaPlayer() {
 
     function getDVRInfoMetric() {
         var metric = metricsModel.getReadOnlyMetricsFor('video') || metricsModel.getReadOnlyMetricsFor('audio');
-        return metricsExt.getCurrentDVRInfo(metric);
+        return dashMetrics.getCurrentDVRInfo(metric);
     }
 
     /**
@@ -271,16 +270,16 @@ function MediaPlayer() {
 
         if (!type)
         {
-            let videoBuffer = getTracksFor('video').length > 0 ? getMetricsExt().getCurrentBufferLevel(getMetricsFor('video')) : Number.MAX_SAFE_INTEGER;
-            let audioBuffer = getTracksFor('audio').length > 0 ? getMetricsExt().getCurrentBufferLevel(getMetricsFor('audio')) : Number.MAX_SAFE_INTEGER;
-            let textBuffer = getTracksFor('fragmentedText').length > 0 ? getMetricsExt().getCurrentBufferLevel(getMetricsFor('fragmentedText')) : Number.MAX_SAFE_INTEGER;
+            let videoBuffer = getTracksFor('video').length > 0 ? getDashMetrics().getCurrentBufferLevel(getMetricsFor('video')) : Number.MAX_SAFE_INTEGER;
+            let audioBuffer = getTracksFor('audio').length > 0 ? getDashMetrics().getCurrentBufferLevel(getMetricsFor('audio')) : Number.MAX_SAFE_INTEGER;
+            let textBuffer = getTracksFor('fragmentedText').length > 0 ? getDashMetrics().getCurrentBufferLevel(getMetricsFor('fragmentedText')) : Number.MAX_SAFE_INTEGER;
             return Math.min(videoBuffer,audioBuffer,textBuffer).toPrecision(3);
         }
         else
         {
             if (type === 'video' || type === 'audio' || type === 'fragmentedText')
             {
-                let buffer = getMetricsExt().getCurrentBufferLevel(getMetricsFor(type));
+                let buffer = getDashMetrics().getCurrentBufferLevel(getMetricsFor(type));
                 return buffer ? buffer.toPrecision(3) : NaN;
             }
             else
@@ -729,8 +728,8 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
-    function getMetricsExt() {
-        return metricsExt;
+    function getDashMetrics() {
+        return dashMetrics;
     }
 
     /**
@@ -1395,10 +1394,10 @@ function MediaPlayer() {
      * @instance
      */
     function displayCaptionsOnTop(value) {
-        let textTrackExt = TextTrackExtensions(context).getInstance();
-        textTrackExt.setConfig({videoModel: videoModel});
-        textTrackExt.initialize();
-        textTrackExt.displayCConTop(value);
+        let textTracks = TextTracks(context).getInstance();
+        textTracks.setConfig({videoModel: videoModel});
+        textTracks.initialize();
+        textTracks.displayCConTop(value);
     }
 
     /**
@@ -1532,13 +1531,13 @@ function MediaPlayer() {
         let scheduleRulesCollection = ScheduleRulesCollection(context).getInstance();
         scheduleRulesCollection.initialize();
 
-        let sourceBufferExt = SourceBufferExtensions(context).getInstance();
-        sourceBufferExt.setConfig({manifestExt: manifestExt});
+        let sourceBufferController = SourceBufferController(context).getInstance();
+        sourceBufferController.setConfig({dashManifestModel: dashManifestModel});
 
 
         let virtualBuffer = VirtualBuffer(context).getInstance();
         virtualBuffer.setConfig({
-            sourceBufferExt: sourceBufferExt
+            sourceBufferController: sourceBufferController
         });
 
         mediaController.initialize();
@@ -1559,14 +1558,13 @@ function MediaPlayer() {
             capabilities: capabilities,
             manifestLoader: createManifestLoader(),
             manifestModel: ManifestModel(context).getInstance(),
-            manifestExt: manifestExt,
+            dashManifestModel: dashManifestModel,
             protectionController: protectionController,
             adapter: adapter,
             metricsModel: metricsModel,
-            metricsExt: metricsExt,
-            videoModelExt: VideoModelExtensions(context).getInstance(),
+            dashMetrics: dashMetrics,
             liveEdgeFinder: LiveEdgeFinder(context).getInstance(),
-            mediaSourceExt: MediaSourceExtensions(context).getInstance(),
+            mediaSourceController: MediaSourceController(context).getInstance(),
             timeSyncController: TimeSyncController(context).getInstance(),
             virtualBuffer: virtualBuffer,
             errHandler: errHandler,
@@ -1586,7 +1584,7 @@ function MediaPlayer() {
             errHandler: errHandler,
             parser: createManifestParser(),
             metricsModel: metricsModel,
-            requestModifierExt: RequestModifierExtensions(context).getInstance()
+            requestModifier: RequestModifier(context).getInstance()
         });
     }
 
@@ -1599,7 +1597,7 @@ function MediaPlayer() {
         //TODO-Refactor Need to be able to switch this create out so will need API to set which adapter to use? Handler is created is inside streamProcessor so need to figure that out as well
         adapter = DashAdapter(context).getInstance();
         adapter.initialize();
-        adapter.setConfig({manifestExt: manifestExt});
+        adapter.setConfig({dashManifestModel: dashManifestModel});
         return adapter;
     }
 
@@ -1639,7 +1637,7 @@ function MediaPlayer() {
                 log: log,
                 eventBus: eventBus,
                 mediaElement: videoModel.getElement(),
-                manifestExt: manifestExt,
+                dashManifestModel: dashManifestModel,
                 metricsModel: metricsModel
             });
 
@@ -1691,7 +1689,7 @@ function MediaPlayer() {
         getAutoPlay: getAutoPlay,
         setScheduleWhilePaused: setScheduleWhilePaused,
         getScheduleWhilePaused: getScheduleWhilePaused,
-        getMetricsExt: getMetricsExt,
+        getDashMetrics: getDashMetrics,
         getMetricsFor: getMetricsFor,
         getQualityFor: getQualityFor,
         setQualityFor: setQualityFor,

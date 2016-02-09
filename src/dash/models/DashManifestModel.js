@@ -34,12 +34,12 @@ import AdaptationSet from '../vo/AdaptationSet.js';
 import Period from '../vo/Period.js';
 import Mpd from '../vo/Mpd.js';
 import UTCTiming from '../vo/UTCTiming.js';
-import TimelineConverter from '../TimelineConverter.js';
+import TimelineConverter from '../utils/TimelineConverter.js';
 import Event from '../vo/Event.js';
 import EventStream from '../vo/EventStream.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-function DashManifestExtensions() {
+function DashManifestModel() {
 
     let instance;
     let context = this.context;
@@ -313,11 +313,6 @@ function DashManifestExtensions() {
         return adaptation.Representation_asArray.length;
     }
 
-    /**
-     * @param adaptation
-     * @returns {Array}
-     * @memberof DashManifestExtensions#
-     */
     function getBitrateListForAdaptation(adaptation) {
         if (!adaptation || !adaptation.Representation_asArray || !adaptation.Representation_asArray.length) return null;
 
@@ -823,5 +818,5 @@ function DashManifestExtensions() {
     return instance;
 }
 
-DashManifestExtensions.__dashjs_factory_name = 'DashManifestExtensions';
-export default FactoryMaker.getSingletonFactory(DashManifestExtensions);
+DashManifestModel.__dashjs_factory_name = 'DashManifestModel';
+export default FactoryMaker.getSingletonFactory(DashManifestModel);

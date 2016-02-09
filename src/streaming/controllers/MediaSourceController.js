@@ -28,58 +28,75 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventBus from './../core/EventBus.js';
-import Events from './../core/events/Events.js';
-import FactoryMaker from '../core/FactoryMaker.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
-function ErrorHandler() {
+function MediaSourceController() {
 
     let instance;
-    let context = this.context;
-    let eventBus = EventBus(context).getInstance();
 
-    // "mediasource"|"mediakeys"
-    function capabilityError(err) {
-        eventBus.trigger(Events.ERROR, {error: 'capability', event: err});
+    function createMediaSource() {
+
+        var hasWebKit = ('WebKitMediaSource' in window);
+        var hasMediaSource = ('MediaSource' in window);
+
+        if (hasMediaSource) {
+            return new MediaSource();
+        } else if (hasWebKit) {
+            return new WebKitMediaSource();
+        }
+
+        return null;
     }
 
-    // {id: "manifest"|"SIDX"|"content"|"initialization", url: "", request: {XMLHttpRequest instance}}
-    function downloadError(id, url, request) {
-        eventBus.trigger(Events.ERROR, {error: 'download', event: {id: id, url: url, request: request}});
+    function attachMediaSource(source, videoModel) {
+
+        var objectURL = window.URL.createObjectURL(source);
+
+        videoModel.setSource(objectURL);
+
+        return objectURL;
     }
 
-    // {message: "", id: "codec"|"parse"|"nostreams", manifest: {parsed manifest}}
-    function manifestError(message, id, manifest) {
-        eventBus.trigger(Events.ERROR, {error: 'manifestError', event: {message: message, id: id, manifest: manifest}});
+    function detachMediaSource(videoModel) {
+        // it seems that any value passed to the setSource is cast to a sting when setting element.src,
+        // so we cannot use null or undefined to reset the element. Use empty string instead.
+        videoModel.setSource('');
     }
 
-    function timedTextError(message, id, ccContent) {
-        eventBus.trigger(Events.ERROR, {error: 'cc', event: {message: message, id: id, cc: ccContent}});
+    function setDuration(source, value) {
+
+        if (source.duration != value)
+            source.duration = value;
+
+        return source.duration;
     }
 
-    function mediaSourceError(err) {
-        eventBus.trigger(Events.ERROR, {error: 'mediasource', event: err});
-    }
+    function signalEndOfStream(source) {
 
-    function mediaKeySessionError(err) {
-        eventBus.trigger(Events.ERROR, {error: 'key_session', event: err});
-    }
+        var buffers = source.sourceBuffers;
+        var ln = buffers.length;
+        var i = 0;
 
-    function mediaKeyMessageError(err) {
-        eventBus.trigger(Events.ERROR, {error: 'key_message', event: err});
+        if (source.readyState !== 'open') return;
+
+        for (i; i < ln; i++) {
+            if (buffers[i].updating) return;
+            if (buffers[i].buffered.length === 0) return;
+        }
+
+        source.endOfStream();
     }
 
     instance = {
-        capabilityError: capabilityError,
-        downloadError: downloadError,
-        manifestError: manifestError,
-        timedTextError: timedTextError,
-        mediaSourceError: mediaSourceError,
-        mediaKeySessionError: mediaKeySessionError,
-        mediaKeyMessageError: mediaKeyMessageError
+        createMediaSource: createMediaSource,
+        attachMediaSource: attachMediaSource,
+        detachMediaSource: detachMediaSource,
+        setDuration: setDuration,
+        signalEndOfStream: signalEndOfStream
     };
 
     return instance;
 }
-ErrorHandler.__dashjs_factory_name = 'ErrorHandler';
-export default FactoryMaker.getSingletonFactory(ErrorHandler);
+
+MediaSourceController.__dashjs_factory_name = 'MediaSourceController';
+export default FactoryMaker.getSingletonFactory(MediaSourceController);

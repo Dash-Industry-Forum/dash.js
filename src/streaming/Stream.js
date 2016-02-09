@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import LiveEdgeFinder from './LiveEdgeFinder.js';
+import LiveEdgeFinder from './utils/LiveEdgeFinder.js';
 import StreamProcessor from './StreamProcessor.js';
 import MediaController from './controllers/MediaController.js';
 import EventController from './controllers/EventController.js';
@@ -38,8 +38,8 @@ import VideoModel from './models/VideoModel.js';
 import MetricsModel from './models/MetricsModel.js';
 import PlaybackController from './controllers/PlaybackController.js';
 import DashHandler from '../dash/DashHandler.js';
-import BaseURLExtensions from '../dash/extensions/BaseURLExtensions.js';
-import DashMetricsExtensions from '../dash/extensions/DashMetricsExtensions.js';
+import SegmentBaseLoader from '../dash/SegmentBaseLoader.js';
+import DashMetrics from '../dash/DashMetrics.js';
 import EventBus from '../core/EventBus.js';
 import Events from '../core/events/Events.js';
 import Debug from '../core/Debug.js';
@@ -294,13 +294,13 @@ function Stream(config) {
 
     function createIndexHandler() {
 
-        let baseUrlExt = BaseURLExtensions(context).getInstance();
-        baseUrlExt.initialize();
+        let segmentBaseLoader = SegmentBaseLoader(context).getInstance();
+        segmentBaseLoader.initialize();
 
         let handler = DashHandler(context).create({
-            baseURLExt: baseUrlExt,
+            segmentBaseLoader: segmentBaseLoader,
             timelineConverter: timelineConverter,
-            metricsExt: DashMetricsExtensions(context).getInstance(),
+            dashMetrics: DashMetrics(context).getInstance(),
             metricsModel: MetricsModel(context).getInstance()
         });
 

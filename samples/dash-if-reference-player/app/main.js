@@ -171,7 +171,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
 
     function getCribbedMetricsFor(type) {
         var metrics = player.getMetricsFor(type),
-            metricsExt = player.getMetricsExt(),
+            dashMetrics = player.getDashMetrics(),
             repSwitch,
             bufferLevel,
             httpRequests,
@@ -228,12 +228,12 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
                 }
             };
 
-        if (metrics && metricsExt) {
-            repSwitch = metricsExt.getCurrentRepresentationSwitch(metrics);
-            bufferLevel = metricsExt.getCurrentBufferLevel(metrics);
-            httpRequests = metricsExt.getHttpRequests(metrics);
-            droppedFramesMetrics = metricsExt.getCurrentDroppedFrames(metrics);
-            requestsQueue = metricsExt.getRequestsQueue(metrics);
+        if (metrics && dashMetrics) {
+            repSwitch = dashMetrics.getCurrentRepresentationSwitch(metrics);
+            bufferLevel = dashMetrics.getCurrentBufferLevel(metrics);
+            httpRequests = dashMetrics.getHttpRequests(metrics);
+            droppedFramesMetrics = dashMetrics.getCurrentDroppedFrames(metrics);
+            requestsQueue = dashMetrics.getRequestsQueue(metrics);
 
             fillmoving("video", httpRequests);
             fillmoving("audio", httpRequests);
@@ -241,13 +241,13 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
             var streamIdx = $scope.streamInfo.index;
 
             if (repSwitch !== null) {
-                bitrateIndexValue = metricsExt.getIndexForRepresentation(repSwitch.to, streamIdx);
-                bandwidthValue = metricsExt.getBandwidthForRepresentation(repSwitch.to, streamIdx);
+                bitrateIndexValue = dashMetrics.getIndexForRepresentation(repSwitch.to, streamIdx);
+                bandwidthValue = dashMetrics.getBandwidthForRepresentation(repSwitch.to, streamIdx);
                 bandwidthValue = bandwidthValue / 1000;
                 bandwidthValue = Math.round(bandwidthValue);
             }
 
-            numBitratesValue = metricsExt.getMaxIndexForBufferType(type, streamIdx);
+            numBitratesValue = dashMetrics.getMaxIndexForBufferType(type, streamIdx);
 
             if (bufferLevel !== null) {
                 bufferLengthValue = bufferLevel.toPrecision(5);
@@ -605,8 +605,8 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
 
     $scope.abrUp = function (type) {
         var newQuality,
-            metricsExt = player.getMetricsExt(),
-            max = metricsExt.getMaxIndexForBufferType(type, $scope.streamInfo.index);
+            dashMetrics = player.getDashMetrics(),
+            max = dashMetrics.getMaxIndexForBufferType(type, $scope.streamInfo.index);
 
         newQuality = player.getQualityFor(type) + 1;
         // zero based

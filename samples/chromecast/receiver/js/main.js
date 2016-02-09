@@ -26,7 +26,7 @@ function ReceiverController($scope) {
         getMetricsFor = function (type) {
             var video = document.querySelector(".dash-video-player video"),
                 metrics = player.getMetricsFor(type),
-                metricsExt = player.getMetricsExt(),
+                dashMetrics = player.getDashMetrics(),
                 repSwitch,
                 bufferLevel,
                 httpRequest,
@@ -41,20 +41,20 @@ function ReceiverController($scope) {
                 lastFragmentDownloadTime,
                 droppedFramesValue = 0;
 
-            if (metrics && metricsExt) {
-                repSwitch = metricsExt.getCurrentRepresentationSwitch(metrics);
-                bufferLevel = metricsExt.getCurrentBufferLevel(metrics);
-                httpRequest = metricsExt.getCurrentHttpRequest(metrics);
-                droppedFramesMetrics = metricsExt.getCurrentDroppedFrames(metrics);
+            if (metrics && dashMetrics) {
+                repSwitch = dashMetrics.getCurrentRepresentationSwitch(metrics);
+                bufferLevel = dashMetrics.getCurrentBufferLevel(metrics);
+                httpRequest = dashMetrics.getCurrentHttpRequest(metrics);
+                droppedFramesMetrics = dashMetrics.getCurrentDroppedFrames(metrics);
 
                 if (repSwitch !== null) {
-                    bitrateIndexValue = metricsExt.getIndexForRepresentation(repSwitch.to);
-                    bandwidthValue = metricsExt.getBandwidthForRepresentation(repSwitch.to);
+                    bitrateIndexValue = dashMetrics.getIndexForRepresentation(repSwitch.to);
+                    bandwidthValue = dashMetrics.getBandwidthForRepresentation(repSwitch.to);
                     bandwidthValue = bandwidthValue / 1000;
                     bandwidthValue = Math.round(bandwidthValue);
                 }
 
-                numBitratesValue = metricsExt.getMaxIndexForBufferType(type);
+                numBitratesValue = dashMetrics.getMaxIndexForBufferType(type);
 
                 if (bufferLevel !== null) {
                     bufferLengthValue = bufferLevel.level.toPrecision(5);

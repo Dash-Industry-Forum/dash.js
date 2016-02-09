@@ -35,7 +35,7 @@ import SwitchRequest from '../rules/SwitchRequest.js';
 import PlaybackController from './PlaybackController.js';
 import AbrController from './AbrController.js';
 import BufferController from './BufferController.js';
-import LiveEdgeFinder from '../LiveEdgeFinder.js';
+import LiveEdgeFinder from '../utils/LiveEdgeFinder.js';
 import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
@@ -50,8 +50,8 @@ function ScheduleController(config) {
     let metricsModel = config.metricsModel;
     let manifestModel = config.manifestModel;
     let adapter = config.adapter;
-    let metricsExt = config.metricsExt;
-    let manifestExt = config.manifestExt;
+    let dashMetrics = config.dashMetrics;
+    let dashManifestModel = config.dashManifestModel;
     let timelineConverter = config.timelineConverter;
     let scheduleRulesCollection = config.scheduleRulesCollection;
     let rulesController = config.rulesController;
@@ -104,7 +104,7 @@ function ScheduleController(config) {
         isDynamic = streamProcessor.isDynamic();
         scheduleWhilePaused = mediaPlayerModel.getScheduleWhilePaused();
 
-        if (manifestExt.getIsTextTrack(type)) {
+        if (dashManifestModel.getIsTextTrack(type)) {
             eventBus.on(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
         }
 
@@ -216,7 +216,7 @@ function ScheduleController(config) {
     }
 
     function onGetRequiredFragmentCount(result) {
-        if (result.value === 1 && !isFragmentLoading && (manifestExt.getIsTextTrack(type) || !bufferController.getIsAppendingInProgress())) {
+        if (result.value === 1 && !isFragmentLoading && (dashManifestModel.getIsTextTrack(type) || !bufferController.getIsAppendingInProgress())) {
             isFragmentLoading = true;
             abrController.getPlaybackQuality(streamProcessor,  getNextFragment());
         } else {
@@ -360,7 +360,7 @@ function ScheduleController(config) {
         }
 
         let metrics = metricsModel.getMetricsFor('stream');
-        let manifestUpdateInfo = metricsExt.getCurrentManifestUpdate(metrics);
+        let manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metrics);
 
         seekTarget = e.seekTime;
 
@@ -386,7 +386,7 @@ function ScheduleController(config) {
         var manifestInfo = currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo;
         var startTime = liveEdgeTime - Math.min((playbackController.getLiveDelay(currentRepresentationInfo.fragmentDuration)), manifestInfo.DVRWindowSize / 2);
         var metrics = metricsModel.getMetricsFor('stream');
-        var manifestUpdateInfo = metricsExt.getCurrentManifestUpdate(metrics);
+        var manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metrics);
         var currentLiveStart = playbackController.getLiveStartTime();
 
         var request,
@@ -457,7 +457,7 @@ function ScheduleController(config) {
         eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
 
 
-        if (manifestExt.getIsTextTrack(type)) {
+        if (dashManifestModel.getIsTextTrack(type)) {
             eventBus.off(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
         }
 

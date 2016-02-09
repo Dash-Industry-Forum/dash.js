@@ -168,6 +168,21 @@ function VideoModel() {
         }
     }
 
+    function getPlaybackQuality() {
+        let hasWebKit = ('webkitDroppedFrameCount' in element);
+        let hasQuality = ('getVideoPlaybackQuality' in element);
+        let result = null;
+
+        if (hasQuality) {
+            result = element.getVideoPlaybackQuality();
+        }
+        else if (hasWebKit) {
+            result = {droppedVideoFrames: element.webkitDroppedFrameCount, creationTime: new Date()};
+        }
+
+        return result;
+    }
+
     instance = {
         initialize: initialize,
         setCurrentTime: setCurrentTime,
@@ -180,6 +195,7 @@ function VideoModel() {
         setVideoContainer: setVideoContainer,
         getTTMLRenderingDiv: getTTMLRenderingDiv,
         setTTMLRenderingDiv: setTTMLRenderingDiv,
+        getPlaybackQuality: getPlaybackQuality
     };
 
     return instance;

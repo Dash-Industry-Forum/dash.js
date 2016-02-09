@@ -34,9 +34,9 @@ import NextFragmentRequestRule from './NextFragmentRequestRule.js';
 import TextSourceBuffer from '../../TextSourceBuffer.js';
 import MetricsModel from '../../models/MetricsModel.js';
 import DashAdapter from '../../../dash/DashAdapter.js';
-import DashMetricsExtensions from '../../../dash/extensions/DashMetricsExtensions.js';
-import SourceBufferExtensions from '../../extensions/SourceBufferExtensions.js';
-import VirtualBuffer from '../../utils/VirtualBuffer.js';
+import DashMetrics from '../../../dash/DashMetrics.js';
+import SourceBufferController from '../../controllers/SourceBufferController.js';
+import VirtualBuffer from '../../VirtualBuffer.js';
 
 const FRAGMENTS_TO_SCHEDULE_RULES = 'fragmentsToScheduleRules';
 const NEXT_FRAGMENT_RULES = 'nextFragmentRules';
@@ -54,13 +54,13 @@ function ScheduleRulesCollection() {
         nextFragmentRules = [];
 
         fragmentsToScheduleRules.push(BufferLevelRule(context).create({
-            metricsExt: DashMetricsExtensions(context).getInstance(),
+            dashMetrics: DashMetrics(context).getInstance(),
             metricsModel: MetricsModel(context).getInstance(),
             textSourceBuffer: TextSourceBuffer(context).getInstance()
         }));
         nextFragmentRules.push(NextFragmentRequestRule(context).create({
             adapter: DashAdapter(context).getInstance(),
-            sourceBufferExt: SourceBufferExtensions(context).getInstance(),
+            sourceBufferController: SourceBufferController(context).getInstance(),
             virtualBuffer: VirtualBuffer(context).getInstance(),
             textSourceBuffer: TextSourceBuffer(context).getInstance()
 

@@ -40,7 +40,7 @@ describe("MediaPlayer", function () {
         });
 
         it("should have metrics extensions", function () {
-            var metricsExt = player.getMetricsExt();
+            var metricsExt = player.getDashMetrics();
 
             expect(metricsExt).toBeDefined();
             expect(metricsExt).not.toBeNull();

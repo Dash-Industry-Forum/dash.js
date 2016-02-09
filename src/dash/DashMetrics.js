@@ -28,13 +28,13 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import HTTPRequest from '../../streaming/vo/metrics/HTTPRequest.js';
-import AbrController from '../../streaming/controllers/AbrController.js';
-import ManifestModel from '../../streaming/models/ManifestModel.js';
-import DashManifestExtensions from '../../dash/extensions/DashManifestExtensions.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
+import HTTPRequest from '../streaming/vo/metrics/HTTPRequest.js';
+import AbrController from '../streaming/controllers/AbrController.js';
+import ManifestModel from '../streaming/models/ManifestModel.js';
+import DashManifestModel from './models/DashManifestModel.js';
+import FactoryMaker from '../core/FactoryMaker.js';
 
-function DashMetricsExtensions() {
+function DashMetrics() {
 
     let instance;
     let context = this.context;
@@ -69,7 +69,7 @@ function DashMetricsExtensions() {
      * @param bufferType - String 'audio' or 'video',
      * @param periodIdx - Make sure this is the period index not id
      * @return int
-     * @memberof DashMetricsExtensions#
+     * @memberof DashMetrics#
      * @method
      */
     function getMaxIndexForBufferType(bufferType, periodIdx) {
@@ -89,8 +89,8 @@ function DashMetricsExtensions() {
      * @param periodId - Make sure this is the period id not index.
      * @return int
      * @see {@link module:MediaPlayer#setMaxAllowedBitrateFor setMaxAllowedBitrateFor()}
-     * @see {@link DashMetricsExtensions#getMaxIndexForBufferType getMaxIndexForBufferType()}
-     * @memberof DashMetricsExtensions#
+     * @see {@link DashMetrics#getMaxIndexForBufferType getMaxIndexForBufferType()}
+     * @memberof DashMetrics#
      * @method
      */
     function getMaxAllowedIndexForBufferType(bufferType, periodId) {
@@ -370,7 +370,7 @@ function DashMetricsExtensions() {
     }
 
     function adaptationIsType(adaptation, bufferType) {
-        return DashManifestExtensions(context).getInstance().getIsTypeOf(adaptation, bufferType);
+        return DashManifestModel(context).getInstance().getIsTypeOf(adaptation, bufferType);
     }
 
     function findMaxBufferIndex(period, bufferType) {
@@ -415,5 +415,5 @@ function DashMetricsExtensions() {
     return instance;
 }
 
-DashMetricsExtensions.__dashjs_factory_name = 'DashMetricsExtensions';
-export default FactoryMaker.getSingletonFactory(DashMetricsExtensions);
+DashMetrics.__dashjs_factory_name = 'DashMetrics';
+export default FactoryMaker.getSingletonFactory(DashMetrics);
