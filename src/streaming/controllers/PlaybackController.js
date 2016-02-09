@@ -261,11 +261,7 @@ function PlaybackController() {
             if (!isNaN(startTimeOffset) && startTimeOffset < streamInfo.duration && startTimeOffset >= 0) {
                 presentationStartTime = startTimeOffset;
             } else {
-                if (videoModel.getElement().currentTime != streamInfo.start) {
-                    presentationStartTime = videoModel.getElement().currentTime;
-                } else {
-                    presentationStartTime = streamInfo.start;
-                }
+                presentationStartTime = streamInfo.start;
             }
         }
 
