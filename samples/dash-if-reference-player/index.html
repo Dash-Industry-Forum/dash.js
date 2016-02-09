@@ -173,7 +173,7 @@
                     </div>
 
                     <div class="panel-heading panel-top">
-                        <span class="panel-title">Cache media settings</span>
+                        <span class="panel-title">Save settings</span>
                         <div class="btn-group">
                             <button
                                 type="button"
@@ -187,6 +187,25 @@
                                 class="btn btn-default active"
                                 ng-class="{active:mediaSettingsCacheEnabled == true}"
                                 ng-click="setMediaSettingsCacheEnabled(true)">
+                                <span>On</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="panel-heading panel-top">
+                        <span class="panel-title">Use BOLA</span>
+                        <div class="btn-group">
+                            <button
+                                    type="button"
+                                    class="btn btn-default active"
+                                    ng-class="{active:bolaEnabled == false}"
+                                    ng-click="setBolaEnabled(false)">
+                                <span>Off</span>
+                            </button>
+                            <button
+                                    type="button"
+                                    class="btn btn-default"
+                                    ng-class="{active:bolaEnabled  == true}"
+                                    ng-click="setBolaEnabled(true)">
                                 <span>On</span>
                             </button>
                         </div>
