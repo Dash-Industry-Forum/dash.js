@@ -19,11 +19,6 @@
                     "browsers":"cdsbi"
                 },
                 {
-                    "url":"http://vm2.dashif.org/dash/vod/testpic_2s/multi_subs.mpd",
-                    "name":"Captions via Fragmented text",
-                    "browsers":"cdsbi"
-                },
-                {
                     "url":"http://dash.edgesuite.net/dash264/TestCases/5a/1/manifest.mpd",
                     "name":"Multiperiod",
                     "browsers":"cdsbi"
@@ -35,7 +30,7 @@
                 },
                 {
                     "url":"http://dash.edgesuite.net/akamai/test/caption_test/ElephantsDream/elephants_dream_480p_heaac5_1.mpd",
-                    "name":"External caption file",
+                    "name":"External VTT subtitle file",
                     "browsers":"cdsbi"
                 }
             ]
@@ -45,22 +40,22 @@
             "submenu":[
                 {
                     "url":"http://vm2.dashif.org/livesim/testpic_2s/Manifest.mpd",
-                    "name":"SegmentTemplate without manifest updates",
+                    "name":"SegmentTemplate without manifest updates (livesim)",
                     "browsers":"cdsbi"
                 },
                 {
                     "url":"http://vm2.dashif.org/livesim/mup_30/testpic_2s/Manifest.mpd",
-                    "name":"SegmentTemplater with manifest updates every 30s",
+                    "name":"SegmentTemplater with manifest updates every 30s (livesim)",
                     "browsers":"cdsbi"
                 },
                 {
                     "url":"http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_2s/Manifest.mpd",
-                    "name":"SegmentTimeline",
+                    "name":"SegmentTimeline (livesim-dev)",
                     "browsers":"cdsbi"
                 },
                 {
-                    "url":" http://vm2.dashif.org/livesim/periods_30/testpic_2s/Manifest.mpd",
-                    "name":"Multiperiod SegmentTemplate",
+                    "url":" http://vm2.dashif.org/livesim/periods_60/testpic_2s/Manifest.mpd",
+                    "name":"Multiperiod SegmentTemplate. New period every minute (livesim)",
                     "browsers":"cdsbi"
                 },
                 {
@@ -129,14 +124,14 @@
                 {"url":"http://54.72.87.160/stattodyn/statodyn.php?type=mpd&pt=1376172390&tsbd=120&origmpd=http%3A%2F%2Fdash.edgesuite.net%2Fdash264%2FTestCases%2F2b%2Fthomson-networks%2F2%2Fmanifest.mpd&php=http%3A%2F%2Fdasher.eu5.org%2Fstatodyn.php&mpd=&debug=0&hack=.mpd","name":"2. Test content with dynamic MPD type and no @minimumUpdatePeriod"},
                 {"url":"http://54.72.87.160/stattodyn/statodyn.php?type=mpd&pt=1376172485&tsbd=10&origmpd=http%3A%2F%2Fdash.edgesuite.net%2Fdash264%2FTestCases%2F2b%2Fthomson-networks%2F1%2Fmanifest.mpd&php=http%3A%2F%2Fdasher.eu5.org%2Fstatodyn.php&mpd=&debug=0&hack=.mpd","name":"3. Test content with dynamic MPD type and no @minimumUpdatePeriod"},
                 {"url":"http://tvnlive.dashdemo.edgesuite.net/live/manifest.mpd","name":"1. Test content with dynamic MPD type and finite @minimumUpdatePeriod"},
-                {"url":"http://vm2.dashif.org/livesim/testpic_2s/Manifest.mpd","name":"2. Test content with dynamic MPD type and finite @minimumUpdatePeriod"},
-                {"url":"http://vm2.dashif.org/livesim/start_1800/testpic_2s/Manifest.mpd","name":"3. Test content with dynamic MPD type and finite @minimumUpdatePeriod"},
-                {"url":"http://vm2.dashif.org/livesim/mup_300/tsbd_500/testpic_2s/Manifest.mpd","name":"4. Test content with dynamic MPD type and finite @minimumUpdatePeriod"},
-                {"url":"http://vm2.dashif.org/livesim/modulo_10/testpic_2s/Manifest.mpd","name":"5. Test content with dynamic MPD type and finite @minimumUpdatePeriod"},
-                {"url":"http://vm2.dashif.org/livesim/periods_20/testpic_2s/Manifest.mpd","name":"6. Test content with dynamic MPD type and finite @minimumUpdatePeriod"},
-                {"url":"http://vm2.dashif.org/livesim/scte35_2/testpic_2s/Manifest.mpd","name":"7. Test content with dynamic MPD type and finite @minimumUpdatePeriod"},
-                {"url":"http://vm2.dashif.org/livesim/utc_direct-head/testpic_2s/Manifest.mpd","name":"8. Test content with dynamic MPD type and finite @minimumUpdatePeriod"},
-                {"url":"http://vm2.dashif.org/livesim-dev/baseurl_d40_u20/baseurl_u40_d20/testpic_2s/Manifest.mpd","name":"9. Test content with dynamic MPD type and finite @minimumUpdatePeriod"},
+                {"url":"http://vm2.dashif.org/livesim/testpic_2s/Manifest.mpd","name":"2. Test content with dynamic MPD type and finite @minimumUpdatePeriod (livesim)"},
+                {"url":"http://vm2.dashif.org/livesim/start_1800/testpic_2s/Manifest.mpd","name":"3. Test content with dynamic MPD type and finite @minimumUpdatePeriod (livesim)"},
+                {"url":"http://vm2.dashif.org/livesim/mup_300/tsbd_500/testpic_2s/Manifest.mpd","name":"4. Test content with dynamic MPD type and finite @minimumUpdatePeriod (livesim)"},
+                {"url":"http://vm2.dashif.org/livesim/modulo_10/testpic_2s/Manifest.mpd","name":"5. Test content with dynamic MPD type and finite @minimumUpdatePeriod (livesim)"},
+                {"url":"http://vm2.dashif.org/livesim/periods_20/testpic_2s/Manifest.mpd","name":"6. Test content with dynamic MPD type and finite @minimumUpdatePeriod (livesim)"},
+                {"url":"http://vm2.dashif.org/livesim/scte35_2/testpic_2s/Manifest.mpd","name":"7. Test content with dynamic MPD type and finite @minimumUpdatePeriod (livesim)"},
+                {"url":"http://vm2.dashif.org/livesim/utc_direct-head/testpic_2s/Manifest.mpd","name":"8. Test content with dynamic MPD type and finite @minimumUpdatePeriod (livesim)"},
+                {"url":"http://vm2.dashif.org/livesim-dev/baseurl_d40_u20/baseurl_u40_d20/testpic_2s/Manifest.mpd","name":"9. Test content with dynamic MPD type and finite @minimumUpdatePeriod (livesim-dev)"},
                 {"url":"http://dash.edgesuite.net/dash264/TestCases/9a/qualcomm/1/MultiRate.mpd","name":"1. Test content with a low bitrate and framerate representation to assist in trick modes."},
                 {"url":"http://dash.edgesuite.net/dash264/TestCases/9a/qualcomm/2/MultiRate.mpd","name":"2. Test content with a low bitrate and framerate representation to assist in trick modes."},
                 {"url":"http://dash.edgesuite.net/dash264/TestCases/9b/qualcomm/1/MultiRate.mpd","name":"3. Test content with a low bitrate and framerate representation to assist in trick modes."},
@@ -610,7 +605,7 @@
                     "browsers":"cdsbi"
                 },
                 {
-                    "name":"TTML Segmented Subtitles Live",
+                    "name":"TTML Segmented Subtitles Live (livesim)",
                     "url":"http://vm2.dashif.org/livesim/testpic_2s/multi_subs.mpd",
                     "browsers":"cdsbi"
                 },
@@ -625,7 +620,7 @@
                     "browsers":"cdsbi"
                 },
                 {
-                    "name":"Embedded CEA-608 Closed Captions and TTML segments Live",
+                    "name":"Embedded CEA-608 Closed Captions and TTML segments Live (livesim)",
                     "url":"http://vm2.dashif.org/livesim/testpic_2s/cea608_and_segs.mpd",
                     "browsers":"cdsbi"
                 }
@@ -634,11 +629,6 @@
         {
             "name":"Other samples",
             "submenu":[
-                {
-                    "name":"Caption Test",
-                    "url":"http://dash.edgesuite.net/akamai/test/caption_test/ElephantsDream/elephants_dream_480p_heaac5_1.mpd",
-                    "browsers":"cdsbi"
-                },
                 {
                     "name":"4K",
                     "url":"http://dash.edgesuite.net/akamai/streamroot/050714/Spring_4Ktest.mpd",
