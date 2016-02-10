@@ -147,13 +147,19 @@ function Stream(config) {
     }
 
     function reset() {
-        playbackController.pause();
-        fragmentController.reset();
+        if (playbackController) {
+            playbackController.pause();
+            playbackController = null;
+        }
+
+        if (fragmentController) {
+            fragmentController.reset();
+            fragmentController = null;
+        }
+
         liveEdgeFinder.abortSearch();
         deactivate();
 
-        playbackController = null;
-        fragmentController = null;
         mediaController = null;
         abrController = null;
         manifestUpdater = null;
