@@ -29,6 +29,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import BufferController from '../../controllers/BufferController.js';
+/**
+ * @class
+ */
 class BufferState {
     /**
      * @description This Object holds reference to the current buffer state of the video element.

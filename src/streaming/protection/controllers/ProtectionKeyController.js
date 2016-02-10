@@ -28,12 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
-/**
- * Media protection functionality that can be modified/overridden by applications
- *
- * @class ProtectionKeyController
- */
 import CommonEncryption from './../CommonEncryption.js';
 import KeySystemClearKey from './../drm/KeySystemClearKey.js';
 import KeySystemWidevine from './../drm/KeySystemWidevine.js';
@@ -44,6 +38,10 @@ import Widevine from './../servers/Widevine.js';
 import ClearKey from './../servers/ClearKey.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
+/**
+ * @module ProtectionKeyController
+ * @description Media protection key system functionality that can be modified/overridden by applications
+ */
 function ProtectionKeyController() {
 
     let context = this.context;
@@ -87,6 +85,8 @@ function ProtectionKeyController() {
      *
      * @returns {KeySystem[]} a prioritized
      * list of key systems
+     * @memberof module:ProtectionKeyController
+     * @instance
      */
     function getKeySystems() {
         return keySystems;
@@ -100,6 +100,8 @@ function ProtectionKeyController() {
      * @returns {KeySystem} the key system
      * or null if no supported key system is associated with the given key
      * system string
+     * @memberof module:ProtectionKeyController
+     * @instance
      */
     function getKeySystemBySystemString(systemString) {
         for (var i = 0; i < keySystems.length; i++) {
@@ -121,6 +123,8 @@ function ProtectionKeyController() {
      * @param keySystem the key
      * @returns {boolean} true if this is the ClearKey key system, false
      * otherwise
+     * @memberof module:ProtectionKeyController
+     * @instance
      */
     function isClearKey(keySystem) {
         return (keySystem === clearkeyKeySystem);
@@ -133,6 +137,8 @@ function ProtectionKeyController() {
      * @param initData2 {ArrayBuffer} second initData
      * @returns {boolean} true if the initData arrays are equal in size and
      * contents, false otherwise
+     * @memberof module:ProtectionKeyController
+     * @instance
      */
     function initDataEquals(initData1, initData2) {
         if (initData1.byteLength === initData2.byteLength) {
@@ -164,6 +170,8 @@ function ProtectionKeyController() {
      * system identified by the ContentProtection element
      * @returns {ArrayBuffer} Object.initData the initialization data parsed
      * from the ContentProtection element
+     * @memberof module:ProtectionKeyController
+     * @instance
      */
     function getSupportedKeySystemsFromContentProtection(cps) {
         var cp, ks, ksIdx, cpIdx;
@@ -206,6 +214,8 @@ function ProtectionKeyController() {
      * system
      * @returns {ArrayBuffer} Object.initData the initialization data
      * associated with the key system
+     * @memberof module:ProtectionKeyController
+     * @instance
      */
     function getSupportedKeySystems(initData) {
         var ksIdx;
@@ -236,6 +246,8 @@ function ProtectionKeyController() {
      * @return {LicenseServer} the license server
      * implementation that should be used for this request or null if the player should not
      * pass messages of the given type to a license server
+     * @memberof module:ProtectionKeyController
+     * @instance
      *
      */
     function getLicenseServer(keySystem, protData, messageType) {
@@ -268,6 +280,8 @@ function ProtectionKeyController() {
      * @param {ArrayBuffer} message the key message from the CDM
      * @return {ClearKeyKeySet} the clear keys associated with
      * the request or null if no keys can be returned by this function
+     * @memberof module:ProtectionKeyController
+     * @instance
      */
     function processClearKeyLicenseRequest(protData, message) {
         try {

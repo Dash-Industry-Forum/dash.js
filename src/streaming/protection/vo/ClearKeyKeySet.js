@@ -37,6 +37,7 @@
  * @param type the type of keys in this set.  One of either 'persistent'
  * or 'temporary'.  Can also be null or undefined.
  * @class
+ * @ignore
  */
 class ClearKeyKeySet {
     constructor(keyPairs, type) {

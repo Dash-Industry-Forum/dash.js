@@ -28,27 +28,25 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
-/**
- * Provides access to media protection information and functionality.  Each
- * ProtectionController manages a single {@link MediaPlayer.models.ProtectionModel}
- * which encapsulates a set of protection information (EME APIs, selected key system,
- * key sessions).  The APIs of ProtectionController mostly align with the latest EME
- * APIs.  Key system selection is mostly automated when combined with app-overrideable
- * functionality provided in {@link ProtectionKeyController}.
- *
- * @class ProtectionController
- * @todo ProtectionController does almost all of its tasks automatically after init() is
- * called.  Applications might want more control over this process and want to go through
- * each step manually (key system selection, session creation, session maintenance).
- */
-
 import CommonEncryption from '../CommonEncryption.js';
 import Events from '../../../core/events/Events.js';
 import MediaCapability from '../vo/MediaCapability.js';
 import KeySystemConfiguration from '../vo/KeySystemConfiguration.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 import Protection from '../Protection.js';
+
+/**
+ * @Module ProtectionController
+ * @description Provides access to media protection information and functionality.  Each
+ * ProtectionController manages a single {@link MediaPlayer.models.ProtectionModel}
+ * which encapsulates a set of protection information (EME APIs, selected key system,
+ * key sessions).  The APIs of ProtectionController mostly align with the latest EME
+ * APIs.  Key system selection is mostly automated when combined with app-overrideable
+ * functionality provided in {@link ProtectionKeyController}.
+ * @todo ProtectionController does almost all of its tasks automatically after init() is
+ * called.  Applications might want more control over this process and want to go through
+ * each step manually (key system selection, session creation, session maintenance).
+ */
 
 function ProtectionController(config) {
 
@@ -86,7 +84,7 @@ function ProtectionController(config) {
      * {@link module:MediaPlayer#retrieveManifest}
      * @param {StreamInfo} [aInfo] audio stream information
      * @param {StreamInfo} [vInfo] video stream information
-     * @memberof ProtectionController
+     * @memberof module:ProtectionController
      * @instance
      * @todo This API will change when we have better support for allowing applications
      * to select different adaptation sets for playback.  Right now it is clunky for
@@ -129,7 +127,7 @@ function ProtectionController(config) {
      * the MPD or from the PSSH box in the media
      *
      * @param {ArrayBuffer} initData the initialization data
-     * @memberof ProtectionController
+     * @memberof module:ProtectionController
      * @instance
      * @fires ProtectionController#KeySessionCreated
      * @todo In older versions of the EME spec, there was a one-to-one relationship between
@@ -164,7 +162,7 @@ function ProtectionController(config) {
      * essentially creates a new key session
      *
      * @param {string} sessionID
-     * @memberof ProtectionController
+     * @memberof module:ProtectionController
      * @instance
      * @fires ProtectionController#KeySessionCreated
      */
@@ -179,7 +177,7 @@ function ProtectionController(config) {
      *
      * @param {SessionToken} sessionToken the session
      * token
-     * @memberof ProtectionController
+     * @memberof module:ProtectionController
      * @instance
      * @fires ProtectionController#KeySessionRemoved
      * @fires ProtectionController#KeySessionClosed
@@ -194,7 +192,7 @@ function ProtectionController(config) {
      *
      * @param {SessionToken} sessionToken the session
      * token
-     * @memberof ProtectionController
+     * @memberof module:ProtectionController
      * @instance
      * @fires ProtectionController#KeySessionClosed
      */
@@ -209,7 +207,7 @@ function ProtectionController(config) {
      *
      * @param {ArrayBuffer} serverCertificate a CDM-specific license server
      * certificate
-     * @memberof ProtectionController
+     * @memberof module:ProtectionController
      * @instance
      * @fires ProtectionController#ServerCertificateUpdated
      */
@@ -224,7 +222,7 @@ function ProtectionController(config) {
      *
      * @param {HTMLMediaElement} element the media element to which the protection
      * system should be associated
-     * @memberof ProtectionController
+     * @memberof module:ProtectionController
      * @instance
      */
     function setMediaElement(element) {
@@ -244,7 +242,7 @@ function ProtectionController(config) {
      * "persistent-license".  Default is "temporary".
      *
      * @param {String} sessionType the session type
-     * @memberof ProtectionController
+     * @memberof module:ProtectionController
      * @instance
      */
     function setSessionType(value) {
@@ -257,7 +255,7 @@ function ProtectionController(config) {
      * @param {Object} data an object containing property names corresponding to
      * key system name strings (e.g. "org.w3.clearkey") and associated values
      * being instances of {@link ProtectionData}
-     * @memberof ProtectionController
+     * @memberof module:ProtectionController
      * @instance
      */
     function setProtectionData(data) {
@@ -270,7 +268,7 @@ function ProtectionController(config) {
      * will simply be unloaded and not deleted.  Additionally, if this protection set is
      * associated with a HTMLMediaElement, it will be detached from that element.
      *
-     * @memberof ProtectionController
+     * @memberof module:ProtectionController
      * @instance
      */
     function reset() {
