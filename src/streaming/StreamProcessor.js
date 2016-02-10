@@ -127,17 +127,31 @@ function StreamProcessor(config) {
     }
 
     function reset(errored) {
-        fragmentModel.reset();
+        if (fragmentModel) {
+            fragmentModel.reset();
+            fragmentModel = null;
+        }
+
         indexHandler.reset();
-        bufferController.reset(errored);
-        scheduleController.reset();
-        representationController.reset();
-        bufferController = null;
-        scheduleController = null;
-        representationController = null;
+
+        if (bufferController) {
+            bufferController.reset(errored);
+            bufferController = null;
+        }
+
+        if (scheduleController) {
+            scheduleController.reset();
+            scheduleController = null;
+        }
+
+        if (representationController) {
+            representationController.reset();
+            representationController = null;
+        }
+
         fragmentController = null;
         fragmentLoader = null;
-        fragmentModel = null;
+
         eventController = null;
         stream = null;
         dynamic = null;
