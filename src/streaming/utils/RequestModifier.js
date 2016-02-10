@@ -28,33 +28,28 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-function VideoModelExtensions() {
+function RequestModifier() {
 
     let instance;
 
-    function getPlaybackQuality(videoElement) {
-        var hasWebKit = ('webkitDroppedFrameCount' in videoElement);
-        var hasQuality = ('getVideoPlaybackQuality' in videoElement);
-        var result = null;
+    function modifyRequestURL(url) {
+        return url;
+    }
 
-        if (hasQuality) {
-            result = videoElement.getVideoPlaybackQuality();
-        }
-        else if (hasWebKit) {
-            result = {droppedVideoFrames: videoElement.webkitDroppedFrameCount, creationTime: new Date()};
-        }
-
-        return result;
+    function modifyRequestHeader(request) {
+        return request;
     }
 
     instance = {
-        getPlaybackQuality: getPlaybackQuality
+        modifyRequestURL: modifyRequestURL,
+        modifyRequestHeader: modifyRequestHeader
     };
 
     return instance;
 }
 
-VideoModelExtensions.__dashjs_factory_name = 'VideoModelExtensions';
-export default FactoryMaker.getSingletonFactory(VideoModelExtensions);
+RequestModifier.__dashjs_factory_name = 'RequestModifier';
+export default FactoryMaker.getSingletonFactory(RequestModifier);

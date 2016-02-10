@@ -28,8 +28,8 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../core/FactoryMaker.js';
-import X2JS from '../../externals/xml2json.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import X2JS from '../../../externals/xml2json.js';
 
 const SECONDS_IN_HOUR = 60 * 60; // Expression of an hour in seconds
 const SECONDS_IN_MIN = 60; // Expression of a minute in seconds
@@ -123,7 +123,7 @@ function TTMLParser() {
             regions.push(processRegion(JSON.parse(JSON.stringify(ttmlLayout[i])), cellUnit));
         }
 
-        // Get the namespace prefixe.
+        // Get the namespace prefix.
         var nsttp = getNamespacePrefix(ttml.tt, 'http://www.w3.org/ns/ttml#parameter');
 
         // Set the framerate.
@@ -242,7 +242,7 @@ function TTMLParser() {
                         deletePropertyFromArray('direction', cueStyleProperties);
                     }
 
-                    // Apply the linePadding property if it is specifyied in the cue style.
+                    // Apply the linePadding property if it is specified in the cue style.
                     if (arrayContains('padding-left', cueStyleProperties) && arrayContains('padding-right', cueStyleProperties)) {
                         cueDirUniWrapper.innerHTML = applyLinePadding(cueDirUniWrapper, cueStyleProperties);
                     }
@@ -485,7 +485,7 @@ function TTMLParser() {
         var hasStyling = hasHead ? ttml.tt.head.hasOwnProperty('styling') : false;
         var hasBody = hasTt ? ttml.tt.hasOwnProperty('body') : false;
 
-        // Check if the document contains all the nececessary information
+        // Check if the document contains all the necessary information
         return (hasTt && hasHead && hasLayout && hasStyling && hasBody);
     }
 

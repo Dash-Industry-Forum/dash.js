@@ -29,13 +29,13 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import TextSourceBuffer from '../TextSourceBuffer.js';
-import MediaController from '../controllers/MediaController.js';
+import MediaController from './MediaController.js';
 import DashAdapter from '../../dash/DashAdapter.js';
-import ErrorHandler from '../../streaming/ErrorHandler.js';
-import StreamController from '../controllers/StreamController.js';
-import TextTrackExtensions from '../extensions/TextTrackExtensions.js';
-import VTTParser from '../VTTParser.js';
-import TTMLParser from '../TTMLParser.js';
+import ErrorHandler from '../utils/ErrorHandler.js';
+import StreamController from './StreamController.js';
+import TextTracks from '../TextTracks.js';
+import VTTParser from '../utils/VTTParser.js';
+import TTMLParser from '../utils/TTMLParser.js';
 import VideoModel from '../models/VideoModel.js';
 import Error from '../vo/Error.js';
 import EventBus from '../../core/EventBus.js';
@@ -45,13 +45,13 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 
 const QUOTA_EXCEEDED_ERROR_CODE = 22;
 
-function SourceBufferExtensions() {
+function SourceBufferController() {
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
 
     let instance,
-        manifestExt;
+        dashManifestModel;
 
     function createSourceBuffer(mediaSource, mediaInfo) {
 
@@ -75,11 +75,11 @@ function SourceBufferExtensions() {
                 buffer.setConfig({
                     errHandler: ErrorHandler(context).getInstance(),
                     adapter: DashAdapter(context).getInstance(),
-                    manifestExt: manifestExt,
+                    dashManifestModel: dashManifestModel,
                     mediaController: MediaController(context).getInstance(),
                     videoModel: VideoModel(context).getInstance(),
                     streamController: StreamController(context).getInstance(),
-                    textTrackExtensions: TextTrackExtensions(context).getInstance(),
+                    textTracks: TextTracks(context).getInstance(),
                     VTTParser: VTTParser(context).getInstance(),
                     TTMLParser: TTMLParser(context).getInstance()
 
@@ -327,8 +327,8 @@ function SourceBufferExtensions() {
     function setConfig(config) {
         if (!config) return;
 
-        if (config.manifestExt) {
-            manifestExt = config.manifestExt;
+        if (config.dashManifestModel) {
+            dashManifestModel = config.dashManifestModel;
         }
     }
 
@@ -338,7 +338,7 @@ function SourceBufferExtensions() {
         var CHECK_INTERVAL = 50;
 
         var checkIsUpdateEnded = function () {
-            // if undating is still in progress do nothing and wait for the next check again.
+            // if updating is still in progress do nothing and wait for the next check again.
             if (buffer.updating) return;
             // updating is completed, now we can stop checking and resolve the promise
             clearInterval(intervalId);
@@ -388,7 +388,7 @@ function SourceBufferExtensions() {
     return instance;
 }
 
-SourceBufferExtensions.__dashjs_factory_name = 'SourceBufferExtensions';
-let factory = FactoryMaker.getSingletonFactory(SourceBufferExtensions);
+SourceBufferController.__dashjs_factory_name = 'SourceBufferController';
+let factory = FactoryMaker.getSingletonFactory(SourceBufferController);
 factory.QUOTA_EXCEEDED_ERROR_CODE = QUOTA_EXCEEDED_ERROR_CODE;
 export default factory;

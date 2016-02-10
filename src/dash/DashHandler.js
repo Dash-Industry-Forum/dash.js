@@ -45,9 +45,9 @@ function DashHandler(config) {
     let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
 
-    let baseURLExt = config.baseURLExt;
+    let segmentBaseLoader = config.segmentBaseLoader;
     let timelineConverter = config.timelineConverter;
-    let metricsExt = config.metricsExt;
+    let dashMetrics = config.dashMetrics;
     let metricsModel = config.metricsModel;
 
     let instance,
@@ -692,7 +692,7 @@ function DashHandler(config) {
             metrics = metricsModel.getMetricsFor('stream');
             // the last segment is supposed to be a live edge
             timelineConverter.setExpectedLiveEdge(liveEdge);
-            metricsModel.updateManifestUpdateInfo(metricsExt.getCurrentManifestUpdate(metrics), {presentationStartTime: liveEdge});
+            metricsModel.updateManifestUpdateInfo(dashMetrics.getCurrentManifestUpdate(metrics), {presentationStartTime: liveEdge});
         }
     }
 
@@ -734,11 +734,11 @@ function DashHandler(config) {
         }
 
         if (!hasInitialization) {
-            baseURLExt.loadInitialization(representation);
+            segmentBaseLoader.loadInitialization(representation);
         }
 
         if (!hasSegments) {
-            baseURLExt.loadSegments(representation, type, representation.indexRange);
+            segmentBaseLoader.loadSegments(representation, type, representation.indexRange);
         }
 
         if (hasInitialization && hasSegments) {
@@ -867,7 +867,7 @@ function DashHandler(config) {
             return null;
         }
 
-        if (requestedTime !== time) { // When playing at live edge with 0 delay we may loop back with same time and index until it is available. Reduces verbosness of logs.
+        if (requestedTime !== time) { // When playing at live edge with 0 delay we may loop back with same time and index until it is available. Reduces verboseness of logs.
             requestedTime = time;
             log('Getting the request for ' + type + ' time : ' + time);
         }

@@ -32,7 +32,7 @@
 import FragmentModel from '../models/FragmentModel.js';
 import MediaPlayerModel from '../models/MediaPlayerModel.js';
 import HTTPRequest from '../vo/metrics/HTTPRequest.js';
-import SourceBufferExtensions from '../extensions/SourceBufferExtensions.js';
+import SourceBufferController from './SourceBufferController.js';
 import AbrController from './AbrController.js';
 import PlaybackController from './PlaybackController.js';
 import MediaController from './MediaController.js';
@@ -55,9 +55,9 @@ function BufferController(config) {
 
     let metricsModel = config.metricsModel;
     let manifestModel = config.manifestModel;
-    let sourceBufferExt = config.sourceBufferExt;
+    let sourceBufferController = config.sourceBufferController;
     let errHandler = config.errHandler;
-    let mediaSourceExt = config.mediaSourceExt;
+    let mediaSourceController = config.mediaSourceController;
     let streamController = config.streamController;
     let mediaController = config.mediaController;
     let adapter = config.adapter;
@@ -142,7 +142,7 @@ function BufferController(config) {
         var sourceBuffer = null;
 
         try {
-            sourceBuffer = sourceBufferExt.createSourceBuffer(mediaSource, mediaInfo);
+            sourceBuffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
 
             if (sourceBuffer && sourceBuffer.hasOwnProperty('initialize')) {
                 sourceBuffer.initialize(type, this);
@@ -264,7 +264,7 @@ function BufferController(config) {
     function appendToBuffer(chunk) {
         isAppendingInProgress = true;
         appendedBytesInfo = chunk;
-        sourceBufferExt.append(buffer, chunk);
+        sourceBufferController.append(buffer, chunk);
 
         if (chunk.mediaInfo.type === 'video') {
             if (chunk.mediaInfo.embeddedCaptions) {
@@ -279,7 +279,7 @@ function BufferController(config) {
         onPlaybackProgression();
 
         if (isBufferingCompleted && streamProcessor.getStreamInfo().isLast) {
-            mediaSourceExt.signalEndOfStream(mediaSource);
+            mediaSourceController.signalEndOfStream(mediaSource);
         }
 
         var ranges;
@@ -289,9 +289,9 @@ function BufferController(config) {
             // that has not been appended and stop request scheduling. We also need to store
             // the promise for this append because the next data can be appended only after
             // this promise is resolved.
-            if (e.error.code === SourceBufferExtensions.QUOTA_EXCEEDED_ERROR_CODE) {
+            if (e.error.code === SourceBufferController.QUOTA_EXCEEDED_ERROR_CODE) {
                 virtualBuffer.append(appendedBytesInfo);
-                criticalBufferLevel = sourceBufferExt.getTotalBufferedTime(buffer) * 0.8;
+                criticalBufferLevel = sourceBufferController.getTotalBufferedTime(buffer) * 0.8;
                 eventBus.trigger(Events.QUOTA_EXCEEDED, {sender: instance, criticalBufferLevel: criticalBufferLevel});
                 clearBuffer(getClearRange());
             }
@@ -304,7 +304,7 @@ function BufferController(config) {
             clearBuffer(getClearRange());
         }
 
-        ranges = sourceBufferExt.getAllRanges(buffer);
+        ranges = sourceBufferController.getAllRanges(buffer);
 
         if (ranges) {
             //log("Append complete: " + ranges.length);
@@ -361,7 +361,7 @@ function BufferController(config) {
     function updateBufferLevel() {
         var currentTime = playbackController.getTime();
 
-        bufferLevel = sourceBufferExt.getBufferLength(buffer, currentTime);
+        bufferLevel = sourceBufferController.getBufferLength(buffer, currentTime);
         eventBus.trigger(Events.BUFFER_LEVEL_UPDATED, {sender: instance, bufferLevel: bufferLevel});
         checkIfSufficientBuffer();
     }
@@ -477,7 +477,7 @@ function BufferController(config) {
     }
 
     function hasEnoughSpaceToAppend() {
-        var totalBufferedTime = sourceBufferExt.getTotalBufferedTime(buffer);
+        var totalBufferedTime = sourceBufferController.getTotalBufferedTime(buffer);
         return (totalBufferedTime < criticalBufferLevel);
     }
 
@@ -495,7 +495,7 @@ function BufferController(config) {
         if (bufferToPrune > 0) {
             log('pruning buffer: ' + bufferToPrune + ' seconds.');
             isPruningInProgress = true;
-            sourceBufferExt.remove(buffer, 0, Math.round(start + bufferToPrune), mediaSource);
+            sourceBufferController.remove(buffer, 0, Math.round(start + bufferToPrune), mediaSource);
         }
     }
 
@@ -513,7 +513,7 @@ function BufferController(config) {
         req = streamProcessor.getFragmentModel().getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED, time: currentTime})[0];
         removeEnd = (req && !isNaN(req.startTime)) ? req.startTime : Math.floor(currentTime);
 
-        range = sourceBufferExt.getBufferRange(buffer, currentTime);
+        range = sourceBufferController.getBufferRange(buffer, currentTime);
 
         if ((range === null) && (buffer.buffered.length > 0)) {
             removeEnd = buffer.buffered.end(buffer.buffered.length - 1 );
@@ -530,7 +530,7 @@ function BufferController(config) {
         var removeStart = range.start;
         var removeEnd = range.end;
 
-        sourceBufferExt.remove(buffer, removeStart, removeEnd, mediaSource);
+        sourceBufferController.remove(buffer, removeStart, removeEnd, mediaSource);
     }
 
     function onRemoved(e) {
@@ -541,7 +541,7 @@ function BufferController(config) {
         if (isPruningInProgress) {
             isPruningInProgress = false;
         }
-        virtualBuffer.updateBufferedRanges({streamId: getStreamId(), mediaType: type}, sourceBufferExt.getAllRanges(buffer));
+        virtualBuffer.updateBufferedRanges({streamId: getStreamId(), mediaType: type}, sourceBufferController.getAllRanges(buffer));
         updateBufferLevel();
         eventBus.trigger(Events.BUFFER_CLEARED, {sender: instance, from: e.from, to: e.to, hasEnoughSpaceToAppend: hasEnoughSpaceToAppend()});
         if (hasEnoughSpaceToAppend()) return;
@@ -582,7 +582,7 @@ function BufferController(config) {
 
         if ((rangesToClear.length === 0) || (rangesToLeave.length === 0)) return;
 
-        currentTrackBufferLength = sourceBufferExt.getBufferLength({buffered: rangesToLeave}, currentTime);
+        currentTrackBufferLength = sourceBufferController.getBufferLength({buffered: rangesToLeave}, currentTime);
 
         if (currentTrackBufferLength < safeBufferLength) return;
 
@@ -745,8 +745,8 @@ function BufferController(config) {
         scheduleController = null;
 
         if (!errored) {
-            sourceBufferExt.abort(mediaSource, buffer);
-            sourceBufferExt.removeSourceBuffer(mediaSource, buffer);
+            sourceBufferController.abort(mediaSource, buffer);
+            sourceBufferController.removeSourceBuffer(mediaSource, buffer);
         }
 
         buffer = null;

@@ -28,12 +28,12 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventBus from '../../core/EventBus.js';
-import Events from '../../core/events/Events.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
-import Debug from '../../core/Debug.js';
+import EventBus from '../core/EventBus.js';
+import Events from '../core/events/Events.js';
+import FactoryMaker from '../core/FactoryMaker.js';
+import Debug from '../core/Debug.js';
 
-function TextTrackExtensions() {
+function TextTracks() {
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
@@ -589,5 +589,5 @@ function TextTrackExtensions() {
     return instance;
 }
 
-TextTrackExtensions.__dashjs_factory_name = 'TextTrackExtensions';
-export default FactoryMaker.getSingletonFactory(TextTrackExtensions);
+TextTracks.__dashjs_factory_name = 'TextTracks';
+export default FactoryMaker.getSingletonFactory(TextTracks);

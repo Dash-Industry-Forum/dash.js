@@ -35,6 +35,7 @@
  * @param keyID {String} 128-bit key ID, base64 encoded, with no padding
  * @param key {String} 128-bit encryption key, base64 encoded, with no padding
  * @class
+ * @ignore
  */
 class KeyPair {
     constructor(keyID, key) {

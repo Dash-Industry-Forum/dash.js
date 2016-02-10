@@ -31,7 +31,7 @@
 
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-function FragmentExtensions(/*config*/) {
+function FragmentedTextBoxParser() {
 
     let instance,
         boxParser;
@@ -53,7 +53,7 @@ function FragmentExtensions(/*config*/) {
         var mfhdBox = isoFile.getBox('mfhd');
 
         var sampleDuration,
-            sampleCompostionTimeOffset,
+            sampleCompositionTimeOffset,
             sampleCount,
             sampleSize,
             sampleDts,
@@ -74,10 +74,10 @@ function FragmentExtensions(/*config*/) {
             sample = trunBox.samples[i];
             sampleDuration = (sample.sample_duration !== undefined) ? sample.sample_duration : tfhdBox.default_sample_duration;
             sampleSize = (sample.sample_size !== undefined) ? sample.sample_size : tfhdBox.default_sample_size;
-            sampleCompostionTimeOffset = (sample.sample_composition_time_offset !== undefined) ? sample.sample_composition_time_offset : 0;
+            sampleCompositionTimeOffset = (sample.sample_composition_time_offset !== undefined) ? sample.sample_composition_time_offset : 0;
 
             sampleList.push({'dts': sampleDts,
-                'cts': (sampleDts + sampleCompostionTimeOffset),
+                'cts': (sampleDts + sampleCompositionTimeOffset),
                 'duration': sampleDuration,
                 'offset': moofBox.offset + dataOffset,
                 'size': sampleSize});
@@ -104,5 +104,5 @@ function FragmentExtensions(/*config*/) {
     return instance;
 }
 
-FragmentExtensions.__dashjs_factory_name = 'FragmentExtensions';
-export default FactoryMaker.getSingletonFactory(FragmentExtensions);
+FragmentedTextBoxParser.__dashjs_factory_name = 'FragmentedTextBoxParser';
+export default FactoryMaker.getSingletonFactory(FragmentedTextBoxParser);

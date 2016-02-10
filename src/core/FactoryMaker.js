@@ -67,10 +67,13 @@ let FactoryMaker = (function () {
     }
 
     /**
+     * Use this method to add an singleton instance to the system.  Useful for unit testing to mock objects etc.
      *
      * @param context
      * @param className
      * @param instance
+     * @memberof module:FactoryMaker
+     * @instance
      */
     function setSingletonInstance(context, className, instance) {
         for (let i in singletonContexts) {

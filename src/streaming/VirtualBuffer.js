@@ -32,12 +32,12 @@
 /**
  * Represents data structure to keep and drive {@link DataChunk}
  */
-import MediaController from '../controllers/MediaController.js';
-import CustomTimeRanges from './CustomTimeRanges.js';
-import HTTPRequest from '../vo/metrics/HTTPRequest.js';
-import EventBus from './../../core/EventBus.js';
-import Events from '../../core/events/Events.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
+import MediaController from './controllers/MediaController.js';
+import CustomTimeRanges from './utils/CustomTimeRanges.js';
+import HTTPRequest from './vo/metrics/HTTPRequest.js';
+import EventBus from '../core/EventBus.js';
+import Events from '../core/events/Events.js';
+import FactoryMaker from '../core/FactoryMaker.js';
 
 function VirtualBuffer() {
 
@@ -46,7 +46,7 @@ function VirtualBuffer() {
 
     let instance,
         data,
-        sourceBufferExt;
+        sourceBufferController;
 
     function setup() {
         data = {};
@@ -83,8 +83,8 @@ function VirtualBuffer() {
     function storeAppendedChunk(chunk, buffer) {
         if (!chunk || !buffer) return;
 
-        // after the media segment has bee appended we check how the buffred ranges of SourceBuffer have been change. The
-        // difference is the actual buffred range of the appended segment.
+        // after the media segment has bee appended we check how the buffered ranges of SourceBuffer have been change. The
+        // difference is the actual buffered range of the appended segment.
         // We need to update actualBufferedRanges so that it reflects SourceBuffer ranges.
         // Also we store the appended chunk so that any BufferController has access to the list
         // of appended chunks.
@@ -104,7 +104,7 @@ function VirtualBuffer() {
         }
 
         sortArrayByProperty(data[streamId][mediaType].appended, 'start');
-        diff = sourceBufferExt.getRangeDifference(bufferedRanges, buffer);
+        diff = sourceBufferController.getRangeDifference(bufferedRanges, buffer);
 
         if (!diff) {
             if (oldChunk) {
@@ -122,7 +122,7 @@ function VirtualBuffer() {
 
         if (!oldChunk) return;
 
-        // if there is an old chunk already appended for the same index, we may need to adjust buffredRange of a new chunk, because
+        // if there is an old chunk already appended for the same index, we may need to adjust bufferedRange of a new chunk, because
         // it may be not valid.
         //
         // Example:
@@ -268,7 +268,7 @@ function VirtualBuffer() {
 
         for (var streamId in data) {
             if (data.hasOwnProperty(streamId)) {
-                level += sourceBufferExt.getTotalBufferedTime({buffered: data[streamId][mediaType].calculatedBufferedRanges});
+                level += sourceBufferController.getTotalBufferedTime({buffered: data[streamId][mediaType].calculatedBufferedRanges});
             }
         }
 
@@ -278,8 +278,8 @@ function VirtualBuffer() {
     function setConfig(config) {
         if (!config) return;
 
-        if (config.sourceBufferExt) {
-            sourceBufferExt = config.sourceBufferExt;
+        if (config.sourceBufferController) {
+            sourceBufferController = config.sourceBufferController;
         }
     }
 
@@ -325,7 +325,7 @@ function VirtualBuffer() {
             isStartIncluded = (chunkStart >= rangeStart && chunkStart < rangeEnd);
             isEndIncluded = (chunkEnd > rangeStart && chunkEnd <= rangeEnd);
 
-            // if a segment has been partially removed from SourceBuffer we select it as weel, but we
+            // if a segment has been partially removed from SourceBuffer we select it as well, but we
             // need to update its bufferedRange
             //
             // Example 1:

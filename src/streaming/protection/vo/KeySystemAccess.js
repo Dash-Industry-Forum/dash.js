@@ -39,6 +39,7 @@
  * subset of configurations passed to the key system access request that are supported
  * by this user agent
  * @class
+ * @ignore
  */
 class KeySystemAccess {
     constructor(keySystem, ksConfiguration) {

@@ -32,6 +32,7 @@ View the /samples folder for many other examples of embedding and using the play
 2. Run the GruntFile.js default task
     * grunt
 3. You can also target individual tasks: E.g.
+	* grunt debug (quickest build)
     * grunt dist
     * grunt release
     * grunt test

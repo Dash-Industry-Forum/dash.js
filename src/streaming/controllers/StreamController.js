@@ -53,13 +53,12 @@ function StreamController() {
         manifestUpdater,
         manifestLoader,
         manifestModel,
-        manifestExt,
+        dashManifestModel,
         adapter,
         metricsModel,
-        metricsExt,
-        videoModelExt,
+        dashMetrics,
         liveEdgeFinder,
-        mediaSourceExt,
+        mediaSourceController,
         timeSyncController,
         virtualBuffer,
         errHandler,
@@ -104,7 +103,7 @@ function StreamController() {
         manifestUpdater.setConfig({
             log: log,
             manifestModel: manifestModel,
-            manifestExt: manifestExt
+            dashManifestModel: dashManifestModel
         });
         manifestUpdater.initialize(manifestLoader);
 
@@ -114,9 +113,9 @@ function StreamController() {
             streamController: instance,
             timelineConverter: timelineConverter,
             metricsModel: metricsModel,
-            metricsExt: metricsExt,
+            dashMetrics: dashMetrics,
             manifestModel: manifestModel,
-            manifestExt: manifestExt,
+            dashManifestModel: dashManifestModel,
             adapter: adapter,
             videoModel: videoModel
         });
@@ -237,7 +236,7 @@ function StreamController() {
      * Used to determine the time current stream is finished and we should switch to the next stream.
      */
     function onPlaybackTimeUpdated(e) {
-        var playbackQuality = videoModelExt.getPlaybackQuality(videoModel.getElement());
+        var playbackQuality = videoModel.getPlaybackQuality();
         if (playbackQuality) {
             metricsModel.addDroppedFrames('video', playbackQuality);
         }
@@ -248,7 +247,7 @@ function StreamController() {
 
         // check if stream end is reached
         if (e.timeToEnd < STREAM_END_THRESHOLD) {
-            mediaSourceExt.signalEndOfStream(mediaSource);
+            mediaSourceController.signalEndOfStream(mediaSource);
         }
     }
 
@@ -303,9 +302,9 @@ function StreamController() {
         var nextStream = getNextStream();
         var isLast = e.streamInfo.isLast;
 
-        // buffering has been complted, now we can signal end of stream
+        // buffering has been completed, now we can signal end of stream
         if (mediaSource && isLast) {
-            mediaSourceExt.signalEndOfStream(mediaSource);
+            mediaSourceController.signalEndOfStream(mediaSource);
         }
 
         if (!nextStream) return;
@@ -391,16 +390,16 @@ function StreamController() {
         };
 
         if (!mediaSource) {
-            mediaSource = mediaSourceExt.createMediaSource();
+            mediaSource = mediaSourceController.createMediaSource();
             //log("MediaSource created.");
             //log("MediaSource should be closed. The actual readyState is: " + mediaSource.readyState);
         } else {
-            mediaSourceExt.detachMediaSource(videoModel);
+            mediaSourceController.detachMediaSource(videoModel);
         }
 
         mediaSource.addEventListener('sourceopen', onMediaSourceOpen, false);
         mediaSource.addEventListener('webkitsourceopen', onMediaSourceOpen, false);
-        sourceUrl = mediaSourceExt.attachMediaSource(mediaSource, videoModel);
+        sourceUrl = mediaSourceController.attachMediaSource(mediaSource, videoModel);
         //log("MediaSource attached to video.  Waiting on open...");
     }
 
@@ -409,14 +408,14 @@ function StreamController() {
             mediaDuration;
 
         manifestDuration = activeStream.getStreamInfo().manifestInfo.duration;
-        mediaDuration = mediaSourceExt.setDuration(mediaSource, manifestDuration);
+        mediaDuration = mediaSourceController.setDuration(mediaSource, manifestDuration);
         log('Duration successfully set to: ' + mediaDuration);
     }
 
     function composeStreams() {
         var manifest = manifestModel.getValue();
         var metrics = metricsModel.getMetricsFor('stream');
-        var manifestUpdateInfo = metricsExt.getCurrentManifestUpdate(metrics);
+        var manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metrics);
         var remainingStreams = [];
         var streamInfo,
             pLen,
@@ -550,7 +549,7 @@ function StreamController() {
 
             if (mediaInfo) {
                 adaptation = adapter.getDataForMedia(mediaInfo);
-                useCalculatedLiveEdgeTime = manifestExt.getRepresentationsForAdaptation(manifest, adaptation)[0].useCalculatedLiveEdgeTime;
+                useCalculatedLiveEdgeTime = dashManifestModel.getRepresentationsForAdaptation(manifest, adaptation)[0].useCalculatedLiveEdgeTime;
 
                 if (useCalculatedLiveEdgeTime) {
                     log('SegmentTimeline detected using calculated Live Edge Time');
@@ -558,8 +557,8 @@ function StreamController() {
                 }
             }
 
-            var manifestUTCTimingSources = manifestExt.getUTCTimingSources(e.manifest);
-            var allUTCTimingSources = (!manifestExt.getIsDynamic(manifest) || useCalculatedLiveEdgeTime) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(mediaPlayerModel.getUTCTimingSources());
+            var manifestUTCTimingSources = dashManifestModel.getUTCTimingSources(e.manifest);
+            var allUTCTimingSources = (!dashManifestModel.getIsDynamic(manifest) || useCalculatedLiveEdgeTime) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(mediaPlayerModel.getUTCTimingSources());
             var isHTTPS = URIQueryAndFragmentModel(context).getInstance().isManifestHTTPS();
 
             //If https is detected on manifest then lets apply that protocol to only the default time source(s). In the future we may find the need to apply this to more then just default so left code at this level instead of in MediaPlayer.
@@ -572,7 +571,7 @@ function StreamController() {
 
             timeSyncController.setConfig({
                 metricsModel: metricsModel,
-                metricsExt: metricsExt
+                dashMetrics: dashMetrics
             });
             timeSyncController.initialize(allUTCTimingSources, mediaPlayerModel.getUseManifestDateHeaderTimeSource());
         } else {
@@ -619,8 +618,8 @@ function StreamController() {
         if (config.manifestModel) {
             manifestModel = config.manifestModel;
         }
-        if (config.manifestExt) {
-            manifestExt = config.manifestExt;
+        if (config.dashManifestModel) {
+            dashManifestModel = config.dashManifestModel;
         }
         if (config.protectionController) {
             protectionController = config.protectionController;
@@ -631,17 +630,14 @@ function StreamController() {
         if (config.metricsModel) {
             metricsModel = config.metricsModel;
         }
-        if (config.metricsExt) {
-            metricsExt = config.metricsExt;
-        }
-        if (config.videoModelExt) {
-            videoModelExt = config.videoModelExt;
+        if (config.dashMetrics) {
+            dashMetrics = config.dashMetrics;
         }
         if (config.liveEdgeFinder) {
             liveEdgeFinder = config.liveEdgeFinder;
         }
-        if (config.mediaSourceExt) {
-            mediaSourceExt = config.mediaSourceExt;
+        if (config.mediaSourceController) {
+            mediaSourceController = config.mediaSourceController;
         }
         if (config.timeSyncController) {
             timeSyncController = config.timeSyncController;
@@ -700,7 +696,7 @@ function StreamController() {
         isPaused = false;
 
         if (mediaSource) {
-            mediaSourceExt.detachMediaSource(videoModel);
+            mediaSourceController.detachMediaSource(videoModel);
             mediaSource = null;
         }
         videoModel = null;

@@ -28,17 +28,17 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import RequestModifierExtensions from '../../streaming/extensions/RequestModifierExtensions.js';
-import Segment from '../vo/Segment.js';
-import Error from '../../streaming/vo/Error.js';
-import ErrorHandler from '../../streaming/ErrorHandler.js';
-import Events from '../../core/events/Events.js';
-import EventBus from '../../core/EventBus.js';
-import BoxParser from '../../streaming/utils/BoxParser.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
-import Debug from '../../core/Debug.js';
+import RequestModifier from '../streaming/utils/RequestModifier.js';
+import Segment from './vo/Segment.js';
+import Error from '../streaming/vo/Error.js';
+import ErrorHandler from '../streaming/utils/ErrorHandler.js';
+import Events from '../core/events/Events.js';
+import EventBus from '../core/EventBus.js';
+import BoxParser from '../streaming/utils/BoxParser.js';
+import FactoryMaker from '../core/FactoryMaker.js';
+import Debug from '../core/Debug.js';
 
-function BaseURLExtensions() {
+function SegmentBaseLoader() {
 
     let context = this.context;
     let log = Debug(context).getInstance().log;
@@ -47,12 +47,12 @@ function BaseURLExtensions() {
     let instance,
         errHandler,
         boxParser,
-        requestModifierExt;
+        requestModifier;
 
     function initialize() {
         errHandler = ErrorHandler(context).getInstance();
         boxParser = BoxParser(context).getInstance();
-        requestModifierExt = RequestModifierExtensions(context).getInstance();
+        requestModifier = RequestModifier(context).getInstance();
     }
 
     function loadInitialization(representation, loadingInfo) {
@@ -222,7 +222,7 @@ function BaseURLExtensions() {
     function reset() {
         errHandler = null;
         boxParser = null;
-        requestModifierExt = null;
+        requestModifier = null;
         log = null;
     }
 
@@ -280,10 +280,10 @@ function BaseURLExtensions() {
     }
 
     function sendRequest(request, info) {
-        request.open('GET', requestModifierExt.modifyRequestURL(info.url));
+        request.open('GET', requestModifier.modifyRequestURL(info.url));
         request.responseType = 'arraybuffer';
         request.setRequestHeader('Range', 'bytes=' + info.range.start + '-' + info.range.end);
-        request = requestModifierExt.modifyRequestHeader(request);
+        request = requestModifier.modifyRequestHeader(request);
         request.send(null);
     }
 
@@ -305,5 +305,5 @@ function BaseURLExtensions() {
     return instance;
 }
 
-BaseURLExtensions.__dashjs_factory_name = 'BaseURLExtensions';
-export default FactoryMaker.getSingletonFactory(BaseURLExtensions);
+SegmentBaseLoader.__dashjs_factory_name = 'SegmentBaseLoader';
+export default FactoryMaker.getSingletonFactory(SegmentBaseLoader);

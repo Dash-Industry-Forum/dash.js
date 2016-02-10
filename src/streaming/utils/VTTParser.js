@@ -28,8 +28,8 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../core/FactoryMaker.js';
-import Debug from '../core/Debug.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
 
 function VTTParser() {
     let context = this.context;
@@ -39,13 +39,13 @@ function VTTParser() {
         regExNewLine,
         regExToken,
         regExWhiteSpace,
-        regExWhiteSpaceWordBoundry;
+        regExWhiteSpaceWordBoundary;
 
     function setup() {
         regExNewLine = /(?:\r\n|\r|\n)/gm;
         regExToken = /-->/;
         regExWhiteSpace = /(^[\s]+|[\s]+$)/g;
-        regExWhiteSpaceWordBoundry = /\s\b/g;
+        regExWhiteSpaceWordBoundary = /\s\b/g;
     }
 
     function parse(data) {
@@ -112,7 +112,7 @@ function VTTParser() {
 
     function parseItemAttributes(data) {
         var vttCuePoints = data.split(regExToken);
-        var arr = vttCuePoints[1].split(regExWhiteSpaceWordBoundry);
+        var arr = vttCuePoints[1].split(regExWhiteSpaceWordBoundary);
         arr.shift(); //remove first array index it is empty...
         vttCuePoints[1] = arr[0];
         arr.shift();

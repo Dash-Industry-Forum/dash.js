@@ -38,7 +38,7 @@ function NextFragmentRequestRule(config) {
     let context = this.context;
     let log = Debug(context).getInstance().log;
     let adapter = config.adapter;
-    let sourceBufferExt = config.sourceBufferExt;
+    let sourceBufferController = config.sourceBufferController;
     let virtualBuffer = config.virtualBuffer;
     let textSourceBuffer = config.textSourceBuffer;
 
@@ -70,7 +70,7 @@ function NextFragmentRequestRule(config) {
         }
 
         if (buffer) {
-            range = sourceBufferExt.getBufferRange(streamProcessor.getBuffer(), time);
+            range = sourceBufferController.getBufferRange(streamProcessor.getBuffer(), time);
             if (range !== null) {
                 appendedChunks = virtualBuffer.getChunks({streamId: streamId, mediaType: mediaType, appended: true, mediaInfo: mediaInfo, forRange: range});
                 if (appendedChunks && appendedChunks.length > 0) {

@@ -28,7 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
+/**
+ * @class
+ */
 class RepresentationSwitch {
     /**
      * @description This Object holds reference to the info at quality switch between two representations.

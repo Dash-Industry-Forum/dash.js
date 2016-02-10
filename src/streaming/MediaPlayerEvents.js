@@ -31,8 +31,13 @@
 import EventsBase from '../core/events/EventsBase.js';
 /**
  * @Class
+ * @ignore
  */
 class MediaPlayerEvents extends EventsBase {
+
+    /**
+     * @description Public facing external events to be used when developing a player that implements dash.js.
+     */
     constructor () {
         super();
         /**
@@ -56,29 +61,128 @@ class MediaPlayerEvents extends EventsBase {
          */
         this.LOG = 'log';
         //TODO refactor with internal event
+        /**
+         * Triggered when the manifest load is complete
+         * @event MediaPlayerEvents#MANIFEST_LOADED
+         */
         this.MANIFEST_LOADED = 'manifestloaded';
+        /**
+         * Triggered anytime there is a change to the overall metrics.
+         * @event MediaPlayerEvents#METRICS_CHANGED
+         */
         this.METRICS_CHANGED = 'metricschanged';
-        this.METRIC_ADDED = 'metricadded';
+        /**
+         * Triggered when an individual metric is added, updated or cleared.
+         * @event MediaPlayerEvents#METRIC_CHANGED
+         */
         this.METRIC_CHANGED = 'metricchanged';
+        /**
+         * Triggered every time a new metric is added.
+         * @event MediaPlayerEvents#METRIC_ADDED
+         */
+        this.METRIC_ADDED = 'metricadded';
+        /**
+         * Triggered every time a metric is updated.
+         * @event MediaPlayerEvents#METRIC_UPDATED
+         */
         this.METRIC_UPDATED = 'metricupdated';
+        /**
+         * Triggered at the stream end of a period.
+         * @event MediaPlayerEvents#PERIOD_SWITCH_COMPLETED
+         */
         this.PERIOD_SWITCH_COMPLETED = 'streamswitchcompleted';
+        /**
+         * Triggered when a new period starts.
+         * @event MediaPlayerEvents#PERIOD_SWITCH_STARTED
+         */
         this.PERIOD_SWITCH_STARTED = 'streamswitchstarted';
+        /**
+         * Triggered when the stream is setup and ready.
+         * @event MediaPlayerEvents#STREAM_INITIALIZED
+         */
         this.STREAM_INITIALIZED = 'streaminitialized';
+        /**
+         * Triggered once all text tracks detected in the MPD are added to the video element.
+         * @event MediaPlayerEvents#TEXT_TRACKS_ADDED
+         */
         this.TEXT_TRACKS_ADDED = 'alltexttracksadded';
+        /**
+         * Triggered when a text track is added to the video element's TextTrackList
+         * @event MediaPlayerEvents#TEXT_TRACK_ADDED
+         */
         this.TEXT_TRACK_ADDED = 'texttrackadded';
 
-        //Video Element Events.
+        /**
+         * Sent when enough data is available that the media can be played,
+         * at least for a couple of frames.  This corresponds to the
+         * HAVE_ENOUGH_DATA readyState.
+         * @event MediaPlayerEvents#CAN_PLAY
+         */
         this.CAN_PLAY = 'canPlay';
+
+        /**
+         * Sent when playback completes.
+         * @event MediaPlayerEvents#PLAYBACK_ENDED
+         */
         this.PLAYBACK_ENDED = 'playbackEnded';
+
+        /**
+         * Sent when an error occurs.  The element's error
+         * attribute contains more information.
+         * @event MediaPlayerEvents#PLAYBACK_ERROR
+         */
         this.PLAYBACK_ERROR = 'playbackError';
+        /**
+         * The media's metadata has finished loading; all attributes now
+         * contain as much useful information as they're going to.
+         * @event MediaPlayerEvents#PLAYBACK_METADATA_LOADED
+         */
         this.PLAYBACK_METADATA_LOADED = 'playbackMetaDataLoaded';
+        /**
+         * Sent when playback is paused.
+         * @event MediaPlayerEvents#PLAYBACK_PAUSED
+         */
         this.PLAYBACK_PAUSED = 'playbackPaused';
+        /**
+         * Sent when the media begins to play (either for the first time, after having been paused,
+         * or after ending and then restarting).
+         *
+         * @event MediaPlayerEvents#PLAYBACK_PLAYING
+         */
         this.PLAYBACK_PLAYING = 'playbackPlaying';
+        /**
+         * Sent periodically to inform interested parties of progress downloading
+         * the media. Information about the current amount of the media that has
+         * been downloaded is available in the media element's buffered attribute.
+         * @event MediaPlayerEvents#PLAYBACK_PROGRESS
+         */
         this.PLAYBACK_PROGRESS = 'playbackProgress';
+        /**
+         * Sent when the playback speed changes.
+         * @event MediaPlayerEvents#PLAYBACK_RATE_CHANGED
+         */
         this.PLAYBACK_RATE_CHANGED = 'playbackRateChanged';
+        /**
+         * Sent when a seek operation completes.
+         * @event MediaPlayerEvents#PLAYBACK_SEEKED
+         */
         this.PLAYBACK_SEEKED = 'playbackSeeked';
+        /**
+         * Sent when a seek operation begins.
+         * @event MediaPlayerEvents#PLAYBACK_SEEKING
+         */
         this.PLAYBACK_SEEKING = 'playbackSeeking';
+        /**
+         * Sent when playback of the media starts after having been paused;
+         * that is, when playback is resumed after a prior pause event.
+         *
+         * @event MediaPlayerEvents#PLAYBACK_STARTED
+         */
         this.PLAYBACK_STARTED = 'playbackStarted';
+        /**
+         * The time indicated by the element's currentTime attribute has changed.
+         * @event MediaPlayerEvents#PLAYBACK_TIME_UPDATED
+         */
         this.PLAYBACK_TIME_UPDATED = 'playbackTimeUpdated';
     }
 }

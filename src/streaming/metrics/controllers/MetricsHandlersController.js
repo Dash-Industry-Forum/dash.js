@@ -57,7 +57,7 @@ function MetricsHandlersController(config) {
                 var handler;
 
                 // there is a bug in ISO23009-1 where the metrics attribute
-                // is a comma-seperated list but HttpList key can contain a
+                // is a comma-separated list but HttpList key can contain a
                 // comma enclosed by ().
                 if ((m.indexOf('(') !== -1) && m.indexOf(')') === -1) {
                     let nextm = ms[midx + 1];

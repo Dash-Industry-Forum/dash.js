@@ -28,9 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import DashManifestExtensions from '../extensions/DashManifestExtensions.js';
-import DashMetricsExtensions from '../extensions/DashMetricsExtensions.js';
-import TimelineConverter from '../TimelineConverter.js';
+import DashManifestModel from '../models/DashManifestModel.js';
+import DashMetrics from '../DashMetrics.js';
+import TimelineConverter from '../utils/TimelineConverter.js';
 import AbrController from '../../streaming/controllers/AbrController.js';
 import PlaybackController from '../../streaming/controllers/PlaybackController.js';
 import StreamController from '../../streaming/controllers/StreamController.js';
@@ -65,8 +65,8 @@ function RepresentationController() {
         metricsModel,
         domStorage,
         timelineConverter,
-        manifestExt,
-        metricsExt,
+        dashManifestModel,
+        dashMetrics,
         mediaPlayerModel;
 
     function setup() {
@@ -82,8 +82,8 @@ function RepresentationController() {
         metricsModel = MetricsModel(context).getInstance();
         domStorage = DOMStorage(context).getInstance();
         timelineConverter = TimelineConverter(context).getInstance();
-        manifestExt = DashManifestExtensions(context).getInstance();
-        metricsExt = DashMetricsExtensions(context).getInstance();
+        dashManifestModel = DashManifestModel(context).getInstance();
+        dashMetrics = DashMetrics(context).getInstance();
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
 
         eventBus.on(Events.QUALITY_CHANGED, onQualityChanged, instance);
@@ -137,8 +137,8 @@ function RepresentationController() {
         metricsModel = null;
         domStorage = null;
         timelineConverter = null;
-        manifestExt = null;
-        metricsExt = null;
+        dashManifestModel = null;
+        dashMetrics = null;
         mediaPlayerModel = null;
 
     }
@@ -220,8 +220,8 @@ function RepresentationController() {
         var reps;
         var manifest = manifestModel.getValue();
 
-        dataIndex = manifestExt.getIndexForAdaptation(data, manifest, adaptation.period.index);
-        reps = manifestExt.getRepresentationsForAdaptation(manifest, adaptation);
+        dataIndex = dashManifestModel.getIndexForAdaptation(data, manifest, adaptation.period.index);
+        reps = dashManifestModel.getRepresentationsForAdaptation(manifest, adaptation);
 
         return reps;
     }
@@ -269,7 +269,7 @@ function RepresentationController() {
         var r = e.representation;
         var streamMetrics = metricsModel.getMetricsFor('stream');
         var metrics = metricsModel.getMetricsFor(getCurrentRepresentation().adaptation.type);
-        var manifestUpdateInfo = metricsExt.getCurrentManifestUpdate(streamMetrics);
+        var manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(streamMetrics);
 
         var repInfo,
             err,
@@ -314,7 +314,7 @@ function RepresentationController() {
             abrController.setPlaybackQuality(streamProcessor.getType(), streamProcessor.getStreamInfo(), getQualityForRepresentation(currentRepresentation));
             metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentRepresentation.segmentAvailabilityRange.end - playbackController.getTime()});
 
-            repSwitch = metricsExt.getCurrentRepresentationSwitch(metrics);
+            repSwitch = dashMetrics.getCurrentRepresentationSwitch(metrics);
 
             if (!repSwitch) {
                 addRepresentationSwitch();
@@ -343,8 +343,8 @@ function RepresentationController() {
         var streamInfo = streamController.getActiveStreamInfo();
 
         if (streamInfo.isLast) {
-            period.mpd.checkTime = manifestExt.getCheckTime(manifest, period);
-            period.duration = manifestExt.getEndTimeForLastPeriod(manifestModel.getValue(), period) - period.start;
+            period.mpd.checkTime = dashManifestModel.getCheckTime(manifest, period);
+            period.duration = dashManifestModel.getEndTimeForLastPeriod(manifestModel.getValue(), period) - period.start;
             streamInfo.duration = period.duration;
         }
     }

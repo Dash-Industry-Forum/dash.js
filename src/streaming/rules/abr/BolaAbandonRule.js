@@ -35,8 +35,11 @@ import BolaRule from './BolaRule.js';
 
 function BolaAbandonRule(config) {
 
+    // do not abandon during the grace period
+    const GRACE_PERIOD_MS = 250;
+
     let context = this.context;
-    let metricsExt = config.metricsExt;
+    let dashMetrics = config.dashMetrics;
     let metricsModel = config.metricsModel;
 
     let instance,
@@ -65,67 +68,68 @@ function BolaAbandonRule(config) {
         let request = progressEvent.request;
         let switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
 
-        if (metrics.BolaState.length === 0 || metrics.BolaState[0].s.state === BolaRule.BOLA_STATE_ONE_BITRATE) {
+        // TODO: should we abandon during startup?
+        if (metrics.BolaState.length === 0 || metrics.BolaState[0]._s.state !== BolaRule.BOLA_STATE_STEADY) {
             callback(switchRequest);
             return;
         }
-        let bolaState = metrics.BolaState[0].s;
-        // TODO: is it OK to change bolaState, or should we clone?
+
+        let bolaState = metrics.BolaState[0]._s;
+        // TODO: does changing bolaState conform to coding style, or should we clone?
 
         let index = request.index;
         let quality = request.quality;
 
-        if (isNaN(index) || index === 0 || quality === 0 || isLastAbandon(mediaType, index, quality) || !request.firstByteDate) {
-            callback(switchRequest);
-            return;
-        }
-
-        let bytesLoaded = request.bytesLoaded;
-        let bytesTotal = request.bytesTotal;
-        let bytesRemaining = bytesTotal - bytesLoaded;
-
-        let estimateOtherBytesTotal = bytesTotal * bolaState.bitrate[0] / bolaState.bitrate[quality];
-
-        if (bytesRemaining <= estimateOtherBytesTotal) {
-            // we need to download less bytes than the size of the lowest quality fragment: do not abandon
-            callback(switchRequest);
-            return;
-        }
-
-        let bufferLevel = metricsExt.getCurrentBufferLevel(metrics) ? metricsExt.getCurrentBufferLevel(metrics).level : 0.0;
-
-        // check if we should "panic" abandon
-        if (!bolaState.live && bolaState.state === BolaRule.BOLA_STATE_STEADY && bufferLevel <= request.duration) {
-            // If the buffer only has one fragment left, then this is the last chance to abandon without rebuffering if the network bandwidth corresponds to the lowest bitrate.
-
-            // live: Since when live streaming we cannot build a large buffer, we would expect too many false triggers here.
-
-            // BOLA_STATE_STEADY: During startup the buffer has not yet grown enough and will trigger falsely.
-
-            bolaState.lastQuality = 0;
-            metricsModel.updateBolaState(mediaType, bolaState);
-
-            setLastAbandon(mediaType, index, quality);
-            switchRequest = SwitchRequest(context).create(0, SwitchRequest.STRONG);
-            // console.log('BolaDebug ' + mediaType + ' BolaAbandonRule to 0 in panic');
+        if (isNaN(index) || quality === 0 || isLastAbandon(mediaType, index, quality) || !request.firstByteDate) {
             callback(switchRequest);
             return;
         }
 
         let nowMilliSeconds = new Date().getTime();
         let elapsedTimeMilliSeconds = nowMilliSeconds - request.firstByteDate.getTime();
-        let estimateThroughputSF = 8000.0 * bytesLoaded / elapsedTimeMilliSeconds * bolaState.bandwidthSafetyFactor; // throughput in bits per second
+
+        let bytesLoaded = request.bytesLoaded;
+        let bytesTotal = request.bytesTotal;
+        let bytesRemaining = bytesTotal - bytesLoaded;
+
+        let estimateOtherBytesTotal = bytesTotal * bolaState.bitrate[0] / bolaState.bitrate[quality];
+        let bufferLevel = dashMetrics.getCurrentBufferLevel(metrics) ? dashMetrics.getCurrentBufferLevel(metrics) : 0.0;
+
+        if (elapsedTimeMilliSeconds < GRACE_PERIOD_MS || bytesRemaining <= estimateOtherBytesTotal || bufferLevel > bolaState.bufferTarget) {
+            // Do not abandon if we need to download less bytes than the size of the lowest quality fragment.
+            // Do not abandon if buffer level is above bufferTarget because the schedule controller will not download anything anyway.
+            callback(switchRequest);
+            return;
+        }
+
+        // check if we are giving the safety guarantee (see comment in BolaRule.js)
+        if (bolaState.safetyGuarantee && bufferLevel <= bolaState.fragmentDuration && bolaState.state === BolaRule.BOLA_STATE_STEADY) {
+            // If the buffer only has one fragment left, then this is the last chance to abandon without rebuffering if the network bandwidth corresponds to the lowest bitrate.
+
+            // BOLA_STATE_STEADY: During startup the buffer has not yet grown enough and will give false positives.
+
+            bolaState.lastQuality = 0;
+            metricsModel.updateBolaState(mediaType, bolaState);
+
+            setLastAbandon(mediaType, index, quality);
+            switchRequest = SwitchRequest(context).create(0, SwitchRequest.STRONG);
+            if (BolaRule.BOLA_DEBUG) console.log('BolaDebug ' + mediaType + ' BolaAbandonRule to 0 for safety guarantee');
+            callback(switchRequest);
+            return;
+        }
+
+        let estimateThroughputBSF = bolaState.bandwidthSafetyFactor * 8000.0 * bytesLoaded / elapsedTimeMilliSeconds; // throughput in bits per second
         let rttSeconds = 0.001 * (request.firstByteDate.getTime() - request.requestStartDate.getTime());
 
-        let estimateTimeRemainSeconds = 8.0 * bytesRemaining / estimateThroughputSF;
+        let estimateTimeRemainSeconds = 8.0 * bytesRemaining / estimateThroughputBSF;
 
         // find maximum allowed quality that shouldn't lead to rebuffering
-        let maxQualityAllowed = quality;
+        let maxQualityAllowed = quality; // recall that quality > 0; if quality === 0 then we would have returned early
         if (estimateTimeRemainSeconds > bufferLevel) {
             --maxQualityAllowed;
             while (maxQualityAllowed > 0) {
                 estimateOtherBytesTotal = bytesTotal * bolaState.bitrate[maxQualityAllowed] / bolaState.bitrate[quality];
-                if (8.0 * estimateOtherBytesTotal / estimateThroughputSF <= bufferLevel)
+                if (8.0 * estimateOtherBytesTotal / estimateThroughputBSF <= bufferLevel)
                     break;
                 --maxQualityAllowed;
             }
@@ -133,17 +137,20 @@ function BolaAbandonRule(config) {
 
         let bufferAfterRtt = bufferLevel + bolaState.virtualBuffer - rttSeconds;
 
-        let estimateBytesRemainAfterRtt = bytesRemaining - rttSeconds * estimateThroughputSF * 0.125;
+        let estimateBytesRemainAfterRtt = bytesRemaining - rttSeconds * estimateThroughputBSF / 8.0;
         if (estimateBytesRemainAfterRtt < 1.0) {
             // shouldn't happen, but just want to make sure
             estimateBytesRemainAfterRtt = 1.0;
         }
 
-        // check if we should abandon using BOLA score criteria
+        // check if we should abandon using BOLA utility criteria
         let newQuality = quality;
         let score = (bolaState.utility[quality] + bolaState.gp - bufferAfterRtt / bolaState.Vp) / estimateBytesRemainAfterRtt;
+
         for (let i = 0; i < quality; ++i) {
             estimateOtherBytesTotal = bytesTotal * bolaState.bitrate[i] / bolaState.bitrate[quality];
+            if (estimateOtherBytesTotal > estimateBytesRemainAfterRtt)
+                break;
             let s = (bolaState.utility[i] + bolaState.gp - bufferAfterRtt / bolaState.Vp) / estimateOtherBytesTotal;
             if (s > score) {
                 newQuality = i;
@@ -151,8 +158,8 @@ function BolaAbandonRule(config) {
             }
         }
 
+        // compare with maximum allowed quality that shouldn't lead to rebuffering
         if (newQuality > maxQualityAllowed) {
-            // cap new quality
             newQuality = maxQualityAllowed;
         }
 
@@ -162,23 +169,32 @@ function BolaAbandonRule(config) {
             return;
         }
 
-        // Abandon, but to which quality? Make sure the chosen quality is sustainable. This should help avoid the case where we abandon multiple times for the same fragment.
-        while (newQuality > 0 && bolaState.bitrate[newQuality] > estimateThroughputSF * (1.0 - rttSeconds / bolaState.fragmentDuration)) {
+        // Abandon, but to which quality? Abandoning should not happen often, and it's OK to be more conservative when it does.
+        while (newQuality > 0) {
+            // We want to make sure that if we download a fragment at newQuality, then the bufferLevel will be sufficient to support another download at newQuality.
+            // TODO: document the math
+
+            let s  = bolaState.bitrate[newQuality];     // relative size
+            let s1 = bolaState.bitrate[newQuality - 1]; // relative size
+            let u  = bolaState.utility[newQuality];
+            let u1 = bolaState.utility[newQuality - 1];
+            let thresholdBufferLevel = bolaState.Vp * (bolaState.gp + (s * u1 - s1 * u) / (s - s1));
+
+            estimateOtherBytesTotal = bytesTotal * bolaState.bitrate[newQuality] / bolaState.bitrate[quality];
+            let estimateTimeToDownloadFragment = 8.0 * estimateOtherBytesTotal / estimateThroughputBSF;
+            if (bufferAfterRtt - estimateTimeToDownloadFragment >= thresholdBufferLevel) {
+                break;
+            }
+
             --newQuality;
         }
-        // if (bolaState.state !== BolaRule.BOLA_STATE_STEADY) {
-        //     // when abandoning, startup will no longer be more aggressive than steady state
-        //     bolaState.state = BolaRule.BOLA_STATE_STEADY;
-        // }
-        if (bolaState.state === BolaRule.BOLA_STATE_STARTUP) {
-            bolaState.state = BolaRule.BOLA_STATE_STARTUP_NO_INC;
-        }
+
         bolaState.lastQuality = newQuality;
         metricsModel.updateBolaState(mediaType, bolaState);
 
         setLastAbandon(mediaType, index, quality);
         switchRequest = SwitchRequest(context).create(newQuality, SwitchRequest.STRONG);
-        // console.log('BolaDebug ' + mediaType + ' BolaAbandonRule abandon to ' + newQuality);
+        if (BolaRule.BOLA_DEBUG) console.log('BolaDebug ' + mediaType + ' BolaAbandonRule abandon to ' + newQuality);
         callback(switchRequest);
     }
 

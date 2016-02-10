@@ -136,7 +136,7 @@ function EventController() {
     }
 
     /**
-     * Itereate through the eventList and trigger/remove the events
+     * Iterate through the eventList and trigger/remove the events
      */
     function onEventTimer() {
         triggerEvents(inbandEvents);

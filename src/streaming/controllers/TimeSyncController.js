@@ -51,7 +51,7 @@ function TimeSyncController() {
         useManifestDateHeaderTimeSource,
         handlers,
         metricsModel,
-        metricsExt;
+        dashMetrics;
 
     function initialize(timingSources, useManifestDateHeader) {
         useManifestDateHeaderTimeSource = useManifestDateHeader;
@@ -97,8 +97,8 @@ function TimeSyncController() {
             metricsModel = config.metricsModel;
         }
 
-        if (config.metricsExt) {
-            metricsExt = config.metricsExt;
+        if (config.dashMetrics) {
+            dashMetrics = config.dashMetrics;
         }
     }
 
@@ -162,7 +162,7 @@ function TimeSyncController() {
         return new Date(utcDate).getTime();
     }
 
-    // try to use the built in parser, since xsdate is a contrained ISO8601
+    // try to use the built in parser, since xsdate is a constrained ISO8601
     // which is supported natively by Date.parse. if that fails, try a
     // regex-based version used elsewhere in this application.
     function xsdatetimeDecoder(xsdatetimeStr) {
@@ -263,7 +263,7 @@ function TimeSyncController() {
 
     function checkForDateHeader() {
         var metrics = metricsModel.getReadOnlyMetricsFor('stream');
-        var dateHeaderValue = metricsExt.getLatestMPDRequestHeaderValueByID(metrics, 'Date');
+        var dateHeaderValue = dashMetrics.getLatestMPDRequestHeaderValueByID(metrics, 'Date');
         var dateHeaderTime = dateHeaderValue !== null ? new Date(dateHeaderValue).getTime() : Number.NaN;
 
         if (!isNaN(dateHeaderTime)) {

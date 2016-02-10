@@ -43,7 +43,7 @@ function ThroughputRule(config) {
 
     let context = this.context;
     let log = Debug(context).getInstance().log;
-    let metricsExt = config.metricsExt;
+    let dashMetrics = config.dashMetrics;
     let metricsModel = config.metricsModel;
 
     let instance,
@@ -101,7 +101,7 @@ function ThroughputRule(config) {
         var streamProcessor = rulesContext.getStreamProcessor();
         var abrController = streamProcessor.getABRController();
         var isDynamic = streamProcessor.isDynamic();
-        var lastRequest = metricsExt.getCurrentHttpRequest(metrics);
+        var lastRequest = dashMetrics.getCurrentHttpRequest(metrics);
         var bufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
         var bufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null;
         var switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);

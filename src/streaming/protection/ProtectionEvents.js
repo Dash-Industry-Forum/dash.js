@@ -29,8 +29,16 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import EventsBase from '../../core/events/EventsBase.js';
-
+/**
+ * @Class
+ * @ignore
+ */
 class ProtectionEvents extends EventsBase {
+    /**
+     * @description Public facing external events to be used when including protection package.
+     * All public events will be aggregated into the MediaPlayerEvents Class and can be accessed
+     * via MediaPlayer.events
+     */
     constructor () {
         super();
 
@@ -38,16 +46,14 @@ class ProtectionEvents extends EventsBase {
          * Event ID for events delivered when the protection set receives
          * a key message from the CDM
          *
-         * @constant
+         * @ignore
          */
         this.INTERNAL_KEY_MESSAGE = 'internalKeyMessage';
 
         /**
          * Event ID for events delivered when a key system selection procedure
          * completes
-         *
-         * @constant
-         * @public
+         * @ignore
          */
         this.INTERNAL_KEY_SYSTEM_SELECTED = 'internalKeySystemSelected';
 
@@ -58,51 +64,41 @@ class ProtectionEvents extends EventsBase {
          * @deprecated The latest versions of the EME specification no longer
          * use this event.  {@MediaPlayer.models.protectionModel.eventList.KEY_STATUSES_CHANGED}
          * is preferred.
-         *
-         * @public
+         * @event ProtectionEvents#KEY_ADDED
          */
         this.KEY_ADDED = 'public_keyAdded';
         /**
          * Event ID for events delivered when an error is encountered by the CDM
          * while processing a license server response message
-         *
-         * @constant
+         * @event ProtectionEvents#KEY_ERROR
          */
         this.KEY_ERROR = 'public_keyError';
 
         /**
          * Event ID for events delivered when the protection set receives
          * a key message from the CDM
-         *
-         * @constant
-         * @public
+         * @event ProtectionEvents#KEY_MESSAGE
          */
         this.KEY_MESSAGE = 'public_keyMessage';
 
         /**
          * Event ID for events delivered when a key session close
          * process has completed
-         *
-         * @constant
-         * @public
+         * @event ProtectionEvents#KEY_SESSION_CLOSED
          */
         this.KEY_SESSION_CLOSED = 'public_keySessionClosed';
 
         /**
          * Event ID for events delivered when a new key sessions creation
          * process has completed
-         *
-         * @constant
-         * @public
+         * @event ProtectionEvents#KEY_SESSION_CREATED
          */
         this.KEY_SESSION_CREATED = 'public_keySessionCreated';
 
         /**
          * Event ID for events delivered when a key session removal
          * process has completed
-         *
-         * @constant
-         * @public
+         * @event ProtectionEvents#KEY_SESSION_REMOVED
          */
         this.KEY_SESSION_REMOVED = 'public_keySessionRemoved';
 
@@ -110,82 +106,67 @@ class ProtectionEvents extends EventsBase {
         /**
          * Event ID for events delivered when the status of one or more
          * decryption keys has changed
-         *
-         * @constant
-         * @public
+         * @event ProtectionEvents#KEY_STATUSES_CHANGED
          */
         this.KEY_STATUSES_CHANGED = 'public_keyStatusesChanged';
 
         /**
          * Event ID for events delivered when a key system access procedure
          * has completed
-         *
-         * @constant
+         * @ignore
          */
         this.KEY_SYSTEM_ACCESS_COMPLETE = 'keySystemAccessComplete';
 
         /**
          * Event ID for events delivered when a key system selection procedure
          * completes
-         *
-         * @constant
-         * @public
+         * @event ProtectionEvents#KEY_SYSTEM_SELECTED
          */
         this.KEY_SYSTEM_SELECTED = 'public_keySystemSelected';
 
         /**
          * Event ID for events delivered when a license request procedure
          * has completed
-         *
-         * @constant
-         * @public
+         * @event ProtectionEvents#LICENSE_REQUEST_COMPLETE
          */
         this.LICENSE_REQUEST_COMPLETE = 'public_licenseRequestComplete';
 
         /**
          * Event ID for needkey/encrypted events
-         *
-         * @constant
+         * @ignore
          */
         this.NEED_KEY = 'needkey';
 
         /**
          * Event ID for events delivered when the Protection system is detected and created.
-         *
-         * @constant
-         * @public
+         * @event ProtectionEvents#PROTECTION_CREATED
          */
         this.PROTECTION_CREATED = 'public_protectioncreated';
 
         /**
          * Event ID for events delivered when the Protection system is destroyed.
-         *
-         * @constant
-         * @public
+         * @event ProtectionEvents#PROTECTION_DESTROYED
          */
         this.PROTECTION_DESTROYED = 'public_protectiondestroyed';
 
         /**
          * Event ID for events delivered when a new server certificate has
          * been delivered to the CDM
-         *
-         * @constant
+         * @ignore
          */
         this.SERVER_CERTIFICATE_UPDATED = 'serverCertificateUpdated';
 
         /**
          * Event ID for events delivered when the process of shutting down
          * a protection set has completed
-         *
-         * @constant
+         * @ignore
          */
         this.TEARDOWN_COMPLETE =  'protectionTeardownComplete';
 
         /**
          * Event ID for events delivered when a HTMLMediaElement has been
          * associated with the protection set
-         *
-         * @constant
+         * @ignore
          */
         this.VIDEO_ELEMENT_SELECTED = 'videoElementSelected';
     }

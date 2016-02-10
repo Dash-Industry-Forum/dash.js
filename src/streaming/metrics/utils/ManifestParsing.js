@@ -5,10 +5,10 @@ import FactoryMaker from '../../../core/FactoryMaker.js';
 
 function ManifestParsing (config) {
     let instance;
-    let manifestExt = config.manifestExt;
+    let dashManifestModel = config.dashManifestModel;
 
     function getMetricsRangeStartTime(manifest, dynamic, range) {
-        var mpd = manifestExt.getMpd(manifest);
+        var mpd = dashManifestModel.getMpd(manifest);
         var periods;
         var presentationStartTime = 0;
         var reportingStartTime;
@@ -48,7 +48,7 @@ function ManifestParsing (config) {
         if (manifest.Metrics_asArray) {
             manifest.Metrics_asArray.forEach(metric => {
                 var metricEntry = new Metrics();
-                var isDynamic = manifestExt.getIsDynamic(manifest);
+                var isDynamic = dashManifestModel.getIsDynamic(manifest);
 
                 if (metric.hasOwnProperty('metrics')) {
                     metricEntry.metrics = metric.metrics;
@@ -69,7 +69,7 @@ function ManifestParsing (config) {
                         } else {
                             // if not present, the value is identical to the
                             // Media Presentation duration.
-                            rangeEntry.duration = manifestExt.getDuration(manifest);
+                            rangeEntry.duration = dashManifestModel.getDuration(manifest);
                         }
 
                         rangeEntry._useWallClockTime = isDynamic;

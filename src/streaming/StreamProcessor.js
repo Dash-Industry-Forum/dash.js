@@ -41,15 +41,15 @@ import ScheduleRulesCollection from './rules/scheduling/ScheduleRulesCollection.
 import MediaPlayerModel from './models/MediaPlayerModel.js';
 import MetricsModel from './models/MetricsModel.js';
 import FragmentLoader from './FragmentLoader.js';
-import RequestModifierExtensions from './extensions/RequestModifierExtensions.js';
-import SourceBufferExtensions from './extensions/SourceBufferExtensions';
+import RequestModifier from './utils/RequestModifier.js';
+import SourceBufferController from './controllers/SourceBufferController';
 import TextSourceBuffer from './TextSourceBuffer.js';
-import VirtualBuffer from './utils/VirtualBuffer.js';
-import MediaSourceExtensions from './extensions/MediaSourceExtensions.js';
-import DashManifestExtensions from '../dash/extensions/DashManifestExtensions.js';
-import DashMetricsExtensions from '../dash/extensions/DashMetricsExtensions.js';
+import VirtualBuffer from './VirtualBuffer.js';
+import MediaSourceController from './controllers/MediaSourceController.js';
+import DashManifestModel from '../dash/models/DashManifestModel.js';
+import DashMetrics from '../dash/DashMetrics.js';
 import RepresentationController from '../dash/controllers/RepresentationController.js';
-import ErrorHandler from './ErrorHandler.js';
+import ErrorHandler from './utils/ErrorHandler.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
 function StreamProcessor(config) {
@@ -100,8 +100,8 @@ function StreamProcessor(config) {
             metricsModel: MetricsModel(context).getInstance(),
             manifestModel: manifestModel,
             adapter: adapter,
-            metricsExt: DashMetricsExtensions(context).getInstance(),
-            manifestExt: DashManifestExtensions(context).getInstance(),
+            dashMetrics: DashMetrics(context).getInstance(),
+            dashManifestModel: DashManifestModel(context).getInstance(),
             timelineConverter: timelineConverter,
             scheduleRulesCollection: ScheduleRulesCollection(context).getInstance(),
             rulesController: RulesController(context).getInstance(),
@@ -113,7 +113,7 @@ function StreamProcessor(config) {
         fragmentLoader = FragmentLoader(context).create({
             metricsModel: MetricsModel(context).getInstance(),
             errHandler: ErrorHandler(context).getInstance(),
-            requestModifierExt: RequestModifierExtensions(context).getInstance()
+            requestModifier: RequestModifier(context).getInstance()
         });
 
         indexHandler.initialize(this);
@@ -267,9 +267,9 @@ function StreamProcessor(config) {
             controller = BufferController(context).create({
                 metricsModel: MetricsModel(context).getInstance(),
                 manifestModel: manifestModel,
-                sourceBufferExt: SourceBufferExtensions(context).getInstance(),
+                sourceBufferController: SourceBufferController(context).getInstance(),
                 errHandler: ErrorHandler(context).getInstance(),
-                mediaSourceExt: MediaSourceExtensions(context).getInstance(),
+                mediaSourceController: MediaSourceController(context).getInstance(),
                 streamController: StreamController(context).getInstance(),
                 mediaController: MediaController(context).getInstance(),
                 adapter: adapter,
@@ -279,7 +279,7 @@ function StreamProcessor(config) {
         }else {
             controller = TextController(context).create({
                 errHandler: ErrorHandler(context).getInstance(),
-                sourceBufferExt: SourceBufferExtensions(context).getInstance()
+                sourceBufferController: SourceBufferController(context).getInstance()
             });
         }
 

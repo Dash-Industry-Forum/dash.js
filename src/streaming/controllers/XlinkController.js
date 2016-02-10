@@ -199,7 +199,7 @@ function XlinkController(config) {
             element = resolveObject.elements[i];
             type = element.type + '_asArray';
 
-            // Element couldnt be resolved or is TODO Inappropriate target: Remove all Xlink attributes
+            // Element couldn't be resolved or is TODO Inappropriate target: Remove all Xlink attributes
             if (!element.resolvedContent || isInappropriateTarget()) {
                 delete element.originalContent['xlink:actuate'];
                 delete element.originalContent['xlink:href'];

@@ -28,6 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+/**
+ * @class
+ */
 class HTTPRequest {
     /**
      * @description This Object holds reference to the HTTPRequest for manifest, fragment and xlink loading.
@@ -98,7 +101,7 @@ class HTTPRequest {
          */
         this._stream = null;
         /**
-         * Real-Time | The real time at which the request finshed.
+         * Real-Time | The real time at which the request finished.
          * @public
          */
         this._tfinish = null;

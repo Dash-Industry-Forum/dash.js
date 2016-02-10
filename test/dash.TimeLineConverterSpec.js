@@ -1,7 +1,7 @@
-import LiveEdgeFinder from '../src/streaming/LiveEdgeFinder.js';
+import LiveEdgeFinder from '../src/streaming/utils/LiveEdgeFinder.js';
 import EventBus from '../src/core/EventBus.js';
 import VoHelper from './helpers/VOHelper.js';
-import TimeLineConverter from '../src/dash/TimelineConverter.js';
+import TimeLineConverter from '../src/dash/utils/TimelineConverter.js';
 import Events from '../src/core/events/Events.js';
 import SpecHelper from './helpers/SpecHelper.js';
 
