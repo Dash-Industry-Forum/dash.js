@@ -91,7 +91,7 @@ function DOMStorage() {
 
     // Return current epoch time, ms, rounded to the nearest 10s to avoid fingerprinting user
     function getTimestamp() {
-        var ten_minutes_ms = 60 * 1000 * 10;
+        let ten_minutes_ms = 60 * 1000 * 10;
         return Math.round(new Date().getTime() / ten_minutes_ms) * ten_minutes_ms;
     }
 
