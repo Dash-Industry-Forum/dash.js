@@ -202,7 +202,7 @@ function MediaController() {
             settings.audioChannelConfiguration = settings.audioChannelConfiguration[0];
         }
 
-        storeLastSettings(type, settings);
+        domStorage.setSavedMediaSettings(type, settings);
     }
 
     /**
@@ -314,12 +314,6 @@ function MediaController() {
     function reset() {
         initialize();
         textSourceBuffer.resetEmbedded();
-    }
-
-    function storeLastSettings(type, value) {
-        if (domStorage.isSupported(DOMStorage.STORAGE_TYPE_LOCAL) && (type === 'video' || type === 'audio')) {
-            localStorage.setItem(DOMStorage['LOCAL_STORAGE_' + type.toUpperCase() + '_SETTINGS_KEY'], JSON.stringify({settings: value, timestamp: new Date().getTime()}));
-        }
     }
 
     function extractSettings(mediaInfo) {
