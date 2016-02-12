@@ -110,7 +110,7 @@ When it is all done, it should look similar to this:
 
 ### MediaPlayerFactory Setup
 
-An alternative way to build a Dash.js player in your web page is to use the MediaPlayerFactory.  The MediaPlayerFactory will automaticlly instantiate and initialize the MediaPlayer module on appropriately tagged video elements. 
+An alternative way to build a Dash.js player in your web page is to use the MediaPlayerFactory.  The MediaPlayerFactory will automatically instantiate and initialize the MediaPlayer module on appropriately tagged video elements. 
 
 Create a video element somewhere in your html and provide the path to your `mpd` file as src. Also ensure that your video element has the `data-dashjs-player` attribute on it.
 ```html
