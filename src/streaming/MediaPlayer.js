@@ -1483,8 +1483,6 @@ function MediaPlayer() {
 
     /**
      * Will override dash.js protection controller.
-     *
-     * @deprecated since version 2.0 Instead use {@link module:MediaPlayer#extend extend()}.
      * @param {ProtectionController} [value] valid protection controller instance.
      * @memberof module:MediaPlayer
      * @instance

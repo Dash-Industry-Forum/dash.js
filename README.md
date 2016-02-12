@@ -13,6 +13,8 @@ If your goal is to improve or extend the code and contribute back to this projec
 All new work should be in the development branch. Master is now reserved for tagged builds.
 
 ## Documentation
+Before you get started, please read the Dash.js v2.0 Migration Document found [here](https://github.com/Dash-Industry-Forum/dash.js/wiki/Migration-2.0)
+
 Full [API Documentation ](http://cdn.dashjs.org/latest/jsdocs/index.html) is available describing all public methods, interfaces, properties, and events.
 
 For help, join our [email list](https://groups.google.com/d/forum/dashjs) and read our [wiki](https://github.com/Dash-Industry-Forum/dash.js/wiki).
@@ -110,7 +112,7 @@ When it is all done, it should look similar to this:
 
 ### MediaPlayerFactory Setup
 
-An alternative way to build a Dash.js player in your web page is to use the MediaPlayerFactory.  The MediaPlayerFactory will automaticlly instantiate and initialize the MediaPlayer module on appropriately tagged video elements. 
+An alternative way to build a Dash.js player in your web page is to use the MediaPlayerFactory.  The MediaPlayerFactory will automatically instantiate and initialize the MediaPlayer module on appropriately tagged video elements. 
 
 Create a video element somewhere in your html and provide the path to your `mpd` file as src. Also ensure that your video element has the `data-dashjs-player` attribute on it.
 ```html
