@@ -32,53 +32,67 @@
 /**
  * CastLabs DRMToday License Server implementation
  *
- * @implements MediaPlayer.dependencies.protection.servers.LicenseServer
+ * @implements LicenseServer
  * @class
  */
-MediaPlayer.dependencies.protection.servers.DRMToday = function() {
-    "use strict";
+import FactoryMaker from '../../../core/FactoryMaker.js';
+import BASE64 from '../../../../externals/base64.js';
 
-    var keySystems = {
-        "com.widevine.alpha": {
-            responseType: "json",
-            getLicenseMessage: function(response) {
+function DRMToday() {
+
+    const keySystems = {
+        'com.widevine.alpha': {
+            responseType: 'json',
+            getLicenseMessage: function (response) {
                 return BASE64.decodeArray(response.license);
             },
-            getErrorResponse: function(response) {
+            getErrorResponse: function (response) {
                 return response;
             }
         },
-        "com.microsoft.playready": {
-            responseType: "arraybuffer",
-            getLicenseMessage: function(response) {
+        'com.microsoft.playready': {
+            responseType: 'arraybuffer',
+            getLicenseMessage: function (response) {
                 return response;
             },
-            getErrorResponse: function(response) {
+            getErrorResponse: function (response) {
                 return String.fromCharCode.apply(null, new Uint8Array(response));
             }
         }
     };
 
-    return {
+    let instance;
 
-        getServerURLFromMessage: function(url /*, message, messageType*/) { return url; },
+    function getServerURLFromMessage(url /*, message, messageType*/) {
+        return url;
+    }
 
-        getHTTPMethod: function(/*messageType*/) { return 'POST'; },
+    function getHTTPMethod(/*messageType*/) {
+        return 'POST';
+    }
 
-        getResponseType: function(keySystemStr/*, messageType*/) {
-            return keySystems[keySystemStr].responseType;
-        },
+    function getResponseType(keySystemStr/*, messageType*/) {
+        return keySystems[keySystemStr].responseType;
+    }
 
-        getLicenseMessage: function(serverResponse, keySystemStr/*, messageType*/) {
-            return keySystems[keySystemStr].getLicenseMessage(serverResponse);
-        },
+    function getLicenseMessage(serverResponse, keySystemStr/*, messageType*/) {
+        return keySystems[keySystemStr].getLicenseMessage(serverResponse);
+    }
 
-        getErrorResponse: function(serverResponse, keySystemStr/*, messageType*/) {
-            return keySystems[keySystemStr].getErrorResponse(serverResponse);
-        }
+    function getErrorResponse(serverResponse, keySystemStr/*, messageType*/) {
+        return keySystems[keySystemStr].getErrorResponse(serverResponse);
+    }
+
+    instance = {
+        getServerURLFromMessage: getServerURLFromMessage,
+        getHTTPMethod: getHTTPMethod,
+        getResponseType: getResponseType,
+        getLicenseMessage: getLicenseMessage,
+        getErrorResponse: getErrorResponse,
     };
-};
 
-MediaPlayer.dependencies.protection.servers.DRMToday.prototype = {
-    constructor: MediaPlayer.dependencies.protection.servers.DRMToday
-};
+    return instance;
+}
+
+DRMToday.__dashjs_factory_name = 'DRMToday';
+export default FactoryMaker.getSingletonFactory(DRMToday);

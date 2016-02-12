@@ -7,8 +7,11 @@
 
     <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
     <script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
-    <script src="../../dist/dash.debug.js"></script>
-    
+    <script src="../../dist/dash.all.debug.js"></script>
+    <!--dash.all.min.js should be used in production over dash.all.debug.js
+        Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
+    <!--<script src="../../dist/dash.all.min.js"></script>-->
+
 
     <script>
         /* TEST CONTENT.
@@ -23,20 +26,16 @@
 
         function startVideo() {
             var url = CAPTION_URL,
-                context,
                 TTMLRenderingDiv;
 
             videoElement = document.querySelector(".videoContainer video");
             TTMLRenderingDiv = document.querySelector("#ttml-rendering-div");
-            context = new Dash.di.DashContext();
-            player = new MediaPlayer(context);
-            player.startup();
-            player.attachView(videoElement);
+
+            player = dashjs.MediaPlayer().create();
+            player.initialize(videoElement, url, true);
             player.attachTTMLRenderingDiv(TTMLRenderingDiv);
             controlbar = new ControlBar(player); // Checkout ControlBar.js for more info on how to target/add text tracks to UI
             controlbar.initialize();
-            player.setAutoPlay(true);
-            player.attachSource(url);
         }
 
 

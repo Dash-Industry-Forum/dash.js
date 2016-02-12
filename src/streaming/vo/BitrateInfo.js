@@ -28,13 +28,16 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.BitrateInfo = function () {
-    "use strict";
-    this.mediaType = null;
-    this.bitrate = null;
-    this.qualityIndex = NaN;
-};
+/**
+ * @class
+ * @ignore
+ */
+class BitrateInfo {
+    constructor() {
+        this.mediaType = null;
+        this.bitrate = null;
+        this.qualityIndex = NaN;
+    }
+}
 
-MediaPlayer.vo.BitrateInfo.prototype = {
-    constructor: MediaPlayer.vo.BitrateInfo
-};
+export default BitrateInfo;

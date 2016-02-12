@@ -28,28 +28,42 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import FactoryMaker from '../../../core/FactoryMaker.js';
 
-MediaPlayer.dependencies.protection.servers.Widevine = function() {
-    "use strict";
+function Widevine() {
 
-    return {
+    let instance;
 
-        getServerURLFromMessage: function(url /*, message, messageType*/) { return url; },
+    function getServerURLFromMessage(url /*, message, messageType*/) {
+        return url;
+    }
 
-        getHTTPMethod: function(/*messageType*/) { return 'POST'; },
+    function getHTTPMethod(/*messageType*/) {
+        return 'POST';
+    }
 
-        getResponseType: function(/*keySystemStr, messageType*/) { return 'arraybuffer'; },
+    function getResponseType(/*keySystemStr, messageType*/) {
+        return 'arraybuffer';
+    }
 
-        getLicenseMessage: function(serverResponse/*, keySystemStr, messageType*/) {
-            return serverResponse;
-        },
+    function getLicenseMessage(serverResponse/*, keySystemStr, messageType*/) {
+        return serverResponse;
+    }
 
-        getErrorResponse: function(serverResponse/*, keySystemStr, messageType*/) {
-            return String.fromCharCode.apply(null, new Uint8Array(serverResponse));
-        }
+    function getErrorResponse(serverResponse/*, keySystemStr, messageType*/) {
+        return String.fromCharCode.apply(null, new Uint8Array(serverResponse));
+    }
+
+    instance = {
+        getServerURLFromMessage: getServerURLFromMessage,
+        getHTTPMethod: getHTTPMethod,
+        getResponseType: getResponseType,
+        getLicenseMessage: getLicenseMessage,
+        getErrorResponse: getErrorResponse,
     };
-};
 
-MediaPlayer.dependencies.protection.servers.Widevine.prototype = {
-    constructor: MediaPlayer.dependencies.protection.servers.Widevine
-};
+    return instance;
+}
+
+Widevine.__dashjs_factory_name = 'Widevine';
+export default FactoryMaker.getSingletonFactory(Widevine);

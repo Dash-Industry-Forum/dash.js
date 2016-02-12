@@ -1,0 +1,26 @@
+body {
+    background-color : #294f6b;
+    color:white;
+    font-size: 14px;
+}
+
+a {
+    color: #59b4d4;
+}
+a:hover {
+    color: lightgrey;
+}
+
+.panel {
+    color:black;
+}
+
+.xlink-item {
+    cursor: pointer;
+    color: #337ab7;
+}
+
+.tdcursor {
+    cursor:pointer;
+    color: #337ab7;
+}

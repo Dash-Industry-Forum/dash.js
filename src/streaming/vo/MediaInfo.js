@@ -28,26 +28,29 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.MediaInfo = function () {
-    "use strict";
-    this.id = null;
-    this.index = null;
-    this.type = null;
-    this.streamInfo = null;
-    this.representationCount = 0;
-    this.lang = null;
-    this.viewpoint = null;
-    this.accessibility = null;
-    this.audioChannelConfiguration = null;
-    this.roles = null;
-    this.codec = null;
-    this.mimeType = null;
-    this.contentProtection = null;
-    this.isText = false;
-    this.KID = null;
-    this.bitrateList = null;
-};
+/**
+ * @class
+ * @ignore
+ */
+class MediaInfo {
+    constructor() {
+        this.id = null;
+        this.index = null;
+        this.type = null;
+        this.streamInfo = null;
+        this.representationCount = 0;
+        this.lang = null;
+        this.viewpoint = null;
+        this.accessibility = null;
+        this.audioChannelConfiguration = null;
+        this.roles = null;
+        this.codec = null;
+        this.mimeType = null;
+        this.contentProtection = null;
+        this.isText = false;
+        this.KID = null;
+        this.bitrateList = null;
+    }
+}
 
-MediaPlayer.vo.MediaInfo.prototype = {
-    constructor: MediaPlayer.vo.MediaInfo
-};
+export default MediaInfo;

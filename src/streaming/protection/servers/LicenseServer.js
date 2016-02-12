@@ -45,14 +45,13 @@
  * @interface
  */
 
-MediaPlayer.dependencies.protection.servers.LicenseServer = function() {};
 
 /**
  * Returns a new or updated license server URL based on the requirements of the
  * license server and possibly from information passed in the CDM license message
  *
  * @function
- * @name MediaPlayer.dependencies.protection.servers.LicenseServer#getServerURLFromMessage
+ * @name LicenseServer#getServerURLFromMessage
  * @param {?string} url the initially established URL (from ProtectionData or initData)
  * @param {ArrayBuffer} message the CDM message which may be needed to generate the license
  * requests URL
@@ -66,7 +65,7 @@ MediaPlayer.dependencies.protection.servers.LicenseServer = function() {};
  * XMLHttpRequest.open().
  *
  * @function
- * @name MediaPlayer.dependencies.protection.servers.LicenseServer#getHTTPMethod
+ * @name LicenseServer#getHTTPMethod
  * @param {String} messageType the message type associated with this request.  Supported
  * message types can be found {@link https://w3c.github.io/encrypted-media/#idl-def-MediaKeyMessageType|here}.
  * @returns {string} the HTTP method
@@ -76,7 +75,7 @@ MediaPlayer.dependencies.protection.servers.LicenseServer = function() {};
  * Returns the response type to set for XMLHttpRequest.responseType
  *
  * @function
- * @name MediaPlayer.dependencies.protection.servers.LicenseServer#getResponseType
+ * @name LicenseServer#getResponseType
  * @param {string} keySystemStr the key system string representing the key system
  * associated with a license request.  Multi-DRM license servers may have different
  * response types depending on the key system.
@@ -90,7 +89,7 @@ MediaPlayer.dependencies.protection.servers.LicenseServer = function() {};
  * the CDM.
  *
  * @function
- * @name MediaPlayer.dependencies.protection.servers.LicenseServer#getLicenseMessage
+ * @name LicenseServer#getLicenseMessage
  * @param {Object} serverResponse the response as returned in XMLHttpRequest.response
  * @param {string} keySystemStr the key system string representing the key system
  * associated with a license request.
@@ -105,7 +104,7 @@ MediaPlayer.dependencies.protection.servers.LicenseServer = function() {};
  * string to display for debugging purposes
  *
  * @function
- * @name MediaPlayer.dependencies.protection.servers.LicenseServer#getErrorResponse
+ * @name LicenseServer#getErrorResponse
  * @param {Object} serverResponse the server response
  * @param {String} messageType the message type associated with this request.  Supported
  * message types can be found {@link https://w3c.github.io/encrypted-media/#idl-def-MediaKeyMessageType|here}.

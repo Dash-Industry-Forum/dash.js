@@ -33,17 +33,15 @@
  * Defines the public interface for all Key Systems (DRMs) supported
  * by the player.
  *
- * @interface
+ * @interface KeySystem
  */
-
-MediaPlayer.dependencies.protection.KeySystem = function() {};
 
 /**
  * Key system name string (e.g. 'org.w3.clearkey')
  *
  * @instance
  * @name systemString
- * @memberof MediaPlayer.dependencies.protection.KeySystem
+ * @memberof KeySystem
  * @readonly
  * @type String
  */
@@ -53,7 +51,7 @@ MediaPlayer.dependencies.protection.KeySystem = function() {};
  *
  * @instance
  * @name uuid
- * @memberof MediaPlayer.dependencies.protection.KeySystem
+ * @memberof KeySystem
  * @readonly
  * @type String
  */
@@ -65,7 +63,7 @@ MediaPlayer.dependencies.protection.KeySystem = function() {};
  *
  * @instance
  * @name schemeIdURI
- * @memberof MediaPlayer.dependencies.protection.KeySystem
+ * @memberof KeySystem
  * @readonly
  * @type String
  */
@@ -75,7 +73,7 @@ MediaPlayer.dependencies.protection.KeySystem = function() {};
  * element.
  *
  * @function
- * @name MediaPlayer.dependencies.protection.KeySystem#getInitData
+ * @name KeySystem#getInitData
  * @param {Object} contentProtection the json-style contentProtection
  * object representing the ContentProtection element parsed from the
  * MPD XML document.
@@ -88,7 +86,7 @@ MediaPlayer.dependencies.protection.KeySystem = function() {};
  * Returns a header object with key/value pairs as object properties/values
  *
  * @function
- * @name MediaPlayer.dependencies.protection.KeySystem#getRequestHeadersFromMessage
+ * @name KeySystem#getRequestHeadersFromMessage
  * @param {ArrayBuffer} message the CDM message
  * @returns {?Object} headers object with header names as the object property
  * names and header values as the corresponding object property values.  Return
@@ -102,7 +100,7 @@ MediaPlayer.dependencies.protection.KeySystem = function() {};
  * the CDM message, if necessary.
  *
  * @function
- * @name MediaPlayer.dependencies.protection.KeySystem#getLicenseRequestFromMessage
+ * @name KeySystem#getLicenseRequestFromMessage
  * @param message {ArrayBuffer} the CDM message
  * @returns {Uint8Array} the license request message as will be passed to
  * XMLHttpRequest.send()
@@ -112,9 +110,8 @@ MediaPlayer.dependencies.protection.KeySystem = function() {};
  * Returns a license server URL as parsed from key system initialization data (PSSH).
  *
  * @function
- * @name MediaPlayer.dependencies.protection.KeySystem#getLicenseServerURLFromInitData
+ * @name KeySystem#getLicenseServerURLFromInitData
  * @param initData {ArrayBuffer} the initialization data.  This is just the "Data" field
  * from the PSSH box definition
  * @returns {?string} The license server URL or null if URL is not available in initData
  */
-

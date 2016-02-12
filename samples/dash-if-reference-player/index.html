@@ -23,20 +23,15 @@
     <!-- http://getbootstrap.com/ -->
     <script src="app/lib/bootstrap/js/bootstrap.min.js"></script>
 
-    <!-- https://github.com/creynders/dijon-framework -->
-    <script src="../../src/lib/dijon.js"></script>
-
     <!-- https://github.com/madebyhiro/codem-isoboxer -->
-    <script src="../../src/lib/iso_boxer.min.js"></script>
+    <!--<script src="../../externals/iso_boxer.min.js"></script>-->
 
     <!-- http://bannister.us/weblog/2007/06/09/simple-base64-encodedecode-javascript/ -->
-    <script src="../../src/lib/base64.js"></script>
+    <!--<script src="../../externals/base64.js"></script>-->
 
     <!-- Misc Libs -->
-    <script src="../../src/lib/xml2json.js"></script>
-    <script src="../../src/lib/objectiron.js"></script>
-    <script src="../../src/lib/long.js"></script>
-    <script src="../../src/lib/Math.js"></script>
+    <!--<script src="../../externals/xml2json.js"></script>-->
+    <!--<script src="../../externals/objectiron.js"></script>-->
 
     <!-- http://www.flotcharts.org/ -->
     <script src="app/lib/flot/jquery.flot.js"></script>
@@ -44,155 +39,10 @@
     <!-- https://github.com/eu81273/angular.treeview -->
     <script src="app/lib/angular.treeview/angular.treeview.min.js"></script>
 
-    <!-- Player -->
-    <script src="../../src/streaming/MediaPlayer.js"></script>
-    <script src="../../src/streaming/Context.js"></script>
-    <script src="../../src/streaming/ErrorHandler.js"></script>
-    <script src="../../src/streaming/utils/Capabilities.js"></script>
-    <script src="../../src/streaming/utils/DOMStorage.js"></script>
-    <script src="../../src/streaming/utils/EventBus.js"></script>
-    <script src="../../src/streaming/utils/Debug.js"></script>
-    <script src="../../src/streaming/utils/CustomTimeRanges.js"></script>
-    <script src="../../src/streaming/utils/VirtualBuffer.js"></script>
-    <script src="../../src/streaming/utils/BoxParser.js"></script>
-    <script src="../../src/streaming/utils/IsoFile.js"></script>
-    <script src="../../src/streaming/extensions/RequestModifierExtensions.js"></script>
-    <script src="../../src/streaming/models/VideoModel.js"></script>
-    <script src="../../src/streaming/vo/FragmentRequest.js"></script>
-    <script src="../../src/streaming/vo/TrackInfo.js"></script>
-    <script src="../../src/streaming/vo/TextTrackInfo.js"></script>
-    <script src="../../src/streaming/vo/MediaInfo.js"></script>
-    <script src="../../src/streaming/vo/StreamInfo.js"></script>
-    <script src="../../src/streaming/vo/TextTrackInfo.js"></script>
-    <script src="../../src/streaming/vo/ManifestInfo.js"></script>
-    <script src="../../src/streaming/vo/Event.js"></script>
-    <script src="../../src/streaming/vo/Error.js"></script>
-    <script src="../../src/streaming/vo/BitrateInfo.js"></script>
-    <script src="../../src/streaming/vo/DataChunk.js"></script>
-    <script src="../../src/streaming/vo/IsoBox.js"></script>
-    <script src="../../src/streaming/ManifestLoader.js"></script>
-    <script src="../../src/streaming/ManifestUpdater.js"></script>
-    <script src="../../src/streaming/models/ManifestModel.js"></script>
-    <script src="../../src/streaming/extensions/MediaSourceExtensions.js"></script>
-    <script src="../../src/streaming/extensions/SourceBufferExtensions.js"></script>
-    <script src="../../src/streaming/extensions/VideoModelExtensions.js"></script>
-    <script src="../../src/streaming/controllers/PlaybackController.js"></script>
-    <script src="../../src/streaming/controllers/FragmentController.js"></script>
-    <script src="../../src/streaming/controllers/AbrController.js"></script>
-    <script src="../../src/streaming/FragmentLoader.js"></script>
-    <script src="../../src/streaming/models/FragmentModel.js"></script>
-    <script src="../../src/streaming/controllers/StreamController.js"></script>
-    <script src="../../src/streaming/controllers/MediaController.js"></script>
-    <script src="../../src/streaming/StreamProcessor.js"></script>
-    <script src="../../src/streaming/controllers/ScheduleController.js"></script>
-    <script src="../../src/streaming/TimeSyncController.js"></script>
-    <script src="../../src/streaming/Stream.js"></script>
-    <script src="../../src/streaming/controllers/BufferController.js"></script>
-    <script src="../../src/streaming/LiveEdgeFinder.js"></script>
-    <script src="../../src/streaming/Notifier.js"></script>
-    <script src="../../src/streaming/controllers/EventController.js"></script>
-    <script src="../../src/streaming/models/URIQueryAndFragmentModel.js"></script>
-    <script src="../../src/streaming/vo/URIFragmentData.js"></script>
-    <script src="../../src/streaming/controllers/XlinkController.js"></script>
-    <script src="../../src/streaming/XlinkLoader.js"></script>
-
-    <!--Protection-->
-    <script src="../../src/streaming/models/ProtectionModel.js"></script>
-    <script src="../../src/streaming/models/ProtectionModel_01b.js"></script>
-    <script src="../../src/streaming/models/ProtectionModel_3Feb2014.js"></script>
-    <script src="../../src/streaming/models/ProtectionModel_21Jan2015.js"></script>
-    <script src="../../src/streaming/vo/protection/ClearKeyKeySet.js"></script>
-    <script src="../../src/streaming/vo/protection/KeyPair.js"></script>
-    <script src="../../src/streaming/vo/protection/SessionToken.js"></script>
-
-    <script src="../../src/streaming/controllers/ProtectionController.js"></script>
-    <script src="../../src/streaming/extensions/ProtectionExtensions.js"></script>
-    <script src="../../src/streaming/protection/CommonEncryption.js"></script>
-
-    <script src="../../src/streaming/protection/drm/KeySystem.js"></script>
-    <script src="../../src/streaming/protection/drm/KeySystem_Access.js"></script>
-    <script src="../../src/streaming/protection/drm/KeySystem_ClearKey.js"></script>
-    <script src="../../src/streaming/protection/drm/KeySystem_PlayReady.js"></script>
-    <script src="../../src/streaming/protection/drm/KeySystem_Widevine.js"></script>
-    <script src="../../src/streaming/protection/drm/KeySystem.js"></script>
-
-    <script src="../../src/streaming/protection/servers/ClearKey.js"></script>
-    <script src="../../src/streaming/protection/servers/PlayReady.js"></script>
-    <script src="../../src/streaming/protection/servers/Widevine.js"></script>
-    <script src="../../src/streaming/protection/servers/DRMToday.js"></script>
-
-    <script src="../../src/streaming/vo/protection/KeyError.js"></script>
-    <script src="../../src/streaming/vo/protection/KeyMessage.js"></script>
-    <script src="../../src/streaming/vo/protection/LicenseRequestComplete.js"></script>
-    <script src="../../src/streaming/vo/protection/NeedKey.js"></script>
-    <script src="../../src/streaming/vo/protection/ProtectionData.js"></script>
-    <script src="../../src/streaming/vo/protection/KeySystemAccess.js"></script>
-    <script src="../../src/streaming/vo/protection/KeySystemConfiguration.js"></script>
-    <script src="../../src/streaming/vo/protection/MediaCapability.js"></script>
-
-    <!--Rules-->
-    <script src="../../src/streaming/rules/SwitchRequest.js"></script>
-    <script src="../../src/streaming/rules/RulesContext.js"></script>
-    <script src="../../src/streaming/rules/RulesController.js"></script>
-
-    <script src="../../src/streaming/rules/ABRRules/InsufficientBufferRule.js"></script>
-    <script src="../../src/streaming/rules/ABRRules/ABRRulesCollection.js"></script>
-    <script src="../../src/streaming/rules/ABRRules/BufferOccupancyRule.js"></script>
-    <script src="../../src/streaming/rules/ABRRules/ThroughputRule.js"></script>
-    <script src="../../src/streaming/rules/ABRRules/AbandonRequestsRule.js"></script>
-
-    <script src="../../src/streaming/rules/SchedulingRules/ScheduleRulesCollection.js"></script>
-    <script src="../../src/streaming/rules/SchedulingRules/BufferLevelRule.js"></script>
-    <script src="../../src/streaming/rules/SchedulingRules/PendingRequestsRule.js"></script>
-    <script src="../../src/streaming/rules/SchedulingRules/SameTimeRequestRule.js"></script>
-    <script src="../../src/streaming/rules/SchedulingRules/PlaybackTimeRule.js"></script>
-
-    <script src="../../src/streaming/rules/SynchronizationRules/LiveEdgeBinarySearchRule.js"></script>
-    <script src="../../src/streaming/rules/SynchronizationRules/LiveEdgeWithTimeSynchronizationRule.js"></script>
-    <script src="../../src/streaming/rules/SynchronizationRules/SynchronizationRulesCollection.js"></script>
-
-    <!--Captioning-->
-    <script src="../../src/streaming/VTTParser.js"></script>
-    <script src="../../src/streaming/TTMLParser.js"></script>
-    <script src="../../src/streaming/TextSourceBuffer.js"></script>
-    <script src="../../src/streaming/extensions/TextTrackExtensions.js"></script>
-    <script src="../../src/streaming/controllers/TextController.js"></script>
-
-    <!-- Metrics -->
-    <script src="../../src/streaming/models/MetricsModel.js"></script>
-    <script src="../../src/streaming/vo/MetricsList.js"></script>
-    <script src="../../src/streaming/vo/metrics/BufferLevel.js"></script>
-    <script src="../../src/streaming/vo/metrics/BufferState.js"></script>
-    <script src="../../src/streaming/vo/metrics/HTTPRequest.js"></script>
-    <script src="../../src/streaming/vo/metrics/PlayList.js"></script>
-    <script src="../../src/streaming/vo/metrics/RepresentationSwitch.js"></script>
-    <script src="../../src/streaming/vo/metrics/TCPConnection.js"></script>
-    <script src="../../src/streaming/vo/metrics/DroppedFrames.js"></script>
-    <script src="../../src/streaming/vo/metrics/SchedulingInfo.js"></script>
-    <script src="../../src/streaming/vo/metrics/RequestsQueue.js"></script>
-    <script src="../../src/streaming/vo/metrics/ManifestUpdate.js"></script>
-    <script src="../../src/streaming/vo/metrics/DVRInfo.js"></script>
-
-    <!-- Dash -->
-    <script src="../../src/dash/Dash.js"></script>
-    <script src="../../src/dash/DashContext.js"></script>
-    <script src="../../src/dash/vo/Mpd.js"></script>
-    <script src="../../src/dash/vo/Period.js"></script>
-    <script src="../../src/dash/vo/AdaptationSet.js"></script>
-    <script src="../../src/dash/vo/Representation.js"></script>
-    <script src="../../src/dash/vo/Segment.js"></script>
-    <script src="../../src/dash/vo/Event.js"></script>
-    <script src="../../src/dash/vo/EventStream.js"></script>
-    <script src="../../src/dash/vo/UTCTiming.js"></script>
-    <script src="../../src/dash/DashParser.js"></script>
-    <script src="../../src/dash/DashHandler.js"></script>
-    <script src="../../src/dash/controllers/RepresentationController.js"></script>
-    <script src="../../src/dash/extensions/BaseURLExtensions.js"></script>
-    <script src="../../src/dash/extensions/FragmentExtensions.js"></script>
-    <script src="../../src/dash/extensions/DashManifestExtensions.js"></script>
-    <script src="../../src/dash/extensions/DashMetricsExtensions.js"></script>
-    <script src="../../src/dash/TimelineConverter.js"></script>
-    <script src="../../src/dash/DashAdapter.js"></script>
+    <script src="../../dist/dash.all.debug.js"></script>
+    <!--dash.all.min.js should be used in production over dash.all.debug.js
+        Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
+    <!--<script src="../../dist/dash.all.min.js"></script>-->
 
     <!-- App -->
     <script src="app/metrics.js"></script>
@@ -246,24 +96,23 @@
 
         <div class="row">
             <div class="input-group">
-                <div id="desktop-streams" class="input-group-btn">
-                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-                        Stream <span class="caret"></span>
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li
-                            ng-repeat="item in availableStreams"
-                            ng-click="setStream(item)">
-                            <a>{{item.name}}</a>
+                <div class="input-group-btn">
+                    <a role="button" data-toggle="dropdown" class="btn btn-primary" data-target="#" href="/page.html">
+                        Sample Streams <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu multi-level" role="menu" aria-labelledby="dropdownMenu">
+                        <li class="dropdown-submenu" ng-if="item.submenu" ng-repeat="item in availableStreams">
+
+                            <a tabindex="-1" href="#">{{item.name}}</a>
+                            <ul class="dropdown-menu">
+                                <li ng-repeat="subitem in item.submenu">
+                                    <a ng-click="setStream(subitem)">{{subitem.name}}</a>
+                                </li>
+                            </ul>
                         </li>
                     </ul>
                 </div>
-                <div id="mobile-streams" class="input-group-btn">
-                    <button type="button" class="btn btn-primary" data-toggle="modal" href="#streamModal">
-                        Stream <span class="caret"></span>
-                    </button>
-                </div>
-                <input type="text" class="form-control" placeholder="manifest" ng-model="selectedItem.url">
+                <input type="text" class="form-control" placeholder="Enter your manifest URL here" ng-model="selectedItem.url">
                 <span class="input-group-btn">
                     <button class="btn btn-primary" type="button" ng-click="doLoad()">Load</button>
                 </span>
@@ -324,7 +173,7 @@
                     </div>
 
                     <div class="panel-heading panel-top">
-                        <span class="panel-title">Cache media settings</span>
+                        <span class="panel-title">Save settings</span>
                         <div class="btn-group">
                             <button
                                 type="button"
@@ -338,6 +187,25 @@
                                 class="btn btn-default active"
                                 ng-class="{active:mediaSettingsCacheEnabled == true}"
                                 ng-click="setMediaSettingsCacheEnabled(true)">
+                                <span>On</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="panel-heading panel-top">
+                        <span class="panel-title">Use BOLA</span>
+                        <div class="btn-group">
+                            <button
+                                    type="button"
+                                    class="btn btn-default active"
+                                    ng-class="{active:bolaEnabled == false}"
+                                    ng-click="setBolaEnabled(false)">
+                                <span>Off</span>
+                            </button>
+                            <button
+                                    type="button"
+                                    class="btn btn-default"
+                                    ng-class="{active:bolaEnabled  == true}"
+                                    ng-click="setBolaEnabled(true)">
                                 <span>On</span>
                             </button>
                         </div>
@@ -603,10 +471,6 @@
                             </div>
                             <div class="tab-pane" id="requests">
                                 <div class="video-requests col-md-4">
-                                    <div>Pending Requests (Video)</div>
-                                    <ul ng-repeat = "request in videoRequestsQueue.pendingRequests">
-                                        <li>{{request.startTime}}</li>
-                                    </ul>
                                     <div>Loading Requests (Video)</div>
                                     <ul ng-repeat = "request in videoRequestsQueue.loadingRequests">
                                         <li>{{request.startTime}}</li>
@@ -615,27 +479,15 @@
                                     <ul ng-repeat = "request in videoRequestsQueue.executedRequests">
                                         <li>{{request.startTime}}</li>
                                     </ul>
-                                    <div>Rejected Requests (Video)</div>
-                                    <ul ng-repeat = "request in videoRequestsQueue.rejectedRequests">
-                                        <li>{{request.startTime}}</li>
-                                    </ul>
                                 </div>
 
                                 <div class="audio-requests col-md-4">
-                                    <div>Pending Requests (Audio)</div>
-                                    <ul ng-repeat = "request in audioRequestsQueue.pendingRequests">
-                                        <li>{{request.startTime}}</li>
-                                    </ul>
                                     <div>Loading Requests (Audio)</div>
                                     <ul ng-repeat = "request in audioRequestsQueue.loadingRequests">
                                         <li>{{request.startTime}}</li>
                                     </ul>
                                     <div>Executed Requests (Audio)</div>
                                     <ul ng-repeat = "request in audioRequestsQueue.executedRequests">
-                                        <li>{{request.startTime}}</li>
-                                    </ul>
-                                    <div>Rejected Requests (Audio)</div>
-                                    <ul ng-repeat = "request in audioRequestsQueue.rejectedRequests">
                                         <li>{{request.startTime}}</li>
                                     </ul>
                                 </div>

@@ -28,15 +28,27 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.metrics.RequestsQueue = function () {
-    "use strict";
+/**
+ * @class
+ */
+class RequestsQueue {
+    /**
+     * @description This Object holds reference to Fragment Model's request queues
+     */
+    constructor() {
 
-    this.pendingRequests = [];
-    this.loadingRequests = [];
-    this.executedRequests = [];
-    this.rejectedRequests = [];
-};
+        /**
+         * Array of all of the requests that have begun to load
+         * This request may not make it into the executed queue if it is abandon due to ABR rules for example.
+         * @public
+         */
+        this.loadingRequests = [];
+        /**
+         * Array of the The requests that have completed
+         * @public
+         */
+        this.executedRequests = [];
+    }
+}
 
-MediaPlayer.vo.metrics.RequestsQueue.prototype = {
-    constructor: MediaPlayer.vo.metrics.RequestsQueue
-};
+export default RequestsQueue;

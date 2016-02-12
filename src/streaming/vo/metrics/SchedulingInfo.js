@@ -28,22 +28,63 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.metrics.SchedulingInfo = function () {
-    "use strict";
+/**
+ * @class
+ */
+class SchedulingInfo {
+    /**
+     * @description This Object holds reference to the index handling of the current fragment being loaded or executed.
+     */
+    constructor() {
 
-    this.mediaType = null;                 // Type of stream ("audio" | "video" etc..)
-    this.t = null;                      // Real-Time | Time of the scheduling event.
+        /**
+         * Type of stream Audio | Video | FragmentedText
+         * @public
+         */
+        this.mediaType = null;
+        /**
+         * Time of the scheduling event.
+         * @public
+         */
+        this.t = null;
 
-    this.type = null;                   // Type of fragment (initialization | media)
-    this.startTime = null;              // Presentation start time of fragment
-    this.availabilityStartTime = null;  // Availability start time of fragment
-    this.duration = null;               // Duration of fragment
-    this.quality = null;                // Quality of fragment
-    this.range = null;                  // Range of fragment
+        /**
+         * Type of fragment (initialization | media)
+         * @public
+         */
+        this.type = null;
+        /**
+         * Presentation start time of fragment
+         * @public
+         */
+        this.startTime = null;
+        /**
+         * Availability start time of fragment
+         * @public
+         */
+        this.availabilityStartTime = null;
+        /**
+         * Duration of fragment
+         * @public
+         */
+        this.duration = null;
+        /**
+         * Bit Rate Quality of fragment
+         * @public
+         */
+        this.quality = null;
+        /**
+         * Range of fragment
+         * @public
+         */
+        this.range = null;
 
-    this.state = null;                  // Current state of fragment
-};
+        /**
+         * Current state of fragment
+         * @public
+         */
+        this.state = null;
+    }
+}
 
-MediaPlayer.vo.metrics.SchedulingInfo.prototype = {
-    constructor: MediaPlayer.vo.metrics.SchedulingInfo
-};
+export default SchedulingInfo;

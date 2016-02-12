@@ -28,161 +28,178 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.models.VideoModel = function () {
-    "use strict";
 
-    var element,
+import FactoryMaker from '../../core/FactoryMaker.js';
+
+function VideoModel() {
+
+    let instance,
+        element,
         TTMLRenderingDiv,
         videoContainer,
-        stalledStreams = [],
-        //_currentTime = 0,
+        stalledStreams,
+        previousPlaybackRate;
 
-        isStalled = function () {
-            return (stalledStreams.length > 0);
-        },
+    function initialize() {
+        stalledStreams = [];
+    }
 
-        addStalledStream = function (type) {
-            if (type === null || element.seeking) {
-                return;
+    function setPlaybackRate(value) {
+        if (!element || element.readyState < 2) return;
+        element.playbackRate = value;
+    }
+
+    //TODO Move the DVR window calculations from MediaPlayer to Here.
+    function setCurrentTime(currentTime) {
+        //_currentTime = currentTime;
+
+        // We don't set the same currentTime because it can cause firing unexpected Pause event in IE11
+        // providing playbackRate property equals to zero.
+        if (element.currentTime == currentTime) return;
+
+        // TODO Despite the fact that MediaSource 'open' event has been fired IE11 cannot set videoElement.currentTime
+        // immediately (it throws InvalidStateError). It seems that this is related to videoElement.readyState property
+        // Initially it is 0, but soon after 'open' event it goes to 1 and setting currentTime is allowed. Chrome allows to
+        // set currentTime even if readyState = 0.
+        // setTimeout is used to workaround InvalidStateError in IE11
+        try {
+            element.currentTime = currentTime;
+        } catch (e) {
+            if (element.readyState === 0 && e.code === e.INVALID_STATE_ERR) {
+                setTimeout(function () {
+                    element.currentTime = currentTime;
+                }, 400);
             }
+        }
+    }
 
-            // Halt playback until nothing is stalled.
-            this.setPlaybackRate(0);
+    function getElement() {
+        return element;
+    }
 
-            if (stalledStreams[type] === true) {
-                return;
-            }
+    function setElement(value) {
+        element = value;
+    }
 
-            stalledStreams.push(type);
-            stalledStreams[type] = true;
-        },
-
-        removeStalledStream = function (type) {
-            if (type === null) {
-                return;
-            }
-
-            stalledStreams[type] = false;
-            var index = stalledStreams.indexOf(type);
-            if (index !== -1) {
-                stalledStreams.splice(index, 1);
-            }
-
-            // If nothing is stalled resume playback.
-            if (isStalled() === false) {
-                this.setPlaybackRate(1);
-            }
-        },
-
-        stallStream = function (type, isStalled) {
-            if (isStalled) {
-                addStalledStream.call(this, type);
-            } else {
-                removeStalledStream.call(this, type);
-            }
-        };
-
-    return {
-        system : undefined,
-
-        play: function () {
-            element.play();
-        },
-
-        pause: function () {
-            element.pause();
-        },
-
-        isPaused: function () {
-            return element.paused;
-        },
-
-        getPlaybackRate:  function () {
-            return element.playbackRate;
-        },
-
-        setPlaybackRate: function (value) {
-            if (!element || element.readyState < 2) return;
-
-            element.playbackRate = value;
-        },
-
-        getCurrentTime: function () {
-            return element.currentTime;
-        },
-
-        setCurrentTime: function (currentTime) {
-            //_currentTime = currentTime;
-
-            // We don't set the same currentTime because it can cause firing unexpected Pause event in IE11
-            // providing playbackRate property equals to zero.
-            if (element.currentTime == currentTime) return;
-
-            // TODO Despite the fact that MediaSource 'open' event has been fired IE11 cannot set videoElement.currentTime
-            // immediately (it throws InvalidStateError). It seems that this is related to videoElement.readyState property
-            // Initially it is 0, but soon after 'open' event it goes to 1 and setting currentTime is allowed. Chrome allows to
-            // set currentTime even if readyState = 0.
-            // setTimeout is used to workaround InvalidStateError in IE11
-            try{
-                element.currentTime = currentTime;
-            } catch (e) {
-                if (element.readyState === 0 && e.code === e.INVALID_STATE_ERR) {
-                    setTimeout(function(){
-                        element.currentTime = currentTime;
-                    }, 400);
-                }
-            }
-        },
-
-        setStallState: function(type, state) {
-            stallStream.call(this, type, state);
-        },
-
-        listen: function (type, callback) {
-            element.addEventListener(type, callback, false);
-        },
-
-        unlisten: function (type, callback) {
-            element.removeEventListener(type, callback, false);
-        },
-
-        getElement: function () {
-            return element;
-        },
-
-        setElement: function (value) {
-            element = value;
-        },
-
-        getVideoContainer: function() {
-            return videoContainer;
-        },
-
-        setVideoContainer: function(value) {
-            videoContainer = value;
-        },
-        
-        getTTMLRenderingDiv: function () {
-            return TTMLRenderingDiv;
-        },
-        
-        setTTMLRenderingDiv: function (div) {
-            TTMLRenderingDiv = div;
-            // The styling will allow the captions to match the video window size and position.
-            TTMLRenderingDiv.style.position = 'absolute';
-            TTMLRenderingDiv.style.display = 'flex';
-            TTMLRenderingDiv.style.overflow = 'hidden';
-            TTMLRenderingDiv.style.pointerEvents = 'none';
-            TTMLRenderingDiv.style.top = 0;
-            TTMLRenderingDiv.style.left = 0;
-        },
-
-        setSource: function (source) {
+    function setSource(source) {
+        if (source) {
             element.src = source;
         }
-    };
-};
+    }
 
-MediaPlayer.models.VideoModel.prototype = {
-    constructor: MediaPlayer.models.VideoModel
-};
+    function getSource() {
+        return element.src;
+    }
+
+    function getVideoContainer() {
+        return videoContainer;
+    }
+
+    function setVideoContainer(value) {
+        videoContainer = value;
+    }
+
+    function getTTMLRenderingDiv() {
+        return TTMLRenderingDiv;
+    }
+
+    function setTTMLRenderingDiv(div) {
+        TTMLRenderingDiv = div;
+        // The styling will allow the captions to match the video window size and position.
+        TTMLRenderingDiv.style.position = 'absolute';
+        TTMLRenderingDiv.style.display = 'flex';
+        TTMLRenderingDiv.style.overflow = 'hidden';
+        TTMLRenderingDiv.style.pointerEvents = 'none';
+        TTMLRenderingDiv.style.top = 0;
+        TTMLRenderingDiv.style.left = 0;
+    }
+
+    function setStallState(type, state) {
+        stallStream(type, state);
+    }
+
+    function isStalled() {
+        return (stalledStreams.length > 0);
+    }
+
+    function addStalledStream(type) {
+
+        let event;
+
+        if (type === null || element.seeking || stalledStreams.indexOf(type) !== -1) {
+            return;
+        }
+
+        stalledStreams.push(type);
+        if (stalledStreams.length === 1) {
+            // Halt playback until nothing is stalled.
+            event = document.createEvent('Event');
+            event.initEvent('waiting', true, false);
+            previousPlaybackRate = element.playbackRate;
+            setPlaybackRate(0);
+            element.dispatchEvent(event);
+        }
+    }
+
+    function removeStalledStream(type) {
+        let index = stalledStreams.indexOf(type);
+        let event;
+
+        if (type === null) {
+            return;
+        }
+        if (index !== -1) {
+            stalledStreams.splice(index, 1);
+        }
+        // If nothing is stalled resume playback.
+        if (isStalled() === false && element.playbackRate === 0) {
+            event = document.createEvent('Event');
+            event.initEvent('playing', true, false);
+            setPlaybackRate(previousPlaybackRate || 1);
+            element.dispatchEvent(event);
+        }
+    }
+
+    function stallStream(type, isStalled) {
+        if (isStalled) {
+            addStalledStream(type);
+        } else {
+            removeStalledStream(type);
+        }
+    }
+
+    function getPlaybackQuality() {
+        let hasWebKit = ('webkitDroppedFrameCount' in element);
+        let hasQuality = ('getVideoPlaybackQuality' in element);
+        let result = null;
+
+        if (hasQuality) {
+            result = element.getVideoPlaybackQuality();
+        }
+        else if (hasWebKit) {
+            result = {droppedVideoFrames: element.webkitDroppedFrameCount, creationTime: new Date()};
+        }
+
+        return result;
+    }
+
+    instance = {
+        initialize: initialize,
+        setCurrentTime: setCurrentTime,
+        setStallState: setStallState,
+        getElement: getElement,
+        setElement: setElement,
+        setSource: setSource,
+        getSource: getSource,
+        getVideoContainer: getVideoContainer,
+        setVideoContainer: setVideoContainer,
+        getTTMLRenderingDiv: getTTMLRenderingDiv,
+        setTTMLRenderingDiv: setTTMLRenderingDiv,
+        getPlaybackQuality: getPlaybackQuality
+    };
+
+    return instance;
+}
+
+VideoModel.__dashjs_factory_name = 'VideoModel';
+export default FactoryMaker.getSingletonFactory(VideoModel);

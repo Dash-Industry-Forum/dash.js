@@ -28,52 +28,149 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.metrics.ManifestUpdate = function () {
-    "use strict";
+/**
+ * @class
+ */
+class ManifestUpdate {
+    /**
+     * @description This Object holds reference to the manifest update information.
+     */
+    constructor() {
 
-    this.mediaType = null;
-    this.type = null;                       // static|dynamic
-    this.requestTime = null;                // when this manifest update was requested
-    this.fetchTime = null;                  // when this manifest update was received
-    this.availabilityStartTime = null;
-    this.presentationStartTime = 0;      // the seek point (liveEdge for dynamic, Stream[0].startTime for static)
-    this.clientTimeOffset = 0;           // the calculated difference between the server and client wall clock time
-    this.currentTime = null;                // actual element.currentTime
-    this.buffered = null;                   // actual element.ranges
-    this.latency = 0;                       // (static is fixed value of zero. dynamic should be ((Now-@availabilityStartTime) - elementCurrentTime)
-    this.streamInfo = [];
-    this.trackInfo = [];
+        /**
+         * Media Type Video | Audio | FragmentedText
+         * @public
+         */
+        this.mediaType = null;
+        /**
+         * MPD Type static | dynamic
+         * @public
+         */
+        this.type = null;
+        /**
+         * When this manifest update was requested
+         * @public
+         */
+        this.requestTime = null;
+        /**
+         * When this manifest update was received
+         * @public
+         */
+        this.fetchTime = null;
+        /**
+         * Calculated Availability Start time of the stream.
+         * @public
+         */
+        this.availabilityStartTime = null;
+        /**
+         * the seek point (liveEdge for dynamic, Stream[0].startTime for static)
+         * @public
+         */
+        this.presentationStartTime = 0;
+        /**
+         * The calculated difference between the server and client wall clock time
+         * @public
+         */
+        this.clientTimeOffset = 0;
+        /**
+         * Actual element.currentTime
+         * @public
+         */
+        this.currentTime = null;
+        /**
+         * Actual element.ranges
+         * @public
+         */
+        this.buffered = null;
+        /**
+         * Static is fixed value of zero. dynamic should be ((Now-@availabilityStartTime) - elementCurrentTime)
+         * @public
+         */
+        this.latency = 0;
+        /**
+         * Array holding list of StreamInfo VO Objects
+         * @public
+         */
+        this.streamInfo = [];
+        /**
+         * Array holding list of TrackInfo VO Objects
+         * @public
+         */
+        this.trackInfo = [];
+
+    }
+}
+
+ManifestUpdate.StreamInfo = class {
+    /**
+     * @description This Object holds reference to the current period's stream information when the manifest was updated.
+     */
+    constructor() {
+        /**
+         * Stream@id
+         * @public
+         */
+        this.id = null;
+        /**
+         * Period Index
+         * @public
+         */
+        this.index = null;
+        /**
+         * Stream@start
+         * @public
+         */
+        this.start = null;
+        /**
+         * Stream@duration
+         * @public
+         */
+        this.duration = null;
+    }
 };
 
-MediaPlayer.vo.metrics.ManifestUpdate.StreamInfo = function () {
-    "use strict";
+ManifestUpdate.TrackInfo = class {
 
-    this.id = null;         // Stream@id
-    this.index = null;
-    this.start = null;      // Stream@start
-    this.duration = null;   // Stream@duration
+    /**
+     * @description This Object holds reference to the current representation's info when the manifest was updated.
+     */
+    constructor() {
+        /**
+         * Track@id
+         * @public
+         */
+        this.id = null;
+        /**
+         * Representation Index
+         * @public
+         */
+        this.index = null;
+        /**
+         * Media Type Video | Audio | FragmentedText
+         * @public
+         */
+        this.mediaType = null;
+        /**
+         * Which reprenset
+         * @public
+         */
+        this.streamIndex = null;
+        /**
+         * Holds reference to @presentationTimeOffset
+         * @public
+         */
+        this.presentationTimeOffset = null;
+        /**
+         * Holds reference to @startNumber
+         * @public
+         */
+        this.startNumber = null;
+        /**
+         * list|template|timeline
+         * @public
+         */
+        this.fragmentInfoType = null;
+    }
 };
-
-MediaPlayer.vo.metrics.ManifestUpdate.TrackInfo = function () {
-    "use strict";
-
-    this.id = null;                         // Track@id
-    this.index = null;
-    this.mediaType = null;
-    this.streamIndex = null;
-    this.presentationTimeOffset = null;     // @presentationTimeOffset
-    this.startNumber = null;                // @startNumber
-    this.fragmentInfoType = null;            // list|template|timeline
-};
-
-MediaPlayer.vo.metrics.ManifestUpdate.prototype = {
-    constructor: MediaPlayer.vo.metrics.ManifestUpdate
-};
-
-MediaPlayer.vo.metrics.ManifestUpdate.StreamInfo.prototype = {
-    constructor: MediaPlayer.vo.metrics.ManifestUpdate.StreamInfo
-};
-
-MediaPlayer.vo.metrics.ManifestUpdate.TrackInfo.prototype = {
-    constructor: MediaPlayer.vo.metrics.ManifestUpdate.TrackInfo
-};
+//TODO we need exports for all the sub objects.  These should all be class VO
+export default ManifestUpdate;

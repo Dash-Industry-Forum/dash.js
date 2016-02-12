@@ -28,229 +28,219 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.FragmentLoader = function () {
-    "use strict";
+import Error from './vo/Error.js';
+import EventBus from './../core/EventBus.js';
+import Events from './../core/events/Events.js';
+import FactoryMaker from '../core/FactoryMaker.js';
+import Debug from '../core/Debug.js';
+import MediaPlayerModel from './models/MediaPlayerModel.js';
 
-    var RETRY_ATTEMPTS = MediaPlayer.dependencies.FragmentLoader.RETRY_ATTEMPTS,
-        RETRY_INTERVAL = MediaPlayer.dependencies.FragmentLoader.RETRY_INTERVAL,
-        xhrs = [],
+function FragmentLoader(config) {
 
-        doLoad = function (request, remainingAttempts) {
-            var req = new XMLHttpRequest(),
-                traces = [],
-                firstProgress = true,
-                needFailureReport = true,
-                lastTraceTime = null,
-                self = this,
-                handleLoaded = function(requestVO, succeeded) {
-                    needFailureReport = false;
+    let context = this.context;
+    let log = Debug(context).getInstance().log;
+    let eventBus = EventBus(context).getInstance();
+    let metricsModel = config.metricsModel;
+    let errHandler = config.errHandler;
+    let requestModifier = config.requestModifier;
 
-                    var currentTime = new Date(),
-                        bytes = req.response,
-                        latency,
-                        download,
-                        httpRequestMetrics = null;
+    let instance,
+        mediaPlayerModel,
+        xhrs;
 
-                    traces.push({
-                        s: currentTime,
-                        d: currentTime.getTime() - lastTraceTime.getTime(),
-                        b: [bytes ? bytes.byteLength : 0]
-                    });
+    function setup() {
+        mediaPlayerModel = MediaPlayerModel(context).getInstance();
+        xhrs = [];
+    }
 
-                    if (!requestVO.firstByteDate) {
-                        requestVO.firstByteDate = requestVO.requestStartDate;
-                    }
-                    requestVO.requestEndDate = currentTime;
+    function doLoad(request, remainingAttempts) {
+        var req = new XMLHttpRequest();
+        var traces = [];
+        var firstProgress = true;
+        var needFailureReport = true;
+        var lastTraceTime = null;
+        var lastTraceReceivedCount = 0;
+        var self = this;
+        var handleLoaded = function (requestVO, succeeded) {
+            needFailureReport = false;
 
-                    latency = (requestVO.firstByteDate.getTime() - requestVO.requestStartDate.getTime());
-                    download = (requestVO.requestEndDate.getTime() - requestVO.firstByteDate.getTime());
+            var currentTime = new Date();
+            var latency,
+                download;
 
-                    self.log((succeeded ? "loaded " : "failed ") + requestVO.mediaType + ":" + requestVO.type + ":" + requestVO.startTime + " (" + req.status + ", " + latency + "ms, " + download + "ms)");
+            if (!requestVO.firstByteDate) {
+                requestVO.firstByteDate = requestVO.requestStartDate;
+            }
+            requestVO.requestEndDate = currentTime;
 
-                    httpRequestMetrics = self.metricsModel.addHttpRequest(
-                        request.mediaType,
-                        null,
-                        request.type,
-                        request.url,
-                        req.responseURL || null,
-                        request.range,
-                        request.requestStartDate,
-                        requestVO.firstByteDate,
-                        requestVO.requestEndDate,
-                        req.status,
-                        request.duration,
-                        req.getAllResponseHeaders()
-                    );
+            latency = (requestVO.firstByteDate.getTime() - requestVO.requestStartDate.getTime());
+            download = (requestVO.requestEndDate.getTime() - requestVO.firstByteDate.getTime());
 
-                    if (succeeded) {
-                        // trace is only for successful requests
-                        traces.forEach(function (trace) {
-                            self.metricsModel.appendHttpTrace(httpRequestMetrics,
-                                                              trace.s,
-                                                              trace.d,
-                                                              trace.b);
-                        });
-                    }
-                };
+            log((succeeded ? 'loaded ' : 'failed ') + requestVO.mediaType + ':' + requestVO.type + ':' + requestVO.startTime + ' (' + req.status + ', ' + latency + 'ms, ' + download + 'ms)');
 
-                xhrs.push(req);
-                request.requestStartDate = new Date();
-
-                traces.push({
-                    s: request.requestStartDate,
-                    d: 0,
-                    b: [0]
-                });
-
-                lastTraceTime = request.requestStartDate;
-
-                req.open("GET", self.requestModifierExt.modifyRequestURL(request.url), true);
-                req.responseType = "arraybuffer";
-                req = self.requestModifierExt.modifyRequestHeader(req);
-/*
-                req.setRequestHeader("Cache-Control", "no-cache");
-                req.setRequestHeader("Pragma", "no-cache");
-                req.setRequestHeader("If-Modified-Since", "Sat, 1 Jan 2000 00:00:00 GMT");
-*/
-                if (request.range) {
-                    req.setRequestHeader("Range", "bytes=" + request.range);
-                }
-
-                req.onprogress = function (event) {
-                    var currentTime = new Date();
-                    if (firstProgress) {
-                        firstProgress = false;
-                        if (!event.lengthComputable || (event.lengthComputable && event.total != event.loaded)) {
-                            request.firstByteDate = currentTime;
-                        }
-                    }
-
-                    if (event.lengthComputable) {
-                        request.bytesLoaded = event.loaded;
-                        request.bytesTotal = event.total;
-                    }
-
-                    traces.push({
-                        s: currentTime,
-                        d: currentTime.getTime() - lastTraceTime.getTime(),
-                        b: [req.response ? req.response.byteLength : 0]
-                    });
-
-                    lastTraceTime = currentTime;
-                    self.notify(MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_LOADING_PROGRESS, {request: request});
-                };
-
-                req.onload = function () {
-                    if (req.status < 200 || req.status > 299) return;
-
-                    handleLoaded(request, true);
-                    self.notify(MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_LOADING_COMPLETED, {request: request, response: req.response});
-                };
-
-                req.onloadend = req.onerror = function () {
-                    if (xhrs.indexOf(req) === -1) {
-                        return;
-                    } else {
-                        xhrs.splice(xhrs.indexOf(req), 1);
-                    }
-
-                    if (!needFailureReport) return;
-
-                    handleLoaded(request, false);
-
-                    if (remainingAttempts > 0) {
-                        self.log("Failed loading fragment: " + request.mediaType + ":" + request.type + ":" + request.startTime + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
-                        remainingAttempts--;
-                        setTimeout(function() {
-                            doLoad.call(self, request, remainingAttempts);
-                        }, RETRY_INTERVAL);
-                    } else {
-                        self.log("Failed loading fragment: " + request.mediaType + ":" + request.type + ":" + request.startTime + " no retry attempts left");
-                        self.errHandler.downloadError("content", request.url, req);
-                        self.notify(MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_LOADING_COMPLETED, {request: request, bytes: null}, new MediaPlayer.vo.Error(null, "failed loading fragment", null));
-                    }
-                };
-
-                req.send();
-        },
-
-        checkForExistence = function(request) {
-            var self = this,
-                req = new XMLHttpRequest(),
-                isSuccessful = false;
-
-            req.open("HEAD", request.url, true);
-
-            req.onload = function () {
-                if (req.status < 200 || req.status > 299) return;
-
-                isSuccessful = true;
-
-                self.notify(MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, {request: request, exists: true});
-            };
-
-            req.onloadend = req.onerror = function () {
-                if (isSuccessful) return;
-
-                self.notify(MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, {request: request, exists: false});
-            };
-
-            req.send();
+            metricsModel.addHttpRequest(
+                request.mediaType,
+                null,
+                request.type,
+                request.url,
+                req.responseURL || null,
+                request.range,
+                request.requestStartDate,
+                requestVO.firstByteDate,
+                requestVO.requestEndDate,
+                req.status,
+                request.duration,
+                req.getAllResponseHeaders(),
+                succeeded ? traces : null
+            );
         };
 
-    return {
-        metricsModel: undefined,
-        errHandler: undefined,
-        log: undefined,
-        requestModifierExt:undefined,
-        notify: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
+        xhrs.push(req);
+        request.requestStartDate = new Date();
+        lastTraceTime = request.requestStartDate;
 
-        load: function (req) {
-
-            if (!req) {
-                this.notify(MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_LOADING_COMPLETED, {request: req, bytes: null}, new MediaPlayer.vo.Error(null, "request is null", null));
-            } else {
-                doLoad.call(this, req, RETRY_ATTEMPTS);
-            }
-        },
-
-        checkForExistence: function(req) {
-            if (!req) {
-                this.notify(MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, {request: req, exists: false});
-                return;
-            }
-
-            checkForExistence.call(this, req);
-        },
-
-        abort: function() {
-            var i,
-                req,
-                ln = xhrs.length;
-
-            for (i = 0; i < ln; i +=1) {
-                req = xhrs[i];
-                xhrs[i] = null;
-                req.abort();
-                req = null;
-            }
-
-            xhrs = [];
+        req.open('GET', requestModifier.modifyRequestURL(request.url), true);
+        req.responseType = 'arraybuffer';
+        req = requestModifier.modifyRequestHeader(req);
+        /*
+         req.setRequestHeader("Cache-Control", "no-cache");
+         req.setRequestHeader("Pragma", "no-cache");
+         req.setRequestHeader("If-Modified-Since", "Sat, 1 Jan 2000 00:00:00 GMT");
+         */
+        if (request.range) {
+            req.setRequestHeader('Range', 'bytes=' + request.range);
         }
+
+        req.onprogress = function (event) {
+            var currentTime = new Date();
+
+            if (firstProgress) {
+                firstProgress = false;
+                if (!event.lengthComputable || (event.lengthComputable && event.total !== event.loaded)) {
+                    request.firstByteDate = currentTime;
+                }
+            }
+
+            if (event.lengthComputable) {
+                request.bytesLoaded = event.loaded;
+                request.bytesTotal = event.total;
+            }
+
+            traces.push({
+                s: lastTraceTime,
+                d: currentTime.getTime() - lastTraceTime.getTime(),
+                b: [event.loaded ? event.loaded - lastTraceReceivedCount : 0]
+            });
+
+            lastTraceTime = currentTime;
+            lastTraceReceivedCount = event.loaded;
+            eventBus.trigger(Events.LOADING_PROGRESS, {request: request});
+        };
+
+        req.onload = function () {
+            if (req.status < 200 || req.status > 299) return;
+            handleLoaded(request, true);
+            eventBus.trigger(Events.LOADING_COMPLETED, {request: request, response: req.response, sender: instance});
+        };
+
+        req.onloadend = req.onerror = function () {
+            if (xhrs.indexOf(req) === -1) {
+                return;
+            } else {
+                xhrs.splice(xhrs.indexOf(req), 1);
+            }
+
+            if (!needFailureReport) return;
+
+            handleLoaded(request, false);
+
+            if (remainingAttempts > 0) {
+                log('Failed loading fragment: ' + request.mediaType + ':' + request.type + ':' + request.startTime + ', retry in ' + mediaPlayerModel.getFragmentRetryInterval() + 'ms' + ' attempts: ' + remainingAttempts);
+                remainingAttempts--;
+                setTimeout(function () {
+                    doLoad.call(self, request, remainingAttempts);
+                }, mediaPlayerModel.getFragmentRetryInterval());
+            } else {
+                log('Failed loading fragment: ' + request.mediaType + ':' + request.type + ':' + request.startTime + ' no retry attempts left');
+                errHandler.downloadError('content', request.url, req);
+                eventBus.trigger(Events.LOADING_COMPLETED, {
+                    request: request,
+                    bytes: null,
+                    error: new Error(null, 'failed loading fragment', null),
+                    sender: self
+                });
+            }
+        };
+
+        req.send();
+    }
+
+    function checkForExistence(request) {
+
+        if (!request) {
+            eventBus.trigger(Events.CHECK_FOR_EXISTENCE_COMPLETED, { request: request, exists: false });
+            return;
+        }
+
+        var req = new XMLHttpRequest();
+        var isSuccessful = false;
+
+        req.open('HEAD', request.url, true);
+
+        req.onload = function () {
+            if (req.status < 200 || req.status > 299) return;
+            isSuccessful = true;
+            eventBus.trigger(Events.CHECK_FOR_EXISTENCE_COMPLETED, { request: request, exists: true });
+
+        };
+
+        req.onloadend = req.onerror = function () {
+            if (isSuccessful) return;
+            eventBus.trigger(Events.CHECK_FOR_EXISTENCE_COMPLETED, { request: request, exists: false });
+        };
+
+        req.send();
+    }
+
+    function load(req) {
+        if (!req) {
+            eventBus.trigger(Events.LOADING_COMPLETED, {
+                request: req,
+                bytes: null,
+                error: new Error(null, 'request is null', null),
+                sender: this
+            });
+        } else {
+            doLoad(req, mediaPlayerModel.getFragmentRetryAttempts());
+        }
+    }
+
+    function abort() {
+        var i,
+            req;
+        var ln = xhrs.length;
+
+        for (i = 0; i < ln; i++) {
+            req = xhrs[i];
+            xhrs[i] = null;
+            if (!req) continue;
+            req.abort();
+            req = null;
+        }
+
+        xhrs = [];
+    }
+
+    instance = {
+        checkForExistence: checkForExistence,
+        load: load,
+        abort: abort
     };
-};
 
-MediaPlayer.dependencies.FragmentLoader.RETRY_ATTEMPTS = 3;
-MediaPlayer.dependencies.FragmentLoader.RETRY_INTERVAL = 500;
+    setup();
 
-MediaPlayer.dependencies.FragmentLoader.prototype = {
-    constructor: MediaPlayer.dependencies.FragmentLoader
-};
+    return instance;
+}
 
-MediaPlayer.dependencies.FragmentLoader.eventList = {
-    ENAME_LOADING_COMPLETED: "loadingCompleted",
-    ENAME_LOADING_PROGRESS: "loadingProgress",
-    ENAME_CHECK_FOR_EXISTENCE_COMPLETED: "checkForExistenceCompleted"
-};
+FragmentLoader.__dashjs_factory_name = 'FragmentLoader';
+export default FactoryMaker.getClassFactory(FragmentLoader);

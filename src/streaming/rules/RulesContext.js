@@ -28,40 +28,51 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.rules.RulesContext = function (streamProcessor, currentValue) {
-    "use strict";
-    var representationInfo = streamProcessor.getCurrentRepresentationInfo(),
-        sp = streamProcessor;
 
-    return {
-        getStreamInfo: function() {
-            return representationInfo.mediaInfo.streamInfo;
-        },
+import FactoryMaker from '../../core/FactoryMaker.js';
 
-        getMediaInfo: function() {
-            return representationInfo.mediaInfo;
-        },
+function RulesContext(config) {
 
-        getTrackInfo: function() {
-            return representationInfo;
-        },
+    let instance;
+    let representationInfo = config.streamProcessor.getCurrentRepresentationInfo();
+    let sp = config.streamProcessor;
+    let currentValue = config.currentValue;
 
-        getCurrentValue: function() {
-            return currentValue;
-        },
+    function getStreamInfo() {
+        return representationInfo.mediaInfo.streamInfo;
+    }
 
-        getManifestInfo: function() {
-            return representationInfo.mediaInfo.streamInfo.manifestInfo;
-        },
+    function getMediaInfo() {
+        return representationInfo.mediaInfo;
+    }
 
-        getStreamProcessor: function() {
-            return sp;
-        }
+    function getTrackInfo() {
+        return representationInfo;
+    }
 
+    function getCurrentValue() {
+        return currentValue;
+    }
 
+    function getManifestInfo() {
+        return representationInfo.mediaInfo.streamInfo.manifestInfo;
+    }
+
+    function getStreamProcessor() {
+        return sp;
+    }
+
+    instance = {
+        getStreamInfo: getStreamInfo,
+        getMediaInfo: getMediaInfo,
+        getTrackInfo: getTrackInfo,
+        getCurrentValue: getCurrentValue,
+        getManifestInfo: getManifestInfo,
+        getStreamProcessor: getStreamProcessor
     };
-};
 
-MediaPlayer.rules.RulesContext.prototype = {
-    constructor: MediaPlayer.rules.RulesContext
-};
+    return instance;
+}
+
+RulesContext.__dashjs_factory_name = 'RulesContext';
+export default FactoryMaker.getClassFactory(RulesContext);

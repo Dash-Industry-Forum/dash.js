@@ -28,17 +28,21 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.TextTrackInfo = function () {
-    "use strict";
-    this.video = null;
-    this.captionData= null;
-    this.label = null;
-    this.lang = null;
-    this.defaultTrack = false;
-    this.kind = null;
-    this.isFragmented = false;
-};
+/**
+ * @class
+ * @ignore
+ */
+class TextTrackInfo {
+    constructor() {
+        this.video = null;
+        this.captionData = null;
+        this.label = null;
+        this.lang = null;
+        this.defaultTrack = false;
+        this.kind = null;
+        this.isFragmented = false;
+        this.isEmbedded = false;
+    }
+}
 
-MediaPlayer.vo.TextTrackInfo.prototype = {
-    constructor: MediaPlayer.vo.TextTrackInfo
-};
+export default TextTrackInfo;

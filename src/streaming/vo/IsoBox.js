@@ -28,15 +28,17 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.IsoBox = function () {
-    "use strict";
+/**
+ * @class
+ * @ignore
+ */
+class IsoBox {
+    constructor() {
+        this.offset = NaN;
+        this.type = null;
+        this.size = NaN;
+        this.isComplete = true;
+    }
+}
 
-    this.offset = NaN;
-    this.type = null;
-    this.size = NaN;
-    this.isComplete = true;
-};
-
-MediaPlayer.vo.IsoBox.prototype = {
-    constructor: MediaPlayer.vo.IsoBox
-};
+export default IsoBox;

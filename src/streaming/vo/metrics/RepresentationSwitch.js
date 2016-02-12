@@ -28,15 +28,43 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.metrics.RepresentationSwitch = function () {
-    "use strict";
+/**
+ * @class
+ */
+class RepresentationSwitch {
+    /**
+     * @description This Object holds reference to the info at quality switch between two representations.
+     */
+    constructor() {
 
-    this.t = null;      // Real-Time | Time of the switch event.
-    this.mt = null;     // Media-Time | The media presentation time of the earliest access unit (out of all media content components) played out from the Representation.
-    this.to = null;     // value of Representation@id identifying the switch-to Representation.
-    this.lto = null;    // If not present, this metrics concerns the Representation as a whole. If present, lto indicates the value of SubRepresentation@level within Representation identifying the switch-to level of the Representation.
-};
+        /**
+         * Time of the switch event.
+         * @public
+         */
+        this.t = null;
+        /**
+         * The media presentation time of the earliest access unit
+         * (out of all media content components) played out from
+         * the Representation.
+         *
+         * @public
+         */
+        this.mt = null;
+        /**
+         * Value of Representation@id identifying the switch-to Representation.
+         * @public
+         */
+        this.to = null;
+        /**
+         * If not present, this metrics concerns the Representation as a whole.
+         * If present, lto indicates the value of SubRepresentation@level within
+         * Representation identifying the switch-to level of the Representation.
+         *
+         * @public
+         */
+        this.lto = null;
 
-MediaPlayer.vo.metrics.RepresentationSwitch.prototype = {
-    constructor: MediaPlayer.vo.metrics.RepresentationSwitch
-};
+    }
+}
+
+export default RepresentationSwitch;

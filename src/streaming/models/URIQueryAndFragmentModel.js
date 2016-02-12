@@ -28,84 +28,95 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.models.URIQueryAndFragmentModel = function () {
-    "use strict";
 
-    var URIFragmentDataVO = new MediaPlayer.vo.URIFragmentData(),
-        URIQueryData = [],
-        isHTTPS = false,
+import URIFragmentData from '../vo/URIFragmentData.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
-        parseURI = function (uri) {
-            if (!uri) return null;
+function URIQueryAndFragmentModel() {
 
-            var URIFragmentData = [],
-                testQuery = new RegExp(/[?]/),
-                testFragment = new RegExp(/[#]/),
-                testHTTPS = new RegExp(/^(https:)?\/\//i),
-                isQuery = testQuery.test(uri),
-                isFragment = testFragment.test(uri),
-                mappedArr;
+    let instance,
+        URIFragmentDataVO,
+        URIQueryData,
+        isHTTPS;
 
-            isHTTPS = testHTTPS.test(uri);
+    function initialize() {
+        URIFragmentDataVO = new URIFragmentData();
+        URIQueryData = [];
+        isHTTPS = false;
+    }
 
-            function reduceArray(previousValue, currentValue, index, array) {
-                var arr =  array[0].split(/[=]/);
-                array.push({key:arr[0], value:arr[1]});
-                array.shift();
-                return array;
-            }
+    function getURIFragmentData() {
+        return URIFragmentDataVO;
+    }
 
-            function mapArray(currentValue, index, array) {
-                if (index > 0)
-                {
-                    if (isQuery && URIQueryData.length === 0) {
-                        URIQueryData = array[index].split(/[&]/);
-                    } else if (isFragment) {
-                        URIFragmentData = array[index].split(/[&]/);
-                    }
-                }
+    function getURIQueryData() {
+        return URIQueryData;
+    }
 
-                return array;
-            }
+    function isManifestHTTPS() {
+        return isHTTPS;
+    }
 
-            mappedArr = uri.split(/[?#]/).map(mapArray);
+    function parseURI(uri) {
+        if (!uri) return null;
 
-            if (URIQueryData.length > 0) {
-                URIQueryData = URIQueryData.reduce(reduceArray, null);
-            }
+        var URIFragmentData = [];
+        var mappedArr;
 
-            if (URIFragmentData.length > 0) {
-                URIFragmentData = URIFragmentData.reduce(reduceArray, null);
-                URIFragmentData.forEach(function (object) {
-                    URIFragmentDataVO[object.key] = object.value;
-                });
-            }
+        var testQuery = new RegExp(/[?]/);
+        var testFragment = new RegExp(/[#]/);
+        var testHTTPS = new RegExp(/^(https:)?\/\//i);
+        var isQuery = testQuery.test(uri);
+        var isFragment = testFragment.test(uri);
 
-            return uri;
-        };
+        isHTTPS = testHTTPS.test(uri);
 
-    return {
-        parseURI:parseURI,
-        getURIFragmentData:function(){
-            return URIFragmentDataVO;
-        },
-
-        getURIQueryData: function(){
-            return URIQueryData;
-        },
-
-        isManifestHTTPS:function(){
-            return isHTTPS;
-        },
-
-        reset: function() {
-            URIFragmentDataVO = new MediaPlayer.vo.URIFragmentData();
-            URIQueryData = [];
-            isHTTPS = false;
+        function reduceArray(previousValue, currentValue, index, array) {
+            var arr =  array[0].split(/[=]/);
+            array.push({key: arr[0], value: arr[1]});
+            array.shift();
+            return array;
         }
-    };
-};
 
-MediaPlayer.models.URIQueryAndFragmentModel.prototype = {
-    constructor: MediaPlayer.models.URIQueryAndFragmentModel
-};
+        function mapArray(currentValue, index, array) {
+            if (index > 0)
+            {
+                if (isQuery && URIQueryData.length === 0) {
+                    URIQueryData = array[index].split(/[&]/);
+                } else if (isFragment) {
+                    URIFragmentData = array[index].split(/[&]/);
+                }
+            }
+
+            return array;
+        }
+
+        mappedArr = uri.split(/[?#]/).map(mapArray);
+
+        if (URIQueryData.length > 0) {
+            URIQueryData = URIQueryData.reduce(reduceArray, null);
+        }
+
+        if (URIFragmentData.length > 0) {
+            URIFragmentData = URIFragmentData.reduce(reduceArray, null);
+            URIFragmentData.forEach(function (object) {
+                URIFragmentDataVO[object.key] = object.value;
+            });
+        }
+
+        return uri;
+    }
+
+    instance = {
+        initialize: initialize,
+        parseURI: parseURI,
+        getURIFragmentData: getURIFragmentData,
+        getURIQueryData: getURIQueryData,
+        isManifestHTTPS: isManifestHTTPS
+    };
+
+    return instance;
+}
+
+URIQueryAndFragmentModel.__dashjs_factory_name = 'URIQueryAndFragmentModel';
+export default FactoryMaker.getSingletonFactory(URIQueryAndFragmentModel);
