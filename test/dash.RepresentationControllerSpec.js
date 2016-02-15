@@ -6,6 +6,8 @@ import RepresentationControler from '../src/dash/controllers/RepresentationContr
 import ManifestModel from '../src/streaming/models/ManifestModel.js';
 import Events from '../src/core/events/Events.js';
 import SpecHelper from './helpers/SpecHelper.js';
+import DOMStorageHelper from './helpers/DOMStorageHelper.js';
+import AbrController from '../src/streaming/controllers/AbrController.js';
 
 const chai = require('chai'),
       spies = require('chai-spies');
@@ -15,6 +17,7 @@ chai.use(spies);
 const expect = chai.expect;
 const voHelper = new VoHelper();
 const objectsHelper = new ObjectsHelper();
+const domStorageHelper = new DOMStorageHelper();
 
 describe("RepresentationController", function () {
     // Arrange
@@ -31,8 +34,13 @@ describe("RepresentationController", function () {
 
     manifestModel.setValue(mpd);
 
+    const abrController = AbrController(context).getInstance();
+    abrController.initialize(testType, streamProcessor);
+    abrController.setConfig({domStorage: domStorageHelper});
+
     const representationControler = RepresentationControler(context).create();
     representationControler.initialize(streamProcessor);
+    representationControler.setConfig({abrController: abrController});
 
     it("should not contain data before it is set", function () {
         // Act
