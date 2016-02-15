@@ -363,7 +363,7 @@ function TTMLParser() {
             'height': '10%;',
             'align-items': 'flex-start;',
             'overflow': 'visible;',
-            '-ms-writing-mode': 'lr-tb, horizontal-tb;;',
+            '-ms-writing-mode': 'lr-tb, horizontal-tb;',
             '-webkit-writing-mode': 'horizontal-tb;',
             '-moz-writing-mode': 'horizontal-tb;',
             'writing-mode': 'horizontal-tb;'
@@ -874,7 +874,7 @@ function TTMLParser() {
         // Extract the linePadding property from cueStyleProperties.
         var linePaddingLeft = getPropertyFromArray('padding-left', cueStyle);
         var linePaddingRight = getPropertyFromArray('padding-right', cueStyle);
-        var linePadding = linePaddingLeft.concat(' ' + linePaddingRight);
+        var linePadding = linePaddingLeft.concat(' ' + linePaddingRight + ' ');
 
         // Declaration of the HTML elements to be used in the cue innerHTML construction.
         var outerHTMLBeforeBr = '';
