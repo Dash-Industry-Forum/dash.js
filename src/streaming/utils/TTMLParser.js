@@ -97,15 +97,15 @@ function TTMLParser() {
             removeNamespacePrefix(ttml, ttNS);
         }
 
-        // Extract styling and layout from the document.
-        ttmlLayout = ttml.tt.head.layout.region_asArray;
-        ttmlStyling = ttml.tt.head.styling.style_asArray;
-
         // Check if the document is conform to the specification.
         if (!passStructuralConstraints()) {
             var errorMsg = 'TTML document has incorrect structure';
             throw errorMsg;
         }
+
+        // Extract styling and layout from the document.
+        ttmlLayout = ttml.tt.head.layout.region_asArray;
+        ttmlStyling = ttml.tt.head.styling.style_asArray;
 
         // Extract the cellResolution information
         var cellResolution = getCellResolution();
