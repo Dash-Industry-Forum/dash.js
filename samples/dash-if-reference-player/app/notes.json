@@ -3,10 +3,42 @@
         {
             "title": "Known Issues",
             "items": [
-                "Erratic playback at higher bitrates.",
+                "MultiPeriod content fails and will be fixed in 2.1",
+                "Intermittent live stream failure with Media Decode Errors",
                 "Streams using high profile codecs may not play properly.",
-                "Only streams with segmentAlignment='true' will work with abr.",
-		"Seek at start does not support multi-period content at this point."
+                "Only streams with segmentAlignment='true' will work with abr."
+            ]
+        },
+        {
+            "title": "Release Notes v2.0.0",
+            "items": [
+                "Converted to ECMAScript 6"
+                ,"Removed SameTimeRequestRule and PendingRequestRule"
+                ,"Simplified the scheduling and buffering logic."
+                ,"Added many new API calls."
+                ,"Externalized Protection. "
+                ,"See the migration document https://github.com/Dash-Industry-Forum/dash.js/wiki/Migration-2.0 for more information."
+                ,"#1115 DOMStoarge Last Bitrate Broken"
+                ,"#1110  BufferTarget is not correct with regards to live delay and live streams"
+                ,"#1104 Fix utf-8 encode fragment text"
+                ,"#1094 SegmentTimeline does not always autoStart properly in Chrome"
+                ,"#1056 Live segmenttemplate streams failing on Chrome/FF/E with 2.0"
+                ,"#1054 Multiple calls to EventController.start without EventController.reset/.clear causes uncaught TypeError"
+                ,"#1045 Live simulator with SegmentTimeline doesn't start to play in 2.0"
+                ,"#1040 Time Text fails to add track in Firefox"
+                ,"#1037 dash.js player fails to load mpd after DOMStorage is supported, but cannot be used warning"
+                ,"#1027 Playing when autoplay is false does not work"
+                ,"#1022 Rename classes with Extensions in name"
+                ,"#1019 Refactor MediaElement Controls VideoModel -> PlaybackController"
+                ,"#1018 Preview while seeking in a paused state."
+                ,"#1014 Fix intermittently failing unit test"
+                ,"#1001 Add JSDocs to new API in 2.0 Documentation"
+                ,"#1000 Stream fails when live delay is set to 0 or 1 fragment with 2 second segments"
+                ,"#984 Exception when resuming fragmentedText rendering"
+                ,"#976 Several pieces of content fail to play under Firefox for various reasons"
+                ,"#974 reset() has weird behavior"
+                ,"#927 detachMediaSource causes misleading MEDIA_ERR_SRC_NOT_SUPPORTED error"
+                ,"#973 Some API methods don't work before play"
             ]
         },
         {
