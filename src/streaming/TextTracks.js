@@ -217,12 +217,6 @@ function TextTracks() {
     function checkVideoSize() {
         var track = this.getCurrentTextTrack();
         if (track && track.renderingType === 'html') {
-            if (!track.activeCues || track.activeCues.length === 0) {
-                return;
-            }
-            var newVideoWidth = video.clientWidth;
-            var newVideoHeight = video.clientHeight;
-
             // Create aspect ratio from cellResolutions
             let aspectRatio = 1;
             if (track.cellResolution) {
@@ -235,10 +229,10 @@ function TextTracks() {
                 use80Percent = true;
             }
 
-            var realVideoSize = getVideoVisibleVideoSize.call(this, video.clientWidth, video.clientHeight, video.videoWidth, video.videoHeight, aspectRatio, use80Percent);
+            const realVideoSize = getVideoVisibleVideoSize.call(this, video.clientWidth, video.clientHeight, video.videoWidth, video.videoHeight, aspectRatio, use80Percent);
 
-            newVideoWidth = realVideoSize.w;
-            newVideoHeight = realVideoSize.h;
+            const newVideoWidth = realVideoSize.w;
+            const newVideoHeight = realVideoSize.h;
 
             if (newVideoWidth != actualVideoWidth || newVideoHeight != actualVideoHeight) {
                 actualVideoLeft = realVideoSize.x;
@@ -250,9 +244,9 @@ function TextTracks() {
                 captionContainer.style.width = actualVideoWidth + 'px';
                 captionContainer.style.height = actualVideoHeight + 'px';
 
-                // Video view has changed size, so resize all active cues
-                for (var i = 0; i < track.activeCues.length; ++i) {
-                    var cue = track.activeCues[i];
+                // Video view has changed size, so resize any active cues
+                for (let i = 0; track.activeCues && i < track.activeCues.length; ++i) {
+                    let cue = track.activeCues[i];
                     cue.scaleCue(cue);
                 }
 
