@@ -44,8 +44,8 @@ function TTMLParser() {
     let instance,
         timingRegex,
         ttml, // contains the whole ttml document received
-        ttmlStyling, // contains the styling information from the document
-        ttmlLayout, // contains the positioning information from the document
+        ttmlStyling, // contains the styling information from the document (from head following EBU-TT-D)
+        ttmlLayout, // contains the positioning information from the document (from head following EBU-TT-D)
         fontSize,
         lineHeight,
         linePadding,
@@ -75,8 +75,12 @@ function TTMLParser() {
      **/
 
     function parse(data) {
-        var type;
-        var converter = new X2JS([], '', false);
+        let tt, // Top element
+            head, // head in tt
+            body, // body in tt
+            type;
+
+        let converter = new X2JS([], '', false);
 
         // Parse the TTML in a JSON object.
         ttml = converter.xml_str2json(data);
@@ -97,15 +101,25 @@ function TTMLParser() {
             removeNamespacePrefix(ttml, ttNS);
         }
 
-        // Check if the document is conform to the specification.
-        if (!passStructuralConstraints()) {
-            var errorMsg = 'TTML document has incorrect structure';
-            throw errorMsg;
+        // Check the document and compare to the specification (TTML and EBU-TT-D).
+        tt = ttml.tt;
+        if (!tt) {
+            throw 'TTML document lacks tt element';
         }
-
-        // Extract styling and layout from the document.
-        ttmlLayout = ttml.tt.head.layout.region_asArray;
-        ttmlStyling = ttml.tt.head.styling.style_asArray;
+        head = tt.head;
+        if (!head) {
+            throw 'TTML document lacks head element';
+        }
+        if (head.layout) {
+            ttmlLayout = head.layout.region_asArray; //Mandatory in EBU-TT-D
+        }
+        if (head.styling) {
+            ttmlStyling = head.styling.style_asArray; // Mandatory in EBU-TT-D
+        }
+        body = tt.body;
+        if (!body) {
+            throw 'TTML document lacks body element';
+        }
 
         // Extract the cellResolution information
         var cellResolution = getCellResolution();
@@ -119,8 +133,10 @@ function TTMLParser() {
         defaultStyleProperties['font-size'] = cellUnit[1] + 'px;';
 
         var regions = [];
-        for (var i = 0; i < ttmlLayout.length; i++) {
-            regions.push(processRegion(JSON.parse(JSON.stringify(ttmlLayout[i])), cellUnit));
+        if (ttmlLayout) {
+            for (var i = 0; i < ttmlLayout.length; i++) {
+                regions.push(processRegion(JSON.parse(JSON.stringify(ttmlLayout[i])), cellUnit));
+            }
         }
 
         // Get the namespace prefix.
@@ -475,18 +491,6 @@ function TTMLParser() {
             }
         }
         return parsedTime;
-    }
-
-    function passStructuralConstraints() {
-        // Check if the ttml document provide all the necessary elements.
-        var hasTt = ttml.hasOwnProperty('tt');
-        var hasHead = hasTt ? ttml.tt.hasOwnProperty('head') : false;
-        var hasLayout = hasHead ? ttml.tt.head.hasOwnProperty('layout') : false;
-        var hasStyling = hasHead ? ttml.tt.head.hasOwnProperty('styling') : false;
-        var hasBody = hasTt ? ttml.tt.hasOwnProperty('body') : false;
-
-        // Check if the document contains all the necessary information
-        return (hasTt && hasHead && hasLayout && hasStyling && hasBody);
     }
 
     function getNamespacePrefix(json, ns) {
