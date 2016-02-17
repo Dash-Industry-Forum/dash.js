@@ -37,7 +37,7 @@ We have also moved the code from Dash.create() and createAll() to MediaPlayerFac
 ## New Public API
 We have cloned most of the native video element's API and events in MediaPlayer. In your player we suggest that you use the available playback API and events from MediaPlayer instead of the native video element. The video element controls are limited and can not handle such features as live streams with DVR windows or Multiple Period content.  In Dash.js 1.x we had only partially implemented the video element's playback API in MediaPlayer. Now in  v2.0, we now have added most the calls and events.  We can add more as requested or needed.
 
-**Note** If something is not available it means it has not been extended. In this case, feel free to use the native element's API. Please check the API Documentation for a complete set of API calls and events [here](http://cdn.dashjs.org/latest/jsdocs/index.html).
+**Note** If something is not available it means it has not been extended. In this case, feel free to use the native element's API. Please check the API Documentation for a complete set of API calls and events [here](http://cdn.dashjs.org/latest/jsdoc/index.html).
 
 * extend
 * pause
