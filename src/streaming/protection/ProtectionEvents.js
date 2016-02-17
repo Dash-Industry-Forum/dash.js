@@ -31,7 +31,7 @@
 import EventsBase from '../../core/events/EventsBase.js';
 /**
  * @Class
- * @ignore
+ *
  */
 class ProtectionEvents extends EventsBase {
     /**
