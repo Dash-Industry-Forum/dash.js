@@ -93,6 +93,13 @@ function RepresentationController() {
         eventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, instance);
     }
 
+    function setConfig(config) {
+        // allow the abrController created in setup to be overidden
+        if (config.abrController) {
+            abrController = config.abrController;
+        }
+    }
+
     function initialize(StreamProcessor) {
         streamProcessor = StreamProcessor;
         indexHandler = streamProcessor.getIndexHandler();
@@ -366,6 +373,7 @@ function RepresentationController() {
 
     instance = {
         initialize: initialize,
+        setConfig: setConfig,
         getData: getData,
         getDataIndex: getDataIndex,
         isUpdating: isUpdating,
