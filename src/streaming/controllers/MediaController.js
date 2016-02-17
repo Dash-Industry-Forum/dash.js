@@ -63,41 +63,45 @@ function MediaController() {
     }
 
     /**
+     * @param type
      * @param streamInfo
      * @memberof MediaController#
      */
-    function checkInitialMediaSettings(streamInfo) {
+    function checkInitialMediaSettingsForType(type, streamInfo) {
+        var settings = getInitialSettings(type);
+        var tracksForType = getTracksFor(type, streamInfo);
+        var tracks = [];
 
-        ['audio', 'video', 'text', 'fragmentedText'].forEach(function (type) {
-            var settings = getInitialSettings(type);
-            var tracksForType = getTracksFor(type, streamInfo);
-            var tracks = [];
+        if (type === 'fragmentedText') {
+            // Choose the first track
+            setTrack(tracksForType[0]);
+            return;
+        }
 
-            if (!settings) {
-                settings = domStorage.getSavedMediaSettings(type);
-                setInitialSettings(type, settings);
-            }
+        if (!settings) {
+            settings = domStorage.getSavedMediaSettings(type);
+            setInitialSettings(type, settings);
+        }
 
-            if (!tracksForType || (tracksForType.length === 0)) return;
+        if (!tracksForType || (tracksForType.length === 0)) return;
 
-            if (settings) {
-                tracksForType.forEach(function (track) {
-                    if (!matchSettings(settings, track)) {
-                        tracks.push(track);
-                    }
-                });
-            }
-
-            if (tracks.length === 0) {
-                setTrack(selectInitialTrack(tracksForType));
-            } else {
-                if (tracks.length > 1) {
-                    setTrack(selectInitialTrack(tracks));
-                } else {
-                    setTrack(tracks[0]);
+        if (settings) {
+            tracksForType.forEach(function (track) {
+                if (!matchSettings(settings, track)) {
+                    tracks.push(track);
                 }
+            });
+        }
+
+        if (tracks.length === 0) {
+            setTrack(selectInitialTrack(tracksForType));
+        } else {
+            if (tracks.length > 1) {
+                setTrack(selectInitialTrack(tracks));
+            } else {
+                setTrack(tracks[0]);
             }
-        });
+        }
     }
 
     /**
@@ -456,7 +460,7 @@ function MediaController() {
 
     instance = {
         initialize: initialize,
-        checkInitialMediaSettings: checkInitialMediaSettings,
+        checkInitialMediaSettingsForType: checkInitialMediaSettingsForType,
         addTrack: addTrack,
         getTracksFor: getTracksFor,
         getCurrentTrackFor: getCurrentTrackFor,

@@ -57,9 +57,11 @@ function DashManifestModel() {
         var mimeTypeRegEx = (type !== 'text') ? new RegExp(type) : new RegExp('(vtt|ttml)');
 
         if ((adaptation.Representation_asArray.length > 0) &&
-            (adaptation.Representation_asArray[0].hasOwnProperty('codecs')) &&
-            (adaptation.Representation_asArray[0].codecs == 'stpp')) {
-            return type == 'fragmentedText';
+            (adaptation.Representation_asArray[0].hasOwnProperty('codecs'))) {
+            var codecs = adaptation.Representation_asArray[0].codecs;
+            if (codecs === 'stpp' || codecs === 'wvtt') {
+                return type === 'fragmentedText';
+            }
         }
 
         if (col) {
