@@ -276,8 +276,10 @@ function ProtectionController(config) {
 
         keySystem = undefined;//TODO-Refactor look at why undefined is needed for this. refactor
 
-        protectionModel.reset();
-        protectionModel = null;
+        if (protectionModel) {
+            protectionModel.reset();
+            protectionModel = null;
+        }
     }
 
     ///////////////
