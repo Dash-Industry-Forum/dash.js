@@ -574,9 +574,11 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     player.attachView(video);
     player.attachVideoContainer(document.getElementById("videoContainer"));
 
-    // Add HTML-rendered TTML subtitles
-    //ttmlDiv = document.querySelector("#video-caption");
-    //player.attachTTMLRenderingDiv(ttmlDiv);
+    // Add HTML-rendered TTML subtitles except for Firefox (issue #1164)
+    if (typeof navigator !== 'undefined' && !navigator.userAgent.match(/Firefox/)) {
+        ttmlDiv = document.querySelector("#video-caption");
+        player.attachTTMLRenderingDiv(ttmlDiv);
+    }
 
     player.setAutoPlay(true);
     controlbar = new ControlBar(player);
