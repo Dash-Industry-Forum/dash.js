@@ -89,6 +89,16 @@ function DOMStorage() {
         return supported;
     }
 
+    // Return current epoch time, ms, rounded to the nearest 10s to avoid fingerprinting user
+    function getTimestamp() {
+        let ten_minutes_ms = 60 * 1000 * 10;
+        return Math.round(new Date().getTime() / ten_minutes_ms) * ten_minutes_ms;
+    }
+
+    function canStore(storageType, key, streamType) {
+        return isSupported(storageType) && mediaPlayerModel['get' + key + 'CachingInfo']().enabled && (streamType === 'video' || streamType === 'audio');
+    }
+
     function getSavedMediaSettings(type) {
         //Checks local storage to see if there is valid, non-expired media settings
         if (!isSupported(STORAGE_TYPE_LOCAL) || !mediaPlayerModel.getLastMediaSettingsCachingInfo().enabled) return null;
@@ -126,9 +136,25 @@ function DOMStorage() {
         return savedBitrate;
     }
 
+    function setSavedMediaSettings(type, value) {
+        if (canStore(STORAGE_TYPE_LOCAL, 'LastMediaSettings', type)) {
+            let key = type === 'video' ? LOCAL_STORAGE_VIDEO_SETTINGS_KEY : LOCAL_STORAGE_AUDIO_SETTINGS_KEY;
+            localStorage.setItem(key, JSON.stringify({settings: value, timestamp: getTimestamp()}));
+        }
+    }
+
+    function setSavedBitrateSettings(type, bitrate) {
+        if (canStore(STORAGE_TYPE_LOCAL, 'LastBitrate', type) && bitrate) {
+            let key = type === 'video' ? LOCAL_STORAGE_VIDEO_BITRATE_KEY : LOCAL_STORAGE_AUDIO_BITRATE_KEY;
+            localStorage.setItem(key, JSON.stringify({bitrate: bitrate / 1000, timestamp: getTimestamp()}));
+        }
+    }
+
     instance = {
         getSavedBitrateSettings: getSavedBitrateSettings,
+        setSavedBitrateSettings: setSavedBitrateSettings,
         getSavedMediaSettings: getSavedMediaSettings,
+        setSavedMediaSettings: setSavedMediaSettings,
         isSupported: isSupported
     };
 
