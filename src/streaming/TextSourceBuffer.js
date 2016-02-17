@@ -206,7 +206,7 @@ function TextSourceBuffer() {
                             result = parser.parse(ccContent);
                             textTracks.addCaptions(currFragmentedTrackIdx, firstSubtitleStart / timescale, result);
                         } catch (e) {
-                            //empty cue ?
+                            log('TTML parser error: ' + e.message);
                         }
                     }
                 } else {
