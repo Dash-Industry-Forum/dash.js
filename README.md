@@ -110,6 +110,11 @@ When it is all done, it should look similar to this:
 </html>
 ```
 
+### Module Setup
+
+We publish dash.js to [npm](https://www.npmjs.com/package/dashjs). Examples of how to use dash.js in different module
+bundlers can be found in the [`samples/modules`](https://github.com/Dash-Industry-Forum/dash.js/tree/development/samples/modules) directory.
+
 ### MediaPlayerFactory Setup
 
 An alternative way to build a Dash.js player in your web page is to use the MediaPlayerFactory.  The MediaPlayerFactory will automatically instantiate and initialize the MediaPlayer module on appropriately tagged video elements. 
