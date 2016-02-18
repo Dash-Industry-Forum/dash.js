@@ -1,0 +1,17 @@
+{
+  "name": "dashjs-webpack-sample",
+  "version": "1.0.0",
+  "description": "Test including dash.js into a WebPack project",
+  "dependencies": {
+    "babel-core": "^6.5.2",
+    "babel-loader": "^6.2.2",
+    "babel-preset-es2015": "^6.5.0",
+    "dashjs": "2.0.0",
+    "webpack": "^1.12.13"
+  },
+  "scripts": {
+    "build": "node_modules/webpack/bin/webpack.js"
+  },
+  "author": "Aaron Boushley",
+  "license": "BSD-3-Clause"
+}
