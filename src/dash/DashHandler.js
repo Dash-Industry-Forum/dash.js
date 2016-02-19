@@ -848,6 +848,7 @@ function DashHandler(config) {
         request.quality = representation.index;
         request.index = segment.availabilityIdx;
         request.mediaInfo = streamProcessor.getMediaInfo();
+        request.adaptationIndex = representation.adaptation.index;
 
         return request;
     }
