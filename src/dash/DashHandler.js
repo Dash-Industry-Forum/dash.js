@@ -240,7 +240,7 @@ function DashHandler(config) {
         return request;
     }
 
-    function isMediaFinished(representation) { // TODO
+    function isMediaFinished(representation) {
         var period = representation.adaptation.period;
         var segmentInfoType = representation.segmentInfoType;
 
@@ -898,8 +898,8 @@ function DashHandler(config) {
             request = getRequestForSegment(segment);
         }
 
-        if (keepIdx && idx >= 0 && representation.segmentInfoType !== 'SegmentTimeline') {
-            index = idx;
+        if (keepIdx && idx >= 0) {
+            index = representation.segmentInfoType === 'SegmentTimeline' && isDynamic ? index : idx;
         }
 
         return request;
