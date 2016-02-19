@@ -84,7 +84,7 @@ function FragmentModel(config) {
         };
 
         var isEqualMedia = function (req1, req2) {
-            return !isNaN(req1.index) && (req1.index === req2.index) && (req1.startTime === req2.startTime);
+            return ((req1.url === req2.url) && (req1.startTime === req2.startTime));
         };
 
         var isEqualInit = function (req1, req2) {
