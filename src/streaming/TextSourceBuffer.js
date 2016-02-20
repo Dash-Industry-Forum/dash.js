@@ -198,12 +198,13 @@ function TextSourceBuffer() {
                     parser = parser !== null ? parser : getParser(codecType);
                     for (i = 0; i < sampleList.length; i++) {
                         let sample = sampleList[i];
-                        sample.cts -= firstSubtitleStart;
-                        this.buffered.add(sample.cts / timescale, (sample.cts + sample.duration) / timescale);
+                        let sampleStart = sample.cts;
+                        let sampleRelStart = sampleStart - firstSubtitleStart;
+                        this.buffered.add(sampleRelStart / timescale, (sampleRelStart + sample.duration) / timescale);
                         let dataView = new DataView(bytes, sample.offset, sample.size);
                         ccContent = ISOBoxer.Utils.dataViewToString(dataView, 'utf-8');
                         try {
-                            result = parser.parse(ccContent);
+                            result = parser.parse(ccContent, sampleStart / timescale, (sampleStart + sample.duration) / timescale);
                             textTracks.addCaptions(currFragmentedTrackIdx, firstSubtitleStart / timescale, result);
                         } catch (e) {
                             log('TTML parser error: ' + e.message);

@@ -30,13 +30,15 @@
  */
 import FactoryMaker from '../../core/FactoryMaker.js';
 import X2JS from '../../../externals/xml2json.js';
+import Debug from '../../core/Debug.js';
 
 const SECONDS_IN_HOUR = 60 * 60; // Expression of an hour in seconds
 const SECONDS_IN_MIN = 60; // Expression of a minute in seconds
 
 function TTMLParser() {
 
-    //let context = this.context;
+    let context = this.context;
+    let log = Debug(context).getInstance().log;
 
     /*
      * This TTML parser follows "EBU-TT-D SUBTITLING DISTRIBUTION FORMAT - tech3380" spec - https://tech.ebu.ch/docs/tech/tech3380.pdf.
@@ -74,7 +76,7 @@ function TTMLParser() {
      * @param data: raw data received from the TextSourceBuffer
      **/
 
-    function parse(data) {
+    function parse(data, intervalStart, intervalEnd) {
         let tt, // Top element
             head, // head in tt
             body, // body in tt
@@ -187,14 +189,40 @@ function TTMLParser() {
                     errorMsg = 'TTML document has incorrect timing value';
                     throw errorMsg;
                 }
+                let cueStartTime = spanStartTime || pStartTime;
+                let cueEndTime = spanEndTime || pEndTime;
+
+                if (typeof intervalStart !== 'undefined' && typeof intervalEnd !== 'undefined') {
+                    if (cueEndTime < intervalStart || cueStartTime > intervalEnd) {
+                        log('TTML: Cue interval ' + cueStartTime + '-' + cueEndTime +
+                            ' outside sample interval ' + intervalStart + '-' + intervalEnd + '. Dropped');
+                        return;
+                    } else {
+                        let clipped = false;
+                        let origStart = cueStartTime;
+                        let origEnd = cueEndTime;
+                        if (cueStartTime < intervalStart) {
+                            clipped = true;
+                            cueStartTime = intervalStart;
+                        }
+                        if (cueEndTime > intervalEnd) {
+                            clipped = true;
+                            cueEndTime = intervalEnd;
+                        }
+                        if (clipped) {
+                            log('TTML: Clipped cue ' + origStart + '-' + origEnd + ' to ' +
+                                cueStartTime + '-' + cueEndTime);
+                        }
+                    }
+                }
 
                 if (cue['smpte:backgroundImage'] !== undefined) {
                     var images = ttml.tt.head.metadata.image_asArray;
                     for (var j = 0; j < images.length; j++) {
                         if (('#' + images[j]['xml:id']) == cue['smpte:backgroundImage']) {
                             captionArray.push({
-                                start: spanStartTime || pStartTime,
-                                end: spanEndTime || pEndTime,
+                                start: cueStartTime,
+                                end: cueEndTime,
                                 id: images[j]['xml:id'],
                                 data: 'data:image/' + images[j].imagetype.toLowerCase() + ';base64, ' + images[j].__text,
                                 type: 'image'
@@ -304,8 +332,8 @@ function TTMLParser() {
 
                     // We add all the cue information in captionArray.
                     captionArray.push({
-                        start: spanStartTime || pStartTime,
-                        end: spanEndTime || pEndTime,
+                        start: cueStartTime,
+                        end: cueEndTime,
                         type: 'html',
                         cueHTMLElement: finalCue,
                         regions: regions,
@@ -351,8 +379,8 @@ function TTMLParser() {
                     }
 
                     captionArray.push({
-                        start: spanStartTime || pStartTime,
-                        end: spanEndTime || pEndTime,
+                        start: cueStartTime,
+                        end: cueEndTime,
                         data:   text,
                         type:   'text'
                     });
