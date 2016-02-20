@@ -181,17 +181,7 @@ function FragmentModel(config) {
     }
 
     function executeRequest(request) {
-        var now = new Date().getTime();
-
         if (!request) return;
-
-        //Adds the ability to delay single fragment loading time to control buffer.
-        if (now < request.delayLoadingTime ) {
-            delayLoadingTimeout = setTimeout(function () {
-                executeRequest(request);
-            }, (request.delayLoadingTime - now) );
-            return;
-        }
 
         switch (request.action) {
             case FragmentRequest.ACTION_COMPLETE:
