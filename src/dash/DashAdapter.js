@@ -90,7 +90,7 @@ function DashAdapter() {
         var ln = periods.length;
 
         for (let i = 0; i < ln; i++) {
-            const period = periods[i];
+            let period = periods[i];
 
             if (streamInfo.id === period.id) return period;
         }

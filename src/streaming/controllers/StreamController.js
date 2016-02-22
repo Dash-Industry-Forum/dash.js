@@ -361,7 +361,6 @@ function StreamController() {
             fireSwitchEvent(Events.PERIOD_SWITCH_COMPLETED, from, to);
         };
 
-        //Removed a hack from 1.5 using setTimeout due to dijon.  Try without hack but remember.
         from.deactivate();
         activeStream = to;
         playbackController.initialize(activeStream.getStreamInfo());

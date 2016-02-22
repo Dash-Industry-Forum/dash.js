@@ -132,21 +132,19 @@ function Stream(config) {
      * @memberof Stream#
      */
     function deactivate() {
-        var ln = streamProcessors.length;
-        var i = 0;
-
-        for (i; i < ln; i++) {
+        let ln = streamProcessors.length;
+        for (let i = 0; i < ln; i++) {
             streamProcessors[i].reset();
         }
-
         streamProcessors = [];
         isStreamActivated = false;
         isMediaInitialized = false;
-        resetEventController();
+        clearEventController();
         eventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
     }
 
     function reset() {
+
         if (playbackController) {
             playbackController.pause();
             playbackController = null;
@@ -221,9 +219,9 @@ function Stream(config) {
         }
     }
 
-    function resetEventController() {
+    function clearEventController() {
         if (eventController) {
-            eventController.reset();
+            eventController.clear();
         }
     }
 
@@ -441,11 +439,11 @@ function Stream(config) {
 
         initialized = true;
         isStreamActivated = true;
-        eventBus.trigger(Events.STREAM_INITIALIZED, {streamInfo: streamInfo, error: error});
         if (!isMediaInitialized) return;
         if (protectionController) {
             protectionController.initialize(manifestModel.getValue(), getMediaInfo('audio'), getMediaInfo('video'));
         }
+        eventBus.trigger(Events.STREAM_INITIALIZED, {streamInfo: streamInfo, error: error});
     }
 
     function getMediaInfo(type) {
@@ -565,7 +563,6 @@ function Stream(config) {
         hasMedia: hasMedia,
         getBitrateListFor: getBitrateListFor,
         startEventController: startEventController,
-        resetEventController: resetEventController,
         isActivated: isActivated,
         isInitialized: isInitialized,
         updateData: updateData,
