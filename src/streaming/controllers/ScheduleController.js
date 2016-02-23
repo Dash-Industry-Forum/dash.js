@@ -362,10 +362,6 @@ function ScheduleController(config) {
 
         let latency = currentRepresentationInfo.DVRWindow ? currentRepresentationInfo.DVRWindow.end - playbackController.getTime() : NaN;
         metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: latency});
-
-        //if (isDynamic) { // need to validate again for dynamic after first seek
-        //    validate();
-        //}
     }
 
     function onPlaybackRateChanged(e) {
