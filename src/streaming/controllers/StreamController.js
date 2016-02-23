@@ -177,7 +177,7 @@ function StreamController() {
     }
 
     function startAutoPlay() {
-        if (!activeStream.isActivated()) return;
+        if (!activeStream.isActivated() || !initialPlayback) return;
         // only first stream must be played automatically during playback initialization
         if (activeStream.getStreamInfo().index === 0) {
             activeStream.startEventController();
