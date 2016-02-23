@@ -145,18 +145,17 @@ function ScheduleController(config) {
 
     function start() {
         if (!ready) return;
-
         addPlaylistTraceMetrics();
-
         isStopped = false;
+        //Validate will be first called after the init segement is appended. But in the case where we stop and start
+        // the ScheduleController E.g dateUpdate on manifest refresh for live streams. we need to start validate again.
+        if (!initialPlayback) {
+            validate();
+        }
         if (initialPlayback) {
             initialPlayback = false;
         }
         log('Schedule controller starting for ' + type);
-        //if starting from a pause we want to call validate to kick off the cycle that was stopped by pausing stream.
-        if (playbackController.getPlayedRanges().length > 0) {
-            validate();
-        }
     }
 
     function startOnReady() {
@@ -170,8 +169,8 @@ function ScheduleController(config) {
     function stop() {
         if (isStopped) return;
         isStopped = true;
-        log('Schedule controller stopping for ' + type);
         clearInterval(validateTimeout);
+        log('Schedule controller stopping for ' + type);
     }
 
     function getInitRequest(quality) {
@@ -202,7 +201,7 @@ function ScheduleController(config) {
     }
 
     function validate() {
-        if (isStopped || (playbackController.isPaused() && (playbackController.getPlayedRanges().length > 0) && !scheduleWhilePaused)) return;
+        if (isStopped || playbackController.isPaused() && !scheduleWhilePaused) return;
         getRequiredFragmentCount();
         //log("validate", type);
     }
@@ -241,10 +240,7 @@ function ScheduleController(config) {
     }
 
     function startValidateTimer(value) {
-        validateTimeout = setTimeout(function () {
-            //log("timeout going back to validate")
-            validate();
-        }, value);
+        validateTimeout = setTimeout(validate, value);
     }
 
     function onQualityChanged(e) {
@@ -280,6 +276,7 @@ function ScheduleController(config) {
 
     function onStreamCompleted(e) {
         if (e.fragmentModel !== fragmentModel) return;
+        stop();
         log('Stream is complete');
     }
 
@@ -295,7 +292,6 @@ function ScheduleController(config) {
 
     function onBytesAppended(e) {
         if (e.sender.getStreamProcessor() !== streamProcessor) return;
-
         validate();
     }
 
@@ -366,10 +362,6 @@ function ScheduleController(config) {
 
         let latency = currentRepresentationInfo.DVRWindow ? currentRepresentationInfo.DVRWindow.end - playbackController.getTime() : NaN;
         metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: latency});
-
-        if (isDynamic) { // need to validate again for dynamic after first seek
-            validate();
-        }
     }
 
     function onPlaybackRateChanged(e) {
