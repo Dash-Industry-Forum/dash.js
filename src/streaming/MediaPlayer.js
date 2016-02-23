@@ -76,6 +76,7 @@ function MediaPlayer() {
     const VERSION = '2.0.0';
     const PLAYBACK_NOT_INITIALIZED_ERROR = 'You must first call play() to init playback before calling this method';
     const ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the video element before calling this method';
+    const SOURCE_NOT_ATTACHED_ERROR = 'You must first call attachSource() with a valid source before calling this method';
     const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
 
     let context = this.context;
@@ -84,7 +85,6 @@ function MediaPlayer() {
     let log = debug.log;
 
     let instance,
-        element,
         source,
         protectionData,
         mediaPlayerInitialized,
@@ -182,7 +182,7 @@ function MediaPlayer() {
      * @instance
      */
     function isReady() {
-        return (!!element && !!source);
+        return (!!videoModel && !!source);
     }
 
     /**
@@ -248,10 +248,10 @@ function MediaPlayer() {
      * @instance
      */
     function setMute(value) {
-        if (!element) {
+        if (!videoModel) {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
-        element.muted = value;
+        getVideoElement().muted = value;
     }
 
     /**
@@ -261,10 +261,10 @@ function MediaPlayer() {
      * @instance
      */
     function isMuted() {
-        if (!element) {
+        if (!videoModel) {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
-        return element.muted;
+        return getVideoElement().muted;
     }
 
     /**
@@ -274,10 +274,10 @@ function MediaPlayer() {
      * @instance
      */
     function setVolume(value) {
-        if (!element) {
+        if (!videoModel) {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
-        element.volume = value;
+        getVideoElement().volume = value;
     }
 
     /**
@@ -287,10 +287,10 @@ function MediaPlayer() {
      * @instance
      */
     function getVolume() {
-        if (!element) {
+        if (!videoModel) {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
-        return element.volume;
+        return getVideoElement().volume;
     }
 
     /**
@@ -398,7 +398,7 @@ function MediaPlayer() {
         if (!playbackInitialized) {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
-        var t = element.currentTime;
+        var t = getVideoElement().currentTime;
         if (playbackController.getIsDynamic()) {
             var metric = getDVRInfoMetric();
             t = (metric === null) ? 0 : duration() - (metric.range.end - metric.time);
@@ -417,7 +417,7 @@ function MediaPlayer() {
         if (!playbackInitialized) {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
-        var d = element.duration;
+        var d = getVideoElement().duration;
 
         if (playbackController.getIsDynamic()) {
 
@@ -575,24 +575,23 @@ function MediaPlayer() {
     }
 
     /**
+     * @deprecated Since version 2.1.0.  <b>Instead use:</b>
+     * <ul>
+     * <li>{@link module:MediaPlayer#getVideoElement getVideoElement()}</li>
+     * <li>{@link module:MediaPlayer#getSource getSource()}</li>
+     * <li>{@link module:MediaPlayer#getVideoContainer getVideoContainer()}</li>
+     * <li>{@link module:MediaPlayer#getTTMLRenderingDiv getTTMLRenderingDiv()}</li>
+     * </ul>
+     *
      * @returns {@link VideoModel}
      * @memberof module:MediaPlayer
      * @instance
      */
     function getVideoModel() {
-        if (!element) {
+        if (!videoModel) {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
         return videoModel;
-    }
-
-    /**
-     * @returns {@link object}
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getVideoContainer() {
-        return videoModel ? videoModel.getVideoContainer() : null;
     }
 
     /**
@@ -859,7 +858,7 @@ function MediaPlayer() {
             textSourceBuffer = TextSourceBuffer(context).getInstance();
         }
 
-        var tracks = element.textTracks;
+        var tracks = getVideoElement().textTracks;
         var ln = tracks.length;
 
         for (var i = 0; i < ln; i++) {
@@ -1517,6 +1516,16 @@ function MediaPlayer() {
     }
 
     /**
+     * Returns instance of Video Container that was attached by calling attachVideoContainer()
+     * @returns {@link object}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getVideoContainer() {
+        return videoModel ? videoModel.getVideoContainer() : null;
+    }
+
+    /**
      * Use this method to attach an HTML5 element that wraps the video element.
      *
      * @param container The HTML5 element containing the video element.
@@ -1531,28 +1540,48 @@ function MediaPlayer() {
     }
 
     /**
+     * Returns instance of Video Element that was attached by calling attachView()
+     * @returns {object}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getVideoElement() {
+        if (!videoModel) {
+            throw ELEMENT_NOT_ATTACHED_ERROR;
+        }
+        return videoModel.getElement();
+    }
+
+    /**
      * Use this method to attach an HTML5 VideoElement for dash.js to operate upon.
      *
      * @param view An HTML5 VideoElement that has already been defined in the DOM.
      * @memberof module:MediaPlayer
      * @instance
      */
-    function attachView(view) {
+    function attachView(element) {
         if (!mediaPlayerInitialized) {
             throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
         }
         videoModel = null;
-        element = view;
         if (element) {
             videoModel = VideoModel(context).getInstance();
             videoModel.initialize();
             videoModel.setElement(element);
-            // Workaround to force Firefox to fire the canplay event.
-            element.preload = 'auto';
             detectProtection();
             detectMetricsReporting();
         }
         resetAndInitializePlayback();
+    }
+
+    /**
+     * Returns instance of Div that was attached by calling attachTTMLRenderingDiv()
+     * @returns {@link object}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getTTMLRenderingDiv() {
+        return videoModel ? videoModel.getTTMLRenderingDiv() : null;
     }
 
     /**
@@ -1567,6 +1596,19 @@ function MediaPlayer() {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
         videoModel.setTTMLRenderingDiv(div);
+    }
+
+    /**
+     * Returns the source string or manifest that was attached by calling attachSource()
+     * @returns {string | manifest}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getSource() {
+        if (!source) {
+            throw SOURCE_NOT_ATTACHED_ERROR;
+        }
+        return source;
     }
 
     /**
@@ -1752,7 +1794,7 @@ function MediaPlayer() {
             metricsReportingController = metricsReporting.createMetricsReporting({
                 log: log,
                 eventBus: eventBus,
-                mediaElement: videoModel.getElement(),
+                mediaElement: getVideoElement(),
                 dashManifestModel: dashManifestModel,
                 metricsModel: metricsModel
             });
@@ -1791,13 +1833,6 @@ function MediaPlayer() {
 
     function initializePlayback() {
         if (!playbackInitialized) {
-            if (!mediaPlayerInitialized) {
-                throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
-            }
-            if (!element || !source) {
-                throw 'Missing view or source.';
-            }
-
             playbackInitialized = true;
             log('Playback Initialized');
             createControllers();
@@ -1839,6 +1874,9 @@ function MediaPlayer() {
         getBufferLength: getBufferLength,
         getVideoModel: getVideoModel,
         getVideoContainer: getVideoContainer,
+        getTTMLRenderingDiv: getTTMLRenderingDiv,
+        getVideoElement: getVideoElement,
+        getSource: getSource,
         setLiveDelayFragmentCount: setLiveDelayFragmentCount,
         useSuggestedPresentationDelay: useSuggestedPresentationDelay,
         enableLastBitrateCaching: enableLastBitrateCaching,
