@@ -29,213 +29,121 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import XlinkController from './controllers/XlinkController.js';
-import XlinkLoader from './XlinkLoader.js';
+import XHRLoader from './XHRLoader.js';
+import URLUtils from './utils/URLUtils.js';
+import TextRequest from './vo/TextRequest.js';
 import Error from './vo/Error.js';
 import HTTPRequest from './vo/metrics/HTTPRequest.js';
 import EventBus from '../core/EventBus.js';
 import Events from '../core/events/Events.js';
 import FactoryMaker from '../core/FactoryMaker.js';
-import Debug from '../core/Debug.js';
+
+const MANIFEST_LOADER_ERROR_PARSING_FAILURE = 1;
+const MANIFEST_LOADER_ERROR_LOADING_FAILURE = 2;
+const MANIFEST_LOADER_MESSAGE_PARSING_FAILURE = 'parsing failed';
 
 function ManifestLoader(config) {
 
-    const RETRY_ATTEMPTS = 3;
-    const RETRY_INTERVAL = 500;
-    const PARSERERROR_ERROR_CODE = 1;
-
-    let context = this.context;
-    let log = Debug(context).getInstance().log;
-    let eventBus = EventBus(context).getInstance();
-
-    let parser = config.parser;
-    let errHandler = config.errHandler;
-    let metricsModel = config.metricsModel;
-    let requestModifier = config.requestModifier;
+    const context = this.context;
+    const eventBus = EventBus(context).getInstance();
+    const urlUtils = URLUtils(context).getInstance();
+    const parser = config.parser;
 
     let instance,
-        xlinkController,
-        remainingAttempts;
+        xhrLoader,
+        xlinkController;
 
     function setup() {
-        remainingAttempts = RETRY_ATTEMPTS;
-        let xlinkLoader = XlinkLoader(context).create({
-            errHandler: errHandler,
-            metricsModel: metricsModel,
-            requestModifier: requestModifier
-        });
-        xlinkController = XlinkController(context).create({
-            xlinkLoader: xlinkLoader
-        });
         eventBus.on(Events.XLINK_READY, onXlinkReady, instance);
+
+        xhrLoader = XHRLoader(context).create({
+            errHandler: config.errHandler,
+            metricsModel: config.metricsModel,
+            requestModifier: config.requestModifier
+        });
+
+        xlinkController = XlinkController(context).create({
+            errHandler: config.errHandler,
+            metricsModel: config.metricsModel,
+            requestModifier: config.requestModifier
+        });
+    }
+
+    function onXlinkReady(event) {
+        eventBus.trigger(
+            Events.INTERNAL_MANIFEST_LOADED, {
+                manifest: event.manifest
+            }
+        );
     }
 
     function load (url) {
-        var baseUrl = parseBaseUrl(url);
+        const request = new TextRequest(url, HTTPRequest.MPD_TYPE);
 
-        var request = new XMLHttpRequest();
-        var requestTime = new Date();
-        var needFailureReport = true;
-        var lastTraceTime = requestTime;
-        var lastTraceReceivedCount = 0;
-        var traces = [];
+        xhrLoader.load({
+            request: request,
+            success: function (data, textStatus, xhr) {
+                var actualUrl;
+                var baseUrl;
 
-        var manifest,
-            onload,
-            report,
-            progress,
-            firstProgressCall;
-
-        onload = function () {
-            var actualUrl = null;
-            var errorMsg;
-            var loadedTime = new Date();
-
-            if (request.status < 200 || request.status > 299) {
-                return;
-            }
-
-
-            needFailureReport = false;
-            remainingAttempts = RETRY_ATTEMPTS;
-
-            // Handle redirects for the MPD - as per RFC3986 Section 5.1.3
-            if (request.responseURL && request.responseURL !== url) {
-                baseUrl = parseBaseUrl(request.responseURL);
-                actualUrl = request.responseURL;
-            }
-
-            metricsModel.addHttpRequest('stream',
-                null,
-                HTTPRequest.MPD_TYPE,
-                url,
-                actualUrl,
-                null,
-                requestTime,
-                request.firstByteDate || null,
-                loadedTime,
-                request.status,
-                null,
-                request.getAllResponseHeaders(),
-                traces);
-
-            manifest = parser.parse(request.responseText, baseUrl, xlinkController);
-
-            if (manifest) {
-                manifest.url = actualUrl || url;
-
-                // URL from which the MPD was originally retrieved (MPD updates will not change this value)
-                if (!manifest.originalUrl) {
-                    manifest.originalUrl = manifest.url;
+                // Handle redirects for the MPD - as per RFC3986 Section 5.1.3
+                if (xhr.responseURL && xhr.responseURL !== url) {
+                    baseUrl = urlUtils.parseBaseUrl(xhr.responseURL);
+                    actualUrl = xhr.responseURL;
+                } else {
+                    baseUrl = urlUtils.parseBaseUrl(url);
                 }
 
-                manifest.loadedTime = loadedTime;
-                metricsModel.addManifestUpdate('stream', manifest.type, requestTime, loadedTime, manifest.availabilityStartTime);
-                xlinkController.resolveManifestOnLoad(manifest);
-            } else {
-                errorMsg = 'Failed loading manifest: ' + url + ', parsing failed';
-                eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {manifest: null, error: new Error(PARSERERROR_ERROR_CODE, errorMsg, null)});
-                log(errorMsg);
-            }
-        };
+                const manifest = parser.parse(data, baseUrl, xlinkController);
 
-        report = function () {
-            if (!needFailureReport) {
-                return;
-            }
-            needFailureReport = false;
+                if (manifest) {
+                    manifest.url = actualUrl || url;
 
-            metricsModel.addHttpRequest('stream',
-                null,
-                HTTPRequest.MPD_TYPE,
-                url,
-                request.responseURL || null,
-                null,
-                requestTime,
-                request.firstByteDate || null,
-                new Date(),
-                request.status,
-                null,
-                request.getAllResponseHeaders(),
-                null);
+                    // URL from which the MPD was originally retrieved (MPD updates will not change this value)
+                    if (!manifest.originalUrl) {
+                        manifest.originalUrl = manifest.url;
+                    }
 
-            if (remainingAttempts > 0) {
-                log('Failed loading manifest: ' + url + ', retry in ' + RETRY_INTERVAL + 'ms' + ' attempts: ' + remainingAttempts);
-                remainingAttempts--;
-                setTimeout(function () {
-                    load(url);
-                }, RETRY_INTERVAL);
-            } else {
-                log('Failed loading manifest: ' + url + ' no retry attempts left');
-                errHandler.downloadError('manifest', url, request);
-                eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {error: new Error('Failed loading manifest: ' + url + ' no retry attempts left')});
-            }
-        };
-
-        progress = function (event) {
-            var currentTime = new Date();
-
-            if (firstProgressCall) {
-                firstProgressCall = false;
-                if (!event.lengthComputable || (event.lengthComputable && event.total !== event.loaded)) {
-                    request.firstByteDate = currentTime;
+                    manifest.loadedTime = new Date();
+                    xlinkController.resolveManifestOnLoad(manifest);
+                } else {
+                    eventBus.trigger(
+                        Events.INTERNAL_MANIFEST_LOADED, {
+                            manifest: null,
+                            error: new Error(
+                                MANIFEST_LOADER_ERROR_PARSING_FAILURE,
+                                MANIFEST_LOADER_MESSAGE_PARSING_FAILURE
+                            )
+                        }
+                    );
                 }
+            },
+            error: function (xhr, statusText, errorText) {
+                eventBus.trigger(
+                    Events.INTERNAL_MANIFEST_LOADED, {
+                        manifest: null,
+                        error: new Error(
+                            MANIFEST_LOADER_ERROR_LOADING_FAILURE,
+                            `Failed loading manifest: ${url}, ${errorText}`
+                        )
+                    }
+                );
             }
-
-            if (event.lengthComputable) {
-                request.bytesLoaded = event.loaded;
-                request.bytesTotal = event.total;
-            }
-
-            traces.push({
-                s: lastTraceTime,
-                d: currentTime.getTime() - lastTraceTime.getTime(),
-                b: [event.loaded ? event.loaded - lastTraceReceivedCount : 0]
-            });
-
-            lastTraceTime = currentTime;
-            lastTraceReceivedCount = event.loaded;
-        };
-
-        try {
-            //log("Start loading manifest: " + url);
-            request.onload = onload;
-            request.onloadend = report;
-            request.onerror = report;
-            request.onprogress = progress;
-            request.open('GET', requestModifier.modifyRequestURL(url), true);
-            request = requestModifier.modifyRequestHeader(request);
-            request.send();
-        } catch (e) {
-            request.onerror();
-        }
+        });
     }
 
     function reset() {
         eventBus.off(Events.XLINK_READY, onXlinkReady, instance);
-        requestModifier = null;
 
         if (xlinkController) {
             xlinkController.reset();
             xlinkController = null;
         }
-    }
 
-    function parseBaseUrl(url) {
-        var base = '';
-
-        if (url.indexOf('/') !== -1)
-        {
-            if (url.indexOf('?') !== -1) {
-                url = url.substring(0, url.indexOf('?'));
-            }
-            base = url.substring(0, url.lastIndexOf('/') + 1);
+        if (xhrLoader) {
+            xhrLoader.abort();
+            xhrLoader = null;
         }
-
-        return base;
-    }
-
-    function onXlinkReady(event) {
-        eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, { manifest: event.manifest });
     }
 
     instance = {
@@ -244,8 +152,13 @@ function ManifestLoader(config) {
     };
 
     setup();
+
     return instance;
 }
 
 ManifestLoader.__dashjs_factory_name = 'ManifestLoader';
-export default FactoryMaker.getClassFactory(ManifestLoader);
+
+const factory = FactoryMaker.getClassFactory(ManifestLoader);
+factory.MANIFEST_LOADER_ERROR_PARSING_FAILURE = MANIFEST_LOADER_ERROR_PARSING_FAILURE;
+factory.MANIFEST_LOADER_ERROR_LOADING_FAILURE = MANIFEST_LOADER_ERROR_LOADING_FAILURE;
+export default factory;
