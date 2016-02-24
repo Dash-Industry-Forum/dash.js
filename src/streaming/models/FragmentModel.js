@@ -53,7 +53,6 @@ function FragmentModel(config) {
         scheduleController,
         executedRequests,
         loadingRequests,
-        delayLoadingTimeout,
         fragmentLoader;
 
     function setup() {
@@ -63,7 +62,6 @@ function FragmentModel(config) {
         loadingRequests = [];
 
         eventBus.on(Events.LOADING_COMPLETED, onLoadingCompleted, instance);
-        eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
     }
 
     function setLoader(value) {
@@ -202,7 +200,6 @@ function FragmentModel(config) {
 
     function reset() {
         eventBus.off(Events.LOADING_COMPLETED, onLoadingCompleted, this);
-        eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
 
         if (fragmentLoader) {
             fragmentLoader.abort();
@@ -315,12 +312,6 @@ function FragmentModel(config) {
 
         addSchedulingInfoMetrics(request, error ? FRAGMENT_MODEL_FAILED : FRAGMENT_MODEL_EXECUTED);
         eventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, { request: request, response: response, error: error, sender: this });
-    }
-
-    function onPlaybackSeeking () {
-        if (delayLoadingTimeout !== undefined) {
-            clearTimeout(delayLoadingTimeout);
-        }
     }
 
     instance = {
