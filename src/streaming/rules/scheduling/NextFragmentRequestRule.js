@@ -91,6 +91,7 @@ function NextFragmentRequestRule(config) {
         if (request) {
             adapter.setIndexHandlerTime(streamProcessor, request.startTime + request.duration);
             request.delayLoadingTime = new Date().getTime() + scheduleController.getTimeToLoadDelay();
+            scheduleController.setTimeToLoadDelay(0); // only delay one fragment
         }
 
         callback(SwitchRequest(context).create(request, p));
