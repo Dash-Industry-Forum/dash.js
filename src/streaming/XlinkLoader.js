@@ -29,173 +29,81 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Error from './vo/Error.js';
+import XHRLoader from './XHRLoader.js';
 import HTTPRequest from './vo/metrics/HTTPRequest.js';
+import TextRequest from './vo/TextRequest.js';
 import EventBus from '../core/EventBus.js';
 import Events from '../core/events/Events.js';
-import Debug from '../core/Debug.js';
 import FactoryMaker from '../core/FactoryMaker.js';
+
+const XLINK_LOADER_ERROR_LOADING_FAILURE = 1;
 
 function XlinkLoader(config) {
 
-    const RETRY_ATTEMPTS = 1;
-    const RETRY_INTERVAL = 500;
     const RESOLVE_TO_ZERO = 'urn:mpeg:dash:resolve-to-zero:2013';
 
-    let instance;
-    let context  = this.context;
-    let log = Debug(context).getInstance().log;
-    let eventBus = EventBus(context).getInstance();
+    const context  = this.context;
+    const eventBus = EventBus(context).getInstance();
 
-    let errHandler = config.errHandler;
-    let metricsModel = config.metricsModel;
-    let requestModifier = config.requestModifier;
+    let xhrLoader = XHRLoader(context).create({
+        errHandler: config.errHandler,
+        metricsModel: config.metricsModel,
+        requestModifier: config.requestModifier
+    });
+
+    let instance;
 
     function load(url, element, resolveObject) {
-        if (url === RESOLVE_TO_ZERO) {
-            element.resolvedContent = null;
+        const report = function (content, resolveToZero) {
             element.resolved = true;
-            eventBus.trigger(Events.XLINK_ELEMENT_LOADED, {element: element, resolveObject: resolveObject});
+            element.resolvedContent = content ? content : null;
+
+            eventBus.trigger(Events.XLINK_ELEMENT_LOADED, {
+                element: element,
+                resolveObject: resolveObject,
+                error: content || resolveToZero ?
+                    null :
+                    new Error(
+                        XLINK_LOADER_ERROR_LOADING_FAILURE,
+                        'Failed loading Xlink element: ' + url
+                    )
+            });
+        };
+
+        if (url === RESOLVE_TO_ZERO) {
+            report(null, true);
         } else {
-            doLoad(url, element, resolveObject, RETRY_ATTEMPTS);
+            const request = new TextRequest(url, HTTPRequest.XLINK_TYPE);
+
+            xhrLoader.load({
+                request: request,
+                success: function (data) {
+                    report(data);
+                },
+                error: function () {
+                    report(null);
+                }
+            });
         }
     }
 
-    function doLoad(url, element, resolveObject, remainingAttempts) {
-        var request = new XMLHttpRequest();
-        var needFailureReport = true;
-        var firstProgressCall = true;
-        var requestTime = new Date();
-        var traces = [];
-        var lastTraceTime = requestTime;
-        var lastTraceReceivedCount = 0;
-
-        var report,
-            onload,
-            progress,
-            content;
-
-        onload = function () {
-            if (request.status < 200 || request.status > 299) {
-                return;
-            }
-            needFailureReport = false;
-
-            metricsModel.addHttpRequest('stream',
-                null,
-                HTTPRequest.XLINK_EXPANSION_TYPE,
-                url,
-                request.responseURL || null,
-                null,
-                requestTime,
-                request.firstByteDate || null,
-                new Date(),
-                request.status,
-                null,
-                request.getAllResponseHeaders(),
-                traces);
-
-            content = request.responseText;
-            element.resolved = true;
-
-            if (content) {
-                element.resolvedContent = content;
-                eventBus.trigger(Events.XLINK_ELEMENT_LOADED, {element: element, resolveObject: resolveObject});
-            } else {
-                element.resolvedContent = null;
-                eventBus.trigger(Events.XLINK_ELEMENT_LOADED,
-                    {
-                        element: element,
-                        resolveObject: resolveObject,
-                        error: new Error(null, 'Failed loading Xlink element: ' + url, null)
-                    });
-            }
-        };
-
-        report = function () {
-            if (!needFailureReport) {
-                return;
-            }
-            needFailureReport = false;
-
-            metricsModel.addHttpRequest('stream',
-                null,
-                HTTPRequest.XLINK_EXPANSION_TYPE,
-                url,
-                request.responseURL || null,
-                null,
-                requestTime,
-                request.firstByteDate || null,
-                new Date(),
-                request.status,
-                null,
-                request.getAllResponseHeaders(),
-                null);
-
-            if (remainingAttempts > 0) {
-                log('Failed loading xLink content: ' + url + ', retry in ' + RETRY_INTERVAL + 'ms' + ' attempts: ' + remainingAttempts);
-                remainingAttempts--;
-                setTimeout(function () {
-                    doLoad(url, element, resolveObject, remainingAttempts);
-                }, RETRY_INTERVAL);
-            } else {
-                log('Failed loading Xlink content: ' + url + ' no retry attempts left');
-                errHandler.downloadError('xlink', url, request);
-                element.resolved = true;
-                element.resolvedContent = null;
-                eventBus.trigger(Events.XLINK_ELEMENT_LOADED,
-                    {
-                        element: element,
-                        resolveObject: resolveObject,
-                        error: new Error('Failed loading xlink Element: ' + url + ' no retry attempts left')
-                    });
-            }
-        };
-
-        progress = function (event) {
-            var currentTime = new Date();
-
-            if (firstProgressCall) {
-                firstProgressCall = false;
-                if (!event.lengthComputable || (event.lengthComputable && event.total !== event.loaded)) {
-                    request.firstByteDate = currentTime;
-                }
-            }
-
-            if (event.lengthComputable) {
-                request.bytesLoaded = event.loaded;
-                request.bytesTotal = event.total;
-            }
-
-            traces.push({
-                s: lastTraceTime,
-                d: currentTime.getTime() - lastTraceTime.getTime(),
-                b: [event.loaded ? event.loaded - lastTraceReceivedCount : 0]
-            });
-
-            lastTraceTime = currentTime;
-            lastTraceReceivedCount = event.loaded;
-        };
-
-        try {
-            //log("Start loading manifest: " + url);
-            request.onload = onload;
-            request.onloadend = report;
-            request.onerror = report;
-            request.onprogress = progress;
-            request.open('GET', requestModifier.modifyRequestURL(url), true);
-            request.send();
-        } catch (e) {
-            log('Xlink loading Error');
-            request.onerror();
+    function reset() {
+        if (xhrLoader) {
+            xhrLoader.abort();
+            xhrLoader = null;
         }
     }
 
     instance = {
-        load: load
+        load: load,
+        reset: reset
     };
 
     return instance;
 }
 
 XlinkLoader.__dashjs_factory_name = 'XlinkLoader';
-export default FactoryMaker.getClassFactory(XlinkLoader);
+
+const factory = FactoryMaker.getClassFactory(XlinkLoader);
+factory.XLINK_LOADER_ERROR_LOADING_FAILURE = XLINK_LOADER_ERROR_LOADING_FAILURE;
+export default factory;

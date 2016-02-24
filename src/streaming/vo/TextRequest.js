@@ -32,33 +32,16 @@
  * @class
  * @ignore
  */
-class FragmentRequest {
-    constructor() {
-        this.action = FragmentRequest.ACTION_DOWNLOAD;
-        this.startTime = NaN;
-        this.mediaType = null;
-        this.mediaInfo = null;
-        this.type = null;
-        this.duration = NaN;
-        this.timescale = NaN;
-        this.range = null;
-        this.url = null;
-        this.requestStartDate = null;
-        this.firstByteDate = null;
-        this.requestEndDate = null;
-        this.quality = NaN;
-        this.index = NaN;
-        this.availabilityStartTime = null;
-        this.availabilityEndTime = null;
-        this.wallStartTime = null;
-        this.bytesLoaded = NaN;
-        this.bytesTotal = NaN;
-        this.delayLoadingTime = NaN;
-        this.responseType = 'arraybuffer';
+import FragmentRequest from './FragmentRequest.js';
+
+class TextRequest extends FragmentRequest {
+    constructor(url, type) {
+        super();
+        this.url = url || null;
+        this.type = type || null;
+        this.mediaType = 'stream';
+        this.responseType = 'text';
     }
 }
 
-FragmentRequest.ACTION_DOWNLOAD = 'download';
-FragmentRequest.ACTION_COMPLETE = 'complete';
-
-export default FragmentRequest;
+export default TextRequest;
