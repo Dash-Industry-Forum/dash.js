@@ -215,7 +215,7 @@ function FragmentModel(config) {
         eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
 
         if (fragmentLoader) {
-            fragmentLoader.abort();
+            fragmentLoader.reset();
             fragmentLoader = null;
         }
 

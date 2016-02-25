@@ -128,6 +128,12 @@ function FragmentLoader(config) {
     function abort() {
         if (xhrLoader) {
             xhrLoader.abort();
+        }
+    }
+
+    function reset() {
+        if (xhrLoader) {
+            xhrLoader.abort();
             xhrLoader = null;
         }
     }
@@ -135,7 +141,8 @@ function FragmentLoader(config) {
     instance = {
         checkForExistence: checkForExistence,
         load: load,
-        abort: abort
+        abort: abort,
+        reset: reset
     };
 
     setup();
