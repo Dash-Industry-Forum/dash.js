@@ -325,9 +325,9 @@ function DashManifestModel() {
 
         for (var i = 0; i < ln; i++) {
             bitrateList.push({
-                bandwidth:reps[i].bandwidth,
-                width:reps[i].width || 0,
-                height:reps[i].height || 0
+                bandwidth: reps[i].bandwidth,
+                width: reps[i].width || 0,
+                height: reps[i].height || 0
             });
         }
 

@@ -373,7 +373,7 @@ function MediaController() {
             var tmp;
 
             trackArr.forEach(function (track) {
-                tmp = Math.max.apply(Math, track.bitrateList.map(function(obj) { return obj.bandwidth; }));
+                tmp = Math.max.apply(Math, track.bitrateList.map(function (obj) { return obj.bandwidth; }));
 
                 if (tmp > max) {
                     max = tmp;
