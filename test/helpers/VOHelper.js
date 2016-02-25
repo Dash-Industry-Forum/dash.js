@@ -139,7 +139,23 @@ class VoHelper {
 
         mediaInfo.id = 'DUMMY_MEDIA-01';
         mediaInfo.type = type;
-        mediaInfo.bitrateList = [1000, 2000, 3000];
+        mediaInfo.bitrateList = [
+            {
+                bandwidth: 1000,
+                width: 360,
+                height: 480
+            },
+            {
+                bandwidth: 2000,
+                width: 640,
+                height: 480
+            },
+            {
+                bandwidth: 3000,
+                width: 1280,
+                height: 720
+            }
+        ];
         mediaInfo.representationCount = 3;
         mediaInfo.streamInfo = this.getDummyStreamInfo();
 
