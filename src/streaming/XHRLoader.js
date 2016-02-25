@@ -205,12 +205,12 @@ function XHRLoader(cfg) {
             xhr.onerror = onloadend;
             xhr.onprogress = progress;
 
-            xhrs.push(xhr);
-
             // Adds the ability to delay single fragment loading time to control buffer.
             let now = new Date().getTime();
-            if (now >= request.delayLoadingTime) {
+            if (isNaN(request.delayLoadingTime) || now >= request.delayLoadingTime) {
                 // no delay - just send xhr
+
+                xhrs.push(xhr);
                 xhr.send();
             } else {
                 // delay
@@ -223,6 +223,7 @@ function XHRLoader(cfg) {
                         delayedXhrs.splice(delayedXhrs.indexOf(delayedXhr), 1);
                     }
                     try {
+                        xhrs.push(delayedXhr.xhr);
                         delayedXhr.xhr.send();
                     } catch (e) {
                         delayedXhr.xhr.onerror();
@@ -258,10 +259,7 @@ function XHRLoader(cfg) {
      * @instance
      */
     function abort() {
-        delayedXhrs.forEach(function (x) {
-            clearTimeout(x.delayTimeout);
-            x.xhr.onloadend();
-        });
+        delayedXhrs.forEach(x => clearTimeout(x.delayTimeout));
         delayedXhrs = [];
 
         xhrs.forEach(x => x.abort());
