@@ -147,24 +147,22 @@ function ScheduleController(config) {
         if (!ready) return;
         addPlaylistTraceMetrics();
         isStopped = false;
-        //Validate will be first called after the init segement is appended. But in the case where we stop and start
-        // the ScheduleController E.g dateUpdate on manifest refresh for live streams. we need to start validate again.
-        if (!initialPlayback) {
+
+        if (initialPlayback) {
+            getInitRequest(currentRepresentationInfo.quality);
+        } else {
+            //Validate will be first called after the init segment is appended. But in the case where we stop and start
+            //the ScheduleController E.g dateUpdate on manifest refresh for live streams. we need to start validate again.
             validate();
         }
+
         if (initialPlayback) {
             initialPlayback = false;
         }
         log('Schedule controller starting for ' + type);
     }
 
-    function startOnReady() {
-        if (initialPlayback) {
-            getInitRequest(currentRepresentationInfo.quality);
-        }
 
-        start();
-    }
 
     function stop() {
         if (isStopped) return;
@@ -269,9 +267,7 @@ function ScheduleController(config) {
             ready = true;
         }
 
-        if (ready) {
-            startOnReady();
-        }
+        start();
     }
 
     function onStreamCompleted(e) {
@@ -355,6 +351,10 @@ function ScheduleController(config) {
             isFragmentLoading = false;
         }
 
+        if (isStopped) {
+            start();
+        }
+
         let metrics = metricsModel.getMetricsFor('stream');
         let manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metrics);
 
@@ -395,7 +395,7 @@ function ScheduleController(config) {
         metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: actualStartTime, presentationStartTime: liveEdgeTime, latency: liveEdgeTime - actualStartTime, clientTimeOffset: timelineConverter.getClientTimeOffset()});
 
         ready = true;
-        startOnReady();
+        start();
     }
 
     function getSeekTarget() {
