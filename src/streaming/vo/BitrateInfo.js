@@ -36,6 +36,8 @@ class BitrateInfo {
     constructor() {
         this.mediaType = null;
         this.bitrate = null;
+        this.width = null;
+        this.height = null;
         this.qualityIndex = NaN;
     }
 }
