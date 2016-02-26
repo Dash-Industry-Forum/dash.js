@@ -28,7 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import SwitchRequest from '../SwitchRequest.js';
 import Debug from '../../../core/Debug.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
@@ -42,27 +41,25 @@ function NextFragmentRequestRule(config) {
     let virtualBuffer = config.virtualBuffer;
     let textSourceBuffer = config.textSourceBuffer;
 
-    function execute(rulesContext, callback) {
+    function execute(streamProcessor) {
 
-        let mediaType = rulesContext.getMediaInfo().type;
-        let mediaInfo = rulesContext.getMediaInfo();
-        let streamId = rulesContext.getStreamInfo().id;
-        let streamProcessor = rulesContext.getStreamProcessor();
-        let scheduleController = streamProcessor.getScheduleController();
         let representationInfo = streamProcessor.getCurrentRepresentationInfo();
+        let mediaInfo = representationInfo.mediaInfo;
+        let mediaType = mediaInfo.type;
+        let streamId = mediaInfo.streamInfo.id;
+        let scheduleController = streamProcessor.getScheduleController();
         let seekTarget = scheduleController.getSeekTarget();
         let hasSeekTarget = !isNaN(seekTarget);
-        let p = hasSeekTarget ? SwitchRequest.STRONG : SwitchRequest.DEFAULT;
         let keepIdx = !hasSeekTarget;
         let time = hasSeekTarget ? seekTarget : adapter.getIndexHandlerTime(streamProcessor);
         let buffer = streamProcessor.getBuffer();
-        let appendedChunks;
         let range = null;
+        let appendedChunks;
         let request;
 
-        if (isNaN(time) || (mediaType === 'fragmentedText' && textSourceBuffer.getAllTracksAreDisabled())) {
-            callback(SwitchRequest(context).create(null, p));
-            return;
+        if (isNaN(time) ||
+            (mediaType === 'fragmentedText' && textSourceBuffer.getAllTracksAreDisabled())) {
+            return null;
         }
 
         if (hasSeekTarget) {
@@ -93,7 +90,7 @@ function NextFragmentRequestRule(config) {
             request.delayLoadingTime = new Date().getTime() + scheduleController.getTimeToLoadDelay();
         }
 
-        callback(SwitchRequest(context).create(request, p));
+        return request;
     }
 
     instance = {

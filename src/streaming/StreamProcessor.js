@@ -37,7 +37,6 @@ import MediaController from './controllers/MediaController.js';
 import TextController from './controllers/TextController.js';
 import ScheduleController from './controllers/ScheduleController.js';
 import RulesController from './rules/RulesController.js';
-import ScheduleRulesCollection from './rules/scheduling/ScheduleRulesCollection.js';
 import MediaPlayerModel from './models/MediaPlayerModel.js';
 import MetricsModel from './models/MetricsModel.js';
 import FragmentLoader from './FragmentLoader.js';
@@ -103,7 +102,6 @@ function StreamProcessor(config) {
             dashMetrics: DashMetrics(context).getInstance(),
             dashManifestModel: DashManifestModel(context).getInstance(),
             timelineConverter: timelineConverter,
-            scheduleRulesCollection: ScheduleRulesCollection(context).getInstance(),
             rulesController: RulesController(context).getInstance(),
             mediaPlayerModel: MediaPlayerModel(context).getInstance(),
         });
