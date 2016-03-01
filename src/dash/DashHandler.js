@@ -661,7 +661,7 @@ function DashHandler(config) {
         return segments;
     }
 
-    function getSegments(representation) {
+    function updateSegments(representation) {
         var segments;
         var type = representation.segmentInfoType;
 
@@ -679,8 +679,6 @@ function DashHandler(config) {
 
             onSegmentListUpdated(representation, segments);
         }
-
-        return segments;
     }
 
     function onSegmentListUpdated(representation, segments) {
@@ -709,7 +707,7 @@ function DashHandler(config) {
 
         representation.segments = null;
 
-        getSegments(representation);
+        updateSegments(representation);
 
         return representation;
     }
@@ -880,7 +878,7 @@ function DashHandler(config) {
 
         index = getIndexForSegments(time, representation, timeThreshold);
         //Index may be -1 if getSegments needs to update.  So after getSegments is called and updated then try to get index again.
-        getSegments(representation);
+        updateSegments(representation);
         if (index < 0) {
             index = getIndexForSegments(time, representation, timeThreshold);
         }
@@ -941,7 +939,7 @@ function DashHandler(config) {
             request.mediaInfo = streamProcessor.getMediaInfo();
             log('Signal complete.');
         } else {
-            getSegments(representation);
+            updateSegments(representation);
             segment = getSegmentByIndex(index, representation);
             request = getRequestForSegment(segment);
             if (!segment && isDynamic) {
