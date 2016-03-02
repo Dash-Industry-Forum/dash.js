@@ -30,11 +30,17 @@
  */
 
 import PlayList from '../vo/metrics/PlayList.js';
-import ScheduleRulesCollection from '../rules/scheduling/ScheduleRulesCollection.js';
-import SwitchRequest from '../rules/SwitchRequest.js';
 import PlaybackController from './PlaybackController.js';
 import AbrController from './AbrController.js';
 import BufferController from './BufferController.js';
+import BufferLevelRule from '../rules/scheduling/BufferLevelRule.js';
+import NextFragmentRequestRule from '../rules/scheduling/NextFragmentRequestRule.js';
+import TextSourceBuffer from '../TextSourceBuffer.js';
+import MetricsModel from '../models/MetricsModel.js';
+import DashMetrics from '../../dash/DashMetrics.js';
+import DashAdapter from '../../dash/DashAdapter.js';
+import SourceBufferController from '../controllers/SourceBufferController.js';
+import VirtualBuffer from '../VirtualBuffer.js';
 import LiveEdgeFinder from '../utils/LiveEdgeFinder.js';
 import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
@@ -53,8 +59,6 @@ function ScheduleController(config) {
     let dashMetrics = config.dashMetrics;
     let dashManifestModel = config.dashManifestModel;
     let timelineConverter = config.timelineConverter;
-    let scheduleRulesCollection = config.scheduleRulesCollection;
-    let rulesController = config.rulesController;
     let mediaPlayerModel = config.mediaPlayerModel;
 
     let instance,
@@ -78,6 +82,8 @@ function ScheduleController(config) {
         fragmentController,
         liveEdgeFinder,
         bufferController,
+        bufferLevelRule,
+        nextFragmentRequestRule,
         scheduleWhilePaused;
 
 
@@ -103,6 +109,21 @@ function ScheduleController(config) {
         fragmentModel = fragmentController.getModel(this);
         isDynamic = streamProcessor.isDynamic();
         scheduleWhilePaused = mediaPlayerModel.getScheduleWhilePaused();
+
+        bufferLevelRule = BufferLevelRule(context).create({
+            dashMetrics: DashMetrics(context).getInstance(),
+            metricsModel: MetricsModel(context).getInstance(),
+            textSourceBuffer: TextSourceBuffer(context).getInstance()
+        });
+
+        nextFragmentRequestRule = NextFragmentRequestRule(context).create({
+            adapter: DashAdapter(context).getInstance(),
+            sourceBufferController: SourceBufferController(context).getInstance(),
+            virtualBuffer: VirtualBuffer(context).getInstance(),
+            textSourceBuffer: TextSourceBuffer(context).getInstance()
+
+        });
+
 
         if (dashManifestModel.getIsTextTrack(type)) {
             eventBus.on(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
@@ -147,24 +168,22 @@ function ScheduleController(config) {
         if (!ready) return;
         addPlaylistTraceMetrics();
         isStopped = false;
-        //Validate will be first called after the init segement is appended. But in the case where we stop and start
-        // the ScheduleController E.g dateUpdate on manifest refresh for live streams. we need to start validate again.
-        if (!initialPlayback) {
+
+        if (initialPlayback) {
+            getInitRequest(currentRepresentationInfo.quality);
+        } else {
+            //Validate will be first called after the init segment is appended. But in the case where we stop and start
+            //the ScheduleController E.g dateUpdate on manifest refresh for live streams. we need to start validate again.
             validate();
         }
+
         if (initialPlayback) {
             initialPlayback = false;
         }
         log('Schedule controller starting for ' + type);
     }
 
-    function startOnReady() {
-        if (initialPlayback) {
-            getInitRequest(currentRepresentationInfo.quality);
-        }
 
-        start();
-    }
 
     function stop() {
         if (isStopped) return;
@@ -202,40 +221,26 @@ function ScheduleController(config) {
 
     function validate() {
         if (isStopped || playbackController.isPaused() && !scheduleWhilePaused) return;
-        getRequiredFragmentCount();
-        //log("validate", type);
-    }
-
-    function getRequiredFragmentCount() {
-        let rules = scheduleRulesCollection.getRules(ScheduleRulesCollection.FRAGMENTS_TO_SCHEDULE_RULES);
-        rulesController.applyRules(rules, streamProcessor, onGetRequiredFragmentCount, 0, function (currentValue, newValue) {
-            currentValue = currentValue === SwitchRequest.NO_CHANGE ? 0 : currentValue;
-            return Math.max(currentValue, newValue);
-        });
-    }
-
-    function onGetRequiredFragmentCount(result) {
-        if (result.value === 1 && !isFragmentLoading && (dashManifestModel.getIsTextTrack(type) || !bufferController.getIsAppendingInProgress())) {
+        //log("validating", type);
+        let readyToLoad = bufferLevelRule.execute(streamProcessor);
+        if (readyToLoad && !isFragmentLoading &&
+            (dashManifestModel.getIsTextTrack(type) || !bufferController.getIsAppendingInProgress())) {
             isFragmentLoading = true;
-            abrController.getPlaybackQuality(streamProcessor,  getNextFragment());
-        } else {
-            startValidateTimer(1000);
-        }
-    }
 
-    function getNextFragment() {
-        let rules = scheduleRulesCollection.getRules(ScheduleRulesCollection.NEXT_FRAGMENT_RULES);
-        rulesController.applyRules(rules, streamProcessor, onGetNextFragment, null, function (currentValue, newValue) {
-            return newValue;
-        });
-    }
+            const getNextFragment = function () {
+                let request = nextFragmentRequestRule.execute(streamProcessor);
+                if (request) {
+                    fragmentModel.executeRequest(request); // we load
+                } else {
+                    isFragmentLoading = false;
+                    startValidateTimer(1000); //we loop
+                }
+            };
+            //Run ABR rules - let it callback to getNextFragment once it is done running.
+            abrController.getPlaybackQuality(streamProcessor,  getNextFragment);
 
-    function onGetNextFragment(result) {
-        if (result.value) {
-            fragmentModel.executeRequest(result.value);
         } else {
-            isFragmentLoading = false;
-            startValidateTimer(1000);
+            startValidateTimer(1000); //we loop
         }
     }
 
@@ -269,9 +274,7 @@ function ScheduleController(config) {
             ready = true;
         }
 
-        if (ready) {
-            startOnReady();
-        }
+        start();
     }
 
     function onStreamCompleted(e) {
@@ -355,6 +358,10 @@ function ScheduleController(config) {
             isFragmentLoading = false;
         }
 
+        if (isStopped) {
+            start();
+        }
+
         let metrics = metricsModel.getMetricsFor('stream');
         let manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metrics);
 
@@ -395,7 +402,7 @@ function ScheduleController(config) {
         metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: actualStartTime, presentationStartTime: liveEdgeTime, latency: liveEdgeTime - actualStartTime, clientTimeOffset: timelineConverter.getClientTimeOffset()});
 
         ready = true;
-        startOnReady();
+        start();
     }
 
     function getSeekTarget() {

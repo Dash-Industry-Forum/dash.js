@@ -246,18 +246,12 @@ function AbrController() {
             }
 
             oldQuality = getQualityFor(type, streamInfo);
-            if (quality === oldQuality || (abandonmentStateDict[type].state === ABANDON_LOAD &&  quality > oldQuality)) return;
-            if (quality !== oldQuality) {
-
+            if (quality !== oldQuality && (abandonmentStateDict[type].state === ALLOW_LOAD ||  quality > oldQuality)) {
                 setInternalQuality(type, streamId, quality);
-                //log("New quality of " + quality);
                 setConfidenceFor(type, streamId, confidence);
-                //log("New confidence of " + confidence);
                 eventBus.trigger(Events.QUALITY_CHANGED, {mediaType: type, streamInfo: streamProcessor.getStreamInfo(), oldQuality: oldQuality, newQuality: quality});
-
             }
-
-            if (completedCallback !== undefined) {
+            if (completedCallback) {
                 completedCallback();
             }
         };
@@ -267,7 +261,7 @@ function AbrController() {
 
         //log("ABR enabled? (" + autoSwitchBitrate + ")");
         if (!getAutoSwitchBitrateFor(type)) {
-            if (completedCallback !== undefined) {
+            if (completedCallback) {
                 completedCallback();
             }
         } else {

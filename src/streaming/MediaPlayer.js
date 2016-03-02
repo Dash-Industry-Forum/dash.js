@@ -50,7 +50,6 @@ import TimeSyncController from './controllers/TimeSyncController.js';
 import ABRRulesCollection from './rules/abr/ABRRulesCollection.js';
 import VideoModel from './models/VideoModel.js';
 import RulesController from './rules/RulesController.js';
-import ScheduleRulesCollection from './rules/scheduling/ScheduleRulesCollection.js';
 import SynchronizationRulesCollection from './rules/synchronization/SynchronizationRulesCollection.js';
 import MediaSourceController from './controllers/MediaSourceController.js';
 import Debug from './../core/Debug.js';
@@ -1686,8 +1685,8 @@ function MediaPlayer() {
         let abrRulesCollection = ABRRulesCollection(context).getInstance();
         abrRulesCollection.initialize();
 
-        let scheduleRulesCollection = ScheduleRulesCollection(context).getInstance();
-        scheduleRulesCollection.initialize();
+        //let scheduleRulesCollection = ScheduleRulesCollection(context).getInstance();
+        //scheduleRulesCollection.initialize();
 
         let sourceBufferController = SourceBufferController(context).getInstance();
         sourceBufferController.setConfig({dashManifestModel: dashManifestModel});
@@ -1707,7 +1706,6 @@ function MediaPlayer() {
         rulesController.initialize();
         rulesController.setConfig({
             abrRulesCollection: abrRulesCollection,
-            scheduleRulesCollection: scheduleRulesCollection,
             synchronizationRulesCollection: synchronizationRulesCollection
         });
 
