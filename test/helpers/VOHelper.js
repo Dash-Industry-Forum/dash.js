@@ -142,8 +142,8 @@ class VoHelper {
         mediaInfo.bitrateList = [
             {
                 bandwidth: 1000,
-                width: 360,
-                height: 480
+                width: 480,
+                height: 360
             },
             {
                 bandwidth: 2000,
