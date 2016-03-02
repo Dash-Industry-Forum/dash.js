@@ -257,7 +257,8 @@ function PlaybackController() {
      */
     function getStreamStartTime(ignoreStartOffset) {
         let presentationStartTime;
-        let startTimeOffset = !ignoreStartOffset ? parseInt(URIQueryAndFragmentModel(context).getInstance().getURIFragmentData().s, 10) : NaN;
+        let fragData = URIQueryAndFragmentModel(context).getInstance().getURIFragmentData();
+        let startTimeOffset = !ignoreStartOffset ? parseInt(fragData.s || fragData.t, 10) : NaN;
 
         if (isDynamic) {
             if (!isNaN(startTimeOffset) && startTimeOffset > 1262304000) {
