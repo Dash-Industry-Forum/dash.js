@@ -30,8 +30,6 @@
  */
 
 import PlayList from '../vo/metrics/PlayList.js';
-//import ScheduleRulesCollection from '../rules/scheduling/ScheduleRulesCollection.js';
-//import SwitchRequest from '../rules/SwitchRequest.js';
 import PlaybackController from './PlaybackController.js';
 import AbrController from './AbrController.js';
 import BufferController from './BufferController.js';
@@ -61,8 +59,6 @@ function ScheduleController(config) {
     let dashMetrics = config.dashMetrics;
     let dashManifestModel = config.dashManifestModel;
     let timelineConverter = config.timelineConverter;
-    //let scheduleRulesCollection = config.scheduleRulesCollection;
-    //let rulesController = config.rulesController;
     let mediaPlayerModel = config.mediaPlayerModel;
 
     let instance,
