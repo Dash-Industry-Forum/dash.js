@@ -392,7 +392,7 @@ function ScheduleController(config) {
             actualStartTime;
 
         // get a request for a start time
-        request = adapter.getFragmentRequestForTime(streamProcessor, currentRepresentationInfo, startTime, {ignoreIsFinished: true});
+        request = adapter.getFragmentRequestForTime(streamProcessor, currentRepresentationInfo, startTime, {ignoreIsFinished: true, forceStart: true});
         actualStartTime = request.startTime;
 
         if (isNaN(currentLiveStart) || (actualStartTime > currentLiveStart)) {
