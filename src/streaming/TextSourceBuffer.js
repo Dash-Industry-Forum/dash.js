@@ -143,7 +143,7 @@ function TextSourceBuffer() {
         var mimeType = mediaInfo.mimeType;
         var codecType = mediaInfo.codec || mimeType;
         if (!codecType) {
-            console.log('No text type defined');
+            log('No text type defined');
             return;
         }
 
@@ -223,18 +223,18 @@ function TextSourceBuffer() {
 
                         for (var j = 0 ; j < sampleBoxes.boxes.length; j++) {
                             var box1 = sampleBoxes.boxes[j];
-                            console.log('VTT box1: ' + box1.type);
+                            log('VTT box1: ' + box1.type);
                             if (box1.type === 'vtte') {
                                 continue; //Empty box
                             }
                             if (box1.type === 'vttc') {
-                                console.log('VTT vttc boxes.length = ' + box1.boxes.length);
+                                log('VTT vttc boxes.length = ' + box1.boxes.length);
                                 for (var k = 0 ; k < box1.boxes.length; k++) {
                                     var box2 = box1.boxes[k];
-                                    console.log('VTT box2: ' + box2.type);
+                                    log('VTT box2: ' + box2.type);
                                     if (box2.type === 'payl') {
                                         var cue_text = box2.cue_text;
-                                        console.log('VTT cue_text = ' + cue_text);
+                                        log('VTT cue_text = ' + cue_text);
                                         var start_time = sample.cts / timescale;
                                         var end_time = (sample.cts + sample.duration) / timescale;
                                         captionArray.push({
@@ -243,7 +243,7 @@ function TextSourceBuffer() {
                                             data: cue_text,
                                             styles: {}
                                         });
-                                        console.log('VTT ' + start_time + '-' + end_time + ' : ' + cue_text);
+                                        log('VTT ' + start_time + '-' + end_time + ' : ' + cue_text);
                                     }
                                 }
                             }
@@ -284,7 +284,7 @@ function TextSourceBuffer() {
                             captionsArray = createHTMLCaptionsFromScreen(videoModel.getElement(), startTime, endTime, captionScreen);
                         } else {
                             var text = captionScreen.getDisplayText();
-                            //console.log("CEA text: " + startTime + "-" + endTime + "  '" + text + "'");
+                            //log("CEA text: " + startTime + "-" + endTime + "  '" + text + "'");
                             captionsArray = [{ start: startTime, end: endTime, data: text, styles: {} }];
                         }
                         if (captionsArray) {
@@ -310,7 +310,7 @@ function TextSourceBuffer() {
                             trackIdx = textTracks.getTrackIdxForId('CC3');
                         }
                         if (trackIdx === -1) {
-                            console.log('CEA-608: data before track is ready.');
+                            log('CEA-608: data before track is ready.');
                             return;
                         }
                         handler = makeCueAdderForIndex(this, trackIdx);
@@ -333,7 +333,7 @@ function TextSourceBuffer() {
                         var fieldParser = embeddedCea608FieldParsers[fieldNr];
                         if (fieldParser) {
                             /*if (ccData.length > 0 ) {
-                                console.log("CEA-608 adding Data to field " + fieldNr + " " + ccData.length + "bytes");
+                                log("CEA-608 adding Data to field " + fieldNr + " " + ccData.length + "bytes");
                             }*/
                             for (i = 0; i < ccData.length; i++) {
                                 fieldParser.addData(ccData[i][0] / embeddedTimescale, ccData[i][1]);
@@ -379,7 +379,7 @@ function TextSourceBuffer() {
         var moof = isoFile.getBox('moof');
         var tfdt = isoFile.getBox('tfdt');
         //var tfhd = isoFile.getBox('tfhd'); //Can have a base_data_offset and other default values
-        //console.log("tfhd: " + tfhd);
+        //log("tfhd: " + tfhd);
         //var saio = isoFile.getBox('saio'); // Offset possibly
         //var saiz = isoFile.getBox('saiz'); // Possible sizes
         var truns = isoFile.getBoxes('trun'); //
@@ -390,7 +390,7 @@ function TextSourceBuffer() {
         }
         trun = truns[0];
         if (truns.length > 1) {
-            console.log('Warning: Too many truns');
+            log('Warning: Too many truns');
         }
         var baseOffset = moof.offset + trun.data_offset;
         //Doublecheck that trun.offset == moof.size + 8
@@ -600,8 +600,8 @@ function TextSourceBuffer() {
             currRegion = null;
         }
 
-        //console.log(styleStates);
-        //console.log(regions);
+        //log(styleStates);
+        //log(regions);
 
         let captionsArray = [];
 
