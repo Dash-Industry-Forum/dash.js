@@ -38,20 +38,33 @@
     src:url("icomoon.ttf") format("truetype");
 }
 
+
+@font-face {
+    font-family: 'moreicomoon';
+    src:url("icomoon-two.ttf") format("truetype");
+}
+
 .icon-play,
 .icon-pause,
 .icon-caption,
 .icon-mute-off,
 .icon-mute-on,
 .icon-fullscreen-enter,
-.icon-fullscreen-exit{
+.icon-fullscreen-exit,
+.icon-video,
+.icon-audio {
     font-family: 'icomoon';
     font-size: 20px;
     color: white;
     text-shadow: none;
     -webkit-font-smoothing: antialiased;
-
 }
+
+.icon-video,
+.icon-audio {
+    font-family: 'moreicomoon';
+}
+
 
 .time-display,
 .duration-display{
@@ -82,6 +95,10 @@
     float: right;
     padding:9px 10px;
     cursor: pointer;
+}
+
+#videoTracksBtn .icon {
+
 }
 
 .btn-fullscreen {
@@ -167,6 +184,12 @@
 }
 .icon-caption:before {
     content: "\e600";
+}
+.icon-video:before {
+    content: "\e901";
+}
+.icon-audio:before {
+    content: "\e900";
 }
 
 .seekContainer {
