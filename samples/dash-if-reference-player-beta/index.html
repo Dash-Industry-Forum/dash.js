@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html ng-app="DashPlayer" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Dash JavaScript Player</title>
+    <meta name="description" content="" />
+    <link rel="icon" type="image/x-icon" href="http://dashif.org/wp-content/uploads/2014/12/dashif.ico" />
+    <meta name="viewport" content="width=device-width, height=device-height, user-scalable=no">
+
+    <link rel="stylesheet" href="app/lib/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="app/lib/bootstrap/css/bootstrap-glyphicons.css">
+    <link rel="stylesheet" href="app/lib/angular.treeview/css/angular.treeview.css">
+    <link rel="stylesheet" href="app/css/main.css">
+    <link rel="stylesheet" href="app/css/dropdown.css">
+    <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
+
+    <!-- http://jquery.com/ -->
+    <script src="app/lib/jquery/jquery-1.10.2.min.js"></script>
+
+    <!-- http://angularjs.org/ -->
+    <script src="app/lib/angular/angular.min.js"></script>
+    <script src="app/lib/angular/angular-resource.min.js"></script>
+
+    <!-- http://getbootstrap.com/ -->
+    <script src="app/lib/bootstrap/js/bootstrap.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            $('[data-toggle="tooltip"]').tooltip(); 
+        });
+    </script>
+
+    <!-- https://github.com/madebyhiro/codem-isoboxer -->
+    <!--<script src="../../externals/iso_boxer.min.js"></script>-->
+
+    <!-- http://bannister.us/weblog/2007/06/09/simple-base64-encodedecode-javascript/ -->
+    <!--<script src="../../externals/base64.js"></script>-->
+
+    <!-- Misc Libs -->
+    <!--<script src="../../externals/xml2json.js"></script>-->
+    <!--<script src="../../externals/objectiron.js"></script>-->
+
+    <!-- http://www.flotcharts.org/ -->
+    <script src="app/lib/flot/jquery.flot.js"></script>
+
+    <!-- https://github.com/eu81273/angular.treeview -->
+    <script src="app/lib/angular.treeview/angular.treeview.min.js"></script>
+
+    <script src="../../dist/dash.debug.js"></script>
+    <script src="../../dist/dash.protection.debug.js"></script>
+
+    <!-- App -->
+    <script src="app/metrics.js"></script>
+    <script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
+    <script src="app/main.js"></script>
+</head>
+<body ng-controller="DashController">
+    <div class="modal fade" id="streamModal">
+        <div class="modal-dialog">
+            <div class="list-group modal-list">
+              <ul>
+                  <li ng-repeat="item in availableTaxonomyStreams"
+                      ng-class="{'sub':item.submenu}">
+                    <span ng-show="!item.submenu"
+                       ng-click="setStream(item)">{{item.name}}</span>
+                    <span ng-show="item.submenu">{{item.name}}</span>
+                    <ul ng-show="item.submenu">
+                        <li ng-repeat="subitem in item.submenu">
+                            <span ng-click="setStream(subitem)"
+                                  data-dismiss="modal">{{subitem.name}}</span> 
+                        </li>
+                    </ul>
+                  </li>
+              </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row title-header">
+            <div class="branding">
+              <a href="http://dashif.org/" target="_blank"><img class="image" src="app/img/if.png"/></a>
+              <span id="big-title">Reference Client</span>
+              <span>{{version}}</span>
+            </div>
+
+            <div class="top-buttons">
+                <button class="extras btn btn-primary" ng-click="toggleOptionsGutter(!optionsGutter)">Options</button>
+                <iframe
+                    id="star-button"
+                    src="http://ghbtns.com/github-btn.html?user=Dash-Industry-Forum&repo=dash.js&type=watch&count=true&size=large"
+                    height="30"
+                    width="170"
+                    frameborder="0"
+                    scrolling="0"
+                    allowTransparency="true"
+                    class="hidden-xs github-button">
+                </iframe>
+                <iframe
+                    id="fork-button"
+                    src="http://ghbtns.com/github-btn.html?user=Dash-Industry-Forum&repo=dash.js&type=fork&count=true&size=large"
+                    height="30"
+                    width="170"
+                    frameborder="0"
+                    scrolling="0"
+                    allowTransparency="true github-button">
+                </iframe>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="input-group">
+                <div id="desktop-streams" class="input-group-btn">
+                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+                        Stream <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu nav">
+                        <li ng-repeat="item in availableTaxonomyStreams"
+                            ng-class="{'sub':item.submenu}">
+                            <span ng-show="!item.submenu"
+                               ng-click="setStream(item)">{{item.name}}</span>
+                            <span ng-show="item.submenu">{{item.name}}</span>
+                            <ul ng-show="item.submenu">
+                                <li ng-repeat="subitem in item.submenu">
+                                    <span ng-click="setStream(subitem)">{{subitem.name}}</span> 
+                                </li>
+                            </ul>
+                        </li>
+<!--                         <li class="sub">
+                            Subhead 1.1
+                            <ul>
+                                <li>Subhead 1.1.1</li>
+                                <li>Subhead 1.1.2</li>
+                                <li>Subhead 1.1.3</li>
+                            </ul>
+                        </li>
+                        <li class="sub">
+                            Subhead 1.1
+                            <ul>
+                                <li>Subhead 1.1.1</li>
+                                <li>Subhead 1.1.2</li>
+                                <li>Subhead 1.1.3</li>
+                            </ul>
+                        </li>
+                        <li>Subhead 1.2</li>
+                        <li>Subhead 1.3</li>
+                        <li>Subhead 1.4</li> -->
+                    </ul>
+<!--                     <ul class="dropdown-menu">
+                        <li
+                            ng-repeat="item in availableStreams"
+                            ng-click="setStream(item)">
+                            <a>{{item.name}}</a>
+                        </li>
+                    </ul> -->
+                </div>
+                <div id="mobile-streams" class="input-group-btn">
+                    <button type="button" class="btn btn-primary" data-toggle="modal" href="#streamModal">
+                        Stream <span class="caret"></span>
+                    </button>
+                </div>
+                <input type="text" class="form-control" placeholder="manifest" ng-model="selectedItem.url">
+                <span class="input-group-btn">
+                    <button class="btn btn-primary" type="button" ng-click="doLoad()">Load</button>
+                </span>
+            </div>
+        </div>
+
+
+        <div class="row options-wrapper"
+             ng-class="{'options-show':optionsGutter, 
+                        'options-hide':!optionsGutter}">
+
+            <div class="options-item playback" id="playback-options">
+                <div class="options-item-title">Playback</div>
+                <ul>
+                    <li>
+                        <input type="checkbox" 
+                               id="autoPlayCB" 
+                               checked="">
+                        <label class="topcoat-checkbox"
+                               for="autoPlayCB">
+                            Auto-Play
+                        </label>
+                    </li>
+                    <li>
+                        <input type="checkbox" 
+                               id="loopCB" 
+                               checked="">
+                        <label class="topcoat-checkbox"
+                               for="loopCB">
+                            Loop
+                        </label>
+                    </li>
+                    <li>
+                        <input type="checkbox" 
+                               id="DOMStorageCB" 
+                               checked="">
+                        <label class="topcoat-checkbox"
+                               for="DOMStorageCB">
+                            DOM Storage
+                        </label>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="options-item sessiontype" id="sessiontype-options">
+                <div class="options-item-title">DRM Options</div>
+                <div id="session-type">
+                    <label>
+                        <input type="radio" 
+                               id="temporary" 
+                               name="drm"
+                               checked="checked"> temporary
+                    </label>
+                    <label>
+                        <input type="radio" 
+                               id="persistent-license" 
+                               name="drm"> persistent-license
+                    </label>
+                    <label>
+                        <input type="radio" 
+                               id="persistent-release-message" 
+                               name="drm"> persistent-release
+                    </label>
+                    <button class="btn btn-primary license" 
+                            type="button" 
+                            ng-click="doLicenseFetch()">Pre-Fetch Licenses</button>
+                </div>
+            </div>
+
+
+            <div class="options-item track-swtch" id="track-swtch-options">
+                <div class="options-item-title">Track Switch Mode</div>
+                <div id="track-switch-type">
+                    <label>
+                        <input type="radio" 
+                               id="always-replace" 
+                               autocomplete="off"
+                               name="track-switch"
+                               checked="checked"
+                               ng-click="changeTrackSwitchMode('ALWAYS_REPLACE', 'video')"> always replace
+                    </label>
+                    <label>
+                        <input type="radio" 
+                               id="never-replace" 
+                               autocomplete="off" 
+                               name="track-switch"
+                               ng-click="changeTrackSwitchMode('NEVER_REPLACE', 'video')"> never replace
+                    </label>
+                </div>
+            </div>
+
+
+            <div class="options-item initial-role" id="initial-role">
+                <div class="options-item-title">Initial Role</div>
+                <div id="initial-role-option">
+                    <label>Audio:</label>
+                    <input type="text" 
+                           class="form-control" 
+                           placeholder="initial lang, e.g. 'en'" 
+                           ng-model="initialSettings.audio">
+                    <label>Video:</label>
+                    <input type="text" 
+                           class="form-control" 
+                           placeholder="initial role, e.g. 'alternate'" 
+                           ng-model="initialSettings.video">
+                </div>
+            </div>
+
+        </div>
+
+
+        <div class="row">
+            <div class="dash-video-player col-md-9">
+                <div id="videoContainer">
+                    <video controls="true"></video>
+                    <div id="video-caption"></div>
+                    <div id="videoController" class="video-controller unselectable">
+                        <div id="playPauseBtn" class="btn-play-pause" title="Play/Pause">
+                            <span id="iconPlayPause" class="icon-play"></span>
+                        </div>
+                        <span id="videoTime" class="time-display">00:00:00</span>
+
+                        <div id="fullscreenBtn" 
+                             class="btn-fullscreen" 
+                             title="Fullscreen">
+
+                            <span class="icon-fullscreen-enter"
+                                  data-toggle="tooltip" 
+                                  title="Fullscreen"></span>
+                        </div>
+                        <input type="range" 
+                               id="volumebar" 
+                               class="volumebar" 
+                               value="1" 
+                               min="0" 
+                               max="1" 
+                               step=".01"
+                               data-toggle="tooltip" 
+                               title="Audio Level" />
+
+                        <div id="muteBtn" 
+                             class="btn-mute" 
+                             data-toggle="tooltip" 
+                             title="Mute">
+
+                            <span id="iconMute" 
+                                  class="icon-mute-off"></span>
+                        </div>
+
+                        <div id="captionBtn"  
+                             class="btn-caption" 
+                             ng-mouseenter="toggleCCBubble = !toggleCCBubble;"
+                             ng-mouseleave="toggleCCBubble = !toggleCCBubble;">
+
+                            <span class="icon-caption"></span>
+                        </div>
+
+                        <div id="caption-bubble"
+                             ng-show="toggleCCBubble">
+                                Closed Caption
+                        </div>
+                        
+                        <div id="videoTracksBtn" 
+                             class="btn-caption"
+                             ng-show="availableTracks.video.length > 1" >
+
+                            <span class="icon-video"
+                                  data-toggle="dropdown">
+                                  <em data-toggle="tooltip" 
+                                      title="Video Tracks"></em></span>
+                            <ul class="dropdown-menu tracklisting" role="menu">
+                                <li ng-repeat="track in availableTracks.video" ng-click="switchTrack(track, 'video')">
+                                    <a>lang: {{track.lang || "undefined"}}, viewpoint: {{track.viewpoint || "undefined"}}, roles: {{track.roles || "undefined"}}</a>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div id="audioTracksBtn" 
+                             class="btn-caption" 
+                             ng-show="availableTracks.audio.length > 1">
+
+                            <span class="icon-audio"
+                                  data-toggle="dropdown">
+                                  <em data-toggle="tooltip" 
+                                      title="Audio Tracks"></em></span>
+                            <ul class="dropdown-menu tracklisting" role="menu">
+                                <li ng-repeat="track in availableTracks.audio" ng-click="switchTrack(track, 'audio')">
+                                    <a>lang: {{track.lang || "undefined"}}, viewpoint: {{track.viewpoint || "undefined"}}, roles: {{track.roles || "undefined"}}</a>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <span id="videoDuration" class="duration-display">00:00:00</span>
+
+                        <div class="seekContainer">
+                            <input type="range" id="seekbar" value="0" class="seekbar" min="0" step="0.01"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 tabs-section">
+                <div>
+                    <ul class="nav nav-tabs" role="tablist">
+                      <li class="active">
+                          <a href="#video" role="tab" data-toggle="tab">
+                              Video
+                          </a>
+                      </li>
+                      <li><a href="#audio" role="tab" data-toggle="tab">
+                          Audio
+                          </a>
+                      </li>
+                      <li><a href="#text" role="tab" data-toggle="tab">
+                          Text
+                          </a>
+                      </li>
+                    </ul>
+                    
+                    <!-- Tab panes -->
+                    <div class="tab-content">
+                      <div class="tab-pane fade active in" id="video">
+                        <div class="panel-body panel-stats">
+                            <p class="text-primary"><span class="text-success"
+                                                          data-toggle="tooltip" 
+                                                          title="The bitrate of the representation being loaded">
+                                                          <em>Bitrate:</em> {{videoBitrate}} kbps</span></p>
+                            <p class="text-primary"><span class="text-success"
+                                                          data-toggle="tooltip" 
+                                                          title="The representation index being loaded. Lowest index is 1">
+                                                          <em>Index being loaded:</em> {{videoIndex}}{{videoPendingIndex}}/{{videoMaxIndex}}</span></p>
+                            <p class="text-primary"><span class="text-success"
+                                                          data-toggle="tooltip" 
+                                                          title="The length of the forward buffer, in seconds">
+                                                          <em>Buffer Length:</em> {{videoBufferLength}}</span></p>
+                            <p class="text-primary"><span class="text-success"
+                                                          data-toggle="tooltip" 
+                                                          title="The minimum, average and maximum latency over the last 4 requested segments. Latency is the time in seconds from request of segment to receipt of first byte">
+                                                          <em>Latency (min|avg|max):</em> {{videoLatency.split('<').join('|')}}</span></p>
+                            <p class="text-primary"><span class="text-success"
+                                                          data-toggle="tooltip" 
+                                                          title="The minimum, average and maximum download time for the last 4 requested segments. Download time is the time in seconds from first byte being received to the last byte">
+                                                          <em>Download (min|avg|max):</em> {{videoDownload.split('<').join('|')}}</span></p>
+                            <p class="text-primary"><span class="text-success"
+                                                          data-toggle="tooltip" 
+                                                          title="The minimum, average and maximum ratio of the segment playback time to total download time over the last 4 segments">
+                                                          <em>Ratio (min|avg|max):</em> {{videoRatio.split('<').join('|')}}</span></p>
+                            <p class="text-primary"><span class="text-success"
+                                                          data-toggle="tooltip" 
+                                                          title="The absolute count of frames dropped by the rendering pipeline since play commenced">
+                                                          <em>Dropped Frames:</em> {{videoDroppedFrames}}</span></p>
+                        </div>
+                      </div>
+                      <div class="tab-pane fade" id="audio">
+                        <div class="panel-body panel-stats">
+                            <p class="text-primary"><span class="text-success"
+                                                          data-toggle="tooltip" 
+                                                          title="The bitrate of the representation being loaded">
+                                                          <em>Bitrate:</em> {{audioBitrate}} kbps</span></p>
+                            <p class="text-primary"><span class="text-success"
+                                                          data-toggle="tooltip" 
+                                                          title="The representation index being loaded. Lowest index is 1">
+                                                          <em>Index being loaded:</em> {{audioIndex}}{{audioPendingIndex}}/{{audioMaxIndex}}</span></p>
+                            <p class="text-primary"><span class="text-success"
+                                                          data-toggle="tooltip" 
+                                                          title="The length of the forward buffer, in seconds">
+                                                          <em>Buffer Length:</em> {{audioBufferLength}}</span></p>
+                            <p class="text-primary"><span class="text-success"
+                                                          data-toggle="tooltip" 
+                                                          title="The minimum, average and maximum latency over the last 4 requested segments. Latency is the time in seconds from request of segment to receipt of first byte">
+                                                          <em>Latency (min|avg|max):</em> {{audioLatency.split('<').join('|')}}</span></p>
+                            <p class="text-primary"><span class="text-success"
+                                                          data-toggle="tooltip" 
+                                                          title="The minimum, average and maximum download time for the last 4 requested segments. Download time is the time in seconds from first byte being received to the last byte">
+                                                          <em>Download (min|avg|max):</em> {{audioDownload.split('<').join('|')}}</span></p>
+                            <p class="text-primary"><span class="text-success"
+                                                          data-toggle="tooltip" 
+                                                          title="The minimum, average and maximum ratio of the segment playback time to total download time over the last 4 segments">
+                                                          <em>Ratio (min|avg|max):</em> {{audioRatio.split('<').join('|')}}</span></p>
+                        </div>
+                      </div>
+                      <div class="tab-pane fade" id="text">
+                        <div class="panel-body panel-stats">
+                            <p class="text-primary"><span class="text-success"
+                                                          data-toggle="tooltip" 
+                                                          title="The bitrate of the representation being loaded">
+                                                          <em>Bitrate:</em> {{textBitrate}} kbps</span></p>
+                            <p class="text-primary"><span class="text-success"
+                                                          data-toggle="tooltip" 
+                                                          title="The representation index being loaded. Lowest index is 1">
+                                                          <em>Index being loaded:</em> {{textIndex}}{{textPendingIndex}}/{{textMaxIndex}}</span></p>
+                            <p class="text-primary"><span class="text-success"
+                                                          data-toggle="tooltip" 
+                                                          title="The length of the forward buffer, in seconds">
+                                                          <em>Buffer Length:</em> {{textBufferLength}}</span></p>
+                            <p class="text-primary"><span class="text-success"
+                                                          data-toggle="tooltip" 
+                                                          title="The minimum, average and maximum latency over the last 4 requested segments. Latency is the time in seconds from request of segment to receipt of first byte">
+                                                          <em>Latency (min|avg|max):</em> {{textLatency.split('<').join('|')}}</span></p>
+                            <p class="text-primary"><span class="text-success"
+                                                          data-toggle="tooltip" 
+                                                          title="The minimum, average and maximum download time for the last 4 requested segments. Download time is the time in seconds from first byte being received to the last byte">
+                                                          <em>Download (min|avg|max):</em> {{textDownload.split('<').join('|')}}</span></p>
+                            <p class="text-primary"><span class="text-success"
+                                                          data-toggle="tooltip" 
+                                                          title="The minimum, average and maximum ratio of the segment playback time to total download time over the last 4 segments">
+                                                          <em>Ratio (min|avg|max):</em> {{textRatio.split('<').join('|')}}</span></p>
+                        </div>
+                      </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Protection Information -->
+       <!--  <div class="row" ng-repeat="d in drmData">
+            <div class="panel panel-info" ng-class="{sessionPanelPlaying: d.isPlaying}">
+                <h3>Protection Information</h3>
+                <div class="panel-heading panel-top">
+                    <span class="panel-title">{{d.manifest.url}}</span>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-default" ng-disabled="!d.licenseReceived" ng-click="play(d)">Play</button>
+                        <button type="button" class="btn btn-default" ng-click="delete(d)">Delete</button>
+                    </div>
+                </div>
+                <div class="col-sm-12" ng-show="d.ksconfig">
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <h4 ng-show="d.protCtrl.protectionModel.keySystem" class="keysystem shrink">Key System: <span class="label label-success">{{d.protCtrl.protectionModel.keySystem.systemString}}</span></h4>
+                            <div><b>Init Data Types: </b>{{arrayToCommaSeparated(d.ksconfig.initDataTypes)}}</div>
+                            <div><b>Persistent State: </b><span ng-show="d.ksconfig.persistentState">{{d.ksconfig.persistentState}}</span></div>
+                            <div><b>Distinctive Identifier: </b><span ng-show="d.ksconfig.distinctiveIdentifier">{{d.ksconfig.distinctiveIdentifier}}</span></div>
+                        </div>
+                        <div class="col-sm-4">
+                            <h5>Video Configs</h5>
+                            <ul class="list-group">
+                                <li class="list-group-item" ng-repeat="video in d.ksconfig.videoCapabilities">
+                                    <div><b>ContentType: </b>{{video.contentType}}</div>
+                                    <div><b>Robustness: </b>{{video.robustness}}</div>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-sm-4">
+                            <h5>Audio Configs</h5>
+                            <ul class="list-group">
+                                <li class="list-group-item" ng-repeat="audio in d.ksconfig.audioCapabilities">
+                                    <div><b>ContentType: </b>{{audio.contentType}}</div>
+                                    <div><b>Robustness: </b>{{audio.robustness}}</div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="errormessage" ng-show="d.error"><span class="label label-danger">ERROR</span><span class="errormessage">{{d.error}}</span></div>
+                <div class="panel panel-default sessionPanel" ng-repeat="s in d.sessions">
+                    <div class="panel-heading panel-top">
+                        <span class="panel-title">SessionID: {{s.sessionToken.getSessionID()}}</span>
+                        <div class="btn-group">
+                            <button type="button" ng-disabled="isLoaded(s)" class="btn btn-default" ng-click="d.protCtrl.loadKeySession(s.sessionID)">Load</button>
+                            <button type="button" ng-disabled="!isLoaded(s)" class="btn btn-default" ng-click="d.protCtrl.removeKeySession(s.sessionToken)">Remove</button>
+                            <button type="button" class="btn btn-default" ng-click="d.protCtrl.closeKeySession(s.sessionToken)">Close</button>
+                        </div>
+                    </div>
+                    <div class="keymessage" ng-show="s.lastMessage">{{s.lastMessage}}</div>
+                    <div class="keymessage"><b>Session Persistence: </b><span>{{getLoadedMessage(s)}}</span></div>
+                    <h5 ng-show="s.getExpirationTime()">Expiration: {{s.getExpirationTime()}}</h5>
+                    <table ng-show="isLoaded(s) && s.keystatus && s.keystatus.length > 0" class="table table-bordered table-hover">
+                        <tr>
+                            <th>Key ID</th>
+                            <th class="centered">Key Status</th>
+                        </tr>
+                        <tr ng-repeat="keystatus in s.keystatus">
+                            <td class="keyid">{{keystatus.key}}</td>
+                            <td ng-class="{true: 'success'}[keystatus.status=='usable']" class="centered">{{keystatus.status}}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div> -->
+
+<!--                 <div ng-switch id="stats-block" on="showCharts">
+                    <div class="panel-body panel-stats" ng-switch-when="true">
+                        <ul class="nav nav-tabs">
+                            <li class="active"><a href="#bufferLevel" data-toggle="tab" ng-click="setBufferLevelChart(true)">Buffer level</a></li>
+                            <li><a href="#consolelog" data-toggle="tab">Console Trace Panel</a></li>
+                        </ul>
+                        <div id="chartTabContent" class="tab-content">
+                            <div class="tab-pane" id="bufferLevel" ng-class="{active:showBufferLevel == true}">
+                                <div ng-switch on="showBufferLevel">
+                                    <div class="panel-body panel-stats" ng-switch-when="true">
+                                        <chart ng-model="bufferData"></chart>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="consolelog"></div>
+                        </div>
+                    </div>
+                </div> -->
+
+
+        <div class="row">
+            <div class="panel">
+                <ul class="nav nav-tabs">
+                    <li class="active">
+                        <a href="#bufferLevel" 
+                           data-toggle="tab" >
+                           <!-- ng-click="setBufferLevelChart(true);"> -->
+                                     <!-- setHtmlLogging(false);
+                                     shutdownDebugConsole();"> -->
+                                        Buffer level
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#consoletracepanel" 
+                           data-toggle="tab"
+                           ng-click="initDebugConsole();">
+                              Console Trace Panel
+                        </a>
+                    </li>
+                </ul>
+                <div id="chartTabContent" class="tab-content">
+                    <div class="tab-pane active" id="bufferLevel">
+                        <!-- <div ng-switch on="showBufferLevel"> -->
+                            <!-- <div id="chart-inventory" class="panel-body" ng-switch-when="true"> -->
+
+
+                            <div id="debugCtrlBarChart">
+                                <button class="topcoat-button--quiet debugButton" 
+                                        id="debugEnableButton"
+                                        ng-click="showBufferLevel = !showBufferLevel;">{{chartEnabledLabel()}}</button>
+                            </div>
+
+                            <div id="chart-inventory" 
+                                 class="panel-body">
+                                <chart ng-model="bufferData"
+                                       ng-show="showBufferLevel"></chart>
+                            <!-- </div> -->
+                            </div>
+                    </div>
+                    <div class="tab-pane" id="consoletracepanel">
+                        <div class="tab-content">
+                            <div class="tab-pane active" id="tab3">
+                                <div id="debugCtrlBar">
+                                    <button class="topcoat-button--quiet debugButton" 
+                                            id="debugEnableButton"
+                                            ng-click="setHtmlLogging(!debugEnabled)">{{debugEnabledLabel()}}</button>
+
+                                    <button class="topcoat-button--quiet debugButton" 
+                                            id="debugClearButton"
+                                            ng-click="clearHtmlLogging()">
+                                            Clear
+                                    </button>
+                                </div>
+                                <!-- <div id="debugLogView" style="height: 418px;"></div> -->
+                                <ul>
+                                    <li ng-repeat="log in logbucket">{{log}}</li>
+                                    <!-- beet: {{logbucket.length}} -->
+                                </ul>
+                            </div>
+                          </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+    <div class="footer-area">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <h3 class="footer-text">Contributors:</h3>
+                    <a
+                        ng-repeat="item in contributors"
+                        class="footer-text"
+                        href="{{item.link}}"
+                        target="_blank">
+                        <img ng-show="hasLogo(item)" ng-src="{{item.logo}}" alt="{{item.link}}"/>
+                        <span class="contributor" ng-show="!hasLogo(item)">{{item.name}}</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
