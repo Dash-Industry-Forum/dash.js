@@ -1,0 +1,42 @@
+.sessionPanel {
+    margin-left: 20px;
+    margin-right: 20px;
+    margin-bottom: 20px;
+}
+
+.sessionPanelPlaying {
+    border-width: 5px;
+    border-color: green;
+}
+
+.keyid {
+    font-family: monospace;
+}
+
+.keymessage {
+    padding: 10px;
+}
+
+.errormessage {
+    padding-left: 15px;
+}
+
+.keysystem {
+    padding: 8px;
+    margin: 5px;
+    border-radius: 8px;
+    background: #eaeaea;
+}
+
+.centered {
+    text-align: center;
+}
+
+.session-prefs {
+    margin: auto;
+}
+
+.shrink {
+    display: table;
+}
+
