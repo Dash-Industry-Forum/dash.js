@@ -301,19 +301,21 @@ function AbrController() {
      * @memberof AbrController#
      */
     function getQualityForBitrate(mediaInfo, bitrate) {
-        var bitrateList = getBitrateList(mediaInfo);
-        var ln = bitrateList.length;
-        var bitrateInfo;
 
-        for (var i = 0; i < ln; i++) {
-            bitrateInfo = bitrateList[i];
+        let bitrateList = getBitrateList(mediaInfo);
+        let bitrateInfo;
 
-            if (bitrate * 1000 <= bitrateInfo.bitrate) {
-                return Math.max(i - 1, 0);
-            }
+        if (!bitrateList || bitrateList.length === 0) {
+            return -1;
         }
 
-        return (ln - 1);
+        for (let i = bitrateList.length - 1; i >= 0; i--) {
+            bitrateInfo = bitrateList[i];
+            if (bitrate * 1000 >= bitrateInfo.bitrate) {
+                return i;
+            }
+        }
+        return 0;
     }
 
     /**
