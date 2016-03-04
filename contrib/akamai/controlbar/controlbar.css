@@ -38,12 +38,6 @@
     src:url("icomoon.ttf") format("truetype");
 }
 
-
-@font-face {
-    font-family: 'moreicomoon';
-    src:url("icomoon-two.ttf") format("truetype");
-}
-
 .icon-play,
 .icon-pause,
 .icon-caption,
@@ -62,7 +56,7 @@
 
 .icon-video,
 .icon-audio {
-    font-family: 'moreicomoon';
+    font-family: 'icomoon';
 }
 
 
