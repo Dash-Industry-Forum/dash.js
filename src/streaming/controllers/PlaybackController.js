@@ -416,7 +416,7 @@ function PlaybackController() {
         let bufferedStart = Math.max(ranges.start(0), streamInfo.start);
         commonEarliestTime[streamInfo.id] = commonEarliestTime[streamInfo.id] === undefined ? bufferedStart : Math.max(commonEarliestTime[streamInfo.id], bufferedStart);
 
-        if (isSeeking()){
+        if (isSeeking()) {
             commonEarliestTime = {};
         } else if (getTime() < commonEarliestTime[streamInfo.id]) {
             seek(getStreamStartTime(streamInfo, true));
