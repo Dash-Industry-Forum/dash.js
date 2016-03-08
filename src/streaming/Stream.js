@@ -101,8 +101,6 @@ function Stream(config) {
 
     function initialize(StreamInfo, ProtectionController) {
         streamInfo = StreamInfo;
-
-        //TODO will need to separate this once DRM is optional.
         protectionController = ProtectionController;
         if (protectionController) {
             eventBus.on(Events.KEY_ERROR, onProtectionError, instance);
@@ -318,15 +316,14 @@ function Stream(config) {
             adapter: adapter,
             manifestModel: manifestModel
         });
-        var allMediaForType = adapter.getAllMediaInfoForType(manifest, streamInfo, mediaInfo.type);
 
+        var allMediaForType = adapter.getAllMediaInfoForType(manifest, streamInfo, mediaInfo.type);
         streamProcessor.initialize(getMimeTypeOrType(mediaInfo), fragmentController, mediaSource, instance, eventController);
         abrController.updateTopQualityIndex(mediaInfo);
 
         if (optionalSettings) {
             streamProcessor.setBuffer(optionalSettings.buffer);
             streamProcessors[optionalSettings.replaceIdx] = streamProcessor;
-            streamProcessor.setIndexHandlerTime(optionalSettings.currentTime);
         } else {
             streamProcessors.push(streamProcessor);
         }

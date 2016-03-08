@@ -254,7 +254,7 @@ function StreamController() {
     function onEnded(/*e*/) {
         var nextStream = getNextStream();
 
-        switchStream(activeStream, nextStream);
+        switchStream(activeStream, nextStream, NaN);
 
         flushPlaylistMetrics(
             nextStream ?
@@ -343,23 +343,27 @@ function StreamController() {
         return null;
     }
 
-    function switchStream(from, to, seekTo) {
+    function switchStream(from, to, seekTime) {
 
         if (isStreamSwitchingInProgress || !from || !to || from === to) return;
 
         fireSwitchEvent(Events.PERIOD_SWITCH_STARTED, from, to);
         isStreamSwitchingInProgress = true;
 
-        var onMediaSourceReady = function () {
-            if (seekTo !== undefined) {
-                playbackController.seek(seekTo);
+        function onMediaSourceReady() {
+            if (!isNaN(seekTime)) {
+                playbackController.seek(seekTime);
+            } else {
+                let startTime = playbackController.getStreamStartTime(activeStream.getStreamInfo(), true);
+                activeStream.getProcessors().forEach(p => {
+                    adapter.setIndexHandlerTime(p, startTime);
+                });
             }
-
             playbackController.play();
             activeStream.startEventController();
             isStreamSwitchingInProgress = false;
             fireSwitchEvent(Events.PERIOD_SWITCH_COMPLETED, from, to);
-        };
+        }
 
         from.deactivate();
         activeStream = to;
