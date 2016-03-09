@@ -372,29 +372,25 @@ function StreamController() {
     }
 
     function setupMediaSource(callback) {
-        var sourceUrl;
 
-        var onMediaSourceOpen = function (e) {
+        let sourceUrl;
+
+        function onMediaSourceOpen() {
             log('MediaSource is open!');
-            window.URL.revokeObjectURL(sourceUrl);
 
+            window.URL.revokeObjectURL(sourceUrl);
             mediaSource.removeEventListener('sourceopen', onMediaSourceOpen);
             mediaSource.removeEventListener('webkitsourceopen', onMediaSourceOpen);
-
-            //log("MediaSource set up.");
             setMediaDuration();
-
             activeStream.activate(mediaSource);
 
             if (callback) {
                 callback();
             }
-        };
+        }
 
         if (!mediaSource) {
             mediaSource = mediaSourceController.createMediaSource();
-            //log("MediaSource created.");
-            //log("MediaSource should be closed. The actual readyState is: " + mediaSource.readyState);
         } else {
             mediaSourceController.detachMediaSource(videoModel);
         }
@@ -402,7 +398,7 @@ function StreamController() {
         mediaSource.addEventListener('sourceopen', onMediaSourceOpen, false);
         mediaSource.addEventListener('webkitsourceopen', onMediaSourceOpen, false);
         sourceUrl = mediaSourceController.attachMediaSource(mediaSource, videoModel);
-        //log("MediaSource attached to video.  Waiting on open...");
+        log('MediaSource attached to element.  Waiting on open...');
     }
 
     function setMediaDuration() {
