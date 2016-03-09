@@ -376,7 +376,6 @@ function StreamController() {
 
         var onMediaSourceOpen = function (e) {
             log('MediaSource is open!');
-            log(e);
             window.URL.revokeObjectURL(sourceUrl);
 
             mediaSource.removeEventListener('sourceopen', onMediaSourceOpen);

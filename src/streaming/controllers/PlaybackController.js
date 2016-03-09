@@ -413,6 +413,7 @@ function PlaybackController() {
 
     function onBytesAppended(e) {
         let ranges = e.bufferedRanges;
+        if(!ranges || !ranges.length) return;
         let bufferedStart = Math.max(ranges.start(0), streamInfo.start);
         commonEarliestTime[streamInfo.id] = commonEarliestTime[streamInfo.id] === undefined ? bufferedStart : Math.max(commonEarliestTime[streamInfo.id], bufferedStart);
 

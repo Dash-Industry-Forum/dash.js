@@ -332,7 +332,6 @@ function SourceBufferController() {
         }
     }
 
-    //private
     function waitForUpdateEnd(buffer, callback) {
         var intervalId;
         var CHECK_INTERVAL = 50;
