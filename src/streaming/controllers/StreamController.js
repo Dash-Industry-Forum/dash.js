@@ -254,7 +254,7 @@ function StreamController() {
     function onEnded(/*e*/) {
         var nextStream = getNextStream();
 
-        switchStream(activeStream, nextStream);
+        switchStream(activeStream, nextStream, NaN);
 
         flushPlaylistMetrics(
             nextStream ?
@@ -343,23 +343,27 @@ function StreamController() {
         return null;
     }
 
-    function switchStream(from, to, seekTo) {
+    function switchStream(from, to, seekTime) {
 
         if (isStreamSwitchingInProgress || !from || !to || from === to) return;
 
         fireSwitchEvent(Events.PERIOD_SWITCH_STARTED, from, to);
         isStreamSwitchingInProgress = true;
 
-        var onMediaSourceReady = function () {
-            if (seekTo !== undefined) {
-                playbackController.seek(seekTo);
+        function onMediaSourceReady() {
+            if (!isNaN(seekTime)) {
+                playbackController.seek(seekTime);
+            } else {
+                let startTime = playbackController.getStreamStartTime(activeStream.getStreamInfo(), true);
+                activeStream.getProcessors().forEach(p => {
+                    adapter.setIndexHandlerTime(p, startTime);
+                });
             }
-
             playbackController.play();
             activeStream.startEventController();
             isStreamSwitchingInProgress = false;
             fireSwitchEvent(Events.PERIOD_SWITCH_COMPLETED, from, to);
-        };
+        }
 
         from.deactivate();
         activeStream = to;
@@ -368,30 +372,25 @@ function StreamController() {
     }
 
     function setupMediaSource(callback) {
-        var sourceUrl;
 
-        var onMediaSourceOpen = function (e) {
+        let sourceUrl;
+
+        function onMediaSourceOpen() {
             log('MediaSource is open!');
-            log(e);
-            window.URL.revokeObjectURL(sourceUrl);
 
+            window.URL.revokeObjectURL(sourceUrl);
             mediaSource.removeEventListener('sourceopen', onMediaSourceOpen);
             mediaSource.removeEventListener('webkitsourceopen', onMediaSourceOpen);
-
-            //log("MediaSource set up.");
             setMediaDuration();
-
             activeStream.activate(mediaSource);
 
             if (callback) {
                 callback();
             }
-        };
+        }
 
         if (!mediaSource) {
             mediaSource = mediaSourceController.createMediaSource();
-            //log("MediaSource created.");
-            //log("MediaSource should be closed. The actual readyState is: " + mediaSource.readyState);
         } else {
             mediaSourceController.detachMediaSource(videoModel);
         }
@@ -399,7 +398,7 @@ function StreamController() {
         mediaSource.addEventListener('sourceopen', onMediaSourceOpen, false);
         mediaSource.addEventListener('webkitsourceopen', onMediaSourceOpen, false);
         sourceUrl = mediaSourceController.attachMediaSource(mediaSource, videoModel);
-        //log("MediaSource attached to video.  Waiting on open...");
+        log('MediaSource attached to element.  Waiting on open...');
     }
 
     function setMediaDuration() {

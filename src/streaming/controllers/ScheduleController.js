@@ -354,19 +354,18 @@ function ScheduleController(config) {
     }
 
     function onPlaybackSeeking(e) {
+
+        seekTarget = e.seekTime;
+
         if (!initialPlayback) {
             isFragmentLoading = false;
         }
-
         if (isStopped) {
             start();
         }
 
         let metrics = metricsModel.getMetricsFor('stream');
         let manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metrics);
-
-        seekTarget = e.seekTime;
-
         let latency = currentRepresentationInfo.DVRWindow ? currentRepresentationInfo.DVRWindow.end - playbackController.getTime() : NaN;
         metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: latency});
     }

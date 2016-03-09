@@ -31,7 +31,6 @@
 
 import AbrController from './controllers/AbrController.js';
 import BufferController from './controllers/BufferController.js';
-import PlaybackController from './controllers/PlaybackController.js';
 import StreamController from './controllers/StreamController.js';
 import MediaController from './controllers/MediaController.js';
 import TextController from './controllers/TextController.js';
@@ -88,6 +87,7 @@ function StreamProcessor(config) {
         fragmentController = FragmentController;
         dynamic = stream.getStreamInfo().manifestInfo.isDynamic;
 
+        indexHandler.initialize(this);
 
         abrController = AbrController(context).getInstance();
         abrController.initialize(type, this);
@@ -113,9 +113,6 @@ function StreamProcessor(config) {
             errHandler: ErrorHandler(context).getInstance(),
             requestModifier: RequestModifier(context).getInstance()
         });
-
-        indexHandler.initialize(this);
-        indexHandler.setCurrentTime(PlaybackController(context).getInstance().getStreamStartTime(getStreamInfo()));
 
         representationController = RepresentationController(context).create();
         representationController.initialize(this);
@@ -244,14 +241,6 @@ function StreamProcessor(config) {
         scheduleController.stop();
     }
 
-    function getIndexHandlerTime() {
-        return adapter.getIndexHandlerTime(this);
-    }
-
-    function setIndexHandlerTime(value) {
-        adapter.setIndexHandlerTime(this, value);
-    }
-
     function getCurrentRepresentationInfo() {
         return adapter.getCurrentRepresentationInfo(manifestModel.getValue(), representationController);
     }
@@ -311,8 +300,6 @@ function StreamProcessor(config) {
         getFragmentController: getFragmentController,
         getRepresentationController: getRepresentationController,
         getIndexHandler: getIndexHandler,
-        getIndexHandlerTime: getIndexHandlerTime,
-        setIndexHandlerTime: setIndexHandlerTime,
         getCurrentRepresentationInfo: getCurrentRepresentationInfo,
         getRepresentationInfoForQuality: getRepresentationInfoForQuality,
         isBufferingCompleted: isBufferingCompleted,
