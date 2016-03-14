@@ -532,7 +532,7 @@ function DashHandler(config) {
         if (currentSegmentList && currentSegmentList.length > 0) {
             originSegment = getSegmentByIndex(index, representation);
             if (originSegment) {
-                originAvailabilityTime = timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, originSegment.presentationStartTime)
+                originAvailabilityTime = timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, originSegment.presentationStartTime);
             } else {
                 originAvailabilityTime = index > 0 ? index * duration :
                     timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, requestedTime);

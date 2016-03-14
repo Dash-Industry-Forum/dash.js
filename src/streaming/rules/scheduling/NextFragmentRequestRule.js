@@ -28,14 +28,14 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Debug from '../../../core/Debug.js';
+//import Debug from '../../../core/Debug.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
 function NextFragmentRequestRule(config) {
 
     let instance;
-    let context = this.context;
-    let log = Debug(context).getInstance().log;
+    //let context = this.context;
+    //let log = Debug(context).getInstance().log;
     let adapter = config.adapter;
     //let sourceBufferController = config.sourceBufferController;
     //let virtualBuffer = config.virtualBuffer;
