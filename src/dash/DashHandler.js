@@ -531,13 +531,18 @@ function DashHandler(config) {
         // segment for the current index
         if (currentSegmentList && currentSegmentList.length > 0) {
             originSegment = getSegmentByIndex(index, representation);
-            originAvailabilityTime = originSegment ? timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, originSegment.presentationStartTime) :
-                (index > 0 ? (index * duration) : timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, requestedTime || currentSegmentList[0].presentationStartTime));
+            if (originSegment) {
+                originAvailabilityTime = timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, originSegment.presentationStartTime)
+            } else {
+                originAvailabilityTime = index > 0 ? index * duration :
+                    timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, requestedTime);
+            }
+
         } else {
             // If no segments exist, but index > 0, it means that we switch to the other representation, so
             // we should proceed from this time.
             // Otherwise we should start from the beginning for static mpds or from the end (live edge) for dynamic mpds
-            originAvailabilityTime = (index > 0) ? (index * duration) : (isDynamic ? periodRelativeRange.end : periodRelativeRange.start);
+            originAvailabilityTime = index > 0 ? index * duration : isDynamic ? periodRelativeRange.end : periodRelativeRange.start;
         }
 
         // segment list should not be out of the availability window range
