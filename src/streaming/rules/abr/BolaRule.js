@@ -39,6 +39,7 @@ import HTTPRequest from '../../vo/metrics/HTTPRequest.js';
 import DashAdapter from '../../../dash/DashAdapter.js';
 import EventBus from '../../../core/EventBus.js';
 import Events from '../../../core/events/Events.js';
+import Debug from '../../../core/Debug.js';
 
 // BOLA_STATE_ONE_BITRATE   : If there is only one bitrate (or initialization failed), always return NO_CHANGE.
 // BOLA_STATE_STARTUP       : Download fragments at most recently measured throughput.
@@ -60,6 +61,7 @@ function BolaRule(config) {
     const AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD = 3;
 
     let context = this.context;
+    let log = Debug(context).getInstance().log;
     let dashMetrics = config.dashMetrics;
     let metricsModel = config.metricsModel;
     let eventBus = EventBus(context).getInstance();
@@ -90,7 +92,7 @@ function BolaRule(config) {
 
         let mediaInfo = rulesContext.getMediaInfo();
 
-        let bitrate = mediaInfo.bitrateList;
+        let bitrate = mediaInfo.bitrateList.map(b => b.bandwidth);
         let bitrateCount = bitrate.length;
         if (bitrateCount < 2 || bitrate[0] >= bitrate[1] || bitrate[bitrateCount -  2] >= bitrate[bitrateCount - 1]) {
             // if bitrate list irregular, stick to lowest bitrate
@@ -192,6 +194,21 @@ function BolaRule(config) {
         initialState.virtualBuffer         = 0.0;
         initialState.throughputCount       = (isDynamic ? AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE : AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD);
 
+        if (BOLA_DEBUG) {
+            let info = '';
+            for (let i = 0; i < bitrate.length - 1; ++i) {
+                let ui  = utility[i];
+                let ui1 = utility[i + 1];
+                let ri  = bitrate[i];
+                let ri1 = bitrate[i + 1];
+                let th  = Vp * ((ui * ri1 - ui1 * ri) / (ri1 - ri) + gp);
+                let z = Vp * (ui + gp);
+                info += i + ':' + (bitrate[i] / 1000000).toFixed(3) + ' ' + th.toFixed(3) + '/' + z.toFixed(3) + ' ';
+            }
+            info += ' ' + (bitrate.length - 1) + ':' + (bitrate[bitrate.length - 1] / 1000000).toFixed(3) + ' -/' + (Vp * (utility[bitrate.length - 1] + gp)).toFixed(3);
+            log('BolaDebug ' + mediaInfo.type + ' bitrates ' + info);
+        }
+
         return initialState;
     }
 
@@ -214,7 +231,7 @@ function BolaRule(config) {
         let httpRequests = [];
         for (let i = allHttpRequests.length - 1; i >= 0; --i) {
             let request = allHttpRequests[i];
-            if (request.type === HTTPRequest.MEDIA_SEGMENT_TYPE && request._tfinish && request.tresponse) {
+            if (request.type === HTTPRequest.MEDIA_SEGMENT_TYPE && request._tfinish && request.tresponse && request.trace) {
                 httpRequests.push(request);
                 if (httpRequests.length === count) {
                     break;
@@ -243,7 +260,7 @@ function BolaRule(config) {
             totalInverse += downloadSeconds / downloadBits;
         }
 
-        if (BOLA_DEBUG) console.log('BolaDebug ' + mediaType + ' BolaRule last throughput = ' + (lastRequests.length / totalInverse / 1000000).toFixed(3) + ' :' + msg);
+        if (BOLA_DEBUG) log('BolaDebug ' + mediaType + ' BolaRule last throughput = ' + (lastRequests.length / totalInverse / 1000000).toFixed(3) + ' :' + msg);
 
         return lastRequests.length / totalInverse;
     }
@@ -322,7 +339,7 @@ function BolaRule(config) {
         if (metrics.BolaState.length === 0) {
             // initialization
 
-            if (BOLA_DEBUG) console.log('BolaDebug ' + mediaType + '\nBolaDebug ' + mediaType + ' BolaRule for state=- fragmentStart=' + adapter.getIndexHandlerTime(rulesContext.getStreamProcessor()).toFixed(3));
+            if (BOLA_DEBUG) log('BolaDebug ' + mediaType + '\nBolaDebug ' + mediaType + ' BolaRule for state=- fragmentStart=' + adapter.getIndexHandlerTime(rulesContext.getStreamProcessor()).toFixed(3));
 
             let initState = calculateInitialState(rulesContext);
             metricsModel.updateBolaState(mediaType, initState);
@@ -339,7 +356,7 @@ function BolaRule(config) {
                 let initThroughput = getLastThroughput(metrics, initState.throughputCount, mediaType);
                 if (initThroughput === 0.0) {
                     // We don't have information about any download yet - let someone else decide quality.
-                    if (BOLA_DEBUG) console.log('BolaDebug ' + mediaType + ' BolaRule quality unchanged for INITIALIZE');
+                    if (BOLA_DEBUG) log('BolaDebug ' + mediaType + ' BolaRule quality unchanged for INITIALIZE');
                     callback(switchRequest);
                     return;
                 }
@@ -348,7 +365,7 @@ function BolaRule(config) {
                 switchRequest = SwitchRequest(context).create(q, SwitchRequest.DEFAULT);
             }
 
-            if (BOLA_DEBUG) console.log('BolaDebug ' + mediaType + ' BolaRule quality ' + q + ' for INITIALIZE');
+            if (BOLA_DEBUG) log('BolaDebug ' + mediaType + ' BolaRule quality ' + q + ' for INITIALIZE');
             callback(switchRequest);
             return;
         }
@@ -358,18 +375,18 @@ function BolaRule(config) {
         // TODO: does changing bolaState conform to coding style, or should we clone?
 
         if (bolaState.state === BOLA_STATE_ONE_BITRATE) {
-            if (BOLA_DEBUG) console.log('BolaDebug ' + mediaType + ' BolaRule quality 0 for ONE_BITRATE');
+            if (BOLA_DEBUG) log('BolaDebug ' + mediaType + ' BolaRule quality 0 for ONE_BITRATE');
             callback(switchRequest);
             return;
         }
 
-        if (BOLA_DEBUG) console.log('BolaDebug ' + mediaType + '\nBolaDebug ' + mediaType + ' EXECUTE BolaRule for state=' + bolaState.state + ' fragmentStart=' + adapter.getIndexHandlerTime(rulesContext.getStreamProcessor()).toFixed(3));
+        if (BOLA_DEBUG) log('BolaDebug ' + mediaType + '\nBolaDebug ' + mediaType + ' EXECUTE BolaRule for state=' + bolaState.state + ' fragmentStart=' + adapter.getIndexHandlerTime(rulesContext.getStreamProcessor()).toFixed(3));
 
         let bufferLevel = dashMetrics.getCurrentBufferLevel(metrics) ? dashMetrics.getCurrentBufferLevel(metrics) : 0.0;
         let bolaQuality = getQualityFromBufferLevel(bolaState, bufferLevel);
         let lastThroughput = getLastThroughput(metrics, bolaState.throughputCount, mediaType);
 
-        if (BOLA_DEBUG) console.log('BolaDebug ' + mediaType + ' BolaRule bufferLevel=' + bufferLevel.toFixed(3) + '(+' + bolaState.virtualBuffer.toFixed(3) + ') lastThroughput=' + (lastThroughput / 1000000.0).toFixed(3) + ' tentativeQuality=' + bolaQuality + ',' + getQualityFromBufferLevel(bolaState, bufferLevel + bolaState.virtualBuffer));
+        if (BOLA_DEBUG) log('BolaDebug ' + mediaType + ' BolaRule bufferLevel=' + bufferLevel.toFixed(3) + '(+' + bolaState.virtualBuffer.toFixed(3) + ') lastThroughput=' + (lastThroughput / 1000000.0).toFixed(3) + ' tentativeQuality=' + bolaQuality + ',' + getQualityFromBufferLevel(bolaState, bufferLevel + bolaState.virtualBuffer));
 
         if (bufferLevel <= 0.1) {
             // rebuffering occurred, reset virtual buffer
@@ -452,7 +469,7 @@ function BolaRule(config) {
             }
             if (bolaState.state !== BOLA_STATE_STEADY) {
                 // still in startup mode
-                if (BOLA_DEBUG) console.log('BolaDebug ' + mediaType + ' BolaRule quality ' + q + '>' + bolaQuality + ' for STARTUP');
+                if (BOLA_DEBUG) log('BolaDebug ' + mediaType + ' BolaRule quality ' + q + '>' + bolaQuality + ' for STARTUP');
                 bolaState.lastQuality = q;
                 metricsModel.updateBolaState(mediaType, bolaState);
                 switchRequest = SwitchRequest(context).create(q, SwitchRequest.DEFAULT);
@@ -501,7 +518,7 @@ function BolaRule(config) {
         bolaState.lastQuality = bolaQuality;
         metricsModel.updateBolaState(mediaType, bolaState);
         switchRequest = SwitchRequest(context).create(bolaQuality, SwitchRequest.DEFAULT);
-        if (BOLA_DEBUG) console.log('BolaDebug ' + mediaType + ' BolaRule quality ' + bolaQuality + ' delay=' + delaySeconds.toFixed(3) + ' for STEADY');
+        if (BOLA_DEBUG) log('BolaDebug ' + mediaType + ' BolaRule quality ' + bolaQuality + ' delay=' + delaySeconds.toFixed(3) + ' for STEADY');
         callback(switchRequest);
     }
 
