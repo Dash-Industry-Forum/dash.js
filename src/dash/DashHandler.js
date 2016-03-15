@@ -259,7 +259,7 @@ function DashHandler(config) {
                 fTime = seg.presentationStartTime - period.start;
                 sDuration = representation.adaptation.period.duration;
                 log(representation.segmentInfoType + ': ' + fTime + ' / ' + sDuration);
-                isFinished = segmentInfoType === 'SegmentTimeline' ? false : (fTime >= sDuration);
+                isFinished = segmentInfoType === 'SegmentTimeline' && isDynamic ? false : (fTime >= sDuration);
             }
         } else {
             isFinished = true;
