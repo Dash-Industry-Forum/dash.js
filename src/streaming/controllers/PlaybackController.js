@@ -59,6 +59,7 @@ function PlaybackController() {
         streamInfo,
         isDynamic,
         mediaPlayerModel,
+        initialSeekCompleted,
         playOnceInitialized;
 
     function setup() {
@@ -66,8 +67,9 @@ function PlaybackController() {
         liveStartTime = NaN;
         wallclockTimeIntervalId = null;
         isDynamic = null;
-        commonEarliestTime = {};
+        initialSeekCompleted = false;
         playOnceInitialized = false;
+        commonEarliestTime = {};
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
     }
 
@@ -255,7 +257,7 @@ function PlaybackController() {
             presentationStartTime = presentationStartTime || liveStartTime;
 
         } else {
-            if (!isNaN(startTimeOffset) && startTimeOffset < streamInfo.duration && startTimeOffset >= 0) {
+            if (!isNaN(startTimeOffset) && startTimeOffset < Math.max(streamInfo.manifestInfo.duration, streamInfo.duration) && startTimeOffset >= 0) {
                 presentationStartTime = startTimeOffset;
             } else {
                 let cet = commonEarliestTime[streamInfo.id] || 0.0;
@@ -300,9 +302,10 @@ function PlaybackController() {
 
     function seekToStartTimeOffset() {
         let initialSeekTime = getStreamStartTime(streamInfo, false);
-        if (!isSeeking() && initialSeekTime > 0) {
-            log('Starting playback at offset: ' + initialSeekTime);
+        if (!initialSeekCompleted && initialSeekTime > 0) {
+            initialSeekCompleted = true;
             seek(initialSeekTime);
+            log('Starting playback at offset: ' + initialSeekTime);
         }
     }
 

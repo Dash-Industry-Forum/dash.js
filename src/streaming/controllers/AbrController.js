@@ -474,10 +474,15 @@ function AbrController() {
 
     function onFragmentLoadProgress(e) {
         var type = e.request.mediaType;
-        if (getAutoSwitchBitrateFor(type)) { //check to see if there are parallel request or just one at a time.
+        if (getAutoSwitchBitrateFor(type)) { //check to see if we are in manual or auto switch mode.
 
             var rules = abrRulesCollection.getRules(ABRRulesCollection.ABANDON_FRAGMENT_RULES);
             var scheduleController = streamProcessorDict[type].getScheduleController();
+
+            // There may be a fragment load in progress when we switch periods and recreated some controllers.
+            // so return if that is the case.
+            if (!scheduleController) return;
+
             var fragmentModel = scheduleController.getFragmentModel();
             var callback = function (switchRequest) {
 
