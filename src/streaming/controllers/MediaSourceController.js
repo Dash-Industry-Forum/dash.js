@@ -58,9 +58,7 @@ function MediaSourceController() {
     }
 
     function detachMediaSource(videoModel) {
-        // it seems that any value passed to the setSource is cast to a sting when setting element.src,
-        // so we cannot use null or undefined to reset the element. Use empty string instead.
-        videoModel.setSource('');
+        videoModel.setSource(null);
     }
 
     function setDuration(source, value) {
