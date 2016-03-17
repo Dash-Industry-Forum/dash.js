@@ -88,7 +88,7 @@ Add dash.all.min.js to the end of the body.
 Now comes the good stuff. We need to create a MediaPlayer and initialize it.  
 ``` js
 
-var url = "http://dash.edgesuite.net/envivio/Envivio-dash2/manifest.mpd";
+var url = "http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd";
 var player = dashjs.MediaPlayer().create();
 player.initialize(document.querySelector("#videoPlayer"), url, true);
 
@@ -114,7 +114,7 @@ When it is all done, it should look similar to this:
         <script src="yourPathToDash/dash.all.min.js"></script>
         <script>
             (function(){
-                var url = "http://dash.edgesuite.net/envivio/Envivio-dash2/manifest.mpd";
+                var url = "http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd";
                 var player = dashjs.MediaPlayer().create();
                 player.initialize(document.querySelector("#videoPlayer"), url, true);
             })();
