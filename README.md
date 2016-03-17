@@ -27,6 +27,13 @@ Put the following code in your web page
 ```
 <script src="http://cdn.dashjs.org/latest/dash.all.min.js"></script>
 ...
+<style>
+    video {
+       width: 640px;
+       height: 360px;
+    }
+</style>
+...
 <body>
    <div>
        <video data-dashjs-player autoplay src="http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd" controls></video>
@@ -93,6 +100,12 @@ When it is all done, it should look similar to this:
 <html>
     <head>
         <title>Dash.js Rocks</title>
+        <style>
+            video {
+                width: 640px;
+                height: 360px;
+            }
+        </style>
     </head>
     <body>
         <div>
@@ -140,6 +153,12 @@ When it is all done, it should look similar to this:
 <html>
     <head>
         <title>Dash.js Rocks</title>
+        <style>
+            video {
+                width: 640px;
+                height: 360px;
+            }
+        </style>
     </head>
     <body>
         <div>
