@@ -26,6 +26,13 @@ Put the following code in your web page
 ```
 <script src="http://cdn.dashjs.org/latest/dash.all.min.js"></script>
 ...
+<style>
+    video {
+       width: 640px;
+       height: 360px;
+    }
+</style>
+...
 <body>
    <div>
        <video data-dashjs-player autoplay src="http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd" controls></video>
@@ -80,7 +87,7 @@ Add dash.all.min.js to the end of the body.
 Now comes the good stuff. We need to create a MediaPlayer and initialize it.  
 ``` js
 
-var url = "http://dash.edgesuite.net/envivio/Envivio-dash2/manifest.mpd";
+var url = "http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd";
 var player = dashjs.MediaPlayer().create();
 player.initialize(document.querySelector("#videoPlayer"), url, true);
 
@@ -92,6 +99,12 @@ When it is all done, it should look similar to this:
 <html>
     <head>
         <title>Dash.js Rocks</title>
+        <style>
+            video {
+                width: 640px;
+                height: 360px;
+            }
+        </style>
     </head>
     <body>
         <div>
@@ -100,7 +113,7 @@ When it is all done, it should look similar to this:
         <script src="yourPathToDash/dash.all.min.js"></script>
         <script>
             (function(){
-                var url = "http://dash.edgesuite.net/envivio/Envivio-dash2/manifest.mpd";
+                var url = "http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd";
                 var player = dashjs.MediaPlayer().create();
                 player.initialize(document.querySelector("#videoPlayer"), url, true);
             })();
@@ -139,6 +152,12 @@ When it is all done, it should look similar to this:
 <html>
     <head>
         <title>Dash.js Rocks</title>
+        <style>
+            video {
+                width: 640px;
+                height: 360px;
+            }
+        </style>
     </head>
     <body>
         <div>
