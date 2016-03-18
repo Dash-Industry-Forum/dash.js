@@ -32,7 +32,13 @@
                     "url":"http://dash.edgesuite.net/akamai/test/caption_test/ElephantsDream/elephants_dream_480p_heaac5_1.mpd",
                     "name":"External VTT subtitle file",
                     "browsers":"cdsbi"
+                },
+                {
+                    "url":"http://dash.edgesuite.net/akamai/bbb_30fps/bbb_30fps.mpd",
+                    "name":"SegmentTemplate/Number, live profile, 250kbps up to 15Mbps@4K. ",
+                    "browsers":"cdsbi"
                 }
+
             ]
         },
         {
