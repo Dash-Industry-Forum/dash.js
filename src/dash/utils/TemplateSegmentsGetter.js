@@ -39,7 +39,7 @@ function TemplateSegmentsGetter(config, isDynamic) {
 
     let instance;
 
-    function getSegmentsFromTemplate(representation, requestedTime, index) {
+    function getSegmentsFromTemplate(representation, requestedTime, index, availabilityUpperLimit) {
         var template = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
             AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate;
         var duration = representation.segmentDuration;
@@ -61,7 +61,7 @@ function TemplateSegmentsGetter(config, isDynamic) {
             segmentRange = {start: start, end: start};
         }
         else {
-            segmentRange = decideSegmentListRangeForTemplate(representation, requestedTime, index);
+            segmentRange = decideSegmentListRangeForTemplate(representation, requestedTime, index, availabilityUpperLimit);
         }
 
         startIdx = segmentRange.start;
@@ -90,7 +90,7 @@ function TemplateSegmentsGetter(config, isDynamic) {
         return segments;
     }
 
-    function decideSegmentListRangeForTemplate(representation, requestedTime, index) {
+    function decideSegmentListRangeForTemplate(representation, requestedTime, index, givenAvailabilityUpperLimit) {
         var duration = representation.segmentDuration;
         var minBufferTime = representation.adaptation.period.mpd.manifest.minBufferTime;
         var availabilityWindow = representation.segmentAvailabilityRange;
@@ -100,7 +100,7 @@ function TemplateSegmentsGetter(config, isDynamic) {
         };
         var currentSegmentList = representation.segments;
         var availabilityLowerLimit = 2 * duration;
-        var availabilityUpperLimit = Math.max(2 * minBufferTime, 10 * duration);
+        var availabilityUpperLimit = givenAvailabilityUpperLimit || Math.max(2 * minBufferTime, 10 * duration);
 
         var originAvailabilityTime = NaN;
         var originSegment = null;

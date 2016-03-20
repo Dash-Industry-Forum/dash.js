@@ -49,7 +49,7 @@ function SegmentsGetter(config, isDynamic) {
         listSegmentsGetter = ListSegmentsGetter(context).create(config, isDynamic);
     }
 
-    function getSegments(representation, requestedTime, index, onSegmentListUpdatedCallback) {
+    function getSegments(representation, requestedTime, index, onSegmentListUpdatedCallback, availabilityUpperLimit) {
         var segments;
         var type = representation.segmentInfoType;
 
@@ -58,11 +58,11 @@ function SegmentsGetter(config, isDynamic) {
             segments = representation.segments;
         } else {
             if (type === 'SegmentTimeline') {
-                segments = timelineSegmentsGetter.getSegments(representation, requestedTime, index);
+                segments = timelineSegmentsGetter.getSegments(representation, requestedTime, index, availabilityUpperLimit);
             } else if (type === 'SegmentTemplate') {
-                segments = templateSegmentsGetter.getSegments(representation, requestedTime, index);
+                segments = templateSegmentsGetter.getSegments(representation, requestedTime, index, availabilityUpperLimit);
             } else if (type === 'SegmentList') {
-                segments = listSegmentsGetter.getSegments(representation, requestedTime, index);
+                segments = listSegmentsGetter.getSegments(representation, requestedTime, index, availabilityUpperLimit);
             }
 
             if (onSegmentListUpdatedCallback) {

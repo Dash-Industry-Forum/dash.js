@@ -39,7 +39,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
 
     let instance;
 
-    function getSegmentsFromTimeline(representation, requestedTime, index) {
+    function getSegmentsFromTimeline(representation, requestedTime, index, availabilityUpperLimit) {
         var template = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
             AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate;
         var timeline = template.SegmentTimeline;
@@ -84,7 +84,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
 
         fragments = timeline.S_asArray;
 
-        calculatedRange = decideSegmentListRangeForTimeline(representation, requestedTime, index);
+        calculatedRange = decideSegmentListRangeForTimeline(representation, requestedTime, index, availabilityUpperLimit);
 
         // if calculatedRange exists we should generate segments that belong to this range.
         // Otherwise generate maxSegmentsAhead segments ahead of the requested time
@@ -177,9 +177,9 @@ function TimelineSegmentsGetter(config, isDynamic) {
         return segments;
     }
 
-    function decideSegmentListRangeForTimeline(representation, requestedTime, index) {
+    function decideSegmentListRangeForTimeline(representation, requestedTime, index, givenAvailabilityUpperLimit) {
         var availabilityLowerLimit = 2;
-        var availabilityUpperLimit = 10;
+        var availabilityUpperLimit = givenAvailabilityUpperLimit || 10;
         var firstIdx = 0;
         var lastIdx = Number.POSITIVE_INFINITY;
 

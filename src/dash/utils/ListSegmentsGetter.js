@@ -39,7 +39,7 @@ function ListSegmentsGetter(config, isDynamic) {
 
     let instance;
 
-    function getSegmentsFromList(representation, requestedTime, index) {
+    function getSegmentsFromList(representation, requestedTime, index, availabilityUpperLimit) {
         var list = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
             AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList;
         var baseURL = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
@@ -58,7 +58,7 @@ function ListSegmentsGetter(config, isDynamic) {
 
         start = representation.startNumber;
 
-        range = decideSegmentListRangeForTemplate(representation, requestedTime, index);
+        range = decideSegmentListRangeForTemplate(representation, requestedTime, index, availabilityUpperLimit);
         startIdx = Math.max(range.start, 0);
         endIdx = Math.min(range.end, list.SegmentURL_asArray.length - 1);
 
@@ -81,7 +81,7 @@ function ListSegmentsGetter(config, isDynamic) {
         return segments;
     }
 
-    function decideSegmentListRangeForTemplate(representation, requestedTime, index) {
+    function decideSegmentListRangeForTemplate(representation, requestedTime, index, givenAvailabilityUpperLimit) {
         var duration = representation.segmentDuration;
         var minBufferTime = representation.adaptation.period.mpd.manifest.minBufferTime;
         var availabilityWindow = representation.segmentAvailabilityRange;
@@ -91,7 +91,7 @@ function ListSegmentsGetter(config, isDynamic) {
         };
         var currentSegmentList = representation.segments;
         var availabilityLowerLimit = 2 * duration;
-        var availabilityUpperLimit = Math.max(2 * minBufferTime, 10 * duration);
+        var availabilityUpperLimit = givenAvailabilityUpperLimit || Math.max(2 * minBufferTime, 10 * duration);
 
         var originAvailabilityTime = NaN;
         var originSegment = null;
