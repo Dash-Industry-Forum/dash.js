@@ -13,7 +13,7 @@ If your goal is to improve or extend the code and contribute back to this projec
 All new work should be in the development branch. Master is now reserved for tagged builds.
 
 ## Documentation
-Before you get started, please read the Dash.js v2.0 Migration Document found [here](https://github.com/Dash-Industry-Forum/dash.js/wiki/Migration-2.0)
+Before you get started, please read the Dash.js v2.0 [Migration Document ](https://github.com/Dash-Industry-Forum/dash.js/wiki/Migration-2.0)
 
 Full [API Documentation ](http://cdn.dashjs.org/latest/jsdocs/index.html) is available describing all public methods, interfaces, properties, and events.
 
