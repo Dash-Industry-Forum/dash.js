@@ -343,6 +343,17 @@ function StreamController() {
         return null;
     }
 
+    function getActiveStreamCommonEarliestTime() {
+        let time = 0;
+        activeStream.getProcessors().forEach(p => {
+            let segments = p.getIndexHandler().getCurrentSegmentList();
+            if (segments.length && segments.length > 0) {
+                time = Math.max(segments[0].presentationStartTime, time);
+            }
+        });
+        return time;
+    }
+
     function switchStream(from, to, seekTime) {
 
         if (isStreamSwitchingInProgress || !from || !to || from === to) return;
@@ -718,6 +729,7 @@ function StreamController() {
         getStreamById: getStreamById,
         load: load,
         loadWithManifest: loadWithManifest,
+        getActiveStreamCommonEarliestTime: getActiveStreamCommonEarliestTime,
         setConfig: setConfig,
         reset: reset
     };
