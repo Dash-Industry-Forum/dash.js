@@ -260,8 +260,8 @@ function PlaybackController() {
             if (!isNaN(startTimeOffset) && startTimeOffset < Math.max(streamInfo.manifestInfo.duration, streamInfo.duration) && startTimeOffset >= 0) {
                 presentationStartTime = startTimeOffset;
             } else {
-                let cet = commonEarliestTime[streamInfo.id] || 0.0;
-                presentationStartTime = Math.max(cet, streamInfo.start);
+                let earliestTime = commonEarliestTime[streamInfo.id] || streamController.getActiveStreamCommonEarliestTime();
+                presentationStartTime = Math.max(earliestTime, streamInfo.start);
             }
         }
 
@@ -322,12 +322,12 @@ function PlaybackController() {
     function onDataUpdateCompleted(e) {
         if (e.error) return;
 
-        var representationInfo = adapter.convertDataToTrack(manifestModel.getValue(), e.currentRepresentation);
-        var info = representationInfo.mediaInfo.streamInfo;
+        let representationInfo = adapter.convertDataToTrack(manifestModel.getValue(), e.currentRepresentation);
+        let info = representationInfo.mediaInfo.streamInfo;
 
         if (streamInfo.id !== info.id) return;
+        streamInfo = info;
 
-        streamInfo = representationInfo.mediaInfo.streamInfo;
         updateCurrentTime();
     }
 
@@ -420,9 +420,7 @@ function PlaybackController() {
         let bufferedStart = Math.max(ranges.start(0), streamInfo.start);
         commonEarliestTime[streamInfo.id] = commonEarliestTime[streamInfo.id] === undefined ? bufferedStart : Math.max(commonEarliestTime[streamInfo.id], bufferedStart);
 
-        if (isSeeking()) {
-            commonEarliestTime = {};
-        } else if (getTime() < commonEarliestTime[streamInfo.id]) {
+        if (getTime() < commonEarliestTime[streamInfo.id]) {
             seek(getStreamStartTime(streamInfo, true));
         }
     }
