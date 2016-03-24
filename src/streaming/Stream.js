@@ -60,6 +60,7 @@ function Stream(config) {
     let capabilities = config.capabilities;
     let errHandler = config.errHandler;
     let timelineConverter = config.timelineConverter;
+    let baseURLController = config.baseURLController;
 
     let instance,
         streamProcessors,
@@ -297,13 +298,17 @@ function Stream(config) {
     function createIndexHandler() {
 
         let segmentBaseLoader = SegmentBaseLoader(context).getInstance();
+        segmentBaseLoader.setConfig({
+            baseURLController: baseURLController
+        });
         segmentBaseLoader.initialize();
 
         let handler = DashHandler(context).create({
             segmentBaseLoader: segmentBaseLoader,
             timelineConverter: timelineConverter,
             dashMetrics: DashMetrics(context).getInstance(),
-            metricsModel: MetricsModel(context).getInstance()
+            metricsModel: MetricsModel(context).getInstance(),
+            baseURLController: baseURLController
         });
 
         return handler;

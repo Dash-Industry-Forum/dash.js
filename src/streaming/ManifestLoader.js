@@ -84,17 +84,17 @@ function ManifestLoader(config) {
             request: request,
             success: function (data, textStatus, xhr) {
                 var actualUrl;
-                var baseUrl;
+                var baseUri;
 
                 // Handle redirects for the MPD - as per RFC3986 Section 5.1.3
                 if (xhr.responseURL && xhr.responseURL !== url) {
-                    baseUrl = urlUtils.parseBaseUrl(xhr.responseURL);
+                    baseUri = urlUtils.parseBaseUrl(xhr.responseURL);
                     actualUrl = xhr.responseURL;
                 } else {
-                    baseUrl = urlUtils.parseBaseUrl(url);
+                    baseUri = urlUtils.parseBaseUrl(url);
                 }
 
-                const manifest = parser.parse(data, baseUrl, xlinkController);
+                const manifest = parser.parse(data, xlinkController);
 
                 if (manifest) {
                     manifest.url = actualUrl || url;
@@ -104,6 +104,7 @@ function ManifestLoader(config) {
                         manifest.originalUrl = manifest.url;
                     }
 
+                    manifest.baseUri = baseUri;
                     manifest.loadedTime = new Date();
                     xlinkController.resolveManifestOnLoad(manifest);
                 } else {

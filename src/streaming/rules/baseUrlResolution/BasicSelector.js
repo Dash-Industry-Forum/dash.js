@@ -28,38 +28,36 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-/**
- * @class
- * @ignore
- */
-class FragmentRequest {
-    constructor() {
-        this.action = FragmentRequest.ACTION_DOWNLOAD;
-        this.startTime = NaN;
-        this.mediaType = null;
-        this.mediaInfo = null;
-        this.type = null;
-        this.duration = NaN;
-        this.timescale = NaN;
-        this.range = null;
-        this.url = null;
-        this.serviceLocation = null;
-        this.requestStartDate = null;
-        this.firstByteDate = null;
-        this.requestEndDate = null;
-        this.quality = NaN;
-        this.index = NaN;
-        this.availabilityStartTime = null;
-        this.availabilityEndTime = null;
-        this.wallStartTime = null;
-        this.bytesLoaded = NaN;
-        this.bytesTotal = NaN;
-        this.delayLoadingTime = NaN;
-        this.responseType = 'arraybuffer';
+
+import FactoryMaker from '../../../core/FactoryMaker.js';
+
+function BasicSelector(config) {
+
+    let instance;
+
+    const blacklistController = config.blacklistController;
+
+    function select(baseUrls) {
+        var index = 0;
+        var selectedBaseUrl;
+
+        if (baseUrls && baseUrls.some((baseUrl, idx) => {
+            index = idx;
+
+            return (!blacklistController.contains(baseUrl.serviceLocation));
+        })) {
+            selectedBaseUrl = baseUrls[index];
+        }
+
+        return selectedBaseUrl;
     }
+
+    instance = {
+        select: select
+    };
+
+    return instance;
 }
 
-FragmentRequest.ACTION_DOWNLOAD = 'download';
-FragmentRequest.ACTION_COMPLETE = 'complete';
-
-export default FragmentRequest;
+BasicSelector.__dashjs_factory_name = 'BasicSelector';
+export default FactoryMaker.getClassFactory(BasicSelector);

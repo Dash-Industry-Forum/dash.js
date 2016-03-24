@@ -130,7 +130,25 @@ function MetricsModel() {
         return vo;
     }
 
-    function addHttpRequest(mediaType, tcpid, type, url, actualurl, range, trequest, tresponse, tfinish, responsecode, mediaduration, responseHeaders, traces) {
+    function appendHttpTrace(httpRequest, s, d, b) {
+        var vo = new HTTPRequest.Trace();
+
+        vo.s = s;
+        vo.d = d;
+        vo.b = b;
+
+        httpRequest.trace.push(vo);
+
+        if (!httpRequest.interval) {
+            httpRequest.interval = 0;
+        }
+
+        httpRequest.interval += d;
+
+        return vo;
+    }
+
+    function addHttpRequest(mediaType, tcpid, type, url, actualurl, serviceLocation, range, trequest, tresponse, tfinish, responsecode, mediaduration, responseHeaders, traces) {
         var vo = new HTTPRequest();
 
         // ISO 23009-1 D.4.3 NOTE 2:
@@ -148,6 +166,7 @@ function MetricsModel() {
                 null,
                 type,
                 url,
+                null,
                 null,
                 range,
                 trequest,
@@ -174,6 +193,7 @@ function MetricsModel() {
         vo._stream = mediaType;
         vo._mediaduration = mediaduration;
         vo._responseHeaders = responseHeaders;
+        vo._serviceLocation = serviceLocation;
 
         if (traces) {
             traces.forEach(trace => {
@@ -188,24 +208,6 @@ function MetricsModel() {
         getMetricsFor(mediaType).HttpList.push(vo);
 
         metricAdded(mediaType, adapter.metricsList.HTTP_REQUEST, vo);
-        return vo;
-    }
-
-    function appendHttpTrace(httpRequest, s, d, b) {
-        var vo = new HTTPRequest.Trace();
-
-        vo.s = s;
-        vo.d = d;
-        vo.b = b;
-
-        httpRequest.trace.push(vo);
-
-        if (!httpRequest.interval) {
-            httpRequest.interval = 0;
-        }
-
-        httpRequest.interval += d;
-
         return vo;
     }
 

@@ -49,11 +49,13 @@ function XHRLoader(cfg) {
     let instance;
     let xhrs;
     let delayedXhrs;
+    let retryTimers;
     let downloadErrorToRequestTypeMap;
 
     function setup() {
         xhrs = [];
         delayedXhrs = [];
+        retryTimers = [];
 
         downloadErrorToRequestTypeMap = {
             [HTTPRequest.MPD_TYPE]:                         errHandler.DOWNLOAD_ERROR_ID_MANIFEST,
@@ -91,6 +93,7 @@ function XHRLoader(cfg) {
                     request.type,
                     request.url,
                     xhr.responseURL || null,
+                    request.serviceLocation || null,
                     request.range || null,
                     request.requestStartDate,
                     request.firstByteDate,
@@ -115,9 +118,11 @@ function XHRLoader(cfg) {
 
                 if (remainingAttempts > 0) {
                     remainingAttempts--;
-                    setTimeout(function () {
-                        internalLoad(config, remainingAttempts);
-                    }, mediaPlayerModel.getRetryIntervalForType(request.type));
+                    retryTimers.push(
+                        setTimeout(function () {
+                            internalLoad(config, remainingAttempts);
+                        }, mediaPlayerModel.getRetryIntervalForType(request.type))
+                    );
                 } else {
                     errHandler.downloadError(
                         downloadErrorToRequestTypeMap[request.type],
@@ -259,6 +264,9 @@ function XHRLoader(cfg) {
      * @instance
      */
     function abort() {
+        retryTimers.forEach(t => clearTimeout(t));
+        retryTimers = [];
+
         delayedXhrs.forEach(x => clearTimeout(x.delayTimeout));
         delayedXhrs = [];
 

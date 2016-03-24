@@ -32,34 +32,28 @@
  * @class
  * @ignore
  */
-class FragmentRequest {
-    constructor() {
-        this.action = FragmentRequest.ACTION_DOWNLOAD;
-        this.startTime = NaN;
-        this.mediaType = null;
-        this.mediaInfo = null;
-        this.type = null;
-        this.duration = NaN;
-        this.timescale = NaN;
-        this.range = null;
-        this.url = null;
-        this.serviceLocation = null;
-        this.requestStartDate = null;
-        this.firstByteDate = null;
-        this.requestEndDate = null;
-        this.quality = NaN;
-        this.index = NaN;
-        this.availabilityStartTime = null;
-        this.availabilityEndTime = null;
-        this.wallStartTime = null;
-        this.bytesLoaded = NaN;
-        this.bytesTotal = NaN;
-        this.delayLoadingTime = NaN;
-        this.responseType = 'arraybuffer';
+
+const DEFAULT_DVB_PRIORITY = 1;
+const DEFAULT_DVB_WEIGHT = 1;
+
+class BaseURL {
+    constructor(url, serviceLocation, priority, weight) {
+        this.url = url || '';
+        this.serviceLocation = serviceLocation || url || '';
+
+        // DVB extensions
+        this.dvb_priority = priority || DEFAULT_DVB_PRIORITY;
+        this.dvb_weight = weight || DEFAULT_DVB_WEIGHT;
+
+        /* currently unused:
+         * byteRange,
+         * availabilityTimeOffset,
+         * availabilityTimeComplete
+         */
     }
 }
 
-FragmentRequest.ACTION_DOWNLOAD = 'download';
-FragmentRequest.ACTION_COMPLETE = 'complete';
+BaseURL.DEFAULT_DVB_PRIORITY = DEFAULT_DVB_PRIORITY;
+BaseURL.DEFAULT_DVB_WEIGHT = DEFAULT_DVB_WEIGHT;
 
-export default FragmentRequest;
+export default BaseURL;

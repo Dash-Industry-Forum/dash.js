@@ -42,12 +42,43 @@ function DVBErrorsTranslator(config) {
     let metricModel = config.metricsModel;
     let mpd;
 
+    function report(vo) {
+        var o = new DVBErrors();
+
+        if (!mpd) {
+            return;
+        }
+
+        for (const key in vo) {
+            if (vo.hasOwnProperty(key)) {
+                o[key] = vo[key];
+            }
+        }
+
+        if (!o.mpdurl) {
+            o.mpdurl = mpd.originalUrl || mpd.url;
+        }
+
+        if (!o.terror) {
+            o.terror = new Date();
+        }
+
+        metricModel.addDVBErrors(o);
+    }
+
     function onManifestUpdate(e) {
         if (e.error) {
             return;
         }
 
         mpd = e.manifest;
+    }
+
+    function onServiceLocationChanged(e) {
+        report({
+            errorcode:          DVBErrors.BASE_URL_CHANGED,
+            servicelocation:    e.entry
+        });
     }
 
     function onBecameReporter() {
@@ -62,9 +93,10 @@ function DVBErrorsTranslator(config) {
                 (vo.responsecode < 100) ||  // unknown status codes
                 (vo.responsecode >= 600)) { // unknown status codes
             report({
-                errorcode:  vo.responsecode || DVBErrors.CONNECTION_ERROR,
-                url:        vo.url,
-                terror:     vo.tresponse
+                errorcode:          vo.responsecode || DVBErrors.CONNECTION_ERROR,
+                url:                vo.url,
+                terror:             vo.tresponse,
+                servicelocation:    vo._serviceLocation
             });
         }
     }
@@ -99,37 +131,13 @@ function DVBErrorsTranslator(config) {
         });
     }
 
-    function report(vo) {
-        var o = new DVBErrors();
-
-        if (!mpd) {
-            return;
-        }
-
-        for (const key in vo) {
-            if (vo.hasOwnProperty(key)) {
-                o[key] = vo[key];
-            }
-        }
-
-        if (!o.mpdurl) {
-            o.mpdurl = mpd.originalUrl || mpd.url;
-        }
-
-        if (!o.servicelocation) {
-            // note, this will need changing when we get BaseURL switching
-            o.servicelocation = mpd.BaseURL.serviceLocation;
-        }
-
-        if (!o.terror) {
-            o.terror = new Date();
-        }
-
-        metricModel.addDVBErrors(o);
-    }
-
     function initialise() {
         eventBus.on(Events.MANIFEST_UPDATED, onManifestUpdate, instance);
+        eventBus.on(
+            Events.SERVICE_LOCATION_BLACKLIST_CHANGED,
+            onServiceLocationChanged,
+            instance
+        );
         eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricEvent, instance);
         eventBus.on(MediaPlayerEvents.METRIC_UPDATED, onMetricEvent, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_ERROR, onPlaybackError, instance);
@@ -142,6 +150,11 @@ function DVBErrorsTranslator(config) {
 
     function reset() {
         eventBus.off(Events.MANIFEST_UPDATED, onManifestUpdate, instance);
+        eventBus.off(
+            Events.SERVICE_LOCATION_BLACKLIST_CHANGED,
+            onServiceLocationChanged,
+            instance
+        );
         eventBus.off(MediaPlayerEvents.METRIC_ADDED, onMetricEvent, instance);
         eventBus.off(MediaPlayerEvents.METRIC_UPDATED, onMetricEvent, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_ERROR, onPlaybackError, instance);

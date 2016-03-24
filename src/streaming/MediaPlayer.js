@@ -52,6 +52,7 @@ import VideoModel from './models/VideoModel.js';
 import RulesController from './rules/RulesController.js';
 import SynchronizationRulesCollection from './rules/synchronization/SynchronizationRulesCollection.js';
 import MediaSourceController from './controllers/MediaSourceController.js';
+import BaseURLController from './controllers/BaseURLController.js';
 import Debug from './../core/Debug.js';
 import EventBus from './../core/EventBus.js';
 import Events from './../core/events/Events.js';
@@ -1738,6 +1739,7 @@ function MediaPlayer() {
             liveEdgeFinder: LiveEdgeFinder(context).getInstance(),
             mediaSourceController: MediaSourceController(context).getInstance(),
             timeSyncController: TimeSyncController(context).getInstance(),
+            baseURLController: BaseURLController(context).getInstance(),
             virtualBuffer: virtualBuffer,
             errHandler: errHandler,
             timelineConverter: TimelineConverter(context).getInstance()

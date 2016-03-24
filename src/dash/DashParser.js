@@ -298,85 +298,16 @@ function DashParser(/*config*/) {
         return period;
     }
 
-    function getBaseUrlValuesMap() {
-        var mpd,
-            period,
-            adaptationSet,
-            representation,
-            common;
-
-        common = [
-            {
-                name: 'BaseURL',
-                merge: true,
-                mergeFunction: function (parentValue, childValue) {
-                    var mergedValue,
-                        origin;
-
-                    // child is absolute, don't merge
-                    if (httpOrHttpsRegex.test(childValue)) {
-                        mergedValue = childValue;
-                    } else if (childValue.charAt(0) === '/' && originRegex.test(parentValue)) {
-                        origin = parentValue.match(originRegex);
-                        mergedValue = origin[1] + childValue;
-                    } else {
-                        mergedValue = parentValue + childValue;
-                    }
-
-                    return mergedValue;
-                }
-            }
-        ];
-
-        mpd = {};
-        mpd.name = 'mpd';
-        mpd.isRoot = true;
-        mpd.isArray = true;
-        mpd.parent = null;
-        mpd.children = [];
-        mpd.properties = common;
-
-        period = {};
-        period.name = 'Period';
-        period.isRoot = false;
-        period.isArray = true;
-        period.parent = null;
-        period.children = [];
-        period.properties = common;
-        mpd.children.push(period);
-
-        adaptationSet = {};
-        adaptationSet.name = 'AdaptationSet';
-        adaptationSet.isRoot = false;
-        adaptationSet.isArray = true;
-        adaptationSet.parent = period;
-        adaptationSet.children = [];
-        adaptationSet.properties = common;
-        period.children.push(adaptationSet);
-
-        representation = {};
-        representation.name = 'Representation';
-        representation.isRoot = false;
-        representation.isArray = true;
-        representation.parent = adaptationSet;
-        representation.children = [];
-        representation.properties = common;
-        adaptationSet.children.push(representation);
-
-        return mpd;
-    }
-
     function getDashMap() {
         var result = [];
 
         result.push(getCommonValuesMap());
         result.push(getSegmentValuesMap());
-        result.push(getBaseUrlValuesMap());
 
         return result;
     }
 
-    function parse(data, baseUrl, xlinkController) {
+    function parse(data, xlinkController) {
 
         var converter = new X2JS(matchers, '', true);
         var iron = new ObjectIron(getDashMap());
@@ -395,18 +326,6 @@ function DashParser(/*config*/) {
             }
 
             json = new Date();
-
-            if (!manifest.hasOwnProperty('BaseURL')) {
-                //log("Setting baseURL: " + baseUrl);
-                manifest.BaseURL = baseUrl;
-            } else {
-                // Setting manifest's BaseURL to the first BaseURL
-                manifest.BaseURL = manifest.BaseURL_asArray[0];
-
-                if (manifest.BaseURL.toString().indexOf('http') !== 0) {
-                    manifest.BaseURL = baseUrl + manifest.BaseURL;
-                }
-            }
 
             if (manifest.hasOwnProperty('Location')) {
                 // for now, do not support multiple Locations -

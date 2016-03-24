@@ -35,6 +35,7 @@ import Events from '../core/events/Events.js';
 import EventBus from '../core/EventBus.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 import Debug from '../core/Debug.js';
+import URLUtils from '../streaming/utils/URLUtils.js';
 
 import {replaceTokenForTemplate, getTimeBasedSegment, getSegmentByIndex} from './utils/SegmentsUtils.js';
 import SegmentsGetter from './utils/SegmentsGetter.js';
@@ -46,11 +47,13 @@ function DashHandler(config) {
     let context = this.context;
     let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
+    const urlUtils = URLUtils(context).getInstance();
 
     let segmentBaseLoader = config.segmentBaseLoader;
     let timelineConverter = config.timelineConverter;
     let dashMetrics = config.dashMetrics;
     let metricsModel = config.metricsModel;
+    const baseURLController = config.baseURLController;
 
     let instance,
         index,
@@ -58,14 +61,12 @@ function DashHandler(config) {
         isDynamic,
         type,
         currentTime,
-        absUrl,
         streamProcessor,
         segmentsGetter;
 
     function setup() {
         index = -1;
         currentTime = 0;
-        absUrl = new RegExp('^(?:(?:[a-z]+:)?\/)?\/', 'i');
 
         eventBus.on(Events.INITIALIZATION_LOADED, onInitializationLoaded, instance);
         eventBus.on(Events.SEGMENTS_LOADED, onSegmentsLoaded, instance);
@@ -118,20 +119,26 @@ function DashHandler(config) {
         return url.split('$RepresentationID$').join(v);
     }
 
-    function getRequestUrl(destination, representation) {
-        var baseURL = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
-            AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL;
+    function setRequestUrl(request, destination, representation) {
+        var baseURL = baseURLController.resolve(representation.path);
         var url;
+        var serviceLocation;
 
-        if (destination === baseURL) {
-            url = destination;
-        } else if (absUrl.test(destination)) {
+        if (!baseURL || (destination === baseURL.url) || (!urlUtils.isRelative(destination))) {
             url = destination;
         } else {
-            url = baseURL + destination;
+            url = baseURL.url + destination;
+            serviceLocation = baseURL.serviceLocation;
         }
 
-        return url;
+        if (urlUtils.isRelative(url)) {
+            return false;
+        }
+
+        request.url = url;
+        request.serviceLocation = serviceLocation;
+
+        return true;
     }
 
     function generateInitRequest(representation, mediaType) {
@@ -143,7 +150,6 @@ function DashHandler(config) {
 
         request.mediaType = mediaType;
         request.type = HTTPRequest.INIT_SEGMENT_TYPE;
-        request.url = getRequestUrl(representation.initialization, representation);
         request.range = representation.range;
         presentationStartTime = period.start;
         request.availabilityStartTime = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationStartTime, representation.adaptation.period.mpd, isDynamic);
@@ -151,7 +157,9 @@ function DashHandler(config) {
         request.quality = representation.index;
         request.mediaInfo = streamProcessor.getMediaInfo();
 
-        return request;
+        if (setRequestUrl(request, representation.initialization, representation)) {
+            return request;
+        }
     }
 
     function getInitRequest(representation) {
@@ -303,9 +311,8 @@ function DashHandler(config) {
         var representation = segment.representation;
         var bandwidth = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
             AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].bandwidth;
-        var url;
+        var url = segment.media;
 
-        url = getRequestUrl(segment.media, representation);
         url = replaceTokenForTemplate(url, 'Number', segment.replacementNumber);
         url = replaceTokenForTemplate(url, 'Time', segment.replacementTime);
         url = replaceTokenForTemplate(url, 'Bandwidth', bandwidth);
@@ -314,7 +321,6 @@ function DashHandler(config) {
 
         request.mediaType = type;
         request.type = HTTPRequest.MEDIA_SEGMENT_TYPE;
-        request.url = url;
         request.range = segment.mediaRange;
         request.startTime = segment.presentationStartTime;
         request.duration = segment.duration;
@@ -327,7 +333,9 @@ function DashHandler(config) {
         request.mediaInfo = streamProcessor.getMediaInfo();
         request.adaptationIndex = representation.adaptation.index;
 
-        return request;
+        if (setRequestUrl(request, url, representation)) {
+            return request;
+        }
     }
 
     function getSegmentRequestForTime(representation, time, options) {
