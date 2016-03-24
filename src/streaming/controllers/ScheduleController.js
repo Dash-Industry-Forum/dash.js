@@ -379,27 +379,25 @@ function ScheduleController(config) {
     function onLiveEdgeSearchCompleted (e) {
         if (e.error) return;
 
-        // step back from a found live edge time to be able to buffer some data
-        var liveEdgeTime = e.liveEdge;
-        var manifestInfo = currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo;
-        var startTime = liveEdgeTime - Math.min((playbackController.getLiveDelay(currentRepresentationInfo.fragmentDuration)), manifestInfo.DVRWindowSize / 2);
-        var metrics = metricsModel.getMetricsFor('stream');
-        var manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metrics);
-        var currentLiveStart = playbackController.getLiveStartTime();
+        let liveEdgeTime = e.liveEdge;
+        let manifestInfo = currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo;
+        let startTime = liveEdgeTime - Math.min((playbackController.getLiveDelay(currentRepresentationInfo.fragmentDuration)), manifestInfo.DVRWindowSize / 2);
+        let metrics = metricsModel.getMetricsFor('stream');
+        let manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metrics);
+        let currentLiveStart = playbackController.getLiveStartTime();
 
-        var request,
+        let request,
             actualStartTime;
 
         // get a request for a start time
         request = adapter.getFragmentRequestForTime(streamProcessor, currentRepresentationInfo, startTime, {ignoreIsFinished: true});
         actualStartTime = request.startTime;
-
+        seekTarget = actualStartTime; //Setting seekTarget will allow NextFragmentRequestRule's first request time to be accurate.
         if (isNaN(currentLiveStart) || (actualStartTime > currentLiveStart)) {
             playbackController.setLiveStartTime(actualStartTime);
         }
 
         metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: actualStartTime, presentationStartTime: liveEdgeTime, latency: liveEdgeTime - actualStartTime, clientTimeOffset: timelineConverter.getClientTimeOffset()});
-
         ready = true;
         start();
     }
