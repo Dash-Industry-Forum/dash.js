@@ -78,7 +78,7 @@ function DashHandler(config) {
         type = streamProcessor.getType();
         isDynamic = streamProcessor.isDynamic();
 
-        segmentsGetter = SegmentsGetter(context).create(config);
+        segmentsGetter = SegmentsGetter(context).create(config, isDynamic);
     }
 
     function getStreamProcessor() {
