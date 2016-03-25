@@ -60,13 +60,13 @@ function DashHandler(config) {
         currentTime,
         absUrl,
         streamProcessor,
-        currentSegmentList,
+        initialSegmentList,
         segmentsGetter;
 
     function setup() {
         index = -1;
         currentTime = 0;
-        currentSegmentList = [];
+        initialSegmentList = null;
         absUrl = new RegExp('^(?:(?:[a-z]+:)?\/)?\/', 'i');
 
         eventBus.on(Events.INITIALIZATION_LOADED, onInitializationLoaded, instance);
@@ -97,14 +97,14 @@ function DashHandler(config) {
         return index;
     }
 
-    function getCurrentSegmentList() {
-        return currentSegmentList;
+    function getInitialSegmentList() {
+        return initialSegmentList;
     }
 
     function reset() {
         segmentsGetter = null;
         currentTime = 0;
-        currentSegmentList = [];
+        initialSegmentList = null;
         requestedTime = NaN;
         index = -1;
         isDynamic = null;
@@ -210,7 +210,10 @@ function DashHandler(config) {
             lastSegment;
 
         representation.segments = segments;
-        currentSegmentList = segments;
+        if (!initialSegmentList) {
+            initialSegmentList = segments;
+        }
+
         lastIdx = segments.length - 1;
         if (isDynamic && isNaN(timelineConverter.getExpectedLiveEdge())) {
             lastSegment = segments[lastIdx];
@@ -497,7 +500,7 @@ function DashHandler(config) {
         setCurrentTime: setCurrentTime,
         getCurrentTime: getCurrentTime,
         getCurrentIndex: getCurrentIndex,
-        getCurrentSegmentList: getCurrentSegmentList,
+        getInitialSegmentList: getInitialSegmentList,
         reset: reset
     };
 

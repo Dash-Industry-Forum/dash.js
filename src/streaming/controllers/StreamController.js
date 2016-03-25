@@ -344,14 +344,14 @@ function StreamController() {
     }
 
     function getActiveStreamCommonEarliestTime() {
-        let time = 0;
+        let commonEarliestTime = [];
         activeStream.getProcessors().forEach(p => {
-            let segments = p.getIndexHandler().getCurrentSegmentList();
+            let segments = p.getIndexHandler().getInitialSegmentList();
             if (segments.length && segments.length > 0) {
-                time = Math.max(segments[0].presentationStartTime, time);
+                commonEarliestTime.push(segments[0].presentationStartTime);
             }
         });
-        return time;
+        return Math.max.apply( Math, commonEarliestTime);
     }
 
     function switchStream(from, to, seekTime) {

@@ -419,10 +419,11 @@ function PlaybackController() {
         if (!ranges || !ranges.length) return;
         let bufferedStart = Math.max(ranges.start(0), streamInfo.start);
         commonEarliestTime[streamInfo.id] = commonEarliestTime[streamInfo.id] === undefined ? bufferedStart : Math.max(commonEarliestTime[streamInfo.id], bufferedStart);
-
-        if (getTime() < commonEarliestTime[streamInfo.id]) {
-            seek(getStreamStartTime(streamInfo, true));
-        }
+        //Commenting this out for now I do not believe it is still needed after fix for issue #1275.
+        //we still want to trap commonEarliestTime for use on seek back to zero.
+        //if (!getTime() < commonEarliestTime[streamInfo.id]) {
+        //    seek(getStreamStartTime(streamInfo, true));
+        //}
     }
 
     function onBufferLevelStateChanged(e) {
