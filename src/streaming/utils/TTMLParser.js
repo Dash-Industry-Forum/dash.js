@@ -82,7 +82,7 @@ function TTMLParser() {
             body, // body in tt
             type;
 
-        var errorMsg = "";
+        var errorMsg = '';
 
         let converter = new X2JS([], '', false);
 
@@ -154,7 +154,7 @@ function TTMLParser() {
         // Extract the div
         var divs = ttml.tt.body_asArray[0].__children;
 
-        divs.forEach(function(div) {
+        divs.forEach(function (div) {
             var cues = div.div.p_asArray;
 
             // Check if cues is not empty or undefined.
@@ -177,7 +177,7 @@ function TTMLParser() {
                 var pEndTime;
                 var spanStartTime;
                 var spanEndTime;
-                cues.forEach(function(cue) {
+                cues.forEach(function (cue) {
 
                     // Obtain the start and end time of the cue.
                     if (cue.hasOwnProperty('begin') && cue.hasOwnProperty('end')) {
@@ -354,10 +354,10 @@ function TTMLParser() {
                         var text = '';
                         var textElements = cue.__children;
                         if (textElements.length) {
-                            textElements.forEach(function(el) {
+                            textElements.forEach(function (el) {
                                 if (el.hasOwnProperty('span')) {
                                     var spanElements = el.span.__children;
-                                    spanElements.forEach(function(spanEl) {
+                                    spanElements.forEach(function (spanEl) {
                                         // If metadata is present, do not process.
                                         if (spanElements.hasOwnProperty('metadata')) {
                                             return;
@@ -391,7 +391,7 @@ function TTMLParser() {
             }
         });
 
-        if (errorMsg !== "") {
+        if (errorMsg !== '') {
             log(errorMsg);
         }
 
@@ -534,9 +534,9 @@ function TTMLParser() {
     function getNamespacePrefix(json, ns) {
         // Obtain the namespace prefix.
         var r = Object.keys(json)
-            .filter(function(k) {
+            .filter(function (k) {
                 return (k.split(':')[0] === 'xmlns' || k.split(':')[1] === 'xmlns') && json[k] === ns;
-            }).map(function(k) {
+            }).map(function (k) {
                 return k.split(':')[2] || k.split(':')[1];
             });
         if (r.length != 1) {
@@ -576,7 +576,7 @@ function TTMLParser() {
         // Convert the alpha value in decimal between 0 and 1.
         var alpha = parseFloat(parseInt((parseInt(hexMatrice[3], 16) / 255) * 1000, 10) / 1000);
         // Get the standard RGB value.
-        var rgb = hexMatrice.slice(0, 3).map(function(i) {
+        var rgb = hexMatrice.slice(0, 3).map(function (i) {
             return parseInt(i, 16);
         });
         // Return the RGBA value for CSS.
@@ -789,7 +789,7 @@ function TTMLParser() {
     function getProcessedStyle(reference, cellUnit) {
         var styles = [];
         var ids = reference.match(/\S+/g);
-        ids.forEach(function(id) {
+        ids.forEach(function (id) {
             // Find the style for each id received.
             var cueStyle = findStyleFromID(ttmlStyling, id);
             if (cueStyle) {
@@ -888,7 +888,7 @@ function TTMLParser() {
     function getProcessedRegion(reference, cellUnit) {
         var regions = [];
         var ids = reference.match(/\S+/g);
-        ids.forEach(function(id) {
+        ids.forEach(function (id) {
             // Find the region for each id received.
             var cueRegion = findRegionFromID(ttmlLayout, id);
             if (cueRegion) {
@@ -945,7 +945,7 @@ function TTMLParser() {
         // If br elements are found:
         if (indices.length) {
             // For each index of a br element we compute the HTML coming before and/or after it.
-            indices.forEach(function(i, index) {
+            indices.forEach(function (i, index) {
                 // If this is the first line break, we compute the HTML of the element coming before.
                 if (index === 0) {
                     var styleBefore = '';
@@ -1010,7 +1010,7 @@ function TTMLParser() {
 
     function constructCue(cueElements, cellUnit) {
         var cue = document.createElement('div');
-        cueElements.forEach(function(el) {
+        cueElements.forEach(function (el) {
             // If metadata is present, do not process.
             if (el.hasOwnProperty('metadata')) {
                 return;
@@ -1035,7 +1035,7 @@ function TTMLParser() {
 
 
                 // if the span has more than one element, we check for each of them their nature (br or text).
-                spanElements.forEach(function(spanEl) {
+                spanElements.forEach(function (spanEl) {
                     // If metadata is present, do not process.
                     if (spanElements.hasOwnProperty('metadata')) {
                         return;
