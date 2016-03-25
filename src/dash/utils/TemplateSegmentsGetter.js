@@ -31,7 +31,7 @@
 
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-import {replaceTokenForTemplate, getIndexBasedSegment, getSegmentByIndex} from './SegmentsUtils.js';
+import {replaceTokenForTemplate, getIndexBasedSegment, decideSegmentListRangeForTemplate} from './SegmentsUtils.js';
 
 function TemplateSegmentsGetter(config, isDynamic) {
 
@@ -61,7 +61,7 @@ function TemplateSegmentsGetter(config, isDynamic) {
             segmentRange = {start: start, end: start};
         }
         else {
-            segmentRange = decideSegmentListRangeForTemplate(representation, requestedTime, index, availabilityUpperLimit);
+            segmentRange = decideSegmentListRangeForTemplate(timelineConverter, isDynamic, representation, requestedTime, index, availabilityUpperLimit);
         }
 
         startIdx = segmentRange.start;
@@ -88,65 +88,6 @@ function TemplateSegmentsGetter(config, isDynamic) {
         }
 
         return segments;
-    }
-
-    function decideSegmentListRangeForTemplate(representation, requestedTime, index, givenAvailabilityUpperLimit) {
-        var duration = representation.segmentDuration;
-        var minBufferTime = representation.adaptation.period.mpd.manifest.minBufferTime;
-        var availabilityWindow = representation.segmentAvailabilityRange;
-        var periodRelativeRange = {
-            start: timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, availabilityWindow.start),
-            end: timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, availabilityWindow.end)
-        };
-        var currentSegmentList = representation.segments;
-        var availabilityLowerLimit = 2 * duration;
-        var availabilityUpperLimit = givenAvailabilityUpperLimit || Math.max(2 * minBufferTime, 10 * duration);
-
-        var originAvailabilityTime = NaN;
-        var originSegment = null;
-
-        var start,
-            end,
-            range;
-
-        if (!periodRelativeRange) { //TODO: no way it can be undefined here, useless statement!
-            periodRelativeRange = timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
-        }
-
-        periodRelativeRange.start = Math.max(periodRelativeRange.start, 0);
-
-        if (isDynamic && !timelineConverter.isTimeSyncCompleted()) {
-            start = Math.floor(periodRelativeRange.start / duration);
-            end = Math.floor(periodRelativeRange.end / duration);
-            range = {start: start, end: end};
-            return range;
-        }
-
-        // if segments exist we should try to find the latest buffered time, which is the presentation time of the
-        // segment for the current index
-        if (currentSegmentList && currentSegmentList.length > 0) {
-            originSegment = getSegmentByIndex(index, representation);
-            if (originSegment) {
-                originAvailabilityTime = timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, originSegment.presentationStartTime);
-            } else {
-                originAvailabilityTime = index > 0 ? index * duration :
-                    timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, requestedTime);
-            }
-
-        } else {
-            // If no segments exist, but index > 0, it means that we switch to the other representation, so
-            // we should proceed from this time.
-            // Otherwise we should start from the beginning for static mpds or from the end (live edge) for dynamic mpds
-            originAvailabilityTime = index > 0 ? index * duration : isDynamic ? periodRelativeRange.end : periodRelativeRange.start;
-        }
-
-        // segment list should not be out of the availability window range
-        start = Math.floor(Math.max(originAvailabilityTime - availabilityLowerLimit, periodRelativeRange.start) / duration);
-        end = Math.floor(Math.min(start + availabilityUpperLimit / duration, periodRelativeRange.end / duration));
-
-        range = {start: start, end: end};
-
-        return range;
     }
 
     instance = {
