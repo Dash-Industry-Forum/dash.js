@@ -76,7 +76,6 @@ function BufferController(config) {
         lastIndex,
         type,
         buffer,
-        minBufferTime,
         bufferState,
         appendedBytesInfo,
         wallclockTicked,
@@ -546,7 +545,9 @@ function BufferController(config) {
         eventBus.trigger(Events.BUFFER_CLEARED, {sender: instance, from: e.from, to: e.to, hasEnoughSpaceToAppend: hasEnoughSpaceToAppend()});
         if (hasEnoughSpaceToAppend()) return;
 
-        setTimeout(clearBuffer(getClearRange()), minBufferTime * 1000);
+        setTimeout(function () {
+            clearBuffer(getClearRange());
+        }, streamProcessor.getStreamInfo().manifestInfo.minBufferTime * 1000);
     }
 
     function updateBufferTimestampOffset(MSETimeOffset) {
@@ -598,15 +599,7 @@ function BufferController(config) {
         if (e.sender.getStreamProcessor() !== streamProcessor) return;
         if (e.error) return;
 
-        var bufferLength;
-
         updateBufferTimestampOffset(e.currentRepresentation.MSETimeOffset);
-
-        bufferLength = streamProcessor.getStreamInfo().manifestInfo.minBufferTime;
-        //log("Min Buffer time: " + bufferLength);
-        if (minBufferTime !== bufferLength) {
-            setMinBufferTime(bufferLength);
-        }
     }
 
     function onStreamCompleted(e) {
@@ -681,14 +674,6 @@ function BufferController(config) {
         return bufferLevel;
     }
 
-    function getMinBufferTime() {
-        return minBufferTime;
-    }
-
-    function setMinBufferTime(value) {
-        minBufferTime = value;
-    }
-
     function getCriticalBufferLevel() {
         return criticalBufferLevel;
     }
@@ -728,7 +713,6 @@ function BufferController(config) {
 
         criticalBufferLevel = Number.POSITIVE_INFINITY;
         bufferState = BUFFER_EMPTY;
-        minBufferTime = null;
         currentQuality = -1;
         lastIndex = -1;
         maxAppendedIndex = -1;
@@ -761,8 +745,6 @@ function BufferController(config) {
         getBuffer: getBuffer,
         setBuffer: setBuffer,
         getBufferLevel: getBufferLevel,
-        getMinBufferTime: getMinBufferTime,
-        setMinBufferTime: setMinBufferTime,
         getCriticalBufferLevel: getCriticalBufferLevel,
         setMediaSource: setMediaSource,
         getMediaSource: getMediaSource,
