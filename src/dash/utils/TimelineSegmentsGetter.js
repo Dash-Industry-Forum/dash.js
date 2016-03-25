@@ -31,7 +31,7 @@
 
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-import {getTimeBasedSegment} from './SegmentsUtils.js';
+import {getTimeBasedSegment, decideSegmentListRangeForTimeline} from './SegmentsUtils.js';
 
 function TimelineSegmentsGetter(config, isDynamic) {
 
@@ -84,7 +84,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
 
         fragments = timeline.S_asArray;
 
-        calculatedRange = decideSegmentListRangeForTimeline(representation, requestedTime, index, availabilityUpperLimit);
+        calculatedRange = decideSegmentListRangeForTimeline(timelineConverter, isDynamic,  requestedTime, index, availabilityUpperLimit);
 
         // if calculatedRange exists we should generate segments that belong to this range.
         // Otherwise generate maxSegmentsAhead segments ahead of the requested time
@@ -175,32 +175,6 @@ function TimelineSegmentsGetter(config, isDynamic) {
         }
 
         return segments;
-    }
-
-    function decideSegmentListRangeForTimeline(representation, requestedTime, index, givenAvailabilityUpperLimit) {
-        var availabilityLowerLimit = 2;
-        var availabilityUpperLimit = givenAvailabilityUpperLimit || 10;
-        var firstIdx = 0;
-        var lastIdx = Number.POSITIVE_INFINITY;
-
-        var start,
-            end,
-            range;
-
-        if (isDynamic && !timelineConverter.isTimeSyncCompleted()) {
-            range = {start: firstIdx, end: lastIdx};
-            return range;
-        }
-
-        if ((!isDynamic && requestedTime) || index < 0) return null;
-
-        // segment list should not be out of the availability window range
-        start = Math.max(index - availabilityLowerLimit, firstIdx);
-        end = Math.min(index + availabilityUpperLimit, lastIdx);
-
-        range = {start: start, end: end};
-
-        return range;
     }
 
     instance = {
