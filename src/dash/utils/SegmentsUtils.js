@@ -218,6 +218,33 @@ export function getSegmentByIndex(index, representation) {
     return null;
 }
 
+
+export function decideSegmentListRangeForTimeline(timelineConverter, isDynamic, requestedTime, index, givenAvailabilityUpperLimit) {
+    var availabilityLowerLimit = 2;
+    var availabilityUpperLimit = givenAvailabilityUpperLimit || 10;
+    var firstIdx = 0;
+    var lastIdx = Number.POSITIVE_INFINITY;
+
+    var start,
+        end,
+        range;
+
+    if (isDynamic && !timelineConverter.isTimeSyncCompleted()) {
+        range = {start: firstIdx, end: lastIdx};
+        return range;
+    }
+
+    if ((!isDynamic && requestedTime) || index < 0) return null;
+
+    // segment list should not be out of the availability window range
+    start = Math.max(index - availabilityLowerLimit, firstIdx);
+    end = Math.min(index + availabilityUpperLimit, lastIdx);
+
+    range = {start: start, end: end};
+
+    return range;
+}
+
 export function decideSegmentListRangeForTemplate(timelineConverter, isDynamic, representation, requestedTime, index, givenAvailabilityUpperLimit) {
     var duration = representation.segmentDuration;
     var minBufferTime = representation.adaptation.period.mpd.manifest.minBufferTime;
@@ -236,10 +263,6 @@ export function decideSegmentListRangeForTemplate(timelineConverter, isDynamic, 
     var start,
         end,
         range;
-
-    if (!periodRelativeRange) {//TODO: no way it can be undefined here, useless statement!
-        periodRelativeRange = timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
-    }
 
     periodRelativeRange.start = Math.max(periodRelativeRange.start, 0);
 
