@@ -381,7 +381,7 @@ function ScheduleController(config) {
 
         let liveEdgeTime = e.liveEdge;
         let manifestInfo = currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo;
-        let startTime = liveEdgeTime - Math.min((playbackController.getLiveDelay(currentRepresentationInfo.fragmentDuration)), manifestInfo.DVRWindowSize / 2);
+        let startTime = liveEdgeTime - playbackController.computeLiveDelay(currentRepresentationInfo.fragmentDuration, manifestInfo.DVRWindowSize / 2);
         let metrics = metricsModel.getMetricsFor('stream');
         let manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metrics);
         let currentLiveStart = playbackController.getLiveStartTime();

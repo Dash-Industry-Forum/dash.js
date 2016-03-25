@@ -67,6 +67,7 @@ function MediaPlayerModel() {
         useSuggestedPresentationDelay,
         UTCTimingSources,
         liveDelayFragmentCount,
+        liveDelay,
         scheduleWhilePaused,
         bufferToKeep,
         bufferPruningInterval,
@@ -93,6 +94,7 @@ function MediaPlayerModel() {
         lastBitrateCachingInfo = {enabled: true , ttl: DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION};
         lastMediaSettingsCachingInfo = {enabled: true , ttl: DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION};
         liveDelayFragmentCount = LIVE_DELAY_FRAGMENT_COUNT;
+        liveDelay = undefined; // Explicitly state that default is undefined
         bufferToKeep = BUFFER_TO_KEEP;
         bufferPruningInterval = BUFFER_PRUNING_INTERVAL;
         stableBufferTime = DEFAULT_MIN_BUFFER_TIME;
@@ -281,8 +283,16 @@ function MediaPlayerModel() {
         liveDelayFragmentCount = value;
     }
 
+    function setLiveDelay(value) {
+        liveDelay = value;
+    }
+
     function getLiveDelayFragmentCount() {
         return liveDelayFragmentCount;
+    }
+
+    function getLiveDelay() {
+        return liveDelay;
     }
 
     function setUseManifestDateHeaderTimeSource(value) {
@@ -355,6 +365,8 @@ function MediaPlayerModel() {
         setUseSuggestedPresentationDelay: setUseSuggestedPresentationDelay,
         setLiveDelayFragmentCount: setLiveDelayFragmentCount,
         getLiveDelayFragmentCount: getLiveDelayFragmentCount,
+        getLiveDelay: getLiveDelay,
+        setLiveDelay: setLiveDelay,
         setUseManifestDateHeaderTimeSource: setUseManifestDateHeaderTimeSource,
         getUseManifestDateHeaderTimeSource: getUseManifestDateHeaderTimeSource,
         setUTCTimingSources: setUTCTimingSources,
