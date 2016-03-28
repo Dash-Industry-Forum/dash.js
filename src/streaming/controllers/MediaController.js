@@ -87,7 +87,7 @@ function MediaController() {
 
         if (settings) {
             tracksForType.forEach(function (track) {
-                if (!matchSettings(settings, track)) {
+                if (matchSettings(settings, track)) {
                     tracks.push(track);
                 }
             });
