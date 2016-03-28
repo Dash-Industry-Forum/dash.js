@@ -88,7 +88,8 @@ function BufferController(config) {
         abrController,
         fragmentController,
         scheduleController,
-        mediaPlayerModel;
+        mediaPlayerModel,
+        clearBufferTimeout;
 
     function setup() {
         requiredQuality = -1;
@@ -106,6 +107,7 @@ function BufferController(config) {
         isAppendingInProgress = false;
         isPruningInProgress = false;
         inbandEventFound = false;
+        clearBufferTimeout = null;
     }
 
     function initialize(Type, Source, StreamProcessor) {
@@ -545,9 +547,12 @@ function BufferController(config) {
         eventBus.trigger(Events.BUFFER_CLEARED, {sender: instance, from: e.from, to: e.to, hasEnoughSpaceToAppend: hasEnoughSpaceToAppend()});
         if (hasEnoughSpaceToAppend()) return;
 
-        setTimeout(function () {
-            clearBuffer(getClearRange());
-        }, streamProcessor.getStreamInfo().manifestInfo.minBufferTime * 1000);
+        if (clearBufferTimeout === null) {
+            clearBufferTimeout = setTimeout(function () {
+                clearBufferTimeout = null;
+                clearBuffer(getClearRange());
+            }, streamProcessor.getStreamInfo().manifestInfo.minBufferTime * 1000);
+        }
     }
 
     function updateBufferTimestampOffset(MSETimeOffset) {
@@ -710,6 +715,9 @@ function BufferController(config) {
         eventBus.off(Events.SOURCEBUFFER_APPEND_COMPLETED, onAppended, this);
         eventBus.off(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
         eventBus.off(Events.CHUNK_APPENDED, onChunkAppended, this);
+
+        clearTimeout(clearBufferTimeout);
+        clearBufferTimeout = null;
 
         criticalBufferLevel = Number.POSITIVE_INFINITY;
         bufferState = BUFFER_EMPTY;
