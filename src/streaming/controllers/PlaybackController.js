@@ -178,19 +178,25 @@ function PlaybackController() {
     function computeLiveDelay(fragmentDuration, dvrWindowSize) {
         var mpd = dashManifestModel.getMpd(manifestModel.getValue());
 
-        if (mediaPlayerModel.getLiveDelay()) {
-            return mediaPlayerModel.getLiveDelay(); // If set by user, this value takes precedence, even on dvrWindowSize
+        let delay;
+        const END_OF_PLAYLIST_PADDING = 10;
+
+        if (mediaPlayerModel.getUseSuggestedPresentationDelay() && mpd.hasOwnProperty('suggestedPresentationDelay')) {
+            delay = mpd.suggestedPresentationDelay;
+        } else if (mediaPlayerModel.getLiveDelay()) {
+            delay = mediaPlayerModel.getLiveDelay(); // If set by user, this value takes precedence
+        } else if (!isNaN(fragmentDuration)) {
+            delay = fragmentDuration * mediaPlayerModel.getLiveDelayFragmentCount();
         } else {
-            let delay;
-            if (mediaPlayerModel.getUseSuggestedPresentationDelay() && mpd.hasOwnProperty('suggestedPresentationDelay')) {
-                delay = mpd.suggestedPresentationDelay;
-            } else if (!isNaN(fragmentDuration)) {
-                delay = fragmentDuration * mediaPlayerModel.getLiveDelayFragmentCount();
-            } else {
-                delay = streamInfo.manifestInfo.minBufferTime * 2;
-            }
-            return Math.min(delay, dvrWindowSize / 2);
+            delay = streamInfo.manifestInfo.minBufferTime * 2;
         }
+
+        // cap target latency to:
+        // - dvrWindowSize / 2 for short playlists
+        // - dvrWindowSize - END_OF_PLAYLIST_PADDING for longer playlists
+        let targetDelayCapping = Math.max(dvrWindowSize - END_OF_PLAYLIST_PADDING, dvrWindowSize / 2);
+
+        return Math.min(delay, targetDelayCapping);
     }
 
     function reset() {
