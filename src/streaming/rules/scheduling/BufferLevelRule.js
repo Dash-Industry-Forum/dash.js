@@ -56,10 +56,8 @@ function BufferLevelRule(config) {
         let mediaType = mediaInfo.type;
         let metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
         let bufferLevel = dashMetrics.getCurrentBufferLevel(metrics);
-        let fragmentCount;
 
-        fragmentCount = bufferLevel < getBufferTarget(streamProcessor, mediaType) ? 1 : 0;
-        return fragmentCount === 1;
+        return bufferLevel < getBufferTarget(streamProcessor, mediaType);
     }
 
     function reset() {}

@@ -171,22 +171,32 @@ function PlaybackController() {
     }
 
     /**
-     * Gets a desirable delay for the live edge to avoid a risk of getting 404 when playing at the bleeding edge
+     * Computes the desirable delay for the live edge to avoid a risk of getting 404 when playing at the bleeding edge
      * @returns {Number} object
      * @memberof PlaybackController#
      * */
-    function getLiveDelay(fragmentDuration) {
-        var delay;
+    function computeLiveDelay(fragmentDuration, dvrWindowSize) {
         var mpd = dashManifestModel.getMpd(manifestModel.getValue());
+
+        let delay;
+        const END_OF_PLAYLIST_PADDING = 10;
 
         if (mediaPlayerModel.getUseSuggestedPresentationDelay() && mpd.hasOwnProperty('suggestedPresentationDelay')) {
             delay = mpd.suggestedPresentationDelay;
+        } else if (mediaPlayerModel.getLiveDelay()) {
+            delay = mediaPlayerModel.getLiveDelay(); // If set by user, this value takes precedence
         } else if (!isNaN(fragmentDuration)) {
             delay = fragmentDuration * mediaPlayerModel.getLiveDelayFragmentCount();
         } else {
             delay = streamInfo.manifestInfo.minBufferTime * 2;
         }
-        return delay;
+
+        // cap target latency to:
+        // - dvrWindowSize / 2 for short playlists
+        // - dvrWindowSize - END_OF_PLAYLIST_PADDING for longer playlists
+        let targetDelayCapping = Math.max(dvrWindowSize - END_OF_PLAYLIST_PADDING, dvrWindowSize / 2);
+
+        return Math.min(delay, targetDelayCapping);
     }
 
     function reset() {
@@ -477,7 +487,7 @@ function PlaybackController() {
         getIsDynamic: getIsDynamic,
         setLiveStartTime: setLiveStartTime,
         getLiveStartTime: getLiveStartTime,
-        getLiveDelay: getLiveDelay,
+        computeLiveDelay: computeLiveDelay,
         play: play,
         isPaused: isPaused,
         pause: pause,

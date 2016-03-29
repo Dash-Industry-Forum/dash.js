@@ -609,6 +609,22 @@ function MediaPlayer() {
     }
 
     /**
+     * <p>Equivalent in seconds of setLiveDelayFragmentCount</p>
+     * <p>Lowering this value will lower latency but may decrease the player's ability to build a stable buffer.</p>
+     * <p>This value should be less than the manifest duration by a couple of segment durations to avoid playback issues</p>
+     * <p>If set, this parameter will take precedence over setLiveDelayFragmentCount and manifest info</p>
+     *
+     * @param value {int} Represents how many seconds to delay the live stream.
+     * @default undefined
+     * @memberof module:MediaPlayer
+     * @see {@link module:MediaPlayer#useSuggestedPresentationDelay useSuggestedPresentationDelay()}
+     * @instance
+     */
+    function setLiveDelay(value) {
+        mediaPlayerModel.setLiveDelay(value);
+    }
+
+    /**
      * <p>Set to true if you would like to override the default live delay and honor the SuggestedPresentationDelay attribute in by the manifest.</p>
      * @param value {boolean}
      * @default false
@@ -1876,6 +1892,7 @@ function MediaPlayer() {
         getVideoElement: getVideoElement,
         getSource: getSource,
         setLiveDelayFragmentCount: setLiveDelayFragmentCount,
+        setLiveDelay: setLiveDelay,
         useSuggestedPresentationDelay: useSuggestedPresentationDelay,
         enableLastBitrateCaching: enableLastBitrateCaching,
         enableLastMediaSettingsCaching: enableLastMediaSettingsCaching,
