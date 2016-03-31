@@ -1872,6 +1872,7 @@ function MediaPlayer() {
         duration: duration,
         timeAsUTC: timeAsUTC,
         durationAsUTC: durationAsUTC,
+        getActiveStream: getActiveStream,
         getDVRWindowSize: getDVRWindowSize,
         getDVRSeekOffset: getDVRSeekOffset,
         convertToTimeCode: convertToTimeCode,
