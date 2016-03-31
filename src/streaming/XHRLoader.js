@@ -262,7 +262,13 @@ function XHRLoader(cfg) {
         delayedXhrs.forEach(x => clearTimeout(x.delayTimeout));
         delayedXhrs = [];
 
-        xhrs.forEach(x => x.abort());
+        xhrs.forEach(x => {
+            // abort will trigger onloadend which we don't want
+            // when deliberately aborting inflight requests -
+            // set them to undefined so they are not called
+            x.onloadend = x.onerror = undefined;
+            x.abort();
+        });
         xhrs = [];
     }
 
