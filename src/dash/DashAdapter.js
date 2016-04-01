@@ -175,15 +175,16 @@ function DashAdapter() {
     }
 
     function convertPeriodToStreamInfo(manifest, period) {
-        var streamInfo = new StreamInfo();
-        var THRESHOLD = 1;
+        let streamInfo = new StreamInfo();
+        const THRESHOLD = 1;
 
         streamInfo.id = period.id;
         streamInfo.index = period.index;
         streamInfo.start = period.start;
         streamInfo.duration = period.duration;
         streamInfo.manifestInfo = convertMpdToManifestInfo(manifest, period.mpd);
-        streamInfo.isLast = (manifest.Period_asArray.length === 1) || (Math.abs((streamInfo.start + streamInfo.duration) - streamInfo.manifestInfo.duration) < THRESHOLD);
+        streamInfo.isLast = manifest.Period_asArray.length === 1 || Math.abs((streamInfo.start + streamInfo.duration) - streamInfo.manifestInfo.duration) < THRESHOLD;
+        streamInfo.isFirst = manifest.Period_asArray.length === 1 || dashManifestModel.getRegularPeriods(manifest, dashManifestModel.getMpd(manifest))[0].id === period.id;
 
         return streamInfo;
     }

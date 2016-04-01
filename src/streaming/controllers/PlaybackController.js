@@ -59,7 +59,6 @@ function PlaybackController() {
         streamInfo,
         isDynamic,
         mediaPlayerModel,
-        initialSeekCompleted,
         playOnceInitialized;
 
     function setup() {
@@ -67,7 +66,6 @@ function PlaybackController() {
         liveStartTime = NaN;
         wallclockTimeIntervalId = null;
         isDynamic = null;
-        initialSeekCompleted = false;
         playOnceInitialized = false;
         commonEarliestTime = {};
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
@@ -79,15 +77,21 @@ function PlaybackController() {
         addAllListeners();
         isDynamic = streamInfo.manifestInfo.isDynamic;
         liveStartTime = streamInfo.start;
-
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         eventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
         eventBus.on(Events.BYTES_APPENDED, onBytesAppended, this);
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
+        eventBus.on(Events.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, this);
 
         if (playOnceInitialized) {
             playOnceInitialized = false;
             play();
+        }
+    }
+
+    function onPeriodSwitchStarted(e) {
+        if (e.fromStreamInfo && commonEarliestTime[e.fromStreamInfo.id]) {
+            delete commonEarliestTime[e.fromStreamInfo.id];
         }
     }
 
@@ -204,7 +208,7 @@ function PlaybackController() {
             eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
             eventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
-            //eventBus.off(Events.BYTES_APPENDED, onBytesAppended, this);
+            eventBus.off(Events.BYTES_APPENDED, onBytesAppended, this);
             stopUpdatingWallclockTime();
             removeAllListeners();
         }
@@ -260,7 +264,6 @@ function PlaybackController() {
 
                 if (presentationStartTime > liveStartTime ||
                     presentationStartTime < (liveStartTime - streamInfo.manifestInfo.DVRWindowSize)) {
-
                     presentationStartTime = null;
                 }
             }
@@ -270,7 +273,10 @@ function PlaybackController() {
             if (!isNaN(startTimeOffset) && startTimeOffset < Math.max(streamInfo.manifestInfo.duration, streamInfo.duration) && startTimeOffset >= 0) {
                 presentationStartTime = startTimeOffset;
             } else {
-                let earliestTime = commonEarliestTime[streamInfo.id] || streamController.getActiveStreamCommonEarliestTime();
+                let earliestTime = commonEarliestTime[streamInfo.id]; //set by ready bufferStart after first onBytesAppended
+                if (earliestTime === undefined) {
+                    earliestTime = streamController.getActiveStreamCommonEarliestTime(); //deal with calculated PST that is none 0 when streamInfo.start is 0
+                }
                 presentationStartTime = Math.max(earliestTime, streamInfo.start);
             }
         }
@@ -312,8 +318,7 @@ function PlaybackController() {
 
     function seekToStartTimeOffset() {
         let initialSeekTime = getStreamStartTime(streamInfo, false);
-        if (!initialSeekCompleted && initialSeekTime > 0) {
-            initialSeekCompleted = true;
+        if (initialSeekTime > 0) {
             seek(initialSeekTime);
             log('Starting playback at offset: ' + initialSeekTime);
         }
@@ -401,7 +406,7 @@ function PlaybackController() {
 
     function onPlaybackMetaDataLoaded() {
         log('Native video element event: loadedmetadata');
-        if (!isDynamic || timelineConverter.isTimeSyncCompleted()) {
+        if ((!isDynamic && streamController.getActiveStreamInfo().isFirst) || timelineConverter.isTimeSyncCompleted()) {
             seekToStartTimeOffset();
         }
         eventBus.trigger(Events.PLAYBACK_METADATA_LOADED);
