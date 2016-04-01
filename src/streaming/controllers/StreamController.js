@@ -346,7 +346,10 @@ function StreamController() {
     function getActiveStreamCommonEarliestTime() {
         let commonEarliestTime = [];
         activeStream.getProcessors().forEach(p => {
-            let segments = p.getIndexHandler().getInitialSegmentList();
+            let representationController = p.getRepresentationController();
+            let representationInfo = p.getCurrentRepresentationInfo();
+            let rep = representationController.getRepresentationForQuality(representationInfo.quality);
+            let segments = rep.segments;
             if (segments.length && segments.length > 0) {
                 commonEarliestTime.push(segments[0].presentationStartTime);
             }
@@ -358,17 +361,18 @@ function StreamController() {
 
         if (isStreamSwitchingInProgress || !from || !to || from === to) return;
 
-        fireSwitchEvent(Events.PERIOD_SWITCH_STARTED, from, to);
         isStreamSwitchingInProgress = true;
+        fireSwitchEvent(Events.PERIOD_SWITCH_STARTED, from, to);
 
         function onMediaSourceReady() {
             if (!isNaN(seekTime)) {
-                playbackController.seek(seekTime);
+                playbackController.seek(seekTime); //we only need to call seek here, IndexHandlerTime was set from seeking event
             } else {
                 let startTime = playbackController.getStreamStartTime(activeStream.getStreamInfo(), true);
                 activeStream.getProcessors().forEach(p => {
                     adapter.setIndexHandlerTime(p, startTime);
                 });
+                playbackController.seek(startTime); //seek to period start time
             }
             playbackController.play();
             activeStream.startEventController();
