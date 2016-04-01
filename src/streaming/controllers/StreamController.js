@@ -368,7 +368,7 @@ function StreamController() {
             if (!isNaN(seekTime)) {
                 playbackController.seek(seekTime); //we only need to call seek here, IndexHandlerTime was set from seeking event
             } else {
-                let startTime = playbackController.getStreamStartTime(activeStream.getStreamInfo(), true);
+                let startTime = playbackController.getStreamStartTime(true);
                 activeStream.getProcessors().forEach(p => {
                     adapter.setIndexHandlerTime(p, startTime);
                 });
