@@ -28,17 +28,17 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-//import Debug from '../../../core/Debug.js';
+import Debug from '../../../core/Debug.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
 function NextFragmentRequestRule(config) {
 
     let instance;
-    //let context = this.context;
-    //let log = Debug(context).getInstance().log;
+    let context = this.context;
+    let log = Debug(context).getInstance().log;
     let adapter = config.adapter;
-    //let sourceBufferController = config.sourceBufferController;
-    //let virtualBuffer = config.virtualBuffer;
+    let sourceBufferController = config.sourceBufferController;
+    let virtualBuffer = config.virtualBuffer;
     let textSourceBuffer = config.textSourceBuffer;
 
     function execute(streamProcessor) {
@@ -46,15 +46,15 @@ function NextFragmentRequestRule(config) {
         let representationInfo = streamProcessor.getCurrentRepresentationInfo();
         let mediaInfo = representationInfo.mediaInfo;
         let mediaType = mediaInfo.type;
-        //let streamId = mediaInfo.streamInfo.id;
+        let streamId = mediaInfo.streamInfo.id;
         let scheduleController = streamProcessor.getScheduleController();
         let seekTarget = scheduleController.getSeekTarget();
         let hasSeekTarget = !isNaN(seekTarget);
         let keepIdx = !hasSeekTarget;
         let time = hasSeekTarget ? seekTarget : adapter.getIndexHandlerTime(streamProcessor);
-        //let buffer = streamProcessor.getBuffer();
-        //let range = null;
-        //let appendedChunks;
+        let buffer = streamProcessor.getBuffer();
+        let range = null;
+        let appendedChunks;
         let request;
 
         if (isNaN(time) ||
@@ -67,8 +67,8 @@ function NextFragmentRequestRule(config) {
         }
 
         /**
-         * https://github.com/Dash-Industry-Forum/dash.js/issues/1218
-         * Leaving this code in but commented out for now. Does not seem to be needed anymore and was a hack in the first place.
+         * This is critical for IE/Safari/EDGE
+         * */
         if (buffer) {
             range = sourceBufferController.getBufferRange(streamProcessor.getBuffer(), time);
             if (range !== null) {
@@ -80,7 +80,7 @@ function NextFragmentRequestRule(config) {
                 }
             }
         }
-        */
+
 
         request = adapter.getFragmentRequestForTime(streamProcessor, representationInfo, time, {keepIdx: keepIdx});
         //log("getForTime", request, time);
