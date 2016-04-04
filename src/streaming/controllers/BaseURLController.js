@@ -29,58 +29,83 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+import BaseURLTreeModel from '../models/BaseURLTreeModel.js';
+import BaseURLSelector from '../utils/BaseURLSelector.js';
+import URLUtils from '../utils/URLUtils.js';
+import BaseURL from '../../dash/vo/BaseURL.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
+import EventBus from '../../core/EventBus.js';
+import Events from '../../core/events/Events.js';
 
-/**
- * @Module URLUtils
- * @description Provides utility functions for operating on URLs.
- * Initially this is simply a method to determine the Base URL of a URL, but
- * should probably include other things provided all over the place such as
- * determining whether a URL is relative/absolute, resolving two paths etc.
- */
-function URLUtils() {
+function BaseURLController() {
 
     let instance;
 
-    const absUrl = /^(?:(?:[a-z]+:)?\/)?\//i;
+    const context = this.context;
+    const eventBus = EventBus(context).getInstance();
+    const urlUtils = URLUtils(context).getInstance();
 
-    /**
-     * Returns a string that contains the Base URL of a URL, if determinable.
-     * @return {string}
-     * @memberof module:URLUtils
-     * @instance
-     */
-    function parseBaseUrl(url) {
-        var base = '';
+    let baseURLTreeModel,
+        baseURLSelector;
 
-        if (url.indexOf('/') !== -1) {
-            if (url.indexOf('?') !== -1) {
-                url = url.substring(0, url.indexOf('?'));
-            }
-            base = url.substring(0, url.lastIndexOf('/') + 1);
-        }
-
-        return base;
+    function onBlackListChanged(e) {
+        baseURLTreeModel.invalidateSelectedIndexes(e.entry);
     }
 
-    /**
-     * Determines whether the url is relative.
-     * @return {bool}
-     * @param {string} url
-     * @memberof module:URLUtils
-     * @instance
-     */
-    function isRelative(url) {
-        return !absUrl.test(url);
+    function setup() {
+        baseURLTreeModel = BaseURLTreeModel(context).create();
+        baseURLSelector = BaseURLSelector(context).create();
+
+        eventBus.on(Events.SERVICE_LOCATION_BLACKLIST_CHANGED, onBlackListChanged, instance);
+    }
+
+    function update(manifest) {
+        baseURLTreeModel.update(manifest);
+        baseURLSelector.chooseSelectorFromManifest(manifest);
+    }
+
+    function resolve(path) {
+        const baseUrls = baseURLTreeModel.getForPath(path);
+
+        const baseUrl = baseUrls.reduce((p, c) => {
+            const b = baseURLSelector.select(c);
+
+            if (b) {
+                if (!urlUtils.isRelative(b.url)) {
+                    p.url = b.url;
+                    p.serviceLocation = b.serviceLocation;
+                } else {
+                    p.url += b.url;
+                }
+            }
+
+            return p;
+        }, new BaseURL());
+
+        if (!urlUtils.isRelative(baseUrl.url)) {
+            return baseUrl;
+        }
+    }
+
+    function reset() {
+        baseURLTreeModel.reset();
+        baseURLSelector.reset();
+    }
+
+    function initialize(data) {
+        update(data);
     }
 
     instance = {
-        parseBaseUrl:   parseBaseUrl,
-        isRelative:     isRelative
+        reset: reset,
+        initialize: initialize,
+        resolve: resolve
     };
+
+    setup();
 
     return instance;
 }
 
-URLUtils.__dashjs_factory_name = 'URLUtils';
-export default FactoryMaker.getSingletonFactory(URLUtils);
+BaseURLController.__dashjs_factory_name = 'BaseURLController';
+export default FactoryMaker.getSingletonFactory(BaseURLController);

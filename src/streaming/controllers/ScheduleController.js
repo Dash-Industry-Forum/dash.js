@@ -145,6 +145,7 @@ function ScheduleController(config) {
         eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
         eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
         eventBus.on(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
+        eventBus.on(Events.URL_RESOLUTION_FAILED, onURLResolutionFailed, this);
     }
 
     function clearPlayListTraceMetrics(endTime, stopreason) {
@@ -215,7 +216,9 @@ function ScheduleController(config) {
             request = canceledRequests[i];
             time = request.startTime + (request.duration / 2) + EPSILON;
             request = adapter.getFragmentRequestForTime(streamProcessor, currentRepresentationInfo, time, {timeThreshold: 0, ignoreIsFinished: true});
-            fragmentModel.executeRequest(request);
+            if (request) {
+                fragmentModel.executeRequest(request);
+            }
         }
     }
 
@@ -289,8 +292,10 @@ function ScheduleController(config) {
         if (!isNaN(e.request.index)) {
             isFragmentLoading = false;
         }
-        if (!e.error) return;
-        stop();
+
+        if (e.error && e.serviceLocation && !isStopped) {
+            replaceCanceledRequests([e.request]);
+        }
     }
 
     function onBytesAppended(e) {
@@ -329,6 +334,11 @@ function ScheduleController(config) {
 
     function onQuotaExceeded(e) {
         if (e.sender.getStreamProcessor() !== streamProcessor) return;
+        stop();
+    }
+
+    function onURLResolutionFailed() {
+        fragmentModel.abortRequests();
         stop();
     }
 
@@ -451,7 +461,7 @@ function ScheduleController(config) {
         eventBus.off(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
         eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
         eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
-
+        eventBus.off(Events.URL_RESOLUTION_FAILED, onURLResolutionFailed, this);
 
         if (dashManifestModel.getIsTextTrack(type)) {
             eventBus.off(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);

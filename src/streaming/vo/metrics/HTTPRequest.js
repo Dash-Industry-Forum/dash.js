@@ -34,6 +34,8 @@
 class HTTPRequest {
     /**
      * @description This Object holds reference to the HTTPRequest for manifest, fragment and xlink loading.
+     * Members which are not defined in ISO23009-1 Annex D should be prefixed by a _ so that they are ignored
+     * by Metrics Reporting code.
      */
     constructor() {
         /**
@@ -115,6 +117,11 @@ class HTTPRequest {
          * @public
          */
         this._responseHeaders = null;
+        /**
+         * The selected service location for the request. string.
+         * @public
+         */
+        this._serviceLocation = null;
     }
 }
 

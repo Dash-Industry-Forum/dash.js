@@ -60,6 +60,7 @@ function StreamController() {
         liveEdgeFinder,
         mediaSourceController,
         timeSyncController,
+        baseURLController,
         virtualBuffer,
         errHandler,
         timelineConverter,
@@ -483,7 +484,8 @@ function StreamController() {
                         adapter: adapter,
                         timelineConverter: timelineConverter,
                         capabilities: capabilities,
-                        errHandler: errHandler
+                        errHandler: errHandler,
+                        baseURLController: baseURLController
                     });
                     stream.initialize(streamInfo, protectionController);
 
@@ -582,6 +584,8 @@ function StreamController() {
                 }
             });
 
+            baseURLController.initialize(manifest);
+
             timeSyncController.setConfig({
                 metricsModel: metricsModel,
                 dashMetrics: dashMetrics
@@ -655,6 +659,9 @@ function StreamController() {
         if (config.timeSyncController) {
             timeSyncController = config.timeSyncController;
         }
+        if (config.baseURLController) {
+            baseURLController = config.baseURLController;
+        }
         if (config.virtualBuffer) {
             virtualBuffer = config.virtualBuffer;
         }
@@ -692,6 +699,7 @@ function StreamController() {
         eventBus.off(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
         eventBus.off(Events.MANIFEST_UPDATED, onManifestUpdated, this);
 
+        baseURLController.reset();
         manifestUpdater.reset();
         metricsModel.clearAllCurrentMetrics();
         manifestModel.setValue(null);

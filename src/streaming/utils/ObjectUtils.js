@@ -28,38 +28,34 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
+import FactoryMaker from '../../core/FactoryMaker.js';
+
 /**
- * @class
- * @ignore
+ * @Module ObjectUtils
+ * @description Provides utility functions for objects
  */
-class FragmentRequest {
-    constructor() {
-        this.action = FragmentRequest.ACTION_DOWNLOAD;
-        this.startTime = NaN;
-        this.mediaType = null;
-        this.mediaInfo = null;
-        this.type = null;
-        this.duration = NaN;
-        this.timescale = NaN;
-        this.range = null;
-        this.url = null;
-        this.serviceLocation = null;
-        this.requestStartDate = null;
-        this.firstByteDate = null;
-        this.requestEndDate = null;
-        this.quality = NaN;
-        this.index = NaN;
-        this.availabilityStartTime = null;
-        this.availabilityEndTime = null;
-        this.wallStartTime = null;
-        this.bytesLoaded = NaN;
-        this.bytesTotal = NaN;
-        this.delayLoadingTime = NaN;
-        this.responseType = 'arraybuffer';
+function ObjectUtils() {
+
+    let instance;
+
+    /**
+     * Returns true if objects resolve to the same string. Only really useful
+     * when the user controls the object generation
+     * @return {boolean}
+     * @memberof module:ObjectUtils
+     * @instance
+     */
+    function areSimpleEquivalent(obj1, obj2) {
+        return JSON.stringify(obj1) === JSON.stringify(obj2);
     }
+
+    instance = {
+        areSimpleEquivalent: areSimpleEquivalent
+    };
+
+    return instance;
 }
 
-FragmentRequest.ACTION_DOWNLOAD = 'download';
-FragmentRequest.ACTION_COMPLETE = 'complete';
-
-export default FragmentRequest;
+ObjectUtils.__dashjs_factory_name = 'ObjectUtils';
+export default FactoryMaker.getSingletonFactory(ObjectUtils);

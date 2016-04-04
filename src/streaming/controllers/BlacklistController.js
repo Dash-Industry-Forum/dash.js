@@ -28,38 +28,65 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-/**
- * @class
- * @ignore
- */
-class FragmentRequest {
-    constructor() {
-        this.action = FragmentRequest.ACTION_DOWNLOAD;
-        this.startTime = NaN;
-        this.mediaType = null;
-        this.mediaInfo = null;
-        this.type = null;
-        this.duration = NaN;
-        this.timescale = NaN;
-        this.range = null;
-        this.url = null;
-        this.serviceLocation = null;
-        this.requestStartDate = null;
-        this.firstByteDate = null;
-        this.requestEndDate = null;
-        this.quality = NaN;
-        this.index = NaN;
-        this.availabilityStartTime = null;
-        this.availabilityEndTime = null;
-        this.wallStartTime = null;
-        this.bytesLoaded = NaN;
-        this.bytesTotal = NaN;
-        this.delayLoadingTime = NaN;
-        this.responseType = 'arraybuffer';
+
+import FactoryMaker from '../../core/FactoryMaker.js';
+import EventBus from '../../core/EventBus.js';
+
+function BlackListController(config) {
+
+    let blacklist = [];
+
+    const eventBus = EventBus(this.context).getInstance();
+    const updateEventName = config.updateEventName;
+    const loadFailedEventName = config.loadFailedEventName;
+
+    function contains(query) {
+        if (!blacklist.length || !query || !query.length) {
+            return false;
+        }
+
+        return (blacklist.indexOf(query) !== -1);
     }
+
+    function add(entry) {
+        if (blacklist.indexOf(entry) !== -1) {
+            return;
+        }
+
+        blacklist.push(entry);
+
+        eventBus.trigger(
+            updateEventName,
+            {
+                entry: entry
+            }
+        );
+    }
+
+    function onLoadFailed(e) {
+        if (e.error) {
+            add(e.request.serviceLocation);
+        }
+    }
+
+    function setup() {
+        if (loadFailedEventName) {
+            eventBus.on(loadFailedEventName, onLoadFailed, this);
+        }
+    }
+
+    function reset() {
+        blacklist = [];
+    }
+
+    setup();
+
+    return {
+        add: add,
+        contains: contains,
+        reset: reset
+    };
 }
 
-FragmentRequest.ACTION_DOWNLOAD = 'download';
-FragmentRequest.ACTION_COMPLETE = 'complete';
-
-export default FragmentRequest;
+BlackListController.__dashjs_factory_name = 'BlackListController';
+export default FactoryMaker.getClassFactory(BlackListController);
