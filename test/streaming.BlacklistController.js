@@ -96,4 +96,3 @@ describe('BlacklistController', function () {
         expect(containsAfterReset).to.be.false; // jshint ignore:line
     });
 });
-

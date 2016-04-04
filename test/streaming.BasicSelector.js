@@ -104,4 +104,3 @@ describe('BaseURLResolution/BasicSelector', function () {
         expect(selected).to.be.undefined; // jshint ignore:line
     });
 });
-

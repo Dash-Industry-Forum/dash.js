@@ -156,4 +156,3 @@ describe('BaseURLResolution/DVBSelector', function () {
         expect(fourthSelection).to.be.undefined;                // jshint ignore:line
     });
 });
-
