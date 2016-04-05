@@ -32,10 +32,16 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 import MediaPlayerModel from '../models/MediaPlayerModel.js';
 import Debug from '../../core/Debug.js';
 
-const LOCAL_STORAGE_VIDEO_BITRATE_KEY = 'dashjs_vbitrate';
-const LOCAL_STORAGE_AUDIO_BITRATE_KEY = 'dashjs_abitrate';
-const LOCAL_STORAGE_AUDIO_SETTINGS_KEY = 'dashjs_asettings';
-const LOCAL_STORAGE_VIDEO_SETTINGS_KEY = 'dashjs_vsettings';
+const legacyKeysAndReplacements = [
+    { oldKey: 'dashjs_vbitrate',  newKey: 'dashjs_video_bitrate' },
+    { oldKey: 'dashjs_abitrate',  newKey: 'dashjs_audio_bitrate' },
+    { oldKey: 'dashjs_vsettings', newKey: 'dashjs_video_settings' },
+    { oldKey: 'dashjs_asettings', newKey: 'dashjs_audio_settings' }
+];
+
+const LOCAL_STORAGE_BITRATE_KEY_TEMPLATE = 'dashjs_?_bitrate';
+const LOCAL_STORAGE_SETTINGS_KEY_TEMPLATE = 'dashjs_?_settings';
+
 const STORAGE_TYPE_LOCAL = 'localStorage';
 const STORAGE_TYPE_SESSION = 'sessionStorage';
 
@@ -48,10 +54,6 @@ function DOMStorage() {
         supported,
         mediaPlayerModel;
 
-    function setup() {
-        mediaPlayerModel = MediaPlayerModel(context).getInstance();
-    }
-
     //type can be local, session
     function isSupported(type) {
         if (supported !== undefined) return supported;
@@ -63,7 +65,9 @@ function DOMStorage() {
         var storage;
 
         try {
-            storage = window[type];
+            if (typeof window !== 'undefined') {
+                storage = window[type];
+            }
         } catch (error) {
             log('Warning: DOMStorage access denied: ' + error.message);
             return supported;
@@ -89,21 +93,45 @@ function DOMStorage() {
         return supported;
     }
 
-    // Return current epoch time, ms, rounded to the nearest 10s to avoid fingerprinting user
+    function translateLegacyKeys() {
+        if (isSupported(STORAGE_TYPE_LOCAL)) {
+            legacyKeysAndReplacements.forEach(entry => {
+                const value = localStorage.getItem(entry.oldKey);
+
+                if (value) {
+                    localStorage.removeItem(entry.oldKey);
+
+                    try {
+                        localStorage.setItem(entry.newKey, value);
+                    } catch (e) {
+                        log(e.message);
+                    }
+                }
+            });
+        }
+    }
+
+    function setup() {
+        mediaPlayerModel = MediaPlayerModel(context).getInstance();
+
+        translateLegacyKeys();
+    }
+
+    // Return current epoch time, ms, rounded to the nearest 10m to avoid fingerprinting user
     function getTimestamp() {
         let ten_minutes_ms = 60 * 1000 * 10;
         return Math.round(new Date().getTime() / ten_minutes_ms) * ten_minutes_ms;
     }
 
-    function canStore(storageType, key, streamType) {
-        return isSupported(storageType) && mediaPlayerModel['get' + key + 'CachingInfo']().enabled && (streamType === 'video' || streamType === 'audio');
+    function canStore(storageType, key) {
+        return isSupported(storageType) && mediaPlayerModel['get' + key + 'CachingInfo']().enabled;
     }
 
     function getSavedMediaSettings(type) {
         //Checks local storage to see if there is valid, non-expired media settings
-        if (!isSupported(STORAGE_TYPE_LOCAL) || !mediaPlayerModel.getLastMediaSettingsCachingInfo().enabled) return null;
+        if (!canStore(STORAGE_TYPE_LOCAL, 'LastMediaSettings')) return null;
 
-        var key = type === 'video' ? LOCAL_STORAGE_VIDEO_SETTINGS_KEY : LOCAL_STORAGE_AUDIO_SETTINGS_KEY;
+        var key = LOCAL_STORAGE_SETTINGS_KEY_TEMPLATE.replace(/\?/, type);
         var obj = JSON.parse(localStorage.getItem(key)) || {};
         var isExpired = (new Date().getTime() - parseInt(obj.timestamp, 10)) >= mediaPlayerModel.getLastMediaSettingsCachingInfo().ttl || false;
         var settings = obj.settings;
@@ -120,8 +148,8 @@ function DOMStorage() {
         let savedBitrate = NaN;
         //Checks local storage to see if there is valid, non-expired bit rate
         //hinting from the last play session to use as a starting bit rate.
-        if (isSupported(STORAGE_TYPE_LOCAL) && mediaPlayerModel.getLastBitrateCachingInfo().enabled ) {
-            var key = type === 'video' ? LOCAL_STORAGE_VIDEO_BITRATE_KEY : LOCAL_STORAGE_AUDIO_BITRATE_KEY;
+        if (canStore(STORAGE_TYPE_LOCAL, 'LastBitrate')) {
+            var key = LOCAL_STORAGE_BITRATE_KEY_TEMPLATE.replace(/\?/, type);
             var obj = JSON.parse(localStorage.getItem(key)) || {};
             var isExpired = (new Date().getTime() - parseInt(obj.timestamp, 10)) >= mediaPlayerModel.getLastBitrateCachingInfo().ttl || false;
             var bitrate = parseInt(obj.bitrate, 10);
@@ -137,16 +165,24 @@ function DOMStorage() {
     }
 
     function setSavedMediaSettings(type, value) {
-        if (canStore(STORAGE_TYPE_LOCAL, 'LastMediaSettings', type)) {
-            let key = type === 'video' ? LOCAL_STORAGE_VIDEO_SETTINGS_KEY : LOCAL_STORAGE_AUDIO_SETTINGS_KEY;
-            localStorage.setItem(key, JSON.stringify({settings: value, timestamp: getTimestamp()}));
+        if (canStore(STORAGE_TYPE_LOCAL, 'LastMediaSettings')) {
+            let key = LOCAL_STORAGE_SETTINGS_KEY_TEMPLATE.replace(/\?/, type);
+            try {
+                localStorage.setItem(key, JSON.stringify({settings: value, timestamp: getTimestamp()}));
+            } catch (e) {
+                log(e.message);
+            }
         }
     }
 
     function setSavedBitrateSettings(type, bitrate) {
-        if (canStore(STORAGE_TYPE_LOCAL, 'LastBitrate', type) && bitrate) {
-            let key = type === 'video' ? LOCAL_STORAGE_VIDEO_BITRATE_KEY : LOCAL_STORAGE_AUDIO_BITRATE_KEY;
-            localStorage.setItem(key, JSON.stringify({bitrate: bitrate / 1000, timestamp: getTimestamp()}));
+        if (canStore(STORAGE_TYPE_LOCAL, 'LastBitrate') && bitrate) {
+            let key = LOCAL_STORAGE_BITRATE_KEY_TEMPLATE.replace(/\?/, type);
+            try {
+                localStorage.setItem(key, JSON.stringify({bitrate: bitrate / 1000, timestamp: getTimestamp()}));
+            } catch (e) {
+                log(e.message);
+            }
         }
     }
 
@@ -164,10 +200,4 @@ function DOMStorage() {
 
 DOMStorage.__dashjs_factory_name = 'DOMStorage';
 let factory = FactoryMaker.getSingletonFactory(DOMStorage);
-factory.STORAGE_TYPE_LOCAL = STORAGE_TYPE_LOCAL;
-factory.STORAGE_TYPE_SESSION = STORAGE_TYPE_SESSION;
-factory.LOCAL_STORAGE_VIDEO_BITRATE_KEY = LOCAL_STORAGE_VIDEO_BITRATE_KEY;
-factory.LOCAL_STORAGE_AUDIO_BITRATE_KEY = LOCAL_STORAGE_AUDIO_BITRATE_KEY;
-factory.LOCAL_STORAGE_AUDIO_SETTINGS_KEY = LOCAL_STORAGE_AUDIO_SETTINGS_KEY;
-factory.LOCAL_STORAGE_VIDEO_SETTINGS_KEY = LOCAL_STORAGE_VIDEO_SETTINGS_KEY;
 export default factory;
