@@ -344,6 +344,41 @@ function StreamController() {
         return null;
     }
 
+    /**
+     * Returns a playhead time, in seconds, converted to be relative
+     * to the start of an identified stream/period or null if no such stream
+     */
+    function getTimeRelativeToStreamId(time, id) {
+        var stream = null;
+        var baseStart = 0;
+        var streamStart = 0;
+        var streamDur = null;
+
+        var ln = streams.length;
+
+        for (var i = 0; i < ln; i++) {
+            stream = streams[i];
+            streamStart = stream.getStartTime();
+            streamDur = stream.getDuration();
+
+            // use start time, if not undefined or NaN or similar
+            if (Number.isFinite(streamStart)) {
+                baseStart = streamStart;
+            }
+
+            if (stream.getId() === id) {
+                return time - baseStart;
+            } else {
+                // use duration if not undefined or NaN or similar
+                if (Number.isFinite(streamDur)) {
+                    baseStart += streamDur;
+                }
+            }
+        }
+
+        return null;
+    }
+
     function getActiveStreamCommonEarliestTime() {
         let commonEarliestTime = [];
         activeStream.getProcessors().forEach(p => {
@@ -739,6 +774,7 @@ function StreamController() {
         getActiveStreamInfo: getActiveStreamInfo,
         isStreamActive: isStreamActive,
         getStreamById: getStreamById,
+        getTimeRelativeToStreamId: getTimeRelativeToStreamId,
         load: load,
         loadWithManifest: loadWithManifest,
         getActiveStreamCommonEarliestTime: getActiveStreamCommonEarliestTime,
