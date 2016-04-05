@@ -110,10 +110,6 @@ function AbrController() {
         if (config.streamController) {
             streamController = config.streamController;
         }
-        // allow the domStorage created in setup to be overidden
-        if (config.domStorage) {
-            domStorage = config.domStorage;
-        }
     }
 
     function getTopQualityIndexFor(type, id) {
