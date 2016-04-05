@@ -234,10 +234,6 @@ function BufferController(config) {
         }
 
         if (chunk.quality === currentQuality) {
-
-            //TODO May need this for MP buffer switch as buffer will be null while new SB established.  But returning here and blocking progression may require validate to be called.
-            //if (!buffer || isAppendingInProgress || !hasEnoughSpaceToAppend()) return;
-
             appendingMediaChunk = false;
             appendToBuffer(chunk);
         }
@@ -408,6 +404,8 @@ function BufferController(config) {
         bufferState = state;
         addBufferMetrics();
         eventBus.trigger(Events.BUFFER_LEVEL_STATE_CHANGED, {sender: instance, state: state, mediaType: type, streamInfo: streamProcessor.getStreamInfo()});
+        let eventType = state === BUFFER_LOADED ? Events.BUFFER_LOADED : Events.BUFFER_EMPTY;
+        eventBus.trigger(eventType, {mediaType: type});
         log(state === BUFFER_LOADED ? ('Got enough buffer to start.') : ('Waiting for more buffer before starting playback.'));
     }
 
@@ -652,7 +650,7 @@ function BufferController(config) {
     }
 
     function onPlaybackRateChanged() {
-        checkIfSufficientBuffer();
+        //checkIfSufficientBuffer();
     }
 
     function getType() {
