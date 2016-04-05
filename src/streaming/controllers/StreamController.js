@@ -42,7 +42,7 @@ import Debug from '../../core/Debug.js';
 
 function StreamController() {
 
-    const STREAM_END_THRESHOLD = 0.2;
+    const STREAM_END_THRESHOLD = 0.5;
 
     let context = this.context;
     let log = Debug(context).getInstance().log;
@@ -252,16 +252,15 @@ function StreamController() {
         }
     }
 
-    function onEnded(/*e*/) {
-        var nextStream = getNextStream();
+    function onEnded() {
 
-        switchStream(activeStream, nextStream, NaN);
+        let nextStream = getNextStream();
 
-        flushPlaylistMetrics(
-            nextStream ?
-                PlayList.Trace.END_OF_PERIOD_STOP_REASON :
-                PlayList.Trace.END_OF_CONTENT_STOP_REASON
-        );
+        if (nextStream) {
+            switchStream(activeStream, nextStream, NaN);
+        }
+
+        flushPlaylistMetrics(nextStream ? PlayList.Trace.END_OF_PERIOD_STOP_REASON : PlayList.Trace.END_OF_CONTENT_STOP_REASON);
     }
 
     function onPlaybackSeeking(e) {
@@ -298,20 +297,20 @@ function StreamController() {
 
     /*
      * Handles the current stream buffering end moment to start the next stream buffering
+     * Removing MP logic from this for now, we removing the complexity of buffering into next period for now.
+     * this handler's logic caused Firefox and Safari to not period switch since the end event did not fire due to this.
      */
     function onStreamBufferingCompleted(e) {
-        var nextStream = getNextStream();
+        //var nextStream = getNextStream();
         var isLast = e.streamInfo.isLast;
 
-        // buffering has been completed, now we can signal end of stream
         if (mediaSource && isLast) {
             mediaSourceController.signalEndOfStream(mediaSource);
         }
-
-        if (!nextStream) return;
-
-        nextStream.activate(mediaSource);
+        //if (!nextStream) return;
+        //nextStream.activate(mediaSource);
     }
+
 
     function getNextStream() {
         var start = activeStream.getStreamInfo().start;
@@ -731,8 +730,8 @@ function StreamController() {
         eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
         eventBus.off(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
         eventBus.off(Events.PLAYBACK_ENDED, onEnded, this);
-        eventBus.off(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
         eventBus.off(Events.MANIFEST_UPDATED, onManifestUpdated, this);
+        eventBus.off(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
 
         baseURLController.reset();
         manifestUpdater.reset();

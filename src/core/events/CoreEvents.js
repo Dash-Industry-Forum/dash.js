@@ -40,7 +40,6 @@ class CoreEvents extends EventsBase {
         this.AST_IN_FUTURE = 'astinfuture';
         this.BUFFERING_COMPLETED = 'bufferingCompleted';
         this.BUFFER_CLEARED = 'bufferCleared';
-        this.BUFFER_LEVEL_STATE_CHANGED = 'bufferStateChanged';
         this.BUFFER_LEVEL_UPDATED = 'bufferLevelUpdated';
         this.BYTES_APPENDED = 'bytesAppended';
         this.CHECK_FOR_EXISTENCE_COMPLETED = 'checkForExistenceCompleted';
