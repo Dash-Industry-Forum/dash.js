@@ -650,7 +650,7 @@ function BufferController(config) {
     }
 
     function onPlaybackRateChanged() {
-        //checkIfSufficientBuffer();
+        checkIfSufficientBuffer();
     }
 
     function getType() {
