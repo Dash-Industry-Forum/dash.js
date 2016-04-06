@@ -199,76 +199,54 @@
     overflow-x: hidden;
 }
 
-.seekbar {
-    position: relative;
-    width: 100%;
-}
 
-input[type="range"] {
+.track {
+    position: relative;
     -webkit-appearance: none;
     -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
-    height: 14px;
+    height: 11px;
     border: none;
-    margin:12px 5px;
-    padding: 1px 2px;
-    border-radius: 5px;
+    margin:0px;
+    padding: 2px 2px;
+    border-radius: 0px;
     background: #232528;
     box-shadow: inset 0 1px 0 0 #0d0e0f, inset 0 -1px 0 0 #3a3d42;
     -webkit-box-shadow: inset 0 1px 0 0 #0d0e0f, inset 0 -1px 0 0 #3a3d42;
-    outline: none; /* no focus outline */
+    outline: none; /* no focus outline */;
+    z-index: 1;
+    width: 100%;
+    curson:none;
+    top:2px;
 }
 
-input[type=range]::-moz-focus-outer {
-    border: 0;
+.bufferbar {
+    position: relative;
+    width: 50%;
+    height: 9px;
+    border: none;
+    border-radius: 0px;
+    background: #444;
+    outline: none;
+    padding: 0;
+    margin: 0;
+    z-index: 2;
+    top: 14px;
+    cursor:none;
 }
 
-input[type="range"]::-moz-range-track {
-    border: inherit;
-    background: transparent;
-}
-
-input[type="range"]::-ms-track {
-    border: inherit;
-    color: transparent; /* don't drawn vertical reference line */
-    background: transparent;
-}
-
-input[type="range"]::-ms-fill-lower,
-input[type="range"]::-ms-fill-upper {
-    background: transparent;
-}
-
-input[type="range"]::-ms-tooltip {
-    display: none;
-}
-
-/* thumb */
-input[type="range"]::-webkit-slider-thumb {
+.thumb {
+    position: relative;
     -webkit-appearance: none;
-    width: 15px;
-    height: 8px;
+    width: 12px;
+    height: 18px;
     border: none;
-    border-radius: 2px;
+    border-radius: 3px 3px 3px 3px;
     background-color:rgb(0, 150, 215);
-}
-input[type="range"]::-moz-range-thumb {
-    width: 15px;
-    height: 8px;
-    border: none;
-    border-radius: 2px;
-    background-color:rgb(0, 150, 215);
-}
-
-input[type="range"]::-ms-thumb {
-    width: 15px;
-    height: 8px;
-    border: none;
-    border-radius: 2px;
-    background-color:rgb(0, 150, 215);
-}
-
-div#videoController input[type="range"]{
-    -webkit-box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    box-sizing: border-box;
+    z-index: 3;
+    left:0px;
+    top: -14px;
+    cursor: pointer;
+    -webkit-box-shadow: 0px 0px 1px 1px rgba(0,0,0,0.5);
+    -moz-box-shadow: 0px 0px 1px 1px rgba(0,0,0,0.5);
+    box-shadow: 0px 0px 1px 1px rgba(0,0,0,0.5);
 }

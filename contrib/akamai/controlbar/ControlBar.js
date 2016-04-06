@@ -37,6 +37,7 @@ var ControlBar = function(dashjsMediaPlayer) {
         captionMenu = null,
         lastValumeLevel = NaN,
         seeking = false,
+        mouseDown = false,
         videoControllerVisibleTimeout = 0,
         //TODO - CREATE ALL ELEMENTS INSIDE "videoController" AND JUST REQUIRE ONE DIV IN PLAYER TO BE CREATED BELOW VIDEO ELEMENT WITH ID "videoController"
         videoController = document.getElementById("videoController"),
@@ -48,6 +49,10 @@ var ControlBar = function(dashjsMediaPlayer) {
         fullscreenBtn = document.getElementById("fullscreenBtn"),
         timeDisplay = document.getElementById("videoTime"),
         durationDisplay = document.getElementById("videoDuration"),
+        bufferBar = document.getElementById("bufferBar"),
+        trackBar = document.getElementById("trackBar"),
+        seekContainer = document.getElementById("seekContainer"),
+        thumb = document.getElementById("thumb")
 
 //************************************************************************************
 // PLAYBACK
@@ -77,6 +82,7 @@ var ControlBar = function(dashjsMediaPlayer) {
             setTime(player.time());
             updateDuration();
             togglePlayPauseBtnState();
+
         },
 
         onPlayTimeUpdate = function(e){
@@ -84,8 +90,54 @@ var ControlBar = function(dashjsMediaPlayer) {
             if (!seeking) {
                 setTime(player.time());
                 seekbar.value = player.time();
+                //updateBufferBar();
+                hideBufferBar(false);
+
             }
         },
+
+        onThumbDown = function(event){
+            mouseDown = true;
+            thumb.originalX = event.clientX - (isNaN(parseInt(thumb.style.left))?0:parseInt(thumb.style.left));
+        },
+
+        onThumbUp = function(event){
+            mouseDown = false;
+        },
+
+        onThumbOut = function(event){
+        },
+
+        onThumbMove = function(event){
+            if (mouseDown)
+            {
+                console.log('move' + event.clientX + " " +  thumb.originalX + " " + thumb.style.left );
+                var pos = event.clientX - thumb.originalX;
+                var maxRight =trackBar.getBoundingClientRect().width - thumb.getBoundingClientRect().width;
+                pos = pos < 0 ? 0:(pos > maxRight ? maxRight:pos);
+                thumb.style.left = pos + "px";
+                console.log("new position" + thumb.style.left + " "+ trackBar.getBoundingClientRect().width);
+            }
+        }
+
+//************************************************************************************
+// BUFFER BAR
+//************************************************************************************
+        updateBufferBar = function(){
+            if (bufferBar){
+                bufferBar.style.left = Math.ceil((seekbar.value/seekbar.max)*(seekbar.offsetWidth - 24  +4) + 24) +'px';
+                bufferBar.style.width = (player.getBufferLength()/seekbar.max)*(seekbar.offsetWidth - 24)+ "px";
+            }
+        },
+        hideBufferBar = function(state){
+            if (bufferBar)
+            {
+                bufferBar.style.visibility = state ? "hidden":"visible";
+            }
+        }
+
+
+
 
 //************************************************************************************
 // VOLUME
@@ -137,6 +189,7 @@ var ControlBar = function(dashjsMediaPlayer) {
             //TODO Add call to seek in trick-mode once implemented. Preview Frames.
             seeking = true;
             setTime(parseFloat(seekbar.value));
+            hideBufferBar(true);
         },
 
         onSeeked = function(e){
@@ -380,11 +433,11 @@ var ControlBar = function(dashjsMediaPlayer) {
             videoContainer = player.getVideoContainer();
             captionBtn.classList.add("hide");
 
-            player.on(dashjs.MediaPlayer.events.PLAYBACK_STARTED, onPlayStart);
-            player.on(dashjs.MediaPlayer.events.PLAYBACK_PAUSED, onPlaybackPaused);
-            player.on(dashjs.MediaPlayer.events.PLAYBACK_TIME_UPDATED, onPlayTimeUpdate);
-            player.on(dashjs.MediaPlayer.events.PLAYBACK_SEEKED, onSeeked);
-            player.on(dashjs.MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded);
+            //player.on(dashjs.MediaPlayer.events.PLAYBACK_STARTED, onPlayStart);
+            //player.on(dashjs.MediaPlayer.events.PLAYBACK_PAUSED, onPlaybackPaused);
+            //player.on(dashjs.MediaPlayer.events.PLAYBACK_TIME_UPDATED, onPlayTimeUpdate);
+            //player.on(dashjs.MediaPlayer.events.PLAYBACK_SEEKED, onSeeked);
+            //player.on(dashjs.MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded);
 
             playPauseBtn.addEventListener("click", onPlayPauseClick);
             muteBtn.addEventListener("click", onMuteClick);

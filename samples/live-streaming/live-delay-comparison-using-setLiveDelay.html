@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         <meta charset="utf-8"/>
-        <title>Live delay comparison</title>
+        <title>Live delay comparison using setLiveDelay</title>
 
         <script src="../../dist/dash.all.debug.js"></script>
         <!--dash.all.min.js should be used in production over dash.all.debug.js
@@ -20,32 +20,32 @@ Debug files are not compressed or obfuscated making the file size much larger co
                 video = document.querySelector("#video1");
                 player1 = dashjs.MediaPlayer().create();
                 player1.initialize(video,MPD_2S_SEGMENTS ,true);
-                player1.setLiveDelayFragmentCount(0);
+                player1.setLiveDelay(2);
 
                 video = document.querySelector("#video2");
                 player2 = dashjs.MediaPlayer().create();
                 player2.initialize(video,MPD_2S_SEGMENTS ,true);
-                player2.setLiveDelayFragmentCount(2);
+                player2.setLiveDelay(4);
 
                 video = document.querySelector("#video3");
                 player3 = dashjs.MediaPlayer().create();
                 player3.initialize(video,MPD_2S_SEGMENTS ,true);
-                player3.setLiveDelayFragmentCount(4);
+                player3.setLiveDelay(8);
 
                 video = document.querySelector("#video4");
                 player4 = dashjs.MediaPlayer().create();
                 player4.initialize(video,MPD_6S_SEGMENTS ,true);
-                player4.setLiveDelayFragmentCount(0);
+                player4.setLiveDelay(6);
 
                 video = document.querySelector("#video5");
                 player5 = dashjs.MediaPlayer().create();
                 player5.initialize(video,MPD_6S_SEGMENTS ,true);
-                player5.setLiveDelayFragmentCount(2);
+                player5.setLiveDelay(12);
 
                 video = document.querySelector("#video6");
                 player6 = dashjs.MediaPlayer().create();
                 player6.initialize(video,MPD_6S_SEGMENTS ,true);
-                player6.setLiveDelayFragmentCount(4);
+                player6.setLiveDelay(24);
 
 
                 setInterval( function() {
@@ -80,25 +80,24 @@ Debug files are not compressed or obfuscated making the file size much larger co
     </head>
 
     <body onload="init()">
-        This sample illustrates the combined effects of segment duration and the "setLiveDelayFragmentCount" MediaPlayer method on the latency of live stream playback.
-        The upper layer of videos are all playing a live stream with 2s segment duration. The lower layer use 6s segment duration. For each stream, the playback position
-        behind live is varied between 0, 2 and 4 segments. Note that the default value for dash.js is 4 segments, which is a trade off between stability and latency.
-        Lowest latency is achieved with shorter segments and with a lower liveDelayFragmentCount. Higher stability/robustness is achieved with a higher liveDelayFragmentCount.
+        This sample illustrates the combined effects of segment duration and the "<strong>setLiveDelay</strong>" MediaPlayer method on the latency of live stream playback.
+        The upper layer of videos are all playing a live stream with 2s segment duration, with setLiveDelay values of 2s, 4s, and 8s. The lower layer use 6s segment duration,
+        with setLiveDelay values of 6s, 12s, and 24s. Lowest latency is achieved with shorter segments and with a lower live delay value. Higher stability/robustness is achieved with a higher live delay which allows a larger forward buffer.
         <table>
             <tr><td>
-                2s segment, 0 segments behind live<br/>
+                2s segment, 2s target latency<br/>
                 <video id="video1" controls="true">
                 </video><br/>
                 Seconds behind live: <span id="video1delay"></span><br/>
                 Buffer length: <span id="video1buffer"></span>
                 </td><td>
-                2s segment, 2 segments behind live<br/>
+                2s segment, 4s target latency<br/>
                 <video id="video2" controls="true">
                 </video><br/>
                 Seconds behind live: <span id="video2delay"></span><br/>
                 Buffer length: <span id="video2buffer"></span>
                 </td><td>
-                2s segment, 4 segments behind live (default)<br/>
+                2s segment,  8s target latency<br/>
                 <video id="video3" controls="true">
                 </video><br/>
                 Seconds behind live: <span id="video3delay"></span><br/>
@@ -110,19 +109,19 @@ Debug files are not compressed or obfuscated making the file size much larger co
                     </div>
                 </td></tr>
             <tr><td>
-                6s segment, 0 segments behind live<br/>
+                6s segment,  6s target latency<br/>
                 <video id="video4" controls="true">
                 </video><br/>
                 Seconds behind live: <span id="video4delay"></span><br/>
                 Buffer length: <span id="video4buffer"></span>
                 </td><td>
-                6s segment, 2 segments behind live<br/>
+                6s segment,  12s target latency<br/>
                 <video id="video5" controls="true">
                 </video><br/>
                 Seconds behind live: <span id="video5delay"></span><br/>
                 Buffer length: <span id="video5buffer"></span>
                 </td><td>
-                6s segment, 4 segments behind live (default)<br/>
+                6s segment,  24s target latency<br/>
                 <video id="video6" controls="true">
                 </video><br/>
                 Seconds behind live: <span id="video6delay"></span><br/>
