@@ -1105,10 +1105,10 @@ function MediaPlayer() {
      * This method sets the selection mode for the initial track. This mode defines how the initial track will be selected
      * if no initial media settings are set. If initial media settings are set this parameter will be ignored. Available options are:
      *
-     * MediaPlayer.dependencies.MediaController.trackSelectionModes.HIGHEST_BITRATE
+     * MediaController.TRACK_SELECTION_MODE_HIGHEST_BITRATE
      * this mode makes the player select the track with a highest bitrate. This mode is a default mode.
      *
-     * MediaPlayer.dependencies.MediaController.trackSelectionModes.WIDEST_RANGE
+     * MediaController.TRACK_SELECTION_MODE_WIDEST_RANGE
      * this mode makes the player select the track with a widest range of bitrates
      *
      * @param mode
