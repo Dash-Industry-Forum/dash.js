@@ -56,6 +56,16 @@ function MediaController() {
         switchMode,
         errHandler;
 
+    const validTrackSwitchModes = [
+        TRACK_SWITCH_MODE_ALWAYS_REPLACE,
+        TRACK_SWITCH_MODE_NEVER_REPLACE
+    ];
+
+    const validTrackSelectionModes = [
+        TRACK_SELECTION_MODE_HIGHEST_BITRATE,
+        TRACK_SELECTION_MODE_WIDEST_RANGE
+    ];
+
     function initialize() {
         tracks = {};
         resetInitialSettings();
@@ -237,7 +247,7 @@ function MediaController() {
      * @memberof MediaController#
      */
     function setSwitchMode(type, mode) {
-        var isModeSupported = !!MediaController[mode];
+        const isModeSupported = (validTrackSwitchModes.indexOf(mode) !== -1);
 
         if (!isModeSupported) {
             log('track switch mode is not supported: ' + mode);
@@ -261,7 +271,7 @@ function MediaController() {
      * @memberof MediaController#
      */
     function setSelectionModeForInitialTrack(mode) {
-        var isModeSupported = !!MediaController.trackSelectionModes[mode];
+        const isModeSupported = (validTrackSelectionModes.indexOf(mode) !== -1);
 
         if (!isModeSupported) {
             log('track selection mode is not supported: ' + mode);
