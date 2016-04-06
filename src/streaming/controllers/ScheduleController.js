@@ -400,7 +400,7 @@ function ScheduleController(config) {
             actualStartTime;
 
         // get a request for a start time
-        request = adapter.getFragmentRequestForTime(streamProcessor, currentRepresentationInfo, startTime, {ignoreIsFinished: true});
+        request = adapter.getFragmentRequestForTime(streamProcessor, currentRepresentationInfo, startTime, {ignoreIsFinished: true, forceStart: true});
         actualStartTime = request.startTime;
         seekTarget = actualStartTime; //Setting seekTarget will allow NextFragmentRequestRule's first request time to be accurate.
         if (isNaN(currentLiveStart) || (actualStartTime > currentLiveStart)) {
