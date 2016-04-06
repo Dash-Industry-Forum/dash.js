@@ -381,15 +381,9 @@ function StreamController() {
     function getActiveStreamCommonEarliestTime() {
         let commonEarliestTime = [];
         activeStream.getProcessors().forEach(p => {
-            let representationController = p.getRepresentationController();
-            let representationInfo = p.getCurrentRepresentationInfo();
-            let rep = representationController.getRepresentationForQuality(representationInfo.quality);
-            let segments = rep.segments;
-            if (segments.length && segments.length > 0) {
-                commonEarliestTime.push(segments[0].presentationStartTime);
-            }
+            commonEarliestTime.push(p.getIndexHandler().getEarliestTime());
         });
-        return Math.max.apply( Math, commonEarliestTime);
+        return Math.min.apply( Math, commonEarliestTime);
     }
 
     function switchStream(from, to, seekTime) {

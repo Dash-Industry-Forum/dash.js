@@ -61,13 +61,14 @@ function DashHandler(config) {
         isDynamic,
         type,
         currentTime,
+        earliestTime,
         streamProcessor,
         segmentsGetter;
 
     function setup() {
         index = -1;
         currentTime = 0;
-
+        earliestTime = NaN;
         eventBus.on(Events.INITIALIZATION_LOADED, onInitializationLoaded, instance);
         eventBus.on(Events.SEGMENTS_LOADED, onSegmentsLoaded, instance);
     }
@@ -96,10 +97,14 @@ function DashHandler(config) {
         return index;
     }
 
+    function getEarliestTime() {
+        return earliestTime;
+    }
+
     function reset() {
         segmentsGetter = null;
         currentTime = 0;
-
+        earliestTime = NaN;
         requestedTime = NaN;
         index = -1;
         isDynamic = null;
@@ -207,17 +212,18 @@ function DashHandler(config) {
     }
 
     function onSegmentListUpdated(representation, segments) {
-        var lastIdx,
-            liveEdge,
-            metrics,
-            lastSegment;
 
         representation.segments = segments;
-        lastIdx = segments.length - 1;
+
+        if (segments && segments.length > 0) {
+            earliestTime = isNaN(earliestTime) ? segments[0].presentationStartTime : Math.min(segments[0].presentationStartTime,  earliestTime);
+        }
+
         if (isDynamic && isNaN(timelineConverter.getExpectedLiveEdge())) {
-            lastSegment = segments[lastIdx];
-            liveEdge = lastSegment.presentationStartTime;
-            metrics = metricsModel.getMetricsFor('stream');
+            let lastIdx = segments.length - 1;
+            let lastSegment = segments[lastIdx];
+            let liveEdge = lastSegment.presentationStartTime;
+            let metrics = metricsModel.getMetricsFor('stream');
             // the last segment is supposed to be a live edge
             timelineConverter.setExpectedLiveEdge(liveEdge);
             metricsModel.updateManifestUpdateInfo(dashMetrics.getCurrentManifestUpdate(metrics), {presentationStartTime: liveEdge});
@@ -499,6 +505,7 @@ function DashHandler(config) {
         setCurrentTime: setCurrentTime,
         getCurrentTime: getCurrentTime,
         getCurrentIndex: getCurrentIndex,
+        getEarliestTime: getEarliestTime,
         reset: reset
     };
 
