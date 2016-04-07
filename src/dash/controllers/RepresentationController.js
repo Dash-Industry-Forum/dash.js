@@ -277,19 +277,17 @@ function RepresentationController() {
         var streamMetrics = metricsModel.getMetricsFor('stream');
         var metrics = metricsModel.getMetricsFor(getCurrentRepresentation().adaptation.type);
         var manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(streamMetrics);
-
-        var repInfo,
-            err,
-            repSwitch;
         var alreadyAdded = false;
-
         var postponeTimePeriod = 0;
+        var repInfo;
+        var err;
+        var repSwitch;
 
         if (r.adaptation.period.mpd.manifest.type == 'dynamic')
         {
-            var segmentAvailabilityTimePeriod = r.segmentAvailabilityRange.end - r.segmentAvailabilityRange.start;
+            let segmentAvailabilityTimePeriod = r.segmentAvailabilityRange.end - r.segmentAvailabilityRange.start;
             // We must put things to sleep unless till e.g. the startTime calculation in ScheduleController.onLiveEdgeSearchCompleted fall after the segmentAvailabilityRange.start
-            let liveDelay = mediaPlayerModel.getLiveDelay() || currentRepresentation.segmentDuration * mediaPlayerModel.getLiveDelayFragmentCount();
+            let liveDelay = playbackController.computeLiveDelay(currentRepresentation.segmentDuration, streamProcessor.getStreamInfo().manifestInfo.DVRWindowSize);
             postponeTimePeriod = (liveDelay - segmentAvailabilityTimePeriod) * 1000;
         }
 
