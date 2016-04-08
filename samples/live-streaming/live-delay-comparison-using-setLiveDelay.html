@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         <meta charset="utf-8"/>
-        <title>Live delay comparison</title>
+        <title>Live delay comparison using setLiveDelay</title>
 
         <script src="../../dist/dash.all.debug.js"></script>
         <!--dash.all.min.js should be used in production over dash.all.debug.js
@@ -80,11 +80,10 @@ Debug files are not compressed or obfuscated making the file size much larger co
     </head>
 
     <body onload="init()">
-        This sample illustrates the combined effects of segment duration and the "setLiveDelayFragmentCount" MediaPlayer method on the latency of live stream playback.
-        The upper layer of videos are all playing a live stream with 2s segment duration. The lower layer use 6s segment duration. For each stream, the playback position
-        behind live is varied between 0, 2 and 4 segments. Note that the default value for dash.js is 4 segments, which is a trade off between stability and latency.
-        Lowest latency is achieved with shorter segments and with a lower liveDelayFragmentCount. Higher stability/robustness is achieved with a higher liveDelayFragmentCount.
-        <table>
+    This sample illustrates the combined effects of segment duration and the "<strong>setLiveDelay</strong>" MediaPlayer method on the latency of live stream playback.
+    The upper layer of videos are all playing a live stream with 2s segment duration, with setLiveDelay values of 2s, 4s, and 8s. The lower layer use 6s segment duration,
+    with setLiveDelay values of 6s, 12s, and 24s. Lowest latency is achieved with shorter segments and with a lower live delay value. Higher stability/robustness is achieved with a higher live delay which allows a larger forward buffer.
+    <table>
             <tr><td>
                 2s segment, 2s target latency<br/>
                 <video id="video1" controls="true">
