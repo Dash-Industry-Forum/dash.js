@@ -42,7 +42,7 @@ import Debug from '../../core/Debug.js';
 
 function StreamController() {
 
-    const STREAM_END_THRESHOLD = 0.5;
+    const STREAM_END_THRESHOLD = 1.0;
 
     let context = this.context;
     let log = Debug(context).getInstance().log;
