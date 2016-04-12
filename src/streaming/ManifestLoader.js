@@ -87,10 +87,18 @@ function ManifestLoader(config) {
                 var baseUri;
 
                 // Handle redirects for the MPD - as per RFC3986 Section 5.1.3
+                // also handily resolves relative MPD URLs to absolute
                 if (xhr.responseURL && xhr.responseURL !== url) {
                     baseUri = urlUtils.parseBaseUrl(xhr.responseURL);
                     actualUrl = xhr.responseURL;
                 } else {
+                    // usually this case will be caught and resolved by
+                    // xhr.responseURL above but it is not available for IE11
+                    // baseUri must be absolute for BaseURL resolution later
+                    if (urlUtils.isRelative(url)) {
+                        url = urlUtils.parseBaseUrl(window.location.href) + url;
+                    }
+
                     baseUri = urlUtils.parseBaseUrl(url);
                 }
 
