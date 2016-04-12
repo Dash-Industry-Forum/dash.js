@@ -790,11 +790,28 @@ function DashManifestModel() {
     function getBaseURLsFromElement(node) {
         let baseUrls = [];
         let entries = node.BaseURL_asArray || [node.baseUri] || [];
+        let earlyReturn = false;
 
         entries.some(entry => {
             if (entry) {
                 const baseUrl = new BaseURL();
-                const text = entry.__text || entry;
+                let text = entry.__text || entry;
+
+                if (urlUtils.isRelative(text)) {
+                    // it doesn't really make sense to have relative and
+                    // absolute URLs at the same level, or multiple
+                    // relative URLs at the same level, so assume we are
+                    // done from this level of the MPD
+                    earlyReturn = true;
+
+                    // deal with the specific case where the MPD@BaseURL
+                    // is specified and is relative. when no MPD@BaseURL
+                    // entries exist, that case is handled by the
+                    // [node.baseUri] in the entries definition.
+                    if (node.baseUri) {
+                        text = node.baseUri + text;
+                    }
+                }
 
                 baseUrl.url = text;
 
@@ -824,13 +841,7 @@ function DashManifestModel() {
 
                 baseUrls.push(baseUrl);
 
-                if (urlUtils.isRelative(text)) {
-                    // it doesn't really make sense to have relative and
-                    // absolute URLs at the same level, or multiple
-                    // relative URLs at the same level, so assume we are
-                    // done from this level of the MPD
-                    return true;
-                }
+                return earlyReturn;
             }
         });
 
