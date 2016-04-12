@@ -176,7 +176,7 @@ function XHRLoader(cfg) {
                 handleLoaded(true);
 
                 if (config.success) {
-                    config.success(xhr.response, xhr.statusText, request);
+                    config.success(xhr.response, xhr.statusText, xhr);
                 }
 
                 if (config.complete) {
