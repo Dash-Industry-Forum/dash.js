@@ -155,4 +155,27 @@ describe('BaseURLResolution/DVBSelector', function () {
         const fourthSelection = dvbSelector.select(baseUrls);
         expect(fourthSelection).to.be.undefined;                // jshint ignore:line
     });
+
+    it('should not select baseUrls with invalid priority when there is another option', () => {
+        const baseUrls = [
+            { serviceLocation: 'A', dvb_priority: 1,        dvb_weight: 1 },
+            { serviceLocation: 'B', dvb_priority: 'STRING', dvb_weight: 100000000 }
+        ];
+
+        const dvbSelector = DVBSelector(context).create(defaultConfig);
+        const firstSelection = dvbSelector.select(baseUrls);
+
+        expect(firstSelection.serviceLocation).to.equal('A');   // jshint ignore:line
+    });
+
+    it('should select baseUrls with invalid priority if there is no other option', () => {
+        const baseUrls = [
+            { serviceLocation: 'B', dvb_priority: 'STRING', dvb_weight: 1 }
+        ];
+
+        const dvbSelector = DVBSelector(context).create(defaultConfig);
+        const firstSelection = dvbSelector.select(baseUrls);
+
+        expect(firstSelection.serviceLocation).to.equal('B');   // jshint ignore:line
+    });
 });

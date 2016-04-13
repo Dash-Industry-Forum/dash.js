@@ -789,7 +789,9 @@ function DashManifestModel() {
 
     function getBaseURLsFromElement(node) {
         let baseUrls = [];
-        let entries = node.BaseURL_asArray || [node.baseUri] || [];
+        // if node.BaseURL_asArray and node.baseUri are undefined entries
+        // will be [undefined] which entries.some will just skip
+        let entries = node.BaseURL_asArray || [node.baseUri];
         let earlyReturn = false;
 
         entries.some(entry => {
