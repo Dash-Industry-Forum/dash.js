@@ -1676,6 +1676,8 @@ function MediaPlayer() {
     function reset() {
         attachSource(null);
         attachView(null);
+        protectionData = null;
+        protectionController = null;
     }
 
     //***********************************
@@ -1693,8 +1695,6 @@ function MediaPlayer() {
             mediaController.reset();
             streamController = null;
             metricsReportingController = null;
-            protectionController = null;
-            protectionData = null;
             if (isReady()) {
                 initializePlayback();
             }
