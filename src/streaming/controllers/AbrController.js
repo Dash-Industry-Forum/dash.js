@@ -141,7 +141,8 @@ function AbrController() {
                 let representation = dashManifestModel.getAdaptationForType(manifest, 0, type).Representation;
 
                 if (Array.isArray(representation)) {
-                    bitrateDict[type] = representation[Math.round(representation.length * ratioDict[type]) - 1].bandwidth;
+                    let repIdx = Math.max(Math.round(representation.length * ratioDict[type]) - 1, 0);
+                    bitrateDict[type] = representation[repIdx].bandwidth;
                 } else {
                     bitrateDict[type] = 0;
                 }
