@@ -61,11 +61,6 @@ function Capabilities() {
     }
 
     function supportsCodec(element, codec) {
-
-        if (!(element instanceof HTMLMediaElement)) {
-            throw 'element must be of type HTMLMediaElement.';
-        }
-
         var canPlay = element.canPlayType(codec);
         return (canPlay === 'probably' || canPlay === 'maybe');
     }

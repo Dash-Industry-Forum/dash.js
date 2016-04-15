@@ -47,7 +47,8 @@ function SegmentBaseLoader() {
     let instance,
         errHandler,
         boxParser,
-        requestModifier;
+        requestModifier,
+        baseURLController;
 
     function initialize() {
         errHandler = ErrorHandler(context).getInstance();
@@ -55,15 +56,20 @@ function SegmentBaseLoader() {
         requestModifier = RequestModifier(context).getInstance();
     }
 
+    function setConfig(config) {
+        if (config.baseURLController) {
+            baseURLController = config.baseURLController;
+        }
+    }
+
     function loadInitialization(representation, loadingInfo) {
         var needFailureReport = true;
         var initRange = null;
         var isoFile = null;
         var request = new XMLHttpRequest();
-        var media = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
-                    AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL;
+        var baseUrl = baseURLController.resolve(representation.path);
         var info = loadingInfo || {
-            url: media,
+            url: baseUrl ? baseUrl.url : undefined,
             range: {
                 start: 0,
                 end: 1500
@@ -87,7 +93,7 @@ function SegmentBaseLoader() {
 
             if (initRange) {
                 representation.range = initRange;
-                representation.initialization = media;
+                representation.initialization = info.url;
                 eventBus.trigger(Events.INITIALIZATION_LOADED, {representation: representation});
             } else {
                 info.range.end = info.bytesLoaded + info.bytesToLoad;
@@ -120,10 +126,9 @@ function SegmentBaseLoader() {
         var sidx = null;
         var hasRange = !!range;
         var request = new XMLHttpRequest();
-        var media = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
-            AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL;
+        var baseUrl = baseURLController.resolve(representation.path);
         var info = {
-            url: media,
+            url: baseUrl ? baseUrl.url : undefined,
             range: hasRange ? range : { start: 0, end: 1500 },
             searching: !hasRange,
             bytesLoaded: loadingInfo ? loadingInfo.bytesLoaded : 0,
@@ -280,6 +285,10 @@ function SegmentBaseLoader() {
     }
 
     function sendRequest(request, info) {
+        if (!info.url) {
+            return;
+        }
+
         request.open('GET', requestModifier.modifyRequestURL(info.url));
         request.responseType = 'arraybuffer';
         request.setRequestHeader('Range', 'bytes=' + info.range.start + '-' + info.range.end);
@@ -296,6 +305,7 @@ function SegmentBaseLoader() {
     }
 
     instance = {
+        setConfig: setConfig,
         initialize: initialize,
         loadInitialization: loadInitialization,
         loadSegments: loadSegments,

@@ -31,13 +31,11 @@
 
 import AbrController from './controllers/AbrController.js';
 import BufferController from './controllers/BufferController.js';
-import PlaybackController from './controllers/PlaybackController.js';
 import StreamController from './controllers/StreamController.js';
 import MediaController from './controllers/MediaController.js';
 import TextController from './controllers/TextController.js';
 import ScheduleController from './controllers/ScheduleController.js';
 import RulesController from './rules/RulesController.js';
-import ScheduleRulesCollection from './rules/scheduling/ScheduleRulesCollection.js';
 import MediaPlayerModel from './models/MediaPlayerModel.js';
 import MetricsModel from './models/MetricsModel.js';
 import FragmentLoader from './FragmentLoader.js';
@@ -89,6 +87,7 @@ function StreamProcessor(config) {
         fragmentController = FragmentController;
         dynamic = stream.getStreamInfo().manifestInfo.isDynamic;
 
+        indexHandler.initialize(this);
 
         abrController = AbrController(context).getInstance();
         abrController.initialize(type, this);
@@ -103,7 +102,6 @@ function StreamProcessor(config) {
             dashMetrics: DashMetrics(context).getInstance(),
             dashManifestModel: DashManifestModel(context).getInstance(),
             timelineConverter: timelineConverter,
-            scheduleRulesCollection: ScheduleRulesCollection(context).getInstance(),
             rulesController: RulesController(context).getInstance(),
             mediaPlayerModel: MediaPlayerModel(context).getInstance(),
         });
@@ -116,9 +114,6 @@ function StreamProcessor(config) {
             requestModifier: RequestModifier(context).getInstance()
         });
 
-        indexHandler.initialize(this);
-        indexHandler.setCurrentTime(PlaybackController(context).getInstance().getStreamStartTime(getStreamInfo()));
-
         representationController = RepresentationController(context).create();
         representationController.initialize(this);
 
@@ -127,17 +122,31 @@ function StreamProcessor(config) {
     }
 
     function reset(errored) {
-        fragmentModel.reset();
+        if (fragmentModel) {
+            fragmentModel.reset();
+            fragmentModel = null;
+        }
+
         indexHandler.reset();
-        bufferController.reset(errored);
-        scheduleController.reset();
-        representationController.reset();
-        bufferController = null;
-        scheduleController = null;
-        representationController = null;
+
+        if (bufferController) {
+            bufferController.reset(errored);
+            bufferController = null;
+        }
+
+        if (scheduleController) {
+            scheduleController.reset();
+            scheduleController = null;
+        }
+
+        if (representationController) {
+            representationController.reset();
+            representationController = null;
+        }
+
         fragmentController = null;
         fragmentLoader = null;
-        fragmentModel = null;
+
         eventController = null;
         stream = null;
         dynamic = null;
@@ -232,14 +241,6 @@ function StreamProcessor(config) {
         scheduleController.stop();
     }
 
-    function getIndexHandlerTime() {
-        return adapter.getIndexHandlerTime(this);
-    }
-
-    function setIndexHandlerTime(value) {
-        adapter.setIndexHandlerTime(this, value);
-    }
-
     function getCurrentRepresentationInfo() {
         return adapter.getCurrentRepresentationInfo(manifestModel.getValue(), representationController);
     }
@@ -299,8 +300,6 @@ function StreamProcessor(config) {
         getFragmentController: getFragmentController,
         getRepresentationController: getRepresentationController,
         getIndexHandler: getIndexHandler,
-        getIndexHandlerTime: getIndexHandlerTime,
-        setIndexHandlerTime: setIndexHandlerTime,
         getCurrentRepresentationInfo: getCurrentRepresentationInfo,
         getRepresentationInfoForQuality: getRepresentationInfoForQuality,
         isBufferingCompleted: isBufferingCompleted,

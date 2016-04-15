@@ -93,6 +93,13 @@ function RepresentationController() {
         eventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, instance);
     }
 
+    function setConfig(config) {
+        // allow the abrController created in setup to be overidden
+        if (config.abrController) {
+            abrController = config.abrController;
+        }
+    }
+
     function initialize(StreamProcessor) {
         streamProcessor = StreamProcessor;
         indexHandler = streamProcessor.getIndexHandler();
@@ -270,19 +277,18 @@ function RepresentationController() {
         var streamMetrics = metricsModel.getMetricsFor('stream');
         var metrics = metricsModel.getMetricsFor(getCurrentRepresentation().adaptation.type);
         var manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(streamMetrics);
-
-        var repInfo,
-            err,
-            repSwitch;
         var alreadyAdded = false;
-
         var postponeTimePeriod = 0;
+        var repInfo;
+        var err;
+        var repSwitch;
 
         if (r.adaptation.period.mpd.manifest.type == 'dynamic')
         {
-            var segmentAvailabilityTimePeriod = r.segmentAvailabilityRange.end - r.segmentAvailabilityRange.start;
+            let segmentAvailabilityTimePeriod = r.segmentAvailabilityRange.end - r.segmentAvailabilityRange.start;
             // We must put things to sleep unless till e.g. the startTime calculation in ScheduleController.onLiveEdgeSearchCompleted fall after the segmentAvailabilityRange.start
-            postponeTimePeriod = ((currentRepresentation.segmentDuration * mediaPlayerModel.getLiveDelayFragmentCount()) - segmentAvailabilityTimePeriod) * 1000;
+            let liveDelay = playbackController.computeLiveDelay(currentRepresentation.segmentDuration, streamProcessor.getStreamInfo().manifestInfo.DVRWindowSize);
+            postponeTimePeriod = (liveDelay - segmentAvailabilityTimePeriod) * 1000;
         }
 
         if (postponeTimePeriod > 0) {
@@ -359,19 +365,14 @@ function RepresentationController() {
 
         if (e.oldQuality !== e.newQuality) {
             currentRepresentation = getRepresentationForQuality(e.newQuality);
-            setLocalStorage(e.mediaType, currentRepresentation.bandwidth);
+            domStorage.setSavedBitrateSettings(e.mediaType, currentRepresentation.bandwidth);
             addRepresentationSwitch();
-        }
-    }
-
-    function setLocalStorage(type, bitrate) {
-        if (domStorage.isSupported(DOMStorage.STORAGE_TYPE_LOCAL) && (type === 'video' || type === 'audio')) {
-            localStorage.setItem(DOMStorage['LOCAL_STORAGE_' + type.toUpperCase() + '_BITRATE_KEY'], JSON.stringify({bitrate: bitrate / 1000, timestamp: new Date().getTime()}));
         }
     }
 
     instance = {
         initialize: initialize,
+        setConfig: setConfig,
         getData: getData,
         getDataIndex: getDataIndex,
         isUpdating: isUpdating,

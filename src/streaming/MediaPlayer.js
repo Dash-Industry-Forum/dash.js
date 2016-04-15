@@ -50,9 +50,9 @@ import TimeSyncController from './controllers/TimeSyncController.js';
 import ABRRulesCollection from './rules/abr/ABRRulesCollection.js';
 import VideoModel from './models/VideoModel.js';
 import RulesController from './rules/RulesController.js';
-import ScheduleRulesCollection from './rules/scheduling/ScheduleRulesCollection.js';
 import SynchronizationRulesCollection from './rules/synchronization/SynchronizationRulesCollection.js';
 import MediaSourceController from './controllers/MediaSourceController.js';
+import BaseURLController from './controllers/BaseURLController.js';
 import Debug from './../core/Debug.js';
 import EventBus from './../core/EventBus.js';
 import Events from './../core/events/Events.js';
@@ -73,9 +73,10 @@ import TimelineConverter from '../dash/utils/TimelineConverter.js';
  */
 function MediaPlayer() {
 
-    const VERSION = '2.0.0';
+    const VERSION = '2.1.0';
     const PLAYBACK_NOT_INITIALIZED_ERROR = 'You must first call play() to init playback before calling this method';
     const ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the video element before calling this method';
+    const SOURCE_NOT_ATTACHED_ERROR = 'You must first call attachSource() with a valid source before calling this method';
     const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
 
     let context = this.context;
@@ -84,7 +85,6 @@ function MediaPlayer() {
     let log = debug.log;
 
     let instance,
-        element,
         source,
         protectionData,
         mediaPlayerInitialized,
@@ -182,7 +182,7 @@ function MediaPlayer() {
      * @instance
      */
     function isReady() {
-        return (!!element && !!source);
+        return (!!videoModel && !!source);
     }
 
     /**
@@ -248,10 +248,10 @@ function MediaPlayer() {
      * @instance
      */
     function setMute(value) {
-        if (!element) {
+        if (!videoModel) {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
-        element.muted = value;
+        getVideoElement().muted = value;
     }
 
     /**
@@ -261,10 +261,10 @@ function MediaPlayer() {
      * @instance
      */
     function isMuted() {
-        if (!element) {
+        if (!videoModel) {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
-        return element.muted;
+        return getVideoElement().muted;
     }
 
     /**
@@ -274,10 +274,10 @@ function MediaPlayer() {
      * @instance
      */
     function setVolume(value) {
-        if (!element) {
+        if (!videoModel) {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
-        element.volume = value;
+        getVideoElement().volume = value;
     }
 
     /**
@@ -287,10 +287,10 @@ function MediaPlayer() {
      * @instance
      */
     function getVolume() {
-        if (!element) {
+        if (!videoModel) {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
-        return element.volume;
+        return getVideoElement().volume;
     }
 
     /**
@@ -390,15 +390,24 @@ function MediaPlayer() {
     /**
      * Current time of the playhead, in seconds.
      *
-     * @returns {number} The current playhead time of the media.
+     * If called with no arguments then the returned time value is time elapsed since the start point of the first stream.
+     * However if a stream ID is supplied then time is relative to the start of that stream, or is null if there is no such stream id in the manifest.
+     *
+     * @param streamId The ID of a stream that the returned playhead time must be relative to the start of. If undefined, then playhead time is relative to the first stream.
+     * @returns {number} The current playhead time of the media, or null.
      * @memberof module:MediaPlayer
      * @instance
      */
-    function time() {
+    function time(streamId) {
         if (!playbackInitialized) {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
-        var t = element.currentTime;
+        var t = getVideoElement().currentTime;
+
+        if (streamId !== undefined) {
+            t = streamController.getTimeRelativeToStreamId(t, streamId);
+        }
+
         if (playbackController.getIsDynamic()) {
             var metric = getDVRInfoMetric();
             t = (metric === null) ? 0 : duration() - (metric.range.end - metric.time);
@@ -417,7 +426,7 @@ function MediaPlayer() {
         if (!playbackInitialized) {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
-        var d = element.duration;
+        var d = getVideoElement().duration;
 
         if (playbackController.getIsDynamic()) {
 
@@ -575,24 +584,23 @@ function MediaPlayer() {
     }
 
     /**
+     * @deprecated Since version 2.1.0.  <b>Instead use:</b>
+     * <ul>
+     * <li>{@link module:MediaPlayer#getVideoElement getVideoElement()}</li>
+     * <li>{@link module:MediaPlayer#getSource getSource()}</li>
+     * <li>{@link module:MediaPlayer#getVideoContainer getVideoContainer()}</li>
+     * <li>{@link module:MediaPlayer#getTTMLRenderingDiv getTTMLRenderingDiv()}</li>
+     * </ul>
+     *
      * @returns {@link VideoModel}
      * @memberof module:MediaPlayer
      * @instance
      */
     function getVideoModel() {
-        if (!element) {
+        if (!videoModel) {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
         return videoModel;
-    }
-
-    /**
-     * @returns {@link object}
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getVideoContainer() {
-        return videoModel ? videoModel.getVideoContainer() : null;
     }
 
     /**
@@ -608,6 +616,22 @@ function MediaPlayer() {
      */
     function setLiveDelayFragmentCount(value) {
         mediaPlayerModel.setLiveDelayFragmentCount(value);
+    }
+
+    /**
+     * <p>Equivalent in seconds of setLiveDelayFragmentCount</p>
+     * <p>Lowering this value will lower latency but may decrease the player's ability to build a stable buffer.</p>
+     * <p>This value should be less than the manifest duration by a couple of segment durations to avoid playback issues</p>
+     * <p>If set, this parameter will take precedence over setLiveDelayFragmentCount and manifest info</p>
+     *
+     * @param value {int} Represents how many seconds to delay the live stream.
+     * @default undefined
+     * @memberof module:MediaPlayer
+     * @see {@link module:MediaPlayer#useSuggestedPresentationDelay useSuggestedPresentationDelay()}
+     * @instance
+     */
+    function setLiveDelay(value) {
+        mediaPlayerModel.setLiveDelay(value);
     }
 
     /**
@@ -859,7 +883,7 @@ function MediaPlayer() {
             textSourceBuffer = TextSourceBuffer(context).getInstance();
         }
 
-        var tracks = element.textTracks;
+        var tracks = getVideoElement().textTracks;
         var ln = tracks.length;
 
         for (var i = 0; i < ln; i++) {
@@ -1081,10 +1105,10 @@ function MediaPlayer() {
      * This method sets the selection mode for the initial track. This mode defines how the initial track will be selected
      * if no initial media settings are set. If initial media settings are set this parameter will be ignored. Available options are:
      *
-     * MediaPlayer.dependencies.MediaController.trackSelectionModes.HIGHEST_BITRATE
+     * MediaController.TRACK_SELECTION_MODE_HIGHEST_BITRATE
      * this mode makes the player select the track with a highest bitrate. This mode is a default mode.
      *
-     * MediaPlayer.dependencies.MediaController.trackSelectionModes.WIDEST_RANGE
+     * MediaController.TRACK_SELECTION_MODE_WIDEST_RANGE
      * this mode makes the player select the track with a widest range of bitrates
      *
      * @param mode
@@ -1517,6 +1541,16 @@ function MediaPlayer() {
     }
 
     /**
+     * Returns instance of Video Container that was attached by calling attachVideoContainer()
+     * @returns {@link object}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getVideoContainer() {
+        return videoModel ? videoModel.getVideoContainer() : null;
+    }
+
+    /**
      * Use this method to attach an HTML5 element that wraps the video element.
      *
      * @param container The HTML5 element containing the video element.
@@ -1531,28 +1565,48 @@ function MediaPlayer() {
     }
 
     /**
+     * Returns instance of Video Element that was attached by calling attachView()
+     * @returns {object}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getVideoElement() {
+        if (!videoModel) {
+            throw ELEMENT_NOT_ATTACHED_ERROR;
+        }
+        return videoModel.getElement();
+    }
+
+    /**
      * Use this method to attach an HTML5 VideoElement for dash.js to operate upon.
      *
      * @param view An HTML5 VideoElement that has already been defined in the DOM.
      * @memberof module:MediaPlayer
      * @instance
      */
-    function attachView(view) {
+    function attachView(element) {
         if (!mediaPlayerInitialized) {
             throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
         }
         videoModel = null;
-        element = view;
         if (element) {
             videoModel = VideoModel(context).getInstance();
             videoModel.initialize();
             videoModel.setElement(element);
-            // Workaround to force Firefox to fire the canplay event.
-            element.preload = 'auto';
             detectProtection();
             detectMetricsReporting();
         }
         resetAndInitializePlayback();
+    }
+
+    /**
+     * Returns instance of Div that was attached by calling attachTTMLRenderingDiv()
+     * @returns {@link object}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getTTMLRenderingDiv() {
+        return videoModel ? videoModel.getTTMLRenderingDiv() : null;
     }
 
     /**
@@ -1567,6 +1621,19 @@ function MediaPlayer() {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
         videoModel.setTTMLRenderingDiv(div);
+    }
+
+    /**
+     * Returns the source string or manifest that was attached by calling attachSource()
+     * @returns {string | manifest}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getSource() {
+        if (!source) {
+            throw SOURCE_NOT_ATTACHED_ERROR;
+        }
+        return source;
     }
 
     /**
@@ -1609,6 +1676,8 @@ function MediaPlayer() {
     function reset() {
         attachSource(null);
         attachView(null);
+        protectionData = null;
+        protectionController = null;
     }
 
     //***********************************
@@ -1626,8 +1695,6 @@ function MediaPlayer() {
             mediaController.reset();
             streamController = null;
             metricsReportingController = null;
-            protectionController = null;
-            protectionData = null;
             if (isReady()) {
                 initializePlayback();
             }
@@ -1644,8 +1711,8 @@ function MediaPlayer() {
         let abrRulesCollection = ABRRulesCollection(context).getInstance();
         abrRulesCollection.initialize();
 
-        let scheduleRulesCollection = ScheduleRulesCollection(context).getInstance();
-        scheduleRulesCollection.initialize();
+        //let scheduleRulesCollection = ScheduleRulesCollection(context).getInstance();
+        //scheduleRulesCollection.initialize();
 
         let sourceBufferController = SourceBufferController(context).getInstance();
         sourceBufferController.setConfig({dashManifestModel: dashManifestModel});
@@ -1665,7 +1732,6 @@ function MediaPlayer() {
         rulesController.initialize();
         rulesController.setConfig({
             abrRulesCollection: abrRulesCollection,
-            scheduleRulesCollection: scheduleRulesCollection,
             synchronizationRulesCollection: synchronizationRulesCollection
         });
 
@@ -1682,6 +1748,7 @@ function MediaPlayer() {
             liveEdgeFinder: LiveEdgeFinder(context).getInstance(),
             mediaSourceController: MediaSourceController(context).getInstance(),
             timeSyncController: TimeSyncController(context).getInstance(),
+            baseURLController: BaseURLController(context).getInstance(),
             virtualBuffer: virtualBuffer,
             errHandler: errHandler,
             timelineConverter: TimelineConverter(context).getInstance()
@@ -1752,7 +1819,7 @@ function MediaPlayer() {
             metricsReportingController = metricsReporting.createMetricsReporting({
                 log: log,
                 eventBus: eventBus,
-                mediaElement: videoModel.getElement(),
+                mediaElement: getVideoElement(),
                 dashManifestModel: dashManifestModel,
                 metricsModel: metricsModel
             });
@@ -1791,13 +1858,6 @@ function MediaPlayer() {
 
     function initializePlayback() {
         if (!playbackInitialized) {
-            if (!mediaPlayerInitialized) {
-                throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
-            }
-            if (!element || !source) {
-                throw 'Missing view or source.';
-            }
-
             playbackInitialized = true;
             log('Playback Initialized');
             createControllers();
@@ -1830,6 +1890,7 @@ function MediaPlayer() {
         duration: duration,
         timeAsUTC: timeAsUTC,
         durationAsUTC: durationAsUTC,
+        getActiveStream: getActiveStream,
         getDVRWindowSize: getDVRWindowSize,
         getDVRSeekOffset: getDVRSeekOffset,
         convertToTimeCode: convertToTimeCode,
@@ -1839,7 +1900,11 @@ function MediaPlayer() {
         getBufferLength: getBufferLength,
         getVideoModel: getVideoModel,
         getVideoContainer: getVideoContainer,
+        getTTMLRenderingDiv: getTTMLRenderingDiv,
+        getVideoElement: getVideoElement,
+        getSource: getSource,
         setLiveDelayFragmentCount: setLiveDelayFragmentCount,
+        setLiveDelay: setLiveDelay,
         useSuggestedPresentationDelay: useSuggestedPresentationDelay,
         enableLastBitrateCaching: enableLastBitrateCaching,
         enableLastMediaSettingsCaching: enableLastMediaSettingsCaching,

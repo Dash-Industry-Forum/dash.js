@@ -56,6 +56,16 @@ function MediaController() {
         switchMode,
         errHandler;
 
+    const validTrackSwitchModes = [
+        TRACK_SWITCH_MODE_ALWAYS_REPLACE,
+        TRACK_SWITCH_MODE_NEVER_REPLACE
+    ];
+
+    const validTrackSelectionModes = [
+        TRACK_SELECTION_MODE_HIGHEST_BITRATE,
+        TRACK_SELECTION_MODE_WIDEST_RANGE
+    ];
+
     function initialize() {
         tracks = {};
         resetInitialSettings();
@@ -63,41 +73,45 @@ function MediaController() {
     }
 
     /**
+     * @param type
      * @param streamInfo
      * @memberof MediaController#
      */
-    function checkInitialMediaSettings(streamInfo) {
+    function checkInitialMediaSettingsForType(type, streamInfo) {
+        var settings = getInitialSettings(type);
+        var tracksForType = getTracksFor(type, streamInfo);
+        var tracks = [];
 
-        ['audio', 'video', 'text', 'fragmentedText'].forEach(function (type) {
-            var settings = getInitialSettings(type);
-            var tracksForType = getTracksFor(type, streamInfo);
-            var tracks = [];
+        if (type === 'fragmentedText') {
+            // Choose the first track
+            setTrack(tracksForType[0]);
+            return;
+        }
 
-            if (!settings) {
-                settings = domStorage.getSavedMediaSettings(type);
-                setInitialSettings(type, settings);
-            }
+        if (!settings) {
+            settings = domStorage.getSavedMediaSettings(type);
+            setInitialSettings(type, settings);
+        }
 
-            if (!tracksForType || (tracksForType.length === 0)) return;
+        if (!tracksForType || (tracksForType.length === 0)) return;
 
-            if (settings) {
-                tracksForType.forEach(function (track) {
-                    if (!matchSettings(settings, track)) {
-                        tracks.push(track);
-                    }
-                });
-            }
-
-            if (tracks.length === 0) {
-                setTrack(selectInitialTrack(tracksForType));
-            } else {
-                if (tracks.length > 1) {
-                    setTrack(selectInitialTrack(tracks));
-                } else {
-                    setTrack(tracks[0]);
+        if (settings) {
+            tracksForType.forEach(function (track) {
+                if (matchSettings(settings, track)) {
+                    tracks.push(track);
                 }
+            });
+        }
+
+        if (tracks.length === 0) {
+            setTrack(selectInitialTrack(tracksForType));
+        } else {
+            if (tracks.length > 1) {
+                setTrack(selectInitialTrack(tracks));
+            } else {
+                setTrack(tracks[0]);
             }
-        });
+        }
     }
 
     /**
@@ -202,7 +216,7 @@ function MediaController() {
             settings.audioChannelConfiguration = settings.audioChannelConfiguration[0];
         }
 
-        storeLastSettings(type, settings);
+        domStorage.setSavedMediaSettings(type, settings);
     }
 
     /**
@@ -233,7 +247,7 @@ function MediaController() {
      * @memberof MediaController#
      */
     function setSwitchMode(type, mode) {
-        var isModeSupported = !!MediaController[mode];
+        const isModeSupported = (validTrackSwitchModes.indexOf(mode) !== -1);
 
         if (!isModeSupported) {
             log('track switch mode is not supported: ' + mode);
@@ -257,7 +271,7 @@ function MediaController() {
      * @memberof MediaController#
      */
     function setSelectionModeForInitialTrack(mode) {
-        var isModeSupported = !!MediaController.trackSelectionModes[mode];
+        const isModeSupported = (validTrackSelectionModes.indexOf(mode) !== -1);
 
         if (!isModeSupported) {
             log('track selection mode is not supported: ' + mode);
@@ -316,12 +330,6 @@ function MediaController() {
         textSourceBuffer.resetEmbedded();
     }
 
-    function storeLastSettings(type, value) {
-        if (domStorage.isSupported(DOMStorage.STORAGE_TYPE_LOCAL) && (type === 'video' || type === 'audio')) {
-            localStorage.setItem(DOMStorage['LOCAL_STORAGE_' + type.toUpperCase() + '_SETTINGS_KEY'], JSON.stringify({settings: value, timestamp: new Date().getTime()}));
-        }
-    }
-
     function extractSettings(mediaInfo) {
         var settings = {
             lang: mediaInfo.lang,
@@ -375,7 +383,7 @@ function MediaController() {
             var tmp;
 
             trackArr.forEach(function (track) {
-                tmp = Math.max.apply(Math, track.bitrateList);
+                tmp = Math.max.apply(Math, track.bitrateList.map(function (obj) { return obj.bandwidth; }));
 
                 if (tmp > max) {
                     max = tmp;
@@ -456,7 +464,7 @@ function MediaController() {
 
     instance = {
         initialize: initialize,
-        checkInitialMediaSettings: checkInitialMediaSettings,
+        checkInitialMediaSettingsForType: checkInitialMediaSettingsForType,
         addTrack: addTrack,
         getTracksFor: getTracksFor,
         getCurrentTrackFor: getCurrentTrackFor,

@@ -42,7 +42,7 @@ import Debug from '../../core/Debug.js';
 
 function StreamController() {
 
-    const STREAM_END_THRESHOLD = 0.2;
+    const STREAM_END_THRESHOLD = 1.0;
 
     let context = this.context;
     let log = Debug(context).getInstance().log;
@@ -60,6 +60,7 @@ function StreamController() {
         liveEdgeFinder,
         mediaSourceController,
         timeSyncController,
+        baseURLController,
         virtualBuffer,
         errHandler,
         timelineConverter,
@@ -177,7 +178,7 @@ function StreamController() {
     }
 
     function startAutoPlay() {
-        if (!activeStream.isActivated()) return;
+        if (!activeStream.isActivated() || !initialPlayback) return;
         // only first stream must be played automatically during playback initialization
         if (activeStream.getStreamInfo().index === 0) {
             activeStream.startEventController();
@@ -251,16 +252,15 @@ function StreamController() {
         }
     }
 
-    function onEnded(/*e*/) {
-        var nextStream = getNextStream();
+    function onEnded() {
 
-        switchStream(activeStream, nextStream);
+        let nextStream = getNextStream();
 
-        flushPlaylistMetrics(
-            nextStream ?
-                PlayList.Trace.END_OF_PERIOD_STOP_REASON :
-                PlayList.Trace.END_OF_CONTENT_STOP_REASON
-        );
+        if (nextStream) {
+            switchStream(activeStream, nextStream, NaN);
+        }
+
+        flushPlaylistMetrics(nextStream ? PlayList.Trace.END_OF_PERIOD_STOP_REASON : PlayList.Trace.END_OF_CONTENT_STOP_REASON);
     }
 
     function onPlaybackSeeking(e) {
@@ -297,20 +297,20 @@ function StreamController() {
 
     /*
      * Handles the current stream buffering end moment to start the next stream buffering
+     * Removing MP logic from this for now, we removing the complexity of buffering into next period for now.
+     * this handler's logic caused Firefox and Safari to not period switch since the end event did not fire due to this.
      */
     function onStreamBufferingCompleted(e) {
-        var nextStream = getNextStream();
+        //var nextStream = getNextStream();
         var isLast = e.streamInfo.isLast;
 
-        // buffering has been completed, now we can signal end of stream
         if (mediaSource && isLast) {
             mediaSourceController.signalEndOfStream(mediaSource);
         }
-
-        if (!nextStream) return;
-
-        nextStream.activate(mediaSource);
+        //if (!nextStream) return;
+        //nextStream.activate(mediaSource);
     }
+
 
     function getNextStream() {
         var start = activeStream.getStreamInfo().start;
@@ -343,25 +343,72 @@ function StreamController() {
         return null;
     }
 
-    function switchStream(from, to, seekTo) {
+    /**
+     * Returns a playhead time, in seconds, converted to be relative
+     * to the start of an identified stream/period or null if no such stream
+     */
+    function getTimeRelativeToStreamId(time, id) {
+        var stream = null;
+        var baseStart = 0;
+        var streamStart = 0;
+        var streamDur = null;
+
+        var ln = streams.length;
+
+        for (var i = 0; i < ln; i++) {
+            stream = streams[i];
+            streamStart = stream.getStartTime();
+            streamDur = stream.getDuration();
+
+            // use start time, if not undefined or NaN or similar
+            if (Number.isFinite(streamStart)) {
+                baseStart = streamStart;
+            }
+
+            if (stream.getId() === id) {
+                return time - baseStart;
+            } else {
+                // use duration if not undefined or NaN or similar
+                if (Number.isFinite(streamDur)) {
+                    baseStart += streamDur;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    function getActiveStreamCommonEarliestTime() {
+        let commonEarliestTime = [];
+        activeStream.getProcessors().forEach(p => {
+            commonEarliestTime.push(p.getIndexHandler().getEarliestTime());
+        });
+        return Math.min.apply( Math, commonEarliestTime);
+    }
+
+    function switchStream(from, to, seekTime) {
 
         if (isStreamSwitchingInProgress || !from || !to || from === to) return;
 
-        fireSwitchEvent(Events.PERIOD_SWITCH_STARTED, from, to);
         isStreamSwitchingInProgress = true;
+        fireSwitchEvent(Events.PERIOD_SWITCH_STARTED, from, to);
 
-        var onMediaSourceReady = function () {
-            if (seekTo !== undefined) {
-                playbackController.seek(seekTo);
+        function onMediaSourceReady() {
+            if (!isNaN(seekTime)) {
+                playbackController.seek(seekTime); //we only need to call seek here, IndexHandlerTime was set from seeking event
+            } else {
+                let startTime = playbackController.getStreamStartTime(true);
+                activeStream.getProcessors().forEach(p => {
+                    adapter.setIndexHandlerTime(p, startTime);
+                });
+                playbackController.seek(startTime); //seek to period start time
             }
-
             playbackController.play();
             activeStream.startEventController();
             isStreamSwitchingInProgress = false;
             fireSwitchEvent(Events.PERIOD_SWITCH_COMPLETED, from, to);
-        };
+        }
 
-        //Removed a hack from 1.5 using setTimeout due to dijon.  Try without hack but remember.
         from.deactivate();
         activeStream = to;
         playbackController.initialize(activeStream.getStreamInfo());
@@ -369,30 +416,25 @@ function StreamController() {
     }
 
     function setupMediaSource(callback) {
-        var sourceUrl;
 
-        var onMediaSourceOpen = function (e) {
+        let sourceUrl;
+
+        function onMediaSourceOpen() {
             log('MediaSource is open!');
-            log(e);
-            window.URL.revokeObjectURL(sourceUrl);
 
+            window.URL.revokeObjectURL(sourceUrl);
             mediaSource.removeEventListener('sourceopen', onMediaSourceOpen);
             mediaSource.removeEventListener('webkitsourceopen', onMediaSourceOpen);
-
-            //log("MediaSource set up.");
             setMediaDuration();
-
             activeStream.activate(mediaSource);
 
             if (callback) {
                 callback();
             }
-        };
+        }
 
         if (!mediaSource) {
             mediaSource = mediaSourceController.createMediaSource();
-            //log("MediaSource created.");
-            //log("MediaSource should be closed. The actual readyState is: " + mediaSource.readyState);
         } else {
             mediaSourceController.detachMediaSource(videoModel);
         }
@@ -400,7 +442,7 @@ function StreamController() {
         mediaSource.addEventListener('sourceopen', onMediaSourceOpen, false);
         mediaSource.addEventListener('webkitsourceopen', onMediaSourceOpen, false);
         sourceUrl = mediaSourceController.attachMediaSource(mediaSource, videoModel);
-        //log("MediaSource attached to video.  Waiting on open...");
+        log('MediaSource attached to element.  Waiting on open...');
     }
 
     function setMediaDuration() {
@@ -470,7 +512,8 @@ function StreamController() {
                         adapter: adapter,
                         timelineConverter: timelineConverter,
                         capabilities: capabilities,
-                        errHandler: errHandler
+                        errHandler: errHandler,
+                        baseURLController: baseURLController
                     });
                     stream.initialize(streamInfo, protectionController);
 
@@ -569,6 +612,8 @@ function StreamController() {
                 }
             });
 
+            baseURLController.initialize(manifest);
+
             timeSyncController.setConfig({
                 metricsModel: metricsModel,
                 dashMetrics: dashMetrics
@@ -642,6 +687,9 @@ function StreamController() {
         if (config.timeSyncController) {
             timeSyncController = config.timeSyncController;
         }
+        if (config.baseURLController) {
+            baseURLController = config.baseURLController;
+        }
         if (config.virtualBuffer) {
             virtualBuffer = config.virtualBuffer;
         }
@@ -676,9 +724,10 @@ function StreamController() {
         eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
         eventBus.off(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
         eventBus.off(Events.PLAYBACK_ENDED, onEnded, this);
-        eventBus.off(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
         eventBus.off(Events.MANIFEST_UPDATED, onManifestUpdated, this);
+        eventBus.off(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
 
+        baseURLController.reset();
         manifestUpdater.reset();
         metricsModel.clearAllCurrentMetrics();
         manifestModel.setValue(null);
@@ -718,8 +767,10 @@ function StreamController() {
         getActiveStreamInfo: getActiveStreamInfo,
         isStreamActive: isStreamActive,
         getStreamById: getStreamById,
+        getTimeRelativeToStreamId: getTimeRelativeToStreamId,
         load: load,
         loadWithManifest: loadWithManifest,
+        getActiveStreamCommonEarliestTime: getActiveStreamCommonEarliestTime,
         setConfig: setConfig,
         reset: reset
     };

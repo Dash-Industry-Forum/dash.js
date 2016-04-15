@@ -79,11 +79,16 @@ function VideoModel() {
 
     function setElement(value) {
         element = value;
+        // Workaround to force Firefox to fire the canplay event.
+        element.preload = 'auto';
     }
 
     function setSource(source) {
         if (source) {
             element.src = source;
+        } else {
+            element.removeAttribute('src');
+            element.load();
         }
     }
 

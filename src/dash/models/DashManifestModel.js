@@ -36,7 +36,9 @@ import Mpd from '../vo/Mpd.js';
 import UTCTiming from '../vo/UTCTiming.js';
 import TimelineConverter from '../utils/TimelineConverter.js';
 import Event from '../vo/Event.js';
+import BaseURL from '../vo/BaseURL.js';
 import EventStream from '../vo/EventStream.js';
+import URLUtils from '../../streaming/utils/URLUtils.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 function DashManifestModel() {
@@ -44,6 +46,7 @@ function DashManifestModel() {
     let instance;
     let context = this.context;
     let timelineConverter = TimelineConverter(context).getInstance();//TODO Need to pass this in not bake in
+    const urlUtils = URLUtils(context).getInstance();
 
     function getIsTypeOf(adaptation, type) {
 
@@ -57,9 +60,11 @@ function DashManifestModel() {
         var mimeTypeRegEx = (type !== 'text') ? new RegExp(type) : new RegExp('(vtt|ttml)');
 
         if ((adaptation.Representation_asArray.length > 0) &&
-            (adaptation.Representation_asArray[0].hasOwnProperty('codecs')) &&
-            (adaptation.Representation_asArray[0].codecs == 'stpp')) {
-            return type == 'fragmentedText';
+            (adaptation.Representation_asArray[0].hasOwnProperty('codecs'))) {
+            var codecs = adaptation.Representation_asArray[0].codecs;
+            if (codecs === 'stpp' || codecs === 'wvtt') {
+                return type === 'fragmentedText';
+            }
         }
 
         if (col) {
@@ -152,11 +157,13 @@ function DashManifestModel() {
         })[0];
     }
 
+    function getRepresentationSortFunction() {
+        return (a, b) => a.bandwidth - b.bandwidth;
+    }
+
     function processAdaptation(adaptation) {
         if (adaptation.Representation_asArray !== undefined && adaptation.Representation_asArray !== null) {
-            adaptation.Representation_asArray.sort(function (a, b) {
-                return a.bandwidth - b.bandwidth;
-            });
+            adaptation.Representation_asArray.sort(getRepresentationSortFunction());
         }
 
         return adaptation;
@@ -271,14 +278,22 @@ function DashManifestModel() {
         return isDVR;
     }
 
-    function getIsOnDemand(manifest) {
-        var isOnDemand = false;
+    function hasProfile(manifest, profile) {
+        var has = false;
 
         if (manifest.profiles && manifest.profiles.length > 0) {
-            isOnDemand = (manifest.profiles.indexOf('urn:mpeg:dash:profile:isoff-on-demand:2011') !== -1);
+            has = (manifest.profiles.indexOf(profile) !== -1);
         }
 
-        return isOnDemand;
+        return has;
+    }
+
+    function getIsOnDemand(manifest) {
+        return hasProfile(manifest, 'urn:mpeg:dash:profile:isoff-on-demand:2011');
+    }
+
+    function getIsDVB(manifest) {
+        return hasProfile(manifest, 'urn:dvb:dash:profile:dvb-dash:2014');
     }
 
     function getDuration(manifest) {
@@ -322,7 +337,11 @@ function DashManifestModel() {
         var bitrateList = [];
 
         for (var i = 0; i < ln; i++) {
-            bitrateList.push(reps[i].bandwidth);
+            bitrateList.push({
+                bandwidth: reps[i].bandwidth,
+                width: reps[i].width || 0,
+                height: reps[i].height || 0
+            });
         }
 
         return bitrateList;
@@ -393,11 +412,9 @@ function DashManifestModel() {
                 if (initialization.hasOwnProperty('sourceURL')) {
                     representation.initialization = initialization.sourceURL;
                 } else if (initialization.hasOwnProperty('range')) {
-                    representation.initialization = r.BaseURL;
                     representation.range = initialization.range;
                 }
             } else if (r.hasOwnProperty('mimeType') && getIsTextTrack(r.mimeType)) {
-                representation.initialization = r.BaseURL;
                 representation.range = 0;
             }
 
@@ -423,6 +440,9 @@ function DashManifestModel() {
             }
 
             representation.MSETimeOffset = timelineConverter.calcMSETimeOffset(representation);
+
+            representation.path = [adaptation.period.index, adaptation.index, i];
+
             representations.push(representation);
         }
 
@@ -767,6 +787,67 @@ function DashManifestModel() {
         return utcTimingEntries;
     }
 
+    function getBaseURLsFromElement(node) {
+        let baseUrls = [];
+        let entries = node.BaseURL_asArray || [node.baseUri] || [];
+        let earlyReturn = false;
+
+        entries.some(entry => {
+            if (entry) {
+                const baseUrl = new BaseURL();
+                let text = entry.__text || entry;
+
+                if (urlUtils.isRelative(text)) {
+                    // it doesn't really make sense to have relative and
+                    // absolute URLs at the same level, or multiple
+                    // relative URLs at the same level, so assume we are
+                    // done from this level of the MPD
+                    earlyReturn = true;
+
+                    // deal with the specific case where the MPD@BaseURL
+                    // is specified and is relative. when no MPD@BaseURL
+                    // entries exist, that case is handled by the
+                    // [node.baseUri] in the entries definition.
+                    if (node.baseUri) {
+                        text = node.baseUri + text;
+                    }
+                }
+
+                baseUrl.url = text;
+
+                // serviceLocation is optional, but we need it in order
+                // to blacklist correctly. if it's not available, use
+                // anything unique since there's no relationship to any
+                // other BaseURL and, in theory, the url should be
+                // unique so use this instead.
+                if (entry.hasOwnProperty('serviceLocation') &&
+                        entry.serviceLocation.length) {
+                    baseUrl.serviceLocation = entry.serviceLocation;
+                } else {
+                    baseUrl.serviceLocation = text;
+                }
+
+                if (entry.hasOwnProperty('dvb:priority')) {
+                    baseUrl.dvb_priority = entry['dvb:priority'];
+                }
+
+                if (entry.hasOwnProperty('dvb:weight')) {
+                    baseUrl.dvb_weight = entry['dvb:weight'];
+                }
+
+                /* NOTE: byteRange, availabilityTimeOffset,
+                 * availabilityTimeComplete currently unused
+                 */
+
+                baseUrls.push(baseUrl);
+
+                return earlyReturn;
+            }
+        });
+
+        return baseUrls;
+    }
+
     instance = {
         getIsTypeOf: getIsTypeOf,
         getIsAudio: getIsAudio,
@@ -794,6 +875,7 @@ function DashManifestModel() {
         getIsDynamic: getIsDynamic,
         getIsDVR: getIsDVR,
         getIsOnDemand: getIsOnDemand,
+        getIsDVB: getIsDVB,
         getDuration: getDuration,
         getBandwidth: getBandwidth,
         getRefreshDelay: getRefreshDelay,
@@ -812,7 +894,9 @@ function DashManifestModel() {
         getEventStreams: getEventStreams,
         getEventStreamForAdaptationSet: getEventStreamForAdaptationSet,
         getEventStreamForRepresentation: getEventStreamForRepresentation,
-        getUTCTimingSources: getUTCTimingSources
+        getUTCTimingSources: getUTCTimingSources,
+        getBaseURLsFromElement: getBaseURLsFromElement,
+        getRepresentationSortFunction: getRepresentationSortFunction
     };
 
     return instance;

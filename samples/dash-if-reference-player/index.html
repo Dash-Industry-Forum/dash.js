@@ -253,8 +253,8 @@
                         <li class="dropdown">
                             <a href="#" id="videoTrackSwitchModeDropdown" class="dropdown-toggle" data-toggle="dropdown">Track switch mode<b class="caret"></b></a>
                             <ul class="dropdown-menu" role="menu">
-                                <li ng-click="changeTrackSwitchMode('ALWAYS_REPLACE', 'video')"><a>always replace</a></li>
-                                <li ng-click="changeTrackSwitchMode('NEVER_REPLACE', 'video')"><a>never replace</a></li>
+                                <li ng-click="changeTrackSwitchMode('alwaysReplace', 'video')"><a>always replace</a></li>
+                                <li ng-click="changeTrackSwitchMode('neverReplace', 'video')"><a>never replace</a></li>
                             </ul>
                         </li>
                         <input type="text" class="form-control" placeholder="initial role, e.g. 'alternate'" ng-model="initialSettings.video">
@@ -301,8 +301,8 @@
                         <li class="dropdown">
                             <a href="#" id="audioTrackSwitchModeDropdown" class="dropdown-toggle" data-toggle="dropdown">Track switch mode<b class="caret"></b></a>
                             <ul class="dropdown-menu" role="menu">
-                                <li ng-click="changeTrackSwitchMode('ALWAYS_REPLACE', 'audio')"><a>always replace</a></li>
-                                <li ng-click="changeTrackSwitchMode('NEVER_REPLACE', 'audio')"><a>never replace</a></li>
+                                <li ng-click="changeTrackSwitchMode('alwaysReplace', 'audio')"><a>always replace</a></li>
+                                <li ng-click="changeTrackSwitchMode('neverReplace', 'audio')"><a>never replace</a></li>
                             </ul>
                         </li>
                         <input type="text" class="form-control" placeholder="initial lang, e.g. 'en'" ng-model="initialSettings.audio">

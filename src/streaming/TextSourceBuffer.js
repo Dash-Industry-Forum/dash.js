@@ -141,6 +141,11 @@ function TextSourceBuffer() {
         var mediaInfo = chunk.mediaInfo;
         var mediaType = mediaInfo.type;
         var mimeType = mediaInfo.mimeType;
+        var codecType = mediaInfo.codec || mimeType;
+        if (!codecType) {
+            log('No text type defined');
+            return;
+        }
 
         function createTextTrackFromMediaInfo(captionData, mediaInfo) {
             var textTrackInfo = new TextTrackInfo();
@@ -186,28 +191,75 @@ function TextSourceBuffer() {
             } else {
                 samplesInfo = fragmentedTextBoxParser.getSamplesInfo(bytes);
                 sampleList = samplesInfo.sampleList;
-                for (i = 0 ; i < sampleList.length ; i++) {
-                    if (!firstSubtitleStart) {
-                        firstSubtitleStart = sampleList[0].cts - chunk.start * timescale;
+                if (!firstSubtitleStart && sampleList.length > 0) {
+                    firstSubtitleStart = sampleList[0].cts - chunk.start * timescale;
+                }
+                if (codecType.search('stpp') >= 0) {
+                    parser = parser !== null ? parser : getParser(codecType);
+                    for (i = 0; i < sampleList.length; i++) {
+                        let sample = sampleList[i];
+                        let sampleStart = sample.cts;
+                        let sampleRelStart = sampleStart - firstSubtitleStart;
+                        this.buffered.add(sampleRelStart / timescale, (sampleRelStart + sample.duration) / timescale);
+                        let dataView = new DataView(bytes, sample.offset, sample.size);
+                        ccContent = ISOBoxer.Utils.dataViewToString(dataView, 'utf-8');
+                        try {
+                            result = parser.parse(ccContent, sampleStart / timescale, (sampleStart + sample.duration) / timescale);
+                            textTracks.addCaptions(currFragmentedTrackIdx, firstSubtitleStart / timescale, result);
+                        } catch (e) {
+                            log('TTML parser error: ' + e.message);
+                        }
                     }
-                    sampleList[i].cts -= firstSubtitleStart;
-                    this.buffered.add(sampleList[i].cts / timescale,(sampleList[i].cts + sampleList[i].duration) / timescale);
-                    let dataView = new DataView(bytes, sampleList[i].offset, sampleList[i].size);
-                    ccContent = ISOBoxer.Utils.dataViewToString(dataView, 'utf-8');
-                    parser = parser !== null ? parser : getParser(mimeType);
-                    try {
-                        result = parser.parse(ccContent);
-                        textTracks.addCaptions(currFragmentedTrackIdx, firstSubtitleStart / timescale, result);
-                    } catch (e) {
-                        //empty cue ?
+                } else {
+                    // WebVTT case
+                    var captionArray = [];
+                    for (i = 0 ; i < sampleList.length; i++) {
+                        var sample = sampleList[i];
+                        sample.cts -= firstSubtitleStart;
+                        this.buffered.add(sample.cts / timescale, (sample.cts + sample.duration) / timescale);
+                        var sampleData = bytes.slice(sample.offset, sample.offset + sample.size);
+                        // There are boxes inside the sampleData, so we need a ISOBoxer to get at it.
+                        var sampleBoxes = ISOBoxer.parseBuffer(sampleData);
+
+                        for (var j = 0 ; j < sampleBoxes.boxes.length; j++) {
+                            var box1 = sampleBoxes.boxes[j];
+                            log('VTT box1: ' + box1.type);
+                            if (box1.type === 'vtte') {
+                                continue; //Empty box
+                            }
+                            if (box1.type === 'vttc') {
+                                log('VTT vttc boxes.length = ' + box1.boxes.length);
+                                for (var k = 0 ; k < box1.boxes.length; k++) {
+                                    var box2 = box1.boxes[k];
+                                    log('VTT box2: ' + box2.type);
+                                    if (box2.type === 'payl') {
+                                        var cue_text = box2.cue_text;
+                                        log('VTT cue_text = ' + cue_text);
+                                        var start_time = sample.cts / timescale;
+                                        var end_time = (sample.cts + sample.duration) / timescale;
+                                        captionArray.push({
+                                            start: start_time,
+                                            end: end_time,
+                                            data: cue_text,
+                                            styles: {}
+                                        });
+                                        log('VTT ' + start_time + '-' + end_time + ' : ' + cue_text);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (captionArray.length > 0) {
+                        textTracks.addCaptions(currFragmentedTrackIdx, 0, captionArray);
                     }
                 }
             }
         } else if (mediaType === 'text') {
             let dataView = new DataView(bytes, 0, bytes.byteLength);
             ccContent = ISOBoxer.Utils.dataViewToString(dataView, 'utf-8');
+
             try {
-                result = getParser(mimeType).parse(ccContent);
+                result = getParser(codecType).parse(ccContent);
                 createTextTrackFromMediaInfo(result, mediaInfo);
             } catch (e) {
                 errHandler.timedTextError(e, 'parse', ccContent);
@@ -232,7 +284,7 @@ function TextSourceBuffer() {
                             captionsArray = createHTMLCaptionsFromScreen(videoModel.getElement(), startTime, endTime, captionScreen);
                         } else {
                             var text = captionScreen.getDisplayText();
-                            //console.log("CEA text: " + startTime + "-" + endTime + "  '" + text + "'");
+                            //log("CEA text: " + startTime + "-" + endTime + "  '" + text + "'");
                             captionsArray = [{ start: startTime, end: endTime, data: text, styles: {} }];
                         }
                         if (captionsArray) {
@@ -258,7 +310,7 @@ function TextSourceBuffer() {
                             trackIdx = textTracks.getTrackIdxForId('CC3');
                         }
                         if (trackIdx === -1) {
-                            console.log('CEA-608: data before track is ready.');
+                            log('CEA-608: data before track is ready.');
                             return;
                         }
                         handler = makeCueAdderForIndex(this, trackIdx);
@@ -281,7 +333,7 @@ function TextSourceBuffer() {
                         var fieldParser = embeddedCea608FieldParsers[fieldNr];
                         if (fieldParser) {
                             /*if (ccData.length > 0 ) {
-                                console.log("CEA-608 adding Data to field " + fieldNr + " " + ccData.length + "bytes");
+                                log("CEA-608 adding Data to field " + fieldNr + " " + ccData.length + "bytes");
                             }*/
                             for (i = 0; i < ccData.length; i++) {
                                 fieldParser.addData(ccData[i][0] / embeddedTimescale, ccData[i][1]);
@@ -296,10 +348,6 @@ function TextSourceBuffer() {
                 }
             }
         }
-        else {
-            log('Warning: Non-supported text type: ' + mediaType);
-        }
-
     }
     /**
      * Extract CEA-608 data from a buffer of data.
@@ -331,7 +379,7 @@ function TextSourceBuffer() {
         var moof = isoFile.getBox('moof');
         var tfdt = isoFile.getBox('tfdt');
         //var tfhd = isoFile.getBox('tfhd'); //Can have a base_data_offset and other default values
-        //console.log("tfhd: " + tfhd);
+        //log("tfhd: " + tfhd);
         //var saio = isoFile.getBox('saio'); // Offset possibly
         //var saiz = isoFile.getBox('saiz'); // Possible sizes
         var truns = isoFile.getBoxes('trun'); //
@@ -342,7 +390,7 @@ function TextSourceBuffer() {
         }
         trun = truns[0];
         if (truns.length > 1) {
-            console.log('Warning: Too many truns');
+            log('Warning: Too many truns');
         }
         var baseOffset = moof.offset + trun.data_offset;
         //Doublecheck that trun.offset == moof.size + 8
@@ -552,8 +600,8 @@ function TextSourceBuffer() {
             currRegion = null;
         }
 
-        //console.log(styleStates);
-        //console.log(regions);
+        //log(styleStates);
+        //log(regions);
 
         let captionsArray = [];
 
@@ -781,11 +829,11 @@ function TextSourceBuffer() {
         return isDefault;
     }
 
-    function getParser(mimeType) {
+    function getParser(codecType) {
         var parser;
-        if (mimeType === 'text/vtt') {
+        if (codecType.search('vtt') >= 0) {
             parser = VTTParser;
-        } else if (mimeType === 'application/ttml+xml' || mimeType === 'application/mp4') {
+        } else if (codecType.search('ttml') >= 0 || codecType.search('stpp') >= 0) {
             parser = TTMLParser;
             parser.setConfig({videoModel: videoModel});
         }

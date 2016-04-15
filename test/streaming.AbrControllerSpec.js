@@ -84,8 +84,7 @@ describe("AbrController", function () {
 
         match = expectedBitrates.filter(function(val, idx) {
             item = actualBitrates[idx];
-
-            return (item && (item.qualityIndex === idx) && (item.bitrate === val) && (item.mediaType === dummyMediaInfo.type));
+            return (item && (item.qualityIndex === idx) && (item.bitrate === val.bandwidth) && (item.mediaType === dummyMediaInfo.type) && (item.width === val.width) && (item.height === val.height));
         });
 
         expect(match.length).to.be.equal(expectedBitrates.length);

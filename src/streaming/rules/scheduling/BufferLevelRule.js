@@ -28,7 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import SwitchRequest from '../SwitchRequest.js';
 import MediaPlayerModel from '../../models/MediaPlayerModel.js';
 import PlaybackController from '../../controllers/PlaybackController.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
@@ -50,31 +49,31 @@ function BufferLevelRule(config) {
         playbackController = PlaybackController(context).getInstance();
     }
 
-    function execute(rulesContext, callback) {
-        let mediaInfo = rulesContext.getMediaInfo();
+    function execute(streamProcessor) {
+
+        let representationInfo = streamProcessor.getCurrentRepresentationInfo();
+        let mediaInfo = representationInfo.mediaInfo;
         let mediaType = mediaInfo.type;
         let metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
         let bufferLevel = dashMetrics.getCurrentBufferLevel(metrics);
-        let fragmentCount;
 
-        fragmentCount = bufferLevel < getBufferTarget(rulesContext, mediaType) ? 1 : 0;
-
-        callback(SwitchRequest(context).create(fragmentCount, SwitchRequest.DEFAULT));
+        return bufferLevel < getBufferTarget(streamProcessor, mediaType);
     }
 
     function reset() {}
 
-    function getBufferTarget(rulesContext, type) {
-        let streamProcessor = rulesContext.getStreamProcessor();
-        let streamInfo = rulesContext.getStreamInfo();
-        let trackInfo = rulesContext.getTrackInfo();
+    function getBufferTarget(streamProcessor, type) {
+
+        let representationInfo = streamProcessor.getCurrentRepresentationInfo();
+        let mediaInfo = representationInfo.mediaInfo;
+        let streamInfo = mediaInfo.streamInfo;
         let abrController = streamProcessor.getABRController();
         let duration = streamInfo.manifestInfo.duration;
         let isLongFormContent = (duration >= mediaPlayerModel.getLongFormContentDurationThreshold());
         let bufferTarget = NaN;
 
         if (type === 'fragmentedText') {
-            bufferTarget = textSourceBuffer.getAllTracksAreDisabled() ? 0 : trackInfo.fragmentDuration;
+            bufferTarget = textSourceBuffer.getAllTracksAreDisabled() ? 0 : representationInfo.fragmentDuration;
         } else {
             if (abrController.isPlayingAtTopQuality(streamInfo)) {
                 bufferTarget = isLongFormContent ? mediaPlayerModel.getBufferTimeAtTopQualityLongForm() : mediaPlayerModel.getBufferTimeAtTopQuality();

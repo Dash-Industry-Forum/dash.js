@@ -2,7 +2,7 @@
     "esnext": true,
     "noarg": true,
     "noempty": true,
-    "latedef": true,
+    "latedef": "nofunc",
     "undef": true,
     "unused": true,
     "strict": false,

@@ -62,15 +62,15 @@ function SourceBufferController() {
             // Safari claims to support anything starting 'application/mp4'.
             // it definitely doesn't understand 'application/mp4;codecs="stpp"'
             // - currently no browser does, so check for it and use our own
-            // implementation.
-            if (codec.match(/application\/mp4;\s*codecs="stpp"/i)) {
+            // implementation. The same is true for codecs="wvtt".
+            if (codec.match(/application\/mp4;\s*codecs="(stpp|wvtt)"/i)) {
                 throw new Error('not really supported');
             }
 
             buffer = mediaSource.addSourceBuffer(codec);
 
         } catch (ex) {
-            if ((mediaInfo.isText) || (codec.indexOf('codecs="stpp"') !== -1)) {
+            if ((mediaInfo.isText) || (codec.indexOf('codecs="stpp"') !== -1) ||  (codec.indexOf('codecs="wvtt"') !== -1) ) {
                 buffer = TextSourceBuffer(context).getInstance();
                 buffer.setConfig({
                     errHandler: ErrorHandler(context).getInstance(),
@@ -332,7 +332,6 @@ function SourceBufferController() {
         }
     }
 
-    //private
     function waitForUpdateEnd(buffer, callback) {
         var intervalId;
         var CHECK_INTERVAL = 50;

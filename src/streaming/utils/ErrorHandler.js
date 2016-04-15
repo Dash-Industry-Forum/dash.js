@@ -32,6 +32,21 @@ import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
+const CAPABILITY_ERROR_MEDIASOURCE      = 'mediasource';
+const CAPABILITY_ERROR_MEDIAKEYS        = 'mediakeys';
+
+const DOWNLOAD_ERROR_ID_MANIFEST        = 'manifest';
+const DOWNLOAD_ERROR_ID_SIDX            = 'SIDX';
+const DOWNLOAD_ERROR_ID_CONTENT         = 'content';
+const DOWNLOAD_ERROR_ID_INITIALIZATION  = 'initialization';
+const DOWNLOAD_ERROR_ID_XLINK           = 'xlink';
+
+const MANIFEST_ERROR_ID_CODEC           = 'codec';
+const MANIFEST_ERROR_ID_PARSE           = 'parse';
+const MANIFEST_ERROR_ID_NOSTREAMS       = 'nostreams';
+
+const TIMED_TEXT_ERROR_ID_PARSE         = 'parse';
+
 function ErrorHandler() {
 
     let instance;
@@ -43,7 +58,7 @@ function ErrorHandler() {
         eventBus.trigger(Events.ERROR, {error: 'capability', event: err});
     }
 
-    // {id: "manifest"|"SIDX"|"content"|"initialization", url: "", request: {XMLHttpRequest instance}}
+    // {id: "manifest"|"SIDX"|"content"|"initialization"|"xlink", url: "", request: {XMLHttpRequest instance}}
     function downloadError(id, url, request) {
         eventBus.trigger(Events.ERROR, {error: 'download', event: {id: id, url: url, request: request}});
     }
@@ -53,6 +68,7 @@ function ErrorHandler() {
         eventBus.trigger(Events.ERROR, {error: 'manifestError', event: {message: message, id: id, manifest: manifest}});
     }
 
+    // {message: '', id: 'parse', cc: ''}
     function timedTextError(message, id, ccContent) {
         eventBus.trigger(Events.ERROR, {error: 'cc', event: {message: message, id: id, cc: ccContent}});
     }
@@ -81,5 +97,21 @@ function ErrorHandler() {
 
     return instance;
 }
+
 ErrorHandler.__dashjs_factory_name = 'ErrorHandler';
-export default FactoryMaker.getSingletonFactory(ErrorHandler);
+
+const factory = FactoryMaker.getSingletonFactory(ErrorHandler);
+
+factory.CAPABILITY_ERROR_MEDIASOURCE        = CAPABILITY_ERROR_MEDIASOURCE;
+factory.CAPABILITY_ERROR_MEDIAKEYS          = CAPABILITY_ERROR_MEDIAKEYS;
+factory.DOWNLOAD_ERROR_ID_MANIFEST          = DOWNLOAD_ERROR_ID_MANIFEST;
+factory.DOWNLOAD_ERROR_ID_SIDX              = DOWNLOAD_ERROR_ID_SIDX;
+factory.DOWNLOAD_ERROR_ID_CONTENT           = DOWNLOAD_ERROR_ID_CONTENT;
+factory.DOWNLOAD_ERROR_ID_INITIALIZATION    = DOWNLOAD_ERROR_ID_INITIALIZATION;
+factory.DOWNLOAD_ERROR_ID_XLINK             = DOWNLOAD_ERROR_ID_XLINK;
+factory.MANIFEST_ERROR_ID_CODEC             = MANIFEST_ERROR_ID_CODEC;
+factory.MANIFEST_ERROR_ID_PARSE             = MANIFEST_ERROR_ID_PARSE;
+factory.MANIFEST_ERROR_ID_NOSTREAMS         = MANIFEST_ERROR_ID_NOSTREAMS;
+factory.TIMED_TEXT_ERROR_ID_PARSE           = TIMED_TEXT_ERROR_ID_PARSE;
+
+export default factory;

@@ -60,6 +60,7 @@ function Stream(config) {
     let capabilities = config.capabilities;
     let errHandler = config.errHandler;
     let timelineConverter = config.timelineConverter;
+    let baseURLController = config.baseURLController;
 
     let instance,
         streamProcessors,
@@ -101,8 +102,6 @@ function Stream(config) {
 
     function initialize(StreamInfo, ProtectionController) {
         streamInfo = StreamInfo;
-
-        //TODO will need to separate this once DRM is optional.
         protectionController = ProtectionController;
         if (protectionController) {
             eventBus.on(Events.KEY_ERROR, onProtectionError, instance);
@@ -132,28 +131,32 @@ function Stream(config) {
      * @memberof Stream#
      */
     function deactivate() {
-        var ln = streamProcessors.length;
-        var i = 0;
-
-        for (i; i < ln; i++) {
+        let ln = streamProcessors.length;
+        for (let i = 0; i < ln; i++) {
             streamProcessors[i].reset();
         }
-
         streamProcessors = [];
         isStreamActivated = false;
         isMediaInitialized = false;
-        resetEventController();
+        clearEventController();
         eventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
     }
 
     function reset() {
-        playbackController.pause();
-        fragmentController.reset();
+
+        if (playbackController) {
+            playbackController.pause();
+            playbackController = null;
+        }
+
+        if (fragmentController) {
+            fragmentController.reset();
+            fragmentController = null;
+        }
+
         liveEdgeFinder.abortSearch();
         deactivate();
 
-        playbackController = null;
-        fragmentController = null;
         mediaController = null;
         abrController = null;
         manifestUpdater = null;
@@ -215,9 +218,9 @@ function Stream(config) {
         }
     }
 
-    function resetEventController() {
+    function clearEventController() {
         if (eventController) {
-            eventController.reset();
+            eventController.clear();
         }
     }
 
@@ -295,13 +298,17 @@ function Stream(config) {
     function createIndexHandler() {
 
         let segmentBaseLoader = SegmentBaseLoader(context).getInstance();
+        segmentBaseLoader.setConfig({
+            baseURLController: baseURLController
+        });
         segmentBaseLoader.initialize();
 
         let handler = DashHandler(context).create({
             segmentBaseLoader: segmentBaseLoader,
             timelineConverter: timelineConverter,
             dashMetrics: DashMetrics(context).getInstance(),
-            metricsModel: MetricsModel(context).getInstance()
+            metricsModel: MetricsModel(context).getInstance(),
+            baseURLController: baseURLController
         });
 
         return handler;
@@ -314,15 +321,14 @@ function Stream(config) {
             adapter: adapter,
             manifestModel: manifestModel
         });
-        var allMediaForType = adapter.getAllMediaInfoForType(manifest, streamInfo, mediaInfo.type);
 
+        var allMediaForType = adapter.getAllMediaInfoForType(manifest, streamInfo, mediaInfo.type);
         streamProcessor.initialize(getMimeTypeOrType(mediaInfo), fragmentController, mediaSource, instance, eventController);
         abrController.updateTopQualityIndex(mediaInfo);
 
         if (optionalSettings) {
             streamProcessor.setBuffer(optionalSettings.buffer);
             streamProcessors[optionalSettings.replaceIdx] = streamProcessor;
-            streamProcessor.setIndexHandlerTime(optionalSettings.currentTime);
         } else {
             streamProcessors.push(streamProcessor);
         }
@@ -375,7 +381,7 @@ function Stream(config) {
             return;
         }
 
-        mediaController.checkInitialMediaSettings(streamInfo);
+        mediaController.checkInitialMediaSettingsForType(type, streamInfo);
         initialMediaInfo = mediaController.getCurrentTrackFor(type, streamInfo);
 
         // TODO : How to tell index handler live/duration?
@@ -435,11 +441,11 @@ function Stream(config) {
 
         initialized = true;
         isStreamActivated = true;
-        eventBus.trigger(Events.STREAM_INITIALIZED, {streamInfo: streamInfo, error: error});
         if (!isMediaInitialized) return;
         if (protectionController) {
             protectionController.initialize(manifestModel.getValue(), getMediaInfo('audio'), getMediaInfo('video'));
         }
+        eventBus.trigger(Events.STREAM_INITIALIZED, {streamInfo: streamInfo, error: error});
     }
 
     function getMediaInfo(type) {
@@ -559,7 +565,6 @@ function Stream(config) {
         hasMedia: hasMedia,
         getBitrateListFor: getBitrateListFor,
         startEventController: startEventController,
-        resetEventController: resetEventController,
         isActivated: isActivated,
         isInitialized: isInitialized,
         updateData: updateData,

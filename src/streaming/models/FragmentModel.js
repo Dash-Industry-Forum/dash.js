@@ -53,7 +53,6 @@ function FragmentModel(config) {
         scheduleController,
         executedRequests,
         loadingRequests,
-        delayLoadingTimeout,
         fragmentLoader;
 
     function setup() {
@@ -63,7 +62,6 @@ function FragmentModel(config) {
         loadingRequests = [];
 
         eventBus.on(Events.LOADING_COMPLETED, onLoadingCompleted, instance);
-        eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
     }
 
     function setLoader(value) {
@@ -84,7 +82,7 @@ function FragmentModel(config) {
         };
 
         var isEqualMedia = function (req1, req2) {
-            return ((req1.url === req2.url) && (req1.startTime === req2.startTime));
+            return !isNaN(req1.index) && (req1.index === req2.index) && (req1.startTime === req2.startTime) && (req1.adaptationIndex === req2.adaptationIndex);
         };
 
         var isEqualInit = function (req1, req2) {
@@ -181,17 +179,7 @@ function FragmentModel(config) {
     }
 
     function executeRequest(request) {
-        var now = new Date().getTime();
-
         if (!request) return;
-
-        //Adds the ability to delay single fragment loading time to control buffer.
-        if (now < request.delayLoadingTime ) {
-            delayLoadingTimeout = setTimeout(function () {
-                executeRequest(request);
-            }, (request.delayLoadingTime - now) );
-            return;
-        }
 
         switch (request.action) {
             case FragmentRequest.ACTION_COMPLETE:
@@ -212,10 +200,12 @@ function FragmentModel(config) {
 
     function reset() {
         eventBus.off(Events.LOADING_COMPLETED, onLoadingCompleted, this);
-        eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
 
-        fragmentLoader.abort();
-        fragmentLoader = null;
+        if (fragmentLoader) {
+            fragmentLoader.reset();
+            fragmentLoader = null;
+        }
+
         context = null;
         executedRequests = [];
         loadingRequests = [];
@@ -322,12 +312,6 @@ function FragmentModel(config) {
 
         addSchedulingInfoMetrics(request, error ? FRAGMENT_MODEL_FAILED : FRAGMENT_MODEL_EXECUTED);
         eventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, { request: request, response: response, error: error, sender: this });
-    }
-
-    function onPlaybackSeeking () {
-        if (delayLoadingTimeout !== undefined) {
-            clearTimeout(delayLoadingTimeout);
-        }
     }
 
     instance = {

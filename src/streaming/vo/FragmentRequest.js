@@ -43,6 +43,7 @@ class FragmentRequest {
         this.timescale = NaN;
         this.range = null;
         this.url = null;
+        this.serviceLocation = null;
         this.requestStartDate = null;
         this.firstByteDate = null;
         this.requestEndDate = null;
@@ -54,6 +55,7 @@ class FragmentRequest {
         this.bytesLoaded = NaN;
         this.bytesTotal = NaN;
         this.delayLoadingTime = NaN;
+        this.responseType = 'arraybuffer';
     }
 }
 

@@ -30,11 +30,17 @@
  */
 
 import PlayList from '../vo/metrics/PlayList.js';
-import ScheduleRulesCollection from '../rules/scheduling/ScheduleRulesCollection.js';
-import SwitchRequest from '../rules/SwitchRequest.js';
 import PlaybackController from './PlaybackController.js';
 import AbrController from './AbrController.js';
 import BufferController from './BufferController.js';
+import BufferLevelRule from '../rules/scheduling/BufferLevelRule.js';
+import NextFragmentRequestRule from '../rules/scheduling/NextFragmentRequestRule.js';
+import TextSourceBuffer from '../TextSourceBuffer.js';
+import MetricsModel from '../models/MetricsModel.js';
+import DashMetrics from '../../dash/DashMetrics.js';
+import DashAdapter from '../../dash/DashAdapter.js';
+import SourceBufferController from '../controllers/SourceBufferController.js';
+import VirtualBuffer from '../VirtualBuffer.js';
 import LiveEdgeFinder from '../utils/LiveEdgeFinder.js';
 import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
@@ -53,8 +59,6 @@ function ScheduleController(config) {
     let dashMetrics = config.dashMetrics;
     let dashManifestModel = config.dashManifestModel;
     let timelineConverter = config.timelineConverter;
-    let scheduleRulesCollection = config.scheduleRulesCollection;
-    let rulesController = config.rulesController;
     let mediaPlayerModel = config.mediaPlayerModel;
 
     let instance,
@@ -78,6 +82,8 @@ function ScheduleController(config) {
         fragmentController,
         liveEdgeFinder,
         bufferController,
+        bufferLevelRule,
+        nextFragmentRequestRule,
         scheduleWhilePaused;
 
 
@@ -104,6 +110,21 @@ function ScheduleController(config) {
         isDynamic = streamProcessor.isDynamic();
         scheduleWhilePaused = mediaPlayerModel.getScheduleWhilePaused();
 
+        bufferLevelRule = BufferLevelRule(context).create({
+            dashMetrics: DashMetrics(context).getInstance(),
+            metricsModel: MetricsModel(context).getInstance(),
+            textSourceBuffer: TextSourceBuffer(context).getInstance()
+        });
+
+        nextFragmentRequestRule = NextFragmentRequestRule(context).create({
+            adapter: DashAdapter(context).getInstance(),
+            sourceBufferController: SourceBufferController(context).getInstance(),
+            virtualBuffer: VirtualBuffer(context).getInstance(),
+            textSourceBuffer: TextSourceBuffer(context).getInstance()
+
+        });
+
+
         if (dashManifestModel.getIsTextTrack(type)) {
             eventBus.on(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
         }
@@ -124,6 +145,7 @@ function ScheduleController(config) {
         eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
         eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
         eventBus.on(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
+        eventBus.on(Events.URL_RESOLUTION_FAILED, onURLResolutionFailed, this);
     }
 
     function clearPlayListTraceMetrics(endTime, stopreason) {
@@ -145,33 +167,30 @@ function ScheduleController(config) {
 
     function start() {
         if (!ready) return;
-
         addPlaylistTraceMetrics();
-
         isStopped = false;
+
+        if (initialPlayback) {
+            getInitRequest(currentRepresentationInfo.quality);
+        } else {
+            //Validate will be first called after the init segment is appended. But in the case where we stop and start
+            //the ScheduleController E.g dateUpdate on manifest refresh for live streams. we need to start validate again.
+            validate();
+        }
+
         if (initialPlayback) {
             initialPlayback = false;
         }
         log('Schedule controller starting for ' + type);
-        //if starting from a pause we want to call validate to kick off the cycle that was stopped by pausing stream.
-        if (playbackController.getPlayedRanges().length > 0) {
-            validate();
-        }
     }
 
-    function startOnReady() {
-        if (initialPlayback) {
-            getInitRequest(currentRepresentationInfo.quality);
-        }
 
-        start();
-    }
 
     function stop() {
         if (isStopped) return;
         isStopped = true;
-        log('Schedule controller stopping for ' + type);
         clearInterval(validateTimeout);
+        log('Schedule controller stopping for ' + type);
     }
 
     function getInitRequest(quality) {
@@ -197,54 +216,39 @@ function ScheduleController(config) {
             request = canceledRequests[i];
             time = request.startTime + (request.duration / 2) + EPSILON;
             request = adapter.getFragmentRequestForTime(streamProcessor, currentRepresentationInfo, time, {timeThreshold: 0, ignoreIsFinished: true});
-            fragmentModel.executeRequest(request);
+            if (request) {
+                fragmentModel.executeRequest(request);
+            }
         }
     }
 
     function validate() {
-        if (isStopped || (playbackController.isPaused() && (playbackController.getPlayedRanges().length > 0) && !scheduleWhilePaused)) return;
-        getRequiredFragmentCount();
-        //log("validate", type);
-    }
-
-    function getRequiredFragmentCount() {
-        let rules = scheduleRulesCollection.getRules(ScheduleRulesCollection.FRAGMENTS_TO_SCHEDULE_RULES);
-        rulesController.applyRules(rules, streamProcessor, onGetRequiredFragmentCount, 0, function (currentValue, newValue) {
-            currentValue = currentValue === SwitchRequest.NO_CHANGE ? 0 : currentValue;
-            return Math.max(currentValue, newValue);
-        });
-    }
-
-    function onGetRequiredFragmentCount(result) {
-        if (result.value === 1 && !isFragmentLoading && (dashManifestModel.getIsTextTrack(type) || !bufferController.getIsAppendingInProgress())) {
+        if (isStopped || playbackController.isPaused() && !scheduleWhilePaused) return;
+        //log("validating", type);
+        let readyToLoad = bufferLevelRule.execute(streamProcessor);
+        if (readyToLoad && !isFragmentLoading &&
+            (dashManifestModel.getIsTextTrack(type) || !bufferController.getIsAppendingInProgress())) {
             isFragmentLoading = true;
-            abrController.getPlaybackQuality(streamProcessor,  getNextFragment());
-        } else {
-            startValidateTimer(1000);
-        }
-    }
 
-    function getNextFragment() {
-        let rules = scheduleRulesCollection.getRules(ScheduleRulesCollection.NEXT_FRAGMENT_RULES);
-        rulesController.applyRules(rules, streamProcessor, onGetNextFragment, null, function (currentValue, newValue) {
-            return newValue;
-        });
-    }
+            const getNextFragment = function () {
+                let request = nextFragmentRequestRule.execute(streamProcessor);
+                if (request) {
+                    fragmentModel.executeRequest(request); // we load
+                } else {
+                    isFragmentLoading = false;
+                    startValidateTimer(1000); //we loop
+                }
+            };
+            //Run ABR rules - let it callback to getNextFragment once it is done running.
+            abrController.getPlaybackQuality(streamProcessor,  getNextFragment);
 
-    function onGetNextFragment(result) {
-        if (result.value) {
-            fragmentModel.executeRequest(result.value);
         } else {
-            isFragmentLoading = false;
-            startValidateTimer(1000);
+            startValidateTimer(1000); //we loop
         }
     }
 
     function startValidateTimer(value) {
-        validateTimeout = setTimeout(function () {
-            //log("timeout going back to validate")
-            validate();
-        }, value);
+        validateTimeout = setTimeout(validate, value);
     }
 
     function onQualityChanged(e) {
@@ -273,13 +277,12 @@ function ScheduleController(config) {
             ready = true;
         }
 
-        if (ready) {
-            startOnReady();
-        }
+        start();
     }
 
     function onStreamCompleted(e) {
         if (e.fragmentModel !== fragmentModel) return;
+        stop();
         log('Stream is complete');
     }
 
@@ -289,13 +292,14 @@ function ScheduleController(config) {
         if (!isNaN(e.request.index)) {
             isFragmentLoading = false;
         }
-        if (!e.error) return;
-        stop();
+
+        if (e.error && e.serviceLocation && !isStopped) {
+            replaceCanceledRequests([e.request]);
+        }
     }
 
     function onBytesAppended(e) {
         if (e.sender.getStreamProcessor() !== streamProcessor) return;
-
         validate();
     }
 
@@ -333,6 +337,11 @@ function ScheduleController(config) {
         stop();
     }
 
+    function onURLResolutionFailed() {
+        fragmentModel.abortRequests();
+        stop();
+    }
+
     function addPlaylistTraceMetrics() {
         if (playListMetrics && playListTraceMetricsClosed === true && currentRepresentationInfo) {
             playListTraceMetricsClosed = false;
@@ -355,21 +364,20 @@ function ScheduleController(config) {
     }
 
     function onPlaybackSeeking(e) {
+
+        seekTarget = e.seekTime;
+
         if (!initialPlayback) {
             isFragmentLoading = false;
+        }
+        if (isStopped) {
+            start();
         }
 
         let metrics = metricsModel.getMetricsFor('stream');
         let manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metrics);
-
-        seekTarget = e.seekTime;
-
         let latency = currentRepresentationInfo.DVRWindow ? currentRepresentationInfo.DVRWindow.end - playbackController.getTime() : NaN;
         metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: latency});
-
-        if (isDynamic) { // need to validate again for dynamic after first seek
-            validate();
-        }
     }
 
     function onPlaybackRateChanged(e) {
@@ -381,29 +389,27 @@ function ScheduleController(config) {
     function onLiveEdgeSearchCompleted (e) {
         if (e.error) return;
 
-        // step back from a found live edge time to be able to buffer some data
-        var liveEdgeTime = e.liveEdge;
-        var manifestInfo = currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo;
-        var startTime = liveEdgeTime - Math.min((playbackController.getLiveDelay(currentRepresentationInfo.fragmentDuration)), manifestInfo.DVRWindowSize / 2);
-        var metrics = metricsModel.getMetricsFor('stream');
-        var manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metrics);
-        var currentLiveStart = playbackController.getLiveStartTime();
+        let liveEdgeTime = e.liveEdge;
+        let manifestInfo = currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo;
+        let startTime = liveEdgeTime - playbackController.computeLiveDelay(currentRepresentationInfo.fragmentDuration, manifestInfo.DVRWindowSize / 2);
+        let metrics = metricsModel.getMetricsFor('stream');
+        let manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metrics);
+        let currentLiveStart = playbackController.getLiveStartTime();
 
-        var request,
+        let request,
             actualStartTime;
 
         // get a request for a start time
         request = adapter.getFragmentRequestForTime(streamProcessor, currentRepresentationInfo, startTime, {ignoreIsFinished: true});
         actualStartTime = request.startTime;
-
+        seekTarget = actualStartTime; //Setting seekTarget will allow NextFragmentRequestRule's first request time to be accurate.
         if (isNaN(currentLiveStart) || (actualStartTime > currentLiveStart)) {
             playbackController.setLiveStartTime(actualStartTime);
         }
 
         metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: actualStartTime, presentationStartTime: liveEdgeTime, latency: liveEdgeTime - actualStartTime, clientTimeOffset: timelineConverter.getClientTimeOffset()});
-
         ready = true;
-        startOnReady();
+        start();
     }
 
     function getSeekTarget() {
@@ -455,7 +461,7 @@ function ScheduleController(config) {
         eventBus.off(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
         eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
         eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
-
+        eventBus.off(Events.URL_RESOLUTION_FAILED, onURLResolutionFailed, this);
 
         if (dashManifestModel.getIsTextTrack(type)) {
             eventBus.off(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);

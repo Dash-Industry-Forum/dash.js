@@ -3,10 +3,47 @@
         {
             "title": "Known Issues",
             "items": [
-                "MultiPeriod content fails and will be fixed in 2.1",
-                "Intermittent live stream failure with Media Decode Errors",
+                "Live Multiperiod is failing.",
+                "Seeking Multiperiod test stream on FireFox for Windows is not failing. Since 1.5.1",
                 "Streams using high profile codecs may not play properly.",
                 "Only streams with segmentAlignment='true' will work with abr."
+            ]
+        },
+        {
+            "title": "Release Notes v2.1.0",
+            "items": [
+                "#1048 Refactor Loader Classes into LoaderBase Code Refactor"
+                ,"#992 Add support for segmented WebVTT subtitles"
+                ,"#571 Support for the <baseURL> tag Feature Enhancment"
+                ,"#1089 Live stream delay under Firefox ignores setLiveDelayFragmentCount value Bug"
+                ,"#900 setMaxAllowedBitrateFor can take a long time/never apply if not done before startup Bug Investigate"
+                ,"#866 btoa and atob declarations break native browser implementations for other libraries Bug Pri-Critical"
+                ,"#841 Wrong index returned for AbrController.getQualityForBitrate Bug Pri-Critical"
+                ,"#1314 [Updated] Always use computeLiveDelay to get bound logic. ATSC logic for postponement needs to be updated"
+                ,"#1298 IE only: Ended doesn't seem to fire Bug Investigate"
+                ,"#1290 Glitches since 2.0.0 Bug Pri-Critical"
+                ,"#1275 Non 0 PST for SegmentTimeline VOD will fail Bug"
+                ,"#1261 No seeked events when seek to unbeffered position on pause Feature Request question"
+                ,"#1257 MediaPlayerEvents.BUFFER_EMPTY not triggering Bug Investigate"
+                ,"#1243 Nightly build no longer works Automation"
+                ,"#1219 Remove Console.log and use internal log Debug.js class. Code Refactor Pri-High"
+                ,"#1218 Seek back to 0 may cause stream failure Bug Pri-High"
+                ,"#1217 s fragment arg is failing. Bug Pri-High"
+                ,"#1212 Presentation duration is shown as 00:00:00 Bug Investigate"
+                ,"#1207 Remove complexity of calling rulecontroller for scheduling. Code Refactor"
+                ,"#1203 validate loop in schedule controller never stops if scheduleWhilePaused is true Bug"
+                ,"#1198 Firefox stops after 2 minutes of play"
+                ,"#1174 Player hangs in MSEdge Investigate"
+                ,"#1172 MediaPlayer#setTextTrack() call resumes player when paused Bug"
+                ,"#1166 Dash 2.0 sometimes fails to replay Bug Investigate"
+                ,"#1164 Subtitles requiring .attachTTMLRenderingDiv(TTMLRenderingDiv) fail in Firefox"
+                ,"#1154 Remove getVideoModel and add API for the two calls that should be public Code Refactor"
+                ,"#1153 resetAndIntializePlayback method not robust after a failed playback Bug"
+                ,"#1141 [RC2_v2.0.0] Inconsistent behavior with SegmentTimeline live stream Bug"
+                ,"#1130 Cannot read property 'pause' of null (playbackController) Bug"
+                ,"#1100 Updates for ATSC-DASH type of content (2nd)"
+                ,"#1331 Prevent low values attempting to use representation -1"
+                ,"#1316 Adding new live delay sample"
             ]
         },
         {

@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import XlinkLoader from '../XlinkLoader.js';
 import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
@@ -45,16 +46,21 @@ function XlinkController(config) {
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
 
-    let xlinkLoader = config.xlinkLoader;
-
     let instance,
         matchers,
         iron,
         manifest,
-        converter;
+        converter,
+        xlinkLoader;
 
     function setup() {
         eventBus.on(Events.XLINK_ELEMENT_LOADED, onXlinkElementLoaded, instance);
+
+        xlinkLoader = XlinkLoader(context).create({
+            errHandler: config.errHandler,
+            metricsModel: config.metricsModel,
+            requestModifier: config.requestModifier
+        });
     }
 
     function setMatchers(value) {
@@ -80,6 +86,11 @@ function XlinkController(config) {
 
     function reset() {
         eventBus.off(Events.XLINK_ELEMENT_LOADED, onXlinkElementLoaded, instance);
+
+        if (xlinkLoader) {
+            xlinkLoader.reset();
+            xlinkLoader = null;
+        }
     }
 
     function resolve(elements, type, resolveType) {

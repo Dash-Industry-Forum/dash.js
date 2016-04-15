@@ -1,0 +1,16 @@
+{
+    "items": [
+        {
+            "name": "dijon",
+            "link": "https://github.com/creynders/dijon-framework"
+        },
+        {
+            "name": "base64",
+            "link": "http://bannister.us/weblog/2007/06/09/simple-base64-encodedecode-javascript/"
+        },
+        {
+            "name": "jasmine",
+            "link": "http://pivotal.github.io/jasmine/"
+        }
+    ]
+}

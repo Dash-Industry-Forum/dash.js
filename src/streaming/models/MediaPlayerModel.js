@@ -1,4 +1,35 @@
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
 import FactoryMaker from '../../core/FactoryMaker.js';
+import HTTPRequest from '../vo/metrics/HTTPRequest.js';
 
 const DEFAULT_UTC_TIMING_SOURCE = { scheme: 'urn:mpeg:dash:utc:http-xsdate:2014', value: 'http://time.akamai.com/?iso' };
 const LIVE_DELAY_FRAGMENT_COUNT = 4;
@@ -20,6 +51,12 @@ const RICH_BUFFER_THRESHOLD = 20;
 const FRAGMENT_RETRY_ATTEMPTS = 3;
 const FRAGMENT_RETRY_INTERVAL = 1000;
 
+const MANIFEST_RETRY_ATTEMPTS = 3;
+const MANIFEST_RETRY_INTERVAL = 500;
+
+const XLINK_RETRY_ATTEMPTS = 1;
+const XLINK_RETRY_INTERVAL = 500;
+
 //This value influences the startup time for live (in ms).
 const WALLCLOCK_TIME_UPDATE_INTERVAL = 50;
 
@@ -30,6 +67,7 @@ function MediaPlayerModel() {
         useSuggestedPresentationDelay,
         UTCTimingSources,
         liveDelayFragmentCount,
+        liveDelay,
         scheduleWhilePaused,
         bufferToKeep,
         bufferPruningInterval,
@@ -42,8 +80,8 @@ function MediaPlayerModel() {
         richBufferThreshold,
         bandwidthSafetyFactor,
         abandonLoadTimeout,
-        fragmentRetryAttempts,
-        fragmentRetryInterval,
+        retryAttempts,
+        retryIntervals,
         wallclockTimeUpdateInterval,
         bufferOccupancyABREnabled;
 
@@ -51,11 +89,12 @@ function MediaPlayerModel() {
         UTCTimingSources = [];
         useSuggestedPresentationDelay = false;
         useManifestDateHeaderTimeSource = true;
-        scheduleWhilePaused = false;
+        scheduleWhilePaused = true;
         bufferOccupancyABREnabled = false;
         lastBitrateCachingInfo = {enabled: true , ttl: DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION};
         lastMediaSettingsCachingInfo = {enabled: true , ttl: DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION};
         liveDelayFragmentCount = LIVE_DELAY_FRAGMENT_COUNT;
+        liveDelay = undefined; // Explicitly state that default is undefined
         bufferToKeep = BUFFER_TO_KEEP;
         bufferPruningInterval = BUFFER_PRUNING_INTERVAL;
         stableBufferTime = DEFAULT_MIN_BUFFER_TIME;
@@ -65,9 +104,27 @@ function MediaPlayerModel() {
         richBufferThreshold = RICH_BUFFER_THRESHOLD;
         bandwidthSafetyFactor = BANDWIDTH_SAFETY_FACTOR;
         abandonLoadTimeout = ABANDON_LOAD_TIMEOUT;
-        fragmentRetryAttempts = FRAGMENT_RETRY_ATTEMPTS;
-        fragmentRetryInterval = FRAGMENT_RETRY_INTERVAL;
         wallclockTimeUpdateInterval = WALLCLOCK_TIME_UPDATE_INTERVAL;
+
+        retryAttempts = {
+            [HTTPRequest.MPD_TYPE]:                         MANIFEST_RETRY_ATTEMPTS,
+            [HTTPRequest.XLINK_EXPANSION_TYPE]:             XLINK_RETRY_ATTEMPTS,
+            [HTTPRequest.MEDIA_SEGMENT_TYPE]:               FRAGMENT_RETRY_ATTEMPTS,
+            [HTTPRequest.INIT_SEGMENT_TYPE]:                FRAGMENT_RETRY_ATTEMPTS,
+            [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: FRAGMENT_RETRY_ATTEMPTS,
+            [HTTPRequest.INDEX_SEGMENT_TYPE]:               FRAGMENT_RETRY_ATTEMPTS,
+            [HTTPRequest.OTHER_TYPE]:                       FRAGMENT_RETRY_ATTEMPTS
+        };
+
+        retryIntervals = {
+            [HTTPRequest.MPD_TYPE]:                         MANIFEST_RETRY_INTERVAL,
+            [HTTPRequest.XLINK_EXPANSION_TYPE]:             XLINK_RETRY_INTERVAL,
+            [HTTPRequest.MEDIA_SEGMENT_TYPE]:               FRAGMENT_RETRY_INTERVAL,
+            [HTTPRequest.INIT_SEGMENT_TYPE]:                FRAGMENT_RETRY_INTERVAL,
+            [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: FRAGMENT_RETRY_INTERVAL,
+            [HTTPRequest.INDEX_SEGMENT_TYPE]:               FRAGMENT_RETRY_INTERVAL,
+            [HTTPRequest.OTHER_TYPE]:                       FRAGMENT_RETRY_INTERVAL
+        };
     }
 
     //TODO Should we use Object.define to have setters/getters? makes more readable code on other side.
@@ -175,19 +232,35 @@ function MediaPlayerModel() {
     }
 
     function setFragmentRetryAttempts(value) {
-        fragmentRetryAttempts = value;
+        retryAttempts[HTTPRequest.MEDIA_SEGMENT_TYPE] = value;
+    }
+
+    function setRetryAttemptsForType(type, value) {
+        retryAttempts[type] = value;
     }
 
     function getFragmentRetryAttempts() {
-        return fragmentRetryAttempts;
+        return retryAttempts[HTTPRequest.MEDIA_SEGMENT_TYPE];
+    }
+
+    function getRetryAttemptsForType(type) {
+        return retryAttempts[type];
     }
 
     function setFragmentRetryInterval(value) {
-        fragmentRetryInterval = value;
+        retryIntervals[HTTPRequest.MEDIA_SEGMENT_TYPE] = value;
+    }
+
+    function setRetryIntervalForType(type, value) {
+        retryIntervals[type] = value;
     }
 
     function getFragmentRetryInterval() {
-        return fragmentRetryInterval;
+        return retryIntervals[HTTPRequest.MEDIA_SEGMENT_TYPE];
+    }
+
+    function getRetryIntervalForType(type) {
+        return retryIntervals[type];
     }
 
     function setWallclockTimeUpdateInterval(value) {
@@ -210,8 +283,16 @@ function MediaPlayerModel() {
         liveDelayFragmentCount = value;
     }
 
+    function setLiveDelay(value) {
+        liveDelay = value;
+    }
+
     function getLiveDelayFragmentCount() {
         return liveDelayFragmentCount;
+    }
+
+    function getLiveDelay() {
+        return liveDelay;
     }
 
     function setUseManifestDateHeaderTimeSource(value) {
@@ -270,8 +351,12 @@ function MediaPlayerModel() {
         getBufferPruningInterval: getBufferPruningInterval,
         setFragmentRetryAttempts: setFragmentRetryAttempts,
         getFragmentRetryAttempts: getFragmentRetryAttempts,
+        setRetryAttemptsForType: setRetryAttemptsForType,
+        getRetryAttemptsForType: getRetryAttemptsForType,
         setFragmentRetryInterval: setFragmentRetryInterval,
         getFragmentRetryInterval: getFragmentRetryInterval,
+        setRetryIntervalForType: setRetryIntervalForType,
+        getRetryIntervalForType: getRetryIntervalForType,
         setWallclockTimeUpdateInterval: setWallclockTimeUpdateInterval,
         getWallclockTimeUpdateInterval: getWallclockTimeUpdateInterval,
         setScheduleWhilePaused: setScheduleWhilePaused,
@@ -280,6 +365,8 @@ function MediaPlayerModel() {
         setUseSuggestedPresentationDelay: setUseSuggestedPresentationDelay,
         setLiveDelayFragmentCount: setLiveDelayFragmentCount,
         getLiveDelayFragmentCount: getLiveDelayFragmentCount,
+        getLiveDelay: getLiveDelay,
+        setLiveDelay: setLiveDelay,
         setUseManifestDateHeaderTimeSource: setUseManifestDateHeaderTimeSource,
         getUseManifestDateHeaderTimeSource: getUseManifestDateHeaderTimeSource,
         setUTCTimingSources: setUTCTimingSources,

@@ -31,25 +31,21 @@
 import RulesContext from './RulesContext.js';
 import SwitchRequest from './SwitchRequest.js';
 import ABRRulesCollection from './abr/ABRRulesCollection.js';
-import ScheduleRulesCollection from './scheduling/ScheduleRulesCollection.js';
 import SynchronizationRulesCollection from './synchronization/SynchronizationRulesCollection.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-const SCHEDULING_RULE = 0;
-const ABR_RULE = 1;
-const SYNC_RULE = 2;
+const ABR_RULE = 0;
+const SYNC_RULE = 1;
 
 function RulesController() {
 
     let context = this.context;
 
     let instance,
-        rules,
-        ruleMandatoryProperties;
+        rules;
 
     function initialize() {
         rules = {};
-        ruleMandatoryProperties = ['execute'];
     }
 
     function setConfig(config) {
@@ -59,25 +55,9 @@ function RulesController() {
             rules[ABR_RULE] = config.abrRulesCollection;
         }
 
-        if (config.scheduleRulesCollection) {
-            rules[SCHEDULING_RULE] = config.scheduleRulesCollection;
-        }
-
         if (config.synchronizationRulesCollection) {
             rules[SYNC_RULE] = config.synchronizationRulesCollection;
         }
-    }
-
-    function setRules(ruleType, rulesCollection) {
-        if (!isRuleTypeSupported(ruleType) || !rulesCollection) return;
-
-        updateRules(rules[ruleType], rulesCollection, true);
-    }
-
-    function addRules(ruleType, rulesCollection) {
-        if (!isRuleTypeSupported(ruleType) || !rulesCollection) return;
-
-        updateRules(rules[ruleType], rulesCollection, false);
     }
 
     function applyRules(rulesArr, streamProcessor, callback, current, overrideFunc) {
@@ -131,24 +111,15 @@ function RulesController() {
 
         for (i = 0; i < ln; i++) {
             rule = rulesArr[i];
-
-            if (!isRule(rule)) {
-                rulesCount--;
-                continue;
-            }
-
             rule.execute(rulesContext, callbackFunc);
         }
     }
 
     function reset() {
         var abrRules = rules[ABR_RULE];
-        var schedulingRules = rules[SCHEDULING_RULE];
         var synchronizationRules = rules[SYNC_RULE];
         var allRules = (abrRules.getRules(ABRRulesCollection.QUALITY_SWITCH_RULES) || []).
             concat(abrRules.getRules(ABRRulesCollection.ABANDON_FRAGMENT_RULES) || []).
-            concat(schedulingRules.getRules(ScheduleRulesCollection.NEXT_FRAGMENT_RULES) || []).
-            concat(schedulingRules.getRules(ScheduleRulesCollection.FRAGMENTS_TO_SCHEDULE_RULES) || []).
             concat(synchronizationRules.getRules(SynchronizationRulesCollection.TIME_SYNCHRONIZED_RULES) || []).
             concat(synchronizationRules.getRules(SynchronizationRulesCollection.BEST_GUESS_RULES) || []);
         var ln = allRules.length;
@@ -167,83 +138,13 @@ function RulesController() {
         rules = {};
     }
 
-    function isRuleTypeSupported(ruleType) {
-        return ((ruleType === ABRRulesCollection.SCHEDULING_RULE) || (ruleType === ABRRulesCollection.ABR_RULE));
-    }
-
-    function isRule(obj) {
-        var ln = ruleMandatoryProperties.length;
-        var i = 0;
-
-        for (i; i < ln; i++) {
-            if (!obj.hasOwnProperty(ruleMandatoryProperties[i])) return false;
-        }
-
-        return true;
-    }
-
     function getRulesContext(streamProcessor, currentValue) {
         return RulesContext(context).create({streamProcessor: streamProcessor, currentValue: currentValue});
-    }
-
-    function normalizeRule(rule) {
-        var exec = rule.execute.bind(rule);
-
-        rule.execute = function (context, callback) {
-            var normalizedCallback = function (result) {
-                callback.call(rule, SwitchRequest(context).create(result.value, result.priority));
-            };
-
-            exec(context, normalizedCallback);
-        };
-
-        if (typeof (rule.reset) !== 'function') {
-            rule.reset = function () {
-                //TODO do some default clearing
-            };
-        }
-
-        return rule;
-    }
-
-    function updateRules(currentRulesCollection, newRulesCollection, override) {
-        var rule,
-            ruleSubType,
-            subTypeRuleSet,
-            ruleArr,
-            ln,
-            i;
-
-        for (ruleSubType in newRulesCollection) {
-            ruleArr = newRulesCollection[ruleSubType];
-            ln = ruleArr.length;
-
-            if (!ln) continue;
-
-            for (i = 0; i < ln; i++) {
-                rule = ruleArr[i];
-
-                if (!isRule(rule)) continue;
-
-                rule = normalizeRule(rule);
-
-                subTypeRuleSet = currentRulesCollection.getRules(ruleSubType);
-
-                if (override) {
-                    override = false;
-                    subTypeRuleSet.length = 0;
-                }
-
-                subTypeRuleSet.push(rule);
-            }
-        }
     }
 
     instance = {
         initialize: initialize,
         setConfig: setConfig,
-        setRules: setRules,
-        addRules: addRules,
         applyRules: applyRules,
         reset: reset
     };
@@ -253,7 +154,6 @@ function RulesController() {
 
 RulesController.__dashjs_factory_name = 'RulesController';
 let factory =  FactoryMaker.getSingletonFactory(RulesController);
-factory.SCHEDULING_RULE = SCHEDULING_RULE;
 factory.ABR_RULE = ABR_RULE;
 factory.SYNC_RULE = SYNC_RULE;
 export default factory;

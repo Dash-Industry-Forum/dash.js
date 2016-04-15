@@ -141,7 +141,8 @@ function AbrController() {
                 let representation = dashManifestModel.getAdaptationForType(manifest, 0, type).Representation;
 
                 if (Array.isArray(representation)) {
-                    bitrateDict[type] = representation[Math.round(representation.length * ratioDict[type]) - 1].bandwidth;
+                    let repIdx = Math.max(Math.round(representation.length * ratioDict[type]) - 1, 0);
+                    bitrateDict[type] = representation[repIdx].bandwidth;
                 } else {
                     bitrateDict[type] = 0;
                 }
@@ -242,18 +243,12 @@ function AbrController() {
             }
 
             oldQuality = getQualityFor(type, streamInfo);
-            if (quality === oldQuality || (abandonmentStateDict[type].state === ABANDON_LOAD &&  quality > oldQuality)) return;
-            if (quality !== oldQuality) {
-
+            if (quality !== oldQuality && (abandonmentStateDict[type].state === ALLOW_LOAD ||  quality > oldQuality)) {
                 setInternalQuality(type, streamId, quality);
-                //log("New quality of " + quality);
                 setConfidenceFor(type, streamId, confidence);
-                //log("New confidence of " + confidence);
                 eventBus.trigger(Events.QUALITY_CHANGED, {mediaType: type, streamInfo: streamProcessor.getStreamInfo(), oldQuality: oldQuality, newQuality: quality});
-
             }
-
-            if (completedCallback !== undefined) {
+            if (completedCallback) {
                 completedCallback();
             }
         };
@@ -263,7 +258,7 @@ function AbrController() {
 
         //log("ABR enabled? (" + autoSwitchBitrate + ")");
         if (!getAutoSwitchBitrateFor(type)) {
-            if (completedCallback !== undefined) {
+            if (completedCallback) {
                 completedCallback();
             }
         } else {
@@ -303,19 +298,21 @@ function AbrController() {
      * @memberof AbrController#
      */
     function getQualityForBitrate(mediaInfo, bitrate) {
-        var bitrateList = getBitrateList(mediaInfo);
-        var ln = bitrateList.length;
-        var bitrateInfo;
 
-        for (var i = 0; i < ln; i++) {
-            bitrateInfo = bitrateList[i];
+        let bitrateList = getBitrateList(mediaInfo);
+        let bitrateInfo;
 
-            if (bitrate * 1000 <= bitrateInfo.bitrate) {
-                return Math.max(i - 1, 0);
-            }
+        if (!bitrateList || bitrateList.length === 0) {
+            return -1;
         }
 
-        return (ln - 1);
+        for (let i = bitrateList.length - 1; i >= 0; i--) {
+            bitrateInfo = bitrateList[i];
+            if (bitrate * 1000 >= bitrateInfo.bitrate) {
+                return i;
+            }
+        }
+        return 0;
     }
 
     /**
@@ -336,7 +333,9 @@ function AbrController() {
             bitrateInfo = new BitrateInfo();
             bitrateInfo.mediaType = type;
             bitrateInfo.qualityIndex = i;
-            bitrateInfo.bitrate = bitrateList[i];
+            bitrateInfo.bitrate = bitrateList[i].bandwidth;
+            bitrateInfo.width = bitrateList[i].width;
+            bitrateInfo.height = bitrateList[i].height;
             infoList.push(bitrateInfo);
         }
 
@@ -472,10 +471,15 @@ function AbrController() {
 
     function onFragmentLoadProgress(e) {
         var type = e.request.mediaType;
-        if (getAutoSwitchBitrateFor(type)) { //check to see if there are parallel request or just one at a time.
+        if (getAutoSwitchBitrateFor(type)) { //check to see if we are in manual or auto switch mode.
 
             var rules = abrRulesCollection.getRules(ABRRulesCollection.ABANDON_FRAGMENT_RULES);
             var scheduleController = streamProcessorDict[type].getScheduleController();
+
+            // There may be a fragment load in progress when we switch periods and recreated some controllers.
+            // so return if that is the case.
+            if (!scheduleController) return;
+
             var fragmentModel = scheduleController.getFragmentModel();
             var callback = function (switchRequest) {
 

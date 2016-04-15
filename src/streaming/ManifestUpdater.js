@@ -99,7 +99,7 @@ function ManifestUpdater() {
         }
     }
 
-    function start() {
+    function startManifestRefreshTimer() {
         clear();
         if (!isNaN(refreshDelay)) {
             log('Refresh manifest in ' + refreshDelay + ' seconds.');
@@ -123,7 +123,7 @@ function ManifestUpdater() {
         eventBus.trigger(Events.MANIFEST_UPDATED, {manifest: manifest});
 
         if (!isStopped) {
-            start();
+            startManifestRefreshTimer();
         }
     }
 
@@ -154,7 +154,7 @@ function ManifestUpdater() {
 
     function onPlaybackStarted (/*e*/) {
         isStopped = false;
-        start();
+        startManifestRefreshTimer();
     }
 
     function onPlaybackPaused(/*e*/) {
