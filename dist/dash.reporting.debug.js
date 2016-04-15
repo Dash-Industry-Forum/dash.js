@@ -240,7 +240,6 @@ var CoreEvents = (function (_EventsBase) {
         this.AST_IN_FUTURE = 'astinfuture';
         this.BUFFERING_COMPLETED = 'bufferingCompleted';
         this.BUFFER_CLEARED = 'bufferCleared';
-        this.BUFFER_LEVEL_STATE_CHANGED = 'bufferStateChanged';
         this.BUFFER_LEVEL_UPDATED = 'bufferLevelUpdated';
         this.BYTES_APPENDED = 'bytesAppended';
         this.CHECK_FOR_EXISTENCE_COMPLETED = 'checkForExistenceCompleted';
@@ -253,7 +252,7 @@ var CoreEvents = (function (_EventsBase) {
         this.INITIALIZATION_LOADED = 'initializationLoaded';
         this.INIT_FRAGMENT_LOADED = 'initFragmentLoaded';
         this.INIT_REQUESTED = 'initRequested';
-        this.INTERNAL_MANIFEST_LOADED = 'manifestLoaded';
+        this.INTERNAL_MANIFEST_LOADED = 'internalManifestLoaded';
         this.LIVE_EDGE_SEARCH_COMPLETED = 'liveEdgeSearchCompleted';
         this.LOADING_COMPLETED = 'loadingCompleted';
         this.LOADING_PROGRESS = 'loadingProgress';
@@ -263,6 +262,7 @@ var CoreEvents = (function (_EventsBase) {
         this.QUOTA_EXCEEDED = 'quotaExceeded';
         this.REPRESENTATION_UPDATED = 'representationUpdated';
         this.SEGMENTS_LOADED = 'segmentsLoaded';
+        this.SERVICE_LOCATION_BLACKLIST_CHANGED = 'serviceLocationBlacklistChanged';
         this.SOURCEBUFFER_APPEND_COMPLETED = 'sourceBufferAppendCompleted';
         this.SOURCEBUFFER_REMOVE_COMPLETED = 'sourceBufferRemoveCompleted';
         this.STREAMS_COMPOSED = 'streamsComposed';
@@ -272,6 +272,7 @@ var CoreEvents = (function (_EventsBase) {
         this.STREAM_TEARDOWN_COMPLETE = 'streamTeardownComplete';
         this.TIMED_TEXT_REQUESTED = 'timedTextRequested';
         this.TIME_SYNCHRONIZATION_COMPLETED = 'timeSynchronizationComplete';
+        this.URL_RESOLUTION_FAILED = 'urlResolutionFailed';
         this.WALLCLOCK_TIME_UPDATED = 'wallclockTimeUpdated';
         this.XLINK_ALL_ELEMENTS_LOADED = 'xlinkAllElementsLoaded';
         this.XLINK_ELEMENT_LOADED = 'xlinkElementLoaded';
@@ -476,7 +477,7 @@ var _coreEventsEventsBaseJs2 = _interopRequireDefault(_coreEventsEventsBaseJs);
 
 /**
  * @Class
- * @ignore
+ *
  */
 
 var MediaPlayerEvents = (function (_EventsBase) {
@@ -492,14 +493,23 @@ var MediaPlayerEvents = (function (_EventsBase) {
     _get(Object.getPrototypeOf(MediaPlayerEvents.prototype), 'constructor', this).call(this);
     /**
      * Triggered when the video element's buffer state changes to stalled.
+     * Check mediaType in payload to determine type (Video, Audio, FragmentedText).
      * @event MediaPlayerEvents#BUFFER_EMPTY
      */
     this.BUFFER_EMPTY = 'bufferstalled';
     /**
      * Triggered when the video element's buffer state changes to loaded.
+     * Check mediaType in payload to determine type (Video, Audio, FragmentedText).
      * @event MediaPlayerEvents#BUFFER_LOADED
      */
     this.BUFFER_LOADED = 'bufferloaded';
+
+    /**
+     * Triggered when the video element's buffer state changes, either stalled or loaded. Check payload for state.
+     * @event MediaPlayerEvents#BUFFER_LOADED
+     */
+    this.BUFFER_LEVEL_STATE_CHANGED = 'bufferStateChanged';
+
     /**
      * Triggered when
      * @event MediaPlayerEvents#ERROR
@@ -2319,12 +2329,43 @@ function DVBErrorsTranslator(config) {
     var metricModel = config.metricsModel;
     var mpd = undefined;
 
+    function report(vo) {
+        var o = new _voDVBErrorsJs2['default']();
+
+        if (!mpd) {
+            return;
+        }
+
+        for (var key in vo) {
+            if (vo.hasOwnProperty(key)) {
+                o[key] = vo[key];
+            }
+        }
+
+        if (!o.mpdurl) {
+            o.mpdurl = mpd.originalUrl || mpd.url;
+        }
+
+        if (!o.terror) {
+            o.terror = new Date();
+        }
+
+        metricModel.addDVBErrors(o);
+    }
+
     function onManifestUpdate(e) {
         if (e.error) {
             return;
         }
 
         mpd = e.manifest;
+    }
+
+    function onServiceLocationChanged(e) {
+        report({
+            errorcode: _voDVBErrorsJs2['default'].BASE_URL_CHANGED,
+            servicelocation: e.entry
+        });
     }
 
     function onBecameReporter() {
@@ -2342,7 +2383,8 @@ function DVBErrorsTranslator(config) {
             report({
                 errorcode: vo.responsecode || _voDVBErrorsJs2['default'].CONNECTION_ERROR,
                 url: vo.url,
-                terror: vo.tresponse
+                terror: vo.tresponse,
+                servicelocation: vo._serviceLocation
             });
         }
     }
@@ -2377,37 +2419,9 @@ function DVBErrorsTranslator(config) {
         });
     }
 
-    function report(vo) {
-        var o = new _voDVBErrorsJs2['default']();
-
-        if (!mpd) {
-            return;
-        }
-
-        for (var key in vo) {
-            if (vo.hasOwnProperty(key)) {
-                o[key] = vo[key];
-            }
-        }
-
-        if (!o.mpdurl) {
-            o.mpdurl = mpd.originalUrl || mpd.url;
-        }
-
-        if (!o.servicelocation) {
-            // note, this will need changing when we get BaseURL switching
-            o.servicelocation = mpd.BaseURL.serviceLocation;
-        }
-
-        if (!o.terror) {
-            o.terror = new Date();
-        }
-
-        metricModel.addDVBErrors(o);
-    }
-
     function initialise() {
         eventBus.on(_coreEventsEventsJs2['default'].MANIFEST_UPDATED, onManifestUpdate, instance);
+        eventBus.on(_coreEventsEventsJs2['default'].SERVICE_LOCATION_BLACKLIST_CHANGED, onServiceLocationChanged, instance);
         eventBus.on(_MediaPlayerEventsJs2['default'].METRIC_ADDED, onMetricEvent, instance);
         eventBus.on(_MediaPlayerEventsJs2['default'].METRIC_UPDATED, onMetricEvent, instance);
         eventBus.on(_MediaPlayerEventsJs2['default'].PLAYBACK_ERROR, onPlaybackError, instance);
@@ -2416,6 +2430,7 @@ function DVBErrorsTranslator(config) {
 
     function reset() {
         eventBus.off(_coreEventsEventsJs2['default'].MANIFEST_UPDATED, onManifestUpdate, instance);
+        eventBus.off(_coreEventsEventsJs2['default'].SERVICE_LOCATION_BLACKLIST_CHANGED, onServiceLocationChanged, instance);
         eventBus.off(_MediaPlayerEventsJs2['default'].METRIC_ADDED, onMetricEvent, instance);
         eventBus.off(_MediaPlayerEventsJs2['default'].METRIC_UPDATED, onMetricEvent, instance);
         eventBus.off(_MediaPlayerEventsJs2['default'].PLAYBACK_ERROR, onPlaybackError, instance);

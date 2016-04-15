@@ -147,12 +147,15 @@ var BASE64 = {};
     };
 })("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
 
+/*The following polyfills are not used in dash.js but have caused multiplayer integration issues.
+ Therefore commenting them out.
 if (undefined === btoa) {
     var btoa = BASE64.encode;
 }
 if (undefined === atob) {
     var atob = BASE64.decode;
 }
+*/
 
 if (typeof exports !== 'undefined') {
     exports.decode = BASE64.decode;
@@ -526,7 +529,6 @@ var CoreEvents = (function (_EventsBase) {
         this.AST_IN_FUTURE = 'astinfuture';
         this.BUFFERING_COMPLETED = 'bufferingCompleted';
         this.BUFFER_CLEARED = 'bufferCleared';
-        this.BUFFER_LEVEL_STATE_CHANGED = 'bufferStateChanged';
         this.BUFFER_LEVEL_UPDATED = 'bufferLevelUpdated';
         this.BYTES_APPENDED = 'bytesAppended';
         this.CHECK_FOR_EXISTENCE_COMPLETED = 'checkForExistenceCompleted';
@@ -539,7 +541,7 @@ var CoreEvents = (function (_EventsBase) {
         this.INITIALIZATION_LOADED = 'initializationLoaded';
         this.INIT_FRAGMENT_LOADED = 'initFragmentLoaded';
         this.INIT_REQUESTED = 'initRequested';
-        this.INTERNAL_MANIFEST_LOADED = 'manifestLoaded';
+        this.INTERNAL_MANIFEST_LOADED = 'internalManifestLoaded';
         this.LIVE_EDGE_SEARCH_COMPLETED = 'liveEdgeSearchCompleted';
         this.LOADING_COMPLETED = 'loadingCompleted';
         this.LOADING_PROGRESS = 'loadingProgress';
@@ -549,6 +551,7 @@ var CoreEvents = (function (_EventsBase) {
         this.QUOTA_EXCEEDED = 'quotaExceeded';
         this.REPRESENTATION_UPDATED = 'representationUpdated';
         this.SEGMENTS_LOADED = 'segmentsLoaded';
+        this.SERVICE_LOCATION_BLACKLIST_CHANGED = 'serviceLocationBlacklistChanged';
         this.SOURCEBUFFER_APPEND_COMPLETED = 'sourceBufferAppendCompleted';
         this.SOURCEBUFFER_REMOVE_COMPLETED = 'sourceBufferRemoveCompleted';
         this.STREAMS_COMPOSED = 'streamsComposed';
@@ -558,6 +561,7 @@ var CoreEvents = (function (_EventsBase) {
         this.STREAM_TEARDOWN_COMPLETE = 'streamTeardownComplete';
         this.TIMED_TEXT_REQUESTED = 'timedTextRequested';
         this.TIME_SYNCHRONIZATION_COMPLETED = 'timeSynchronizationComplete';
+        this.URL_RESOLUTION_FAILED = 'urlResolutionFailed';
         this.WALLCLOCK_TIME_UPDATED = 'wallclockTimeUpdated';
         this.XLINK_ALL_ELEMENTS_LOADED = 'xlinkAllElementsLoaded';
         this.XLINK_ELEMENT_LOADED = 'xlinkElementLoaded';
@@ -1219,7 +1223,7 @@ var _coreEventsEventsBaseJs2 = _interopRequireDefault(_coreEventsEventsBaseJs);
 
 /**
  * @Class
- * @ignore
+ *
  */
 
 var ProtectionEvents = (function (_EventsBase) {
@@ -1675,8 +1679,10 @@ function ProtectionController(config) {
 
         keySystem = undefined; //TODO-Refactor look at why undefined is needed for this. refactor
 
-        protectionModel.reset();
-        protectionModel = null;
+        if (protectionModel) {
+            protectionModel.reset();
+            protectionModel = null;
+        }
     }
 
     ///////////////
@@ -5029,6 +5035,21 @@ var _coreFactoryMakerJs = _dereq_('../../core/FactoryMaker.js');
 
 var _coreFactoryMakerJs2 = _interopRequireDefault(_coreFactoryMakerJs);
 
+var CAPABILITY_ERROR_MEDIASOURCE = 'mediasource';
+var CAPABILITY_ERROR_MEDIAKEYS = 'mediakeys';
+
+var DOWNLOAD_ERROR_ID_MANIFEST = 'manifest';
+var DOWNLOAD_ERROR_ID_SIDX = 'SIDX';
+var DOWNLOAD_ERROR_ID_CONTENT = 'content';
+var DOWNLOAD_ERROR_ID_INITIALIZATION = 'initialization';
+var DOWNLOAD_ERROR_ID_XLINK = 'xlink';
+
+var MANIFEST_ERROR_ID_CODEC = 'codec';
+var MANIFEST_ERROR_ID_PARSE = 'parse';
+var MANIFEST_ERROR_ID_NOSTREAMS = 'nostreams';
+
+var TIMED_TEXT_ERROR_ID_PARSE = 'parse';
+
 function ErrorHandler() {
 
     var instance = undefined;
@@ -5040,7 +5061,7 @@ function ErrorHandler() {
         eventBus.trigger(_coreEventsEventsJs2['default'].ERROR, { error: 'capability', event: err });
     }
 
-    // {id: "manifest"|"SIDX"|"content"|"initialization", url: "", request: {XMLHttpRequest instance}}
+    // {id: "manifest"|"SIDX"|"content"|"initialization"|"xlink", url: "", request: {XMLHttpRequest instance}}
     function downloadError(id, url, request) {
         eventBus.trigger(_coreEventsEventsJs2['default'].ERROR, { error: 'download', event: { id: id, url: url, request: request } });
     }
@@ -5050,6 +5071,7 @@ function ErrorHandler() {
         eventBus.trigger(_coreEventsEventsJs2['default'].ERROR, { error: 'manifestError', event: { message: message, id: id, manifest: manifest } });
     }
 
+    // {message: '', id: 'parse', cc: ''}
     function timedTextError(message, id, ccContent) {
         eventBus.trigger(_coreEventsEventsJs2['default'].ERROR, { error: 'cc', event: { message: message, id: id, cc: ccContent } });
     }
@@ -5078,8 +5100,24 @@ function ErrorHandler() {
 
     return instance;
 }
+
 ErrorHandler.__dashjs_factory_name = 'ErrorHandler';
-exports['default'] = _coreFactoryMakerJs2['default'].getSingletonFactory(ErrorHandler);
+
+var factory = _coreFactoryMakerJs2['default'].getSingletonFactory(ErrorHandler);
+
+factory.CAPABILITY_ERROR_MEDIASOURCE = CAPABILITY_ERROR_MEDIASOURCE;
+factory.CAPABILITY_ERROR_MEDIAKEYS = CAPABILITY_ERROR_MEDIAKEYS;
+factory.DOWNLOAD_ERROR_ID_MANIFEST = DOWNLOAD_ERROR_ID_MANIFEST;
+factory.DOWNLOAD_ERROR_ID_SIDX = DOWNLOAD_ERROR_ID_SIDX;
+factory.DOWNLOAD_ERROR_ID_CONTENT = DOWNLOAD_ERROR_ID_CONTENT;
+factory.DOWNLOAD_ERROR_ID_INITIALIZATION = DOWNLOAD_ERROR_ID_INITIALIZATION;
+factory.DOWNLOAD_ERROR_ID_XLINK = DOWNLOAD_ERROR_ID_XLINK;
+factory.MANIFEST_ERROR_ID_CODEC = MANIFEST_ERROR_ID_CODEC;
+factory.MANIFEST_ERROR_ID_PARSE = MANIFEST_ERROR_ID_PARSE;
+factory.MANIFEST_ERROR_ID_NOSTREAMS = MANIFEST_ERROR_ID_NOSTREAMS;
+factory.TIMED_TEXT_ERROR_ID_PARSE = TIMED_TEXT_ERROR_ID_PARSE;
+
+exports['default'] = factory;
 module.exports = exports['default'];
 
 },{"../../core/EventBus.js":2,"../../core/FactoryMaker.js":3,"../../core/events/Events.js":5}],31:[function(_dereq_,module,exports){
