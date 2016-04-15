@@ -114,7 +114,7 @@ function Stream(config) {
 
     /**
      * Activates Stream by re-initializing some of its components
-     * @param mediaSource {MediaSource}
+     * @param {MediaSource} mediaSource
      * @memberof Stream#
      */
     function activate(mediaSource) {
@@ -203,7 +203,7 @@ function Stream(config) {
     }
 
     /**
-     * @param type
+     * @param {string} type
      * @returns {Array}
      * @memberof Stream#
      */

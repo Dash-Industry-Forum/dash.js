@@ -346,6 +346,9 @@ function StreamController() {
     /**
      * Returns a playhead time, in seconds, converted to be relative
      * to the start of an identified stream/period or null if no such stream
+     * @param {number} time
+     * @param {string} id
+     * @returns {number|null}
      */
     function getTimeRelativeToStreamId(time, id) {
         var stream = null;

@@ -21,5 +21,16 @@
     "validateParameterSeparator": ", ",
     "disallowMultipleVarDecl": {
         "allExcept": ["undefined"]
+    },
+    "jsDoc": {
+        "checkTypes": "strictNativeCase",
+        "checkParamExistence": true,
+        "checkParamNames": true,
+        "requireParamTypes": true,
+        "checkRedundantParams": true,
+        "checkReturnTypes": true,
+        "checkRedundantReturns": true,
+        "requireReturnTypes": true,
+        "checkTypes": true
     }
 }

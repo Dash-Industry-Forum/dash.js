@@ -316,7 +316,7 @@ function TextTracks() {
         }
     }
 
-    /**
+    /*
     * Add captions to track, store for later adding, or add captions added before
     */
     function addCaptions(trackIdx, timeOffset, captionData) {

@@ -32,8 +32,8 @@
 /**
  * Represents a 128-bit keyID and 128-bit encryption key
  *
- * @param keyID {String} 128-bit key ID, base64 encoded, with no padding
- * @param key {String} 128-bit encryption key, base64 encoded, with no padding
+ * @param keyID {string} 128-bit key ID, base64 encoded, with no padding
+ * @param key {string} 128-bit encryption key, base64 encoded, with no padding
  * @class
  * @ignore
  */

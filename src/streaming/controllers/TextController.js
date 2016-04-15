@@ -69,8 +69,8 @@ function TextController(config) {
     }
 
     /**
-     * @param mediaInfo object
-     * @returns SourceBuffer object
+     * @param {MediaInfo }mediaInfo
+     * @returns {Object} SourceBuffer object
      * @memberof BufferController#
      */
     function createBuffer(mediaInfo) {

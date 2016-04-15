@@ -66,7 +66,7 @@ import DashMetrics from '../dash/DashMetrics.js';
 import TimelineConverter from '../dash/utils/TimelineConverter.js';
 
 /**
- * @Module MediaPlayer
+ * @module MediaPlayer
  * @description The MediaPlayer is the primary dash.js Module and a Facade to build your player around.
  * It will allow you access to all the important dash.js properties/methods via the public API and all the
  * events to build a robust DASH media player.
@@ -126,9 +126,9 @@ function MediaPlayer() {
      * ALL arguments are optional and there are individual methods to set each argument later on.
      * The args in this method are just for convenience and should only be used for a simple player setup.
      *
-     * @param {HTML5MediaElement} view - Optional arg to set the video element. {@link module:MediaPlayer#attachView attachView()}
-     * @param {string} source - Optional arg to set the media source. {@link module:MediaPlayer#attachSource attachSource()}
-     * @param {boolean} AutoPlay - Optional arg to set auto play. {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
+     * @param {HTML5MediaElement=} view - Optional arg to set the video element. {@link module:MediaPlayer#attachView attachView()}
+     * @param {string=} source - Optional arg to set the media source. {@link module:MediaPlayer#attachSource attachSource()}
+     * @param {boolean=} AutoPlay - Optional arg to set auto play. {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
      * @see {@link module:MediaPlayer#attachView attachView()}
      * @see {@link module:MediaPlayer#attachSource attachSource()}
      * @see {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
@@ -299,6 +299,7 @@ function MediaPlayer() {
      * NaN is returned if an invalid type is requested, or if the presentation does not contain that type or if no arguments are passed and the
      * presentation doers not include any audio or video adaption sets.
      *
+     * @param {string} type - the media type of the buffer
      * @returns {number} The length of the buffer for the given media type, in seconds.
      * @memberof module:MediaPlayer
      * @instance
@@ -347,7 +348,7 @@ function MediaPlayer() {
      * NOTE - If you do not need the raw offset value (i.e. media analytics, tracking, etc) consider using the {@link module:MediaPlayer#seek seek()} method
      * which will calculate this value for you and set the video element's currentTime property all in one simple call.
      *
-     * @param value {number} A relative time, in seconds, based on the return value of the {@link module:MediaPlayer#duration duration()} method is expected.
+     * @param {number} value - A relative time, in seconds, based on the return value of the {@link module:MediaPlayer#duration duration()} method is expected.
      * @returns {number} A value that is relative the available range within the timeShiftBufferLength (DVR Window).
      * @see {@link module:MediaPlayer#seek seek()}
      * @memberof module:MediaPlayer
@@ -373,7 +374,7 @@ function MediaPlayer() {
      * Sets the currentTime property of the attached video element.  If it is a live stream with a
      * timeShiftBufferLength, then the DVR window offset will be automatically calculated.
      *
-     * @param value {number} A relative time, in seconds, based on the return value of the {@link module:MediaPlayer#duration duration()} method is expected
+     * @param {number} value - A relative time, in seconds, based on the return value of the {@link module:MediaPlayer#duration duration()} method is expected
      * @see {@link module:MediaPlayer#getDVRSeekOffset getDVRSeekOffset()}
      * @memberof module:MediaPlayer
      * @instance
@@ -393,7 +394,7 @@ function MediaPlayer() {
      * If called with no arguments then the returned time value is time elapsed since the start point of the first stream.
      * However if a stream ID is supplied then time is relative to the start of that stream, or is null if there is no such stream id in the manifest.
      *
-     * @param streamId The ID of a stream that the returned playhead time must be relative to the start of. If undefined, then playhead time is relative to the first stream.
+     * @param {string} streamId - The ID of a stream that the returned playhead time must be relative to the start of. If undefined, then playhead time is relative to the first stream.
      * @returns {number} The current playhead time of the media, or null.
      * @memberof module:MediaPlayer
      * @instance
@@ -496,7 +497,7 @@ function MediaPlayer() {
     /**
      * A utility method which converts seconds into TimeCode (i.e. 300 --> 05:00).
      *
-     * @param value {number} A number in seconds to be converted into a formatted time code.
+     * @param {number} value - A number in seconds to be converted into a formatted time code.
      * @returns {string} A formatted time code string.
      * @memberof module:MediaPlayer
      * @instance
@@ -516,7 +517,7 @@ function MediaPlayer() {
      * <ol>
      * <li>If you set override to true any public method or property in your custom object will
      * override the dash.js parent object's property(ies) and will be used instead but the
-     * dashj.s parent module will still be created.</li>
+     * dash.js parent module will still be created.</li>
      *
      * <li>If you set override to false your object will completely replace the dash.js object.
      * (Note: This is how it was in 1.x of Dash.js with Dijon).</li>
@@ -529,6 +530,9 @@ function MediaPlayer() {
      * </ul>
      * <b>You must call extend before you call initialize</b>
      * @see {@link module:MediaPlayer#initialize initialize()}
+     * @param {string} parentNameString - name of parent module
+     * @param {Object} childInstance - overriding object
+     * @param {boolean} override - replace only some methods (true) or the whole object (false)
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -539,7 +543,7 @@ function MediaPlayer() {
     /**
      * Use the on method to listen for public events found in MediaPlayer.events. {@link MediaPlayerEvents}
      *
-     * @param {String} type - {@link MediaPlayerEvents}
+     * @param {string} type - {@link MediaPlayerEvents}
      * @param {Function} listener - callback method when the event fires.
      * @param {Object} scope - context of the listener so it can be removed properly.
      * @memberof module:MediaPlayer
@@ -552,7 +556,7 @@ function MediaPlayer() {
     /**
      * Use the off method to remove listeners for public events found in MediaPlayer.events. {@link MediaPlayerEvents}
      *
-     * @param {String} type - {@link MediaPlayerEvents}
+     * @param {string} type - {@link MediaPlayerEvents}
      * @param {Function} listener - callback method when the event fires.
      * @param {Object} scope - context of the listener so it can be removed properly.
      * @memberof module:MediaPlayer
@@ -575,7 +579,7 @@ function MediaPlayer() {
     /**
      * Use this method to access the dash.js logging class.
      *
-     * @returns {@link module:Debug}
+     * @returns {Debug}
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -592,7 +596,7 @@ function MediaPlayer() {
      * <li>{@link module:MediaPlayer#getTTMLRenderingDiv getTTMLRenderingDiv()}</li>
      * </ul>
      *
-     * @returns {@link VideoModel}
+     * @returns {VideoModel}
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -608,7 +612,7 @@ function MediaPlayer() {
      * to define a time in seconds to delay a live stream from the live edge.</p>
      * <p>Lowering this value will lower latency but may decrease the player's ability to build a stable buffer.</p>
      *
-     * @param value {int} Represents how many segment durations to delay the live stream.
+     * @param {number} value - Represents how many segment durations to delay the live stream.
      * @default 4
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#useSuggestedPresentationDelay useSuggestedPresentationDelay()}
@@ -624,7 +628,7 @@ function MediaPlayer() {
      * <p>This value should be less than the manifest duration by a couple of segment durations to avoid playback issues</p>
      * <p>If set, this parameter will take precedence over setLiveDelayFragmentCount and manifest info</p>
      *
-     * @param value {int} Represents how many seconds to delay the live stream.
+     * @param {number} value - Represents how many seconds to delay the live stream.
      * @default undefined
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#useSuggestedPresentationDelay useSuggestedPresentationDelay()}
@@ -636,7 +640,7 @@ function MediaPlayer() {
 
     /**
      * <p>Set to true if you would like to override the default live delay and honor the SuggestedPresentationDelay attribute in by the manifest.</p>
-     * @param value {boolean}
+     * @param {boolean} value
      * @default false
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#setLiveDelayFragmentCount setLiveDelayFragmentCount()}
@@ -653,8 +657,8 @@ function MediaPlayer() {
      * The default expiration is one hour, defined in milliseconds. If expired, the default initial bit rate (closest to 1000 kbps) will be used
      * for that session and a new bit rate will be stored during that session.
      *
-     * @param enable - Boolean - Will toggle if feature is enabled. True to enable, False to disable.
-     * @param ttl Number - (Optional) A value defined in milliseconds representing how long to cache the bit rate for. Time to live.
+     * @param {boolean} enable - Will toggle if feature is enabled. True to enable, False to disable.
+     * @param {number=} ttl - (Optional) A value defined in milliseconds representing how long to cache the bit rate for. Time to live.
      * @default enable = True, ttl = 360000 (1 hour)
      * @memberof module:MediaPlayer
      * @instance
@@ -671,8 +675,8 @@ function MediaPlayer() {
      * The default expiration is one hour, defined in milliseconds. If expired, the default settings will be used
      * for that session and a new settings will be stored during that session.
      *
-     * @param enable - Boolean - Will toggle if feature is enabled. True to enable, False to disable.
-     * @param ttl Number - (Optional) A value defined in milliseconds representing how long to cache the settings for. Time to live.
+     * @param {boolean} enable - Will toggle if feature is enabled. True to enable, False to disable.
+     * @param {number=} [ttl] - (Optional) A value defined in milliseconds representing how long to cache the settings for. Time to live.
      * @default enable = True, ttl = 360000 (1 hour)
      * @memberof module:MediaPlayer
      * @instance
@@ -693,8 +697,8 @@ function MediaPlayer() {
      *
      * This feature is typically used to reserve higher bitrates for playback only when the player is in large or full-screen format.
      *
-     * @param type {String} 'video' or 'audio' are the type options.
-     * @param value {int} Value in kbps representing the maximum bitrate allowed.
+     * @param {string} type - 'video' or 'audio' are the type options.
+     * @param {number} value - Value in kbps representing the maximum bitrate allowed.
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -703,7 +707,7 @@ function MediaPlayer() {
     }
 
     /**
-     * @param type {string} 'video' or 'audio' are the type options.
+     * @param {string} type - 'video' or 'audio' are the type options.
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#setMaxAllowedBitrateFor setMaxAllowedBitrateFor()}
      * @instance
@@ -724,8 +728,8 @@ function MediaPlayer() {
      *
      * This feature is typically used to reserve higher representations for playback only when connected over a fast connection.
      *
-     * @param type String 'video' or 'audio' are the type options.
-     * @param value number between 0 and 1, where 1 is allow all representations, and 0 is allow only the lowest.
+     * @param {string} type - 'video' or 'audio' are the type options.
+     * @param {number} value - number between 0 and 1, where 1 is allow all representations, and 0 is allow only the lowest.
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -734,7 +738,7 @@ function MediaPlayer() {
     }
 
     /**
-     * @param type String 'video' or 'audio' are the type options.
+     * @param {string} type - 'video' or 'audio' are the type options.
      * @returns {number} The current representation ratio cap.
      * @memberof module:MediaPlayer
      * @see {@link MediaPlayer#setMaxAllowedRepresentationRatioFor setMaxAllowedRepresentationRatioFor()}
@@ -747,7 +751,7 @@ function MediaPlayer() {
     /**
      * <p>Set to false to prevent stream from auto-playing when the view is attached.</p>
      *
-     * @param value {boolean}
+     * @param {boolean} value
      * @default true
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#attachView attachView()}
@@ -772,7 +776,7 @@ function MediaPlayer() {
      * when the video element is paused.
      *
      * @default false
-     * @param value
+     * @param {boolean} value
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -797,7 +801,7 @@ function MediaPlayer() {
      * stored in dash.js
      *
      * @see {@link module:DashMetrics}
-     * @returns {object}
+     * @returns {Object}
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -807,8 +811,8 @@ function MediaPlayer() {
 
     /**
      *
-     * @param type
-     * @returns {object}
+     * @param {string} type
+     * @returns {Object}
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -817,8 +821,8 @@ function MediaPlayer() {
     }
 
     /**
-     * @param type
-     * @returns {object}
+     * @param {string} type
+     * @returns {Object}
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -832,8 +836,8 @@ function MediaPlayer() {
     /**
      * Sets the current quality for media type instead of letting the ABR Heuristics automatically selecting it..
      *
-     * @param type
-     * @param value
+     * @param {string} type
+     * @param {number} value
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -855,7 +859,7 @@ function MediaPlayer() {
     /**
      * Sets whether to limit the representation used based on the size of the playback area
      *
-     * @param value
+     * @param {boolean} value
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -868,7 +872,7 @@ function MediaPlayer() {
      * Use this method to change the current text track for both external time text files and fragmented text tracks. There is no need to
      * set the track mode on the video object to switch a track when using this method.
      *
-     * @param idx - Index of track based on the order of the order the tracks are added Use -1 to disable all tracks. (turn captions off).  Use module:MediaPlayer#dashjs.MediaPlayer.events.TEXT_TRACK_ADDED.
+     * @param {number} idx - Index of track based on the order of the order the tracks are added Use -1 to disable all tracks. (turn captions off).  Use module:MediaPlayer#dashjs.MediaPlayer.events.TEXT_TRACK_ADDED.
      * @see {@link module:MediaPlayer#dashjs.MediaPlayer.events.TEXT_TRACK_ADDED}
      * @memberof module:MediaPlayer
      * @instance
@@ -899,7 +903,7 @@ function MediaPlayer() {
     }
 
     /**
-     * @param type
+     * @param {string} type
      * @returns {Array}
      * @memberof module:MediaPlayer
      * @instance
@@ -915,8 +919,8 @@ function MediaPlayer() {
     /**
      * Use this method to explicitly set the starting bitrate for audio | video
      *
-     * @param type
-     * @param {number} value A value of the initial bitrate, kbps
+     * @param {string} type
+     * @param {number} value - A value of the initial bitrate, kbps
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -925,7 +929,7 @@ function MediaPlayer() {
     }
 
     /**
-     * @param type
+     * @param {string} type
      * @returns {number} A value of the initial bitrate, kbps
      * @memberof module:MediaPlayer
      * @instance
@@ -938,8 +942,8 @@ function MediaPlayer() {
     }
 
     /**
-     * @param type
-     * @param {number} value A value of the initial Representation Ratio
+     * @param {string} type
+     * @param {number} value - A value of the initial Representation Ratio
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -948,7 +952,7 @@ function MediaPlayer() {
     }
 
     /**
-     * @param type
+     * @param {string} type
      * @returns {number} A value of the initial Representation Ratio
      * @memberof module:MediaPlayer
      * @instance
@@ -959,7 +963,7 @@ function MediaPlayer() {
 
     /**
      * This method returns the list of all available streams from a given manifest
-     * @param manifest
+     * @param {Object} manifest
      * @returns {Array} list of {@link StreamInfo}
      * @memberof module:MediaPlayer
      * @instance
@@ -973,7 +977,7 @@ function MediaPlayer() {
 
     /**
      * This method returns the list of all available tracks for a given media type
-     * @param type
+     * @param {string} type
      * @returns {Array} list of {@link MediaInfo}
      * @memberof module:MediaPlayer
      * @instance
@@ -989,9 +993,9 @@ function MediaPlayer() {
 
     /**
      * This method returns the list of all available tracks for a given media type and streamInfo from a given manifest
-     * @param type
-     * @param manifest
-     * @param streamInfo
+     * @param {string} type
+     * @param {Object} manifest
+     * @param {Object} streamInfo
      * @returns {Array} list of {@link MediaInfo}
      * @memberof module:MediaPlayer
      * @instance
@@ -1007,8 +1011,8 @@ function MediaPlayer() {
     }
 
     /**
-     * @param type
-     * @returns {Object} {@link MediaInfo}
+     * @param {string} type
+     * @returns {Object|null} {@link MediaInfo}
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1033,8 +1037,8 @@ function MediaPlayer() {
          *  role: roleValue}
      *
      *
-     * @param type
-     * @param value {Object}
+     * @param {string} type
+     * @param {Object} value
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1050,7 +1054,7 @@ function MediaPlayer() {
          *  audioChannelConfiguration: audioChannelConfigurationValue,
          *  accessibility: accessibilityValue,
          *  role: roleValue}
-     * @param type
+     * @param {string} type
      * @returns {Object}
      * @memberof module:MediaPlayer
      * @instance
@@ -1060,7 +1064,7 @@ function MediaPlayer() {
     }
 
     /**
-     * @param track instance of {@link MediaInfo}
+     * @param {MediaInfo} track - instance of {@link MediaInfo}
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1074,8 +1078,8 @@ function MediaPlayer() {
     /**
      * This method returns the current track switch mode.
      *
-     * @param type
-     * @returns mode
+     * @param {string} type
+     * @returns {string} mode
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1092,8 +1096,8 @@ function MediaPlayer() {
      * MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE
      * (used to clear the buffered data (prior to current playback position) after track switch. Default for audio)
      *
-     * @param type
-     * @param mode
+     * @param {string} type
+     * @param {string} mode
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1111,7 +1115,7 @@ function MediaPlayer() {
      * MediaController.TRACK_SELECTION_MODE_WIDEST_RANGE
      * this mode makes the player select the track with a widest range of bitrates
      *
-     * @param mode
+     * @param {string} mode
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1122,7 +1126,7 @@ function MediaPlayer() {
     /**
      * This method returns the track selection mode.
      *
-     * @returns mode
+     * @returns {string} mode
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1144,7 +1148,7 @@ function MediaPlayer() {
      * Set to false to switch off adaptive bitrate switching.
      *
      * @deprecated since version 2.0 Instead use {@link module:MediaPlayer#setAutoSwitchQualityFor setAutoSwitchQualityFor()}.
-     * @param value {boolean}
+     * @param {boolean} value
      * @default {boolean} true
      * @memberof module:MediaPlayer
      * @instance
@@ -1155,7 +1159,7 @@ function MediaPlayer() {
     }
 
     /**
-     * @param type {string} 'audio' | 'video'
+     * @param {string} type - 'audio' | 'video'
      * @returns {boolean} Current state of adaptive bitrate switching
      * @memberof module:MediaPlayer
      * @instance
@@ -1167,8 +1171,8 @@ function MediaPlayer() {
     /**
      * Set to false to switch off adaptive bitrate switching.
      *
-     * @param type {string} 'audio' | 'video'
-     * @param value {boolean}
+     * @param {string} type - 'audio' | 'video'
+     * @param {boolean} value
      * @default {boolean} true
      * @memberof module:MediaPlayer
      * @instance
@@ -1186,7 +1190,7 @@ function MediaPlayer() {
      *
      * @see {@link http://arxiv.org/abs/1601.06748 BOLA WhitePaper.}
      * @see {@link https://github.com/Dash-Industry-Forum/dash.js/wiki/BOLA-status More details about the implementation status.}
-     * @param value {boolean}
+     * @param {boolean} value
      * @default false
      * @memberof module:MediaPlayer
      * @instance
@@ -1200,8 +1204,8 @@ function MediaPlayer() {
      * nous and
      * requires the app-provided callback function
      *
-     * @param url {string} url the manifest url
-     * @param callback {function} A Callback function provided when retrieving manifests
+     * @param {string} url - url the manifest url
+     * @param {function} callback - A Callback function provided when retrieving manifests
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1231,8 +1235,7 @@ function MediaPlayer() {
      * If UTCTiming is defined in the manifest, it will take precedence over any time source manually added.</p>
      * <p>If you have exposed the Date header, use the method {@link module:MediaPlayer#clearDefaultUTCTimingSources clearDefaultUTCTimingSources()}.
      * This will allow the date header on the manifest to be used instead of a time server</p>
-     * @param {string} schemeIdUri -
-     * <ul>
+     * @param {string} schemeIdUri - <ul>
      * <li>urn:mpeg:dash:utc:http-head:2014</li>
      * <li>urn:mpeg:dash:utc:http-xsdate:2014</li>
      * <li>urn:mpeg:dash:utc:http-iso:2014</li>
@@ -1321,6 +1324,7 @@ function MediaPlayer() {
      * use of the date header will happen only after the other timing source that take precedence fail or are omitted as described.
      * {@link module:MediaPlayer#clearDefaultUTCTimingSources clearDefaultUTCTimingSources()} </p>
      *
+     * @param {boolean} value - true to enable
      * @default {boolean} True
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#addUTCTimingSource addUTCTimingSource()}
@@ -1408,7 +1412,7 @@ function MediaPlayer() {
      *
      * @see {@link module:MediaPlayer#setBufferTimeAtTopQualityLongForm setBufferTimeAtTopQualityLongForm()}
      * @default 600 seconds (10 minutes).
-     * @param value
+     * @param {number} value
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1423,7 +1427,7 @@ function MediaPlayer() {
      * buffer level surpasses this value and while it remains greater than this value.
      *
      * @default 20 seconds
-     * @param value
+     * @param {number} value
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1437,7 +1441,7 @@ function MediaPlayer() {
      * measured throughput calculations will be. please use carefully. This will directly
      * affect the ABR logic in dash.js
      *
-     * @param value
+     * @param {number} value
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1507,7 +1511,7 @@ function MediaPlayer() {
 
     /**
      * Will override dash.js protection controller.
-     * @param {ProtectionController} [value] valid protection controller instance.
+     * @param {ProtectionController} value - valid protection controller instance.
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1516,7 +1520,7 @@ function MediaPlayer() {
     }
 
     /**
-     * @param {ProtectionData} [value] object containing
+     * @param {ProtectionData} value - object containing
      * property names corresponding to key system name strings and associated
      * values being instances of.
      * @memberof module:MediaPlayer
@@ -1529,7 +1533,7 @@ function MediaPlayer() {
     /**
      * This method serves to control captions z-index value. If 'true' is passed, the captions will have the highest z-index and be
      * displayed on top of other html elements. Default value is 'false' (z-index is not set).
-     * @param value {Boolean}
+     * @param {boolean} value
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1542,7 +1546,7 @@ function MediaPlayer() {
 
     /**
      * Returns instance of Video Container that was attached by calling attachVideoContainer()
-     * @returns {@link object}
+     * @returns {Object}
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1553,7 +1557,7 @@ function MediaPlayer() {
     /**
      * Use this method to attach an HTML5 element that wraps the video element.
      *
-     * @param container The HTML5 element containing the video element.
+     * @param {HTMLElement} container - The HTML5 element containing the video element.
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1566,7 +1570,7 @@ function MediaPlayer() {
 
     /**
      * Returns instance of Video Element that was attached by calling attachView()
-     * @returns {object}
+     * @returns {Object}
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1580,7 +1584,7 @@ function MediaPlayer() {
     /**
      * Use this method to attach an HTML5 VideoElement for dash.js to operate upon.
      *
-     * @param view An HTML5 VideoElement that has already been defined in the DOM.
+     * @param {Object} element - An HTMLMediaElement that has already been defined in the DOM (or equivalent stub).
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1601,7 +1605,7 @@ function MediaPlayer() {
 
     /**
      * Returns instance of Div that was attached by calling attachTTMLRenderingDiv()
-     * @returns {@link object}
+     * @returns {Object}
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1612,7 +1616,7 @@ function MediaPlayer() {
     /**
      * Use this method to attach an HTML5 div for dash.js to render rich TTML subtitles.
      *
-     * @param div An unstyled div placed after the video element. It will be styled to match the video size and overlay z-order.
+     * @param {HTMLDivElement} div - An unstyled div placed after the video element. It will be styled to match the video size and overlay z-order.
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1641,11 +1645,11 @@ function MediaPlayer() {
      * a previously downloaded and parsed manifest object.  Optionally, can
      * also provide protection information
      *
-     * @param {string | object} urlOrManifest A URL to a valid MPD manifest file, or a
+     * @param {string|Object} urlOrManifest - A URL to a valid MPD manifest file, or a
      * parsed manifest object.
      *
      *
-     * @throw "MediaPlayer not initialized!"
+     * @throws "MediaPlayer not initialized!"
      *
      * @memberof module:MediaPlayer
      * @instance

@@ -33,8 +33,9 @@ import FactoryMaker from '../core/FactoryMaker.js';
 import MediaPlayerModel from './models/MediaPlayerModel.js';
 
 /**
- * @Module XHRLoader
+ * @module XHRLoader
  * @description Manages download of resources via HTTP.
+ * @param {Object} cfg - dependancies from parent
  */
 function XHRLoader(cfg) {
     const context = this.context;

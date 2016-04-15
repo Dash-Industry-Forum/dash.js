@@ -145,9 +145,9 @@ function VTTParser() {
         return styleObject;
     }
 
-    /**
-        * VTT can have multiple lines to display per cuepoint.
-        * */
+    /*
+    * VTT can have multiple lines to display per cuepoint.
+    */
     function getSublines(data, idx) {
         var i = idx;
 

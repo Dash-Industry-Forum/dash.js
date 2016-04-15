@@ -73,7 +73,7 @@ function XlinkController(config) {
 
     /**
      * <p>Triggers the resolution of the xlink.onLoad attributes in the manifest file </p>
-     * @param manifest
+     * @param {Object} mpd - the manifest
      */
     function resolveManifestOnLoad(mpd) {
         var elements;

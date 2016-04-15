@@ -55,7 +55,7 @@ let ProtectionModel = function () { };
  * @instance
  * @name getAllInitData
  * @memberof ProtectionModel
- * @returns {ArrayBuffer[]} an array of initialization data buffers
+ * @returns {Array.<ArrayBuffer>} an array of initialization data buffers
  */
 
 /**
@@ -68,7 +68,7 @@ let ProtectionModel = function () { };
  * @name requestKeySystemAccess
  * @memberof ProtectionModel
  *
- * @param {Object[]} ksConfigurations array of desired key system
+ * @param {Array.<Object>} ksConfigurations array of desired key system
  * configurations in priority order (highest priority first)
  * @param {MediaPlayer.dependencies.protection.KeySystem} ksConfigurations.ks
  * the key system

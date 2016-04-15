@@ -40,7 +40,7 @@ function BoxParser(/*config*/) {
 
     /**
      * @param {ArrayBuffer} data
-     * @returns {@link IsoFile}
+     * @returns {IsoFile|null}
      * @memberof BoxParser#
      */
     function parse(data) {

@@ -246,7 +246,7 @@ function ProtectionModel_3Feb2014(config) {
      * Close the given session and release all associated keys.  Following
      * this call, the sessionToken becomes invalid
      *
-     * @param sessionToken the session token
+     * @param {Object} sessionToken - the session token
      */
     function closeKeySession(sessionToken) {
 
