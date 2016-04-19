@@ -1,9 +1,9 @@
-import LiveEdgeFinder from '../src/streaming/utils/LiveEdgeFinder.js';
-import EventBus from '../src/core/EventBus.js';
-import VoHelper from './helpers/VOHelper.js';
-import TimeLineConverter from '../src/dash/utils/TimelineConverter.js';
-import Events from '../src/core/events/Events.js';
-import SpecHelper from './helpers/SpecHelper.js';
+import LiveEdgeFinder from '../src/streaming/utils/LiveEdgeFinder';
+import EventBus from '../src/core/EventBus';
+import VoHelper from './helpers/VOHelper';
+import TimeLineConverter from '../src/dash/utils/TimelineConverter';
+import Events from '../src/core/events/Events';
+import SpecHelper from './helpers/SpecHelper';
 
 const expect = require('chai').expect;
 const sinon = require('sinon');

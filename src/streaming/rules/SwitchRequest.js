@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../core/FactoryMaker.js';
+import FactoryMaker from '../../core/FactoryMaker';
 
 const NO_CHANGE = 999;
 const DEFAULT = 0.5;

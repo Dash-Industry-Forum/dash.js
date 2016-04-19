@@ -29,19 +29,19 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FragmentModel from '../models/FragmentModel.js';
-import MediaPlayerModel from '../models/MediaPlayerModel.js';
-import HTTPRequest from '../vo/metrics/HTTPRequest.js';
-import SourceBufferController from './SourceBufferController.js';
-import AbrController from './AbrController.js';
-import PlaybackController from './PlaybackController.js';
-import MediaController from './MediaController.js';
-import CustomTimeRanges from '../utils/CustomTimeRanges.js';
-import EventBus from '../../core/EventBus.js';
-import Events from '../../core/events/Events.js';
-import BoxParser from '../utils/BoxParser.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
-import Debug from '../../core/Debug.js';
+import FragmentModel from '../models/FragmentModel';
+import MediaPlayerModel from '../models/MediaPlayerModel';
+import HTTPRequest from '../vo/metrics/HTTPRequest';
+import SourceBufferController from './SourceBufferController';
+import AbrController from './AbrController';
+import PlaybackController from './PlaybackController';
+import MediaController from './MediaController';
+import CustomTimeRanges from '../utils/CustomTimeRanges';
+import EventBus from '../../core/EventBus';
+import Events from '../../core/events/Events';
+import BoxParser from '../utils/BoxParser';
+import FactoryMaker from '../../core/FactoryMaker';
+import Debug from '../../core/Debug';
 
 const BUFFER_LOADED = 'bufferLoaded';
 const BUFFER_EMPTY = 'bufferStalled';

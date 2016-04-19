@@ -28,12 +28,12 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Events from '../../core/events/Events.js';
-import EventBus from '../../core/EventBus.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
-import Debug from '../../core/Debug.js';
-import TextSourceBuffer from '../TextSourceBuffer.js';
-import DOMStorage from '../utils/DOMStorage.js';
+import Events from '../../core/events/Events';
+import EventBus from '../../core/EventBus';
+import FactoryMaker from '../../core/FactoryMaker';
+import Debug from '../../core/Debug';
+import TextSourceBuffer from '../TextSourceBuffer';
+import DOMStorage from '../utils/DOMStorage';
 
 const TRACK_SWITCH_MODE_NEVER_REPLACE = 'neverReplace';
 const TRACK_SWITCH_MODE_ALWAYS_REPLACE = 'alwaysReplace';

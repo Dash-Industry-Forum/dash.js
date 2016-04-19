@@ -1,4 +1,4 @@
-import MediaPlayer from './MediaPlayer.js';
+import MediaPlayer from './MediaPlayer';
 
 function MediaPlayerFactory() {
 

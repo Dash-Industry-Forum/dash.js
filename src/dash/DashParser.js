@@ -28,11 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import ErrorHandler from '../streaming/utils/ErrorHandler.js';
-import FactoryMaker from '../core/FactoryMaker.js';
-import Debug from '../core/Debug.js';
-import ObjectIron from '../../externals/objectiron.js';
-import X2JS from '../../externals/xml2json.js';
+import ErrorHandler from '../streaming/utils/ErrorHandler';
+import FactoryMaker from '../core/FactoryMaker';
+import Debug from '../core/Debug';
+import ObjectIron from '../../externals/objectiron';
+import X2JS from '../../externals/xml2json';
 
 function DashParser(/*config*/) {
 

@@ -29,8 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../../core/FactoryMaker.js';
-import CustomTimeRanges from '../../utils/CustomTimeRanges.js';
+import FactoryMaker from '../../../core/FactoryMaker';
+import CustomTimeRanges from '../../utils/CustomTimeRanges';
 
 function RangeController(config) {
 

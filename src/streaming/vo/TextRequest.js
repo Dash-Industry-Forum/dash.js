@@ -32,7 +32,7 @@
  * @class
  * @ignore
  */
-import FragmentRequest from './FragmentRequest.js';
+import FragmentRequest from './FragmentRequest';
 
 class TextRequest extends FragmentRequest {
     constructor(url, type) {

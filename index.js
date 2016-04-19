@@ -29,10 +29,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import MediaPlayer from './src/streaming/MediaPlayer.js';
-import Protection from './src/streaming/protection/Protection.js';
-import MetricsReporting from './src/streaming/metrics/MetricsReporting.js';
-import MediaPlayerFactory from './src/streaming/MediaPlayerFactory.js';
+import MediaPlayer from './src/streaming/MediaPlayer';
+import Protection from './src/streaming/protection/Protection';
+import MetricsReporting from './src/streaming/metrics/MetricsReporting';
+import MediaPlayerFactory from './src/streaming/MediaPlayerFactory';
 
 
 // Shove both of these into the global scope

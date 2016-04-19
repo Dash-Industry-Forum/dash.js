@@ -32,12 +32,12 @@
 /**
  * Represents data structure to keep and drive {DataChunk}
  */
-import MediaController from './controllers/MediaController.js';
-import CustomTimeRanges from './utils/CustomTimeRanges.js';
-import HTTPRequest from './vo/metrics/HTTPRequest.js';
-import EventBus from '../core/EventBus.js';
-import Events from '../core/events/Events.js';
-import FactoryMaker from '../core/FactoryMaker.js';
+import MediaController from './controllers/MediaController';
+import CustomTimeRanges from './utils/CustomTimeRanges';
+import HTTPRequest from './vo/metrics/HTTPRequest';
+import EventBus from '../core/EventBus';
+import Events from '../core/events/Events';
+import FactoryMaker from '../core/FactoryMaker';
 
 function VirtualBuffer() {
 

@@ -28,9 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import HTTPRequest from './vo/metrics/HTTPRequest.js';
-import FactoryMaker from '../core/FactoryMaker.js';
-import MediaPlayerModel from './models/MediaPlayerModel.js';
+import HTTPRequest from './vo/metrics/HTTPRequest';
+import FactoryMaker from '../core/FactoryMaker';
+import MediaPlayerModel from './models/MediaPlayerModel';
 
 /**
  * @module XHRLoader

@@ -1,5 +1,5 @@
-import ObjectsHelper from './helpers/ObjectsHelper.js';
-import DVBSelector from '../src/streaming/rules/baseUrlResolution/DVBSelector.js';
+import ObjectsHelper from './helpers/ObjectsHelper';
+import DVBSelector from '../src/streaming/rules/baseUrlResolution/DVBSelector';
 
 const chai = require('chai');
 const expect = chai.expect;

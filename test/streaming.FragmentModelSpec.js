@@ -1,8 +1,8 @@
-import SpecHelper from './helpers/SpecHelper.js';
-import VoHelper from './helpers/VOHelper.js';
-import EventBus from '../src/core/EventBus.js';
-import Events from '../src/core/events/Events.js';
-import FragmentModel from '../src/streaming/models/FragmentModel.js';
+import SpecHelper from './helpers/SpecHelper';
+import VoHelper from './helpers/VOHelper';
+import EventBus from '../src/core/EventBus';
+import Events from '../src/core/events/Events';
+import FragmentModel from '../src/streaming/models/FragmentModel';
 
 const chai = require('chai');
 const spies = require('chai-spies');

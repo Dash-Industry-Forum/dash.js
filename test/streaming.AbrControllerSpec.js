@@ -1,6 +1,6 @@
-import SpecHelper from './helpers/SpecHelper.js';
-import VoHelper from './helpers/VOHelper.js';
-import AbrController from '../src/streaming/controllers/AbrController.js';
+import SpecHelper from './helpers/SpecHelper';
+import VoHelper from './helpers/VOHelper';
+import AbrController from '../src/streaming/controllers/AbrController';
 
 const expect = require('chai').expect;
 

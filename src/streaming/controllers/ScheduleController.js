@@ -29,23 +29,23 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import PlayList from '../vo/metrics/PlayList.js';
-import PlaybackController from './PlaybackController.js';
-import AbrController from './AbrController.js';
-import BufferController from './BufferController.js';
-import BufferLevelRule from '../rules/scheduling/BufferLevelRule.js';
-import NextFragmentRequestRule from '../rules/scheduling/NextFragmentRequestRule.js';
-import TextSourceBuffer from '../TextSourceBuffer.js';
-import MetricsModel from '../models/MetricsModel.js';
-import DashMetrics from '../../dash/DashMetrics.js';
-import DashAdapter from '../../dash/DashAdapter.js';
-import SourceBufferController from '../controllers/SourceBufferController.js';
-import VirtualBuffer from '../VirtualBuffer.js';
-import LiveEdgeFinder from '../utils/LiveEdgeFinder.js';
-import EventBus from '../../core/EventBus.js';
-import Events from '../../core/events/Events.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
-import Debug from '../../core/Debug.js';
+import PlayList from '../vo/metrics/PlayList';
+import PlaybackController from './PlaybackController';
+import AbrController from './AbrController';
+import BufferController from './BufferController';
+import BufferLevelRule from '../rules/scheduling/BufferLevelRule';
+import NextFragmentRequestRule from '../rules/scheduling/NextFragmentRequestRule';
+import TextSourceBuffer from '../TextSourceBuffer';
+import MetricsModel from '../models/MetricsModel';
+import DashMetrics from '../../dash/DashMetrics';
+import DashAdapter from '../../dash/DashAdapter';
+import SourceBufferController from '../controllers/SourceBufferController';
+import VirtualBuffer from '../VirtualBuffer';
+import LiveEdgeFinder from '../utils/LiveEdgeFinder';
+import EventBus from '../../core/EventBus';
+import Events from '../../core/events/Events';
+import FactoryMaker from '../../core/FactoryMaker';
+import Debug from '../../core/Debug';
 
 function ScheduleController(config) {
 

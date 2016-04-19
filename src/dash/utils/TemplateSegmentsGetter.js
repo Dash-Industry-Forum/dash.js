@@ -29,9 +29,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../core/FactoryMaker.js';
+import FactoryMaker from '../../core/FactoryMaker';
 
-import {replaceTokenForTemplate, getIndexBasedSegment, decideSegmentListRangeForTemplate} from './SegmentsUtils.js';
+import {replaceTokenForTemplate, getIndexBasedSegment, decideSegmentListRangeForTemplate} from './SegmentsUtils';
 
 function TemplateSegmentsGetter(config, isDynamic) {
 

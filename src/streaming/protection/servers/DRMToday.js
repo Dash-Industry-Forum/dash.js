@@ -35,8 +35,8 @@
  * @implements LicenseServer
  * @class
  */
-import FactoryMaker from '../../../core/FactoryMaker.js';
-import BASE64 from '../../../../externals/base64.js';
+import FactoryMaker from '../../../core/FactoryMaker';
+import BASE64 from '../../../../externals/base64';
 
 function DRMToday() {
 

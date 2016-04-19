@@ -28,11 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import XlinkLoader from '../XlinkLoader.js';
-import EventBus from '../../core/EventBus.js';
-import Events from '../../core/events/Events.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
-import X2JS from '../../../externals/xml2json.js';
+import XlinkLoader from '../XlinkLoader';
+import EventBus from '../../core/EventBus';
+import Events from '../../core/events/Events';
+import FactoryMaker from '../../core/FactoryMaker';
+import X2JS from '../../../externals/xml2json';
 
 const RESOLVE_TYPE_ONLOAD = 'onLoad';
 const RESOLVE_TYPE_ONACTUATE = 'onActuate';

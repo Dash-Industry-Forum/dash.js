@@ -28,16 +28,16 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import TextTrackInfo from './vo/TextTrackInfo.js';
-import FragmentedTextBoxParser from '../dash/utils/FragmentedTextBoxParser.js';
-import BoxParser from './utils/BoxParser.js';
-import CustomTimeRanges from './utils/CustomTimeRanges.js';
-import FactoryMaker from '../core/FactoryMaker.js';
-import Debug from '../core/Debug.js';
-import VideoModel from './models/VideoModel.js';
-import TextTracks from './TextTracks.js';
+import TextTrackInfo from './vo/TextTrackInfo';
+import FragmentedTextBoxParser from '../dash/utils/FragmentedTextBoxParser';
+import BoxParser from './utils/BoxParser';
+import CustomTimeRanges from './utils/CustomTimeRanges';
+import FactoryMaker from '../core/FactoryMaker';
+import Debug from '../core/Debug';
+import VideoModel from './models/VideoModel';
+import TextTracks from './TextTracks';
 import ISOBoxer from 'codem-isoboxer';
-import cea608parser from '../../externals/cea608-parser.js';
+import cea608parser from '../../externals/cea608-parser';
 
 function TextSourceBuffer() {
 

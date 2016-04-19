@@ -28,13 +28,13 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import SwitchRequest from '../SwitchRequest.js';
-import BufferController from '../../controllers/BufferController.js';
-import AbrController from '../../controllers/AbrController.js';
-import MediaPlayerModel from '../../models/MediaPlayerModel.js';
-import HTTPRequest from '../../vo/metrics/HTTPRequest.js';
-import FactoryMaker from '../../../core/FactoryMaker.js';
-import Debug from '../../../core/Debug.js';
+import SwitchRequest from '../SwitchRequest';
+import BufferController from '../../controllers/BufferController';
+import AbrController from '../../controllers/AbrController';
+import MediaPlayerModel from '../../models/MediaPlayerModel';
+import HTTPRequest from '../../vo/metrics/HTTPRequest';
+import FactoryMaker from '../../../core/FactoryMaker';
+import Debug from '../../../core/Debug';
 
 function ThroughputRule(config) {
 

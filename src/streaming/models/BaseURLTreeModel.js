@@ -29,9 +29,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import DashManifestModel from '../../dash/models/DashManifestModel.js';
-import ObjectUtils from '../utils/ObjectUtils.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
+import DashManifestModel from '../../dash/models/DashManifestModel';
+import ObjectUtils from '../utils/ObjectUtils';
+import FactoryMaker from '../../core/FactoryMaker';
 
 const DEFAULT_INDEX = NaN;
 

@@ -29,9 +29,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../core/FactoryMaker.js';
+import FactoryMaker from '../../core/FactoryMaker';
 
-import {getTimeBasedSegment, decideSegmentListRangeForTimeline} from './SegmentsUtils.js';
+import {getTimeBasedSegment, decideSegmentListRangeForTimeline} from './SegmentsUtils';
 
 function TimelineSegmentsGetter(config, isDynamic) {
 

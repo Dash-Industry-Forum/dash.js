@@ -29,10 +29,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import PlaybackController from '../controllers/PlaybackController.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
-import Debug from '../../core/Debug.js';
-import EventBus from '../../core/EventBus.js';
+import PlaybackController from '../controllers/PlaybackController';
+import FactoryMaker from '../../core/FactoryMaker';
+import Debug from '../../core/Debug';
+import EventBus from '../../core/EventBus';
 
 function EventController() {
 

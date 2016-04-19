@@ -30,17 +30,17 @@
  */
 
 import SwitchRequest from '../rules/SwitchRequest';
-import BitrateInfo from '../vo/BitrateInfo.js';
-import DOMStorage from '../utils/DOMStorage.js';
-import ABRRulesCollection from '../rules/abr/ABRRulesCollection.js';
-import MediaPlayerModel from '../models/MediaPlayerModel.js';
-import FragmentModel from '../models/FragmentModel.js';
-import EventBus from '../../core/EventBus.js';
-import Events from '../../core/events/Events.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
-import ManifestModel from '../models/ManifestModel.js';
-import DashManifestModel from '../../dash/models/DashManifestModel.js';
-import VideoModel from '../models/VideoModel.js';
+import BitrateInfo from '../vo/BitrateInfo';
+import DOMStorage from '../utils/DOMStorage';
+import ABRRulesCollection from '../rules/abr/ABRRulesCollection';
+import MediaPlayerModel from '../models/MediaPlayerModel';
+import FragmentModel from '../models/FragmentModel';
+import EventBus from '../../core/EventBus';
+import Events from '../../core/events/Events';
+import FactoryMaker from '../../core/FactoryMaker';
+import ManifestModel from '../models/ManifestModel';
+import DashManifestModel from '../../dash/models/DashManifestModel';
+import VideoModel from '../models/VideoModel';
 
 const ABANDON_LOAD = 'abandonload';
 const ALLOW_LOAD = 'allowload';

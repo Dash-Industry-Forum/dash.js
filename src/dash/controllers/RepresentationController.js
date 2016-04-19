@@ -28,20 +28,20 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import DashManifestModel from '../models/DashManifestModel.js';
-import DashMetrics from '../DashMetrics.js';
-import TimelineConverter from '../utils/TimelineConverter.js';
-import AbrController from '../../streaming/controllers/AbrController.js';
-import PlaybackController from '../../streaming/controllers/PlaybackController.js';
-import StreamController from '../../streaming/controllers/StreamController.js';
-import ManifestModel from '../../streaming/models/ManifestModel.js';
-import MetricsModel from '../../streaming/models/MetricsModel.js';
-import MediaPlayerModel from '../../streaming/models/MediaPlayerModel.js';
-import DOMStorage from '../../streaming/utils/DOMStorage.js';
-import Error from '../../streaming/vo/Error.js';
-import EventBus from '../../core/EventBus.js';
-import Events from '../../core/events/Events.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
+import DashManifestModel from '../models/DashManifestModel';
+import DashMetrics from '../DashMetrics';
+import TimelineConverter from '../utils/TimelineConverter';
+import AbrController from '../../streaming/controllers/AbrController';
+import PlaybackController from '../../streaming/controllers/PlaybackController';
+import StreamController from '../../streaming/controllers/StreamController';
+import ManifestModel from '../../streaming/models/ManifestModel';
+import MetricsModel from '../../streaming/models/MetricsModel';
+import MediaPlayerModel from '../../streaming/models/MediaPlayerModel';
+import DOMStorage from '../../streaming/utils/DOMStorage';
+import Error from '../../streaming/vo/Error';
+import EventBus from '../../core/EventBus';
+import Events from '../../core/events/Events';
+import FactoryMaker from '../../core/FactoryMaker';
 
 function RepresentationController() {
 

@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import Segment from './../vo/Segment.js';
+import Segment from './../vo/Segment';
 
 function zeroPadToLength(numStr, minStrLength) {
     while (numStr.length < minStrLength) {

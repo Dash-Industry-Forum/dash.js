@@ -37,13 +37,13 @@
  * @implements ProtectionModel
  * @class
  */
-import ProtectionKeyController from '../controllers/ProtectionKeyController.js';
-import NeedKey from '../vo/NeedKey.js';
-import KeyError from '../vo/KeyError.js';
-import KeyMessage from '../vo/KeyMessage.js';
-import KeySystemAccess from '../vo/KeySystemAccess.js';
-import Events from '../../../core/events/Events.js';
-import FactoryMaker from '../../../core/FactoryMaker.js';
+import ProtectionKeyController from '../controllers/ProtectionKeyController';
+import NeedKey from '../vo/NeedKey';
+import KeyError from '../vo/KeyError';
+import KeyMessage from '../vo/KeyMessage';
+import KeySystemAccess from '../vo/KeySystemAccess';
+import Events from '../../../core/events/Events';
+import FactoryMaker from '../../../core/FactoryMaker';
 
 function ProtectionModel_21Jan2015(config) {
 

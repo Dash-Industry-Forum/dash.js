@@ -29,13 +29,13 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import TrackInfo from '../streaming/vo/TrackInfo.js';
-import MediaInfo from '../streaming/vo/MediaInfo.js';
-import StreamInfo from '../streaming/vo/StreamInfo.js';
-import ManifestInfo from '../streaming/vo/ManifestInfo.js';
-import Event from './vo/Event.js';
-import FactoryMaker from '../core/FactoryMaker.js';
-import cea608parser from '../../externals/cea608-parser.js';
+import TrackInfo from '../streaming/vo/TrackInfo';
+import MediaInfo from '../streaming/vo/MediaInfo';
+import StreamInfo from '../streaming/vo/StreamInfo';
+import ManifestInfo from '../streaming/vo/ManifestInfo';
+import Event from './vo/Event';
+import FactoryMaker from '../core/FactoryMaker';
+import cea608parser from '../../externals/cea608-parser';
 
 const METRIC_LIST = {
     //TODO need to refactor all that reference to be able to export like all other const on factory object.

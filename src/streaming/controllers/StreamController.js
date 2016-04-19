@@ -28,17 +28,17 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import PlaybackController from './PlaybackController.js';
-import Stream from '../Stream.js';
-import ManifestUpdater from '../ManifestUpdater.js';
-import EventBus from '../../core/EventBus.js';
-import Events from '../../core/events/Events.js';
-import URIQueryAndFragmentModel from '../models/URIQueryAndFragmentModel.js';
-import VideoModel from '../models/VideoModel.js';
-import MediaPlayerModel from '../models/MediaPlayerModel.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
-import PlayList from '../vo/metrics/PlayList.js';
-import Debug from '../../core/Debug.js';
+import PlaybackController from './PlaybackController';
+import Stream from '../Stream';
+import ManifestUpdater from '../ManifestUpdater';
+import EventBus from '../../core/EventBus';
+import Events from '../../core/events/Events';
+import URIQueryAndFragmentModel from '../models/URIQueryAndFragmentModel';
+import VideoModel from '../models/VideoModel';
+import MediaPlayerModel from '../models/MediaPlayerModel';
+import FactoryMaker from '../../core/FactoryMaker';
+import PlayList from '../vo/metrics/PlayList';
+import Debug from '../../core/Debug';
 
 function StreamController() {
 

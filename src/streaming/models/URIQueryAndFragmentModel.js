@@ -29,8 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import URIFragmentData from '../vo/URIFragmentData.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
+import URIFragmentData from '../vo/URIFragmentData';
+import FactoryMaker from '../../core/FactoryMaker';
 
 function URIQueryAndFragmentModel() {
 

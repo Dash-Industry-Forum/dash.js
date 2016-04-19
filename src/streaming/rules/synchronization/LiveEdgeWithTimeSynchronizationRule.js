@@ -29,8 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import SwitchRequest from '../SwitchRequest.js';
-import FactoryMaker from '../../../core/FactoryMaker.js';
+import SwitchRequest from '../SwitchRequest';
+import FactoryMaker from '../../../core/FactoryMaker';
 
 function LiveEdgeWithTimeSynchronizationRule(config) {
 

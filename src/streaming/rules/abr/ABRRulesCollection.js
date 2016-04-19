@@ -28,16 +28,16 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import ThroughputRule from './ThroughputRule.js';
-import BufferOccupancyRule from './BufferOccupancyRule.js';
-import InsufficientBufferRule from './InsufficientBufferRule.js';
-import AbandonRequestsRule from './AbandonRequestsRule.js';
-import BolaRule from './BolaRule.js';
-import BolaAbandonRule from './BolaAbandonRule.js';
-import MediaPlayerModel from '../../models/MediaPlayerModel.js';
-import MetricsModel from '../../models/MetricsModel.js';
-import DashMetrics from '../../../dash/DashMetrics.js';
-import FactoryMaker from '../../../core/FactoryMaker.js';
+import ThroughputRule from './ThroughputRule';
+import BufferOccupancyRule from './BufferOccupancyRule';
+import InsufficientBufferRule from './InsufficientBufferRule';
+import AbandonRequestsRule from './AbandonRequestsRule';
+import BolaRule from './BolaRule';
+import BolaAbandonRule from './BolaAbandonRule';
+import MediaPlayerModel from '../../models/MediaPlayerModel';
+import MetricsModel from '../../models/MetricsModel';
+import DashMetrics from '../../../dash/DashMetrics';
+import FactoryMaker from '../../../core/FactoryMaker';
 
 const QUALITY_SWITCH_RULES = 'qualitySwitchRules';
 const ABANDON_FRAGMENT_RULES = 'abandonFragmentRules';

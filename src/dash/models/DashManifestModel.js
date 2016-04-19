@@ -29,17 +29,17 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import Representation from '../vo/Representation.js';
-import AdaptationSet from '../vo/AdaptationSet.js';
-import Period from '../vo/Period.js';
-import Mpd from '../vo/Mpd.js';
-import UTCTiming from '../vo/UTCTiming.js';
-import TimelineConverter from '../utils/TimelineConverter.js';
-import Event from '../vo/Event.js';
-import BaseURL from '../vo/BaseURL.js';
-import EventStream from '../vo/EventStream.js';
-import URLUtils from '../../streaming/utils/URLUtils.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
+import Representation from '../vo/Representation';
+import AdaptationSet from '../vo/AdaptationSet';
+import Period from '../vo/Period';
+import Mpd from '../vo/Mpd';
+import UTCTiming from '../vo/UTCTiming';
+import TimelineConverter from '../utils/TimelineConverter';
+import Event from '../vo/Event';
+import BaseURL from '../vo/BaseURL';
+import EventStream from '../vo/EventStream';
+import URLUtils from '../../streaming/utils/URLUtils';
+import FactoryMaker from '../../core/FactoryMaker';
 
 function DashManifestModel() {
 

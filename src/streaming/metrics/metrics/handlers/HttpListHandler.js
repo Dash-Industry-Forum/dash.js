@@ -29,8 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../../../core/FactoryMaker.js';
-import HandlerHelpers from '../../utils/HandlerHelpers.js';
+import FactoryMaker from '../../../../core/FactoryMaker';
+import HandlerHelpers from '../../utils/HandlerHelpers';
 
 function HttpListHandler() {
 
