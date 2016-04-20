@@ -31,20 +31,22 @@
 import HTTPRequest from './vo/metrics/HTTPRequest.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 import MediaPlayerModel from './models/MediaPlayerModel.js';
+import ErrorHandler from './utils/ErrorHandler.js';
 
 /**
  * @Module XHRLoader
  * @description Manages download of resources via HTTP.
  */
-function XHRLoader(cfg) {
+function XHRLoader() {
     const context = this.context;
 
     //const log = Debug(context).getInstance().log;
     const mediaPlayerModel = MediaPlayerModel(context).getInstance();
+    const errHandler = ErrorHandler(context).getInstance();
 
-    const errHandler = cfg.errHandler;
-    const metricsModel = cfg.metricsModel;
-    const requestModifier = cfg.requestModifier;
+    //const errHandler = cfg.errHandler;
+    //const metricsModel = cfg.metricsModel;
+    //const requestModifier = cfg.requestModifier;
 
     let instance;
     let xhrs;
@@ -71,6 +73,8 @@ function XHRLoader(cfg) {
     function internalLoad(config, remainingAttempts) {
 
         var request = config.request;
+        var metricsModel = config.metricsModel;
+        var requestModifier = config.requestModifier;
         var xhr = new XMLHttpRequest();
         var traces = [];
         var firstProgress = true;
@@ -291,6 +295,6 @@ function XHRLoader(cfg) {
 }
 
 XHRLoader.__dashjs_factory_name = 'XHRLoader';
-
-const factory = FactoryMaker.getClassFactory(XHRLoader);
-export default factory;
+export default FactoryMaker.getSingletonFactory(XHRLoader);
+//const factory = FactoryMaker.getClassFactory(XHRLoader);
+//export default factory;
