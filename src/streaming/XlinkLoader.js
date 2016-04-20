@@ -45,12 +45,12 @@ function XlinkLoader(config) {
     const context  = this.context;
     const eventBus = EventBus(context).getInstance();
 
-    let xhrLoader = XHRLoader(context).create({
-        errHandler: config.errHandler,
-        metricsModel: config.metricsModel,
-        requestModifier: config.requestModifier
-    });
-
+    //let xhrLoader = XHRLoader(context).create({
+    //    errHandler: config.errHandler,
+    //    metricsModel: config.metricsModel,
+    //    requestModifier: config.requestModifier
+    //});
+    let xhrLoader = XHRLoader(context).getInstance();
     let instance;
 
     function load(url, element, resolveObject) {
@@ -77,6 +77,8 @@ function XlinkLoader(config) {
 
             xhrLoader.load({
                 request: request,
+                metricsModel: config.metricsModel,
+                requestModifier: config.requestModifier,
                 success: function (data) {
                     report(data);
                 },
