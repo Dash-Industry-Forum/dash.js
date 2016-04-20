@@ -98,6 +98,8 @@ function FragmentLoader(config) {
         if (request) {
             xhrLoader.load({
                 request: request,
+                metricsModel: config.metricsModel,
+                requestModifier: config.requestModifier,
                 progress: function () {
                     eventBus.trigger(Events.LOADING_PROGRESS, {
                         request: request
