@@ -48,11 +48,12 @@ function FragmentLoader(config) {
         xhrLoader;
 
     function setup() {
-        xhrLoader = XHRLoader(context).create({
-            errHandler: config.errHandler,
-            metricsModel: config.metricsModel,
-            requestModifier: config.requestModifier
-        });
+        //xhrLoader = XHRLoader(context).create({
+        //    errHandler: config.errHandler,
+        //    metricsModel: config.metricsModel,
+        //    requestModifier: config.requestModifier
+        //});
+        xhrLoader = XHRLoader(context).getInstance();
     }
 
     function checkForExistence(request) {
@@ -70,6 +71,8 @@ function FragmentLoader(config) {
 
             xhrLoader.load({
                 request: headRequest,
+                metricsModel: config.metricsModel,
+                requestModifier: config.requestModifier,
                 success: function () {
                     report(true);
                 },
