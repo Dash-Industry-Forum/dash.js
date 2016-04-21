@@ -70,12 +70,12 @@ function XHRLoader() {
         };
     }
 
-    function internalLoad(config, remainingAttempts) {
+    function internalLoad(config, remainingAttempts, xhr) {
 
         var request = config.request;
         var metricsModel = config.metricsModel;
         var requestModifier = config.requestModifier;
-        var xhr = new XMLHttpRequest();
+        //var xhr = new XMLHttpRequest();
         var traces = [];
         var firstProgress = true;
         var needFailureReport = true;
@@ -253,13 +253,17 @@ function XHRLoader() {
      */
     function load(config) {
         if (config.request) {
+            var xhr = new XMLHttpRequest();
             internalLoad(
                 config,
                 mediaPlayerModel.getRetryAttemptsForType(
                     config.request.type
-                )
+                ),
+                xhr
             );
+            return xhr;
         }
+
     }
 
     /**
@@ -267,7 +271,7 @@ function XHRLoader() {
      * @memberof module:XHRLoader
      * @instance
      */
-    function abort() {
+    function abort(xhr) {
         retryTimers.forEach(t => clearTimeout(t));
         retryTimers = [];
 
@@ -278,10 +282,15 @@ function XHRLoader() {
             // abort will trigger onloadend which we don't want
             // when deliberately aborting inflight requests -
             // set them to undefined so they are not called
-            x.onloadend = x.onerror = undefined;
-            x.abort();
+            if (x == xhr) {
+                x.onloadend = x.onerror = undefined;
+                x.abort();
+            }
         });
-        xhrs = [];
+        var index = xhrs.indexOf(xhr);
+        if (index > -1) {
+            xhrs.splice(index, 1);
+        }
     }
 
     instance = {
