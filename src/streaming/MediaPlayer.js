@@ -73,7 +73,7 @@ import TimelineConverter from '../dash/utils/TimelineConverter.js';
  */
 function MediaPlayer() {
 
-    const VERSION = '2.1.0';
+    const VERSION = '2.1.1';
     const PLAYBACK_NOT_INITIALIZED_ERROR = 'You must first call play() to init playback before calling this method';
     const ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the video element before calling this method';
     const SOURCE_NOT_ATTACHED_ERROR = 'You must first call attachSource() with a valid source before calling this method';

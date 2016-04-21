@@ -10,6 +10,13 @@
             ]
         },
         {
+            "title": "Release Notes v2.1.1",
+            "items": [
+                "This release is a patch release of 2.1.0, which had a major startup issue for some streams on all browsers.",
+                "#1338 Only seek forward on PST check"
+            ]
+        },
+        {
             "title": "Release Notes v2.1.0",
             "items": [
                 "#1048 Refactor Loader Classes into LoaderBase Code Refactor"
