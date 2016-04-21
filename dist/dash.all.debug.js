@@ -9345,7 +9345,7 @@ var _dashUtilsTimelineConverterJs2 = _interopRequireDefault(_dashUtilsTimelineCo
  */
 function MediaPlayer() {
 
-    var VERSION = '2.1.0';
+    var VERSION = '2.1.1';
     var PLAYBACK_NOT_INITIALIZED_ERROR = 'You must first call play() to init playback before calling this method';
     var ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the video element before calling this method';
     var SOURCE_NOT_ATTACHED_ERROR = 'You must first call attachSource() with a valid source before calling this method';
@@ -18154,7 +18154,7 @@ function PlaybackController() {
         var bufferedStart = Math.max(ranges.start(0), streamInfo.start);
         var earliestTime = commonEarliestTime[streamInfo.id] === undefined ? bufferedStart : Math.max(commonEarliestTime[streamInfo.id], bufferedStart);
         if (earliestTime === commonEarliestTime[streamInfo.id]) return;
-        if (!isDynamic && getStreamStartTime(true) < earliestTime) {
+        if (!isDynamic && getStreamStartTime(true) < earliestTime && getTime() < earliestTime) {
             seek(earliestTime);
         }
         commonEarliestTime[streamInfo.id] = earliestTime;
