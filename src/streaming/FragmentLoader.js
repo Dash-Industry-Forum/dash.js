@@ -45,14 +45,17 @@ function FragmentLoader(config) {
     const eventBus = EventBus(context).getInstance();
 
     let instance,
-        xhrLoader;
+        xhrLoader,
+        xhrs;
 
     function setup() {
-        xhrLoader = XHRLoader(context).create({
-            errHandler: config.errHandler,
-            metricsModel: config.metricsModel,
-            requestModifier: config.requestModifier
-        });
+        //xhrLoader = XHRLoader(context).create({
+        //    errHandler: config.errHandler,
+        //    metricsModel: config.metricsModel,
+        //    requestModifier: config.requestModifier
+        //});
+        xhrLoader = XHRLoader(context).getInstance();
+        xhrs = [];
     }
 
     function checkForExistence(request) {
@@ -68,8 +71,10 @@ function FragmentLoader(config) {
         if (request) {
             let headRequest = new HeadRequest(request.url);
 
-            xhrLoader.load({
+            var xhr = xhrLoader.load({
                 request: headRequest,
+                metricsModel: config.metricsModel,
+                requestModifier: config.requestModifier,
                 success: function () {
                     report(true);
                 },
@@ -77,6 +82,7 @@ function FragmentLoader(config) {
                     report(false);
                 }
             });
+            xhrs.push(xhr);
         } else {
             report(false);
         }
@@ -93,8 +99,10 @@ function FragmentLoader(config) {
         };
 
         if (request) {
-            xhrLoader.load({
+            var xhr = xhrLoader.load({
                 request: request,
+                metricsModel: config.metricsModel,
+                requestModifier: config.requestModifier,
                 progress: function () {
                     eventBus.trigger(Events.LOADING_PROGRESS, {
                         request: request
@@ -114,6 +122,7 @@ function FragmentLoader(config) {
                     );
                 }
             });
+            xhrs.push(xhr);
         } else {
             report(
                 undefined,
@@ -127,13 +136,13 @@ function FragmentLoader(config) {
 
     function abort() {
         if (xhrLoader) {
-            xhrLoader.abort();
+            xhrs.forEach(x => xhrLoader.abort(x));
         }
     }
 
     function reset() {
         if (xhrLoader) {
-            xhrLoader.abort();
+            xhrs.forEach(x => xhrLoader.abort(x));
             xhrLoader = null;
         }
     }

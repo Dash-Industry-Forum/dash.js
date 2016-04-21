@@ -56,11 +56,12 @@ function ManifestLoader(config) {
     function setup() {
         eventBus.on(Events.XLINK_READY, onXlinkReady, instance);
 
-        xhrLoader = XHRLoader(context).create({
-            errHandler: config.errHandler,
-            metricsModel: config.metricsModel,
-            requestModifier: config.requestModifier
-        });
+        //xhrLoader = XHRLoader(context).create({
+        //    errHandler: config.errHandler,
+        //    metricsModel: config.metricsModel,
+        //    requestModifier: config.requestModifier
+        //});
+        xhrLoader = XHRLoader(context).getInstance();
 
         xlinkController = XlinkController(context).create({
             errHandler: config.errHandler,
@@ -82,6 +83,8 @@ function ManifestLoader(config) {
 
         xhrLoader.load({
             request: request,
+            metricsModel: config.metricsModel,
+            requestModifier: config.requestModifier,
             success: function (data, textStatus, xhr) {
                 var actualUrl;
                 var baseUri;
