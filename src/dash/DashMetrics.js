@@ -35,7 +35,7 @@ import DashManifestModel from './models/DashManifestModel.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
 /**
- * @Module DashMetrics
+ * @module DashMetrics
  */
 function DashMetrics() {
 
@@ -60,8 +60,8 @@ function DashMetrics() {
 
     /**
      *
-     * @param representationId
-     * @param periodIdx
+     * @param {string} representationId
+     * @param {number} periodIdx
      * @returns {*}
      */
     function getIndexForRepresentation(representationId, periodIdx) {
@@ -76,9 +76,9 @@ function DashMetrics() {
     /**
      * This method returns the current max index based on what is defined in the MPD.
      *
-     * @param bufferType - String 'audio' or 'video',
-     * @param periodIdx - Make sure this is the period index not id
-     * @return int
+     * @param {string} bufferType - String 'audio' or 'video',
+     * @param {number} periodIdx - Make sure this is the period index not id
+     * @return {number}
      * @memberof module:DashMetrics
      * @instance
      */
@@ -95,9 +95,9 @@ function DashMetrics() {
      * This method returns the current max index correlated to the max allowed bitrate
      * explicitly set via the MediaPlayer's API setMaxAllowedBitrateFor.
      *
-     * @param bufferType - String 'audio' or 'video',
-     * @param periodId - Make sure this is the period id not index.
-     * @return int
+     * @param {string} bufferType - String 'audio' or 'video',
+     * @param {number} periodId - Make sure this is the period id not index.
+     * @return {number}
      * @see {@link module:MediaPlayer#setMaxAllowedBitrateFor setMaxAllowedBitrateFor()}
      * @see {@link DashMetrics#getMaxIndexForBufferType getMaxIndexForBufferType()}
      * @memberof module:DashMetrics
@@ -115,7 +115,7 @@ function DashMetrics() {
     }
 
     /**
-     * @param metrics
+     * @param {MetricsList} metrics
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
@@ -142,7 +142,7 @@ function DashMetrics() {
     }
 
     /**
-     * @param metrics
+     * @param {MetricsList} metrics
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
@@ -161,7 +161,7 @@ function DashMetrics() {
     }
 
     /**
-     * @param metrics
+     * @param {MetricsList} metrics
      * @returns {number}
      * @memberof module:DashMetrics
      * @instance
@@ -180,7 +180,7 @@ function DashMetrics() {
     }
 
     /**
-     * @param metrics
+     * @param {MetricsList} metrics
      * @returns {null|*|vo}
      * @memberof module:DashMetrics
      * @instance
@@ -190,7 +190,7 @@ function DashMetrics() {
     }
 
     /**
-     * @param metrics
+     * @param {MetricsList} metrics
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
@@ -224,7 +224,7 @@ function DashMetrics() {
     }
 
     /**
-     * @param metrics
+     * @param {MetricsList} metrics
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
@@ -238,7 +238,7 @@ function DashMetrics() {
     }
 
     /**
-     * @param metrics
+     * @param {MetricsList} metrics
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
@@ -263,7 +263,7 @@ function DashMetrics() {
     }
 
     /**
-     * @param metrics
+     * @param {MetricsList} metrics
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
@@ -289,7 +289,7 @@ function DashMetrics() {
     }
 
     /**
-     * @param metrics
+     * @param {MetricsList} metrics
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
@@ -315,7 +315,7 @@ function DashMetrics() {
     }
 
     /**
-     * @param metrics
+     * @param {MetricsList} metrics
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
@@ -341,8 +341,8 @@ function DashMetrics() {
     }
 
     /**
-     * @param metrics
-     * @param id
+     * @param {MetricsList} metrics
+     * @param {string} id
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
@@ -372,8 +372,8 @@ function DashMetrics() {
     }
 
     /**
-     * @param metrics
-     * @param id
+     * @param {MetricsList} metrics
+     * @param {string} id
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance

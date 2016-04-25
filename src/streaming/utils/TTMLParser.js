@@ -73,8 +73,11 @@ function TTMLParser() {
     /**
      * Parse the raw data and process it to return the HTML element representing the cue.
      * Return the region to be processed and controlled (hide/show) by the caption controller.
-     * @param data: raw data received from the TextSourceBuffer
-     **/
+     * @param {string} data - raw data received from the TextSourceBuffer
+     * @param {number} intervalStart
+     * @param {number} intervalEnd
+     *
+     */
 
     function parse(data, intervalStart, intervalEnd) {
         let tt, // Top element
@@ -1001,12 +1004,13 @@ function TTMLParser() {
         return cueInnerHTML;
     }
 
-    /*** Create the cue element
+    /*
+    * Create the cue element
      * I. The cues are text only:
      *      i) The cue contains a 'br' element
      *      ii) The cue contains a span element
      *      iii) The cue contains text
-     * ***/
+     */
 
     function constructCue(cueElements, cellUnit) {
         var cue = document.createElement('div');

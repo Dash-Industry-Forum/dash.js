@@ -127,7 +127,7 @@ function AbrController() {
     }
 
     /**
-     * @param type
+     * @param {string} type
      * @returns {number} A value of the initial bitrate, kbps
      * @memberof AbrController#
      */
@@ -157,7 +157,7 @@ function AbrController() {
     }
 
     /**
-     * @param type
+     * @param {string} type
      * @param {number} value A value of the initial bitrate, kbps
      * @memberof AbrController#
      */
@@ -292,8 +292,8 @@ function AbrController() {
     }
 
     /**
-     * @param mediaInfo
-     * @param bitrate A bitrate value, kbps
+     * @param {MediaInfo} mediaInfo
+     * @param {number} bitrate A bitrate value, kbps
      * @returns {number} A quality index <= for the given bitrate
      * @memberof AbrController#
      */
@@ -316,8 +316,8 @@ function AbrController() {
     }
 
     /**
-     * @param mediaInfo
-     * @returns {Array} A list of {@link BitrateInfo} objects
+     * @param {MediaInfo} mediaInfo
+     * @returns {Array|null} A list of {@link BitrateInfo} objects
      * @memberof AbrController#
      */
     function getBitrateList(mediaInfo) {

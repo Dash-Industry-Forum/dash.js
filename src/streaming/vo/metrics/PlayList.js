@@ -70,7 +70,7 @@ PlayList.Trace = class {
     constructor() {
         /**
          * The value of the Representation@id of the Representation from which the samples were taken.
-         * @type {String}
+         * @type {string}
          * @public
          */
         this.representationid = null;
@@ -78,31 +78,31 @@ PlayList.Trace = class {
          * If not present, this metrics concerns the Representation as a whole.
          * If present, subreplevel indicates the greatest value of any
          * Subrepresentation@level being rendered.
-         * @type {Number}
+         * @type {number}
          * @public
          */
         this.subreplevel = null;
         /**
          * The time at which the first sample was rendered
-         * @type {Number}
+         * @type {number}
          * @public
          */
         this.start = null;
         /**
          * The presentation time of the first sample rendered.
-         * @type {Number}
+         * @type {number}
          * @public
          */
         this.mstart = null;
         /**
          * The duration of the continuously presented samples (which is the same in real time and media time). "Continuously presented" means that the media clock continued to advance at the playout speed throughout the interval. NOTE: the spec does not call out the units, but all other durations etc are in ms, and we use ms too.
-         * @type {Number}
+         * @type {number}
          * @public
          */
         this.duration = null;
         /**
          * The playback speed relative to normal playback speed (i.e.normal forward playback speed is 1.0).
-         * @type {Number}
+         * @type {number}
          * @public
          */
         this.playbackspeed = null;
@@ -116,7 +116,7 @@ PlayList.Trace = class {
          * end of content
          * end of a metrics collection period
          *
-         * @type {String}
+         * @type {string}
          * @public
          */
         this.stopreason = null;

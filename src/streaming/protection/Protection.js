@@ -109,6 +109,7 @@ function Protection() {
      * Create a ProtectionController and associated ProtectionModel for use with
      * a single piece of content.
      *
+     * @param {Object} config
      * @return {ProtectionController} protection controller
      *
      */

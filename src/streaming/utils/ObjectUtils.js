@@ -32,7 +32,7 @@
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 /**
- * @Module ObjectUtils
+ * @module ObjectUtils
  * @description Provides utility functions for objects
  */
 function ObjectUtils() {
@@ -43,6 +43,8 @@ function ObjectUtils() {
      * Returns true if objects resolve to the same string. Only really useful
      * when the user controls the object generation
      * @return {boolean}
+     * @param {object} obj1
+     * @param {object} obj2
      * @memberof module:ObjectUtils
      * @instance
      */

@@ -30,7 +30,7 @@
  */
 import EventsBase from '../core/events/EventsBase.js';
 /**
- * @Class
+ * @class
  *
  */
 class MediaPlayerEvents extends EventsBase {

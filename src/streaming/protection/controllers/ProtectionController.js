@@ -36,7 +36,7 @@ import FactoryMaker from '../../../core/FactoryMaker.js';
 import Protection from '../Protection.js';
 
 /**
- * @Module ProtectionController
+ * @module ProtectionController
  * @description Provides access to media protection information and functionality.  Each
  * ProtectionController manages a single {@link MediaPlayer.models.ProtectionModel}
  * which encapsulates a set of protection information (EME APIs, selected key system,
@@ -46,6 +46,7 @@ import Protection from '../Protection.js';
  * @todo ProtectionController does almost all of its tasks automatically after init() is
  * called.  Applications might want more control over this process and want to go through
  * each step manually (key system selection, session creation, session maintenance).
+ * @param {Object} config
  */
 
 function ProtectionController(config) {
@@ -241,7 +242,7 @@ function ProtectionController(config) {
      * Sets the session type to use when creating key sessions.  Either "temporary" or
      * "persistent-license".  Default is "temporary".
      *
-     * @param {String} sessionType the session type
+     * @param {string} value the session type
      * @memberof module:ProtectionController
      * @instance
      */

@@ -35,7 +35,7 @@
 class NeedKey {
     /**
      * @param {ArrayBuffer} initData the initialization data
-     * @param {String} [initDataType] initialization data type
+     * @param {string} [initDataType] initialization data type
      * @constructor
      */
     constructor(initData, initDataType) {

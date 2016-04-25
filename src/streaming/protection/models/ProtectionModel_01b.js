@@ -370,8 +370,8 @@ function ProtectionModel_01b(config) {
      * Helper function to retrieve the stored session token based on a given
      * sessionID value
      *
-     * @param sessionArray {Array} the array of sessions to search
-     * @param sessionID the sessionID to search for
+     * @param {Array} sessionArray - the array of sessions to search
+     * @param {*} sessionID - the sessionID to search for
      * @returns {*} the session token with the given sessionID
      */
     function findSessionByID(sessionArray, sessionID) {

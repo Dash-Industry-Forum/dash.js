@@ -45,6 +45,7 @@ function MetricsReporting() {
 
     /**
      * Create a MetricsCollectionController, and a DVBErrorsTranslator
+     * @param {Object} config - dependancies from owner
      * @return {MetricsCollectionController} Metrics Collection Controller
      */
     function createMetricsReporting(config) {

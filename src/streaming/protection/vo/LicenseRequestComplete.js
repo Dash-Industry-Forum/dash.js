@@ -34,7 +34,7 @@
  *
  * @param {Uint8Array} message license response message
  * @param {SessionToken} sessionToken the session to
- * @param {String} [messageType="license-request"] the message type that is associated
+ * @param {string} [messageType="license-request"] the message type that is associated
  * with this object's response message.  Supported message types can be found
  * {@link https://w3c.github.io/encrypted-media/#idl-def-MediaKeyMessageType|here}.
  * @constructor

@@ -351,12 +351,12 @@ function TextSourceBuffer() {
     }
     /**
      * Extract CEA-608 data from a buffer of data.
-     * @parameter(data) ArrayBuffer of data
-     * @returns ccData corresponding to one segment.
+     * @param {ArrayBuffer} data
+     * @returns {Object|null} ccData corresponding to one segment.
     */
     function extractCea608Data(data) {
 
-        /** Insert [time, data] pairs in order into array. */
+        /* Insert [time, data] pairs in order into array. */
         var insertInOrder = function (arr, time, data) {
             var len = arr.length;
             if (len > 0) {

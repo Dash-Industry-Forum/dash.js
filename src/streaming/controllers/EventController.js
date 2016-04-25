@@ -84,7 +84,7 @@ function EventController() {
 
     /**
      * Add events to the eventList. Events that are not in the mpd anymore but not triggered yet will still be deleted
-     * @param values
+     * @param {Array.<Object>} values
      */
     function addInlineEvents(values) {
         inlineEvents = {};
@@ -101,7 +101,7 @@ function EventController() {
 
     /**
      * i.e. processing of any one event message box with the same id is sufficient
-     * @param values
+     * @param {Array.<Object>} values
      */
     function addInbandEvents(values) {
         for (var i = 0; i < values.length; i++) {

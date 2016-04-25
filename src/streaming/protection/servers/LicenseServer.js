@@ -55,7 +55,7 @@
  * @param {?string} url the initially established URL (from ProtectionData or initData)
  * @param {ArrayBuffer} message the CDM message which may be needed to generate the license
  * requests URL
- * @param {String} messageType the message type associated with this request.  Supported
+ * @param {string} messageType the message type associated with this request.  Supported
  * message types can be found {@link https://w3c.github.io/encrypted-media/#idl-def-MediaKeyMessageType|here}.
  * @returns {string} the URL to use in license requests
  */
@@ -66,7 +66,7 @@
  *
  * @function
  * @name LicenseServer#getHTTPMethod
- * @param {String} messageType the message type associated with this request.  Supported
+ * @param {string} messageType the message type associated with this request.  Supported
  * message types can be found {@link https://w3c.github.io/encrypted-media/#idl-def-MediaKeyMessageType|here}.
  * @returns {string} the HTTP method
  */
@@ -79,7 +79,7 @@
  * @param {string} keySystemStr the key system string representing the key system
  * associated with a license request.  Multi-DRM license servers may have different
  * response types depending on the key system.
- * @param {String} messageType the message type associated with this request.  Supported
+ * @param {string} messageType the message type associated with this request.  Supported
  * message types can be found {@link https://w3c.github.io/encrypted-media/#idl-def-MediaKeyMessageType|here}.
  * @returns {string} the response type
  */
@@ -93,7 +93,7 @@
  * @param {Object} serverResponse the response as returned in XMLHttpRequest.response
  * @param {string} keySystemStr the key system string representing the key system
  * associated with a license request.
- * @param {String} messageType the message type associated with this request.  Supported
+ * @param {string} messageType the message type associated with this request.  Supported
  * message types can be found {@link https://w3c.github.io/encrypted-media/#idl-def-MediaKeyMessageType|here}.
  * @returns {ArrayBuffer} message that will be sent to the CDM or null if no CDM message
  * was present in the response.
@@ -106,7 +106,7 @@
  * @function
  * @name LicenseServer#getErrorResponse
  * @param {Object} serverResponse the server response
- * @param {String} messageType the message type associated with this request.  Supported
+ * @param {string} messageType the message type associated with this request.  Supported
  * message types can be found {@link https://w3c.github.io/encrypted-media/#idl-def-MediaKeyMessageType|here}.
  * @returns {string} an error message that indicates the reason for the failure
  */

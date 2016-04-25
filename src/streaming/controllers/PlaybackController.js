@@ -176,9 +176,11 @@ function PlaybackController() {
 
     /**
      * Computes the desirable delay for the live edge to avoid a risk of getting 404 when playing at the bleeding edge
-     * @returns {Number} object
+     * @param {number} fragmentDuration - seconds?
+     * @param {number} dvrWindowSize - seconds?
+     * @returns {number} object
      * @memberof PlaybackController#
-     * */
+     */
     function computeLiveDelay(fragmentDuration, dvrWindowSize) {
         var mpd = dashManifestModel.getMpd(manifestModel.getValue());
 
@@ -249,8 +251,8 @@ function PlaybackController() {
     }
 
     /**
-     * @param streamInfo object
-     * @returns {Number} object
+     * @param {boolean} ignoreStartOffset - ignore URL fragment start offset if true
+     * @returns {number} object
      * @memberof PlaybackController#
      */
     function getStreamStartTime(ignoreStartOffset) {

@@ -83,7 +83,7 @@ function ProtectionKeyController() {
      * by this player (not necessarily those supported by the
      * user agent)
      *
-     * @returns {KeySystem[]} a prioritized
+     * @returns {Array.<KeySystem>} a prioritized
      * list of key systems
      * @memberof module:ProtectionKeyController
      * @instance
@@ -97,7 +97,7 @@ function ProtectionKeyController() {
      * name (i.e. 'org.w3.clearkey')
      *
      * @param {string} systemString the system string
-     * @returns {KeySystem} the key system
+     * @returns {KeySystem|null} the key system
      * or null if no supported key system is associated with the given key
      * system string
      * @memberof module:ProtectionKeyController
@@ -120,7 +120,7 @@ function ProtectionKeyController() {
      * must know if the system is ClearKey so that it can format the keys
      * according to the particular spec version.
      *
-     * @param keySystem the key
+     * @param {Object} keySystem the key
      * @returns {boolean} true if this is the ClearKey key system, false
      * otherwise
      * @memberof module:ProtectionKeyController
@@ -133,8 +133,8 @@ function ProtectionKeyController() {
     /**
      * Check equality of initData array buffers.
      *
-     * @param initData1 {ArrayBuffer} first initData
-     * @param initData2 {ArrayBuffer} second initData
+     * @param {ArrayBuffer} initData1 - first initData
+     * @param {ArrayBuffer} initData2 - second initData
      * @returns {boolean} true if the initData arrays are equal in size and
      * contents, false otherwise
      * @memberof module:ProtectionKeyController
@@ -161,15 +161,11 @@ function ProtectionKeyController() {
      * key systems that are supported by this player will be returned.
      * Key systems are returned in priority order (highest first).
      *
-     * @param {Object[]} cps array of content protection elements parsed
+     * @param {Array.<Object>} cps - array of content protection elements parsed
      * from the manifest
-     * @returns {Object[]} array of objects indicating which supported key
+     * @returns {Array.<Object>} array of objects indicating which supported key
      * systems were found.  Empty array is returned if no
      * supported key systems were found
-     * @returns {KeySystem} Object.ks the key
-     * system identified by the ContentProtection element
-     * @returns {ArrayBuffer} Object.initData the initialization data parsed
-     * from the ContentProtection element
      * @memberof module:ProtectionKeyController
      * @instance
      */
@@ -207,13 +203,9 @@ function ProtectionKeyController() {
      *
      * @param {ArrayBuffer} initData Concatenated PSSH data for all DRMs
      * supported by the content
-     * @returns {Object[]} array of objects indicating which supported key
+     * @returns {Array.<Object>} array of objects indicating which supported key
      * systems were found.  Empty array is returned if no
      * supported key systems were found
-     * @returns {KeySystem} Object.ks the key
-     * system
-     * @returns {ArrayBuffer} Object.initData the initialization data
-     * associated with the key system
      * @memberof module:ProtectionKeyController
      * @instance
      */
@@ -240,10 +232,10 @@ function ProtectionKeyController() {
      * associated with this license request
      * @param {ProtectionData} protData protection data to use for the
      * request
-     * @param {String} [messageType="license-request"] the message type associated with this
+     * @param {string} [messageType="license-request"] the message type associated with this
      * request.  Supported message types can be found
      * {@link https://w3c.github.io/encrypted-media/#idl-def-MediaKeyMessageType|here}.
-     * @return {LicenseServer} the license server
+     * @returns {LicenseServer|null} the license server
      * implementation that should be used for this request or null if the player should not
      * pass messages of the given type to a license server
      * @memberof module:ProtectionKeyController
@@ -278,7 +270,7 @@ function ProtectionKeyController() {
      * @param {ProtectionData} protData protection data to use for the
      * request
      * @param {ArrayBuffer} message the key message from the CDM
-     * @return {ClearKeyKeySet} the clear keys associated with
+     * @return {ClearKeyKeySet|null} the clear keys associated with
      * the request or null if no keys can be returned by this function
      * @memberof module:ProtectionKeyController
      * @instance
