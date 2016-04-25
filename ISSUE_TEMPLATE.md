@@ -1,4 +1,4 @@
-================== Issue submission guidelines (you may delete the text below after reading it ) ============
+========= Issue submission guidelines (you may delete the text below after reading it ) =========
 Before creating a new issue around a potential bug please:
 1. Check your browser's console for 404s (MPD file or media fragments) 
 2. Check for Access-Denied errors which indicates an issue with the server's HTTP access control (CORS)
@@ -9,6 +9,5 @@ Before creating a new issue around a potential bug please:
 * Valid MPD test content - ideally the URL to the manifest or a static copy of it if it is not public.
 * The relevant excerpt from the console trace showing the problem. 
 * A clear sequence of steps to reproduce the problem. 
-=============================================================================================
 
 
