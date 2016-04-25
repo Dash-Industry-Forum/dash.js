@@ -414,8 +414,8 @@ function TTMLParser() {
         lineHeight = {};
         linePadding = {};
         defaultLayoutProperties = {
-            'top': '85%;',
-            'left': '5%;',
+            'top': 'auto;',
+            'left': 'auto;',
             'width': '90%;',
             'height': '10%;',
             'align-items': 'flex-start;',
@@ -634,7 +634,7 @@ function TTMLParser() {
 
 
     // Compute the style properties to return an array with the cleaned properties.
-    function processStyle(cueStyle, cellUnit) {
+    function processStyle(cueStyle, cellUnit, includeRegionStyles) {
         var properties = [];
 
         // Clean up from the xml2json parsing:
@@ -765,6 +765,10 @@ function TTMLParser() {
             properties.push('text-decoration:' + cueStyle['text-decoration'] + ';');
         }
 
+        if (includeRegionStyles) {
+            properties = properties.concat(processRegion(cueStyle, cellUnit));
+        }
+
         // Handle white-space preserve
         if (ttml.tt.hasOwnProperty('xml:space')) {
             if (ttml.tt['xml:space'] === 'preserve') {
@@ -789,7 +793,7 @@ function TTMLParser() {
         return null;
     }
     // Return the computed style from a certain ID.
-    function getProcessedStyle(reference, cellUnit) {
+    function getProcessedStyle(reference, cellUnit, includeRegionStyles) {
         var styles = [];
         var ids = reference.match(/\S+/g);
         ids.forEach(function (id) {
@@ -798,7 +802,7 @@ function TTMLParser() {
             if (cueStyle) {
                 // Process the style for the cue in CSS form.
                 // Send a copy of the style object, so it does not modify the original by cleaning it.
-                var stylesFromId = processStyle(JSON.parse(JSON.stringify(cueStyle)), cellUnit);
+                var stylesFromId = processStyle(JSON.parse(JSON.stringify(cueStyle)), cellUnit, includeRegionStyles);
                 styles = styles.concat(stylesFromId);
             }
         });
@@ -851,7 +855,7 @@ function TTMLParser() {
         }
         // Style will give to the region the style properties from the style selected
         if ('style' in cueRegion) {
-            var styleFromID = getProcessedStyle(cueRegion.style, cellUnit);
+            var styleFromID = getProcessedStyle(cueRegion.style, cellUnit, true);
             properties = properties.concat(styleFromID);
         }
 
