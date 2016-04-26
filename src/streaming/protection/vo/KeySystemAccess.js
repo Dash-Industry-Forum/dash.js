@@ -28,20 +28,21 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
- * Creates a new key system access token.  Represents a valid key system for
+ * @classdesc Creates a new key system access token.  Represents a valid key system for
  * given piece of content and key system requirements.  Used to initialize license
  * acquisition operations.
- *
- * @param {MediaPlayer.dependencies.protection.KeySystem} keySystem the key system
- * @param {KeySystemConfiguration} ksConfiguration the
- * subset of configurations passed to the key system access request that are supported
- * by this user agent
- * @class
  * @ignore
  */
 class KeySystemAccess {
+    /**
+     * @param {MediaPlayer.dependencies.protection.KeySystem} keySystem the key system
+     * @param {KeySystemConfiguration} ksConfiguration the
+     * subset of configurations passed to the key system access request that are supported
+     * by this user agent
+     * @class
+     * @ignore
+     */
     constructor(keySystem, ksConfiguration) {
         this.keySystem = keySystem;
         this.ksConfiguration = ksConfiguration;

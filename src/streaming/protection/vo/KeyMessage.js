@@ -28,19 +28,20 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
- * EME-independent KeyMessage
- *
- * @param {SessionToken} sessionToken the session
- * to which the key message is associated
- * @param {ArrayBuffer} message the key message
- * @param [defaultURL] license acquisition URL provided by the CDM
- * @param [messageType="license-request"] the message type.  Supported message types can be found
- * {@link https://w3c.github.io/encrypted-media/#idl-def-MediaKeyMessageType|here}.
- * @class
+ * @classdesc EME-independent KeyMessage
+ * @ignore
  */
 class KeyMessage {
+    /**
+     * @param {SessionToken} sessionToken the session
+     * to which the key message is associated
+     * @param {ArrayBuffer} message the key message
+     * @param {string} defaultURL license acquisition URL provided by the CDM
+     * @param {string} messageType Supported message types can be found
+     * {@link https://w3c.github.io/encrypted-media/#idl-def-MediaKeyMessageType|here}.
+     * @class
+     */
     constructor(sessionToken, message, defaultURL, messageType) {
         this.sessionToken = sessionToken;
         this.message = message;
