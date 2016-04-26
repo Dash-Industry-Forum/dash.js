@@ -28,42 +28,42 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import UTCTiming from '../dash/vo/UTCTiming.js';
-import PlaybackController from './controllers/PlaybackController.js';
-import StreamController from './controllers/StreamController.js';
-import MediaController from './controllers/MediaController.js';
-import ManifestLoader from './ManifestLoader.js';
-import LiveEdgeFinder from './utils/LiveEdgeFinder.js';
-import ErrorHandler from './utils/ErrorHandler.js';
-import Capabilities from './utils/Capabilities.js';
-import TextTracks from './TextTracks.js';
-import SourceBufferController from './controllers/SourceBufferController.js';
-import VirtualBuffer from './VirtualBuffer.js';
-import RequestModifier from './utils/RequestModifier.js';
-import TextSourceBuffer from './TextSourceBuffer.js';
-import URIQueryAndFragmentModel from './models/URIQueryAndFragmentModel.js';
-import ManifestModel from './models/ManifestModel.js';
-import MediaPlayerModel from './models/MediaPlayerModel.js';
-import MetricsModel from './models/MetricsModel.js';
-import AbrController from './controllers/AbrController.js';
-import TimeSyncController from './controllers/TimeSyncController.js';
-import ABRRulesCollection from './rules/abr/ABRRulesCollection.js';
-import VideoModel from './models/VideoModel.js';
-import RulesController from './rules/RulesController.js';
-import SynchronizationRulesCollection from './rules/synchronization/SynchronizationRulesCollection.js';
-import MediaSourceController from './controllers/MediaSourceController.js';
-import BaseURLController from './controllers/BaseURLController.js';
-import Debug from './../core/Debug.js';
-import EventBus from './../core/EventBus.js';
-import Events from './../core/events/Events.js';
-import MediaPlayerEvents from './MediaPlayerEvents.js';
-import FactoryMaker from '../core/FactoryMaker.js';
+import UTCTiming from '../dash/vo/UTCTiming';
+import PlaybackController from './controllers/PlaybackController';
+import StreamController from './controllers/StreamController';
+import MediaController from './controllers/MediaController';
+import ManifestLoader from './ManifestLoader';
+import LiveEdgeFinder from './utils/LiveEdgeFinder';
+import ErrorHandler from './utils/ErrorHandler';
+import Capabilities from './utils/Capabilities';
+import TextTracks from './TextTracks';
+import SourceBufferController from './controllers/SourceBufferController';
+import VirtualBuffer from './VirtualBuffer';
+import RequestModifier from './utils/RequestModifier';
+import TextSourceBuffer from './TextSourceBuffer';
+import URIQueryAndFragmentModel from './models/URIQueryAndFragmentModel';
+import ManifestModel from './models/ManifestModel';
+import MediaPlayerModel from './models/MediaPlayerModel';
+import MetricsModel from './models/MetricsModel';
+import AbrController from './controllers/AbrController';
+import TimeSyncController from './controllers/TimeSyncController';
+import ABRRulesCollection from './rules/abr/ABRRulesCollection';
+import VideoModel from './models/VideoModel';
+import RulesController from './rules/RulesController';
+import SynchronizationRulesCollection from './rules/synchronization/SynchronizationRulesCollection';
+import MediaSourceController from './controllers/MediaSourceController';
+import BaseURLController from './controllers/BaseURLController';
+import Debug from './../core/Debug';
+import EventBus from './../core/EventBus';
+import Events from './../core/events/Events';
+import MediaPlayerEvents from './MediaPlayerEvents';
+import FactoryMaker from '../core/FactoryMaker';
 //Dash
-import DashAdapter from '../dash/DashAdapter.js';
-import DashParser from '../dash/DashParser.js';
-import DashManifestModel from '../dash/models/DashManifestModel.js';
-import DashMetrics from '../dash/DashMetrics.js';
-import TimelineConverter from '../dash/utils/TimelineConverter.js';
+import DashAdapter from '../dash/DashAdapter';
+import DashParser from '../dash/DashParser';
+import DashManifestModel from '../dash/models/DashManifestModel';
+import DashMetrics from '../dash/DashMetrics';
+import TimelineConverter from '../dash/utils/TimelineConverter';
 
 /**
  * @module MediaPlayer

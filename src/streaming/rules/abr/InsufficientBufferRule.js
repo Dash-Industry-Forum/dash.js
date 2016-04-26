@@ -28,12 +28,12 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import SwitchRequest from '../SwitchRequest.js';
-import BufferController from '../../controllers/BufferController.js';
-import EventBus from '../../../core/EventBus.js';
-import Events from '../../../core/events/Events.js';
-import FactoryMaker from '../../../core/FactoryMaker.js';
-import Debug from '../../../core/Debug.js';
+import SwitchRequest from '../SwitchRequest';
+import BufferController from '../../controllers/BufferController';
+import EventBus from '../../../core/EventBus';
+import Events from '../../../core/events/Events';
+import FactoryMaker from '../../../core/FactoryMaker';
+import Debug from '../../../core/Debug';
 
 function InsufficientBufferRule(config) {
 

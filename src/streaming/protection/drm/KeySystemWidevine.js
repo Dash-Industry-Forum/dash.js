@@ -36,8 +36,8 @@
  * @implements MediaPlayer.dependencies.protection.KeySystem
  */
 
-import CommonEncryption from '../CommonEncryption.js';
-import FactoryMaker from '../../../core/FactoryMaker.js';
+import CommonEncryption from '../CommonEncryption';
+import FactoryMaker from '../../../core/FactoryMaker';
 
 const uuid = 'edef8ba9-79d6-4ace-a3c8-27dcd51d21ed';
 const systemString = 'com.widevine.alpha';

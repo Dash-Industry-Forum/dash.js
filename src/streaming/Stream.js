@@ -28,23 +28,23 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import LiveEdgeFinder from './utils/LiveEdgeFinder.js';
-import StreamProcessor from './StreamProcessor.js';
-import MediaController from './controllers/MediaController.js';
-import EventController from './controllers/EventController.js';
-import FragmentController from './controllers/FragmentController.js';
-import AbrController from './controllers/AbrController.js';
-import VideoModel from './models/VideoModel.js';
-import MetricsModel from './models/MetricsModel.js';
-import PlaybackController from './controllers/PlaybackController.js';
-import DashHandler from '../dash/DashHandler.js';
-import SegmentBaseLoader from '../dash/SegmentBaseLoader.js';
-import DashMetrics from '../dash/DashMetrics.js';
-import EventBus from '../core/EventBus.js';
-import Events from '../core/events/Events.js';
-import Debug from '../core/Debug.js';
-import FactoryMaker from '../core/FactoryMaker.js';
-import TextSourceBuffer from './TextSourceBuffer.js';
+import LiveEdgeFinder from './utils/LiveEdgeFinder';
+import StreamProcessor from './StreamProcessor';
+import MediaController from './controllers/MediaController';
+import EventController from './controllers/EventController';
+import FragmentController from './controllers/FragmentController';
+import AbrController from './controllers/AbrController';
+import VideoModel from './models/VideoModel';
+import MetricsModel from './models/MetricsModel';
+import PlaybackController from './controllers/PlaybackController';
+import DashHandler from '../dash/DashHandler';
+import SegmentBaseLoader from '../dash/SegmentBaseLoader';
+import DashMetrics from '../dash/DashMetrics';
+import EventBus from '../core/EventBus';
+import Events from '../core/events/Events';
+import Debug from '../core/Debug';
+import FactoryMaker from '../core/FactoryMaker';
+import TextSourceBuffer from './TextSourceBuffer';
 
 function Stream(config) {
 

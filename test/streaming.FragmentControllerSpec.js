@@ -1,7 +1,7 @@
-import VoHelper from './helpers/VOHelper.js';
-import Events from '../src/core/events/Events.js';
-import MediaPlayerEvents from '../src/streaming/MediaPlayerEvents.js';
-import FragmentController from '../src/streaming/controllers/FragmentController.js';
+import VoHelper from './helpers/VOHelper';
+import Events from '../src/core/events/Events';
+import MediaPlayerEvents from '../src/streaming/MediaPlayerEvents';
+import FragmentController from '../src/streaming/controllers/FragmentController';
 
 const expect = require('chai').expect;
 

@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import BASE64 from '../../../externals/base64.js';
+import BASE64 from '../../../externals/base64';
 
 class CommonEncryption {
     /**

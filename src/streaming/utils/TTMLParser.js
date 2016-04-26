@@ -28,9 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../../core/FactoryMaker.js';
-import X2JS from '../../../externals/xml2json.js';
-import Debug from '../../core/Debug.js';
+import FactoryMaker from '../../core/FactoryMaker';
+import X2JS from '../../../externals/xml2json';
+import Debug from '../../core/Debug';
 
 const SECONDS_IN_HOUR = 60 * 60; // Expression of an hour in seconds
 const SECONDS_IN_MIN = 60; // Expression of a minute in seconds

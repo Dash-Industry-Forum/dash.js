@@ -28,12 +28,12 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import CommonEncryption from '../CommonEncryption.js';
-import Events from '../../../core/events/Events.js';
-import MediaCapability from '../vo/MediaCapability.js';
-import KeySystemConfiguration from '../vo/KeySystemConfiguration.js';
-import FactoryMaker from '../../../core/FactoryMaker.js';
-import Protection from '../Protection.js';
+import CommonEncryption from '../CommonEncryption';
+import Events from '../../../core/events/Events';
+import MediaCapability from '../vo/MediaCapability';
+import KeySystemConfiguration from '../vo/KeySystemConfiguration';
+import FactoryMaker from '../../../core/FactoryMaker';
+import Protection from '../Protection';
 
 /**
  * @module ProtectionController

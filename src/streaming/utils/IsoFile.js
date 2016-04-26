@@ -29,8 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import IsoBox from '../vo/IsoBox.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
+import IsoBox from '../vo/IsoBox';
+import FactoryMaker from '../../core/FactoryMaker';
 
 function IsoFile() {
 

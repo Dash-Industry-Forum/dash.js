@@ -35,7 +35,7 @@
  * @class
  * @implements KeySystem
  */
-import FactoryMaker from '../../../core/FactoryMaker.js';
+import FactoryMaker from '../../../core/FactoryMaker';
 
 //TODO implement
 function KeySystemAdobeAccess() {

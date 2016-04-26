@@ -28,9 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../../../../core/FactoryMaker.js';
-import MetricSerialiser from '../../utils/MetricSerialiser.js';
-import RNG from '../../utils/RNG.js';
+import FactoryMaker from '../../../../core/FactoryMaker';
+import MetricSerialiser from '../../utils/MetricSerialiser';
+import RNG from '../../utils/RNG';
 
 function DVBReporting() {
     let instance;

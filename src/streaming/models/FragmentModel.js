@@ -30,11 +30,11 @@
  */
 
 
-import EventBus from '../../core/EventBus.js';
-import Events from '../../core/events/Events.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
-import FragmentRequest from '../vo/FragmentRequest.js';
-import Debug from '../../core/Debug.js';
+import EventBus from '../../core/EventBus';
+import Events from '../../core/events/Events';
+import FactoryMaker from '../../core/FactoryMaker';
+import FragmentRequest from '../vo/FragmentRequest';
+import Debug from '../../core/Debug';
 
 const FRAGMENT_MODEL_LOADING = 'loading';
 const FRAGMENT_MODEL_EXECUTED = 'executed';

@@ -28,8 +28,8 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../../core/FactoryMaker.js';
-import HTTPRequest from '../vo/metrics/HTTPRequest.js';
+import FactoryMaker from '../../core/FactoryMaker';
+import HTTPRequest from '../vo/metrics/HTTPRequest';
 
 const DEFAULT_UTC_TIMING_SOURCE = { scheme: 'urn:mpeg:dash:utc:http-xsdate:2014', value: 'http://time.akamai.com/?iso' };
 const LIVE_DELAY_FRAGMENT_COUNT = 4;

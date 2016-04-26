@@ -28,15 +28,15 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import CommonEncryption from './../CommonEncryption.js';
-import KeySystemClearKey from './../drm/KeySystemClearKey.js';
-import KeySystemWidevine from './../drm/KeySystemWidevine.js';
-import KeySystemPlayReady from './../drm/KeySystemPlayReady.js';
-import DRMToday from './../servers/DRMToday.js';
-import PlayReady from './../servers/PlayReady.js';
-import Widevine from './../servers/Widevine.js';
-import ClearKey from './../servers/ClearKey.js';
-import FactoryMaker from '../../../core/FactoryMaker.js';
+import CommonEncryption from './../CommonEncryption';
+import KeySystemClearKey from './../drm/KeySystemClearKey';
+import KeySystemWidevine from './../drm/KeySystemWidevine';
+import KeySystemPlayReady from './../drm/KeySystemPlayReady';
+import DRMToday from './../servers/DRMToday';
+import PlayReady from './../servers/PlayReady';
+import Widevine from './../servers/Widevine';
+import ClearKey from './../servers/ClearKey';
+import FactoryMaker from '../../../core/FactoryMaker';
 
 /**
  * @module ProtectionKeyController

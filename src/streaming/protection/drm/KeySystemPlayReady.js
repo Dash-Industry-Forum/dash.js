@@ -35,11 +35,11 @@
  * @class
  * @implements KeySystem
  */
-import CommonEncryption from '../CommonEncryption.js';
-import Error from '../../vo/Error.js';
+import CommonEncryption from '../CommonEncryption';
+import Error from '../../vo/Error';
 
-import FactoryMaker from '../../../core/FactoryMaker.js';
-import BASE64 from '../../../../externals/base64.js';
+import FactoryMaker from '../../../core/FactoryMaker';
+import BASE64 from '../../../../externals/base64';
 
 const uuid = '9a04f079-9840-4286-ab92-e65be0885f95';
 const systemString = 'com.microsoft.playready';

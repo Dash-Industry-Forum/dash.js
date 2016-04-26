@@ -29,10 +29,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../core/FactoryMaker.js';
-import TimelineSegmentsGetter from './TimelineSegmentsGetter.js';
-import TemplateSegmentsGetter from './TemplateSegmentsGetter.js';
-import ListSegmentsGetter from './ListSegmentsGetter.js';
+import FactoryMaker from '../../core/FactoryMaker';
+import TimelineSegmentsGetter from './TimelineSegmentsGetter';
+import TemplateSegmentsGetter from './TemplateSegmentsGetter';
+import ListSegmentsGetter from './ListSegmentsGetter';
 
 function SegmentsGetter(config, isDynamic) {
 

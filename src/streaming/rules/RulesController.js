@@ -28,11 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import RulesContext from './RulesContext.js';
-import SwitchRequest from './SwitchRequest.js';
-import ABRRulesCollection from './abr/ABRRulesCollection.js';
-import SynchronizationRulesCollection from './synchronization/SynchronizationRulesCollection.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
+import RulesContext from './RulesContext';
+import SwitchRequest from './SwitchRequest';
+import ABRRulesCollection from './abr/ABRRulesCollection';
+import SynchronizationRulesCollection from './synchronization/SynchronizationRulesCollection';
+import FactoryMaker from '../../core/FactoryMaker';
 
 const ABR_RULE = 0;
 const SYNC_RULE = 1;

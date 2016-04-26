@@ -28,11 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import HTTPRequest from '../streaming/vo/metrics/HTTPRequest.js';
-import AbrController from '../streaming/controllers/AbrController.js';
-import ManifestModel from '../streaming/models/ManifestModel.js';
-import DashManifestModel from './models/DashManifestModel.js';
-import FactoryMaker from '../core/FactoryMaker.js';
+import HTTPRequest from '../streaming/vo/metrics/HTTPRequest';
+import AbrController from '../streaming/controllers/AbrController';
+import ManifestModel from '../streaming/models/ManifestModel';
+import DashManifestModel from './models/DashManifestModel';
+import FactoryMaker from '../core/FactoryMaker';
 
 /**
  * @module DashMetrics

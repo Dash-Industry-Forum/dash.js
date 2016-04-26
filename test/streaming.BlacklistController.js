@@ -1,5 +1,5 @@
-import BlacklistController from '../src/streaming/controllers/BlacklistController.js';
-import EventBus from '../src/core/EventBus.js';
+import BlacklistController from '../src/streaming/controllers/BlacklistController';
+import EventBus from '../src/core/EventBus';
 
 const chai = require('chai');
 const spies = require('chai-spies');
