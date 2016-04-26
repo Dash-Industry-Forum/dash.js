@@ -130,18 +130,19 @@ function TimelineConverter() {
 
         if (isDynamic) {
             suggestedPresentationDelay = segment.representation.adaptation.period.mpd.suggestedPresentationDelay;
-            displayStartTime = segment.presentationStartTime + suggestedPresentationDelay;
-            wallTime = new Date(segment.availabilityStartTime.getTime() + (displayStartTime * 1000));
+            displayStartTime = segment.availabilityStartTime.getTime() + suggestedPresentationDelay;
+            wallTime = new Date(displayStartTime);
         }
 
         return wallTime;
     }
 
-    function calcSegmentAvailabilityRange(representation, isDynamic) {
+    function calcSegmentAvailabilityRange(representation, isDynamic, disableSnapToSegmentBoundary) {
         var start = representation.adaptation.period.start;
         var end = start + representation.adaptation.period.duration;
         var range = { start: start, end: end };
         var d = representation.segmentDuration || ((representation.segments && representation.segments.length) ? representation.segments[representation.segments.length - 1].duration : 0);
+        var availableSegmentsEndTime = representation.segments && representation.segments.length && representation.segments[representation.segments.length - 1].availabilityStartTime.getTime() / 1000;
 
         var checkTime,
             now;
@@ -161,6 +162,9 @@ function TimelineConverter() {
         var timeAnchor = (isNaN(checkTime) ? now : Math.min(checkTime, now));
         var periodEnd = representation.adaptation.period.start + representation.adaptation.period.duration;
         end = (timeAnchor >= periodEnd  && (timeAnchor - d) < periodEnd ? periodEnd : timeAnchor) - d;
+        if (!disableSnapToSegmentBoundary && availableSegmentsEndTime && end > availableSegmentsEndTime) {
+            end = availableSegmentsEndTime;
+        }
         //end = (isNaN(checkTime) ? now : Math.min(checkTime, now)) - d;
         range = {start: start, end: end};
 
