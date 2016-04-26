@@ -30,16 +30,18 @@
  */
 
 /**
- * A collection of ClearKey encryption keys with an (optional) associated
- * type
- *
- * @param keyPairs {KeyPair[]} array of key pairs
- * @param type the type of keys in this set.  One of either 'persistent'
- * or 'temporary'.  Can also be null or undefined.
- * @class
+ * @classdesc A collection of ClearKey encryption keys with an (optional) associated
+ *  type
  * @ignore
  */
 class ClearKeyKeySet {
+    /**
+     * @param {Array.<KeyPair>} keyPairs
+     * @param {string} type the type of keys in this set.  One of either 'persistent'
+     * or 'temporary'.  Can also be null or undefined.
+     * @class
+     * @ignore
+     */
     constructor(keyPairs, type) {
         if (type && type !== 'persistent' && type !== 'temporary')
             throw new Error('Invalid ClearKey key set type!  Must be one of \'persistent\' or \'temporary\'');
