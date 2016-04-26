@@ -371,7 +371,7 @@ var ControlBar = function(dashjsMediaPlayer) {
             if (!player) {
                 throw new Error("Please pass an instance of MediaPlayer.js when instantiating the ControlBar Object");
             }
-            video  = player.getVideoModel().getElement();
+            video  = player.getVideoElement();
             if (!video) {
                 throw new Error("Please call initialize after you have called attachView on MediaPlayer.js");
             }
