@@ -37,7 +37,7 @@ import URIQueryAndFragmentModel from '../models/URIQueryAndFragmentModel';
 import VideoModel from '../models/VideoModel';
 import MediaPlayerModel from '../models/MediaPlayerModel';
 import FactoryMaker from '../../core/FactoryMaker';
-import PlayList from '../vo/metrics/PlayList';
+import {PlayList, PlayListTrace} from '../vo/metrics/PlayList';
 import Debug from '../../core/Debug';
 
 function StreamController() {
@@ -260,17 +260,17 @@ function StreamController() {
             switchStream(activeStream, nextStream, NaN);
         }
 
-        flushPlaylistMetrics(nextStream ? PlayList.Trace.END_OF_PERIOD_STOP_REASON : PlayList.Trace.END_OF_CONTENT_STOP_REASON);
+        flushPlaylistMetrics(nextStream ? PlayListTrace.END_OF_PERIOD_STOP_REASON : PlayListTrace.END_OF_CONTENT_STOP_REASON);
     }
 
     function onPlaybackSeeking(e) {
         var seekingStream = getStreamForTime(e.seekTime);
 
         if (seekingStream && seekingStream !== activeStream) {
-            flushPlaylistMetrics(PlayList.Trace.END_OF_PERIOD_STOP_REASON);
+            flushPlaylistMetrics(PlayListTrace.END_OF_PERIOD_STOP_REASON);
             switchStream(activeStream, seekingStream, e.seekTime);
         } else {
-            flushPlaylistMetrics(PlayList.Trace.USER_REQUEST_STOP_REASON);
+            flushPlaylistMetrics(PlayListTrace.USER_REQUEST_STOP_REASON);
         }
 
         addPlaylistMetrics(PlayList.SEEK_START_REASON);
@@ -291,7 +291,7 @@ function StreamController() {
     function onPlaybackPaused(e) {
         if (!e.ended) {
             isPaused = true;
-            flushPlaylistMetrics(PlayList.Trace.USER_REQUEST_STOP_REASON);
+            flushPlaylistMetrics(PlayListTrace.USER_REQUEST_STOP_REASON);
         }
     }
 
@@ -709,8 +709,8 @@ function StreamController() {
 
         flushPlaylistMetrics(
             hasMediaError || hasInitialisationError ?
-                PlayList.Trace.FAILURE_STOP_REASON :
-                PlayList.Trace.USER_REQUEST_STOP_REASON
+                PlayListTrace.FAILURE_STOP_REASON :
+                PlayListTrace.USER_REQUEST_STOP_REASON
         );
 
         for (let i = 0, ln = streams.length; i < ln; i++) {

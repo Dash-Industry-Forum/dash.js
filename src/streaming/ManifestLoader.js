@@ -33,7 +33,7 @@ import XHRLoader from './XHRLoader';
 import URLUtils from './utils/URLUtils';
 import TextRequest from './vo/TextRequest';
 import Error from './vo/Error';
-import HTTPRequest from './vo/metrics/HTTPRequest';
+import {HTTPRequest} from './vo/metrics/HTTPRequest';
 import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import FactoryMaker from '../core/FactoryMaker';

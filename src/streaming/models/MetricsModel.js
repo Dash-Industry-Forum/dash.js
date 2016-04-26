@@ -30,13 +30,13 @@
  */
 import MetricsList from '../vo/MetricsList';
 import TCPConnection from '../vo/metrics/TCPConnection';
-import HTTPRequest from '../vo/metrics/HTTPRequest';
+import {HTTPRequest, HTTPRequestTrace} from '../vo/metrics/HTTPRequest';
 import TrackSwitch from '../vo/metrics/RepresentationSwitch';
 import BufferLevel from '../vo/metrics/BufferLevel';
 import BufferState from '../vo/metrics/BufferState';
 import DVRInfo from '../vo/metrics/DVRInfo';
 import DroppedFrames from '../vo/metrics/DroppedFrames';
-import ManifestUpdate from '../vo/metrics/ManifestUpdate';
+import {ManifestUpdate, ManifestUpdateStreamInfo, ManifestUpdateTrackInfo} from '../vo/metrics/ManifestUpdate';
 import SchedulingInfo from '../vo/metrics/SchedulingInfo';
 import EventBus from '../../core/EventBus';
 import RequestsQueue from '../vo/metrics/RequestsQueue';
@@ -131,7 +131,7 @@ function MetricsModel() {
     }
 
     function appendHttpTrace(httpRequest, s, d, b) {
-        var vo = new HTTPRequest.Trace();
+        var vo = new HTTPRequestTrace();
 
         vo.s = s;
         vo.d = d;
@@ -344,7 +344,7 @@ function MetricsModel() {
 
     function addManifestUpdateStreamInfo(manifestUpdate, id, index, start, duration) {
         if (manifestUpdate) {
-            var vo = new ManifestUpdate.StreamInfo();
+            var vo = new ManifestUpdateStreamInfo();
 
             vo.id = id;
             vo.index = index;
@@ -361,7 +361,7 @@ function MetricsModel() {
 
     function addManifestUpdateRepresentationInfo(manifestUpdate, id, index, streamIndex, mediaType, presentationTimeOffset, startNumber, fragmentInfoType) {
         if (manifestUpdate) {
-            var vo = new ManifestUpdate.TrackInfo();
+            var vo = new ManifestUpdateTrackInfo();
 
             vo.id = id;
             vo.index = index;

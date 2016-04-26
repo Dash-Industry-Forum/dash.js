@@ -4,7 +4,7 @@ import MpdHelper from './MPDHelper';
 import SpecHelper from './SpecHelper';
 import Representation from '../../src/dash/vo/Representation';
 import FragmentRequest from '../../src/streaming/vo/FragmentRequest';
-import HTTPRequest from '../../src/streaming/vo/metrics/HTTPRequest';
+import {HTTPRequest} from '../../src/streaming/vo/metrics/HTTPRequest';
 
 class VoHelper {
     constructor() {
