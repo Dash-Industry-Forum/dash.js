@@ -58,6 +58,8 @@ import EventBus from './../core/EventBus';
 import Events from './../core/events/Events';
 import MediaPlayerEvents from './MediaPlayerEvents';
 import FactoryMaker from '../core/FactoryMaker';
+import {getVersionString} from './../core/Version';
+
 //Dash
 import DashAdapter from '../dash/DashAdapter';
 import DashParser from '../dash/DashParser';
@@ -73,7 +75,6 @@ import TimelineConverter from '../dash/utils/TimelineConverter';
  */
 function MediaPlayer() {
 
-    const VERSION = '2.1.1';
     const PLAYBACK_NOT_INITIALIZED_ERROR = 'You must first call play() to init playback before calling this method';
     const ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the video element before calling this method';
     const SOURCE_NOT_ATTACHED_ERROR = 'You must first call attachSource() with a valid source before calling this method';
@@ -169,7 +170,7 @@ function MediaPlayer() {
             attachSource(source);
         }
 
-        log('[dash.js ' + VERSION + '] ' + 'MediaPlayer has been initialized');
+        log('[dash.js ' + getVersion() + '] ' + 'MediaPlayer has been initialized');
     }
 
     /**
@@ -573,7 +574,7 @@ function MediaPlayer() {
      * @instance
      */
     function getVersion() {
-        return VERSION;
+        return getVersionString();
     }
 
     /**
