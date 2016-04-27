@@ -34,7 +34,7 @@
  */
 import MediaController from './controllers/MediaController';
 import CustomTimeRanges from './utils/CustomTimeRanges';
-import HTTPRequest from './vo/metrics/HTTPRequest';
+import {HTTPRequest} from './vo/metrics/HTTPRequest';
 import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import FactoryMaker from '../core/FactoryMaker';

@@ -31,7 +31,7 @@
 
 import FragmentModel from '../models/FragmentModel';
 import MediaPlayerModel from '../models/MediaPlayerModel';
-import HTTPRequest from '../vo/metrics/HTTPRequest';
+import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import SourceBufferController from './SourceBufferController';
 import AbrController from './AbrController';
 import PlaybackController from './PlaybackController';

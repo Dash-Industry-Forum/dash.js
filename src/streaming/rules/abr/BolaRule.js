@@ -35,7 +35,7 @@ import SwitchRequest from '../SwitchRequest';
 import FactoryMaker from '../../../core/FactoryMaker';
 import MediaPlayerModel from '../../models/MediaPlayerModel';
 import PlaybackController from '../../controllers/PlaybackController';
-import HTTPRequest from '../../vo/metrics/HTTPRequest';
+import {HTTPRequest} from '../../vo/metrics/HTTPRequest';
 import DashAdapter from '../../../dash/DashAdapter';
 import EventBus from '../../../core/EventBus';
 import Events from '../../../core/events/Events';

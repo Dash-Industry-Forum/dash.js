@@ -32,7 +32,7 @@ import SwitchRequest from '../SwitchRequest';
 import BufferController from '../../controllers/BufferController';
 import AbrController from '../../controllers/AbrController';
 import MediaPlayerModel from '../../models/MediaPlayerModel';
-import HTTPRequest from '../../vo/metrics/HTTPRequest';
+import {HTTPRequest} from '../../vo/metrics/HTTPRequest';
 import FactoryMaker from '../../../core/FactoryMaker';
 import Debug from '../../../core/Debug';
 

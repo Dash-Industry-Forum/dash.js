@@ -29,11 +29,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * @class
+ * @classdesc This Object holds reference to the manifest update information.
  */
 class ManifestUpdate {
     /**
-     * @description This Object holds reference to the manifest update information.
+     * @class
      */
     constructor() {
 
@@ -101,9 +101,12 @@ class ManifestUpdate {
     }
 }
 
-ManifestUpdate.StreamInfo = class {
+/**
+ * @classdesc This Object holds reference to the current period's stream information when the manifest was updated.
+ */
+class ManifestUpdateStreamInfo {
     /**
-     * @description This Object holds reference to the current period's stream information when the manifest was updated.
+     * @class
      */
     constructor() {
         /**
@@ -127,12 +130,14 @@ ManifestUpdate.StreamInfo = class {
          */
         this.duration = null;
     }
-};
+}
 
-ManifestUpdate.TrackInfo = class {
-
+/**
+ * @classdesc This Object holds reference to the current representation's info when the manifest was updated.
+ */
+class ManifestUpdateTrackInfo {
     /**
-     * @description This Object holds reference to the current representation's info when the manifest was updated.
+     * @class
      */
     constructor() {
         /**
@@ -171,6 +176,6 @@ ManifestUpdate.TrackInfo = class {
          */
         this.fragmentInfoType = null;
     }
-};
-//TODO we need exports for all the sub objects.  These should all be class VO
-export default ManifestUpdate;
+}
+
+export { ManifestUpdate, ManifestUpdateStreamInfo, ManifestUpdateTrackInfo };

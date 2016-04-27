@@ -30,7 +30,7 @@
  */
 import Error from './vo/Error';
 import XHRLoader from './XHRLoader';
-import HTTPRequest from './vo/metrics/HTTPRequest';
+import {HTTPRequest} from './vo/metrics/HTTPRequest';
 import TextRequest from './vo/TextRequest';
 import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';

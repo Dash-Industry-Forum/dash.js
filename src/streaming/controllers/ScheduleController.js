@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import PlayList from '../vo/metrics/PlayList';
+import {PlayListTrace} from '../vo/metrics/PlayList';
 import PlaybackController from './PlaybackController';
 import AbrController from './AbrController';
 import BufferController from './BufferController';
@@ -259,7 +259,7 @@ function ScheduleController(config) {
             throw 'Unexpected error! - currentRepresentationInfo is null or undefined';
         }
 
-        clearPlayListTraceMetrics(new Date(), PlayList.Trace.REPRESENTATION_SWITCH_STOP_REASON);
+        clearPlayListTraceMetrics(new Date(), PlayListTrace.REPRESENTATION_SWITCH_STOP_REASON);
         addPlaylistTraceMetrics();
     }
 
@@ -328,7 +328,7 @@ function ScheduleController(config) {
     function onBufferLevelStateChanged(e) {
         if ((e.sender.getStreamProcessor() === streamProcessor) && e.state === BufferController.BUFFER_EMPTY && !playbackController.isSeeking()) {
             log('Stalling Buffer');
-            clearPlayListTraceMetrics(new Date(), PlayList.Trace.REBUFFERING_REASON);
+            clearPlayListTraceMetrics(new Date(), PlayListTrace.REBUFFERING_REASON);
         }
     }
 
@@ -346,7 +346,7 @@ function ScheduleController(config) {
         if (playListMetrics && playListTraceMetricsClosed === true && currentRepresentationInfo) {
             playListTraceMetricsClosed = false;
 
-            playListTraceMetrics = new PlayList.Trace();
+            playListTraceMetrics = new PlayListTrace();
             playListTraceMetrics.representationid = currentRepresentationInfo.id;
             playListTraceMetrics.start = new Date();
             playListTraceMetrics.mstart = playbackController.getTime() * 1000;

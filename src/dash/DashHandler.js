@@ -30,7 +30,7 @@
  */
 import FragmentRequest from '../streaming/vo/FragmentRequest';
 import Error from '../streaming/vo/Error';
-import HTTPRequest from '../streaming/vo/metrics/HTTPRequest';
+import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
 import Events from '../core/events/Events';
 import EventBus from '../core/EventBus';
 import FactoryMaker from '../core/FactoryMaker';
