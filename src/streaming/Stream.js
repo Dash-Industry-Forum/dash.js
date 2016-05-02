@@ -328,6 +328,7 @@ function Stream(config) {
 
         if (optionalSettings) {
             streamProcessor.setBuffer(optionalSettings.buffer);
+            streamProcessor.getIndexHandler().setCurrentTime(optionalSettings.currentTime);
             streamProcessors[optionalSettings.replaceIdx] = streamProcessor;
         } else {
             streamProcessors.push(streamProcessor);
