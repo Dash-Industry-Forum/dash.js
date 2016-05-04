@@ -125,7 +125,7 @@ module.exports = function (grunt) {
                         standalone: 'dashjs.MediaPlayer'
                     },
                     plugin: [
-                      ['browserify-derequire']
+                        'browserify-derequire', 'bundle-collapser/plugin'
                     ],
                     transform: ['babelify']
                 }
@@ -140,7 +140,7 @@ module.exports = function (grunt) {
                         standalone: 'dashjs.Protection'
                     },
                     plugin: [
-                        ['browserify-derequire']
+                        'browserify-derequire', 'bundle-collapser/plugin'
                     ],
                     transform: ['babelify']
                 }
@@ -155,7 +155,7 @@ module.exports = function (grunt) {
                         standalone: 'dashjs.MetricsReporting'
                     },
                     plugin: [
-                        ['browserify-derequire']
+                        'browserify-derequire', 'bundle-collapser/plugin'
                     ],
                     transform: ['babelify']
                 }
@@ -169,7 +169,7 @@ module.exports = function (grunt) {
                         debug: true
                     },
                     plugin: [
-                        ['browserify-derequire']
+                        'browserify-derequire', 'bundle-collapser/plugin'
                     ],
                     transform: ['babelify']
                 }
