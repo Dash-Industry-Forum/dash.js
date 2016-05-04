@@ -1,36 +1,28 @@
-/*! videojs-contrib-dash - v1.1.0 - 2015-07-24
- * Copyright (c) 2015 Brightcove  */
-(function(window, videojs) {
-  'use strict';
+/*! videojs-contrib-dash - v2.2.0 - 2016-05-04
+ * Copyright (c) 2016 Brightcove  */
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function (global){
+if (typeof window !== "undefined") {
+    module.exports = window;
+} else if (typeof global !== "undefined") {
+    module.exports = global;
+} else if (typeof self !== "undefined"){
+    module.exports = self;
+} else {
+    module.exports = {};
+}
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],2:[function(require,module,exports){
+(function (global){
+'use strict';
+var window_ = require('global/window');
+var videojs = (typeof window !== "undefined" ? window['videojs'] : typeof global !== "undefined" ? global['videojs'] : null);
+var dashjs = (typeof window !== "undefined" ? window['dashjs'] : typeof global !== "undefined" ? global['dashjs'] : null);
 
   var
     isArray = function(a) {
       return Object.prototype.toString.call(a) === '[object Array]';
-    },
-    isObject = function (a) {
-      return Object.prototype.toString.call(a) === '[object Object]';
-    },
-    mergeOptions = function(obj1, obj2){
-      var key, val1, val2, res;
-
-      // make a copy of obj1 so we're not overwriting original values.
-      // like prototype.options_ and all sub options objects
-      res = {};
-
-      for (key in obj2){
-        if (obj2.hasOwnProperty(key)) {
-          val1 = obj1[key];
-          val2 = obj2[key];
-
-          // Check if both properties are pure objects and do a deep merge if so
-          if (isObject(val1) && isObject(val2)) {
-            obj1[key] = mergeOptions(val1, val2);
-          } else {
-            obj1[key] = obj2[key];
-          }
-        }
-      }
-      return obj1;
     };
 
   /**
@@ -39,9 +31,7 @@
    * Use Dash.js to playback DASH content inside of Video.js via a SourceHandler
    */
   function Html5DashJS (source, tech) {
-    var
-      options = tech.options(),
-      manifestSource;
+    var manifestSource;
 
     this.tech_ = tech;
     this.el_ = tech.el();
@@ -57,96 +47,44 @@
     // again later once everything is setup
     tech.isReady_ = false;
 
+    if (Html5DashJS.updateSourceData) {
+      source = Html5DashJS.updateSourceData(source);
+    }
+
     manifestSource = source.src;
     this.keySystemOptions_ = Html5DashJS.buildDashJSProtData(source.keySystemOptions);
 
-    // We have to hide errors since SRC_UNSUPPORTED is thrown by the video element when
-    // we set src = '' in order to clear the mediaKeys
-    Html5DashJS.hideErrors(this.elParent_);
-
-    // Must be before anything is initialized since we are overridding a global object
-    // injection
-    if (Html5DashJS.useVideoJSDebug) {
-      Html5DashJS.useVideoJSDebug(videojs);
-    }
-
     // Save the context after the first initialization for subsequent instances
-    Html5DashJS.context_ = Html5DashJS.context_ || new Dash.di.DashContext();
+    Html5DashJS.context_ = Html5DashJS.context_ || {};
 
     // But make a fresh MediaPlayer each time the sourceHandler is used
-    this.mediaPlayer_ = new MediaPlayer(Html5DashJS.context_);
+    this.mediaPlayer_ = dashjs.MediaPlayer(Html5DashJS.context_).create();
+
+    // Log MedaPlayer messages through video.js
+    if (Html5DashJS.useVideoJSDebug) {
+      Html5DashJS.useVideoJSDebug(this.mediaPlayer_);
+    }
 
     // Must run controller before these two lines or else there is no
     // element to bind to.
-    this.mediaPlayer_.startup();
+    this.mediaPlayer_.initialize();
     this.mediaPlayer_.attachView(this.el_);
 
-    // Dash.js autoplays by default
-    if (!options.autoplay) {
-      this.mediaPlayer_.setAutoPlay(false);
-    }
+    // Dash.js autoplays by default, video.js will handle autoplay
+    this.mediaPlayer_.setAutoPlay(false);
 
-    // Fetches and parses the manifest - WARNING the callback is non-standard "error-last" style
-    this.mediaPlayer_.retrieveManifest(manifestSource, videojs.bind(this, this.initializeDashJS));
+    // Attach the source with any protection data
+    this.mediaPlayer_.setProtectionData(this.keySystemOptions_);
+    this.mediaPlayer_.attachSource(manifestSource);
+
+    this.tech_.triggerReady();
   }
-
-  Html5DashJS.prototype.initializeDashJS = function (manifest, err) {
-    var manifestProtectionData = {};
-
-    if (err) {
-      Html5DashJS.showErrors(this.elParent_);
-      this.tech_.triggerReady();
-      this.dispose();
-      return;
-    }
-
-    // If we haven't received protection data from the outside world try to get it from the manifest
-    // We merge the two allowing the manifest to override any keySystemOptions provided via src()
-    if (Html5DashJS.getWidevineProtectionData) {
-      manifestProtectionData = Html5DashJS.getWidevineProtectionData(manifest);
-      this.keySystemOptions_ = mergeOptions(
-        this.keySystemOptions_,
-        manifestProtectionData);
-    }
-
-    // We have to reset any mediaKeys before the attachSource call below
-    this.resetSrc_(videojs.bind(this, function afterMediaKeysReset () {
-      Html5DashJS.showErrors(this.elParent_);
-
-      // Attach the source with any protection data
-      this.mediaPlayer_.attachSource(manifest, null, this.keySystemOptions_);
-
-      this.tech_.triggerReady();
-    }));
-  };
-
-  /*
-   * Add a css-class that is used to temporarily hide the error dialog while so that
-   * we don't see a flash of the dialog box when we remove the video element's src
-   * to reset MediaKeys in resetSrc_
-   */
-  Html5DashJS.hideErrors = function (el) {
-    el.className += ' vjs-dashjs-hide-errors';
-  };
-
-  /*
-   * Remove the css-class above to enable the error dialog to be shown once again
-   */
-  Html5DashJS.showErrors = function (el) {
-    // The video element's src is set asynchronously so we have to wait a while
-    // before we unhide any errors
-    // 250ms is arbitrary but I haven't seen dash.js take longer than that to initialize
-    // in my testing
-    setTimeout(function () {
-      el.className = el.className.replace('vjs-dashjs-hide-errors', '');
-    }, 250);
-  };
 
   /*
    * Iterate over the `keySystemOptions` array and convert each object into
    * the type of object Dash.js expects in the `protData` argument.
    *
-   * Also rename 'licenseUrl' property in the options to an 'laURL' property
+   * Also rename 'licenseUrl' property in the options to an 'serverURL' property
    */
   Html5DashJS.buildDashJSProtData = function (keySystemOptions) {
     var
@@ -161,10 +99,10 @@
 
     for (i = 0; i < keySystemOptions.length; i++) {
       keySystem = keySystemOptions[i];
-      options = mergeOptions({}, keySystem.options);
+      options = videojs.mergeOptions({}, keySystem.options);
 
       if (options.licenseUrl) {
-        options.laURL = options.licenseUrl;
+        options.serverURL = options.licenseUrl;
         delete options.licenseUrl;
       }
 
@@ -202,14 +140,12 @@
     this.resetSrc_(function noop(){});
   };
 
-  // Only add the SourceHandler if the browser supports MediaSourceExtensions
-  if (!!window.MediaSource) {
-    videojs.Html5.registerSourceHandler({
+  videojs.DashSourceHandler = function() {
+    return {
       canHandleSource: function (source) {
-        var dashTypeRE = /^application\/dash\+xml/i;
         var dashExtRE = /\.mpd/i;
 
-        if (dashTypeRE.test(source.type)) {
+        if (videojs.DashSourceHandler.canPlayType(source.type)) {
           return 'probably';
         } else if (dashExtRE.test(source.src)){
           return 'maybe';
@@ -220,9 +156,30 @@
 
       handleSource: function (source, tech) {
         return new Html5DashJS(source, tech);
+      },
+
+      canPlayType: function (type) {
+        return videojs.DashSourceHandler.canPlayType(type);
       }
-    });
+    };
+  };
+
+  videojs.DashSourceHandler.canPlayType = function (type) {
+    var dashTypeRE = /^application\/dash\+xml/i;
+    if (dashTypeRE.test(type)) {
+      return 'probably';
+    }
+
+    return '';
+  };
+
+  // Only add the SourceHandler if the browser supports MediaSourceExtensions
+  if (!!window_.MediaSource) {
+    videojs.getComponent('Html5').registerSourceHandler(videojs.DashSourceHandler(), 0);
   }
 
   videojs.Html5DashJS = Html5DashJS;
-})(window, window.videojs);
+module.exports = Html5DashJS;
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"global/window":1}]},{},[2]);
