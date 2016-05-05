@@ -105,6 +105,10 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#PERIOD_SWITCH_STARTED
          */
         this.PERIOD_SWITCH_STARTED = 'streamswitchstarted';
+
+        this.QUALITY_CHANGE_START = 'qualityChangeStart';
+        this.QUALITY_CHANGE_COMPLETE = 'qualityChangeComplete';
+
         /**
          * Triggered when the stream is setup and ready.
          * @event MediaPlayerEvents#STREAM_INITIALIZED

@@ -386,7 +386,7 @@ function AbrController() {
         qualityDict[id] = qualityDict[id] || {};
 
         if (!qualityDict[id].hasOwnProperty(type)) {
-            qualityDict[id][type] = 0;
+            qualityDict[id][type] = -1;
         }
 
         quality = qualityDict[id][type];
