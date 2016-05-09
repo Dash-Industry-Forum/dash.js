@@ -669,7 +669,7 @@ function DashManifestModel() {
                 if (eventStreams[i].hasOwnProperty('schemeIdUri')) {
                     eventStream.schemeIdUri = eventStreams[i].schemeIdUri;
                 } else {
-                    throw 'Invalid EventStream. SchemeIdUri has to be set';
+                    throw new Error('Invalid EventStream. SchemeIdUri has to be set');
                 }
                 if (eventStreams[i].hasOwnProperty('timescale')) {
                     eventStream.timescale = eventStreams[i].timescale;
@@ -712,7 +712,7 @@ function DashManifestModel() {
             if (inbandStreams[i].hasOwnProperty('schemeIdUri')) {
                 eventStream.schemeIdUri = inbandStreams[i].schemeIdUri;
             } else {
-                throw 'Invalid EventStream. SchemeIdUri has to be set';
+                throw new Error('Invalid EventStream. SchemeIdUri has to be set');
             }
             if (inbandStreams[i].hasOwnProperty('timescale')) {
                 eventStream.timescale = inbandStreams[i].timescale;

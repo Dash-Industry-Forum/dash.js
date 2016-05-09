@@ -256,7 +256,7 @@ function ScheduleController(config) {
 
         currentRepresentationInfo = streamProcessor.getRepresentationInfoForQuality(e.newQuality);
         if (currentRepresentationInfo === null || currentRepresentationInfo === undefined) {
-            throw 'Unexpected error! - currentRepresentationInfo is null or undefined';
+            throw new Error('Unexpected error! - currentRepresentationInfo is null or undefined');
         }
 
         clearPlayListTraceMetrics(new Date(), PlayListTrace.REPRESENTATION_SWITCH_STOP_REASON);

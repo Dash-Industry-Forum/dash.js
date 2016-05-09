@@ -322,7 +322,7 @@ function DashParser(/*config*/) {
             manifest = converter.xml_str2json(data);
 
             if (!manifest) {
-                throw 'parser error';
+                throw new Error('parser error');
             }
 
             json = new Date();
