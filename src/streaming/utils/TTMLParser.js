@@ -93,7 +93,7 @@ function TTMLParser() {
         ttml = converter.xml_str2json(data);
 
         if (!ttml) {
-            throw 'TTML document could not be parsed';
+            throw new Error('TTML document could not be parsed');
         }
 
         if (videoModel.getTTMLRenderingDiv()) {
@@ -111,11 +111,11 @@ function TTMLParser() {
         // Check the document and compare to the specification (TTML and EBU-TT-D).
         tt = ttml.tt;
         if (!tt) {
-            throw 'TTML document lacks tt element';
+            throw new Error('TTML document lacks tt element');
         }
         head = tt.head;
         if (!head) {
-            throw 'TTML document lacks head element';
+            throw new Error('TTML document lacks head element');
         }
         if (head.layout) {
             ttmlLayout = head.layout.region_asArray; //Mandatory in EBU-TT-D
@@ -125,7 +125,7 @@ function TTMLParser() {
         }
         body = tt.body;
         if (!body) {
-            throw 'TTML document lacks body element';
+            throw new Error('TTML document lacks body element');
         }
 
         // Extract the cellResolution information
@@ -191,7 +191,7 @@ function TTMLParser() {
                         spanEndTime = parseTimings(cue.span.end);
                     } else {
                         errorMsg = 'TTML document has incorrect timing value';
-                        throw errorMsg;
+                        throw new Error(errorMsg);
                     }
                     let cueStartTime = spanStartTime || pStartTime;
                     let cueEndTime = spanEndTime || pEndTime;
@@ -245,7 +245,7 @@ function TTMLParser() {
                         // TODO: check with the specification what is allowed.
                         if ((isNaN(pStartTime) || isNaN(pEndTime)) && (isNaN(spanStartTime) || isNaN(spanEndTime))) {
                             errorMsg = 'TTML document has incorrect timing value';
-                            throw errorMsg;
+                            throw new Error(errorMsg);
                         }
 
                         /**
@@ -401,7 +401,7 @@ function TTMLParser() {
         if (captionArray.length > 0) {
             return captionArray;
         } else {
-            throw errorMsg;
+            throw new Error(errorMsg);
         }
     }
 

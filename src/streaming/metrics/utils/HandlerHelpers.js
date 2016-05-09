@@ -51,17 +51,17 @@ function HandlerHelpers() {
 
         validateN: function (n_ms) {
             if (!n_ms) {
-                throw 'missing n';
+                throw new Error('missing n');
             }
 
             if (isNaN(n_ms)) {
-                throw 'n is NaN';
+                throw new Error('n is NaN');
             }
 
             // n is a positive integer is defined to refer to the metric
             // in which the buffer level is recorded every n ms.
             if (n_ms < 0) {
-                throw 'n must be positive';
+                throw new Error('n must be positive');
             }
 
             return n_ms;

@@ -275,7 +275,7 @@ function AbrController() {
         var quality = getQualityFor(type, streamInfo);
         var isInt = newPlaybackQuality !== null && !isNaN(newPlaybackQuality) && (newPlaybackQuality % 1 === 0);
 
-        if (!isInt) throw 'argument is not an integer';
+        if (!isInt) throw new Error('argument is not an integer');
 
         if (newPlaybackQuality !== quality && newPlaybackQuality >= 0 && newPlaybackQuality <= getTopQualityIndexFor(type, id)) {
             setInternalQuality(type, id, newPlaybackQuality);
