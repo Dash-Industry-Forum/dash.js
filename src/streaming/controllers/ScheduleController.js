@@ -229,15 +229,14 @@ function ScheduleController(config) {
         // If not replace it with higher quality media.
         let request = fragmentModel.getRequests({
             state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
-            time: playbackController.getTime() + (currentRepresentationInfo.fragmentDuration/2) + currentRepresentationInfo.fragmentDuration/2,
-            threshold:0
+            time: playbackController.getTime() + (currentRepresentationInfo.fragmentDuration / 2) + currentRepresentationInfo.fragmentDuration,
+            threshold: 0
         })[0];
 
         if (request && request.quality < currentRepresentationInfo.quality &&
             !isFragmentLoading && !bufferController.getIsAppendingInProgress()) {
             replaceRequests([request]);
-            if (type === 'video') log("XXX reload", request.index, request.quality, currentRepresentationInfo.quality);
-            //return;
+            //if (type === 'video') log('reload', request.index);
         }
 
         let readyToLoad = bufferLevelRule.execute(streamProcessor);
@@ -247,11 +246,11 @@ function ScheduleController(config) {
             const getNextFragment = function () {
                 let request = nextFragmentRequestRule.execute(streamProcessor);
                 if (request) {
-                    if (type === 'video') log("XXX new load", request.index);
-                    fragmentModel.executeRequest(request); // we load
+                    //if (type === 'video') log('new load', request.index);
+                    fragmentModel.executeRequest(request);
                 } else {
                     isFragmentLoading = false;
-                    startValidateTimer(500); //we loop
+                    startValidateTimer(500);
                 }
             };
 
@@ -259,7 +258,7 @@ function ScheduleController(config) {
             abrController.getPlaybackQuality(streamProcessor,  getNextFragment); //Run ABR rules - let it callback to getNextFragment once it is done running.
 
         } else {
-            startValidateTimer(500); //we loop
+            startValidateTimer(500);
         }
     }
 
@@ -325,7 +324,7 @@ function ScheduleController(config) {
         if (isNaN(renderTimeCheckInterval) && qualityChangeInProgress &&
             !isNaN(e.startTime) && e.quality === currentRepresentationInfo.quality) {
             renderTimeCheckInterval = setInterval(() => {
-                log('renderTimeCheckInterval', playbackController.getTime(),  e.startTime);
+                //log('renderTimeCheckInterval', playbackController.getTime(),  e.startTime);
                 if (playbackController.getTime() >= e.startTime) {
                     completeRenderTimeCheck();
                 }
