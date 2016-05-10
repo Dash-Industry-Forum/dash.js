@@ -236,7 +236,7 @@ function FragmentModel(config) {
             req = arr[i];
             start = req.startTime;
             end = start + req.duration;
-            threshold = threshold || (req.duration / 2);
+            threshold = threshold !== undefined ? threshold : (req.duration / 2);
             if ((!isNaN(start) && !isNaN(end) && ((time + threshold) >= start) && ((time - threshold) < end)) || (isNaN(start) && isNaN(time))) {
                 return req;
             }

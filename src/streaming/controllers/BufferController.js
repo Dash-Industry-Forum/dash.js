@@ -523,11 +523,7 @@ function BufferController(config) {
 
     function clearBuffer(range) {
         if (!range || !buffer) return;
-
-        var removeStart = range.start;
-        var removeEnd = range.end;
-
-        sourceBufferController.remove(buffer, removeStart, removeEnd, mediaSource);
+        sourceBufferController.remove(buffer, range.start, range.end, mediaSource);
     }
 
     function onRemoved(e) {

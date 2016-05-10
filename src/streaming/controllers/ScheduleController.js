@@ -86,12 +86,10 @@ function ScheduleController(config) {
         bufferLevelRule,
         nextFragmentRequestRule,
         scheduleWhilePaused,
-        reappendHigherQuality,
         qualityChangeInProgress,
         renderTimeCheckInterval;
 
     function setup() {
-        reappendHigherQuality = false;
         qualityChangeInProgress = false;
         initialPlayback = true;
         isStopped = false;
@@ -205,15 +203,15 @@ function ScheduleController(config) {
         return request;
     }
 
-    function replaceCanceledRequests(canceledRequests) {
+    function replaceRequests(reqArr) {
         // EPSILON is used to avoid javascript floating point issue, e.g. if request.startTime = 19.2,
         // request.duration = 3.83, than request.startTime + request.startTime = 19.2 + 1.92 = 21.119999999999997
         let EPSILON = 0.1;
         let request,
             time;
 
-        for (let i = 0, ln = canceledRequests.length; i < ln; i++) {
-            request = canceledRequests[i];
+        for (let i = 0, ln = reqArr.length; i < ln; i++) {
+            request = reqArr[i];
             time = request.startTime + (request.duration / 2) + EPSILON;
             request = adapter.getFragmentRequestForTime(streamProcessor, currentRepresentationInfo, time, {timeThreshold: 0, ignoreIsFinished: true});
             if (request) {
@@ -225,28 +223,35 @@ function ScheduleController(config) {
 
     function validate() {
         if (isStopped || playbackController.isPaused() && !scheduleWhilePaused) return;
-        //log("validating", type);
-        if (reappendHigherQuality) { //TODO add API to MediaPlayerModel to enable/disable FastTrackSwitch
-            reappendHigherQuality = false;
-            let request = fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED, time: playbackController.getTime() + currentRepresentationInfo.fragmentDuration })[0];
-            if (request) {
-                qualityChangeInProgress = true;
-                replaceCanceledRequests([request]);
-                return;
-            }
+
+        //TODO add API to MediaPlayerModel to enable/disable FastTrackSwitch
+        //validate the next fragment of the one we are playing is of same quality as current quality.
+        // If not replace it with higher quality media.
+        let request = fragmentModel.getRequests({
+            state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
+            time: playbackController.getTime() + (currentRepresentationInfo.fragmentDuration/2) + currentRepresentationInfo.fragmentDuration/2,
+            threshold:0
+        })[0];
+
+        if (request && request.quality < currentRepresentationInfo.quality &&
+            !isFragmentLoading && !bufferController.getIsAppendingInProgress()) {
+            replaceRequests([request]);
+            if (type === 'video') log("XXX reload", request.index, request.quality, currentRepresentationInfo.quality);
+            //return;
         }
 
         let readyToLoad = bufferLevelRule.execute(streamProcessor);
         if (readyToLoad && !isFragmentLoading &&
-            (dashManifestModel.getIsTextTrack(type) || !bufferController.getIsAppendingInProgress())) {
+            (dashManifestModel.getIsTextTrack(type) || !bufferController.getIsAppendingInProgress()) ) {
 
             const getNextFragment = function () {
                 let request = nextFragmentRequestRule.execute(streamProcessor);
                 if (request) {
+                    if (type === 'video') log("XXX new load", request.index);
                     fragmentModel.executeRequest(request); // we load
                 } else {
                     isFragmentLoading = false;
-                    startValidateTimer(1000); //we loop
+                    startValidateTimer(500); //we loop
                 }
             };
 
@@ -254,7 +259,7 @@ function ScheduleController(config) {
             abrController.getPlaybackQuality(streamProcessor,  getNextFragment); //Run ABR rules - let it callback to getNextFragment once it is done running.
 
         } else {
-            startValidateTimer(1000); //we loop
+            startValidateTimer(500); //we loop
         }
     }
 
@@ -269,9 +274,7 @@ function ScheduleController(config) {
             throw new Error('Unexpected error! - currentRepresentationInfo is null or undefined');
         }
 
-
         if (e.oldQuality !== -1) { //blocks init quality change
-            reappendHigherQuality = e.newQuality > e.oldQuality;
             qualityChangeInProgress = true;
             eventBus.trigger(Events.QUALITY_CHANGE_START, {mediaType: e.mediaType, newQuality: e.newQuality,  oldQuality: e.oldQuality});
         }
@@ -311,7 +314,7 @@ function ScheduleController(config) {
         }
 
         if (e.error && e.serviceLocation && !isStopped) {
-            replaceCanceledRequests([e.request]);
+            replaceRequests([e.request]);
         }
     }
 
@@ -322,7 +325,7 @@ function ScheduleController(config) {
         if (isNaN(renderTimeCheckInterval) && qualityChangeInProgress &&
             !isNaN(e.startTime) && e.quality === currentRepresentationInfo.quality) {
             renderTimeCheckInterval = setInterval(() => {
-                log('XXX interval a', playbackController.getTime(),  e.startTime);
+                log('renderTimeCheckInterval', playbackController.getTime(),  e.startTime);
                 if (playbackController.getTime() >= e.startTime) {
                     completeRenderTimeCheck();
                 }
@@ -400,7 +403,6 @@ function ScheduleController(config) {
 
         seekTarget = e.seekTime;
 
-        reappendHigherQuality = false;
         if (qualityChangeInProgress) {
             completeRenderTimeCheck();
         }
@@ -508,7 +510,6 @@ function ScheduleController(config) {
         stop();
         fragmentController.detachModel(fragmentModel);
         isFragmentLoading = false;
-        reappendHigherQuality = false;
         completeRenderTimeCheck();
         timeToLoadDelay = 0;
         seekTarget = NaN;
@@ -524,7 +525,7 @@ function ScheduleController(config) {
         getFragmentModel: getFragmentModel,
         setTimeToLoadDelay: setTimeToLoadDelay,
         getTimeToLoadDelay: getTimeToLoadDelay,
-        replaceCanceledRequests: replaceCanceledRequests,
+        replaceRequests: replaceRequests,
         start: start,
         stop: stop,
         reset: reset,
