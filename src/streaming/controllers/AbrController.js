@@ -500,7 +500,7 @@ function AbrController() {
                         fragmentModel.abortRequests();
                         setAbandonmentStateFor(type, ABANDON_LOAD);
                         setPlaybackQuality(type, streamController.getActiveStreamInfo(), newQuality);
-                        scheduleController.replaceCanceledRequests(requests);
+                        scheduleController.replaceRequests(requests);
                         setupTimeout(type);
                     }
                 }
