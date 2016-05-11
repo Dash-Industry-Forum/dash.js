@@ -86,7 +86,8 @@ function MediaPlayerModel() {
         retryIntervals,
         wallclockTimeUpdateInterval,
         bufferOccupancyABREnabled,
-        xhrWithCredentials;
+        xhrWithCredentials,
+        fastABRSwitch;
 
     function setup() {
         UTCTimingSources = [];
@@ -94,6 +95,7 @@ function MediaPlayerModel() {
         useManifestDateHeaderTimeSource = true;
         scheduleWhilePaused = true;
         bufferOccupancyABREnabled = false;
+        fastABRSwitch = true;
         lastBitrateCachingInfo = {enabled: true , ttl: DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION};
         lastMediaSettingsCachingInfo = {enabled: true , ttl: DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION};
         liveDelayFragmentCount = LIVE_DELAY_FRAGMENT_COUNT;
@@ -109,6 +111,7 @@ function MediaPlayerModel() {
         abandonLoadTimeout = ABANDON_LOAD_TIMEOUT;
         wallclockTimeUpdateInterval = WALLCLOCK_TIME_UPDATE_INTERVAL;
         xhrWithCredentials = DEFAULT_XHR_WITH_CREDENTIALS;
+
 
         retryAttempts = {
             [HTTPRequest.MPD_TYPE]:                         MANIFEST_RETRY_ATTEMPTS,
@@ -331,12 +334,22 @@ function MediaPlayerModel() {
         return xhrWithCredentials;
     }
 
+    function getFastABRSwitch() {
+        return fastABRSwitch;
+    }
+
+    function setFastABRSwitch(value) {
+        fastABRSwitch = value;
+    }
+
     function reset() {
         //TODO need to figure out what props to persist across sessions and which to reset if any.
         //setup();
     }
 
     instance = {
+        setFastABRSwitch: setFastABRSwitch,
+        getFastABRSwitch: getFastABRSwitch,
         setBufferOccupancyABREnabled: setBufferOccupancyABREnabled,
         getBufferOccupancyABREnabled: getBufferOccupancyABREnabled,
         setBandwidthSafetyFactor: setBandwidthSafetyFactor,

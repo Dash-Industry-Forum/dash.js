@@ -224,19 +224,22 @@ function ScheduleController(config) {
     function validate() {
         if (isStopped || playbackController.isPaused() && !scheduleWhilePaused) return;
 
-        //TODO add API to MediaPlayerModel to enable/disable FastTrackSwitch
-        //validate the next fragment of the one we are playing is of same quality as current quality.
-        // If not replace it with higher quality media.
-        let request = fragmentModel.getRequests({
-            state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
-            time: playbackController.getTime() + (currentRepresentationInfo.fragmentDuration / 2) + currentRepresentationInfo.fragmentDuration,
-            threshold: 0
-        })[0];
+        if (mediaPlayerModel.getFastABRSwitch()) {
+            /*
+             The logic in FragmentModel's getRequestForTime seems incorrect.
+             I should be able to set time to playbackController.getTime() + currentRepresentationInfo.fragmentDuration
+             with a threshold of 0 and get sequential fragments but I do not.
+             I skips every other one during lookup.
+             */
+            let time = playbackController.getTime() + (currentRepresentationInfo.fragmentDuration / 2) + currentRepresentationInfo.fragmentDuration;
+            let request = fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED, time: time, threshold: 0})[0];
+            if (request && request.quality < currentRepresentationInfo.quality &&
+                !isFragmentLoading && !bufferController.getIsAppendingInProgress() &&
+                !dashManifestModel.getIsTextTrack(type)) {
 
-        if (request && request.quality < currentRepresentationInfo.quality &&
-            !isFragmentLoading && !bufferController.getIsAppendingInProgress()) {
-            replaceRequests([request]);
-            //if (type === 'video') log('reload', request.index);
+                replaceRequests([request]);
+                log('Reloading index:',request.index,'at a higher quality - (',request.quality,')');
+            }
         }
 
         let readyToLoad = bufferLevelRule.execute(streamProcessor);
@@ -246,7 +249,7 @@ function ScheduleController(config) {
             const getNextFragment = function () {
                 let request = nextFragmentRequestRule.execute(streamProcessor);
                 if (request) {
-                    //if (type === 'video') log('new load', request.index);
+                    //if (type === 'video') log('XXX new load', request.index);
                     fragmentModel.executeRequest(request);
                 } else {
                     isFragmentLoading = false;

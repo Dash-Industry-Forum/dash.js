@@ -1184,6 +1184,18 @@ function MediaPlayer() {
 
 
     /**
+     * NEED DOCs
+     * @param {boolean} value
+     * @default {boolean} true
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setFastABRSwitch(value) { //TODO we need to make this work for track switches for adaptation sets.
+        mediaPlayerModel.setFastABRSwitch(value);
+    }
+
+
+    /**
      * Enabling buffer-occupancy ABR will switch to the *experimental* implementation of BOLA,
      * replacing the throughput-based ABR rule set (ThroughputRule, BufferOccupancyRule,
      * InsufficientBufferRule and AbandonRequestsRule) with the buffer-occupancy-based
@@ -1958,6 +1970,7 @@ function MediaPlayer() {
         getSelectionModeForInitialTrack: getSelectionModeForInitialTrack,
         getAutoSwitchQuality: getAutoSwitchQuality,
         setAutoSwitchQuality: setAutoSwitchQuality,
+        setFastABRSwitch: setFastABRSwitch,
         getAutoSwitchQualityFor: getAutoSwitchQualityFor,
         setAutoSwitchQualityFor: setAutoSwitchQualityFor,
         enableBufferOccupancyABR: enableBufferOccupancyABR,
