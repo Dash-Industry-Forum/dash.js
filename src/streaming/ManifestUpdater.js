@@ -137,8 +137,9 @@ function ManifestUpdater() {
         manifest = manifestModel.getValue();
         url = manifest.url;
 
-        if (manifest.hasOwnProperty('Location')) {
-            url = manifest.Location;
+        const location = dashManifestModel.getLocation(manifest);
+        if (location) {
+            url = location;
         }
 
         //log("Refresh manifest @ " + url);
