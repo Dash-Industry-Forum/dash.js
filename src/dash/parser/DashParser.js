@@ -69,7 +69,7 @@ function DashParser(/*config*/) {
         var manifest;
 
         try {
-            const start = new Date();
+            const startTime = window.performance.now();
 
             manifest = converter.xml_str2json(data);
 
@@ -77,16 +77,16 @@ function DashParser(/*config*/) {
                 throw new Error('parser error');
             }
 
-            const json = new Date();
+            const jsonTime = window.performance.now();
 
             objectIron.run(manifest);
 
-            const ironed = new Date();
+            const ironedTime = window.performance.now();
 
             xlinkController.setMatchers(matchers);
             xlinkController.setIron(objectIron);
 
-            log('Parsing complete: ( xml2json: ' + (json.getTime() - start.getTime()) + 'ms, objectiron: ' + (ironed.getTime() - json.getTime()) + 'ms, total: ' + ((ironed.getTime() - start.getTime()) / 1000) + 's)');
+            log('Parsing complete: ( xml2json: ' + (jsonTime - startTime).toPrecision(3) + 'ms, objectiron: ' + (ironedTime - jsonTime).toPrecision(3) + 'ms, total: ' + ((ironedTime - startTime) / 1000).toPrecision(3) + 's)');
         } catch (err) {
             errorHandler.manifestError('parsing the manifest failed', 'parse', data);
             return null;
