@@ -35,6 +35,8 @@ import Period from '../vo/Period';
 import Mpd from '../vo/Mpd';
 import UTCTiming from '../vo/UTCTiming';
 import TimelineConverter from '../utils/TimelineConverter';
+import MediaController from '../../streaming/controllers/MediaController';
+import DashAdapter from '../DashAdapter';
 import Event from '../vo/Event';
 import BaseURL from '../vo/BaseURL';
 import EventStream from '../vo/EventStream';
@@ -46,6 +48,9 @@ function DashManifestModel() {
     let instance;
     let context = this.context;
     let timelineConverter = TimelineConverter(context).getInstance();//TODO Need to pass this in not bake in
+    let mediaController = MediaController(context).getInstance();
+    let adaptor = DashAdapter(context).getInstance();
+
     const urlUtils = URLUtils(context).getInstance();
 
     function getIsTypeOf(adaptation, type) {
@@ -220,17 +225,23 @@ function DashManifestModel() {
         return adaptations;
     }
 
-    function getAdaptationForType(manifest, periodIndex, type) {
-        var i,
-            len,
-            adaptations;
+    function getAdaptationForType(manifest, periodIndex, type, streamInfo) {
 
-        adaptations = getAdaptationsForType(manifest, periodIndex, type);
+        let adaptations = getAdaptationsForType(manifest, periodIndex, type);
 
         if (!adaptations || adaptations.length === 0) return null;
 
-        for (i = 0, len = adaptations.length; i < len; i++) {
-            if (getIsMain(adaptations[i])) return adaptations[i];
+        if (adaptations.length > 1 && streamInfo) {
+            let currentTrack = mediaController.getCurrentTrackFor(type, streamInfo);
+            let allMediaInfoForType = adaptor.getAllMediaInfoForType(manifest, streamInfo, type);
+            for (let i = 0, ln = adaptations.length; i < ln; i++) {
+                if (mediaController.isTracksEqual(currentTrack, allMediaInfoForType[i])) {
+                    return adaptations[i];
+                }
+                if (getIsMain(adaptations[i])) {
+                    return adaptations[i];
+                }
+            }
         }
 
         return adaptations[0];

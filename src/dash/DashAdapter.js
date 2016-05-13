@@ -204,14 +204,13 @@ function DashAdapter() {
     }
 
     function getMediaInfoForType(manifest, streamInfo, type) {
-        var periodInfo = getPeriodForStreamInfo(streamInfo);
-        var periodId = periodInfo.id;
-        var data = dashManifestModel.getAdaptationForType(manifest, streamInfo.index, type);
-        var idx;
 
+        let data = dashManifestModel.getAdaptationForType(manifest, streamInfo.index, type, streamInfo);
         if (!data) return null;
 
-        idx = dashManifestModel.getIndexForAdaptation(data, manifest, streamInfo.index);
+        let periodInfo = getPeriodForStreamInfo(streamInfo);
+        let periodId = periodInfo.id;
+        let idx = dashManifestModel.getIndexForAdaptation(data, manifest, streamInfo.index);
 
         adaptations[periodId] = adaptations[periodId] || dashManifestModel.getAdaptationsForPeriod(manifest, periodInfo);
 
