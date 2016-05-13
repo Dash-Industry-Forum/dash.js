@@ -54,15 +54,16 @@ function BufferLevelRule(config) {
         let representationInfo = streamProcessor.getCurrentRepresentationInfo();
         let mediaInfo = representationInfo.mediaInfo;
         let mediaType = mediaInfo.type;
-        let metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
-        let bufferLevel = dashMetrics.getCurrentBufferLevel(metrics);
+        let audioBufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor('audio'));
+        let videoBufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor('video'));
+        let bufferLevel = mediaType === 'video' ? videoBufferLevel : audioBufferLevel;
 
-        return bufferLevel < getBufferTarget(streamProcessor, mediaType);
+        return bufferLevel < getBufferTarget(streamProcessor, mediaType, videoBufferLevel);
     }
 
     function reset() {}
 
-    function getBufferTarget(streamProcessor, type) {
+    function getBufferTarget(streamProcessor, type, videoBufferLevel) {
 
         let representationInfo = streamProcessor.getCurrentRepresentationInfo();
         let mediaInfo = representationInfo.mediaInfo;
@@ -74,6 +75,8 @@ function BufferLevelRule(config) {
 
         if (type === 'fragmentedText') {
             bufferTarget = textSourceBuffer.getAllTracksAreDisabled() ? 0 : representationInfo.fragmentDuration;
+        } else if(type === 'audio'){
+            bufferTarget = videoBufferLevel;
         } else {
             if (abrController.isPlayingAtTopQuality(streamInfo)) {
                 bufferTarget = isLongFormContent ? mediaPlayerModel.getBufferTimeAtTopQualityLongForm() : mediaPlayerModel.getBufferTimeAtTopQuality();
