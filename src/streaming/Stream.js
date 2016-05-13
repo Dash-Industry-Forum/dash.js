@@ -523,31 +523,26 @@ function Stream(config) {
     }
 
     function updateData(updatedStreamInfo) {
-        var ln = streamProcessors.length;
-        var manifest = manifestModel.getValue();
 
-        var i = 0;
-        var mediaInfo,
-           events,
-           controller;
+        log('Manifest updated... updating data system wide.');
+
+        let manifest = manifestModel.getValue();
 
         isStreamActivated = false;
+        isUpdating = true;
+        initialized = false;
         streamInfo = updatedStreamInfo;
-        log('Manifest updated... set new data on buffers.');
 
         if (eventController) {
-            events = adapter.getEventsFor(manifest, streamInfo);
+            let events = adapter.getEventsFor(manifest, streamInfo);
             eventController.addInlineEvents(events);
         }
 
-        isUpdating = true;
-        initialized = false;
-
-        for (i; i < ln; i++) {
-            controller = streamProcessors[i];
-            mediaInfo = adapter.getMediaInfoForType(manifest, streamInfo, controller.getType());
+        for (let i = 0, ln = streamProcessors.length; i < ln; i++) {
+            let streamProcessor = streamProcessors[i];
+            let mediaInfo = adapter.getMediaInfoForType(manifest, streamInfo, streamProcessor.getType());
             abrController.updateTopQualityIndex(mediaInfo);
-            controller.updateMediaInfo(manifest, mediaInfo);
+            streamProcessor.updateMediaInfo(manifest, mediaInfo);
         }
 
         isUpdating = false;
