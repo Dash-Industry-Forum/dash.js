@@ -225,14 +225,10 @@ function ScheduleController(config) {
         if (isStopped || playbackController.isPaused() && !scheduleWhilePaused) return;
 
         if (mediaPlayerModel.getFastABRSwitch()) {
-            /*
-             The logic in FragmentModel's getRequestForTime seems incorrect.
-             I should be able to set time to playbackController.getTime() + currentRepresentationInfo.fragmentDuration
-             with a threshold of 0 and get sequential fragments but I do not.
-             I skips every other one during lookup.
-             */
-            let time = playbackController.getTime() + (currentRepresentationInfo.fragmentDuration / 2) + currentRepresentationInfo.fragmentDuration;
+
+            let time = playbackController.getTime() + currentRepresentationInfo.fragmentDuration;
             let request = fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED, time: time, threshold: 0})[0];
+
             if (request && request.quality < currentRepresentationInfo.quality &&
                 !isFragmentLoading && !bufferController.getIsAppendingInProgress() &&
                 !dashManifestModel.getIsTextTrack(type)) {
