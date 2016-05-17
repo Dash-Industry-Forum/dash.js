@@ -221,7 +221,7 @@ export function getSegmentByIndex(index, representation) {
 
 export function decideSegmentListRangeForTimeline(timelineConverter, isDynamic, requestedTime, index, givenAvailabilityUpperLimit) {
     var availabilityLowerLimit = 2;
-    var availabilityUpperLimit = givenAvailabilityUpperLimit || 10;
+    var availabilityUpperLimit = givenAvailabilityUpperLimit >= 0 ? givenAvailabilityUpperLimit : 10;
     var firstIdx = 0;
     var lastIdx = Number.POSITIVE_INFINITY;
 
