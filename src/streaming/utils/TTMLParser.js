@@ -71,6 +71,58 @@ function TTMLParser() {
     }
 
     /**
+    * Create unique sorted list of times at which spans start or end.
+    *
+    * @param {Array} spans - array of span elements
+    */
+    function createSpanChangeTimesList(spans) {
+
+        let spanChangeTimeList = [];
+        let spanChangeTimeStrings = [];
+
+        function addSpanTime(span, name) {
+            if (span.hasOwnProperty(name)) {
+                let timeString = span[name];
+                if (spanChangeTimeStrings.indexOf(timeString) < 0) {
+                    spanChangeTimeStrings.push(timeString);
+                }
+            }
+        }
+
+        for (let i = 0; i < spans.length; i++) {
+            let span = spans[i];
+            addSpanTime(span, 'begin');
+            addSpanTime(span, 'end');
+        }
+
+        for (let i = 0; i < spanChangeTimeStrings.length; i++) {
+            spanChangeTimeList.push(parseTimings(spanChangeTimeStrings[i]));
+        }
+        spanChangeTimeList.sort();
+        return spanChangeTimeList;
+    }
+
+
+    function clipStartTime(startTime, startInterval) {
+        if (typeof startInterval !== 'undefined') {
+            if (startTime < startInterval) {
+                startTime = startInterval;
+            }
+        }
+        return startTime;
+    }
+
+
+    function clipEndTime(endTime, endInterval) {
+        if (typeof endInterval !== 'undefined') {
+            if (endTime > endInterval) {
+                endTime = endInterval;
+            }
+        }
+        return endTime;
+    }
+
+    /**
      * Parse the raw data and process it to return the HTML element representing the cue.
      * Return the region to be processed and controlled (hide/show) by the caption controller.
      * @param {string} data - raw data received from the TextSourceBuffer
@@ -157,73 +209,92 @@ function TTMLParser() {
         // Extract the div
         var divs = ttml.tt.body_asArray[0].__children;
 
-        divs.forEach(function (div) {
-            var cues = div.div.p_asArray;
+        // Keep track of the start and end times for the current cue
+        // Timing is either on div, paragraph or span level.
+        let cueStartTime;
+        let cueEndTime;
 
+        for (let k = 0; k < divs.length; k++) {
+            let div = divs[k];
+            let divStartTime; // This is mainly for image subtitles.
+            let divEndTime;
+
+            if (div.hasOwnProperty('begin') && div.hasOwnProperty('end')) {
+                // Timing on div level is not allowed by EBU-TT-D
+                divStartTime = parseTimings(div.begin);
+                divEndTime = parseTimings(div.end);
+                cueStartTime = divStartTime;
+                cueEndTime = divStartTime;
+            }
+
+            let paragraphs = div.div.p_asArray;
             // Check if cues is not empty or undefined.
-            if (!cues || cues.length === 0) {
-                errorMsg = 'TTML document does not contain any cues';
-            } else {
+            if (divStartTime === undefined && (!paragraphs || paragraphs.length === 0)) {
+                errorMsg = 'TTML document does not contain any paragraphs or div timing.';
+                log(errorMsg);
+                return captionArray;
+            }
 
-                /*** Parsing of every cue.
+            if (paragraphs.length > 0) {
+
+                /*** Parsing of every paragraph.
                  *
-                 * cues: List of the cues found in the ttml parsing.
+                 * paragraphs: List of the paragraphs found in the ttml parsing.
                  *       We iterate on this list.
-                 * cue: Every cue is parsed individually and creates an HTML element with its style and children.
+                 * paragraph: Every paragraph is parsed individually. Normally one cue is generated per paragraph.
+                 *            However, if timing is in spans, there may be more than one cue generated.
                  *
                  * pElements: all the nodes that can be found in the paragraph.
                  *
                  * ***/
 
                 // Caption array is the final result return containing all the cues' information.
-                var pStartTime;
-                var pEndTime;
-                var spanStartTime;
-                var spanEndTime;
-                cues.forEach(function (cue) {
-
-                    // Obtain the start and end time of the cue.
-                    if (cue.hasOwnProperty('begin') && cue.hasOwnProperty('end')) {
-                        pStartTime = parseTimings(cue.begin);
-                        pEndTime = parseTimings(cue.end);
-                    } else if (cue.span.hasOwnProperty('begin') && cue.span.hasOwnProperty('end')) {
-                        spanStartTime = parseTimings(cue.span.begin);
-                        spanEndTime = parseTimings(cue.span.end);
-                    } else {
-                        errorMsg = 'TTML document has incorrect timing value';
-                        throw new Error(errorMsg);
+                let pStartTime;
+                let pEndTime;
+                let spanStartTime;
+                let spanEndTime;
+                for (let j = 0; j < paragraphs.length; j++) {
+                    let paragraph = paragraphs[j];
+                    // Get the paragraph timing if present
+                    if (paragraph.hasOwnProperty('begin') && paragraph.hasOwnProperty('end')) {
+                        pStartTime = parseTimings(paragraph.begin);
+                        pEndTime = parseTimings(paragraph.end);
+                        cueStartTime = pStartTime;
+                        cueEndTime = pEndTime;
                     }
-                    let cueStartTime = spanStartTime || pStartTime;
-                    let cueEndTime = spanEndTime || pEndTime;
 
-                    if (typeof intervalStart !== 'undefined' && typeof intervalEnd !== 'undefined') {
-                        if (cueEndTime < intervalStart || cueStartTime > intervalEnd) {
-                            log('TTML: Cue interval ' + cueStartTime + '-' + cueEndTime +
-                                ' outside sample interval ' + intervalStart + '-' + intervalEnd + '. Dropped');
-                            return;
+                    let spans = paragraph.span_asArray;
+                    let spanChangeTimes = [];
+                    if (cueStartTime === undefined) {
+                        // Still no timing. Must be on span level.
+                        spanChangeTimes = createSpanChangeTimesList(spans);
+                        if (spanChangeTimes.length === 0) {
+                            errorMsg = 'No timing even on span level';
                         } else {
-                            let clipped = false;
-                            let origStart = cueStartTime;
-                            let origEnd = cueEndTime;
-                            if (cueStartTime < intervalStart) {
-                                clipped = true;
-                                cueStartTime = intervalStart;
-                            }
-                            if (cueEndTime > intervalEnd) {
-                                clipped = true;
-                                cueEndTime = intervalEnd;
-                            }
-                            if (clipped) {
-                                log('TTML: Clipped cue ' + origStart + '-' + origEnd + ' to ' +
-                                    cueStartTime + '-' + cueEndTime);
-                            }
+                            spanStartTime = spanChangeTimes[0];
+                            spanEndTime = spanChangeTimes[spanChangeTimes.length - 1];
+                            cueStartTime = spanStartTime; //TODO. Make this better
+                            cueEndTime = spanEndTime; // TODO. Add multiple cues
                         }
                     }
 
-                    if (cue['smpte:backgroundImage'] !== undefined) {
+                    // Make clipping method instead of what is below.
+
+                    let origStartTime = cueStartTime;
+                    let origEndTime = cueEndTime;
+
+                    cueStartTime = clipStartTime(origStartTime, intervalStart);
+                    cueEndTime = clipEndTime(origEndTime, intervalEnd);
+
+                    if ((cueStartTime !== origStartTime) || (cueEndTime !== origEndTime)) {
+                        log('TTML: Clipped cue ' + origStartTime + '-' + origEndTime + ' to ' +
+                            cueStartTime + '-' + cueEndTime);
+                    }
+
+                    if (paragraph['smpte:backgroundImage'] !== undefined) {
                         var images = ttml.tt.head.metadata.image_asArray;
                         for (var j = 0; j < images.length; j++) {
-                            if (('#' + images[j]['xml:id']) == cue['smpte:backgroundImage']) {
+                            if (('#' + images[j]['xml:id']) == paragraph['smpte:backgroundImage']) {
                                 captionArray.push({
                                     start: cueStartTime,
                                     end: cueEndTime,
@@ -238,8 +309,8 @@ function TTMLParser() {
                         linePadding = {};
                         fontSize = {};
                         var cueID = '';
-                        if (cue.hasOwnProperty('id') || cue.hasOwnProperty('xml:id')) {
-                            cueID = cue['xml:id'] || cue.id;
+                        if (paragraph.hasOwnProperty('id') || paragraph.hasOwnProperty('xml:id')) {
+                            cueID = paragraph['xml:id'] || paragraph.id;
                         }
                         // Error if timing is not specified.
                         // TODO: check with the specification what is allowed.
@@ -252,13 +323,13 @@ function TTMLParser() {
                          * Find the region defined for the cue.
                          */
                         // properties to be put in the "captionRegion" HTML element.
-                        var cueRegionProperties = constructCueRegion(cue, div.div, cellUnit);
+                        var cueRegionProperties = constructCueRegion(paragraph, div.div, cellUnit);
 
                         /**
                          * Find the style defined for the cue.
                          */
                         // properties to be put in the "paragraph" HTML element.
-                        var cueStyleProperties = constructCueStyle(cue, cellUnit);
+                        var cueStyleProperties = constructCueStyle(paragraph, cellUnit);
 
                         /**
                          * /!\ Create the cue HTML Element containing the whole cue.
@@ -270,8 +341,8 @@ function TTMLParser() {
                         var cueParagraph = document.createElement('div');
                         cueParagraph.className = styleIDs;
 
-                        // Stock the element in the subtitle (in p) in an array (in case there are only one value).
-                        var pElements = cue.__children;
+                        // Stock the element in the subtitle (in p) in an array (in case there is only one value).
+                        var pElements = paragraph.__children;
 
                         // Create an wrapper containing the cue information about unicodeBidi and direction
                         // as they need to be defined on at this level.
@@ -355,7 +426,7 @@ function TTMLParser() {
 
                     } else {
                         var text = '';
-                        var textElements = cue.__children;
+                        var textElements = paragraph.__children;
                         if (textElements.length) {
                             textElements.forEach(function (el) {
                                 if (el.hasOwnProperty('span')) {
@@ -388,11 +459,10 @@ function TTMLParser() {
                             data: text,
                             type: 'text'
                         });
-
                     }
-                });
+                }
             }
-        });
+        }
 
         if (errorMsg !== '') {
             log(errorMsg);
