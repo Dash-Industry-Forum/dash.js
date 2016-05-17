@@ -254,7 +254,7 @@ export function decideSegmentListRangeForTemplate(timelineConverter, isDynamic, 
     };
     var currentSegmentList = representation.segments;
     var availabilityLowerLimit = periodRelativeRange.start;
-    var availabilityUpperLimit = givenAvailabilityUpperLimit || periodRelativeRange.end;
+    var availabilityUpperLimit = givenAvailabilityUpperLimit >= 0 ? givenAvailabilityUpperLimit : periodRelativeRange.end;
 
     var originAvailabilityTime = NaN;
     var originSegment = null;
