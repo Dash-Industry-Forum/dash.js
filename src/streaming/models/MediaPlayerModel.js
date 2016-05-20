@@ -60,6 +60,8 @@ const XLINK_RETRY_INTERVAL = 500;
 //This value influences the startup time for live (in ms).
 const WALLCLOCK_TIME_UPDATE_INTERVAL = 50;
 
+const DEFAULT_XHR_WITH_CREDENTIALS = false;
+
 function MediaPlayerModel() {
 
     let instance,
@@ -83,7 +85,8 @@ function MediaPlayerModel() {
         retryAttempts,
         retryIntervals,
         wallclockTimeUpdateInterval,
-        bufferOccupancyABREnabled;
+        bufferOccupancyABREnabled,
+        xhrWithCredentials;
 
     function setup() {
         UTCTimingSources = [];
@@ -105,6 +108,7 @@ function MediaPlayerModel() {
         bandwidthSafetyFactor = BANDWIDTH_SAFETY_FACTOR;
         abandonLoadTimeout = ABANDON_LOAD_TIMEOUT;
         wallclockTimeUpdateInterval = WALLCLOCK_TIME_UPDATE_INTERVAL;
+        xhrWithCredentials = DEFAULT_XHR_WITH_CREDENTIALS;
 
         retryAttempts = {
             [HTTPRequest.MPD_TYPE]:                         MANIFEST_RETRY_ATTEMPTS,
@@ -319,6 +323,14 @@ function MediaPlayerModel() {
         return UTCTimingSources;
     }
 
+    function setXHRWithCredentials(value) {
+        xhrWithCredentials = !!value;
+    }
+
+    function getXHRWithCredentials() {
+        return xhrWithCredentials;
+    }
+
     function reset() {
         //TODO need to figure out what props to persist across sessions and which to reset if any.
         //setup();
@@ -371,6 +383,8 @@ function MediaPlayerModel() {
         getUseManifestDateHeaderTimeSource: getUseManifestDateHeaderTimeSource,
         setUTCTimingSources: setUTCTimingSources,
         getUTCTimingSources: getUTCTimingSources,
+        setXHRWithCredentials: setXHRWithCredentials,
+        getXHRWithCredentials: getXHRWithCredentials,
         reset: reset
     };
 

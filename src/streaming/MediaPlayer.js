@@ -1502,6 +1502,18 @@ function MediaPlayer() {
     }
 
     /**
+     * Sets whether withCredentials on XHR requests is true or false
+     *
+     * @default false
+     * @param {boolean} value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setXHRWithCredentials(value) {
+        mediaPlayerModel.setXHRWithCredentials(value);
+    }
+
+    /**
      * Detects if Protection is included and returns an instance of ProtectionController.js
      * @memberof module:MediaPlayer
      * @instance
@@ -1963,6 +1975,7 @@ function MediaPlayer() {
         setBufferTimeAtTopQuality: setBufferTimeAtTopQuality,
         setFragmentLoaderRetryAttempts: setFragmentLoaderRetryAttempts,
         setFragmentLoaderRetryInterval: setFragmentLoaderRetryInterval,
+        setXHRWithCredentials: setXHRWithCredentials,
         setBufferTimeAtTopQualityLongForm: setBufferTimeAtTopQualityLongForm,
         setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,
         setRichBufferThreshold: setRichBufferThreshold,
