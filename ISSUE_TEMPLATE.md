@@ -1,13 +1,25 @@
-========= Issue submission guidelines (you may delete the text below after reading it ) =========
-Before creating a new issue around a potential bug please:
-1. Check your browser's console for 404s (MPD file or media fragments) 
-2. Check for Access-Denied errors which indicates an issue with the server's HTTP access control (CORS)
-3. Please use the Dash Validator (http://dashif.org/conformance.html) to make sure your MPD and media fragments conform before you file an issue.
-4. View the Javascript console to see the debug traces produced by the reference player. They may indicate why your content is not playing.
-5. When you do file an issue please add as much info as possible:
-* Your dash.js, browser and OS system versions
-* Valid MPD test content - ideally the URL to the manifest or a static copy of it if it is not public.
-* The relevant excerpt from the console trace showing the problem. 
-* A clear sequence of steps to reproduce the problem. 
+<!-- If you are raising a bug playing a stream, you must fill out the following or your issue may not be responded to. For features or improvements, you may delete this. -->
+##### Environment
+<!-- Replace [ ] with [x] to check off the list -->
+- [ ] The MPD passes the DASH-IF Conformance Tool on http://dashif.org/conformance.html
+- [ ] The stream has correct Access-Control-Allow-Origin headers (CORS)
+- [ ] There are no network errors such as 404s in the browser console when trying to play the stream
+- [ ] The issue observed is not mentioned on https://github.com/Dash-Industry-Forum/dash.js/wiki/FAQ
+- [ ] The issue occurrs in the latest reference client on http://dashif.org/reference/players/javascript/ and not just on my page
+* Link to playable MPD file: 
+* Dash.js version: 
+* Browser name/version: 
+* OS name/version: 
 
+##### Steps to reproduce
+1. Please provide clear steps to reproduce your problem
+2. If the bug is intermittent, give a rough frequency if possible
 
+##### Observed behaviour
+Describe what the player is doing that is unexpected or undesired behaviour.
+
+##### Console output
+```
+Paste the contents of the browser console here.
+You may need to enable debug logging in dash.js by calling player.getDebug().setLogToBrowserConsole(true) if you are using your own page.
+```
