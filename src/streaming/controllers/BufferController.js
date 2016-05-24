@@ -484,8 +484,6 @@ function BufferController(config) {
     function pruneBuffer() {
         if (type === 'fragmentedText') return;
 
-        log('try to prune buffer');
-
         var start = buffer.buffered.length ? buffer.buffered.start(0) : 0;
         var currentTime = playbackController.getTime();
         // we want to get rid off buffer that is more than x seconds behind current time
