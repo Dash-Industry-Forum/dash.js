@@ -43,6 +43,7 @@ function URLUtils() {
     let instance;
 
     const absUrl = /^(?:(?:[a-z]+:)?\/)?\//i;
+    const httpUrlRegex = /^https?:\/\//i;
 
     /**
      * Returns a string that contains the Base URL of a URL, if determinable.
@@ -75,9 +76,23 @@ function URLUtils() {
         return !absUrl.test(url);
     }
 
+
+    /**
+     * Determines whether the url is an HTTP-URL as defined in ISO/IEC
+     * 23009-1:2014 3.1.15. ie URL with a fixed scheme of http or https
+     * @return {bool}
+     * @param {string} url
+     * @memberof module:URLUtils
+     * @instance
+     */
+    function isHTTPURL(url) {
+        return httpUrlRegex.test(url);
+    }
+
     instance = {
         parseBaseUrl:   parseBaseUrl,
-        isRelative:     isRelative
+        isRelative:     isRelative,
+        isHTTPURL:      isHTTPURL
     };
 
     return instance;
