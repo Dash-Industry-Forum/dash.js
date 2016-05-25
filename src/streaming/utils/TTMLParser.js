@@ -189,12 +189,10 @@ function TTMLParser() {
      * Check if entity timing has some overlap with interval
      */
     function inIntervalOrNoTiming(entity, interval) {
-        let inInterval = false;
+        let inInterval = true;
         if (entity.hasOwnProperty('span')) {
             let entityInterval = getInterval(entity.span);
-            if (entityInterval === null) { // No timing
-                inInterval = true;
-            } else {
+            if (entityInterval !== null) { //Timing
                 inInterval = (entityInterval[0] < interval[1] && entityInterval[1] > interval[0]);
             }
         }
@@ -294,7 +292,7 @@ function TTMLParser() {
             let div = divs[k];
             let divInterval = null; // This is mainly for image subtitles.
 
-            if (null !== (divInterval = getInterval(div))) {
+            if (null !== (divInterval = getInterval(div.div))) {
                 // Timing on div level is not allowed by EBU-TT-D.
                 // We only use it for IMSC-1 image subtitle profile.
 
