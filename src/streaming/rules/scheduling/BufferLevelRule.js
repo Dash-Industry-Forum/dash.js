@@ -75,8 +75,8 @@ function BufferLevelRule(config) {
 
         if (type === 'fragmentedText') {
             bufferTarget = textSourceBuffer.getAllTracksAreDisabled() ? 0 : representationInfo.fragmentDuration;
-        } else if(type === 'audio'){
-            bufferTarget = videoBufferLevel;
+        } else if (type === 'audio') {
+            bufferTarget = videoBufferLevel !== 0 ? videoBufferLevel : representationInfo.fragmentDuration;
         } else {
             if (abrController.isPlayingAtTopQuality(streamInfo)) {
                 bufferTarget = isLongFormContent ? mediaPlayerModel.getBufferTimeAtTopQualityLongForm() : mediaPlayerModel.getBufferTimeAtTopQuality();
