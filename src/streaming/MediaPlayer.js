@@ -62,7 +62,7 @@ import {getVersionString} from './../core/Version';
 
 //Dash
 import DashAdapter from '../dash/DashAdapter';
-import DashParser from '../dash/DashParser';
+import DashParser from '../dash/parser/DashParser';
 import DashManifestModel from '../dash/models/DashManifestModel';
 import DashMetrics from '../dash/DashMetrics';
 import TimelineConverter from '../dash/utils/TimelineConverter';
