@@ -222,11 +222,12 @@ function ScheduleController(config) {
     }
 
     function validate() {
+
         if (isStopped || playbackController.isPaused() && !scheduleWhilePaused) return;
 
         if (mediaPlayerModel.getFastABRSwitch()) {
 
-            let time = playbackController.getTime() + currentRepresentationInfo.fragmentDuration;
+            let time = playbackController.getTime() + (currentRepresentationInfo.fragmentDuration * 1.5);
             let request = fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED, time: time, threshold: 0})[0];
 
             if (request && request.quality < currentRepresentationInfo.quality &&
