@@ -162,8 +162,7 @@ function MediaController() {
      * @memberof MediaController#
      */
     function getCurrentTrackFor(type, streamInfo) {
-        if (!type || !streamInfo) return null;
-
+        if (!type || !streamInfo || (streamInfo && !tracks[streamInfo.id])) return null;
         return tracks[streamInfo.id][type].current;
     }
 
