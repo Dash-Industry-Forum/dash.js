@@ -87,6 +87,7 @@ function TextTracks() {
         } else if (document.mozFullScreen) { // Firefox
             fullscreenAttribute = 'mozFullScreen';
         }
+
     }
 
     function createTrackForUserAgent (i) {
@@ -407,6 +408,7 @@ function TextTracks() {
 
                 cue.onenter =  function () {
                     if (track.mode == 'showing') {
+                        log('Cue ' + this.startTime + '-' + this.endTime + ' : ' + this.cueHTMLElement.id + ' : ' + this.cueHTMLElement.innerText);
                         captionContainer.appendChild(this.cueHTMLElement);
                         scaleCue.call(self, this);
                     }
@@ -415,7 +417,7 @@ function TextTracks() {
                 cue.onexit =  function () {
                     var divs = captionContainer.childNodes;
                     for (var i = 0; i < divs.length; ++i) {
-                        if (divs[i].id == 'subtitle_' + this.cueID) {
+                        if (divs[i].id === this.cueID) {
                             captionContainer.removeChild(divs[i]);
                         }
                     }
@@ -464,7 +466,7 @@ function TextTracks() {
 
     function setCurrentTrackIdx(idx) {
         currentTrackIdx = idx;
-        clearCues.call(this);
+        clearCaptionContainer.call(this);
         if (idx >= 0) {
             var track = video.textTracks[idx];
             if (track.renderingType === 'html') {
@@ -512,7 +514,7 @@ function TextTracks() {
             clearInterval(videoSizeCheckInterval);
             videoSizeCheckInterval = null;
         }
-        clearCues.call(this);
+        clearCaptionContainer.call(this);
     }
 
     function deleteTextTrack(idx) {
@@ -548,7 +550,7 @@ function TextTracks() {
         }
     }
 
-    function clearCues() {
+    function clearCaptionContainer() {
         if (captionContainer) {
             while (captionContainer.firstChild) {
                 captionContainer.removeChild(captionContainer.firstChild);
