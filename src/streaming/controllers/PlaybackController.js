@@ -114,7 +114,12 @@ function PlaybackController() {
     function play() {
         if (element) {
             element.autoplay = true;
-            element.play();
+            const p = element.play();
+            if (p && (typeof Promise !== 'undefined') && (p instanceof Promise)) {
+                p.catch((e) => {
+                    log(`Caught pending play exception - continuing (${e})`);
+                });
+            }
         } else {
             playOnceInitialized = true;
         }
