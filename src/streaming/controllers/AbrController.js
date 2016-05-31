@@ -67,6 +67,7 @@ function AbrController() {
         abandonmentStateDict,
         abandonmentTimeout,
         limitBitrateByPortal,
+        usePixelRatioInLimitBitrateByPortal,
         manifestModel,
         dashManifestModel,
         videoModel,
@@ -84,6 +85,7 @@ function AbrController() {
         abandonmentStateDict = {};
         streamProcessorDict = {};
         limitBitrateByPortal = false;
+        usePixelRatioInLimitBitrateByPortal = false;
         domStorage = DOMStorage(context).getInstance();
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
         manifestModel = ManifestModel(context).getInstance();
@@ -217,6 +219,14 @@ function AbrController() {
 
     function setLimitBitrateByPortal(value) {
         limitBitrateByPortal = value;
+    }
+
+    function getUsePixelRatioInLimitBitrateByPortal() {
+        return usePixelRatioInLimitBitrateByPortal;
+    }
+
+    function setUsePixelRatioInLimitBitrateByPortal(value) {
+        usePixelRatioInLimitBitrateByPortal = value;
     }
 
     function getPlaybackQuality(streamProcessor, completedCallback) {
@@ -444,12 +454,14 @@ function AbrController() {
             return idx;
         }
 
-        let element = videoModel.getElement();
-        let elementWidth = element.clientWidth;
-        let elementHeight = element.clientHeight;
-        let manifest = manifestModel.getValue();
-        let representation = dashManifestModel.getAdaptationForType(manifest, 0, type).Representation;
-        let newIdx = idx;
+        var hasPixelRatio = usePixelRatioInLimitBitrateByPortal && window.hasOwnProperty('devicePixelRatio');
+        var pixelRatio = hasPixelRatio ? window.devicePixelRatio : 1;
+        var element = videoModel.getElement();
+        var elementWidth = element.clientWidth * pixelRatio;
+        var elementHeight = element.clientHeight * pixelRatio;
+        var manifest = manifestModel.getValue();
+        var representation = dashManifestModel.getAdaptationForType(manifest, 0, type).Representation;
+        var newIdx = idx;
 
         if (elementWidth > 0 && elementHeight > 0) {
             while (
@@ -530,6 +542,8 @@ function AbrController() {
         getAutoSwitchBitrateFor: getAutoSwitchBitrateFor,
         setLimitBitrateByPortal: setLimitBitrateByPortal,
         getLimitBitrateByPortal: getLimitBitrateByPortal,
+        getUsePixelRatioInLimitBitrateByPortal: getUsePixelRatioInLimitBitrateByPortal,
+        setUsePixelRatioInLimitBitrateByPortal: setUsePixelRatioInLimitBitrateByPortal,
         getConfidenceFor: getConfidenceFor,
         getQualityFor: getQualityFor,
         getAbandonmentStateFor: getAbandonmentStateFor,
