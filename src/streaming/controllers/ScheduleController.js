@@ -407,6 +407,10 @@ function ScheduleController(config) {
             completeRenderTimeCheck();
         }
 
+        if (qualityChangeInProgress) {
+            completeRenderTimeCheck();
+        }
+
         if (!initialPlayback) {
             isFragmentLoading = false;
         }
