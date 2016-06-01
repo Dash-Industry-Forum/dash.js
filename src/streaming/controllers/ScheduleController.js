@@ -206,17 +206,17 @@ function ScheduleController(config) {
     function replaceRequests(reqArr) {
         // EPSILON is used to avoid javascript floating point issue, e.g. if request.startTime = 19.2,
         // request.duration = 3.83, than request.startTime + request.startTime = 19.2 + 1.92 = 21.119999999999997
-        let EPSILON = 0.1;
-        let request,
-            time;
+        const EPSILON = 0.1;
 
         for (let i = 0, ln = reqArr.length; i < ln; i++) {
-            request = reqArr[i];
-            time = request.startTime + (request.duration / 2) + EPSILON;
-            request = adapter.getFragmentRequestForTime(streamProcessor, currentRepresentationInfo, time, {timeThreshold: 0, ignoreIsFinished: true});
-            if (request) {
+
+            const request = reqArr[i];
+            const time = request.startTime + (request.duration / 2) + EPSILON;
+            const requestForTime = adapter.getFragmentRequestForTime(streamProcessor, currentRepresentationInfo, time, {timeThreshold: 0, ignoreIsFinished: true});
+
+            if (requestForTime) {
                 isFragmentLoading = true;
-                fragmentModel.executeRequest(request);
+                fragmentModel.executeRequest(requestForTime);
             }
         }
     }
@@ -273,7 +273,7 @@ function ScheduleController(config) {
             throw new Error('Unexpected error! - currentRepresentationInfo is null or undefined');
         }
 
-        if (e.oldQuality !== -1) { //blocks init quality change
+        if (e.oldQuality !== AbrController.QUALITY_DEFAULT) { //blocks init quality change
             qualityChangeInProgress = true;
             eventBus.trigger(Events.QUALITY_CHANGE_START, {mediaType: e.mediaType, newQuality: e.newQuality,  oldQuality: e.oldQuality});
         }
@@ -326,17 +326,19 @@ function ScheduleController(config) {
             renderTimeCheckInterval = setInterval(() => {
                 //log('renderTimeCheckInterval', playbackController.getTime(),  e.startTime);
                 if (playbackController.getTime() >= e.startTime) {
-                    completeRenderTimeCheck();
+                    completeRenderTimeCheck(true);
                 }
             }, 500);
         }
     }
 
-    function completeRenderTimeCheck() {
+    function completeRenderTimeCheck(dispatchEvent) {
         clearInterval(renderTimeCheckInterval);
         qualityChangeInProgress = false;
         renderTimeCheckInterval = NaN;
-        eventBus.trigger(Events.QUALITY_CHANGE_COMPLETE, {mediaType: type});
+        if (dispatchEvent) {
+            eventBus.trigger(Events.QUALITY_CHANGE_COMPLETE, {mediaType: type});
+        }
     }
 
     function onDataUpdateStarted(e) {
@@ -404,11 +406,7 @@ function ScheduleController(config) {
         setTimeToLoadDelay(0);
 
         if (qualityChangeInProgress) {
-            completeRenderTimeCheck();
-        }
-
-        if (qualityChangeInProgress) {
-            completeRenderTimeCheck();
+            completeRenderTimeCheck(true);
         }
 
         if (!initialPlayback) {
@@ -514,7 +512,7 @@ function ScheduleController(config) {
         stop();
         fragmentController.detachModel(fragmentModel);
         isFragmentLoading = false;
-        completeRenderTimeCheck();
+        completeRenderTimeCheck(false);
         timeToLoadDelay = 0;
         seekTarget = NaN;
         playbackController = null;

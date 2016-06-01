@@ -46,6 +46,7 @@ const ABANDON_LOAD = 'abandonload';
 const ALLOW_LOAD = 'allowload';
 const DEFAULT_VIDEO_BITRATE = 1000;
 const DEFAULT_AUDIO_BITRATE = 100;
+const QUALITY_DEFAULT = -1;
 
 function AbrController() {
 
@@ -303,7 +304,7 @@ function AbrController() {
         let bitrateInfo;
 
         if (!bitrateList || bitrateList.length === 0) {
-            return -1;
+            return QUALITY_DEFAULT;
         }
 
         for (let i = bitrateList.length - 1; i >= 0; i--) {
@@ -386,7 +387,7 @@ function AbrController() {
         qualityDict[id] = qualityDict[id] || {};
 
         if (!qualityDict[id].hasOwnProperty(type)) {
-            qualityDict[id][type] = -1;
+            qualityDict[id][type] = QUALITY_DEFAULT;
         }
 
         quality = qualityDict[id][type];
@@ -551,4 +552,5 @@ function AbrController() {
 AbrController.__dashjs_factory_name = 'AbrController';
 let factory = FactoryMaker.getSingletonFactory(AbrController);
 factory.ABANDON_LOAD = ABANDON_LOAD;
+factory.QUALITY_DEFAULT = QUALITY_DEFAULT;
 export default factory;
