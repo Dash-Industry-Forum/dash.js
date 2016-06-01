@@ -42,7 +42,7 @@ const ABANDON_LOAD_TIMEOUT = 10000;
 
 const BUFFER_TO_KEEP = 30;
 const BUFFER_PRUNING_INTERVAL = 30;
-const DEFAULT_MIN_BUFFER_TIME = 12;
+const DEFAULT_MIN_BUFFER_TIME = 20;
 const BUFFER_TIME_AT_TOP_QUALITY = 30;
 const BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 60;
 const LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;
@@ -86,7 +86,8 @@ function MediaPlayerModel() {
         retryIntervals,
         wallclockTimeUpdateInterval,
         bufferOccupancyABREnabled,
-        xhrWithCredentials;
+        xhrWithCredentials,
+        fastABRSwitch;
 
     function setup() {
         UTCTimingSources = [];
@@ -94,6 +95,7 @@ function MediaPlayerModel() {
         useManifestDateHeaderTimeSource = true;
         scheduleWhilePaused = true;
         bufferOccupancyABREnabled = false;
+        fastABRSwitch = true;
         lastBitrateCachingInfo = {enabled: true , ttl: DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION};
         lastMediaSettingsCachingInfo = {enabled: true , ttl: DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION};
         liveDelayFragmentCount = LIVE_DELAY_FRAGMENT_COUNT;
@@ -109,6 +111,7 @@ function MediaPlayerModel() {
         abandonLoadTimeout = ABANDON_LOAD_TIMEOUT;
         wallclockTimeUpdateInterval = WALLCLOCK_TIME_UPDATE_INTERVAL;
         xhrWithCredentials = DEFAULT_XHR_WITH_CREDENTIALS;
+
 
         retryAttempts = {
             [HTTPRequest.MPD_TYPE]:                         MANIFEST_RETRY_ATTEMPTS,
@@ -331,12 +334,22 @@ function MediaPlayerModel() {
         return xhrWithCredentials;
     }
 
+    function getFastABRSwitch() {
+        return fastABRSwitch;
+    }
+
+    function setFastABRSwitch(value) {
+        fastABRSwitch = value;
+    }
+
     function reset() {
         //TODO need to figure out what props to persist across sessions and which to reset if any.
         //setup();
     }
 
     instance = {
+        setFastABRSwitch: setFastABRSwitch,
+        getFastABRSwitch: getFastABRSwitch,
         setBufferOccupancyABREnabled: setBufferOccupancyABREnabled,
         getBufferOccupancyABREnabled: getBufferOccupancyABREnabled,
         setBandwidthSafetyFactor: setBandwidthSafetyFactor,
