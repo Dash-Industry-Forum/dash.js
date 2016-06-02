@@ -33,7 +33,7 @@ import ManifestModel from '../streaming/models/ManifestModel';
 import DashManifestModel from './models/DashManifestModel';
 import FactoryMaker from '../core/FactoryMaker';
 import * as MetricsList from './constants/DashMetricsList';
-const round10 = require('round10').round10;
+import { round10 } from 'round10';
 
 /**
  * @module DashMetrics
