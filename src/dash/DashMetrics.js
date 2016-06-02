@@ -29,10 +29,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
-import AbrController from '../streaming/controllers/AbrController';
 import ManifestModel from '../streaming/models/ManifestModel';
 import DashManifestModel from './models/DashManifestModel';
 import FactoryMaker from '../core/FactoryMaker';
+import * as MetricsList from './constants/DashMetricsList';
 
 /**
  * @module DashMetrics
@@ -92,53 +92,13 @@ function DashMetrics() {
     }
 
     /**
-     * This method returns the current max index correlated to the max allowed bitrate
-     * explicitly set via the MediaPlayer's API setMaxAllowedBitrateFor.
-     *
-     * @param {string} bufferType - String 'audio' or 'video',
-     * @param {number} periodId - Make sure this is the period id not index.
-     * @return {number}
-     * @see {@link module:MediaPlayer#setMaxAllowedBitrateFor setMaxAllowedBitrateFor()}
-     * @see {@link DashMetrics#getMaxIndexForBufferType getMaxIndexForBufferType()}
-     * @memberof module:DashMetrics
-     * @instance
-     */
-    function getMaxAllowedIndexForBufferType(bufferType, periodId) {
-        var idx = 0;
-        var abrController = AbrController(context).getInstance();
-
-        if (abrController) {
-            idx = abrController.getTopQualityIndexFor(bufferType, periodId);
-        }
-
-        return idx;
-    }
-
-    /**
      * @param {MetricsList} metrics
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
      */
     function getCurrentRepresentationSwitch(metrics) {
-        if (metrics === null) {
-            return null;
-        }
-
-        var repSwitch = metrics.RepSwitchList;
-        var repSwitchLength,
-            repSwitchLastIndex,
-            currentRepSwitch;
-
-        if (repSwitch === null || repSwitch.length <= 0) {
-            return null;
-        }
-
-        repSwitchLength = repSwitch.length;
-        repSwitchLastIndex = repSwitchLength - 1;
-
-        currentRepSwitch = repSwitch[repSwitchLastIndex];
-        return currentRepSwitch;
+        return getCurrent(metrics, MetricsList.TRACK_SWITCH);
     }
 
     /**
@@ -148,16 +108,7 @@ function DashMetrics() {
      * @instance
      */
     function getLatestBufferLevelVO(metrics) {
-        if (metrics === null) {
-            return null;
-        }
-
-        var bufferLevel = metrics.BufferLevel;
-        if (bufferLevel === null || bufferLevel.length <= 0) {
-            return null;
-        }
-
-        return bufferLevel[bufferLevel.length - 1];
+        return getCurrent(metrics, MetricsList.BUFFER_LEVEL);
     }
 
     /**
@@ -167,16 +118,13 @@ function DashMetrics() {
      * @instance
      */
     function getCurrentBufferLevel(metrics) {
-        if (metrics === null) {
-            return 0;
+        const vo = getLatestBufferLevelVO(metrics);
+
+        if (vo) {
+            return vo.level / 1000;
         }
 
-        var bufferLevel = metrics.BufferLevel;
-        if (bufferLevel === null || bufferLevel.length <= 0) {
-            return 0;
-        }
-
-        return bufferLevel[bufferLevel.length - 1].level / 1000;
+        return 0;
     }
 
     /**
@@ -239,27 +187,39 @@ function DashMetrics() {
 
     /**
      * @param {MetricsList} metrics
+     * @param {string} metricName
+     * @returns {*}
+     * @memberof module:DashMetrics
+     * @instance
+     */
+    function getCurrent(metrics, metricName) {
+        if (metrics === null) {
+            return null;
+        }
+
+        const list = metrics[metricName];
+
+        if (list === null) {
+            return null;
+        }
+
+        const length = list.length;
+
+        if (length <= 0) {
+            return null;
+        }
+
+        return list[length - 1];
+    }
+
+    /**
+     * @param {MetricsList} metrics
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
      */
     function getCurrentDroppedFrames(metrics) {
-        if (metrics === null) { return null; }
-
-        var droppedFrames = metrics.DroppedFrames;
-        var droppedFramesLength,
-            droppedFramesLastIndex,
-            currentDroppedFrames;
-
-        if (droppedFrames === null || droppedFrames.length <= 0) {
-            return null;
-        }
-
-        droppedFramesLength = droppedFrames.length;
-        droppedFramesLastIndex = droppedFramesLength - 1;
-        currentDroppedFrames = droppedFrames[droppedFramesLastIndex];
-
-        return currentDroppedFrames;
+        return getCurrent(metrics, MetricsList.DROPPED_FRAMES);
     }
 
     /**
@@ -269,23 +229,7 @@ function DashMetrics() {
      * @instance
      */
     function getCurrentSchedulingInfo(metrics) {
-        if (metrics === null) return null;
-
-        var schedulingInfo = metrics.SchedulingInfo;
-        var ln,
-            lastIdx,
-            currentSchedulingInfo;
-
-        if (schedulingInfo === null || schedulingInfo.length <= 0) {
-            return null;
-        }
-
-        ln = schedulingInfo.length;
-        lastIdx = ln - 1;
-
-        currentSchedulingInfo = schedulingInfo[lastIdx];
-
-        return currentSchedulingInfo;
+        return getCurrent(metrics, MetricsList.SCHEDULING_INFO);
     }
 
     /**
@@ -295,23 +239,7 @@ function DashMetrics() {
      * @instance
      */
     function getCurrentManifestUpdate(metrics) {
-        if (metrics === null) return null;
-
-        var manifestUpdate = metrics.ManifestUpdate;
-        var ln,
-            lastIdx,
-            currentManifestUpdate;
-
-        if (manifestUpdate === null || manifestUpdate.length <= 0) {
-            return null;
-        }
-
-        ln = manifestUpdate.length;
-        lastIdx = ln - 1;
-
-        currentManifestUpdate = manifestUpdate[lastIdx];
-
-        return currentManifestUpdate;
+        return getCurrent(metrics, MetricsList.MANIFEST_UPDATE);
     }
 
     /**
@@ -321,23 +249,7 @@ function DashMetrics() {
      * @instance
      */
     function getCurrentDVRInfo(metrics) {
-
-        if (metrics === null) {
-            return null;
-        }
-
-        var dvrInfo = metrics.DVRInfo;
-        var dvrInfoLastIndex,
-            currentDVRInfo;
-
-        if (dvrInfo === null || dvrInfo.length <= 0) {
-            return null;
-        }
-
-        dvrInfoLastIndex = dvrInfo.length - 1;
-        currentDVRInfo = dvrInfo[dvrInfoLastIndex];
-
-        return currentDVRInfo;
+        return getCurrent(metrics, MetricsList.DVR_INFO);
     }
 
     /**
@@ -408,29 +320,16 @@ function DashMetrics() {
     }
 
     function findRepresentationIndex(period, representationId) {
-        var adaptationSet,
-            adaptationSetArray,
-            representation,
-            representationArray,
-            adaptationSetArrayIndex,
-            representationArrayIndex;
+        const index = findRepresentation(period, representationId, true);
 
-        adaptationSetArray = period.AdaptationSet_asArray;
-        for (adaptationSetArrayIndex = 0; adaptationSetArrayIndex < adaptationSetArray.length; adaptationSetArrayIndex = adaptationSetArrayIndex + 1) {
-            adaptationSet = adaptationSetArray[adaptationSetArrayIndex];
-            representationArray = adaptationSet.Representation_asArray;
-            for (representationArrayIndex = 0; representationArrayIndex < representationArray.length; representationArrayIndex = representationArrayIndex + 1) {
-                representation = representationArray[representationArrayIndex];
-                if (representationId === representation.id) {
-                    return representationArrayIndex;
-                }
-            }
+        if (index !== null) {
+            return index;
         }
 
         return -1;
     }
 
-    function findRepresentation(period, representationId) {
+    function findRepresentation(period, representationId, returnIndex) {
         var adaptationSet,
             adaptationSetArray,
             representation,
@@ -445,7 +344,11 @@ function DashMetrics() {
             for (representationArrayIndex = 0; representationArrayIndex < representationArray.length; representationArrayIndex = representationArrayIndex + 1) {
                 representation = representationArray[representationArrayIndex];
                 if (representationId === representation.id) {
-                    return representation;
+                    if (returnIndex) {
+                        return representationArrayIndex;
+                    } else {
+                        return representation;
+                    }
                 }
             }
         }
@@ -481,7 +384,6 @@ function DashMetrics() {
         getBandwidthForRepresentation: getBandwidthForRepresentation,
         getIndexForRepresentation: getIndexForRepresentation,
         getMaxIndexForBufferType: getMaxIndexForBufferType,
-        getMaxAllowedIndexForBufferType: getMaxAllowedIndexForBufferType,
         getCurrentRepresentationSwitch: getCurrentRepresentationSwitch,
         getLatestBufferLevelVO: getLatestBufferLevelVO,
         getCurrentBufferLevel: getCurrentBufferLevel,

@@ -366,6 +366,7 @@ function ScheduleController(config) {
     function onPlaybackSeeking(e) {
 
         seekTarget = e.seekTime;
+        setTimeToLoadDelay(0);
 
         if (!initialPlayback) {
             isFragmentLoading = false;

@@ -30,7 +30,6 @@
  * parent.name = "ParentNode";
  * parent.isRoor = false;
  * parent.isArray = false;
- * parent.parent = null;
  * parent.children = [];
  * parent.properties = properties;
  *
@@ -38,7 +37,6 @@
  * child.name = "ChildNode";
  * child.isRoor = false;
  * child.isArray = true;
- * child.parent = parent;
  * child.children = null;
  * child.properties = properties;
  * parent.children.push(child);

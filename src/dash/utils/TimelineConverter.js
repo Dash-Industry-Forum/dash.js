@@ -130,21 +130,24 @@ function TimelineConverter() {
 
         if (isDynamic) {
             suggestedPresentationDelay = segment.representation.adaptation.period.mpd.suggestedPresentationDelay;
-            displayStartTime = segment.presentationStartTime + suggestedPresentationDelay;
-            wallTime = new Date(segment.availabilityStartTime.getTime() + (displayStartTime * 1000));
+            displayStartTime = segment.availabilityStartTime.getTime() + suggestedPresentationDelay;
+            wallTime = new Date(displayStartTime);
         }
 
         return wallTime;
     }
 
-    function calcSegmentAvailabilityRange(representation, isDynamic) {
+    function calcSegmentAvailabilityRange(representation, isDynamic, disableSnapToSegmentBoundary) {
         var start = representation.adaptation.period.start;
         var end = start + representation.adaptation.period.duration;
         var range = { start: start, end: end };
-        var d = representation.segmentDuration || ((representation.segments && representation.segments.length) ? representation.segments[representation.segments.length - 1].duration : 0);
+        var hasSegments = representation.segments && representation.segments.length;
+        var d = representation.segmentDuration || (hasSegments ? representation.segments[representation.segments.length - 1].duration : 0);
 
         var checkTime,
-            now;
+            now,
+            availableSegmentsStartTime,
+            availableSegmentsEndTime;
 
         if (!isDynamic) return range;
 
@@ -154,6 +157,7 @@ function TimelineConverter() {
 
         checkTime = representation.adaptation.period.mpd.checkTime;
         now = calcPresentationTimeFromWallTime(new Date(), representation.adaptation.period);
+
         //the Media Segment list is further restricted by the CheckTime together with the MPD attribute
         // MPD@timeShiftBufferDepth such that only Media Segments for which the sum of the start time of the
         // Media Segment and the Period start time falls in the interval [NOW- MPD@timeShiftBufferDepth - @duration, min(CheckTime, NOW)] are included.
@@ -161,6 +165,38 @@ function TimelineConverter() {
         var timeAnchor = (isNaN(checkTime) ? now : Math.min(checkTime, now));
         var periodEnd = representation.adaptation.period.start + representation.adaptation.period.duration;
         end = (timeAnchor >= periodEnd  && (timeAnchor - d) < periodEnd ? periodEnd : timeAnchor) - d;
+
+        // We have approximate numbers now, but we need to adjust this based on when segments actually
+        // appear and disappear from the server - restrict the range to the first one which is still available,
+        // and the last one which is available.
+        if (hasSegments) {
+            for (let i = 0; i < representation.segments.length - 1; i++) {
+                let segmentAvailabilityEnd = representation.segments[i].availabilityEndTime.getTime() / 1000;
+                let segmentMediaStart = representation.segments[i].presentationStartTime;
+                if (segmentAvailabilityEnd >= start) {
+                    availableSegmentsStartTime = segmentMediaStart;
+                    break;
+                }
+            }
+
+            for (let i = representation.segments.length - 1; i > 0; i--) {
+                let segmentAvailabilityStart = representation.segments[i].availabilityStartTime.getTime() / 1000;
+                let segmentMediaStart = representation.segments[i].presentationStartTime;
+                if (segmentAvailabilityStart <= now) {
+                    availableSegmentsEndTime = segmentMediaStart + representation.segments[i].duration;
+                    break;
+                }
+            }
+        }
+
+        if (!disableSnapToSegmentBoundary) {
+            if (availableSegmentsEndTime && end > availableSegmentsEndTime) {
+                end = availableSegmentsEndTime;
+            }
+            if (availableSegmentsStartTime && start < availableSegmentsStartTime) {
+                start = availableSegmentsStartTime;
+            }
+        }
         //end = (isNaN(checkTime) ? now : Math.min(checkTime, now)) - d;
         range = {start: start, end: end};
 

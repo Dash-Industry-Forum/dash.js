@@ -28,75 +28,57 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
-import FactoryMaker from '../../core/FactoryMaker';
-
 /**
- * @module URLUtils
- * @description Provides utility functions for operating on URLs.
- * Initially this is simply a method to determine the Base URL of a URL, but
- * should probably include other things provided all over the place such as
- * determining whether a URL is relative/absolute, resolving two paths etc.
+ * @classdesc matches and converts xs:duration to seconds
  */
-function URLUtils() {
+import BaseMatcher from './BaseMatcher';
 
-    let instance;
+const durationRegex = /^([-])?P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/;
 
-    const absUrl = /^(?:(?:[a-z]+:)?\/)?\//i;
-    const httpUrlRegex = /^https?:\/\//i;
+const SECONDS_IN_YEAR = 365 * 24 * 60 * 60;
+const SECONDS_IN_MONTH = 30 * 24 * 60 * 60;
+const SECONDS_IN_DAY = 24 * 60 * 60;
+const SECONDS_IN_HOUR = 60 * 60;
+const SECONDS_IN_MIN = 60;
 
-    /**
-     * Returns a string that contains the Base URL of a URL, if determinable.
-     * @param {string} url - full url
-     * @return {string}
-     * @memberof module:URLUtils
-     * @instance
-     */
-    function parseBaseUrl(url) {
-        var base = '';
+class DurationMatcher extends BaseMatcher {
+    constructor() {
+        super(
+            attr => {
+                const attributeList = [
+                    'minBufferTime', 'mediaPresentationDuration',
+                    'minimumUpdatePeriod', 'timeShiftBufferDepth', 'maxSegmentDuration',
+                    'maxSubsegmentDuration', 'suggestedPresentationDelay', 'start',
+                    'starttime', 'duration'
+                ];
+                const len = attributeList.length;
 
-        if (url.indexOf('/') !== -1) {
-            if (url.indexOf('?') !== -1) {
-                url = url.substring(0, url.indexOf('?'));
+                for (let i = 0; i < len; i++) {
+                    if (attr.nodeName === attributeList[i]) {
+                        return durationRegex.test(attr.value);
+                    }
+                }
+
+                return false;
+            },
+            str => {
+                //str = "P10Y10M10DT10H10M10.1S";
+                const match = durationRegex.exec(str);
+                let result = (parseFloat(match[2] || 0) * SECONDS_IN_YEAR +
+                    parseFloat(match[4] || 0) * SECONDS_IN_MONTH +
+                    parseFloat(match[6] || 0) * SECONDS_IN_DAY +
+                    parseFloat(match[8] || 0) * SECONDS_IN_HOUR +
+                    parseFloat(match[10] || 0) * SECONDS_IN_MIN +
+                    parseFloat(match[12] || 0));
+
+                if (match[1] !== undefined) {
+                    result = -result;
+                }
+
+                return result;
             }
-            base = url.substring(0, url.lastIndexOf('/') + 1);
-        }
-
-        return base;
+        );
     }
-
-    /**
-     * Determines whether the url is relative.
-     * @return {bool}
-     * @param {string} url
-     * @memberof module:URLUtils
-     * @instance
-     */
-    function isRelative(url) {
-        return !absUrl.test(url);
-    }
-
-
-    /**
-     * Determines whether the url is an HTTP-URL as defined in ISO/IEC
-     * 23009-1:2014 3.1.15. ie URL with a fixed scheme of http or https
-     * @return {bool}
-     * @param {string} url
-     * @memberof module:URLUtils
-     * @instance
-     */
-    function isHTTPURL(url) {
-        return httpUrlRegex.test(url);
-    }
-
-    instance = {
-        parseBaseUrl:   parseBaseUrl,
-        isRelative:     isRelative,
-        isHTTPURL:      isHTTPURL
-    };
-
-    return instance;
 }
 
-URLUtils.__dashjs_factory_name = 'URLUtils';
-export default FactoryMaker.getSingletonFactory(URLUtils);
+export default DurationMatcher;

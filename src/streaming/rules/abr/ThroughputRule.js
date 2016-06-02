@@ -132,7 +132,7 @@ function ThroughputRule(config) {
 
             if (bufferStateVO.state === BufferController.BUFFER_LOADED || isDynamic) {
                 var newQuality = abrController.getQualityForBitrate(mediaInfo, averageThroughput);
-                streamProcessor.getScheduleController().setTimeToLoadDelay(0); // TODO Watch out for seek event - no delay when seeking.!!
+                streamProcessor.getScheduleController().setTimeToLoadDelay(0);
                 switchRequest = SwitchRequest(context).create(newQuality, SwitchRequest.DEFAULT);
             }
 

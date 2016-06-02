@@ -74,6 +74,9 @@ function SegmentsGetter(config, isDynamic) {
     }
 
     function isSegmentListUpdateRequired(representation, index) {
+        if (isDynamic) {
+            return true;
+        }
         var segments = representation.segments;
         var updateRequired = false;
 

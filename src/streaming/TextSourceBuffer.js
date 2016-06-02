@@ -609,9 +609,9 @@ function TextSourceBuffer() {
         for (r = 0; r < regions.length; ++r) {
             let region = regions[r];
 
-            let cueID = 'sub_' + (captionId++);
+            let cueID = 'sub_cea608_' + (captionId++);
             let finalDiv = document.createElement('div');
-            finalDiv.id = 'subtitle_' + cueID;
+            finalDiv.id = cueID;
             let cueRegionProperties = getRegionProperties(region);
             finalDiv.style.cssText = 'position: absolute; margin: 0; display: flex; box-sizing: border-box; pointer-events: none;' + cueRegionProperties;
 

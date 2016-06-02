@@ -28,75 +28,47 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
-import FactoryMaker from '../../core/FactoryMaker';
-
 /**
- * @module URLUtils
- * @description Provides utility functions for operating on URLs.
- * Initially this is simply a method to determine the Base URL of a URL, but
- * should probably include other things provided all over the place such as
- * determining whether a URL is relative/absolute, resolving two paths etc.
+ * @classdesc matches and converts xs:datetime to Date
  */
-function URLUtils() {
+import BaseMatcher from './BaseMatcher';
 
-    let instance;
+const SECONDS_IN_MIN = 60;
+const MINUTES_IN_HOUR = 60;
+const MILLISECONDS_IN_SECONDS = 1000;
 
-    const absUrl = /^(?:(?:[a-z]+:)?\/)?\//i;
-    const httpUrlRegex = /^https?:\/\//i;
+const datetimeRegex = /^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2})(?::([0-9]*)(\.[0-9]*)?)?(?:([+-])([0-9]{2})(?::?)([0-9]{2}))?/;
 
-    /**
-     * Returns a string that contains the Base URL of a URL, if determinable.
-     * @param {string} url - full url
-     * @return {string}
-     * @memberof module:URLUtils
-     * @instance
-     */
-    function parseBaseUrl(url) {
-        var base = '';
+class DateTimeMatcher extends BaseMatcher {
+    constructor() {
+        super(
+            attr => datetimeRegex.test(attr.value),
+            str => {
+                const match = datetimeRegex.exec(str);
+                let utcDate;
 
-        if (url.indexOf('/') !== -1) {
-            if (url.indexOf('?') !== -1) {
-                url = url.substring(0, url.indexOf('?'));
+                // If the string does not contain a timezone offset different browsers can interpret it either
+                // as UTC or as a local time so we have to parse the string manually to normalize the given date value for
+                // all browsers
+                utcDate = Date.UTC(
+                    parseInt(match[1], 10),
+                    parseInt(match[2], 10) - 1, // months start from zero
+                    parseInt(match[3], 10),
+                    parseInt(match[4], 10),
+                    parseInt(match[5], 10),
+                    (match[6] && parseInt(match[6], 10) || 0),
+                    (match[7] && parseFloat(match[7]) * MILLISECONDS_IN_SECONDS) || 0);
+
+                // If the date has timezone offset take it into account as well
+                if (match[9] && match[10]) {
+                    const timezoneOffset = parseInt(match[9], 10) * MINUTES_IN_HOUR + parseInt(match[10], 10);
+                    utcDate += (match[8] === '+' ? -1 : +1) * timezoneOffset * SECONDS_IN_MIN * MILLISECONDS_IN_SECONDS;
+                }
+
+                return new Date(utcDate);
             }
-            base = url.substring(0, url.lastIndexOf('/') + 1);
-        }
-
-        return base;
+        );
     }
-
-    /**
-     * Determines whether the url is relative.
-     * @return {bool}
-     * @param {string} url
-     * @memberof module:URLUtils
-     * @instance
-     */
-    function isRelative(url) {
-        return !absUrl.test(url);
-    }
-
-
-    /**
-     * Determines whether the url is an HTTP-URL as defined in ISO/IEC
-     * 23009-1:2014 3.1.15. ie URL with a fixed scheme of http or https
-     * @return {bool}
-     * @param {string} url
-     * @memberof module:URLUtils
-     * @instance
-     */
-    function isHTTPURL(url) {
-        return httpUrlRegex.test(url);
-    }
-
-    instance = {
-        parseBaseUrl:   parseBaseUrl,
-        isRelative:     isRelative,
-        isHTTPURL:      isHTTPURL
-    };
-
-    return instance;
 }
 
-URLUtils.__dashjs_factory_name = 'URLUtils';
-export default FactoryMaker.getSingletonFactory(URLUtils);
+export default DateTimeMatcher;

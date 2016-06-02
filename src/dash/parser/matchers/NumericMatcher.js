@@ -28,75 +28,20 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
-import FactoryMaker from '../../core/FactoryMaker';
-
 /**
- * @module URLUtils
- * @description Provides utility functions for operating on URLs.
- * Initially this is simply a method to determine the Base URL of a URL, but
- * should probably include other things provided all over the place such as
- * determining whether a URL is relative/absolute, resolving two paths etc.
+ * @classdesc Matches and converts xs:numeric to float
  */
-function URLUtils() {
+import BaseMatcher from './BaseMatcher';
 
-    let instance;
+const numericRegex = /^[-+]?[0-9]+[.]?[0-9]*([eE][-+]?[0-9]+)?$/;
 
-    const absUrl = /^(?:(?:[a-z]+:)?\/)?\//i;
-    const httpUrlRegex = /^https?:\/\//i;
-
-    /**
-     * Returns a string that contains the Base URL of a URL, if determinable.
-     * @param {string} url - full url
-     * @return {string}
-     * @memberof module:URLUtils
-     * @instance
-     */
-    function parseBaseUrl(url) {
-        var base = '';
-
-        if (url.indexOf('/') !== -1) {
-            if (url.indexOf('?') !== -1) {
-                url = url.substring(0, url.indexOf('?'));
-            }
-            base = url.substring(0, url.lastIndexOf('/') + 1);
-        }
-
-        return base;
+class NumericMatcher extends BaseMatcher {
+    constructor() {
+        super(
+            attr => numericRegex.test(attr.value),
+            str => parseFloat(str)
+        );
     }
-
-    /**
-     * Determines whether the url is relative.
-     * @return {bool}
-     * @param {string} url
-     * @memberof module:URLUtils
-     * @instance
-     */
-    function isRelative(url) {
-        return !absUrl.test(url);
-    }
-
-
-    /**
-     * Determines whether the url is an HTTP-URL as defined in ISO/IEC
-     * 23009-1:2014 3.1.15. ie URL with a fixed scheme of http or https
-     * @return {bool}
-     * @param {string} url
-     * @memberof module:URLUtils
-     * @instance
-     */
-    function isHTTPURL(url) {
-        return httpUrlRegex.test(url);
-    }
-
-    instance = {
-        parseBaseUrl:   parseBaseUrl,
-        isRelative:     isRelative,
-        isHTTPURL:      isHTTPURL
-    };
-
-    return instance;
 }
 
-URLUtils.__dashjs_factory_name = 'URLUtils';
-export default FactoryMaker.getSingletonFactory(URLUtils);
+export default NumericMatcher;
