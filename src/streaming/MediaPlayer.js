@@ -295,34 +295,33 @@ function MediaPlayer() {
     }
 
     /**
-     * The length of the buffer for a given media type, in seconds. Valid media types are "video", "audio" and "fragmentedText". If no type
-     * is passed in, then the minimum of the video and the audio buffer length is returned. The value is returned to a precision of two decimal places.
-     * NaN is returned if an invalid type is requested, or if the presentation does not contain that type or if no arguments are passed and the
-     * presentation doers not include any audio or video adaption sets.
+     * The length of the buffer for a given media type, in seconds. Valid media
+     * types are "video", "audio" and "fragmentedText". If no type is passed
+     * in, then the minimum of video, audio and fragmentedText buffer length is
+     * returned. NaN is returned if an invalid type is requested, the
+     * presentation does not contain that type, or if no arguments are passed
+     * and the presentation does not include any adaption sets of valid media
+     * type.
      *
      * @param {string} type - the media type of the buffer
-     * @returns {number} The length of the buffer for the given media type, in seconds.
+     * @returns {number} The length of the buffer for the given media type, in
+     *  seconds, or NaN
      * @memberof module:MediaPlayer
      * @instance
      */
     function getBufferLength(type) {
-
-        if (!type)
-        {
-            let videoBuffer = getTracksFor('video').length > 0 ? getDashMetrics().getCurrentBufferLevel(getMetricsFor('video')) : Number.MAX_SAFE_INTEGER;
-            let audioBuffer = getTracksFor('audio').length > 0 ? getDashMetrics().getCurrentBufferLevel(getMetricsFor('audio')) : Number.MAX_SAFE_INTEGER;
-            let textBuffer = getTracksFor('fragmentedText').length > 0 ? getDashMetrics().getCurrentBufferLevel(getMetricsFor('fragmentedText')) : Number.MAX_SAFE_INTEGER;
-            return Math.min(videoBuffer,audioBuffer,textBuffer).toPrecision(3);
-        }
-        else
-        {
-            if (type === 'video' || type === 'audio' || type === 'fragmentedText')
-            {
-                let buffer = getDashMetrics().getCurrentBufferLevel(getMetricsFor(type));
-                return buffer ? buffer.toPrecision(3) : NaN;
-            }
-            else
-            {
+        const types = ['video', 'audio', 'fragmentedText'];
+        if (!type) {
+            return types.map(
+                t => getTracksFor(t).length > 0 ? getDashMetrics().getCurrentBufferLevel(getMetricsFor(t)) : Number.MAX_VALUE
+            ).reduce(
+                (p, c) => Math.min(p, c)
+            );
+        } else {
+            if (types.indexOf(type) !== -1) {
+                const buffer = getDashMetrics().getCurrentBufferLevel(getMetricsFor(type));
+                return buffer ? buffer : NaN;
+            } else {
                 log('Warning  - getBufferLength requested for invalid type');
                 return NaN;
             }
