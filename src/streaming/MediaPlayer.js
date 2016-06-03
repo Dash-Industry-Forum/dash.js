@@ -1183,6 +1183,41 @@ function MediaPlayer() {
 
 
     /**
+     * When enabled, after an ABR up-switch in quality, instead of requesting and appending the next fragment
+     * at the end of the current buffer range it is requested and appended closer to the current time
+     * When enabled, The maximum time to render a higher quality is current time + (1.5 * fragment duration).
+     *
+     * Note, WHen ABR down-switch is detected, we appended the lower quality at the end of the buffer range to preserve the
+     * higher quality media for as long as possible.
+     *
+     * If enabled, it should be noted there are a few cases when the client will not replace inside buffer range but rather
+     * just append at the end.  1. When the buffer level is less than one fragment duration 2.  The client
+     * is in an Abandonment State due to recent fragment abandonment event.
+     *
+     * Known issues:
+     * 1. In IE11 with auto switching off, if a user switches to a quality they can not downloaded in time the
+     * fragment may be appended in the same range as the playhead or even in past, in IE11 it may cause a stutter
+     * or stall in playback.
+     *
+     *
+     * @param {boolean} value
+     * @default {boolean} false
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setFastSwitchEnabled(value) { //TODO we need to look at track switches for adaptation sets.  If always replace it works much like this but clears buffer. Maybe too many ways to do same thing.
+        mediaPlayerModel.setFastSwitchEnabled(value);
+    }
+
+    /**
+     * @return {boolean} Returns true if FastSwitch ABR is enabled.
+     */
+    function getFastSwitchEnabled() {
+        return mediaPlayerModel.getFastSwitchEnabled();
+    }
+
+
+    /**
      * Enabling buffer-occupancy ABR will switch to the *experimental* implementation of BOLA,
      * replacing the throughput-based ABR rule set (ThroughputRule, BufferOccupancyRule,
      * InsufficientBufferRule and AbandonRequestsRule) with the buffer-occupancy-based
@@ -1957,6 +1992,8 @@ function MediaPlayer() {
         getSelectionModeForInitialTrack: getSelectionModeForInitialTrack,
         getAutoSwitchQuality: getAutoSwitchQuality,
         setAutoSwitchQuality: setAutoSwitchQuality,
+        setFastSwitchEnabled: setFastSwitchEnabled,
+        getFastSwitchEnabled: getFastSwitchEnabled,
         getAutoSwitchQualityFor: getAutoSwitchQualityFor,
         setAutoSwitchQualityFor: setAutoSwitchQualityFor,
         enableBufferOccupancyABR: enableBufferOccupancyABR,
