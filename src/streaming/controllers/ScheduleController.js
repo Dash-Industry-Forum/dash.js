@@ -225,7 +225,9 @@ function ScheduleController(config) {
 
         if (isStopped || playbackController.isPaused() && !scheduleWhilePaused) return;
 
-        if (mediaPlayerModel.getFastABRSwitch()) {
+        if (mediaPlayerModel.getFastSwitchEnabled() &&
+            bufferController.getBufferLevel() > (currentRepresentationInfo.fragmentDuration * 1.5) &&
+            abrController.getAbandonmentStateFor(type) !== AbrController.ABANDON_LOAD ) {
 
             let time = playbackController.getTime() + (currentRepresentationInfo.fragmentDuration * 1.5);
             let request = fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED, time: time, threshold: 0})[0];

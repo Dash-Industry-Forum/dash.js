@@ -42,7 +42,8 @@ const ABANDON_LOAD_TIMEOUT = 10000;
 
 const BUFFER_TO_KEEP = 30;
 const BUFFER_PRUNING_INTERVAL = 30;
-const DEFAULT_MIN_BUFFER_TIME = 20;
+const DEFAULT_MIN_BUFFER_TIME = 12;
+const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
 const BUFFER_TIME_AT_TOP_QUALITY = 30;
 const BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 60;
 const LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;
@@ -87,7 +88,7 @@ function MediaPlayerModel() {
         wallclockTimeUpdateInterval,
         bufferOccupancyABREnabled,
         xhrWithCredentials,
-        fastABRSwitch;
+        fastSwitchEnabled;
 
     function setup() {
         UTCTimingSources = [];
@@ -95,14 +96,14 @@ function MediaPlayerModel() {
         useManifestDateHeaderTimeSource = true;
         scheduleWhilePaused = true;
         bufferOccupancyABREnabled = false;
-        fastABRSwitch = true;
+        fastSwitchEnabled = false;
         lastBitrateCachingInfo = {enabled: true , ttl: DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION};
         lastMediaSettingsCachingInfo = {enabled: true , ttl: DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION};
         liveDelayFragmentCount = LIVE_DELAY_FRAGMENT_COUNT;
         liveDelay = undefined; // Explicitly state that default is undefined
         bufferToKeep = BUFFER_TO_KEEP;
         bufferPruningInterval = BUFFER_PRUNING_INTERVAL;
-        stableBufferTime = DEFAULT_MIN_BUFFER_TIME;
+        stableBufferTime = NaN;
         bufferTimeAtTopQuality = BUFFER_TIME_AT_TOP_QUALITY;
         bufferTimeAtTopQualityLongForm = BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM;
         longFormContentDurationThreshold = LONG_FORM_CONTENT_DURATION_THRESHOLD;
@@ -164,7 +165,7 @@ function MediaPlayerModel() {
     }
 
     function getStableBufferTime() {
-        return stableBufferTime;
+        return !isNaN(stableBufferTime) ? stableBufferTime : fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
     }
 
     function setBufferTimeAtTopQuality(value) {
@@ -334,12 +335,12 @@ function MediaPlayerModel() {
         return xhrWithCredentials;
     }
 
-    function getFastABRSwitch() {
-        return fastABRSwitch;
+    function getFastSwitchEnabled() {
+        return fastSwitchEnabled;
     }
 
-    function setFastABRSwitch(value) {
-        fastABRSwitch = value;
+    function setFastSwitchEnabled(value) {
+        fastSwitchEnabled = value;
     }
 
     function reset() {
@@ -348,8 +349,6 @@ function MediaPlayerModel() {
     }
 
     instance = {
-        setFastABRSwitch: setFastABRSwitch,
-        getFastABRSwitch: getFastABRSwitch,
         setBufferOccupancyABREnabled: setBufferOccupancyABREnabled,
         getBufferOccupancyABREnabled: getBufferOccupancyABREnabled,
         setBandwidthSafetyFactor: setBandwidthSafetyFactor,
@@ -398,6 +397,8 @@ function MediaPlayerModel() {
         getUTCTimingSources: getUTCTimingSources,
         setXHRWithCredentials: setXHRWithCredentials,
         getXHRWithCredentials: getXHRWithCredentials,
+        setFastSwitchEnabled: setFastSwitchEnabled,
+        getFastSwitchEnabled: getFastSwitchEnabled,
         reset: reset
     };
 
