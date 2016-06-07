@@ -6,6 +6,9 @@ import Debug from '../core/Debug';
 import ErrorHandler from '../streaming/utils/ErrorHandler';
 import RequestModifier from '../streaming/utils/RequestModifier';
 import Segment from './vo/Segment';
+import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
+import FragmentRequest from '../streaming/vo/FragmentRequest';
+import XHRLoader from '../streaming/XHRLoader';
 
 function WebmSegmentBaseLoader() {
 
@@ -17,6 +20,8 @@ function WebmSegmentBaseLoader() {
         WebM,
         errHandler,
         requestModifier,
+        metricsModel,
+        xhrLoader,
         baseURLController;
 
     function setup() {
@@ -91,12 +96,20 @@ function WebmSegmentBaseLoader() {
     function initialize() {
         errHandler = ErrorHandler(context).getInstance();
         requestModifier = RequestModifier(context).getInstance();
+        xhrLoader = XHRLoader(context).create({
+            errHandler: errHandler,
+            metricsModel: metricsModel,
+            requestModifier: requestModifier
+        });
     }
 
     function setConfig(config) {
-        if (config.baseURLController) {
-            baseURLController = config.baseURLController;
+        if (!config.baseURLController || !config.metricsModel) {
+            throw new Error('Missing config parameter(s)');
         }
+
+        baseURLController = config.baseURLController;
+        metricsModel = config.metricsModel;
     }
 
     function parseCues(ab) {
@@ -210,8 +223,7 @@ function WebmSegmentBaseLoader() {
         let duration;
         let segments;
         let parts = theRange.split('-');
-        let request = new XMLHttpRequest();
-        let needFailureReport = true;
+        let request = null;
         let info = {
                 url: media,
                 range: {
@@ -222,6 +234,8 @@ function WebmSegmentBaseLoader() {
             };
         let segmentEnd;
         let segmentStart;
+
+        log('Parse EBML header: ' + info.url);
 
         // skip over the header itself
         ebmlParser.skipOverElement(WebM.EBML);
@@ -260,34 +274,26 @@ function WebmSegmentBaseLoader() {
 
         // once we have what we need from segment info, we jump right to the
         // cues
-        request.onload = function () {
-            if (request.status < 200 || request.status > 299) {
-                return;
-            }
-            needFailureReport = false;
-            segments = parseSegments(request.response, info.url, segmentStart, segmentEnd, duration);
+
+        request = getFragmentRequest(info);
+
+        const onload = function (response) {
+            segments = parseSegments(response, info.url, segmentStart, segmentEnd, duration);
             callback(segments);
         };
 
-        request.onloadend = request.onerror = function () {
-            if (!needFailureReport) {
-                return;
-            }
-            needFailureReport = false;
-
-            errHandler.downloadError('Cues ', info.url, request);
+        const onloadend = function () {
+            log('Download Error: Cues ' + info.url);
             callback(null);
         };
 
-
-        sendRequest(request, info);
+        xhrLoader.load({request: request, success: onload, error: onloadend});
 
         log('Perform cues load: ' + info.url + ' bytes=' + info.range.start + '-' + info.range.end);
     }
 
     function loadInitialization(representation, loadingInfo) {
-        let request = new XMLHttpRequest();
-        let needFailureReport = true;
+        let request = null;
         let baseUrl = baseURLController.resolve(representation.path);
         let media = baseUrl ? baseUrl.url : undefined;
         let initRange = representation.range.split('-');
@@ -297,35 +303,30 @@ function WebmSegmentBaseLoader() {
                     end: parseFloat(initRange[1])
                 },
                 request: request,
-                url: media
+                url: media,
+                init: true
             };
 
         log('Start loading initialization.');
 
-        request.onload = function () {
-            log('Initialization loaded.');
-            if (request.status < 200 || request.status > 299) return;
+        request = getFragmentRequest(info);
 
-            needFailureReport = false;
+        const onload = function () {
             representation.initialization = info.url;
             eventBus.trigger(Events.INITIALIZATION_LOADED, {representation: representation});
         };
 
-        request.onloadend = request.onerror = function () {
-            if (!needFailureReport) return;
-            needFailureReport = false;
-
-            errHandler.downloadError('initialization', info.url, request);
+        const onloadend = function () {
             eventBus.trigger(Events.INITIALIZATION_LOADED, {representation: representation});
         };
 
-        sendRequest(request, info);
+        xhrLoader.load({request: request, success: onload, error: onloadend});
+
         log('Perform init load: ' + info.url);
     }
 
     function loadSegments(representation, type, theRange, callback) {
-        let request = new XMLHttpRequest();
-        let needFailureReport = true;
+        let request = null;
         let baseUrl = baseURLController.resolve(representation.path);
         let media = baseUrl ? baseUrl.url : undefined;
         let bytesToLoad = 8192;
@@ -337,37 +338,29 @@ function WebmSegmentBaseLoader() {
                     end: bytesToLoad
                 },
                 request: request,
-                url: media
+                url: media,
+                init: false
             };
 
         callback = !callback ? onLoaded : callback;
+        request = getFragmentRequest(info);
 
         // first load the header, but preserve the manifest range so we can
         // load the cues after parsing the header
         // NOTE: we expect segment info to appear in the first 8192 bytes
         log('Parsing ebml header');
-        request.onload = function () {
-            if (request.status < 200 || request.status > 299) {
-                return;
-            }
-            needFailureReport = false;
-            parseEbmlHeader(request.response, media, theRange, function (segments) {
+
+        const onload = function (response) {
+            parseEbmlHeader(response, media, theRange, function (segments) {
                 callback(segments, representation, type);
             });
         };
 
-        request.onloadend = request.onerror = function () {
-            if (!needFailureReport) {
-                return;
-            }
-            needFailureReport = false;
-
-            errHandler.downloadError('EBML Header', info.url, request);
+        const onloadend = function () {
             callback(null, representation, type);
         };
 
-        sendRequest(request, info);
-        log('Parse EBML header: ' + info.url);
+        xhrLoader.load({request: request, success: onload, error: onloadend});
     }
 
     function onLoaded(segments, representation, type) {
@@ -378,16 +371,14 @@ function WebmSegmentBaseLoader() {
         }
     }
 
-    function sendRequest(request, info) {
-        if (!info.url) {
-            return;
-        }
+    function getFragmentRequest(info) {
+        let request = new FragmentRequest();
 
-        request.open('GET', requestModifier.modifyRequestURL(info.url));
-        request.responseType = 'arraybuffer';
-        request.setRequestHeader('Range', 'bytes=' + info.range.start + '-' + info.range.end);
-        request = requestModifier.modifyRequestHeader(request);
-        request.send(null);
+        request.type = info.init ? HTTPRequest.INIT_SEGMENT_TYPE : HTTPRequest.MEDIA_SEGMENT_TYPE;
+        request.url = info.url;
+        request.range = info.range.start + '-' + info.range.end;
+
+        return request;
     }
 
     function reset() {
