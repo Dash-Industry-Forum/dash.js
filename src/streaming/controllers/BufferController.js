@@ -92,14 +92,14 @@ function BufferController(config) {
         clearBufferTimeout;
 
     function setup() {
-        requiredQuality = -1;
-        currentQuality = -1;
+        requiredQuality = AbrController.QUALITY_DEFAULT;
+        currentQuality = AbrController.QUALITY_DEFAULT;
         isBufferingCompleted = false;
         bufferLevel = 0;
         bufferTarget = 0;
         criticalBufferLevel = Number.POSITIVE_INFINITY;
-        maxAppendedIndex = -1;
-        lastIndex = -1;
+        maxAppendedIndex = 0;
+        lastIndex = 0;
         buffer = null;
         bufferState = BUFFER_EMPTY;
         wallclockTicked = 0;
@@ -713,10 +713,10 @@ function BufferController(config) {
 
         criticalBufferLevel = Number.POSITIVE_INFINITY;
         bufferState = BUFFER_EMPTY;
-        currentQuality = -1;
-        lastIndex = -1;
-        maxAppendedIndex = -1;
-        requiredQuality = 0;
+        currentQuality = AbrController.QUALITY_DEFAULT;
+        requiredQuality = AbrController.QUALITY_DEFAULT;
+        lastIndex = 0;
+        maxAppendedIndex = 0;
         appendedBytesInfo = null;
         appendingMediaChunk = false;
         isBufferingCompleted = false;
