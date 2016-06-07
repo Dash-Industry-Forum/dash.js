@@ -106,7 +106,7 @@
                             <a tabindex="-1" href="#">{{item.name}}</a>
                             <ul class="dropdown-menu">
                                 <li ng-repeat="subitem in item.submenu">
-                                    <a ng-click="setStream(subitem)">{{subitem.name}}</a>
+                                    <a title="{{ subitem.moreInfo && 'See ' + subitem.moreInfo + ' for more information' || undefined }}" ng-click="setStream(subitem)">{{subitem.name}}</a>
                                 </li>
                             </ul>
                         </li>
