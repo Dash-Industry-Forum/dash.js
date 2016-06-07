@@ -166,21 +166,15 @@ function TextTracks() {
         var viewAspectRatio = viewWidth / viewHeight;
         var videoAspectRatio = videoWidth / videoHeight;
 
-        var videoPictureX = 0;
-        var videoPictureY = 0;
         var videoPictureWidth = 0;
         var videoPictureHeight = 0;
 
         if (viewAspectRatio > videoAspectRatio) {
             videoPictureHeight = viewHeight;
             videoPictureWidth = (videoPictureHeight / videoHeight) * videoWidth;
-            videoPictureX = (viewWidth - videoPictureWidth) / 2;
-            videoPictureY = 0;
         } else {
             videoPictureWidth = viewWidth;
             videoPictureHeight = (videoPictureWidth / videoWidth) * videoHeight;
-            videoPictureX = 0;
-            videoPictureY = (viewHeight - videoPictureHeight) / 2;
         }
 
         var videoPictureXAspect = 0;
@@ -218,11 +212,7 @@ function TextTracks() {
     function checkVideoSize() {
         var track = this.getCurrentTextTrack();
         if (track && track.renderingType === 'html') {
-            // Create aspect ratio from cellResolutions
-            let aspectRatio = 1;
-            if (track.cellResolution) {
-                aspectRatio = track.cellResolution[0] / track.cellResolution[1];
-            }
+            let aspectRatio = video.clientWidth / video.clientHeight;
             let use80Percent = false;
             if (track.isFromCEA608) {
                 // If this is CEA608 then use predefined aspect ratio
