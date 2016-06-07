@@ -141,6 +141,7 @@ function BufferController(config) {
         if (!mediaInfo || !mediaSource || !streamProcessor) return null;
 
         var sourceBuffer = null;
+        var quality = null;
 
         try {
             sourceBuffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
@@ -152,8 +153,10 @@ function BufferController(config) {
             errHandler.mediaSourceError('Error creating ' + type + ' source buffer.');
         }
 
+        quality = requiredQuality === -1 ? 0 : requiredQuality;
+
         setBuffer(sourceBuffer);
-        updateBufferTimestampOffset(streamProcessor.getRepresentationInfoForQuality(requiredQuality).MSETimeOffset);
+        updateBufferTimestampOffset(streamProcessor.getRepresentationInfoForQuality(quality).MSETimeOffset);
         // We may already have some segments in a virtual buffer by this moment. Let's try to append them to the real one.
         appendNext();
 
