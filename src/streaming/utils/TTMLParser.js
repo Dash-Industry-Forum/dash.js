@@ -1057,7 +1057,7 @@ function TTMLParser() {
         // Strings for the cue innerHTML construction.
         var spanStringEnd = '<\/span>';
         var br = '<br>';
-        var clonePropertyString = '<span' + ' class="spanPadding" ' + 'style="-webkit-box-decoration-break: clone; -box-decoration-break: clone; ';
+        var clonePropertyString = '<span' + ' class="spanPadding" ' + 'style="-webkit-box-decoration-break: clone; box-decoration-break: clone; ';
 
         // If br elements are found:
         if (indices.length) {
