@@ -86,12 +86,14 @@ function ScheduleController(config) {
         bufferLevelRule,
         nextFragmentRequestRule,
         scheduleWhilePaused,
+        initialQualityChange,
         qualityChangeInProgress,
         renderTimeCheckInterval;
 
     function setup() {
         qualityChangeInProgress = false;
         initialPlayback = true;
+        initialQualityChange = true;
         isStopped = false;
         playListMetrics = null;
         playListTraceMetrics = null;
@@ -275,9 +277,11 @@ function ScheduleController(config) {
             throw new Error('Unexpected error! - currentRepresentationInfo is null or undefined');
         }
 
-        if (e.oldQuality !== AbrController.QUALITY_DEFAULT) { //blocks init quality change
+        if (!initialQualityChange) { //blocks init quality change
             qualityChangeInProgress = true;
             eventBus.trigger(Events.QUALITY_CHANGE_START, {mediaType: e.mediaType, newQuality: e.newQuality,  oldQuality: e.oldQuality});
+        } else {
+            initialQualityChange = false;
         }
 
         clearPlayListTraceMetrics(new Date(), PlayListTrace.REPRESENTATION_SWITCH_STOP_REASON);
