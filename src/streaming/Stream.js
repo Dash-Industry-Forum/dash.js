@@ -306,7 +306,8 @@ function Stream(config) {
 
         let segmentBaseLoader = isWebM(mediaInfo.mimeType) ? WebmSegmentBaseLoader(context).getInstance() : SegmentBaseLoader(context).getInstance();
         segmentBaseLoader.setConfig({
-            baseURLController: baseURLController
+            baseURLController: baseURLController,
+            metricsModel: MetricsModel(context).getInstance()
         });
         segmentBaseLoader.initialize();
 
