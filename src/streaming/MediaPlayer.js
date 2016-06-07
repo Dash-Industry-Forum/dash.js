@@ -867,6 +867,26 @@ function MediaPlayer() {
         abrController.setLimitBitrateByPortal(value);
     }
 
+    /**
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getUsePixelRatioInLimitBitrateByPortal() {
+        return abrController.getUsePixelRatioInLimitBitrateByPortal();
+    }
+
+    /**
+     * Sets whether to take into account the device's pixel ratio when defining the portal dimensions.
+     * Useful on, for example, retina displays.
+     *
+     * @param {boolean} value
+     * @memberof module:MediaPlayer
+     * @instance
+     * @default {boolean} false
+     */
+    function setUsePixelRatioInLimitBitrateByPortal(value) {
+        abrController.setUsePixelRatioInLimitBitrateByPortal(value);
+    }
 
     /**
      * Use this method to change the current text track for both external time text files and fragmented text tracks. There is no need to
@@ -1973,6 +1993,8 @@ function MediaPlayer() {
         setQualityFor: setQualityFor,
         getLimitBitrateByPortal: getLimitBitrateByPortal,
         setLimitBitrateByPortal: setLimitBitrateByPortal,
+        getUsePixelRatioInLimitBitrateByPortal: getUsePixelRatioInLimitBitrateByPortal,
+        setUsePixelRatioInLimitBitrateByPortal: setUsePixelRatioInLimitBitrateByPortal,
         setTextTrack: setTextTrack,
         getBitrateInfoListFor: getBitrateInfoListFor,
         setInitialBitrateFor: setInitialBitrateFor,
