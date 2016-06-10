@@ -157,6 +157,9 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
 
         // Assign the session type to be used for this controller
         protCtrl.setSessionType($("#session-type").find(".active").children().attr("id"));
+        //set a robustness level for chrome.
+        //Possible values are SW_SECURE_CRYPTO, SW_SECURE_DECODE, HW_SECURE_CRYPTO, HW_SECURE_CRYPTO, HW_SECURE_DECODE, HW_SECURE_ALL
+        //protCtrl.setRobustnessLevel("SW_SECURE_CRYPTO");
 
         var data = {
             manifest: manifest,
