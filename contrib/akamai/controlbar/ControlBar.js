@@ -229,7 +229,7 @@ var ControlBar = function(dashjsMediaPlayer) {
                 document.webkitCancelFullScreen();
             }
             videoController.classList.remove('video-controller-fullscreen');
-        }
+        },
 
         onFullscreenClick = function(e){
             if(!isFullscreen()) {
