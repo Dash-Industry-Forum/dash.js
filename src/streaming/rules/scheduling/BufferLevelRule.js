@@ -72,7 +72,7 @@ function BufferLevelRule(config) {
         }
         else if (type === 'audio') {
             let videoBufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor('video'));
-            bufferTarget = videoBufferLevel > 0.01 ? videoBufferLevel : mediaPlayerModel.getStableBufferTime(); //check for audio only stream with null video metric
+            bufferTarget = videoBufferLevel > 1 ? videoBufferLevel : mediaPlayerModel.getStableBufferTime(); //check for audio only stream with null video metric
         }
         else {
 
