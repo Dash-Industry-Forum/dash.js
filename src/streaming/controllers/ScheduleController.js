@@ -46,6 +46,7 @@ import LiveEdgeFinder from '../utils/LiveEdgeFinder';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
+import StreamController from '../controllers/StreamController';
 import Debug from '../../core/Debug';
 
 function ScheduleController(config) {
@@ -80,6 +81,7 @@ function ScheduleController(config) {
         playbackController,
         abrController,
         streamProcessor,
+        streamController,
         fragmentController,
         liveEdgeFinder,
         bufferController,
@@ -109,6 +111,7 @@ function ScheduleController(config) {
         liveEdgeFinder = LiveEdgeFinder(context).getInstance();
         playbackController = PlaybackController(context).getInstance();
         abrController = AbrController(context).getInstance();
+        streamController = StreamController(context).getInstance();
         fragmentController = streamProcessor.getFragmentController();
         bufferController = streamProcessor.getBufferController();
         fragmentModel = fragmentController.getModel(this);
@@ -243,7 +246,7 @@ function ScheduleController(config) {
             }
         }
 
-        let readyToLoad = bufferLevelRule.execute(streamProcessor);
+        let readyToLoad = bufferLevelRule.execute(streamProcessor, streamController.isVideoTrackPresent());
         if (readyToLoad && !isFragmentLoading &&
             (dashManifestModel.getIsTextTrack(type) || !bufferController.getIsAppendingInProgress()) ) {
 
