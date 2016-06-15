@@ -238,11 +238,13 @@ function StreamController() {
      * Used to determine the time current stream is finished and we should switch to the next stream.
      */
     function onPlaybackTimeUpdated(e) {
-        var playbackQuality = videoModel.getPlaybackQuality();
-        if (playbackQuality) {
-            metricsModel.addDroppedFrames('video', playbackQuality);
-        }
 
+        if (isVideoTrackPresent()) {
+            var playbackQuality = videoModel.getPlaybackQuality();
+            if (playbackQuality) {
+                metricsModel.addDroppedFrames('video', playbackQuality);
+            }
+        }
         // Sometimes after seeking timeUpdateHandler is called before seekingHandler and a new stream starts
         // from beginning instead of from a chosen position. So we do nothing if the player is in the seeking state
         if (playbackController.isSeeking()) return;
