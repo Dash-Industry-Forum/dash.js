@@ -43,6 +43,7 @@ const ABANDON_LOAD_TIMEOUT = 10000;
 const BUFFER_TO_KEEP = 30;
 const BUFFER_PRUNING_INTERVAL = 30;
 const DEFAULT_MIN_BUFFER_TIME = 12;
+const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
 const BUFFER_TIME_AT_TOP_QUALITY = 30;
 const BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 60;
 const LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;
@@ -86,7 +87,8 @@ function MediaPlayerModel() {
         retryIntervals,
         wallclockTimeUpdateInterval,
         bufferOccupancyABREnabled,
-        xhrWithCredentials;
+        xhrWithCredentials,
+        fastSwitchEnabled;
 
     function setup() {
         UTCTimingSources = [];
@@ -94,13 +96,14 @@ function MediaPlayerModel() {
         useManifestDateHeaderTimeSource = true;
         scheduleWhilePaused = true;
         bufferOccupancyABREnabled = false;
+        fastSwitchEnabled = false;
         lastBitrateCachingInfo = {enabled: true , ttl: DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION};
         lastMediaSettingsCachingInfo = {enabled: true , ttl: DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION};
         liveDelayFragmentCount = LIVE_DELAY_FRAGMENT_COUNT;
         liveDelay = undefined; // Explicitly state that default is undefined
         bufferToKeep = BUFFER_TO_KEEP;
         bufferPruningInterval = BUFFER_PRUNING_INTERVAL;
-        stableBufferTime = DEFAULT_MIN_BUFFER_TIME;
+        stableBufferTime = NaN;
         bufferTimeAtTopQuality = BUFFER_TIME_AT_TOP_QUALITY;
         bufferTimeAtTopQualityLongForm = BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM;
         longFormContentDurationThreshold = LONG_FORM_CONTENT_DURATION_THRESHOLD;
@@ -109,6 +112,7 @@ function MediaPlayerModel() {
         abandonLoadTimeout = ABANDON_LOAD_TIMEOUT;
         wallclockTimeUpdateInterval = WALLCLOCK_TIME_UPDATE_INTERVAL;
         xhrWithCredentials = DEFAULT_XHR_WITH_CREDENTIALS;
+
 
         retryAttempts = {
             [HTTPRequest.MPD_TYPE]:                         MANIFEST_RETRY_ATTEMPTS,
@@ -161,7 +165,7 @@ function MediaPlayerModel() {
     }
 
     function getStableBufferTime() {
-        return stableBufferTime;
+        return !isNaN(stableBufferTime) ? stableBufferTime : fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
     }
 
     function setBufferTimeAtTopQuality(value) {
@@ -331,6 +335,14 @@ function MediaPlayerModel() {
         return xhrWithCredentials;
     }
 
+    function getFastSwitchEnabled() {
+        return fastSwitchEnabled;
+    }
+
+    function setFastSwitchEnabled(value) {
+        fastSwitchEnabled = value;
+    }
+
     function reset() {
         //TODO need to figure out what props to persist across sessions and which to reset if any.
         //setup();
@@ -385,6 +397,8 @@ function MediaPlayerModel() {
         getUTCTimingSources: getUTCTimingSources,
         setXHRWithCredentials: setXHRWithCredentials,
         getXHRWithCredentials: getXHRWithCredentials,
+        setFastSwitchEnabled: setFastSwitchEnabled,
+        getFastSwitchEnabled: getFastSwitchEnabled,
         reset: reset
     };
 

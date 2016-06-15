@@ -8,7 +8,7 @@ describe("AbrController", function () {
     const context = {};
     const testType = 'video';
     const voHelper = new VoHelper();
-    const defaultQuality = new SpecHelper().getDefaultQuality();
+    const defaultQuality = AbrController.QUALITY_DEFAULT;
     const abrCtrl = AbrController(context).getInstance();
     const dummyMediaInfo = voHelper.getDummyMediaInfo('video');
     const representationCount = dummyMediaInfo.representationCount;

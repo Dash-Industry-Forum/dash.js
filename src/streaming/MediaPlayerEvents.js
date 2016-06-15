@@ -55,7 +55,7 @@ class MediaPlayerEvents extends EventsBase {
 
         /**
          * Triggered when the video element's buffer state changes, either stalled or loaded. Check payload for state.
-         * @event MediaPlayerEvents#BUFFER_LOADED
+         * @event MediaPlayerEvents#BUFFER_LEVEL_STATE_CHANGED
          */
         this.BUFFER_LEVEL_STATE_CHANGED = 'bufferStateChanged';
 
@@ -105,6 +105,19 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#PERIOD_SWITCH_STARTED
          */
         this.PERIOD_SWITCH_STARTED = 'streamswitchstarted';
+
+        /**
+         * Triggered when an ABR up /down switch is initialed; either by user in manual mode or auto mode via ABR rules.
+         * @event MediaPlayerEvents#QUALITY_CHANGE_START
+         */
+        this.QUALITY_CHANGE_START = 'qualityChangeStart';
+
+        /**
+         * Triggered when the new ABR quality is being rendered on-screen.
+         * @event MediaPlayerEvents#QUALITY_CHANGE_COMPLETE
+         */
+        this.QUALITY_CHANGE_COMPLETE = 'qualityChangeComplete';
+
         /**
          * Triggered when the stream is setup and ready.
          * @event MediaPlayerEvents#STREAM_INITIALIZED

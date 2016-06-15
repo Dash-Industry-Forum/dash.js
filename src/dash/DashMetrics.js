@@ -33,6 +33,7 @@ import ManifestModel from '../streaming/models/ManifestModel';
 import DashManifestModel from './models/DashManifestModel';
 import FactoryMaker from '../core/FactoryMaker';
 import * as MetricsList from './constants/DashMetricsList';
+import { round10 } from 'round10';
 
 /**
  * @module DashMetrics
@@ -121,7 +122,7 @@ function DashMetrics() {
         const vo = getLatestBufferLevelVO(metrics);
 
         if (vo) {
-            return vo.level / 1000;
+            return round10(vo.level / 1000, -3);
         }
 
         return 0;
