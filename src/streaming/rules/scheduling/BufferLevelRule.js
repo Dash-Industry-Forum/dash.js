@@ -31,13 +31,11 @@
 import MediaPlayerModel from '../../models/MediaPlayerModel';
 import PlaybackController from '../../controllers/PlaybackController';
 import FactoryMaker from '../../../core/FactoryMaker';
-//import Debug from '../../../core/Debug';
 
 function BufferLevelRule(config) {
 
     let instance;
     let context = this.context;
-    //let log = Debug(context).getInstance().log;
     let dashMetrics = config.dashMetrics;
     let metricsModel = config.metricsModel;
     let textSourceBuffer = config.textSourceBuffer;
@@ -50,19 +48,19 @@ function BufferLevelRule(config) {
         playbackController = PlaybackController(context).getInstance();
     }
 
-    function execute(streamProcessor) {
+    function execute(streamProcessor, videoTrackPresent) {
 
         let representationInfo = streamProcessor.getCurrentRepresentationInfo();
         let mediaInfo = representationInfo.mediaInfo;
         let mediaType = mediaInfo.type;
         let bufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor(mediaType));
 
-        return bufferLevel < getBufferTarget(streamProcessor, mediaType);
+        return bufferLevel < getBufferTarget(streamProcessor, mediaType, videoTrackPresent);
     }
 
     function reset() {}
 
-    function getBufferTarget(streamProcessor, type) {
+    function getBufferTarget(streamProcessor, type, videoTrackPresent) {
 
         let representationInfo = streamProcessor.getCurrentRepresentationInfo();
         let bufferTarget = NaN;
@@ -70,9 +68,9 @@ function BufferLevelRule(config) {
         if (type === 'fragmentedText') {
             bufferTarget = textSourceBuffer.getAllTracksAreDisabled() ? 0 : representationInfo.fragmentDuration;
         }
-        else if (type === 'audio') {
+        else if (type === 'audio' && videoTrackPresent) {
             let videoBufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor('video'));
-            bufferTarget = videoBufferLevel > 1 ? videoBufferLevel : mediaPlayerModel.getStableBufferTime(); //check for audio only stream with null video metric
+            bufferTarget = Math.max(videoBufferLevel, representationInfo.fragmentDuration);
         }
         else {
 

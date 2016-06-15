@@ -79,7 +79,8 @@ function StreamController() {
         mediaPlayerModel,
         isPaused,
         initialPlayback,
-        playListMetrics;
+        playListMetrics,
+        videoTrackDetected;
 
     function setup() {
         protectionController = null;
@@ -415,6 +416,7 @@ function StreamController() {
         from.deactivate();
         activeStream = to;
         playbackController.initialize(activeStream.getStreamInfo());
+        videoTrackDetected = checkVideoPresence();
         setupMediaSource(onMediaSourceReady);
     }
 
@@ -628,6 +630,24 @@ function StreamController() {
         }
     }
 
+
+    function isVideoTrackPresent() {
+        if (videoTrackDetected === undefined) {
+            videoTrackDetected = checkVideoPresence();
+        }
+        return videoTrackDetected;
+    }
+
+    function checkVideoPresence() {
+        let isVideoDetected = false;
+        activeStream.getProcessors().forEach(p => {
+            if (p.getMediaInfo().type === 'video') {
+                isVideoDetected = true;
+            }
+        });
+        return isVideoDetected;
+    }
+
     function getAutoPlay() {
         return autoPlay;
     }
@@ -744,6 +764,7 @@ function StreamController() {
         activeStream = null;
         hasMediaError = false;
         hasInitialisationError = false;
+        videoTrackDetected = undefined;
         initialPlayback = true;
         isPaused = false;
 
@@ -769,6 +790,7 @@ function StreamController() {
         getAutoPlay: getAutoPlay,
         getActiveStreamInfo: getActiveStreamInfo,
         isStreamActive: isStreamActive,
+        isVideoTrackPresent: isVideoTrackPresent,
         getStreamById: getStreamById,
         getTimeRelativeToStreamId: getTimeRelativeToStreamId,
         load: load,
