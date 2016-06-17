@@ -282,7 +282,7 @@ function ScheduleController(config) {
 
         if (!initialQualityChange) { //blocks init quality change
             qualityChangeInProgress = true;
-            eventBus.trigger(Events.QUALITY_CHANGE_START, {mediaType: e.mediaType, newQuality: e.newQuality,  oldQuality: e.oldQuality});
+            eventBus.trigger(Events.QUALITY_CHANGE_START, {mediaType: e.mediaType, newQuality: e.newQuality,  oldQuality: e.oldQuality, reason: e.reason});
         } else {
             initialQualityChange = false;
         }

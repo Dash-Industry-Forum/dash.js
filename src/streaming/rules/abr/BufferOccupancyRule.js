@@ -65,7 +65,7 @@ function BufferOccupancyRule(config) {
         var lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
         var isBufferRich = false;
         var maxIndex = mediaInfo.representationCount - 1;
-        var switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
+        var switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK, {name: BufferOccupancyRule.__dashjs_factory_name});
 
         if (now - lastSwitchTime < waitToSwitchTime ||
             abrController.getAbandonmentStateFor(mediaType) === AbrController.ABANDON_LOAD) {
@@ -80,7 +80,10 @@ function BufferOccupancyRule(config) {
                 isBufferRich = (lastBufferLevel - lastBufferStateVO.target) > mediaPlayerModel.getRichBufferThreshold();
 
                 if (isBufferRich && mediaInfo.representationCount > 1) {
-                    switchRequest = SwitchRequest(context).create(maxIndex, SwitchRequest.STRONG);
+                    switchRequest.value = maxIndex;
+                    switchRequest.priority = SwitchRequest.STRONG;
+                    switchRequest.reason.bufferLevel = lastBufferLevel;
+                    switchRequest.reason.bufferTarget = lastBufferStateVO.target;
                 }
             }
         }

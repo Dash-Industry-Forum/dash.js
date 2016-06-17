@@ -82,7 +82,6 @@ function RulesController() {
             if (values[SwitchRequest.WEAK] !== SwitchRequest.NO_CHANGE) {
                 confidence = SwitchRequest.WEAK;
                 value = values[SwitchRequest.WEAK];
-
             }
 
             if (values[SwitchRequest.DEFAULT] !== SwitchRequest.NO_CHANGE) {
@@ -101,7 +100,7 @@ function RulesController() {
             }
 
 
-            callback({ value: (value !== undefined) ? value : current, confidence: confidence });
+            callback({ value: (value !== undefined) ? value : current, confidence: confidence, reason: result.reason});
 
         };
 
