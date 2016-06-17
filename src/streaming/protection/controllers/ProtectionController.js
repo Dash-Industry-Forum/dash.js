@@ -65,6 +65,7 @@ function ProtectionController(config) {
         protDataSet,
         initialized,
         sessionType,
+        robustnessLevel,
         keySystem;
 
     function setup() {
@@ -72,6 +73,7 @@ function ProtectionController(config) {
         pendingNeedKeyData = [];
         initialized = false;
         sessionType = 'temporary';
+        robustnessLevel = '';
 
         Events.extend(Protection.events);
     }
@@ -251,6 +253,18 @@ function ProtectionController(config) {
     }
 
     /**
+     * Sets the robustness level for video and audio capabilities. Optional to remove Chrome warnings.
+     * Possible values are SW_SECURE_CRYPTO, SW_SECURE_DECODE, HW_SECURE_CRYPTO, HW_SECURE_CRYPTO, HW_SECURE_DECODE, HW_SECURE_ALL.
+     *
+     * @param {string} level the robustness level
+     * @memberof module:ProtectionController
+     * @instance
+     */
+    function setRobustnessLevel(level) {
+        robustnessLevel = level;
+    }
+
+    /**
      * Attach KeySystem-specific data to use for license acquisition with EME
      *
      * @param {Object} data an object containing property names corresponding to
@@ -306,16 +320,18 @@ function ProtectionController(config) {
         var videoCapabilities = [];
 
         if (videoInfo) {
-            videoCapabilities.push(new MediaCapability(videoInfo.codec));
+            videoCapabilities.push(new MediaCapability(videoInfo.codec, robustnessLevel));
         }
         if (audioInfo) {
-            audioCapabilities.push(new MediaCapability(audioInfo.codec));
+            audioCapabilities.push(new MediaCapability(audioInfo.codec, robustnessLevel));
         }
         var ksConfig = new KeySystemConfiguration(
                 audioCapabilities, videoCapabilities, 'optional',
                 (sessionType === 'temporary') ? 'optional' : 'required',
                 [sessionType]);
         var requestedKeySystems = [];
+
+        console.log('CONFIG', ksConfig);
 
         var ksIdx;
         if (keySystem) {
@@ -553,6 +569,7 @@ function ProtectionController(config) {
         setServerCertificate: setServerCertificate,
         setMediaElement: setMediaElement,
         setSessionType: setSessionType,
+        setRobustnessLevel: setRobustnessLevel,
         setProtectionData: setProtectionData,
         reset: reset
     };
