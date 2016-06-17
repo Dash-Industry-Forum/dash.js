@@ -198,10 +198,12 @@ function ProtectionKeyController() {
     /**
      * Returns key systems supported by this player for the given PSSH
      * initializationData. Only key systems supported by this player
-     * will be returned.  Key systems are returned in priority order
+     * that have protection data present will be returned.  Key systems are returned in priority order
      * (highest priority first)
      *
      * @param {ArrayBuffer} initData Concatenated PSSH data for all DRMs
+     * supported by the content
+     * @param {ProtectionData} protDataSet user specified protection data - license server url etc
      * supported by the content
      * @returns {Array.<Object>} array of objects indicating which supported key
      * systems were found.  Empty array is returned if no
@@ -209,13 +211,16 @@ function ProtectionKeyController() {
      * @memberof module:ProtectionKeyController
      * @instance
      */
-    function getSupportedKeySystems(initData) {
+    function getSupportedKeySystems(initData, protDataSet) {
         var ksIdx;
         var supportedKS = [];
         var pssh = CommonEncryption.parsePSSHList(initData);
 
         for (ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
-            if (keySystems[ksIdx].uuid in pssh) {
+            var keySystemString = keySystems[ksIdx].systemString;
+            var protectionDataForKeySystemPresent = keySystemString in protDataSet;
+
+            if (keySystems[ksIdx].uuid in pssh && protectionDataForKeySystemPresent) {
                 supportedKS.push({
                     ks: keySystems[ksIdx],
                     initData: pssh[keySystems[ksIdx].uuid]

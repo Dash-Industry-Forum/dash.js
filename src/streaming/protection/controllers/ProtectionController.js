@@ -535,7 +535,7 @@ function ProtectionController(config) {
 
         log('DRM: initData:', String.fromCharCode.apply(null, new Uint8Array(abInitData)));
 
-        var supportedKS = protectionKeyController.getSupportedKeySystems(abInitData);
+        var supportedKS = protectionKeyController.getSupportedKeySystems(abInitData, protDataSet);
         if (supportedKS.length === 0) {
             log('DRM: Received needkey event with initData, but we don\'t support any of the key systems!');
             return;
