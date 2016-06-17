@@ -331,8 +331,6 @@ function ProtectionController(config) {
                 [sessionType]);
         var requestedKeySystems = [];
 
-        console.log('CONFIG', ksConfig);
-
         var ksIdx;
         if (keySystem) {
             // We have a key system
