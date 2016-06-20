@@ -40,9 +40,12 @@ function TimelineSegmentsGetter(config, isDynamic) {
     let instance;
 
     function getSegmentsFromTimeline(representation, requestedTime, index, availabilityUpperLimit) {
-        var template = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
-            AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate;
-        var timeline = template.SegmentTimeline;
+        var base = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
+            AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate ||
+            representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
+            AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList;
+        var timeline = base.SegmentTimeline;
+        var list = base.SegmentURL_asArray;
         var isAvailableSegmentNumberCalculated = representation.availableSegmentsNumber > 0;
 
         var maxSegmentsAhead = 10;
@@ -67,7 +70,15 @@ function TimelineSegmentsGetter(config, isDynamic) {
             endIdx,
             fTimescale;
 
-        var createSegment = function (s) {
+        var createSegment = function (s, i) {
+            var media = base.media;
+            var mediaRange = s.mediaRange;
+
+            if (list) {
+                media = list[i].media || '';
+                mediaRange = list[i].mediaRange;
+            }
+
             return getTimeBasedSegment(
                 timelineConverter,
                 isDynamic,
@@ -75,8 +86,8 @@ function TimelineSegmentsGetter(config, isDynamic) {
                 time,
                 s.d,
                 fTimescale,
-                template.media,
-                s.mediaRange,
+                media,
+                mediaRange,
                 availabilityIdx);
         };
 
@@ -143,7 +154,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
                     }
 
                     if (availabilityIdx >= startIdx) {
-                        segments.push(createSegment(frag));
+                        segments.push(createSegment(frag, availabilityIdx));
                     }
                 } else {
                     if (segments.length > maxSegmentsAhead) {
@@ -158,10 +169,10 @@ function TimelineSegmentsGetter(config, isDynamic) {
                     // use a correction factor = 1.5. This number is used because the largest possible deviation is
                     // is 50% of segment duration.
                     if (isStartSegmentForRequestedTimeFound) {
-                        segments.push(createSegment(frag));
+                        segments.push(createSegment(frag, availabilityIdx));
                     }  else if (scaledTime >= (requiredMediaTime - (frag.d / fTimescale) * 1.5)) {
                         isStartSegmentForRequestedTimeFound = true;
-                        segments.push(createSegment(frag));
+                        segments.push(createSegment(frag, availabilityIdx));
                     }
                 }
 
