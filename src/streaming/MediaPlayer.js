@@ -775,7 +775,7 @@ function MediaPlayer() {
      * Set to true if you would like dash.js to keep downloading fragments in the background
      * when the video element is paused.
      *
-     * @default false
+     * @default true
      * @param {boolean} value
      * @memberof module:MediaPlayer
      * @instance
