@@ -249,7 +249,7 @@ function DashHandler(config) {
 
     function updateRepresentation(representation, keepIdx) {
         var hasInitialization = representation.initialization;
-        var hasSegments = representation.segmentInfoType !== 'BaseURL' && representation.segmentInfoType !== 'SegmentBase';
+        var hasSegments = representation.segmentInfoType !== 'BaseURL' && representation.segmentInfoType !== 'SegmentBase' && !representation.indexRange;
         var error;
 
         if (!representation.segmentDuration && !representation.segments) {

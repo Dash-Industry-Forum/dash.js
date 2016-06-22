@@ -393,8 +393,17 @@ function DashManifestModel() {
             }
             else if (r.hasOwnProperty('SegmentList')) {
                 segmentInfo = r.SegmentList;
-                representation.segmentInfoType = 'SegmentList';
-                representation.useCalculatedLiveEdgeTime = true;
+
+                if (segmentInfo.hasOwnProperty('SegmentTimeline')) {
+                    representation.segmentInfoType = 'SegmentTimeline';
+                    s = segmentInfo.SegmentTimeline.S_asArray[segmentInfo.SegmentTimeline.S_asArray.length - 1];
+                    if (!s.hasOwnProperty('r') || s.r >= 0) {
+                        representation.useCalculatedLiveEdgeTime = true;
+                    }
+                } else {
+                    representation.segmentInfoType = 'SegmentList';
+                    representation.useCalculatedLiveEdgeTime = true;
+                }
             }
             else if (r.hasOwnProperty('SegmentTemplate')) {
                 segmentInfo = r.SegmentTemplate;
