@@ -46,7 +46,9 @@ function ManifestModel() {
 
     function setValue(value) {
         manifest = value;
-        eventBus.trigger(Events.MANIFEST_LOADED,  {data: value});
+        if (value) {
+            eventBus.trigger(Events.MANIFEST_LOADED,  {data: value});
+        }
     }
 
     instance = {
