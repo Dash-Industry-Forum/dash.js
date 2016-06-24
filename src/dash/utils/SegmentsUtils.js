@@ -221,7 +221,7 @@ export function getSegmentByIndex(index, representation) {
 
 export function decideSegmentListRangeForTimeline(timelineConverter, isDynamic, requestedTime, index, givenAvailabilityUpperLimit) {
     var availabilityLowerLimit = 2;
-    var availabilityUpperLimit = givenAvailabilityUpperLimit >= 0 ? givenAvailabilityUpperLimit : 10;
+    var availabilityUpperLimit = givenAvailabilityUpperLimit || 10;
     var firstIdx = 0;
     var lastIdx = Number.POSITIVE_INFINITY;
 
@@ -247,14 +247,15 @@ export function decideSegmentListRangeForTimeline(timelineConverter, isDynamic, 
 
 export function decideSegmentListRangeForTemplate(timelineConverter, isDynamic, representation, requestedTime, index, givenAvailabilityUpperLimit) {
     var duration = representation.segmentDuration;
-    var availabilityWindow = timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic, true);
+    var minBufferTime = representation.adaptation.period.mpd.manifest.minBufferTime;
+    var availabilityWindow = representation.segmentAvailabilityRange;
     var periodRelativeRange = {
         start: timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, availabilityWindow.start),
         end: timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, availabilityWindow.end)
     };
     var currentSegmentList = representation.segments;
-    var availabilityLowerLimit = periodRelativeRange.start;
-    var availabilityUpperLimit = givenAvailabilityUpperLimit >= 0 ? givenAvailabilityUpperLimit : periodRelativeRange.end;
+    var availabilityLowerLimit = 2 * duration;
+    var availabilityUpperLimit = givenAvailabilityUpperLimit || Math.max(2 * minBufferTime, 10 * duration);
 
     var originAvailabilityTime = NaN;
     var originSegment = null;
@@ -298,3 +299,5 @@ export function decideSegmentListRangeForTemplate(timelineConverter, isDynamic, 
 
     return range;
 }
+
+
