@@ -37,6 +37,7 @@
                 ,"#1457 Cannot play manifest with SegmentTimeline inside of SegmentList."
                 ,"#1461 Reference live stream fails to replay correctly in dev (Regression)."
                 ,"#1463 setScheduleWhilePaused default value documentation incorrect."
+                ,"#521  properly support path-absolute BaseURLs (Regression)."
             ]
         },
         {
