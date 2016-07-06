@@ -29,26 +29,26 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import AbrController from './controllers/AbrController.js';
-import BufferController from './controllers/BufferController.js';
-import StreamController from './controllers/StreamController.js';
-import MediaController from './controllers/MediaController.js';
-import TextController from './controllers/TextController.js';
-import ScheduleController from './controllers/ScheduleController.js';
-import RulesController from './rules/RulesController.js';
-import MediaPlayerModel from './models/MediaPlayerModel.js';
-import MetricsModel from './models/MetricsModel.js';
-import FragmentLoader from './FragmentLoader.js';
-import RequestModifier from './utils/RequestModifier.js';
+import AbrController from './controllers/AbrController';
+import BufferController from './controllers/BufferController';
+import StreamController from './controllers/StreamController';
+import MediaController from './controllers/MediaController';
+import TextController from './controllers/TextController';
+import ScheduleController from './controllers/ScheduleController';
+import RulesController from './rules/RulesController';
+import MediaPlayerModel from './models/MediaPlayerModel';
+import MetricsModel from './models/MetricsModel';
+import FragmentLoader from './FragmentLoader';
+import RequestModifier from './utils/RequestModifier';
 import SourceBufferController from './controllers/SourceBufferController';
-import TextSourceBuffer from './TextSourceBuffer.js';
-import VirtualBuffer from './VirtualBuffer.js';
-import MediaSourceController from './controllers/MediaSourceController.js';
-import DashManifestModel from '../dash/models/DashManifestModel.js';
-import DashMetrics from '../dash/DashMetrics.js';
-import RepresentationController from '../dash/controllers/RepresentationController.js';
-import ErrorHandler from './utils/ErrorHandler.js';
-import FactoryMaker from '../core/FactoryMaker.js';
+import TextSourceBuffer from './TextSourceBuffer';
+import VirtualBuffer from './VirtualBuffer';
+import MediaSourceController from './controllers/MediaSourceController';
+import DashManifestModel from '../dash/models/DashManifestModel';
+import DashMetrics from '../dash/DashMetrics';
+import RepresentationController from '../dash/controllers/RepresentationController';
+import ErrorHandler from './utils/ErrorHandler';
+import FactoryMaker from '../core/FactoryMaker';
 
 function StreamProcessor(config) {
 

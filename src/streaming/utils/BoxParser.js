@@ -29,8 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import IsoFile from './IsoFile.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
+import IsoFile from './IsoFile';
+import FactoryMaker from '../../core/FactoryMaker';
 import ISOBoxer from 'codem-isoboxer';
 
 function BoxParser(/*config*/) {
@@ -40,7 +40,7 @@ function BoxParser(/*config*/) {
 
     /**
      * @param {ArrayBuffer} data
-     * @returns {@link IsoFile}
+     * @returns {IsoFile|null}
      * @memberof BoxParser#
      */
     function parse(data) {

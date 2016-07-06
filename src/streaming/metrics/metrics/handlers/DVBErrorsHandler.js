@@ -29,8 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../../../core/FactoryMaker.js';
-import MetricsReportingEvents from '../../MetricsReportingEvents.js';
+import FactoryMaker from '../../../../core/FactoryMaker';
+import MetricsReportingEvents from '../../MetricsReportingEvents';
 
 function DVBErrorsHandler(config) {
 

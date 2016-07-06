@@ -28,21 +28,21 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import MetricsList from '../vo/MetricsList.js';
-import TCPConnection from '../vo/metrics/TCPConnection.js';
-import HTTPRequest from '../vo/metrics/HTTPRequest.js';
-import TrackSwitch from '../vo/metrics/RepresentationSwitch.js';
-import BufferLevel from '../vo/metrics/BufferLevel.js';
-import BufferState from '../vo/metrics/BufferState.js';
-import DVRInfo from '../vo/metrics/DVRInfo.js';
-import DroppedFrames from '../vo/metrics/DroppedFrames.js';
-import ManifestUpdate from '../vo/metrics/ManifestUpdate.js';
-import SchedulingInfo from '../vo/metrics/SchedulingInfo.js';
-import EventBus from '../../core/EventBus.js';
-import RequestsQueue from '../vo/metrics/RequestsQueue.js';
-import Events from '../../core/events/Events.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
-import BolaState from '../vo/metrics/BolaState.js';
+import MetricsList from '../vo/MetricsList';
+import TCPConnection from '../vo/metrics/TCPConnection';
+import {HTTPRequest, HTTPRequestTrace} from '../vo/metrics/HTTPRequest';
+import TrackSwitch from '../vo/metrics/RepresentationSwitch';
+import BufferLevel from '../vo/metrics/BufferLevel';
+import BufferState from '../vo/metrics/BufferState';
+import DVRInfo from '../vo/metrics/DVRInfo';
+import DroppedFrames from '../vo/metrics/DroppedFrames';
+import {ManifestUpdate, ManifestUpdateStreamInfo, ManifestUpdateTrackInfo} from '../vo/metrics/ManifestUpdate';
+import SchedulingInfo from '../vo/metrics/SchedulingInfo';
+import EventBus from '../../core/EventBus';
+import RequestsQueue from '../vo/metrics/RequestsQueue';
+import Events from '../../core/events/Events';
+import FactoryMaker from '../../core/FactoryMaker';
+import BolaState from '../vo/metrics/BolaState';
 
 function MetricsModel() {
 
@@ -131,7 +131,7 @@ function MetricsModel() {
     }
 
     function appendHttpTrace(httpRequest, s, d, b) {
-        var vo = new HTTPRequest.Trace();
+        var vo = new HTTPRequestTrace();
 
         vo.s = s;
         vo.d = d;
@@ -344,7 +344,7 @@ function MetricsModel() {
 
     function addManifestUpdateStreamInfo(manifestUpdate, id, index, start, duration) {
         if (manifestUpdate) {
-            var vo = new ManifestUpdate.StreamInfo();
+            var vo = new ManifestUpdateStreamInfo();
 
             vo.id = id;
             vo.index = index;
@@ -361,7 +361,7 @@ function MetricsModel() {
 
     function addManifestUpdateRepresentationInfo(manifestUpdate, id, index, streamIndex, mediaType, presentationTimeOffset, startNumber, fragmentInfoType) {
         if (manifestUpdate) {
-            var vo = new ManifestUpdate.TrackInfo();
+            var vo = new ManifestUpdateTrackInfo();
 
             vo.id = id;
             vo.index = index;

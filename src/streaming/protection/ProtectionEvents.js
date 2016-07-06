@@ -28,9 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventsBase from '../../core/events/EventsBase.js';
+import EventsBase from '../../core/events/EventsBase';
 /**
- * @Class
+ * @class
  *
  */
 class ProtectionEvents extends EventsBase {

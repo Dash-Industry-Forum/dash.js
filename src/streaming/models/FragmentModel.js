@@ -30,11 +30,11 @@
  */
 
 
-import EventBus from '../../core/EventBus.js';
-import Events from '../../core/events/Events.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
-import FragmentRequest from '../vo/FragmentRequest.js';
-import Debug from '../../core/Debug.js';
+import EventBus from '../../core/EventBus';
+import Events from '../../core/events/Events';
+import FactoryMaker from '../../core/FactoryMaker';
+import FragmentRequest from '../vo/FragmentRequest';
+import Debug from '../../core/Debug';
 
 const FRAGMENT_MODEL_LOADING = 'loading';
 const FRAGMENT_MODEL_EXECUTED = 'executed';
@@ -116,7 +116,7 @@ function FragmentModel(config) {
      *
      * Gets an array of {@link FragmentRequest} objects
      *
-     * @param {object} filter The object with properties by which the method filters the requests to be returned.
+     * @param {Object} filter The object with properties by which the method filters the requests to be returned.
      *  the only mandatory property is state, which must be a value from
      *  other properties should match the properties of {@link FragmentRequest}. E.g.:
      *  getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED, quality: 0}) - returns
@@ -236,7 +236,7 @@ function FragmentModel(config) {
             req = arr[i];
             start = req.startTime;
             end = start + req.duration;
-            threshold = threshold || (req.duration / 2);
+            threshold = threshold !== undefined ? threshold : (req.duration / 2);
             if ((!isNaN(start) && !isNaN(end) && ((time + threshold) >= start) && ((time - threshold) < end)) || (isNaN(start) && isNaN(time))) {
                 return req;
             }

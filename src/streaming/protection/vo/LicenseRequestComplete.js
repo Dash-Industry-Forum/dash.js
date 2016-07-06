@@ -28,19 +28,22 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
- * Event indicating the receipt of a response from a license server
- *
- * @param {Uint8Array} message license response message
- * @param {SessionToken} sessionToken the session to
- * @param {String} [messageType="license-request"] the message type that is associated
- * with this object's response message.  Supported message types can be found
- * {@link https://w3c.github.io/encrypted-media/#idl-def-MediaKeyMessageType|here}.
- * @constructor
+ * @classdesc Event indicating the receipt of a response from a license server
  * @ignore
  */
 class LicenseRequestComplete {
+    /**
+     * Event indicating the receipt of a response from a license server
+     *
+     * @param {Uint8Array} message license response message
+     * @param {SessionToken} sessionToken the session to
+     * @param {String} messageType the message type that is associated
+     * with this object's response message.  Supported message types can be found
+     * {@link https://w3c.github.io/encrypted-media/#idl-def-MediaKeyMessageType|here}.
+     * @class
+     * @ignore
+     */
     constructor(message, sessionToken, messageType) {
         this.message = message;
         this.sessionToken = sessionToken;

@@ -28,10 +28,10 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventBus from '../core/EventBus.js';
-import Events from '../core/events/Events.js';
-import FactoryMaker from '../core/FactoryMaker.js';
-import Debug from '../core/Debug.js';
+import EventBus from '../core/EventBus';
+import Events from '../core/events/Events';
+import FactoryMaker from '../core/FactoryMaker';
+import Debug from '../core/Debug';
 
 function TextTracks() {
 
@@ -87,6 +87,7 @@ function TextTracks() {
         } else if (document.mozFullScreen) { // Firefox
             fullscreenAttribute = 'mozFullScreen';
         }
+
     }
 
     function createTrackForUserAgent (i) {
@@ -165,21 +166,15 @@ function TextTracks() {
         var viewAspectRatio = viewWidth / viewHeight;
         var videoAspectRatio = videoWidth / videoHeight;
 
-        var videoPictureX = 0;
-        var videoPictureY = 0;
         var videoPictureWidth = 0;
         var videoPictureHeight = 0;
 
         if (viewAspectRatio > videoAspectRatio) {
             videoPictureHeight = viewHeight;
             videoPictureWidth = (videoPictureHeight / videoHeight) * videoWidth;
-            videoPictureX = (viewWidth - videoPictureWidth) / 2;
-            videoPictureY = 0;
         } else {
             videoPictureWidth = viewWidth;
             videoPictureHeight = (videoPictureWidth / videoWidth) * videoHeight;
-            videoPictureX = 0;
-            videoPictureY = (viewHeight - videoPictureHeight) / 2;
         }
 
         var videoPictureXAspect = 0;
@@ -217,11 +212,7 @@ function TextTracks() {
     function checkVideoSize() {
         var track = this.getCurrentTextTrack();
         if (track && track.renderingType === 'html') {
-            // Create aspect ratio from cellResolutions
-            let aspectRatio = 1;
-            if (track.cellResolution) {
-                aspectRatio = track.cellResolution[0] / track.cellResolution[1];
-            }
+            let aspectRatio = video.clientWidth / video.clientHeight;
             let use80Percent = false;
             if (track.isFromCEA608) {
                 // If this is CEA608 then use predefined aspect ratio
@@ -316,7 +307,7 @@ function TextTracks() {
         }
     }
 
-    /**
+    /*
     * Add captions to track, store for later adding, or add captions added before
     */
     function addCaptions(trackIdx, timeOffset, captionData) {
@@ -407,6 +398,7 @@ function TextTracks() {
 
                 cue.onenter =  function () {
                     if (track.mode == 'showing') {
+                        log('Cue ' + this.startTime + '-' + this.endTime + ' : ' + this.cueHTMLElement.id + ' : ' + this.cueHTMLElement.innerText);
                         captionContainer.appendChild(this.cueHTMLElement);
                         scaleCue.call(self, this);
                     }
@@ -415,7 +407,7 @@ function TextTracks() {
                 cue.onexit =  function () {
                     var divs = captionContainer.childNodes;
                     for (var i = 0; i < divs.length; ++i) {
-                        if (divs[i].id == 'subtitle_' + this.cueID) {
+                        if (divs[i].id === this.cueID) {
                             captionContainer.removeChild(divs[i]);
                         }
                     }
@@ -464,7 +456,7 @@ function TextTracks() {
 
     function setCurrentTrackIdx(idx) {
         currentTrackIdx = idx;
-        clearCues.call(this);
+        clearCaptionContainer.call(this);
         if (idx >= 0) {
             var track = video.textTracks[idx];
             if (track.renderingType === 'html') {
@@ -512,7 +504,7 @@ function TextTracks() {
             clearInterval(videoSizeCheckInterval);
             videoSizeCheckInterval = null;
         }
-        clearCues.call(this);
+        clearCaptionContainer.call(this);
     }
 
     function deleteTextTrack(idx) {
@@ -548,7 +540,7 @@ function TextTracks() {
         }
     }
 
-    function clearCues() {
+    function clearCaptionContainer() {
         if (captionContainer) {
             while (captionContainer.firstChild) {
                 captionContainer.removeChild(captionContainer.firstChild);

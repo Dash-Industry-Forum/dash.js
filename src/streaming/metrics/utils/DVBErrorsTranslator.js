@@ -29,11 +29,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import DVBErrors from '../vo/DVBErrors.js';
-import Events from '../../../core/events/Events.js';
-import MediaPlayerEvents from '../../MediaPlayerEvents.js';
-import MetricsReportingEvents from '../MetricsReportingEvents.js';
-import FactoryMaker from '../../../core/FactoryMaker.js';
+import DVBErrors from '../vo/DVBErrors';
+import Events from '../../../core/events/Events';
+import MediaPlayerEvents from '../../MediaPlayerEvents';
+import MetricsReportingEvents from '../MetricsReportingEvents';
+import FactoryMaker from '../../../core/FactoryMaker';
 
 function DVBErrorsTranslator(config) {
 

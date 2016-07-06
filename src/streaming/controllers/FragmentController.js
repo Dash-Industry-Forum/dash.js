@@ -28,14 +28,14 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import HTTPRequest from '../vo/metrics/HTTPRequest.js';
-import DataChunk from '../vo/DataChunk.js';
-import FragmentModel from '../models/FragmentModel.js';
-import MetricsModel from '../models/MetricsModel.js';
-import EventBus from '../../core/EventBus.js';
-import Events from '../../core/events/Events.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
-import Debug from '../../core/Debug.js';
+import {HTTPRequest} from '../vo/metrics/HTTPRequest';
+import DataChunk from '../vo/DataChunk';
+import FragmentModel from '../models/FragmentModel';
+import MetricsModel from '../models/MetricsModel';
+import EventBus from '../../core/EventBus';
+import Events from '../../core/events/Events';
+import FactoryMaker from '../../core/FactoryMaker';
+import Debug from '../../core/Debug';
 
 function FragmentController(/*config*/) {
 

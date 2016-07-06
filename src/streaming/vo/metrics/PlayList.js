@@ -29,11 +29,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * @class
+ * @classdesc a PlayList from ISO23009-1 Annex D, this Object holds reference to the playback session information
  */
 class PlayList {
     /**
-     * @description This Object holds reference to the playback session information
+     * @class
      */
     constructor() {
 
@@ -62,15 +62,26 @@ class PlayList {
          * @public
          */
         this.trace = [];
-
     }
 }
 
-PlayList.Trace = class {
+/* Public Static Constants */
+PlayList.INITIAL_PLAYOUT_START_REASON = 'initial_playout';
+PlayList.SEEK_START_REASON = 'seek';
+PlayList.RESUME_FROM_PAUSE_START_REASON = 'resume';
+PlayList.METRICS_COLLECTION_START_REASON = 'metrics_collection_start';
+
+/**
+ * @classdesc a PlayList.Trace from ISO23009-1 Annex D
+ */
+class PlayListTrace {
+    /**
+     * @class
+     */
     constructor() {
         /**
          * The value of the Representation@id of the Representation from which the samples were taken.
-         * @type {String}
+         * @type {string}
          * @public
          */
         this.representationid = null;
@@ -78,31 +89,31 @@ PlayList.Trace = class {
          * If not present, this metrics concerns the Representation as a whole.
          * If present, subreplevel indicates the greatest value of any
          * Subrepresentation@level being rendered.
-         * @type {Number}
+         * @type {number}
          * @public
          */
         this.subreplevel = null;
         /**
          * The time at which the first sample was rendered
-         * @type {Number}
+         * @type {number}
          * @public
          */
         this.start = null;
         /**
          * The presentation time of the first sample rendered.
-         * @type {Number}
+         * @type {number}
          * @public
          */
         this.mstart = null;
         /**
          * The duration of the continuously presented samples (which is the same in real time and media time). "Continuously presented" means that the media clock continued to advance at the playout speed throughout the interval. NOTE: the spec does not call out the units, but all other durations etc are in ms, and we use ms too.
-         * @type {Number}
+         * @type {number}
          * @public
          */
         this.duration = null;
         /**
          * The playback speed relative to normal playback speed (i.e.normal forward playback speed is 1.0).
-         * @type {Number}
+         * @type {number}
          * @public
          */
         this.playbackspeed = null;
@@ -116,26 +127,19 @@ PlayList.Trace = class {
          * end of content
          * end of a metrics collection period
          *
-         * @type {String}
+         * @type {string}
          * @public
          */
         this.stopreason = null;
     }
-};
+}
 
+PlayListTrace.REPRESENTATION_SWITCH_STOP_REASON = 'representation_switch';
+PlayListTrace.REBUFFERING_REASON = 'rebuffering';
+PlayListTrace.USER_REQUEST_STOP_REASON = 'user_request';
+PlayListTrace.END_OF_PERIOD_STOP_REASON = 'end_of_period';
+PlayListTrace.END_OF_CONTENT_STOP_REASON = 'end_of_content';
+PlayListTrace.METRICS_COLLECTION_STOP_REASON = 'metrics_collection_end';
+PlayListTrace.FAILURE_STOP_REASON = 'failure';
 
-/* Public Static Constants */
-PlayList.INITIAL_PLAYOUT_START_REASON = 'initial_playout';
-PlayList.SEEK_START_REASON = 'seek';
-PlayList.RESUME_FROM_PAUSE_START_REASON = 'resume';
-PlayList.METRICS_COLLECTION_START_REASON = 'metrics_collection_start';
-
-PlayList.Trace.REPRESENTATION_SWITCH_STOP_REASON = 'representation_switch';
-PlayList.Trace.REBUFFERING_REASON = 'rebuffering';
-PlayList.Trace.USER_REQUEST_STOP_REASON = 'user_request';
-PlayList.Trace.END_OF_PERIOD_STOP_REASON = 'end_of_period';
-PlayList.Trace.END_OF_CONTENT_STOP_REASON = 'end_of_content';
-PlayList.Trace.METRICS_COLLECTION_STOP_REASON = 'metrics_collection_end';
-PlayList.Trace.FAILURE_STOP_REASON = 'failure';
-
-export default PlayList;
+export { PlayList, PlayListTrace };

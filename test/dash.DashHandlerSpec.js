@@ -1,6 +1,6 @@
-import ObjectsHelper from './helpers/ObjectsHelper.js';
-import VoHelper from './helpers/VOHelper.js';
-import DashHandler from '../src/dash/DashHandler.js';
+import ObjectsHelper from './helpers/ObjectsHelper';
+import VoHelper from './helpers/VOHelper';
+import DashHandler from '../src/dash/DashHandler';
 
 const expect = require('chai').expect;
 

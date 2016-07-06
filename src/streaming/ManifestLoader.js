@@ -28,15 +28,15 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import XlinkController from './controllers/XlinkController.js';
-import XHRLoader from './XHRLoader.js';
-import URLUtils from './utils/URLUtils.js';
-import TextRequest from './vo/TextRequest.js';
-import Error from './vo/Error.js';
-import HTTPRequest from './vo/metrics/HTTPRequest.js';
-import EventBus from '../core/EventBus.js';
-import Events from '../core/events/Events.js';
-import FactoryMaker from '../core/FactoryMaker.js';
+import XlinkController from './controllers/XlinkController';
+import XHRLoader from './XHRLoader';
+import URLUtils from './utils/URLUtils';
+import TextRequest from './vo/TextRequest';
+import Error from './vo/Error';
+import {HTTPRequest} from './vo/metrics/HTTPRequest';
+import EventBus from '../core/EventBus';
+import Events from '../core/events/Events';
+import FactoryMaker from '../core/FactoryMaker';
 
 const MANIFEST_LOADER_ERROR_PARSING_FAILURE = 1;
 const MANIFEST_LOADER_ERROR_LOADING_FAILURE = 2;

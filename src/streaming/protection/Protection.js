@@ -28,13 +28,13 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import ProtectionController from './controllers/ProtectionController.js';
-import ProtectionKeyController from './controllers/ProtectionKeyController.js';
-import ProtectionEvents from './ProtectionEvents.js';
-import ProtectionModel_21Jan2015 from './models/ProtectionModel_21Jan2015.js';
-import ProtectionModel_3Feb2014 from './models/ProtectionModel_3Feb2014.js';
-import ProtectionModel_01b from './models/ProtectionModel_01b.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
+import ProtectionController from './controllers/ProtectionController';
+import ProtectionKeyController from './controllers/ProtectionKeyController';
+import ProtectionEvents from './ProtectionEvents';
+import ProtectionModel_21Jan2015 from './models/ProtectionModel_21Jan2015';
+import ProtectionModel_3Feb2014 from './models/ProtectionModel_3Feb2014';
+import ProtectionModel_01b from './models/ProtectionModel_01b';
+import FactoryMaker from '../../core/FactoryMaker';
 
 const APIS_ProtectionModel_01b = [
     // Un-prefixed as per spec
@@ -109,6 +109,7 @@ function Protection() {
      * Create a ProtectionController and associated ProtectionModel for use with
      * a single piece of content.
      *
+     * @param {Object} config
      * @return {ProtectionController} protection controller
      *
      */

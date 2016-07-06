@@ -28,9 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventBus from '../../core/EventBus.js';
-import Events from '../../core/events/Events.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
+import EventBus from '../../core/EventBus';
+import Events from '../../core/events/Events';
+import FactoryMaker from '../../core/FactoryMaker';
 
 function ManifestModel() {
 
@@ -46,7 +46,9 @@ function ManifestModel() {
 
     function setValue(value) {
         manifest = value;
-        eventBus.trigger(Events.MANIFEST_LOADED,  {data: value});
+        if (value) {
+            eventBus.trigger(Events.MANIFEST_LOADED,  {data: value});
+        }
     }
 
     instance = {

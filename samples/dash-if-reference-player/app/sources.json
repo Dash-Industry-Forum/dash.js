@@ -6,7 +6,8 @@
                 {
                     "url":"http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-events.mpd",
                     "name":"SegmentTemplate/Number, live profile",
-                    "browsers":"cdsbi"
+                    "browsers":"cdsbi",
+                    "moreInfo":"http://rdmedia.bbc.co.uk/dash/ondemand/testcard/"
                 },
                 {
                     "url":"http://dash.edgesuite.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd",
@@ -518,12 +519,14 @@
                 {
                     "name":"BBC R&D Testcard",
                     "url":"http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-events.mpd",
-                    "browsers":""
+                    "browsers":"",
+                    "moreInfo":"http://rdmedia.bbc.co.uk/dash/ondemand/testcard/"
                 },
                 {
                     "name":"BBC R&D EBU-TT-D Subtitling Test",
                     "url":"http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/1/client_manifest-all.mpd",
-                    "browsers":""
+                    "browsers":"",
+                    "moreInfo":"http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/"
                 }
             ]
         },
@@ -568,7 +571,7 @@
             ]
         },
         {
-            "name":"D-DASH  Test Content",
+            "name":"D-DASH Test Content",
             "submenu":[
                 {
                     "name":"D-Dash #1",
@@ -629,6 +632,39 @@
                     "name":"Embedded CEA-608 Closed Captions and TTML segments Live (livesim)",
                     "url":"http://vm2.dashif.org/livesim/testpic_2s/cea608_and_segs.mpd",
                     "browsers":"cdsbi"
+                },
+                {
+                    "name":"TTML Segmented 'snaking' subtitles (with random text) (Ondemand)",
+                    "url":"http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/1/client_manifest-snake.mpd",
+                    "browsers":"cdsbi",
+                    "moreInfo":"http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/"
+                }
+            ]
+        },
+        {
+            "name":"Audio-only",
+            "submenu":[
+                {
+                    "name":"48k AAC-LC Stereo Beeps (Live)",
+                    "url":"http://vm2.dashif.org/livesim/testpic_2s/audio.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"48k AAC-LC Stereo Beeps (Ondemand)",
+                    "url":"http://vm2.dashif.org/dash/vod/testpic_2s/audio.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"128k AAC-LC Stereo 1kHz Tone (Ondemand)",
+                    "url":"http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-audio-1kHz.mpd",
+                    "browsers":"cdsbi",
+                    "moreInfo":"http://rdmedia.bbc.co.uk/dash/ondemand/testcard/"
+                },
+                {
+                    "name":"128k/320k AAC-LC Stereo/5.1 'Testcard' (Ondemand)",
+                    "url":"http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-audio.mpd",
+                    "browsers":"cdsbi",
+                    "moreInfo":"http://rdmedia.bbc.co.uk/dash/ondemand/testcard/"
                 }
             ]
         },

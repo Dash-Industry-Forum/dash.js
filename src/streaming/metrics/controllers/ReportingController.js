@@ -29,8 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../../core/FactoryMaker.js';
-import ReportingFactory from '../reporting/ReportingFactory.js';
+import FactoryMaker from '../../../core/FactoryMaker';
+import ReportingFactory from '../reporting/ReportingFactory';
 
 function ReportingController(config) {
 

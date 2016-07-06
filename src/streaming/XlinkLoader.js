@@ -28,13 +28,13 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Error from './vo/Error.js';
-import XHRLoader from './XHRLoader.js';
-import HTTPRequest from './vo/metrics/HTTPRequest.js';
-import TextRequest from './vo/TextRequest.js';
-import EventBus from '../core/EventBus.js';
-import Events from '../core/events/Events.js';
-import FactoryMaker from '../core/FactoryMaker.js';
+import Error from './vo/Error';
+import XHRLoader from './XHRLoader';
+import {HTTPRequest} from './vo/metrics/HTTPRequest';
+import TextRequest from './vo/TextRequest';
+import EventBus from '../core/EventBus';
+import Events from '../core/events/Events';
+import FactoryMaker from '../core/FactoryMaker';
 
 const XLINK_LOADER_ERROR_LOADING_FAILURE = 1;
 

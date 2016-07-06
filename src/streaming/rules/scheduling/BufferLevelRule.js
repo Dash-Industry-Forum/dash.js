@@ -28,15 +28,14 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import MediaPlayerModel from '../../models/MediaPlayerModel.js';
-import PlaybackController from '../../controllers/PlaybackController.js';
-import FactoryMaker from '../../../core/FactoryMaker.js';
+import MediaPlayerModel from '../../models/MediaPlayerModel';
+import PlaybackController from '../../controllers/PlaybackController';
+import FactoryMaker from '../../../core/FactoryMaker';
 
 function BufferLevelRule(config) {
 
     let instance;
     let context = this.context;
-
     let dashMetrics = config.dashMetrics;
     let metricsModel = config.metricsModel;
     let textSourceBuffer = config.textSourceBuffer;
@@ -49,38 +48,43 @@ function BufferLevelRule(config) {
         playbackController = PlaybackController(context).getInstance();
     }
 
-    function execute(streamProcessor) {
+    function execute(streamProcessor, videoTrackPresent) {
 
         let representationInfo = streamProcessor.getCurrentRepresentationInfo();
         let mediaInfo = representationInfo.mediaInfo;
         let mediaType = mediaInfo.type;
-        let metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
-        let bufferLevel = dashMetrics.getCurrentBufferLevel(metrics);
+        let bufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor(mediaType));
 
-        return bufferLevel < getBufferTarget(streamProcessor, mediaType);
+        return bufferLevel < getBufferTarget(streamProcessor, mediaType, videoTrackPresent);
     }
 
     function reset() {}
 
-    function getBufferTarget(streamProcessor, type) {
+    function getBufferTarget(streamProcessor, type, videoTrackPresent) {
 
         let representationInfo = streamProcessor.getCurrentRepresentationInfo();
-        let mediaInfo = representationInfo.mediaInfo;
-        let streamInfo = mediaInfo.streamInfo;
-        let abrController = streamProcessor.getABRController();
-        let duration = streamInfo.manifestInfo.duration;
-        let isLongFormContent = (duration >= mediaPlayerModel.getLongFormContentDurationThreshold());
         let bufferTarget = NaN;
 
         if (type === 'fragmentedText') {
             bufferTarget = textSourceBuffer.getAllTracksAreDisabled() ? 0 : representationInfo.fragmentDuration;
-        } else {
+        }
+        else if (type === 'audio' && videoTrackPresent) {
+            let videoBufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor('video'));
+            bufferTarget = Math.max(videoBufferLevel, representationInfo.fragmentDuration);
+        }
+        else {
+
+            let streamInfo = representationInfo.mediaInfo.streamInfo;
+            let abrController = streamProcessor.getABRController();
+
             if (abrController.isPlayingAtTopQuality(streamInfo)) {
+                let isLongFormContent = (streamInfo.manifestInfo.duration >= mediaPlayerModel.getLongFormContentDurationThreshold());
                 bufferTarget = isLongFormContent ? mediaPlayerModel.getBufferTimeAtTopQualityLongForm() : mediaPlayerModel.getBufferTimeAtTopQuality();
             }else {
                 bufferTarget = mediaPlayerModel.getStableBufferTime();
             }
         }
+
         return bufferTarget;
     }
 
@@ -88,7 +92,9 @@ function BufferLevelRule(config) {
         execute: execute,
         reset: reset
     };
+
     setup();
+
     return instance;
 }
 

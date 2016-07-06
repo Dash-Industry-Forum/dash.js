@@ -1,5 +1,5 @@
-import BlacklistController from '../src/streaming/controllers/BlacklistController.js';
-import EventBus from '../src/core/EventBus.js';
+import BlacklistController from '../src/streaming/controllers/BlacklistController';
+import EventBus from '../src/core/EventBus';
 
 const chai = require('chai');
 const spies = require('chai-spies');
@@ -81,6 +81,21 @@ describe('BlacklistController', function () {
         const contains = blacklistController.contains(SERVICE_LOCATION);
 
         expect(contains).to.be.true; // jshint ignore:line
+    });
+
+    it('should not trigger an update event if a duplicate entry is added', () => {
+        const spy = chai.spy();
+        const config = { updateEventName: EVENT_NAME };
+        const blacklistController = BlacklistController(context).create(config);
+
+        eventBus.on(EVENT_NAME, spy);
+
+        blacklistController.add(SERVICE_LOCATION);
+        blacklistController.add(SERVICE_LOCATION);
+
+        expect(spy).to.have.been.called.once; // jshint ignore:line
+
+        eventBus.off(EVENT_NAME, spy);
     });
 
     it('should not contain an entry after reset', () => {

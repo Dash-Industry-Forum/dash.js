@@ -31,15 +31,15 @@
 
 // For a description of the BOLA adaptive bitrate (ABR) algorithm, see http://arxiv.org/abs/1601.06748
 
-import SwitchRequest from '../SwitchRequest.js';
-import FactoryMaker from '../../../core/FactoryMaker.js';
-import MediaPlayerModel from '../../models/MediaPlayerModel.js';
-import PlaybackController from '../../controllers/PlaybackController.js';
-import HTTPRequest from '../../vo/metrics/HTTPRequest.js';
-import DashAdapter from '../../../dash/DashAdapter.js';
-import EventBus from '../../../core/EventBus.js';
-import Events from '../../../core/events/Events.js';
-import Debug from '../../../core/Debug.js';
+import SwitchRequest from '../SwitchRequest';
+import FactoryMaker from '../../../core/FactoryMaker';
+import MediaPlayerModel from '../../models/MediaPlayerModel';
+import PlaybackController from '../../controllers/PlaybackController';
+import {HTTPRequest} from '../../vo/metrics/HTTPRequest';
+import DashAdapter from '../../../dash/DashAdapter';
+import EventBus from '../../../core/EventBus';
+import Events from '../../../core/events/Events';
+import Debug from '../../../core/Debug';
 
 // BOLA_STATE_ONE_BITRATE   : If there is only one bitrate (or initialization failed), always return NO_CHANGE.
 // BOLA_STATE_STARTUP       : Download fragments at most recently measured throughput.

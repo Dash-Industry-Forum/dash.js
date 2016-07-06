@@ -28,9 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventBus from './EventBus.js';
-import Events from './events/Events.js';
-import FactoryMaker from './FactoryMaker.js';
+import EventBus from './EventBus';
+import Events from './events/Events';
+import FactoryMaker from './FactoryMaker';
 
 /**
  * @module Debug
@@ -82,7 +82,7 @@ function Debug() {
     }
     /**
      * This method will allow you send log messages to either the browser's console and/or dispatch an event to capture at the media player level.
-     * @param arguments The message you want to log. The Arguments object is supported for this method so you can send in comma separated logging items.
+     * @param {...*} arguments The message you want to log. The Arguments object is supported for this method so you can send in comma separated logging items.
      * @memberof module:Debug
      * @instance
      */

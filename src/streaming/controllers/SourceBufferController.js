@@ -28,19 +28,19 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import TextSourceBuffer from '../TextSourceBuffer.js';
-import MediaController from './MediaController.js';
-import DashAdapter from '../../dash/DashAdapter.js';
-import ErrorHandler from '../utils/ErrorHandler.js';
-import StreamController from './StreamController.js';
-import TextTracks from '../TextTracks.js';
-import VTTParser from '../utils/VTTParser.js';
-import TTMLParser from '../utils/TTMLParser.js';
-import VideoModel from '../models/VideoModel.js';
-import Error from '../vo/Error.js';
-import EventBus from '../../core/EventBus.js';
-import Events from '../../core/events/Events.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
+import TextSourceBuffer from '../TextSourceBuffer';
+import MediaController from './MediaController';
+import DashAdapter from '../../dash/DashAdapter';
+import ErrorHandler from '../utils/ErrorHandler';
+import StreamController from './StreamController';
+import TextTracks from '../TextTracks';
+import VTTParser from '../utils/VTTParser';
+import TTMLParser from '../utils/TTMLParser';
+import VideoModel from '../models/VideoModel';
+import Error from '../vo/Error';
+import EventBus from '../../core/EventBus';
+import Events from '../../core/events/Events';
+import FactoryMaker from '../../core/FactoryMaker';
 
 
 const QUOTA_EXCEEDED_ERROR_CODE = 22;

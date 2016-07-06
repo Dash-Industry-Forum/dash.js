@@ -30,22 +30,23 @@
  */
 
 import SwitchRequest from '../rules/SwitchRequest';
-import BitrateInfo from '../vo/BitrateInfo.js';
-import DOMStorage from '../utils/DOMStorage.js';
-import ABRRulesCollection from '../rules/abr/ABRRulesCollection.js';
-import MediaPlayerModel from '../models/MediaPlayerModel.js';
-import FragmentModel from '../models/FragmentModel.js';
-import EventBus from '../../core/EventBus.js';
-import Events from '../../core/events/Events.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
-import ManifestModel from '../models/ManifestModel.js';
-import DashManifestModel from '../../dash/models/DashManifestModel.js';
-import VideoModel from '../models/VideoModel.js';
+import BitrateInfo from '../vo/BitrateInfo';
+import DOMStorage from '../utils/DOMStorage';
+import ABRRulesCollection from '../rules/abr/ABRRulesCollection';
+import MediaPlayerModel from '../models/MediaPlayerModel';
+import FragmentModel from '../models/FragmentModel';
+import EventBus from '../../core/EventBus';
+import Events from '../../core/events/Events';
+import FactoryMaker from '../../core/FactoryMaker';
+import ManifestModel from '../models/ManifestModel';
+import DashManifestModel from '../../dash/models/DashManifestModel';
+import VideoModel from '../models/VideoModel';
 
 const ABANDON_LOAD = 'abandonload';
 const ALLOW_LOAD = 'allowload';
 const DEFAULT_VIDEO_BITRATE = 1000;
 const DEFAULT_AUDIO_BITRATE = 100;
+const QUALITY_DEFAULT = 0;
 
 function AbrController() {
 
@@ -67,6 +68,7 @@ function AbrController() {
         abandonmentStateDict,
         abandonmentTimeout,
         limitBitrateByPortal,
+        usePixelRatioInLimitBitrateByPortal,
         manifestModel,
         dashManifestModel,
         videoModel,
@@ -84,6 +86,7 @@ function AbrController() {
         abandonmentStateDict = {};
         streamProcessorDict = {};
         limitBitrateByPortal = false;
+        usePixelRatioInLimitBitrateByPortal = false;
         domStorage = DOMStorage(context).getInstance();
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
         manifestModel = ManifestModel(context).getInstance();
@@ -127,7 +130,7 @@ function AbrController() {
     }
 
     /**
-     * @param type
+     * @param {string} type
      * @returns {number} A value of the initial bitrate, kbps
      * @memberof AbrController#
      */
@@ -157,7 +160,7 @@ function AbrController() {
     }
 
     /**
-     * @param type
+     * @param {string} type
      * @param {number} value A value of the initial bitrate, kbps
      * @memberof AbrController#
      */
@@ -219,6 +222,14 @@ function AbrController() {
         limitBitrateByPortal = value;
     }
 
+    function getUsePixelRatioInLimitBitrateByPortal() {
+        return usePixelRatioInLimitBitrateByPortal;
+    }
+
+    function setUsePixelRatioInLimitBitrateByPortal(value) {
+        usePixelRatioInLimitBitrateByPortal = value;
+    }
+
     function getPlaybackQuality(streamProcessor, completedCallback) {
         var type = streamProcessor.getType();
         var streamInfo = streamProcessor.getStreamInfo();
@@ -275,7 +286,7 @@ function AbrController() {
         var quality = getQualityFor(type, streamInfo);
         var isInt = newPlaybackQuality !== null && !isNaN(newPlaybackQuality) && (newPlaybackQuality % 1 === 0);
 
-        if (!isInt) throw 'argument is not an integer';
+        if (!isInt) throw new Error('argument is not an integer');
 
         if (newPlaybackQuality !== quality && newPlaybackQuality >= 0 && newPlaybackQuality <= getTopQualityIndexFor(type, id)) {
             setInternalQuality(type, id, newPlaybackQuality);
@@ -292,8 +303,8 @@ function AbrController() {
     }
 
     /**
-     * @param mediaInfo
-     * @param bitrate A bitrate value, kbps
+     * @param {MediaInfo} mediaInfo
+     * @param {number} bitrate A bitrate value, kbps
      * @returns {number} A quality index <= for the given bitrate
      * @memberof AbrController#
      */
@@ -303,7 +314,7 @@ function AbrController() {
         let bitrateInfo;
 
         if (!bitrateList || bitrateList.length === 0) {
-            return -1;
+            return QUALITY_DEFAULT;
         }
 
         for (let i = bitrateList.length - 1; i >= 0; i--) {
@@ -316,8 +327,8 @@ function AbrController() {
     }
 
     /**
-     * @param mediaInfo
-     * @returns {Array} A list of {@link BitrateInfo} objects
+     * @param {MediaInfo} mediaInfo
+     * @returns {Array|null} A list of {@link BitrateInfo} objects
      * @memberof AbrController#
      */
     function getBitrateList(mediaInfo) {
@@ -386,7 +397,7 @@ function AbrController() {
         qualityDict[id] = qualityDict[id] || {};
 
         if (!qualityDict[id].hasOwnProperty(type)) {
-            qualityDict[id][type] = 0;
+            qualityDict[id][type] = QUALITY_DEFAULT;
         }
 
         quality = qualityDict[id][type];
@@ -444,12 +455,14 @@ function AbrController() {
             return idx;
         }
 
-        let element = videoModel.getElement();
-        let elementWidth = element.clientWidth;
-        let elementHeight = element.clientHeight;
-        let manifest = manifestModel.getValue();
-        let representation = dashManifestModel.getAdaptationForType(manifest, 0, type).Representation;
-        let newIdx = idx;
+        var hasPixelRatio = usePixelRatioInLimitBitrateByPortal && window.hasOwnProperty('devicePixelRatio');
+        var pixelRatio = hasPixelRatio ? window.devicePixelRatio : 1;
+        var element = videoModel.getElement();
+        var elementWidth = element.clientWidth * pixelRatio;
+        var elementHeight = element.clientHeight * pixelRatio;
+        var manifest = manifestModel.getValue();
+        var representation = dashManifestModel.getAdaptationForType(manifest, 0, type).Representation;
+        var newIdx = idx;
 
         if (elementWidth > 0 && elementHeight > 0) {
             while (
@@ -500,7 +513,7 @@ function AbrController() {
                         fragmentModel.abortRequests();
                         setAbandonmentStateFor(type, ABANDON_LOAD);
                         setPlaybackQuality(type, streamController.getActiveStreamInfo(), newQuality);
-                        scheduleController.replaceCanceledRequests(requests);
+                        scheduleController.replaceRequests(requests);
                         setupTimeout(type);
                     }
                 }
@@ -530,6 +543,8 @@ function AbrController() {
         getAutoSwitchBitrateFor: getAutoSwitchBitrateFor,
         setLimitBitrateByPortal: setLimitBitrateByPortal,
         getLimitBitrateByPortal: getLimitBitrateByPortal,
+        getUsePixelRatioInLimitBitrateByPortal: getUsePixelRatioInLimitBitrateByPortal,
+        setUsePixelRatioInLimitBitrateByPortal: setUsePixelRatioInLimitBitrateByPortal,
         getConfidenceFor: getConfidenceFor,
         getQualityFor: getQualityFor,
         getAbandonmentStateFor: getAbandonmentStateFor,
@@ -551,4 +566,5 @@ function AbrController() {
 AbrController.__dashjs_factory_name = 'AbrController';
 let factory = FactoryMaker.getSingletonFactory(AbrController);
 factory.ABANDON_LOAD = ABANDON_LOAD;
+factory.QUALITY_DEFAULT = QUALITY_DEFAULT;
 export default factory;

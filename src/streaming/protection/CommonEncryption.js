@@ -29,15 +29,15 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import BASE64 from '../../../externals/base64.js';
+import BASE64 from '../../../externals/base64';
 
 class CommonEncryption {
     /**
      * Find and return the ContentProtection element in the given array
      * that indicates support for MPEG Common Encryption
      *
-     * @param cpArray array of content protection elements
-     * @returns the Common Encryption content protection element or
+     * @param {Array} cpArray array of content protection elements
+     * @returns {Object|null} the Common Encryption content protection element or
      * null if one was not found
      */
     static findCencContentProtection(cpArray) {
@@ -54,7 +54,7 @@ class CommonEncryption {
     /**
      * Returns just the data portion of a single PSSH
      *
-     * @param pssh {ArrayBuffer} the PSSH
+     * @param {ArrayBuffer} pssh - the PSSH
      * @return {ArrayBuffer} data portion of the PSSH
      */
     static getPSSHData(pssh) {
@@ -81,7 +81,7 @@ class CommonEncryption {
      * @param {KeySystem} keySystem the desired
      * key system
      * @param {ArrayBuffer} initData 'cenc' initialization data.  Concatenated list of PSSH.
-     * @returns {ArrayBuffer} The PSSH box data corresponding to the given key system
+     * @returns {ArrayBuffer|null} The PSSH box data corresponding to the given key system, null if not found
      * or null if a valid association could not be found.
      */
     static getPSSHForKeySystem(keySystem, initData) {
@@ -96,8 +96,8 @@ class CommonEncryption {
      * Parse a standard common encryption PSSH which contains a simple
      * base64-encoding of the init data
      *
-     * @param cpData the ContentProtection element
-     * @returns {ArrayBuffer} the init data or null if not found
+     * @param {Object} cpData the ContentProtection element
+     * @returns {ArrayBuffer|null} the init data or null if not found
      */
     static parseInitDataFromContentProtection(cpData) {
         if ('pssh' in cpData) {
@@ -109,9 +109,9 @@ class CommonEncryption {
     /**
      * Parses list of PSSH boxes into keysystem-specific PSSH data
      *
-     * @param data {ArrayBuffer} the concatenated list of PSSH boxes as provided by
+     * @param {ArrayBuffer} data - the concatenated list of PSSH boxes as provided by
      * CDM as initialization data when CommonEncryption content is detected
-     * @returns {object} an object that has a property named according to each of
+     * @returns {Object|Array} an object that has a property named according to each of
      * the detected key system UUIDs (e.g. 00000000-0000-0000-0000-0000000000)
      * and a ArrayBuffer (the entire PSSH box) as the property value
      */

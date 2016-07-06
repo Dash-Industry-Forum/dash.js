@@ -32,7 +32,7 @@
  * @class
  * @ignore
  */
-import FragmentRequest from './FragmentRequest.js';
+import FragmentRequest from './FragmentRequest';
 
 class HeadRequest extends FragmentRequest {
     constructor(url) {

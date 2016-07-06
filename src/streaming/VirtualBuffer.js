@@ -30,14 +30,14 @@
  */
 
 /**
- * Represents data structure to keep and drive {@link DataChunk}
+ * Represents data structure to keep and drive {DataChunk}
  */
-import MediaController from './controllers/MediaController.js';
-import CustomTimeRanges from './utils/CustomTimeRanges.js';
-import HTTPRequest from './vo/metrics/HTTPRequest.js';
-import EventBus from '../core/EventBus.js';
-import Events from '../core/events/Events.js';
-import FactoryMaker from '../core/FactoryMaker.js';
+import MediaController from './controllers/MediaController';
+import CustomTimeRanges from './utils/CustomTimeRanges';
+import {HTTPRequest} from './vo/metrics/HTTPRequest';
+import EventBus from '../core/EventBus';
+import Events from '../core/events/Events';
+import FactoryMaker from '../core/FactoryMaker';
 
 function VirtualBuffer() {
 
@@ -54,7 +54,7 @@ function VirtualBuffer() {
 
     /**
      * Adds DataChunk to array of chunks
-     * @param {@link DataChunk}
+     * @param {DataChunk} chunk
      * @memberof VirtualBuffer#
      */
     function append(chunk) {
@@ -76,8 +76,8 @@ function VirtualBuffer() {
 
     /**
      * Adds DataChunk to array of appended chunks and updates virual ranges of appended chunks
-     * @param {@link DataChunk}
-     * @param buffer {SourceBuffer}
+     * @param {DataChunk} chunk
+     * @param {SourceBuffer} buffer
      * @memberof VirtualBuffer#
      */
     function storeAppendedChunk(chunk, buffer) {
@@ -154,8 +154,8 @@ function VirtualBuffer() {
 
     /**
      * Updates virual ranges of appended chunks according to the given ranges
-     * @param filter
-     * @param ranges
+     * @param {Object} filter
+     * @param {Object} ranges
      * @memberof VirtualBuffer#
      */
     function updateBufferedRanges(filter, ranges) {
@@ -188,8 +188,8 @@ function VirtualBuffer() {
     }
 
     /**
-     * Finds and returns {@link DataChunk} that satisfies filtering options
-     * @param filter - an object that contains properties by which the method search for chunks
+     * Finds and returns {DataChunk} that satisfies filtering options
+     * @param {Object} filter - an object that contains properties by which the method search for chunks
      * @returns {Array}
      * @memberof VirtualBuffer#
      */
@@ -245,9 +245,9 @@ function VirtualBuffer() {
     }
 
     /**
-     * Finds and returns {@link DataChunk} that satisfies filtering options. Filtered chunks are removed
+     * Finds and returns {DataChunk} that satisfies filtering options. Filtered chunks are removed
      * from the original array
-     * @param filter - an object that contains properties by which the method search for chunks
+     * @param {Object} filter - an object that contains properties by which the method search for chunks
      * @returns {Array}
      * @memberof VirtualBuffer#
      */
@@ -258,8 +258,8 @@ function VirtualBuffer() {
 
     /**
      * Calculates total buffer size across all Periods
-     * @param {@link MediaInfo}
-     * @returns {Number}
+     * @param {MediaInfo} mediaInfo
+     * @returns {number}
      * @memberof VirtualBuffer#
      */
     function getTotalBufferLevel(mediaInfo) {
