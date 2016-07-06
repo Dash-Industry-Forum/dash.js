@@ -10,6 +10,36 @@
             ]
         },
         {
+            "title": "Release Notes v2.2.0",
+            "items": [
+                "#382 Event for switch requested and switch complete."
+                ,"#1006 Player is not sending cookies if we attachSource."
+                ,"#1122 Faster switching by replacing segments close to the playhead."
+                ,"#1301 webm.js not compatible with current dash.js."
+                ,"#1361 Support for MPD Anchors (Partial in 2.2)."
+                ,"#1363 Improve handling of silent request failures."
+                ,"#1423 Add audio-only test vectors to reference player."
+                ,"#887 Live audio-only stream show incorrect time info."
+                ,"#1340 DASH-IF player cannot properly render ttml with multiple lines."
+                ,"#1353 ControlBar uses deprecated method on MediaPlayer API."
+                ,"#1362 Advertised DVR Window does not match available DVR Window."
+                ,"#1369 All segments from time zero are reloaded when switching track (Regression)."
+                ,"#1370 Download errors have no id (Regression)."
+                ,"#1372 Uncaught (in promise) DOMException: The play() request was interrupted by a call to pause()."
+                ,"#1375 Switching audio track on LIVE stream stops the playback."
+                ,"#1379 Fragment request URLs incorrect when using a SegmentList (Regression)."
+                ,"#1380 Partial fix for Suspicious-looking URL handling in XlinkController."
+                ,"#1393 IE11 API issue."
+                ,"#1406 Paused video keeps writing log lines about buffer pruning."
+                ,"#1409 Ondemand audio-only stream fails to play with dev reference player (Regression)."
+                ,"#1432 TTML Parser incorrectly scales root container region by cellResolution."
+                ,"#1437 Uncaught TypeError when quality is -1."
+                ,"#1457 Cannot play manifest with SegmentTimeline inside of SegmentList."
+                ,"#1461 Reference live stream fails to replay correctly in dev (Regression)."
+                ,"#1463 setScheduleWhilePaused default value documentation incorrect."
+            ]
+        },
+        {
             "title": "Release Notes v2.1.1",
             "items": [
                 "This release is a patch release of 2.1.0, which had a major startup issue for some streams on all browsers.",
