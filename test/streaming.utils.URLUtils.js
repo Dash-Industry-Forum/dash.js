@@ -28,7 +28,6 @@ describe('URLUtils', function () {
 
             const result = urlUtils.isHTTPURL(ftpUrl);
 
-            // Assert
             expect(result).to.be.false; // jshint ignore:line
         });
     });
@@ -46,6 +45,32 @@ describe('URLUtils', function () {
             const absoluteUrl = 'https://www.example.com';
 
             const result = urlUtils.isRelative(absoluteUrl);
+
+            expect(result).to.be.false; // jshint ignore:line
+        });
+    });
+
+    describe('isPathAbsolute', () => {
+        it('should return true for a path-absolute url', () => {
+            const pathAbsoluteUrl = '/path/to/some/file';
+
+            const result = urlUtils.isPathAbsolute(pathAbsoluteUrl);
+
+            expect(result).to.be.true; // jshint ignore:line
+        });
+
+        it('should return false for a relative url', () => {
+            const relativeUrl = 'path/to/some/file';
+
+            const result = urlUtils.isPathAbsolute(relativeUrl);
+
+            expect(result).to.be.false; // jshint ignore:line
+        });
+
+        it('should return false for an absolute url', () => {
+            const absoluteUrl = 'https://www.example.com';
+
+            const result = urlUtils.isPathAbsolute(absoluteUrl);
 
             expect(result).to.be.false; // jshint ignore:line
         });
@@ -82,9 +107,39 @@ describe('URLUtils', function () {
         });
 
         it('should return an empty string if argument is not a url', () => {
-            const arg = 'skjdlkasdhflkhasdlkfhl'
+            const arg = 'skjdlkasdhflkhasdlkfhl';
 
             const result = urlUtils.parseBaseUrl(arg);
+
+            expect(result).to.be.empty; // jshint ignore:line
+        });
+    });
+
+    describe('parseOrigin', () => {
+        it('should return the scheme and origin url of a valid url', () => {
+            const schemeAndOrigin = 'http://www.example.com';
+            const pathAbsolute = '/MPDs/index.html';
+            const url = schemeAndOrigin + pathAbsolute;
+
+            const result = urlUtils.parseOrigin(url);
+
+            expect(result).to.equal(schemeAndOrigin); // jshint ignore:line
+        });
+
+        it('should return the scheme and origin url if no relative portion', () => {
+            const baseUrl = 'http://www.example.com';
+            const slash = '/';
+            const url = baseUrl + slash;
+
+            const result = urlUtils.parseOrigin(url);
+
+            expect(result).to.equal(baseUrl); // jshint ignore:line
+        });
+
+        it('should return an empty string if argument is not a url', () => {
+            const arg = 'skjdlkasdhflkhasdlkfhl';
+
+            const result = urlUtils.parseOrigin(arg);
 
             expect(result).to.be.empty; // jshint ignore:line
         });
