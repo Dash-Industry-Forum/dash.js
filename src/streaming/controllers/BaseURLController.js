@@ -72,8 +72,12 @@ function BaseURLController() {
 
             if (b) {
                 if (!urlUtils.isRelative(b.url)) {
-                    p.url = b.url;
-                    p.serviceLocation = b.serviceLocation;
+                    if (urlUtils.isPathAbsolute(b.url)) {
+                        p.url = urlUtils.parseOrigin(p.url) + b.url;
+                    } else {
+                        p.url = b.url;
+                        p.serviceLocation = b.serviceLocation;
+                    }
                 } else {
                     p.url += b.url;
                 }
