@@ -147,6 +147,7 @@ function ScheduleController(config) {
         eventBus.on(Events.BUFFER_CLEARED, onBufferCleared, this);
         eventBus.on(Events.BYTES_APPENDED, onBytesAppended, this);
         eventBus.on(Events.INIT_REQUESTED, onInitRequested, this);
+        eventBus.on(Events.INIT_FRAGMENT_LOADED, onInitLoaded, this);
         eventBus.on(Events.QUOTA_EXCEEDED, onQuotaExceeded, this);
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
         eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
@@ -203,6 +204,7 @@ function ScheduleController(config) {
 
         if (request !== null) {
             fragmentModel.executeRequest(request);
+            isFragmentLoading = true;
         }
 
         return request;
@@ -360,6 +362,10 @@ function ScheduleController(config) {
         getInitRequest(e.requiredQuality);
     }
 
+    function onInitLoaded() {
+        isFragmentLoading = false;
+    }
+
     function onBufferCleared(e) {
         if (e.sender.getStreamProcessor() !== streamProcessor) return;
         // after the data has been removed from the buffer we should remove the requests from the list of
@@ -509,6 +515,7 @@ function ScheduleController(config) {
         eventBus.off(Events.BYTES_APPENDED, onBytesAppended, this);
         eventBus.off(Events.BUFFER_CLEARED, onBufferCleared, this);
         eventBus.off(Events.INIT_REQUESTED, onInitRequested, this);
+        eventBus.off(Events.INIT_FRAGMENT_LOADED, onInitLoaded, this);
         eventBus.off(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
         eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
         eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
