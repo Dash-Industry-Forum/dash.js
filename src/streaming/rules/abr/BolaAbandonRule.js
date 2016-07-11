@@ -72,7 +72,7 @@ function BolaAbandonRule(config) {
         let metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
         let progressEvent = rulesContext.getCurrentValue();
         let request = progressEvent.request;
-        let switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
+        let switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK, {name: BolaAbandonRule.__dashjs_factory_name});
 
         // TODO: should we abandon during startup?
         if (metrics.BolaState.length === 0 || metrics.BolaState[0]._s.state !== BolaRule.BOLA_STATE_STEADY) {
@@ -139,7 +139,13 @@ function BolaAbandonRule(config) {
             metricsModel.updateBolaState(mediaType, bolaState);
 
             rememberAbandon(mediaType, index, quality);
-            switchRequest = SwitchRequest(context).create(0, SwitchRequest.STRONG);
+
+            switchRequest.value = 0;
+            switchRequest.priority = SwitchRequest.STRONG;
+            switchRequest.reason.state = bolaState.state;
+            switchRequest.reason.throughput = estimateThroughputBSF;
+            switchRequest.reason.bufferLevel = bufferLevel;
+
             if (BolaRule.BOLA_DEBUG) log('BolaDebug ' + mediaType + ' BolaAbandonRule to 0 for safety guarantee' + ' - ' + diagnosticMessage);
             callback(switchRequest);
             return;
@@ -204,7 +210,12 @@ function BolaAbandonRule(config) {
         metricsModel.updateBolaState(mediaType, bolaState);
 
         rememberAbandon(mediaType, index, quality);
-        switchRequest = SwitchRequest(context).create(newQuality, SwitchRequest.STRONG);
+        switchRequest.value = newQuality;
+        switchRequest.priority = SwitchRequest.STRONG;
+        switchRequest.reason.state = bolaState.state;
+        switchRequest.reason.throughput = estimateThroughputBSF;
+        switchRequest.reason.bufferLevel = bufferLevel;
+
         if (BolaRule.BOLA_DEBUG) log('BolaDebug ' + mediaType + ' BolaAbandonRule abandon to ' + newQuality + ' - ' + diagnosticMessage);
         callback(switchRequest);
     }

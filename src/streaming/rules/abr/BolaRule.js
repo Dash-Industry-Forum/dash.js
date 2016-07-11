@@ -330,7 +330,7 @@ function BolaRule(config) {
         let streamProcessor = rulesContext.getStreamProcessor();
         streamProcessor.getScheduleController().setTimeToLoadDelay(0.0);
 
-        let switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
+        let switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK, {name: BolaRule.__dashjs_factory_name});
 
         let mediaInfo = rulesContext.getMediaInfo();
         let mediaType = mediaInfo.type;
@@ -362,7 +362,8 @@ function BolaRule(config) {
                 }
                 q = getQualityFromThroughput(initState, initThroughput * initState.bandwidthSafetyFactor);
                 initState.lastQuality = q;
-                switchRequest = SwitchRequest(context).create(q, SwitchRequest.DEFAULT);
+                switchRequest.value = q;
+                switchRequest.priority = SwitchRequest.DEFAULT;
             }
 
             if (BOLA_DEBUG) log('BolaDebug ' + mediaType + ' BolaRule quality ' + q + ' for INITIALIZE');
@@ -472,7 +473,10 @@ function BolaRule(config) {
                 if (BOLA_DEBUG) log('BolaDebug ' + mediaType + ' BolaRule quality ' + q + '>' + bolaQuality + ' for STARTUP');
                 bolaState.lastQuality = q;
                 metricsModel.updateBolaState(mediaType, bolaState);
-                switchRequest = SwitchRequest(context).create(q, SwitchRequest.DEFAULT);
+                switchRequest.value = q;
+                switchRequest.priority = SwitchRequest.DEFAULT;
+                switchRequest.reason.state = bolaState.state;
+                switchRequest.reason.throughput = lastThroughput;
                 callback(switchRequest);
                 return;
             }
@@ -517,7 +521,13 @@ function BolaRule(config) {
 
         bolaState.lastQuality = bolaQuality;
         metricsModel.updateBolaState(mediaType, bolaState);
-        switchRequest = SwitchRequest(context).create(bolaQuality, SwitchRequest.DEFAULT);
+
+        switchRequest.value = bolaQuality;
+        switchRequest.priority = SwitchRequest.DEFAULT;
+        switchRequest.reason.state = bolaState.state;
+        switchRequest.reason.throughput = lastThroughput;
+        switchRequest.reason.bufferLevel = bufferLevel;
+
         if (BOLA_DEBUG) log('BolaDebug ' + mediaType + ' BolaRule quality ' + bolaQuality + ' delay=' + delaySeconds.toFixed(3) + ' for STEADY');
         callback(switchRequest);
     }

@@ -257,7 +257,7 @@ function AbrController() {
             if (quality !== oldQuality && (abandonmentStateDict[type].state === ALLOW_LOAD ||  quality > oldQuality)) {
                 setInternalQuality(type, streamId, quality);
                 setConfidenceFor(type, streamId, confidence);
-                eventBus.trigger(Events.QUALITY_CHANGED, {mediaType: type, streamInfo: streamProcessor.getStreamInfo(), oldQuality: oldQuality, newQuality: quality});
+                eventBus.trigger(Events.QUALITY_CHANGED, {mediaType: type, streamInfo: streamProcessor.getStreamInfo(), oldQuality: oldQuality, newQuality: quality, reason: res.reason});
             }
             if (completedCallback) {
                 completedCallback();
