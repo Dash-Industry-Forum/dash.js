@@ -281,7 +281,7 @@ function AbrController() {
         }
     }
 
-    function setPlaybackQuality(type, streamInfo, newPlaybackQuality) {
+    function setPlaybackQuality(type, streamInfo, newPlaybackQuality, reason) {
         var id = streamInfo.id;
         var quality = getQualityFor(type, streamInfo);
         var isInt = newPlaybackQuality !== null && !isNaN(newPlaybackQuality) && (newPlaybackQuality % 1 === 0);
@@ -290,7 +290,7 @@ function AbrController() {
 
         if (newPlaybackQuality !== quality && newPlaybackQuality >= 0 && newPlaybackQuality <= getTopQualityIndexFor(type, id)) {
             setInternalQuality(type, id, newPlaybackQuality);
-            eventBus.trigger(Events.QUALITY_CHANGED, {mediaType: type, streamInfo: streamInfo, oldQuality: quality, newQuality: newPlaybackQuality});
+            eventBus.trigger(Events.QUALITY_CHANGED, {mediaType: type, streamInfo: streamInfo, oldQuality: quality, newQuality: newPlaybackQuality, reason: reason});
         }
     }
 
@@ -512,7 +512,7 @@ function AbrController() {
 
                         fragmentModel.abortRequests();
                         setAbandonmentStateFor(type, ABANDON_LOAD);
-                        setPlaybackQuality(type, streamController.getActiveStreamInfo(), newQuality);
+                        setPlaybackQuality(type, streamController.getActiveStreamInfo(), newQuality, switchRequest.reason);
                         scheduleController.replaceRequests(requests);
                         setupTimeout(type);
                     }
