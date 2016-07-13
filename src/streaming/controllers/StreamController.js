@@ -190,11 +190,15 @@ function StreamController() {
     }
 
     function onPlaybackError(e) {
-        var code = e.error ? e.error.code : 0;
+        if (!e.error) {
+            return;
+        }
+
+        var code = e.error.code;
         var msg = '';
 
         if (code === -1) {
-            // not an error!
+            // not a media error!
             return;
         }
 
