@@ -218,7 +218,7 @@ function ProtectionKeyController() {
 
         for (ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
             var keySystemString = keySystems[ksIdx].systemString;
-            var protectionDataForKeySystemPresent = keySystemString in protDataSet;
+            var protectionDataForKeySystemPresent = protDataSet && keySystemString in protDataSet;
 
             if (keySystems[ksIdx].uuid in pssh && protectionDataForKeySystemPresent) {
                 supportedKS.push({
