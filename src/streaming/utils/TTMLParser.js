@@ -176,9 +176,9 @@ function TTMLParser() {
         startTime = clipStartTime(startTime, intervalStart);
         endTime = clipEndTime(endTime, intervalEnd);
         if (typeof intervalStart !== 'undefined' && typeof intervalEnd !== 'undefined') {
-            if (endTime <= intervalStart || startTime >= intervalEnd) {
+            if (endTime < intervalStart || startTime > intervalEnd) {
                 log('TTML: Cue ' + startTime + '-' + endTime + ' outside interval ' +
-                            startTime + '-' + endTime);
+                            intervalStart + '-' + intervalEnd);
                 return null;
             }
         }
