@@ -4,13 +4,14 @@
     <meta charset="utf-8"/>
     <title>Dash JavaScript Player</title>
     <meta name="description" content="" />
-    <link rel="icon" type="image/png" href="http://dashpg.com/w/2012/09/dashif.ico" />
+    <link rel="icon" type="image/x-icon" href="http://dashif.org/wp-content/uploads/2014/12/dashif.ico" />
     <meta name="viewport" content="width=device-width, height=device-height, user-scalable=no">
 
     <link rel="stylesheet" href="app/lib/bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" href="app/lib/bootstrap/css/bootstrap-glyphicons.css">
     <link rel="stylesheet" href="app/css/main.css">
     <link rel="stylesheet" href="app/css/eme.css">
+    <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
 
     <!-- http://jquery.com/ -->
     <script src="app/lib/jquery/jquery-1.10.2.min.js"></script>
@@ -22,10 +23,16 @@
     <!-- http://getbootstrap.com/ -->
     <script src="app/lib/bootstrap/js/bootstrap.min.js"></script>
 
-    <script src="../../dist/dash.debug.js"></script>
+
+    <script src="../../dist/dash.all.debug.js"></script>
+    <!--dash.all.min.js should be used in production over dash.all.debug.js
+        Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
+    <!--<script src="../../dist/dash.all.min.js"></script>-->
 
     <!-- App -->
+    <script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
     <script src="app/eme-main.js"></script>
+
 </head>
 <body ng-controller="DashController">
     <div class="modal fade" id="streamModal">
@@ -74,34 +81,58 @@
 
         <div class="row">
             <div class="input-group">
-                <div id="desktop-streams" class="input-group-btn">
-                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-                        Stream <span class="caret"></span>
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li
-                            ng-repeat="item in availableStreams"
-                            ng-click="setStream(item)">
-                            <a>{{item.name}}</a>
+                <div class="input-group-btn">
+                    <a role="button" data-toggle="dropdown" class="btn btn-primary" data-target="#" href="/page.html">
+                        Sample Streams <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu multi-level" role="menu" aria-labelledby="dropdownMenu">
+                        <li class="dropdown-submenu" ng-if="item.submenu" ng-repeat="item in availableStreams">
+
+                            <a tabindex="-1" href="#">{{item.name}}</a>
+                            <ul class="dropdown-menu">
+                                <li ng-repeat="subitem in item.submenu">
+                                    <a ng-click="setStream(subitem)">{{subitem.name}}</a>
+                                </li>
+                            </ul>
                         </li>
                     </ul>
                 </div>
-                <div id="mobile-streams" class="input-group-btn">
-                    <button type="button" class="btn btn-primary" data-toggle="modal" href="#streamModal">
-                        Stream <span class="caret"></span>
-                    </button>
-                </div>
-                <input type="text" class="form-control" placeholder="manifest" ng-model="selectedItem.url">
+                <input type="text" class="form-control" placeholder="Enter your manifest URL here" ng-model="selectedItem.url">
                 <span class="input-group-btn">
-                    <button class="btn btn-primary" type="button" ng-click="doLoad()">Play</button>
-                    <button class="btn btn-primary" type="button" ng-click="doLicenseFetch()">Fetch Licenses</button>
+                    <button class="btn btn-primary" type="button" ng-click="doLoad()">Load</button>
                 </span>
             </div>
         </div>
 
         <div class="row">
             <div class="dash-video-player col-md-9">
-                <video controls="true"></video>
+                <div id="videoContainer">
+                    <video controls="true"></video>
+                    <div id="videoController" class="video-controller unselectable">
+                        <div id="playPauseBtn" class="btn-play-pause" title="Play/Pause">
+                            <span id="iconPlayPause" class="icon-play"></span>
+                        </div>
+                        <span id="videoTime" class="time-display">00:00:00</span>
+    
+                        <div id="fullscreenBtn" class="btn-fullscreen" title="Fullscreen">
+                            <span class="icon-fullscreen-enter"></span>
+                        </div>
+                        <input type="range" id="volumebar" class="volumebar" value="1" min="0" max="1" step=".01" />
+    
+                        <div id="muteBtn" class="btn-mute" title="Mute">
+                            <span id="iconMute" class="icon-mute-off"></span>
+                        </div>
+                        <div id="captionBtn" class="btn-caption" title="Closed Caption">
+                            <span class="icon-caption"></span>
+                        </div>
+    
+                        <span id="videoDuration" class="duration-display">00:00:00</span>
+    
+                        <div class="seekContainer">
+                            <input type="range" id="seekbar" value="0" class="seekbar" min="0" step="0.01"/>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="col-md-3">
                 <div class="shrink panel panel-default">
@@ -134,11 +165,11 @@
 
 
         <div class="row" ng-repeat="d in drmData">
-            <div class="panel panel-info">
+            <div class="panel panel-info" ng-class="{sessionPanelPlaying: d.isPlaying}">
                 <div class="panel-heading panel-top">
-                    <span class="panel-title">{{d.url}}</span>
+                    <span class="panel-title">{{d.manifest.url}}</span>
                     <div class="btn-group">
-                        <button type="button" class="btn btn-default" ng-click="play(d)">Play</button>
+                        <button type="button" class="btn btn-default" ng-disabled="!d.licenseReceived" ng-click="play(d)">Play</button>
                         <button type="button" class="btn btn-default" ng-click="delete(d)">Delete</button>
                     </div>
                 </div>
@@ -175,14 +206,15 @@
                     <div class="panel-heading panel-top">
                         <span class="panel-title">SessionID: {{s.sessionToken.getSessionID()}}</span>
                         <div class="btn-group">
-                            <button type="button" ng-disabled="!s.removed" class="btn btn-default" ng-click="d.protCtrl.loadKeySession(s.sessionID)">Load</button>
-                            <button type="button" ng-disabled="s.removed" class="btn btn-default" ng-click="d.protCtrl.removeKeySession(s.sessionToken)">Remove</button>
+                            <button type="button" ng-disabled="isLoaded(s)" class="btn btn-default" ng-click="d.protCtrl.loadKeySession(s.sessionID)">Load</button>
+                            <button type="button" ng-disabled="!isLoaded(s)" class="btn btn-default" ng-click="d.protCtrl.removeKeySession(s.sessionToken)">Remove</button>
                             <button type="button" class="btn btn-default" ng-click="d.protCtrl.closeKeySession(s.sessionToken)">Close</button>
                         </div>
                     </div>
                     <div class="keymessage" ng-show="s.lastMessage">{{s.lastMessage}}</div>
+                    <div class="keymessage"><b>Session Persistence: </b><span>{{getLoadedMessage(s)}}</span></div>
                     <h5 ng-show="s.getExpirationTime()">Expiration: {{s.getExpirationTime()}}</h5>
-                    <table ng-show="s.keystatus && s.keystatus.length > 0" class="table table-bordered table-hover">
+                    <table ng-show="isLoaded(s) && s.keystatus && s.keystatus.length > 0" class="table table-bordered table-hover">
                         <tr>
                             <th>Key ID</th>
                             <th class="centered">Key Status</th>

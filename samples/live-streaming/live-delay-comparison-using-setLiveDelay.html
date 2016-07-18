@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <title>Live delay comparison using setLiveDelay</title>
+
+        <script src="../../dist/dash.all.debug.js"></script>
+        <!--dash.all.min.js should be used in production over dash.all.debug.js
+Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
+        <!--<script src="../../dist/dash.all.min.js"></script>-->
+
+        <script>
+            function init()
+            {
+                var player1,player2,player3,player4,player5,player6, video;
+                var MPD_2S_SEGMENTS = "http://vm2.dashif.org/livesim/testpic_2s/Manifest.mpd";
+                var MPD_6S_SEGMENTS = "http://vm2.dashif.org/livesim/testpic_6s/Manifest.mpd";
+
+
+                video = document.querySelector("#video1");
+                player1 = dashjs.MediaPlayer().create();
+                player1.initialize(video,MPD_2S_SEGMENTS ,true);
+                player1.setLiveDelay(2);
+
+                video = document.querySelector("#video2");
+                player2 = dashjs.MediaPlayer().create();
+                player2.initialize(video,MPD_2S_SEGMENTS ,true);
+                player2.setLiveDelay(4);
+
+                video = document.querySelector("#video3");
+                player3 = dashjs.MediaPlayer().create();
+                player3.initialize(video,MPD_2S_SEGMENTS ,true);
+                player3.setLiveDelay(8);
+
+                video = document.querySelector("#video4");
+                player4 = dashjs.MediaPlayer().create();
+                player4.initialize(video,MPD_6S_SEGMENTS ,true);
+                player4.setLiveDelay(6);
+
+                video = document.querySelector("#video5");
+                player5 = dashjs.MediaPlayer().create();
+                player5.initialize(video,MPD_6S_SEGMENTS ,true);
+                player5.setLiveDelay(12);
+
+                video = document.querySelector("#video6");
+                player6 = dashjs.MediaPlayer().create();
+                player6.initialize(video,MPD_6S_SEGMENTS ,true);
+                player6.setLiveDelay(24);
+
+
+                setInterval( function() {
+                    var d = new Date();
+                    var seconds = d.getSeconds();
+                    document.querySelector("#sec").innerHTML = ( seconds < 10 ? "0" : "" ) + seconds;
+                    var minutes = d.getMinutes();
+                    document.querySelector("#min").innerHTML = ( minutes < 10 ? "0" : "" ) + minutes;
+                    for (var i=1;i < 7;i++)
+                    {
+                        var p = eval("player"+i);
+                        document.querySelector("#video" + i + "delay").innerHTML = Math.round((d.getTime()/1000) - Number(p.timeAsUTC()));
+                        document.querySelector("#video" + i + "buffer").innerHTML = p.getBufferLength()+ "s";
+                    }
+
+
+                },1000);
+
+            }
+        </script>
+        <style>
+
+            table {
+                border-spacing: 10px;
+            }
+            video {
+                width: 320px;
+                height: 180px;
+            }
+            .clock { border:1px solid #333; color:#000; font-size: 60pt}
+        </style>
+    </head>
+
+    <body onload="init()">
+    This sample illustrates the combined effects of segment duration and the "<strong>setLiveDelay</strong>" MediaPlayer method on the latency of live stream playback.
+    The upper layer of videos are all playing a live stream with 2s segment duration, with setLiveDelay values of 2s, 4s, and 8s. The lower layer use 6s segment duration,
+    with setLiveDelay values of 6s, 12s, and 24s. Lowest latency is achieved with shorter segments and with a lower live delay value. Higher stability/robustness is achieved with a higher live delay which allows a larger forward buffer.
+    <table>
+            <tr><td>
+                2s segment, 2s target latency<br/>
+                <video id="video1" controls="true">
+                </video><br/>
+                Seconds behind live: <span id="video1delay"></span><br/>
+                Buffer length: <span id="video1buffer"></span>
+                </td><td>
+                2s segment, 4s target latency<br/>
+                <video id="video2" controls="true">
+                </video><br/>
+                Seconds behind live: <span id="video2delay"></span><br/>
+                Buffer length: <span id="video2buffer"></span>
+                </td><td>
+                2s segment,  8s target latency<br/>
+                <video id="video3" controls="true">
+                </video><br/>
+                Seconds behind live: <span id="video3delay"></span><br/>
+                Buffer length: <span id="video3buffer"></span>
+                </td>
+                <td>Wall clock time
+                    <div class="clock">
+                        <span id="min"> </span>:<span id="sec"></span>
+                    </div>
+                </td></tr>
+            <tr><td>
+                6s segment,  6s target latency<br/>
+                <video id="video4" controls="true">
+                </video><br/>
+                Seconds behind live: <span id="video4delay"></span><br/>
+                Buffer length: <span id="video4buffer"></span>
+                </td><td>
+                6s segment,  12s target latency<br/>
+                <video id="video5" controls="true">
+                </video><br/>
+                Seconds behind live: <span id="video5delay"></span><br/>
+                Buffer length: <span id="video5buffer"></span>
+                </td><td>
+                6s segment,  24s target latency<br/>
+                <video id="video6" controls="true">
+                </video><br/>
+                Seconds behind live: <span id="video6delay"></span><br/>
+                Buffer length: <span id="video6buffer"></span>
+                </td></tr>
+        </table>
+    </body>
+</html>
+

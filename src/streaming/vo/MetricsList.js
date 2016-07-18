@@ -28,23 +28,26 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.models.MetricsList = function () {
-    "use strict";
+/**
+ * @class
+ * @ignore
+ */
+class MetricsList {
+    constructor() {
+        this.TcpList = [];
+        this.HttpList = [];
+        this.RepSwitchList = [];
+        this.BufferLevel = [];
+        this.BufferState = [];
+        this.PlayList = [];
+        this.DroppedFrames = [];
+        this.SchedulingInfo = [];
+        this.DVRInfo = [];
+        this.ManifestUpdate = [];
+        this.RequestsQueue = null;
+        this.DVBErrors = [];
+        this.BolaState = [];
+    }
+}
 
-    return {
-        TcpList: [],
-        HttpList: [],
-        RepSwitchList: [],
-        BufferLevel: [],
-        BufferState: [],
-        PlayList: [],
-        DroppedFrames: [],
-        SchedulingInfo: [],
-        DVRInfo: [],
-        ManifestUpdate: []
-    };
-};
-
-MediaPlayer.models.MetricsList.prototype = {
-    constructor: MediaPlayer.models.MetricsList
-};
+export default MetricsList;

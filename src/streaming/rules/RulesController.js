@@ -28,197 +28,132 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.rules.RulesController = function () {
-    "use strict";
+import RulesContext from './RulesContext';
+import SwitchRequest from './SwitchRequest';
+import ABRRulesCollection from './abr/ABRRulesCollection';
+import SynchronizationRulesCollection from './synchronization/SynchronizationRulesCollection';
+import FactoryMaker from '../../core/FactoryMaker';
 
-    var rules = {},
+const ABR_RULE = 0;
+const SYNC_RULE = 1;
 
-        ruleMandatoryProperties = ["execute"],
+function RulesController() {
 
-        isRuleTypeSupported = function(ruleType) {
-            return ((ruleType === this.SCHEDULING_RULE) || (ruleType === this.ABR_RULE));
-        },
+    let context = this.context;
 
-        isRule = function(obj) {
-            var ln = ruleMandatoryProperties.length,
-                i = 0;
+    let instance,
+        rules;
 
-            for (i; i < ln; i += 1) {
-                if (!obj.hasOwnProperty(ruleMandatoryProperties[i])) return false;
+    function initialize() {
+        rules = {};
+    }
+
+    function setConfig(config) {
+        if (!config) return;
+
+        if (config.abrRulesCollection) {
+            rules[ABR_RULE] = config.abrRulesCollection;
+        }
+
+        if (config.synchronizationRulesCollection) {
+            rules[SYNC_RULE] = config.synchronizationRulesCollection;
+        }
+    }
+
+    function applyRules(rulesArr, streamProcessor, callback, current, overrideFunc) {
+        var values = {};
+        var rule,
+            i;
+
+        var rulesCount = rulesArr.length;
+        var ln = rulesCount;
+        var rulesContext = getRulesContext(streamProcessor, current);
+
+        var callbackFunc = function (result) {
+            var value,
+                confidence;
+
+            if (result.value !== SwitchRequest.NO_CHANGE) {
+                values[result.priority] = overrideFunc(values[result.priority], result.value);
             }
 
-            return true;
-        },
+            if (--rulesCount) return;
 
-        getRulesContext = function(streamProcessor, currentValue) {
-            return new MediaPlayer.rules.RulesContext(streamProcessor, currentValue);
-        },
+            if (values[SwitchRequest.WEAK] !== SwitchRequest.NO_CHANGE) {
+                confidence = SwitchRequest.WEAK;
+                value = values[SwitchRequest.WEAK];
 
-        normalizeRule = function(rule) {
-            var exec = rule.execute.bind(rule);
-
-            rule.execute = function(context, callback) {
-                var normalizedCallback = function(result) {
-                    callback.call(rule, new MediaPlayer.rules.SwitchRequest(result.value, result.priority));
-                };
-
-                exec(context, normalizedCallback);
-            };
-
-            if (typeof(rule.reset) !== "function") {
-                rule.reset = function(){
-                    //TODO do some default clearing
-                };
             }
 
-            return rule;
-        },
-
-        updateRules = function(currentRulesCollection, newRulesCollection, override) {
-            var rule,
-                ruleSubType,
-                subTypeRuleSet,
-                ruleArr,
-                ln,
-                i;
-
-            for (ruleSubType in newRulesCollection) {
-                ruleArr = newRulesCollection[ruleSubType];
-                ln = ruleArr.length;
-
-                if (!ln) continue;
-
-                for (i = 0; i < ln; i += 1) {
-                    rule = ruleArr[i];
-
-                    if (!isRule.call(this, rule)) continue;
-
-                    rule = normalizeRule.call(this, rule);
-
-                    subTypeRuleSet = currentRulesCollection.getRules(ruleSubType);
-
-                    if (override) {
-                        override = false;
-                        subTypeRuleSet.length = 0;
-                    }
-
-                    this.system.injectInto(rule);
-                    subTypeRuleSet.push(rule);
-                }
+            if (values[SwitchRequest.DEFAULT] !== SwitchRequest.NO_CHANGE) {
+                confidence = SwitchRequest.DEFAULT;
+                value = values[SwitchRequest.DEFAULT];
             }
+
+            if (values[SwitchRequest.STRONG] !== SwitchRequest.NO_CHANGE) {
+                confidence = SwitchRequest.STRONG;
+                value = values[SwitchRequest.STRONG];
+            }
+
+            if (confidence != SwitchRequest.STRONG &&
+                confidence != SwitchRequest.WEAK) {
+                confidence = SwitchRequest.DEFAULT;
+            }
+
+
+            callback({ value: (value !== undefined) ? value : current, confidence: confidence });
+
         };
 
-    return {
-        system: undefined,
-        log: undefined,
+        values[SwitchRequest.STRONG] = SwitchRequest.NO_CHANGE;
+        values[SwitchRequest.WEAK] = SwitchRequest.NO_CHANGE;
+        values[SwitchRequest.DEFAULT] = SwitchRequest.NO_CHANGE;
 
-        SCHEDULING_RULE: 0,
-        ABR_RULE: 1,
-        SYNC_RULE: 2,
-
-        initialize: function() {
-            rules[this.ABR_RULE] = this.system.getObject("abrRulesCollection");
-            rules[this.SCHEDULING_RULE] = this.system.getObject("scheduleRulesCollection");
-            rules[this.SYNC_RULE] = this.system.getObject("synchronizationRulesCollection");
-        },
-
-        setRules: function(ruleType, rulesCollection) {
-            if (!isRuleTypeSupported.call(this, ruleType) || !rulesCollection) return;
-
-            updateRules.call(this, rules[ruleType], rulesCollection, true);
-        },
-
-        addRules: function(ruleType, rulesCollection) {
-            if (!isRuleTypeSupported.call(this, ruleType) || !rulesCollection) return;
-
-            updateRules.call(this, rules[ruleType], rulesCollection, false);
-        },
-
-        applyRules: function(rulesArr, streamProcessor, callback, current, overrideFunc) {
-            var rulesCount = rulesArr.length,
-                ln = rulesCount,
-                values = {},
-                rulesContext = getRulesContext.call(this, streamProcessor, current),
-                rule,
-                i,
-
-                callbackFunc = function(result) {
-                    var value,
-                        confidence;
-
-                    if (result.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                        values[result.priority] = overrideFunc(values[result.priority], result.value);
-                    }
-
-                    if (--rulesCount) return;
-
-                    if (values[MediaPlayer.rules.SwitchRequest.prototype.WEAK] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                        confidence = MediaPlayer.rules.SwitchRequest.prototype.WEAK;
-                        value = values[MediaPlayer.rules.SwitchRequest.prototype.WEAK];
-                    }
-
-                    if (values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                        confidence = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
-                        value = values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT];
-                    }
-
-                    if (values[MediaPlayer.rules.SwitchRequest.prototype.STRONG] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                        confidence = MediaPlayer.rules.SwitchRequest.prototype.STRONG;
-                        value = values[MediaPlayer.rules.SwitchRequest.prototype.STRONG];
-                    }
-
-                    if (confidence != MediaPlayer.rules.SwitchRequest.prototype.STRONG &&
-                        confidence != MediaPlayer.rules.SwitchRequest.prototype.WEAK) {
-                        confidence = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
-                    }
-
-                    callback({value: (value !== undefined) ? value : current, confidence: confidence});
-
-                };
-
-            values[MediaPlayer.rules.SwitchRequest.prototype.STRONG] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
-            values[MediaPlayer.rules.SwitchRequest.prototype.WEAK] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
-            values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
-
-            for (i = 0; i < ln; i += 1) {
-                rule = rulesArr[i];
-
-                if (!isRule.call(this, rule)) {
-                    rulesCount--;
-                    continue;
-                }
-
-                rule.execute(rulesContext, callbackFunc);
-            }
-        },
-
-        reset: function() {
-            var abrRules = rules[this.ABR_RULE],
-                schedulingRules = rules[this.SCHEDULING_RULE],
-                synchronizationRules = rules[this.SYNC_RULE],
-                allRules = (abrRules.getRules(MediaPlayer.rules.ABRRulesCollection.prototype.QUALITY_SWITCH_RULES)|| []).
-                    concat(schedulingRules.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.NEXT_FRAGMENT_RULES) || []).
-                    concat(schedulingRules.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.FRAGMENTS_TO_SCHEDULE_RULES) || []).
-                    concat(schedulingRules.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.FRAGMENTS_TO_EXECUTE_RULES) || []).
-                    concat(synchronizationRules.getRules(MediaPlayer.rules.SynchronizationRulesCollection.prototype.TIME_SYNCHRONIZED_RULES) || []).
-                    concat(synchronizationRules.getRules(MediaPlayer.rules.SynchronizationRulesCollection.prototype.BEST_GUESS_RULES) || []),
-                ln = allRules.length,
-                rule,
-                i;
-
-            for (i = 0; i < ln; i += 1) {
-                rule = allRules[i];
-
-                if (typeof (rule.reset) !== "function") continue;
-
-                rule.reset();
-            }
-
-            rules = {};
+        for (i = 0; i < ln; i++) {
+            rule = rulesArr[i];
+            rule.execute(rulesContext, callbackFunc);
         }
-    };
-};
+    }
 
-MediaPlayer.rules.RulesController.prototype = {
-    constructor: MediaPlayer.rules.RulesController
-};
+    function reset() {
+        var abrRules = rules[ABR_RULE];
+        var synchronizationRules = rules[SYNC_RULE];
+        var allRules = (abrRules.getRules(ABRRulesCollection.QUALITY_SWITCH_RULES) || []).
+            concat(abrRules.getRules(ABRRulesCollection.ABANDON_FRAGMENT_RULES) || []).
+            concat(synchronizationRules.getRules(SynchronizationRulesCollection.TIME_SYNCHRONIZED_RULES) || []).
+            concat(synchronizationRules.getRules(SynchronizationRulesCollection.BEST_GUESS_RULES) || []);
+        var ln = allRules.length;
+
+        var rule,
+            i;
+
+        for (i = 0; i < ln; i++) {
+            rule = allRules[i];
+
+            if (typeof (rule.reset) !== 'function') continue;
+
+            rule.reset();
+        }
+
+        rules = {};
+    }
+
+    function getRulesContext(streamProcessor, currentValue) {
+        return RulesContext(context).create({streamProcessor: streamProcessor, currentValue: currentValue});
+    }
+
+    instance = {
+        initialize: initialize,
+        setConfig: setConfig,
+        applyRules: applyRules,
+        reset: reset
+    };
+
+    return instance;
+}
+
+RulesController.__dashjs_factory_name = 'RulesController';
+let factory =  FactoryMaker.getSingletonFactory(RulesController);
+factory.ABR_RULE = ABR_RULE;
+factory.SYNC_RULE = SYNC_RULE;
+export default factory;

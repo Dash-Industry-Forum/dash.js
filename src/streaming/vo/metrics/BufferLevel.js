@@ -28,12 +28,28 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.metrics.BufferLevel = function () {
-    "use strict";
-    this.t = null;      // Real-Time | Time of the measurement of the buffer level.
-    this.level = null;  // Level of the buffer in milliseconds. Indicates the playout duration for which media data of all active media components is available starting from the current playout time.
-};
 
-MediaPlayer.vo.metrics.BufferLevel.prototype = {
-    constructor: MediaPlayer.vo.metrics.BufferLevel
-};
+/**
+ * @class
+ */
+class BufferLevel {
+    /**
+     * @description This Object holds reference to the current buffer level and the time it was recorded.
+     */
+    constructor() {
+        /**
+         * Real-Time | Time of the measurement of the buffer level.
+         * @public
+         */
+        this.t = null;
+        /**
+         * Level of the buffer in milliseconds. Indicates the playout duration for which
+         * media data of all active media components is available starting from the
+         * current playout time.
+         * @public
+         */
+        this.level = null;
+    }
+}
+
+export default BufferLevel;

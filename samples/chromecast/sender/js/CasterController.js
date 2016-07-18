@@ -117,7 +117,7 @@ function CasterController($scope) {
         },
         {
             name: "Envivio",
-            url: "http://dash.edgesuite.net/envivio/dashpr/clear/Manifest.mpd",
+            url: "http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd",
             isLive: false
         },
         {

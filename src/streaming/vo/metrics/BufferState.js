@@ -28,12 +28,26 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.metrics.BufferState = function () {
-    "use strict";
-    this.target = null; // Required Buffer Level determined by the BufferLevelRule.
-    this.state = MediaPlayer.dependencies.BufferController.BUFFER_EMPTY;
-};
+import BufferController from '../../controllers/BufferController';
+/**
+ * @class
+ */
+class BufferState {
+    /**
+     * @description This Object holds reference to the current buffer state of the video element.
+     */
+    constructor() {
+        /**
+         * The Buffer Level Target determined by the BufferLevelRule.
+         * @public
+         */
+        this.target = null;
+        /**
+         * Current buffer state. Will be BufferController.BUFFER_EMPTY or BufferController.BUFFER_LOADED.
+         * @public
+         */
+        this.state = BufferController.BUFFER_EMPTY;
+    }
+}
 
-MediaPlayer.vo.metrics.BufferState.prototype = {
-    constructor: MediaPlayer.vo.metrics.BufferState
-};
+export default BufferState;

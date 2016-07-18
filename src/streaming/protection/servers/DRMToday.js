@@ -29,88 +29,70 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-MediaPlayer.dependencies.protection.servers.DRMToday = function() {
-    "use strict";
+/**
+ * CastLabs DRMToday License Server implementation
+ *
+ * @implements LicenseServer
+ * @class
+ */
+import FactoryMaker from '../../../core/FactoryMaker';
+import BASE64 from '../../../../externals/base64';
 
-    var keySystems = {
-        "com.widevine.alpha": {
-            responseType: "json",
-            getLicenseMessage: function(response) {
-                return new Uint8Array(BASE64.decodeArray(response.license));
+function DRMToday() {
+
+    const keySystems = {
+        'com.widevine.alpha': {
+            responseType: 'json',
+            getLicenseMessage: function (response) {
+                return BASE64.decodeArray(response.license);
             },
-            getErrorResponse: function(response) {
+            getErrorResponse: function (response) {
                 return response;
             }
         },
-        "com.microsoft.playready": {
-            responseType: "arraybuffer",
-            getLicenseMessage: function(response) {
-                return new Uint8Array(response);
+        'com.microsoft.playready': {
+            responseType: 'arraybuffer',
+            getLicenseMessage: function (response) {
+                return response;
             },
-            getErrorResponse: function(response) {
+            getErrorResponse: function (response) {
                 return String.fromCharCode.apply(null, new Uint8Array(response));
             }
         }
     };
 
-    return {
+    let instance;
 
-        /**
-         * Returns a new or updated license server URL based on information
-         * found in the CDM message
-         *
-         * @param url the initially established URL (from ProtectionData or initData)
-         * @param message the CDM message
-         * @returns {string} the URL to use in license requests
-         */
-        getServerURLFromMessage: function(url /*, message*/) { return url; },
+    function getServerURLFromMessage(url /*, message, messageType*/) {
+        return url;
+    }
 
-        /**
-         * Returns the HTTP method to be used (i.e. "GET", "POST", etc.) in
-         * XMLHttpRequest.open().
-         *
-         * @returns {string} the HTTP method
-         */
-        getHTTPMethod: function() { return 'POST'; },
+    function getHTTPMethod(/*messageType*/) {
+        return 'POST';
+    }
 
-        /**
-         * Returns the response type to set for XMLHttpRequest.responseType
-         * for a particular key system
-         *
-         * @param keySystemStr {String} the key system
-         * @returns {string} the response type
-         */
-        getResponseType: function(keySystemStr) {
-            return keySystems[keySystemStr].responseType;
-        },
+    function getResponseType(keySystemStr/*, messageType*/) {
+        return keySystems[keySystemStr].responseType;
+    }
 
-        /**
-         * Parses the license server response to retrieve the message intended for
-         * the CDM.
-         *
-         * @param serverResponse the response as returned in XMLHttpRequest.response
-         * @param keySystemStr {String} the key system string
-         * @returns {Uint8Array} message that will be sent to the CDM
-         */
-        getLicenseMessage: function(serverResponse, keySystemStr) {
-            return keySystems[keySystemStr].getLicenseMessage(serverResponse);
-        },
+    function getLicenseMessage(serverResponse, keySystemStr/*, messageType*/) {
+        return keySystems[keySystemStr].getLicenseMessage(serverResponse);
+    }
 
-        /**
-         * Parses the license server response during error conditions and returns a
-         * string to display for debugging purposes
-         *
-         * @param serverResponse the server response
-         * @param keySystemStr {String} the key system string
-         * @returns {String} An error message to report
-         */
-        getErrorResponse: function(serverResponse, keySystemStr) {
-            return keySystems[keySystemStr].getErrorResponse(serverResponse);
-        }
+    function getErrorResponse(serverResponse, keySystemStr/*, messageType*/) {
+        return keySystems[keySystemStr].getErrorResponse(serverResponse);
+    }
 
+    instance = {
+        getServerURLFromMessage: getServerURLFromMessage,
+        getHTTPMethod: getHTTPMethod,
+        getResponseType: getResponseType,
+        getLicenseMessage: getLicenseMessage,
+        getErrorResponse: getErrorResponse,
     };
-};
 
-MediaPlayer.dependencies.protection.servers.DRMToday.prototype = {
-    constructor: MediaPlayer.dependencies.protection.servers.DRMToday
-};
+    return instance;
+}
+
+DRMToday.__dashjs_factory_name = 'DRMToday';
+export default FactoryMaker.getSingletonFactory(DRMToday);

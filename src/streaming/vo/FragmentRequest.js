@@ -28,30 +28,38 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.FragmentRequest = function () {
-    "use strict";
-    this.action = "download";
-    this.startTime = NaN;
-    this.mediaType = null;
-    this.type = null;
-    this.duration = NaN;
-    this.timescale = NaN;
-    this.range = null;
-    this.url = null;
-    this.requestStartDate = null;
-    this.firstByteDate = null;
-    this.requestEndDate = null;
-    this.quality = NaN;
-    this.index = NaN;
-    this.availabilityStartTime = null;
-    this.availabilityEndTime = null;
-    this.wallStartTime = null;
-    this.bytesLoaded = NaN;
-    this.bytesTotal = NaN;
-};
+/**
+ * @class
+ * @ignore
+ */
+class FragmentRequest {
+    constructor() {
+        this.action = FragmentRequest.ACTION_DOWNLOAD;
+        this.startTime = NaN;
+        this.mediaType = null;
+        this.mediaInfo = null;
+        this.type = null;
+        this.duration = NaN;
+        this.timescale = NaN;
+        this.range = null;
+        this.url = null;
+        this.serviceLocation = null;
+        this.requestStartDate = null;
+        this.firstByteDate = null;
+        this.requestEndDate = null;
+        this.quality = NaN;
+        this.index = NaN;
+        this.availabilityStartTime = null;
+        this.availabilityEndTime = null;
+        this.wallStartTime = null;
+        this.bytesLoaded = NaN;
+        this.bytesTotal = NaN;
+        this.delayLoadingTime = NaN;
+        this.responseType = 'arraybuffer';
+    }
+}
 
-MediaPlayer.vo.FragmentRequest.prototype = {
-    constructor: MediaPlayer.vo.FragmentRequest,
-    ACTION_DOWNLOAD: "download",
-    ACTION_COMPLETE: "complete"
-};
+FragmentRequest.ACTION_DOWNLOAD = 'download';
+FragmentRequest.ACTION_COMPLETE = 'complete';
+
+export default FragmentRequest;

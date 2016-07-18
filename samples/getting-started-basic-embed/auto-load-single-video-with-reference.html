@@ -4,25 +4,23 @@
     <meta charset="utf-8"/>
     <title>Auto-player instantiation example, showing how to obtain a reference to the MediaPlayer</title>
 
-    <script src="../../dist/dash.debug.js"></script>
-    <!--dash.all.js should be used in production over dash.debug.js. dash.debug.js is not compressed or obfuscated and the file size is much larger compared with dash.all.js-->
-    <!--<script src="../../dist/dash.all.js"></script>-->
+    <script src="../../dist/dash.all.debug.js"></script>
+    <!--dash.all.min.js should be used in production over dash.all.debug.js
+        Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
+    <!--<script src="../../dist/dash.all.min.js"></script>-->
 
     <script>
         var player;
 
         function init()
         {
-            player = Dash.create(document.querySelector(".dashjs-player"));
+            player = dashjs.MediaPlayerFactory.create(document.querySelector(".dashjs-player"));
             setInterval(updateStats,500)
         }
 
         function updateStats()
         {
-            var     metrics = player.getMetricsFor('video'),
-                    metricsExt = player.getMetricsExt(),
-                    bufferLevel = metricsExt.getCurrentBufferLevel(metrics);
-            document.querySelector("#stats").innerHTML = "Buffer level " + bufferLevel.level.toPrecision(3) + "s";
+            document.querySelector("#stats").innerHTML = "Buffer level " + player.getBufferLength() + "s";
         }
     </script>
     <style>
@@ -31,11 +29,11 @@
             height: 360px;
         }
     </style>
-
+    </head>
     <body onload="init()">
         <div>
             <video class="dashjs-player" autoplay controls>
-                <source src="http://dash.edgesuite.net/envivio/dashpr/clear/Manifest.mpd" type="application/dash+xml"/>
+                <source src="http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd" type="application/dash+xml"/>
             </video>
         </div>
         <div>

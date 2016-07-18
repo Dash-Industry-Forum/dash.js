@@ -1,0 +1,151 @@
+<!-- The copyright in this software is being made available under the BSD License, included below. This software may be subject to other third party and contributor rights, including patent rights, and no such rights are granted under this license.
+//
+// Copyright (c) 2013, Microsoft Open Technologies, Inc.
+//
+// All rights reserved.
+// Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+//     -             Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+//     -             Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+//     -             Neither the name of the Microsoft Open Technologies, Inc. nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Dash Player</title>
+    <meta name="description" content="" />
+
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script> 
+	
+	<style type="text/css">
+        @import url("style.css");
+    </style>
+
+    <!-- Player -->
+    <script src="../../dist/dash.all.debug.js"></script>
+    <!--dash.all.min.js should be used in production over dash.all.debug.js
+        Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
+    <!--<script src="../../dist/dash.all.min.js"></script>-->
+
+    <script src="MPDList.js"></script>
+    <script src="DashUtil.js"></script>
+	<script src="FileSaver.js"></script>		
+	<script src="MPDfiles.js"></script>     
+	
+</head>
+<body background="blueGradientBackground.jpg" width="100%" height="100%" style="background-repeat:no-repeat;background-size:100% 100%">
+    <center>
+        <div style="width: 95%; background-color: #FFFFFF;margin-top:0px" height="100%">
+            <center>
+                <div id="divHeader" >DASH PLAYER TEST APP                    			
+					<img src = "MSOpenTech.png" alt = "MSOpenTech" width="150px" style="margin-top:10px"/>
+					</div>
+                    </br>
+                <fieldset style="width:550px;">
+                <legend style="font-family:Verdana; font-size:14px; font-weight:bold"> Instructions </legend>
+                <center>
+                <div id="divBody">
+                    This is an Application to test Dash Player against various MPDS
+                    </br> 
+                    </br> 
+                    Usage:</br>
+                    <ul>
+                    <li> Click on Reset before running a  new test</li>
+                    <li> You can add/edit MPD list in dash.js-pr\test\js\utils\MPDList.js</li>
+                    <li> MPD url should be added corresponding to appropriate array index</li>                              
+					<li> Enable ActiveX options to run on IE</li>  					
+                    </ul>
+                </div>
+                </center>
+                </fieldset>
+                </br>
+                <div width="50px" align="center">
+             <label id="lbTestMode" style="font-weight:bold">Select Test Mode</label>
+             <select id = "myList">
+               <option value = "1">Manual</option>
+               <option value = "2">Automation</option>
+             </select>
+       <div>
+       </br>
+                <div width="500px" height="100px" style="overflow-y: 50px">
+                    <div cellpadding="5px">										
+						<input type="button" class="AddMPD" value="Add MPD" style="width:80px;" onclick="addMPD()" />		
+						<input type="button" class="Reset" value="Reset" style="width:80px;" onclick="window.location.reload()">
+						<input type="button" class="StopTests" value="Stop" style="width:80px;" onclick="stopTest()" id="btnStopTest" />
+						<input type="button" class="ResumeTests" value="Resume" style="width:80px;" onclick="resumeTest()" id="btnResumeTest" />
+						<input type="button" class="ExportLog" value="Export Log" style="width:80px;" onclick="logging()" id="btnExportLog" />
+						<input type="button" class="ExportToJSON" value="Export to JSON" style="width: 110px;" onclick="exportToJSON()" id="btnExportToJSON" />						
+						<input type="file" id="files" name="files[]"  /><div id="fileContents" value="" style="visibility:hidden">	</div>																	
+                    </div>
+
+                    <div id = "popup_box" >
+					<div id="addMPDURL" style="margin-left:200px">Enter the MPD Url</div>
+					<input type="text" class="AddMPDText" id="AddMPDTextArea" style="margin-top:20px;width:350px"/>
+                   	 <a id = "popupBoxClose" > X </a>
+					 <input type="button" class="AddMPDData" value="Add" style="width: 70px;" onclick="addMPDData()" />
+					 </br>
+					 </br>
+					 <div id="successMsg" ></div>
+                   	 </div>
+                   	 <div id = "container" > 
+					 </div >
+                    
+                </div>
+                <div id="MPDUrl"></div>
+                </br>
+            </center>
+            <center>
+                <div id="divtable" >
+                    <table height="100%" style="border: 1px solid black;" id="tbMPD">
+                        <thead>
+                            <tr  align="center" style="border: 1px solid black;">
+                                <th width="150px">
+                                    MPD
+                                </th>
+                                <th width="250px">
+                                    Events
+                                </th>
+								<th width="150px">
+                                    Actions
+									</th>
+
+                            </tr>
+                            <thead>
+                                <tbody>
+                                    <tr  style="border: 1px solid black;" align="center" height="100%" id="template">
+                                        <td style="border: 1px solid black;">
+                                            MPD template
+                                        </td>
+                                        <td id="VideoPlayer0" height="100%" style="border: 1px solid black; margin:2; padding:2" width="250px">
+											
+											<div id="Video0" class="ClassVideo0" style="display: block; width:250px; height:200px; margin:5px;padding:5px;visibility:visible;">
+												<!-- <video style="width: 90%"  controls></video> -->
+											</div>
+											<div id="MPDUrl0" style="margin:2; padding:2" height="100%" ></div>
+											<div style="margin:2px; padding:2px">
+											<div id="play0" ></div><div id="pause0" ></div><div id="seek0" ></div><div id="stall0" ></div><div id="error0"></div>
+											</div>
+											
+										</td>
+										<td style="border: 1px solid black;">
+										<div>
+											<input type="button" class="btn-large" value="Run Test" style="width: 70px;" id="RunTest0" onclick="runTest(this.id)"/>																			
+										</div>
+										</br>
+										<div>
+											<input type="button" class="btn-large" value="Delete" style="width: 70px;" id="Delete0" onclick="deleteRow(this.id)"/>
+										</div>
+										</td>
+									</tr>
+                                </tbody>
+                                <table>
+                    </br> </br>
+                </div>
+            </center>
+        </div>		
+    </center>
+</body>
+</html>
+

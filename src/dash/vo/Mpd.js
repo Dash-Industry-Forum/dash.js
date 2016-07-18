@@ -28,19 +28,22 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-Dash.vo.Mpd = function () {
-    "use strict";
-    this.manifest = null;
-    this.suggestedPresentationDelay = 0;
-    this.availabilityStartTime = null;
-    this.availabilityEndTime = Number.POSITIVE_INFINITY;
-    this.timeShiftBufferDepth = Number.POSITIVE_INFINITY;
-    this.maxSegmentDuration = Number.POSITIVE_INFINITY;
-    this.checkTime = NaN;
-    this.clientServerTimeShift = 0;
-    this.isClientServerTimeSyncCompleted = false;
-};
+/**
+ * @class
+ * @ignore
+ */
+class Mpd {
+    constructor() {
+        this.manifest = null;
+        this.suggestedPresentationDelay = 0;
+        this.availabilityStartTime = null;
+        this.availabilityEndTime = Number.POSITIVE_INFINITY;
+        this.timeShiftBufferDepth = Number.POSITIVE_INFINITY;
+        this.maxSegmentDuration = Number.POSITIVE_INFINITY;
+        this.checkTime = NaN;
+        this.clientServerTimeShift = 0;
+        this.isClientServerTimeSyncCompleted = false;
+    }
+}
 
-Dash.vo.Mpd.prototype = {
-    constructor: Dash.vo.Mpd
-};
+export default Mpd;

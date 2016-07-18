@@ -16,8 +16,11 @@
     <!-- Chromecast -->
     <script src="https://www.gstatic.com/cast/js/receiver/1.0/cast_receiver.js"></script>
 
-    <!-- Minified Dash -->
-    <script src="../dash.all.js"></script>
+    <!-- Unminified Dash -->
+    <script src="../../dist/dash.all.debug.js"></script>
+    <!--dash.all.min.js should be used in production over dash.all.debug.js
+        Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
+    <!--<script src="../../dist/dash.all.min.js"></script>-->
 
     <script src="receiver/js/main.js"></script>
 

@@ -28,149 +28,146 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.ManifestLoader = function () {
-    "use strict";
+import XlinkController from './controllers/XlinkController';
+import XHRLoader from './XHRLoader';
+import URLUtils from './utils/URLUtils';
+import TextRequest from './vo/TextRequest';
+import Error from './vo/Error';
+import {HTTPRequest} from './vo/metrics/HTTPRequest';
+import EventBus from '../core/EventBus';
+import Events from '../core/events/Events';
+import FactoryMaker from '../core/FactoryMaker';
 
-    var RETRY_ATTEMPTS = 3,
-        RETRY_INTERVAL = 500,
-        parseBaseUrl = function (url) {
-            var base = "";
+const MANIFEST_LOADER_ERROR_PARSING_FAILURE = 1;
+const MANIFEST_LOADER_ERROR_LOADING_FAILURE = 2;
+const MANIFEST_LOADER_MESSAGE_PARSING_FAILURE = 'parsing failed';
 
-            if (url.indexOf("/") !== -1)
-            {
-                if (url.indexOf("?") !== -1) {
-                    url = url.substring(0, url.indexOf("?"));
-                }
-                base = url.substring(0, url.lastIndexOf("/") + 1);
+function ManifestLoader(config) {
+
+    const context = this.context;
+    const eventBus = EventBus(context).getInstance();
+    const urlUtils = URLUtils(context).getInstance();
+    const parser = config.parser;
+
+    let instance,
+        xhrLoader,
+        xlinkController;
+
+    function setup() {
+        eventBus.on(Events.XLINK_READY, onXlinkReady, instance);
+
+        xhrLoader = XHRLoader(context).create({
+            errHandler: config.errHandler,
+            metricsModel: config.metricsModel,
+            requestModifier: config.requestModifier
+        });
+
+        xlinkController = XlinkController(context).create({
+            errHandler: config.errHandler,
+            metricsModel: config.metricsModel,
+            requestModifier: config.requestModifier
+        });
+    }
+
+    function onXlinkReady(event) {
+        eventBus.trigger(
+            Events.INTERNAL_MANIFEST_LOADED, {
+                manifest: event.manifest
             }
+        );
+    }
 
-            return base;
-        },
+    function load (url) {
+        const request = new TextRequest(url, HTTPRequest.MPD_TYPE);
 
-        doLoad = function (url, remainingAttempts) {
-            var baseUrl = parseBaseUrl(url),
-                request = new XMLHttpRequest(),
-                requestTime = new Date(),
-                loadedTime = null,
-                needFailureReport = true,
-                manifest,
-                onload,
-                report,
-                self = this;
-
-
-            onload = function () {
-                if (request.status < 200 || request.status > 299)
-                {
-                  return;
-                }
-                needFailureReport = false;
-                loadedTime = new Date();
-
-                self.metricsModel.addHttpRequest("stream",
-                                                 null,
-                                                 "MPD",
-                                                 url,
-                                                 null,
-                                                 null,
-                                                 requestTime,
-                                                 loadedTime,
-                                                 null,
-                                                 request.status,
-                                                 null,
-                                                 null,
-                                                 request.getAllResponseHeaders());
+        xhrLoader.load({
+            request: request,
+            success: function (data, textStatus, xhr) {
+                var actualUrl;
+                var baseUri;
 
                 // Handle redirects for the MPD - as per RFC3986 Section 5.1.3
-                if (request.responseURL) {
-                    baseUrl = parseBaseUrl(request.responseURL);
-                    url = request.responseURL;
+                // also handily resolves relative MPD URLs to absolute
+                if (xhr.responseURL && xhr.responseURL !== url) {
+                    baseUri = urlUtils.parseBaseUrl(xhr.responseURL);
+                    actualUrl = xhr.responseURL;
+                } else {
+                    // usually this case will be caught and resolved by
+                    // xhr.responseURL above but it is not available for IE11
+                    // baseUri must be absolute for BaseURL resolution later
+                    if (urlUtils.isRelative(url)) {
+                        url = urlUtils.parseBaseUrl(window.location.href) + url;
+                    }
+
+                    baseUri = urlUtils.parseBaseUrl(url);
                 }
 
-                manifest = self.parser.parse(request.responseText, baseUrl);
+                const manifest = parser.parse(data, xlinkController);
 
                 if (manifest) {
-                    manifest.url = url;
-                    manifest.loadedTime = loadedTime;
-                    self.metricsModel.addManifestUpdate("stream", manifest.type, requestTime, loadedTime, manifest.availabilityStartTime);
-                    self.xlinkController.resolveManifestOnLoad(manifest);
+                    manifest.url = actualUrl || url;
+
+                    // URL from which the MPD was originally retrieved (MPD updates will not change this value)
+                    if (!manifest.originalUrl) {
+                        manifest.originalUrl = manifest.url;
+                    }
+
+                    manifest.baseUri = baseUri;
+                    manifest.loadedTime = new Date();
+                    xlinkController.resolveManifestOnLoad(manifest);
                 } else {
-                    self.notify(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, {manifest: null}, new MediaPlayer.vo.Error(null, "Failed loading manifest: " + url, null));
+                    eventBus.trigger(
+                        Events.INTERNAL_MANIFEST_LOADED, {
+                            manifest: null,
+                            error: new Error(
+                                MANIFEST_LOADER_ERROR_PARSING_FAILURE,
+                                MANIFEST_LOADER_MESSAGE_PARSING_FAILURE
+                            )
+                        }
+                    );
                 }
-            };
-
-            report = function () {
-                if (!needFailureReport)
-                {
-                  return;
-                }
-                needFailureReport = false;
-
-                self.metricsModel.addHttpRequest("stream",
-                                                 null,
-                                                 "MPD",
-                                                 url,
-                                                 null,
-                                                 null,
-                                                 requestTime,
-                                                 new Date(),
-                                                 request.status,
-                                                 null,
-                                                 null,
-                                                 request.getAllResponseHeaders());
-                if (remainingAttempts > 0) {
-                    self.log("Failed loading manifest: " + url + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
-                    remainingAttempts--;
-                    setTimeout(function() {
-                        doLoad.call(self, url, remainingAttempts);
-                    }, RETRY_INTERVAL);
-                } else {
-                    self.log("Failed loading manifest: " + url + " no retry attempts left");
-                    self.errHandler.downloadError("manifest", url, request);
-                    self.notify(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, null, new Error("Failed loading manifest: " + url + " no retry attempts left"));
-                }
-            };
-
-            try {
-                //this.log("Start loading manifest: " + url);
-                request.onload = onload;
-                request.onloadend = report;
-                request.onerror = report;
-                request.open("GET", self.requestModifierExt.modifyRequestURL(url), true);
-                request.send();
-            } catch(e) {
-                request.onerror();
+            },
+            error: function (xhr, statusText, errorText) {
+                eventBus.trigger(
+                    Events.INTERNAL_MANIFEST_LOADED, {
+                        manifest: null,
+                        error: new Error(
+                            MANIFEST_LOADER_ERROR_LOADING_FAILURE,
+                            `Failed loading manifest: ${url}, ${errorText}`
+                        )
+                    }
+                );
             }
-        },
-        onXlinkReady = function(event) {
-            this.notify(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, {manifest: event.data.manifest});
-        };
+        });
+    }
 
-    return {
-        log: undefined,
-        parser: undefined,
-        errHandler: undefined,
-        metricsModel: undefined,
-        requestModifierExt:undefined,
-        notify: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
-        xlinkController: undefined,
+    function reset() {
+        eventBus.off(Events.XLINK_READY, onXlinkReady, instance);
 
-        load: function(url) {
-            doLoad.call(this, url, RETRY_ATTEMPTS);
-        },
-        setup: function() {
-            onXlinkReady = onXlinkReady.bind(this);
-            this.xlinkController.subscribe(MediaPlayer.dependencies.XlinkController.eventList.ENAME_XLINK_READY,this,onXlinkReady);
+        if (xlinkController) {
+            xlinkController.reset();
+            xlinkController = null;
         }
+
+        if (xhrLoader) {
+            xhrLoader.abort();
+            xhrLoader = null;
+        }
+    }
+
+    instance = {
+        load: load,
+        reset: reset
     };
-};
 
-MediaPlayer.dependencies.ManifestLoader.prototype = {
-    constructor: MediaPlayer.dependencies.ManifestLoader
-};
+    setup();
 
-MediaPlayer.dependencies.ManifestLoader.eventList = {
-    ENAME_MANIFEST_LOADED: "manifestLoaded"
-};
+    return instance;
+}
+
+ManifestLoader.__dashjs_factory_name = 'ManifestLoader';
+
+const factory = FactoryMaker.getClassFactory(ManifestLoader);
+factory.MANIFEST_LOADER_ERROR_PARSING_FAILURE = MANIFEST_LOADER_ERROR_PARSING_FAILURE;
+factory.MANIFEST_LOADER_ERROR_LOADING_FAILURE = MANIFEST_LOADER_ERROR_LOADING_FAILURE;
+export default factory;

@@ -1,0 +1,166 @@
+import StreamInfo from '../../src/streaming/vo/StreamInfo';
+import MediaInfo from '../../src/streaming/vo/MediaInfo';
+import MpdHelper from './MPDHelper';
+import SpecHelper from './SpecHelper';
+import Representation from '../../src/dash/vo/Representation';
+import FragmentRequest from '../../src/streaming/vo/FragmentRequest';
+import {HTTPRequest} from '../../src/streaming/vo/metrics/HTTPRequest';
+
+class VoHelper {
+    constructor() {
+        this.mpdHelper = new MpdHelper();
+        this.specHelper = new SpecHelper();
+        this.voRep = undefined;
+        this.voAdaptation = undefined;
+        this.unixTime = this.specHelper.getUnixTime();
+        this.adaptation = undefined;
+        this.defaultMpdType = 'static';
+    }
+
+    createMpd(type) {
+        var mpd = {};
+
+        mpd.manifest = this.mpdHelper.getMpd(type || this.defaultMpdType);
+        mpd.suggestedPresentationDelay = 0;
+        mpd.availabilityStartTime = this.unixTime;
+        mpd.availabilityEndTime = Number.POSITIVE_INFINITY;
+        mpd.timeShiftBufferDepth = 50;
+        mpd.maxSegmentDuration = 1;
+        mpd.checkTime = 10;
+
+        return mpd;
+    }
+
+    createPeriod() {
+        var period = {};
+
+        period.mpd = this.createMpd();
+        period.start = 0;
+
+        period.id = 'id1';
+        period.index = 0;
+        period.duration = 100;
+        period.liveEdge = 50;
+        period.isClientServerTimeSyncCompleted = false;
+        period.clientServerTimeShift = 0;
+
+        return period;
+    }
+
+    createAdaptation(type) {
+        var adaptation = {};
+        adaptation.period = this.createPeriod();
+        adaptation.index = 0;
+        adaptation.type = type;
+
+        return adaptation;
+    }
+
+    createRepresentation(type) {
+        var rep = new Representation();
+
+        rep.id = null;
+        rep.index = 0;
+        rep.adaptation = this.createAdaptation(type);
+        rep.fragmentInfoType = null;
+        rep.initialization = 'http://dash.edgesuite.net/envivio/dashpr/clear/video4/Header.m4s';
+        rep.segmentDuration = 1;
+        rep.timescale = 1;
+        rep.startNumber = 1;
+        rep.indexRange = null;
+        rep.range = null;
+        rep.presentationTimeOffset = 10;
+        // Set the source buffer timeOffset to this
+        rep.MSETimeOffset = NaN;
+        rep.segmentAvailabilityRange = null;
+        rep.availableSegmentsNumber = 0;
+
+        return rep;
+    }
+
+    createRequest(type) {
+        var req = {};
+        req.action = FragmentRequest.ACTION_DOWNLOAD;
+        req.quality = 0;
+        req.mediaType = 'video';
+        req.type = type;
+        req.url = 'http://dash.edgesuite.net/envivio/dashpr/clear/video4/Header.m4s';
+        req.startTime = NaN;
+        req.duration = NaN;
+
+        if (type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
+            req.url = 'http://dash.edgesuite.net/envivio/dashpr/clear/video4/0.m4s';
+            req.startTime = 0;
+            req.duration = 4;
+            req.index = 0;
+        } else if (type === FragmentRequest.ACTION_COMPLETE) {
+            req.action = type;
+            req.url = undefined;
+            req.quality = NaN;
+        }
+
+        return req;
+    }
+
+    getDummyRepresentation(type) {
+        return this.voRep || this.createRepresentation(type);
+    }
+
+    getDummyMpd(type) {
+        return this.createMpd(type);
+    }
+
+    getDummyPeriod() {
+        return this.createPeriod();
+    }
+
+    getMediaRequest() {
+        return this.createRequest(HTTPRequest.MEDIA_SEGMENT_TYPE);
+    }
+
+    getInitRequest() {
+        return this.createRequest(HTTPRequest.INIT_SEGMENT_TYPE);
+    }
+
+    getCompleteRequest() {
+        return this.createRequest(FragmentRequest.ACTION_COMPLETE);
+    }
+
+    getDummyStreamInfo() {
+        const streamInfo = new StreamInfo();
+
+        streamInfo.id = 'DUMMY_STREAM-01';
+
+        return streamInfo;
+    }
+
+    getDummyMediaInfo(type) {
+        const mediaInfo = new MediaInfo();
+
+        mediaInfo.id = 'DUMMY_MEDIA-01';
+        mediaInfo.type = type;
+        mediaInfo.bitrateList = [
+            {
+                bandwidth: 1000,
+                width: 480,
+                height: 360
+            },
+            {
+                bandwidth: 2000,
+                width: 640,
+                height: 480
+            },
+            {
+                bandwidth: 3000,
+                width: 1280,
+                height: 720
+            }
+        ];
+        mediaInfo.representationCount = 3;
+        mediaInfo.streamInfo = this.getDummyStreamInfo();
+
+        return mediaInfo;
+    }
+}
+
+export default VoHelper;

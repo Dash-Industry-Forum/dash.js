@@ -28,41 +28,36 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.models.ManifestModel = function () {
-    "use strict";
+import EventBus from '../../core/EventBus';
+import Events from '../../core/events/Events';
+import FactoryMaker from '../../core/FactoryMaker';
 
-    var manifest;
+function ManifestModel() {
 
-    return {
-        system: undefined,
-        eventBus: undefined,
-        notify: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
+    let context = this.context;
+    let eventBus = EventBus(context).getInstance();
 
-        getValue:  function () {
-            return manifest;
-        },
+    let instance,
+        manifest;
 
-        setValue: function (value) {
-            manifest = value;
+    function getValue() {
+        return manifest;
+    }
 
-            this.eventBus.dispatchEvent({
-                type: MediaPlayer.events.MANIFEST_LOADED,
-                data: value
-            });
-
-            this.notify(MediaPlayer.models.ManifestModel.eventList.ENAME_MANIFEST_UPDATED, {manifest: value});
+    function setValue(value) {
+        manifest = value;
+        if (value) {
+            eventBus.trigger(Events.MANIFEST_LOADED,  {data: value});
         }
+    }
+
+    instance = {
+        getValue: getValue,
+        setValue: setValue
     };
-};
 
-MediaPlayer.models.ManifestModel.prototype = {
-    constructor: MediaPlayer.models.ManifestModel
-};
+    return instance;
+}
 
-MediaPlayer.models.ManifestModel.eventList = {
-    ENAME_MANIFEST_UPDATED: "manifestUpdated"
-};
-
-
+ManifestModel.__dashjs_factory_name = 'ManifestModel';
+export default FactoryMaker.getSingletonFactory(ManifestModel);

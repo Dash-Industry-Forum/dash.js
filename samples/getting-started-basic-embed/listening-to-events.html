@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Events example</title>
+
+    <script src="../../dist/dash.all.debug.js"></script>
+    <!--dash.all.min.js should be used in production over dash.all.debug.js
+        Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
+    <!--<script src="../../dist/dash.all.min.js"></script>-->
+
+    <script>
+        var player,firstLoad = true;
+
+        function init() {
+            player = dashjs.MediaPlayer().create();
+            player.getDebug().setLogToBrowserConsole(false);
+        }
+
+        function showEvent(e)
+        {
+            log("EVENT RECEIVED: " + e.type);
+            // We double process in order to pretty-print. Only two levels of object properties are exposed.
+            for (var name in e)
+            {
+
+                if (typeof e[name] != 'object') {
+                    log("    " + name + ": " + e[name]);
+                }
+            }
+            for (name in e)
+            {
+                if (typeof e[name] == 'object' )
+                {
+                    log("    " + name + ":");
+                    for (name2 in e[name])
+                    {
+                        log("        " + name2 + ": " + JSON.stringify(e[name][name2]));
+                    }
+                }
+            }
+        }
+
+
+        function log(msg) {
+            msg = msg.length > 90 ? msg.substring(0, 90) + "..." : msg; // to avoid wrapping with large objects
+            var tracePanel = document.getElementById("trace");
+            tracePanel.innerHTML += msg + "\n";
+            tracePanel.scrollTop = tracePanel.scrollHeight;
+            console.log(msg);
+        }
+
+        function setListener(eventName)
+        {
+            player.on(dashjs.MediaPlayer.events[eventName],showEvent);
+            var element = document.createElement("input");
+            element.type = "button";
+            element.id = eventName;
+            element.value = "Remove " + eventName;
+            element.onclick = function() {
+                player.off(dashjs.MediaPlayer.events[eventName],showEvent);
+                document.getElementById("eventHolder").removeChild(element);
+            };
+            document.getElementById("eventHolder").appendChild(element);
+        }
+
+        function load(button)
+        {
+            // Add your own URL in here if you wish to epxlore events with other content.
+            var url = "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-events.mpd";
+
+            if (!firstLoad)
+            {
+                player.attachSource(url);
+            }
+            else
+            {
+                firstLoad = false;
+                button.value = "RELOAD PLAYER";
+                player.initialize(document.querySelector("video"), url, true);
+            }
+            document.getElementById("trace").innerHTML = "";
+        }
+    </script>
+
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+        }
+        textarea {
+            width: 500px;
+            height:360px;
+            font-size: 10px;
+        }
+        input, select {
+            background-color: orange;
+        }
+    </style>
+
+    <body onload="init()">
+        <div>
+        This sample allows you to explore the various external events that are accessible from MediaPlayer. Events can be dynamically added and removed. <br/>
+        Choose the events you would like to monitor before starting playback:
+        <select id="availableEvents" onChange="setListener(this.options[this.selectedIndex].text)">
+            <option selected disabled>Select an event ..</option>
+            <option>BUFFER_EMPTY</option>
+            <option>BUFFER_LOADED</option>
+            <option>CAN_PLAY</option>
+            <option>ERROR</option>
+            <option>LOG</option>
+            <option>MANIFEST_LOADED</option>
+            <option>METRIC_ADDED</option>
+            <option>METRIC_CHANGED</option>
+            <option>METRIC_UPDATED</option>
+            <option>METRICS_CHANGED</option>
+            <option>PERIOD_SWITCH_COMPLETED</option>
+            <option>PERIOD_SWITCH_STARTED</option>
+            <option>PLAYBACK_ENDED</option>
+            <option>PLAYBACK_ERROR</option>
+            <option>PLAYBACK_METADATA_LOADED</option>
+            <option>PLAYBACK_PAUSED</option>
+            <option>PLAYBACK_PLAYING</option>
+            <option>PLAYBACK_PROGRESS</option>
+            <option>PLAYBACK_RATE_CHANGED</option>
+            <option>PLAYBACK_SEEKED</option>
+            <option>PLAYBACK_SEEKING</option>
+            <option>PLAYBACK_STARTED</option>
+            <option>PLAYBACK_TIME_UPDATED</option>
+            <option>STREAM_INITIALIZED</option>
+            <option>TEXT_TRACK_ADDED</option>
+            <option>TEXT_TRACKS_ADDED</option>
+        </select>
+        <p/>
+            <input type="button" value="LOAD PLAYER" onclick="load(this)"/>
+        </div>
+
+        <div>
+            <video controls="true">
+            </video>
+            <textarea id="trace" placeholder="Trapped events will be displayed here"></textarea>
+            <p/>
+            <span id="eventHolder">Events actively being listened to are shown below. Remove the listener by clicking on the event button.<br/></span>
+        </div>
+    </body>
+</html>

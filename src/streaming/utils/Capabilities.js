@@ -28,24 +28,23 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.utils.Capabilities = function () {
-    "use strict";
-};
+import FactoryMaker from '../../core/FactoryMaker';
 
+function Capabilities() {
 
-MediaPlayer.utils.Capabilities.prototype = {
-    constructor: MediaPlayer.utils.Capabilities,
-    system: undefined,
-    log: undefined,
+    let instance,
+        encryptedMediaSupported;
 
-    supportsMediaSource: function () {
-        "use strict";
+    function setup() {
+        encryptedMediaSupported = false;
+    }
 
-        var hasWebKit = ("WebKitMediaSource" in window),
-            hasMediaSource = ("MediaSource" in window);
+    function supportsMediaSource() {
+        let hasWebKit = ('WebKitMediaSource' in window);
+        let hasMediaSource = ('MediaSource' in window);
 
         return (hasWebKit || hasMediaSource);
-    },
+    }
 
     /**
      * Returns whether Encrypted Media Extensions are supported on this
@@ -53,20 +52,29 @@ MediaPlayer.utils.Capabilities.prototype = {
      *
      * @return {boolean} true if EME is supported, false otherwise
      */
-    supportsEncryptedMedia: function () {
-        return this.system.hasMapping('protectionModel');
-    },
-
-    supportsCodec: function (element, codec) {
-        "use strict";
-
-        if (!(element instanceof HTMLMediaElement)) {
-            throw "element must be of type HTMLMediaElement.";
-        }
-
-        var canPlay = element.canPlayType(codec);
-        return (canPlay === "probably" || canPlay === "maybe");
+    function supportsEncryptedMedia() {
+        return encryptedMediaSupported;
     }
 
+    function setEncryptedMediaSupported(value) {
+        encryptedMediaSupported = value;
+    }
 
-};
+    function supportsCodec(element, codec) {
+        var canPlay = element.canPlayType(codec);
+        return (canPlay === 'probably' || canPlay === 'maybe');
+    }
+
+    instance = {
+        supportsMediaSource: supportsMediaSource,
+        supportsEncryptedMedia: supportsEncryptedMedia,
+        supportsCodec: supportsCodec,
+        setEncryptedMediaSupported: setEncryptedMediaSupported
+    };
+
+    setup();
+
+    return instance;
+}
+Capabilities.__dashjs_factory_name = 'Capabilities';
+export default FactoryMaker.getSingletonFactory(Capabilities);

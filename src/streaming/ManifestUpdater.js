@@ -28,137 +28,155 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.ManifestUpdater = function () {
-    "use strict";
+import EventBus from '../core/EventBus';
+import Events from '../core/events/Events';
+import FactoryMaker from '../core/FactoryMaker';
+import Debug from '../core/Debug';
 
-    var refreshDelay = NaN,
-        refreshTimer = null,
-        isStopped = true,
-        isUpdating = false,
+function ManifestUpdater() {
+
+    let context = this.context;
+    let log = Debug(context).getInstance().log;
+    let eventBus = EventBus(context).getInstance();
+
+    let instance,
+        refreshDelay,
+        refreshTimer,
+        isStopped,
+        isUpdating,
         manifestLoader,
+        manifestModel,
+        dashManifestModel;
 
-        clear = function () {
-            if (refreshTimer !== null) {
-                clearInterval(refreshTimer);
-                refreshTimer = null;
-            }
-        },
+    function setConfig(config) {
+        if (!config) return;
 
-        start = function () {
-            clear.call(this);
-
-            if (!isNaN(refreshDelay)) {
-                this.log("Refresh manifest in " + refreshDelay + " seconds.");
-                refreshTimer = setTimeout(onRefreshTimer.bind(this), Math.min(refreshDelay * 1000, Math.pow(2, 31) - 1), this);
-            }
-        },
-
-        update = function (manifest) {
-
-            var delay,
-                timeSinceLastUpdate;
-
-            this.manifestModel.setValue(manifest);
-            this.log("Manifest has been refreshed.");
-
-            delay = this.manifestExt.getRefreshDelay(manifest);
-            timeSinceLastUpdate = (new Date().getTime() - manifest.loadedTime.getTime()) / 1000;
-            refreshDelay = Math.max(delay - timeSinceLastUpdate, 0);
-
-            this.notify(MediaPlayer.dependencies.ManifestUpdater.eventList.ENAME_MANIFEST_UPDATED, {manifest:manifest});
-
-            if (!isStopped) {
-                start.call(this);
-            }
-        },
-
-        onRefreshTimer = function () {
-            var self = this,
-                manifest,
-                url;
-
-            if (isStopped || isUpdating) return;
-
-            isUpdating = true;
-            manifest = self.manifestModel.getValue();
-            url = manifest.url;
-
-            if (manifest.hasOwnProperty("Location")) {
-                url = manifest.Location;
-            }
-
-            //self.log("Refresh manifest @ " + url);
-
-            manifestLoader.load(url);
-        },
-
-        onManifestLoaded = function(e) {
-            if (!e.error) {
-                update.call(this, e.data.manifest);
-            }
-        },
-
-        onPlaybackStarted = function(/*e*/) {
-            isStopped = false;
-            start.call(this);
-        },
-
-        onPlaybackPaused = function(/*e*/) {
-            isStopped = true;
-            clear.call(this);
-        },
-
-        onStreamsComposed = function(/*e*/) {
-            // When streams are ready we can consider manifest update completed. Resolve the update promise.
-            isUpdating = false;
-        };
-
-    return {
-        log: undefined,
-        system: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
-        notify: undefined,
-        manifestModel: undefined,
-        manifestExt: undefined,
-
-        setup: function () {
-            // Listen to streamsComposed event to be aware that the streams have been composed
-            this[MediaPlayer.dependencies.StreamController.eventList.ENAME_STREAMS_COMPOSED] = onStreamsComposed;
-            this[MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED] = onManifestLoaded;
-            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_STARTED] = onPlaybackStarted;
-            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PAUSED] = onPlaybackPaused;
-        },
-
-        initialize: function (loader) {
-            isUpdating = false;
-            isStopped = true;
-            manifestLoader = loader;
-            manifestLoader.subscribe(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, this);
-        },
-
-        setManifest: function (m) {
-            update.call(this, m);
-        },
-
-        getManifestLoader: function () {
-            return manifestLoader;
-        },
-
-        reset: function() {
-            isStopped = true;
-            isUpdating = false;
-            clear.call(this);
-            manifestLoader.unsubscribe(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, this);
-            refreshDelay = NaN;
+        if (config.manifestModel) {
+            manifestModel = config.manifestModel;
         }
+        if (config.dashManifestModel) {
+            dashManifestModel = config.dashManifestModel;
+        }
+    }
+
+    function initialize(loader) {
+        manifestLoader = loader;
+        refreshDelay = NaN;
+        refreshTimer = null;
+        isUpdating = false;
+        isStopped = true;
+
+        eventBus.on(Events.STREAMS_COMPOSED, onStreamsComposed, this);
+        eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
+        eventBus.on(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
+        eventBus.on(Events.INTERNAL_MANIFEST_LOADED, onManifestLoaded, this);
+    }
+
+    function setManifest(manifest) {
+        update(manifest);
+    }
+
+    function getManifestLoader() {
+        return manifestLoader;
+    }
+
+    function reset() {
+        eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
+        eventBus.off(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
+        eventBus.off(Events.STREAMS_COMPOSED, onStreamsComposed, this);
+        eventBus.off(Events.INTERNAL_MANIFEST_LOADED, onManifestLoaded, this);
+
+        isStopped = true;
+        isUpdating = false;
+        clear();
+        refreshDelay = NaN;
+    }
+
+    function clear() {
+        if (refreshTimer !== null) {
+            clearInterval(refreshTimer);
+            refreshTimer = null;
+        }
+    }
+
+    function startManifestRefreshTimer() {
+        clear();
+        if (!isNaN(refreshDelay)) {
+            log('Refresh manifest in ' + refreshDelay + ' seconds.');
+            refreshTimer = setTimeout(onRefreshTimer, Math.min(refreshDelay * 1000, Math.pow(2, 31) - 1), this);
+        }
+    }
+
+    function update(manifest) {
+        var delay,
+            timeSinceLastUpdate;
+
+        var date = new Date();
+
+        manifestModel.setValue(manifest);
+        log('Manifest has been refreshed at ' + date + '[' + date.getTime() / 1000 + '] ');
+
+        delay = dashManifestModel.getRefreshDelay(manifest);
+        timeSinceLastUpdate = (new Date().getTime() - manifest.loadedTime.getTime()) / 1000;
+        refreshDelay = Math.max(delay - timeSinceLastUpdate, 0);
+
+        eventBus.trigger(Events.MANIFEST_UPDATED, {manifest: manifest});
+
+        if (!isStopped) {
+            startManifestRefreshTimer();
+        }
+    }
+
+    function onRefreshTimer() {
+        var manifest,
+            url;
+
+        if (isStopped || isUpdating) return;
+
+        isUpdating = true;
+        manifest = manifestModel.getValue();
+        url = manifest.url;
+
+        const location = dashManifestModel.getLocation(manifest);
+        if (location) {
+            url = location;
+        }
+
+        //log("Refresh manifest @ " + url);
+
+        manifestLoader.load(url);
+    }
+
+    function onManifestLoaded(e) {
+        if (!e.error) {
+            update(e.manifest);
+        }
+    }
+
+    function onPlaybackStarted (/*e*/) {
+        isStopped = false;
+        startManifestRefreshTimer();
+    }
+
+    function onPlaybackPaused(/*e*/) {
+        isStopped = true;
+        clear();
+    }
+
+    function onStreamsComposed(/*e*/) {
+        // When streams are ready we can consider manifest update completed. Resolve the update promise.
+        isUpdating = false;
+    }
+
+    instance = {
+        initialize: initialize,
+        setManifest: setManifest,
+        getManifestLoader: getManifestLoader,
+        setConfig: setConfig,
+        reset: reset
     };
-};
 
-MediaPlayer.dependencies.ManifestUpdater.prototype = {
-    constructor: MediaPlayer.dependencies.ManifestUpdater
-};
-
-MediaPlayer.dependencies.ManifestUpdater.eventList = {
-    ENAME_MANIFEST_UPDATED: "manifestUpdated"
-};
+    return instance;
+}
+ManifestUpdater.__dashjs_factory_name = 'ManifestUpdater';
+export default FactoryMaker.getSingletonFactory(ManifestUpdater);

@@ -3,10 +3,180 @@
         {
             "title": "Known Issues",
             "items": [
-                "Erratic playback at higher bitrates.",
+                "Live Multiperiod is failing.",
+                "Seeking Multiperiod test stream on FireFox for Windows is not failing. Since 1.5.1",
                 "Streams using high profile codecs may not play properly.",
-                "Only streams with segmentAlignment='true' will work with abr.",
-		"Seek at start does not support multi-period content at this point."
+                "Only streams with segmentAlignment='true' will work with abr."
+            ]
+        },
+        {
+            "title": "Release Notes v2.2.0",
+            "items": [
+                "#382 Event for switch requested and switch complete."
+                ,"#1006 Player is not sending cookies if we attachSource."
+                ,"#1122 Faster switching by replacing segments close to the playhead."
+                ,"#1301 webm.js not compatible with current dash.js."
+                ,"#1361 Support for MPD Anchors (Partial in 2.2)."
+                ,"#1363 Improve handling of silent request failures."
+                ,"#1423 Add audio-only test vectors to reference player."
+                ,"#887 Live audio-only stream show incorrect time info."
+                ,"#1340 DASH-IF player cannot properly render ttml with multiple lines."
+                ,"#1353 ControlBar uses deprecated method on MediaPlayer API."
+                ,"#1362 Advertised DVR Window does not match available DVR Window."
+                ,"#1369 All segments from time zero are reloaded when switching track (Regression)."
+                ,"#1370 Download errors have no id (Regression)."
+                ,"#1372 Uncaught (in promise) DOMException: The play() request was interrupted by a call to pause()."
+                ,"#1375 Switching audio track on LIVE stream stops the playback."
+                ,"#1379 Fragment request URLs incorrect when using a SegmentList (Regression)."
+                ,"#1380 Partial fix for Suspicious-looking URL handling in XlinkController."
+                ,"#1393 IE11 API issue."
+                ,"#1406 Paused video keeps writing log lines about buffer pruning."
+                ,"#1409 Ondemand audio-only stream fails to play with dev reference player (Regression)."
+                ,"#1432 TTML Parser incorrectly scales root container region by cellResolution."
+                ,"#1437 Uncaught TypeError when quality is -1."
+                ,"#1457 Cannot play manifest with SegmentTimeline inside of SegmentList."
+                ,"#1461 Reference live stream fails to replay correctly in dev (Regression)."
+                ,"#1463 setScheduleWhilePaused default value documentation incorrect."
+                ,"#521  properly support path-absolute BaseURLs (Regression)."
+            ]
+        },
+        {
+            "title": "Release Notes v2.1.1",
+            "items": [
+                "This release is a patch release of 2.1.0, which had a major startup issue for some streams on all browsers.",
+                "#1338 Only seek forward on PST check"
+            ]
+        },
+        {
+            "title": "Release Notes v2.1.0",
+            "items": [
+                "#1048 Refactor Loader Classes into LoaderBase Code Refactor"
+                ,"#992 Add support for segmented WebVTT subtitles"
+                ,"#571 Support for the <baseURL> tag Feature Enhancment"
+                ,"#1089 Live stream delay under Firefox ignores setLiveDelayFragmentCount value Bug"
+                ,"#900 setMaxAllowedBitrateFor can take a long time/never apply if not done before startup Bug Investigate"
+                ,"#866 btoa and atob declarations break native browser implementations for other libraries Bug Pri-Critical"
+                ,"#841 Wrong index returned for AbrController.getQualityForBitrate Bug Pri-Critical"
+                ,"#1314 [Updated] Always use computeLiveDelay to get bound logic. ATSC logic for postponement needs to be updated"
+                ,"#1298 IE only: Ended doesn't seem to fire Bug Investigate"
+                ,"#1290 Glitches since 2.0.0 Bug Pri-Critical"
+                ,"#1275 Non 0 PST for SegmentTimeline VOD will fail Bug"
+                ,"#1261 No seeked events when seek to unbeffered position on pause Feature Request question"
+                ,"#1257 MediaPlayerEvents.BUFFER_EMPTY not triggering Bug Investigate"
+                ,"#1243 Nightly build no longer works Automation"
+                ,"#1219 Remove Console.log and use internal log Debug.js class. Code Refactor Pri-High"
+                ,"#1218 Seek back to 0 may cause stream failure Bug Pri-High"
+                ,"#1217 s fragment arg is failing. Bug Pri-High"
+                ,"#1212 Presentation duration is shown as 00:00:00 Bug Investigate"
+                ,"#1207 Remove complexity of calling rulecontroller for scheduling. Code Refactor"
+                ,"#1203 validate loop in schedule controller never stops if scheduleWhilePaused is true Bug"
+                ,"#1198 Firefox stops after 2 minutes of play"
+                ,"#1174 Player hangs in MSEdge Investigate"
+                ,"#1172 MediaPlayer#setTextTrack() call resumes player when paused Bug"
+                ,"#1166 Dash 2.0 sometimes fails to replay Bug Investigate"
+                ,"#1164 Subtitles requiring .attachTTMLRenderingDiv(TTMLRenderingDiv) fail in Firefox"
+                ,"#1154 Remove getVideoModel and add API for the two calls that should be public Code Refactor"
+                ,"#1153 resetAndIntializePlayback method not robust after a failed playback Bug"
+                ,"#1141 [RC2_v2.0.0] Inconsistent behavior with SegmentTimeline live stream Bug"
+                ,"#1130 Cannot read property 'pause' of null (playbackController) Bug"
+                ,"#1100 Updates for ATSC-DASH type of content (2nd)"
+                ,"#1331 Prevent low values attempting to use representation -1"
+                ,"#1316 Adding new live delay sample"
+            ]
+        },
+        {
+            "title": "Release Notes v2.0.0",
+            "items": [
+                "Converted to ECMAScript 6"
+                ,"Removed SameTimeRequestRule and PendingRequestRule"
+                ,"Simplified the scheduling and buffering logic."
+                ,"Added many new API calls."
+                ,"Externalized Protection. "
+                ,"See the migration document https://github.com/Dash-Industry-Forum/dash.js/wiki/Migration-2.0 for more information."
+                ,"#1115 DOMStoarge Last Bitrate Broken"
+                ,"#1110  BufferTarget is not correct with regards to live delay and live streams"
+                ,"#1104 Fix utf-8 encode fragment text"
+                ,"#1094 SegmentTimeline does not always autoStart properly in Chrome"
+                ,"#1056 Live segmenttemplate streams failing on Chrome/FF/E with 2.0"
+                ,"#1054 Multiple calls to EventController.start without EventController.reset/.clear causes uncaught TypeError"
+                ,"#1045 Live simulator with SegmentTimeline doesn't start to play in 2.0"
+                ,"#1040 Time Text fails to add track in Firefox"
+                ,"#1037 dash.js player fails to load mpd after DOMStorage is supported, but cannot be used warning"
+                ,"#1027 Playing when autoplay is false does not work"
+                ,"#1022 Rename classes with Extensions in name"
+                ,"#1019 Refactor MediaElement Controls VideoModel -> PlaybackController"
+                ,"#1018 Preview while seeking in a paused state."
+                ,"#1014 Fix intermittently failing unit test"
+                ,"#1001 Add JSDocs to new API in 2.0 Documentation"
+                ,"#1000 Stream fails when live delay is set to 0 or 1 fragment with 2 second segments"
+                ,"#984 Exception when resuming fragmentedText rendering"
+                ,"#976 Several pieces of content fail to play under Firefox for various reasons"
+                ,"#974 reset() has weird behavior"
+                ,"#927 detachMediaSource causes misleading MEDIA_ERR_SRC_NOT_SUPPORTED error"
+                ,"#973 Some API methods don't work before play"
+            ]
+        },
+        {
+            "title": "Release Notes v1.5.1",
+            "items": [
+                "HTTPS Delivery Support",
+                "Fixes for closed captions",
+                "Fixes for full screen mode",
+                "Fixes for 'Load video at time' feature",
+                "Other minor fixes",
+                "Debugging - trace out framework version and date/time of execution (Enhancement)"                
+            ]
+        },
+        {
+            "title": "Release Notes v1.5.0",
+            "items": [
+                "Fully Integrated Box Parser (For extracting items like EMSG)",
+                "Multiple Video Adaptation Support",
+                "Multiple Audio Adaptation Support",
+                "Multiple Text Adaptation Support",
+                "Richly styled TTML subtitling (almost complete EBU-TT-D)",
+                "Support for Safari and Firefox",
+                "Multiperiod DRM/EME Protection",
+                "Buffer Pruning/Seeking (Enhancement)",
+                "HTTP Metric Improvements",
+                "DRM/EME JSDocs (Enhancement)",
+                "Improved support for app-specific DRM license servers",
+                "Fixes for Multiperiod",
+                "Fixes for xLink onload",
+                "Fixes for TextTrack",
+                "Fixes for Cross Browser",
+                "Fixes for Scheduling",
+                "Fixes for Live edge detection.",
+                "Fixes for HTTPS Timeserver calls",
+                "Fixes for DRM/EME"
+            ]
+        },
+		{
+            "title": "Release Notes v1.4.0",
+            "items": [
+                "Multiperiod re-design",
+                "Enhanced xlink support for xlink onLoad",
+                "DRM support and improvements with key prefetching API.",
+                "Optimize Starting bit rate selection including",
+                "starting index API",
+                "starting bitrate API",
+                "maxBitrateAllowed API",
+                "Last known Bitrate cached with TTL for starting bitrate",
+                "Defaults down to starting at bitrate <= 1 mbps",
+                "Live edge detection enhancements (current order of fallback)",
+                "UTC Manifest attribute detection",
+                "Segment Timeline Advertised Frag ID",
+                "Default NTP time server with API to add and remove more.",
+                "DateHeader lookup",
+                "Default back to live edge binary search.",
+                "Fragment Abandonment ABR rule (Abandon download and switch).",
+                "Scheduling API to set number of allowed parallel request.",
+                "WebVTT caption style support",
+                "Header License Consistency",
+                "Author File Added",
+                "Node compliance",
+                "JSDoc enhancements",
+                "Various bug fixes"
             ]
         },
         {

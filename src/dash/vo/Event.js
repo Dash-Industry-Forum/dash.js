@@ -28,17 +28,19 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-Dash.vo.Event = function () {
-    "use strict";
-    this.duration = NaN;
-    this.presentationTime = NaN;
-    this.id = NaN;
-    this.messageData = "";
-    this.eventStream = null;
-    this.presentationTimeDelta = NaN; // Specific EMSG Box parameter
+/**
+ * @class
+ * @ignore
+ */
+class Event {
+    constructor() {
+        this.duration = NaN;
+        this.presentationTime = NaN;
+        this.id = NaN;
+        this.messageData = '';
+        this.eventStream = null;
+        this.presentationTimeDelta = NaN; // Specific EMSG Box parameter
+    }
+}
 
-};
-
-Dash.vo.Event.prototype = {
-    constructor: Dash.vo.Event
-};
+export default Event;
