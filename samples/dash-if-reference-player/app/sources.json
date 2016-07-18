@@ -69,6 +69,16 @@
                     "url":"http://irtdashreference-i.akamaihd.net/dash/live/901161/bfs/manifestARD.mpd",
                     "name":"IRT reference with EBU-TT-D subtitles",
                     "browsers":"cdsbi"
+                },
+                {
+                    "url":" http://vm2.dashif.org/livesim-dev/ato_10/testpic_2s/Manifest.mpd",
+                    "name":"10 seconds availabilityTimeOffset (livesim)",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "url":"http://vm2.dashif.org/livesim-dev/ato_inf/testpic_2s/Manifest.mpd",
+                    "name":"Infinite offset - all segments available at availability start (livesim)",
+                    "browsers":"cdsbi"
                 }
             ]
         },
