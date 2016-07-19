@@ -206,7 +206,7 @@ module.exports = function (grunt) {
                 options: {
                     mask: '*.js',
                     coverageFolder: './reports',
-                    mochaOptions: ['--compilers', 'js:babel/register'],
+                    mochaOptions: ['--require', 'mochahook'],
                     print: 'summary',
                     root: './src'
                 }
