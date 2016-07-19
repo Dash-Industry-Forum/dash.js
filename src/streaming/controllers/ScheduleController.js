@@ -88,14 +88,11 @@ function ScheduleController(config) {
         bufferLevelRule,
         nextFragmentRequestRule,
         scheduleWhilePaused,
-        initialQualityChange,
-        qualityChangeInProgress,
-        renderTimeCheckInterval;
+        lastQualityIndex;
 
     function setup() {
-        qualityChangeInProgress = false;
         initialPlayback = true;
-        initialQualityChange = true;
+        lastQualityIndex = NaN;
         isStopped = false;
         playListMetrics = null;
         playListTraceMetrics = null;
@@ -153,6 +150,7 @@ function ScheduleController(config) {
         eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
         eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
         eventBus.on(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
+        eventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
         eventBus.on(Events.URL_RESOLUTION_FAILED, onURLResolutionFailed, this);
     }
 
@@ -219,7 +217,10 @@ function ScheduleController(config) {
 
             const request = reqArr[i];
             const time = request.startTime + (request.duration / 2) + EPSILON;
-            const requestForTime = adapter.getFragmentRequestForTime(streamProcessor, currentRepresentationInfo, time, {timeThreshold: 0, ignoreIsFinished: true});
+            const requestForTime = adapter.getFragmentRequestForTime(streamProcessor, currentRepresentationInfo, time, {
+                timeThreshold: 0,
+                ignoreIsFinished: true
+            });
 
             if (requestForTime) {
                 isFragmentLoading = true;
@@ -234,28 +235,29 @@ function ScheduleController(config) {
 
         if (mediaPlayerModel.getFastSwitchEnabled() &&
             bufferController.getBufferLevel() > (currentRepresentationInfo.fragmentDuration * 1.5) &&
-            abrController.getAbandonmentStateFor(type) !== AbrController.ABANDON_LOAD ) {
+            abrController.getAbandonmentStateFor(type) !== AbrController.ABANDON_LOAD) {
 
-            let time = playbackController.getTime() + (currentRepresentationInfo.fragmentDuration * 1.5);
-            let request = fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED, time: time, threshold: 0})[0];
+            const time = playbackController.getTime() + (currentRepresentationInfo.fragmentDuration * 1.5);
+            const request = fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED, time: time, threshold: 0})[0];
 
-            if (request && request.quality < currentRepresentationInfo.quality &&
-                !isFragmentLoading && !bufferController.getIsAppendingInProgress() &&
-                !dashManifestModel.getIsTextTrack(type)) {
+            if (request && !isFragmentLoading && !bufferController.getIsAppendingInProgress() && !dashManifestModel.getIsTextTrack(type)) {
 
-                replaceRequests([request]);
-                log('Reloading index:',request.index,'at a higher quality - (',request.quality,')');
+                if (request.quality < currentRepresentationInfo.quality) {
+                    replaceRequests([request]);
+                    log('Reloading fragment -', request.index, 'at a higher quality - (old quality:', request.quality, ' new quality:', currentRepresentationInfo.quality, ')');
+                } else if (request.quality > currentRepresentationInfo.quality ) {
+                    setSeekTarget(playbackController.getTime() + bufferController.getBufferLevel());
+                }
             }
         }
 
-        let readyToLoad = bufferLevelRule.execute(streamProcessor, streamController.isVideoTrackPresent());
+        const readyToLoad = bufferLevelRule.execute(streamProcessor, streamController.isVideoTrackPresent());
         if (readyToLoad && !isFragmentLoading &&
-            (dashManifestModel.getIsTextTrack(type) || !bufferController.getIsAppendingInProgress()) ) {
-
+            (dashManifestModel.getIsTextTrack(type) || !bufferController.getIsAppendingInProgress())) {
             const getNextFragment = function () {
-                let request = nextFragmentRequestRule.execute(streamProcessor);
+                const request = nextFragmentRequestRule.execute(streamProcessor);
                 if (request) {
-                    //if (type === 'video') log('XXX new load', request.index);
+                    //log('new load inside', request.index);
                     fragmentModel.executeRequest(request);
                 } else {
                     isFragmentLoading = false;
@@ -264,7 +266,7 @@ function ScheduleController(config) {
             };
 
             isFragmentLoading = true;
-            abrController.getPlaybackQuality(streamProcessor,  getNextFragment); //Run ABR rules - let it callback to getNextFragment once it is done running.
+            abrController.getPlaybackQuality(streamProcessor, getNextFragment); //Run ABR rules - let it callback to getNextFragment once it is done running.
 
         } else {
             startValidateTimer(500);
@@ -278,19 +280,23 @@ function ScheduleController(config) {
     function onQualityChanged(e) {
         if (type !== e.mediaType || streamProcessor.getStreamInfo().id !== e.streamInfo.id) return;
         currentRepresentationInfo = streamProcessor.getRepresentationInfoForQuality(e.newQuality);
+
         if (currentRepresentationInfo === null || currentRepresentationInfo === undefined) {
             throw new Error('Unexpected error! - currentRepresentationInfo is null or undefined');
         }
 
-        if (!initialQualityChange) { //blocks init quality change
-            qualityChangeInProgress = true;
-            eventBus.trigger(Events.QUALITY_CHANGE_START, {mediaType: e.mediaType, newQuality: e.newQuality,  oldQuality: e.oldQuality, reason: e.reason});
-        } else {
-            initialQualityChange = false;
-        }
-
         clearPlayListTraceMetrics(new Date(), PlayListTrace.REPRESENTATION_SWITCH_STOP_REASON);
         addPlaylistTraceMetrics();
+    }
+
+    function completeQualityChange(trigger) {
+        const item = fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED, time: playbackController.getTime(), threshold: 0})[0];
+        if (item && playbackController.getTime() >= item.startTime ) {
+            if(item.quality !== lastQualityIndex && trigger) {
+                eventBus.trigger(Events.QUALITY_CHANGE_RENDERED, {mediaType: type, oldQuality: lastQualityIndex, newQuality: item.quality});
+            }
+            lastQualityIndex = item.quality;
+        }
     }
 
     function onDataUpdateCompleted(e) {
@@ -328,28 +334,13 @@ function ScheduleController(config) {
         }
     }
 
+    function onPlaybackTimeUpdated() {
+        completeQualityChange(true);
+    }
+
     function onBytesAppended(e) {
         if (e.sender.getStreamProcessor() !== streamProcessor) return;
         validate();
-
-        if (isNaN(renderTimeCheckInterval) && qualityChangeInProgress &&
-            !isNaN(e.startTime) && e.quality === currentRepresentationInfo.quality) {
-            renderTimeCheckInterval = setInterval(() => {
-                //log('renderTimeCheckInterval', playbackController.getTime(),  e.startTime);
-                if (playbackController.getTime() >= e.startTime) {
-                    completeRenderTimeCheck(true);
-                }
-            }, 500);
-        }
-    }
-
-    function completeRenderTimeCheck(dispatchEvent) {
-        clearInterval(renderTimeCheckInterval);
-        qualityChangeInProgress = false;
-        renderTimeCheckInterval = NaN;
-        if (dispatchEvent) {
-            eventBus.trigger(Events.QUALITY_CHANGE_COMPLETE, {mediaType: type});
-        }
     }
 
     function onDataUpdateStarted(e) {
@@ -372,7 +363,7 @@ function ScheduleController(config) {
         // the executed requests for which playback time is inside the time interval that has been removed from the buffer
         fragmentModel.removeExecutedRequestsBeforeTime(e.to);
 
-        if (e.hasEnoughSpaceToAppend && !bufferController.getIsBufferingCompleted()) {
+        if (e.hasEnoughSpaceToAppend && !bufferConseektroller.getIsBufferingCompleted()) {
             start();
         }
     }
@@ -420,9 +411,9 @@ function ScheduleController(config) {
         seekTarget = e.seekTime;
         setTimeToLoadDelay(0);
 
-        if (qualityChangeInProgress) {
-            completeRenderTimeCheck(true);
-        }
+
+
+
 
         if (!initialPlayback) {
             isFragmentLoading = false;
@@ -528,7 +519,7 @@ function ScheduleController(config) {
         stop();
         fragmentController.detachModel(fragmentModel);
         isFragmentLoading = false;
-        completeRenderTimeCheck(false);
+        completeQualityChange(false);
         timeToLoadDelay = 0;
         seekTarget = NaN;
         playbackController = null;

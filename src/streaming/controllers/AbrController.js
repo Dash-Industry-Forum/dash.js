@@ -99,6 +99,8 @@ function AbrController() {
         abandonmentStateDict[type] = abandonmentStateDict[type] || {};
         abandonmentStateDict[type].state = ALLOW_LOAD;
         eventBus.on(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
+
+
     }
 
     function setConfig(config) {
@@ -231,41 +233,32 @@ function AbrController() {
     }
 
     function getPlaybackQuality(streamProcessor, completedCallback) {
-        var type = streamProcessor.getType();
-        var streamInfo = streamProcessor.getStreamInfo();
-        var streamId = streamInfo.id;
-        var quality,
-            oldQuality,
-            rules,
-            confidence;
-        var callback = function (res) {
-            var topQualityIdx = getTopQualityIndexFor(type, streamId);
 
-            quality = res.value;
-            confidence = res.confidence;
+        const type = streamProcessor.getType();
+        const streamInfo = streamProcessor.getStreamInfo();
+        const streamId = streamInfo.id;
 
-            // be sure the quality valid!
-            if (quality < 0) {
-                quality = 0;
+        const callback = function (res) {
+
+            const topQualityIdx = getTopQualityIndexFor(type, streamId);
+
+            let newQuality = res.value;
+            if (newQuality < 0) {
+                newQuality = 0;
             }
-            // zero based
-            if (quality > topQualityIdx) {
-                quality = topQualityIdx;
+            if (newQuality > topQualityIdx) {
+                newQuality = topQualityIdx;
             }
 
-            oldQuality = getQualityFor(type, streamInfo);
-            if (quality !== oldQuality && (abandonmentStateDict[type].state === ALLOW_LOAD ||  quality > oldQuality)) {
-                setInternalQuality(type, streamId, quality);
-                setConfidenceFor(type, streamId, confidence);
-                eventBus.trigger(Events.QUALITY_CHANGED, {mediaType: type, streamInfo: streamProcessor.getStreamInfo(), oldQuality: oldQuality, newQuality: quality, reason: res.reason});
+            const oldQuality = getQualityFor(type, streamInfo);
+            if (newQuality !== oldQuality && (abandonmentStateDict[type].state === ALLOW_LOAD || newQuality > oldQuality)) {
+                setConfidenceFor(type, streamId, res.confidence);
+                changeQuality(type, streamInfo, oldQuality, newQuality, res.reason);
             }
             if (completedCallback) {
                 completedCallback();
             }
         };
-
-        quality = getQualityFor(type, streamInfo);
-        confidence = getConfidenceFor(type, streamId);
 
         //log("ABR enabled? (" + autoSwitchBitrate + ")");
         if (!getAutoSwitchBitrateFor(type)) {
@@ -273,26 +266,31 @@ function AbrController() {
                 completedCallback();
             }
         } else {
-            rules = abrRulesCollection.getRules(ABRRulesCollection.QUALITY_SWITCH_RULES);
-            rulesController.applyRules(rules, streamProcessor, callback, quality, function (currentValue, newValue) {
+            const rules = abrRulesCollection.getRules(ABRRulesCollection.QUALITY_SWITCH_RULES);
+            rulesController.applyRules(rules, streamProcessor, callback, getQualityFor(type, streamInfo), function (currentValue, newValue) {
                 currentValue = currentValue === SwitchRequest.NO_CHANGE ? 0 : currentValue;
                 return Math.max(currentValue, newValue);
             });
         }
     }
 
-    function setPlaybackQuality(type, streamInfo, newPlaybackQuality, reason) {
-        var id = streamInfo.id;
-        var quality = getQualityFor(type, streamInfo);
-        var isInt = newPlaybackQuality !== null && !isNaN(newPlaybackQuality) && (newPlaybackQuality % 1 === 0);
+    function setPlaybackQuality(type, streamInfo, newQuality, reason) {
+        const id = streamInfo.id;
+        const oldQuality = getQualityFor(type, streamInfo);
+        const isInt = newQuality !== null && !isNaN(newQuality) && (newQuality % 1 === 0);
 
         if (!isInt) throw new Error('argument is not an integer');
 
-        if (newPlaybackQuality !== quality && newPlaybackQuality >= 0 && newPlaybackQuality <= getTopQualityIndexFor(type, id)) {
-            setInternalQuality(type, id, newPlaybackQuality);
-            eventBus.trigger(Events.QUALITY_CHANGED, {mediaType: type, streamInfo: streamInfo, oldQuality: quality, newQuality: newPlaybackQuality, reason: reason});
+        if (newQuality !== oldQuality && newQuality >= 0 && newQuality <= getTopQualityIndexFor(type, id)) {
+            changeQuality(type, streamInfo, oldQuality, newQuality, reason);
         }
     }
+
+    function changeQuality(type, streamInfo, oldQuality, newQuality, reason) {
+        setQualityFor(type, streamInfo.id, newQuality);
+        eventBus.trigger(Events.QUALITY_CHANGED, {mediaType: type, streamInfo: streamInfo, oldQuality: oldQuality, newQuality: newQuality, reason: reason});
+    }
+
 
     function setAbandonmentStateFor(type, state) {
         abandonmentStateDict[type].state = state;
@@ -310,15 +308,14 @@ function AbrController() {
      */
     function getQualityForBitrate(mediaInfo, bitrate) {
 
-        let bitrateList = getBitrateList(mediaInfo);
-        let bitrateInfo;
+        const bitrateList = getBitrateList(mediaInfo);
 
         if (!bitrateList || bitrateList.length === 0) {
             return QUALITY_DEFAULT;
         }
 
         for (let i = bitrateList.length - 1; i >= 0; i--) {
-            bitrateInfo = bitrateList[i];
+            const bitrateInfo = bitrateList[i];
             if (bitrate * 1000 >= bitrateInfo.bitrate) {
                 return i;
             }
@@ -404,7 +401,7 @@ function AbrController() {
         return quality;
     }
 
-    function setInternalQuality(type, id, value) {
+    function setQualityFor(type, id, value) {
         qualityDict[id] = qualityDict[id] || {};
         qualityDict[id][type] = value;
     }

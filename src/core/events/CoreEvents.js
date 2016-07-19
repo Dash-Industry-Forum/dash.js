@@ -58,7 +58,6 @@ class CoreEvents extends EventsBase {
         this.LOADING_PROGRESS = 'loadingProgress';
         this.MANIFEST_UPDATED = 'manifestUpdated';
         this.MEDIA_FRAGMENT_LOADED = 'mediaFragmentLoaded';
-        this.QUALITY_CHANGED = 'qualityChanged';
         this.QUOTA_EXCEEDED = 'quotaExceeded';
         this.REPRESENTATION_UPDATED = 'representationUpdated';
         this.SEGMENTS_LOADED = 'segmentsLoaded';
