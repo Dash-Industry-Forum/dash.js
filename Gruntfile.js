@@ -206,8 +206,8 @@ module.exports = function (grunt) {
                 options: {
                     mask: '*.js',
                     coverageFolder: './reports',
-                    mochaOptions: ['--require', 'mochahook'],
-                    print: 'summary',
+                    nodeExec: require.resolve('.bin/babel-node'),
+                    scriptPath: require.resolve('.bin/babel-istanbul'),
                     root: './src'
                 }
             }
