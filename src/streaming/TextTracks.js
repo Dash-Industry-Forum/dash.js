@@ -338,12 +338,12 @@ function TextTracks() {
             track.cellResolution = currentItem.cellResolution;
             track.isFromCEA608 = currentItem.isFromCEA608;
 
-            if (!videoSizeCheckInterval && currentItem.type == 'html') {
+            if (!videoSizeCheckInterval && currentItem.type === 'html') {
                 videoSizeCheckInterval = setInterval(checkVideoSize.bind(this), 500);
             }
 
             //image subtitle extracted from TTML
-            if (currentItem.type == 'image') {
+            if (currentItem.type === 'image') {
                 cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, '');
                 cue.image = currentItem.data;
                 cue.id = currentItem.id;
@@ -372,7 +372,7 @@ function TextTracks() {
                     }
                     imgs = container.childNodes;
                     for (i = 0; i < imgs.length; i++) {
-                        if (imgs[i].id == 'ttmlImage_' + this.id) {
+                        if (imgs[i].id === 'ttmlImage_' + this.id) {
                             container.removeChild(imgs[i]);
                         }
                     }
@@ -397,7 +397,7 @@ function TextTracks() {
                 captionContainer.style.height = actualVideoHeight + 'px';
 
                 cue.onenter =  function () {
-                    if (track.mode == 'showing') {
+                    if (track.mode === 'showing') {
                         log('Cue ' + this.startTime + '-' + this.endTime + ' : ' + this.cueHTMLElement.id + ' : ' + this.cueHTMLElement.innerText);
                         captionContainer.appendChild(this.cueHTMLElement);
                         scaleCue.call(self, this);
