@@ -251,7 +251,7 @@ function ProtectionKeyController() {
 
         // Our default server implementations do not do anything with "license-release" or
         // "individualization-request" messages, so we just send a success event
-        if (messageType === 'license-release' || messageType == 'individualization-request') {
+        if (messageType === 'license-release' || messageType === 'individualization-request') {
             return null;
         }
 

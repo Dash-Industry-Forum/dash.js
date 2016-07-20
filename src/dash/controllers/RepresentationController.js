@@ -283,7 +283,7 @@ function RepresentationController() {
         var err;
         var repSwitch;
 
-        if (r.adaptation.period.mpd.manifest.type == 'dynamic')
+        if (r.adaptation.period.mpd.manifest.type === 'dynamic')
         {
             let segmentAvailabilityTimePeriod = r.segmentAvailabilityRange.end - r.segmentAvailabilityRange.start;
             // We must put things to sleep unless till e.g. the startTime calculation in ScheduleController.onLiveEdgeSearchCompleted fall after the segmentAvailabilityRange.start
