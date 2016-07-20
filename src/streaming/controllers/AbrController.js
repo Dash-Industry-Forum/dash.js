@@ -288,7 +288,7 @@ function AbrController() {
 
     function changeQuality(type, streamInfo, oldQuality, newQuality, reason) {
         setQualityFor(type, streamInfo.id, newQuality);
-        eventBus.trigger(Events.QUALITY_CHANGED, {mediaType: type, streamInfo: streamInfo, oldQuality: oldQuality, newQuality: newQuality, reason: reason});
+        eventBus.trigger(Events.QUALITY_CHANGE_REQUESTED, {mediaType: type, streamInfo: streamInfo, oldQuality: oldQuality, newQuality: newQuality, reason: reason});
     }
 
 

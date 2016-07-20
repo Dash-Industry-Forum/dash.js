@@ -108,9 +108,9 @@ class MediaPlayerEvents extends EventsBase {
 
         /**
          * Triggered when an ABR up /down switch is initialed; either by user in manual mode or auto mode via ABR rules.
-         * @event MediaPlayerEvents#QUALITY_CHANGED
+         * @event MediaPlayerEvents#QUALITY_CHANGE_REQUESTED
          */
-        this.QUALITY_CHANGED = 'qualityChanged';
+        this.QUALITY_CHANGE_REQUESTED = 'qualityChangeRequested';
 
         /**
          * Triggered when the new ABR quality is being rendered on-screen.

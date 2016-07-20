@@ -134,7 +134,7 @@ function ScheduleController(config) {
         }
 
         eventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
-        eventBus.on(Events.QUALITY_CHANGED, onQualityChanged, this);
+        eventBus.on(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, this);
         eventBus.on(Events.DATA_UPDATE_STARTED, onDataUpdateStarted, this);
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         eventBus.on(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
@@ -498,7 +498,7 @@ function ScheduleController(config) {
         eventBus.off(Events.DATA_UPDATE_STARTED, onDataUpdateStarted, this);
         eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
-        eventBus.off(Events.QUALITY_CHANGED, onQualityChanged, this);
+        eventBus.off(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, this);
         eventBus.off(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
         eventBus.off(Events.STREAM_COMPLETED, onStreamCompleted, this);
         eventBus.off(Events.STREAM_INITIALIZED, onStreamInitialized, this);
