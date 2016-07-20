@@ -292,7 +292,7 @@ function ScheduleController(config) {
     function completeQualityChange(trigger) {
         const item = fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED, time: playbackController.getTime(), threshold: 0})[0];
         if (item && playbackController.getTime() >= item.startTime ) {
-            if(item.quality !== lastQualityIndex && trigger) {
+            if (item.quality !== lastQualityIndex && trigger) {
                 eventBus.trigger(Events.QUALITY_CHANGE_RENDERED, {mediaType: type, oldQuality: lastQualityIndex, newQuality: item.quality});
             }
             lastQualityIndex = item.quality;
@@ -363,7 +363,7 @@ function ScheduleController(config) {
         // the executed requests for which playback time is inside the time interval that has been removed from the buffer
         fragmentModel.removeExecutedRequestsBeforeTime(e.to);
 
-        if (e.hasEnoughSpaceToAppend && !bufferConseektroller.getIsBufferingCompleted()) {
+        if (e.hasEnoughSpaceToAppend && !bufferController.getIsBufferingCompleted()) {
             start();
         }
     }
