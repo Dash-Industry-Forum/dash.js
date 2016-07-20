@@ -206,8 +206,9 @@ module.exports = function (grunt) {
                 options: {
                     mask: '*.js',
                     coverageFolder: './reports',
-                    mochaOptions: ['--compilers', 'js:babel/register'],
-                    print: 'summary',
+                    nodeExec: require.resolve('.bin/babel-node'),
+                    scriptPath: require.resolve('.bin/isparta'),
+                    mochaOptions: ['--compilers', 'js:babel-register'],
                     root: './src'
                 }
             }
