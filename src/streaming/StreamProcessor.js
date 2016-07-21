@@ -42,7 +42,6 @@ import FragmentLoader from './FragmentLoader';
 import RequestModifier from './utils/RequestModifier';
 import SourceBufferController from './controllers/SourceBufferController';
 import TextSourceBuffer from './TextSourceBuffer';
-import VirtualBuffer from './VirtualBuffer';
 import MediaSourceController from './controllers/MediaSourceController';
 import DashManifestModel from '../dash/models/DashManifestModel';
 import DashMetrics from '../dash/DashMetrics';
@@ -274,7 +273,6 @@ function StreamProcessor(config) {
                 streamController: StreamController(context).getInstance(),
                 mediaController: MediaController(context).getInstance(),
                 adapter: adapter,
-                virtualBuffer: VirtualBuffer(context).getInstance(),
                 textSourceBuffer: TextSourceBuffer(context).getInstance(),
             });
         }else {

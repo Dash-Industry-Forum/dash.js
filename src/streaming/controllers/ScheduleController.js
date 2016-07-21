@@ -41,7 +41,6 @@ import FragmentModel from '../models/FragmentModel';
 import DashMetrics from '../../dash/DashMetrics';
 import DashAdapter from '../../dash/DashAdapter';
 import SourceBufferController from '../controllers/SourceBufferController';
-import VirtualBuffer from '../VirtualBuffer';
 import LiveEdgeFinder from '../utils/LiveEdgeFinder';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
@@ -124,7 +123,6 @@ function ScheduleController(config) {
         nextFragmentRequestRule = NextFragmentRequestRule(context).create({
             adapter: DashAdapter(context).getInstance(),
             sourceBufferController: SourceBufferController(context).getInstance(),
-            virtualBuffer: VirtualBuffer(context).getInstance(),
             textSourceBuffer: TextSourceBuffer(context).getInstance()
 
         });
