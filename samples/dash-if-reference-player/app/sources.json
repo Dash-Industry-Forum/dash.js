@@ -571,6 +571,101 @@
             ]
         },
         {
+            "name":"Wowza Test Content",
+            "submenu":[
+                {
+                    "name":"Clear Dynamic SegmentTimeline",
+                    "url": "http://wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mvtime.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"Clear Dynamic SegmentTemplate",
+                    "url": "http://wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mvnumber.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"Clear Dynamic SegmentList",
+                    "url": "http://wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mvlist.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"Clear Static SegmentTimeline",
+                    "url": "http://wowzaec2demo.streamlock.net/vod/_definst_/ElephantsDream/smil:ElephantsDream.smil/manifest_mvtime.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"Clear Static SegmentTemplate",
+                    "url": "http://wowzaec2demo.streamlock.net/vod/_definst_/ElephantsDream/smil:ElephantsDream.smil/manifest_mvnumber.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"Clear Static SegmentList",
+                    "url": "http://wowzaec2demo.streamlock.net/vod/_definst_/ElephantsDream/smil:ElephantsDream.smil/manifest_mvlist.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"Widevine Dynamic SegmentTimeline",
+                    "url": "http://wowzaec2demo.streamlock.net/live/bigbuckbunny-enc-wv.stream/manifest_mvtime.mpd",
+                    "browsers":"cdsbi",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "http://widevine-proxy.appspot.com/proxy"
+                        }
+                    }
+                },
+                {
+                    "name":"Widevine Dynamic SegmentTemplate",
+                    "url": "http://wowzaec2demo.streamlock.net/live/bigbuckbunny-enc-wv.stream/manifest_mvnumber.mpd",
+                    "browsers":"cdsbi",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "http://widevine-proxy.appspot.com/proxy"
+                        }
+                    }
+                },
+                {
+                    "name":"Widevine Dynamic SegmentList",
+                    "url": "http://wowzaec2demo.streamlock.net/live/bigbuckbunny-enc-wv.stream/manifest_mvlist.mpd",
+                    "browsers":"cdsbi",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "http://widevine-proxy.appspot.com/proxy"
+                        }
+                    }
+                },
+                {
+                    "name":"Widevine Static SegmentTimeline",
+                    "url": "http://wowzaec2demo.streamlock.net/vod/elephantsdream_1100kbps-enc-wv.mp4/manifest_mvtime.mpd",
+                    "browsers":"cdsbi",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "http://widevine-proxy.appspot.com/proxy"
+                        }
+                    }
+                },
+                {
+                    "name":"Widevine Static SegmentTemplate",
+                    "url": "http://wowzaec2demo.streamlock.net/vod/elephantsdream_1100kbps-enc-wv.mp4/manifest_mvnumber.mpd",
+                    "browsers":"cdsbi",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "http://widevine-proxy.appspot.com/proxy"
+                        }
+                    }
+                },
+                {
+                    "name":"Widevine Static SegmentList",
+                    "url": "http://wowzaec2demo.streamlock.net/vod/elephantsdream_1100kbps-enc-wv.mp4/manifest_mvlist.mpd ",
+                    "browsers":"cdsbi",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "http://widevine-proxy.appspot.com/proxy"
+                        }
+                    }
+                }
+            ]
+        },
+        {
             "name":"D-DASH Test Content",
             "submenu":[
                 {
