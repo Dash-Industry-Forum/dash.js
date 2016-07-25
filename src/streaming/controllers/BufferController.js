@@ -515,14 +515,9 @@ function BufferController(config) {
         }
 
         const time = playbackController.getTime() + (streamProcessor.getCurrentRepresentationInfo().fragmentDuration * 2);
-        const req = streamProcessor.getFragmentModel().getRequests({
-            state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
-            time: time
-        })[0];
-
-        if (req) {
-            const end = buffer.buffered.end(buffer.buffered.length - 1)
-            const range = {start: req.startTime, end: end};
+        const request = streamProcessor.getFragmentModel().getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED, time: time})[0];
+        if (request) {
+            const range = {start: request.startTime, end: buffer.buffered.end(buffer.buffered.length - 1)};
             clearBuffer(range);
         }
     }

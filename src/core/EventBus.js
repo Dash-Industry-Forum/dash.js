@@ -57,10 +57,7 @@ function EventBus() {
 
         handlers[type] = handlers[type] || [];
         handlers[type].push(handler);
-        handlers[type].sort(function (a, b) {
-            return a.priority - b.priority;
-        })
-
+        handlers[type].sort(function (a, b) {return a.priority - b.priority;});
     }
 
     function off(type, listener, scope) {
