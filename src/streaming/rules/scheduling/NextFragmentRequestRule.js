@@ -50,8 +50,8 @@ function NextFragmentRequestRule(config) {
         const buffer = streamProcessor.getBuffer();
 
         let time = hasSeekTarget ? seekTarget : adapter.getIndexHandlerTime(streamProcessor);
-        if (isNaN(time) ||
-            (mediaType === 'fragmentedText' && textSourceBuffer.getAllTracksAreDisabled())) {
+
+        if (isNaN(time) || (mediaType === 'fragmentedText' && textSourceBuffer.getAllTracksAreDisabled())) {
             return null;
         }
 

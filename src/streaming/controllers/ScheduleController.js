@@ -199,8 +199,8 @@ function ScheduleController(config) {
         var request = adapter.getInitRequest(streamProcessor, quality);
 
         if (request !== null) {
-            fragmentModel.executeRequest(request);
             isFragmentLoading = true;
+            fragmentModel.executeRequest(request);
         }
 
         return request;
@@ -229,7 +229,7 @@ function ScheduleController(config) {
 
     function validate() {
 
-        if (isStopped || playbackController.isPaused() && !scheduleWhilePaused) return;
+        if (isStopped || !bufferController || playbackController.isPaused() && !scheduleWhilePaused) return;
 
         if (mediaPlayerModel.getFastSwitchEnabled() &&
             bufferController.getBufferLevel() > (currentRepresentationInfo.fragmentDuration * 1.5) &&

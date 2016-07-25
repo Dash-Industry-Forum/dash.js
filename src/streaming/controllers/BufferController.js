@@ -50,19 +50,19 @@ const STALL_THRESHOLD = 0.5;
 
 function BufferController(config) {
 
-    let context = this.context;
-    let log = Debug(context).getInstance().log;
-    let eventBus = EventBus(context).getInstance();
+    const context = this.context;
+    const log = Debug(context).getInstance().log;
+    const eventBus = EventBus(context).getInstance();
+    const metricsModel = config.metricsModel;
+    const manifestModel = config.manifestModel;
+    const sourceBufferController = config.sourceBufferController;
+    const errHandler = config.errHandler;
+    const mediaSourceController = config.mediaSourceController;
+    const streamController = config.streamController;
+    const mediaController = config.mediaController;
+    const adapter = config.adapter;
+    const textSourceBuffer = config.textSourceBuffer;
 
-    let metricsModel = config.metricsModel;
-    let manifestModel = config.manifestModel;
-    let sourceBufferController = config.sourceBufferController;
-    let errHandler = config.errHandler;
-    let mediaSourceController = config.mediaSourceController;
-    let streamController = config.streamController;
-    //let mediaController = config.mediaController;
-    let adapter = config.adapter;
-    let textSourceBuffer = config.textSourceBuffer;
 
     let instance,
         requiredQuality,
@@ -133,10 +133,9 @@ function BufferController(config) {
         eventBus.on(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
         eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
-        eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);
+        eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this, 0);
         eventBus.on(Events.SOURCEBUFFER_APPEND_COMPLETED, onAppended, this);
         eventBus.on(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
-        //eventBus.on(Events.CHUNK_APPENDED, onChunkAppended, this);
     }
 
     function createBuffer(mediaInfo) {
@@ -288,7 +287,7 @@ function BufferController(config) {
         //finish appending
         isAppendingInProgress = false;
         if (!isNaN(appendedBytesInfo.index)) {
-            removeOldTrackData(appendedBytesInfo);
+
             maxAppendedIndex = Math.max(appendedBytesInfo.index, maxAppendedIndex);
             checkIfBufferingCompleted();
         } else {
@@ -455,28 +454,20 @@ function BufferController(config) {
     }
 
     function getClearRange() {
-        var currentTime,
-            removeStart,
-            removeEnd,
-            range,
-            req;
 
         if (!buffer) return null;
 
-        currentTime = playbackController.getTime();
         // we need to remove data that is more than one fragment before the video currentTime
-        req = streamProcessor.getFragmentModel().getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED, time: currentTime})[0];
-        removeEnd = (req && !isNaN(req.startTime)) ? req.startTime : Math.floor(currentTime);
+        const currentTime = playbackController.getTime();
+        const req = streamProcessor.getFragmentModel().getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED, time: currentTime, })[0];
+        const range = sourceBufferController.getBufferRange(buffer, currentTime);
 
-        range = sourceBufferController.getBufferRange(buffer, currentTime);
-
+        let removeEnd = (req && !isNaN(req.startTime)) ? req.startTime : Math.floor(currentTime);
         if ((range === null) && (buffer.buffered.length > 0)) {
             removeEnd = buffer.buffered.end(buffer.buffered.length - 1 );
         }
 
-        removeStart = buffer.buffered.start(0);
-
-        return {start: removeStart, end: removeEnd};
+        return {start: buffer.buffered.start(0), end: removeEnd};
     }
 
     function clearBuffer(range) {
@@ -517,39 +508,23 @@ function BufferController(config) {
         return streamProcessor.getStreamInfo().id;
     }
 
-    function removeOldTrackData(/*chunk*/) {
-        //TODO I will need to find a way to clear old adaptation set data if we have multipe tracks for video or audio.  Maybe fast switch replace on the fly.
+    function removeOldTrackData() {
 
-        // var allAppendedChunks = virtualBuffer.getChunks({ streamId: getStreamId(), mediaType: type, segmentType: HTTPRequest.MEDIA_SEGMENT_TYPE, appended: true });
+        if (mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE) {
+            clearBuffer(getClearRange()); // should clear up to playhead.
+        }
 
-        //const customTimeRangesFactory = CustomTimeRanges(context);
-        //var rangesToClear = customTimeRangesFactory.create();
-        //var rangesToLeave = customTimeRangesFactory.create();
-        //
-        //var currentTime = playbackController.getTime();
-        //var safeBufferLength = streamProcessor.getCurrentRepresentationInfo().fragmentDuration * 2;
-        //
-        //var currentTrackBufferLength,
-        //    ranges,
-        //    range;
-        //
-        //allAppendedChunks.forEach(function (chunk) {
-        //    ranges = mediaController.isCurrentTrack(chunk.mediaInfo) ? rangesToLeave : rangesToClear;
-        //    ranges.add(chunk.bufferedRange.start, chunk.bufferedRange.end);
-        //});
-        //
-        //if ((rangesToClear.length === 0) || (rangesToLeave.length === 0)) return;
-        //
-        //currentTrackBufferLength = sourceBufferController.getBufferLength({buffered: rangesToLeave}, currentTime);
-        //
-        //if (currentTrackBufferLength < safeBufferLength) return;
-        //
-        //for (var i = 0, ln = rangesToClear.length; i < ln; i++) {
-        //    range = {start: rangesToClear.start(i), end: rangesToClear.end(i)};
-        //    if (mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE || range.start > currentTime) {
-        //        clearBuffer(range);
-        //    }
-        //}
+        const time = playbackController.getTime() + (streamProcessor.getCurrentRepresentationInfo().fragmentDuration * 2);
+        const req = streamProcessor.getFragmentModel().getRequests({
+            state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
+            time: time
+        })[0];
+
+        if (req) {
+            const end = buffer.buffered.end(buffer.buffered.length - 1)
+            const range = {start: req.startTime, end: end};
+            clearBuffer(range);
+        }
     }
 
     function onDataUpdateCompleted(e) {
@@ -567,24 +542,8 @@ function BufferController(config) {
 
     function onCurrentTrackChanged(e) {
         if (!buffer || (e.newMediaInfo.type !== type) || (e.newMediaInfo.streamInfo.id !== streamProcessor.getStreamInfo().id)) return;
+        removeOldTrackData();
 
-        var newMediaInfo = e.newMediaInfo;
-        var mediaType = newMediaInfo.type;
-        var switchMode = e.switchMode;
-        var currentTime = playbackController.getTime();
-        var range = { start: 0, end: currentTime };
-
-        if (type !== mediaType) return;
-
-        switch (switchMode) {
-            case MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE:
-                clearBuffer(range);
-                break;
-            case MediaController.TRACK_SWITCH_MODE_NEVER_REPLACE:
-                break;
-            default:
-                log('track switch mode is not supported: ' + switchMode);
-        }
     }
 
     function onWallclockTimeUpdated() {

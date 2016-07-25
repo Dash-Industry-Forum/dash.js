@@ -113,11 +113,11 @@ function StreamProcessor(config) {
             requestModifier: RequestModifier(context).getInstance()
         });
 
-        representationController = RepresentationController(context).create();
-        representationController.initialize(this);
-
         fragmentModel = scheduleController.getFragmentModel();
         fragmentModel.setLoader(fragmentLoader);
+
+        representationController = RepresentationController(context).create();
+        representationController.initialize(this);
     }
 
     function reset(errored) {

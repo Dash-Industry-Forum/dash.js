@@ -32,11 +32,13 @@ import FactoryMaker from './FactoryMaker';
 
 function EventBus() {
 
+    const LOW_PRIORITY = 5000;
+
     let instance;
     let handlers = {};
 
 
-    function on(type, listener, scope) {
+    function on(type, listener, scope, priority) {
         if (!type) {
             throw new Error('event type cannot be null or undefined');
         }
@@ -49,11 +51,16 @@ function EventBus() {
 
         var handler = {
             callback: listener,
-            scope: scope
+            scope: scope,
+            priority: priority !== undefined ? priority : LOW_PRIORITY
         };
 
         handlers[type] = handlers[type] || [];
         handlers[type].push(handler);
+        handlers[type].sort(function (a, b) {
+            return a.priority - b.priority;
+        })
+
     }
 
     function off(type, listener, scope) {
