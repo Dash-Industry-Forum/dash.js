@@ -511,7 +511,7 @@ function BufferController(config) {
     function removeOldTrackData() {
 
         if (mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE) {
-            clearBuffer(getClearRange()); // should clear up to playhead.
+            clearBuffer(getClearRange());
         }
 
         const time = playbackController.getTime() + (streamProcessor.getCurrentRepresentationInfo().fragmentDuration * 2);

@@ -120,7 +120,7 @@ function Stream(config) {
      */
     function activate(mediaSource) {
         if (!isStreamActivated) {
-            eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance, 1);
+            eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
             initializeMedia(mediaSource);
         } else {
             createBuffers();
