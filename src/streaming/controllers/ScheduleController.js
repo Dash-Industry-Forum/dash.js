@@ -73,9 +73,9 @@ function ScheduleController(config) {
         playListMetrics,
         playListTraceMetrics,
         playListTraceMetricsClosed,
-        isFragmentLoading,
+        isFragmentProcessingInProgress,
         timeToLoadDelay,
-        validateTimeout,
+        scheduleTimeout,
         seekTarget,
         playbackController,
         abrController,
@@ -87,16 +87,20 @@ function ScheduleController(config) {
         bufferLevelRule,
         nextFragmentRequestRule,
         scheduleWhilePaused,
-        lastQualityIndex;
+        lastQualityIndex,
+        lastInitQuality,
+        replaceRequestArray;
 
     function setup() {
         initialPlayback = true;
+        lastInitQuality = NaN;
         lastQualityIndex = NaN;
+        replaceRequestArray = [];
         isStopped = false;
         playListMetrics = null;
         playListTraceMetrics = null;
         playListTraceMetricsClosed = true;
-        isFragmentLoading = false;
+        isFragmentProcessingInProgress = false;
         timeToLoadDelay = 0;
         seekTarget = NaN;
     }
@@ -142,7 +146,6 @@ function ScheduleController(config) {
         eventBus.on(Events.BUFFER_CLEARED, onBufferCleared, this);
         eventBus.on(Events.BYTES_APPENDED, onBytesAppended, this);
         eventBus.on(Events.INIT_REQUESTED, onInitRequested, this);
-        eventBus.on(Events.INIT_FRAGMENT_LOADED, onInitLoaded, this);
         eventBus.on(Events.QUOTA_EXCEEDED, onQuotaExceeded, this);
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
         eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
@@ -150,23 +153,7 @@ function ScheduleController(config) {
         eventBus.on(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
         eventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
         eventBus.on(Events.URL_RESOLUTION_FAILED, onURLResolutionFailed, this);
-    }
-
-    function clearPlayListTraceMetrics(endTime, stopreason) {
-        var duration = 0;
-        var startTime = null;
-
-        if (playListMetrics && playListTraceMetricsClosed === false) {
-            startTime = playListTraceMetrics.start;
-            duration = endTime.getTime() - startTime.getTime();
-
-            playListTraceMetrics.duration = duration;
-            playListTraceMetrics.stopreason = stopreason;
-
-            playListMetrics.trace.push(playListTraceMetrics);
-
-            playListTraceMetricsClosed = true;
-        }
+        eventBus.on(Events.FRAGMENT_LOADING_ABANDONED, onFragmentLoadingAbandoned, this);
     }
 
     function start() {
@@ -177,9 +164,9 @@ function ScheduleController(config) {
         if (initialPlayback) {
             getInitRequest(currentRepresentationInfo.quality);
         } else {
-            //Validate will be first called after the init segment is appended. But in the case where we stop and start
-            //the ScheduleController E.g dateUpdate on manifest refresh for live streams. we need to start validate again.
-            validate();
+            //schedule will be first called after the init segment is appended. But in the case where we stop and start
+            //the ScheduleController E.g dateUpdate on manifest refresh for live streams. we need to start schedule again.
+            startScheduleTimer(0);
         }
 
         if (initialPlayback) {
@@ -191,43 +178,11 @@ function ScheduleController(config) {
     function stop() {
         if (isStopped) return;
         isStopped = true;
-        clearInterval(validateTimeout);
+        clearTimeout(scheduleTimeout);
         log('Schedule controller stopping for ' + type);
     }
 
-    function getInitRequest(quality) {
-        var request = adapter.getInitRequest(streamProcessor, quality);
-
-        if (request !== null) {
-            isFragmentLoading = true;
-            fragmentModel.executeRequest(request);
-        }
-
-        return request;
-    }
-
-    function replaceRequests(reqArr) {
-        // EPSILON is used to avoid javascript floating point issue, e.g. if request.startTime = 19.2,
-        // request.duration = 3.83, than request.startTime + request.startTime = 19.2 + 1.92 = 21.119999999999997
-        const EPSILON = 0.1;
-
-        for (let i = 0, ln = reqArr.length; i < ln; i++) {
-
-            const request = reqArr[i];
-            const time = request.startTime + (request.duration / 2) + EPSILON;
-            const requestForTime = adapter.getFragmentRequestForTime(streamProcessor, currentRepresentationInfo, time, {
-                timeThreshold: 0,
-                ignoreIsFinished: true
-            });
-
-            if (requestForTime) {
-                isFragmentLoading = true;
-                fragmentModel.executeRequest(requestForTime);
-            }
-        }
-    }
-
-    function validate() {
+    function schedule() {
 
         if (isStopped || !bufferController || playbackController.isPaused() && !scheduleWhilePaused) return;
 
@@ -238,41 +193,76 @@ function ScheduleController(config) {
             const time = playbackController.getTime() + (currentRepresentationInfo.fragmentDuration * 1.5);
             const request = fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED, time: time, threshold: 0})[0];
 
-            if (request && !isFragmentLoading && !bufferController.getIsAppendingInProgress() && !dashManifestModel.getIsTextTrack(type)) {
+            if (request && !isFragmentProcessingInProgress &&
+                !dashManifestModel.getIsTextTrack(type) && replaceRequestArray.indexOf(request) === -1 ) {
 
                 if (request.quality < currentRepresentationInfo.quality) {
-                    replaceRequests([request]);
-                    log('Reloading fragment -', request.index, 'at a higher quality - (old quality:', request.quality, ' new quality:', currentRepresentationInfo.quality, ')');
+                    replaceRequest(request);
+                    log('XXX Reloading fragment -', request.index, 'at a higher quality - (old quality:', request.quality, ' new quality:', currentRepresentationInfo.quality, ')');
                 } else if (request.quality > currentRepresentationInfo.quality ) {
                     setSeekTarget(playbackController.getTime() + bufferController.getBufferLevel());
                 }
             }
         }
 
+        const isReplacement = replaceRequestArray.length > 0;
         const readyToLoad = bufferLevelRule.execute(streamProcessor, streamController.isVideoTrackPresent());
-        if (readyToLoad && !isFragmentLoading &&
-            (dashManifestModel.getIsTextTrack(type) || !bufferController.getIsAppendingInProgress())) {
+        if ((readyToLoad || isReplacement) && !isFragmentProcessingInProgress) {
+
             const getNextFragment = function () {
-                const request = nextFragmentRequestRule.execute(streamProcessor);
-                if (request) {
-                    //log('new load inside', request.index);
-                    fragmentModel.executeRequest(request);
+
+                if (currentRepresentationInfo.quality !== lastInitQuality) {
+                    lastInitQuality = currentRepresentationInfo.quality;
+                    bufferController.switchInitData(streamProcessor.getStreamInfo().id, currentRepresentationInfo.quality);
                 } else {
-                    isFragmentLoading = false;
-                    startValidateTimer(500);
+
+                    const request = nextFragmentRequestRule.execute(streamProcessor, replaceRequestArray.shift());
+
+                    if (request) {
+                        fragmentModel.executeRequest(request);
+                    } else {
+                        //Playing at bleeding live edge and frag is not available yet. Cycle back around.
+                        isFragmentProcessingInProgress = false;
+                        startScheduleTimer(250);
+                    }
                 }
             };
 
-            isFragmentLoading = true;
-            abrController.getPlaybackQuality(streamProcessor, getNextFragment); //Run ABR rules - let it callback to getNextFragment once it is done running.
+            isFragmentProcessingInProgress = true;
+            if (isReplacement) {
+                getNextFragment();
+            }else {
+                abrController.getPlaybackQuality(streamProcessor, getNextFragment); //Run ABR rules - let it callback to getNextFragment once it is done running.
+            }
 
         } else {
-            startValidateTimer(500);
+            startScheduleTimer(500);
         }
     }
 
-    function startValidateTimer(value) {
-        validateTimeout = setTimeout(validate, value);
+    function startScheduleTimer(value) {
+        clearTimeout(scheduleTimeout);
+        scheduleTimeout = setTimeout(schedule, value);
+    }
+
+    function onInitRequested(e) {
+        if (e.sender.getStreamProcessor() !== streamProcessor) return;
+        getInitRequest(currentRepresentationInfo.quality);
+    }
+
+    function getInitRequest(quality) {
+        lastInitQuality = quality;
+
+        const request = adapter.getInitRequest(streamProcessor, quality);
+
+        if (request !== null) {
+            isFragmentProcessingInProgress = true;
+            fragmentModel.executeRequest(request);
+        }
+    }
+
+    function replaceRequest(request) {
+        replaceRequestArray.push(request);
     }
 
     function onQualityChanged(e) {
@@ -310,8 +300,9 @@ function ScheduleController(config) {
         if (!isDynamic || liveEdgeFinder.getLiveEdge() !== null) {
             ready = true;
         }
-
-        start();
+        if (isStopped) {
+            start();
+        }
     }
 
     function onStreamCompleted(e) {
@@ -323,12 +314,13 @@ function ScheduleController(config) {
     function onFragmentLoadingCompleted(e) {
         if (e.sender !== fragmentModel) return;
 
-        if (!isNaN(e.request.index)) {
-            isFragmentLoading = false;
+        if (dashManifestModel.getIsTextTrack(type)) {
+            //we allow this here because we do not use a BufferController with text tracks and do not get BYTES_APPENDED event.
+            isFragmentProcessingInProgress = false;
         }
 
         if (e.error && e.serviceLocation && !isStopped) {
-            replaceRequests([e.request]);
+            replaceRequest(e.request);
         }
     }
 
@@ -338,21 +330,20 @@ function ScheduleController(config) {
 
     function onBytesAppended(e) {
         if (e.sender.getStreamProcessor() !== streamProcessor) return;
-        validate();
+        isFragmentProcessingInProgress = false;
+        startScheduleTimer(0);
+    }
+
+    function onFragmentLoadingAbandoned(e) {
+        if (e.streamProcessor !== streamProcessor) return;
+        replaceRequest(e.request);
+        isFragmentProcessingInProgress = false;
+        startScheduleTimer(0);
     }
 
     function onDataUpdateStarted(e) {
         if (e.sender.getStreamProcessor() !== streamProcessor) return;
         stop();
-    }
-
-    function onInitRequested(e) {
-        if (e.sender.getStreamProcessor() !== streamProcessor) return;
-        getInitRequest(e.requiredQuality);
-    }
-
-    function onInitLoaded() {
-        isFragmentLoading = false;
     }
 
     function onBufferCleared(e) {
@@ -361,7 +352,7 @@ function ScheduleController(config) {
         // the executed requests for which playback time is inside the time interval that has been removed from the buffer
         fragmentModel.removeExecutedRequestsBeforeTime(e.to);
 
-        if (e.hasEnoughSpaceToAppend && !bufferController.getIsBufferingCompleted()) {
+        if (e.hasEnoughSpaceToAppend && !bufferController.getIsBufferingCompleted() && isStopped) {
             start();
         }
     }
@@ -383,25 +374,15 @@ function ScheduleController(config) {
         stop();
     }
 
-    function addPlaylistTraceMetrics() {
-        if (playListMetrics && playListTraceMetricsClosed === true && currentRepresentationInfo) {
-            playListTraceMetricsClosed = false;
-
-            playListTraceMetrics = new PlayListTrace();
-            playListTraceMetrics.representationid = currentRepresentationInfo.id;
-            playListTraceMetrics.start = new Date();
-            playListTraceMetrics.mstart = playbackController.getTime() * 1000;
-            playListTraceMetrics.playbackspeed = playbackController.getPlaybackRate().toString();
-        }
-    }
-
     function onTimedTextRequested(e) {
         if (e.sender.getStreamProcessor() !== streamProcessor) return;
         getInitRequest(e.index);
     }
 
     function onPlaybackStarted() {
-        start();
+        if (isStopped) {
+            start();
+        }
     }
 
     function onPlaybackSeeking(e) {
@@ -409,13 +390,6 @@ function ScheduleController(config) {
         seekTarget = e.seekTime;
         setTimeToLoadDelay(0);
 
-
-
-
-
-        if (!initialPlayback) {
-            isFragmentLoading = false;
-        }
         if (isStopped) {
             start();
         }
@@ -455,7 +429,10 @@ function ScheduleController(config) {
 
         metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: actualStartTime, presentationStartTime: liveEdgeTime, latency: liveEdgeTime - actualStartTime, clientTimeOffset: timelineConverter.getClientTimeOffset()});
         ready = true;
-        start();
+
+        if (isStopped) {
+            start();
+        }
     }
 
     function getSeekTarget() {
@@ -491,6 +468,28 @@ function ScheduleController(config) {
         playListMetrics = null;
     }
 
+    function clearPlayListTraceMetrics(endTime, stopreason) {
+        if (playListMetrics && playListTraceMetricsClosed === false) {
+            const startTime = playListTraceMetrics.start;
+            const duration = endTime.getTime() - startTime.getTime();
+            playListTraceMetrics.duration = duration;
+            playListTraceMetrics.stopreason = stopreason;
+            playListMetrics.trace.push(playListTraceMetrics);
+            playListTraceMetricsClosed = true;
+        }
+    }
+
+    function addPlaylistTraceMetrics() {
+        if (playListMetrics && playListTraceMetricsClosed === true && currentRepresentationInfo) {
+            playListTraceMetricsClosed = false;
+            playListTraceMetrics = new PlayListTrace();
+            playListTraceMetrics.representationid = currentRepresentationInfo.id;
+            playListTraceMetrics.start = new Date();
+            playListTraceMetrics.mstart = playbackController.getTime() * 1000;
+            playListTraceMetrics.playbackspeed = playbackController.getPlaybackRate().toString();
+        }
+    }
+
     function reset() {
         eventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
         eventBus.off(Events.DATA_UPDATE_STARTED, onDataUpdateStarted, this);
@@ -504,7 +503,6 @@ function ScheduleController(config) {
         eventBus.off(Events.BYTES_APPENDED, onBytesAppended, this);
         eventBus.off(Events.BUFFER_CLEARED, onBufferCleared, this);
         eventBus.off(Events.INIT_REQUESTED, onInitRequested, this);
-        eventBus.off(Events.INIT_FRAGMENT_LOADED, onInitLoaded, this);
         eventBus.off(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
         eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
         eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
@@ -516,7 +514,7 @@ function ScheduleController(config) {
 
         stop();
         fragmentController.detachModel(fragmentModel);
-        isFragmentLoading = false;
+        isFragmentProcessingInProgress = false;
         completeQualityChange(false);
         timeToLoadDelay = 0;
         seekTarget = NaN;
@@ -532,7 +530,7 @@ function ScheduleController(config) {
         getFragmentModel: getFragmentModel,
         setTimeToLoadDelay: setTimeToLoadDelay,
         getTimeToLoadDelay: getTimeToLoadDelay,
-        replaceRequests: replaceRequests,
+        replaceRequest: replaceRequest,
         start: start,
         stop: stop,
         reset: reset,

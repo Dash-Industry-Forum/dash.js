@@ -39,7 +39,7 @@ function NextFragmentRequestRule(config) {
     const sourceBufferController = config.sourceBufferController;
     const textSourceBuffer = config.textSourceBuffer;
 
-    function execute(streamProcessor) {
+    function execute(streamProcessor, requestToReplace) {
 
         const representationInfo = streamProcessor.getCurrentRepresentationInfo();
         const mediaInfo = representationInfo.mediaInfo;
@@ -70,17 +70,22 @@ function NextFragmentRequestRule(config) {
             }
         }
 
-        let request = adapter.getFragmentRequestForTime(streamProcessor, representationInfo, time, {keepIdx: !hasSeekTarget});
-        //log("getForTime", request, time);
-        if (request && streamProcessor.getFragmentModel().isFragmentLoaded(request)) {
-            request = adapter.getNextFragmentRequest(streamProcessor, representationInfo);
-            //log("getForNext", request, streamProcessor.getIndexHandler().getCurrentIndex());
-        }
-
-        if (request) {
-            adapter.setIndexHandlerTime(streamProcessor, request.startTime + request.duration);
-            request.delayLoadingTime = new Date().getTime() + scheduleController.getTimeToLoadDelay();
-            scheduleController.setTimeToLoadDelay(0);
+        let request;
+        if (requestToReplace) {
+            time = requestToReplace.startTime + (requestToReplace.duration / 2);
+            request = adapter.getFragmentRequestForTime(streamProcessor, representationInfo, time, {timeThreshold: 0, ignoreIsFinished: true});
+        } else {
+            request = adapter.getFragmentRequestForTime(streamProcessor, representationInfo, time, {keepIdx: !hasSeekTarget});
+            //log("getForTime", request, time);
+            if (request && streamProcessor.getFragmentModel().isFragmentLoaded(request)) {
+                request = adapter.getNextFragmentRequest(streamProcessor, representationInfo);
+                //log("getForNext", request, streamProcessor.getIndexHandler().getCurrentIndex());
+            }
+            if (request) {
+                adapter.setIndexHandlerTime(streamProcessor, request.startTime + request.duration);
+                request.delayLoadingTime = new Date().getTime() + scheduleController.getTimeToLoadDelay();
+                scheduleController.setTimeToLoadDelay(0);
+            }
         }
 
         return request;

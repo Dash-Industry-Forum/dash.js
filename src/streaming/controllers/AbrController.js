@@ -480,38 +480,31 @@ function AbrController() {
     }
 
     function onFragmentLoadProgress(e) {
-        var type = e.request.mediaType;
-        if (getAutoSwitchBitrateFor(type)) { //check to see if we are in manual or auto switch mode.
+        const type = e.request.mediaType;
+        if (getAutoSwitchBitrateFor(type)) {
 
-            var rules = abrRulesCollection.getRules(ABRRulesCollection.ABANDON_FRAGMENT_RULES);
-            var scheduleController = streamProcessorDict[type].getScheduleController();
+            const rules = abrRulesCollection.getRules(ABRRulesCollection.ABANDON_FRAGMENT_RULES);
+            const scheduleController = streamProcessorDict[type].getScheduleController();
+            if (!scheduleController) return;// There may be a fragment load in progress when we switch periods and recreated some controllers.
 
-            // There may be a fragment load in progress when we switch periods and recreated some controllers.
-            // so return if that is the case.
-            if (!scheduleController) return;
+            const callback = function (switchRequest) {
+                if (switchRequest.confidence === SwitchRequest.STRONG &&
+                    switchRequest.value < getQualityFor(type, streamController.getActiveStreamInfo())) {
 
-            var fragmentModel = scheduleController.getFragmentModel();
-            var callback = function (switchRequest) {
-
-                function setupTimeout(type) {
-                    abandonmentTimeout = setTimeout(function () {
-                        setAbandonmentStateFor(type, ALLOW_LOAD);
-                    }, mediaPlayerModel.getAbandonLoadTimeout());
-                }
-
-                if (switchRequest.confidence === SwitchRequest.STRONG) {
-
-                    var requests = fragmentModel.getRequests({ state: FragmentModel.FRAGMENT_MODEL_LOADING});
-                    var newQuality = switchRequest.value;
-                    var currentQuality = getQualityFor(type, streamController.getActiveStreamInfo());
-
-                    if (newQuality < currentQuality) {
-
+                    const fragmentModel = scheduleController.getFragmentModel();
+                    const request = fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_LOADING, index: e.request.index})[0];
+                    if (request) {
+                        //TODO Check if we should abort or if better to finish download. check bytesLoaded/Total
                         fragmentModel.abortRequests();
                         setAbandonmentStateFor(type, ABANDON_LOAD);
-                        setPlaybackQuality(type, streamController.getActiveStreamInfo(), newQuality, switchRequest.reason);
-                        scheduleController.replaceRequests(requests);
-                        setupTimeout(type);
+                        setPlaybackQuality(type, streamController.getActiveStreamInfo(), switchRequest.value, switchRequest.reason);
+                        eventBus.trigger(Events.FRAGMENT_LOADING_ABANDONED, {streamProcessor: streamProcessorDict[type], request: request, mediaType: type});
+
+                        clearTimeout(abandonmentTimeout);
+                        abandonmentTimeout = setTimeout(() => {
+                            setAbandonmentStateFor(type, ALLOW_LOAD);
+                            abandonmentTimeout = null;
+                        }, mediaPlayerModel.getAbandonLoadTimeout());
                     }
                 }
             };
