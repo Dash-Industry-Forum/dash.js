@@ -510,6 +510,7 @@ function ScheduleController(config) {
         eventBus.off(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
         eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
         eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
+        eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
         eventBus.off(Events.URL_RESOLUTION_FAILED, onURLResolutionFailed, this);
 
         if (dashManifestModel.getIsTextTrack(type)) {
