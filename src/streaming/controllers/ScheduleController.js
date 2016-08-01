@@ -255,7 +255,7 @@ function ScheduleController(config) {
 
         const request = adapter.getInitRequest(streamProcessor, quality);
 
-        if (request !== null) {
+        if (request) {
             isFragmentProcessingInProgress = true;
             fragmentModel.executeRequest(request);
         }
