@@ -121,10 +121,6 @@ function StreamProcessor(config) {
     }
 
     function reset(errored) {
-        if (fragmentModel) {
-            fragmentModel.reset();
-            fragmentModel = null;
-        }
 
         indexHandler.reset();
 

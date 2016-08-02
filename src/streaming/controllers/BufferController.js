@@ -31,12 +31,10 @@
 
 import FragmentModel from '../models/FragmentModel';
 import MediaPlayerModel from '../models/MediaPlayerModel';
-//import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import SourceBufferController from './SourceBufferController';
 import AbrController from './AbrController';
 import PlaybackController from './PlaybackController';
 import MediaController from './MediaController';
-//import CustomTimeRanges from '../utils/CustomTimeRanges';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import BoxParser from '../utils/BoxParser';
@@ -139,7 +137,7 @@ function BufferController(config) {
     function createBuffer(mediaInfo) {
         if (!mediaInfo || !mediaSource || !streamProcessor) return null;
 
-        var sourceBuffer = null;
+        let sourceBuffer = null;
 
         try {
             sourceBuffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
@@ -200,7 +198,6 @@ function BufferController(config) {
 
         chunk.bytes = deleteInbandEvents(bytes);
         appendToBuffer(chunk);
-
     }
 
 
@@ -255,11 +252,10 @@ function BufferController(config) {
     }
 
     function onQualityChanged(e) {
-        var newQuality = e.newQuality;
-        if (requiredQuality === newQuality || type !== e.mediaType || streamProcessor.getStreamInfo().id !== e.streamInfo.id) return;
+        if (requiredQuality === e.newQuality || type !== e.mediaType || streamProcessor.getStreamInfo().id !== e.streamInfo.id) return;
 
-        updateBufferTimestampOffset(streamProcessor.getRepresentationInfoForQuality(newQuality).MSETimeOffset);
-        requiredQuality = newQuality;
+        updateBufferTimestampOffset(streamProcessor.getRepresentationInfoForQuality(e.newQuality).MSETimeOffset);
+        requiredQuality = e.newQuality;
     }
 
     //**********************************************************************
@@ -275,9 +271,7 @@ function BufferController(config) {
     }
 
     function updateBufferLevel() {
-        var currentTime = playbackController.getTime();
-
-        bufferLevel = sourceBufferController.getBufferLength(buffer, currentTime);
+        bufferLevel = sourceBufferController.getBufferLength(buffer, playbackController.getTime());
         eventBus.trigger(Events.BUFFER_LEVEL_UPDATED, {sender: instance, bufferLevel: bufferLevel});
         checkIfSufficientBuffer();
     }
@@ -309,38 +303,32 @@ function BufferController(config) {
 
     function notifyBufferStateChanged(state) {
         if (bufferState === state || (type === 'fragmentedText' && textSourceBuffer.getAllTracksAreDisabled())) return;
-
         bufferState = state;
         addBufferMetrics();
         eventBus.trigger(Events.BUFFER_LEVEL_STATE_CHANGED, {sender: instance, state: state, mediaType: type, streamInfo: streamProcessor.getStreamInfo()});
-        let eventType = state === BUFFER_LOADED ? Events.BUFFER_LOADED : Events.BUFFER_EMPTY;
-        eventBus.trigger(eventType, {mediaType: type});
-        log(state === BUFFER_LOADED ? ('Got enough buffer to start.') : ('Waiting for more buffer before starting playback.'));
+        eventBus.trigger(state === BUFFER_LOADED ? Events.BUFFER_LOADED : Events.BUFFER_EMPTY, {mediaType: type});
+        log(state === BUFFER_LOADED ? 'Got enough buffer to start.' : 'Waiting for more buffer before starting playback.');
     }
 
 
     function handleInbandEvents(data, request, mediaInbandEvents, trackInbandEvents) {
-        var fragmentStarttime = Math.max(isNaN(request.startTime) ? 0 : request.startTime, 0);
-        var eventStreams = [];
-        var events = [];
 
-        var eventBoxes,
-            event,
-            isoFile,
-            inbandEvents;
+        const fragmentStartTime = Math.max(isNaN(request.startTime) ? 0 : request.startTime, 0);
+        const eventStreams = [];
+        const events = [];
 
-        inbandEventFound = false;
+        inbandEventFound = false; //TODO Discuss why this is hear!
         /* Extract the possible schemeIdUri : If a DASH client detects an event message box with a scheme that is not defined in MPD, the client is expected to ignore it */
-        inbandEvents = mediaInbandEvents.concat(trackInbandEvents);
-        for (var loop = 0; loop < inbandEvents.length; loop++) {
-            eventStreams[inbandEvents[loop].schemeIdUri] = inbandEvents[loop];
+        const inbandEvents = mediaInbandEvents.concat(trackInbandEvents);
+        for (let i = 0, ln = inbandEvents.length; i < ln; i++) {
+            eventStreams[inbandEvents[i].schemeIdUri] = inbandEvents[i];
         }
 
-        isoFile = BoxParser(context).getInstance().parse(data);
-        eventBoxes = isoFile.getBoxes('emsg');
+        const isoFile = BoxParser(context).getInstance().parse(data);
+        const eventBoxes = isoFile.getBoxes('emsg');
 
-        for (var i = 0, ln = eventBoxes.length; i < ln; i++) {
-            event = adapter.getEvent(eventBoxes[i], eventStreams, fragmentStarttime);
+        for (let i = 0, ln = eventBoxes.length; i < ln; i++) {
+            const event = adapter.getEvent(eventBoxes[i], eventStreams, fragmentStartTime);
 
             if (event) {
                 events.push(event);
@@ -352,27 +340,25 @@ function BufferController(config) {
 
     function deleteInbandEvents(data) {
 
-        if (!inbandEventFound) {
+        if (!inbandEventFound) { //TODO Discuss why this is here. inbandEventFound is never set to true!!
             return data;
         }
 
-        var length = data.length;
-        var expTwo = Math.pow(256, 2);
-        var expThree = Math.pow(256, 3);
-        var modData = new Uint8Array(data.length);
+        const length = data.length;
+        const expTwo = Math.pow(256, 2);
+        const expThree = Math.pow(256, 3);
+        const modData = new Uint8Array(data.length);
 
-        var identifier,
-            size;
-        var i = 0;
-        var j = 0;
+        let i = 0;
+        let j = 0;
 
         while (i < length) {
 
-            identifier = String.fromCharCode(data[i + 4],data[i + 5],data[i + 6],data[i + 7]);
-            size = data[i] * expThree + data[i + 1] * expTwo + data[i + 2] * 256 + data[i + 3] * 1;
+            let identifier = String.fromCharCode(data[i + 4],data[i + 5],data[i + 6],data[i + 7]);
+            let size = data[i] * expThree + data[i + 1] * expTwo + data[i + 2] * 256 + data[i + 3] * 1;
 
             if (identifier != 'emsg' ) {
-                for (var l = i ; l < i + size; l++) {
+                for (let l = i ; l < i + size; l++) {
                     modData[j] = data[l];
                     j++;
                 }
@@ -381,7 +367,7 @@ function BufferController(config) {
 
         }
 
-        return modData.subarray(0,j);
+        return modData.subarray(0, j);
     }
 
     function hasEnoughSpaceToAppend() {
@@ -392,12 +378,8 @@ function BufferController(config) {
     /* prune buffer on our own in background to avoid browsers pruning buffer silently */
     function pruneBuffer() {
         if (type === 'fragmentedText') return;
-
-        var start = buffer.buffered.length ? buffer.buffered.start(0) : 0;
-        var currentTime = playbackController.getTime();
-        // we want to get rid off buffer that is more than x seconds behind current time
-        var bufferToPrune = currentTime - start - mediaPlayerModel.getBufferToKeep();
-
+        const start = buffer.buffered.length ? buffer.buffered.start(0) : 0;
+        const bufferToPrune = playbackController.getTime() - start - mediaPlayerModel.getBufferToKeep();
         if (bufferToPrune > 0) {
             log('pruning buffer: ' + bufferToPrune + ' seconds.');
             isPruningInProgress = true;
@@ -430,22 +412,22 @@ function BufferController(config) {
     function onRemoved(e) {
         if (buffer !== e.buffer) return;
 
-        // After the buffer has been cleared we need to update the virtual range that reflects the actual ranges
-        // of SourceBuffer. We also need to update the list of appended chunks
         if (isPruningInProgress) {
             isPruningInProgress = false;
         }
 
         updateBufferLevel();
         eventBus.trigger(Events.BUFFER_CLEARED, {sender: instance, from: e.from, to: e.to, hasEnoughSpaceToAppend: hasEnoughSpaceToAppend()});
-        if (hasEnoughSpaceToAppend()) return;
 
-        if (clearBufferTimeout === null) {
-            clearBufferTimeout = setTimeout(function () {
-                clearBufferTimeout = null;
-                clearBuffer(getClearRange());
-            }, streamProcessor.getStreamInfo().manifestInfo.minBufferTime * 1000);
-        }
+        //TODO Should not need this anymore but I will leave in for this sprint (2.3) to see if I missed an edgecase.
+        //if (hasEnoughSpaceToAppend()) return;
+        //
+        //if (clearBufferTimeout === null) {
+        //    clearBufferTimeout = setTimeout(function () {
+        //        clearBufferTimeout = null;
+        //        clearBuffer(getClearRange());
+        //    }, streamProcessor.getStreamInfo().manifestInfo.minBufferTime * 1000);
+        //}
     }
 
     function updateBufferTimestampOffset(MSETimeOffset) {
@@ -456,28 +438,8 @@ function BufferController(config) {
         }
     }
 
-    //function getStreamId() {
-    //    return streamProcessor.getStreamInfo().id;
-    //}
-
-    function removeOldTrackData() {
-
-        if (mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE) {
-            clearBuffer(getClearRange());
-        }
-
-        const time = playbackController.getTime() + (streamProcessor.getCurrentRepresentationInfo().fragmentDuration * 2);
-        const request = streamProcessor.getFragmentModel().getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED, time: time})[0];
-        if (request) {
-            const range = {start: request.startTime, end: buffer.buffered.end(buffer.buffered.length - 1)};
-            clearBuffer(range);
-        }
-    }
-
     function onDataUpdateCompleted(e) {
-        if (e.sender.getStreamProcessor() !== streamProcessor) return;
-        if (e.error) return;
-
+        if (e.sender.getStreamProcessor() !== streamProcessor || e.error) return;
         updateBufferTimestampOffset(e.currentRepresentation.MSETimeOffset);
     }
 
@@ -489,15 +451,14 @@ function BufferController(config) {
 
     function onCurrentTrackChanged(e) {
         if (!buffer || (e.newMediaInfo.type !== type) || (e.newMediaInfo.streamInfo.id !== streamProcessor.getStreamInfo().id)) return;
-        removeOldTrackData();
-
+        if (mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE) {
+            clearBuffer(getClearRange());
+        }
     }
 
     function onWallclockTimeUpdated() {
-        var secondsElapsed;
-        //constantly prune buffer every x seconds
         wallclockTicked++;
-        secondsElapsed = (wallclockTicked * (mediaPlayerModel.getWallclockTimeUpdateInterval() / 1000));
+        const secondsElapsed = (wallclockTicked * (mediaPlayerModel.getWallclockTimeUpdateInterval() / 1000));
         if ((secondsElapsed >= mediaPlayerModel.getBufferPruningInterval()) && !isAppendingInProgress) {
             wallclockTicked = 0;
             pruneBuffer();
@@ -607,16 +568,14 @@ function BufferController(config) {
         getIsBufferingCompleted: getIsBufferingCompleted,
         switchInitData: switchInitData,
         reset: reset
-
     };
 
     setup();
-
     return instance;
 }
 
 BufferController.__dashjs_factory_name = 'BufferController';
-let factory = FactoryMaker.getClassFactory(BufferController);
+const factory = FactoryMaker.getClassFactory(BufferController);
 factory.BUFFER_LOADED = BUFFER_LOADED;
 factory.BUFFER_EMPTY = BUFFER_EMPTY;
 export default factory;

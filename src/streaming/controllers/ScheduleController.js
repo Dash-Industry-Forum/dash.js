@@ -33,6 +33,7 @@ import {PlayListTrace} from '../vo/metrics/PlayList';
 import PlaybackController from './PlaybackController';
 import AbrController from './AbrController';
 import BufferController from './BufferController';
+import MediaController from './MediaController';
 import BufferLevelRule from '../rules/scheduling/BufferLevelRule';
 import NextFragmentRequestRule from '../rules/scheduling/NextFragmentRequestRule';
 import TextSourceBuffer from '../TextSourceBuffer';
@@ -50,17 +51,16 @@ import Debug from '../../core/Debug';
 
 function ScheduleController(config) {
 
-    let context = this.context;
-    let log = Debug(context).getInstance().log;
-    let eventBus = EventBus(context).getInstance();
-
-    let metricsModel = config.metricsModel;
-    let manifestModel = config.manifestModel;
-    let adapter = config.adapter;
-    let dashMetrics = config.dashMetrics;
-    let dashManifestModel = config.dashManifestModel;
-    let timelineConverter = config.timelineConverter;
-    let mediaPlayerModel = config.mediaPlayerModel;
+    const context = this.context;
+    const log = Debug(context).getInstance().log;
+    const eventBus = EventBus(context).getInstance();
+    const metricsModel = config.metricsModel;
+    const manifestModel = config.manifestModel;
+    const adapter = config.adapter;
+    const dashMetrics = config.dashMetrics;
+    const dashManifestModel = config.dashManifestModel;
+    const timelineConverter = config.timelineConverter;
+    const mediaPlayerModel = config.mediaPlayerModel;
 
     let instance,
         type,
@@ -78,6 +78,7 @@ function ScheduleController(config) {
         scheduleTimeout,
         seekTarget,
         playbackController,
+        mediaController,
         abrController,
         streamProcessor,
         streamController,
@@ -110,11 +111,13 @@ function ScheduleController(config) {
         streamProcessor = StreamProcessor;
         liveEdgeFinder = LiveEdgeFinder(context).getInstance();
         playbackController = PlaybackController(context).getInstance();
+        mediaController = MediaController(context).getInstance();
         abrController = AbrController(context).getInstance();
         streamController = StreamController(context).getInstance();
         fragmentController = streamProcessor.getFragmentController();
         bufferController = streamProcessor.getBufferController();
-        fragmentModel = fragmentController.getModel(this);
+        fragmentModel = fragmentController.getModel(type);
+        fragmentModel.setScheduleController(this);
         isDynamic = streamProcessor.isDynamic();
         scheduleWhilePaused = mediaPlayerModel.getScheduleWhilePaused();
 
@@ -184,30 +187,13 @@ function ScheduleController(config) {
 
     function schedule() {
 
-        if (isStopped || !bufferController || playbackController.isPaused() && !scheduleWhilePaused) return;
+        if (isStopped || isFragmentProcessingInProgress || !bufferController || playbackController.isPaused() && !scheduleWhilePaused) return;
 
-        if (mediaPlayerModel.getFastSwitchEnabled() &&
-            bufferController.getBufferLevel() > (currentRepresentationInfo.fragmentDuration * 1.5) &&
-            abrController.getAbandonmentStateFor(type) !== AbrController.ABANDON_LOAD) {
-
-            const time = playbackController.getTime() + (currentRepresentationInfo.fragmentDuration * 1.5);
-            const request = fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED, time: time, threshold: 0})[0];
-
-            if (request && !isFragmentProcessingInProgress &&
-                !dashManifestModel.getIsTextTrack(type) && replaceRequestArray.indexOf(request) === -1 ) {
-
-                if (request.quality < currentRepresentationInfo.quality) {
-                    replaceRequest(request);
-                    log('XXX Reloading fragment -', request.index, 'at a higher quality - (old quality:', request.quality, ' new quality:', currentRepresentationInfo.quality, ')');
-                } else if (request.quality > currentRepresentationInfo.quality ) {
-                    setSeekTarget(playbackController.getTime() + bufferController.getBufferLevel());
-                }
-            }
-        }
+        validateExecutedFragmentRequest();
 
         const isReplacement = replaceRequestArray.length > 0;
         const readyToLoad = bufferLevelRule.execute(streamProcessor, streamController.isVideoTrackPresent());
-        if ((readyToLoad || isReplacement) && !isFragmentProcessingInProgress) {
+        if (readyToLoad || isReplacement) {
 
             const getNextFragment = function () {
 
@@ -217,11 +203,10 @@ function ScheduleController(config) {
                 } else {
 
                     const request = nextFragmentRequestRule.execute(streamProcessor, replaceRequestArray.shift());
-
                     if (request) {
                         fragmentModel.executeRequest(request);
                     } else {
-                        //Playing at bleeding live edge and frag is not available yet. Cycle back around.
+                        //Playing at the bleeding live edge and frag is not available yet. Cycle back around.
                         isFragmentProcessingInProgress = false;
                         startScheduleTimer(250);
                     }
@@ -231,12 +216,31 @@ function ScheduleController(config) {
             isFragmentProcessingInProgress = true;
             if (isReplacement) {
                 getNextFragment();
-            }else {
-                abrController.getPlaybackQuality(streamProcessor, getNextFragment); //Run ABR rules - let it callback to getNextFragment once it is done running.
+            } else {
+                abrController.getPlaybackQuality(streamProcessor, getNextFragment);
             }
 
         } else {
             startScheduleTimer(500);
+        }
+    }
+
+    function validateExecutedFragmentRequest() {
+
+        //Validate that the fragment request executed and appended into the source buffer is as
+        // good of quality as the current quality and is the correct media track.
+        const safeBufferLevel = currentRepresentationInfo.fragmentDuration * 1.5;
+        const request = fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED, time: playbackController.getTime() + safeBufferLevel, threshold: 0})[0];
+
+        if (request && replaceRequestArray.indexOf(request) === -1 && !dashManifestModel.getIsTextTrack(type)) {
+            if (!mediaController.isCurrentTrack(request.mediaInfo) || mediaPlayerModel.getFastSwitchEnabled() && request.quality < currentRepresentationInfo.quality &&
+                bufferController.getBufferLevel() >= safeBufferLevel && abrController.getAbandonmentStateFor(type) !== AbrController.ABANDON_LOAD) {
+                replaceRequest(request);
+                log('Reloading outdated fragment at index: ', request.index);
+            } else if (request.quality > currentRepresentationInfo.quality) {
+                //The buffer has better quality it in then what we would request so set append point to end of buffer!!
+                setSeekTarget(playbackController.getTime() + bufferController.getBufferLevel());
+            }
         }
     }
 
@@ -394,9 +398,8 @@ function ScheduleController(config) {
             start();
         }
 
-        let metrics = metricsModel.getMetricsFor('stream');
-        let manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metrics);
-        let latency = currentRepresentationInfo.DVRWindow ? currentRepresentationInfo.DVRWindow.end - playbackController.getTime() : NaN;
+        const manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metricsModel.getMetricsFor('stream'));
+        const latency = currentRepresentationInfo.DVRWindow ? currentRepresentationInfo.DVRWindow.end - playbackController.getTime() : NaN;
         metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: latency});
     }
 
@@ -409,27 +412,26 @@ function ScheduleController(config) {
     function onLiveEdgeSearchCompleted (e) {
         if (e.error) return;
 
-        let liveEdgeTime = e.liveEdge;
-        let manifestInfo = currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo;
-        let startTime = liveEdgeTime - playbackController.computeLiveDelay(currentRepresentationInfo.fragmentDuration, manifestInfo.DVRWindowSize / 2);
-        let metrics = metricsModel.getMetricsFor('stream');
-        let manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metrics);
-        let currentLiveStart = playbackController.getLiveStartTime();
+        const dvrWindowSize = currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo.DVRWindowSize / 2;
+        const startTime = e.liveEdge - playbackController.computeLiveDelay(currentRepresentationInfo.fragmentDuration, dvrWindowSize);
+        const manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metricsModel.getMetricsFor('stream'));
+        const currentLiveStart = playbackController.getLiveStartTime();
+        const request = adapter.getFragmentRequestForTime(streamProcessor, currentRepresentationInfo, startTime, {ignoreIsFinished: true});
 
-        let request,
-            actualStartTime;
-
-        // get a request for a start time
-        request = adapter.getFragmentRequestForTime(streamProcessor, currentRepresentationInfo, startTime, {ignoreIsFinished: true});
-        actualStartTime = request.startTime;
-        seekTarget = actualStartTime; //Setting seekTarget will allow NextFragmentRequestRule's first request time to be accurate.
-        if (isNaN(currentLiveStart) || (actualStartTime > currentLiveStart)) {
-            playbackController.setLiveStartTime(actualStartTime);
+        seekTarget = currentLiveStart;
+        if (isNaN(currentLiveStart) || request.startTime > currentLiveStart) {
+            playbackController.setLiveStartTime(request.startTime);
+            seekTarget = request.startTime;
         }
 
-        metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: actualStartTime, presentationStartTime: liveEdgeTime, latency: liveEdgeTime - actualStartTime, clientTimeOffset: timelineConverter.getClientTimeOffset()});
-        ready = true;
+        metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {
+            currentTime: seekTarget,
+            presentationStartTime: e.liveEdge,
+            latency: e.liveEdge - seekTarget,
+            clientTimeOffset: timelineConverter.getClientTimeOffset()
+        });
 
+        ready = true;
         if (isStopped) {
             start();
         }
@@ -506,6 +508,7 @@ function ScheduleController(config) {
         eventBus.off(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
         eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
         eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
+        eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
         eventBus.off(Events.URL_RESOLUTION_FAILED, onURLResolutionFailed, this);
 
         if (dashManifestModel.getIsTextTrack(type)) {
@@ -513,7 +516,6 @@ function ScheduleController(config) {
         }
 
         stop();
-        fragmentController.detachModel(fragmentModel);
         isFragmentProcessingInProgress = false;
         completeQualityChange(false);
         timeToLoadDelay = 0;
