@@ -88,7 +88,7 @@ function DashParser(/*config*/) {
 
             log('Parsing complete: ( xml2json: ' + (jsonTime - startTime).toPrecision(3) + 'ms, objectiron: ' + (ironedTime - jsonTime).toPrecision(3) + 'ms, total: ' + ((ironedTime - startTime) / 1000).toPrecision(3) + 's)');
         } catch (err) {
-            errorHandler.manifestError('parsing the manifest failed', 'parse', data);
+            errorHandler.manifestError('parsing the manifest failed', 'parse', data, err);
             return null;
         }
 
