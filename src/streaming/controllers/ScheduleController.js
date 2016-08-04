@@ -226,7 +226,6 @@ function ScheduleController(config) {
     }
 
     function validateExecutedFragmentRequest() {
-
         //Validate that the fragment request executed and appended into the source buffer is as
         // good of quality as the current quality and is the correct media track.
         const safeBufferLevel = currentRepresentationInfo.fragmentDuration * 1.5;
@@ -319,7 +318,6 @@ function ScheduleController(config) {
         if (e.sender !== fragmentModel) return;
 
         if (dashManifestModel.getIsTextTrack(type)) {
-            //we allow this here because we do not use a BufferController with text tracks and do not get BYTES_APPENDED event.
             isFragmentProcessingInProgress = false;
         }
 
@@ -390,7 +388,6 @@ function ScheduleController(config) {
     }
 
     function onPlaybackSeeking(e) {
-
         seekTarget = e.seekTime;
         setTimeToLoadDelay(0);
 
@@ -510,14 +507,14 @@ function ScheduleController(config) {
         eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
         eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
         eventBus.off(Events.URL_RESOLUTION_FAILED, onURLResolutionFailed, this);
-
+        eventBus.off(Events.FRAGMENT_LOADING_ABANDONED, onFragmentLoadingAbandoned, this);
         if (dashManifestModel.getIsTextTrack(type)) {
             eventBus.off(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
         }
 
         stop();
-        isFragmentProcessingInProgress = false;
         completeQualityChange(false);
+        isFragmentProcessingInProgress = false;
         timeToLoadDelay = 0;
         seekTarget = NaN;
         playbackController = null;
