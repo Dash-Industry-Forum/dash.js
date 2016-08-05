@@ -250,6 +250,41 @@ function TextTracks() {
         }
     }
 
+    function convertToPixels(percentageString, pixelMeasure) {
+        let percentage = parseInt(percentageString.substring(0, percentageString.length - 1));
+        let percentString = Math.round(0.01 * percentage * pixelMeasure).toString() + 'px';
+        return percentString;
+    }
+
+    function scaleImageCue(activeCue) {
+        var videoWidth = actualVideoWidth;
+        var videoHeight = actualVideoHeight;
+
+        if (videoWidth * videoHeight === 0) {
+            return; //At least one of the measures is still zero
+        }
+
+        if ('layout' in activeCue) {
+            let originParts = activeCue.layout.origin.split(/\s/);
+            let extentParts = activeCue.layout.extent.split(/\s/);
+            let left = convertToPixels(originParts[0], videoWidth);
+            let top = convertToPixels(originParts[1], videoHeight);
+            let width = convertToPixels(extentParts[0], videoWidth);
+            let height = convertToPixels(extentParts[1], videoHeight);
+            captionContainer.style.left = left;
+            captionContainer.style.top = top;
+            captionContainer.style.width = width;
+            captionContainer.style.height = height;
+            let image = captionContainer.firstChild;
+            if (image && image.style) {
+                image.style.left = '0px';
+                image.style.top = '0px';
+                image.style.width = width;
+                image.style.height = height;
+            }
+        }
+    }
+
     function scaleCue(activeCue) {
         var videoWidth = actualVideoWidth;
         var videoHeight = actualVideoHeight;
@@ -338,7 +373,7 @@ function TextTracks() {
             track.cellResolution = currentItem.cellResolution;
             track.isFromCEA608 = currentItem.isFromCEA608;
 
-            if (!videoSizeCheckInterval && currentItem.type === 'html') {
+            if (!videoSizeCheckInterval && (currentItem.type === 'html' || currentItem.type === 'image') ) {
                 videoSizeCheckInterval = setInterval(checkVideoSize.bind(this), 500);
             }
 
@@ -349,31 +384,29 @@ function TextTracks() {
                 cue.id = currentItem.id;
                 cue.size = 0; //discard the native display for this subtitles
                 cue.type = 'image'; // active image overlay
-                cue.onenter =  function () {
+                cue.layout = currentItem.layout;
+                cue.scaleCue = scaleImageCue.bind(self);
+                cue.onenter = function () {
+                    if (!captionContainer) { // Does not support image captions without a container
+                        return;
+                    }
                     var img = new Image();
                     img.id = 'ttmlImage_' + this.id;
                     img.src = this.image;
-                    img.className = 'cue-image';
-                    if (captionContainer) {
-                        captionContainer.appendChild(img);
-                    } else {
-                        video.parentNode.appendChild(img);
-                    }
+                    //img.className = 'cue-image';
+                    img.style.cssText = 'z-index: 2147483648; pointer-events: none; display: block; visibility: visible !important; position: relative !important;';
+                    captionContainer.appendChild(img);
+                    scaleImageCue.call(self, this);
                 };
 
                 cue.onexit =  function () {
-                    var container,
-                        i,
-                        imgs;
-                    if (captionContainer) {
-                        container = captionContainer;
-                    } else {
-                        container = video.parentNode;
+                    if (!captionContainer) {
+                        return;
                     }
-                    imgs = container.childNodes;
-                    for (i = 0; i < imgs.length; i++) {
+                    let imgs = captionContainer.childNodes;
+                    for (let i = 0; i < imgs.length; i++) {
                         if (imgs[i].id === 'ttmlImage_' + this.id) {
-                            container.removeChild(imgs[i]);
+                            captionContainer.removeChild(imgs[i]);
                         }
                     }
                 };
