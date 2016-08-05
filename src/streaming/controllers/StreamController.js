@@ -39,6 +39,7 @@ import MediaPlayerModel from '../models/MediaPlayerModel';
 import FactoryMaker from '../../core/FactoryMaker';
 import {PlayList, PlayListTrace} from '../vo/metrics/PlayList';
 import Debug from '../../core/Debug';
+import InitCache from '../utils/InitCache';
 
 function StreamController() {
 
@@ -61,7 +62,7 @@ function StreamController() {
         mediaSourceController,
         timeSyncController,
         baseURLController,
-        virtualBuffer,
+        initCache,
         errHandler,
         timelineConverter,
         streams,
@@ -100,6 +101,7 @@ function StreamController() {
         autoPlay = autoPl;
         protectionData = protData;
         timelineConverter.initialize();
+        initCache = InitCache(context).getInstance();
 
         manifestUpdater = ManifestUpdater(context).getInstance();
         manifestUpdater.setConfig({
@@ -715,9 +717,6 @@ function StreamController() {
         if (config.baseURLController) {
             baseURLController = config.baseURLController;
         }
-        if (config.virtualBuffer) {
-            virtualBuffer = config.virtualBuffer;
-        }
         if (config.errHandler) {
             errHandler = config.errHandler;
         }
@@ -760,7 +759,7 @@ function StreamController() {
         timelineConverter.reset();
         liveEdgeFinder.reset();
         adapter.reset();
-        virtualBuffer.reset();
+        initCache.reset();
         isStreamSwitchingInProgress = false;
         isUpdating = false;
         activeStream = null;

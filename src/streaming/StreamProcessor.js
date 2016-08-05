@@ -42,7 +42,6 @@ import FragmentLoader from './FragmentLoader';
 import RequestModifier from './utils/RequestModifier';
 import SourceBufferController from './controllers/SourceBufferController';
 import TextSourceBuffer from './TextSourceBuffer';
-import VirtualBuffer from './VirtualBuffer';
 import MediaSourceController from './controllers/MediaSourceController';
 import DashManifestModel from '../dash/models/DashManifestModel';
 import DashMetrics from '../dash/DashMetrics';
@@ -93,8 +92,6 @@ function StreamProcessor(config) {
         abrController.initialize(type, this);
 
         bufferController = createBufferControllerForType(Type);
-        bufferController.initialize(type, mediaSource, this);
-
         scheduleController = ScheduleController(context).create({
             metricsModel: MetricsModel(context).getInstance(),
             manifestModel: manifestModel,
@@ -106,7 +103,9 @@ function StreamProcessor(config) {
             mediaPlayerModel: MediaPlayerModel(context).getInstance(),
         });
 
+        bufferController.initialize(type, mediaSource, this);
         scheduleController.initialize(type, this);
+
 
         fragmentLoader = FragmentLoader(context).create({
             metricsModel: MetricsModel(context).getInstance(),
@@ -114,18 +113,16 @@ function StreamProcessor(config) {
             requestModifier: RequestModifier(context).getInstance()
         });
 
+        fragmentModel = scheduleController.getFragmentModel();
+        fragmentModel.setLoader(fragmentLoader);
+
         representationController = RepresentationController(context).create();
         representationController.initialize(this);
 
-        fragmentModel = scheduleController.getFragmentModel();
-        fragmentModel.setLoader(fragmentLoader);
+
     }
 
     function reset(errored) {
-        if (fragmentModel) {
-            fragmentModel.reset();
-            fragmentModel = null;
-        }
 
         indexHandler.reset();
 
@@ -274,7 +271,6 @@ function StreamProcessor(config) {
                 streamController: StreamController(context).getInstance(),
                 mediaController: MediaController(context).getInstance(),
                 adapter: adapter,
-                virtualBuffer: VirtualBuffer(context).getInstance(),
                 textSourceBuffer: TextSourceBuffer(context).getInstance(),
             });
         }else {

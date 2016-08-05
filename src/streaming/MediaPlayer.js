@@ -38,7 +38,6 @@ import ErrorHandler from './utils/ErrorHandler';
 import Capabilities from './utils/Capabilities';
 import TextTracks from './TextTracks';
 import SourceBufferController from './controllers/SourceBufferController';
-import VirtualBuffer from './VirtualBuffer';
 import RequestModifier from './utils/RequestModifier';
 import TextSourceBuffer from './TextSourceBuffer';
 import URIQueryAndFragmentModel from './models/URIQueryAndFragmentModel';
@@ -1788,12 +1787,6 @@ function MediaPlayer() {
         let sourceBufferController = SourceBufferController(context).getInstance();
         sourceBufferController.setConfig({dashManifestModel: dashManifestModel});
 
-
-        let virtualBuffer = VirtualBuffer(context).getInstance();
-        virtualBuffer.setConfig({
-            sourceBufferController: sourceBufferController
-        });
-
         mediaController.initialize();
         mediaController.setConfig({
             errHandler: errHandler
@@ -1820,7 +1813,6 @@ function MediaPlayer() {
             mediaSourceController: MediaSourceController(context).getInstance(),
             timeSyncController: TimeSyncController(context).getInstance(),
             baseURLController: BaseURLController(context).getInstance(),
-            virtualBuffer: virtualBuffer,
             errHandler: errHandler,
             timelineConverter: TimelineConverter(context).getInstance()
         });
