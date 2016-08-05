@@ -192,11 +192,11 @@ function ScheduleController(config) {
         validateExecutedFragmentRequest();
 
         const isReplacement = replaceRequestArray.length > 0;
-        const readyToLoad = bufferLevelRule.execute(streamProcessor, streamController.isVideoTrackPresent());
+        const readyToLoad = bufferLevelRule.execute(streamProcessor, type, streamController.isVideoTrackPresent());
+
         if (readyToLoad || isReplacement) {
 
             const getNextFragment = function () {
-
                 if (currentRepresentationInfo.quality !== lastInitQuality) {
                     lastInitQuality = currentRepresentationInfo.quality;
                     bufferController.switchInitData(streamProcessor.getStreamInfo().id, currentRepresentationInfo.quality);
@@ -205,8 +205,7 @@ function ScheduleController(config) {
                     const request = nextFragmentRequestRule.execute(streamProcessor, replaceRequestArray.shift());
                     if (request) {
                         fragmentModel.executeRequest(request);
-                    } else {
-                        //Playing at the bleeding live edge and frag is not available yet. Cycle back around.
+                    } else { //Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
                         isFragmentProcessingInProgress = false;
                         startScheduleTimer(250);
                     }
@@ -257,7 +256,6 @@ function ScheduleController(config) {
         lastInitQuality = quality;
 
         const request = adapter.getInitRequest(streamProcessor, quality);
-
         if (request) {
             isFragmentProcessingInProgress = true;
             fragmentModel.executeRequest(request);
@@ -270,6 +268,7 @@ function ScheduleController(config) {
 
     function onQualityChanged(e) {
         if (type !== e.mediaType || streamProcessor.getStreamInfo().id !== e.streamInfo.id) return;
+
         currentRepresentationInfo = streamProcessor.getRepresentationInfoForQuality(e.newQuality);
 
         if (currentRepresentationInfo === null || currentRepresentationInfo === undefined) {
@@ -291,15 +290,13 @@ function ScheduleController(config) {
     }
 
     function onDataUpdateCompleted(e) {
-        if (e.error) return;
+        if (e.error || e.sender.getStreamProcessor() !== streamProcessor) return;
         currentRepresentationInfo = adapter.convertDataToTrack(manifestModel.getValue(), e.currentRepresentation);
     }
 
     function onStreamInitialized(e) {
-        if (e.error) return;
-
+        if (e.error || streamProcessor.getStreamInfo().id !== e.streamInfo.id) return;
         currentRepresentationInfo = streamProcessor.getCurrentRepresentationInfo();
-
         if (!isDynamic || liveEdgeFinder.getLiveEdge() !== null) {
             ready = true;
         }
@@ -361,7 +358,7 @@ function ScheduleController(config) {
 
     function onBufferLevelStateChanged(e) {
         if ((e.sender.getStreamProcessor() === streamProcessor) && e.state === BufferController.BUFFER_EMPTY && !playbackController.isSeeking()) {
-            log('Stalling Buffer');
+            log('Buffer is empty! Stalling!');
             clearPlayListTraceMetrics(new Date(), PlayListTrace.REBUFFERING_REASON);
         }
     }
@@ -458,6 +455,10 @@ function ScheduleController(config) {
         return streamProcessor;
     }
 
+    function getBufferTarget() {
+        return bufferLevelRule.getBufferTarget(streamProcessor, type, streamController.isVideoTrackPresent());
+    }
+
     function setPlayList(playList) {
         playListMetrics = playList;
     }
@@ -534,6 +535,7 @@ function ScheduleController(config) {
         stop: stop,
         reset: reset,
         setPlayList: setPlayList,
+        getBufferTarget: getBufferTarget,
         finalisePlayList: finalisePlayList
     };
 

@@ -92,8 +92,6 @@ function StreamProcessor(config) {
         abrController.initialize(type, this);
 
         bufferController = createBufferControllerForType(Type);
-        bufferController.initialize(type, mediaSource, this);
-
         scheduleController = ScheduleController(context).create({
             metricsModel: MetricsModel(context).getInstance(),
             manifestModel: manifestModel,
@@ -105,7 +103,9 @@ function StreamProcessor(config) {
             mediaPlayerModel: MediaPlayerModel(context).getInstance(),
         });
 
+        bufferController.initialize(type, mediaSource, this);
         scheduleController.initialize(type, this);
+
 
         fragmentLoader = FragmentLoader(context).create({
             metricsModel: MetricsModel(context).getInstance(),
@@ -118,6 +118,8 @@ function StreamProcessor(config) {
 
         representationController = RepresentationController(context).create();
         representationController.initialize(this);
+
+
     }
 
     function reset(errored) {

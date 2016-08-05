@@ -66,7 +66,6 @@ function BufferController(config) {
         requiredQuality,
         isBufferingCompleted,
         bufferLevel,
-        bufferTarget,
         criticalBufferLevel,
         mediaSource,
         maxAppendedIndex,
@@ -83,17 +82,14 @@ function BufferController(config) {
         playbackController,
         streamProcessor,
         abrController,
-        fragmentController,
         scheduleController,
         mediaPlayerModel,
-        clearBufferTimeout,
         initCache;
 
     function setup() {
         requiredQuality = AbrController.QUALITY_DEFAULT;
         isBufferingCompleted = false;
         bufferLevel = 0;
-        bufferTarget = 0;
         criticalBufferLevel = Number.POSITIVE_INFINITY;
         maxAppendedIndex = 0;
         lastIndex = 0;
@@ -104,7 +100,6 @@ function BufferController(config) {
         isAppendingInProgress = false;
         isPruningInProgress = false;
         inbandEventFound = false;
-        clearBufferTimeout = null;
     }
 
     function initialize(Type, Source, StreamProcessor) {
@@ -115,7 +110,6 @@ function BufferController(config) {
         playbackController = PlaybackController(context).getInstance();
         abrController = AbrController(context).getInstance();
         initCache = InitCache(context).getInstance();
-        fragmentController = streamProcessor.getFragmentController();
         scheduleController = streamProcessor.getScheduleController();
         requiredQuality = abrController.getQualityFor(type, streamProcessor.getStreamInfo());
 
@@ -148,10 +142,8 @@ function BufferController(config) {
         } catch (e) {
             errHandler.mediaSourceError('Error creating ' + type + ' source buffer.');
         }
-
         setBuffer(sourceBuffer);
         updateBufferTimestampOffset(streamProcessor.getRepresentationInfoForQuality(requiredQuality).MSETimeOffset);
-
         return sourceBuffer;
     }
 
@@ -161,7 +153,7 @@ function BufferController(config) {
 
     function onInitFragmentLoaded(e) {
         if (e.fragmentModel !== streamProcessor.getFragmentModel()) return;
-        log('Initialization finished loading adding to the init cache');
+        log('Init fragment finished loading saving to', type + '\'s init cache');
         initCache.save(e.chunk);
         appendToBuffer(e.chunk);
     }
@@ -216,9 +208,6 @@ function BufferController(config) {
     function onAppended(e) {
         if (buffer !== e.buffer) return;
 
-        isAppendingInProgress = false;
-        onPlaybackProgression();
-
         if (e.error || !hasEnoughSpaceToAppend()) {
             if (e.error.code === SourceBufferController.QUOTA_EXCEEDED_ERROR_CODE) {
                 criticalBufferLevel = sourceBufferController.getTotalBufferedTime(buffer) * 0.8;
@@ -238,10 +227,12 @@ function BufferController(config) {
         const ranges = sourceBufferController.getAllRanges(buffer);
         if (ranges && ranges.length > 0) {
             for (let i = 0, len = ranges.length; i < len; i++) {
-                log('Buffered Range: ' + ranges.start(i) + ' - ' + ranges.end(i));
+                log('Buffered Range for type:', type , ':' ,ranges.start(i) ,  ' - ' ,  ranges.end(i));
             }
         }
 
+        onPlaybackProgression();
+        isAppendingInProgress = false;
         eventBus.trigger(Events.BYTES_APPENDED, {
             sender: instance,
             quality: appendedBytesInfo.quality,
@@ -278,9 +269,7 @@ function BufferController(config) {
 
     function addBufferMetrics() {
         if (!isActive()) return;
-        //TODO will need to fix how we get bufferTarget... since we ony load one at a time. but do it in the addBufferMetrics call not here
-        //bufferTarget = fragmentsToLoad > 0 ? (fragmentsToLoad * fragmentDuration) + bufferLevel : bufferTarget;
-        metricsModel.addBufferState(type, bufferState, bufferTarget);
+        metricsModel.addBufferState(type, bufferState, scheduleController.getBufferTarget());
         metricsModel.addBufferLevel(type, new Date(), bufferLevel * 1000);
     }
 
@@ -418,20 +407,11 @@ function BufferController(config) {
 
         updateBufferLevel();
         eventBus.trigger(Events.BUFFER_CLEARED, {sender: instance, from: e.from, to: e.to, hasEnoughSpaceToAppend: hasEnoughSpaceToAppend()});
-
-        //TODO Should not need this anymore but I will leave in for this sprint (2.3) to see if I missed an edgecase.
-        //if (hasEnoughSpaceToAppend()) return;
-        //
-        //if (clearBufferTimeout === null) {
-        //    clearBufferTimeout = setTimeout(function () {
-        //        clearBufferTimeout = null;
-        //        clearBuffer(getClearRange());
-        //    }, streamProcessor.getStreamInfo().manifestInfo.minBufferTime * 1000);
-        //}
+        //TODO - REMEMBER removed a timerout hack calling clearBuffer after manifestInfo.minBufferTime * 1000 if !hasEnoughSpaceToAppend() Aug 04 2016
     }
 
     function updateBufferTimestampOffset(MSETimeOffset) {
-        // each track can have its own @presentationTimeOffset, so we should set the offset
+        // Each track can have its own @presentationTimeOffset, so we should set the offset
         // if it has changed after switching the quality or updating an mpd
         if (buffer && buffer.timestampOffset !== MSETimeOffset && !isNaN(MSETimeOffset)) {
             buffer.timestampOffset = MSETimeOffset;
@@ -524,10 +504,6 @@ function BufferController(config) {
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
         eventBus.off(Events.SOURCEBUFFER_APPEND_COMPLETED, onAppended, this);
         eventBus.off(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
-        //eventBus.off(Events.CHUNK_APPENDED, onChunkAppended, this);
-
-        clearTimeout(clearBufferTimeout);
-        clearBufferTimeout = null;
 
         criticalBufferLevel = Number.POSITIVE_INFINITY;
         bufferState = BUFFER_EMPTY;
@@ -542,7 +518,6 @@ function BufferController(config) {
         playbackController = null;
         streamProcessor = null;
         abrController = null;
-        fragmentController = null;
         scheduleController = null;
 
         if (!errored) {
