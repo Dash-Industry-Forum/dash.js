@@ -279,25 +279,25 @@ function TTMLParser() {
         var nsttp = getNamespacePrefix(ttml.tt, 'http://www.w3.org/ns/ttml#parameter');
 
         // Set the framerate.
-        if (tt.hasOwnProperty(nsttp + ':frameRate')) {
-            tt.frameRate = parseInt(tt[nsttp + ':frameRate'], 10);
+        if (ttml.tt.hasOwnProperty(nsttp + ':frameRate')) {
+            ttml.tt.frameRate = parseInt(ttml.tt[nsttp + ':frameRate'], 10);
         }
         var captionArray = [];
         // Extract the div
-        var divs = tt.body_asArray[0].__children;
+        var divs = ttml.tt.body_asArray[0].__children;
 
         // Timing is either on div, paragraph or span level.
 
         for (let k = 0; k < divs.length; k++) {
-            let div = divs[k].div;
+            let div = divs[k];
             let divInterval = null; // This is mainly for image subtitles.
 
-            if (null !== (divInterval = getInterval(div))) {
+            if (null !== (divInterval = getInterval(div.div))) {
                 // Timing on div level is not allowed by EBU-TT-D.
-                // We only use it for SMPTE-TT image subtitle profile.
+                // We only use it for IMSC-1 image subtitle profile.
 
                 if (div['smpte:backgroundImage'] !== undefined) {
-                    var images = tt.head.metadata.image_asArray; // TODO. Check if this is too limited
+                    var images = ttml.tt.head.metadata.image_asArray; // TODO. Check if this is too limited
                     for (var j = 0; j < images.length; j++) {
                         if (('#' + images[j]['xml:id']) == div['smpte:backgroundImage']) {
                             captionArray.push({
@@ -313,7 +313,7 @@ function TTMLParser() {
                 continue; // Next div
             }
 
-            let paragraphs = div.p_asArray;
+            let paragraphs = div.div.p_asArray;
             // Check if cues is not empty or undefined.
             if (divInterval === null && (!paragraphs || paragraphs.length === 0)) {
                 errorMsg = 'TTML has div that contains no timing and no paragraphs.';
