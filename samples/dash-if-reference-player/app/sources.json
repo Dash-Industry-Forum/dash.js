@@ -4,6 +4,12 @@
             "name":"VOD",
             "submenu":[
                 {
+                    "url":"http://localhost/~tobbe/dash/vod/trombone2/manifest.mpd",
+                    "name":"Image Subtitles trombone2",
+                    "browsers":"cdsbi",
+                    "moreInfo":"None"
+                },
+                {
                     "url":"http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-events.mpd",
                     "name":"SegmentTemplate/Number, live profile",
                     "browsers":"cdsbi",
