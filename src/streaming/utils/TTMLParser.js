@@ -279,33 +279,45 @@ function TTMLParser() {
         var nsttp = getNamespacePrefix(ttml.tt, 'http://www.w3.org/ns/ttml#parameter');
 
         // Set the framerate.
-        if (ttml.tt.hasOwnProperty(nsttp + ':frameRate')) {
-            ttml.tt.frameRate = parseInt(ttml.tt[nsttp + ':frameRate'], 10);
+        if (tt.hasOwnProperty(nsttp + ':frameRate')) {
+            tt.frameRate = parseInt(tt[nsttp + ':frameRate'], 10);
         }
         var captionArray = [];
         // Extract the div
-        var divs = ttml.tt.body_asArray[0].__children;
+        var divs = tt.body_asArray[0].__children;
 
         // Timing is either on div, paragraph or span level.
 
         for (let k = 0; k < divs.length; k++) {
-            let div = divs[k];
+            let div = divs[k].div;
             let divInterval = null; // This is mainly for image subtitles.
 
-            if (null !== (divInterval = getInterval(div.div))) {
+            if (null !== (divInterval = getInterval(div))) {
                 // Timing on div level is not allowed by EBU-TT-D.
-                // We only use it for IMSC-1 image subtitle profile.
+                // We only use it for SMPTE-TT image subtitle profile.
+
+                // Layout should be defined by a region. Given early test material, we take it from div instead
+                let layout = {};
+                // Extent property corresponds to width and height
+                if ('tts:extent' in div) {
+                    layout.extent = div['tts:extent'];
+                }
+                // Origin property corresponds to top and left
+                if ('tts:origin' in div) {
+                    layout.origin = div['tts:origin'];
+                }
 
                 if (div['smpte:backgroundImage'] !== undefined) {
-                    var images = ttml.tt.head.metadata.image_asArray; // TODO. Check if this is too limited
-                    for (var j = 0; j < images.length; j++) {
-                        if (('#' + images[j]['xml:id']) == div['smpte:backgroundImage']) {
+                    let images = tt.head.metadata.image_asArray; // TODO. Check if this is too limited
+                    for (let j = 0; j < images.length; j++) {
+                        if (('#' + images[j]['xml:id']) === div['smpte:backgroundImage']) {
                             captionArray.push({
                                 start: divInterval[0],
                                 end: divInterval[1],
-                                id: images[j]['xml:id'],
+                                id: getCueID(),
                                 data: 'data:image/' + images[j].imagetype.toLowerCase() + ';base64, ' + images[j].__text,
-                                type: 'image'
+                                type: 'image',
+                                layout: layout
                             });
                         }
                     }
@@ -313,7 +325,7 @@ function TTMLParser() {
                 continue; // Next div
             }
 
-            let paragraphs = div.div.p_asArray;
+            let paragraphs = div.p_asArray;
             // Check if cues is not empty or undefined.
             if (divInterval === null && (!paragraphs || paragraphs.length === 0)) {
                 errorMsg = 'TTML has div that contains no timing and no paragraphs.';
@@ -366,7 +378,7 @@ function TTMLParser() {
                          * Find the region defined for the cue.
                          */
                         // properties to be put in the "captionRegion" HTML element.
-                        var cueRegionProperties = constructCueRegion(paragraph, div.div, cellUnit);
+                        var cueRegionProperties = constructCueRegion(paragraph, div, cellUnit);
 
                         /**
                          * Find the style defined for the cue.
