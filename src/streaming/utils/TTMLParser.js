@@ -212,6 +212,7 @@ function TTMLParser() {
         let tt, // Top element
             head, // head in tt
             body, // body in tt
+            ttExtent, // extent attribute of tt element
             type;
 
         var errorMsg = '';
@@ -242,6 +243,8 @@ function TTMLParser() {
         if (ttNS) {
             removeNamespacePrefix(tt, ttNS);
         }
+
+        ttExtent = tt['tts:extent']; // Should check that tts is right namespace.
 
         head = tt.head;
         if (!head) {
@@ -297,19 +300,20 @@ function TTMLParser() {
                 // Timing on div level is not allowed by EBU-TT-D.
                 // We only use it for SMPTE-TT image subtitle profile.
 
-                // Layout should be defined by a region. Given early test material, we take it from div instead
-                let layout = {};
-                // Extent property corresponds to width and height
-                if ('tts:extent' in div) {
-                    layout.extent = div['tts:extent'];
+                // Layout should be defined by a region. Given early test material, we also support that it is on
+                // div level
+                let layout;
+                if (div.region) {
+                    let region = findRegionFromID(ttmlLayout, div.region);
+                    layout = getRelativePositioning(region, ttExtent);
                 }
-                // Origin property corresponds to top and left
-                if ('tts:origin' in div) {
-                    layout.origin = div['tts:origin'];
+                if (!layout) {
+                    layout = getRelativePositioning(div, ttExtent);
                 }
 
+                let images = tt.head.metadata.image_asArray; // TODO. Add URL image sources
+
                 if (div['smpte:backgroundImage'] !== undefined) {
-                    let images = tt.head.metadata.image_asArray; // TODO. Check if this is too limited
                     for (let j = 0; j < images.length; j++) {
                         if (('#' + images[j]['xml:id']) === div['smpte:backgroundImage']) {
                             captionArray.push({
@@ -930,6 +934,51 @@ function TTMLParser() {
             }
         });
         return styles;
+    }
+
+    // Calculate relative left, top, width, height from extent and origin in percent.
+    // Return object with {left, top, width, height} as numbers in percent or null.
+    function getRelativePositioning(element, ttExtent) {
+
+        let pairRe = /([\d\.]+)(%|px)\s+([\d\.]+)(%|px)/;
+
+        if (('tts:extent' in element) && ('tts:origin' in element) ) {
+            let extentParts = pairRe.exec(element['tts:extent']);
+            let originParts = pairRe.exec(element['tts:origin']);
+            if (extentParts === null || originParts === null) {
+                log('Bad extent or origin: ' + element['tts:extent'] + ' ' + element['tts:origin']);
+                return null;
+            }
+            let width = parseFloat(extentParts[1]);
+            let height = parseFloat(extentParts[3]);
+            let left = parseFloat(originParts[1]);
+            let top = parseFloat(originParts[3]);
+
+            if (ttExtent) { // Should give overall scale in pixels
+                let ttExtentParts = pairRe.exec(ttExtent);
+                if (ttExtentParts === null || ttExtentParts[2] !== 'px' || ttExtentParts[4] !== 'px') {
+                    log('Bad tt.extent: ' + ttExtent);
+                    return null;
+                }
+                let exWidth = parseFloat(ttExtentParts[1]);
+                let exHeight = parseFloat(ttExtentParts[3]);
+                if (extentParts[2] === 'px') {
+                    width = width / exWidth * 100;
+                }
+                if (extentParts[4] === 'px') {
+                    height = height / exHeight * 100;
+                }
+                if (originParts[2] === 'px') {
+                    left = left / exWidth * 100;
+                }
+                if (originParts[4] === 'px') {
+                    top = top / exHeight * 100;
+                }
+            }
+            return { 'left': left, 'top': top, 'width': width, 'height': height };
+        } else {
+            return null;
+        }
     }
 
     /**

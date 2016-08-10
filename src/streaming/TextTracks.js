@@ -250,8 +250,7 @@ function TextTracks() {
         }
     }
 
-    function convertToPixels(percentageString, pixelMeasure) {
-        let percentage = parseInt(percentageString.substring(0, percentageString.length - 1));
+    function convertToPixels(percentage, pixelMeasure) {
         let percentString = Math.round(0.01 * percentage * pixelMeasure).toString() + 'px';
         return percentString;
     }
@@ -264,13 +263,12 @@ function TextTracks() {
             return; //At least one of the measures is still zero
         }
 
-        if ('layout' in activeCue) {
-            let originParts = activeCue.layout.origin.split(/\s/);
-            let extentParts = activeCue.layout.extent.split(/\s/);
-            let left = convertToPixels(originParts[0], videoWidth);
-            let top = convertToPixels(originParts[1], videoHeight);
-            let width = convertToPixels(extentParts[0], videoWidth);
-            let height = convertToPixels(extentParts[1], videoHeight);
+        if (activeCue.layout) {
+            let layout = activeCue.layout;
+            let left = convertToPixels(layout.left, videoWidth);
+            let top = convertToPixels(layout.top, videoHeight);
+            let width = convertToPixels(layout.width, videoWidth);
+            let height = convertToPixels(layout.height, videoHeight);
             captionContainer.style.left = left;
             captionContainer.style.top = top;
             captionContainer.style.width = width;
@@ -390,13 +388,15 @@ function TextTracks() {
                     if (!captionContainer) { // Does not support image captions without a container
                         return;
                     }
-                    var img = new Image();
-                    img.id = 'ttmlImage_' + this.id;
-                    img.src = this.image;
-                    //img.className = 'cue-image';
-                    img.style.cssText = 'z-index: 2147483648; pointer-events: none; display: block; visibility: visible !important; position: relative !important;';
-                    captionContainer.appendChild(img);
-                    scaleImageCue.call(self, this);
+                    if (track.mode === 'showing') {
+                        var img = new Image();
+                        img.id = 'ttmlImage_' + this.id;
+                        img.src = this.image;
+                        //img.className = 'cue-image';
+                        img.style.cssText = 'z-index: 2147483648; pointer-events: none; display: block; visibility: visible !important; position: relative !important;';
+                        captionContainer.appendChild(img);
+                        scaleImageCue.call(self, this);
+                    }
                 };
 
                 cue.onexit =  function () {
