@@ -155,6 +155,11 @@ class MediaPlayerEvents extends EventsBase {
          */
         this.PLAYBACK_ERROR = 'playbackError';
         /**
+         * Sent when playback is not allowed (for example if user gesture is needed).
+         * @event MediaPlayerEvents#PLAYBACK_NOT_ALLOWED
+         */
+        this.PLAYBACK_NOT_ALLOWED = 'playbackNotAllowed';
+        /**
          * The media's metadata has finished loading; all attributes now
          * contain as much useful information as they're going to.
          * @event MediaPlayerEvents#PLAYBACK_METADATA_LOADED
