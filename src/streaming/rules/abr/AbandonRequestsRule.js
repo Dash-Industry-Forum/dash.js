@@ -28,10 +28,10 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import SwitchRequest from '../SwitchRequest.js';
-import MediaPlayerModel from '../../models/MediaPlayerModel.js';
-import FactoryMaker from '../../../core/FactoryMaker.js';
-import Debug from '../../../core/Debug.js';
+import SwitchRequest from '../SwitchRequest';
+import MediaPlayerModel from '../../models/MediaPlayerModel';
+import FactoryMaker from '../../../core/FactoryMaker';
+import Debug from '../../../core/Debug';
 
 const GRACE_TIME_THRESHOLD = 500;
 const ABANDON_MULTIPLIER = 1.5;
@@ -66,7 +66,7 @@ function AbandonRequestsRule(/*config*/) {
         var representationInfo = rulesContext.getTrackInfo();
         var req = progressEvent.request;
         var abrController = rulesContext.getStreamProcessor().getABRController();
-        var switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
+        var switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK, {name: AbandonRequestsRule.__dashjs_factory_name});
 
         if (!isNaN(req.index)) {
             setFragmentRequestDict(mediaType, req.index);
@@ -101,7 +101,10 @@ function AbandonRequestsRule(/*config*/) {
                     return;
                 }else if (!abandonDict.hasOwnProperty(fragmentInfo.id)) {
                     var newQuality = abrController.getQualityForBitrate(mediaInfo, fragmentInfo.measuredBandwidthInKbps * mediaPlayerModel.getBandwidthSafetyFactor());
-                    switchRequest = SwitchRequest(context).create(newQuality, SwitchRequest.STRONG);
+                    switchRequest.value = newQuality;
+                    switchRequest.priority = SwitchRequest.STRONG;
+                    switchRequest.reason.throughput = fragmentInfo.measuredBandwidthInKbps;
+
                     abandonDict[fragmentInfo.id] = fragmentInfo;
                     log('AbandonRequestsRule ( ', mediaType, 'frag id',fragmentInfo.id,') is asking to abandon and switch to quality to ', newQuality, ' measured bandwidth was', fragmentInfo.measuredBandwidthInKbps);
                     delete fragmentDict[mediaType][fragmentInfo.id];

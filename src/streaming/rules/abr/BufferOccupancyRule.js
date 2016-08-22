@@ -28,11 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import SwitchRequest from '../SwitchRequest.js';
-import MediaPlayerModel from '../../models/MediaPlayerModel.js';
-import AbrController from '../../controllers/AbrController.js';
-import FactoryMaker from '../../../core/FactoryMaker.js';
-import Debug from '../../../core/Debug.js';
+import SwitchRequest from '../SwitchRequest';
+import MediaPlayerModel from '../../models/MediaPlayerModel';
+import AbrController from '../../controllers/AbrController';
+import FactoryMaker from '../../../core/FactoryMaker';
+import Debug from '../../../core/Debug';
 
 function BufferOccupancyRule(config) {
 
@@ -65,7 +65,7 @@ function BufferOccupancyRule(config) {
         var lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
         var isBufferRich = false;
         var maxIndex = mediaInfo.representationCount - 1;
-        var switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
+        var switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK, {name: BufferOccupancyRule.__dashjs_factory_name});
 
         if (now - lastSwitchTime < waitToSwitchTime ||
             abrController.getAbandonmentStateFor(mediaType) === AbrController.ABANDON_LOAD) {
@@ -80,7 +80,10 @@ function BufferOccupancyRule(config) {
                 isBufferRich = (lastBufferLevel - lastBufferStateVO.target) > mediaPlayerModel.getRichBufferThreshold();
 
                 if (isBufferRich && mediaInfo.representationCount > 1) {
-                    switchRequest = SwitchRequest(context).create(maxIndex, SwitchRequest.STRONG);
+                    switchRequest.value = maxIndex;
+                    switchRequest.priority = SwitchRequest.STRONG;
+                    switchRequest.reason.bufferLevel = lastBufferLevel;
+                    switchRequest.reason.bufferTarget = lastBufferStateVO.target;
                 }
             }
         }

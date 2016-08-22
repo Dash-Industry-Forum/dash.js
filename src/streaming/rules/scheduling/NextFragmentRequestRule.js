@@ -28,37 +28,30 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Debug from '../../../core/Debug.js';
-import FactoryMaker from '../../../core/FactoryMaker.js';
+import Debug from '../../../core/Debug';
+import FactoryMaker from '../../../core/FactoryMaker';
 
 function NextFragmentRequestRule(config) {
 
-    let instance;
-    let context = this.context;
-    let log = Debug(context).getInstance().log;
-    let adapter = config.adapter;
-    let sourceBufferController = config.sourceBufferController;
-    let virtualBuffer = config.virtualBuffer;
-    let textSourceBuffer = config.textSourceBuffer;
+    const context = this.context;
+    const log = Debug(context).getInstance().log;
+    const adapter = config.adapter;
+    const sourceBufferController = config.sourceBufferController;
+    const textSourceBuffer = config.textSourceBuffer;
 
-    function execute(streamProcessor) {
+    function execute(streamProcessor, requestToReplace) {
 
-        let representationInfo = streamProcessor.getCurrentRepresentationInfo();
-        let mediaInfo = representationInfo.mediaInfo;
-        let mediaType = mediaInfo.type;
-        let streamId = mediaInfo.streamInfo.id;
-        let scheduleController = streamProcessor.getScheduleController();
-        let seekTarget = scheduleController.getSeekTarget();
-        let hasSeekTarget = !isNaN(seekTarget);
-        let keepIdx = !hasSeekTarget;
+        const representationInfo = streamProcessor.getCurrentRepresentationInfo();
+        const mediaInfo = representationInfo.mediaInfo;
+        const mediaType = mediaInfo.type;
+        const scheduleController = streamProcessor.getScheduleController();
+        const seekTarget = scheduleController.getSeekTarget();
+        const hasSeekTarget = !isNaN(seekTarget);
+        const buffer = streamProcessor.getBuffer();
+
         let time = hasSeekTarget ? seekTarget : adapter.getIndexHandlerTime(streamProcessor);
-        let buffer = streamProcessor.getBuffer();
-        let range = null;
-        let appendedChunks;
-        let request;
 
-        if (isNaN(time) ||
-            (mediaType === 'fragmentedText' && textSourceBuffer.getAllTracksAreDisabled())) {
+        if (isNaN(time) || (mediaType === 'fragmentedText' && textSourceBuffer.getAllTracksAreDisabled())) {
             return null;
         }
 
@@ -70,35 +63,33 @@ function NextFragmentRequestRule(config) {
          * This is critical for IE/Safari/EDGE
          * */
         if (buffer) {
-            range = sourceBufferController.getBufferRange(streamProcessor.getBuffer(), time);
+            const range = sourceBufferController.getBufferRange(streamProcessor.getBuffer(), time);
             if (range !== null) {
-                appendedChunks = virtualBuffer.getChunks({streamId: streamId, mediaType: mediaType, appended: true, mediaInfo: mediaInfo, forRange: range});
-                if (appendedChunks && appendedChunks.length > 0) {
-                    let t = time;
-                    time = appendedChunks[appendedChunks.length - 1].bufferedRange.end;
-                    log('Prior to making a request for time, NextFragmentRequestRule is aligning index handler\'s currentTime with bufferedRange.end.',  t, ' was changed to ', time);
-                }
+                log('Prior to making a request for time, NextFragmentRequestRule is aligning index handler\'s currentTime with bufferedRange.end.', time, ' was changed to ', range.end);
+                time = range.end;
             }
         }
 
-
-        request = adapter.getFragmentRequestForTime(streamProcessor, representationInfo, time, {keepIdx: keepIdx});
-        //log("getForTime", request, time);
-        if (request && streamProcessor.getFragmentModel().isFragmentLoaded(request)) {
-            request = adapter.getNextFragmentRequest(streamProcessor, representationInfo);
-            //log("getForNext", request, streamProcessor.getIndexHandler().getCurrentIndex());
-        }
-
-        if (request) {
-            adapter.setIndexHandlerTime(streamProcessor, request.startTime + request.duration);
-            request.delayLoadingTime = new Date().getTime() + scheduleController.getTimeToLoadDelay();
-            scheduleController.setTimeToLoadDelay(0); // only delay one fragment
+        let request;
+        if (requestToReplace) {
+            time = requestToReplace.startTime + (requestToReplace.duration / 2);
+            request = adapter.getFragmentRequestForTime(streamProcessor, representationInfo, time, {timeThreshold: 0, ignoreIsFinished: true});
+        } else {
+            request = adapter.getFragmentRequestForTime(streamProcessor, representationInfo, time, {keepIdx: !hasSeekTarget});
+            if (request && streamProcessor.getFragmentModel().isFragmentLoaded(request)) {
+                request = adapter.getNextFragmentRequest(streamProcessor, representationInfo);
+            }
+            if (request) {
+                adapter.setIndexHandlerTime(streamProcessor, request.startTime + request.duration);
+                request.delayLoadingTime = new Date().getTime() + scheduleController.getTimeToLoadDelay();
+                scheduleController.setTimeToLoadDelay(0);
+            }
         }
 
         return request;
     }
 
-    instance = {
+    const instance = {
         execute: execute
     };
 

@@ -28,11 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import RulesContext from './RulesContext.js';
-import SwitchRequest from './SwitchRequest.js';
-import ABRRulesCollection from './abr/ABRRulesCollection.js';
-import SynchronizationRulesCollection from './synchronization/SynchronizationRulesCollection.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
+import RulesContext from './RulesContext';
+import SwitchRequest from './SwitchRequest';
+import ABRRulesCollection from './abr/ABRRulesCollection';
+import SynchronizationRulesCollection from './synchronization/SynchronizationRulesCollection';
+import FactoryMaker from '../../core/FactoryMaker';
 
 const ABR_RULE = 0;
 const SYNC_RULE = 1;
@@ -62,6 +62,7 @@ function RulesController() {
 
     function applyRules(rulesArr, streamProcessor, callback, current, overrideFunc) {
         var values = {};
+        var reasons = {};
         var rule,
             i;
 
@@ -71,10 +72,16 @@ function RulesController() {
 
         var callbackFunc = function (result) {
             var value,
+                reason,
                 confidence;
 
             if (result.value !== SwitchRequest.NO_CHANGE) {
-                values[result.priority] = overrideFunc(values[result.priority], result.value);
+                var newValue = overrideFunc(values[result.priority], result.value);
+                if (newValue !== values[result.priority]) {
+                    // change in value
+                    values[result.priority] = newValue; // === result.value
+                    reasons[result.priority] = result.reason;
+                }
             }
 
             if (--rulesCount) return;
@@ -82,17 +89,19 @@ function RulesController() {
             if (values[SwitchRequest.WEAK] !== SwitchRequest.NO_CHANGE) {
                 confidence = SwitchRequest.WEAK;
                 value = values[SwitchRequest.WEAK];
-
+                reason = reasons[SwitchRequest.WEAK];
             }
 
             if (values[SwitchRequest.DEFAULT] !== SwitchRequest.NO_CHANGE) {
                 confidence = SwitchRequest.DEFAULT;
                 value = values[SwitchRequest.DEFAULT];
+                reason = reasons[SwitchRequest.DEFAULT];
             }
 
             if (values[SwitchRequest.STRONG] !== SwitchRequest.NO_CHANGE) {
                 confidence = SwitchRequest.STRONG;
                 value = values[SwitchRequest.STRONG];
+                reason = reasons[SwitchRequest.STRONG];
             }
 
             if (confidence != SwitchRequest.STRONG &&
@@ -100,8 +109,11 @@ function RulesController() {
                 confidence = SwitchRequest.DEFAULT;
             }
 
-
-            callback({ value: (value !== undefined) ? value : current, confidence: confidence });
+            if (value !== undefined) {
+                callback({ value: value, confidence: confidence, reason: reason});
+            } else {
+                callback({ value: current, confidence: confidence, reason: {name: 'NO_CHANGE'}});
+            }
 
         };
 

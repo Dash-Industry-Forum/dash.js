@@ -30,24 +30,26 @@
  */
 
 /**
- * Represents a set of configurations that describe the capabilities desired for
- * support by a given CDM
- *
- * @param {MediaCapability[]} audioCapabilities array of
- * desired audio capabilities.  Higher preference capabilities should be placed earlier
- * in the array.
- * @param {MediaCapability[]} videoCapabilities array of
- * desired video capabilities.  Higher preference capabilities should be placed earlier
- * in the array.
- * @param {string} [distinctiveIdentifier="optional"] desired use of distinctive identifiers.
- * One of "required", "optional", or "not-allowed"
- * @param {string} [persistentState="optional"] desired support for persistent storage of
- * key systems.  One of "required", "optional", or "not-allowed"
- * @param {string[]} [sessionTypes=["temporary"]] List of session types that must
- * be supported by the key system
- * @class
+ * @classdesc Represents a set of configurations that describe the capabilities desired for
+ *  support by a given CDM
+ * @ignore
  */
 class KeySystemConfiguration {
+    /**
+     * @param {Array.<MediaCapability>} audioCapabilities array of
+     * desired audio capabilities.  Higher preference capabilities should be placed earlier
+     * in the array.
+     * @param {Array.<MediaCapability>} videoCapabilities array of
+     * desired video capabilities.  Higher preference capabilities should be placed earlier
+     * in the array.
+     * @param {string} distinctiveIdentifier desired use of distinctive identifiers.
+     * One of "required", "optional", or "not-allowed"
+     * @param {string} persistentState desired support for persistent storage of
+     * key systems.  One of "required", "optional", or "not-allowed"
+     * @param {Array.<string>} sessionTypes List of session types that must
+     * be supported by the key system
+     * @class
+     */
     constructor(audioCapabilities, videoCapabilities, distinctiveIdentifier, persistentState, sessionTypes) {
         this.initDataTypes = [ 'cenc' ];
         this.audioCapabilities = audioCapabilities;

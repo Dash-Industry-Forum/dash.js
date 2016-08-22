@@ -1,6 +1,6 @@
-import SpecHelper from './helpers/SpecHelper.js';
-import VoHelper from './helpers/VOHelper.js';
-import AbrController from '../src/streaming/controllers/AbrController.js';
+import SpecHelper from './helpers/SpecHelper';
+import VoHelper from './helpers/VOHelper';
+import AbrController from '../src/streaming/controllers/AbrController';
 
 const expect = require('chai').expect;
 
@@ -8,7 +8,7 @@ describe("AbrController", function () {
     const context = {};
     const testType = 'video';
     const voHelper = new VoHelper();
-    const defaultQuality = new SpecHelper().getDefaultQuality();
+    const defaultQuality = AbrController.QUALITY_DEFAULT;
     const abrCtrl = AbrController(context).getInstance();
     const dummyMediaInfo = voHelper.getDummyMediaInfo('video');
     const representationCount = dummyMediaInfo.representationCount;

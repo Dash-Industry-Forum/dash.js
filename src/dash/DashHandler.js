@@ -28,17 +28,17 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FragmentRequest from '../streaming/vo/FragmentRequest.js';
-import Error from '../streaming/vo/Error.js';
-import HTTPRequest from '../streaming/vo/metrics/HTTPRequest.js';
-import Events from '../core/events/Events.js';
-import EventBus from '../core/EventBus.js';
-import FactoryMaker from '../core/FactoryMaker.js';
-import Debug from '../core/Debug.js';
-import URLUtils from '../streaming/utils/URLUtils.js';
+import FragmentRequest from '../streaming/vo/FragmentRequest';
+import Error from '../streaming/vo/Error';
+import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
+import Events from '../core/events/Events';
+import EventBus from '../core/EventBus';
+import FactoryMaker from '../core/FactoryMaker';
+import Debug from '../core/Debug';
+import URLUtils from '../streaming/utils/URLUtils';
 
-import {replaceTokenForTemplate, getTimeBasedSegment, getSegmentByIndex} from './utils/SegmentsUtils.js';
-import SegmentsGetter from './utils/SegmentsGetter.js';
+import {replaceTokenForTemplate, getTimeBasedSegment, getSegmentByIndex} from './utils/SegmentsUtils';
+import SegmentsGetter from './utils/SegmentsGetter';
 
 const SEGMENTS_UNAVAILABLE_ERROR_CODE = 1;
 
@@ -132,8 +132,12 @@ function DashHandler(config) {
         if (!baseURL || (destination === baseURL.url) || (!urlUtils.isRelative(destination))) {
             url = destination;
         } else {
-            url = baseURL.url + destination;
+            url = baseURL.url;
             serviceLocation = baseURL.serviceLocation;
+
+            if (destination) {
+                url += destination;
+            }
         }
 
         if (urlUtils.isRelative(url)) {
@@ -245,7 +249,7 @@ function DashHandler(config) {
 
     function updateRepresentation(representation, keepIdx) {
         var hasInitialization = representation.initialization;
-        var hasSegments = representation.segmentInfoType !== 'BaseURL' && representation.segmentInfoType !== 'SegmentBase';
+        var hasSegments = representation.segmentInfoType !== 'BaseURL' && representation.segmentInfoType !== 'SegmentBase' && !representation.indexRange;
         var error;
 
         if (!representation.segmentDuration && !representation.segments) {

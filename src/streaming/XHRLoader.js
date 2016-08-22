@@ -28,13 +28,15 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import HTTPRequest from './vo/metrics/HTTPRequest.js';
-import FactoryMaker from '../core/FactoryMaker.js';
-import MediaPlayerModel from './models/MediaPlayerModel.js';
+import {HTTPRequest} from './vo/metrics/HTTPRequest';
+import FactoryMaker from '../core/FactoryMaker';
+import MediaPlayerModel from './models/MediaPlayerModel';
+import ErrorHandler from './utils/ErrorHandler.js';
 
 /**
- * @Module XHRLoader
+ * @module XHRLoader
  * @description Manages download of resources via HTTP.
+ * @param {Object} cfg - dependancies from parent
  */
 function XHRLoader(cfg) {
     const context = this.context;
@@ -58,13 +60,13 @@ function XHRLoader(cfg) {
         retryTimers = [];
 
         downloadErrorToRequestTypeMap = {
-            [HTTPRequest.MPD_TYPE]:                         errHandler.DOWNLOAD_ERROR_ID_MANIFEST,
-            [HTTPRequest.XLINK_EXPANSION_TYPE]:             errHandler.DOWNLOAD_ERROR_ID_XLINK,
-            [HTTPRequest.INIT_SEGMENT_TYPE]:                errHandler.DOWNLOAD_ERROR_ID_CONTENT,
-            [HTTPRequest.MEDIA_SEGMENT_TYPE]:               errHandler.DOWNLOAD_ERROR_ID_CONTENT,
-            [HTTPRequest.INDEX_SEGMENT_TYPE]:               errHandler.DOWNLOAD_ERROR_ID_CONTENT,
-            [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: errHandler.DOWNLOAD_ERROR_ID_CONTENT,
-            [HTTPRequest.OTHER_TYPE]:                       errHandler.DOWNLOAD_ERROR_ID_CONTENT
+            [HTTPRequest.MPD_TYPE]:                         ErrorHandler.DOWNLOAD_ERROR_ID_MANIFEST,
+            [HTTPRequest.XLINK_EXPANSION_TYPE]:             ErrorHandler.DOWNLOAD_ERROR_ID_XLINK,
+            [HTTPRequest.INIT_SEGMENT_TYPE]:                ErrorHandler.DOWNLOAD_ERROR_ID_INITIALIZATION,
+            [HTTPRequest.MEDIA_SEGMENT_TYPE]:               ErrorHandler.DOWNLOAD_ERROR_ID_CONTENT,
+            [HTTPRequest.INDEX_SEGMENT_TYPE]:               ErrorHandler.DOWNLOAD_ERROR_ID_CONTENT,
+            [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: ErrorHandler.DOWNLOAD_ERROR_ID_CONTENT,
+            [HTTPRequest.OTHER_TYPE]:                       ErrorHandler.DOWNLOAD_ERROR_ID_CONTENT
         };
     }
 
@@ -176,7 +178,7 @@ function XHRLoader(cfg) {
                 handleLoaded(true);
 
                 if (config.success) {
-                    config.success(xhr.response, xhr.statusText, request);
+                    config.success(xhr.response, xhr.statusText, xhr);
                 }
 
                 if (config.complete) {
@@ -204,6 +206,8 @@ function XHRLoader(cfg) {
             }
 
             xhr = requestModifier.modifyRequestHeader(xhr);
+
+            xhr.withCredentials = mediaPlayerModel.getXHRWithCredentials();
 
             xhr.onload = onload;
             xhr.onloadend = onloadend;
@@ -274,7 +278,7 @@ function XHRLoader(cfg) {
             // abort will trigger onloadend which we don't want
             // when deliberately aborting inflight requests -
             // set them to undefined so they are not called
-            x.onloadend = x.onerror = undefined;
+            x.onloadend = x.onerror = x.onprogress = undefined;
             x.abort();
         });
         xhrs = [];

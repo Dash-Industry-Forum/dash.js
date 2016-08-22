@@ -1,6 +1,5 @@
 class SpecHelper {
     constructor() {
-        this.DEFAULT_QUALITY = 0;
         this.EVENT_NOTIFICATION_DELAY = 200;
         this.TIMEOUT_DELAY = 2000;
         this.isHtmlRunner = false; //window.location.href.indexOf("runner.html") > 0;
@@ -26,10 +25,6 @@ class SpecHelper {
 
     getTimeoutDelay() {
         return this.TIMEOUT_DELAY;
-    }
-
-    getDefaultQuality() {
-        return this.DEFAULT_QUALITY;
     }
 
     getUnixTime() {

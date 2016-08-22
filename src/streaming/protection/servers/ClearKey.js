@@ -38,9 +38,9 @@
  * @implements LicenseServer
  * @class
  */
-import KeyPair from '../vo/KeyPair.js';
-import ClearKeyKeySet from '../vo/ClearKeyKeySet.js';
-import FactoryMaker from '../../../core/FactoryMaker.js';
+import KeyPair from '../vo/KeyPair';
+import ClearKeyKeySet from '../vo/ClearKeyKeySet';
+import FactoryMaker from '../../../core/FactoryMaker';
 
 function ClearKey() {
 

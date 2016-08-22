@@ -37,15 +37,15 @@
  * @implements ProtectionModel
  * @class
  */
-import ProtectionKeyController from '../controllers/ProtectionKeyController.js';
-import NeedKey from '../vo/NeedKey.js';
-import KeyError from '../vo/KeyError.js';
-import KeyMessage from '../vo/KeyMessage.js';
-import KeySystemConfiguration from '../vo/KeySystemConfiguration.js';
-import KeySystemAccess from '../vo/KeySystemAccess.js';
-import Events from '../../../core/events/Events.js';
-import ErrorHandler from '../../utils/ErrorHandler.js';
-import FactoryMaker from '../../../core/FactoryMaker.js';
+import ProtectionKeyController from '../controllers/ProtectionKeyController';
+import NeedKey from '../vo/NeedKey';
+import KeyError from '../vo/KeyError';
+import KeyMessage from '../vo/KeyMessage';
+import KeySystemConfiguration from '../vo/KeySystemConfiguration';
+import KeySystemAccess from '../vo/KeySystemAccess';
+import Events from '../../../core/events/Events';
+import ErrorHandler from '../../utils/ErrorHandler';
+import FactoryMaker from '../../../core/FactoryMaker';
 
 function ProtectionModel_01b(config) {
 
@@ -370,8 +370,8 @@ function ProtectionModel_01b(config) {
      * Helper function to retrieve the stored session token based on a given
      * sessionID value
      *
-     * @param sessionArray {Array} the array of sessions to search
-     * @param sessionID the sessionID to search for
+     * @param {Array} sessionArray - the array of sessions to search
+     * @param {*} sessionID - the sessionID to search for
      * @returns {*} the session token with the given sessionID
      */
     function findSessionByID(sessionArray, sessionID) {

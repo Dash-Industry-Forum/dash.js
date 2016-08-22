@@ -28,13 +28,13 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import SwitchRequest from '../SwitchRequest.js';
-import BufferController from '../../controllers/BufferController.js';
-import AbrController from '../../controllers/AbrController.js';
-import MediaPlayerModel from '../../models/MediaPlayerModel.js';
-import HTTPRequest from '../../vo/metrics/HTTPRequest.js';
-import FactoryMaker from '../../../core/FactoryMaker.js';
-import Debug from '../../../core/Debug.js';
+import SwitchRequest from '../SwitchRequest';
+import BufferController from '../../controllers/BufferController';
+import AbrController from '../../controllers/AbrController';
+import MediaPlayerModel from '../../models/MediaPlayerModel';
+import {HTTPRequest} from '../../vo/metrics/HTTPRequest';
+import FactoryMaker from '../../../core/FactoryMaker';
+import Debug from '../../../core/Debug';
 
 function ThroughputRule(config) {
 
@@ -67,7 +67,7 @@ function ThroughputRule(config) {
         var averageThroughput = 0;
         var sampleAmount = isDynamic ? AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE : AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD;
         var arr = throughputArray[type];
-        var len = arr.length;
+        var len = arr ? arr.length : 0;
 
         sampleAmount = len < sampleAmount ? len : sampleAmount;
 
@@ -79,10 +79,10 @@ function ThroughputRule(config) {
                 totalSampledValue += arr[i];
             }
             averageThroughput = totalSampledValue / sampleAmount;
-        }
 
-        if (arr.length > sampleAmount) {
-            arr.shift();
+            if (arr.length > sampleAmount) {
+                arr.shift();
+            }
         }
 
         return (averageThroughput / 1000 ) * mediaPlayerModel.getBandwidthSafetyFactor();
@@ -104,7 +104,7 @@ function ThroughputRule(config) {
         var lastRequest = dashMetrics.getCurrentHttpRequest(metrics);
         var bufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
         var bufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null;
-        var switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
+        var switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK, {name: ThroughputRule.__dashjs_factory_name});
 
         if (!metrics || !lastRequest || lastRequest.type !== HTTPRequest.MEDIA_SEGMENT_TYPE ||
             !bufferStateVO || !bufferLevelVO ) {
@@ -132,8 +132,10 @@ function ThroughputRule(config) {
 
             if (bufferStateVO.state === BufferController.BUFFER_LOADED || isDynamic) {
                 var newQuality = abrController.getQualityForBitrate(mediaInfo, averageThroughput);
-                streamProcessor.getScheduleController().setTimeToLoadDelay(0); // TODO Watch out for seek event - no delay when seeking.!!
-                switchRequest = SwitchRequest(context).create(newQuality, SwitchRequest.DEFAULT);
+                streamProcessor.getScheduleController().setTimeToLoadDelay(0);
+                switchRequest.value = newQuality;
+                switchRequest.priority = SwitchRequest.DEFAULT;
+                switchRequest.reason.throughput = averageThroughput;
             }
 
             if (switchRequest.value !== SwitchRequest.NO_CHANGE && switchRequest.value !== current) {

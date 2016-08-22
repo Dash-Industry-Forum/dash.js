@@ -28,12 +28,12 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import SynchronizationRulesCollection from '../rules/synchronization/SynchronizationRulesCollection.js';
-import Error from '../vo/Error.js';
-import EventBus from '../../core/EventBus.js';
-import Events from '../../core/events/Events.js';
-import RulesController from '../rules/RulesController.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
+import SynchronizationRulesCollection from '../rules/synchronization/SynchronizationRulesCollection';
+import Error from '../vo/Error';
+import EventBus from '../../core/EventBus';
+import Events from '../../core/events/Events';
+import RulesController from '../rules/RulesController';
+import FactoryMaker from '../../core/FactoryMaker';
 
 const LIVE_EDGE_NOT_FOUND_ERROR_CODE = 1;
 

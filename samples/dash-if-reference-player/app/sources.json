@@ -6,7 +6,8 @@
                 {
                     "url":"http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-events.mpd",
                     "name":"SegmentTemplate/Number, live profile",
-                    "browsers":"cdsbi"
+                    "browsers":"cdsbi",
+                    "moreInfo":"http://rdmedia.bbc.co.uk/dash/ondemand/testcard/"
                 },
                 {
                     "url":"http://dash.edgesuite.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd",
@@ -67,6 +68,16 @@
                 {
                     "url":"http://irtdashreference-i.akamaihd.net/dash/live/901161/bfs/manifestARD.mpd",
                     "name":"IRT reference with EBU-TT-D subtitles",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "url":" http://vm2.dashif.org/livesim-dev/ato_10/testpic_2s/Manifest.mpd",
+                    "name":"10 seconds availabilityTimeOffset (livesim)",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "url":"http://vm2.dashif.org/livesim-dev/ato_inf/testpic_2s/Manifest.mpd",
+                    "name":"Infinite offset - all segments available at availability start (livesim)",
                     "browsers":"cdsbi"
                 }
             ]
@@ -518,12 +529,14 @@
                 {
                     "name":"BBC R&D Testcard",
                     "url":"http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-events.mpd",
-                    "browsers":""
+                    "browsers":"",
+                    "moreInfo":"http://rdmedia.bbc.co.uk/dash/ondemand/testcard/"
                 },
                 {
                     "name":"BBC R&D EBU-TT-D Subtitling Test",
                     "url":"http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/1/client_manifest-all.mpd",
-                    "browsers":""
+                    "browsers":"",
+                    "moreInfo":"http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/"
                 }
             ]
         },
@@ -568,7 +581,102 @@
             ]
         },
         {
-            "name":"D-DASH  Test Content",
+            "name":"Wowza Test Content",
+            "submenu":[
+                {
+                    "name":"Clear Dynamic SegmentTimeline",
+                    "url": "http://wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mvtime.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"Clear Dynamic SegmentTemplate",
+                    "url": "http://wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mvnumber.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"Clear Dynamic SegmentList",
+                    "url": "http://wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mvlist.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"Clear Static SegmentTimeline",
+                    "url": "http://wowzaec2demo.streamlock.net/vod/_definst_/ElephantsDream/smil:ElephantsDream.smil/manifest_mvtime.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"Clear Static SegmentTemplate",
+                    "url": "http://wowzaec2demo.streamlock.net/vod/_definst_/ElephantsDream/smil:ElephantsDream.smil/manifest_mvnumber.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"Clear Static SegmentList",
+                    "url": "http://wowzaec2demo.streamlock.net/vod/_definst_/ElephantsDream/smil:ElephantsDream.smil/manifest_mvlist.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"Widevine Dynamic SegmentTimeline",
+                    "url": "http://wowzaec2demo.streamlock.net/live/bigbuckbunny-enc-wv.stream/manifest_mvtime.mpd",
+                    "browsers":"cdsbi",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "http://widevine-proxy.appspot.com/proxy"
+                        }
+                    }
+                },
+                {
+                    "name":"Widevine Dynamic SegmentTemplate",
+                    "url": "http://wowzaec2demo.streamlock.net/live/bigbuckbunny-enc-wv.stream/manifest_mvnumber.mpd",
+                    "browsers":"cdsbi",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "http://widevine-proxy.appspot.com/proxy"
+                        }
+                    }
+                },
+                {
+                    "name":"Widevine Dynamic SegmentList",
+                    "url": "http://wowzaec2demo.streamlock.net/live/bigbuckbunny-enc-wv.stream/manifest_mvlist.mpd",
+                    "browsers":"cdsbi",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "http://widevine-proxy.appspot.com/proxy"
+                        }
+                    }
+                },
+                {
+                    "name":"Widevine Static SegmentTimeline",
+                    "url": "http://wowzaec2demo.streamlock.net/vod/elephantsdream_1100kbps-enc-wv.mp4/manifest_mvtime.mpd",
+                    "browsers":"cdsbi",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "http://widevine-proxy.appspot.com/proxy"
+                        }
+                    }
+                },
+                {
+                    "name":"Widevine Static SegmentTemplate",
+                    "url": "http://wowzaec2demo.streamlock.net/vod/elephantsdream_1100kbps-enc-wv.mp4/manifest_mvnumber.mpd",
+                    "browsers":"cdsbi",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "http://widevine-proxy.appspot.com/proxy"
+                        }
+                    }
+                },
+                {
+                    "name":"Widevine Static SegmentList",
+                    "url": "http://wowzaec2demo.streamlock.net/vod/elephantsdream_1100kbps-enc-wv.mp4/manifest_mvlist.mpd ",
+                    "browsers":"cdsbi",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "http://widevine-proxy.appspot.com/proxy"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name":"D-DASH Test Content",
             "submenu":[
                 {
                     "name":"D-Dash #1",
@@ -629,6 +737,39 @@
                     "name":"Embedded CEA-608 Closed Captions and TTML segments Live (livesim)",
                     "url":"http://vm2.dashif.org/livesim/testpic_2s/cea608_and_segs.mpd",
                     "browsers":"cdsbi"
+                },
+                {
+                    "name":"TTML Segmented 'snaking' subtitles (with random text) (Ondemand)",
+                    "url":"http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/1/client_manifest-snake.mpd",
+                    "browsers":"cdsbi",
+                    "moreInfo":"http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/"
+                }
+            ]
+        },
+        {
+            "name":"Audio-only",
+            "submenu":[
+                {
+                    "name":"48k AAC-LC Stereo Beeps (Live)",
+                    "url":"http://vm2.dashif.org/livesim/testpic_2s/audio.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"48k AAC-LC Stereo Beeps (Ondemand)",
+                    "url":"http://vm2.dashif.org/dash/vod/testpic_2s/audio.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"128k AAC-LC Stereo 1kHz Tone (Ondemand)",
+                    "url":"http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-audio-1kHz.mpd",
+                    "browsers":"cdsbi",
+                    "moreInfo":"http://rdmedia.bbc.co.uk/dash/ondemand/testcard/"
+                },
+                {
+                    "name":"128k/320k AAC-LC Stereo/5.1 'Testcard' (Ondemand)",
+                    "url":"http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-audio.mpd",
+                    "browsers":"cdsbi",
+                    "moreInfo":"http://rdmedia.bbc.co.uk/dash/ondemand/testcard/"
                 }
             ]
         },

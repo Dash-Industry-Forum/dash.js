@@ -29,9 +29,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import MetricsHandlerFactory from '../metrics/MetricsHandlerFactory.js';
-import FactoryMaker from '../../../core/FactoryMaker.js';
-import MediaPlayerEvents from '../../MediaPlayerEvents.js';
+import MetricsHandlerFactory from '../metrics/MetricsHandlerFactory';
+import FactoryMaker from '../../../core/FactoryMaker';
+import MediaPlayerEvents from '../../MediaPlayerEvents';
 
 function MetricsHandlersController(config) {
     let handlers = [];

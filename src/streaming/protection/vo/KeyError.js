@@ -30,14 +30,16 @@
  */
 
 /**
- * EME-independent KeyError
- *
- * @param sessionToken the key session to which this error is associated
- * @param errorString an informational error message
- * @class
- * @deprecated Newest versions of EME APIs will not use this error object
+ * @classdesc EME-independent KeyError
+ * @ignore
  */
 class KeyError {
+    /**
+     * @param {Object} sessionToken the key session to which this error is associated
+     * @param {string} errorString an informational error message
+     * @class
+     * @deprecated Newest versions of EME APIs will not use this error object
+     */
     constructor(sessionToken, errorString) {
         this.sessionToken = sessionToken;
         this.error = errorString;

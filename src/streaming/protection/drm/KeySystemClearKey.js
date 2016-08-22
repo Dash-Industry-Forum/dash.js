@@ -29,10 +29,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import KeyPair from '../vo/KeyPair.js';
-import ClearKeyKeySet from '../vo/ClearKeyKeySet.js';
-import CommonEncryption from '../CommonEncryption.js';
-import FactoryMaker from '../../../core/FactoryMaker.js';
+import KeyPair from '../vo/KeyPair';
+import ClearKeyKeySet from '../vo/ClearKeyKeySet';
+import CommonEncryption from '../CommonEncryption';
+import FactoryMaker from '../../../core/FactoryMaker';
 
 const uuid = '1077efec-c0b2-4d02-ace3-3c1e52e2fb4b';
 const systemString = 'org.w3.clearkey';
@@ -44,7 +44,7 @@ function KeySystemClearKey() {
     /**
      * Returns desired clearkeys (as specified in the CDM message) from protection data
      *
-     * @param {ProtectionData} protData the protection data
+     * @param {ProtectionData} protectionData the protection data
      * @param {ArrayBuffer} message the ClearKey CDM message
      * @returns {ClearKeyKeySet} the key set or null if none found
      * @throws {Error} if a keyID specified in the CDM message was not found in the

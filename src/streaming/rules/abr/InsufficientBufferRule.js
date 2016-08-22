@@ -28,12 +28,12 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import SwitchRequest from '../SwitchRequest.js';
-import BufferController from '../../controllers/BufferController.js';
-import EventBus from '../../../core/EventBus.js';
-import Events from '../../../core/events/Events.js';
-import FactoryMaker from '../../../core/FactoryMaker.js';
-import Debug from '../../../core/Debug.js';
+import SwitchRequest from '../SwitchRequest';
+import BufferController from '../../controllers/BufferController';
+import EventBus from '../../../core/EventBus';
+import Events from '../../../core/events/Events';
+import FactoryMaker from '../../../core/FactoryMaker';
+import Debug from '../../../core/Debug';
 
 function InsufficientBufferRule(config) {
 
@@ -61,7 +61,7 @@ function InsufficientBufferRule(config) {
         var current = rulesContext.getCurrentValue();
         var metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
         var lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
-        var switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
+        var switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK, {name: InsufficientBufferRule.__dashjs_factory_name});
 
         if (now - lastSwitchTime < waitToSwitchTime ||
             lastBufferStateVO === null) {
@@ -72,6 +72,10 @@ function InsufficientBufferRule(config) {
         setBufferInfo(mediaType, lastBufferStateVO.state);
         // After the sessions first buffer loaded event , if we ever have a buffer empty event we want to switch all the way down.
         if (lastBufferStateVO.state === BufferController.BUFFER_EMPTY && bufferStateDict[mediaType].firstBufferLoadedEvent !== undefined) {
+            switchRequest.value = 0;
+            switchRequest.priority = SwitchRequest.STRONG;
+            switchRequest.reason.bufferState = lastBufferStateVO.state;
+
             switchRequest = SwitchRequest(context).create(0, SwitchRequest.STRONG);
         }
 

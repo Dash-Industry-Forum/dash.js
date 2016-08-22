@@ -28,10 +28,10 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import SwitchRequest from '../SwitchRequest.js';
-import EventBus from '../../../core/EventBus.js';
-import Events from '../../../core/events/Events.js';
-import FactoryMaker from '../../../core/FactoryMaker.js';
+import SwitchRequest from '../SwitchRequest';
+import EventBus from '../../../core/EventBus';
+import Events from '../../../core/events/Events';
+import FactoryMaker from '../../../core/FactoryMaker';
 
 const SEARCH_TIME_SPAN = 12 * 60 * 60; // set the time span that limits our search range to a 12 hours in seconds
 

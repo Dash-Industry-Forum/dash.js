@@ -29,10 +29,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import PlaybackController from '../controllers/PlaybackController.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
-import Debug from '../../core/Debug.js';
-import EventBus from '../../core/EventBus.js';
+import PlaybackController from '../controllers/PlaybackController';
+import FactoryMaker from '../../core/FactoryMaker';
+import Debug from '../../core/Debug';
+import EventBus from '../../core/EventBus';
 
 function EventController() {
 
@@ -84,7 +84,7 @@ function EventController() {
 
     /**
      * Add events to the eventList. Events that are not in the mpd anymore but not triggered yet will still be deleted
-     * @param values
+     * @param {Array.<Object>} values
      */
     function addInlineEvents(values) {
         inlineEvents = {};
@@ -101,7 +101,7 @@ function EventController() {
 
     /**
      * i.e. processing of any one event message box with the same id is sufficient
-     * @param values
+     * @param {Array.<Object>} values
      */
     function addInbandEvents(values) {
         for (var i = 0; i < values.length; i++) {

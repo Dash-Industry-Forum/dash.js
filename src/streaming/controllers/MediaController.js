@@ -28,12 +28,12 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Events from '../../core/events/Events.js';
-import EventBus from '../../core/EventBus.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
-import Debug from '../../core/Debug.js';
-import TextSourceBuffer from '../TextSourceBuffer.js';
-import DOMStorage from '../utils/DOMStorage.js';
+import Events from '../../core/events/Events';
+import EventBus from '../../core/EventBus';
+import FactoryMaker from '../../core/FactoryMaker';
+import Debug from '../../core/Debug';
+import TextSourceBuffer from '../TextSourceBuffer';
+import DOMStorage from '../utils/DOMStorage';
 
 const TRACK_SWITCH_MODE_NEVER_REPLACE = 'neverReplace';
 const TRACK_SWITCH_MODE_ALWAYS_REPLACE = 'alwaysReplace';
@@ -73,8 +73,8 @@ function MediaController() {
     }
 
     /**
-     * @param type
-     * @param streamInfo
+     * @param {string} type
+     * @param {StreamInfo} streamInfo
      * @memberof MediaController#
      */
     function checkInitialMediaSettingsForType(type, streamInfo) {
@@ -115,8 +115,8 @@ function MediaController() {
     }
 
     /**
-     * @param track
-     * @returns {Boolean}
+     * @param {MediaInfo} track
+     * @returns {boolean}
      * @memberof MediaController#
      */
     function addTrack(track) {
@@ -140,8 +140,8 @@ function MediaController() {
     }
 
     /**
-     * @param type
-     * @param streamInfo
+     * @param {string} type
+     * @param {StreamInfo} streamInfo
      * @returns {Array}
      * @memberof MediaController#
      */
@@ -156,20 +156,19 @@ function MediaController() {
     }
 
     /**
-     * @param type
-     * @param streamInfo
-     * @returns {Object}
+     * @param {string} type
+     * @param {StreamInfo} streamInfo
+     * @returns {Object|null}
      * @memberof MediaController#
      */
     function getCurrentTrackFor(type, streamInfo) {
-        if (!type || !streamInfo) return null;
-
+        if (!type || !streamInfo || (streamInfo && !tracks[streamInfo.id])) return null;
         return tracks[streamInfo.id][type].current;
     }
 
     /**
-     * @param track
-     * @returns {Boolean}
+     * @param {MediaInfo} track
+     * @returns {boolean}
      * @memberof MediaController#
      */
     function isCurrentTrack(track) {
@@ -180,7 +179,7 @@ function MediaController() {
     }
 
     /**
-     * @param track
+     * @param {MediaInfo} track
      * @memberof MediaController#
      */
     function setTrack(track) {
@@ -220,8 +219,8 @@ function MediaController() {
     }
 
     /**
-     * @param type
-     * @param {Object}
+     * @param {string} type
+     * @param {Object} value
      * @memberof MediaController#
      */
     function setInitialSettings(type, value) {
@@ -231,8 +230,8 @@ function MediaController() {
     }
 
     /**
-     * @param type
-     * @returns {Object}
+     * @param {string} type
+     * @returns {Object|null}
      * @memberof MediaController#
      */
     function getInitialSettings(type) {
@@ -242,8 +241,8 @@ function MediaController() {
     }
 
     /**
-     * @param type
-     * @param mode
+     * @param {string} type
+     * @param {string} mode
      * @memberof MediaController#
      */
     function setSwitchMode(type, mode) {
@@ -258,8 +257,8 @@ function MediaController() {
     }
 
     /**
-     * @param type
-     * @returns mode
+     * @param {string} type
+     * @returns {string} mode
      * @memberof MediaController#
      */
     function getSwitchMode(type) {
@@ -267,7 +266,7 @@ function MediaController() {
     }
 
     /**
-     * @param mode
+     * @param {string} mode
      * @memberof MediaController#
      */
     function setSelectionModeForInitialTrack(mode) {
@@ -281,7 +280,7 @@ function MediaController() {
     }
 
     /**
-     * @returns mode
+     * @returns {string} mode
      * @memberof MediaController#
      */
     function getSelectionModeForInitialTrack() {
@@ -289,8 +288,8 @@ function MediaController() {
     }
 
     /**
-     * @param type
-     * @returns {Boolean}
+     * @param {string} type
+     * @returns {boolean}
      * @memberof MediaController#
      */
     function isMultiTrackSupportedByType(type) {
@@ -298,18 +297,18 @@ function MediaController() {
     }
 
     /**
-     * @param t1 first track to compare
-     * @param t2 second track to compare
-     * @returns {Boolean}
+     * @param {MediaInfo} t1 - first track to compare
+     * @param {MediaInfo} t2 - second track to compare
+     * @returns {boolean}
      * @memberof MediaController#
      */
     function isTracksEqual(t1, t2) {
         var sameId = t1.id === t2.id;
         var sameViewpoint = t1.viewpoint === t2.viewpoint;
         var sameLang = t1.lang === t2.lang;
-        var sameRoles = t1.roles.toString() == t2.roles.toString();
-        var sameAccessibility = t1.accessibility.toString() == t2.accessibility.toString();
-        var sameAudioChannelConfiguration = t1.audioChannelConfiguration.toString() == t2.audioChannelConfiguration.toString();
+        var sameRoles = t1.roles.toString() === t2.roles.toString();
+        var sameAccessibility = t1.accessibility.toString() === t2.accessibility.toString();
+        var sameAudioChannelConfiguration = t1.audioChannelConfiguration.toString() === t2.audioChannelConfiguration.toString();
 
         return (sameId && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration);
     }

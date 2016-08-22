@@ -669,6 +669,11 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
 
     $scope.doLoad = function () {
         var protData = null;
+
+        if (!$scope.selectedItem) {
+            return;
+        }
+
         if ($scope.selectedItem.hasOwnProperty("protData")) {
             protData = $scope.selectedItem.protData;
         }

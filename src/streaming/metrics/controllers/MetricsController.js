@@ -29,10 +29,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../../core/FactoryMaker.js';
-import RangeController from './RangeController.js';
-import ReportingController from './ReportingController.js';
-import MetricsHandlersController from './MetricsHandlersController.js';
+import FactoryMaker from '../../../core/FactoryMaker';
+import RangeController from './RangeController';
+import ReportingController from './ReportingController';
+import MetricsHandlersController from './MetricsHandlersController';
 
 function MetricsController(config) {
 

@@ -28,10 +28,10 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventBus from '../core/EventBus.js';
-import Events from '../core/events/Events.js';
-import FactoryMaker from '../core/FactoryMaker.js';
-import Debug from '../core/Debug.js';
+import EventBus from '../core/EventBus';
+import Events from '../core/events/Events';
+import FactoryMaker from '../core/FactoryMaker';
+import Debug from '../core/Debug';
 
 function ManifestUpdater() {
 
@@ -137,8 +137,9 @@ function ManifestUpdater() {
         manifest = manifestModel.getValue();
         url = manifest.url;
 
-        if (manifest.hasOwnProperty('Location')) {
-            url = manifest.Location;
+        const location = dashManifestModel.getLocation(manifest);
+        if (location) {
+            url = location;
         }
 
         //log("Refresh manifest @ " + url);

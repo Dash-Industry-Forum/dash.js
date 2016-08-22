@@ -28,15 +28,15 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import RequestModifier from '../streaming/utils/RequestModifier.js';
-import Segment from './vo/Segment.js';
-import Error from '../streaming/vo/Error.js';
-import ErrorHandler from '../streaming/utils/ErrorHandler.js';
-import Events from '../core/events/Events.js';
-import EventBus from '../core/EventBus.js';
-import BoxParser from '../streaming/utils/BoxParser.js';
-import FactoryMaker from '../core/FactoryMaker.js';
-import Debug from '../core/Debug.js';
+import RequestModifier from '../streaming/utils/RequestModifier';
+import Segment from './vo/Segment';
+import Error from '../streaming/vo/Error';
+import ErrorHandler from '../streaming/utils/ErrorHandler';
+import Events from '../core/events/Events';
+import EventBus from '../core/EventBus';
+import BoxParser from '../streaming/utils/BoxParser';
+import FactoryMaker from '../core/FactoryMaker';
+import Debug from '../core/Debug';
 
 function SegmentBaseLoader() {
 
@@ -237,7 +237,7 @@ function SegmentBaseLoader() {
         var len = refs.length;
         var timescale = sidx.timescale;
         var time = sidx.earliest_presentation_time;
-        var start = info.range.start + sidx.first_offset + sidx.size;
+        var start = info.range.start + sidx.offset + sidx.first_offset + sidx.size;
         var segments = [];
         var segment,
             end,

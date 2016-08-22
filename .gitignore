@@ -14,8 +14,9 @@ _SpecRunner.html
 reports
 jsdoc
 dist
-build/temp
-coverage/
+es5
+temp
+coverage
 
 #################
 ## Eclipse
@@ -24,9 +25,9 @@ coverage/
 *.pydevproject
 .project
 .metadata
-bin/
-tmp/
-.idea/
+bin
+tmp
+.idea
 *.tmp
 *.bak
 *.swp

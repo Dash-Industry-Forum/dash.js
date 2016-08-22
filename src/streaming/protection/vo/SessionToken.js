@@ -66,7 +66,7 @@ class SessionToken {}
  *
  * @function
  * @name SessionToken#getExpirationTime
- * @returns {Number} the expiration time or NaN if no expiration time exists
+ * @returns {number} the expiration time or NaN if no expiration time exists
  * for this session
  */
 
@@ -76,7 +76,7 @@ class SessionToken {}
  *
  * @function
  * @name SessionToken#getKeyStatuses
- * @returns {"maplike<BufferSource,MediaKeyStatus>"} the map of keys
+ * @returns {maplike<BufferSource,MediaKeyStatus>} the map of keys
  * in this session and their associated status
  */
 
@@ -86,7 +86,7 @@ class SessionToken {}
  *
  * @function
  * @name SessionToken#getSessionType
- * @returns {String} The session type
+ * @returns {string} The session type
  */
 
 export default SessionToken;

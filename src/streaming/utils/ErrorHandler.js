@@ -28,9 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventBus from '../../core/EventBus.js';
-import Events from '../../core/events/Events.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
+import EventBus from '../../core/EventBus';
+import Events from '../../core/events/Events';
+import FactoryMaker from '../../core/FactoryMaker';
 
 const CAPABILITY_ERROR_MEDIASOURCE      = 'mediasource';
 const CAPABILITY_ERROR_MEDIAKEYS        = 'mediakeys';
@@ -64,8 +64,8 @@ function ErrorHandler() {
     }
 
     // {message: "", id: "codec"|"parse"|"nostreams", manifest: {parsed manifest}}
-    function manifestError(message, id, manifest) {
-        eventBus.trigger(Events.ERROR, {error: 'manifestError', event: {message: message, id: id, manifest: manifest}});
+    function manifestError(message, id, manifest, err) {
+        eventBus.trigger(Events.ERROR, {error: 'manifestError', event: {message: message, id: id, manifest: manifest, event: err}});
     }
 
     // {message: '', id: 'parse', cc: ''}

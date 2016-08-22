@@ -29,11 +29,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import MetricsController from './MetricsController.js';
-import ManifestParsing from '../utils/ManifestParsing.js';
-import FactoryMaker from '../../../core/FactoryMaker.js';
-import MetricsReportingEvents from '../MetricsReportingEvents.js';
-import Events from '../../../core/events/Events.js';
+import MetricsController from './MetricsController';
+import ManifestParsing from '../utils/ManifestParsing';
+import FactoryMaker from '../../../core/FactoryMaker';
+import MetricsReportingEvents from '../MetricsReportingEvents';
+import Events from '../../../core/events/Events';
 
 function MetricsCollectionController(config) {
 

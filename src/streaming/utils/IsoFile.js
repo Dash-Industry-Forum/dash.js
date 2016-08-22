@@ -29,8 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import IsoBox from '../vo/IsoBox.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
+import IsoBox from '../vo/IsoBox';
+import FactoryMaker from '../../core/FactoryMaker';
 
 function IsoFile() {
 
@@ -49,7 +49,7 @@ function IsoFile() {
 
     /**
     * @param {string} type
-    * @returns {@link IsoBox}
+    * @returns {IsoBox|null}
     * @memberof IsoFile#
     */
     function getBox(type) {
@@ -88,7 +88,7 @@ function IsoFile() {
     }
 
     /**
-    * @returns {@link IsoBox}
+    * @returns {IsoBox|null}
     * @memberof IsoFile#
     */
     function getLastBox() {
@@ -101,7 +101,7 @@ function IsoFile() {
     }
 
     /**
-    * @returns {Number}
+    * @returns {number}
     * @memberof IsoFile#
     */
     function getOffset() {

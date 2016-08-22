@@ -1,7 +1,7 @@
-import Metrics from '../vo/Metrics.js';
-import Range from '../vo/Range.js';
-import Reporting from '../vo/Reporting.js';
-import FactoryMaker from '../../../core/FactoryMaker.js';
+import Metrics from '../vo/Metrics';
+import Range from '../vo/Range';
+import Reporting from '../vo/Reporting';
+import FactoryMaker from '../../../core/FactoryMaker';
 
 function ManifestParsing (config) {
     let instance;

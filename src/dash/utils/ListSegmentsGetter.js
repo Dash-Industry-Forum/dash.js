@@ -29,9 +29,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../core/FactoryMaker.js';
+import FactoryMaker from '../../core/FactoryMaker';
 
-import {getIndexBasedSegment, decideSegmentListRangeForTemplate} from './SegmentsUtils.js';
+import {getIndexBasedSegment, decideSegmentListRangeForTemplate} from './SegmentsUtils';
 
 function ListSegmentsGetter(config, isDynamic) {
 
@@ -42,8 +42,6 @@ function ListSegmentsGetter(config, isDynamic) {
     function getSegmentsFromList(representation, requestedTime, index, availabilityUpperLimit) {
         var list = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
             AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList;
-        var baseURL = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
-            AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL;
         var len = list.SegmentURL_asArray.length;
 
         var segments = [];
@@ -67,7 +65,7 @@ function ListSegmentsGetter(config, isDynamic) {
 
             seg = getIndexBasedSegment(timelineConverter, isDynamic, representation, periodSegIdx);
             seg.replacementTime = (start + periodSegIdx - 1) * representation.segmentDuration;
-            seg.media = s.media ? s.media : baseURL;
+            seg.media = s.media ? s.media : '';
             seg.mediaRange = s.mediaRange;
             seg.index = s.index;
             seg.indexRange = s.indexRange;

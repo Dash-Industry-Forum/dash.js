@@ -1,4 +1,4 @@
-import MediaPlayer from './MediaPlayer.js';
+import MediaPlayer from './MediaPlayer';
 
 function MediaPlayerFactory() {
 
@@ -13,9 +13,10 @@ function MediaPlayerFactory() {
      *  a default DashContext is used. If no source is provided, the videoElement is interrogated to extract the first source whose
      *  type is application/dash+xml.
      * The autoplay property of the videoElement is preserved. Any preload attribute is ignored. This method should be called after the page onLoad event is dispatched.
-     * @param video
-     * @param source
-     * @returns {MediaPlayer}
+     * @param {HTMLMediaElement} video
+     * @param {HTMLSourceElement} source
+     * @param {Object} context
+     * @returns {MediaPlayer|null}
      */
     function create(video, source, context) {
         if (!video || video.nodeName !== 'VIDEO') return null;
@@ -54,8 +55,8 @@ function MediaPlayerFactory() {
      * A new MediaPlayer is instantiated for each matching video element and the appropriate source is assigned.
      * The autoplay property of the video element is preserved. Any preload attribute is ignored. This method should be called after the page onLoad event is dispatched.
      * Returns an array holding all the MediaPlayer instances that were added by this method.
-     * @param selector
-     * @param scope
+     * @param {string} selector - CSS selector
+     * @param {Object} scope
      * @returns {Array} an array of MediaPlayer objects
      */
     function createAll(selector, scope) {

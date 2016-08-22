@@ -28,13 +28,13 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import BufferController from './BufferController.js';
-import URIQueryAndFragmentModel from '../models/URIQueryAndFragmentModel.js';
-import MediaPlayerModel from '../../streaming/models/MediaPlayerModel.js';
-import EventBus from '../../core/EventBus.js';
-import Events from '../../core/events/Events.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
-import Debug from '../../core/Debug.js';
+import BufferController from './BufferController';
+import URIQueryAndFragmentModel from '../models/URIQueryAndFragmentModel';
+import MediaPlayerModel from '../../streaming/models/MediaPlayerModel';
+import EventBus from '../../core/EventBus';
+import Events from '../../core/events/Events';
+import FactoryMaker from '../../core/FactoryMaker';
+import Debug from '../../core/Debug';
 
 function PlaybackController() {
 
@@ -114,7 +114,15 @@ function PlaybackController() {
     function play() {
         if (element) {
             element.autoplay = true;
-            element.play();
+            const p = element.play();
+            if (p && (typeof Promise !== 'undefined') && (p instanceof Promise)) {
+                p.catch((e) => {
+                    if (e.name === 'NotAllowedError') {
+                        eventBus.trigger(Events.PLAYBACK_NOT_ALLOWED);
+                    }
+                    log(`Caught pending play exception - continuing (${e})`);
+                });
+            }
         } else {
             playOnceInitialized = true;
         }
@@ -176,9 +184,11 @@ function PlaybackController() {
 
     /**
      * Computes the desirable delay for the live edge to avoid a risk of getting 404 when playing at the bleeding edge
-     * @returns {Number} object
+     * @param {number} fragmentDuration - seconds?
+     * @param {number} dvrWindowSize - seconds?
+     * @returns {number} object
      * @memberof PlaybackController#
-     * */
+     */
     function computeLiveDelay(fragmentDuration, dvrWindowSize) {
         var mpd = dashManifestModel.getMpd(manifestModel.getValue());
 
@@ -249,8 +259,8 @@ function PlaybackController() {
     }
 
     /**
-     * @param streamInfo object
-     * @returns {Number} object
+     * @param {boolean} ignoreStartOffset - ignore URL fragment start offset if true
+     * @returns {number} object
      * @memberof PlaybackController#
      */
     function getStreamStartTime(ignoreStartOffset) {
@@ -435,7 +445,7 @@ function PlaybackController() {
         let bufferedStart = Math.max(ranges.start(0), streamInfo.start);
         let earliestTime = commonEarliestTime[streamInfo.id] === undefined ? bufferedStart : Math.max(commonEarliestTime[streamInfo.id], bufferedStart);
         if (earliestTime === commonEarliestTime[streamInfo.id]) return;
-        if (!isDynamic && !streamInfo.isFirst && getStreamStartTime(true) < earliestTime) {
+        if (!isDynamic && getStreamStartTime(true) < earliestTime && getTime() < earliestTime) {
             seek(earliestTime);
         }
         commonEarliestTime[streamInfo.id] = earliestTime;

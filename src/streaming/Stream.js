@@ -28,23 +28,24 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import LiveEdgeFinder from './utils/LiveEdgeFinder.js';
-import StreamProcessor from './StreamProcessor.js';
-import MediaController from './controllers/MediaController.js';
-import EventController from './controllers/EventController.js';
-import FragmentController from './controllers/FragmentController.js';
-import AbrController from './controllers/AbrController.js';
-import VideoModel from './models/VideoModel.js';
-import MetricsModel from './models/MetricsModel.js';
-import PlaybackController from './controllers/PlaybackController.js';
-import DashHandler from '../dash/DashHandler.js';
-import SegmentBaseLoader from '../dash/SegmentBaseLoader.js';
-import DashMetrics from '../dash/DashMetrics.js';
-import EventBus from '../core/EventBus.js';
-import Events from '../core/events/Events.js';
-import Debug from '../core/Debug.js';
-import FactoryMaker from '../core/FactoryMaker.js';
-import TextSourceBuffer from './TextSourceBuffer.js';
+import LiveEdgeFinder from './utils/LiveEdgeFinder';
+import StreamProcessor from './StreamProcessor';
+import MediaController from './controllers/MediaController';
+import EventController from './controllers/EventController';
+import FragmentController from './controllers/FragmentController';
+import AbrController from './controllers/AbrController';
+import VideoModel from './models/VideoModel';
+import MetricsModel from './models/MetricsModel';
+import PlaybackController from './controllers/PlaybackController';
+import DashHandler from '../dash/DashHandler';
+import SegmentBaseLoader from '../dash/SegmentBaseLoader';
+import WebmSegmentBaseLoader from '../dash/WebmSegmentBaseLoader';
+import DashMetrics from '../dash/DashMetrics';
+import EventBus from '../core/EventBus';
+import Events from '../core/events/Events';
+import Debug from '../core/Debug';
+import FactoryMaker from '../core/FactoryMaker';
+import TextSourceBuffer from './TextSourceBuffer';
 
 function Stream(config) {
 
@@ -114,7 +115,7 @@ function Stream(config) {
 
     /**
      * Activates Stream by re-initializing some of its components
-     * @param mediaSource {MediaSource}
+     * @param {MediaSource} mediaSource
      * @memberof Stream#
      */
     function activate(mediaSource) {
@@ -203,7 +204,7 @@ function Stream(config) {
     }
 
     /**
-     * @param type
+     * @param {string} type
      * @returns {Array}
      * @memberof Stream#
      */
@@ -295,11 +296,18 @@ function Stream(config) {
         }
     }
 
-    function createIndexHandler() {
+    function isWebM (mimeType) {
+        let type = mimeType.split('/')[1];
 
-        let segmentBaseLoader = SegmentBaseLoader(context).getInstance();
+        return 'webm' === type.toLowerCase();
+    }
+
+    function createIndexHandler(mediaInfo) {
+
+        let segmentBaseLoader = isWebM(mediaInfo.mimeType) ? WebmSegmentBaseLoader(context).getInstance() : SegmentBaseLoader(context).getInstance();
         segmentBaseLoader.setConfig({
-            baseURLController: baseURLController
+            baseURLController: baseURLController,
+            metricsModel: MetricsModel(context).getInstance()
         });
         segmentBaseLoader.initialize();
 
@@ -316,7 +324,7 @@ function Stream(config) {
 
     function createStreamProcessor(mediaInfo, manifest, mediaSource, optionalSettings) {
         var streamProcessor = StreamProcessor(context).create({
-            indexHandler: createIndexHandler(),
+            indexHandler: createIndexHandler(mediaInfo),
             timelineConverter: timelineConverter,
             adapter: adapter,
             manifestModel: manifestModel
@@ -328,6 +336,7 @@ function Stream(config) {
 
         if (optionalSettings) {
             streamProcessor.setBuffer(optionalSettings.buffer);
+            streamProcessor.getIndexHandler().setCurrentTime(optionalSettings.currentTime);
             streamProcessors[optionalSettings.replaceIdx] = streamProcessor;
         } else {
             streamProcessors.push(streamProcessor);
@@ -522,31 +531,26 @@ function Stream(config) {
     }
 
     function updateData(updatedStreamInfo) {
-        var ln = streamProcessors.length;
-        var manifest = manifestModel.getValue();
 
-        var i = 0;
-        var mediaInfo,
-           events,
-           controller;
+        log('Manifest updated... updating data system wide.');
+
+        let manifest = manifestModel.getValue();
 
         isStreamActivated = false;
+        isUpdating = true;
+        initialized = false;
         streamInfo = updatedStreamInfo;
-        log('Manifest updated... set new data on buffers.');
 
         if (eventController) {
-            events = adapter.getEventsFor(manifest, streamInfo);
+            let events = adapter.getEventsFor(manifest, streamInfo);
             eventController.addInlineEvents(events);
         }
 
-        isUpdating = true;
-        initialized = false;
-
-        for (i; i < ln; i++) {
-            controller = streamProcessors[i];
-            mediaInfo = adapter.getMediaInfoForType(manifest, streamInfo, controller.getType());
+        for (let i = 0, ln = streamProcessors.length; i < ln; i++) {
+            let streamProcessor = streamProcessors[i];
+            let mediaInfo = adapter.getMediaInfoForType(manifest, streamInfo, streamProcessor.getType());
             abrController.updateTopQualityIndex(mediaInfo);
-            controller.updateMediaInfo(manifest, mediaInfo);
+            streamProcessor.updateMediaInfo(manifest, mediaInfo);
         }
 
         isUpdating = false;

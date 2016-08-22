@@ -38,14 +38,14 @@
  * @class
  */
 
-import ProtectionKeyController from '../controllers/ProtectionKeyController.js';
-import NeedKey from '../vo/NeedKey.js';
-import KeyError from '../vo/KeyError.js';
-import KeyMessage from '../vo/KeyMessage.js';
-import KeySystemConfiguration from '../vo/KeySystemConfiguration.js';
-import KeySystemAccess from '../vo/KeySystemAccess.js';
-import Events from '../../../core/events/Events.js';
-import FactoryMaker from '../../../core/FactoryMaker.js';
+import ProtectionKeyController from '../controllers/ProtectionKeyController';
+import NeedKey from '../vo/NeedKey';
+import KeyError from '../vo/KeyError';
+import KeyMessage from '../vo/KeyMessage';
+import KeySystemConfiguration from '../vo/KeySystemConfiguration';
+import KeySystemAccess from '../vo/KeySystemAccess';
+import Events from '../../../core/events/Events';
+import FactoryMaker from '../../../core/FactoryMaker';
 
 function ProtectionModel_3Feb2014(config) {
 
@@ -246,7 +246,7 @@ function ProtectionModel_3Feb2014(config) {
      * Close the given session and release all associated keys.  Following
      * this call, the sessionToken becomes invalid
      *
-     * @param sessionToken the session token
+     * @param {Object} sessionToken - the session token
      */
     function closeKeySession(sessionToken) {
 

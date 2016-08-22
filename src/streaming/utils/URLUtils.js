@@ -29,10 +29,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../core/FactoryMaker.js';
+import FactoryMaker from '../../core/FactoryMaker';
 
 /**
- * @Module URLUtils
+ * @module URLUtils
  * @description Provides utility functions for operating on URLs.
  * Initially this is simply a method to determine the Base URL of a URL, but
  * should probably include other things provided all over the place such as
@@ -43,9 +43,12 @@ function URLUtils() {
     let instance;
 
     const absUrl = /^(?:(?:[a-z]+:)?\/)?\//i;
+    const httpUrlRegex = /^https?:\/\//i;
+    const originRegex = /^(https?:\/\/[^\/]+)\/?/i;
 
     /**
      * Returns a string that contains the Base URL of a URL, if determinable.
+     * @param {string} url - full url
      * @return {string}
      * @memberof module:URLUtils
      * @instance
@@ -64,6 +67,24 @@ function URLUtils() {
     }
 
     /**
+     * Returns a string that contains the scheme and origin of a URL,
+     * if determinable.
+     * @param {string} url - full url
+     * @return {string}
+     * @memberof module:URLUtils
+     * @instance
+     */
+    function parseOrigin(url) {
+        const matches = url.match(originRegex);
+
+        if (matches) {
+            return matches[1];
+        }
+
+        return '';
+    }
+
+    /**
      * Determines whether the url is relative.
      * @return {bool}
      * @param {string} url
@@ -74,9 +95,36 @@ function URLUtils() {
         return !absUrl.test(url);
     }
 
+
+    /**
+     * Determines whether the url is path-absolute.
+     * @return {bool}
+     * @param {string} url
+     * @memberof module:URLUtils
+     * @instance
+     */
+    function isPathAbsolute(url) {
+        return absUrl.test(url) && url.charAt(0) === '/';
+    }
+
+    /**
+     * Determines whether the url is an HTTP-URL as defined in ISO/IEC
+     * 23009-1:2014 3.1.15. ie URL with a fixed scheme of http or https
+     * @return {bool}
+     * @param {string} url
+     * @memberof module:URLUtils
+     * @instance
+     */
+    function isHTTPURL(url) {
+        return httpUrlRegex.test(url);
+    }
+
     instance = {
         parseBaseUrl:   parseBaseUrl,
-        isRelative:     isRelative
+        parseOrigin:    parseOrigin,
+        isRelative:     isRelative,
+        isPathAbsolute: isPathAbsolute,
+        isHTTPURL:      isHTTPURL
     };
 
     return instance;

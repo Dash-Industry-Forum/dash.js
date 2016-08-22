@@ -28,9 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventBus from '../../core/EventBus.js';
-import Events from '../../core/events/Events.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
+import EventBus from '../../core/EventBus';
+import Events from '../../core/events/Events';
+import FactoryMaker from '../../core/FactoryMaker';
 
 function TextController(config) {
 
@@ -69,8 +69,8 @@ function TextController(config) {
     }
 
     /**
-     * @param mediaInfo object
-     * @returns SourceBuffer object
+     * @param {MediaInfo }mediaInfo
+     * @returns {Object} SourceBuffer object
      * @memberof BufferController#
      */
     function createBuffer(mediaInfo) {

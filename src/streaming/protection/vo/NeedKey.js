@@ -29,14 +29,14 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * @class
+ * @classdesc NeedKey
  * @ignore
  */
 class NeedKey {
     /**
      * @param {ArrayBuffer} initData the initialization data
-     * @param {String} [initDataType] initialization data type
-     * @constructor
+     * @param {string} initDataType initialization data type
+     * @class
      */
     constructor(initData, initDataType) {
         this.initData = initData;

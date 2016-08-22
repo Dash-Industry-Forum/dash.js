@@ -29,31 +29,14 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import TrackInfo from '../streaming/vo/TrackInfo.js';
-import MediaInfo from '../streaming/vo/MediaInfo.js';
-import StreamInfo from '../streaming/vo/StreamInfo.js';
-import ManifestInfo from '../streaming/vo/ManifestInfo.js';
-import Event from './vo/Event.js';
-import FactoryMaker from '../core/FactoryMaker.js';
-import cea608parser from '../../externals/cea608-parser.js';
-
-const METRIC_LIST = {
-    //TODO need to refactor all that reference to be able to export like all other const on factory object.
-    TCP_CONNECTION: 'TcpList',
-    HTTP_REQUEST: 'HttpList',
-    TRACK_SWITCH: 'RepSwitchList',
-    BUFFER_LEVEL: 'BufferLevel',
-    BUFFER_STATE: 'BufferState',
-    DVR_INFO: 'DVRInfo',
-    DROPPED_FRAMES: 'DroppedFrames',
-    SCHEDULING_INFO: 'SchedulingInfo',
-    REQUESTS_QUEUE: 'RequestsQueue',
-    MANIFEST_UPDATE: 'ManifestUpdate',
-    MANIFEST_UPDATE_STREAM_INFO: 'ManifestUpdatePeriodInfo',
-    MANIFEST_UPDATE_TRACK_INFO: 'ManifestUpdateRepresentationInfo',
-    PLAY_LIST: 'PlayList',
-    DVB_ERRORS: 'DVBErrors'
-};
+import TrackInfo from '../streaming/vo/TrackInfo';
+import MediaInfo from '../streaming/vo/MediaInfo';
+import StreamInfo from '../streaming/vo/StreamInfo';
+import ManifestInfo from '../streaming/vo/ManifestInfo';
+import Event from './vo/Event';
+import FactoryMaker from '../core/FactoryMaker';
+import cea608parser from '../../externals/cea608-parser';
+import * as METRIC_LIST from './constants/DashMetricsList';
 
 function DashAdapter() {
 
@@ -204,14 +187,13 @@ function DashAdapter() {
     }
 
     function getMediaInfoForType(manifest, streamInfo, type) {
-        var periodInfo = getPeriodForStreamInfo(streamInfo);
-        var periodId = periodInfo.id;
-        var data = dashManifestModel.getAdaptationForType(manifest, streamInfo.index, type);
-        var idx;
 
+        let data = dashManifestModel.getAdaptationForType(manifest, streamInfo.index, type, streamInfo);
         if (!data) return null;
 
-        idx = dashManifestModel.getIndexForAdaptation(data, manifest, streamInfo.index);
+        let periodInfo = getPeriodForStreamInfo(streamInfo);
+        let periodId = periodInfo.id;
+        let idx = dashManifestModel.getIndexForAdaptation(data, manifest, streamInfo.index);
 
         adaptations[periodId] = adaptations[periodId] || dashManifestModel.getAdaptationsForPeriod(manifest, periodInfo);
 

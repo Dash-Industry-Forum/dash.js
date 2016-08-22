@@ -29,8 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../core/FactoryMaker.js';
-import EventBus from '../../core/EventBus.js';
+import FactoryMaker from '../../core/FactoryMaker';
+import EventBus from '../../core/EventBus';
 
 function BlackListController(config) {
 

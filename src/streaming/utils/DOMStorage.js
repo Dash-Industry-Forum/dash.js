@@ -28,9 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../../core/FactoryMaker.js';
-import MediaPlayerModel from '../models/MediaPlayerModel.js';
-import Debug from '../../core/Debug.js';
+import FactoryMaker from '../../core/FactoryMaker';
+import MediaPlayerModel from '../models/MediaPlayerModel';
+import Debug from '../../core/Debug';
 
 const legacyKeysAndReplacements = [
     { oldKey: 'dashjs_vbitrate',  newKey: 'dashjs_video_bitrate' },

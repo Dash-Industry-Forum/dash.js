@@ -114,6 +114,20 @@ module.exports = function (grunt) {
                 }
             }
         },
+
+        babel: {
+            options: {
+                sourceMap: true
+            },
+            es5: {
+                files: [{
+                    expand: true,
+                    src: ['index.js', 'src/**/*.js', 'externals/**/*.js'],
+                    dest: 'build/es5/',
+                }]
+            }
+        },
+
         browserify: {
             mediaplayer: {
                 files: {
@@ -125,7 +139,7 @@ module.exports = function (grunt) {
                         standalone: 'dashjs.MediaPlayer'
                     },
                     plugin: [
-                      ['browserify-derequire']
+                        'browserify-derequire', 'bundle-collapser/plugin'
                     ],
                     transform: ['babelify']
                 }
@@ -140,7 +154,7 @@ module.exports = function (grunt) {
                         standalone: 'dashjs.Protection'
                     },
                     plugin: [
-                        ['browserify-derequire']
+                        'browserify-derequire', 'bundle-collapser/plugin'
                     ],
                     transform: ['babelify']
                 }
@@ -155,7 +169,7 @@ module.exports = function (grunt) {
                         standalone: 'dashjs.MetricsReporting'
                     },
                     plugin: [
-                        ['browserify-derequire']
+                        'browserify-derequire', 'bundle-collapser/plugin'
                     ],
                     transform: ['babelify']
                 }
@@ -169,7 +183,7 @@ module.exports = function (grunt) {
                         debug: true
                     },
                     plugin: [
-                        ['browserify-derequire']
+                        'browserify-derequire', 'bundle-collapser/plugin'
                     ],
                     transform: ['babelify']
                 }
@@ -227,7 +241,7 @@ module.exports = function (grunt) {
 
     require('load-grunt-tasks')(grunt);
     grunt.registerTask('default',   ['dist', 'test']);
-    grunt.registerTask('dist',      ['clean', 'jshint', 'jscs', 'browserify:mediaplayer' , 'browserify:protection', 'browserify:reporting', 'browserify:all', 'minimize', 'copy:dist']);
+    grunt.registerTask('dist',      ['clean', 'jshint', 'jscs', 'browserify:mediaplayer' , 'browserify:protection', 'browserify:reporting', 'browserify:all', 'babel:es5', 'minimize', 'copy:dist']);
     grunt.registerTask('minimize',  ['exorcise', 'uglify']);
     grunt.registerTask('test',      ['mocha_istanbul:test']);
     grunt.registerTask('watch',     ['browserify:watch']);

@@ -29,11 +29,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../../core/FactoryMaker.js';
-import TimelineConverter from '../../../dash/utils/TimelineConverter.js';
-import LiveEdgeBinarySearchRule from './LiveEdgeBinarySearchRule.js';
-import LiveEdgeWithTimeSynchronizationRule from './LiveEdgeWithTimeSynchronizationRule.js';
-import DashAdapter from '../../../dash/DashAdapter.js';
+import FactoryMaker from '../../../core/FactoryMaker';
+import TimelineConverter from '../../../dash/utils/TimelineConverter';
+import LiveEdgeBinarySearchRule from './LiveEdgeBinarySearchRule';
+import LiveEdgeWithTimeSynchronizationRule from './LiveEdgeWithTimeSynchronizationRule';
+import DashAdapter from '../../../dash/DashAdapter';
 
 
 const TIME_SYNCHRONIZED_RULES = 'withAccurateTimeSourceRules';

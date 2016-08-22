@@ -28,16 +28,17 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
- * Represents a 128-bit keyID and 128-bit encryption key
- *
- * @param keyID {String} 128-bit key ID, base64 encoded, with no padding
- * @param key {String} 128-bit encryption key, base64 encoded, with no padding
- * @class
+ * @classdesc Represents a 128-bit keyID and 128-bit encryption key
  * @ignore
  */
 class KeyPair {
+    /**
+     * @param {string} keyID 128-bit key ID, base64 encoded, with no padding
+     * @param {string} key 128-bit encryption key, base64 encoded, with no padding
+     * @class
+     * @ignore
+     */
     constructor(keyID, key) {
         this.keyID = keyID;
         this.key = key;

@@ -29,23 +29,28 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import Representation from '../vo/Representation.js';
-import AdaptationSet from '../vo/AdaptationSet.js';
-import Period from '../vo/Period.js';
-import Mpd from '../vo/Mpd.js';
-import UTCTiming from '../vo/UTCTiming.js';
-import TimelineConverter from '../utils/TimelineConverter.js';
-import Event from '../vo/Event.js';
-import BaseURL from '../vo/BaseURL.js';
-import EventStream from '../vo/EventStream.js';
-import URLUtils from '../../streaming/utils/URLUtils.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
+import Representation from '../vo/Representation';
+import AdaptationSet from '../vo/AdaptationSet';
+import Period from '../vo/Period';
+import Mpd from '../vo/Mpd';
+import UTCTiming from '../vo/UTCTiming';
+import TimelineConverter from '../utils/TimelineConverter';
+import MediaController from '../../streaming/controllers/MediaController';
+import DashAdapter from '../DashAdapter';
+import Event from '../vo/Event';
+import BaseURL from '../vo/BaseURL';
+import EventStream from '../vo/EventStream';
+import URLUtils from '../../streaming/utils/URLUtils';
+import FactoryMaker from '../../core/FactoryMaker';
 
 function DashManifestModel() {
 
     let instance;
     let context = this.context;
     let timelineConverter = TimelineConverter(context).getInstance();//TODO Need to pass this in not bake in
+    let mediaController = MediaController(context).getInstance();
+    let adaptor = DashAdapter(context).getInstance();
+
     const urlUtils = URLUtils(context).getInstance();
 
     function getIsTypeOf(adaptation, type) {
@@ -69,7 +74,7 @@ function DashManifestModel() {
 
         if (col) {
             if (col.length > 1) {
-                return (type == 'muxed');
+                return (type === 'muxed');
             } else if (col[0] && col[0].contentType === type) {
                 result = true;
                 found = true;
@@ -220,17 +225,23 @@ function DashManifestModel() {
         return adaptations;
     }
 
-    function getAdaptationForType(manifest, periodIndex, type) {
-        var i,
-            len,
-            adaptations;
+    function getAdaptationForType(manifest, periodIndex, type, streamInfo) {
 
-        adaptations = getAdaptationsForType(manifest, periodIndex, type);
+        let adaptations = getAdaptationsForType(manifest, periodIndex, type);
 
         if (!adaptations || adaptations.length === 0) return null;
 
-        for (i = 0, len = adaptations.length; i < len; i++) {
-            if (getIsMain(adaptations[i])) return adaptations[i];
+        if (adaptations.length > 1 && streamInfo) {
+            let currentTrack = mediaController.getCurrentTrackFor(type, streamInfo);
+            let allMediaInfoForType = adaptor.getAllMediaInfoForType(manifest, streamInfo, type);
+            for (let i = 0, ln = adaptations.length; i < ln; i++) {
+                if (currentTrack && mediaController.isTracksEqual(currentTrack, allMediaInfoForType[i])) {
+                    return adaptations[i];
+                }
+                if (getIsMain(adaptations[i])) {
+                    return adaptations[i];
+                }
+            }
         }
 
         return adaptations[0];
@@ -382,8 +393,17 @@ function DashManifestModel() {
             }
             else if (r.hasOwnProperty('SegmentList')) {
                 segmentInfo = r.SegmentList;
-                representation.segmentInfoType = 'SegmentList';
-                representation.useCalculatedLiveEdgeTime = true;
+
+                if (segmentInfo.hasOwnProperty('SegmentTimeline')) {
+                    representation.segmentInfoType = 'SegmentTimeline';
+                    s = segmentInfo.SegmentTimeline.S_asArray[segmentInfo.SegmentTimeline.S_asArray.length - 1];
+                    if (!s.hasOwnProperty('r') || s.r >= 0) {
+                        representation.useCalculatedLiveEdgeTime = true;
+                    }
+                } else {
+                    representation.segmentInfoType = 'SegmentList';
+                    representation.useCalculatedLiveEdgeTime = true;
+                }
             }
             else if (r.hasOwnProperty('SegmentTemplate')) {
                 segmentInfo = r.SegmentTemplate;
@@ -669,7 +689,7 @@ function DashManifestModel() {
                 if (eventStreams[i].hasOwnProperty('schemeIdUri')) {
                     eventStream.schemeIdUri = eventStreams[i].schemeIdUri;
                 } else {
-                    throw 'Invalid EventStream. SchemeIdUri has to be set';
+                    throw new Error('Invalid EventStream. SchemeIdUri has to be set');
                 }
                 if (eventStreams[i].hasOwnProperty('timescale')) {
                     eventStream.timescale = eventStreams[i].timescale;
@@ -712,7 +732,7 @@ function DashManifestModel() {
             if (inbandStreams[i].hasOwnProperty('schemeIdUri')) {
                 eventStream.schemeIdUri = inbandStreams[i].schemeIdUri;
             } else {
-                throw 'Invalid EventStream. SchemeIdUri has to be set';
+                throw new Error('Invalid EventStream. SchemeIdUri has to be set');
             }
             if (inbandStreams[i].hasOwnProperty('timescale')) {
                 eventStream.timescale = inbandStreams[i].timescale;
@@ -789,12 +809,31 @@ function DashManifestModel() {
 
     function getBaseURLsFromElement(node) {
         let baseUrls = [];
-        let entries = node.BaseURL_asArray || [node.baseUri] || [];
+        // if node.BaseURL_asArray and node.baseUri are undefined entries
+        // will be [undefined] which entries.some will just skip
+        let entries = node.BaseURL_asArray || [node.baseUri];
+        let earlyReturn = false;
 
         entries.some(entry => {
             if (entry) {
                 const baseUrl = new BaseURL();
-                const text = entry.__text || entry;
+                let text = entry.__text || entry;
+
+                if (urlUtils.isRelative(text)) {
+                    // it doesn't really make sense to have relative and
+                    // absolute URLs at the same level, or multiple
+                    // relative URLs at the same level, so assume we are
+                    // done from this level of the MPD
+                    earlyReturn = true;
+
+                    // deal with the specific case where the MPD@BaseURL
+                    // is specified and is relative. when no MPD@BaseURL
+                    // entries exist, that case is handled by the
+                    // [node.baseUri] in the entries definition.
+                    if (node.baseUri) {
+                        text = node.baseUri + text;
+                    }
+                }
 
                 baseUrl.url = text;
 
@@ -824,17 +863,22 @@ function DashManifestModel() {
 
                 baseUrls.push(baseUrl);
 
-                if (urlUtils.isRelative(text)) {
-                    // it doesn't really make sense to have relative and
-                    // absolute URLs at the same level, or multiple
-                    // relative URLs at the same level, so assume we are
-                    // done from this level of the MPD
-                    return true;
-                }
+                return earlyReturn;
             }
         });
 
         return baseUrls;
+    }
+
+    function getLocation(manifest) {
+        if (manifest.hasOwnProperty('Location')) {
+            // for now, do not support multiple Locations -
+            // just set Location to the first Location.
+            manifest.Location = manifest.Location_asArray[0];
+        }
+
+        // may well be undefined
+        return manifest.Location;
     }
 
     instance = {
@@ -885,7 +929,8 @@ function DashManifestModel() {
         getEventStreamForRepresentation: getEventStreamForRepresentation,
         getUTCTimingSources: getUTCTimingSources,
         getBaseURLsFromElement: getBaseURLsFromElement,
-        getRepresentationSortFunction: getRepresentationSortFunction
+        getRepresentationSortFunction: getRepresentationSortFunction,
+        getLocation: getLocation
     };
 
     return instance;

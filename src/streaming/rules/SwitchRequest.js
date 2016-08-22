@@ -29,21 +29,25 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../core/FactoryMaker.js';
+import FactoryMaker from '../../core/FactoryMaker';
 
 const NO_CHANGE = 999;
 const DEFAULT = 0.5;
 const STRONG = 1;
 const WEAK = 0;
 
-function SwitchRequest (v, p) {
+
+
+function SwitchRequest (v, p, r) {
     //TODO refactor all the calls to this to use config to be like everything else.
     let value = (v === undefined) ? NO_CHANGE : v;
     let priority = (p === undefined) ? DEFAULT : p;
+    let reason = (r === undefined) ? null : r;
 
     let instance = {
         value: value,
-        priority: priority
+        priority: priority,
+        reason: reason
     };
 
     return instance;

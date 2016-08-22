@@ -28,17 +28,18 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import PlaybackController from './PlaybackController.js';
-import Stream from '../Stream.js';
-import ManifestUpdater from '../ManifestUpdater.js';
-import EventBus from '../../core/EventBus.js';
-import Events from '../../core/events/Events.js';
-import URIQueryAndFragmentModel from '../models/URIQueryAndFragmentModel.js';
-import VideoModel from '../models/VideoModel.js';
-import MediaPlayerModel from '../models/MediaPlayerModel.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
-import PlayList from '../vo/metrics/PlayList.js';
-import Debug from '../../core/Debug.js';
+import PlaybackController from './PlaybackController';
+import Stream from '../Stream';
+import ManifestUpdater from '../ManifestUpdater';
+import EventBus from '../../core/EventBus';
+import Events from '../../core/events/Events';
+import URIQueryAndFragmentModel from '../models/URIQueryAndFragmentModel';
+import VideoModel from '../models/VideoModel';
+import MediaPlayerModel from '../models/MediaPlayerModel';
+import FactoryMaker from '../../core/FactoryMaker';
+import {PlayList, PlayListTrace} from '../vo/metrics/PlayList';
+import Debug from '../../core/Debug';
+import InitCache from '../utils/InitCache';
 
 function StreamController() {
 
@@ -61,7 +62,7 @@ function StreamController() {
         mediaSourceController,
         timeSyncController,
         baseURLController,
-        virtualBuffer,
+        initCache,
         errHandler,
         timelineConverter,
         streams,
@@ -79,7 +80,8 @@ function StreamController() {
         mediaPlayerModel,
         isPaused,
         initialPlayback,
-        playListMetrics;
+        playListMetrics,
+        videoTrackDetected;
 
     function setup() {
         protectionController = null;
@@ -99,6 +101,7 @@ function StreamController() {
         autoPlay = autoPl;
         protectionData = protData;
         timelineConverter.initialize();
+        initCache = InitCache(context).getInstance();
 
         manifestUpdater = ManifestUpdater(context).getInstance();
         manifestUpdater.setConfig({
@@ -189,13 +192,13 @@ function StreamController() {
     }
 
     function onPlaybackError(e) {
-        var code = e.error ? e.error.code : 0;
-        var msg = '';
-
-        if (code === -1) {
-            // not an error!
+        if (!e.error) {
+            // not a media error!
             return;
         }
+
+        var code = e.error.code;
+        var msg = '';
 
         switch (code) {
             case 1:
@@ -237,11 +240,13 @@ function StreamController() {
      * Used to determine the time current stream is finished and we should switch to the next stream.
      */
     function onPlaybackTimeUpdated(e) {
-        var playbackQuality = videoModel.getPlaybackQuality();
-        if (playbackQuality) {
-            metricsModel.addDroppedFrames('video', playbackQuality);
-        }
 
+        if (isVideoTrackPresent()) {
+            var playbackQuality = videoModel.getPlaybackQuality();
+            if (playbackQuality) {
+                metricsModel.addDroppedFrames('video', playbackQuality);
+            }
+        }
         // Sometimes after seeking timeUpdateHandler is called before seekingHandler and a new stream starts
         // from beginning instead of from a chosen position. So we do nothing if the player is in the seeking state
         if (playbackController.isSeeking()) return;
@@ -260,17 +265,17 @@ function StreamController() {
             switchStream(activeStream, nextStream, NaN);
         }
 
-        flushPlaylistMetrics(nextStream ? PlayList.Trace.END_OF_PERIOD_STOP_REASON : PlayList.Trace.END_OF_CONTENT_STOP_REASON);
+        flushPlaylistMetrics(nextStream ? PlayListTrace.END_OF_PERIOD_STOP_REASON : PlayListTrace.END_OF_CONTENT_STOP_REASON);
     }
 
     function onPlaybackSeeking(e) {
         var seekingStream = getStreamForTime(e.seekTime);
 
         if (seekingStream && seekingStream !== activeStream) {
-            flushPlaylistMetrics(PlayList.Trace.END_OF_PERIOD_STOP_REASON);
+            flushPlaylistMetrics(PlayListTrace.END_OF_PERIOD_STOP_REASON);
             switchStream(activeStream, seekingStream, e.seekTime);
         } else {
-            flushPlaylistMetrics(PlayList.Trace.USER_REQUEST_STOP_REASON);
+            flushPlaylistMetrics(PlayListTrace.USER_REQUEST_STOP_REASON);
         }
 
         addPlaylistMetrics(PlayList.SEEK_START_REASON);
@@ -291,7 +296,7 @@ function StreamController() {
     function onPlaybackPaused(e) {
         if (!e.ended) {
             isPaused = true;
-            flushPlaylistMetrics(PlayList.Trace.USER_REQUEST_STOP_REASON);
+            flushPlaylistMetrics(PlayListTrace.USER_REQUEST_STOP_REASON);
         }
     }
 
@@ -346,6 +351,9 @@ function StreamController() {
     /**
      * Returns a playhead time, in seconds, converted to be relative
      * to the start of an identified stream/period or null if no such stream
+     * @param {number} time
+     * @param {string} id
+     * @returns {number|null}
      */
     function getTimeRelativeToStreamId(time, id) {
         var stream = null;
@@ -412,6 +420,7 @@ function StreamController() {
         from.deactivate();
         activeStream = to;
         playbackController.initialize(activeStream.getStreamInfo());
+        videoTrackDetected = checkVideoPresence();
         setupMediaSource(onMediaSourceReady);
     }
 
@@ -625,6 +634,24 @@ function StreamController() {
         }
     }
 
+
+    function isVideoTrackPresent() {
+        if (videoTrackDetected === undefined) {
+            videoTrackDetected = checkVideoPresence();
+        }
+        return videoTrackDetected;
+    }
+
+    function checkVideoPresence() {
+        let isVideoDetected = false;
+        activeStream.getProcessors().forEach(p => {
+            if (p.getMediaInfo().type === 'video') {
+                isVideoDetected = true;
+            }
+        });
+        return isVideoDetected;
+    }
+
     function getAutoPlay() {
         return autoPlay;
     }
@@ -690,9 +717,6 @@ function StreamController() {
         if (config.baseURLController) {
             baseURLController = config.baseURLController;
         }
-        if (config.virtualBuffer) {
-            virtualBuffer = config.virtualBuffer;
-        }
         if (config.errHandler) {
             errHandler = config.errHandler;
         }
@@ -706,8 +730,8 @@ function StreamController() {
 
         flushPlaylistMetrics(
             hasMediaError || hasInitialisationError ?
-                PlayList.Trace.FAILURE_STOP_REASON :
-                PlayList.Trace.USER_REQUEST_STOP_REASON
+                PlayListTrace.FAILURE_STOP_REASON :
+                PlayListTrace.USER_REQUEST_STOP_REASON
         );
 
         for (let i = 0, ln = streams.length; i < ln; i++) {
@@ -735,12 +759,13 @@ function StreamController() {
         timelineConverter.reset();
         liveEdgeFinder.reset();
         adapter.reset();
-        virtualBuffer.reset();
+        initCache.reset();
         isStreamSwitchingInProgress = false;
         isUpdating = false;
         activeStream = null;
         hasMediaError = false;
         hasInitialisationError = false;
+        videoTrackDetected = undefined;
         initialPlayback = true;
         isPaused = false;
 
@@ -766,6 +791,7 @@ function StreamController() {
         getAutoPlay: getAutoPlay,
         getActiveStreamInfo: getActiveStreamInfo,
         isStreamActive: isStreamActive,
+        isVideoTrackPresent: isVideoTrackPresent,
         getStreamById: getStreamById,
         getTimeRelativeToStreamId: getTimeRelativeToStreamId,
         load: load,

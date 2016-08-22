@@ -29,11 +29,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../../core/FactoryMaker.js';
-import BufferLevel from './handlers/BufferLevelHandler.js';
-import DVBErrors from './handlers/DVBErrorsHandler.js';
-import HttpList from './handlers/HttpListHandler.js';
-import GenericMetricHandler from './handlers/GenericMetricHandler.js';
+import FactoryMaker from '../../../core/FactoryMaker';
+import BufferLevel from './handlers/BufferLevelHandler';
+import DVBErrors from './handlers/DVBErrorsHandler';
+import HttpList from './handlers/HttpListHandler';
+import GenericMetricHandler from './handlers/GenericMetricHandler';
 
 function MetricsHandlerFactory(config) {
 

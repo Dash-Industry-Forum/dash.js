@@ -28,15 +28,15 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import CommonEncryption from '../CommonEncryption.js';
-import Events from '../../../core/events/Events.js';
-import MediaCapability from '../vo/MediaCapability.js';
-import KeySystemConfiguration from '../vo/KeySystemConfiguration.js';
-import FactoryMaker from '../../../core/FactoryMaker.js';
-import Protection from '../Protection.js';
+import CommonEncryption from '../CommonEncryption';
+import Events from '../../../core/events/Events';
+import MediaCapability from '../vo/MediaCapability';
+import KeySystemConfiguration from '../vo/KeySystemConfiguration';
+import FactoryMaker from '../../../core/FactoryMaker';
+import Protection from '../Protection';
 
 /**
- * @Module ProtectionController
+ * @module ProtectionController
  * @description Provides access to media protection information and functionality.  Each
  * ProtectionController manages a single {@link MediaPlayer.models.ProtectionModel}
  * which encapsulates a set of protection information (EME APIs, selected key system,
@@ -46,6 +46,7 @@ import Protection from '../Protection.js';
  * @todo ProtectionController does almost all of its tasks automatically after init() is
  * called.  Applications might want more control over this process and want to go through
  * each step manually (key system selection, session creation, session maintenance).
+ * @param {Object} config
  */
 
 function ProtectionController(config) {
@@ -64,6 +65,7 @@ function ProtectionController(config) {
         protDataSet,
         initialized,
         sessionType,
+        robustnessLevel,
         keySystem;
 
     function setup() {
@@ -71,6 +73,7 @@ function ProtectionController(config) {
         pendingNeedKeyData = [];
         initialized = false;
         sessionType = 'temporary';
+        robustnessLevel = '';
 
         Events.extend(Protection.events);
     }
@@ -241,12 +244,24 @@ function ProtectionController(config) {
      * Sets the session type to use when creating key sessions.  Either "temporary" or
      * "persistent-license".  Default is "temporary".
      *
-     * @param {String} sessionType the session type
+     * @param {string} value the session type
      * @memberof module:ProtectionController
      * @instance
      */
     function setSessionType(value) {
         sessionType = value;
+    }
+
+    /**
+     * Sets the robustness level for video and audio capabilities. Optional to remove Chrome warnings.
+     * Possible values are SW_SECURE_CRYPTO, SW_SECURE_DECODE, HW_SECURE_CRYPTO, HW_SECURE_CRYPTO, HW_SECURE_DECODE, HW_SECURE_ALL.
+     *
+     * @param {string} level the robustness level
+     * @memberof module:ProtectionController
+     * @instance
+     */
+    function setRobustnessLevel(level) {
+        robustnessLevel = level;
     }
 
     /**
@@ -305,10 +320,10 @@ function ProtectionController(config) {
         var videoCapabilities = [];
 
         if (videoInfo) {
-            videoCapabilities.push(new MediaCapability(videoInfo.codec));
+            videoCapabilities.push(new MediaCapability(videoInfo.codec, robustnessLevel));
         }
         if (audioInfo) {
-            audioCapabilities.push(new MediaCapability(audioInfo.codec));
+            audioCapabilities.push(new MediaCapability(audioInfo.codec, robustnessLevel));
         }
         var ksConfig = new KeySystemConfiguration(
                 audioCapabilities, videoCapabilities, 'optional',
@@ -534,7 +549,7 @@ function ProtectionController(config) {
 
         log('DRM: initData:', String.fromCharCode.apply(null, new Uint8Array(abInitData)));
 
-        var supportedKS = protectionKeyController.getSupportedKeySystems(abInitData);
+        var supportedKS = protectionKeyController.getSupportedKeySystems(abInitData, protDataSet);
         if (supportedKS.length === 0) {
             log('DRM: Received needkey event with initData, but we don\'t support any of the key systems!');
             return;
@@ -552,6 +567,7 @@ function ProtectionController(config) {
         setServerCertificate: setServerCertificate,
         setMediaElement: setMediaElement,
         setSessionType: setSessionType,
+        setRobustnessLevel: setRobustnessLevel,
         setProtectionData: setProtectionData,
         reset: reset
     };

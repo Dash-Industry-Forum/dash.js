@@ -28,12 +28,12 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import XHRLoader from './XHRLoader.js';
-import HeadRequest from './vo/HeadRequest.js';
-import Error from './vo/Error.js';
-import EventBus from './../core/EventBus.js';
-import Events from './../core/events/Events.js';
-import FactoryMaker from '../core/FactoryMaker.js';
+import XHRLoader from './XHRLoader';
+import HeadRequest from './vo/HeadRequest';
+import Error from './vo/Error';
+import EventBus from './../core/EventBus';
+import Events from './../core/events/Events';
+import FactoryMaker from '../core/FactoryMaker';
 
 const FRAGMENT_LOADER_ERROR_LOADING_FAILURE = 1;
 const FRAGMENT_LOADER_ERROR_NULL_REQUEST = 2;
