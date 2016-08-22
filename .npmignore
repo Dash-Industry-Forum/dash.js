@@ -1,6 +1,7 @@
 samples
 docs
-build
+build/temp
+build/jsdoc
 test
 .travis.yml
 mochahook.js
