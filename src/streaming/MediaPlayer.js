@@ -390,7 +390,7 @@ function MediaPlayer() {
     /**
      * Current time of the playhead, in seconds.
      *
-     * If called with no arguments then the returned time value is time elapsed since the start point of the first stream.
+     * If called with no arguments then the returned time value is time elapsed since the start point of the first stream, or if it is a live stream, then the time will be based on the return value of the {@link module:MediaPlayer#duration duration()} method.
      * However if a stream ID is supplied then time is relative to the start of that stream, or is null if there is no such stream id in the manifest.
      *
      * @param {string} streamId - The ID of a stream that the returned playhead time must be relative to the start of. If undefined, then playhead time is relative to the first stream.
@@ -406,12 +406,12 @@ function MediaPlayer() {
 
         if (streamId !== undefined) {
             t = streamController.getTimeRelativeToStreamId(t, streamId);
-        }
 
-        if (playbackController.getIsDynamic()) {
+        } else if (playbackController.getIsDynamic()) {
             var metric = getDVRInfoMetric();
             t = (metric === null) ? 0 : duration() - (metric.range.end - metric.time);
         }
+
         return t;
     }
 
