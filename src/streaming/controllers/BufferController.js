@@ -277,7 +277,7 @@ function BufferController(config) {
         const isLastIdxAppended = maxAppendedIndex === (lastIndex - 1);
         if (isLastIdxAppended && !isBufferingCompleted) {
             isBufferingCompleted = true;
-            mediaSourceController.signalEndOfStream(mediaSource);
+            //mediaSourceController.signalEndOfStream(mediaSource);
             eventBus.trigger(Events.BUFFERING_COMPLETED, {sender: instance, streamInfo: streamProcessor.getStreamInfo()});
         }
     }

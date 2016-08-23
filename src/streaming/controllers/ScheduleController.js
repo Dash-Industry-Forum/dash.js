@@ -195,7 +195,6 @@ function ScheduleController(config) {
         const readyToLoad = bufferLevelRule.execute(streamProcessor, type, streamController.isVideoTrackPresent());
 
         if (readyToLoad || isReplacement) {
-
             const getNextFragment = function () {
                 if (currentRepresentationInfo.quality !== lastInitQuality) {
                     lastInitQuality = currentRepresentationInfo.quality;
@@ -308,6 +307,7 @@ function ScheduleController(config) {
     function onStreamCompleted(e) {
         if (e.fragmentModel !== fragmentModel) return;
         stop();
+        isFragmentProcessingInProgress = false;
         log('Stream is complete');
     }
 

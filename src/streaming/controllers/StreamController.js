@@ -306,14 +306,9 @@ function StreamController() {
      * this handler's logic caused Firefox and Safari to not period switch since the end event did not fire due to this.
      */
     function onStreamBufferingCompleted(e) {
-        //var nextStream = getNextStream();
-        var isLast = e.streamInfo.isLast;
-
-        if (mediaSource && isLast) {
+        if (mediaSource && e.streamInfo.isLast) {
             mediaSourceController.signalEndOfStream(mediaSource);
         }
-        //if (!nextStream) return;
-        //nextStream.activate(mediaSource);
     }
 
 
