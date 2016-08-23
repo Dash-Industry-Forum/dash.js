@@ -212,6 +212,7 @@ function TTMLParser() {
         let tt, // Top element
             head, // head in tt
             body, // body in tt
+            ttExtent, // extent attribute of tt element
             type;
 
         var errorMsg = '';
@@ -229,19 +230,22 @@ function TTMLParser() {
             type = 'html';
         }
 
-        // Get the namespace if there is one defined in the JSON object.
-        var ttNS = getNamespacePrefix(ttml, 'http://www.w3.org/ns/ttml');
-
-        // Remove the namespace before each node if it exists:
-        if (ttNS) {
-            removeNamespacePrefix(ttml, ttNS);
-        }
-
         // Check the document and compare to the specification (TTML and EBU-TT-D).
         tt = ttml.tt;
         if (!tt) {
             throw new Error('TTML document lacks tt element');
         }
+
+        // Get the namespace if there is one defined in the JSON object.
+        var ttNS = getNamespacePrefix(tt, 'http://www.w3.org/ns/ttml');
+
+        // Remove the namespace before each node if it exists:
+        if (ttNS) {
+            removeNamespacePrefix(tt, ttNS);
+        }
+
+        ttExtent = tt['tts:extent']; // Should check that tts is right namespace.
+
         head = tt.head;
         if (!head) {
             throw new Error('TTML document lacks head element');
@@ -279,33 +283,46 @@ function TTMLParser() {
         var nsttp = getNamespacePrefix(ttml.tt, 'http://www.w3.org/ns/ttml#parameter');
 
         // Set the framerate.
-        if (ttml.tt.hasOwnProperty(nsttp + ':frameRate')) {
-            ttml.tt.frameRate = parseInt(ttml.tt[nsttp + ':frameRate'], 10);
+        if (tt.hasOwnProperty(nsttp + ':frameRate')) {
+            tt.frameRate = parseInt(tt[nsttp + ':frameRate'], 10);
         }
         var captionArray = [];
         // Extract the div
-        var divs = ttml.tt.body_asArray[0].__children;
+        var divs = tt.body_asArray[0].__children;
 
         // Timing is either on div, paragraph or span level.
 
         for (let k = 0; k < divs.length; k++) {
-            let div = divs[k];
+            let div = divs[k].div;
             let divInterval = null; // This is mainly for image subtitles.
 
-            if (null !== (divInterval = getInterval(div.div))) {
+            if (null !== (divInterval = getInterval(div))) {
                 // Timing on div level is not allowed by EBU-TT-D.
-                // We only use it for IMSC-1 image subtitle profile.
+                // We only use it for SMPTE-TT image subtitle profile.
+
+                // Layout should be defined by a region. Given early test material, we also support that it is on
+                // div level
+                let layout;
+                if (div.region) {
+                    let region = findRegionFromID(ttmlLayout, div.region);
+                    layout = getRelativePositioning(region, ttExtent);
+                }
+                if (!layout) {
+                    layout = getRelativePositioning(div, ttExtent);
+                }
+
+                let images = tt.head.metadata.image_asArray; // TODO. Add URL image sources
 
                 if (div['smpte:backgroundImage'] !== undefined) {
-                    var images = ttml.tt.head.metadata.image_asArray; // TODO. Check if this is too limited
-                    for (var j = 0; j < images.length; j++) {
-                        if (('#' + images[j]['xml:id']) == div['smpte:backgroundImage']) {
+                    for (let j = 0; j < images.length; j++) {
+                        if (('#' + images[j]['xml:id']) === div['smpte:backgroundImage']) {
                             captionArray.push({
                                 start: divInterval[0],
                                 end: divInterval[1],
-                                id: images[j]['xml:id'],
+                                id: getCueID(),
                                 data: 'data:image/' + images[j].imagetype.toLowerCase() + ';base64, ' + images[j].__text,
-                                type: 'image'
+                                type: 'image',
+                                layout: layout
                             });
                         }
                     }
@@ -313,7 +330,7 @@ function TTMLParser() {
                 continue; // Next div
             }
 
-            let paragraphs = div.div.p_asArray;
+            let paragraphs = div.p_asArray;
             // Check if cues is not empty or undefined.
             if (divInterval === null && (!paragraphs || paragraphs.length === 0)) {
                 errorMsg = 'TTML has div that contains no timing and no paragraphs.';
@@ -366,7 +383,7 @@ function TTMLParser() {
                          * Find the region defined for the cue.
                          */
                         // properties to be put in the "captionRegion" HTML element.
-                        var cueRegionProperties = constructCueRegion(paragraph, div.div, cellUnit);
+                        var cueRegionProperties = constructCueRegion(paragraph, div, cellUnit);
 
                         /**
                          * Find the style defined for the cue.
@@ -917,6 +934,51 @@ function TTMLParser() {
             }
         });
         return styles;
+    }
+
+    // Calculate relative left, top, width, height from extent and origin in percent.
+    // Return object with {left, top, width, height} as numbers in percent or null.
+    function getRelativePositioning(element, ttExtent) {
+
+        let pairRe = /([\d\.]+)(%|px)\s+([\d\.]+)(%|px)/;
+
+        if (('tts:extent' in element) && ('tts:origin' in element) ) {
+            let extentParts = pairRe.exec(element['tts:extent']);
+            let originParts = pairRe.exec(element['tts:origin']);
+            if (extentParts === null || originParts === null) {
+                log('Bad extent or origin: ' + element['tts:extent'] + ' ' + element['tts:origin']);
+                return null;
+            }
+            let width = parseFloat(extentParts[1]);
+            let height = parseFloat(extentParts[3]);
+            let left = parseFloat(originParts[1]);
+            let top = parseFloat(originParts[3]);
+
+            if (ttExtent) { // Should give overall scale in pixels
+                let ttExtentParts = pairRe.exec(ttExtent);
+                if (ttExtentParts === null || ttExtentParts[2] !== 'px' || ttExtentParts[4] !== 'px') {
+                    log('Bad tt.extent: ' + ttExtent);
+                    return null;
+                }
+                let exWidth = parseFloat(ttExtentParts[1]);
+                let exHeight = parseFloat(ttExtentParts[3]);
+                if (extentParts[2] === 'px') {
+                    width = width / exWidth * 100;
+                }
+                if (extentParts[4] === 'px') {
+                    height = height / exHeight * 100;
+                }
+                if (originParts[2] === 'px') {
+                    left = left / exWidth * 100;
+                }
+                if (originParts[4] === 'px') {
+                    top = top / exHeight * 100;
+                }
+            }
+            return { 'left': left, 'top': top, 'width': width, 'height': height };
+        } else {
+            return null;
+        }
     }
 
     /**

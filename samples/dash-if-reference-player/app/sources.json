@@ -743,6 +743,12 @@
                     "url":"http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/1/client_manifest-snake.mpd",
                     "browsers":"cdsbi",
                     "moreInfo":"http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/"
+                },
+                {
+                    "name":"TTML Image Subtitles embedded (VoD)",
+                    "url":"http://vm2.dashif.org/dash/vod/testpic_2s/img_subs.mpd",
+                    "browsers":"cdsbi",
+                    "moreInfo":"http://vm2.dashif.org/dash/vod/testpic_2s/img_subs_info.txt"
                 }
             ]
         },
