@@ -55,7 +55,6 @@ function BufferController(config) {
     const manifestModel = config.manifestModel;
     const sourceBufferController = config.sourceBufferController;
     const errHandler = config.errHandler;
-    const mediaSourceController = config.mediaSourceController;
     const streamController = config.streamController;
     const mediaController = config.mediaController;
     const adapter = config.adapter;
@@ -253,6 +252,8 @@ function BufferController(config) {
     // START Buffer Level, State & Sufficiency Handling.
     //**********************************************************************
     function onPlaybackSeeking() {
+        lastIndex = 0;
+        isBufferingCompleted = false;
         onPlaybackProgression();
     }
 
@@ -277,7 +278,6 @@ function BufferController(config) {
         const isLastIdxAppended = maxAppendedIndex === (lastIndex - 1);
         if (isLastIdxAppended && !isBufferingCompleted) {
             isBufferingCompleted = true;
-            mediaSourceController.signalEndOfStream(mediaSource);
             eventBus.trigger(Events.BUFFERING_COMPLETED, {sender: instance, streamInfo: streamProcessor.getStreamInfo()});
         }
     }

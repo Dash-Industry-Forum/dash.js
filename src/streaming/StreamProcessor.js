@@ -42,7 +42,6 @@ import FragmentLoader from './FragmentLoader';
 import RequestModifier from './utils/RequestModifier';
 import SourceBufferController from './controllers/SourceBufferController';
 import TextSourceBuffer from './TextSourceBuffer';
-import MediaSourceController from './controllers/MediaSourceController';
 import DashManifestModel from '../dash/models/DashManifestModel';
 import DashMetrics from '../dash/DashMetrics';
 import RepresentationController from '../dash/controllers/RepresentationController';
@@ -267,7 +266,6 @@ function StreamProcessor(config) {
                 manifestModel: manifestModel,
                 sourceBufferController: SourceBufferController(context).getInstance(),
                 errHandler: ErrorHandler(context).getInstance(),
-                mediaSourceController: MediaSourceController(context).getInstance(),
                 streamController: StreamController(context).getInstance(),
                 mediaController: MediaController(context).getInstance(),
                 adapter: adapter,
