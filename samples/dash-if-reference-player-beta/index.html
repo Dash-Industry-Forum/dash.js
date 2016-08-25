@@ -74,7 +74,7 @@
             <div class="branding">
               <a href="http://dashif.org/" target="_blank"><img class="image" src="app/img/if.png"/></a>
               <span id="big-title">Reference Client</span>
-              <span>{{version}}</span>
+                <span ng-bind="version"></span>
             </div>
 
             <div class="top-buttons">
@@ -119,33 +119,8 @@
                                 </li>
                             </ul>
                         </li>
-<!--                         <li class="sub">
-                            Subhead 1.1
-                            <ul>
-                                <li>Subhead 1.1.1</li>
-                                <li>Subhead 1.1.2</li>
-                                <li>Subhead 1.1.3</li>
-                            </ul>
-                        </li>
-                        <li class="sub">
-                            Subhead 1.1
-                            <ul>
-                                <li>Subhead 1.1.1</li>
-                                <li>Subhead 1.1.2</li>
-                                <li>Subhead 1.1.3</li>
-                            </ul>
-                        </li>
-                        <li>Subhead 1.2</li>
-                        <li>Subhead 1.3</li>
-                        <li>Subhead 1.4</li> -->
                     </ul>
-<!--                     <ul class="dropdown-menu">
-                        <li
-                            ng-repeat="item in availableStreams"
-                            ng-click="setStream(item)">
-                            <a>{{item.name}}</a>
-                        </li>
-                    </ul> -->
+
                 </div>
                 <div id="mobile-streams" class="input-group-btn">
                     <button type="button" class="btn btn-primary" data-toggle="modal" href="#streamModal">
@@ -160,8 +135,7 @@
         </div>
 
 
-        <div class="row options-wrapper"
-             ng-class="{'options-show':optionsGutter, 'options-hide':!optionsGutter}">
+        <div ng-cloak class="row options-wrapper" ng-class="{'options-show':optionsGutter, 'options-hide':!optionsGutter}">
 
             <div class="options-item playback" id="playback-options">
                 <div class="options-item-title">Playback</div>
