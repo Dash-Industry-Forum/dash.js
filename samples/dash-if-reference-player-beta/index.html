@@ -20,38 +20,32 @@
     <!-- http://angularjs.org/ -->
     <script src="app/lib/angular/angular.min.js"></script>
     <script src="app/lib/angular/angular-resource.min.js"></script>
+    <!-- https://github.com/eu81273/angular.treeview -->
+    <!--<script src="app/lib/angular.treeview/angular.treeview.min.js"></script>-->
 
     <!-- http://getbootstrap.com/ -->
     <script src="app/lib/bootstrap/js/bootstrap.min.js"></script>
-    <script>
-        $(document).ready(function(){
-            $('[data-toggle="tooltip"]').tooltip(); 
-        });
-    </script>
-
-    <!-- https://github.com/madebyhiro/codem-isoboxer -->
-    <!--<script src="../../externals/iso_boxer.min.js"></script>-->
-
-    <!-- http://bannister.us/weblog/2007/06/09/simple-base64-encodedecode-javascript/ -->
-    <!--<script src="../../externals/base64.js"></script>-->
-
-    <!-- Misc Libs -->
-    <!--<script src="../../externals/xml2json.js"></script>-->
-    <!--<script src="../../externals/objectiron.js"></script>-->
 
     <!-- http://www.flotcharts.org/ -->
     <script src="app/lib/flot/jquery.flot.js"></script>
 
-    <!-- https://github.com/eu81273/angular.treeview -->
-    <script src="app/lib/angular.treeview/angular.treeview.min.js"></script>
+
 
     <script src="../../dist/dash.all.debug.js"></script>
-    <script src="../../dist/dash.protection.debug.js"></script>
 
     <!-- App -->
-    <script src="app/metrics.js"></script>
+    <!--<script src="app/metrics.js"></script>-->
     <script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
     <script src="app/main.js"></script>
+
+
+    <script>
+        $(document).ready(function () {
+            $('[data-toggle="tooltip"]').tooltip();
+        });
+    </script>
+
+
 </head>
 <body ng-controller="DashController">
     <div class="modal fade" id="streamModal">
@@ -167,8 +161,7 @@
 
 
         <div class="row options-wrapper"
-             ng-class="{'options-show':optionsGutter, 
-                        'options-hide':!optionsGutter}">
+             ng-class="{'options-show':optionsGutter, 'options-hide':!optionsGutter}">
 
             <div class="options-item playback" id="playback-options">
                 <div class="options-item-title">Playback</div>
@@ -381,30 +374,43 @@
                     <div class="tab-content">
                       <div class="tab-pane fade active in" id="video">
                         <div class="panel-body panel-stats">
+
                             <p class="text-primary"><span class="text-success"
-                                                          data-toggle="tooltip" 
-                                                          title="The bitrate of the representation being loaded">
-                                                          <em>Bitrate:</em> {{videoBitrate}} kbps</span></p>
-                            <p class="text-primary"><span class="text-success"
-                                                          data-toggle="tooltip" 
-                                                          title="The representation index being loaded. Lowest index is 1">
-                                                          <em>Index being loaded:</em> {{videoIndex}}{{videoPendingIndex}}/{{videoMaxIndex}}</span></p>
-                            <p class="text-primary"><span class="text-success"
-                                                          data-toggle="tooltip" 
+                                                          data-toggle="tooltip"
                                                           title="The length of the forward buffer, in seconds">
                                                           <em>Buffer Length:</em> {{videoBufferLength}}</span></p>
+
                             <p class="text-primary"><span class="text-success"
-                                                          data-toggle="tooltip" 
+                                                          data-toggle="tooltip"
+                                                          title="The bitrate of the representation being downloaded">
+                                                          <em>Bitrate Downloading:</em> {{videoBitrate}} kbps</span></p>
+
+
+
+                            <p class="text-primary"><span class="text-success"
+                                                          data-toggle="tooltip"
+                                                          title="The representation index being downloaded and appended to the buffer">
+                                                          <em>Index Downloading:</em> {{videoPendingIndex}}</span></p>
+
+                            <p class="text-primary"><span class="text-success"
+                                                          data-toggle="tooltip"
+                                                          title="The representation index being rendered.">
+                                                          <em>Current Index / Max Index</em> {{videoIndex}} / {{videoMaxIndex}}</span></p>
+
+
+
+                            <p class="text-primary"><span class="text-success"
+                                                          data-toggle="tooltip"
                                                           title="The minimum, average and maximum latency over the last 4 requested segments. Latency is the time in seconds from request of segment to receipt of first byte">
-                                                          <em>Latency (min|avg|max):</em> {{videoLatency.split('<').join('|')}}</span></p>
+                                                          <em>Latency (min|avg|max):</em> {{videoLatency}}</span></p>
                             <p class="text-primary"><span class="text-success"
                                                           data-toggle="tooltip" 
                                                           title="The minimum, average and maximum download time for the last 4 requested segments. Download time is the time in seconds from first byte being received to the last byte">
-                                                          <em>Download (min|avg|max):</em> {{videoDownload.split('<').join('|')}}</span></p>
+                                                          <em>Download (min|avg|max):</em> {{videoDownload}}</span></p>
                             <p class="text-primary"><span class="text-success"
                                                           data-toggle="tooltip" 
                                                           title="The minimum, average and maximum ratio of the segment playback time to total download time over the last 4 segments">
-                                                          <em>Ratio (min|avg|max):</em> {{videoRatio.split('<').join('|')}}</span></p>
+                                                          <em>Ratio (min|avg|max):</em> {{videoRatio}}</span></p>
                             <p class="text-primary"><span class="text-success"
                                                           data-toggle="tooltip" 
                                                           title="The absolute count of frames dropped by the rendering pipeline since play commenced">
@@ -414,17 +420,25 @@
                       <div class="tab-pane fade" id="audio">
                         <div class="panel-body panel-stats">
                             <p class="text-primary"><span class="text-success"
-                                                          data-toggle="tooltip" 
+                                                          data-toggle="tooltip"
                                                           title="The bitrate of the representation being loaded">
                                                           <em>Bitrate:</em> {{audioBitrate}} kbps</span></p>
+
                             <p class="text-primary"><span class="text-success"
-                                                          data-toggle="tooltip" 
-                                                          title="The representation index being loaded. Lowest index is 1">
-                                                          <em>Index being loaded:</em> {{audioIndex}}{{audioPendingIndex}}/{{audioMaxIndex}}</span></p>
-                            <p class="text-primary"><span class="text-success"
-                                                          data-toggle="tooltip" 
+                                                          data-toggle="tooltip"
                                                           title="The length of the forward buffer, in seconds">
                                                           <em>Buffer Length:</em> {{audioBufferLength}}</span></p>
+
+                            <p class="text-primary"><span class="text-success"
+                                                          data-toggle="tooltip"
+                                                          title="The representation index being downloaded and appended to the buffer">
+                                                          <em>Index Downloading:</em> {{audioPendingIndex}}</span></p>
+
+                            <p class="text-primary"><span class="text-success"
+                                                          data-toggle="tooltip"
+                                                          title="The representation index being rendered.">
+                                                          <em>Current Index / Max Index</em> {{audioIndex}}/{{audioMaxIndex}}</span>
+                            </p>
                             <p class="text-primary"><span class="text-success"
                                                           data-toggle="tooltip" 
                                                           title="The minimum, average and maximum latency over the last 4 requested segments. Latency is the time in seconds from request of segment to receipt of first byte">
