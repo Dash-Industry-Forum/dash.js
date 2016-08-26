@@ -52,7 +52,7 @@
                 },
                 {
                     "url":"http://vm2.dashif.org/livesim/mup_30/testpic_2s/Manifest.mpd",
-                    "name":"SegmentTemplater with manifest updates every 30s (livesim)",
+                    "name":"SegmentTemplate with manifest updates every 30s (livesim)",
                     "browsers":"cdsbi"
                 },
                 {
@@ -75,11 +75,13 @@
                     "name":"10 seconds availabilityTimeOffset (livesim)",
                     "browsers":"cdsbi"
                 },
+
                 {
-                    "url":"http://vm2.dashif.org/livesim-dev/ato_inf/testpic_2s/Manifest.mpd",
-                    "name":"Infinite offset - all segments available at availability start (livesim)",
+                    "url":"http://24x7dash-i.akamaihd.net/dash/live/900080/dash-demo/dash.mpd",
+                    "name":"Akamai 24x7 reference stream - segmentTemplate",
                     "browsers":"cdsbi"
                 }
+
             ]
         },
         {
