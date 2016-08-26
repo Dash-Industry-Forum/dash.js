@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="app/lib/bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" href="app/lib/bootstrap/css/bootstrap-glyphicons.css">
     <link rel="stylesheet" href="app/css/main.css">
-    <link rel="stylesheet" href="app/css/dropdown.css">
     <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
 
     <!-- http://jquery.com/ -->
@@ -33,7 +32,7 @@
         <div class="modal-dialog">
             <div class="list-group modal-list">
               <ul>
-                  <li ng-repeat="item in availableTaxonomyStreams"
+                  <li ng-repeat="item in availableStreams"
                       ng-class="{'sub':item.submenu}">
                     <span ng-show="!item.submenu"
                        ng-click="setStream(item)">{{item.name}}</span>
@@ -86,15 +85,13 @@
                     <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
                         Stream <span class="caret"></span>
                     </button>
-                    <ul class="dropdown-menu nav">
-                        <li ng-repeat="item in availableTaxonomyStreams"
-                            ng-class="{'sub':item.submenu}">
-                            <span ng-show="!item.submenu"
-                               ng-click="setStream(item)">{{item.name}}</span>
-                            <span ng-show="item.submenu">{{item.name}}</span>
-                            <ul ng-show="item.submenu">
+                    <ul class="dropdown-menu multi-level" role="menu" aria-labelledby="dropdownMenu">
+                        <li class="dropdown-submenu" ng-if="item.submenu" ng-repeat="item in availableStreams">
+                            <a tabindex="-1" href="#">{{item.name}}</a>
+                            <ul class="dropdown-menu">
                                 <li ng-repeat="subitem in item.submenu">
-                                    <span ng-click="setStream(subitem)">{{subitem.name}}</span>
+                                    <a title="{{ subitem.moreInfo && 'See ' + subitem.moreInfo + ' for more information' || undefined }}"
+                                       ng-click="setStream(subitem)">{{subitem.name}}</a>
                                 </li>
                             </ul>
                         </li>

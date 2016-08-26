@@ -159,7 +159,7 @@ app.controller('DashController', function($scope, sources, contributors) {
     ////////////////////////////////////////
 
     sources.query(function (data) {
-        $scope.availableTaxonomyStreams = data.items;
+        $scope.availableStreams = data.items;
     });
 
     contributors.query(function (data) {
