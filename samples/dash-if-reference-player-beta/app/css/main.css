@@ -588,7 +588,7 @@ label input {
     position:relative;
 }
 
-#debugCtrlBarChart {
+#bufferLevelChart {
     position: absolute;
     left: 46px;
     top: 25px;

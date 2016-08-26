@@ -1,5 +1,9 @@
 'use strict';
 
+$(document).ready(function () {
+    $('[data-toggle="tooltip"]').tooltip();
+});
+
 angular.module('DashSourcesService', ['ngResource'])
     .factory('sources', function($resource){
         return $resource('app/sources.json', {}, {
@@ -20,46 +24,36 @@ var lastUpdateTime = 0;
 app.directive('chart', function() {
     return {
         restrict: 'E',
-        link: function (scope, elem, attrs) {
-            var chart = null,
-                options = {
-                    series: {
-                        shadowSize: 0
-                    },
-                    yaxis: {
-                        autoscaleMargin:1.5
-                    },
-                    xaxis: {
+        link: function ($scope, elem, attrs) {
 
-                    }
+            if (!$scope.chart) {
+
+                var options = {
+                    legend: {},
+                    series: { shadowSize: 0 },
+                    yaxis: { autoscaleMargin: 1.5 },
+                    xaxis: {}
                 };
 
-            // If the data changes somehow, update it in the chart
-            scope.$watch('bufferData', function(v) {
-                if (v === null || v === undefined) {
-                    return;
-                }
+                $scope.chart = $.plot(elem, [], options);
+                $scope.invalidateDisplay(true);
+            }
 
-                if (!chart) {
-                    chart = $.plot(elem, v , options);
-                    elem.show();
-                }
-                else {
-                    chart.setData(v);
-                    chart.setupGrid();
-                    chart.draw();
+            $scope.$watch('invalidateChartDisplay', function(v) {
+                if (v && $scope.chart) {
+                    var data = $scope[attrs.ngModel];
+                    $scope.chart.setData(data);
+                    $scope.resizeChartDisplay = true;
+                    $scope.invalidateDisplay(false);
                 }
             });
 
-            scope.$watch('invalidateChartDisplay', function(v) {
-                if (v && chart) {
-                    var data = scope[attrs.ngModel];
-                    chart.setData(data);
-                    chart.setupGrid();
-                    chart.draw();
-                    chart.resize();
-                    scope.invalidateDisplay(false);
-
+            $scope.$watch('resizeChartDisplay', function (v) {
+                if (v && $scope.chart) {
+                    $scope.chart.resize();
+                    $scope.chart.setupGrid();
+                    $scope.chart.draw();
+                    $scope.resizeChartDisplay = false;
                 }
             });
         }
@@ -73,10 +67,8 @@ app.controller('DashController', function($scope, sources, contributors) {
         maxGraphPoints = 50;
 
 
-    $scope.graphPoints = {video: [], audio: [], text: []},
     $scope.abrEnabled = true;
     $scope.toggleCCBubble = false;
-    $scope.logbucket = [];
     $scope.debugEnabled = false;
     $scope.htmlLogging = false;
     $scope.videotoggle = false;
@@ -86,9 +78,26 @@ app.controller('DashController', function($scope, sources, contributors) {
     $scope.initialSettings = {audio: null, video: null};
     $scope.mediaSettingsCacheEnabled = true;
     $scope.invalidateChartDisplay = false;
-    $scope.showCharts = true;
-    $scope.showBufferLevel = true;
-    $scope.showDebug = false;
+    $scope.bufferLevelChartEnabled = true;
+
+    // from: https://gist.github.com/siongui/4969449
+    $scope.safeApply = function (fn) {
+        var phase = this.$root.$$phase;
+        if (phase == '$apply' || phase == '$digest')
+            this.$eval(fn);
+        else
+            this.$apply(fn);
+    };
+
+    $(window).resize(function () {
+        $scope.resizeChartDisplay = true;
+        $scope.safeApply();
+    });
+
+    $scope.invalidateDisplay = function (value) {
+        $scope.invalidateChartDisplay = value;
+        $scope.safeApply();
+    }
 
     $scope.toggleVideoMenu = function() {
         $scope.videotoggle = !$scope.videotoggle;
@@ -98,31 +107,28 @@ app.controller('DashController', function($scope, sources, contributors) {
         $scope.audiotoggle = !$scope.audiotoggle;
     }
 
-    // from: https://gist.github.com/siongui/4969449
-    $scope.safeApply = function(fn) {
-      var phase = this.$root.$$phase;
-      if(phase == '$apply' || phase == '$digest')
-        this.$eval(fn);
-      else
-        this.$apply(fn);
-    };
-
-    $scope.invalidateDisplay = function (value) {
-        $scope.invalidateChartDisplay = value;
-        $scope.safeApply();
+    $scope.setChartInfo = function () {
+        clearInterval($scope.metricsTimer);
+        $scope.graphPoints = {video: [], audio: [], text: []};
+        $scope.bufferData = [
+            {
+                data: $scope.graphPoints.video,
+                label: "Video",
+                color: "#2980B9"
+            },
+            {
+                data: $scope.graphPoints.audio,
+                label: "Audio",
+                color: "#E74C3C"
+            },
+            {
+                data: $scope.graphPoints.text,
+                label: "Text",
+                color: "#888"
+            }
+        ];
     }
 
-    $scope.setCharts = function (show) {
-        $scope.showCharts = show;
-    }
-
-    $scope.setBufferLevelChart = function(show) {
-        $scope.showBufferLevel = show;
-    }
-
-    $scope.setDebug = function (show) {
-        $scope.showDebug = show;
-    }
 
     ////////////////////////////////////////
     //
@@ -130,11 +136,8 @@ app.controller('DashController', function($scope, sources, contributors) {
     //
     ////////////////////////////////////////
 
-    video = document.querySelector(".dash-video-player video");
+    video = document.querySelector("video");
     player = dashjs.MediaPlayer().create();
-
-    $scope.version = player.getVersion();
-
     player.initialize();
     player.attachView(video);
     player.attachVideoContainer(document.getElementById("videoContainer"));
@@ -144,6 +147,9 @@ app.controller('DashController', function($scope, sources, contributors) {
     controlbar = new ControlBar(player);
     controlbar.initialize();
     controlbar.disable();
+
+    $scope.setChartInfo();
+    $scope.version = player.getVersion();
 
 
     ////////////////////////////////////////
@@ -168,12 +174,8 @@ app.controller('DashController', function($scope, sources, contributors) {
         }
     }
 
-    $scope.chartEnabledLabel = function() {
-        if( $scope.showBufferLevel ) {
-            return "Disable";
-        } else {
-            return "Enable";
-        }
+    $scope.getBufferLevelChartButtonLabel = function() {
+        return $scope.bufferLevelChartEnabled ? "Disable" : "Enable";
     }
 
     $scope.initDebugConsole = function () {
@@ -635,31 +637,12 @@ app.controller('DashController', function($scope, sources, contributors) {
 
     $scope.doLoad = function () {
 
-        clearInterval($scope.metricsTimer);
-        $scope.graphPoints = {video: [], audio: [], text: []};
-        $scope.bufferData = [
-            {
-                data: $scope.graphPoints.video,
-                label: "Video",
-                color: "#2980B9"
-            },
-            {
-                data: $scope.graphPoints.audio,
-                label: "Audio",
-                color: "#E74C3C"
-            },
-            {
-                data: $scope.graphPoints.text,
-                label: "Text",
-                color: "#888"
-            }
-        ];
-
-
         var protData = null;
         if ($scope.selectedItem.hasOwnProperty("protData")) {
             protData = $scope.selectedItem.protData;
         }
+
+        $scope.setChartInfo();
 
         player.attachSource($scope.selectedItem.url, null, protData);
         player.setAutoSwitchQuality($scope.abrEnabled);
