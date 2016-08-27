@@ -244,10 +244,10 @@
                           Audio
                           </a>
                       </li>
-                      <!--<li><a href="#text" role="tab" data-toggle="tab">-->
-                          <!--Text-->
-                          <!--</a>-->
-                      <!--</li>-->
+                      <li><a href="#text" role="tab" data-toggle="tab">
+                          Text
+                          </a>
+                      </li>
                     </ul>
 
                     <!-- Tab panes -->
@@ -367,48 +367,6 @@
                                         <!--<em>Buffer Length:</em> {{audioBufferLength}}-->
                                     <!--</span>-->
                                 <!--</p>-->
-                                <!--<p class="text-primary">-->
-                                    <!--<span class="text-success" data-toggle="tooltip"-->
-                                          <!--title="The bitrate of the representation being downloaded">-->
-                                        <!--<em>Bitrate Downloading:</em> {{audioBitrate}} kbps-->
-                                    <!--</span>-->
-                                <!--</p>-->
-                                <!--<p class="text-primary">-->
-                                    <!--<span class="text-success" data-toggle="tooltip"-->
-                                          <!--title="The representation index being downloaded and appended to the buffer">-->
-                                        <!--<em>Index Downloading:</em> {{audioPendingIndex}}-->
-                                    <!--</span>-->
-                                <!--</p>-->
-                                <!--<p class="text-primary">-->
-                                    <!--<span class="text-success" data-toggle="tooltip"-->
-                                          <!--title="The representation index being rendered.">-->
-                                        <!--<em>Current Index / Max Index</em> {{audioIndex}} / {{audioMaxIndex}}-->
-                                    <!--</span>-->
-                                <!--</p>-->
-                                <!--<p class="text-primary">-->
-                                    <!--<span class="text-success" data-toggle="tooltip"-->
-                                          <!--title="The minimum, average and maximum latency over the last 4 requested segments. Latency is the time in seconds from request of segment to receipt of first byte">-->
-                                        <!--<em>Latency (min|avg|max):</em> {{audioLatency}}-->
-                                    <!--</span>-->
-                                <!--</p>-->
-                                <!--<p class="text-primary">-->
-                                    <!--<span class="text-success" data-toggle="tooltip"-->
-                                          <!--title="The minimum, average and maximum download time for the last 4 requested segments. Download time is the time in seconds from first byte being received to the last byte">-->
-                                        <!--<em>Download (min|avg|max):</em> {{audioDownload}}-->
-                                    <!--</span>-->
-                                <!--</p>-->
-                                <!--<p class="text-primary">-->
-                                    <!--<span class="text-success" data-toggle="tooltip"-->
-                                          <!--title="The minimum, average and maximum ratio of the segment playback time to total download time over the last 4 segments">-->
-                                        <!--<em>Ratio (min|avg|max):</em> {{audioRatio}}-->
-                                    <!--</span>-->
-                                <!--</p>-->
-                                <!--<p class="text-primary">-->
-                                    <!--<span class="text-success" data-toggle="tooltip"-->
-                                          <!--title="The absolute count of frames dropped by the rendering pipeline since play commenced">-->
-                                        <!--<em>Dropped Frames:</em> {{audioDroppedFrames}}-->
-                                    <!--</span>-->
-                                <!--</p>-->
                             <!--</div>-->
                           <!--</div>-->
                     </div>
@@ -416,30 +374,22 @@
             </div>
         </div>
 
-        <!-- CHARTING TAB CONTENT -->
+        <!-- CHARTING -->
 
-        <div class="row">
-            <div class="panel">
-                <ul class="nav nav-tabs">
-                    <li class="active">
-                        <a href="#bufferLevel" data-toggle="tab" >Buffer level</a>
-                    </li>
-                    <!--<li>-->
-                        <!--<a href="#consoletracepanel" data-toggle="tab" ng-click="initDebugConsole();">Console Trace Panel</a>-->
-                    <!--</li>-->
-                </ul>
-                <div id="chartTabContent" class="tab-content">
-                    <div class="tab-pane active" id="bufferLevel">
-                        <div id="bufferLevelChart">
-                            <button class="btn btn-primary" ng-click="bufferLevelChartEnabled = !bufferLevelChartEnabled;" ng-cloak>{{getBufferLevelChartButtonLabel()}}</button>
-                        </div>
-                        <div id="chart-inventory" class="panel-body">
-                            <chart ng-model="bufferData" ></chart>
-                        </div>
-                    </div>
+        <div class="chartPanel">
+            <div class="chartControls">
+                <button class="btn btn-primary" ng-click="chartEnabled = !chartEnabled;"
+                        ng-cloak>{{getChartButtonLabel()}}
+                </button>
+            </div>
+            <div id="chartWrapper" >
+                <div id="statsChart"></div>
+                <div id="chart-inventory" >
+                    <chart ng-model="chartData" ></chart>
                 </div>
             </div>
         </div>
+
     </div>
 
     <!-- FOOTER -->

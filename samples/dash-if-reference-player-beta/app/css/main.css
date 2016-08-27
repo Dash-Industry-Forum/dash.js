@@ -11,6 +11,10 @@ a:hover {
     color: rgba(42, 100, 150, 1);
 }
 
+.container {
+    max-width: 1600px;
+}
+
 /****************************
     HEADER TITLE BAR
 *****************************/
@@ -125,13 +129,30 @@ a:hover {
 *****************************/
 
 .row {
-    margin-bottom: 15px;
+    margin-bottom: 7px;
     margin-right: 0px;
     margin-left: 0px;
 }
 
 .dash-video-player {
     background-color: #000000;
+}
+
+.col-md-9 video {
+    width: 100%;
+}
+
+.col-md-9 {
+    padding-top: 15px;
+}
+
+.col-md-3 {
+    padding-right: 0px;
+    padding-left: 0px;
+}
+
+.video-controller {
+    margin-top: -5px !important;
 }
 
 .btn-caption,
@@ -162,23 +183,8 @@ a:hover {
     font-style: normal;
 }
 
-
 .panel-stats p {
     display: block;
-}
-
-.panel {
-    background-color: #eee;
-}
-
-/****************************
-    CHARTING AND CHART TABS
-*****************************/
-
-chart, chart canvas {
-    display: block;
-    width: 100%;
-    height: 185px;
 }
 
 .tabs-section .nav > li > a {
@@ -195,27 +201,40 @@ chart, chart canvas {
     font-size: 14px;
 }
 
-#chartTabContent .tab-pane {
-    height: 220px;
+/****************************
+    CHARTING AND CHART TABS
+*****************************/
+
+chart, chart canvas {
+    display: block;
+    width: 100%;
+    height: 185px;
 }
 
 #chart-inventory {
     position:relative;
 }
 
-#bufferLevelChart {
+#statsChart {
     position: absolute;
     left: 46px;
     top: 25px;
     z-index: 100;
 }
 
-#chartTabContent {
-    height:230px;
+.chartControls {
+    padding-top: 15px;
+    padding-left: 15px;
 }
 
-#chartTabContent {
-    position:relative;
+#chartWrapper{
+    padding: 15px;
+}
+
+.chartPanel {
+    background-color: #fff;
+    margin-top: 15px;
+    margin-bottom: 15px;
 }
 
 
@@ -246,22 +265,11 @@ chart, chart canvas {
     color: #555;
 }
 
+
+
 /****************************
     MEDIA SCREEN CONTROL
 *****************************/
-
-.container {
-    max-width: 1600px;
-}
-
-.col-md-3 {
-    padding-right: 0px;
-    padding-left: 0px;
-}
-
-.col-md-9 video {
-    width: 100%;
-}
 
 @media (min-width: 993px) {
 

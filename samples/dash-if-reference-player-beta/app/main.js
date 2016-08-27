@@ -89,7 +89,7 @@ app.controller('DashController', function($scope, sources, contributors) {
     $scope.initialSettings = {audio: null, video: null};
     $scope.mediaSettingsCacheEnabled = true;
     $scope.invalidateChartDisplay = false;
-    $scope.bufferLevelChartEnabled = true;
+    $scope.chartEnabled = true;
 
     // from: https://gist.github.com/siongui/4969449
     $scope.safeApply = function (fn) {
@@ -116,7 +116,7 @@ app.controller('DashController', function($scope, sources, contributors) {
     $scope.setChartInfo = function () {
         clearInterval($scope.metricsTimer);
         $scope.graphPoints = {video: [], audio: [], text: []};
-        $scope.bufferData = [
+        $scope.chartData = [
             {
                 data: $scope.graphPoints.video,
                 label: "Video",
@@ -171,8 +171,8 @@ app.controller('DashController', function($scope, sources, contributors) {
         $scope.contributors = data.items;
     });
 
-    $scope.getBufferLevelChartButtonLabel = function() {
-        return $scope.bufferLevelChartEnabled ? "Disable" : "Enable";
+    $scope.getChartButtonLabel = function() {
+        return $scope.chartEnabled ? "Disable" : "Enable";
     }
 
 
@@ -280,10 +280,15 @@ app.controller('DashController', function($scope, sources, contributors) {
             }
 
 
-            var point = [parseFloat($scope.video.currentTime), Math.round(parseFloat(bufferLevel))];
-            $scope.graphPoints[type].push(point);
-            if ($scope.graphPoints[type].length > maxGraphPoints) {
-                $scope.graphPoints[type].splice(0, 1);
+
+            if ($scope.chartEnabled) {
+
+                var point = [parseFloat($scope.video.currentTime), Math.round(parseFloat(bufferLevel))];
+
+                $scope.graphPoints[type].push(point);
+                if ($scope.graphPoints[type].length > maxGraphPoints) {
+                    $scope.graphPoints[type].splice(0, 1);
+                }
             }
 
         }
