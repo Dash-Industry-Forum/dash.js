@@ -19,7 +19,14 @@ angular.module('DashContributorsService', ['ngResource'])
     });
 
 var app = angular.module('DashPlayer', ['DashSourcesService', 'DashContributorsService']);
-var lastUpdateTime = 0;
+
+//app.directive('resizeApplication', function () {
+//    return {
+//        link: function ($scope, element, attrs) {
+//
+//        }
+//    }
+//})
 
 app.directive('chart', function() {
     return {
@@ -56,6 +63,11 @@ app.directive('chart', function() {
                     $scope.resizeChartDisplay = false;
                 }
             });
+
+            $(window).resize(function () {
+                $scope.resizeChartDisplay = true;
+                $scope.safeApply();
+            });
         }
     };
 });
@@ -63,10 +75,9 @@ app.directive('chart', function() {
 app.controller('DashController', function($scope, sources, contributors) {
     var player,
         controlbar,
-        video,
         maxGraphPoints = 50;
 
-
+    $scope.selectedItem = {"url": "http://dash.edgesuite.net/akamai/bbb_30fps/bbb_30fps.mpd"};
     $scope.abrEnabled = true;
     $scope.toggleCCBubble = false;
     $scope.debugEnabled = false;
@@ -88,11 +99,6 @@ app.controller('DashController', function($scope, sources, contributors) {
         else
             this.$apply(fn);
     };
-
-    $(window).resize(function () {
-        $scope.resizeChartDisplay = true;
-        $scope.safeApply();
-    });
 
     $scope.invalidateDisplay = function (value) {
         $scope.invalidateChartDisplay = value;
@@ -129,17 +135,16 @@ app.controller('DashController', function($scope, sources, contributors) {
         ];
     }
 
-
     ////////////////////////////////////////
     //
     // Player Setup
     //
     ////////////////////////////////////////
 
-    video = document.querySelector("video");
+    $scope.video = document.querySelector(".dash-video-player video");
     player = dashjs.MediaPlayer().create();
     player.initialize();
-    player.attachView(video);
+    player.attachView($scope.video);
     player.attachVideoContainer(document.getElementById("videoContainer"));
     player.attachTTMLRenderingDiv(document.querySelector("#video-caption"));
     player.setAutoPlay(true);
@@ -166,59 +171,8 @@ app.controller('DashController', function($scope, sources, contributors) {
         $scope.contributors = data.items;
     });
 
-    $scope.debugEnabledLabel = function() {
-        if( $scope.debugEnabled ) {
-            return "Disable";
-        } else {
-            return "Enable";
-        }
-    }
-
     $scope.getBufferLevelChartButtonLabel = function() {
         return $scope.bufferLevelChartEnabled ? "Disable" : "Enable";
-    }
-
-    $scope.initDebugConsole = function () {
-
-        var debug;
-
-        //console.log('XXX', $scope.logbucket);
-
-        debug = player.getDebug();
-        debug.setLogTimestampVisible(true);
-        debug.setLogToBrowserConsole(true);
-
-        var date            = new Date(),
-            logStreamEpoch  = date.getTime();
-
-        player.on(dashjs.MediaPlayer.events.LOG, function(event)
-        {
-            var currentTime = (new Date()).getTime() - logStreamEpoch,
-                timestamp = '[' + currentTime + ']';
-
-            if($scope.htmlLogging)
-            {
-                $scope.logbucket.push(timestamp + ' ' + event.message);
-            }
-        }, false);
-    }
-
-    $scope.shutdownDebugConsole = function() {
-        debug.setLogTimestampVisible(false);
-        debug.setLogToBrowserConsole(false);
-    }
-
-    $scope.setHtmlLogging = function(bool) {
-        $scope.debugEnabled = bool;
-        $scope.htmlLogging = bool;
-        console.log('DEBUGGER LOG OBJECT', player.getDebug());
-        console.log('html logging set to: ', bool);
-    }
-
-    $scope.clearHtmlLogging = function() {
-        $scope.debugEnabled = false;
-        $scope.htmlLogging = false;
-        $scope.logbucket = [];
     }
 
 
@@ -326,7 +280,7 @@ app.controller('DashController', function($scope, sources, contributors) {
             }
 
 
-            var point = [parseFloat(video.currentTime), Math.round(parseFloat(bufferLevel))];
+            var point = [parseFloat($scope.video.currentTime), Math.round(parseFloat(bufferLevel))];
             $scope.graphPoints[type].push(point);
             if ($scope.graphPoints[type].length > maxGraphPoints) {
                 $scope.graphPoints[type].splice(0, 1);
@@ -398,6 +352,7 @@ app.controller('DashController', function($scope, sources, contributors) {
         }
         $scope.safeApply();
     }, $scope);
+
     player.on(dashjs.MediaPlayer.events.PROTECTION_DESTROYED, function (e) {
         for (var i = 0; i < $scope.drmData.length; i++) {
             if ($scope.drmData[i].manifest.url === e.data) {

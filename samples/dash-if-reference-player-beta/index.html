@@ -28,14 +28,14 @@
 
 </head>
 <body ng-controller="DashController">
+
+    <!-- Mobile Stream Menu-->
     <div class="modal fade" id="streamModal">
         <div class="modal-dialog">
             <div class="list-group modal-list">
               <ul>
-                  <li ng-repeat="item in availableStreams"
-                      ng-class="{'sub':item.submenu}">
-                    <span ng-show="!item.submenu"
-                       ng-click="setStream(item)">{{item.name}}</span>
+                  <li ng-repeat="item in availableStreams" ng-class="{'sub':item.submenu}">
+                    <span ng-show="!item.submenu" ng-click="setStream(item)">{{item.name}}</span>
                     <span ng-show="item.submenu">{{item.name}}</span>
                     <ul ng-show="item.submenu">
                         <li ng-repeat="subitem in item.submenu">
@@ -49,6 +49,8 @@
         </div>
     </div>
 
+
+    <!-- TITLE BAR -->
     <div class="container">
         <div class="row title-header">
             <div class="branding">
@@ -103,7 +105,7 @@
                         Stream <span class="caret"></span>
                     </button>
                 </div>
-                <input type="text" class="form-control" placeholder="manifest" ng-model="selectedItem.url">
+                <input type="text" class="form-control" ng-cloak placeholder="{{$scope.selectedItem.url}}" ng-model="selectedItem.url">
                 <span class="input-group-btn">
                     <button class="btn btn-primary" ng-click="toggleOptionsGutter(!optionsGutter)">Options</button>
                     <button class="btn btn-primary" type="button" ng-click="doLoad()">Load</button>
@@ -111,7 +113,7 @@
             </div>
         </div>
 
-
+        <!-- OPTIONS MENU-->
         <div ng-cloak class="row options-wrapper" ng-class="{'options-show':optionsGutter, 'options-hide':!optionsGutter}">
 
             <div class="options-item playback" id="playback-options">
@@ -131,6 +133,7 @@
                     </li>
                 </ul>
             </div>
+
             <div class="options-item sessiontype" id="sessiontype-options">
                 <div class="options-item-title">DRM Options</div>
                 <div id="session-type">
@@ -149,7 +152,6 @@
                     <button class="btn btn-primary license" type="button" ng-click="doLicenseFetch()">Pre-Fetch Licenses</button>
                 </div>
             </div>
-
 
             <div class="options-item track-swtch" id="track-swtch-options">
                 <div class="options-item-title">Track Switch Mode</div>
@@ -177,11 +179,11 @@
 
         </div>
 
-
+        <!--VIDEO PLAYER / CONTROLS -->
         <div class="row">
             <div class="dash-video-player col-md-9">
                 <div id="videoContainer">
-                    <video id="videoSurface"></video>
+                    <video></video>
                     <div id="video-caption"></div>
                     <div id="videoController" class="video-controller unselectable">
                         <div id="playPauseBtn" class="btn-play-pause" title="Play/Pause">
@@ -228,8 +230,10 @@
                     </div>
                 </div>
             </div>
+
+            <!-- STATS TAB CONTENT -->
             <div class="col-md-3 tabs-section">
-                <div>
+                <div >
                     <ul class="nav nav-tabs" role="tablist">
                       <li class="active">
                           <a href="#video" role="tab" data-toggle="tab">
@@ -412,6 +416,8 @@
             </div>
         </div>
 
+        <!-- CHARTING TAB CONTENT -->
+
         <div class="row">
             <div class="panel">
                 <ul class="nav nav-tabs">
@@ -425,7 +431,7 @@
                 <div id="chartTabContent" class="tab-content">
                     <div class="tab-pane active" id="bufferLevel">
                         <div id="bufferLevelChart">
-                            <button class="extras btn btn-primary" ng-click="bufferLevelChartEnabled = !bufferLevelChartEnabled;" ng-cloak>{{getBufferLevelChartButtonLabel()}}</button>
+                            <button class="btn btn-primary" ng-click="bufferLevelChartEnabled = !bufferLevelChartEnabled;" ng-cloak>{{getBufferLevelChartButtonLabel()}}</button>
                         </div>
                         <div id="chart-inventory" class="panel-body">
                             <chart ng-model="bufferData" ></chart>
@@ -435,7 +441,9 @@
             </div>
         </div>
     </div>
-    <div class="footer-area">
+
+    <!-- FOOTER -->
+    <div class="footer-area" ng-cloak>
         <div class="container">
             <div class="row">
                 <div class="col-md-12">
