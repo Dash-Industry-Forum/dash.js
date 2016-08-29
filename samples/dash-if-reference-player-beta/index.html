@@ -8,6 +8,7 @@
     <meta name="viewport" content="width=device-width, height=device-height, user-scalable=no">
 
     <link rel="stylesheet" href="app/lib/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="app/lib/bootstrap/css/bootstrap-theme.min.css">
     <link rel="stylesheet" href="app/lib/bootstrap/css/bootstrap-glyphicons.css">
     <link rel="stylesheet" href="app/css/main.css">
     <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
@@ -53,30 +54,22 @@
     <!-- TITLE BAR -->
     <div class="container">
         <div class="row title-header">
+
             <div class="branding">
               <a href="http://dashif.org/" target="_blank"><img class="image" src="app/img/if.png"/></a>
               <span id="big-title">Reference Client</span>
                 <span ng-bind="version"></span>
             </div>
+
+            <!-- Using iframe to solve pre-flight request issue from GIT-->
             <div class="top-buttons">
-                <iframe
-                    id="star-button"
-                    src="http://ghbtns.com/github-btn.html?user=Dash-Industry-Forum&repo=dash.js&type=watch&count=true&size=large"
-                    height="30"
-                    width="170"
-                    frameborder="0"
-                    scrolling="0"
-                    allowTransparency="true"
-                    class="hidden-xs github-button">
+                <iframe id="star-button"
+                        src="http://ghbtns.com/github-btn.html?user=Dash-Industry-Forum&repo=dash.js&type=watch&count=true&size=large"
+                        height="30" width="150">
                 </iframe>
-                <iframe
-                    id="fork-button"
-                    src="http://ghbtns.com/github-btn.html?user=Dash-Industry-Forum&repo=dash.js&type=fork&count=true&size=large"
-                    height="30"
-                    width="170"
-                    frameborder="0"
-                    scrolling="0"
-                    allowTransparency="true github-button">
+                <iframe id="fork-button"
+                        src="http://ghbtns.com/github-btn.html?user=Dash-Industry-Forum&repo=dash.js&type=fork&count=true&size=large"
+                        height="30" width="150" >
                 </iframe>
             </div>
         </div>
@@ -107,7 +100,7 @@
                 </div>
                 <input type="text" class="form-control" ng-cloak placeholder="{{$scope.selectedItem.url}}" ng-model="selectedItem.url">
                 <span class="input-group-btn">
-                    <button class="btn btn-primary" ng-click="toggleOptionsGutter(!optionsGutter)">Options</button>
+                    <button class="btn btn-default" ng-click="toggleOptionsGutter(!optionsGutter)">Options</button>
                     <button class="btn btn-primary" type="button" ng-click="doLoad()">Load</button>
                 </span>
             </div>
@@ -116,46 +109,60 @@
         <!-- OPTIONS MENU-->
         <div ng-cloak class="row options-wrapper" ng-class="{'options-show':optionsGutter, 'options-hide':!optionsGutter}">
 
-            <div class="options-item playback" id="playback-options">
+            <div class="options-item">
                 <div class="options-item-title">Playback</div>
-                <ul>
-                    <li>
-                        <input type="checkbox" id="autoPlayCB" checked="">
-                        <label class="topcoat-checkbox" for="autoPlayCB">Auto-Play</label>
-                    </li>
-                    <li>
-                        <input type="checkbox" id="loopCB" checked="">
-                        <label class="topcoat-checkbox" for="loopCB">Loop</label>
-                    </li>
-                    <li>
-                        <input type="checkbox" id="DOMStorageCB" checked="">
-                        <label class="topcoat-checkbox" for="DOMStorageCB">DOM Storage</label>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="options-item sessiontype" id="sessiontype-options">
-                <div class="options-item-title">DRM Options</div>
-                <div id="session-type">
-                    <label>
-                        <input type="radio" id="temporary" name="drm" checked="checked">
-                        temporary
+                <div class="options-item-body">
+                    <label class="topcoat-checkbox" >
+                        <input type="checkbox" ng-model="autoPlaySelected" ng-change="toggleAutoPlay()" ng-checked="true">
+                        Auto-Play
                     </label>
-                    <label>
-                        <input type="radio" id="persistent-license" name="drm">
-                        persistent-license
+                    <label class="topcoat-checkbox" >
+                        <input type="checkbox" id="loop-cb" ng-checked="true">
+                        Loop
                     </label>
-                    <label>
-                        <input type="radio" id="persistent-release-message" name="drm">
-                        persistent-release
+                    <label class="topcoat-checkbox" >
+                        <input type="checkbox" id="DOMStorageCB" ng-model="domStorageSelected" ng-change="toggleDOMStorage()" ng-checked="true">
+                        DOM Storage
                     </label>
-                    <button class="btn btn-primary license" type="button" ng-click="doLicenseFetch()">Pre-Fetch Licenses</button>
+                    <label class="topcoat-checkbox" >
+                        <input type="checkbox" id="fastSwitchCB" ng-model="fastSwitchSelected" ng-change="toggleFastSwitch()" ng-checked="true">
+                        Fast Switching
+                    </label>
+                    <label class="topcoat-checkbox" >
+                        <input type="checkbox" id="bolaCB" ng-model="bolaSelected" ng-change="toggleBufferOccupancyABR()" ng-checked="false">
+                        Buffer Occupancy ABR
+                    </label>
                 </div>
             </div>
 
-            <div class="options-item track-swtch" id="track-swtch-options">
+            <!--<div class="options-item">-->
+                <!--<div class="options-item-title">DRM Options</div>-->
+                <!--<div class="options-item-body">-->
+                    <!--<label>-->
+                        <!--<input type="radio" value="temporary" name="drm" ng-model="drmOptionsValue" ng-change="drmOptionsHandler()" ng-checked="true">-->
+                        <!--temporary-->
+                    <!--</label>-->
+                    <!--<label>-->
+                        <!--<input type="radio" value="persistent-license" name="drm" ng-model="drmOptionsValue" ng-change="drmOptionsHandler()" >-->
+                        <!--persistent-license-->
+                    <!--</label>-->
+                    <!--<label>-->
+                        <!--<input type="radio" value="persistent-release-message" name="drm" ng-model="drmOptionsValue" ng-change="drmOptionsHandler()" >-->
+                        <!--persistent-release-->
+                    <!--</label>-->
+                    <!--<button class="btn btn-primary license" type="button" ng-click="doLicenseFetch()">Pre-Fetch Licenses</button>-->
+                <!--</div>-->
+            <!--</div>-->
+
+            <div class="options-item">
                 <div class="options-item-title">Track Switch Mode</div>
-                <div id="track-switch-type">
+                <div class="options-item-body">
+                    <label>Audio:</label>
+                    <input type="text" class="form-control" placeholder="initial lang, e.g. 'en'"
+                           ng-model="initialSettings.audio">
+                    <label>Video:</label>
+                    <input type="text" class="form-control" placeholder="initial role, e.g. 'alternate'"
+                           ng-model="initialSettings.video">
                     <label>
                         <input type="radio" id="always-replace" autocomplete="off" name="track-switch" checked="checked" ng-click="changeTrackSwitchMode('alwaysReplace', 'video')">
                         always replace
@@ -164,16 +171,6 @@
                         <input type="radio" id="never-replace" autocomplete="off" name="track-switch" ng-click="changeTrackSwitchMode('neverReplace', 'video')">
                         never replace
                     </label>
-                </div>
-            </div>
-
-            <div class="options-item initial-role" id="initial-role">
-                <div class="options-item-title">Initial Role</div>
-                <div id="initial-role-option">
-                    <label>Audio:</label>
-                    <input type="text" class="form-control" placeholder="initial lang, e.g. 'en'" ng-model="initialSettings.audio">
-                    <label>audio:</label>
-                    <input type="text" class="form-control" placeholder="initial role, e.g. 'alternate'" ng-model="initialSettings.video">
                 </div>
             </div>
 
@@ -186,47 +183,71 @@
                     <video></video>
                     <div id="video-caption"></div>
                     <div id="videoController" class="video-controller unselectable">
+
                         <div id="playPauseBtn" class="btn-play-pause" title="Play/Pause">
                             <span id="iconPlayPause" class="icon-play"></span>
                         </div>
                         <span id="videoTime" class="time-display">00:00:00</span>
+
                         <div id="fullscreenBtn" class="btn-fullscreen" title="Fullscreen">
-                            <span class="icon-fullscreen-enter" data-toggle="tooltip" title="Fullscreen"></span>
+                            <span class="icon-fullscreen-enter"></span>
                         </div>
-                        <input type="range" id="volumebar" class="volumebar" value="1" min="0" max="1" step=".01" data-toggle="tooltip" title="Audio Level" />
-                        <div id="muteBtn" class="btn-mute" data-toggle="tooltip" title="Mute">
+                        <input type="range" id="volumebar" class="volumebar" value="1" min="0" max="1" step=".01"/>
+
+                        <div id="muteBtn" class="btn-mute" title="Mute">
                             <span id="iconMute" class="icon-mute-off"></span>
                         </div>
-                        <div id="captionBtn" class="btn-caption" ng-mouseenter="toggleCCBubble = !toggleCCBubble;" ng-mouseleave="toggleCCBubble = !toggleCCBubble;">
+                        <div id="captionBtn" class="btn-caption" title="Closed Caption">
                             <span class="icon-caption"></span>
                         </div>
-                        <div id="caption-bubble" ng-show="toggleCCBubble">Closed Caption</div>
 
-                        <div id="videoTracksBtn" class="btn-caption" ng-show="availableTracks.video.length > 1" >
-                            <span class="icon-video" data-toggle="dropdown">
-                                  <em data-toggle="tooltip" title="Video Tracks"></em>
-                            </span>
-                            <ul class="dropdown-menu tracklisting" role="menu">
-                                <li ng-repeat="track in availableTracks.video" ng-click="switchTrack(track, 'video')">
-                                    <a>lang: {{track.lang || "undefined"}}, viewpoint: {{track.viewpoint || "undefined"}}, roles: {{track.roles || "undefined"}}</a>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div id="audioTracksBtn" class="btn-caption" ng-show="availableTracks.audio.length > 1">
-                            <span class="icon-audio" data-toggle="dropdown">
-                                  <em data-toggle="tooltip" title="Audio Tracks"></em>
-                            </span>
-                            <ul class="dropdown-menu tracklisting" role="menu">
-                                <li ng-repeat="track in availableTracks.audio" ng-click="switchTrack(track, 'audio')">
-                                    <a>lang: {{track.lang || "undefined"}}, viewpoint: {{track.viewpoint || "undefined"}}, roles: {{track.roles || "undefined"}}</a>
-                                </li>
-                            </ul>
-                        </div>
                         <span id="videoDuration" class="duration-display">00:00:00</span>
+
                         <div class="seekContainer">
                             <input type="range" id="seekbar" value="0" class="seekbar" min="0" step="0.01"/>
                         </div>
+
+                        <!--<div id="playPauseBtn" class="btn-play-pause" title="Play/Pause">-->
+                            <!--<span id="iconPlayPause" class="icon-play"></span>-->
+                        <!--</div>-->
+                        <!--<span id="videoTime" class="time-display">00:00:00</span>-->
+                        <!--<div id="fullscreenBtn" class="btn-fullscreen" title="Fullscreen">-->
+                            <!--<span class="icon-fullscreen-enter" data-toggle="tooltip" title="Fullscreen"></span>-->
+                        <!--</div>-->
+                        <!--<input type="range" id="volumebar" class="volumebar" value="1" min="0" max="1" step=".01" data-toggle="tooltip" title="Audio Level" />-->
+                        <!--<div id="muteBtn" class="btn-mute" data-toggle="tooltip" title="Mute">-->
+                            <!--<span id="iconMute" class="icon-mute-off"></span>-->
+                        <!--</div>-->
+                        <!--<div id="captionBtn" class="btn-caption" ng-mouseenter="toggleCCBubble = !toggleCCBubble;" ng-mouseleave="toggleCCBubble = !toggleCCBubble;">-->
+                            <!--<span class="icon-caption"></span>-->
+                        <!--</div>-->
+                        <!--<div id="caption-bubble" ng-show="toggleCCBubble">Closed Caption</div>-->
+
+                        <!--<div id="videoTracksBtn" class="btn-caption" ng-show="availableTracks.video.length > 1" >-->
+                            <!--<span class="icon-video" data-toggle="dropdown">-->
+                                  <!--<em data-toggle="tooltip" title="Video Tracks"></em>-->
+                            <!--</span>-->
+                            <!--<ul class="dropdown-menu tracklisting" role="menu">-->
+                                <!--<li ng-repeat="track in availableTracks.video" ng-click="switchTrack(track, 'video')">-->
+                                    <!--<a>lang: {{track.lang || "undefined"}}, viewpoint: {{track.viewpoint || "undefined"}}, roles: {{track.roles || "undefined"}}</a>-->
+                                <!--</li>-->
+                            <!--</ul>-->
+                        <!--</div>-->
+
+                        <!--<div id="audioTracksBtn" class="btn-caption" ng-show="availableTracks.audio.length > 1">-->
+                            <!--<span class="icon-audio" data-toggle="dropdown">-->
+                                  <!--<em data-toggle="tooltip" title="Audio Tracks"></em>-->
+                            <!--</span>-->
+                            <!--<ul class="dropdown-menu tracklisting" role="menu">-->
+                                <!--<li ng-repeat="track in availableTracks.audio" ng-click="switchTrack(track, 'audio')">-->
+                                    <!--<a>lang: {{track.lang || "undefined"}}, viewpoint: {{track.viewpoint || "undefined"}}, roles: {{track.roles || "undefined"}}</a>-->
+                                <!--</li>-->
+                            <!--</ul>-->
+                        <!--</div>-->
+                        <!--<span id="videoDuration" class="duration-display">00:00:00</span>-->
+                        <!--<div class="seekContainer">-->
+                            <!--<input type="range" id="seekbar" value="0" class="seekbar" min="0" step="0.01"/>-->
+                        <!--</div>-->
                     </div>
                 </div>
             </div>
@@ -244,10 +265,10 @@
                           Audio
                           </a>
                       </li>
-                      <li><a href="#text" role="tab" data-toggle="tab">
-                          Text
-                          </a>
-                      </li>
+                      <!--<li><a href="#text" role="tab" data-toggle="tab">-->
+                          <!--Text-->
+                          <!--</a>-->
+                      <!--</li>-->
                     </ul>
 
                     <!-- Tab panes -->
@@ -275,6 +296,13 @@
                                     <em>Current Index / Max Index</em> {{videoIndex}} / {{videoMaxIndex}}
                                 </span>
                             </p>
+
+                            <p class="text-primary">
+                                <span class="text-success" data-toggle="tooltip"
+                                      title="The absolute count of frames dropped by the rendering pipeline since play commenced">
+                                    <em>Dropped Frames:</em> {{videoDroppedFrames}}
+                                </span>
+                            </p>
                             <p class="text-primary">
                                 <span class="text-success" data-toggle="tooltip" title="The minimum, average and maximum latency over the last 4 requested segments. Latency is the time in seconds from request of segment to receipt of first byte">
                                     <em>Latency (min|avg|max):</em> {{videoLatency}}
@@ -289,11 +317,6 @@
                             <p class="text-primary">
                                 <span class="text-success" data-toggle="tooltip" title="The minimum, average and maximum ratio of the segment playback time to total download time over the last 4 segments">
                                     <em>Ratio (min|avg|max):</em> {{videoRatio}}
-                                </span>
-                            </p>
-                            <p class="text-primary">
-                                <span class="text-success" data-toggle="tooltip" title="The absolute count of frames dropped by the rendering pipeline since play commenced">
-                                    <em>Dropped Frames:</em> {{videoDroppedFrames}}
                                 </span>
                             </p>
                         </div>
@@ -328,7 +351,12 @@
                                     <em>Current Index / Max Index</em> {{audioIndex}} / {{audioMaxIndex}}
                                 </span>
                             </p>
-
+                            <p class="text-primary">
+                                <span class="text-success" data-toggle="tooltip"
+                                      title="The absolute count of frames dropped by the rendering pipeline since play commenced">
+                                    <em>Dropped Frames:</em> {{audioDroppedFrames}}
+                                </span>
+                            </p>
                             <p class="text-primary">
                                 <span class="text-success" data-toggle="tooltip"
                                       title="The minimum, average and maximum latency over the last 4 requested segments. Latency is the time in seconds from request of segment to receipt of first byte">
@@ -349,13 +377,6 @@
                                     <em>Ratio (min|avg|max):</em> {{audioRatio}}
                                 </span>
                             </p>
-
-                            <p class="text-primary">
-                                <span class="text-success" data-toggle="tooltip"
-                                      title="The absolute count of frames dropped by the rendering pipeline since play commenced">
-                                    <em>Dropped Frames:</em> {{audioDroppedFrames}}
-                                </span>
-                            </p>
                         </div>
                       </div>
                           <!--<div class="tab-pane fade" id="text">-->
@@ -364,7 +385,7 @@
                                 <!--<p class="text-primary">-->
                                     <!--<span class="text-success" data-toggle="tooltip"-->
                                           <!--title="The length of the forward buffer, in seconds">-->
-                                        <!--<em>Buffer Length:</em> {{audioBufferLength}}-->
+                                        <!--<em>Language:</em> {{audioBufferLength}}-->
                                     <!--</span>-->
                                 <!--</p>-->
                             <!--</div>-->

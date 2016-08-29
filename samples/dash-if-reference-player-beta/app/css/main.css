@@ -1,10 +1,16 @@
 body {
     background: #eee;
+    min-width: 320px;
     overflow-x: hidden;
 }
 
 label input {
     display: inline;
+}
+
+iframe {
+    border: none;
+    overflow: hidden;
 }
 
 a:hover {
@@ -19,16 +25,6 @@ a:hover {
     HEADER TITLE BAR
 *****************************/
 
-.github-button {
-    float: left;
-    width: 170px;
-    height: 30px;
-}
-
-.title-header {
-    position: relative;
-}
-
 .title-header a img {
     height: 50px;
 }
@@ -39,13 +35,13 @@ a:hover {
 }
 
 .top-buttons {
-    margin-top: 10px;
     float: right;
+    margin-right: -20px;;
+    margin-top: 10px;
 }
 
 .branding {
     float: left;
-    width:400px;
 }
 
 .form-control {
@@ -55,16 +51,8 @@ a:hover {
 /****************************
         OPTIONS PANEL
 *****************************/
-
-.options-wrapper {
-    background-color: #8F9292;
-    width: 100%;
-    overflow-x: hidden;
-    overflow-y: scroll;
-}
-
 .options-show {
-    height: 165px;
+    height: 200px;
     transition-property: all;
     transition-duration: .5s;
 }
@@ -75,34 +63,29 @@ a:hover {
     transition-duration: .5s;
 }
 
+.options-wrapper {
+    background-color: rgb(43, 43, 43);
+    overflow-x: hidden;
+}
+
 .options-item {
     background-color: #dfe2e2;
-    margin: 10px;
+    margin: 2px;
     padding: 5px;
-    min-height: 100px;
+    min-height: 195px;
     float: left;
 }
 
-#initial-role label {
-    margin-bottom: 0;
-    font-size: 11px;
-}
-
-#initial-role div {
-    margin-bottom: 0px;
-}
-
-#initial-role-option {
-    margin-left: 16px;
-}
-
-.options-item ul {
-    list-style: none;
-}
-
-.options-item ul input,
-.options-item ul label {
+.options-item-body input,
+.options-item-body label {
     cursor: pointer;
+    clear: both;
+    float: left;
+    margin-bottom: 2px !important;
+}
+
+.options-item-body input {
+    margin-right: 5px;
 }
 
 .options-item-title {
@@ -111,18 +94,17 @@ a:hover {
     padding-top: .2rem;
     text-align: center;
     color: #ffffff;
-    margin-bottom: 10px;
+    margin-bottom: 2px;
     line-height: 15px;
 }
 
-.playback, .sessiontype, .track-swtch, .initial-role {
+.options-item-body {
     width: 200px;
     height: 145px;
+    margin: 5px;
 }
 
-#session-type {
-    margin-left: 24px;
-}
+
 
 /****************************
     MIDDLE ROW VIDEO
@@ -299,12 +281,15 @@ chart, chart canvas {
     #big-title {
         display: none;
     }
+}
 
+@media (max-width: 530px) {
     .top-buttons {
-        margin-top: 10px;
-        float: left;
+        display: none;
     }
 }
+
+
 
 @media (min-width: 1201px) and (max-width: 1400px) {
 
@@ -504,10 +489,6 @@ CONTROL BAR CSS NEEDS TO MOVE INTO THE CONTROL BAR
     -webkit-border-radius: 12px;
     -moz-border-radius: 12px;
     border-radius: 5px;
-}
-
-#track-switch-type {
-    margin-left: 40px;
 }
 
 .tracklisting {

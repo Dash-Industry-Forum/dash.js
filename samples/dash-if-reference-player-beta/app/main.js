@@ -18,15 +18,8 @@ angular.module('DashContributorsService', ['ngResource'])
         });
     });
 
-var app = angular.module('DashPlayer', ['DashSourcesService', 'DashContributorsService']);
 
-//app.directive('resizeApplication', function () {
-//    return {
-//        link: function ($scope, element, attrs) {
-//
-//        }
-//    }
-//})
+var app = angular.module('DashPlayer', ['DashSourcesService', 'DashContributorsService']);
 
 app.directive('chart', function() {
     return {
@@ -77,7 +70,7 @@ app.controller('DashController', function($scope, sources, contributors) {
         controlbar,
         maxGraphPoints = 50;
 
-    $scope.selectedItem = {"url": "http://dash.edgesuite.net/akamai/bbb_30fps/bbb_30fps.mpd"};
+    $scope.selectedItem = {url:"http://dash.edgesuite.net/akamai/bbb_30fps/bbb_30fps.mpd"};
     $scope.abrEnabled = true;
     $scope.toggleCCBubble = false;
     $scope.debugEnabled = false;
@@ -91,69 +84,25 @@ app.controller('DashController', function($scope, sources, contributors) {
     $scope.invalidateChartDisplay = false;
     $scope.chartEnabled = true;
 
-    // from: https://gist.github.com/siongui/4969449
-    $scope.safeApply = function (fn) {
-        var phase = this.$root.$$phase;
-        if (phase == '$apply' || phase == '$digest')
-            this.$eval(fn);
-        else
-            this.$apply(fn);
-    };
-
-    $scope.invalidateDisplay = function (value) {
-        $scope.invalidateChartDisplay = value;
-        $scope.safeApply();
-    }
-
-    $scope.toggleVideoMenu = function() {
-        $scope.videotoggle = !$scope.videotoggle;
-    }
-
-    $scope.toggleAudioMenu = function() {
-        $scope.audiotoggle = !$scope.audiotoggle;
-    }
-
-    $scope.setChartInfo = function () {
-        clearInterval($scope.metricsTimer);
-        $scope.graphPoints = {video: [], audio: [], text: []};
-        $scope.chartData = [
-            {
-                data: $scope.graphPoints.video,
-                label: "Video",
-                color: "#2980B9"
-            },
-            {
-                data: $scope.graphPoints.audio,
-                label: "Audio",
-                color: "#E74C3C"
-            },
-            {
-                data: $scope.graphPoints.text,
-                label: "Text",
-                color: "#888"
-            }
-        ];
-    }
-
     ////////////////////////////////////////
     //
     // Player Setup
     //
     ////////////////////////////////////////
-
     $scope.video = document.querySelector(".dash-video-player video");
     player = dashjs.MediaPlayer().create();
-    player.initialize();
-    player.attachView($scope.video);
+    player.initialize($scope.video, null, true);
+    player.setFastSwitchEnabled(true);
     player.attachVideoContainer(document.getElementById("videoContainer"));
-    player.attachTTMLRenderingDiv(document.querySelector("#video-caption"));
-    player.setAutoPlay(true);
+    // Add HTML-rendered TTML subtitles except for Firefox (issue #1164)
+    if (typeof navigator !== 'undefined' && !navigator.userAgent.match(/Firefox/)) {
+        player.attachTTMLRenderingDiv($("#video-caption")[0]);
+    }
 
     controlbar = new ControlBar(player);
     controlbar.initialize();
     controlbar.disable();
 
-    $scope.setChartInfo();
     $scope.version = player.getVersion();
 
 
@@ -171,10 +120,8 @@ app.controller('DashController', function($scope, sources, contributors) {
         $scope.contributors = data.items;
     });
 
-    $scope.getChartButtonLabel = function() {
-        return $scope.chartEnabled ? "Disable" : "Enable";
-    }
 
+    $("#result").load("ajax/test.html");
 
     ////////////////////////////////////////
     //
@@ -331,15 +278,15 @@ app.controller('DashController', function($scope, sources, contributors) {
 
     }, $scope);
 
-    player.on(dashjs.MediaPlayer.events.PLAYBACK_ENDED, function onStreamComplete(e) {
-        if ($('#loopCB').is(':checked')) {
+    player.on(dashjs.MediaPlayer.events.PLAYBACK_ENDED, function(e) {
+        if ($('#loop-cb').is(':checked')) {
             $scope.doLoad();
         }
     }, $scope);
 
     ////////////////////////////////////////
     //
-    // DRM Events
+    // DRM Events  //TODO Implement what is in eme-main and eme-index into this player to unify.  Add dialog in tab section for DRM license info.  Reinstate the DRM Options panel
     //
     ////////////////////////////////////////
 
@@ -347,187 +294,239 @@ app.controller('DashController', function($scope, sources, contributors) {
     // only happen in the case where we do not not provide a ProtectionController
     // to the player via dashjs.MediaPlayer.attachSource()
 
-    player.on(dashjs.MediaPlayer.events.PROTECTION_CREATED, function (e) {
-        var data = addDRMData(e.manifest, e.controller);
-        data.isPlaying = true;
-        for (var i = 0; i < $scope.drmData.length; i++) {
-            if ($scope.drmData[i] !== data) {
-                $scope.drmData[i].isPlaying = false;
-            }
-        }
-        $scope.safeApply();
-    }, $scope);
-
-    player.on(dashjs.MediaPlayer.events.PROTECTION_DESTROYED, function (e) {
-        for (var i = 0; i < $scope.drmData.length; i++) {
-            if ($scope.drmData[i].manifest.url === e.data) {
-                $scope.drmData.splice(i, 1);
-                break;
-            }
-        }
-        $scope.safeApply();
-    }, $scope);
-
-    
-    var addDRMData = function(manifest, protCtrl) {
-
-        // Assign the session type to be used for this controller
-        protCtrl.setSessionType($("#session-type").find(".active").children().attr("id"));
-
-        var data = {
-            manifest: manifest,
-            protCtrl: protCtrl,
-            licenseReceived: false,
-            sessions: []
-        };
-        var findSession = function(sessionID) {
-            for (var i = 0; i < data.sessions.length; i++) {
-                if (data.sessions[i].sessionID === sessionID)
-                    return data.sessions[i];
-            }
-            return null;
-        };
-        $scope.drmData.push(data);
-        $scope.safeApply();
-
-        player.on(dashjs.MediaPlayer.events.KEY_SYSTEM_SELECTED, function(e) {
-            if (!e.error) {
-                data.ksconfig = e.data.ksConfiguration;
-            } else {
-                data.error = e.error;
-            }
-            $scope.safeApply();
-        }, $scope);
+    //player.on(dashjs.MediaPlayer.events.PROTECTION_CREATED, function (e) {
+    //    var data = addDRMData(e.manifest, e.controller);
+    //    data.isPlaying = true;
+    //    for (var i = 0; i < $scope.drmData.length; i++) {
+    //        if ($scope.drmData[i] !== data) {
+    //            $scope.drmData[i].isPlaying = false;
+    //        }
+    //    }
+    //    $scope.safeApply();
+    //}, $scope);
+    //
+    //player.on(dashjs.MediaPlayer.events.PROTECTION_DESTROYED, function (e) {
+    //    for (var i = 0; i < $scope.drmData.length; i++) {
+    //        if ($scope.drmData[i].manifest.url === e.data) {
+    //            $scope.drmData.splice(i, 1);
+    //            break;
+    //        }
+    //    }
+    //    $scope.safeApply();
+    //}, $scope);
 
 
-        player.on(dashjs.MediaPlayer.events.KEY_SESSION_CREATED, function(e) {
-            if (!e.error) {
-                var persistedSession = findSession(e.data.getSessionID());
-                if (persistedSession) {
-                    persistedSession.isLoaded = true;
-                    persistedSession.sessionToken = e.data;
-                } else {
-                    var sessionToken = e.data;
-                    data.sessions.push({
-                        sessionToken: sessionToken,
-                        sessionID: e.data.getSessionID(),
-                        isLoaded: true
-                    });
-                }
-            } else {
-                data.error = e.error;
-            }
-            $scope.safeApply();
-        }, $scope);
+    //var addDRMData = function(manifest, protCtrl) {
+    //
+    //    // Assign the session type to be used for this controller
+    //    protCtrl.setSessionType($("#session-type").find(".active").children().attr("id"));
+    //
+    //    var data = {
+    //        manifest: manifest,
+    //        protCtrl: protCtrl,
+    //        licenseReceived: false,
+    //        sessions: []
+    //    };
+    //    var findSession = function(sessionID) {
+    //        for (var i = 0; i < data.sessions.length; i++) {
+    //            if (data.sessions[i].sessionID === sessionID)
+    //                return data.sessions[i];
+    //        }
+    //        return null;
+    //    };
+    //    $scope.drmData.push(data);
+    //    $scope.safeApply();
+    //
+    //    player.on(dashjs.MediaPlayer.events.KEY_SYSTEM_SELECTED, function(e) {
+    //        if (!e.error) {
+    //            data.ksconfig = e.data.ksConfiguration;
+    //        } else {
+    //            data.error = e.error;
+    //        }
+    //        $scope.safeApply();
+    //    }, $scope);
+    //
+    //
+    //    player.on(dashjs.MediaPlayer.events.KEY_SESSION_CREATED, function(e) {
+    //        if (!e.error) {
+    //            var persistedSession = findSession(e.data.getSessionID());
+    //            if (persistedSession) {
+    //                persistedSession.isLoaded = true;
+    //                persistedSession.sessionToken = e.data;
+    //            } else {
+    //                var sessionToken = e.data;
+    //                data.sessions.push({
+    //                    sessionToken: sessionToken,
+    //                    sessionID: e.data.getSessionID(),
+    //                    isLoaded: true
+    //                });
+    //            }
+    //        } else {
+    //            data.error = e.error;
+    //        }
+    //        $scope.safeApply();
+    //    }, $scope);
+    //
+    //
+    //    player.on(dashjs.MediaPlayer.events.KEY_SESSION_REMOVED, function(e) {
+    //        if (!e.error) {
+    //            var session = findSession(e.data);
+    //            if (session) {
+    //                session.isLoaded = false;
+    //                session.sessionToken = null;
+    //            }
+    //        } else {
+    //            data.error = e.error;
+    //        }
+    //        $scope.safeApply();
+    //    }, $scope);
+    //
+    //
+    //    player.on(dashjs.MediaPlayer.events.KEY_SESSION_CLOSED, function(e) {
+    //        if (!e.error) {
+    //            for (var i = 0; i < data.sessions.length; i++) {
+    //                if (data.sessions[i].sessionID === e.data) {
+    //                    data.sessions.splice(i, 1);
+    //                    break;
+    //                }
+    //            }
+    //        } else {
+    //            data.error = e.error;
+    //        }
+    //        $scope.safeApply();
+    //    }, $scope);
+    //
+    //    player.on(dashjs.MediaPlayer.events.KEY_STATUSES_CHANGED, function(e) {
+    //        var session = findSession(e.data.getSessionID());
+    //        if (session) {
+    //            var toGUID = function(uakey) {
+    //                var keyIdx = 0, retVal = "", i, zeroPad = function(str) {
+    //                    return (str.length === 1) ? "0" + str : str;
+    //                };
+    //                for (i = 0; i < 4; i++, keyIdx++)
+    //                    retVal += zeroPad(uakey[keyIdx].toString(16));
+    //                retVal += "-";
+    //                for (i = 0; i < 2; i++, keyIdx++)
+    //                    retVal += zeroPad(uakey[keyIdx].toString(16));
+    //                retVal += "-";
+    //                for (i = 0; i < 2; i++, keyIdx++)
+    //                    retVal += zeroPad(uakey[keyIdx].toString(16));
+    //                retVal += "-";
+    //                for (i = 0; i < 2; i++, keyIdx++)
+    //                    retVal += zeroPad(uakey[keyIdx].toString(16));
+    //                retVal += "-";
+    //                for (i = 0; i < 6; i++, keyIdx++)
+    //                    retVal += zeroPad(uakey[keyIdx].toString(16));
+    //                return retVal;
+    //            };
+    //            session.keystatus = [];
+    //            e.data.getKeyStatuses().forEach(function(status, key){
+    //                session.keystatus.push({
+    //                    key: toGUID(new Uint8Array(key)),
+    //                    status: status
+    //                });
+    //            });
+    //            $scope.safeApply();
+    //        }
+    //    }, $scope);
+    //
+    //    player.on(dashjs.MediaPlayer.events.KEY_MESSAGE, function(e) {
+    //        var session = findSession(e.data.sessionToken.getSessionID());
+    //        if (session) {
+    //            session.lastMessage = "Last Message: " + e.data.message.byteLength + " bytes";
+    //            if (e.data.messageType) {
+    //                session.lastMessage += " (" + e.data.messageType + "). ";
+    //            } else {
+    //                session.lastMessage += ". ";
+    //            }
+    //            session.lastMessage += "Waiting for response from license server...";
+    //            $scope.safeApply();
+    //        }
+    //    }, $scope);
+    //
+    //    player.on(dashjs.MediaPlayer.events.LICENSE_REQUEST_COMPLETE, function(e) {
+    //        if (!e.error) {
+    //            var session = findSession(e.data.sessionToken.getSessionID());
+    //            if (session) {
+    //                session.lastMessage = "Successful response received from license server for message type '" + e.data.messageType + "'!";
+    //                data.licenseReceived = true;
+    //            }
+    //        } else {
+    //            data.error = "License request failed for message type '" + e.data.messageType + "'! " + e.error;
+    //        }
+    //        $scope.safeApply();
+    //    }, $scope);
+    //
+    //    return data;
+    //};
+    //
+    //$scope.delete = function(data) {
+    //    for (var i = 0; i < $scope.drmData.length; i++) {
+    //        if ($scope.drmData[i] === data) {
+    //            $scope.drmData.splice(i,1);
+    //            data.protCtrl.reset();
+    //            $scope.safeApply();
+    //        }
+    //    }
+    //};
 
+    //$scope.play = function (data) {
+    //    player.attachSource(data.manifest, data.protCtrl);
+    //    for (var i = 0; i < $scope.drmData.length; i++) {
+    //        var drmData = $scope.drmData[i];
+    //        drmData.isPlaying = !!(drmData === data);
+    //    }
+    //};
 
-        player.on(dashjs.MediaPlayer.events.KEY_SESSION_REMOVED, function(e) {
-            if (!e.error) {
-                var session = findSession(e.data);
-                if (session) {
-                    session.isLoaded = false;
-                    session.sessionToken = null;
-                }
-            } else {
-                data.error = e.error;
-            }
-            $scope.safeApply();
-        }, $scope);
-
-
-        player.on(dashjs.MediaPlayer.events.KEY_SESSION_CLOSED, function(e) {
-            if (!e.error) {
-                for (var i = 0; i < data.sessions.length; i++) {
-                    if (data.sessions[i].sessionID === e.data) {
-                        data.sessions.splice(i, 1);
-                        break;
-                    }
-                }
-            } else {
-                data.error = e.error;
-            }
-            $scope.safeApply();
-        }, $scope);
-
-        player.on(dashjs.MediaPlayer.events.KEY_STATUSES_CHANGED, function(e) {
-            var session = findSession(e.data.getSessionID());
-            if (session) {
-                var toGUID = function(uakey) {
-                    var keyIdx = 0, retVal = "", i, zeroPad = function(str) {
-                        return (str.length === 1) ? "0" + str : str;
-                    };
-                    for (i = 0; i < 4; i++, keyIdx++)
-                        retVal += zeroPad(uakey[keyIdx].toString(16));
-                    retVal += "-";
-                    for (i = 0; i < 2; i++, keyIdx++)
-                        retVal += zeroPad(uakey[keyIdx].toString(16));
-                    retVal += "-";
-                    for (i = 0; i < 2; i++, keyIdx++)
-                        retVal += zeroPad(uakey[keyIdx].toString(16));
-                    retVal += "-";
-                    for (i = 0; i < 2; i++, keyIdx++)
-                        retVal += zeroPad(uakey[keyIdx].toString(16));
-                    retVal += "-";
-                    for (i = 0; i < 6; i++, keyIdx++)
-                        retVal += zeroPad(uakey[keyIdx].toString(16));
-                    return retVal;
-                };
-                session.keystatus = [];
-                e.data.getKeyStatuses().forEach(function(status, key){
-                    session.keystatus.push({
-                        key: toGUID(new Uint8Array(key)),
-                        status: status
-                    });
-                });
-                $scope.safeApply();
-            }
-        }, $scope);
-
-        player.on(dashjs.MediaPlayer.events.KEY_MESSAGE, function(e) {
-            var session = findSession(e.data.sessionToken.getSessionID());
-            if (session) {
-                session.lastMessage = "Last Message: " + e.data.message.byteLength + " bytes";
-                if (e.data.messageType) {
-                    session.lastMessage += " (" + e.data.messageType + "). ";
-                } else {
-                    session.lastMessage += ". ";
-                }
-                session.lastMessage += "Waiting for response from license server...";
-                $scope.safeApply();
-            }
-        }, $scope);
-
-        player.on(dashjs.MediaPlayer.events.LICENSE_REQUEST_COMPLETE, function(e) {
-            if (!e.error) {
-                var session = findSession(e.data.sessionToken.getSessionID());
-                if (session) {
-                    session.lastMessage = "Successful response received from license server for message type '" + e.data.messageType + "'!";
-                    data.licenseReceived = true;
-                }
-            } else {
-                data.error = "License request failed for message type '" + e.data.messageType + "'! " + e.error;
-            }
-            $scope.safeApply();
-        }, $scope);
-
-        return data;
-    };
-
-    $scope.delete = function(data) {
-        for (var i = 0; i < $scope.drmData.length; i++) {
-            if ($scope.drmData[i] === data) {
-                $scope.drmData.splice(i,1);
-                data.protCtrl.reset();
-                $scope.safeApply();
-            }
-        }
-    };
+    //$scope.doLicenseFetch = function () {
+    //    player.retrieveManifest($scope.selectedItem.url, function (manifest) {
+    //        if (manifest) {
+    //            var found = false;
+    //            for (var i = 0; i < $scope.drmData.length; i++) {
+    //                if (manifest.url === $scope.drmData[i].manifest.url) {
+    //                    found = true;
+    //                    break;
+    //                }
+    //            }
+    //            if (!found) {
+    //                var protCtrl = player.getProtectionController();
+    //                if ($scope.selectedItem.hasOwnProperty("protData")) {
+    //                    protCtrl.setProtectionData($scope.selectedItem.protData);
+    //                }
+    //                addDRMData(manifest, protCtrl);
+    //                protCtrl.initialize(manifest);
+    //            }
+    //        } else {
+    //            // Log error here
+    //        }
+    //    });
+    //};
 
     ////////////////////////////////////////
     //
     // General Player Methods
     //
     ////////////////////////////////////////
+
+    $scope.toggleAutoPlay = function () {
+        player.setAutoPlay($scope.autoPlaySelected);
+    }
+
+    $scope.toggleBufferOccupancyABR = function () {
+        player.enableBufferOccupancyABR($scope.bolaSelected);
+    }
+
+    $scope.toggleFastSwitch = function () {
+        player.setFastSwitchEnabled($scope.fastSwitchSelected);
+    }
+
+    $scope.toggleDOMStorage = function () {
+        player.enableLastBitrateCaching($scope.domStorageSelected);
+        player.enableLastMediaSettingsCaching($scope.domStorageSelected);
+    }
+
+    //$scope.drmOptionsHandler = function () {
+    //}
 
     $scope.setAbrEnabled = function (enabled) {
         $scope.abrEnabled = enabled;
@@ -555,38 +554,6 @@ app.controller('DashController', function($scope, sources, contributors) {
         player.setQualityFor(type, newQuality);
     }
 
-    $scope.play = function (data) {
-        player.attachSource(data.manifest, data.protCtrl);
-        for (var i = 0; i < $scope.drmData.length; i++) {
-            var drmData = $scope.drmData[i];
-            drmData.isPlaying = !!(drmData === data);
-        }
-    };
-
-    $scope.doLicenseFetch = function () {
-        player.retrieveManifest($scope.selectedItem.url, function (manifest) {
-            if (manifest) {
-                var found = false;
-                for (var i = 0; i < $scope.drmData.length; i++) {
-                    if (manifest.url === $scope.drmData[i].manifest.url) {
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) {
-                    var protCtrl = player.getProtectionController();
-                    if ($scope.selectedItem.hasOwnProperty("protData")) {
-                        protCtrl.setProtectionData($scope.selectedItem.protData);
-                    }
-                    addDRMData(manifest, protCtrl);
-                    protCtrl.initialize(manifest);
-                }
-            } else {
-                // Log error here
-            }
-        });
-    };
-
     $scope.setStream = function (item) {
         $scope.selectedItem = item;
     }
@@ -603,9 +570,9 @@ app.controller('DashController', function($scope, sources, contributors) {
         }
 
         $scope.setChartInfo();
+        player.setProtectionData(protData);
+        player.attachSource($scope.selectedItem.url);
 
-        player.attachSource($scope.selectedItem.url, null, protData);
-        player.setAutoSwitchQuality($scope.abrEnabled);
         controlbar.reset();
         controlbar.enable();
 
@@ -615,10 +582,6 @@ app.controller('DashController', function($scope, sources, contributors) {
         if ($scope.initialSettings.video) {
             player.setInitialMediaSettingsFor("video", {role: $scope.initialSettings.video});
         }
-
-        $scope.manifestUpdateInfo = null;
-
-        // initDebugConsole();
     }
 
     $scope.switchTrack = function(track, type) {
@@ -641,6 +604,46 @@ app.controller('DashController', function($scope, sources, contributors) {
         return (item.hasOwnProperty("logo") && item.logo !== null && item.logo !== undefined && item.logo !== "");
     }
 
+    $scope.getChartButtonLabel = function () {
+        return $scope.chartEnabled ? "Disable" : "Enable";
+    }
+
+
+    // from: https://gist.github.com/siongui/4969449
+    $scope.safeApply = function (fn) {
+        var phase = this.$root.$$phase;
+        if (phase == '$apply' || phase == '$digest')
+            this.$eval(fn);
+        else
+            this.$apply(fn);
+    };
+
+    $scope.invalidateDisplay = function (value) {
+        $scope.invalidateChartDisplay = value;
+        $scope.safeApply();
+    }
+
+    $scope.setChartInfo = function () {
+        clearInterval($scope.metricsTimer);
+        $scope.graphPoints = {video: [], audio: [], text: []};
+        $scope.chartData = [
+            {
+                data: $scope.graphPoints.video,
+                label: "Video",
+                color: "#2980B9"
+            },
+            {
+                data: $scope.graphPoints.audio,
+                label: "Audio",
+                color: "#E74C3C"
+            },
+            {
+                data: $scope.graphPoints.text,
+                label: "Text",
+                color: "#888"
+            }
+        ];
+    }
 
     function getUrlVars() {
         var vars = {};
@@ -651,28 +654,31 @@ app.controller('DashController', function($scope, sources, contributors) {
     }
 
     var vars = getUrlVars();
-	var paramUrl = null;
+    var paramUrl = null;
 
     if (vars && vars.hasOwnProperty("url")) {
-    	paramUrl = vars.url;
+        paramUrl = vars.url;
     }
 
     if (vars && vars.hasOwnProperty("mpd")) {
-    	paramUrl = vars.mpd;
+        paramUrl = vars.mpd;
     }
 
     if (paramUrl !== null) {
-    	var startPlayback = true;
-    
-    	$scope.selectedItem = {};
+        var startPlayback = true;
+
+        $scope.selectedItem = {};
         $scope.selectedItem.url = paramUrl;
 
         if (vars.hasOwnProperty("autoplay")) {
-        	startPlayback = (vars.autoplay === 'true');
+            startPlayback = (vars.autoplay === 'true');
         }
 
-    	if (startPlayback) {
-	    	$scope.doLoad();
-		}
+        if (startPlayback) {
+            $scope.doLoad();
+        }
     }
+
+
+    $scope.setChartInfo();
 });
