@@ -137,10 +137,8 @@ a:hover {
     margin-top: -5px !important;
 }
 
-.btn-caption,
-.btn-mute,
-.btn-fullscreen,
-.btn-play-pause {
+.btn-play-pause,
+.control-icon-layout {
     padding: 4px 10px !important;
 }
 
@@ -246,8 +244,6 @@ chart, chart canvas {
     font-size: 22px;
     color: #555;
 }
-
-
 
 /****************************
     MEDIA SCREEN CONTROL

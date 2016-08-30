@@ -89,9 +89,9 @@
     cursor: pointer;
 }
 
-.btn-caption,
-.btn-mute,
-.btn-fullscreen {
+
+.control-icon-layout
+ {
     float: right;
     padding:9px 10px;
     cursor: pointer;
@@ -123,44 +123,44 @@
     left: 0;
 }
 
-.caption-menu,
+.menu,
 .video-controller {
     background-color: black;
 }
 
-.caption-item-unselected,
-.caption-item-selected{
+.menu-item-unselected,
+.menu-item-selected{
     font-weight: normal;
     font-size: .9em;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
-.caption-item-unselected{
+.menu-item-unselected {
     color: white;
 }
 
-.caption-item-over,
-.caption-item-selected {
+.menu-item-over,
+.menu-item-selected {
     background-color: white;
     color: black;
 }
 
-.caption-item-selected {
+.menu-item-selected {
     opacity: .7;
 }
 
-.caption-menu ul{
+.menu ul{
     list-style-type: none;
     padding:0;
     margin:0;
 }
 
-.caption-menu li{
+.menu li{
     padding:0 10px;
     cursor: pointer;
 }
 
-.caption-menu {
+.menu {
     position: absolute;
 }
 

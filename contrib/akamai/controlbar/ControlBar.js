@@ -28,20 +28,24 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-var ControlBar = function(dashjsMediaPlayer) {
+var ControlBar = function (dashjsMediaPlayer) {
 
     var player = dashjsMediaPlayer,
         video,
         videoContainer,
-        currentCaptionMenuIdx = 0,
         captionMenu = null,
-        lastValumeLevel = NaN,
+        videoMenu = null,
+        audioMenu = null,
+        menuHandlersList = [];
+        lastVolumeLevel = NaN,
         seeking = false,
         videoControllerVisibleTimeout = 0,
-        //TODO - CREATE ALL ELEMENTS INSIDE "videoController" AND JUST REQUIRE ONE DIV IN PLAYER TO BE CREATED BELOW VIDEO ELEMENT WITH ID "videoController"
+    //TODO - CREATE ALL ELEMENTS INSIDE "videoController" AND JUST REQUIRE ONE DIV IN PLAYER TO BE CREATED BELOW VIDEO ELEMENT WITH ID "videoController"
         videoController = document.getElementById("videoController"),
         playPauseBtn = document.getElementById("playPauseBtn"),
         captionBtn = document.getElementById("captionBtn"),
+        videoTrackBtn = document.getElementById("videoTrackBtn"),
+        audioTrackBtn = document.getElementById("audioTrackBtn"),
         seekbar = document.getElementById("seekbar"),
         muteBtn = document.getElementById("muteBtn"),
         volumebar = document.getElementById("volumebar"),
@@ -53,9 +57,9 @@ var ControlBar = function(dashjsMediaPlayer) {
 // PLAYBACK
 //************************************************************************************
 
-        togglePlayPauseBtnState = function(){
+        togglePlayPauseBtnState = function () {
             var span = document.getElementById('iconPlayPause');
-            if(player.isPaused()) {
+            if (player.isPaused()) {
                 span.classList.remove('icon-pause')
                 span.classList.add('icon-play');
             } else {
@@ -64,22 +68,22 @@ var ControlBar = function(dashjsMediaPlayer) {
             }
         },
 
-        onPlayPauseClick = function(e){
+        onPlayPauseClick = function (e) {
             togglePlayPauseBtnState.call(this);
             player.isPaused() ? player.play() : player.pause();
         },
 
-        onPlaybackPaused = function(e){
+        onPlaybackPaused = function (e) {
             togglePlayPauseBtnState();
         },
 
-        onPlayStart = function(e){
+        onPlayStart = function (e) {
             setTime(player.time());
             updateDuration();
             togglePlayPauseBtnState();
         },
 
-        onPlayTimeUpdate = function(e){
+        onPlayTimeUpdate = function (e) {
             updateDuration();
             if (!seeking) {
                 setTime(player.time());
@@ -91,7 +95,7 @@ var ControlBar = function(dashjsMediaPlayer) {
 // VOLUME
 //************************************************************************************
 
-        toggleMuteBtnState = function(){
+        toggleMuteBtnState = function () {
             var span = document.getElementById('iconMute');
             if (player.isMuted()) {
                 span.classList.remove('icon-mute-off');
@@ -102,25 +106,25 @@ var ControlBar = function(dashjsMediaPlayer) {
             }
         },
 
-        onMuteClick = function(e) {
-            if (player.isMuted() && !isNaN(lastValumeLevel)) {
-                setVolume(lastValumeLevel);
+        onMuteClick = function (e) {
+            if (player.isMuted() && !isNaN(lastVolumeLevel)) {
+                setVolume(lastVolumeLevel);
             } else {
-                lastValumeLevel = parseFloat(volumebar.value);
+                lastVolumeLevel = parseFloat(volumebar.value);
                 setVolume(0);
             }
             player.setMute(player.getVolume() === 0);
             toggleMuteBtnState();
         },
 
-        setVolume = function(value){
+        setVolume = function (value) {
             if (typeof value === "number") {
                 volumebar.value = value;
             }
             player.setVolume(volumebar.value);
             player.setMute(player.getVolume() === 0);
-            if (isNaN(lastValumeLevel)) {
-                lastValumeLevel = player.getVolume();
+            if (isNaN(lastVolumeLevel)) {
+                lastVolumeLevel = player.getVolume();
             }
             toggleMuteBtnState();
         },
@@ -129,17 +133,17 @@ var ControlBar = function(dashjsMediaPlayer) {
 // SEEKING
 // ************************************************************************************
 
-        onSeekBarChange = function(e){
+        onSeekBarChange = function (e) {
             player.seek(parseFloat(seekbar.value));
         },
 
-        onSeeking = function(e){
+        onSeeking = function (e) {
             //TODO Add call to seek in trick-mode once implemented. Preview Frames.
             seeking = true;
             setTime(parseFloat(seekbar.value));
         },
 
-        onSeeked = function(e){
+        onSeeked = function (e) {
             seeking = false;
         },
 
@@ -147,19 +151,19 @@ var ControlBar = function(dashjsMediaPlayer) {
 // TIME/DURATION
 //************************************************************************************
 
-        setDuration = function(value){
+        setDuration = function (value) {
             if (!isNaN(value)) {
                 durationDisplay.textContent = player.convertToTimeCode(value);
             }
         },
 
-        setTime = function(value){
+        setTime = function (value) {
             if (!isNaN(value)) {
                 timeDisplay.textContent = player.convertToTimeCode(value);
             }
         },
 
-        updateDuration = function(){
+        updateDuration = function () {
             var duration = player.duration();
             if (duration !== parseFloat(seekbar.max)) { //check if duration changes for live streams..
                 setDuration(duration);
@@ -172,7 +176,7 @@ var ControlBar = function(dashjsMediaPlayer) {
 //************************************************************************************
 
         onFullScreenChange = function (e) {
-            if(isFullscreen()) {
+            if (isFullscreen()) {
                 enterFullscreen();
             } else {
                 exitFullscreen();
@@ -182,7 +186,7 @@ var ControlBar = function(dashjsMediaPlayer) {
             }
         },
 
-        isFullscreen = function (){
+        isFullscreen = function () {
             return document.fullscreenElement || document.msFullscreenElement || document.mozFullScreen || document.webkitIsFullScreen;
         },
 
@@ -205,7 +209,7 @@ var ControlBar = function(dashjsMediaPlayer) {
 
         onFullScreenMouseMove = function () {
             clearFullscreenState();
-            videoControllerVisibleTimeout = setTimeout(function(){
+            videoControllerVisibleTimeout = setTimeout(function () {
                 videoController.classList.add("hide");
             }, 4000);
         },
@@ -221,7 +225,7 @@ var ControlBar = function(dashjsMediaPlayer) {
 
             if (document.exitFullscreen) {
                 document.exitFullscreen();
-            } else if (document.mozCancelFullScreen){
+            } else if (document.mozCancelFullScreen) {
                 document.mozCancelFullScreen();
             } else if (document.msExitFullscreen) {
                 document.msExitFullscreen();
@@ -231,8 +235,8 @@ var ControlBar = function(dashjsMediaPlayer) {
             videoController.classList.remove('video-controller-fullscreen');
         },
 
-        onFullscreenClick = function(e){
-            if(!isFullscreen()) {
+        onFullscreenClick = function (e) {
+            if (!isFullscreen()) {
                 enterFullscreen();
             } else {
                 exitFullscreen();
@@ -242,103 +246,166 @@ var ControlBar = function(dashjsMediaPlayer) {
             }
         },
 
+
 //************************************************************************************
-// CAPTION MENU
+// Audio Video MENU
 //************************************************************************************
 
-        onTracksAdded = function(e){
+        onTracksAdded = function (e) {
+
             if (!captionMenu) {
-                createCaptionMenu(e);
-                captionBtn.addEventListener("click", onCaptionClick);
+                var contentFunc = function (index, info) {
+                    return index === 0 ? info.tracks[index].kind + " off" : info.tracks[index - 1].lang + " : " + info.tracks[index - 1].kind;
+                }
+                captionMenu = initMenu(e, contentFunc);
+                setMenuItemsState(0, 'caption');
+                var func = function () {onMenuClick(captionMenu);}
+                menuHandlersList.push(func);
+                captionBtn.addEventListener("click", func);
                 captionBtn.classList.remove("hide");
             }
         },
 
-        onCaptionClick = function(e){
-            if (captionMenu.classList.contains("hide")){
-                captionMenu.classList.remove("hide");
-                captionMenu.onmouseleave = function(e){
-                    this.classList.add("hide");
-                };
-            }else{
-                captionMenu.classList.add("hide");
+        onStreamInitialized = function (e) {
+
+            var contentFunc = function (index, info) {
+                return index === 0 ? " Auto Switch" : Math.floor(info[index - 1].bitrate / 1000) + " kbps"
             }
-            captionMenu.style.position = isFullscreen() ? "fixed" : "absolute";
-            positionCaptionMenu();
+
+            var videoBitrateInfo = player.getBitrateInfoListFor("video")
+            if (videoBitrateInfo.length > 1) {
+                videoMenu = initMenu(videoBitrateInfo, contentFunc);
+                setMenuItemsState(0, 'video');
+                var func = function () {onMenuClick(videoMenu);}
+                menuHandlersList.push(func);
+                videoTrackBtn.addEventListener("click", func);
+                videoTrackBtn.classList.remove("hide");
+            }
+
+            var audioBitrateInfo = player.getBitrateInfoListFor("audio")
+            if (audioBitrateInfo.length > 1) {
+                audioMenu = initMenu(audioBitrateInfo, contentFunc);
+                setMenuItemsState(0, 'audio');
+                var func = function () { onMenuClick(audioMenu);}
+                menuHandlersList.push(func);
+                audioTrackBtn.addEventListener("click", func);
+                audioTrackBtn.classList.remove("hide");
+            }
         },
 
-        createCaptionMenu = function(info) {
-            captionMenu = document.createElement("div");
-            captionMenu.id = "captionMenu";
-            captionMenu.classList.add("caption-menu");
-            captionMenu.classList.add("hide");
-            captionMenu.classList.add("unselectable"); //IE did not like this as "one line CSV" Do not use classlist.add with CSV
-            captionMenu.appendChild(document.createElement("ul"));
-            videoController.appendChild(captionMenu);
+        initMenu = function (info, contentFunc) {
 
-            var tracks = info.tracks,
-                ln = tracks.length + 1; //add extra iteration for off button.;
+            var type = info.tracks ? "caption" : info[0].mediaType;
+            var el = document.createElement("div");
+            el.id = type+"Menu";
+            el.classList.add("menu");
+            el.classList.add("hide");
+            el.classList.add("unselectable");
+            el.classList.add("menu-item-unselected");
 
-            for(var i = 0; i < ln; i++) { //TODO refactor to not offset "i' all over the code. Maybe just build elements push array then build default off button and shift to front then add to DOM?
-                var captionItem = document.createElement("li");
-                captionItem.id = "captionItem_"+i
-                captionItem.index = i;
-                captionItem.selected = false;
-                captionItem.textContent = i === 0 ? tracks[i].kind +" off" : tracks[i-1].lang + " : " + tracks[i-1].kind; //subtract to offset for off button.
-                captionItem.onmouseover = function(e){
-                    if (this.selected !== true){
-                        this.classList.add("caption-item-over");
+            el.appendChild(document.createElement("ul"));
+            videoController.appendChild(el);
+
+            var ln = info.tracks ? info.tracks.length : info.length;
+
+            for (var i = 0; i < ln + 1; i++) {
+                var item = document.createElement("li");
+                item.id = type+"Item_" + i
+                item.index = i;
+                item.type = type;
+                item.selected = false;
+                item.textContent = contentFunc(i, info);
+
+                item.onmouseover = function (e) {
+                    if (this.selected !== true) {
+                        this.classList.add("menu-item-over");
                     }
                 };
-                captionItem.onmouseout = function(e){
-                    this.classList.remove("caption-item-over");
+                item.onmouseout = function (e) {
+                    this.classList.remove("menu-item-over");
                 };
-                captionItem.onclick = setCaptionItemsState.bind(captionItem);
-                captionMenu.querySelector("ul").appendChild(captionItem);
+                item.onclick = setMenuItemsState.bind(item);
+                el.querySelector("ul").appendChild(item);
             }
-            setCaptionItemsState(info.index + 1);
-            window.addEventListener("resize", positionCaptionMenu, true);
+
+            window.addEventListener("resize", function () {
+                if (captionMenu) {
+                    positionMenu(captionMenu, captionBtn);
+                }
+                if (videoMenu) {
+                    positionMenu(videoMenu, videoTrackBtn);
+                }
+                if (audioMenu) {
+                    positionMenu(audioMenu, audioTrackBtn);
+                }
+            }, true);
+
+            return el;
         },
 
-        positionCaptionMenu = function () {
-            if (captionMenu) {
-                var menu_y = videoController.offsetTop - captionMenu.offsetHeight;
-                captionMenu.style.top = menu_y+"px";
-                captionMenu.style.left = captionBtn.offsetLeft+"px";
+
+        onMenuClick = function (menu) {
+            var btn = menu.id === "videoMenu" ? videoTrackBtn : menu.id === "audioMenu" ? audioTrackBtn : captionBtn;
+
+            if (menu.classList.contains("hide")) {
+                menu.classList.remove("hide");
+                menu.onmouseleave = function (e) {
+                    this.classList.add("hide");
+                };
+            } else {
+                menu.classList.add("hide");
             }
+            menu.style.position = isFullscreen() ? "fixed" : "absolute";
+            positionMenu(menu, btn);
         },
 
-        setCaptionItemsState = function (value) {
-            var self = typeof value === 'number' ? document.getElementById("captionItem_"+value) : this,
+
+        setMenuItemsState = function (value, type) {
+            var self = typeof value === 'number' ? document.getElementById(type+"Item_" + value) : this,
                 nodes = self.parentElement.children;
 
-            for(i=0; i < nodes.length; i++)  {
+            for (var i = 0; i < nodes.length; i++) {
                 nodes[i].selected = false;
-                nodes[i].classList.remove("caption-item-selected");
-                nodes[i].classList.add("caption-item-unselected");
+                nodes[i].classList.remove("menu-item-selected");
+                nodes[i].classList.add("menu-item-unselected");
             }
             self.selected = true;
-            self.classList.remove("caption-item-over");
-            self.classList.remove("caption-item-unselected");
-            self.classList.add("caption-item-selected");
+            self.classList.remove("menu-item-over");
+            self.classList.remove("menu-item-unselected");
+            self.classList.add("menu-item-selected");
 
-            currentCaptionMenuIdx = self.index;
-            player.setTextTrack(currentCaptionMenuIdx - 1);
+            if (self.type === 'video' || self.type === 'audio') {
+                if (self.index > 0) {
+                    player.setAutoSwitchQualityFor(self.type, false);
+                    player.setQualityFor(self.type, self.index - 1);
+                } else {
+                    player.setAutoSwitchQualityFor(self.type, true);
+                }
+            } else if (self.type === 'caption'){
+                player.setTextTrack(self.index - 1);
+            }
+        },
+
+
+        positionMenu = function (menu, btn) {
+            var menu_y = videoController.offsetTop - menu.offsetHeight;
+            menu.style.top = menu_y + "px";
+            menu.style.left = btn.offsetLeft + "px";
         },
 
 //************************************************************************************
 //IE FIX
 //************************************************************************************
 
-        coerceIEInputAndChangeEvents = function(slider, addChange) {
-            var fireChange = function(e) {
+        coerceIEInputAndChangeEvents = function (slider, addChange) {
+            var fireChange = function (e) {
                 var changeEvent = document.createEvent('Event');
                 changeEvent.initEvent('change', true, true);
                 changeEvent.forceChange = true;
                 slider.dispatchEvent(changeEvent);
             };
 
-            this.addEventListener('change', function(e) {
+            this.addEventListener('change', function (e) {
                 var inputEvent;
                 if (!e.forceChange && e.target.getAttribute('type') === 'range') {
                     e.stopPropagation();
@@ -354,7 +421,7 @@ var ControlBar = function(dashjsMediaPlayer) {
             }, true);
         },
 
-        isIE = function(){
+        isIE = function () {
             return !!navigator.userAgent.match(/Trident.*rv[ :]*11\./)
         };
 
@@ -364,14 +431,14 @@ var ControlBar = function(dashjsMediaPlayer) {
 //************************************************************************************
 
     return {
-        setVolume:setVolume,
-        setDuration:setDuration,
-        setTime:setTime,
-        initialize:function(){
+        setVolume: setVolume,
+        setDuration: setDuration,
+        setTime: setTime,
+        initialize: function () {
             if (!player) {
                 throw new Error("Please pass an instance of MediaPlayer.js when instantiating the ControlBar Object");
             }
-            video  = player.getVideoElement();
+            video = player.getVideoElement();
             if (!video) {
                 throw new Error("Please call initialize after you have called attachView on MediaPlayer.js");
             }
@@ -379,12 +446,15 @@ var ControlBar = function(dashjsMediaPlayer) {
             video.controls = false;
             videoContainer = player.getVideoContainer();
             captionBtn.classList.add("hide");
+            videoTrackBtn.classList.add("hide");
+            audioTrackBtn.classList.add("hide");
 
-            player.on(dashjs.MediaPlayer.events.PLAYBACK_STARTED, onPlayStart);
-            player.on(dashjs.MediaPlayer.events.PLAYBACK_PAUSED, onPlaybackPaused);
-            player.on(dashjs.MediaPlayer.events.PLAYBACK_TIME_UPDATED, onPlayTimeUpdate);
-            player.on(dashjs.MediaPlayer.events.PLAYBACK_SEEKED, onSeeked);
-            player.on(dashjs.MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded);
+            player.on(dashjs.MediaPlayer.events.PLAYBACK_STARTED, onPlayStart, this);
+            player.on(dashjs.MediaPlayer.events.PLAYBACK_PAUSED, onPlaybackPaused, this);
+            player.on(dashjs.MediaPlayer.events.PLAYBACK_TIME_UPDATED, onPlayTimeUpdate, this);
+            player.on(dashjs.MediaPlayer.events.PLAYBACK_SEEKED, onSeeked, this);
+            player.on(dashjs.MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded, this);
+            player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, onStreamInitialized, this);
 
             playPauseBtn.addEventListener("click", onPlayPauseClick);
             muteBtn.addEventListener("click", onMuteClick);
@@ -403,43 +473,59 @@ var ControlBar = function(dashjsMediaPlayer) {
                 coerceIEInputAndChangeEvents(volumebar, false);
             }
         },
-        show : function(){
+        show: function () {
             videoController.classList.remove("hide");
         },
-        hide : function(){
+        hide: function () {
             videoController.classList.add("hide");
         },
-        disable : function(){
+        disable: function () {
             videoController.classList.add("disable");
         },
-        enable : function(){
+        enable: function () {
             videoController.classList.remove("disable");
         },
-        reset : function(){
+        reset: function () {
+            menuHandlersList.forEach( function(item) {
+                captionBtn.removeEventListener("click", item);
+                videoTrackBtn.removeEventListener("click", item);
+                audioTrackBtn.removeEventListener("click", item);
+            })
+            menuHandlersList = [];
             if (captionMenu) {
-                window.removeEventListener("resize", positionCaptionMenu);
                 videoController.removeChild(captionMenu);
                 captionMenu = null;
                 captionBtn.classList.add("hide");
             }
-            currentCaptionMenuIdx = 0;
+            if (videoMenu) {
+                videoController.removeChild(videoMenu);
+                videoMenu = null;
+                videoTrackBtn.classList.add("hide");
+            }
+
+            if (audioMenu) {
+                videoController.removeChild(audioMenu);
+                audioMenu = null;
+                audioTrackBtn.classList.add("hide");
+            }
             seeking = false;
         },
-        destroy : function(){
+        destroy: function () {
             reset();
-            window.removeEventListener("resize", positionCaptionMenu);
+            window.removeEventListener("resize", positionMenu);
             playPauseBtn.removeEventListener("click", onPlayPauseClick);
-            captionBtn.removeEventListener("click", onCaptionClick);
             muteBtn.removeEventListener("click", onMuteClick);
             fullscreenBtn.removeEventListener("click", onFullscreenClick);
             seekbar.removeEventListener("change", onSeekBarChange);
             seekbar.removeEventListener("input", onSeeking);
             volumebar.removeEventListener("input", setVolume);
-            player.off(dashjs.MediaPlayer.events.PLAYBACK_STARTED, onPlayStart);
-            player.off(dashjs.MediaPlayer.events.PLAYBACK_PAUSED, onPlaybackPaused);
-            player.off(dashjs.MediaPlayer.events.PLAYBACK_TIME_UPDATED, onPlayTimeUpdate);
-            player.off(dashjs.MediaPlayer.events.PLAYBACK_SEEKED, onSeeked);
-            player.off(dashjs.MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded);off
+            player.off(dashjs.MediaPlayer.events.PLAYBACK_STARTED, onPlayStart, this);
+            player.off(dashjs.MediaPlayer.events.PLAYBACK_PAUSED, onPlaybackPaused, this);
+            player.off(dashjs.MediaPlayer.events.PLAYBACK_TIME_UPDATED, onPlayTimeUpdate, this);
+            player.off(dashjs.MediaPlayer.events.PLAYBACK_SEEKED, onSeeked, this);
+            player.off(dashjs.MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded, this);
+            player.off(dashjs.MediaPlayer.events.STREAM_INITIALIZED, onStreamInitialized, this);
+
             document.removeEventListener("fullscreenchange", onFullScreenChange);
             document.removeEventListener("MSFullscreenChange", onFullScreenChange);
             document.removeEventListener("mozfullscreenchange", onFullScreenChange);

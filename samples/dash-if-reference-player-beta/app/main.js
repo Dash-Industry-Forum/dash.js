@@ -70,7 +70,7 @@ app.controller('DashController', function($scope, sources, contributors) {
         controlbar,
         maxGraphPoints = 50;
 
-    $scope.selectedItem = {url:"http://dash.edgesuite.net/akamai/bbb_30fps/bbb_30fps.mpd"};
+    $scope.selectedItem = {url:"http://vm2.dashif.org/livesim/testpic2_2s/Manifest.mpd"};
     $scope.abrEnabled = true;
     $scope.toggleCCBubble = false;
     $scope.debugEnabled = false;
@@ -570,11 +570,13 @@ app.controller('DashController', function($scope, sources, contributors) {
         }
 
         $scope.setChartInfo();
-        player.setProtectionData(protData);
-        player.attachSource($scope.selectedItem.url);
 
         controlbar.reset();
+        player.setProtectionData(protData);
+        player.attachSource($scope.selectedItem.url);
         controlbar.enable();
+
+
 
         if ($scope.initialSettings.audio) {
             player.setInitialMediaSettingsFor("audio", {lang: $scope.initialSettings.audio});
