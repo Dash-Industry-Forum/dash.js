@@ -924,6 +924,7 @@
           },
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
+        
         {
           "name": "Axinom clear v7 (1080p)",
           "url": "http://media.axprod.net/TestVectors/v7-Clear/Manifest_1080p.mpd",
@@ -953,9 +954,184 @@
           "name": "Axinom clear multi-period v7 (audio only)",
           "url": "http://media.axprod.net/TestVectors/v7-Clear/Manifest_MultiPeriod_AudioOnly.mpd",
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
+        },
+
+        {
+          "name": "v6 encrypted (1080p)",
+          "url": "http://media.axprod.net/TestVectors/v6-MultiDRM/Manifest_1080p.mpd",
+          "protData": {
+            "com.widevine.alpha": {
+              "serverURL": "http://drm-widevine-licensing.axtest.net/AcquireLicense",
+              "httpRequestHeaders": {
+                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNmU1YTFkMjYtMjc1Ny00N2Q3LTgwNDYtZWFhNWQxZDM0YjVhIn1dfX0.yF7PflOPv9qHnu3ZWJNZ12jgkqTabmwXbDWk_47tLNE"
+              }
+            },
+            "com.microsoft.playready": {
+              "serverURL": "http://drm-playready-licensing.axtest.net/AcquireLicense",
+              "httpRequestHeaders": {
+                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNmU1YTFkMjYtMjc1Ny00N2Q3LTgwNDYtZWFhNWQxZDM0YjVhIn1dfX0.yF7PflOPv9qHnu3ZWJNZ12jgkqTabmwXbDWk_47tLNE"
+              }
+            }
+          },
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors/commit/e689891faf4845ff80137b22a731db13350652df"
+        },
+        {
+          "name": "v6 encrypted (4K)",
+          "url": "http://media.axprod.net/TestVectors/v6-MultiDRM/Manifest.mpd",
+          "protData": {
+            "com.widevine.alpha": {
+              "serverURL": "http://drm-widevine-licensing.axtest.net/AcquireLicense",
+              "httpRequestHeaders": {
+                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNmU1YTFkMjYtMjc1Ny00N2Q3LTgwNDYtZWFhNWQxZDM0YjVhIn1dfX0.yF7PflOPv9qHnu3ZWJNZ12jgkqTabmwXbDWk_47tLNE"
+              }
+            },
+            "com.microsoft.playready": {
+              "serverURL": "http://drm-playready-licensing.axtest.net/AcquireLicense",
+              "httpRequestHeaders": {
+                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNmU1YTFkMjYtMjc1Ny00N2Q3LTgwNDYtZWFhNWQxZDM0YjVhIn1dfX0.yF7PflOPv9qHnu3ZWJNZ12jgkqTabmwXbDWk_47tLNE"
+              }
+            }
+          },
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors/commit/e689891faf4845ff80137b22a731db13350652df"
+        },
+        {
+          "name": "v6 encrypted with generic EME PSSH (1080p)",
+          "url": "http://media.axprod.net/TestVectors/v6-MultiDRM-GenericEmePssh/Manifest_1080p.mpd",
+          "protData": {
+            "com.widevine.alpha": {
+              "serverURL": "http://drm-widevine-licensing.axtest.net/AcquireLicense",
+              "httpRequestHeaders": {
+                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNmU1YTFkMjYtMjc1Ny00N2Q3LTgwNDYtZWFhNWQxZDM0YjVhIn1dfX0.yF7PflOPv9qHnu3ZWJNZ12jgkqTabmwXbDWk_47tLNE"
+              }
+            },
+            "com.microsoft.playready": {
+              "serverURL": "http://drm-playready-licensing.axtest.net/AcquireLicense",
+              "httpRequestHeaders": {
+                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNmU1YTFkMjYtMjc1Ny00N2Q3LTgwNDYtZWFhNWQxZDM0YjVhIn1dfX0.yF7PflOPv9qHnu3ZWJNZ12jgkqTabmwXbDWk_47tLNE"
+              }
+            }
+          },
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors/commit/e689891faf4845ff80137b22a731db13350652df"
+        },
+        {
+          "name": "v6 encrypted with generic EME PSSH (4K)",
+          "url": "http://media.axprod.net/TestVectors/v6-MultiDRM-GenericEmePssh/Manifest.mpd",
+          "protData": {
+            "com.widevine.alpha": {
+              "serverURL": "http://drm-widevine-licensing.axtest.net/AcquireLicense",
+              "httpRequestHeaders": {
+                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNmU1YTFkMjYtMjc1Ny00N2Q3LTgwNDYtZWFhNWQxZDM0YjVhIn1dfX0.yF7PflOPv9qHnu3ZWJNZ12jgkqTabmwXbDWk_47tLNE"
+              }
+            },
+            "com.microsoft.playready": {
+              "serverURL": "http://drm-playready-licensing.axtest.net/AcquireLicense",
+              "httpRequestHeaders": {
+                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNmU1YTFkMjYtMjc1Ny00N2Q3LTgwNDYtZWFhNWQxZDM0YjVhIn1dfX0.yF7PflOPv9qHnu3ZWJNZ12jgkqTabmwXbDWk_47tLNE"
+              }
+            }
+          },
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors/commit/e689891faf4845ff80137b22a731db13350652df"
+        },
+        {
+          "name": "v6 encrypted with multiple keys (1080p)",
+          "url": "http://media.axprod.net/TestVectors/v6-MultiDRM-MultiKey/Manifest_1080p.mpd",
+          "protData": {
+            "com.widevine.alpha": {
+              "serverURL": "http://drm-widevine-licensing.axtest.net/AcquireLicense",
+              "httpRequestHeaders": {
+                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiMTUzMGQzYTAtNjkwNC00NDZhLTkxYTEtMzNhMTE1YWE4YzQxIn0seyJpZCI6ImM4M2ViNjM5LWU2NjQtNDNmOC1hZTk4LTQwMzliMGMxM2IyZCJ9LHsiaWQiOiIzZDhjYzc2Mi0yN2FjLTQwMGYtOTg5Zi04YWI1ZGM3ZDc3NzUifSx7ImlkIjoiYmQ4ZGFkNTgtMDMyZC00YzI1LTg5ZmEtYzdiNzEwZTgyYWMyIn1dfX0.9t18lFmZFVHMzpoZxYDyqOS0Bk_evGhTBw_F2JnAK2k"
+              }
+            },
+            "com.microsoft.playready": {
+              "serverURL": "http://drm-playready-licensing.axtest.net/AcquireLicense",
+              "httpRequestHeaders": {
+                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiMTUzMGQzYTAtNjkwNC00NDZhLTkxYTEtMzNhMTE1YWE4YzQxIn0seyJpZCI6ImM4M2ViNjM5LWU2NjQtNDNmOC1hZTk4LTQwMzliMGMxM2IyZCJ9LHsiaWQiOiIzZDhjYzc2Mi0yN2FjLTQwMGYtOTg5Zi04YWI1ZGM3ZDc3NzUifSx7ImlkIjoiYmQ4ZGFkNTgtMDMyZC00YzI1LTg5ZmEtYzdiNzEwZTgyYWMyIn1dfX0.9t18lFmZFVHMzpoZxYDyqOS0Bk_evGhTBw_F2JnAK2k"
+              }
+            }
+          },
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors/commit/e689891faf4845ff80137b22a731db13350652df"
+        },
+        {
+          "name": "v6 encrypted with multiple keys (4K)",
+          "url": "http://media.axprod.net/TestVectors/v6-MultiDRM-MultiKey/Manifest.mpd",
+          "protData": {
+            "com.widevine.alpha": {
+              "serverURL": "http://drm-widevine-licensing.axtest.net/AcquireLicense",
+              "httpRequestHeaders": {
+                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiMTUzMGQzYTAtNjkwNC00NDZhLTkxYTEtMzNhMTE1YWE4YzQxIn0seyJpZCI6ImM4M2ViNjM5LWU2NjQtNDNmOC1hZTk4LTQwMzliMGMxM2IyZCJ9LHsiaWQiOiIzZDhjYzc2Mi0yN2FjLTQwMGYtOTg5Zi04YWI1ZGM3ZDc3NzUifSx7ImlkIjoiYmQ4ZGFkNTgtMDMyZC00YzI1LTg5ZmEtYzdiNzEwZTgyYWMyIn1dfX0.9t18lFmZFVHMzpoZxYDyqOS0Bk_evGhTBw_F2JnAK2k"
+              }
+            },
+            "com.microsoft.playready": {
+              "serverURL": "http://drm-playready-licensing.axtest.net/AcquireLicense",
+              "httpRequestHeaders": {
+                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiMTUzMGQzYTAtNjkwNC00NDZhLTkxYTEtMzNhMTE1YWE4YzQxIn0seyJpZCI6ImM4M2ViNjM5LWU2NjQtNDNmOC1hZTk4LTQwMzliMGMxM2IyZCJ9LHsiaWQiOiIzZDhjYzc2Mi0yN2FjLTQwMGYtOTg5Zi04YWI1ZGM3ZDc3NzUifSx7ImlkIjoiYmQ4ZGFkNTgtMDMyZC00YzI1LTg5ZmEtYzdiNzEwZTgyYWMyIn1dfX0.9t18lFmZFVHMzpoZxYDyqOS0Bk_evGhTBw_F2JnAK2k"
+              }
+            }
+          },
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors/commit/e689891faf4845ff80137b22a731db13350652df"
+        },
+        {
+          "name": "v6 encrypted with multiple keys and multiple periods (1080p)",
+          "url": "http://media.axprod.net/TestVectors/v6-MultiDRM-MultiKey-MultiPeriod/Manifest_1080p.mpd",
+          "protData": {
+            "com.widevine.alpha": {
+              "serverURL": "http://drm-widevine-licensing.axtest.net/AcquireLicense",
+              "httpRequestHeaders": {
+                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNTNiZTc3NTctNzI4OC00YjZiLWIyMGEtZjA1YjY0YTRlZjc5In0seyJpZCI6IjBlZDgyMWE4LTgwZWQtNDBhYy1hODA0LTkyN2M5ZmRhZGJlOSJ9LHsiaWQiOiJlNDdkNzhjYS05NGRjLTQ1ZmItOWUzZC0yYTc3M2FlZjc0YjIifSx7ImlkIjoiMzJhMTQxZTktMjNhYi00NGZmLWE2YzctNTM0OWM4OTQ1MWNmIn0seyJpZCI6IjhkMDkxOTY2LTQ0YjUtNGNmOC04YTQ1LWVkMTJmZGIxOGQzNSJ9XX19.9YSK6QsDr4SYR7Q74ftq9mVtsT0ZkP3STE0zI-3mVIA"
+              }
+            },
+            "com.microsoft.playready": {
+              "serverURL": "http://drm-playready-licensing.axtest.net/AcquireLicense",
+              "httpRequestHeaders": {
+                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNTNiZTc3NTctNzI4OC00YjZiLWIyMGEtZjA1YjY0YTRlZjc5In0seyJpZCI6IjBlZDgyMWE4LTgwZWQtNDBhYy1hODA0LTkyN2M5ZmRhZGJlOSJ9LHsiaWQiOiJlNDdkNzhjYS05NGRjLTQ1ZmItOWUzZC0yYTc3M2FlZjc0YjIifSx7ImlkIjoiMzJhMTQxZTktMjNhYi00NGZmLWE2YzctNTM0OWM4OTQ1MWNmIn0seyJpZCI6IjhkMDkxOTY2LTQ0YjUtNGNmOC04YTQ1LWVkMTJmZGIxOGQzNSJ9XX19.9YSK6QsDr4SYR7Q74ftq9mVtsT0ZkP3STE0zI-3mVIA"
+              }
+            }
+          },
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors/commit/e689891faf4845ff80137b22a731db13350652df"
+        },
+        {
+          "name": "v6 encrypted with multiple keys and multiple periods (4K)",
+          "url": "http://media.axprod.net/TestVectors/v6-MultiDRM-MultiKey-MultiPeriod/Manifest.mpd",
+          "protData": {
+            "com.widevine.alpha": {
+              "serverURL": "http://drm-widevine-licensing.axtest.net/AcquireLicense",
+              "httpRequestHeaders": {
+                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNTNiZTc3NTctNzI4OC00YjZiLWIyMGEtZjA1YjY0YTRlZjc5In0seyJpZCI6IjBlZDgyMWE4LTgwZWQtNDBhYy1hODA0LTkyN2M5ZmRhZGJlOSJ9LHsiaWQiOiJlNDdkNzhjYS05NGRjLTQ1ZmItOWUzZC0yYTc3M2FlZjc0YjIifSx7ImlkIjoiMzJhMTQxZTktMjNhYi00NGZmLWE2YzctNTM0OWM4OTQ1MWNmIn0seyJpZCI6IjhkMDkxOTY2LTQ0YjUtNGNmOC04YTQ1LWVkMTJmZGIxOGQzNSJ9XX19.9YSK6QsDr4SYR7Q74ftq9mVtsT0ZkP3STE0zI-3mVIA"
+              }
+            },
+            "com.microsoft.playready": {
+              "serverURL": "http://drm-playready-licensing.axtest.net/AcquireLicense",
+              "httpRequestHeaders": {
+                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNTNiZTc3NTctNzI4OC00YjZiLWIyMGEtZjA1YjY0YTRlZjc5In0seyJpZCI6IjBlZDgyMWE4LTgwZWQtNDBhYy1hODA0LTkyN2M5ZmRhZGJlOSJ9LHsiaWQiOiJlNDdkNzhjYS05NGRjLTQ1ZmItOWUzZC0yYTc3M2FlZjc0YjIifSx7ImlkIjoiMzJhMTQxZTktMjNhYi00NGZmLWE2YzctNTM0OWM4OTQ1MWNmIn0seyJpZCI6IjhkMDkxOTY2LTQ0YjUtNGNmOC04YTQ1LWVkMTJmZGIxOGQzNSJ9XX19.9YSK6QsDr4SYR7Q74ftq9mVtsT0ZkP3STE0zI-3mVIA"
+              }
+            }
+          },
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors/commit/e689891faf4845ff80137b22a731db13350652df"
+        },
+
+        {
+          "name": "v6 clear (1080p)",
+          "url": "http://media.axprod.net/TestVectors/v6-Clear/Manifest_1080p.mpd",
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors/commit/e689891faf4845ff80137b22a731db13350652df"
+        },
+        {
+          "name": "v6 clear (4K)",
+          "url": "http://media.axprod.net/TestVectors/v6-Clear/Manifest.mpd",
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors/commit/e689891faf4845ff80137b22a731db13350652df"
+        },
+        {
+          "name": "v6 clear multi-period (1080p)",
+          "url": "http://media.axprod.net/TestVectors/v6-Clear/MultiPeriod_Manifest_1080p.mpd",
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors/commit/e689891faf4845ff80137b22a731db13350652df"
+        },
+        {
+          "name": "v6 clear multi-period (4K)",
+          "url": "http://media.axprod.net/TestVectors/v6-Clear/MultiPeriod_Manifest.mpd",
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors/commit/e689891faf4845ff80137b22a731db13350652df"
         }
       ]
     },
+    
     
     {
       "name": "BBC R&D Test Content",
