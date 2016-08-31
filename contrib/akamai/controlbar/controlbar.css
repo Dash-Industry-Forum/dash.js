@@ -51,20 +51,19 @@
 .icon-mute-on,
 .icon-fullscreen-enter,
 .icon-fullscreen-exit,
-.icon-video,
-.icon-audio {
+.icon-tracks,
+.icon-bitrate {
     font-family: 'icomoon';
     font-size: 20px;
     color: white;
     text-shadow: none;
     -webkit-font-smoothing: antialiased;
 }
-
-.icon-video,
-.icon-audio {
+/*TODO make once font set*/
+.icon-tracks,
+.icon-bitrate {
     font-family: 'moreicomoon';
 }
-
 
 .time-display,
 .duration-display{
@@ -145,6 +144,15 @@
     color: black;
 }
 
+.menu-sub-menu-title {
+    background-color: #191919;
+    padding-left: 2px;
+    font-weight: bold;
+    font-size: 1.0em;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+}
+
 .menu-item-selected {
     opacity: .7;
 }
@@ -185,11 +193,11 @@
 .icon-caption:before {
     content: "\e600";
 }
-.icon-video:before {
-    content: "\e901";
-}
-.icon-audio:before {
+.icon-bitrate:before {
     content: "\e900";
+}
+.icon-tracks:before {
+    content: "\e901";
 }
 
 .seekContainer {

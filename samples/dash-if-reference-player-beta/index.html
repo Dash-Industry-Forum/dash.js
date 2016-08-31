@@ -190,21 +190,24 @@
 
                         <span id="videoTime" class="time-display">00:00:00</span>
 
+
+
                         <div id="fullscreenBtn" class="btn-fullscreen control-icon-layout" title="Fullscreen">
                             <span class="icon-fullscreen-enter"></span>
                         </div>
+
+                        <div id="bitrateListBtn" class="control-icon-layout" title="Bitrate List">
+                            <span class="icon-bitrate"></span>
+                        </div>
+
                         <input type="range" id="volumebar" class="volumebar" value="1" min="0" max="1" step=".01"/>
 
                         <div id="muteBtn" class="btn-mute control-icon-layout" title="Mute">
                             <span id="iconMute" class="icon-mute-off"></span>
                         </div>
 
-                        <div id="audioTrackBtn" class="btn-audio-tracks control-icon-layout" title="Audio Tracks">
-                            <span class="icon-audio"></span>
-                        </div>
-
-                        <div id="videoTrackBtn" class="btn-video-tracks control-icon-layout" title="Video Tracks">
-                            <span class="icon-video"></span>
+                        <div id="trackSwitchBtn" class="control-icon-layout" title="A/V Tracks">
+                            <span class="icon-tracks"></span>
                         </div>
 
                         <div id="captionBtn" class="btn-caption control-icon-layout" title="Closed Caption">
@@ -217,48 +220,6 @@
                         <div class="seekContainer">
                             <input type="range" id="seekbar" value="0" class="seekbar" min="0" step="0.01"/>
                         </div>
-
-                        <!--<div id="playPauseBtn" class="btn-play-pause" title="Play/Pause">-->
-                            <!--<span id="iconPlayPause" class="icon-play"></span>-->
-                        <!--</div>-->
-                        <!--<span id="videoTime" class="time-display">00:00:00</span>-->
-                        <!--<div id="fullscreenBtn" class="btn-fullscreen" title="Fullscreen">-->
-                            <!--<span class="icon-fullscreen-enter" data-toggle="tooltip" title="Fullscreen"></span>-->
-                        <!--</div>-->
-                        <!--<input type="range" id="volumebar" class="volumebar" value="1" min="0" max="1" step=".01" data-toggle="tooltip" title="Audio Level" />-->
-                        <!--<div id="muteBtn" class="btn-mute" data-toggle="tooltip" title="Mute">-->
-                            <!--<span id="iconMute" class="icon-mute-off"></span>-->
-                        <!--</div>-->
-                        <!--<div id="captionBtn" class="btn-caption" ng-mouseenter="toggleCCBubble = !toggleCCBubble;" ng-mouseleave="toggleCCBubble = !toggleCCBubble;">-->
-                            <!--<span class="icon-caption"></span>-->
-                        <!--</div>-->
-                        <!--<div id="caption-bubble" ng-show="toggleCCBubble">Closed Caption</div>-->
-
-                        <!--<div id="videoTracksBtn" class="btn-caption" ng-show="availableTracks.video.length > 1" >-->
-                            <!--<span class="icon-video" data-toggle="dropdown">-->
-                                  <!--<em data-toggle="tooltip" title="Video Tracks"></em>-->
-                            <!--</span>-->
-                            <!--<ul class="dropdown-menu tracklisting" role="menu">-->
-                                <!--<li ng-repeat="track in availableTracks.video" ng-click="switchTrack(track, 'video')">-->
-                                    <!--<a>lang: {{track.lang || "undefined"}}, viewpoint: {{track.viewpoint || "undefined"}}, roles: {{track.roles || "undefined"}}</a>-->
-                                <!--</li>-->
-                            <!--</ul>-->
-                        <!--</div>-->
-
-                        <!--<div id="audioTracksBtn" class="btn-caption" ng-show="availableTracks.audio.length > 1">-->
-                            <!--<span class="icon-audio" data-toggle="dropdown">-->
-                                  <!--<em data-toggle="tooltip" title="Audio Tracks"></em>-->
-                            <!--</span>-->
-                            <!--<ul class="dropdown-menu tracklisting" role="menu">-->
-                                <!--<li ng-repeat="track in availableTracks.audio" ng-click="switchTrack(track, 'audio')">-->
-                                    <!--<a>lang: {{track.lang || "undefined"}}, viewpoint: {{track.viewpoint || "undefined"}}, roles: {{track.roles || "undefined"}}</a>-->
-                                <!--</li>-->
-                            <!--</ul>-->
-                        <!--</div>-->
-                        <!--<span id="videoDuration" class="duration-display">00:00:00</span>-->
-                        <!--<div class="seekContainer">-->
-                            <!--<input type="range" id="seekbar" value="0" class="seekbar" min="0" step="0.01"/>-->
-                        <!--</div>-->
                     </div>
                 </div>
             </div>
