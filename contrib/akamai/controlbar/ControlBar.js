@@ -177,11 +177,24 @@ var ControlBar = function (dashjsMediaPlayer) {
         onFullScreenChange = function (e) {
             if (isFullscreen()) {
                 enterFullscreen();
+                var icon = fullscreenBtn.querySelector(".icon-fullscreen-enter")
+                icon.classList.remove("icon-fullscreen-enter");
+                icon.classList.add("icon-fullscreen-exit");
             } else {
                 exitFullscreen();
+                var icon = fullscreenBtn.querySelector(".icon-fullscreen-exit")
+                icon.classList.remove("icon-fullscreen-exit");
+                icon.classList.add("icon-fullscreen-enter");
             }
+
             if (captionMenu) {
                 captionMenu.classList.add("hide");
+            }
+            if (bitrateListMenu) {
+                bitrateListMenu.classList.add("hide");
+            }
+            if (trackSwitchMenu) {
+                trackSwitchMenu.classList.add("hide");
             }
         },
 
@@ -201,8 +214,13 @@ var ControlBar = function (dashjsMediaPlayer) {
             } else {
                 element.webkitRequestFullScreen();
             }
+
+
             videoController.classList.add('video-controller-fullscreen');
             window.addEventListener("mousemove", onFullScreenMouseMove);
+
+
+
             onFullScreenMouseMove();
         },
 
@@ -245,7 +263,6 @@ var ControlBar = function (dashjsMediaPlayer) {
             }
         },
 
-
 //************************************************************************************
 // Audio Video MENU
 //************************************************************************************
@@ -272,7 +289,7 @@ var ControlBar = function (dashjsMediaPlayer) {
             var contentFunc;
 
             //Bitrate Menu
-            resetBitrateMenu();
+            destroyBitrateMenu();
 
             var availableBitrates = {menuType: 'bitrate'};
             availableBitrates.audio = player.getBitrateInfoListFor("audio");
@@ -509,7 +526,7 @@ var ControlBar = function (dashjsMediaPlayer) {
             menu.style.left = btn.offsetLeft + "px";
         },
 
-        resetBitrateMenu = function () {
+        destroyBitrateMenu = function () {
             if (bitrateListMenu) {
                 menuHandlersList.forEach(function (item) {
                     bitrateListBtn.removeEventListener("click", item);
@@ -620,7 +637,7 @@ var ControlBar = function (dashjsMediaPlayer) {
 
         reset: function () {
             window.removeEventListener("resize", handleMenuPositionOnResize);
-            resetBitrateMenu();
+            destroyBitrateMenu();
             menuHandlersList.forEach(function (item) {
                 trackSwitchBtn.removeEventListener("click", item);
                 captionBtn.removeEventListener("click", item);

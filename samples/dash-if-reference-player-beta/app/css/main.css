@@ -217,6 +217,14 @@ chart, chart canvas {
     margin-bottom: 15px;
 }
 
+button#disable-chart-btn {
+    float: left;
+}
+div#legend-wrapper {
+    margin-top: 10px;
+    margin-left: 80px;
+}
+
 
 /****************************
         FOOTER SECTION

@@ -98,7 +98,7 @@
                         Stream <span class="caret"></span>
                     </button>
                 </div>
-                <input type="text" class="form-control" ng-cloak placeholder="{{$scope.selectedItem.url}}" ng-model="selectedItem.url">
+                <input type="text" class="form-control" ng-cloak ng-bind="selectedItem.url" ng-model="selectedItem.url">
                 <span class="input-group-btn">
                     <button class="btn btn-default" ng-click="toggleOptionsGutter(!optionsGutter)">Options</button>
                     <button class="btn btn-primary" type="button" ng-click="doLoad()">Load</button>
@@ -183,40 +183,27 @@
                     <video></video>
                     <div id="video-caption"></div>
                     <div id="videoController" class="video-controller unselectable">
-
                         <div id="playPauseBtn" class="btn-play-pause" title="Play/Pause">
                             <span id="iconPlayPause" class="icon-play"></span>
                         </div>
-
                         <span id="videoTime" class="time-display">00:00:00</span>
-
-
-
                         <div id="fullscreenBtn" class="btn-fullscreen control-icon-layout" title="Fullscreen">
                             <span class="icon-fullscreen-enter"></span>
                         </div>
-
                         <div id="bitrateListBtn" class="control-icon-layout" title="Bitrate List">
                             <span class="icon-bitrate"></span>
                         </div>
-
                         <input type="range" id="volumebar" class="volumebar" value="1" min="0" max="1" step=".01"/>
-
                         <div id="muteBtn" class="btn-mute control-icon-layout" title="Mute">
                             <span id="iconMute" class="icon-mute-off"></span>
                         </div>
-
                         <div id="trackSwitchBtn" class="control-icon-layout" title="A/V Tracks">
                             <span class="icon-tracks"></span>
                         </div>
-
                         <div id="captionBtn" class="btn-caption control-icon-layout" title="Closed Caption">
                             <span class="icon-caption"></span>
                         </div>
-
-
                         <span id="videoDuration" class="duration-display">00:00:00</span>
-
                         <div class="seekContainer">
                             <input type="range" id="seekbar" value="0" class="seekbar" min="0" step="0.01"/>
                         </div>
@@ -229,15 +216,15 @@
                 <div >
                     <ul class="nav nav-tabs" role="tablist">
                       <li class="active">
-                          <a href="#video" role="tab" data-toggle="tab">
+                          <a href="#videoStatsTab" role="tab" data-toggle="tab">
                               Video
                           </a>
                       </li>
-                      <li><a href="#audio" role="tab" data-toggle="tab">
+                      <li><a href="#audioStatsTab" role="tab" data-toggle="tab">
                           Audio
                           </a>
                       </li>
-                      <!--<li><a href="#text" role="tab" data-toggle="tab">-->
+                      <!--<li><a href="#textStatsTab" role="tab" data-toggle="tab">-->
                           <!--Text-->
                           <!--</a>-->
                       <!--</li>-->
@@ -245,7 +232,7 @@
 
                     <!-- Tab panes -->
                     <div class="tab-content">
-                      <div class="tab-pane fade active in" id="video">
+                      <div class="tab-pane fade active in" id="videoStatsTab">
                         <div class="panel-body panel-stats" ng-cloak>
                             <!-- VIDEO STATS ITEMS-->
                             <p class="text-primary">
@@ -293,7 +280,7 @@
                             </p>
                         </div>
                       </div>
-                      <div class="tab-pane fade" id="audio">
+                      <div class="tab-pane fade" id="audioStatsTab">
                         <div class="panel-body panel-stats">
                             <!-- AUDIO STATS ITEMS-->
                             <p class="text-primary">
@@ -351,17 +338,17 @@
                             </p>
                         </div>
                       </div>
-                          <!--<div class="tab-pane fade" id="text">-->
-                            <!--<div class="panel-body panel-stats">-->
-                                <!--&lt;!&ndash; TEXT STATS ITEMS&ndash;&gt;-->
-                                <!--<p class="text-primary">-->
-                                    <!--<span class="text-success" data-toggle="tooltip"-->
-                                          <!--title="The length of the forward buffer, in seconds">-->
-                                        <!--<em>Language:</em> {{audioBufferLength}}-->
-                                    <!--</span>-->
-                                <!--</p>-->
-                            <!--</div>-->
-                          <!--</div>-->
+                      <!--<div class="tab-pane fade" id="textStatsTab">-->
+                        <!--<div class="panel-body panel-stats">-->
+                            <!--&lt;!&ndash; TEXT STATS ITEMS&ndash;&gt;-->
+                            <!--<p class="text-primary">-->
+                                <!--<span class="text-success" data-toggle="tooltip"-->
+                                      <!--title="The length of the forward buffer, in seconds">-->
+                                    <!--<em>Language:</em> {{audioBufferLength}}-->
+                                <!--</span>-->
+                            <!--</p>-->
+                        <!--</div>-->
+                      <!--</div>-->
                     </div>
                 </div>
             </div>
@@ -371,9 +358,8 @@
 
         <div class="chartPanel">
             <div class="chartControls">
-                <button class="btn btn-primary" ng-click="chartEnabled = !chartEnabled;"
-                        ng-cloak>{{getChartButtonLabel()}}
-                </button>
+                <button id="disable-chart-btn" class="btn btn-primary" ng-click="chartEnabled = !chartEnabled;" ng-cloak>{{getChartButtonLabel()}}</button>
+                <div id="legend-wrapper"></div>
             </div>
             <div id="chartWrapper" >
                 <div id="statsChart"></div>

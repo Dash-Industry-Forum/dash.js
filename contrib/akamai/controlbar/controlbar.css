@@ -33,38 +33,6 @@
     margin: auto;
 }
 
-@font-face {
-    font-family: 'icomoon';
-    src:url("icomoon.ttf") format("truetype");
-}
-
-
-@font-face {
-    font-family: 'moreicomoon';
-    src:url("icomoon-two.ttf") format("truetype");
-}
-
-.icon-play,
-.icon-pause,
-.icon-caption,
-.icon-mute-off,
-.icon-mute-on,
-.icon-fullscreen-enter,
-.icon-fullscreen-exit,
-.icon-tracks,
-.icon-bitrate {
-    font-family: 'icomoon';
-    font-size: 20px;
-    color: white;
-    text-shadow: none;
-    -webkit-font-smoothing: antialiased;
-}
-/*TODO make once font set*/
-.icon-tracks,
-.icon-bitrate {
-    font-family: 'moreicomoon';
-}
-
 .time-display,
 .duration-display{
     padding:11px;
@@ -88,16 +56,11 @@
     cursor: pointer;
 }
 
-
 .control-icon-layout
  {
     float: right;
     padding:9px 10px;
     cursor: pointer;
-}
-
-#videoTracksBtn .icon {
-
 }
 
 .btn-fullscreen {
@@ -172,32 +135,55 @@
     position: absolute;
 }
 
+@font-face {
+    font-family: 'icomoon';
+    src: url("icomoon.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+}
+
+.icon-play,
+.icon-pause,
+.icon-caption,
+.icon-mute-off,
+.icon-mute-on,
+.icon-fullscreen-enter,
+.icon-fullscreen-exit,
+.icon-tracks,
+.icon-bitrate {
+    font-family: 'icomoon';
+    font-size: 20px;
+    color: white;
+    text-shadow: none;
+    -webkit-font-smoothing: antialiased;
+}
+
 .icon-fullscreen-enter:before {
-    content: "\e989";
+    content: "\e90b";
 }
 .icon-fullscreen-exit:before {
-    content: "\e98a";
+    content: "\e90c";
 }
 .icon-play:before {
-    content: "\ea1c";
+    content: "\e910";
 }
 .icon-pause:before {
-    content: "\ea1d";
+    content: "\e911";
 }
 .icon-mute-on:before {
-    content: "\ea29";
+    content: "\e909";
 }
 .icon-mute-off:before {
-    content: "\ea27";
+    content: "\e918";
 }
 .icon-caption:before {
-    content: "\e600";
+    content: "\e901";
 }
 .icon-bitrate:before {
-    content: "\e900";
+    content: "\e905";
 }
 .icon-tracks:before {
-    content: "\e901";
+    content: "\e900";
 }
 
 .seekContainer {
