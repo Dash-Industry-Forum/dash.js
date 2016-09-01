@@ -334,13 +334,11 @@ var ControlBar = function (dashjsMediaPlayer) {
             el.classList.add("menu-item-unselected");
             videoController.appendChild(el);
 
-
-            // XXX setMenuItemsState(X  Should not be harcoded.  get initial index or state from dash.js
             switch (menuType) {
                 case 'caption' :
                     el.appendChild(document.createElement("ul"));
                     el = createMenuContent(el, getMenuContent(menuType, info.arr, contentFunc), 'caption', "captionMenuList");
-                    setMenuItemsState(1, 'captionMenuList'); // Should not be harcoded.  get initial index or state from dash.js
+                    setMenuItemsState(1, 'captionMenuList'); // Should not be harcoded.  get initial index or state from dash.js - not available yet in dash.js
                     break;
                 case 'track' :
                 case 'bitrate' :
@@ -518,6 +516,9 @@ var ControlBar = function (dashjsMediaPlayer) {
             }
             if (bitrateListMenu) {
                 positionMenu(bitrateListMenu, bitrateListBtn);
+            }
+            if (trackSwitchMenu) {
+                positionMenu(trackSwitchMenu, trackSwitchBtn);
             }
         },
 
