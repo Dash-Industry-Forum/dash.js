@@ -93,7 +93,7 @@ app.controller('DashController', function($scope, sources, contributors) {
         controlbar,
         maxGraphPoints = 30;
 
-    $scope.selectedItem = {url:"http://vm2.dashif.org/livesim/testpic2_2s/Manifest.mpd"};
+    $scope.selectedItem = {url:"http://media.axprod.net/TestVectors/v7-Clear/Manifest_1080p.mpd"};
     $scope.abrEnabled = true;
     $scope.toggleCCBubble = false;
     $scope.debugEnabled = false;
@@ -237,7 +237,7 @@ app.controller('DashController', function($scope, sources, contributors) {
             var bufferLevel = dashMetrics.getCurrentBufferLevel(metrics);
 
             $scope[type + "BufferLength"] = bufferLevel;
-            $scope[type + "MaxIndex"] = dashMetrics.getMaxIndexForBufferType(type, periodIdx) - 1;
+            $scope[type + "MaxIndex"] = dashMetrics.getMaxIndexForBufferType(type, periodIdx);
             $scope[type + "Bitrate"] = Math.round(dashMetrics.getBandwidthForRepresentation(repSwitch.to, periodIdx) / 1000);
             $scope[type + "DroppedFrames"] = dashMetrics.getCurrentDroppedFrames(metrics) ? dashMetrics.getCurrentDroppedFrames(metrics).droppedFrames : 0;
 
@@ -249,7 +249,8 @@ app.controller('DashController', function($scope, sources, contributors) {
             }
 
             if ($scope.chartEnabled) {
-                var point = [parseInt(performance.now() / 1000), Math.round(parseFloat(bufferLevel))];
+                var chartTime = (new Date().getTime() / 1000 ) -  $scope.sessionStartTime;
+                var point = [parseInt(chartTime).toFixed(1), Math.round(parseFloat(bufferLevel))];
                 $scope.graphPoints[type].push(point);
                 if ($scope.graphPoints[type].length > maxGraphPoints) {
                     $scope.graphPoints[type].splice(0, 1);
@@ -269,13 +270,13 @@ app.controller('DashController', function($scope, sources, contributors) {
     player.on(dashjs.MediaPlayer.events.ERROR, function (e) {}, $scope);
 
     player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_REQUESTED, function (e) {
-        $scope[e.mediaType + "Index"] = e.oldQuality;
-        $scope[e.mediaType+ "PendingIndex"] = e.newQuality;
+        $scope[e.mediaType + "Index"] = e.oldQuality + 1 ;
+        $scope[e.mediaType+ "PendingIndex"] = e.newQuality + 1;
     }, $scope);
 
     player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, function (e) {
-        $scope[e.mediaType + "Index"] = e.newQuality;
-        $scope[e.mediaType + "PendingIndex"] = e.newQuality;
+        $scope[e.mediaType + "Index"] = e.newQuality + 1;
+        $scope[e.mediaType + "PendingIndex"] = e.newQuality + 1;
     }, $scope);
 
     player.on(dashjs.MediaPlayer.events.PERIOD_SWITCH_COMPLETED, function (e) {
@@ -292,9 +293,10 @@ app.controller('DashController', function($scope, sources, contributors) {
     }, $scope);
 
     player.on(dashjs.MediaPlayer.events.PLAYBACK_ENDED, function(e) {
-        //if ($('#loop-cb').is(':checked')) { //TODO make sure it is the last period or it will break MP
-        //    $scope.doLoad();
-        //}
+        if ($('#loop-cb').is(':checked') &&
+            player.getActiveStream().getStreamInfo().isLast) {
+            $scope.doLoad();
+        }
     }, $scope);
 
     ////////////////////////////////////////
@@ -533,9 +535,9 @@ app.controller('DashController', function($scope, sources, contributors) {
         player.setFastSwitchEnabled($scope.fastSwitchSelected);
     }
 
-    $scope.toggleDOMStorage = function () {
-        player.enableLastBitrateCaching($scope.domStorageSelected);
-        player.enableLastMediaSettingsCaching($scope.domStorageSelected);
+    $scope.toggleLocalStorage = function () {
+        player.enableLastBitrateCaching($scope.localStorageSelected);
+        player.enableLastMediaSettingsCaching($scope.localStorageSelected);
     }
 
     $scope.setStream = function (item) {
@@ -553,19 +555,20 @@ app.controller('DashController', function($scope, sources, contributors) {
             protData = $scope.selectedItem.protData;
         }
 
+
+
         $scope.setChartInfo();
 
         controlbar.reset();
         player.setProtectionData(protData);
         player.attachSource($scope.selectedItem.url);
-        controlbar.enable();
-
         if ($scope.initialSettings.audio) {
             player.setInitialMediaSettingsFor("audio", {lang: $scope.initialSettings.audio});
         }
         if ($scope.initialSettings.video) {
             player.setInitialMediaSettingsFor("video", {role: $scope.initialSettings.video});
         }
+        controlbar.enable();
     }
 
     $scope.changeTrackSwitchMode = function(mode, type) {
@@ -578,6 +581,10 @@ app.controller('DashController', function($scope, sources, contributors) {
 
     $scope.getChartButtonLabel = function () {
         return $scope.chartEnabled ? "Disable" : "Enable";
+    }
+
+    $scope.getOptionsButtonLabel = function () {
+        return $scope.optionsGutter ? "Hide Options" : "Show Options";
     }
 
     // from: https://gist.github.com/siongui/4969449
@@ -595,6 +602,8 @@ app.controller('DashController', function($scope, sources, contributors) {
     }
 
     $scope.setChartInfo = function () {
+        $scope.sessionStartTime = new Date().getTime()/1000;
+
         clearInterval($scope.metricsTimer);
         $scope.graphPoints = {video: [], audio: [], text: []};
         $scope.chartData = [
