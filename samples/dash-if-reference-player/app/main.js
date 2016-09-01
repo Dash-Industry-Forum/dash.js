@@ -45,12 +45,17 @@ app.directive('chart', function() {
                         //}
                     },
                     series: { shadowSize: 3 },
-                    yaxis: [
-                        {show: true, ticks: false, position: 'right'},
-                        {color: $scope.videoGraphColor, position: 'right', min: 0},
-                        {color: $scope.audioGraphColor, position: 'right', min: 0}
-                    ],
-                    xaxis: {}
+                    xaxis: {
+                        show: true,
+                        tickDecimals:0
+                    },
+                    yaxis: {
+                        show: true,
+                        ticks: 5,
+                        position: 'right',
+                        min:0,
+                        tickDecimals:0
+                    },
                 };
 
                 $scope.chart = $.plot(elem, [], options);
@@ -91,9 +96,9 @@ app.directive('chart', function() {
 app.controller('DashController', function($scope, sources, contributors) {
     var player,
         controlbar,
-        maxGraphPoints = 30;
+        maxGraphPoints = 50;
 
-    $scope.selectedItem = {url:"http://media.axprod.net/TestVectors/v7-Clear/Manifest_1080p.mpd"};
+    $scope.selectedItem = {url:"http://dash.edgesuite.net/akamai/bbb_30fps/bbb_30fps.mpd"};
     $scope.abrEnabled = true;
     $scope.toggleCCBubble = false;
     $scope.debugEnabled = false;
@@ -609,12 +614,12 @@ app.controller('DashController', function($scope, sources, contributors) {
         $scope.chartData = [
             {
                 data: $scope.graphPoints.video,
-                label: "Video",
+                label: "Video Buffer Level",
                 color: $scope.videoGraphColor,
             },
             {
                 data: $scope.graphPoints.audio,
-                label: "Audio",
+                label: "Audio Buffer Level",
                 color: $scope.audioGraphColor,
             }
             //,

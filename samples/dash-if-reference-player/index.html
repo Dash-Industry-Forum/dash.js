@@ -21,7 +21,7 @@
     <!-- http://getbootstrap.com/ -->
     <script src="app/lib/bootstrap/js/bootstrap.min.js"></script>
     <!-- http://www.flotcharts.org/ -->
-    <script src="app/lib/flot/jquery.flot.js"></script>
+    <script src="app/lib/flot/jquery.flot.min.js"></script>
     <script src="../../dist/dash.all.debug.js"></script>
     <!-- App -->
     <script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
@@ -241,45 +241,48 @@
                         <div class="panel-body panel-stats" ng-cloak>
                             <!-- VIDEO STATS ITEMS-->
                             <p class="text-primary">
-                                <span class="text-success" data-toggle="tooltip" title="The length of the forward buffer, in seconds">
+                                <span class="text-success" data-toggle="tooltip" data-placement="right" title="The length of the forward buffer, in seconds">
                                     <em>Buffer Length:</em> {{videoBufferLength}}
                                 </span>
                             </p>
                             <p class="text-primary">
-                                <span class="text-success" data-toggle="tooltip" title="The bitrate of the representation being downloaded">
+                                <span class="text-success" data-toggle="tooltip" data-placement="right"  title="The bitrate of the representation being downloaded">
                                     <em>Bitrate Downloading:</em> {{videoBitrate}} kbps
                                 </span>
                             </p>
                             <p class="text-primary">
-                                <span class="text-success" data-toggle="tooltip" title="The representation index being downloaded and appended to the buffer">
+                                <span class="text-success" data-toggle="tooltip" data-placement="right"  title="The representation index being downloaded and appended to the buffer">
                                     <em>Index Downloading:</em> {{videoPendingIndex}}
                                 </span>
                             </p>
                             <p class="text-primary">
-                                <span class="text-success" data-toggle="tooltip" title="The representation index being rendered.">
+                                <span class="text-success" data-toggle="tooltip" data-placement="right"  title="The representation index being rendered.">
                                     <em>Current Index / Max Index</em> {{videoIndex}} / {{videoMaxIndex}}
                                 </span>
                             </p>
 
                             <p class="text-primary">
-                                <span class="text-success" data-toggle="tooltip"
+                                <span class="text-success" data-toggle="tooltip" data-placement="right"
                                       title="The absolute count of frames dropped by the rendering pipeline since play commenced">
                                     <em>Dropped Frames:</em> {{videoDroppedFrames}}
                                 </span>
                             </p>
                             <p class="text-primary">
-                                <span class="text-success" data-toggle="tooltip" title="The minimum, average and maximum latency over the last 4 requested segments. Latency is the time in seconds from request of segment to receipt of first byte">
+                                <span class="text-success" data-toggle="tooltip" data-placement="left"
+                                      title="The minimum, average and maximum latency over the last 4 requested segments. Latency is the time in seconds from request of segment to receipt of first byte">
                                     <em>Latency (min|avg|max):</em> {{videoLatency}}
                                 </span>
                             </p>
 
                             <p class="text-primary">
-                                <span class="text-success" data-toggle="tooltip" title="The minimum, average and maximum download time for the last 4 requested segments. Download time is the time in seconds from first byte being received to the last byte">
+                                <span class="text-success" data-toggle="tooltip" data-placement="left"
+                                      title="The minimum, average and maximum download time for the last 4 requested segments. Download time is the time in seconds from first byte being received to the last byte">
                                     <em>Download (min|avg|max):</em> {{videoDownload}}
                                 </span>
                             </p>
                             <p class="text-primary">
-                                <span class="text-success" data-toggle="tooltip" title="The minimum, average and maximum ratio of the segment playback time to total download time over the last 4 segments">
+                                <span class="text-success" data-toggle="tooltip" data-placement="left"
+                                      title="The minimum, average and maximum ratio of the segment playback time to total download time over the last 4 segments">
                                     <em>Ratio (min|avg|max):</em> {{videoRatio}}
                                 </span>
                             </p>
@@ -289,54 +292,54 @@
                         <div class="panel-body panel-stats">
                             <!-- AUDIO STATS ITEMS-->
                             <p class="text-primary">
-                                <span class="text-success" data-toggle="tooltip"
+                                <span class="text-success" data-toggle="tooltip" data-placement="right"
                                       title="The length of the forward buffer, in seconds">
                                     <em>Buffer Length:</em> {{audioBufferLength}}
                                 </span>
                             </p>
 
                             <p class="text-primary">
-                                <span class="text-success" data-toggle="tooltip"
+                                <span class="text-success" data-toggle="tooltip" data-placement="right"
                                       title="The bitrate of the representation being downloaded">
                                     <em>Bitrate Downloading:</em> {{audioBitrate}} kbps
                                 </span>
                             </p>
 
                             <p class="text-primary">
-                                <span class="text-success" data-toggle="tooltip"
+                                <span class="text-success" data-toggle="tooltip" data-placement="right"
                                       title="The representation index being downloaded and appended to the buffer">
                                     <em>Index Downloading:</em> {{audioPendingIndex}}
                                 </span>
                             </p>
 
                             <p class="text-primary">
-                                <span class="text-success" data-toggle="tooltip"
+                                <span class="text-success" data-toggle="tooltip" data-placement="right"
                                       title="The representation index being rendered.">
                                     <em>Current Index / Max Index</em> {{audioIndex}} / {{audioMaxIndex}}
                                 </span>
                             </p>
                             <p class="text-primary">
-                                <span class="text-success" data-toggle="tooltip"
+                                <span class="text-success" data-toggle="tooltip" data-placement="right"
                                       title="The absolute count of frames dropped by the rendering pipeline since play commenced">
                                     <em>Dropped Frames:</em> {{audioDroppedFrames}}
                                 </span>
                             </p>
                             <p class="text-primary">
-                                <span class="text-success" data-toggle="tooltip"
+                                <span class="text-success" data-toggle="tooltip" data-placement="left"
                                       title="The minimum, average and maximum latency over the last 4 requested segments. Latency is the time in seconds from request of segment to receipt of first byte">
                                     <em>Latency (min|avg|max):</em> {{audioLatency}}
                                 </span>
                             </p>
 
                             <p class="text-primary">
-                                <span class="text-success" data-toggle="tooltip"
+                                <span class="text-success" data-toggle="tooltip" data-placement="left"
                                       title="The minimum, average and maximum download time for the last 4 requested segments. Download time is the time in seconds from first byte being received to the last byte">
                                     <em>Download (min|avg|max):</em> {{audioDownload}}
                                 </span>
                             </p>
 
                             <p class="text-primary">
-                                <span class="text-success" data-toggle="tooltip"
+                                <span class="text-success" data-toggle="tooltip" data-placement="left"
                                       title="The minimum, average and maximum ratio of the segment playback time to total download time over the last 4 segments">
                                     <em>Ratio (min|avg|max):</em> {{audioRatio}}
                                 </span>
@@ -347,7 +350,7 @@
                         <!--<div class="panel-body panel-stats">-->
                             <!--&lt;!&ndash; TEXT STATS ITEMS&ndash;&gt;-->
                             <!--<p class="text-primary">-->
-                                <!--<span class="text-success" data-toggle="tooltip"-->
+                                <!--<span class="text-success" data-toggle="tooltip" data-placement="right" -->
                                       <!--title="The length of the forward buffer, in seconds">-->
                                     <!--<em>Language:</em> {{audioBufferLength}}-->
                                 <!--</span>-->
