@@ -287,32 +287,32 @@ var ControlBar = function (dashjsMediaPlayer) {
         onStreamInitialized = function (e) {
 
             var contentFunc;
-
             //Bitrate Menu
-            destroyBitrateMenu();
+            if (bitrateListBtn) {
+                destroyBitrateMenu();
+                var availableBitrates = {menuType: 'bitrate'};
+                availableBitrates.audio = player.getBitrateInfoListFor("audio");
+                availableBitrates.video = player.getBitrateInfoListFor("video");
+                if (availableBitrates.audio.length > 1 || availableBitrates.video.length > 1) {
+                    contentFunc = function (element, index) {
+                        return isNaN(index) ? " Auto Switch" : Math.floor(element.bitrate / 1000) + " kbps";
+                    }
+                    bitrateListMenu = createMenu(availableBitrates, contentFunc);
+                    var func = function () {
+                        onMenuClick(bitrateListMenu, bitrateListBtn);
+                    };
+                    menuHandlersList.push(func);
+                    bitrateListBtn.addEventListener("click", func);
+                    bitrateListBtn.classList.remove("hide");
 
-            var availableBitrates = {menuType: 'bitrate'};
-            availableBitrates.audio = player.getBitrateInfoListFor("audio");
-            availableBitrates.video = player.getBitrateInfoListFor("video");
-            if (availableBitrates.audio.length > 1 || availableBitrates.video.length > 1) {
-                contentFunc = function (element, index) {
-                    return isNaN(index) ? " Auto Switch" : Math.floor(element.bitrate / 1000) + " kbps";
+                } else {
+                    bitrateListBtn.classList.add("hide");
                 }
-                bitrateListMenu = createMenu(availableBitrates, contentFunc);
-                var func = function () {
-                    onMenuClick(bitrateListMenu, bitrateListBtn);
-                };
-                menuHandlersList.push(func);
-                bitrateListBtn.addEventListener("click", func);
-                bitrateListBtn.classList.remove("hide");
-
-            } else {
-                bitrateListBtn.classList.add("hide");
             }
 
             //Track Switch Menu
 
-            if (!trackSwitchMenu) {
+            if (!trackSwitchMenu && trackSwitchBtn) {
                 var availableTracks = {menuType: "track"};
                 availableTracks.audio = player.getTracksFor("audio");
                 availableTracks.video = player.getTracksFor("video");
@@ -591,8 +591,9 @@ var ControlBar = function (dashjsMediaPlayer) {
             video.controls = false;
             videoContainer = player.getVideoContainer();
             captionBtn.classList.add("hide");
-            trackSwitchBtn.classList.add("hide");
-
+            if (trackSwitchBtn) {
+                trackSwitchBtn.classList.add("hide");
+            }
 
             player.on(dashjs.MediaPlayer.events.PLAYBACK_STARTED, onPlayStart, this);
             player.on(dashjs.MediaPlayer.events.PLAYBACK_PAUSED, onPlaybackPaused, this);
@@ -639,8 +640,8 @@ var ControlBar = function (dashjsMediaPlayer) {
             window.removeEventListener("resize", handleMenuPositionOnResize);
             destroyBitrateMenu();
             menuHandlersList.forEach(function (item) {
-                trackSwitchBtn.removeEventListener("click", item);
-                captionBtn.removeEventListener("click", item);
+                if (trackSwitchBtn) trackSwitchBtn.removeEventListener("click", item);
+                if (captionBtn) captionBtn.removeEventListener("click", item);
             })
             if (captionMenu) {
                 videoController.removeChild(captionMenu);
@@ -654,7 +655,6 @@ var ControlBar = function (dashjsMediaPlayer) {
             }
             menuHandlersList = [];
             seeking = false;
-
         },
 
         destroy: function () {
