@@ -754,7 +754,7 @@
       "name": "Axinom Test Content",
       "submenu": [
         {
-          "name": "Axinom multi-DRM single-key v7 (1080p)",
+           "name": "v7 encrypted single-key (1080p)",
           "url": "http://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_1080p.mpd",
           "protData": {
             "com.widevine.alpha": {
@@ -773,7 +773,7 @@
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
-          "name": "Axinom multi-DRM single-key v7 (4K)",
+           "name": "v7 encrypted single-key (4K)",
           "url": "http://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest.mpd",
           "protData": {
             "com.widevine.alpha": {
@@ -792,7 +792,7 @@
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
-          "name": "Axinom multi-DRM single-key v7 (audio only)",
+           "name": "v7 encrypted single-key (audio only)",
           "url": "http://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_1080p.mpd",
           "protData": {
             "com.widevine.alpha": {
@@ -811,7 +811,7 @@
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
-          "name": "Axinom multi-DRM multi-key v7 (1080p)",
+           "name": "v7 encrypted multi-key (1080p)",
           "url": "http://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey/Manifest_1080p.mpd",
           "protData": {
             "com.widevine.alpha": {
@@ -830,7 +830,7 @@
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
-          "name": "Axinom multi-DRM multi-key v7 (4K)",
+           "name": "v7 encrypted multi-key (4K)",
           "url": "http://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey/Manifest.mpd",
           "protData": {
             "com.widevine.alpha": {
@@ -849,7 +849,7 @@
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
-          "name": "Axinom multi-DRM multi-key v7 (audio only)",
+           "name": "v7 encrypted multi-key (audio only)",
           "url": "http://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey/Manifest_AudioOnly.mpd",
           "protData": {
             "com.widevine.alpha": {
@@ -868,7 +868,7 @@
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
-          "name": "Axinom multi-DRM multi-key multi-period v7 (1080p)",
+           "name": "v7 encrypted multi-key multi-period (1080p)",
           "url": "http://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey-MultiPeriod/Manifest_1080p.mpd",
           "protData": {
             "com.widevine.alpha": {
@@ -887,7 +887,7 @@
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
-          "name": "Axinom multi-DRM multi-key multi-period v7 (4K)",
+           "name": "v7 encrypted multi-key multi-period (4K)",
           "url": "http://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey-MultiPeriod/Manifest.mpd",
           "protData": {
             "com.widevine.alpha": {
@@ -906,7 +906,7 @@
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
-          "name": "Axinom multi-DRM multi-key multi-period v7 (audio only)",
+           "name": "v7 encrypted multi-key multi-period (audio only)",
           "url": "http://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey-MultiPeriod/Manifest_AudioOnly.mpd",
           "protData": {
             "com.widevine.alpha": {
@@ -926,32 +926,32 @@
         },
         
         {
-          "name": "Axinom clear v7 (1080p)",
+          "name": "Axinom clear (1080p)",
           "url": "http://media.axprod.net/TestVectors/v7-Clear/Manifest_1080p.mpd",
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
-          "name": "Axinom clear v7 (4K)",
+          "name": "Axinom clear (4K)",
           "url": "http://media.axprod.net/TestVectors/v7-Clear/Manifest.mpd",
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
-          "name": "Axinom clear v7 (audio only)",
+          "name": "Axinom clear (audio only)",
           "url": "http://media.axprod.net/TestVectors/v7-Clear/Manifest_AudioOnly.mpd",
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
-          "name": "Axinom clear multi-period v7 (1080p)",
+          "name": "Axinom clear multi-period (1080p)",
           "url": "http://media.axprod.net/TestVectors/v7-Clear/Manifest_MultiPeriod_1080p.mpd",
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
-          "name": "Axinom clear multi-period v7 (4K)",
+          "name": "Axinom clear multi-period (4K)",
           "url": "http://media.axprod.net/TestVectors/v7-Clear/Manifest_MultiPeriod.mpd",
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
-          "name": "Axinom clear multi-period v7 (audio only)",
+          "name": "Axinom clear multi-period (audio only)",
           "url": "http://media.axprod.net/TestVectors/v7-Clear/Manifest_MultiPeriod_AudioOnly.mpd",
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
