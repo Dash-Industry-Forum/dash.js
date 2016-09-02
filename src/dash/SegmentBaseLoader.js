@@ -237,7 +237,7 @@ function SegmentBaseLoader() {
         var len = refs.length;
         var timescale = sidx.timescale;
         var time = sidx.earliest_presentation_time;
-        var start = info.range.start + sidx.first_offset + sidx.size;
+        var start = info.range.start + sidx.offset + sidx.first_offset + sidx.size;
         var segments = [];
         var segment,
             end,

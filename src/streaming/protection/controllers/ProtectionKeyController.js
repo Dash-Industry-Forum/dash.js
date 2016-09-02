@@ -218,9 +218,9 @@ function ProtectionKeyController() {
 
         for (ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
             var keySystemString = keySystems[ksIdx].systemString;
-            var protectionDataForKeySystemPresent = keySystemString in protDataSet;
+            var shouldNotFilterOutKeySystem = (protDataSet) ? keySystemString in protDataSet : true;
 
-            if (keySystems[ksIdx].uuid in pssh && protectionDataForKeySystemPresent) {
+            if (keySystems[ksIdx].uuid in pssh && shouldNotFilterOutKeySystem) {
                 supportedKS.push({
                     ks: keySystems[ksIdx],
                     initData: pssh[keySystems[ksIdx].uuid]
@@ -251,7 +251,7 @@ function ProtectionKeyController() {
 
         // Our default server implementations do not do anything with "license-release" or
         // "individualization-request" messages, so we just send a success event
-        if (messageType === 'license-release' || messageType == 'individualization-request') {
+        if (messageType === 'license-release' || messageType === 'individualization-request') {
             return null;
         }
 

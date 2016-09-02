@@ -86,7 +86,7 @@ function RepresentationController() {
         dashMetrics = DashMetrics(context).getInstance();
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
 
-        eventBus.on(Events.QUALITY_CHANGED, onQualityChanged, instance);
+        eventBus.on(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
         eventBus.on(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
         eventBus.on(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
@@ -127,7 +127,7 @@ function RepresentationController() {
 
     function reset() {
 
-        eventBus.off(Events.QUALITY_CHANGED, onQualityChanged, instance);
+        eventBus.off(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
         eventBus.off(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
         eventBus.off(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
@@ -283,7 +283,7 @@ function RepresentationController() {
         var err;
         var repSwitch;
 
-        if (r.adaptation.period.mpd.manifest.type == 'dynamic')
+        if (r.adaptation.period.mpd.manifest.type === 'dynamic')
         {
             let segmentAvailabilityTimePeriod = r.segmentAvailabilityRange.end - r.segmentAvailabilityRange.start;
             // We must put things to sleep unless till e.g. the startTime calculation in ScheduleController.onLiveEdgeSearchCompleted fall after the segmentAvailabilityRange.start

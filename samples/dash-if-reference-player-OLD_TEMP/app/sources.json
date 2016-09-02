@@ -1,0 +1,818 @@
+{
+    "items":[
+        {
+            "name":"VOD",
+            "submenu":[
+                {
+                    "url":"http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-events.mpd",
+                    "name":"SegmentTemplate/Number, live profile",
+                    "browsers":"cdsbi",
+                    "moreInfo":"http://rdmedia.bbc.co.uk/dash/ondemand/testcard/"
+                },
+                {
+                    "url":"http://dash.edgesuite.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd",
+                    "name":"SegmentBase, ondemand profile",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "url":"http://demo.unified-streaming.com/video/ateam/ateam.ism/ateam.mpd",
+                    "name":"SegmentTimeline/Time",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "url":"http://dash.edgesuite.net/dash264/TestCases/5a/1/manifest.mpd",
+                    "name":"Multiperiod",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "url":"http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd",
+                    "name":"SegmentTemplate, live profile - Envivio",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "url":"http://dash.edgesuite.net/akamai/test/caption_test/ElephantsDream/elephants_dream_480p_heaac5_1.mpd",
+                    "name":"External VTT subtitle file",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "url":"http://dash.edgesuite.net/akamai/bbb_30fps/bbb_30fps.mpd",
+                    "name":"SegmentTemplate/Number, live profile, 250kbps up to 15Mbps@4K. ",
+                    "browsers":"cdsbi"
+                }
+
+            ]
+        },
+        {
+            "name":"LIVE Services",
+            "submenu":[
+                {
+                    "url":"http://vm2.dashif.org/livesim/testpic_2s/Manifest.mpd",
+                    "name":"SegmentTemplate without manifest updates (livesim)",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "url":"http://vm2.dashif.org/livesim/mup_30/testpic_2s/Manifest.mpd",
+                    "name":"SegmentTemplate with manifest updates every 30s (livesim)",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "url":"http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_2s/Manifest.mpd",
+                    "name":"SegmentTimeline (livesim-dev)",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "url":" http://vm2.dashif.org/livesim/periods_60/testpic_2s/Manifest.mpd",
+                    "name":"Multiperiod SegmentTemplate. New period every minute (livesim)",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "url":"http://irtdashreference-i.akamaihd.net/dash/live/901161/bfs/manifestARD.mpd",
+                    "name":"IRT reference with EBU-TT-D subtitles",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "url":" http://vm2.dashif.org/livesim-dev/ato_10/testpic_2s/Manifest.mpd",
+                    "name":"10 seconds availabilityTimeOffset (livesim)",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "url":"http://vm2.dashif.org/livesim-dev/ato_inf/testpic_2s/Manifest.mpd",
+                    "name":"Infinite offset - all segments available at availability start (livesim)",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "url":"http://24x7dash-i.akamaihd.net/dash/live/900080/dash-demo/dash.mpd",
+                    "name":"Akamai 24x7 reference stream - segmentTemplate",
+                    "browsers":"cdsbi"
+                }
+            ]
+        },
+        {
+            "name":"DASH Industry Forum Test Vectors",
+            "submenu":[
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/1a/netflix/exMPD_BIP_TC1.mpd","name":"1. All video representations with same spatial resolution encoded at different bitrates with a single audio representation."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd","name":"2. All video representations with same spatial resolution encoded at different bitrates with a single audio representation."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/1a/qualcomm/1/MultiRate.mpd","name":"3. All video representations with same spatial resolution encoded at different bitrates with a single audio representation."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/1a/qualcomm/2/MultiRate.mpd","name":"4. All video representations with same spatial resolution encoded at different bitrates with a single audio representation."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/1b/qualcomm/1/MultiRatePatched.mpd","name":"5. All video representations with same spatial resolution encoded at different bitrates with a single audio representation."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/1b/qualcomm/2/MultiRate.mpd","name":"6. All video representations with same spatial resolution encoded at different bitrates with a single audio representation."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/1c/qualcomm/1/MultiRate.mpd","name":"7. All video representations with same spatial resolution encoded at different bitrates with a single audio representation."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/1c/qualcomm/2/MultiRate.mpd","name":"8. All video representations with same spatial resolution encoded at different bitrates with a single audio representation."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/2a/qualcomm/1/MultiResMPEG2.mpd","name":"1. Video representations with different spatial resolution and bitrate, with a single audio representation."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/2a/qualcomm/2/MultiRes.mpd","name":"2. Video representations with different spatial resolution and bitrate, with a single audio representation."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/2b/qualcomm/1/MultiResMPEG2.mpd","name":"3. Video representations with different spatial resolution and bitrate, with a single audio representation."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/2b/qualcomm/2/MultiRes.mpd","name":"4. Video representations with different spatial resolution and bitrate, with a single audio representation."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/2c/qualcomm/1/MultiResMPEG2.mpd","name":"5. Video representations with different spatial resolution and bitrate, with a single audio representation."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/2c/qualcomm/2/MultiRes.mpd","name":"6. Video representations with different spatial resolution and bitrate, with a single audio representation."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/3a/fraunhofer/aac-lc_stereo_without_video/ElephantsDream/elephants_dream_audio_only_aaclc_stereo_sidx.mpd","name":"1. Multiple audio representation with different audio bitrate."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/3a/fraunhofer/aac-lc_stereo_without_video/Sintel/sintel_audio_only_aaclc_stereo_sidx.mpd","name":"2. Multiple audio representation with different audio bitrate."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/3a/fraunhofer/heaac_stereo_without_video/ElephantsDream/elephants_dream_audio_only_heaac_stereo_sidx.mpd","name":"3. Multiple audio representation with different audio bitrate."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/3a/fraunhofer/heaac_stereo_without_video/Sintel/sintel_audio_only_heaac_stereo_sidx.mpd","name":"4. Multiple audio representation with different audio bitrate."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/3a/fraunhofer/heaacv2_stereo_without_video/ElephantsDream/elephants_dream_audio_only_heaacv2_stereo_sidx.mpd","name":"5. Multiple audio representation with different audio bitrate."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/3a/fraunhofer/heaacv2_stereo_without_video/Sintel/sintel_audio_only_heaacv2_stereo_sidx.mpd","name":"6. Multiple audio representation with different audio bitrate."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/3b/fraunhofer/aac-lc_stereo_with_video/ElephantsDream/elephants_dream_480p_aaclc_stereo_sidx.mpd","name":"7. Multiple audio representation with different audio bitrate."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/3b/fraunhofer/aac-lc_stereo_with_video/Sintel/sintel_480p_aaclc_stereo_sidx.mpd","name":"8. Multiple audio representation with different audio bitrate."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/3b/fraunhofer/heaac_stereo_with_video/ElephantsDream/elephants_dream_480p_heaac_stereo_sidx.mpd","name":"9. Multiple audio representation with different audio bitrate."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/3b/fraunhofer/heaac_stereo_with_video/Sintel/sintel_480p_heaac_stereo_sidx.mpd","name":"10.Multiple audio representation with different audio bitrate."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/3b/fraunhofer/heaacv2_stereo_with_video/ElephantsDream/elephants_dream_480p_heaacv2_stereo_sidx.mpd","name":"11. Multiple audio representation with different audio bitrate."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/3b/fraunhofer/heaacv2_stereo_with_video/Sintel/sintel_480p_heaacv2_stereo_sidx.mpd","name":"12. Multiple audio representation with different audio bitrate."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/3b/sony/SNE_DASH_CASE3B_SD_REVISED.mpd","name":"13. Multiple audio representation with different audio bitrate."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/4b/qualcomm/1/ED_OnDemand_5SecSeg_Subtitles.mpd","name":"1. One or more subtitle representations provided along with audio, video representations."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/4b/qualcomm/2/TearsOfSteel_onDem5secSegSubTitles.mpd","name":"2. One or more subtitle representations provided along with audio, video representations."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/4b/qualcomm/3/Solekai.mpd","name":"3. One or more subtitle representations provided along with audio, video representations."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/4c/1/dash.mpd","name":"4. One or more subtitle representations provided along with audio, video representations."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/5a/nomor/1.mpd","name":"1. Test content with more than one periods."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/5a/nomor/3.mpd","name":"2. Test content with more than one periods."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/5a/nomor/4.mpd","name":"3. Test content with more than one periods."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/5a/nomor/5.mpd","name":"4. Test content with more than one periods."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/5b/nomor/1.mpd","name":"5. Test content with more than one periods."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/5b/nomor/2.mpd","name":"6. Test content with more than one periods."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/5b/nomor/3.mpd","name":"7. Test content with more than one periods."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/5b/nomor/4.mpd","name":"8. Test content with more than one periods."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/5b/nomor/5.mpd","name":"9. Test content with more than one periods."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/5b/nomor/6.mpd","name":"10. Test content with more than one periods."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/5b/nomor/7.mpd","name":"11. Test content with more than one periods."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/5b/nomor/8.mpd","name":"12. Test content with more than one periods."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/5b/nomor/9.mpd","name":"13. Test content with more than one periods."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/5b/nomor/10.mpd","name":"14. Test content with more than one periods."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/5b/nomor/11.mpd","name":"15. Test content with more than one periods."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/6b/microsoft/CENC_SD_Time/CENC_SD_time_MPD.mpd","name":"1. Test content with encrypted representations."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/6b/microsoft/CENC_HD_Time/CENC_HD_time_MPD.mpd","name":"2. Test content with encrypted representations."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/6c/envivio/manifest.mpd","name":"3. Test content with encrypted representations."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/6c/envivio/manifest2.mpd","name":"4. Test content with encrypted representations."},
+                {"url":"http://html5.cablelabs.com:8100/cenc/prwv/dash.mpd","name":"5. Test content with encrypted representations."},
+                {"url":"http://html5.cablelabs.com:8100/cenc/prwv/dash_init.mpd","name":"6. Test content with encrypted representations."},
+                {"url":"http://54.72.87.160/stattodyn/statodyn.php?type=mpd&pt=1376172180&tsbd=120&origmpd=http%3A%2F%2Fdash.edgesuite.net%2Fdash264%2FTestCases%2F1b%2Fthomson-networks%2F2%2Fmanifest.mpd&php=http%3A%2F%2Fdasher.eu5.org%2Fstatodyn.php&mpd=&debug=0&hack=.mpd","name":"1. Test content with dynamic MPD type and no @minimumUpdatePeriod"},
+                {"url":"http://54.72.87.160/stattodyn/statodyn.php?type=mpd&pt=1376172390&tsbd=120&origmpd=http%3A%2F%2Fdash.edgesuite.net%2Fdash264%2FTestCases%2F2b%2Fthomson-networks%2F2%2Fmanifest.mpd&php=http%3A%2F%2Fdasher.eu5.org%2Fstatodyn.php&mpd=&debug=0&hack=.mpd","name":"2. Test content with dynamic MPD type and no @minimumUpdatePeriod"},
+                {"url":"http://54.72.87.160/stattodyn/statodyn.php?type=mpd&pt=1376172485&tsbd=10&origmpd=http%3A%2F%2Fdash.edgesuite.net%2Fdash264%2FTestCases%2F2b%2Fthomson-networks%2F1%2Fmanifest.mpd&php=http%3A%2F%2Fdasher.eu5.org%2Fstatodyn.php&mpd=&debug=0&hack=.mpd","name":"3. Test content with dynamic MPD type and no @minimumUpdatePeriod"},
+                {"url":"http://tvnlive.dashdemo.edgesuite.net/live/manifest.mpd","name":"1. Test content with dynamic MPD type and finite @minimumUpdatePeriod"},
+                {"url":"http://vm2.dashif.org/livesim/testpic_2s/Manifest.mpd","name":"2. Test content with dynamic MPD type and finite @minimumUpdatePeriod (livesim)"},
+                {"url":"http://vm2.dashif.org/livesim/start_1800/testpic_2s/Manifest.mpd","name":"3. Test content with dynamic MPD type and finite @minimumUpdatePeriod (livesim)"},
+                {"url":"http://vm2.dashif.org/livesim/mup_300/tsbd_500/testpic_2s/Manifest.mpd","name":"4. Test content with dynamic MPD type and finite @minimumUpdatePeriod (livesim)"},
+                {"url":"http://vm2.dashif.org/livesim/modulo_10/testpic_2s/Manifest.mpd","name":"5. Test content with dynamic MPD type and finite @minimumUpdatePeriod (livesim)"},
+                {"url":"http://vm2.dashif.org/livesim/periods_20/testpic_2s/Manifest.mpd","name":"6. Test content with dynamic MPD type and finite @minimumUpdatePeriod (livesim)"},
+                {"url":"http://vm2.dashif.org/livesim/scte35_2/testpic_2s/Manifest.mpd","name":"7. Test content with dynamic MPD type and finite @minimumUpdatePeriod (livesim)"},
+                {"url":"http://vm2.dashif.org/livesim/utc_direct-head/testpic_2s/Manifest.mpd","name":"8. Test content with dynamic MPD type and finite @minimumUpdatePeriod (livesim)"},
+                {"url":"http://vm2.dashif.org/livesim-dev/baseurl_d40_u20/baseurl_u40_d20/testpic_2s/Manifest.mpd","name":"9. Test content with dynamic MPD type and finite @minimumUpdatePeriod (livesim-dev)"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/9a/qualcomm/1/MultiRate.mpd","name":"1. Test content with a low bitrate and framerate representation to assist in trick modes."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/9a/qualcomm/2/MultiRate.mpd","name":"2. Test content with a low bitrate and framerate representation to assist in trick modes."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/9b/qualcomm/1/MultiRate.mpd","name":"3. Test content with a low bitrate and framerate representation to assist in trick modes."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/9b/qualcomm/2/MultiRate.mpd","name":"4. Test content with a low bitrate and framerate representation to assist in trick modes."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/9c/qualcomm/1/MultiRate.mpd","name":"5. Test content with a low bitrate and framerate representation to assist in trick modes."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCases/10a/1/iis_forest_short_poem_multi_lang_480p_single_adapt_aaclc_sidx.mpd","name":"1. Test content with multiple tracks, e.g. different audio language tracks, different video views etc."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesHD/1a/qualcomm/1/MultiRate.mpd","name":"1. All 1080p video representations encoded at different bitrates with a single audio representation."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesHD/1a/qualcomm/2/MultiRate.mpd","name":"2. All 1080p video representations encoded at different bitrates with a single audio representation."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesHD/1b/qualcomm/1/MultiRate.mpd","name":"3. All 1080p video representations encoded at different bitrates with a single audio representation."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesHD/1b/qualcomm/2/MultiRate.mpd","name":"4. All 1080p video representations encoded at different bitrates with a single audio representation."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesHD/1c/qualcomm/1/MultiRate.mpd","name":"5. All 1080p video representations encoded at different bitrates with a single audio representation."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesHD/2a/qualcomm/1/MultiResMPEG2.mpd","name":"1. Video representations with different spatial resolution and bitrate with at least on 1080p representation, with a single audio representation."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesHD/2a/qualcomm/2/MultiRes.mpd","name":"2. Video representations with different spatial resolution and bitrate with at least on 1080p representation, with a single audio representation."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesHD/2b/DTV/1/live.mpd","name":"3. Video representations with different spatial resolution and bitrate with at least on 1080p representation, with a single audio representation."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesHD/2b/qualcomm/1/MultiResMPEG2.mpd","name":"4. Video representations with different spatial resolution and bitrate with at least on 1080p representation, with a single audio representation."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesHD/2b/qualcomm/2/MultiRes.mpd","name":"5. Video representations with different spatial resolution and bitrate with at least on 1080p representation, with a single audio representation."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesHD/2c/qualcomm/1/MultiResMPEG2.mpd","name":"6. Video representations with different spatial resolution and bitrate with at least on 1080p representation, with a single audio representation."},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/dolby/1/1/ChID_voices_51_256_ddp.mpd","name":"6-CHANNEL ID"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/dolby/2/1/ChID_voices_71_768_ddp.mpd","name":"8-CHANNEL ID"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/dolby/3/1/ChID_voices_20_128_ddp.mpd","name":"SINGLE STEREO AUDIO TRACK"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/dolby/4/1/ChID_voices_71_384_448_768_ddp.mpd","name":"MULTIPLE ADAPTATION SETS"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/dolby/5/1/Living_Room_720p_20_96k_25fps.mpd","name":"1. AC-4 TEST VECTORS"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/dolby/5/2/Living_Room_720p_20_96k_2997fps.mpd","name":"2. AC-4 TEST VECTORS"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/dolby/5/3/Living_Room_720p_51_192k_25fps.mpd","name":"3. AC-4 TEST VECTORS"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/dolby/5/4/Living_Room_720p_51_192k_2997fps.mpd","name":"4. AC-4 TEST VECTORS"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/dolby/5/5/Living_Room_720p_51_51_192k_320k_25fps.mpd","name":"5. AC-4 TEST VECTORS"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/dolby/5/6/Living_Room_720p_51_51_192k_320k_2997fps.mpd","name":"6. AC-4 TEST VECTORS"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/dolby/5/7/Living_Room_720p_20_96k_25fps.mpd","name":"7. AC-4 TEST VECTORS"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/dolby/5/8/Living_Room_720p_20_96k_2997fps.mpd","name":"8. AC-4 TEST VECTORS"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/dolby/5/9/Living_Room_720p_51_192k_25fps.mpd","name":"9. AC-4 TEST VECTORS"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/dolby/5/10/Living_Room_720p_51_192k_2997fps.mpd","name":"10. AC-4 TEST VECTORS"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/dolby/5/11/Living_Room_720p_51_51_192k_320k_25fps.mpd","name":"11. AC-4 TEST VECTORS"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/dolby/5/12/Living_Room_720p_51_51_192k_320k_2997fps.mpd","name":"12. AC-4 TEST VECTORS"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/dts/1/Paint_dtsc_testA.mpd","name":"1. SINGLE MULTICHANNEL AUDIO TRACK"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/dts/1/Paint_dtse_testA.mpd","name":"2. SINGLE MULTICHANNEL AUDIO TRACK"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/dts/1/Paint_dtsh_testA.mpd","name":"3. SINGLE MULTICHANNEL AUDIO TRACK"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/dts/1/Paint_dtsl_testA.mpd","name":"4. SINGLE MULTICHANNEL AUDIO TRACK"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/dts/2/Paint_dtsc_testB.mpd","name":"1. SINGLE STEREO AUDIO TRACK"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/dts/2/Paint_dtse_testB.mpd","name":"2. SINGLE STEREO AUDIO TRACK"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/dts/2/Paint_dtsl_testB.mpd","name":"3. SINGLE STEREO AUDIO TRACK"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/dts/3/Paint_dtsc_testD.mpd","name":"1. MULTIPLE ADAPTATION SETS"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/dts/3/Paint_dtse_testD.mpd","name":"2. MULTIPLE ADAPTATION SETS"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/dts/3/Paint_dtsh_testD.mpd","name":"3. MULTIPLE ADAPTATION SETS"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/dts/3/Paint_dtsl_testD.mpd","name":"4, MULTIPLE ADAPTATION SETS"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/fraunhofer/HE-AACv2_Multichannel/1/6chID/6chId_480p_single_adapt_heaac5_1_sidx.mpd","name":"6-CHANNEL ID"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/fraunhofer/HE-AACv2_Multichannel/2/8chID/8ch_id_480p_single_adapt_heaac7_1_cf12_sidx.mpd","name":"8-CHANNEL ID"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/fraunhofer/HE-AACv2_Multichannel/3/ElephantsDream_6ch/elephants_dream_480p_heaac5_1_sidx.mpd","name":"1. MULTIPLE AUDIO REPRESENTATIONS"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/fraunhofer/HE-AACv2_Multichannel/3/Sintel_6ch/sintel_480p_heaac5_1_sidx.mpd","name":"2. MULTIPLE AUDIO REPRESENTATIONS"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/fraunhofer/HE-AACv2_Multichannel/3/Sintel_8ch/sintel_480p_heaac7_1_cf12_sidx.mpd","name":"3. MULTIPLE AUDIO REPRESENTATIONS"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/fraunhofer/MPEG_Surround/1/6chID/6chId_480p_single_adapt_mps5_1_sidx.mpd","name":"6-CHANNEL ID"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/fraunhofer/MPEG_Surround/2/ElephantsDream_6ch/elephants_dream_480p_mps5_1_sidx.mpd","name":"MULTIPLE AUDIO REPRESENTATIONS"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/fraunhofer/MPEG_Surround/2/Sintel_6ch/sintel_480p_mps5_1_sidx.mpd","name":"MULTIPLE AUDIO REPRESENTATIONS"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/fraunhofer/MPEGH_Stereo/1/sintel_audio_video_mpegh_stereo_sidx.mpd","name":"STEREO MPEG-H AUDIO"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/fraunhofer/MPEGH_51/1/sintel_audio_video_mpegh_5_1_brs_sidx.mpd","name":"5.1 MPEG-H AUDIO"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesMCA/fraunhofer/MPEGH_714/1/sintel_audio_video_mpegh_7_1_4_sidx.mpd","name":"7.1+4 MPEG-H AUDIO"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesHEVC/1a/1/TOS_OnDemand_HEVC_MultiRate.mpd","name":"1. HEVC SINGLE RESOLUTION MULTI-RATE"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesHEVC/1a/2/BBB_OnDemand_HEVC_MultiRate.mpd","name":"2. HEVC SINGLE RESOLUTION MULTI-RATE"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesHEVC/1a/9/tos_ondemand_multirate_hvc.mpd","name":"3. HEVC SINGLE RESOLUTION MULTI-RATE"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesHEVC/1b/1/TOS_Live_HEVC_MultiRate.mpd","name":"4. HEVC SINGLE RESOLUTION MULTI-RATE"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesHEVC/1b/2/BBB_Live_HEVC_MultiRate.mpd","name":"5. HEVC SINGLE RESOLUTION MULTI-RATE"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesHEVC/1b/10/tos_live_multirate_hvc.mpd","name":"6. HEVC SINGLE RESOLUTION MULTI-RATE"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesHEVC/2a/1/TOS_OnDemand_HEVC_MultiRes.mpd","name":"1. HEVC MULTI-RESOLUTION MULTI-RATE"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesHEVC/2a/2/BBB_OnDemand_HEVC_MultiRes.mpd","name":"2. HEVC MULTI-RESOLUTION MULTI-RATE"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesHEVC/2a/11/tos_ondemand_multires_hvc.mpd","name":"3. HEVC MULTI-RESOLUTION MULTI-RATE"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesHEVC/2a/12/tos_ondemand_multires_10bit_hev.mpd","name":"4. HEVC MULTI-RESOLUTION MULTI-RATE"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesHEVC/2a/13/tos_ondemand_multires_10bit_hvc.mpd","name":"5. HEVC MULTI-RESOLUTION MULTI-RATE"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesHEVC/2b/1/TOS_Live_HEVC_MultiRes.mpd","name":"6. HEVC MULTI-RESOLUTION MULTI-RATE"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesHEVC/2b/2/BBB_Live_HEVC_MultiRes.mpd","name":"7. HEVC MULTI-RESOLUTION MULTI-RATE"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesHEVC/2b/14/tos_live_multires_hvc.mpd","name":"8. HEVC MULTI-RESOLUTION MULTI-RATE"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesHEVC/2b/15/tos_live_multires_10bit_hev.mpd","name":"9. HEVC MULTI-RESOLUTION MULTI-RATE"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesHEVC/2b/16/tos_live_multires_10bit_hvc.mpd","name":"10. HEVC MULTI-RESOLUTION MULTI-RATE"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesHEVC/2b/17/bbb_live_multires_10bit_hev.mpd","name":"11. HEVC MULTI-RESOLUTION MULTI-RATE"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesHEVC/2b/18/bbb_live_multires_10bit_hvc.mpd","name":"12. HEVC MULTI-RESOLUTION MULTI-RATE"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesNegative/1/1.mpd","name":"1. NEGATIVE - ESSENTIAL PROPERTY"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesNegative/1/2.mpd","name":"2. NEGATIVE - ESSENTIAL PROPERTY"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesNegative/2/1.mpd","name":"1. NEGATIVE - CONTENT PROTECTION"},
+                {"url":"http://dash.edgesuite.net/dash264/TestCasesNegative/2/2.mpd","name":"1. NEGATIVE - CONTENT PROTECTION"}
+            ]
+        },
+        {
+            "name":"CableLabs Test Content",
+            "submenu":[
+                {
+                    "name":"CableLabs Cenc Widevine",
+                    "url":"http://html5.cablelabs.com:8100/cenc/wv/dash.mpd",
+                    "browsers":"",
+                    "protData":{
+                        "com.widevine.alpha":{
+                            "serverURL":"https://html5.cablelabs.com:8025"
+                        }
+                    }
+                },
+                {
+                    "name":"CableLabs Cenc Widevine/ClearKey",
+                    "url":"http://html5.cablelabs.com:8100/cenc/wvck/dash.mpd",
+                    "browsers":"",
+                    "protData":{
+                        "com.widevine.alpha":{
+                            "serverURL":"https://html5.cablelabs.com:8025"
+                        },
+                        "org.w3.clearkey":{
+                            "clearkeys":{
+                                "H3JbV93QV3mPNBKQON2UtQ":"ClKhDPHMtCouEx1vLGsJsA"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name":"CableLabs Cenc Widevine/ClearKey (InitData in MPD)",
+                    "url":"http://html5.cablelabs.com:8100/cenc/wvck/dash_initdata.mpd",
+                    "browsers":"",
+                    "protData":{
+                        "com.widevine.alpha":{
+                            "serverURL":"https://html5.cablelabs.com:8025"
+                        },
+                        "org.w3.clearkey":{
+                            "clearkeys":{
+                                "H3JbV93QV3mPNBKQON2UtQ":"ClKhDPHMtCouEx1vLGsJsA"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name":"CableLabs Cenc PlayReady",
+                    "url":"http://html5.cablelabs.com:8100/cenc/pr/dash.mpd",
+                    "browsers":""
+                },
+                {
+                    "name":"CableLabs Cenc PlayReady (InitData in MPD)",
+                    "url":"http://html5.cablelabs.com:8100/cenc/pr/dash_initdata.mpd",
+                    "browsers":""
+                },
+                {
+                    "name":"CableLabs Cenc PR/WV",
+                    "url":"http://html5.cablelabs.com:8100/cenc/prwv/dash.mpd",
+                    "browsers":"",
+                    "protData":{
+                        "com.widevine.alpha":{
+                            "drmtoday":true,
+                            "serverURL":"https://lic.staging.drmtoday.com/license-proxy-widevine/cenc/",
+                            "httpRequestHeaders":{
+                                "dt-custom-data":"eyJ1c2VySWQiOiIxMjM0NSIsInNlc3Npb25JZCI6ImV3b2dJQ0p3Y205bWFXeGxJaUE2SUhzS0lDQWdJQ0p3ZFhKamFHRnpaU0lnT2lCN0lIMEtJQ0I5TEFvZ0lDSnZkWFJ3ZFhSUWNtOTBaV04wYVc5dUlpQTZJSHNLSUNBZ0lDSmthV2RwZEdGc0lpQTZJR1poYkhObExBb2dJQ0FnSW1GdVlXeHZaM1ZsSWlBNklHWmhiSE5sTEFvZ0lDQWdJbVZ1Wm05eVkyVWlJRG9nWm1Gc2MyVUtJQ0I5TEFvZ0lDSnpkRzl5WlV4cFkyVnVjMlVpSURvZ1ptRnNjMlVLZlFvSyIsIm1lcmNoYW50IjoiY2FibGVsYWJzIn0K"
+                            }
+                        },
+                        "com.microsoft.playready":{
+                            "drmtoday":true,
+                            "serverURL":"https://lic.staging.drmtoday.com/license-proxy-headerauth/drmtoday/RightsManager.asmx",
+                            "httpRequestHeaders":{
+                                "http-header-CustomData":"eyJ1c2VySWQiOiIxMjM0NSIsInNlc3Npb25JZCI6ImV3b2dJQ0p3Y205bWFXeGxJaUE2SUhzS0lDQWdJQ0p3ZFhKamFHRnpaU0lnT2lCN0lIMEtJQ0I5TEFvZ0lDSnZkWFJ3ZFhSUWNtOTBaV04wYVc5dUlpQTZJSHNLSUNBZ0lDSmthV2RwZEdGc0lpQTZJR1poYkhObExBb2dJQ0FnSW1GdVlXeHZaM1ZsSWlBNklHWmhiSE5sTEFvZ0lDQWdJbVZ1Wm05eVkyVWlJRG9nWm1Gc2MyVUtJQ0I5TEFvZ0lDSnpkRzl5WlV4cFkyVnVjMlVpSURvZ1ptRnNjMlVLZlFvSyIsIm1lcmNoYW50IjoiY2FibGVsYWJzIn0K"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name":"CableLabs Cenc PR/WV (InitData in MPD)",
+                    "url":"http://html5.cablelabs.com:8100/cenc/prwv/dash_init.mpd",
+                    "browsers":"",
+                    "protData":{
+                        "com.widevine.alpha":{
+                            "drmtoday":true,
+                            "serverURL":"https://lic.staging.drmtoday.com/license-proxy-widevine/cenc/",
+                            "httpRequestHeaders":{
+                                "dt-custom-data":"eyJ1c2VySWQiOiIxMjM0NSIsInNlc3Npb25JZCI6ImV3b2dJQ0p3Y205bWFXeGxJaUE2SUhzS0lDQWdJQ0p3ZFhKamFHRnpaU0lnT2lCN0lIMEtJQ0I5TEFvZ0lDSnZkWFJ3ZFhSUWNtOTBaV04wYVc5dUlpQTZJSHNLSUNBZ0lDSmthV2RwZEdGc0lpQTZJR1poYkhObExBb2dJQ0FnSW1GdVlXeHZaM1ZsSWlBNklHWmhiSE5sTEFvZ0lDQWdJbVZ1Wm05eVkyVWlJRG9nWm1Gc2MyVUtJQ0I5TEFvZ0lDSnpkRzl5WlV4cFkyVnVjMlVpSURvZ1ptRnNjMlVLZlFvSyIsIm1lcmNoYW50IjoiY2FibGVsYWJzIn0K"
+                            }
+                        },
+                        "com.microsoft.playready":{
+                            "drmtoday":true,
+                            "serverURL":"https://lic.staging.drmtoday.com/license-proxy-headerauth/drmtoday/RightsManager.asmx",
+                            "httpRequestHeaders":{
+                                "http-header-CustomData":"eyJ1c2VySWQiOiIxMjM0NSIsInNlc3Npb25JZCI6ImV3b2dJQ0p3Y205bWFXeGxJaUE2SUhzS0lDQWdJQ0p3ZFhKamFHRnpaU0lnT2lCN0lIMEtJQ0I5TEFvZ0lDSnZkWFJ3ZFhSUWNtOTBaV04wYVc5dUlpQTZJSHNLSUNBZ0lDSmthV2RwZEdGc0lpQTZJR1poYkhObExBb2dJQ0FnSW1GdVlXeHZaM1ZsSWlBNklHWmhiSE5sTEFvZ0lDQWdJbVZ1Wm05eVkyVWlJRG9nWm1Gc2MyVUtJQ0I5TEFvZ0lDSnpkRzl5WlV4cFkyVnVjMlVpSURvZ1ptRnNjMlVLZlFvSyIsIm1lcmNoYW50IjoiY2FibGVsYWJzIn0K"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name":"CableLabs Cenc PR/WV (2-Period, 2-Key)",
+                    "url":"http://html5.cablelabs.com:8100/cenc/prwv_mp/dash.mpd",
+                    "browsers":"",
+                    "protData":{
+                        "com.widevine.alpha":{
+                            "drmtoday":true,
+                            "serverURL":"https://lic.staging.drmtoday.com/license-proxy-widevine/cenc/",
+                            "httpRequestHeaders":{
+                                "dt-custom-data":"eyJ1c2VySWQiOiIxMjM0NSIsInNlc3Npb25JZCI6ImV3b2dJQ0p3Y205bWFXeGxJaUE2SUhzS0lDQWdJQ0p3ZFhKamFHRnpaU0lnT2lCN0lIMEtJQ0I5TEFvZ0lDSnZkWFJ3ZFhSUWNtOTBaV04wYVc5dUlpQTZJSHNLSUNBZ0lDSmthV2RwZEdGc0lpQTZJR1poYkhObExBb2dJQ0FnSW1GdVlXeHZaM1ZsSWlBNklHWmhiSE5sTEFvZ0lDQWdJbVZ1Wm05eVkyVWlJRG9nWm1Gc2MyVUtJQ0I5TEFvZ0lDSnpkRzl5WlV4cFkyVnVjMlVpSURvZ1ptRnNjMlVLZlFvSyIsIm1lcmNoYW50IjoiY2FibGVsYWJzIn0K"
+                            }
+                        },
+                        "com.microsoft.playready":{
+                            "drmtoday":true,
+                            "serverURL":"https://lic.staging.drmtoday.com/license-proxy-headerauth/drmtoday/RightsManager.asmx",
+                            "httpRequestHeaders":{
+                                "http-header-CustomData":"eyJ1c2VySWQiOiIxMjM0NSIsInNlc3Npb25JZCI6ImV3b2dJQ0p3Y205bWFXeGxJaUE2SUhzS0lDQWdJQ0p3ZFhKamFHRnpaU0lnT2lCN0lIMEtJQ0I5TEFvZ0lDSnZkWFJ3ZFhSUWNtOTBaV04wYVc5dUlpQTZJSHNLSUNBZ0lDSmthV2RwZEdGc0lpQTZJR1poYkhObExBb2dJQ0FnSW1GdVlXeHZaM1ZsSWlBNklHWmhiSE5sTEFvZ0lDQWdJbVZ1Wm05eVkyVWlJRG9nWm1Gc2MyVUtJQ0I5TEFvZ0lDSnpkRzl5WlV4cFkyVnVjMlVpSURvZ1ptRnNjMlVLZlFvSyIsIm1lcmNoYW50IjoiY2FibGVsYWJzIn0K"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name":"Axinom Test Content",
+            "submenu":[
+                {
+                    "name": "Axinom multi-DRM (1080p)",
+                    "url": "http://media.axprod.net/TestVectors/v6-MultiDRM/Manifest_1080p.mpd",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "http://drm-widevine-licensing.axtest.net/AcquireLicense",
+                            "httpRequestHeaders": {
+                                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNmU1YTFkMjYtMjc1Ny00N2Q3LTgwNDYtZWFhNWQxZDM0YjVhIn1dfX0.yF7PflOPv9qHnu3ZWJNZ12jgkqTabmwXbDWk_47tLNE"
+                            }
+                        },
+                        "com.microsoft.playready": {
+                            "serverURL": "http://drm-playready-licensing.axtest.net/AcquireLicense",
+                            "httpRequestHeaders": {
+                                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNmU1YTFkMjYtMjc1Ny00N2Q3LTgwNDYtZWFhNWQxZDM0YjVhIn1dfX0.yF7PflOPv9qHnu3ZWJNZ12jgkqTabmwXbDWk_47tLNE"
+                            }
+                        }
+                    },
+                    "moreInfo": "https://github.com/Axinom/dash-test-vectors"
+                },
+                {
+                    "name": "Axinom multi-DRM (4K)",
+                    "url": "http://media.axprod.net/TestVectors/v6-MultiDRM/Manifest.mpd",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "http://drm-widevine-licensing.axtest.net/AcquireLicense",
+                            "httpRequestHeaders": {
+                                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNmU1YTFkMjYtMjc1Ny00N2Q3LTgwNDYtZWFhNWQxZDM0YjVhIn1dfX0.yF7PflOPv9qHnu3ZWJNZ12jgkqTabmwXbDWk_47tLNE"
+                            }
+                        },
+                        "com.microsoft.playready": {
+                            "serverURL": "http://drm-playready-licensing.axtest.net/AcquireLicense",
+                            "httpRequestHeaders": {
+                                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNmU1YTFkMjYtMjc1Ny00N2Q3LTgwNDYtZWFhNWQxZDM0YjVhIn1dfX0.yF7PflOPv9qHnu3ZWJNZ12jgkqTabmwXbDWk_47tLNE"
+                            }
+                        }
+                    },
+                    "moreInfo": "https://github.com/Axinom/dash-test-vectors"
+                },
+                {
+                    "name": "Axinom multi-DRM with generic EME PSSH (1080p)",
+                    "url": "http://media.axprod.net/TestVectors/v6-MultiDRM-GenericEmePssh/Manifest_1080p.mpd",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "http://drm-widevine-licensing.axtest.net/AcquireLicense",
+                            "httpRequestHeaders": {
+                                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNmU1YTFkMjYtMjc1Ny00N2Q3LTgwNDYtZWFhNWQxZDM0YjVhIn1dfX0.yF7PflOPv9qHnu3ZWJNZ12jgkqTabmwXbDWk_47tLNE"
+                            }
+                        },
+                        "com.microsoft.playready": {
+                            "serverURL": "http://drm-playready-licensing.axtest.net/AcquireLicense",
+                            "httpRequestHeaders": {
+                                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNmU1YTFkMjYtMjc1Ny00N2Q3LTgwNDYtZWFhNWQxZDM0YjVhIn1dfX0.yF7PflOPv9qHnu3ZWJNZ12jgkqTabmwXbDWk_47tLNE"
+                            }
+                        }
+                    },
+                    "moreInfo": "https://github.com/Axinom/dash-test-vectors"
+                },
+                {
+                    "name": "Axinom multi-DRM with generic EME PSSH (4K)",
+                    "url": "http://media.axprod.net/TestVectors/v6-MultiDRM-GenericEmePssh/Manifest.mpd",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "http://drm-widevine-licensing.axtest.net/AcquireLicense",
+                            "httpRequestHeaders": {
+                                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNmU1YTFkMjYtMjc1Ny00N2Q3LTgwNDYtZWFhNWQxZDM0YjVhIn1dfX0.yF7PflOPv9qHnu3ZWJNZ12jgkqTabmwXbDWk_47tLNE"
+                            }
+                        },
+                        "com.microsoft.playready": {
+                            "serverURL": "http://drm-playready-licensing.axtest.net/AcquireLicense",
+                            "httpRequestHeaders": {
+                                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNmU1YTFkMjYtMjc1Ny00N2Q3LTgwNDYtZWFhNWQxZDM0YjVhIn1dfX0.yF7PflOPv9qHnu3ZWJNZ12jgkqTabmwXbDWk_47tLNE"
+                            }
+                        }
+                    },
+                    "moreInfo": "https://github.com/Axinom/dash-test-vectors"
+                },
+                {
+                    "name": "Axinom multi-DRM with multiple keys (1080p)",
+                    "url": "http://media.axprod.net/TestVectors/v6-MultiDRM-MultiKey/Manifest_1080p.mpd",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "http://drm-widevine-licensing.axtest.net/AcquireLicense",
+                            "httpRequestHeaders": {
+                                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiMTUzMGQzYTAtNjkwNC00NDZhLTkxYTEtMzNhMTE1YWE4YzQxIn0seyJpZCI6ImM4M2ViNjM5LWU2NjQtNDNmOC1hZTk4LTQwMzliMGMxM2IyZCJ9LHsiaWQiOiIzZDhjYzc2Mi0yN2FjLTQwMGYtOTg5Zi04YWI1ZGM3ZDc3NzUifSx7ImlkIjoiYmQ4ZGFkNTgtMDMyZC00YzI1LTg5ZmEtYzdiNzEwZTgyYWMyIn1dfX0.9t18lFmZFVHMzpoZxYDyqOS0Bk_evGhTBw_F2JnAK2k"
+                            }
+                        },
+                        "com.microsoft.playready": {
+                            "serverURL": "http://drm-playready-licensing.axtest.net/AcquireLicense",
+                            "httpRequestHeaders": {
+                                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiMTUzMGQzYTAtNjkwNC00NDZhLTkxYTEtMzNhMTE1YWE4YzQxIn0seyJpZCI6ImM4M2ViNjM5LWU2NjQtNDNmOC1hZTk4LTQwMzliMGMxM2IyZCJ9LHsiaWQiOiIzZDhjYzc2Mi0yN2FjLTQwMGYtOTg5Zi04YWI1ZGM3ZDc3NzUifSx7ImlkIjoiYmQ4ZGFkNTgtMDMyZC00YzI1LTg5ZmEtYzdiNzEwZTgyYWMyIn1dfX0.9t18lFmZFVHMzpoZxYDyqOS0Bk_evGhTBw_F2JnAK2k"
+                            }
+                        }
+                    },
+                    "moreInfo": "https://github.com/Axinom/dash-test-vectors"
+                },
+                {
+                    "name": "Axinom multi-DRM with multiple keys (4K)",
+                    "url": "http://media.axprod.net/TestVectors/v6-MultiDRM-MultiKey/Manifest.mpd",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "http://drm-widevine-licensing.axtest.net/AcquireLicense",
+                            "httpRequestHeaders": {
+                                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiMTUzMGQzYTAtNjkwNC00NDZhLTkxYTEtMzNhMTE1YWE4YzQxIn0seyJpZCI6ImM4M2ViNjM5LWU2NjQtNDNmOC1hZTk4LTQwMzliMGMxM2IyZCJ9LHsiaWQiOiIzZDhjYzc2Mi0yN2FjLTQwMGYtOTg5Zi04YWI1ZGM3ZDc3NzUifSx7ImlkIjoiYmQ4ZGFkNTgtMDMyZC00YzI1LTg5ZmEtYzdiNzEwZTgyYWMyIn1dfX0.9t18lFmZFVHMzpoZxYDyqOS0Bk_evGhTBw_F2JnAK2k"
+                            }
+                        },
+                        "com.microsoft.playready": {
+                            "serverURL": "http://drm-playready-licensing.axtest.net/AcquireLicense",
+                            "httpRequestHeaders": {
+                                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiMTUzMGQzYTAtNjkwNC00NDZhLTkxYTEtMzNhMTE1YWE4YzQxIn0seyJpZCI6ImM4M2ViNjM5LWU2NjQtNDNmOC1hZTk4LTQwMzliMGMxM2IyZCJ9LHsiaWQiOiIzZDhjYzc2Mi0yN2FjLTQwMGYtOTg5Zi04YWI1ZGM3ZDc3NzUifSx7ImlkIjoiYmQ4ZGFkNTgtMDMyZC00YzI1LTg5ZmEtYzdiNzEwZTgyYWMyIn1dfX0.9t18lFmZFVHMzpoZxYDyqOS0Bk_evGhTBw_F2JnAK2k"
+                            }
+                        }
+                    },
+                    "moreInfo": "https://github.com/Axinom/dash-test-vectors"
+                },
+                {
+                    "name": "Axinom multi-DRM with multiple keys and multiple periods (1080p)",
+                    "url": "http://media.axprod.net/TestVectors/v6-MultiDRM-MultiKey-MultiPeriod/Manifest_1080p.mpd",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "http://drm-widevine-licensing.axtest.net/AcquireLicense",
+                            "httpRequestHeaders": {
+                                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNTNiZTc3NTctNzI4OC00YjZiLWIyMGEtZjA1YjY0YTRlZjc5In0seyJpZCI6IjBlZDgyMWE4LTgwZWQtNDBhYy1hODA0LTkyN2M5ZmRhZGJlOSJ9LHsiaWQiOiJlNDdkNzhjYS05NGRjLTQ1ZmItOWUzZC0yYTc3M2FlZjc0YjIifSx7ImlkIjoiMzJhMTQxZTktMjNhYi00NGZmLWE2YzctNTM0OWM4OTQ1MWNmIn0seyJpZCI6IjhkMDkxOTY2LTQ0YjUtNGNmOC04YTQ1LWVkMTJmZGIxOGQzNSJ9XX19.9YSK6QsDr4SYR7Q74ftq9mVtsT0ZkP3STE0zI-3mVIA"
+                            }
+                        },
+                        "com.microsoft.playready": {
+                            "serverURL": "http://drm-playready-licensing.axtest.net/AcquireLicense",
+                            "httpRequestHeaders": {
+                                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNTNiZTc3NTctNzI4OC00YjZiLWIyMGEtZjA1YjY0YTRlZjc5In0seyJpZCI6IjBlZDgyMWE4LTgwZWQtNDBhYy1hODA0LTkyN2M5ZmRhZGJlOSJ9LHsiaWQiOiJlNDdkNzhjYS05NGRjLTQ1ZmItOWUzZC0yYTc3M2FlZjc0YjIifSx7ImlkIjoiMzJhMTQxZTktMjNhYi00NGZmLWE2YzctNTM0OWM4OTQ1MWNmIn0seyJpZCI6IjhkMDkxOTY2LTQ0YjUtNGNmOC04YTQ1LWVkMTJmZGIxOGQzNSJ9XX19.9YSK6QsDr4SYR7Q74ftq9mVtsT0ZkP3STE0zI-3mVIA"
+                            }
+                        }
+                    },
+                    "moreInfo": "https://github.com/Axinom/dash-test-vectors"
+                },
+                {
+                    "name": "Axinom multi-DRM with multiple keys and multiple periods (4K)",
+                    "url": "http://media.axprod.net/TestVectors/v6-MultiDRM-MultiKey-MultiPeriod/Manifest.mpd",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "http://drm-widevine-licensing.axtest.net/AcquireLicense",
+                            "httpRequestHeaders": {
+                                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNTNiZTc3NTctNzI4OC00YjZiLWIyMGEtZjA1YjY0YTRlZjc5In0seyJpZCI6IjBlZDgyMWE4LTgwZWQtNDBhYy1hODA0LTkyN2M5ZmRhZGJlOSJ9LHsiaWQiOiJlNDdkNzhjYS05NGRjLTQ1ZmItOWUzZC0yYTc3M2FlZjc0YjIifSx7ImlkIjoiMzJhMTQxZTktMjNhYi00NGZmLWE2YzctNTM0OWM4OTQ1MWNmIn0seyJpZCI6IjhkMDkxOTY2LTQ0YjUtNGNmOC04YTQ1LWVkMTJmZGIxOGQzNSJ9XX19.9YSK6QsDr4SYR7Q74ftq9mVtsT0ZkP3STE0zI-3mVIA"
+                            }
+                        },
+                        "com.microsoft.playready": {
+                            "serverURL": "http://drm-playready-licensing.axtest.net/AcquireLicense",
+                            "httpRequestHeaders": {
+                                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNTNiZTc3NTctNzI4OC00YjZiLWIyMGEtZjA1YjY0YTRlZjc5In0seyJpZCI6IjBlZDgyMWE4LTgwZWQtNDBhYy1hODA0LTkyN2M5ZmRhZGJlOSJ9LHsiaWQiOiJlNDdkNzhjYS05NGRjLTQ1ZmItOWUzZC0yYTc3M2FlZjc0YjIifSx7ImlkIjoiMzJhMTQxZTktMjNhYi00NGZmLWE2YzctNTM0OWM4OTQ1MWNmIn0seyJpZCI6IjhkMDkxOTY2LTQ0YjUtNGNmOC04YTQ1LWVkMTJmZGIxOGQzNSJ9XX19.9YSK6QsDr4SYR7Q74ftq9mVtsT0ZkP3STE0zI-3mVIA"
+                            }
+                        }
+                    },
+                    "moreInfo": "https://github.com/Axinom/dash-test-vectors"
+                },
+                {
+                    "name": "Axinom clear (1080p)",
+                    "url": "http://media.axprod.net/TestVectors/v6-Clear/Manifest_1080p.mpd",
+                    "moreInfo": "https://github.com/Axinom/dash-test-vectors"
+                },
+                {
+                    "name": "Axinom clear (4K)",
+                    "url": "http://media.axprod.net/TestVectors/v6-Clear/Manifest.mpd",
+                    "moreInfo": "https://github.com/Axinom/dash-test-vectors"
+                },
+                {
+                    "name": "Axinom clear multi-period (1080p)",
+                    "url": "http://media.axprod.net/TestVectors/v6-Clear/MultiPeriod_Manifest_1080p.mpd",
+                    "moreInfo": "https://github.com/Axinom/dash-test-vectors"
+                },
+                {
+                    "name": "Axinom clear multi-period (4K)",
+                    "url": "http://media.axprod.net/TestVectors/v6-Clear/MultiPeriod_Manifest.mpd",
+                    "moreInfo": "https://github.com/Axinom/dash-test-vectors"
+                }
+            ]
+        },
+        {
+            "name":"BBC R&D Test Content",
+            "submenu":[
+                {
+                    "name":"BBC R&D Testcard",
+                    "url":"http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-events.mpd",
+                    "browsers":"",
+                    "moreInfo":"http://rdmedia.bbc.co.uk/dash/ondemand/testcard/"
+                },
+                {
+                    "name":"BBC R&D EBU-TT-D Subtitling Test",
+                    "url":"http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/1/client_manifest-all.mpd",
+                    "browsers":"",
+                    "moreInfo":"http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/"
+                }
+            ]
+        },
+        {
+            "name":"Microsoft Test Content",
+            "submenu":[
+                {
+                    "name":"Microsoft #1",
+                    "url":"http://wams.edgesuite.net/media/SintelTrailer_MP4_from_WAME/sintel_trailer-1080p.ism/manifest(format=mpd-time-csf)",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"Microsoft #2",
+                    "url":"http://wams.edgesuite.net/media/SintelTrailer_Smooth_from_WAME/sintel_trailer-1080p.ism/manifest(format=mpd-time-csf)",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"Microsoft #3",
+                    "url":"http://wams.edgesuite.net/media/SintelTrailer_Smooth_from_WAME_720p_Main_Profile/sintel_trailer-720p.ism/manifest(format=mpd-time-csf)",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"Microsoft #4",
+                    "url":"http://wams.edgesuite.net/media/MPTExpressionData01/ElephantsDream_1080p24_IYUV_2ch.ism/manifest(format=mpd-time-csf)",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"Microsoft #5",
+                    "url":"http://wams.edgesuite.net/media/MPTExpressionData02/BigBuckBunny_1080p24_IYUV_2ch.ism/manifest(format=mpd-time-csf)",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"Microsoft Cenc #1",
+                    "url":"http://wams.edgesuite.net/media/SintelTrailer_Smooth_from_WAME_720p_Main_Profile_CENC/CENC/sintel_trailer-720p.ism/manifest(format=mpd-time-csf)",
+                    "browsers":"i"
+                },
+                {
+                    "name":"Microsoft Cenc #4",
+                    "url":"http://wams.edgesuite.net/media/SintelTrailer_Smooth_from_WAME_CENC/CENC/sintel_trailer-1080p.ism/manifest(format=mpd-time-csf)",
+                    "browsers":"i"
+                }
+            ]
+        },
+        {
+            "name":"Wowza Test Content",
+            "submenu":[
+                {
+                    "name":"Clear Dynamic SegmentTimeline",
+                    "url": "http://wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mvtime.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"Clear Dynamic SegmentTemplate",
+                    "url": "http://wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mvnumber.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"Clear Dynamic SegmentList",
+                    "url": "http://wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mvlist.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"Clear Static SegmentTimeline",
+                    "url": "http://wowzaec2demo.streamlock.net/vod/_definst_/ElephantsDream/smil:ElephantsDream.smil/manifest_mvtime.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"Clear Static SegmentTemplate",
+                    "url": "http://wowzaec2demo.streamlock.net/vod/_definst_/ElephantsDream/smil:ElephantsDream.smil/manifest_mvnumber.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"Clear Static SegmentList",
+                    "url": "http://wowzaec2demo.streamlock.net/vod/_definst_/ElephantsDream/smil:ElephantsDream.smil/manifest_mvlist.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"Widevine Dynamic SegmentTimeline",
+                    "url": "http://wowzaec2demo.streamlock.net/live/bigbuckbunny-enc-wv.stream/manifest_mvtime.mpd",
+                    "browsers":"cdsbi",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "http://widevine-proxy.appspot.com/proxy"
+                        }
+                    }
+                },
+                {
+                    "name":"Widevine Dynamic SegmentTemplate",
+                    "url": "http://wowzaec2demo.streamlock.net/live/bigbuckbunny-enc-wv.stream/manifest_mvnumber.mpd",
+                    "browsers":"cdsbi",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "http://widevine-proxy.appspot.com/proxy"
+                        }
+                    }
+                },
+                {
+                    "name":"Widevine Dynamic SegmentList",
+                    "url": "http://wowzaec2demo.streamlock.net/live/bigbuckbunny-enc-wv.stream/manifest_mvlist.mpd",
+                    "browsers":"cdsbi",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "http://widevine-proxy.appspot.com/proxy"
+                        }
+                    }
+                },
+                {
+                    "name":"Widevine Static SegmentTimeline",
+                    "url": "http://wowzaec2demo.streamlock.net/vod/elephantsdream_1100kbps-enc-wv.mp4/manifest_mvtime.mpd",
+                    "browsers":"cdsbi",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "http://widevine-proxy.appspot.com/proxy"
+                        }
+                    }
+                },
+                {
+                    "name":"Widevine Static SegmentTemplate",
+                    "url": "http://wowzaec2demo.streamlock.net/vod/elephantsdream_1100kbps-enc-wv.mp4/manifest_mvnumber.mpd",
+                    "browsers":"cdsbi",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "http://widevine-proxy.appspot.com/proxy"
+                        }
+                    }
+                },
+                {
+                    "name":"Widevine Static SegmentList",
+                    "url": "http://wowzaec2demo.streamlock.net/vod/elephantsdream_1100kbps-enc-wv.mp4/manifest_mvlist.mpd ",
+                    "browsers":"cdsbi",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "http://widevine-proxy.appspot.com/proxy"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name":"D-DASH Test Content",
+            "submenu":[
+                {
+                    "name":"D-Dash #1",
+                    "url":"http://www-itec.uni-klu.ac.at/dash/ddash/mpdGenerator.php?segmentlength=2&type=full",
+                    "browsers":""
+                },
+                {
+                    "name":"D-Dash #2",
+                    "url":"http://www-itec.uni-klu.ac.at/dash/ddash/mpdGenerator.php?segmentlength=4&type=full",
+                    "browsers":""
+                },
+                {
+                    "name":"D-Dash #3",
+                    "url":"http://www-itec.uni-klu.ac.at/dash/ddash/mpdGenerator.php?segmentlength=6&type=full",
+                    "browsers":""
+                },
+                {
+                    "name":"D-Dash #4",
+                    "url":"http://www-itec.uni-klu.ac.at/dash/ddash/mpdGenerator.php?segmentlength=8&type=full",
+                    "browsers":""
+                },
+                {
+                    "name":"D-Dash #5",
+                    "url":"http://www-itec.uni-klu.ac.at/dash/ddash/mpdGenerator.php?segmentlength=10&type=full",
+                    "browsers":""
+                },
+                {
+                    "name":"D-Dash #6",
+                    "url":"http://www-itec.uni-klu.ac.at/dash/ddash/mpdGenerator.php?segmentlength=15&type=full",
+                    "browsers":""
+                }
+            ]
+        },
+        {
+            "name":"Subtitles and Captions",
+            "submenu":[
+                {
+                    "name":"TTML Segmented Subtitles VoD",
+                    "url":"http://vm2.dashif.org/dash/vod/testpic_2s/multi_subs.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"TTML Segmented Subtitles Live (livesim)",
+                    "url":"http://vm2.dashif.org/livesim/testpic_2s/multi_subs.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"TTML Sideloaded XML Subtitles",
+                    "url":"http://vm2.dashif.org/dash/vod/testpic_2s/xml_subs.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"Embedded CEA-608 Closed Captions and TTML segments VoD",
+                    "url":"http://vm2.dashif.org/dash/vod/testpic_2s/cea608_and_segs.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"Embedded CEA-608 Closed Captions and TTML segments Live (livesim)",
+                    "url":"http://vm2.dashif.org/livesim/testpic_2s/cea608_and_segs.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"TTML Segmented 'snaking' subtitles (with random text) (Ondemand)",
+                    "url":"http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/1/client_manifest-snake.mpd",
+                    "browsers":"cdsbi",
+                    "moreInfo":"http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/"
+                },
+                {
+                    "name":"TTML Image Subtitles embedded (VoD)",
+                    "url":"http://vm2.dashif.org/dash/vod/testpic_2s/img_subs.mpd",
+                    "browsers":"cdsbi",
+                    "moreInfo":"http://vm2.dashif.org/dash/vod/testpic_2s/img_subs_info.txt"
+                }
+            ]
+        },
+        {
+            "name":"Audio-only",
+            "submenu":[
+                {
+                    "name":"48k AAC-LC Stereo Beeps (Live)",
+                    "url":"http://vm2.dashif.org/livesim/testpic_2s/audio.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"48k AAC-LC Stereo Beeps (Ondemand)",
+                    "url":"http://vm2.dashif.org/dash/vod/testpic_2s/audio.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"128k AAC-LC Stereo 1kHz Tone (Ondemand)",
+                    "url":"http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-audio-1kHz.mpd",
+                    "browsers":"cdsbi",
+                    "moreInfo":"http://rdmedia.bbc.co.uk/dash/ondemand/testcard/"
+                },
+                {
+                    "name":"128k/320k AAC-LC Stereo/5.1 'Testcard' (Ondemand)",
+                    "url":"http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-audio.mpd",
+                    "browsers":"cdsbi",
+                    "moreInfo":"http://rdmedia.bbc.co.uk/dash/ondemand/testcard/"
+                }
+            ]
+        },
+        {
+            "name":"Other samples",
+            "submenu":[
+                {
+                    "name":"4K",
+                    "url":"http://dash.edgesuite.net/akamai/streamroot/050714/Spring_4Ktest.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"Segment List",
+                    "url":"http://www.digitalprimates.net/dash/streams/gpac/mp4-main-multi-mpd-AV-NBS.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"Segment Template",
+                    "url":"http://www.digitalprimates.net/dash/streams/mp4-live-template/mp4-live-mpd-AV-BS.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"Unified Streaming - Timeline",
+                    "url":"http://demo.unified-streaming.com/video/ateam/ateam.ism/ateam.mpd",
+                    "browsers":"cdsbi"
+                },
+                {
+                    "name":"Unified Streaming Live",
+                    "url":"http://live.unified-streaming.com/loop/loop.isml/loop.mpd?format=mp4&session_id=25020",
+                    "browsers":""
+                }
+            ]
+        }
+    ]
+}

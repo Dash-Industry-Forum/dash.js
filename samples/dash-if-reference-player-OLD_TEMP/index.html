@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html ng-app="DashPlayer" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Dash JavaScript Player</title>
+    <meta name="description" content="" />
+    <link rel="icon" type="image/x-icon" href="http://dashif.org/wp-content/uploads/2014/12/dashif.ico" />
+    <meta name="viewport" content="width=device-width, height=device-height, user-scalable=no">
+
+    <link rel="stylesheet" href="app/lib/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="app/lib/bootstrap/css/bootstrap-glyphicons.css">
+    <link rel="stylesheet" href="app/lib/angular.treeview/css/angular.treeview.css">
+    <link rel="stylesheet" href="app/css/main.css">
+    <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
+
+    <!-- http://jquery.com/ -->
+    <script src="app/lib/jquery/jquery-1.10.2.min.js"></script>
+
+    <!-- http://angularjs.org/ -->
+    <script src="app/lib/angular/angular.min.js"></script>
+    <script src="app/lib/angular/angular-resource.min.js"></script>
+
+    <!-- http://getbootstrap.com/ -->
+    <script src="app/lib/bootstrap/js/bootstrap.min.js"></script>
+
+    <!-- https://github.com/madebyhiro/codem-isoboxer -->
+    <!--<script src="../../externals/iso_boxer.min.js"></script>-->
+
+    <!-- http://bannister.us/weblog/2007/06/09/simple-base64-encodedecode-javascript/ -->
+    <!--<script src="../../externals/base64.js"></script>-->
+
+    <!-- Misc Libs -->
+    <!--<script src="../../externals/xml2json.js"></script>-->
+    <!--<script src="../../externals/objectiron.js"></script>-->
+
+    <!-- http://www.flotcharts.org/ -->
+    <script src="app/lib/flot/jquery.flot.js"></script>
+
+    <!-- https://github.com/eu81273/angular.treeview -->
+    <script src="app/lib/angular.treeview/angular.treeview.min.js"></script>
+
+    <script src="../../dist/dash.all.debug.js"></script>
+    <!--dash.all.min.js should be used in production over dash.all.debug.js
+        Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
+    <!--<script src="../../dist/dash.all.min.js"></script>-->
+
+    <!-- App -->
+    <script src="app/metrics.js"></script>
+    <script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
+    <script src="app/main.js"></script>
+</head>
+<body ng-controller="DashController">
+    <div class="modal fade" id="streamModal">
+        <div class="modal-dialog">
+            <div class="list-group modal-list">
+                <a
+                   ng-repeat="item in availableStreams"
+                   href="#"
+                   class="list-group-item"
+                   ng-click="setStream(item)"
+                   data-dismiss="modal">
+                    {{item.name}}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row title-header">
+            <a href="http://dashif.org/" target="_blank"><img class="image" src="app/img/if.png"/></a>
+            <span id="big-title">Reference Client</span>
+            <span>{{version}}</span>
+
+            <div class="github">
+                <iframe
+                    id="star-button"
+                    src="http://ghbtns.com/github-btn.html?user=Dash-Industry-Forum&repo=dash.js&type=watch&count=true&size=large"
+                    height="30"
+                    width="170"
+                    frameborder="0"
+                    scrolling="0"
+                    allowTransparency="true"
+                    class="hidden-xs github-button">
+                </iframe>
+                <iframe
+                    id="fork-button"
+                    src="http://ghbtns.com/github-btn.html?user=Dash-Industry-Forum&repo=dash.js&type=fork&count=true&size=large"
+                    height="30"
+                    width="170"
+                    frameborder="0"
+                    scrolling="0"
+                    allowTransparency="true github-button">
+                </iframe>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="input-group">
+                <div class="input-group-btn">
+                    <a role="button" data-toggle="dropdown" class="btn btn-primary" data-target="#" href="/page.html">
+                        Sample Streams <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu multi-level" role="menu" aria-labelledby="dropdownMenu">
+                        <li class="dropdown-submenu" ng-if="item.submenu" ng-repeat="item in availableStreams">
+
+                            <a tabindex="-1" href="#">{{item.name}}</a>
+                            <ul class="dropdown-menu">
+                                <li ng-repeat="subitem in item.submenu">
+                                    <a title="{{ subitem.moreInfo && 'See ' + subitem.moreInfo + ' for more information' || undefined }}" ng-click="setStream(subitem)">{{subitem.name}}</a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+                <input type="text" class="form-control" placeholder="Enter your manifest URL here" ng-model="selectedItem.url">
+                <span class="input-group-btn">
+                    <button class="btn btn-primary" type="button" ng-click="doLoad()">Load</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="dash-video-player col-md-9">
+                <div id="videoContainer">
+                    <video controls="true"></video>
+                    <div id="video-caption"></div>
+                    <div id="videoController" class="video-controller unselectable">
+                        <div id="playPauseBtn" class="btn-play-pause" title="Play/Pause">
+                            <span id="iconPlayPause" class="icon-play"></span>
+                        </div>
+                        <span id="videoTime" class="time-display">00:00:00</span>
+
+                        <div id="fullscreenBtn" class="btn-fullscreen" title="Fullscreen">
+                            <span class="icon-fullscreen-enter"></span>
+                        </div>
+                        <input type="range" id="volumebar" class="volumebar" value="1" min="0" max="1" step=".01" />
+
+                        <div id="muteBtn" class="btn-mute" title="Mute">
+                            <span id="iconMute" class="icon-mute-off"></span>
+                        </div>
+                        <div id="captionBtn" class="btn-caption" title="Closed Caption">
+                            <span class="icon-caption"></span>
+                        </div>
+
+                        <span id="videoDuration" class="duration-display">00:00:00</span>
+
+                        <div class="seekContainer">
+                            <input type="range" id="seekbar" value="0" class="seekbar" min="0" step="0.01"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="panel">
+                    <div class="panel-heading panel-top">
+                        <span class="panel-title">ABR</span>
+                        <div class="btn-group">
+                            <button
+                                type="button"
+                                class="btn btn-default"
+                                ng-class="{active:abrEnabled == false}"
+                                ng-click="setAbrEnabled(false)">
+                                <span>Off</span>
+                            </button>
+                            <button
+                                type="button"
+                                class="btn btn-default active"
+                                ng-class="{active:abrEnabled == true}"
+                                ng-click="setAbrEnabled(true)">
+                                <span>On</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="panel-heading panel-top">
+                        <span class="panel-title">Save settings</span>
+                        <div class="btn-group">
+                            <button
+                                type="button"
+                                class="btn btn-default"
+                                ng-class="{active:mediaSettingsCacheEnabled == false}"
+                                ng-click="setMediaSettingsCacheEnabled(false)">
+                                <span>Off</span>
+                            </button>
+                            <button
+                                type="button"
+                                class="btn btn-default active"
+                                ng-class="{active:mediaSettingsCacheEnabled == true}"
+                                ng-click="setMediaSettingsCacheEnabled(true)">
+                                <span>On</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="panel-heading panel-top">
+                        <span class="panel-title">Use BOLA</span>
+                        <div class="btn-group">
+                            <button
+                                    type="button"
+                                    class="btn btn-default active"
+                                    ng-class="{active:bolaEnabled == false}"
+                                    ng-click="setBolaEnabled(false)">
+                                <span>Off</span>
+                            </button>
+                            <button
+                                    type="button"
+                                    class="btn btn-default"
+                                    ng-class="{active:bolaEnabled  == true}"
+                                    ng-click="setBolaEnabled(true)">
+                                <span>On</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-heading panel-top">
+                        <span class="panel-title">Video</span>
+                        <div class="btn-group">
+                            <button
+                                type="button"
+                                class="btn btn-default"
+                                ng-click="abrDown('video')">
+                                <span class="glyphicon glyphicon-minus"></span>
+                            </button>
+                            <button
+                                type="button"
+                                class="btn btn-default"
+                                ng-click="abrUp('video')">
+                                <span class="glyphicon glyphicon-plus"></span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="panel-body panel-stats">
+                        <p class="text-warning">{{videoBitrate}} kbps</p>
+                        <p class="text-primary">Rep Index: <span class="text-success">{{videoIndex}}</span><span class="text-warning">{{videoPendingIndex}}</span>/<span class="text-success">{{videoMaxIndex}}</span></p>
+                        <p class="text-primary">Buffer Length: <span class="text-success">{{videoBufferLength}}</span></p>
+                        <p class="text-primary">Latency: <span class="text-success">last {{videoRatioCount}} segments</span></p>
+                        <p class="text-success" title="[low] < [average] < [high]">{{videoLatency}}</p>
+                        <p class="text-primary">Download: <span class="text-success">last {{videoRatioCount}} segments</span></p>
+                        <p class="text-success" title="[low] < [average] < [high]">{{videoDownload}}</p>
+                        <p class="text-primary">Ratio: <span class="text-success">last {{videoRatioCount}} segments</span></p>
+                        <p class="text-success" title="[low] < [average] < [high]">{{videoRatio}}</p>
+                        <p class="text-primary">Dropped Frames: <span class="text-success">{{videoDroppedFrames}}</span></p>
+                    </div>
+                    <ul class="nav nav-tabs">
+                        <li class="dropdown">
+                            <a href="#" id="videoTracksDropdown" class="dropdown-toggle" data-toggle="dropdown">Tracks <b class="caret"></b></a>
+                            <ul class="dropdown-menu" role="menu">
+                                <li ng-repeat="track in availableTracks.video" ng-click="switchTrack(track, 'video')">
+                                    <a>lang: {{track.lang || "undefined"}}, viewpoint: {{track.viewpoint || "undefined"}}, roles: {{track.roles || "undefined"}}</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="dropdown">
+                            <a href="#" id="videoTrackSwitchModeDropdown" class="dropdown-toggle" data-toggle="dropdown">Track switch mode<b class="caret"></b></a>
+                            <ul class="dropdown-menu" role="menu">
+                                <li ng-click="changeTrackSwitchMode('alwaysReplace', 'video')"><a>always replace</a></li>
+                                <li ng-click="changeTrackSwitchMode('neverReplace', 'video')"><a>never replace</a></li>
+                            </ul>
+                        </li>
+                        <input type="text" class="form-control" placeholder="initial role, e.g. 'alternate'" ng-model="initialSettings.video">
+                    </ul>
+                </div>
+                <div class="panel">
+                    <div class="panel-heading panel-top">
+                        <span class="panel-title">Audio</span>
+                        <div class="btn-group">
+                            <button
+                                type="button"
+                                class="btn btn-default"
+                                ng-click="abrDown('audio')">
+                                <span class="glyphicon glyphicon-minus"></span>
+                            </button>
+                            <button
+                                type="button"
+                                class="btn btn-default"
+                                ng-click="abrUp('audio')">
+                                <span class="glyphicon glyphicon-plus"></span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="panel-body panel-stats">
+                        <p class="text-warning">{{audioBitrate}} kbps</p>
+                        <p class="text-primary">Rep Index: <span class="text-success">{{audioIndex}}</span><span class="text-warning">{{audioPendingIndex}}</span>/<span class="text-success">{{audioMaxIndex}}</span></p>
+                        <p class="text-primary">Buffer Length: <span class="text-success">{{audioBufferLength}}</span></p>
+                        <p class="text-primary">Latency: <span class="text-success">last {{audioLatencyCount}} segments</span></p>
+                        <p class="text-success" title="[low] < [average] < [high]">{{audioLatency}}</p>
+                        <p class="text-primary">Download: <span class="text-success">last {{audioDownloadCount}} segments</span></p>
+                        <p class="text-success" title="[low] < [average] < [high]">{{audioDownload}}</p>
+                        <p class="text-primary">Ratio: <span class="text-success">last {{audioRatioCount}} segments</span></p>
+                        <p class="text-success" title="[low] < [average] < [high]">{{audioRatio}}</p>
+                    </div>
+                    <ul class="nav nav-tabs">
+                        <li class="dropdown">
+                            <a href="#" id="audioTracksDropdown" class="dropdown-toggle" data-toggle="dropdown">Tracks <b class="caret"></b></a>
+                            <ul class="dropdown-menu" role="menu">
+                                <li ng-repeat="track in availableTracks.audio" ng-click="switchTrack(track, 'audio')">
+                                    <a>lang: {{track.lang || "undefined"}}, viewpoint: {{track.viewpoint || "undefined"}}, roles: {{track.roles || "undefined"}}</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="dropdown">
+                            <a href="#" id="audioTrackSwitchModeDropdown" class="dropdown-toggle" data-toggle="dropdown">Track switch mode<b class="caret"></b></a>
+                            <ul class="dropdown-menu" role="menu">
+                                <li ng-click="changeTrackSwitchMode('alwaysReplace', 'audio')"><a>always replace</a></li>
+                                <li ng-click="changeTrackSwitchMode('neverReplace', 'audio')"><a>never replace</a></li>
+                            </ul>
+                        </li>
+                        <input type="text" class="form-control" placeholder="initial lang, e.g. 'en'" ng-model="initialSettings.audio">
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="panel">
+                <div class="panel-heading panel-top">
+                    <span class="panel-title">Charts</span>
+                    <div class="btn-group">
+                        <button
+                            type="button"
+                            class="btn btn-default"
+                            ng-class="{active:showCharts == false}"
+                            ng-click="setCharts(false)">
+                            Hide
+                        </button>
+                        <button
+                            type="button"
+                            class="btn btn-default"
+                            ng-class="{active:showCharts == true}"
+                            ng-click="setCharts(true)">
+                            Show
+                        </button>
+                    </div>
+                </div>
+                <div ng-switch on="showCharts">
+                    <div class="panel-body panel-stats" ng-switch-when="true">
+                        <ul class="nav nav-tabs">
+                            <li><a href="#bufferLevel" data-toggle="tab" ng-click="setBufferLevelChart(true)">Buffer level</a></li>
+                            <li><a href="#manifestInfo" data-toggle="tab">Manifest update info</a></li>
+                        </ul>
+                        <div id="chartTabContent" class="tab-content">
+                            <div class="tab-pane" id="bufferLevel" ng-class="{active:showBufferLevel == true}">
+                                <div ng-switch on="showBufferLevel">
+                                    <div class="panel-body panel-stats" ng-switch-when="true">
+                                        <chart ng-model="bufferData"></chart>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="manifestInfo">
+                                <div>
+                                    <div ng-repeat="info in manifestUpdateInfo" class="manifest-info-box manifest-info-item">
+                                        <div class="manifest-info-content" header="Manifest type"><span class="text-success">{{info.type}}</span></div><br/>
+                                        <div class="manifest-info-content" header="Request time (delta)"><span class="text-success">{{info.requestTime}}</span><span class="text-warning"> {{info.requestTimeDelta}}</span></div><br/>
+                                        <div class="manifest-info-content" header="Fetch time (delta)"><span class="text-success">{{info.fetchTime}}</span><span class="text-warning"> {{info.fetchTimeDelta}}</span></div><br/>
+                                        <div class="manifest-info-content" header="Availability start time (delta)"><span class="text-success">{{info.availabilityStartTime}}</span><span class="text-warning"> {{info.availabilityStartTimeDelta}}</span></div><br/>
+                                        <div class="manifest-info-content" header="Presentation start time (delta)"><span class="text-success">{{info.presentationStartTime}}</span><span class="text-warning"> {{info.presentationStartTimeDelta}}</span></div><br/>
+                                        <div class="manifest-info-content" header="Client time offset (delta)"><span class="text-success">{{info.clientTimeOffset}}</span><span class="text-warning"> {{info.clientTimeOffsetDelta}}</span></div><br/>
+                                        <div class="manifest-info-content" header="Current time (delta)"><span class="text-success">{{info.currentTime}}</span><span class="text-warning"> {{info.currentTimeDelta}}</span></div><br/>
+                                        <div class="manifest-info-content" header="Latency (delta)"><span class="text-success">{{info.latency}}</span><span class="text-warning"> {{info.latencyDelta}}</span></div><br/>
+                                        <div class="repeat-container" ng-repeat="stream in info.streamInfo">
+                                            <div class="manifest-info-content" header="Period"><span class="text-success">{{stream.index}}</span></div><br/>
+                                            <div class="manifest-info-content manifest-nested-info" header="Id"><span class="text-success">{{stream.id}}</span></div><br/>
+                                            <div class="manifest-info-content manifest-nested-info" header="Start"><span class="text-success">{{stream.start}}</span><span class="text-warning"> {{stream.startDelta}}</span></div><br/>
+                                            <div class="manifest-info-content manifest-nested-info" header="Duration"><span class="text-success">{{stream.duration}}</span><span class="text-warning"> {{stream.durationDelta}}</span></div><br/>
+                                            <div class="repeat-container" ng-repeat="range in info.buffered">
+                                                <div class="manifest-info-content" header="Buffered"><span class="text-success"></span></div><br/>
+                                                <div class="manifest-info-content manifest-nested-info" header="Start"><span class="text-success">{{range.start}}</span></div><br/>
+                                                <div class="manifest-info-content manifest-nested-info" header="End"><span class="text-success">{{range.end}}</span></div><br/>
+                                                <div class="manifest-info-content manifest-nested-info" header="Size"><span class="text-success">{{range.size}}</span></div><br/>
+                                            </div>
+                                            <div class="repeat-container" ng-repeat="track in info.trackInfo" ng-show="track.streamIndex == stream.index">
+                                                <div class="manifest-info-content" header="Representation"><span class="text-success">{{track.index}}</span></div><br/>
+                                                <div class="manifest-info-content manifest-nested-info" header="Id"><span class="text-success">{{track.id}}</span></div><br/>
+                                                <div class="manifest-info-content manifest-nested-info" header="Stream type"><span class="text-success">{{track.mediaType}}</span></div><br/>
+                                                <div class="manifest-info-content manifest-nested-info" header="Presentation time offset"><span class="text-success">{{track.presentationTimeOffset}}</span><span class="text-warning"> {{track.presentationTimeOffsetDelta}}</span></div><br/>
+                                                <div class="manifest-info-content manifest-nested-info" header="Start number"><span class="text-success">{{track.startNumber}}</span><span class="text-warning"> {{track.startNumberDelta}}</span></div><br/>
+                                                <div class="manifest-info-content manifest-nested-info" header="Segment info type"><span class="text-success">{{track.fragmentInfoType}}</span></div><br/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <span ng-show="manifestUpdateInfo == undefined">No data available</span>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="panel">
+                <div class="panel-heading panel-top">
+                    <span class="panel-title">Debug</span>
+                    <div class="btn-group">
+                        <button
+                            type="button"
+                            class="btn btn-default"
+                            ng-class="{active:showDebug == false}"
+                            ng-click="setDebug(false)">
+                            Hide
+                        </button>
+                        <button
+                            type="button"
+                            class="btn btn-default"
+                            ng-class="{active:showDebug == true}"
+                            ng-click="setDebug(true)">
+                            Show
+                        </button>
+                    </div>
+                </div>
+                <div ng-switch on="showDebug">
+                    <div class="panel-body panel-stats" ng-switch-when="true">
+                        <ul class="nav nav-tabs">
+                            <li class="dropdown">
+                                <a href="#" id="metricsDropdown" class="dropdown-toggle" data-toggle="dropdown">Metrics <b class="caret"></b></a>
+                                <ul class="dropdown-menu" role="menu" aria-labelledby="metricsDropdown">
+                                    <li><a href="#video-metrics" tabindex="-1" data-toggle="tab">Video</a></li>
+                                    <li><a href="#audio-metrics" tabindex="-1" data-toggle="tab">Audio</a></li>
+                                    <li><a href="#stream-metrics" tabindex="-1" data-toggle="tab">Stream</a></li>
+                                </ul>
+                            </li>
+                            <li><a href="#requests" data-toggle="tab">Requests</a></li>
+                            <li><a href="#notes" data-toggle="tab">Release Notes</a></li>
+                        </ul>
+                        <div id="debugTabContent" class="tab-content">
+                            <div class="tab-pane" id="video-metrics">
+                                <button
+                                    type="button"
+                                    class="btn btn-default"
+                                    ng-click="getVideoTreeMetrics()">
+                                    Video - Update
+                                </button>
+                                <div
+                                    class="tree"
+                                    data-angular-treeview="true"
+                                    data-tree-model="videoMetrics"
+                                    data-node-label="text"
+                                    data-node-children="items">
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="audio-metrics">
+                                <button
+                                    type="button"
+                                    class="btn btn-default"
+                                    ng-click="getAudioTreeMetrics()">
+                                    Audio - Update
+                                </button>
+                                <div
+                                    class="tree"
+                                    data-angular-treeview="true"
+                                    data-tree-model="audioMetrics"
+                                    data-node-label="text"
+                                    data-node-children="items">
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="stream-metrics">
+                                <button
+                                    type="button"
+                                    class="btn btn-default"
+                                    ng-click="getStreamTreeMetrics()">
+                                    Stream - Update
+                                </button>
+                                <div
+                                    class="tree"
+                                    data-angular-treeview="true"
+                                    data-tree-model="streamMetrics"
+                                    data-node-label="text"
+                                    data-node-children="items">
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="requests">
+                                <div class="video-requests col-md-4">
+                                    <div>Loading Requests (Video)</div>
+                                    <ul ng-repeat = "request in videoRequestsQueue.loadingRequests">
+                                        <li>{{request.startTime}}</li>
+                                    </ul>
+                                    <div>Executed Requests (Video)</div>
+                                    <ul ng-repeat = "request in videoRequestsQueue.executedRequests">
+                                        <li>{{request.startTime}}</li>
+                                    </ul>
+                                </div>
+
+                                <div class="audio-requests col-md-4">
+                                    <div>Loading Requests (Audio)</div>
+                                    <ul ng-repeat = "request in audioRequestsQueue.loadingRequests">
+                                        <li>{{request.startTime}}</li>
+                                    </ul>
+                                    <div>Executed Requests (Audio)</div>
+                                    <ul ng-repeat = "request in audioRequestsQueue.executedRequests">
+                                        <li>{{request.startTime}}</li>
+                                    </ul>
+                                </div>
+
+                                <div class="buffered-ranges col-md-4">
+                                    <div>Buffered Ranges (Video + Audio)</div>
+                                    <ul ng-repeat = "bufferedRange in bufferedRanges">
+                                        <li>{{bufferedRange}}</li>
+                                    </ul>
+                                </div>
+
+                            </div>
+                            <div class="tab-pane" id="notes">
+                                <div ng-repeat="note in releaseNotes" class="note-box">
+                                    <span><b>{{note.title}}</b></span><br/>
+                                    <span ng-repeat="text in note.items">
+                                        {{text}}<br/>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-area">
+        <div class="container">
+            <div class="row">
+                <div class="compat-box col-md-5">
+                    <h3>Compatibility Notes:</h3>
+                    <ul class="list-group">
+                        <li class="list-group-item"><a href="https://github.com/Dash-Industry-Forum/dash.js">This project can be forked on GitHub.</a></li>
+                        <li class="list-group-item">Use your browser's JavaScript console to view detailed information about stream playback.</li>
+                        <li class="list-group-item"><a href="../getting-started-basic-embed/auto-load-single-video.html">See a base implementation here.</a></li>
+                        <li class="list-group-item">A browser that supports MSE (Media Source Extensions) is required.</li>
+                        <li class="list-group-item">As of 2/1/2015 supported on the following browsers: Desktop Chrome, Desktop Internet Explorer 11 under WIn8.1, Mobile Chrome for Android and Safari on Mac Yosemite</li>
+                        <li class="list-group-item">Use the most up-to-date version of your browser for the best compatibility.</li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h3 class="footer-text">Player Libraries:</h3>
+                    <a
+                        ng-repeat="item in playerLibraries"
+                        class="footer-text"
+                        href="{{item.link}}"
+                        target="_blank">
+                        {{item.name}}
+                    </a>
+                    <h3 class="footer-text">Showcase Libraries:</h3>
+                    <a
+                        ng-repeat="item in showcaseLibraries"
+                        class="footer-text"
+                        href="{{item.link}}"
+                        target="_blank">
+                        {{item.name}}
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <h3 class="footer-text">Contributors:</h3>
+                    <a
+                        ng-repeat="item in contributors"
+                        class="footer-text"
+                        href="{{item.link}}"
+                        target="_blank">
+                        <img ng-show="hasLogo(item)" ng-src="{{item.logo}}" alt="{{item.link}}"/>
+                        <span class="contributor" ng-show="!hasLogo(item)">{{item.name}}</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -74,7 +74,7 @@ function DashManifestModel() {
 
         if (col) {
             if (col.length > 1) {
-                return (type == 'muxed');
+                return (type === 'muxed');
             } else if (col[0] && col[0].contentType === type) {
                 result = true;
                 found = true;

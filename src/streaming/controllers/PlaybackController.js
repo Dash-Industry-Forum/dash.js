@@ -117,6 +117,9 @@ function PlaybackController() {
             const p = element.play();
             if (p && (typeof Promise !== 'undefined') && (p instanceof Promise)) {
                 p.catch((e) => {
+                    if (e.name === 'NotAllowedError') {
+                        eventBus.trigger(Events.PLAYBACK_NOT_ALLOWED);
+                    }
                     log(`Caught pending play exception - continuing (${e})`);
                 });
             }
@@ -262,7 +265,14 @@ function PlaybackController() {
      */
     function getStreamStartTime(ignoreStartOffset) {
         let presentationStartTime;
-        let startTimeOffset = !ignoreStartOffset ? parseInt(URIQueryAndFragmentModel(context).getInstance().getURIFragmentData().s, 10) : NaN;
+        let fragData = URIQueryAndFragmentModel(context).getInstance().getURIFragmentData();
+        let fragS = parseInt(fragData.s, 10);
+        let fragT = parseInt(fragData.t, 10);
+        let startTimeOffset = NaN;
+
+        if (!ignoreStartOffset) {
+            startTimeOffset = !isNaN(fragS) ? fragS : fragT;
+        }
 
         if (isDynamic) {
             if (!isNaN(startTimeOffset) && startTimeOffset > 1262304000) {

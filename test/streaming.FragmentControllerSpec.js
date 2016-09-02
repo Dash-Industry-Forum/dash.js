@@ -15,24 +15,12 @@ describe("FragmentController", function () {
     it("should process bytes array", function () {
         const bytes = new ArrayBuffer(612);
         const expectedValue = new Uint8Array(bytes);
-
-        let result = fragmentController.process(bytes);
-
+        const result = fragmentController.process(bytes);
         expect(result).to.be.eql(expectedValue);
     });
 
-    it("should not create or return model without context", function () {
-        const expectedValue = null;
-
-        expect(fragmentController.getModel()).to.be.equal(expectedValue);
-        expect(fragmentController.getModel(null)).to.be.equal(expectedValue);
-    });
-
-    it("should create or return model for a given context", function () {
-        const context = {};
-
-        const model = fragmentController.getModel(context);
-
+    it("should create or return model for a given media type", function () {
+        const model = fragmentController.getModel('video');
         expect(model).to.exist;
     });
 
@@ -45,15 +33,6 @@ describe("FragmentController", function () {
 
         expect(fragmentController.getModel(context1)).to.be.equal(model1);
         expect(fragmentController.getModel(context2)).to.be.equal(model2);
-    });
-
-    it("should detach model", function () {
-        const context = {};
-        const model = fragmentController.getModel(context);
-        
-        fragmentController.detachModel(model);
-        
-        expect(fragmentController.getModel(context)).to.be.not.equal(model);
     });
 
     it("should identify an initialization segment", function () {

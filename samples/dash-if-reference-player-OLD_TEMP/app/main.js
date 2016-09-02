@@ -43,7 +43,6 @@ var app = angular.module('DashPlayer', [
     'DashShowcaseLibrariesService',
     'angularTreeview'
 ]);
-var lastUpdateTime = 0;
 
 app.directive('chart', function() {
     return {
@@ -55,10 +54,11 @@ app.directive('chart', function() {
                         shadowSize: 0
                     },
                     yaxis: {
-                        autoscaleMargin:1.5
+                        min: 0,
+                        max: 60
                     },
                     xaxis: {
-
+                        show: false
                     }
                 };
 
@@ -73,10 +73,10 @@ app.directive('chart', function() {
                     elem.show();
                 }
                 else {
-                        chart.setData(v);
-                        chart.setupGrid();
-                        chart.draw();
-                    }
+                    chart.setData(v);
+                    chart.setupGrid();
+                    chart.draw();
+                }
             });
 
             scope.$watch('invalidateChartDisplay', function(v) {
@@ -171,7 +171,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
 
     function getCribbedMetricsFor(type) {
         var metrics = player.getMetricsFor(type),
-            metricsExt = player.getMetricsExt(),
+            dashMetrics = player.getDashMetrics(),
             repSwitch,
             bufferLevel,
             httpRequests,
@@ -228,12 +228,12 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
                 }
             };
 
-        if (metrics && metricsExt) {
-            repSwitch = metricsExt.getCurrentRepresentationSwitch(metrics);
-            bufferLevel = metricsExt.getCurrentBufferLevel(metrics);
-            httpRequests = metricsExt.getHttpRequests(metrics);
-            droppedFramesMetrics = metricsExt.getCurrentDroppedFrames(metrics);
-            requestsQueue = metricsExt.getRequestsQueue(metrics);
+        if (metrics && dashMetrics) {
+            repSwitch = dashMetrics.getCurrentRepresentationSwitch(metrics);
+            bufferLevel = dashMetrics.getCurrentBufferLevel(metrics);
+            httpRequests = dashMetrics.getHttpRequests(metrics);
+            droppedFramesMetrics = dashMetrics.getCurrentDroppedFrames(metrics);
+            requestsQueue = dashMetrics.getRequestsQueue(metrics);
 
             fillmoving("video", httpRequests);
             fillmoving("audio", httpRequests);
@@ -241,13 +241,13 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
             var streamIdx = $scope.streamInfo.index;
 
             if (repSwitch !== null) {
-                bitrateIndexValue = metricsExt.getIndexForRepresentation(repSwitch.to, streamIdx);
-                bandwidthValue = metricsExt.getBandwidthForRepresentation(repSwitch.to, streamIdx);
+                bitrateIndexValue = dashMetrics.getIndexForRepresentation(repSwitch.to, streamIdx);
+                bandwidthValue = dashMetrics.getBandwidthForRepresentation(repSwitch.to, streamIdx);
                 bandwidthValue = bandwidthValue / 1000;
                 bandwidthValue = Math.round(bandwidthValue);
             }
 
-            numBitratesValue = metricsExt.getMaxIndexForBufferType(type, streamIdx);
+            numBitratesValue = dashMetrics.getMaxIndexForBufferType(type, streamIdx);
 
             if (bufferLevel !== null) {
                 bufferLengthValue = bufferLevel.toPrecision(5);
@@ -400,89 +400,83 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     }
 
     function metricChanged(e) {
-        console.log("*** metric changed");
         var metrics,
             point,
             treeData,
-            bufferedRanges = [],
-            now  = new Date().getTime();
-        console.log("*** now "+ now + " " + lastUpdateTime);
-        if (now  - lastUpdateTime > 1000) {
-            console.log("*** charting");
-            // get current buffered ranges of video element and keep them up to date
-            for (var i = 0; i < video.buffered.length; i++) {
-                bufferedRanges.push(video.buffered.start(i) + ' - ' + video.buffered.end(i));
-            }
-            $scope.bufferedRanges = bufferedRanges;
+            bufferedRanges = [];
 
-            if (e.mediaType == "video") {
-                metrics = getCribbedMetricsFor("video");
-                if (metrics) {
-                    $scope.videoBitrate = metrics.bandwidthValue;
-                    $scope.videoIndex = metrics.bitrateIndexValue;
-                    $scope.videoPendingIndex = metrics.pendingIndex;
-                    $scope.videoMaxIndex = metrics.numBitratesValue;
-                    $scope.videoBufferLength = metrics.bufferLengthValue;
-                    $scope.videoDroppedFrames = metrics.droppedFramesValue;
-                    $scope.videoRequestsQueue = metrics.requestsQueue;
-                    if (metrics.movingLatency["video"]) {
-                        $scope.videoLatencyCount = metrics.movingLatency["video"].count;
-                        $scope.videoLatency = metrics.movingLatency["video"].low.toFixed(3) + " < " + metrics.movingLatency["video"].average.toFixed(3) + " < " + metrics.movingLatency["video"].high.toFixed(3);
-                    }
-                    if (metrics.movingDownload["video"]) {
-                        $scope.videoDownloadCount = metrics.movingDownload["video"].count;
-                        $scope.videoDownload = metrics.movingDownload["video"].low.toFixed(3) + " < " + metrics.movingDownload["video"].average.toFixed(3) + " < " + metrics.movingDownload["video"].high.toFixed(3);
-                    }
-                    if (metrics.movingRatio["video"]) {
-                        $scope.videoRatioCount = metrics.movingRatio["video"].count;
-                        $scope.videoRatio = metrics.movingRatio["video"].low.toFixed(3) + " < " + metrics.movingRatio["video"].average.toFixed(3) + " < " + metrics.movingRatio["video"].high.toFixed(3);
-                    }
-
-                    point = [parseFloat(video.currentTime), Math.round(parseFloat(metrics.bufferLengthValue))];
-                    videoSeries.push(point);
-
-                    if (videoSeries.length > maxGraphPoints) {
-                        videoSeries.splice(0, 1);
-                    }
-                }
-            }
-
-            if (e.mediaType == "audio") {
-                metrics = getCribbedMetricsFor("audio");
-                if (metrics) {
-                    $scope.audioBitrate = metrics.bandwidthValue;
-                    $scope.audioIndex = metrics.bitrateIndexValue;
-                    $scope.audioPendingIndex = metrics.pendingIndex;
-                    $scope.audioMaxIndex = metrics.numBitratesValue;
-                    $scope.audioBufferLength = metrics.bufferLengthValue;
-                    $scope.audioDroppedFrames = metrics.droppedFramesValue;
-                    $scope.audioRequestsQueue = metrics.requestsQueue;
-                    if (metrics.movingLatency["audio"]) {
-                        $scope.audioLatencyCount = metrics.movingLatency["audio"].count;
-                        $scope.audioLatency = metrics.movingLatency["audio"].low.toFixed(3) + " < " + metrics.movingLatency["audio"].average.toFixed(3) + " < " + metrics.movingLatency["audio"].high.toFixed(3);
-                    }
-                    if (metrics.movingDownload["audio"]) {
-                        $scope.audioDownloadCount = metrics.movingDownload["audio"].count;
-                        $scope.audioDownload = metrics.movingDownload["audio"].low.toFixed(3) + " < " + metrics.movingDownload["audio"].average.toFixed(3) + " < " + metrics.movingDownload["audio"].high.toFixed(3);
-                    }
-                    if (metrics.movingRatio["audio"]) {
-                        $scope.audioRatioCount = metrics.movingRatio["audio"].count;
-                        $scope.audioRatio = metrics.movingRatio["audio"].low.toFixed(3) + " < " + metrics.movingRatio["audio"].average.toFixed(3) + " < " + metrics.movingRatio["audio"].high.toFixed(3);
-                    }
-
-                    point = [parseFloat(video.currentTime), Math.round(parseFloat(metrics.bufferLengthValue))];
-                    audioSeries.push(point);
-
-                    if (audioSeries.length > maxGraphPoints) {
-                        audioSeries.splice(0, 1);
-                    }
-                }
-            }
-
-            $scope.invalidateDisplay(true);
-            $scope.safeApply();
-            lastUpdateTime = now;
+        // get current buffered ranges of video element and keep them up to date
+        for (var i = 0; i < video.buffered.length; i++) {
+            bufferedRanges.push(video.buffered.start(i) + ' - ' + video.buffered.end(i));
         }
+        $scope.bufferedRanges = bufferedRanges;
+
+        if (e.mediaType == "video") {
+            metrics = getCribbedMetricsFor("video");
+            if (metrics) {
+                $scope.videoBitrate = metrics.bandwidthValue;
+                $scope.videoIndex = metrics.bitrateIndexValue;
+                $scope.videoPendingIndex = metrics.pendingIndex;
+                $scope.videoMaxIndex = metrics.numBitratesValue;
+                $scope.videoBufferLength = metrics.bufferLengthValue;
+                $scope.videoDroppedFrames = metrics.droppedFramesValue;
+                $scope.videoRequestsQueue = metrics.requestsQueue;
+                if (metrics.movingLatency["video"]) {
+                    $scope.videoLatencyCount = metrics.movingLatency["video"].count;
+                    $scope.videoLatency = metrics.movingLatency["video"].low.toFixed(3) + " < " + metrics.movingLatency["video"].average.toFixed(3) + " < " + metrics.movingLatency["video"].high.toFixed(3);
+                }
+                if (metrics.movingDownload["video"]) {
+                    $scope.videoDownloadCount = metrics.movingDownload["video"].count;
+                    $scope.videoDownload = metrics.movingDownload["video"].low.toFixed(3) + " < " + metrics.movingDownload["video"].average.toFixed(3) + " < " + metrics.movingDownload["video"].high.toFixed(3);
+                }
+                if (metrics.movingRatio["video"]) {
+                    $scope.videoRatioCount = metrics.movingRatio["video"].count;
+                    $scope.videoRatio = metrics.movingRatio["video"].low.toFixed(3) + " < " + metrics.movingRatio["video"].average.toFixed(3) + " < " + metrics.movingRatio["video"].high.toFixed(3);
+                }
+
+                point = [parseFloat(video.currentTime), Math.round(parseFloat(metrics.bufferLengthValue))];
+                videoSeries.push(point);
+
+                if (videoSeries.length > maxGraphPoints) {
+                    videoSeries.splice(0, 1);
+                }
+            }
+        }
+
+        if (e.mediaType == "audio") {
+            metrics = getCribbedMetricsFor("audio");
+            if (metrics) {
+                $scope.audioBitrate = metrics.bandwidthValue;
+                $scope.audioIndex = metrics.bitrateIndexValue;
+                $scope.audioPendingIndex = metrics.pendingIndex;
+                $scope.audioMaxIndex = metrics.numBitratesValue;
+                $scope.audioBufferLength = metrics.bufferLengthValue;
+                $scope.audioDroppedFrames = metrics.droppedFramesValue;
+                $scope.audioRequestsQueue = metrics.requestsQueue;
+                if (metrics.movingLatency["audio"]) {
+                    $scope.audioLatencyCount = metrics.movingLatency["audio"].count;
+                    $scope.audioLatency = metrics.movingLatency["audio"].low.toFixed(3) + " < " + metrics.movingLatency["audio"].average.toFixed(3) + " < " + metrics.movingLatency["audio"].high.toFixed(3);
+                }
+                if (metrics.movingDownload["audio"]) {
+                    $scope.audioDownloadCount = metrics.movingDownload["audio"].count;
+                    $scope.audioDownload = metrics.movingDownload["audio"].low.toFixed(3) + " < " + metrics.movingDownload["audio"].average.toFixed(3) + " < " + metrics.movingDownload["audio"].high.toFixed(3);
+                }
+                if (metrics.movingRatio["audio"]) {
+                    $scope.audioRatioCount = metrics.movingRatio["audio"].count;
+                    $scope.audioRatio = metrics.movingRatio["audio"].low.toFixed(3) + " < " + metrics.movingRatio["audio"].average.toFixed(3) + " < " + metrics.movingRatio["audio"].high.toFixed(3);
+                }
+
+                point = [parseFloat(video.currentTime), Math.round(parseFloat(metrics.bufferLengthValue))];
+                audioSeries.push(point);
+
+                if (audioSeries.length > maxGraphPoints) {
+                    audioSeries.splice(0, 1);
+                }
+            }
+        }
+
+        $scope.invalidateDisplay(true);
+        $scope.safeApply();
     }
 
     function metricUpdated(e) {
@@ -567,22 +561,24 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     ////////////////////////////////////////
 
     video = document.querySelector(".dash-video-player video");
-    player = MediaPlayer().create();
+    player = dashjs.MediaPlayer().create();
 
     $scope.version = player.getVersion();
 
     player.initialize();
-    player.on(MediaPlayer.events.ERROR, onError.bind(this));
-    player.on(MediaPlayer.events.METRIC_CHANGED, metricChanged.bind(this));
-    player.on(MediaPlayer.events.METRIC_UPDATED, metricUpdated.bind(this));
-    player.on(MediaPlayer.events.PERIOD_SWITCH_COMPLETED, streamSwitch.bind(this));
-    player.on(MediaPlayer.events.STREAM_INITIALIZED, streamInitialized.bind(this));
+    player.on(dashjs.MediaPlayer.events.ERROR, onError.bind(this));
+    player.on(dashjs.MediaPlayer.events.METRIC_CHANGED, metricChanged.bind(this));
+    player.on(dashjs.MediaPlayer.events.METRIC_UPDATED, metricUpdated.bind(this));
+    player.on(dashjs.MediaPlayer.events.PERIOD_SWITCH_COMPLETED, streamSwitch.bind(this));
+    player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, streamInitialized.bind(this));
     player.attachView(video);
     player.attachVideoContainer(document.getElementById("videoContainer"));
 
-    // Add HTML-rendered TTML subtitles
-    ttmlDiv = document.querySelector("#video-caption");
-    player.attachTTMLRenderingDiv(ttmlDiv);
+    // Add HTML-rendered TTML subtitles except for Firefox (issue #1164)
+    if (typeof navigator !== 'undefined' && !navigator.userAgent.match(/Firefox/)) {
+        ttmlDiv = document.querySelector("#video-caption");
+        player.attachTTMLRenderingDiv(ttmlDiv);
+    }
 
     player.setAutoPlay(true);
     controlbar = new ControlBar(player);
@@ -602,10 +598,17 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
         player.setAutoSwitchQuality(enabled);
     }
 
+    $scope.bolaEnabled = false;
+
+    $scope.setBolaEnabled = function (enabled) {
+        $scope.bolaEnabled = enabled;
+        player.enableBufferOccupancyABR(enabled);
+    }
+
     $scope.abrUp = function (type) {
         var newQuality,
-            metricsExt = player.getMetricsExt(),
-            max = metricsExt.getMaxIndexForBufferType(type, $scope.streamInfo.index);
+            dashMetrics = player.getDashMetrics(),
+            max = dashMetrics.getMaxIndexForBufferType(type, $scope.streamInfo.index);
 
         newQuality = player.getQualityFor(type) + 1;
         // zero based
@@ -666,12 +669,18 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
 
     $scope.doLoad = function () {
         var protData = null;
+
+        if (!$scope.selectedItem) {
+            return;
+        }
+
         if ($scope.selectedItem.hasOwnProperty("protData")) {
             protData = $scope.selectedItem.protData;
         }
         player.setProtectionData(protData);
         player.attachSource($scope.selectedItem.url);
         player.setAutoSwitchQuality($scope.abrEnabled);
+        player.enableBufferOccupancyABR($scope.bolaEnabled);
         controlbar.reset();
         controlbar.enable();
 

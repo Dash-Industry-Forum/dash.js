@@ -49,6 +49,7 @@ class CoreEvents extends EventsBase {
         this.DATA_UPDATE_STARTED = 'dataUpdateStarted';
         this.FRAGMENT_LOADING_COMPLETED = 'fragmentLoadingCompleted';
         this.FRAGMENT_LOADING_STARTED = 'fragmentLoadingStarted';
+        this.FRAGMENT_LOADING_ABANDONED = 'fragmentLoadingAbandoned';
         this.INITIALIZATION_LOADED = 'initializationLoaded';
         this.INIT_FRAGMENT_LOADED = 'initFragmentLoaded';
         this.INIT_REQUESTED = 'initRequested';
@@ -58,7 +59,6 @@ class CoreEvents extends EventsBase {
         this.LOADING_PROGRESS = 'loadingProgress';
         this.MANIFEST_UPDATED = 'manifestUpdated';
         this.MEDIA_FRAGMENT_LOADED = 'mediaFragmentLoaded';
-        this.QUALITY_CHANGED = 'qualityChanged';
         this.QUOTA_EXCEEDED = 'quotaExceeded';
         this.REPRESENTATION_UPDATED = 'representationUpdated';
         this.SEGMENTS_LOADED = 'segmentsLoaded';

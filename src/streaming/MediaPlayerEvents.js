@@ -108,15 +108,15 @@ class MediaPlayerEvents extends EventsBase {
 
         /**
          * Triggered when an ABR up /down switch is initialed; either by user in manual mode or auto mode via ABR rules.
-         * @event MediaPlayerEvents#QUALITY_CHANGE_START
+         * @event MediaPlayerEvents#QUALITY_CHANGE_REQUESTED
          */
-        this.QUALITY_CHANGE_START = 'qualityChangeStart';
+        this.QUALITY_CHANGE_REQUESTED = 'qualityChangeRequested';
 
         /**
          * Triggered when the new ABR quality is being rendered on-screen.
-         * @event MediaPlayerEvents#QUALITY_CHANGE_COMPLETE
+         * @event MediaPlayerEvents#QUALITY_CHANGE_RENDERED
          */
-        this.QUALITY_CHANGE_COMPLETE = 'qualityChangeComplete';
+        this.QUALITY_CHANGE_RENDERED = 'qualityChangeRendered';
 
         /**
          * Triggered when the stream is setup and ready.
@@ -154,6 +154,11 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#PLAYBACK_ERROR
          */
         this.PLAYBACK_ERROR = 'playbackError';
+        /**
+         * Sent when playback is not allowed (for example if user gesture is needed).
+         * @event MediaPlayerEvents#PLAYBACK_NOT_ALLOWED
+         */
+        this.PLAYBACK_NOT_ALLOWED = 'playbackNotAllowed';
         /**
          * The media's metadata has finished loading; all attributes now
          * contain as much useful information as they're going to.
