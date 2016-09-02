@@ -21,14 +21,14 @@
     <!-- http://getbootstrap.com/ -->
     <script src="app/lib/bootstrap/js/bootstrap.min.js"></script>
     <!-- http://www.flotcharts.org/ -->
-    <script src="app/lib/flot/jquery.flot.js"></script>
+    <script src="app/lib/flot/jquery.flot.min.js"></script>
     <script src="../../dist/dash.all.debug.js"></script>
     <!-- App -->
     <script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
     <script src="app/main.js"></script>
 
 </head>
-<body ng-controller="DashController">
+<body ng-controller="DashController" >
 
     <!-- Mobile Stream Menu-->
     <div class="modal fade" id="streamModal">
@@ -100,7 +100,7 @@
                 </div>
                 <input type="text" class="form-control" ng-cloak ng-bind="selectedItem.url" ng-model="selectedItem.url">
                 <span class="input-group-btn">
-                    <button class="btn btn-default" ng-click="toggleOptionsGutter(!optionsGutter)">Options</button>
+                    <button class="btn btn-default" ng-click="toggleOptionsGutter(!optionsGutter)" ng-cloak>{{getOptionsButtonLabel()}}</button>
                     <button class="btn btn-primary" type="button" ng-click="doLoad()">Load</button>
                 </span>
             </div>
@@ -112,23 +112,28 @@
             <div class="options-item">
                 <div class="options-item-title">Playback</div>
                 <div class="options-item-body">
-                    <label class="topcoat-checkbox" >
+                    <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                           title="Enables automatic startup of the media once the media is loaded">
                         <input type="checkbox" ng-model="autoPlaySelected" ng-change="toggleAutoPlay()" ng-checked="true">
                         Auto-Play
                     </label>
-                    <label class="topcoat-checkbox" >
+                    <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                           title="Enables looping of the media once playback has completed">
                         <input type="checkbox" id="loop-cb" ng-checked="true">
                         Loop
                     </label>
-                    <label class="topcoat-checkbox" >
-                        <input type="checkbox" id="DOMStorageCB" ng-model="domStorageSelected" ng-change="toggleDOMStorage()" ng-checked="true">
-                        DOM Storage
+                    <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                           title="Enables local storage of player state (last bitrate, a/v or text track etc). This is then used when the next time media is played.">
+                        <input type="checkbox" id="localStorageCB" ng-model="localStorageSelected" ng-change="toggleLocalStorage()" ng-checked="true">
+                        Local-Storage
                     </label>
-                    <label class="topcoat-checkbox" >
+                    <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                           title="Enables faster ABR switching (time to render). Only when the new quality is higher than the current.">
                         <input type="checkbox" id="fastSwitchCB" ng-model="fastSwitchSelected" ng-change="toggleFastSwitch()" ng-checked="true">
-                        Fast Switching
+                        Fast Switching ABR
                     </label>
-                    <label class="topcoat-checkbox" >
+                    <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                           title="BOLA is an ABR ruleset. When enabled, it will disable the default heuristics in Dash.js that depend strictly on average and real-time throughput measurements">
                         <input type="checkbox" id="bolaCB" ng-model="bolaSelected" ng-change="toggleBufferOccupancyABR()" ng-checked="false">
                         Buffer Occupancy ABR
                     </label>
@@ -158,16 +163,16 @@
                 <div class="options-item-title">Track Switch Mode</div>
                 <div class="options-item-body">
                     <label>Audio:</label>
-                    <input type="text" class="form-control" placeholder="initial lang, e.g. 'en'"
-                           ng-model="initialSettings.audio">
+                    <input type="text" class="form-control" placeholder="initial lang, e.g. 'en'" ng-model="initialSettings.audio">
                     <label>Video:</label>
-                    <input type="text" class="form-control" placeholder="initial role, e.g. 'alternate'"
-                           ng-model="initialSettings.video">
-                    <label>
-                        <input type="radio" id="always-replace" autocomplete="off" name="track-switch" checked="checked" ng-click="changeTrackSwitchMode('alwaysReplace', 'video')">
+                    <input type="text" class="form-control" placeholder="initial role, e.g. 'alternate'"ng-model="initialSettings.video">
+                    <label data-toggle="tooltip" data-placement="right"
+                           title="When a track is switched, the portion of the buffer that contains old track data is cleared">
+                        <input  type="radio" id="always-replace" autocomplete="off" name="track-switch" checked="checked" ng-click="changeTrackSwitchMode('alwaysReplace', 'video')" >
                         always replace
                     </label>
-                    <label>
+                    <label  data-toggle="tooltip" data-placement="right"
+                            title="When a track is switched, the portion of the buffer that contains old track data is NOT cleared">
                         <input type="radio" id="never-replace" autocomplete="off" name="track-switch" ng-click="changeTrackSwitchMode('neverReplace', 'video')">
                         never replace
                     </label>
@@ -182,25 +187,25 @@
                 <div id="videoContainer">
                     <video></video>
                     <div id="video-caption"></div>
-                    <div id="videoController" class="video-controller unselectable">
-                        <div id="playPauseBtn" class="btn-play-pause" title="Play/Pause">
+                    <div id="videoController" class="video-controller unselectable" ng-cloak>
+                        <div id="playPauseBtn" class="btn-play-pause" data-toggle="tooltip" data-placement="bottom" title="Play/Pause">
                             <span id="iconPlayPause" class="icon-play"></span>
                         </div>
                         <span id="videoTime" class="time-display">00:00:00</span>
-                        <div id="fullscreenBtn" class="btn-fullscreen control-icon-layout" title="Fullscreen">
+                        <div id="fullscreenBtn" class="btn-fullscreen control-icon-layout" data-toggle="tooltip" data-placement="bottom" title="Fullscreen">
                             <span class="icon-fullscreen-enter"></span>
                         </div>
-                        <div id="bitrateListBtn" class="control-icon-layout" title="Bitrate List">
+                        <div id="bitrateListBtn" class="btn-bitrate control-icon-layout" data-toggle="tooltip" data-placement="bottom" title="Bitrate List">
                             <span class="icon-bitrate"></span>
                         </div>
                         <input type="range" id="volumebar" class="volumebar" value="1" min="0" max="1" step=".01"/>
-                        <div id="muteBtn" class="btn-mute control-icon-layout" title="Mute">
+                        <div id="muteBtn" class="btn-mute control-icon-layout" data-toggle="tooltip" data-placement="bottom" title="Mute">
                             <span id="iconMute" class="icon-mute-off"></span>
                         </div>
-                        <div id="trackSwitchBtn" class="control-icon-layout" title="A/V Tracks">
+                        <div id="trackSwitchBtn" class="btn-track-switch control-icon-layout" data-toggle="tooltip" data-placement="bottom" title="Track List">
                             <span class="icon-tracks"></span>
                         </div>
-                        <div id="captionBtn" class="btn-caption control-icon-layout" title="Closed Caption">
+                        <div id="captionBtn" class="btn-caption control-icon-layout" data-toggle="tooltip" data-placement="bottom" title="Closed Caption / Subtitles">
                             <span class="icon-caption"></span>
                         </div>
                         <span id="videoDuration" class="duration-display">00:00:00</span>
@@ -236,45 +241,48 @@
                         <div class="panel-body panel-stats" ng-cloak>
                             <!-- VIDEO STATS ITEMS-->
                             <p class="text-primary">
-                                <span class="text-success" data-toggle="tooltip" title="The length of the forward buffer, in seconds">
+                                <span class="text-success" data-toggle="tooltip" data-placement="right" title="The length of the forward buffer, in seconds">
                                     <em>Buffer Length:</em> {{videoBufferLength}}
                                 </span>
                             </p>
                             <p class="text-primary">
-                                <span class="text-success" data-toggle="tooltip" title="The bitrate of the representation being downloaded">
+                                <span class="text-success" data-toggle="tooltip" data-placement="right"  title="The bitrate of the representation being downloaded">
                                     <em>Bitrate Downloading:</em> {{videoBitrate}} kbps
                                 </span>
                             </p>
                             <p class="text-primary">
-                                <span class="text-success" data-toggle="tooltip" title="The representation index being downloaded and appended to the buffer">
+                                <span class="text-success" data-toggle="tooltip" data-placement="right"  title="The representation index being downloaded and appended to the buffer">
                                     <em>Index Downloading:</em> {{videoPendingIndex}}
                                 </span>
                             </p>
                             <p class="text-primary">
-                                <span class="text-success" data-toggle="tooltip" title="The representation index being rendered.">
+                                <span class="text-success" data-toggle="tooltip" data-placement="right"  title="The representation index being rendered.">
                                     <em>Current Index / Max Index</em> {{videoIndex}} / {{videoMaxIndex}}
                                 </span>
                             </p>
 
                             <p class="text-primary">
-                                <span class="text-success" data-toggle="tooltip"
+                                <span class="text-success" data-toggle="tooltip" data-placement="right"
                                       title="The absolute count of frames dropped by the rendering pipeline since play commenced">
                                     <em>Dropped Frames:</em> {{videoDroppedFrames}}
                                 </span>
                             </p>
                             <p class="text-primary">
-                                <span class="text-success" data-toggle="tooltip" title="The minimum, average and maximum latency over the last 4 requested segments. Latency is the time in seconds from request of segment to receipt of first byte">
+                                <span class="text-success" data-toggle="tooltip" data-placement="left"
+                                      title="The minimum, average and maximum latency over the last 4 requested segments. Latency is the time in seconds from request of segment to receipt of first byte">
                                     <em>Latency (min|avg|max):</em> {{videoLatency}}
                                 </span>
                             </p>
 
                             <p class="text-primary">
-                                <span class="text-success" data-toggle="tooltip" title="The minimum, average and maximum download time for the last 4 requested segments. Download time is the time in seconds from first byte being received to the last byte">
+                                <span class="text-success" data-toggle="tooltip" data-placement="left"
+                                      title="The minimum, average and maximum download time for the last 4 requested segments. Download time is the time in seconds from first byte being received to the last byte">
                                     <em>Download (min|avg|max):</em> {{videoDownload}}
                                 </span>
                             </p>
                             <p class="text-primary">
-                                <span class="text-success" data-toggle="tooltip" title="The minimum, average and maximum ratio of the segment playback time to total download time over the last 4 segments">
+                                <span class="text-success" data-toggle="tooltip" data-placement="left"
+                                      title="The minimum, average and maximum ratio of the segment playback time to total download time over the last 4 segments">
                                     <em>Ratio (min|avg|max):</em> {{videoRatio}}
                                 </span>
                             </p>
@@ -284,54 +292,54 @@
                         <div class="panel-body panel-stats">
                             <!-- AUDIO STATS ITEMS-->
                             <p class="text-primary">
-                                <span class="text-success" data-toggle="tooltip"
+                                <span class="text-success" data-toggle="tooltip" data-placement="right"
                                       title="The length of the forward buffer, in seconds">
                                     <em>Buffer Length:</em> {{audioBufferLength}}
                                 </span>
                             </p>
 
                             <p class="text-primary">
-                                <span class="text-success" data-toggle="tooltip"
+                                <span class="text-success" data-toggle="tooltip" data-placement="right"
                                       title="The bitrate of the representation being downloaded">
                                     <em>Bitrate Downloading:</em> {{audioBitrate}} kbps
                                 </span>
                             </p>
 
                             <p class="text-primary">
-                                <span class="text-success" data-toggle="tooltip"
+                                <span class="text-success" data-toggle="tooltip" data-placement="right"
                                       title="The representation index being downloaded and appended to the buffer">
                                     <em>Index Downloading:</em> {{audioPendingIndex}}
                                 </span>
                             </p>
 
                             <p class="text-primary">
-                                <span class="text-success" data-toggle="tooltip"
+                                <span class="text-success" data-toggle="tooltip" data-placement="right"
                                       title="The representation index being rendered.">
                                     <em>Current Index / Max Index</em> {{audioIndex}} / {{audioMaxIndex}}
                                 </span>
                             </p>
                             <p class="text-primary">
-                                <span class="text-success" data-toggle="tooltip"
+                                <span class="text-success" data-toggle="tooltip" data-placement="right"
                                       title="The absolute count of frames dropped by the rendering pipeline since play commenced">
                                     <em>Dropped Frames:</em> {{audioDroppedFrames}}
                                 </span>
                             </p>
                             <p class="text-primary">
-                                <span class="text-success" data-toggle="tooltip"
+                                <span class="text-success" data-toggle="tooltip" data-placement="left"
                                       title="The minimum, average and maximum latency over the last 4 requested segments. Latency is the time in seconds from request of segment to receipt of first byte">
                                     <em>Latency (min|avg|max):</em> {{audioLatency}}
                                 </span>
                             </p>
 
                             <p class="text-primary">
-                                <span class="text-success" data-toggle="tooltip"
+                                <span class="text-success" data-toggle="tooltip" data-placement="left"
                                       title="The minimum, average and maximum download time for the last 4 requested segments. Download time is the time in seconds from first byte being received to the last byte">
                                     <em>Download (min|avg|max):</em> {{audioDownload}}
                                 </span>
                             </p>
 
                             <p class="text-primary">
-                                <span class="text-success" data-toggle="tooltip"
+                                <span class="text-success" data-toggle="tooltip" data-placement="left"
                                       title="The minimum, average and maximum ratio of the segment playback time to total download time over the last 4 segments">
                                     <em>Ratio (min|avg|max):</em> {{audioRatio}}
                                 </span>
@@ -342,7 +350,7 @@
                         <!--<div class="panel-body panel-stats">-->
                             <!--&lt;!&ndash; TEXT STATS ITEMS&ndash;&gt;-->
                             <!--<p class="text-primary">-->
-                                <!--<span class="text-success" data-toggle="tooltip"-->
+                                <!--<span class="text-success" data-toggle="tooltip" data-placement="right" -->
                                       <!--title="The length of the forward buffer, in seconds">-->
                                     <!--<em>Language:</em> {{audioBufferLength}}-->
                                 <!--</span>-->
