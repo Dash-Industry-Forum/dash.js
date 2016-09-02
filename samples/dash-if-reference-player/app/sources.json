@@ -926,32 +926,32 @@
         },
         
         {
-          "name": "Axinom clear (1080p)",
+          "name": "v7 clear (1080p)",
           "url": "http://media.axprod.net/TestVectors/v7-Clear/Manifest_1080p.mpd",
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
-          "name": "Axinom clear (4K)",
+          "name": "v7 clear (4K)",
           "url": "http://media.axprod.net/TestVectors/v7-Clear/Manifest.mpd",
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
-          "name": "Axinom clear (audio only)",
+          "name": "v7 clear (audio only)",
           "url": "http://media.axprod.net/TestVectors/v7-Clear/Manifest_AudioOnly.mpd",
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
-          "name": "Axinom clear multi-period (1080p)",
+          "name": "v7 clear multi-period (1080p)",
           "url": "http://media.axprod.net/TestVectors/v7-Clear/Manifest_MultiPeriod_1080p.mpd",
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
-          "name": "Axinom clear multi-period (4K)",
+          "name": "v7 clear multi-period (4K)",
           "url": "http://media.axprod.net/TestVectors/v7-Clear/Manifest_MultiPeriod.mpd",
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
-          "name": "Axinom clear multi-period (audio only)",
+          "name": "v7 clear multi-period (audio only)",
           "url": "http://media.axprod.net/TestVectors/v7-Clear/Manifest_MultiPeriod_AudioOnly.mpd",
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
