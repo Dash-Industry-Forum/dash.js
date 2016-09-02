@@ -21,6 +21,10 @@ a:hover {
     max-width: 1600px;
 }
 
+.btn:focus {
+  outline: none;
+}
+
 /****************************
     HEADER TITLE BAR
 *****************************/
@@ -89,7 +93,7 @@ a:hover {
 }
 
 .options-item-title {
-    background-color: #428BCA;
+    background-color: #136bfb;
     height: 20px;
     padding-top: .2rem;
     text-align: center;
@@ -158,8 +162,13 @@ a:hover {
         STATS PANELS
 *****************************/
 
+.text-success {
+    color:black !important;
+    font-size: 1.15em !important;
+}
+
 .text-primary span em {
-    color:#428bca;
+    color:#136bfb;
     font-style: normal;
 }
 
@@ -220,6 +229,7 @@ chart, chart canvas {
 button#disable-chart-btn {
     float: left;
 }
+
 div#legend-wrapper {
     margin-top: 10px;
     margin-left: 80px;
