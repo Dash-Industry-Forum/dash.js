@@ -249,6 +249,7 @@ var CoreEvents = (function (_EventsBase) {
         this.DATA_UPDATE_STARTED = 'dataUpdateStarted';
         this.FRAGMENT_LOADING_COMPLETED = 'fragmentLoadingCompleted';
         this.FRAGMENT_LOADING_STARTED = 'fragmentLoadingStarted';
+        this.FRAGMENT_LOADING_ABANDONED = 'fragmentLoadingAbandoned';
         this.INITIALIZATION_LOADED = 'initializationLoaded';
         this.INIT_FRAGMENT_LOADED = 'initFragmentLoaded';
         this.INIT_REQUESTED = 'initRequested';
@@ -258,7 +259,6 @@ var CoreEvents = (function (_EventsBase) {
         this.LOADING_PROGRESS = 'loadingProgress';
         this.MANIFEST_UPDATED = 'manifestUpdated';
         this.MEDIA_FRAGMENT_LOADED = 'mediaFragmentLoaded';
-        this.QUALITY_CHANGED = 'qualityChanged';
         this.QUOTA_EXCEEDED = 'quotaExceeded';
         this.REPRESENTATION_UPDATED = 'representationUpdated';
         this.SEGMENTS_LOADED = 'segmentsLoaded';
@@ -559,15 +559,15 @@ var MediaPlayerEvents = (function (_EventsBase) {
 
     /**
      * Triggered when an ABR up /down switch is initialed; either by user in manual mode or auto mode via ABR rules.
-     * @event MediaPlayerEvents#QUALITY_CHANGE_START
+     * @event MediaPlayerEvents#QUALITY_CHANGE_REQUESTED
      */
-    this.QUALITY_CHANGE_START = 'qualityChangeStart';
+    this.QUALITY_CHANGE_REQUESTED = 'qualityChangeRequested';
 
     /**
      * Triggered when the new ABR quality is being rendered on-screen.
-     * @event MediaPlayerEvents#QUALITY_CHANGE_COMPLETE
+     * @event MediaPlayerEvents#QUALITY_CHANGE_RENDERED
      */
-    this.QUALITY_CHANGE_COMPLETE = 'qualityChangeComplete';
+    this.QUALITY_CHANGE_RENDERED = 'qualityChangeRendered';
 
     /**
      * Triggered when the stream is setup and ready.
@@ -605,6 +605,11 @@ var MediaPlayerEvents = (function (_EventsBase) {
      * @event MediaPlayerEvents#PLAYBACK_ERROR
      */
     this.PLAYBACK_ERROR = 'playbackError';
+    /**
+     * Sent when playback is not allowed (for example if user gesture is needed).
+     * @event MediaPlayerEvents#PLAYBACK_NOT_ALLOWED
+     */
+    this.PLAYBACK_NOT_ALLOWED = 'playbackNotAllowed';
     /**
      * The media's metadata has finished loading; all attributes now
      * contain as much useful information as they're going to.

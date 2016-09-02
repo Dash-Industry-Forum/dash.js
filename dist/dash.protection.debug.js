@@ -205,75 +205,86 @@ var _FactoryMaker = _dereq_(3);
 
 var _FactoryMaker2 = _interopRequireDefault(_FactoryMaker);
 
+var EVENT_PRIORITY_LOW = 0;
+var EVENT_PRIORITY_HIGH = 5000;
+
 function EventBus() {
 
-    var instance = undefined;
     var handlers = {};
 
     function on(type, listener, scope) {
+        var priority = arguments.length <= 3 || arguments[3] === undefined ? EVENT_PRIORITY_LOW : arguments[3];
+
         if (!type) {
             throw new Error('event type cannot be null or undefined');
         }
-
         if (!listener || typeof listener !== 'function') {
             throw new Error('listener must be a function: ' + listener);
         }
 
         if (getHandlerIdx(type, listener, scope) >= 0) return;
 
+        handlers[type] = handlers[type] || [];
+
         var handler = {
             callback: listener,
-            scope: scope
+            scope: scope,
+            priority: priority
         };
 
-        handlers[type] = handlers[type] || [];
-        handlers[type].push(handler);
+        var inserted = handlers[type].some(function (item, idx) {
+            if (priority > item.priority) {
+                handlers[type].splice(idx, 0, handler);
+                return true;
+            }
+        });
+
+        if (!inserted) {
+            handlers[type].push(handler);
+        }
     }
 
     function off(type, listener, scope) {
         if (!type || !listener || !handlers[type]) return;
-
         var idx = getHandlerIdx(type, listener, scope);
-
         if (idx < 0) return;
-
         handlers[type].splice(idx, 1);
     }
 
-    function trigger(type, args) {
+    function trigger(type, payload) {
         if (!type || !handlers[type]) return;
 
-        args = args || {};
+        payload = payload || {};
 
-        if (args.hasOwnProperty('type')) {
-            throw new Error('\'type\' is a reserved word for event dispatching');
-        }
+        if (payload.hasOwnProperty('type')) throw new Error('\'type\' is a reserved word for event dispatching');
 
-        args.type = type;
+        payload.type = type;
 
         handlers[type].forEach(function (handler) {
-            handler.callback.call(handler.scope, args);
+            return handler.callback.call(handler.scope, payload);
         });
+    }
+
+    function getHandlerIdx(type, listener, scope) {
+
+        var idx = -1;
+
+        if (!handlers[type]) return idx;
+
+        handlers[type].some(function (item, index) {
+            if (item.callback === listener && (!scope || scope === item.scope)) {
+                idx = index;
+                return true;
+            }
+        });
+        return idx;
     }
 
     function reset() {
         handlers = {};
     }
 
-    function getHandlerIdx(type, listener, scope) {
-        var handlersForType = handlers[type];
-        var result = -1;
-
-        if (!handlersForType || handlersForType.length === 0) return result;
-
-        for (var i = 0; i < handlersForType.length; i++) {
-            if (handlersForType[i].callback === listener && (!scope || scope === handlersForType[i].scope)) return i;
-        }
-
-        return result;
-    }
-
-    instance = {
+    var instance = {
         on: on,
         off: off,
         trigger: trigger,
@@ -284,7 +295,10 @@ function EventBus() {
 }
 
 EventBus.__dashjs_factory_name = 'EventBus';
-exports['default'] = _FactoryMaker2['default'].getSingletonFactory(EventBus);
+var factory = _FactoryMaker2['default'].getSingletonFactory(EventBus);
+factory.EVENT_PRIORITY_LOW = EVENT_PRIORITY_LOW;
+factory.EVENT_PRIORITY_HIGH = EVENT_PRIORITY_HIGH;
+exports['default'] = factory;
 module.exports = exports['default'];
 
 },{"3":3}],3:[function(_dereq_,module,exports){
@@ -538,6 +552,7 @@ var CoreEvents = (function (_EventsBase) {
         this.DATA_UPDATE_STARTED = 'dataUpdateStarted';
         this.FRAGMENT_LOADING_COMPLETED = 'fragmentLoadingCompleted';
         this.FRAGMENT_LOADING_STARTED = 'fragmentLoadingStarted';
+        this.FRAGMENT_LOADING_ABANDONED = 'fragmentLoadingAbandoned';
         this.INITIALIZATION_LOADED = 'initializationLoaded';
         this.INIT_FRAGMENT_LOADED = 'initFragmentLoaded';
         this.INIT_REQUESTED = 'initRequested';
@@ -547,7 +562,6 @@ var CoreEvents = (function (_EventsBase) {
         this.LOADING_PROGRESS = 'loadingProgress';
         this.MANIFEST_UPDATED = 'manifestUpdated';
         this.MEDIA_FRAGMENT_LOADED = 'mediaFragmentLoaded';
-        this.QUALITY_CHANGED = 'qualityChanged';
         this.QUOTA_EXCEEDED = 'quotaExceeded';
         this.REPRESENTATION_UPDATED = 'representationUpdated';
         this.SEGMENTS_LOADED = 'segmentsLoaded';
@@ -2236,9 +2250,9 @@ function ProtectionKeyController() {
 
         for (ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
             var keySystemString = keySystems[ksIdx].systemString;
-            var protectionDataForKeySystemPresent = (keySystemString in protDataSet);
+            var shouldNotFilterOutKeySystem = protDataSet ? keySystemString in protDataSet : true;
 
-            if (keySystems[ksIdx].uuid in pssh && protectionDataForKeySystemPresent) {
+            if (keySystems[ksIdx].uuid in pssh && shouldNotFilterOutKeySystem) {
                 supportedKS.push({
                     ks: keySystems[ksIdx],
                     initData: pssh[keySystems[ksIdx].uuid]
@@ -2269,7 +2283,7 @@ function ProtectionKeyController() {
 
         // Our default server implementations do not do anything with "license-release" or
         // "individualization-request" messages, so we just send a success event
-        if (messageType === 'license-release' || messageType == 'individualization-request') {
+        if (messageType === 'license-release' || messageType === 'individualization-request') {
             return null;
         }
 
@@ -5099,8 +5113,8 @@ function ErrorHandler() {
     }
 
     // {message: "", id: "codec"|"parse"|"nostreams", manifest: {parsed manifest}}
-    function manifestError(message, id, manifest) {
-        eventBus.trigger(_coreEventsEvents2['default'].ERROR, { error: 'manifestError', event: { message: message, id: id, manifest: manifest } });
+    function manifestError(message, id, manifest, err) {
+        eventBus.trigger(_coreEventsEvents2['default'].ERROR, { error: 'manifestError', event: { message: message, id: id, manifest: manifest, event: err } });
     }
 
     // {message: '', id: 'parse', cc: ''}
