@@ -186,16 +186,6 @@ var ControlBar = function (dashjsMediaPlayer) {
                 icon.classList.remove("icon-fullscreen-exit");
                 icon.classList.add("icon-fullscreen-enter");
             }
-
-            if (captionMenu) {
-                captionMenu.classList.add("hide");
-            }
-            if (bitrateListMenu) {
-                bitrateListMenu.classList.add("hide");
-            }
-            if (trackSwitchMenu) {
-                trackSwitchMenu.classList.add("hide");
-            }
         },
 
         isFullscreen = function () {
@@ -214,13 +204,8 @@ var ControlBar = function (dashjsMediaPlayer) {
             } else {
                 element.webkitRequestFullScreen();
             }
-
-
             videoController.classList.add('video-controller-fullscreen');
             window.addEventListener("mousemove", onFullScreenMouseMove);
-
-
-
             onFullScreenMouseMove();
         },
 
@@ -260,6 +245,12 @@ var ControlBar = function (dashjsMediaPlayer) {
             }
             if (captionMenu) {
                 captionMenu.classList.add("hide");
+            }
+            if (bitrateListMenu) {
+                bitrateListMenu.classList.add("hide");
+            }
+            if (trackSwitchMenu) {
+                trackSwitchMenu.classList.add("hide");
             }
         },
 
@@ -343,13 +334,11 @@ var ControlBar = function (dashjsMediaPlayer) {
             el.classList.add("menu-item-unselected");
             videoController.appendChild(el);
 
-
-            // XXX setMenuItemsState(X  Should not be harcoded.  get initial index or state from dash.js
             switch (menuType) {
                 case 'caption' :
                     el.appendChild(document.createElement("ul"));
                     el = createMenuContent(el, getMenuContent(menuType, info.arr, contentFunc), 'caption', "captionMenuList");
-                    setMenuItemsState(1, 'captionMenuList'); // Should not be harcoded.  get initial index or state from dash.js
+                    setMenuItemsState(1, 'captionMenuList'); // Should not be harcoded.  get initial index or state from dash.js - not available yet in dash.js
                     break;
                 case 'track' :
                 case 'bitrate' :
@@ -376,7 +365,7 @@ var ControlBar = function (dashjsMediaPlayer) {
                 var mediaInfo = player.getCurrentTrackFor(mediaType);
                 var idx = 0
                 info.some(function(element, index){
-                    if (element.id === mediaInfo.id) {
+                    if (isTracksEqual(element, mediaInfo)) {
                         idx = index;
                         return true;
                     }
@@ -386,6 +375,17 @@ var ControlBar = function (dashjsMediaPlayer) {
             } else if (menuType === "bitrate") {
                 return player.getAutoSwitchQualityFor(mediaType) ? 0 : getQualityFor(mediaType);
             }
+        },
+
+        isTracksEqual = function (t1, t2) {
+            var sameId = t1.id === t2.id;
+            var sameViewpoint = t1.viewpoint === t2.viewpoint;
+            var sameLang = t1.lang === t2.lang;
+            var sameRoles = t1.roles.toString() === t2.roles.toString();
+            var sameAccessibility = t1.accessibility.toString() === t2.accessibility.toString();
+            var sameAudioChannelConfiguration = t1.audioChannelConfiguration.toString() === t2.audioChannelConfiguration.toString();
+
+            return (sameId && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration);
         },
 
         getMenuContent = function (type, arr, contentFunc) {
@@ -441,7 +441,6 @@ var ControlBar = function (dashjsMediaPlayer) {
                     this.classList.remove("menu-item-over");
                 };
                 item.onclick = setMenuItemsState.bind(item);
-
 
                 var el;
                 if (mediaType === 'caption') {
@@ -517,6 +516,9 @@ var ControlBar = function (dashjsMediaPlayer) {
             }
             if (bitrateListMenu) {
                 positionMenu(bitrateListMenu, bitrateListBtn);
+            }
+            if (trackSwitchMenu) {
+                positionMenu(trackSwitchMenu, trackSwitchBtn);
             }
         },
 
