@@ -373,7 +373,7 @@ var ControlBar = function (dashjsMediaPlayer) {
                 return idx;
 
             } else if (menuType === "bitrate") {
-                return player.getAutoSwitchQualityFor(mediaType) ? 0 : getQualityFor(mediaType);
+                return player.getAutoSwitchQualityFor(mediaType) ? 0 : player.getQualityFor(mediaType);
             }
         },
 
@@ -492,7 +492,9 @@ var ControlBar = function (dashjsMediaPlayer) {
                     case 'video-bitrate-list':
                     case 'audio-bitrate-list':
                         if (self.index > 0) {
-                            player.setAutoSwitchQualityFor(self.type, false);
+                            if (player.getAutoSwitchQualityFor(self.type)) {
+                                player.setAutoSwitchQualityFor(self.type, false);
+                            }
                             player.setQualityFor(self.type, self.index - 1);
                         } else {
                             player.setAutoSwitchQualityFor(self.type, true);
