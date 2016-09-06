@@ -509,7 +509,6 @@ var ControlBar = function (dashjsMediaPlayer) {
                         break;
                 }
             }
-
         },
 
         handleMenuPositionOnResize = function (e) {
