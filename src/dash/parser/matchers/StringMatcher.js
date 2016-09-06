@@ -62,6 +62,7 @@ class StringMatcher extends BaseMatcher {
                     'Rating':                     [ 'value', 'id' ],
                     'Viewpoint':                  [ 'value', 'id' ],
                     'ContentComponent':           [ 'contentType' ],
+                    'Representation':             [ 'id', 'dependencyId', 'mediaStreamStructureId' ],
                     'Subset':                     [ 'id' ],
                     'Metrics':                    [ 'metrics' ],
                     'Reporting':                  [ 'value', 'id' ]
