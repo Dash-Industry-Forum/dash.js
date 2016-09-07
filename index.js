@@ -37,7 +37,7 @@ import {getVersionString} from './src/core/Version';
 
 
 // Shove both of these into the global scope
-var context = window || global;
+var context = (typeof window !== 'undefined' && window) || global;
 
 var dashjs = context.dashjs;
 if (!dashjs) {
