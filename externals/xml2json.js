@@ -140,6 +140,7 @@ function X2JS(matchers, attrPrefix, ignoreRoot) {
             result.__children = children;
 			
 			// Attributes
+			var nodeLocalName = getNodeLocalName(node);
 			for(var aidx=0; aidx <node.attributes.length; aidx++) {
 				var attr = node.attributes.item(aidx); // [aidx];
 				result.__cnt++;
@@ -147,7 +148,7 @@ function X2JS(matchers, attrPrefix, ignoreRoot) {
 				var value2 = attr.value;
 				for(var m=0, ml=matchers.length; m < ml; m++) {
 				    var matchobj = matchers[m];
-				    if (matchobj.test(attr)) {
+				    if (matchobj.test(attr, nodeLocalName)) {
 						value2 = matchobj.converter(attr.value);
 					}
 				}
