@@ -102,7 +102,7 @@ function BolaAbandonRule(config) {
         let durationS = request.duration;
 
         let bufferLevel = dashMetrics.getCurrentBufferLevel(metrics) ? dashMetrics.getCurrentBufferLevel(metrics) : 0.0;
-        let effectiveBufferLevel = bufferLevel + bolaState.virtualBuffer;
+        let effectiveBufferLevel = bufferLevel + bolaState.placeholderBuffer;
 
         let estimateThroughput = 8 * bytesLoaded / (0.001 * elapsedTimeMs); // throughput in bits per second
         let estimateThroughputBSF = bolaState.bandwidthSafetyFactor * estimateThroughput;
