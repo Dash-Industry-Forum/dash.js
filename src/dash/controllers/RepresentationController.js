@@ -41,6 +41,7 @@ import DOMStorage from '../../streaming/utils/DOMStorage';
 import Error from '../../streaming/vo/Error';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
+import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
 import FactoryMaker from '../../core/FactoryMaker';
 
 function RepresentationController() {
@@ -266,7 +267,7 @@ function RepresentationController() {
         };
 
         updating = false;
-        eventBus.trigger(Events.AST_IN_FUTURE, { delay: delay });
+        eventBus.trigger(MediaPlayerEvents.AST_IN_FUTURE, { delay: delay });
         setTimeout(update, delay);
     }
 

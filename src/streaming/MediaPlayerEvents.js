@@ -41,6 +41,12 @@ class MediaPlayerEvents extends EventsBase {
     constructor () {
         super();
         /**
+         * Triggered when playback will not start yet
+         * as the MPD's availabilityStartTime is in the future.
+         * Check delay property in payload to determine time before playback will start.
+         */
+        this.AST_IN_FUTURE = 'astinfuture';
+        /**
          * Triggered when the video element's buffer state changes to stalled.
          * Check mediaType in payload to determine type (Video, Audio, FragmentedText).
          * @event MediaPlayerEvents#BUFFER_EMPTY
