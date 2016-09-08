@@ -644,6 +644,10 @@ app.controller('DashController', function($scope, sources, contributors) {
             paramUrl = vars.mpd;
         }
 
+        if (vars && vars.hasOwnProperty("source")) {
+            paramUrl = vars.source;
+        }
+
         if (paramUrl !== null) {
             var startPlayback = false;
 
