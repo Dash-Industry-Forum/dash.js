@@ -281,10 +281,14 @@ var ControlBar = function (dashjsMediaPlayer) {
             //Bitrate Menu
             if (bitrateListBtn) {
                 destroyBitrateMenu();
+
                 var availableBitrates = {menuType: 'bitrate'};
                 availableBitrates.audio = player.getBitrateInfoListFor("audio");
                 availableBitrates.video = player.getBitrateInfoListFor("video");
-                if (availableBitrates.audio.length > 1 || availableBitrates.video.length > 1) {
+
+                if ((availableBitrates.audio && availableBitrates.audio.length > 1) ||
+                    (availableBitrates.video && availableBitrates.video.length > 1)) {
+
                     contentFunc = function (element, index) {
                         return isNaN(index) ? " Auto Switch" : Math.floor(element.bitrate / 1000) + " kbps";
                     }
@@ -302,11 +306,11 @@ var ControlBar = function (dashjsMediaPlayer) {
             }
 
             //Track Switch Menu
-
             if (!trackSwitchMenu && trackSwitchBtn) {
                 var availableTracks = {menuType: "track"};
                 availableTracks.audio = player.getTracksFor("audio");
-                availableTracks.video = player.getTracksFor("video");
+                availableTracks.video = player.getTracksFor("video"); // these return empty arrays so no need to cehck for null
+
                 if (availableTracks.audio.length > 1 || availableTracks.video.length > 1) {
                     contentFunc = function (element) {
                         return 'Language: ' + element.lang + ' - Role: ' + element.roles[0];
