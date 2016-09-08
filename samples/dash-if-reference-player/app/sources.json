@@ -446,8 +446,8 @@
         },
 
         {
-          "name": "v6 encrypted (1080p)",
-          "url": "http://media.axprod.net/TestVectors/v6-MultiDRM/Manifest_1080p.mpd",
+          "name": "v6.1 encrypted (1080p)",
+          "url": "http://media.axprod.net/TestVectors/v6.1-MultiDRM/Manifest_1080p.mpd",
           "protData": {
             "com.widevine.alpha": {
               "serverURL": "http://drm-widevine-licensing.axtest.net/AcquireLicense",
@@ -462,11 +462,11 @@
               }
             }
           },
-          "moreInfo": "https://github.com/Axinom/dash-test-vectors/commit/e689891faf4845ff80137b22a731db13350652df"
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
         },
         {
-          "name": "v6 encrypted (4K)",
-          "url": "http://media.axprod.net/TestVectors/v6-MultiDRM/Manifest.mpd",
+          "name": "v6.1 encrypted (4K)",
+          "url": "http://media.axprod.net/TestVectors/v6.1-MultiDRM/Manifest.mpd",
           "protData": {
             "com.widevine.alpha": {
               "serverURL": "http://drm-widevine-licensing.axtest.net/AcquireLicense",
@@ -481,49 +481,11 @@
               }
             }
           },
-          "moreInfo": "https://github.com/Axinom/dash-test-vectors/commit/e689891faf4845ff80137b22a731db13350652df"
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
         },
         {
-          "name": "v6 encrypted with generic EME PSSH (1080p)",
-          "url": "http://media.axprod.net/TestVectors/v6-MultiDRM-GenericEmePssh/Manifest_1080p.mpd",
-          "protData": {
-            "com.widevine.alpha": {
-              "serverURL": "http://drm-widevine-licensing.axtest.net/AcquireLicense",
-              "httpRequestHeaders": {
-                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNmU1YTFkMjYtMjc1Ny00N2Q3LTgwNDYtZWFhNWQxZDM0YjVhIn1dfX0.yF7PflOPv9qHnu3ZWJNZ12jgkqTabmwXbDWk_47tLNE"
-              }
-            },
-            "com.microsoft.playready": {
-              "serverURL": "http://drm-playready-licensing.axtest.net/AcquireLicense",
-              "httpRequestHeaders": {
-                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNmU1YTFkMjYtMjc1Ny00N2Q3LTgwNDYtZWFhNWQxZDM0YjVhIn1dfX0.yF7PflOPv9qHnu3ZWJNZ12jgkqTabmwXbDWk_47tLNE"
-              }
-            }
-          },
-          "moreInfo": "https://github.com/Axinom/dash-test-vectors/commit/e689891faf4845ff80137b22a731db13350652df"
-        },
-        {
-          "name": "v6 encrypted with generic EME PSSH (4K)",
-          "url": "http://media.axprod.net/TestVectors/v6-MultiDRM-GenericEmePssh/Manifest.mpd",
-          "protData": {
-            "com.widevine.alpha": {
-              "serverURL": "http://drm-widevine-licensing.axtest.net/AcquireLicense",
-              "httpRequestHeaders": {
-                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNmU1YTFkMjYtMjc1Ny00N2Q3LTgwNDYtZWFhNWQxZDM0YjVhIn1dfX0.yF7PflOPv9qHnu3ZWJNZ12jgkqTabmwXbDWk_47tLNE"
-              }
-            },
-            "com.microsoft.playready": {
-              "serverURL": "http://drm-playready-licensing.axtest.net/AcquireLicense",
-              "httpRequestHeaders": {
-                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNmU1YTFkMjYtMjc1Ny00N2Q3LTgwNDYtZWFhNWQxZDM0YjVhIn1dfX0.yF7PflOPv9qHnu3ZWJNZ12jgkqTabmwXbDWk_47tLNE"
-              }
-            }
-          },
-          "moreInfo": "https://github.com/Axinom/dash-test-vectors/commit/e689891faf4845ff80137b22a731db13350652df"
-        },
-        {
-          "name": "v6 encrypted with multiple keys (1080p)",
-          "url": "http://media.axprod.net/TestVectors/v6-MultiDRM-MultiKey/Manifest_1080p.mpd",
+          "name": "v6.1 encrypted with multiple keys (1080p)",
+          "url": "http://media.axprod.net/TestVectors/v6.1-MultiDRM-MultiKey/Manifest_1080p.mpd",
           "protData": {
             "com.widevine.alpha": {
               "serverURL": "http://drm-widevine-licensing.axtest.net/AcquireLicense",
@@ -538,11 +500,11 @@
               }
             }
           },
-          "moreInfo": "https://github.com/Axinom/dash-test-vectors/commit/e689891faf4845ff80137b22a731db13350652df"
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
         },
         {
-          "name": "v6 encrypted with multiple keys (4K)",
-          "url": "http://media.axprod.net/TestVectors/v6-MultiDRM-MultiKey/Manifest.mpd",
+          "name": "v6.1 encrypted with multiple keys (4K)",
+          "url": "http://media.axprod.net/TestVectors/v6.1-MultiDRM-MultiKey/Manifest.mpd",
           "protData": {
             "com.widevine.alpha": {
               "serverURL": "http://drm-widevine-licensing.axtest.net/AcquireLicense",
@@ -557,11 +519,11 @@
               }
             }
           },
-          "moreInfo": "https://github.com/Axinom/dash-test-vectors/commit/e689891faf4845ff80137b22a731db13350652df"
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
         },
         {
-          "name": "v6 encrypted with multiple keys and multiple periods (1080p)",
-          "url": "http://media.axprod.net/TestVectors/v6-MultiDRM-MultiKey-MultiPeriod/Manifest_1080p.mpd",
+          "name": "v6.1 encrypted with multiple keys and multiple periods (1080p)",
+          "url": "http://media.axprod.net/TestVectors/v6.1-MultiDRM-MultiKey-MultiPeriod/Manifest_1080p.mpd",
           "protData": {
             "com.widevine.alpha": {
               "serverURL": "http://drm-widevine-licensing.axtest.net/AcquireLicense",
@@ -576,11 +538,11 @@
               }
             }
           },
-          "moreInfo": "https://github.com/Axinom/dash-test-vectors/commit/e689891faf4845ff80137b22a731db13350652df"
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
         },
         {
-          "name": "v6 encrypted with multiple keys and multiple periods (4K)",
-          "url": "http://media.axprod.net/TestVectors/v6-MultiDRM-MultiKey-MultiPeriod/Manifest.mpd",
+          "name": "v6.1 encrypted with multiple keys and multiple periods (4K)",
+          "url": "http://media.axprod.net/TestVectors/v6.1-MultiDRM-MultiKey-MultiPeriod/Manifest.mpd",
           "protData": {
             "com.widevine.alpha": {
               "serverURL": "http://drm-widevine-licensing.axtest.net/AcquireLicense",
@@ -595,28 +557,28 @@
               }
             }
           },
-          "moreInfo": "https://github.com/Axinom/dash-test-vectors/commit/e689891faf4845ff80137b22a731db13350652df"
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
         },
 
         {
-          "name": "v6 clear (1080p)",
-          "url": "http://media.axprod.net/TestVectors/v6-Clear/Manifest_1080p.mpd",
-          "moreInfo": "https://github.com/Axinom/dash-test-vectors/commit/e689891faf4845ff80137b22a731db13350652df"
+          "name": "v6.1 clear (1080p)",
+          "url": "http://media.axprod.net/TestVectors/v6.1-Clear/Manifest_1080p.mpd",
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
         },
         {
-          "name": "v6 clear (4K)",
-          "url": "http://media.axprod.net/TestVectors/v6-Clear/Manifest.mpd",
-          "moreInfo": "https://github.com/Axinom/dash-test-vectors/commit/e689891faf4845ff80137b22a731db13350652df"
+          "name": "v6.1 clear (4K)",
+          "url": "http://media.axprod.net/TestVectors/v6.1-Clear/Manifest.mpd",
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
         },
         {
-          "name": "v6 clear multi-period (1080p)",
-          "url": "http://media.axprod.net/TestVectors/v6-Clear/MultiPeriod_Manifest_1080p.mpd",
-          "moreInfo": "https://github.com/Axinom/dash-test-vectors/commit/e689891faf4845ff80137b22a731db13350652df"
+          "name": "v6.1 clear multi-period (1080p)",
+          "url": "http://media.axprod.net/TestVectors/v6.1-Clear/MultiPeriod_Manifest_1080p.mpd",
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
         },
         {
-          "name": "v6 clear multi-period (4K)",
-          "url": "http://media.axprod.net/TestVectors/v6-Clear/MultiPeriod_Manifest.mpd",
-          "moreInfo": "https://github.com/Axinom/dash-test-vectors/commit/e689891faf4845ff80137b22a731db13350652df"
+          "name": "v6.1 clear multi-period (4K)",
+          "url": "http://media.axprod.net/TestVectors/v6.1-Clear/MultiPeriod_Manifest.mpd",
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
         }
       ]
     },
