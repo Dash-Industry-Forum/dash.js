@@ -283,11 +283,10 @@ var ControlBar = function (dashjsMediaPlayer) {
                 destroyBitrateMenu();
 
                 var availableBitrates = {menuType: 'bitrate'};
-                availableBitrates.audio = player.getBitrateInfoListFor("audio");
-                availableBitrates.video = player.getBitrateInfoListFor("video");
+                availableBitrates.audio = player.getBitrateInfoListFor("audio") || [];
+                availableBitrates.video = player.getBitrateInfoListFor("video") || [];
 
-                if ((availableBitrates.audio && availableBitrates.audio.length > 1) ||
-                    (availableBitrates.video && availableBitrates.video.length > 1)) {
+                if (availableBitrates.audio.length > 1 || availableBitrates.video.length > 1) {
 
                     contentFunc = function (element, index) {
                         return isNaN(index) ? " Auto Switch" : Math.floor(element.bitrate / 1000) + " kbps";
@@ -431,7 +430,7 @@ var ControlBar = function (dashjsMediaPlayer) {
                 var item = document.createElement("li");
                 item.id = name + "Item_" + i;
                 item.index = i;
-                item.type = mediaType;
+                item.mediaType = mediaType;
                 item.name = name;
                 item.selected = false;
                 item.textContent = arr[i];
@@ -496,12 +495,12 @@ var ControlBar = function (dashjsMediaPlayer) {
                     case 'video-bitrate-list':
                     case 'audio-bitrate-list':
                         if (self.index > 0) {
-                            if (player.getAutoSwitchQualityFor(self.type)) {
-                                player.setAutoSwitchQualityFor(self.type, false);
+                            if (player.getAutoSwitchQualityFor(self.mediaType)) {
+                                player.setAutoSwitchQualityFor(self.mediaType, false);
                             }
-                            player.setQualityFor(self.type, self.index - 1);
+                            player.setQualityFor(self.mediaType, self.index - 1);
                         } else {
-                            player.setAutoSwitchQualityFor(self.type, true);
+                            player.setAutoSwitchQualityFor(self.mediaType, true);
                         }
                         break;
                     case 'caption' :
@@ -509,7 +508,7 @@ var ControlBar = function (dashjsMediaPlayer) {
                         break
                     case 'video-track-list' :
                     case 'audio-track-list' :
-                        player.setCurrentTrack(player.getTracksFor(self.type)[self.index]);
+                        player.setCurrentTrack(player.getTracksFor(self.mediaType)[self.index]);
                         break;
                 }
             }
