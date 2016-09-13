@@ -96,7 +96,7 @@ function ManifestLoader(config) {
                     // xhr.responseURL above but it is not available for IE11
                     // baseUri must be absolute for BaseURL resolution later
                     if (urlUtils.isRelative(url)) {
-                        url = urlUtils.parseBaseUrl(window.location.href) + url;
+                        url = urlUtils.resolve(url, window.location.href);
                     }
 
                     baseUri = urlUtils.parseBaseUrl(url);

@@ -15,6 +15,8 @@
     "predef" : [
         "it",
         "describe",
+        "beforeEach",
+        "afterEach",
         "kendo",
         "utils",
         "MediaPlayer",
