@@ -231,11 +231,6 @@ module.exports = function (grunt) {
             options: {
                 config: '.jscsrc'
             }
-        },
-        githooks: {
-            all: {
-                'pre-commit': 'lint'
-            }
         }
     });
 
@@ -248,5 +243,5 @@ module.exports = function (grunt) {
     grunt.registerTask('release',   ['default', 'jsdoc']);
     grunt.registerTask('debug',     ['clean', 'browserify:all', 'exorcise:all', 'copy:dist']);
     grunt.registerTask('lint',      ['jshint', 'jscs']);
-    grunt.registerTask('prepublish', ['githooks', 'dist']);
+    grunt.registerTask('prepublish', ['dist']);
 };

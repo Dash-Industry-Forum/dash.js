@@ -340,8 +340,8 @@ var ControlBar = function (dashjsMediaPlayer) {
             switch (menuType) {
                 case 'caption' :
                     el.appendChild(document.createElement("ul"));
-                    el = createMenuContent(el, getMenuContent(menuType, info.arr, contentFunc), 'caption', "captionMenuList");
-                    setMenuItemsState(1, 'captionMenuList'); // Should not be harcoded.  get initial index or state from dash.js - not available yet in dash.js
+                    el = createMenuContent(el, getMenuContent(menuType, info.arr, contentFunc), 'caption', menuType + '-list');
+                    setMenuItemsState(1, menuType + '-list'); // Should not be harcoded.  get initial index or state from dash.js - not available yet in dash.js
                     break;
                 case 'track' :
                 case 'bitrate' :
@@ -503,7 +503,7 @@ var ControlBar = function (dashjsMediaPlayer) {
                             player.setAutoSwitchQualityFor(self.mediaType, true);
                         }
                         break;
-                    case 'caption' :
+                    case 'caption-list' :
                         player.setTextTrack(self.index - 1);
                         break
                     case 'video-track-list' :
