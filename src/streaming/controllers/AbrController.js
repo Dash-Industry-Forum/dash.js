@@ -291,7 +291,6 @@ function AbrController() {
         eventBus.trigger(Events.QUALITY_CHANGE_REQUESTED, {mediaType: type, streamInfo: streamInfo, oldQuality: oldQuality, newQuality: newQuality, reason: reason});
     }
 
-
     function setAbandonmentStateFor(type, state) {
         abandonmentStateDict[type].state = state;
     }
@@ -497,6 +496,7 @@ function AbrController() {
                         //TODO Check if we should abort or if better to finish download. check bytesLoaded/Total
                         fragmentModel.abortRequests();
                         setAbandonmentStateFor(type, ABANDON_LOAD);
+                        rulesController.addToSwitchHistory({oldValue: getQualityFor(type, streamController.getActiveStreamInfo()), newValue: switchRequest.value, confidence: 1, reason: switchRequest.reason});
                         setPlaybackQuality(type, streamController.getActiveStreamInfo(), switchRequest.value, switchRequest.reason);
                         eventBus.trigger(Events.FRAGMENT_LOADING_ABANDONED, {streamProcessor: streamProcessorDict[type], request: request, mediaType: type});
 

@@ -46,6 +46,7 @@ function SwitchRequest (v, p, r) {
 
     let instance = {
         value: value,
+
         priority: priority,
         reason: reason
     };
