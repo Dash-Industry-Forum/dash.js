@@ -116,7 +116,7 @@ function ThroughputRule(config) {
 
         if (lastRequest.trace && lastRequest.trace.length) {
 
-            downloadTimeInMilliseconds = lastRequest._tfinish.getTime() - lastRequest.tresponse.getTime() + 1; //Make sure never 0 we divide by this value. Avoid infinity!
+            downloadTimeInMilliseconds = (lastRequest._tfinish.getTime() - lastRequest.trequest.getTime()) || 1; //Make sure never 0 we divide by this value. Avoid infinity!
 
             const bytes = lastRequest.trace.reduce((a, b) => a + b.b[0], 0);
             const lastRequestThroughput = Math.round((bytes * 8) / (downloadTimeInMilliseconds / 1000));
