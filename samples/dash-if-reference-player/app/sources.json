@@ -282,7 +282,7 @@
         },
         {
            "name": "v7 encrypted single-key (audio only)",
-          "url": "http://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_1080p.mpd",
+          "url": "http://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_AudioOnly.mpd",
           "protData": {
             "com.widevine.alpha": {
               "serverURL": "http://drm-widevine-licensing.axtest.net/AcquireLicense",
