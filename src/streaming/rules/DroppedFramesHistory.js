@@ -37,7 +37,7 @@ function DroppedFramesHistory() {
         push: push,
         getFrameHistory: getDroppedFrameHistory,
         reset: reset
-    }
+    };
 }
 
 DroppedFramesHistory.__dashjs_factory_name = 'DroppedFramesHistory';

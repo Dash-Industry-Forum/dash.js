@@ -7,21 +7,21 @@ import Debug from '../../../core/Debug';
 function DroppedFramesRule() {
     const log = Debug(this.context).getInstance().log;
 
-    const DROPPED_PERCENTAGE_FORBID = 0.10;
-    const GOOD_SAMPLE_SIZE = 180; //Don't apply the rule until this many frames have been rendered(and counted under those indices).
+    const DROPPED_PERCENTAGE_FORBID = 0.15;
+    const GOOD_SAMPLE_SIZE = 375; //Don't apply the rule until this many frames have been rendered(and counted under those indices).
 
     let videoModel = VideoModel(this.context).getInstance();
     let droppedFramesHistory = DroppedFramesHistory(this.context).create();
 
-    function execute(rulesContext) {
-        if (videoModel.getElement()) {
-            let playbackQuality = videoModel.getPlaybackQuality();
-            let index = rulesContext.getCurrentValue();
-            if (typeof index === "number") {
-                droppedFramesHistory.push(index, playbackQuality);
+    function execute(rulesContext, playbackIndex) {
+        if (playbackIndex) {
+            if (videoModel.getElement()) {
+                let playbackQuality = videoModel.getPlaybackQuality();
+                droppedFramesHistory.push(playbackIndex, playbackQuality);
 
                 let dfh = droppedFramesHistory.getFrameHistory();
-                let droppedFrames = 0, totalFrames = 0;
+                let droppedFrames = 0;
+                let totalFrames = 0;
                 let maxIndex = -1;
                 for (let i = 1; i < dfh.length; i++) { //No point in measuring dropped frames for the zeroeth index.
                     if (dfh[i]) {
@@ -34,13 +34,12 @@ function DroppedFramesRule() {
                         }
                     }
                 }
-                log("DroppedFramesRule, index: " + maxIndex + " Dropped Frames: " + droppedFrames + " Total Frames: " + totalFrames);
+                log('DroppedFramesRule, index: ' + maxIndex + ' Dropped Frames: ' + droppedFrames + ' Total Frames: ' + totalFrames);
                 return maxIndex;
             }
-            return -1;
         }
 
-        return null;
+        return -1;
     }
 
     function reset() {

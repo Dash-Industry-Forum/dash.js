@@ -67,7 +67,7 @@ function RulesController() {
         }
     }
 
-    function applyRules(rulesArr, streamProcessor, callback, current, overrideFunc) {
+    function applyRules(rulesArr, streamProcessor, callback, current, playbackQuality, overrideFunc) {
         var values = {};
         var reasons = {};
         var rule,
@@ -116,7 +116,7 @@ function RulesController() {
                 confidence = SwitchRequest.DEFAULT;
             }
 
-            var maxIndex = droppedFramesRule.execute(rulesContext);
+            var maxIndex = droppedFramesRule.execute(rulesContext, playbackQuality);
             if (value && maxIndex && maxIndex >= 0 && value > maxIndex) {
                 value = maxIndex;
             }

@@ -25,7 +25,7 @@ function SwitchRequestHistory() {
     }
 
     function reset() {
-        switchRequests=[];
+        switchRequests = [];
     }
 
     return {

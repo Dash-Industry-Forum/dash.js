@@ -37,6 +37,7 @@ import MediaPlayerModel from '../models/MediaPlayerModel';
 import FragmentModel from '../models/FragmentModel';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
+import MediaPlayerEvents from '../MediaPlayerEvents.js'
 import FactoryMaker from '../../core/FactoryMaker';
 import ManifestModel from '../models/ManifestModel';
 import DashManifestModel from '../../dash/models/DashManifestModel';
@@ -73,7 +74,8 @@ function AbrController() {
         dashManifestModel,
         videoModel,
         mediaPlayerModel,
-        domStorage;
+        domStorage,
+        playbackQuality;
 
     function setup() {
         autoSwitchBitrate = {video: true, audio: true};
@@ -99,8 +101,7 @@ function AbrController() {
         abandonmentStateDict[type] = abandonmentStateDict[type] || {};
         abandonmentStateDict[type].state = ALLOW_LOAD;
         eventBus.on(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
-
-
+        eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_RENDERED, onQualityChangeRendered, this);
     }
 
     function setConfig(config) {
@@ -114,6 +115,12 @@ function AbrController() {
         }
         if (config.streamController) {
             streamController = config.streamController;
+        }
+    }
+
+    function onQualityChangeRendered(e) {
+        if (e.mediaType === 'video') {
+            playbackQuality = e.newQuality;
         }
     }
 
@@ -267,7 +274,7 @@ function AbrController() {
             }
         } else {
             const rules = abrRulesCollection.getRules(ABRRulesCollection.QUALITY_SWITCH_RULES);
-            rulesController.applyRules(rules, streamProcessor, callback, getQualityFor(type, streamInfo), function (currentValue, newValue) {
+            rulesController.applyRules(rules, streamProcessor, callback, getQualityFor(type, streamInfo), playbackQuality, function (currentValue, newValue) {
                 currentValue = currentValue === SwitchRequest.NO_CHANGE ? 0 : currentValue;
                 return Math.max(currentValue, newValue);
             });
@@ -381,6 +388,8 @@ function AbrController() {
 
     function reset () {
         eventBus.off(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
+        eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_RENDERED, onQualityChangeRendered, this);
+        playbackQuality = undefined;
         clearTimeout(abandonmentTimeout);
         abandonmentTimeout = null;
         setup();
@@ -509,7 +518,7 @@ function AbrController() {
                 }
             };
 
-            rulesController.applyRules(rules, streamProcessorDict[type], callback, e, function (currentValue, newValue) {
+            rulesController.applyRules(rules, streamProcessorDict[type], callback, e, playbackQuality, function (currentValue, newValue) {
                 return newValue;
             });
         }
