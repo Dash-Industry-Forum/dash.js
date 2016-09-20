@@ -638,6 +638,16 @@ function MediaPlayer() {
     }
 
     /**
+     * @memberof module:MediaPlayer
+     * @see {@link module:MediaPlayer#setLiveDelay setLiveDelay()}
+     * @instance
+     * @returns {number} Current live stream delay in seconds
+     */
+    function getLiveDelay() {
+        return mediaPlayerModel.getLiveDelay();
+    }
+
+    /**
      * <p>Set to true if you would like to override the default live delay and honor the SuggestedPresentationDelay attribute in by the manifest.</p>
      * @param {boolean} value
      * @default false
@@ -1968,6 +1978,7 @@ function MediaPlayer() {
         getSource: getSource,
         setLiveDelayFragmentCount: setLiveDelayFragmentCount,
         setLiveDelay: setLiveDelay,
+        getLiveDelay: getLiveDelay,
         useSuggestedPresentationDelay: useSuggestedPresentationDelay,
         enableLastBitrateCaching: enableLastBitrateCaching,
         enableLastMediaSettingsCaching: enableLastMediaSettingsCaching,
