@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-var ControlBar = function (dashjsMediaPlayer) {
+var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
     var player = dashjsMediaPlayer,
         video,
@@ -77,7 +77,7 @@ var ControlBar = function (dashjsMediaPlayer) {
         },
 
         onPlayStart = function (e) {
-            setTime(player.time());
+            setTime(displayUTCTimeCodes ? player.timeAsUTC() : player.time());
             updateDuration();
             togglePlayPauseBtnState();
         },
@@ -85,7 +85,7 @@ var ControlBar = function (dashjsMediaPlayer) {
         onPlayTimeUpdate = function (e) {
             updateDuration();
             if (!seeking) {
-                setTime(player.time());
+                setTime(displayUTCTimeCodes ? player.timeAsUTC() : player.time());
                 seekbar.value = player.time();
             }
         },
@@ -139,7 +139,9 @@ var ControlBar = function (dashjsMediaPlayer) {
         onSeeking = function (e) {
             //TODO Add call to seek in trick-mode once implemented. Preview Frames.
             seeking = true;
-            setTime(parseFloat(seekbar.value));
+            var seekValue = parseFloat(seekbar.value);
+            var value = displayUTCTimeCodes ? (player.timeAsUTC() - player.duration()) + seekValue : seekValue;
+            setTime(value);
         },
 
         onSeeked = function (e) {
@@ -152,20 +154,20 @@ var ControlBar = function (dashjsMediaPlayer) {
 
         setDuration = function (value) {
             if (!isNaN(value)) {
-                durationDisplay.textContent = player.convertToTimeCode(value);
+                durationDisplay.textContent = displayUTCTimeCodes ? player.formatUTC(value) : player.convertToTimeCode(value);
             }
         },
 
         setTime = function (value) {
             if (!isNaN(value)) {
-                timeDisplay.textContent = player.convertToTimeCode(value);
+                timeDisplay.textContent = displayUTCTimeCodes ? player.formatUTC(value) : player.convertToTimeCode(value);
             }
         },
 
         updateDuration = function () {
             var duration = player.duration();
             if (duration !== parseFloat(seekbar.max)) { //check if duration changes for live streams..
-                setDuration(duration);
+                setDuration(displayUTCTimeCodes ? player.durationAsUTC() : duration);
                 seekbar.max = duration;
             }
         },
@@ -593,6 +595,8 @@ var ControlBar = function (dashjsMediaPlayer) {
             if (!video) {
                 throw new Error("Please call initialize after you have called attachView on MediaPlayer.js");
             }
+
+            displayUTCTimeCodes = displayUTCTimeCodes === undefined ? false : displayUTCTimeCodes;
 
             video.controls = false;
             videoContainer = player.getVideoContainer();
