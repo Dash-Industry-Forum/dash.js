@@ -7,9 +7,9 @@ function SwitchHistoryRule(switchRequestHistory) {
 
     //MAX_INDEX_SWITCH is the number of drops made, divided by the number of times the abr rules were invoked(that is, opportunities to drop).
     //0.05 is equivalent to a drop from the highest quality to the lowest quality after 20 switch requests.
-    const MAX_INDEX_SWITCH = 0.025;
+    //const MAX_INDEX_SWITCH = 0.025;
     //MAX_SWITCH is the number of drops made. It doesn't consider the size of the drop.
-    const MAX_SWITCH = 0.1;
+    const MAX_SWITCH = 0.075;
 
     //Before this number of switch requests(no switch or actual), don't prevent apply the rule.
     const SAMPLE_SIZE = 8;
@@ -28,7 +28,7 @@ function SwitchHistoryRule(switchRequestHistory) {
                 noDrops += switchRequests[i].noDrops;
                 dropSize += switchRequests[i].dropSize;
 
-                if (drops + noDrops >= SAMPLE_SIZE && (drops / noDrops > MAX_SWITCH || dropSize / (drops + noDrops) / i > MAX_INDEX_SWITCH)) {
+                if (drops + noDrops >= SAMPLE_SIZE && (drops / noDrops > MAX_SWITCH)) {// || dropSize / (drops + noDrops) / i > MAX_INDEX_SWITCH)) {
                     maxIndex = i > 0 ? i - 1 : 0;
                     log('Switch history rule index: ' + maxIndex + ' samples: ' + (drops + noDrops) + ' drops: ' + drops + ' dropSize: ' + dropSize);
                     break;

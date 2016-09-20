@@ -192,12 +192,13 @@ function ThroughputRule(config) {
                     switchRequest.value = newQuality;
                     switchRequest.priority = SwitchRequest.DEFAULT;
                     switchRequest.reason.throughput = throughput;
+                    switchRequest.reason.latency = latency;
                 }
 
                 if (switchRequest.value !== SwitchRequest.NO_CHANGE && switchRequest.value !== currentQuality) {
                     log('ThroughputRule requesting switch to index: ', switchRequest.value, 'type: ', mediaType, ' Priority: ',
                         switchRequest.priority === SwitchRequest.DEFAULT ? 'Default' :
-                            switchRequest.priority === SwitchRequest.STRONG ? 'Strong' : 'Weak', 'Average throughput', Math.round(throughput), 'kbps');
+                            switchRequest.priority === SwitchRequest.STRONG ? 'Strong' : 'Weak', 'Average throughput', Math.round(throughput), 'kbps; Average latency', Math.round(latency), 'ms');
                 }
             }
             callback(switchRequest);
