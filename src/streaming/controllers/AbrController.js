@@ -37,7 +37,7 @@ import MediaPlayerModel from '../models/MediaPlayerModel';
 import FragmentModel from '../models/FragmentModel';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
-import MediaPlayerEvents from '../MediaPlayerEvents.js'
+import MediaPlayerEvents from '../MediaPlayerEvents.js';
 import FactoryMaker from '../../core/FactoryMaker';
 import ManifestModel from '../models/ManifestModel';
 import DashManifestModel from '../../dash/models/DashManifestModel';
@@ -309,13 +309,23 @@ function AbrController() {
     /**
      * @param {MediaInfo} mediaInfo
      * @param {number} bitrate A bitrate value, kbps
+     * @param {number} latency Expected latency of connection, ms
      * @returns {number} A quality index <= for the given bitrate
      * @memberof AbrController#
      */
-    function getQualityForBitrate(mediaInfo, bitrate) {
+    function getQualityForBitrate(mediaInfo, bitrate, latency) {
+        if (latency && streamProcessorDict[mediaInfo.type].getCurrentRepresentationInfo()) {
+            latency = latency / 1000;
+            let fragmentDuration = streamProcessorDict[mediaInfo.type].getCurrentRepresentationInfo().fragmentDuration;
+            if (latency > fragmentDuration) {
+                return 0;
+            } else {
+                let deadTimeRatio = latency / fragmentDuration;
+                bitrate = bitrate * (1 - deadTimeRatio);
+            }
+        }
 
         const bitrateList = getBitrateList(mediaInfo);
-
         if (!bitrateList || bitrateList.length === 0) {
             return QUALITY_DEFAULT;
         }

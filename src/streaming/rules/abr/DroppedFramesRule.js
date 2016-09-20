@@ -30,11 +30,11 @@ function DroppedFramesRule() {
 
                         if (totalFrames > GOOD_SAMPLE_SIZE && droppedFrames / totalFrames > DROPPED_PERCENTAGE_FORBID) {
                             maxIndex = i - 1;
+                            log('DroppedFramesRule, index: ' + maxIndex + ' Dropped Frames: ' + droppedFrames + ' Total Frames: ' + totalFrames);
                             break;
                         }
                     }
                 }
-                log('DroppedFramesRule, index: ' + maxIndex + ' Dropped Frames: ' + droppedFrames + ' Total Frames: ' + totalFrames);
                 return maxIndex;
             }
         }
