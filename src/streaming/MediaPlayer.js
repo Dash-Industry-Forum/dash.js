@@ -641,7 +641,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#setLiveDelay setLiveDelay()}
      * @instance
-     * @returns {number} Current live stream delay in seconds
+     * @returns {number|undefined} Current live stream delay in seconds when previously set, or `undefined`
      */
     function getLiveDelay() {
         return mediaPlayerModel.getLiveDelay();
@@ -700,7 +700,7 @@ function MediaPlayer() {
      * If you set this property to a value lower than that currently playing, the switching engine will switch down to
      * satisfy this requirement. If you set it to a value that is lower than the lowest bitrate, it will still play
      * that lowest bitrate.
-     *
+     *g
      * You can set or remove this bitrate cap at anytime before or during playback.  To clear this setting you must use the API
      * and set the value param to NaN.
      *
