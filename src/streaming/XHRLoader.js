@@ -207,7 +207,7 @@ function XHRLoader(cfg) {
 
             xhr = requestModifier.modifyRequestHeader(xhr);
 
-            xhr.withCredentials = mediaPlayerModel.getXHRWithCredentials();
+            xhr.withCredentials = mediaPlayerModel.getXHRWithCredentialsForType(request.type);
 
             xhr.onload = onload;
             xhr.onloadend = onloadend;
