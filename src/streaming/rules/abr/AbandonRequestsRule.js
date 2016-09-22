@@ -64,7 +64,7 @@ function AbandonRequestsRule() {
         throughputArray[type].push(throughput);
     }
 
-    function execute(rulesContext, callback) {
+    function shouldAbandon(rulesContext) {
 
         const mediaInfo = rulesContext.getMediaInfo();
         const mediaType = mediaInfo.type;
@@ -77,8 +77,7 @@ function AbandonRequestsRule() {
 
             const fragmentInfo = fragmentDict[mediaType][req.index];
             if (fragmentInfo === null || req.firstByteDate === null || abandonDict.hasOwnProperty(fragmentInfo.id)) {
-                callback(switchRequest);
-                return;
+                return switchRequest;
             }
 
             //setup some init info based on first progress event
@@ -106,10 +105,7 @@ function AbandonRequestsRule() {
                 //log("id:",fragmentInfo.id, "kbps:", fragmentInfo.measuredBandwidthInKbps, "etd:",fragmentInfo.estimatedTimeOfDownload, fragmentInfo.bytesLoaded);
 
                 if (fragmentInfo.estimatedTimeOfDownload < fragmentInfo.segmentDuration * ABANDON_MULTIPLIER || rulesContext.getTrackInfo().quality === 0 ) {
-
-                    callback(switchRequest);
-                    return;
-
+                    return switchRequest;
                 } else if (!abandonDict.hasOwnProperty(fragmentInfo.id)) {
 
                     const abrController = rulesContext.getStreamProcessor().getABRController();
@@ -133,7 +129,7 @@ function AbandonRequestsRule() {
             }
         }
 
-        callback(switchRequest);
+        return switchRequest;
     }
 
     function reset() {
@@ -141,7 +137,7 @@ function AbandonRequestsRule() {
     }
 
     const instance = {
-        execute: execute,
+        shouldAbandon: shouldAbandon,
         reset: reset
     };
 

@@ -32,7 +32,6 @@
 import SwitchRequest from '../rules/SwitchRequest';
 import BitrateInfo from '../vo/BitrateInfo';
 import DOMStorage from '../utils/DOMStorage';
-import ABRRulesCollection from '../rules/abr/ABRRulesCollection';
 import MediaPlayerModel from '../models/MediaPlayerModel';
 import FragmentModel from '../models/FragmentModel';
 import EventBus from '../../core/EventBus';
@@ -42,6 +41,7 @@ import FactoryMaker from '../../core/FactoryMaker';
 import ManifestModel from '../models/ManifestModel';
 import DashManifestModel from '../../dash/models/DashManifestModel';
 import VideoModel from '../models/VideoModel';
+import RulesContext from '../rules/RulesController.js';
 
 const ABANDON_LOAD = 'abandonload';
 const ALLOW_LOAD = 'allowload';
@@ -56,7 +56,6 @@ function AbrController() {
 
     let instance,
         abrRulesCollection,
-        rulesController,
         streamController,
         autoSwitchBitrate,
         topQualities,
@@ -94,6 +93,11 @@ function AbrController() {
         manifestModel = ManifestModel(context).getInstance();
         dashManifestModel = DashManifestModel(context).getInstance();
         videoModel = VideoModel(context).getInstance();
+
+        //TODO Move to abrmodel
+        //let bufferOccupancyRule = BufferOccupancyRule(context).create({
+        //    metricsModel: metricsModel,
+        //    dashMetrics: dashMetrics})
     }
 
     function initialize(type, streamProcessor) {
@@ -109,9 +113,6 @@ function AbrController() {
 
         if (config.abrRulesCollection) {
             abrRulesCollection = config.abrRulesCollection;
-        }
-        if (config.rulesController) {
-            rulesController = config.rulesController;
         }
         if (config.streamController) {
             streamController = config.streamController;
@@ -239,17 +240,44 @@ function AbrController() {
         usePixelRatioInLimitBitrateByPortal = value;
     }
 
-    function getPlaybackQuality(streamProcessor, completedCallback) {
+    //function hasRichBuffer(rulesContext) {
+    //var now = new Date().getTime() / 1000;
+    //var mediaInfo = rulesContext.getMediaInfo();
+    //var representationInfo = rulesContext.getTrackInfo();
+    //var mediaType = mediaInfo.type;
+    //var waitToSwitchTime = !isNaN(representationInfo.fragmentDuration) ? representationInfo.fragmentDuration / 2 : 2;
+    //var streamProcessor = rulesContext.getStreamProcessor();
+    //var abrController = streamProcessor.getABRController();
+    //var metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
+    //var lastBufferLevel = dashMetrics.getCurrentBufferLevel(metrics);
+    //var lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
+    //let isBufferRich = false;
+    //
+    //if (!(now - lastSwitchTime < waitToSwitchTime ||
+    //    abrController.getAbandonmentStateFor(mediaType) === AbrController.ABANDON_LOAD ||
+    //    lastBufferStateVO === null)) {
+    //    // This will happen when another rule tries to switch from top to any other.
+    //    // If there is enough buffer why not try to stay at high level.
+    //    if (lastBufferLevel > lastBufferStateVO.target) {
+    //        isBufferRich = (lastBufferLevel - lastBufferStateVO.target) > mediaPlayerModel.getRichBufferThreshold();
+    //    }
+    //}
+    //
+    //return isBufferRich;
+    //}
 
+    function getPlaybackQuality(streamProcessor) {
         const type = streamProcessor.getType();
         const streamInfo = streamProcessor.getStreamInfo();
         const streamId = streamInfo.id;
+        const oldQuality = getQualityFor(type, streamInfo);
+        let rulesContext = RulesContext(context).create({streamProcessor: streamProcessor, currentValue: oldQuality});
 
-        const callback = function (res) {
-
+        //log("ABR enabled? (" + autoSwitchBitrate + ")");
+        if (getAutoSwitchBitrateFor(type)) {
+            let newQuality = abrRulesCollection.getMaxQuality(rulesContext);//TODO Switch rulesContext to abr model.
             const topQualityIdx = getTopQualityIndexFor(type, streamId);
 
-            let newQuality = res.value;
             if (newQuality < 0) {
                 newQuality = 0;
             }
@@ -257,27 +285,12 @@ function AbrController() {
                 newQuality = topQualityIdx;
             }
 
-            const oldQuality = getQualityFor(type, streamInfo);
             if (newQuality !== oldQuality && (abandonmentStateDict[type].state === ALLOW_LOAD || newQuality > oldQuality)) {
-                setConfidenceFor(type, streamId, res.confidence);
-                changeQuality(type, streamInfo, oldQuality, newQuality, res.reason);
+                //TODO Provide metrics model with uncertainty statistics.
+                //setConfidenceFor(type, streamId, res.confidence);
+                //TODO Provide logging with reason.
+                changeQuality(type, streamInfo, oldQuality, newQuality, '');//res.reason);
             }
-            if (completedCallback) {
-                completedCallback();
-            }
-        };
-
-        //log("ABR enabled? (" + autoSwitchBitrate + ")");
-        if (!getAutoSwitchBitrateFor(type)) {
-            if (completedCallback) {
-                completedCallback();
-            }
-        } else {
-            const rules = abrRulesCollection.getRules(ABRRulesCollection.QUALITY_SWITCH_RULES);
-            rulesController.applyRules(rules, streamProcessor, callback, getQualityFor(type, streamInfo), playbackQuality, function (currentValue, newValue) {
-                currentValue = currentValue === SwitchRequest.NO_CHANGE ? 0 : currentValue;
-                return Math.max(currentValue, newValue);
-            });
         }
     }
 
@@ -438,10 +451,10 @@ function AbrController() {
         return confidence;
     }
 
-    function setConfidenceFor(type, id, value) {
-        confidenceDict[id] = confidenceDict[id] || {};
-        confidenceDict[id][type] = value;
-    }
+    //function setConfidenceFor(type, id, value) {
+    //    confidenceDict[id] = confidenceDict[id] || {};
+    //    confidenceDict[id][type] = value;
+    //}
 
     function setTopQualityIndex(type, id, value) {
         topQualities[id] = topQualities[id] || {};
@@ -500,37 +513,36 @@ function AbrController() {
     function onFragmentLoadProgress(e) {
         const type = e.request.mediaType;
         if (getAutoSwitchBitrateFor(type)) {
-
-            const rules = abrRulesCollection.getRules(ABRRulesCollection.ABANDON_FRAGMENT_RULES);
             const scheduleController = streamProcessorDict[type].getScheduleController();
             if (!scheduleController) return;// There may be a fragment load in progress when we switch periods and recreated some controllers.
 
-            const callback = function (switchRequest) {
-                if (switchRequest.confidence === SwitchRequest.STRONG &&
-                    switchRequest.value < getQualityFor(type, streamController.getActiveStreamInfo())) {
+            let switchRequest = abrRulesCollection.shouldAbandonFragment(streamProcessorDict[type], e, playbackQuality);
+            //Removed overrideFunc
+            //    function (currentValue, newValue) {
+            //        return newValue;
+            //    });
 
-                    const fragmentModel = scheduleController.getFragmentModel();
-                    const request = fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_LOADING, index: e.request.index})[0];
-                    if (request) {
-                        //TODO Check if we should abort or if better to finish download. check bytesLoaded/Total
-                        fragmentModel.abortRequests();
-                        setAbandonmentStateFor(type, ABANDON_LOAD);
-                        rulesController.addToSwitchHistory({oldValue: getQualityFor(type, streamController.getActiveStreamInfo()), newValue: switchRequest.value, confidence: 1, reason: switchRequest.reason});
-                        setPlaybackQuality(type, streamController.getActiveStreamInfo(), switchRequest.value, switchRequest.reason);
-                        eventBus.trigger(Events.FRAGMENT_LOADING_ABANDONED, {streamProcessor: streamProcessorDict[type], request: request, mediaType: type});
+            if (switchRequest.confidence === SwitchRequest.STRONG &&
+                switchRequest.value < getQualityFor(type, streamController.getActiveStreamInfo())) {
 
-                        clearTimeout(abandonmentTimeout);
-                        abandonmentTimeout = setTimeout(() => {
-                            setAbandonmentStateFor(type, ALLOW_LOAD);
-                            abandonmentTimeout = null;
-                        }, mediaPlayerModel.getAbandonLoadTimeout());
-                    }
+                const fragmentModel = scheduleController.getFragmentModel();
+                const request = fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_LOADING, index: e.request.index})[0];
+                if (request) {
+                    //TODO Check if we should abort or if better to finish download. check bytesLoaded/Total
+                    fragmentModel.abortRequests();
+                    setAbandonmentStateFor(type, ABANDON_LOAD);
+                    //TODO re-connect switch history
+                    //rulesController.addToSwitchHistory({oldValue: getQualityFor(type, streamController.getActiveStreamInfo()), newValue: switchRequest.value, confidence: 1, reason: switchRequest.reason});
+                    setPlaybackQuality(type, streamController.getActiveStreamInfo(), switchRequest.value, switchRequest.reason);
+                    eventBus.trigger(Events.FRAGMENT_LOADING_ABANDONED, {streamProcessor: streamProcessorDict[type], request: request, mediaType: type});
+
+                    clearTimeout(abandonmentTimeout);
+                    abandonmentTimeout = setTimeout(() => {
+                        setAbandonmentStateFor(type, ALLOW_LOAD);
+                    abandonmentTimeout = null; },
+                    mediaPlayerModel.getAbandonLoadTimeout());
                 }
-            };
-
-            rulesController.applyRules(rules, streamProcessorDict[type], callback, e, playbackQuality, function (currentValue, newValue) {
-                return newValue;
-            });
+            }
         }
     }
 

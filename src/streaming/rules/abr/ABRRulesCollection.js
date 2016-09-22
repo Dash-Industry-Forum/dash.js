@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import ThroughputRule from './ThroughputRule';
-import BufferOccupancyRule from './BufferOccupancyRule';
 import InsufficientBufferRule from './InsufficientBufferRule';
 import AbandonRequestsRule from './AbandonRequestsRule';
 import BolaRule from './BolaRule';
@@ -79,13 +78,6 @@ function ABRRulesCollection() {
                 })
             );
 
-            qualitySwitchRules.push(
-                BufferOccupancyRule(context).create({
-                    metricsModel: metricsModel,
-                    dashMetrics: dashMetrics
-                })
-            );
-
             qualitySwitchRules.push(InsufficientBufferRule(context).create({metricsModel: metricsModel}));
             abandonFragmentRules.push(AbandonRequestsRule(context).create());
         }
@@ -102,15 +94,40 @@ function ABRRulesCollection() {
         }
     }
 
+    function getMaxQuality(rulesContext) {
+        return qualitySwitchRules.reduce((a, b) => {return Math.min(a, b.getMaxQuality(rulesContext));});
+    }
+
+    function shouldAbandonFragment(streamProcessor, e, playbackQuality) {
+        //TODO Sketchy, replace by simple yes/no.
+        return abandonFragmentRules.reduce(function (a, bRule) {
+            let b = bRule.shouldAbandon(streamProcessor, e, playbackQuality);
+            if (a.priority > b.priority) {
+                return a;
+            } else if (b.priority > a.priority) {
+                return b;
+            } else {
+                if (a.value < b.value) {
+                    return a;
+                } else {
+                    return b;
+                }
+            }
+        });
+    }
+
     instance = {
         initialize: initialize,
-        getRules: getRules
+        getRules: getRules,
+        getMaxQuality: getMaxQuality,
+        shouldAbandonFragment: shouldAbandonFragment
     };
 
     return instance;
 }
 
 ABRRulesCollection.__dashjs_factory_name = 'ABRRulesCollection';
+//TODO make not singleton
 let factory =  FactoryMaker.getSingletonFactory(ABRRulesCollection);
 factory.QUALITY_SWITCH_RULES = QUALITY_SWITCH_RULES;
 factory.ABANDON_FRAGMENT_RULES = ABANDON_FRAGMENT_RULES;
