@@ -87,6 +87,23 @@ app.directive('chart', function() {
 
 app.controller('DashController', function($scope, sources, contributors) {
 
+    function doesTimeMarchesOn() {
+        var version;
+        var REQUIRED_VERSION = 49.0;
+
+        if (typeof navigator !== 'undefined') {
+            if (!navigator.userAgent.match(/Firefox/)) {
+                return true;
+            }
+
+            version = parseFloat(navigator.userAgent.match(/rv:([0-9.]+)/)[1]);
+
+            if (!isNaN(version) && version >= REQUIRED_VERSION){
+                return true;
+            }
+        }
+    }
+
     $scope.selectedItem = {url:"http://dash.edgesuite.net/akamai/bbb_30fps/bbb_30fps.mpd"};
     $scope.abrEnabled = true;
     $scope.toggleCCBubble = false;
@@ -143,8 +160,8 @@ app.controller('DashController', function($scope, sources, contributors) {
     $scope.player.initialize($scope.video, null, true);
     $scope.player.setFastSwitchEnabled(true);
     $scope.player.attachVideoContainer(document.getElementById("videoContainer"));
-    // Add HTML-rendered TTML subtitles except for Firefox (issue #1164)
-    if (typeof navigator !== 'undefined' && !navigator.userAgent.match(/Firefox/)) {
+    // Add HTML-rendered TTML subtitles except for Firefox < v49 (issue #1164)
+    if (doesTimeMarchesOn()) {
         $scope.player.attachTTMLRenderingDiv($("#video-caption")[0]);
     }
 
