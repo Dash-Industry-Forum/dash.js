@@ -2,7 +2,7 @@
 import FactoryMaker from '../../../core/FactoryMaker.js';
 import Debug from '../../../core/Debug';
 
-function SwitchHistoryRule(switchRequestHistory) {
+function SwitchHistoryRule() {
     const log = Debug(this.context).getInstance().log;
 
     //MAX_INDEX_SWITCH is the number of drops made, divided by the number of times the abr rules were invoked(that is, opportunities to drop).
@@ -15,7 +15,8 @@ function SwitchHistoryRule(switchRequestHistory) {
     const SAMPLE_SIZE = 8;
 
 
-    function getMaxIndex() {
+    function getMaxIndex(rulesContext) {
+        const switchRequestHistory = rulesContext.getSwitchHistory();
         let switchRequests = switchRequestHistory.getSwitchRequests();
         let maxIndex = -1;
         let drops = 0;

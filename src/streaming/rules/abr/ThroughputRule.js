@@ -139,8 +139,7 @@ function ThroughputRule(config) {
         return ret;
     }
 
-    function execute (rulesContext, callback) {
-
+    function getMaxIndex(rulesContext) {
         const mediaInfo = rulesContext.getMediaInfo();
         const mediaType = mediaInfo.type;
         const currentQuality = rulesContext.getCurrentValue();
@@ -150,11 +149,9 @@ function ThroughputRule(config) {
         const isDynamic = streamProcessor.isDynamic();
         const lastRequest = dashMetrics.getCurrentHttpRequest(metrics);
         const bufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
-        const switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK, {name: ThroughputRule.__dashjs_factory_name});
 
         if (!metrics || !lastRequest || lastRequest.type !== HTTPRequest.MEDIA_SEGMENT_TYPE || !bufferStateVO ) {
-            callback(switchRequest);
-            return;
+            return -1;
         }
 
         let downloadTimeInMilliseconds;
@@ -171,6 +168,7 @@ function ThroughputRule(config) {
 
             let throughput;
             let latency;
+            let newQuality = -1;
             //Prevent cached fragment loads from skewing the average throughput value - allow first even if cached to set allowance for ABR rules..
             if (isCachedResponse(latencyTimeInMilliseconds, downloadTimeInMilliseconds, mediaType)) {
                 throughput = lastRequestThroughput / 1000;
@@ -187,21 +185,15 @@ function ThroughputRule(config) {
             if (abrController.getAbandonmentStateFor(mediaType) !== AbrController.ABANDON_LOAD) {
 
                 if (bufferStateVO.state === BufferController.BUFFER_LOADED || isDynamic) {
-                    const newQuality = abrController.getQualityForBitrate(mediaInfo, throughput, latency);
+                    newQuality = abrController.getQualityForBitrate(mediaInfo, throughput, latency);
                     streamProcessor.getScheduleController().setTimeToLoadDelay(0);
-                    switchRequest.value = newQuality;
-                    switchRequest.priority = SwitchRequest.DEFAULT;
-                    switchRequest.reason.throughput = throughput;
-                    switchRequest.reason.latency = latency;
                 }
 
-                if (switchRequest.value !== SwitchRequest.NO_CHANGE && switchRequest.value !== currentQuality) {
-                    log('ThroughputRule requesting switch to index: ', switchRequest.value, 'type: ', mediaType, ' Priority: ',
-                        switchRequest.priority === SwitchRequest.DEFAULT ? 'Default' :
-                            switchRequest.priority === SwitchRequest.STRONG ? 'Strong' : 'Weak', 'Average throughput', Math.round(throughput), 'kbps; Average latency', Math.round(latency), 'ms');
+                if (newQuality >= 0) {
+                    log('ThroughputRule requesting switch to index: ', newQuality, 'Average throughput', Math.round(throughput), 'kbps; Average latency', Math.round(latency), 'ms');
                 }
             }
-            callback(switchRequest);
+            return newQuality;
         }
     }
 
@@ -210,7 +202,7 @@ function ThroughputRule(config) {
     }
 
     const instance = {
-        execute: execute,
+        getMaxIndex: getMaxIndex,
         reset: reset
     };
 

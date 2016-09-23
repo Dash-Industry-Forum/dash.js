@@ -31,6 +31,8 @@
 import ThroughputRule from './ThroughputRule';
 import InsufficientBufferRule from './InsufficientBufferRule';
 import AbandonRequestsRule from './AbandonRequestsRule';
+import DroppedFramesRule from './DroppedFramesRule.js';
+import SwitchHistoryRule from './SwitchHistoryRule.js';
 import BolaRule from './BolaRule';
 import BolaAbandonRule from './BolaAbandonRule';
 import MediaPlayerModel from '../../models/MediaPlayerModel';
@@ -79,6 +81,8 @@ function ABRRulesCollection() {
             );
 
             qualitySwitchRules.push(InsufficientBufferRule(context).create({metricsModel: metricsModel}));
+            qualitySwitchRules.push(SwitchHistoryRule(context).create());
+            qualitySwitchRules.push(DroppedFramesRule(context).create());
             abandonFragmentRules.push(AbandonRequestsRule(context).create());
         }
     }
@@ -95,7 +99,10 @@ function ABRRulesCollection() {
     }
 
     function getMaxQuality(rulesContext) {
-        return qualitySwitchRules.reduce((a, b) => {return Math.min(a, b.getMaxQuality(rulesContext));});
+        let maxQualityArray = qualitySwitchRules.map((rule) => { return rule.getMaxIndex(rulesContext) });
+        let active = maxQualityArray.filter((quality) => {return quality >= 0;});
+
+        return active.length > 0 ? Math.min(...active) : -1;
     }
 
     function shouldAbandonFragment(streamProcessor, e, playbackQuality) {

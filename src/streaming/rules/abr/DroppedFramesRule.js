@@ -13,7 +13,8 @@ function DroppedFramesRule() {
     let videoModel = VideoModel(this.context).getInstance();
     let droppedFramesHistory = DroppedFramesHistory(this.context).create();
 
-    function execute(rulesContext, playbackIndex) {
+    function getMaxIndex(rulesContext) {
+        const playbackIndex = rulesContext.getPlaybackIndex();
         if (playbackIndex) {
             if (videoModel.getElement()) {
                 let playbackQuality = videoModel.getPlaybackQuality();
@@ -48,7 +49,7 @@ function DroppedFramesRule() {
     }
 
     return {
-        execute: execute,
+        getMaxIndex: getMaxIndex,
         reset: reset
     };
 }

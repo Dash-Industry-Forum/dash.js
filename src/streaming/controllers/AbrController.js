@@ -41,7 +41,8 @@ import FactoryMaker from '../../core/FactoryMaker';
 import ManifestModel from '../models/ManifestModel';
 import DashManifestModel from '../../dash/models/DashManifestModel';
 import VideoModel from '../models/VideoModel';
-import RulesContext from '../rules/RulesController.js';
+import RulesContext from '../rules/RulesContext.js';
+import SwitchRequestHistory from '../rules/SwitchRequestHistory.js';
 
 const ABANDON_LOAD = 'abandonload';
 const ALLOW_LOAD = 'allowload';
@@ -74,7 +75,8 @@ function AbrController() {
         videoModel,
         mediaPlayerModel,
         domStorage,
-        playbackQuality;
+        playbackQuality,
+        switchHistory;
 
     function setup() {
         autoSwitchBitrate = {video: true, audio: true};
@@ -93,6 +95,7 @@ function AbrController() {
         manifestModel = ManifestModel(context).getInstance();
         dashManifestModel = DashManifestModel(context).getInstance();
         videoModel = VideoModel(context).getInstance();
+        switchHistory = SwitchRequestHistory(context).create();
 
         //TODO Move to abrmodel
         //let bufferOccupancyRule = BufferOccupancyRule(context).create({
@@ -271,25 +274,27 @@ function AbrController() {
         const streamInfo = streamProcessor.getStreamInfo();
         const streamId = streamInfo.id;
         const oldQuality = getQualityFor(type, streamInfo);
-        let rulesContext = RulesContext(context).create({streamProcessor: streamProcessor, currentValue: oldQuality});
+        const rulesContext = RulesContext(context).create({streamProcessor: streamProcessor, currentValue: oldQuality, playbackIndex: playbackQuality, switchHistory: switchHistory});
 
         //log("ABR enabled? (" + autoSwitchBitrate + ")");
         if (getAutoSwitchBitrateFor(type)) {
-            let newQuality = abrRulesCollection.getMaxQuality(rulesContext);//TODO Switch rulesContext to abr model.
             const topQualityIdx = getTopQualityIndexFor(type, streamId);
-
+            let newQuality = abrRulesCollection.getMaxQuality(rulesContext);//TODO Switch rulesContext to abr model.
             if (newQuality < 0) {
-                newQuality = 0;
-            }
-            if (newQuality > topQualityIdx) {
+                newQuality = oldQuality;
+            } else if (newQuality > topQualityIdx) {
                 newQuality = topQualityIdx;
             }
 
-            if (newQuality !== oldQuality && (abandonmentStateDict[type].state === ALLOW_LOAD || newQuality > oldQuality)) {
-                //TODO Provide metrics model with uncertainty statistics.
-                //setConfidenceFor(type, streamId, res.confidence);
-                //TODO Provide logging with reason.
-                changeQuality(type, streamInfo, oldQuality, newQuality, '');//res.reason);
+            switchHistory.push({oldValue: oldQuality, newValue: newQuality});
+
+            if (newQuality != oldQuality) {
+                if (abandonmentStateDict[type].state === ALLOW_LOAD || newQuality > oldQuality) {
+                    //TODO Provide metrics model with uncertainty statistics.
+                    //setConfidenceFor(type, streamId, res.confidence);
+                    //TODO Provide logging with reason.
+                    changeQuality(type, streamInfo, oldQuality, newQuality, '');//res.reason);
+                }
             }
         }
     }
