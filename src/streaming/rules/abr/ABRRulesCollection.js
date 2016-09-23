@@ -99,7 +99,7 @@ function ABRRulesCollection() {
     }
 
     function getMaxQuality(rulesContext) {
-        let maxQualityArray = qualitySwitchRules.map((rule) => { return rule.getMaxIndex(rulesContext) });
+        let maxQualityArray = qualitySwitchRules.map((rule) => { return rule.getMaxIndex(rulesContext); });
         let active = maxQualityArray.filter((quality) => {return quality >= 0;});
 
         return active.length > 0 ? Math.min(...active) : -1;

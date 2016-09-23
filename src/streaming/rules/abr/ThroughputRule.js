@@ -28,7 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import SwitchRequest from '../SwitchRequest';
 import BufferController from '../../controllers/BufferController';
 import AbrController from '../../controllers/AbrController';
 import MediaPlayerModel from '../../models/MediaPlayerModel';
@@ -142,7 +141,6 @@ function ThroughputRule(config) {
     function getMaxIndex(rulesContext) {
         const mediaInfo = rulesContext.getMediaInfo();
         const mediaType = mediaInfo.type;
-        const currentQuality = rulesContext.getCurrentValue();
         const metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
         const streamProcessor = rulesContext.getStreamProcessor();
         const abrController = streamProcessor.getABRController();
