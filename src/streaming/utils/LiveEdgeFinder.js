@@ -102,7 +102,7 @@ function LiveEdgeFinder() {
         isSearchStarted = true;
         searchStartTime = new Date().getTime();
 
-        rulesController.applyRules(rules, streamProcessor, onSearchCompleted, null, function (currentValue, newValue) {
+        rulesController.applyRules(rules, streamProcessor, onSearchCompleted, null, null, function (currentValue, newValue) {
             return newValue;
         });
     }
