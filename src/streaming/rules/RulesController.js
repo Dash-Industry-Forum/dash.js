@@ -32,9 +32,6 @@ import RulesContext from './RulesContext';
 import SwitchRequest from './SwitchRequest';
 import ABRRulesCollection from './abr/ABRRulesCollection';
 import SynchronizationRulesCollection from './synchronization/SynchronizationRulesCollection';
-import SwitchRequestHistory from './SwitchRequestHistory.js';
-import SwitchHistoryRule from './abr/SwitchHistoryRule.js';
-import DroppedFramesRule from './abr/DroppedFramesRule.js';
 import FactoryMaker from '../../core/FactoryMaker';
 
 const ABR_RULE = 0;
@@ -43,10 +40,6 @@ const SYNC_RULE = 1;
 function RulesController() {
 
     let context = this.context;
-    let switchHistory = SwitchRequestHistory(context).create();
-    let switchHistoryRule = SwitchHistoryRule(context).create(switchHistory);
-
-    let droppedFramesRule = DroppedFramesRule(context).create();
 
     let instance,
         rules;
@@ -116,23 +109,6 @@ function RulesController() {
                 confidence = SwitchRequest.DEFAULT;
             }
 
-            var maxIndex = droppedFramesRule.execute(rulesContext, playbackQuality);
-            if (value && maxIndex && maxIndex >= 0 && value > maxIndex) {
-                value = maxIndex;
-            }
-
-            if (value > current) {
-                let switchMaxIndex = switchHistoryRule.getMaxIndex();
-                if (switchMaxIndex != -1 && switchMaxIndex < value) {
-                    value = switchMaxIndex;
-                }
-            }
-
-            if (typeof current === 'number') {
-                //TODO Don't construct inline.
-                switchHistory.push({newValue: value === undefined ? current : value, oldValue: current, confidence: confidence, reason: reason});
-            }
-
             if (value !== undefined) {
                 callback({ value: value, confidence: confidence, reason: reason});
             } else {
@@ -171,23 +147,17 @@ function RulesController() {
         }
 
         rules = {};
-        switchHistory.reset();
     }
 
     function getRulesContext(streamProcessor, currentValue) {
         return RulesContext(context).create({streamProcessor: streamProcessor, currentValue: currentValue});
     }
 
-    function addToSwitchHistory(switchRequest) {
-        switchHistory.push(switchRequest);
-    }
-
     instance = {
         initialize: initialize,
         setConfig: setConfig,
         applyRules: applyRules,
-        reset: reset,
-        addToSwitchHistory: addToSwitchHistory
+        reset: reset
     };
 
     return instance;
