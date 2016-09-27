@@ -67,6 +67,8 @@ function BolaRule(config) {
 
     let instance,
         lastCallTimeDict,
+        lastFragmentLoadedDict,
+        lastFragmentWasSwitchDict,
         eventMediaTypes,
         mediaPlayerModel,
         playbackController,
@@ -74,6 +76,8 @@ function BolaRule(config) {
 
     function setup() {
         lastCallTimeDict = {};
+        lastFragmentLoadedDict = {};
+        lastFragmentWasSwitchDict = {};
         eventMediaTypes = [];
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
         playbackController = PlaybackController(context).getInstance();
@@ -81,6 +85,7 @@ function BolaRule(config) {
         eventBus.on(Events.BUFFER_EMPTY, onBufferEmpty, instance);
         eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
         eventBus.on(Events.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, instance);
+        eventBus.on(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, instance);
     }
 
     function utilitiesFromBitrates(bitrates) {
@@ -239,33 +244,42 @@ function BolaRule(config) {
         return q;
     }
 
-    function getDelayFromLastFragmentInSeconds(metrics, mediaType) {
-        let lastRequests = getLastHttpRequests(metrics, 1);
-        if (lastRequests.length === 0) {
-            return 0;
-        }
-        let lastRequest = lastRequests[0];
-        let nowMs = Date.now();
-        let lastRequestFinishMs = lastRequest._tfinish.getTime();
+    function getPlaceholderIncrementInSeconds(metrics, mediaType) {
+        // find out if there was delay because of
+        // 1. lack of availability in live streaming or
+        // 2. bufferLevel > bufferTarget or
+        // 3. fast switching
 
-        if (lastRequestFinishMs > nowMs) {
-            // this shouldn't happen, try to handle gracefully
-            lastRequestFinishMs = nowMs;
+        let nowMs = Date.now();
+        let lctMs = lastCallTimeDict[mediaType];
+        let wasSwitch = lastFragmentWasSwitchDict[mediaType];
+        let lastRequestFinishMs = NaN;
+
+        lastCallTimeDict[mediaType] = nowMs;
+        lastFragmentWasSwitchDict[mediaType] = false;
+
+        if (!wasSwitch) {
+            let lastRequests = getLastHttpRequests(metrics, 1);
+            if (lastRequests.length > 0) {
+                lastRequestFinishMs = lastRequests[0]._tfinish.getTime();
+                if (lastRequestFinishMs > nowMs) {
+                    // this shouldn't happen, try to handle gracefully
+                    lastRequestFinishMs = nowMs;
+                }
+            }
         }
 
         // return the time since the finish of the last request.
         // The return will be added cumulatively to the placeholder buffer, so we must be sure not to add the same delay twice.
 
-        let lctMs = lastCallTimeDict[mediaType];
-        lastCallTimeDict[mediaType] = nowMs;
         let delayMs = 0;
-        if (lctMs && lctMs > lastRequestFinishMs) {
+        if (wasSwitch || lctMs > lastRequestFinishMs) {
             delayMs = nowMs - lctMs;
         } else {
             delayMs = nowMs - lastRequestFinishMs;
         }
 
-        if (delayMs <= 0)
+        if (isNaN(delayMs) || delayMs <= 0)
             return 0;
         return 0.001 * delayMs;
     }
@@ -299,10 +313,30 @@ function BolaRule(config) {
                 metricsModel.updateBolaState(mediaType, bolaState);
             }
         });
+
+        lastFragmentLoadedDict = {};
+        lastFragmentWasSwitchDict = {};
     }
 
     function onPeriodSwitchStarted() {
         // TODO
+    }
+
+    function onMediaFragmentLoaded(e) {
+        if (e && e.chunk && e.chunk.mediaInfo) {
+            let type = e.chunk.mediaInfo.type;
+            let index = e.chunk.index;
+            if (type !== undefined && !isNaN(index)) {
+                if (index <= lastFragmentLoadedDict[type]) {
+                    lastFragmentWasSwitchDict[type] = true;
+                    // keep lastFragmentLoadedDict[type] e.g. last fragment index 10, switch fragment 8, last is still 10
+                } else {
+                    // isNaN(lastFragmentLoadedDict[type]) also falls here
+                    lastFragmentWasSwitchDict[type] = false;
+                    lastFragmentLoadedDict[type] = index;
+                }
+            }
+        }
     }
 
     function execute(rulesContext, callback) {
@@ -375,10 +409,10 @@ function BolaRule(config) {
             bolaState.placeholderBuffer = 0;
         }
 
-        // find out if there was delay because of lack of availability or because buffer level > bufferTarget
-        let timeSinceLastDownload = getDelayFromLastFragmentInSeconds(metrics, mediaType);
-        if (timeSinceLastDownload > 0) { // TODO: maybe we should set some positive threshold here
-            bolaState.placeholderBuffer += timeSinceLastDownload;
+        // find out if there was delay because of lack of availability or because buffer level > bufferTarget or because of fast switching
+        let placeholderInc = getPlaceholderIncrementInSeconds(metrics, mediaType);
+        if (placeholderInc > 0) { // TODO: maybe we should set some positive threshold here
+            bolaState.placeholderBuffer += placeholderInc;
         }
         if (bolaState.placeholderBuffer < 0) {
             bolaState.placeholderBuffer = 0;
@@ -499,6 +533,7 @@ function BolaRule(config) {
         eventBus.off(Events.BUFFER_EMPTY, onBufferEmpty, instance);
         eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
         eventBus.off(Events.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, instance);
+        eventBus.off(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, instance);
         setup();
     }
 
