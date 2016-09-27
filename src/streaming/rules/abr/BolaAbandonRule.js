@@ -206,6 +206,31 @@ function BolaAbandonRule(config) {
             --newQuality;
         }
 
+        // deflate placeholder buffer - we want to be conservative after abandoning
+        let wantBufferLevel = NaN;
+        if (newQuality > 0) {
+            // deflate to point where score for newQuality is just getting better than for (newQuality - 1)
+            let u  = bolaState.utilities[newQuality];
+            let u1 = bolaState.utilities[newQuality - 1];
+            let s  = bolaState.bitrates[newQuality];
+            let s1 = bolaState.bitrates[newQuality - 1];
+            wantBufferLevel = bolaState.Vp * ((s * u1 - s1 * u) / (s - s1) + bolaState.gp);
+        } else {
+            // deflate to point where score for (newQuality + 1) is just getting better than for newQuality
+            let u  = bolaState.utilities[0];
+            let u1 = bolaState.utilities[1];
+            let s  = bolaState.bitrates[0];
+            let s1 = bolaState.bitrates[1];
+            wantBufferLevel = bolaState.Vp * ((s * u1 - s1 * u) / (s - s1) + bolaState.gp);
+            // then reduce one fragment duration to be conservative
+            wantBufferLevel -= durationS;
+        }
+        if (effectiveBufferLevel > wantBufferLevel) {
+            bolaState.placeholderBuffer = wantBufferLevel - bufferLevel;
+            if (bolaState.placeholderBuffer < 0)
+                bolaState.placeholderBuffer = 0;
+        }
+
         bolaState.lastQuality = newQuality;
         metricsModel.updateBolaState(mediaType, bolaState);
 
