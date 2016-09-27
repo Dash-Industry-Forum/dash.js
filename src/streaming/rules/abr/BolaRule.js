@@ -325,15 +325,15 @@ function BolaRule(config) {
     function onMediaFragmentLoaded(e) {
         if (e && e.chunk && e.chunk.mediaInfo) {
             let type = e.chunk.mediaInfo.type;
-            let index = e.chunk.index;
-            if (type !== undefined && !isNaN(index)) {
-                if (index <= lastFragmentLoadedDict[type]) {
+            let start = e.chunk.start;
+            if (type !== undefined && !isNaN(start)) {
+                if (start <= lastFragmentLoadedDict[type]) {
                     lastFragmentWasSwitchDict[type] = true;
-                    // keep lastFragmentLoadedDict[type] e.g. last fragment index 10, switch fragment 8, last is still 10
+                    // keep lastFragmentLoadedDict[type] e.g. last fragment start 10, switch fragment 8, last is still 10
                 } else {
                     // isNaN(lastFragmentLoadedDict[type]) also falls here
                     lastFragmentWasSwitchDict[type] = false;
-                    lastFragmentLoadedDict[type] = index;
+                    lastFragmentLoadedDict[type] = start;
                 }
             }
         }
