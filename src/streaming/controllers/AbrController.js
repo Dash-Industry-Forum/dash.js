@@ -73,7 +73,9 @@ function AbrController() {
         dashManifestModel,
         videoModel,
         mediaPlayerModel,
-        domStorage;
+        domStorage,
+        elementWidth,
+        elementHeight;
 
     function setup() {
         autoSwitchBitrate = {video: true, audio: true};
@@ -99,8 +101,10 @@ function AbrController() {
         abandonmentStateDict[type] = abandonmentStateDict[type] || {};
         abandonmentStateDict[type].state = ALLOW_LOAD;
         eventBus.on(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
-
-
+        if (type == 'video') {
+            window.addEventListener('resize', setElementSize);
+            setElementSize();
+        }
     }
 
     function setConfig(config) {
@@ -384,6 +388,7 @@ function AbrController() {
         eventBus.off(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
         clearTimeout(abandonmentTimeout);
         abandonmentTimeout = null;
+        window.removeEventListener('resize', setElementSize);
         setup();
     }
 
@@ -447,16 +452,20 @@ function AbrController() {
         return Math.min( idx , Math.round(maxIdx * maxRepresentationRatio) );
     }
 
+    function setElementSize() {
+        // window.onresize
+        var hasPixelRatio = usePixelRatioInLimitBitrateByPortal && window.hasOwnProperty('devicePixelRatio');
+        var pixelRatio = hasPixelRatio ? window.devicePixelRatio : 1;
+        var element = videoModel.getElement();
+        elementWidth = element.clientWidth * pixelRatio;
+        elementHeight = element.clientHeight * pixelRatio;
+    }
+
     function checkPortalSize(idx, type) {
         if (type !== 'video' || !limitBitrateByPortal || !streamProcessorDict[type]) {
             return idx;
         }
 
-        var hasPixelRatio = usePixelRatioInLimitBitrateByPortal && window.hasOwnProperty('devicePixelRatio');
-        var pixelRatio = hasPixelRatio ? window.devicePixelRatio : 1;
-        var element = videoModel.getElement();
-        var elementWidth = element.clientWidth * pixelRatio;
-        var elementHeight = element.clientHeight * pixelRatio;
         var manifest = manifestModel.getValue();
         var representation = dashManifestModel.getAdaptationForType(manifest, 0, type).Representation;
         var newIdx = idx;
