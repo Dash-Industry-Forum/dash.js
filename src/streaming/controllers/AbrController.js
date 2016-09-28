@@ -461,7 +461,6 @@ function AbrController() {
             var pixelRatio = hasPixelRatio ? window.devicePixelRatio : 1;
             elementWidth = element.clientWidth * pixelRatio;
             elementHeight = element.clientHeight * pixelRatio;
-            console.log('Portal resize: ' + elementWidth + ' ' + elementHeight);
         }
     }
 
