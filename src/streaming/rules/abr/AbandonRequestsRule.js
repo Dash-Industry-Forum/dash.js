@@ -68,7 +68,7 @@ function AbandonRequestsRule() {
 
         const mediaInfo = rulesContext.getMediaInfo();
         const mediaType = mediaInfo.type;
-        const req = rulesContext.getCurrentValue().request;
+        const req = rulesContext.getCurrentRequest();
         const switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK, {name: AbandonRequestsRule.__dashjs_factory_name});
 
         if (!isNaN(req.index)) {

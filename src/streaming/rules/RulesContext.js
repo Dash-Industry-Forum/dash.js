@@ -39,6 +39,9 @@ function RulesContext(config) {
     let currentValue = config.currentValue;
     let playbackIndex = config.playbackIndex;
     let switchHistory = config.switchHistory;
+    let droppedFramesHistory = config.droppedFramesHistory;
+    let currentRequest = config.currentRequest;
+    let richBuffer = config.hasRichBuffer;
 
     function getStreamInfo() {
         return representationInfo.mediaInfo.streamInfo;
@@ -72,16 +75,30 @@ function RulesContext(config) {
         return switchHistory;
     }
 
+    function getDroppedFramesHistory() {
+        return droppedFramesHistory;
+    }
+
+    function getCurrentRequest() {
+        return currentRequest;
+    }
+
+    function hasRichBuffer() {
+        return richBuffer;
+    }
+
     instance = {
         getCurrentValue: getCurrentValue,
         getManifestInfo: getManifestInfo,
         getMediaInfo: getMediaInfo,
         getPlaybackIndex: getPlaybackIndex,
+        getDroppedFramesHistory: getDroppedFramesHistory,
+        getCurrentRequest: getCurrentRequest,
         getSwitchHistory: getSwitchHistory,
         getStreamInfo: getStreamInfo,
         getStreamProcessor: getStreamProcessor,
-        getTrackInfo: getTrackInfo
-
+        getTrackInfo: getTrackInfo,
+        hasRichBuffer: hasRichBuffer
     };
 
     return instance;

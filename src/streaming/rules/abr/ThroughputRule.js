@@ -147,8 +147,9 @@ function ThroughputRule(config) {
         const isDynamic = streamProcessor.isDynamic();
         const lastRequest = dashMetrics.getCurrentHttpRequest(metrics);
         const bufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
+        const hasRichBuffer = rulesContext.hasRichBuffer();
 
-        if (!metrics || !lastRequest || lastRequest.type !== HTTPRequest.MEDIA_SEGMENT_TYPE || !bufferStateVO ) {
+        if (!metrics || !lastRequest || lastRequest.type !== HTTPRequest.MEDIA_SEGMENT_TYPE || !bufferStateVO || hasRichBuffer) {
             return -1;
         }
 
@@ -186,8 +187,10 @@ function ThroughputRule(config) {
                     newQuality = abrController.getQualityForBitrate(mediaInfo, throughput, latency);
                     streamProcessor.getScheduleController().setTimeToLoadDelay(0);
                 }
-
-                if (newQuality >= 0) {
+                if (newQuality >= 0 && newQuality < 3) {
+                    log('ThroughputRule requesting switch to index: ', newQuality, 'Average throughput', Math.round(throughput), 'kbps; Average latency', Math.round(latency), 'ms');
+                }
+                if (newQuality >= 3) {
                     log('ThroughputRule requesting switch to index: ', newQuality, 'Average throughput', Math.round(throughput), 'kbps; Average latency', Math.round(latency), 'ms');
                 }
             }

@@ -105,22 +105,18 @@ function ABRRulesCollection() {
         return active.length > 0 ? Math.min(...active) : -1;
     }
 
-    function shouldAbandonFragment(streamProcessor, e, playbackQuality) {
-        //TODO Sketchy, replace by simple yes/no.
-        return abandonFragmentRules.reduce(function (a, bRule) {
-            let b = bRule.shouldAbandon(streamProcessor, e, playbackQuality);
-            if (a.priority > b.priority) {
-                return a;
-            } else if (b.priority > a.priority) {
-                return b;
-            } else {
-                if (a.value < b.value) {
-                    return a;
-                } else {
-                    return b;
-                }
+    function shouldAbandonFragment(rulesContext) {
+        let ret = -1;
+        let lastPriority = 0;
+        for (let i = 0; i < abandonFragmentRules.length; i++) {
+            let switchRequest = abandonFragmentRules[i].shouldAbandon(rulesContext);
+            if (switchRequest.priority > lastPriority) {
+                lastPriority = switchRequest.priority;
+                ret = switchRequest.value;
             }
-        });
+        }
+
+        return ret;
     }
 
     instance = {
@@ -134,7 +130,6 @@ function ABRRulesCollection() {
 }
 
 ABRRulesCollection.__dashjs_factory_name = 'ABRRulesCollection';
-//TODO make not singleton
 let factory =  FactoryMaker.getSingletonFactory(ABRRulesCollection);
 factory.QUALITY_SWITCH_RULES = QUALITY_SWITCH_RULES;
 factory.ABANDON_FRAGMENT_RULES = ABANDON_FRAGMENT_RULES;
