@@ -52,8 +52,12 @@ class KeySystemConfiguration {
      */
     constructor(audioCapabilities, videoCapabilities, distinctiveIdentifier, persistentState, sessionTypes) {
         this.initDataTypes = [ 'cenc' ];
-        this.audioCapabilities = audioCapabilities;
-        this.videoCapabilities = videoCapabilities;
+        if (audioCapabilities && audioCapabilities.length) {
+            this.audioCapabilities = audioCapabilities;
+        }
+        if (videoCapabilities && videoCapabilities.length) {
+            this.videoCapabilities = videoCapabilities;
+        }
         this.distinctiveIdentifier = distinctiveIdentifier;
         this.persistentState = persistentState;
         this.sessionTypes = sessionTypes;
