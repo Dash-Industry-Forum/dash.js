@@ -158,10 +158,12 @@ function VideoModel() {
         }
         // If nothing is stalled resume playback.
         if (isStalled() === false && element.playbackRate === 0) {
-            event = document.createEvent('Event');
-            event.initEvent('playing', true, false);
             setPlaybackRate(previousPlaybackRate || 1);
-            element.dispatchEvent(event);
+            if (!element.paused) {
+                event = document.createEvent('Event');
+                event.initEvent('playing', true, false);
+                element.dispatchEvent(event);
+            }
         }
     }
 
