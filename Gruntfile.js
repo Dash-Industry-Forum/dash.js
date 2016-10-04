@@ -2,6 +2,12 @@ module.exports = function (grunt) {
     require('time-grunt')(grunt);
 
     grunt.initConfig({
+        pkg: grunt.file.readJSON('package.json'),
+        githash: {
+            dist: {
+            }
+        },
+
         clean: {
             build: ['build/temp'],
             dist: ['dist/*']
@@ -17,6 +23,7 @@ module.exports = function (grunt) {
 
         uglify: {
             options: {
+                banner: '/*! v<%= pkg.version %>-<%= githash.dist.short %>, <%= grunt.template.today("isoUtcDateTime") %> */',
                 sourceMap: true,
                 sourceMapIncludeSources: true,
                 sourceMapRoot: './src/',
@@ -242,7 +249,7 @@ module.exports = function (grunt) {
     require('load-grunt-tasks')(grunt);
     grunt.registerTask('default',   ['dist', 'test']);
     grunt.registerTask('dist',      ['clean', 'jshint', 'jscs', 'browserify:mediaplayer' , 'browserify:protection', 'browserify:reporting', 'browserify:all', 'babel:es5', 'minimize', 'copy:dist']);
-    grunt.registerTask('minimize',  ['exorcise', 'uglify']);
+    grunt.registerTask('minimize',  ['exorcise', 'githash', 'uglify']);
     grunt.registerTask('test',      ['mocha_istanbul:test']);
     grunt.registerTask('watch',     ['browserify:watch']);
     grunt.registerTask('release',   ['default', 'jsdoc']);
