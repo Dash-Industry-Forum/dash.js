@@ -277,7 +277,7 @@ function DashAdapter() {
 
         mpd = dashManifestModel.getMpd(manifest);
         periods = dashManifestModel.getRegularPeriods(manifest, mpd);
-        mpd.checkTime = dashManifestModel.getCheckTime(manifest, periods[0]);
+        //mpd.checkTime = dashManifestModel.getCheckTime(manifest, periods[0]);
         adaptations = {};
         ln = periods.length;
 

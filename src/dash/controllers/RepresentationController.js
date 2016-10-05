@@ -340,20 +340,22 @@ function RepresentationController() {
     function onLiveEdgeSearchCompleted(e) {
         if (e.error) return;
 
-        updateAvailabilityWindow(true);
-        indexHandler.updateRepresentation(currentRepresentation, false);
+        //updateAvailabilityWindow(true);
+        //indexHandler.updateRepresentation(currentRepresentation, false);
 
-        // we need to update checkTime after we have found the live edge because its initial value
-        // does not take into account clientServerTimeShift
-        var manifest = manifestModel.getValue();
-        var period = currentRepresentation.adaptation.period;
-        var streamInfo = streamController.getActiveStreamInfo();
+        //
+        //// we need to update checkTime after we have found the live edge because its initial value
+        //// does not take into account clientServerTimeShift
+        //var manifest = manifestModel.getValue();
+        //var period = currentRepresentation.adaptation.period;
+        //var streamInfo = streamController.getActiveStreamInfo();
+        //
+        //if (streamInfo.isLast) {
+        //    period.mpd.checkTime = dashManifestModel.getCheckTime(manifest, period);
+        //    period.duration = dashManifestModel.getEndTimeForLastPeriod(manifestModel.getValue(), period) - period.start;
+        //    streamInfo.duration = period.duration;
+        //}
 
-        if (streamInfo.isLast) {
-            period.mpd.checkTime = dashManifestModel.getCheckTime(manifest, period);
-            period.duration = dashManifestModel.getEndTimeForLastPeriod(manifestModel.getValue(), period) - period.start;
-            streamInfo.duration = period.duration;
-        }
     }
 
     function onBufferLevelUpdated(e) {
