@@ -193,7 +193,9 @@ function DashHandler(config) {
             seg,
             fTime;
 
-        if (index < 0) {
+
+
+        if (index < 0 ) {
             isFinished = false;
         } else if (isDynamic || index < representation.availableSegmentsNumber) {
             seg = getSegmentByIndex(index, representation);
@@ -202,7 +204,9 @@ function DashHandler(config) {
                 fTime = seg.presentationStartTime - period.start;
                 sDuration = representation.adaptation.period.duration;
                 log(representation.segmentInfoType + ': ' + fTime + ' / ' + sDuration);
-                isFinished = segmentInfoType === 'SegmentTimeline' && isDynamic ? false : (fTime >= sDuration);
+                if (!isDynamic || streamProcessor.getStreamInfo().isLast) {
+                    isFinished = segmentInfoType === 'SegmentTimeline' && isDynamic ? false : fTime >= sDuration;
+                }
             }
         } else {
             isFinished = true;

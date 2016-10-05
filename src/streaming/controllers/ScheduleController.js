@@ -206,7 +206,7 @@ function ScheduleController(config) {
                         fragmentModel.executeRequest(request);
                     } else { //Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
                         isFragmentProcessingInProgress = false;
-                        startScheduleTimer(250);
+                        startScheduleTimer(500);
                     }
                 }
             };
