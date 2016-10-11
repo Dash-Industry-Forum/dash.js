@@ -250,7 +250,8 @@ div#legend-wrapper {
 }
 
 .footer-text img {
-    height: 40px;
+    max-height: 40px;
+    max-width: 150px;
 }
 
 .footer-area a {
