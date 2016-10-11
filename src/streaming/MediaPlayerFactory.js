@@ -100,9 +100,9 @@ function loadHandler() {
     instance.createAll();
 }
 
-let avoidAutoCreate = window && window.dashjs && window.dashjs.skipAutoCreate;
+let avoidAutoCreate = typeof window !== 'undefined' && window && window.dashjs && window.dashjs.skipAutoCreate;
 
-if (!avoidAutoCreate && window && window.addEventListener) {
+if (!avoidAutoCreate && typeof window !== 'undefined' && window && window.addEventListener) {
     if (window.document.readyState === 'complete') {
         instance.createAll();
     } else {

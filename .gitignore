@@ -1,3 +1,4 @@
+/simple.html
 #################
 ## Node.js
 #################
@@ -15,7 +16,8 @@ reports
 jsdoc
 dist
 build/temp
-coverage/
+build/es5
+coverage
 
 #################
 ## Eclipse
@@ -24,9 +26,9 @@ coverage/
 *.pydevproject
 .project
 .metadata
-bin/
-tmp/
-.idea/
+bin
+tmp
+.idea
 *.tmp
 *.bak
 *.swp

@@ -37,7 +37,7 @@ class ProtectionEvents extends EventsBase {
     /**
      * @description Public facing external events to be used when including protection package.
      * All public events will be aggregated into the MediaPlayerEvents Class and can be accessed
-     * via MediaPlayer.events
+     * via MediaPlayer.events.  public_ is the prefix that we use to move event names to MediaPlayerEvents.
      */
     constructor () {
         super();

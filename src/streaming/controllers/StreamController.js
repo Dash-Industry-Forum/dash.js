@@ -39,6 +39,7 @@ import MediaPlayerModel from '../models/MediaPlayerModel';
 import FactoryMaker from '../../core/FactoryMaker';
 import {PlayList, PlayListTrace} from '../vo/metrics/PlayList';
 import Debug from '../../core/Debug';
+import InitCache from '../utils/InitCache';
 
 function StreamController() {
 
@@ -61,7 +62,7 @@ function StreamController() {
         mediaSourceController,
         timeSyncController,
         baseURLController,
-        virtualBuffer,
+        initCache,
         errHandler,
         timelineConverter,
         streams,
@@ -100,6 +101,7 @@ function StreamController() {
         autoPlay = autoPl;
         protectionData = protData;
         timelineConverter.initialize();
+        initCache = InitCache(context).getInstance();
 
         manifestUpdater = ManifestUpdater(context).getInstance();
         manifestUpdater.setConfig({
@@ -190,15 +192,12 @@ function StreamController() {
     }
 
     function onPlaybackError(e) {
-        var code = e.error ? e.error.code : 0;
-        var msg = '';
 
-        if (code === -1) {
-            // not an error!
-            return;
-        }
+        if (!e.error) return;
 
-        switch (code) {
+        let msg = '';
+
+        switch (e.error.code) {
             case 1:
                 msg = 'MEDIA_ERR_ABORTED';
                 break;
@@ -240,7 +239,7 @@ function StreamController() {
     function onPlaybackTimeUpdated(e) {
 
         if (isVideoTrackPresent()) {
-            var playbackQuality = videoModel.getPlaybackQuality();
+            const playbackQuality = videoModel.getPlaybackQuality();
             if (playbackQuality) {
                 metricsModel.addDroppedFrames('video', playbackQuality);
             }
@@ -248,26 +247,23 @@ function StreamController() {
         // Sometimes after seeking timeUpdateHandler is called before seekingHandler and a new stream starts
         // from beginning instead of from a chosen position. So we do nothing if the player is in the seeking state
         if (playbackController.isSeeking()) return;
-
-        // check if stream end is reached
         if (e.timeToEnd < STREAM_END_THRESHOLD) {
+            //This is only used for multiperiod content.
+            // The main call to signalEndOfStream is driven by BUFFERING_COMPLETED event
             mediaSourceController.signalEndOfStream(mediaSource);
         }
     }
 
     function onEnded() {
-
-        let nextStream = getNextStream();
-
+        const nextStream = getNextStream();
         if (nextStream) {
             switchStream(activeStream, nextStream, NaN);
         }
-
         flushPlaylistMetrics(nextStream ? PlayListTrace.END_OF_PERIOD_STOP_REASON : PlayListTrace.END_OF_CONTENT_STOP_REASON);
     }
 
     function onPlaybackSeeking(e) {
-        var seekingStream = getStreamForTime(e.seekTime);
+        const seekingStream = getStreamForTime(e.seekTime);
 
         if (seekingStream && seekingStream !== activeStream) {
             flushPlaylistMetrics(PlayListTrace.END_OF_PERIOD_STOP_REASON);
@@ -304,14 +300,9 @@ function StreamController() {
      * this handler's logic caused Firefox and Safari to not period switch since the end event did not fire due to this.
      */
     function onStreamBufferingCompleted(e) {
-        //var nextStream = getNextStream();
-        var isLast = e.streamInfo.isLast;
-
-        if (mediaSource && isLast) {
+        if (mediaSource && e.streamInfo.isLast) {
             mediaSourceController.signalEndOfStream(mediaSource);
         }
-        //if (!nextStream) return;
-        //nextStream.activate(mediaSource);
     }
 
 
@@ -715,9 +706,6 @@ function StreamController() {
         if (config.baseURLController) {
             baseURLController = config.baseURLController;
         }
-        if (config.virtualBuffer) {
-            virtualBuffer = config.virtualBuffer;
-        }
         if (config.errHandler) {
             errHandler = config.errHandler;
         }
@@ -760,7 +748,7 @@ function StreamController() {
         timelineConverter.reset();
         liveEdgeFinder.reset();
         adapter.reset();
-        virtualBuffer.reset();
+        initCache.reset();
         isStreamSwitchingInProgress = false;
         isUpdating = false;
         activeStream = null;

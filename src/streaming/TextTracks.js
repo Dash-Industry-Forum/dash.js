@@ -250,6 +250,39 @@ function TextTracks() {
         }
     }
 
+    function convertToPixels(percentage, pixelMeasure) {
+        let percentString = Math.round(0.01 * percentage * pixelMeasure).toString() + 'px';
+        return percentString;
+    }
+
+    function scaleImageCue(activeCue) {
+        var videoWidth = actualVideoWidth;
+        var videoHeight = actualVideoHeight;
+
+        if (videoWidth * videoHeight === 0) {
+            return; //At least one of the measures is still zero
+        }
+
+        if (activeCue.layout) {
+            let layout = activeCue.layout;
+            let left = convertToPixels(layout.left, videoWidth);
+            let top = convertToPixels(layout.top, videoHeight);
+            let width = convertToPixels(layout.width, videoWidth);
+            let height = convertToPixels(layout.height, videoHeight);
+            captionContainer.style.left = left;
+            captionContainer.style.top = top;
+            captionContainer.style.width = width;
+            captionContainer.style.height = height;
+            let image = captionContainer.firstChild;
+            if (image && image.style) {
+                image.style.left = '0px';
+                image.style.top = '0px';
+                image.style.width = width;
+                image.style.height = height;
+            }
+        }
+    }
+
     function scaleCue(activeCue) {
         var videoWidth = actualVideoWidth;
         var videoHeight = actualVideoHeight;
@@ -338,42 +371,42 @@ function TextTracks() {
             track.cellResolution = currentItem.cellResolution;
             track.isFromCEA608 = currentItem.isFromCEA608;
 
-            if (!videoSizeCheckInterval && currentItem.type == 'html') {
+            if (!videoSizeCheckInterval && (currentItem.type === 'html' || currentItem.type === 'image') ) {
                 videoSizeCheckInterval = setInterval(checkVideoSize.bind(this), 500);
             }
 
             //image subtitle extracted from TTML
-            if (currentItem.type == 'image') {
+            if (currentItem.type === 'image') {
                 cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, '');
                 cue.image = currentItem.data;
                 cue.id = currentItem.id;
                 cue.size = 0; //discard the native display for this subtitles
                 cue.type = 'image'; // active image overlay
-                cue.onenter =  function () {
-                    var img = new Image();
-                    img.id = 'ttmlImage_' + this.id;
-                    img.src = this.image;
-                    img.className = 'cue-image';
-                    if (captionContainer) {
+                cue.layout = currentItem.layout;
+                cue.scaleCue = scaleImageCue.bind(self);
+                cue.onenter = function () {
+                    if (!captionContainer) { // Does not support image captions without a container
+                        return;
+                    }
+                    if (track.mode === 'showing') {
+                        var img = new Image();
+                        img.id = 'ttmlImage_' + this.id;
+                        img.src = this.image;
+                        //img.className = 'cue-image';
+                        img.style.cssText = 'z-index: 2147483648; pointer-events: none; display: block; visibility: visible !important; position: relative !important;';
                         captionContainer.appendChild(img);
-                    } else {
-                        video.parentNode.appendChild(img);
+                        scaleImageCue.call(self, this);
                     }
                 };
 
                 cue.onexit =  function () {
-                    var container,
-                        i,
-                        imgs;
-                    if (captionContainer) {
-                        container = captionContainer;
-                    } else {
-                        container = video.parentNode;
+                    if (!captionContainer) {
+                        return;
                     }
-                    imgs = container.childNodes;
-                    for (i = 0; i < imgs.length; i++) {
-                        if (imgs[i].id == 'ttmlImage_' + this.id) {
-                            container.removeChild(imgs[i]);
+                    let imgs = captionContainer.childNodes;
+                    for (let i = 0; i < imgs.length; i++) {
+                        if (imgs[i].id === 'ttmlImage_' + this.id) {
+                            captionContainer.removeChild(imgs[i]);
                         }
                     }
                 };
@@ -397,7 +430,7 @@ function TextTracks() {
                 captionContainer.style.height = actualVideoHeight + 'px';
 
                 cue.onenter =  function () {
-                    if (track.mode == 'showing') {
+                    if (track.mode === 'showing') {
                         log('Cue ' + this.startTime + '-' + this.endTime + ' : ' + this.cueHTMLElement.id + ' : ' + this.cueHTMLElement.innerText);
                         captionContainer.appendChild(this.cueHTMLElement);
                         scaleCue.call(self, this);

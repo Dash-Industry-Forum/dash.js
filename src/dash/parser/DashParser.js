@@ -33,6 +33,7 @@ import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import ObjectIron from '../../../externals/objectiron';
 import X2JS from '../../../externals/xml2json';
+import StringMatcher from './matchers/StringMatcher';
 import DurationMatcher from './matchers/DurationMatcher';
 import DateTimeMatcher from './matchers/DateTimeMatcher';
 import NumericMatcher from './matchers/NumericMatcher';
@@ -54,10 +55,20 @@ function DashParser(/*config*/) {
         matchers = [
             new DurationMatcher(),
             new DateTimeMatcher(),
-            new NumericMatcher()
+            new NumericMatcher(),
+            new StringMatcher()   // last in list to take precedence over NumericMatcher
         ];
 
-        converter = new X2JS(matchers, '', true);
+        converter = new X2JS({
+            escapeMode:         false,
+            attributePrefix:    '',
+            arrayAccessForm:    'property',
+            emptyNodeForm:      'object',
+            stripWhitespaces:   false,
+            enableToStringFunc: false,
+            ignoreRoot:         true,
+            matchers:           matchers
+        });
 
         objectIron = new ObjectIron([
             new RepresentationBaseValuesMap(),
@@ -88,7 +99,7 @@ function DashParser(/*config*/) {
 
             log('Parsing complete: ( xml2json: ' + (jsonTime - startTime).toPrecision(3) + 'ms, objectiron: ' + (ironedTime - jsonTime).toPrecision(3) + 'ms, total: ' + ((ironedTime - startTime) / 1000).toPrecision(3) + 's)');
         } catch (err) {
-            errorHandler.manifestError('parsing the manifest failed', 'parse', data);
+            errorHandler.manifestError('parsing the manifest failed', 'parse', data, err);
             return null;
         }
 

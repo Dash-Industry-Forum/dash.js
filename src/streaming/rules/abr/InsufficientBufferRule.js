@@ -61,7 +61,7 @@ function InsufficientBufferRule(config) {
         var current = rulesContext.getCurrentValue();
         var metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
         var lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
-        var switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
+        var switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK, {name: InsufficientBufferRule.__dashjs_factory_name});
 
         if (now - lastSwitchTime < waitToSwitchTime ||
             lastBufferStateVO === null) {
@@ -72,6 +72,10 @@ function InsufficientBufferRule(config) {
         setBufferInfo(mediaType, lastBufferStateVO.state);
         // After the sessions first buffer loaded event , if we ever have a buffer empty event we want to switch all the way down.
         if (lastBufferStateVO.state === BufferController.BUFFER_EMPTY && bufferStateDict[mediaType].firstBufferLoadedEvent !== undefined) {
+            switchRequest.value = 0;
+            switchRequest.priority = SwitchRequest.STRONG;
+            switchRequest.reason.bufferState = lastBufferStateVO.state;
+
             switchRequest = SwitchRequest(context).create(0, SwitchRequest.STRONG);
         }
 

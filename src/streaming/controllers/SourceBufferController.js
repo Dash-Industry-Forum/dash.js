@@ -319,6 +319,8 @@ function SourceBufferController() {
         try {
             if (mediaSource.readyState === 'open') {
                 buffer.abort();
+            } else if (buffer.setTextTrack && mediaSource.readyState === 'ended') {
+                buffer.abort(); //The cues need to be removed from the TextSourceBuffer via a call to abort()
             }
         } catch (ex) {
         }

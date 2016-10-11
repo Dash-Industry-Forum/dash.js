@@ -5,6 +5,7 @@ import EventBus from '../src/core/EventBus';
 import RepresentationController from '../src/dash/controllers/RepresentationController';
 import ManifestModel from '../src/streaming/models/ManifestModel';
 import Events from '../src/core/events/Events';
+import MediaPlayerEvents from '../src/streaming/MediaPlayerEvents';
 import SpecHelper from './helpers/SpecHelper';
 import AbrController from '../src/streaming/controllers/AbrController';
 
@@ -29,6 +30,8 @@ describe("RepresentationController", function () {
     const streamProcessor = objectsHelper.getDummyStreamProcessor(testType);
     const eventBus = EventBus(context).getInstance();
     const manifestModel = ManifestModel(context).getInstance();
+
+    Events.extend(MediaPlayerEvents);
 
     manifestModel.setValue(mpd);
 

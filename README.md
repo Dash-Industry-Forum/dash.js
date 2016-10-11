@@ -24,9 +24,9 @@ For help, join our [Slack channel](https://dashif-slack.azurewebsites.net), our 
 ## Reference players
 The released [pre-built reference players](http://dashif.org/reference/players/javascript/index.html) are publicly accessible if you want direct access without writing any Javascript. 
 
-The [nightly build of the /dev branch reference player](http://dashif.org/reference/players/javascript/nightly/dash.js/samples/dash-if-reference-player/index.html), is pre-release but contains the latest fixes. It is a good place to start if you are debugging playback problems. 
+The [nightly build of the /dev branch reference player](http://mediapm.edgesuite.net/dash/public/nightly/samples/dash-if-reference-player/index.html), is pre-release but contains the latest fixes. It is a good place to start if you are debugging playback problems. 
 
-A nightly build of the latest minified files are also available: [dash.all.min.js](http://dashif.org/reference/players/javascript/nightly/dash.js/dist/dash.all.min.js) and its debug version  [dash.all.debug.js](http://dashif.org/reference/players/javascript/nightly/dash.js/dist/dash.all.debug.js).
+A nightly build of the latest minified files are also available: [dash.all.min.js](http://mediapm.edgesuite.net/dash/public/nightly/dist/dash.all.min.js) and its debug version  [dash.all.debug.js](http://mediapm.edgesuite.net/dash/public/nightly/dist/dash.all.debug.js).
 
 ## Quick Start for Users
 If you just want a DASH player to use and don't need to see the code or commit to this project, then follow the instructions below. If you are a developer and want to work with this code base, then skip down to the "Quick Start for Developers" section.
