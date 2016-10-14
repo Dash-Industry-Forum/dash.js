@@ -379,7 +379,7 @@ function ScheduleController(config) {
     }
 
     function onPlaybackStarted() {
-        if (isStopped) {
+        if (isStopped || !scheduleWhilePaused) {
             start();
         }
     }
