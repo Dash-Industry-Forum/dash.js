@@ -637,31 +637,6 @@ function DashManifestModel() {
         return mpd;
     }
 
-    //function getFetchTime(manifest, period) {
-    //    // FetchTime is defined as the time at which the server processes the request for the MPD from the client.
-    //    // TODO The client typically should not use the time at which it actually successfully received the MPD, but should
-    //    // take into account delay due to MPD delivery and processing. The fetch is considered successful fetching
-    //    // either if the client obtains an updated MPD or the client verifies that the MPD has not been updated since the previous fetching.
-    //
-    //    return timelineConverter.calcPresentationTimeFromWallTime(manifest.loadedTime, period);
-    //}
-    //
-    //function getCheckTime(manifest, period) {
-    //    var checkTime = NaN;
-    //    var fetchTime;
-    //
-    //    // If the MPD@minimumUpdatePeriod attribute in the client is provided, then the check time is defined as the
-    //    // sum of the fetch time of this operating MPD and the value of this attribute,
-    //    // i.e. CheckTime = FetchTime + MPD@minimumUpdatePeriod.
-    //    if (manifest.hasOwnProperty('minimumUpdatePeriod')) {
-    //        fetchTime = getFetchTime(manifest, period);
-    //        checkTime = fetchTime + manifest.minimumUpdatePeriod;
-    //    }
-    //    // TODO If the MPD@minimumUpdatePeriod attribute in the client is not provided, external means are used to
-    //    // determine CheckTime, such as a priori knowledge, or HTTP cache headers, etc.
-    //
-    //    return checkTime;
-    //}
 
     function getEndTimeForLastPeriod(manifest, period) {
         const isDynamic = getIsDynamic(manifest);
@@ -671,15 +646,10 @@ function DashManifestModel() {
             periodEnd = manifest.mediaPresentationDuration;
         } else if (period.duration) {
             periodEnd = period.duration;
-        }
-        //else if (manifest.minimumUpdatePeriod && !isDynamic) { // Could there be a use case for VOD no duration but minUpdatePeriod is indicated for static MPD
-        //    const fetchTime = timelineConverter.calcPresentationTimeFromWallTime(manifest.loadedTime, period);
-        //    periodEnd = fetchTime + manifest.minimumUpdatePeriod;
-        //}
-        else if (isDynamic) {
+        } else if (isDynamic) {
             periodEnd = Number.POSITIVE_INFINITY;
         } else {
-            throw new Error('Must have @mediaPresentationDuration or @minimumUpdatePeriod on MPD or an explicit @duration on the last period.');
+            throw new Error('Must have @mediaPresentationDuratio on MPD or an explicit @duration on the last period.');
         }
 
         return periodEnd;
@@ -931,9 +901,6 @@ function DashManifestModel() {
         getRegularPeriods: getRegularPeriods,
         getPeriodId: getPeriodId,
         getMpd: getMpd,
-        //getFetchTime: getFetchTime,
-        //getCheckTime: getCheckTime,
-        //getEndTimeForLastPeriod: getEndTimeForLastPeriod,
         getEventsForPeriod: getEventsForPeriod,
         getEventStreams: getEventStreams,
         getEventStreamForAdaptationSet: getEventStreamForAdaptationSet,
