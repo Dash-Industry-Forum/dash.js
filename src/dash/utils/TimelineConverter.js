@@ -142,7 +142,7 @@ function TimelineConverter() {
 
         // Static Range Finder
         const period = representation.adaptation.period;
-        const range = { start: period.start, end: period.duration };
+        const range = { start: period.start, end: period.start + period.duration };
         if (!isDynamic) return range;
 
         if (!isClientServerTimeSyncCompleted && representation.segmentAvailabilityRange) {
