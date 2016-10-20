@@ -43,7 +43,7 @@ import InitCache from '../utils/InitCache';
 
 function StreamController() {
 
-    const STREAM_END_THRESHOLD = 1.0;
+    const STREAM_END_THRESHOLD = 0.1;
 
     let context = this.context;
     let log = Debug(context).getInstance().log;
@@ -147,13 +147,13 @@ function StreamController() {
                 metricsModel.addDroppedFrames('video', playbackQuality);
             }
         }
+
         // Sometimes after seeking timeUpdateHandler is called before seekingHandler and a new stream starts
         // from beginning instead of from a chosen position. So we do nothing if the player is in the seeking state
         if (playbackController.isSeeking()) return;
-        if (e.timeToEnd < STREAM_END_THRESHOLD) {
-            //This is only used for multiperiod content.
-            // The main call to signalEndOfStream is driven by BUFFERING_COMPLETED event
-            //onStreamBufferingCompleted();
+
+        if (e.timeToEnd <= STREAM_END_THRESHOLD) {
+            //only needed for multiple period content when the native event does not fire due to duration manipulation.
             onEnded();
         }
     }
@@ -286,10 +286,7 @@ function StreamController() {
 
         if (isStreamSwitchingInProgress || !to || from === to) return;
         isStreamSwitchingInProgress = true;
-        eventBus.trigger(Events.PERIOD_SWITCH_STARTED, {
-            fromStreamInfo: from ? from.getStreamInfo() : null,
-            toStreamInfo: to.getStreamInfo()
-        });
+        //eventBus.trigger(Events.PERIOD_SWITCH_STARTED, {fromStreamInfo: from ? from.getStreamInfo() : null, toStreamInfo: to.getStreamInfo()});
 
         function onMediaSourceReady() {
             if (!initialPlayback) {
@@ -309,10 +306,7 @@ function StreamController() {
                 playbackController.play();
             }
             isStreamSwitchingInProgress = false;
-            eventBus.trigger(Events.PERIOD_SWITCH_COMPLETED, {
-                fromStreamInfo: from ? from.getStreamInfo() : null,
-                toStreamInfo: to.getStreamInfo()
-            });
+            eventBus.trigger(Events.PERIOD_SWITCH_COMPLETED, {fromStreamInfo: from ? from.getStreamInfo() : null,toStreamInfo: to.getStreamInfo()});
         }
 
         if (from) {
