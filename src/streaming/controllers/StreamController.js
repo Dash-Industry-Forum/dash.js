@@ -282,56 +282,37 @@ function StreamController() {
         })[0];
     }
 
-    function switchStream(from, to, seekTime) {
+    function switchStream(oldStream, newStream, seekTime) {
 
-        if (isStreamSwitchingInProgress || !to || from === to) return;
+        if (isStreamSwitchingInProgress || !newStream || oldStream === newStream) return;
         isStreamSwitchingInProgress = true;
-        //eventBus.trigger(Events.PERIOD_SWITCH_STARTED, {fromStreamInfo: from ? from.getStreamInfo() : null, toStreamInfo: to.getStreamInfo()});
 
-        function onMediaSourceReady() {
-            if (!initialPlayback) {
-                if (!isNaN(seekTime)) {
-                    playbackController.seek(seekTime); //we only need to call seek here, IndexHandlerTime was set from seeking event
-                } else {
-                    let startTime = playbackController.getStreamStartTime(true);
-                    activeStream.getProcessors().forEach(p => {
-                        adapter.setIndexHandlerTime(p, startTime);
-                    });
-                    playbackController.seek(startTime); //seek to period start time
-                }
-            }
+        eventBus.trigger(Events.PERIOD_SWITCH_STARTED,
+            {
+                fromStreamInfo: oldStream ? oldStream.getStreamInfo() : null,
+                toStreamInfo: newStream.getStreamInfo()
+            });
 
-            activeStream.startEventController();
-            if (autoPlay || !initialPlayback) {
-                playbackController.play();
-            }
-            isStreamSwitchingInProgress = false;
-            eventBus.trigger(Events.PERIOD_SWITCH_COMPLETED, {fromStreamInfo: from ? from.getStreamInfo() : null,toStreamInfo: to.getStreamInfo()});
-        }
-
-        if (from) {
-            from.deactivate();
-        }
-        activeStream = to;
+        if (oldStream) oldStream.deactivate();
+        activeStream = newStream;
         playbackController.initialize(activeStream.getStreamInfo());
         videoTrackDetected = checkVideoPresence();
-        setupMediaSource(onMediaSourceReady);
+
+        //TODO detect if we should close and repose or jump to activateStream.
+        openMediaSource(seekTime);
     }
 
-    function setupMediaSource(callback) {
+    function openMediaSource(seekTime) {
 
         let sourceUrl;
 
         function onMediaSourceOpen() {
             log('MediaSource is open!');
-
             window.URL.revokeObjectURL(sourceUrl);
             mediaSource.removeEventListener('sourceopen', onMediaSourceOpen);
             mediaSource.removeEventListener('webkitsourceopen', onMediaSourceOpen);
             setMediaDuration();
-            activeStream.activate(mediaSource);
-
-            if (callback) callback();
+            activateStream(seekTime);
         }
 
         if (!mediaSource) {
@@ -344,6 +325,31 @@ function StreamController() {
         mediaSource.addEventListener('webkitsourceopen', onMediaSourceOpen, false);
         sourceUrl = mediaSourceController.attachMediaSource(mediaSource, videoModel);
         log('MediaSource attached to element.  Waiting on open...');
+    }
+
+    function activateStream(seekTime) {
+
+        activeStream.activate(mediaSource);
+
+        if (!initialPlayback) {
+            if (!isNaN(seekTime)) {
+                playbackController.seek(seekTime); //we only need to call seek here, IndexHandlerTime was set from seeking event
+            } else {
+                let startTime = playbackController.getStreamStartTime(true);
+                activeStream.getProcessors().forEach(p => {
+                    adapter.setIndexHandlerTime(p, startTime);
+                });
+                playbackController.seek(startTime); //seek to period start time
+            }
+        }
+
+        activeStream.startEventController();
+        if (autoPlay || !initialPlayback) {
+            playbackController.play();
+        }
+
+        isStreamSwitchingInProgress = false;
+        eventBus.trigger(Events.PERIOD_SWITCH_COMPLETED, {toStreamInfo: activeStream.getStreamInfo()});
     }
 
     function setMediaDuration() {
@@ -395,8 +401,8 @@ function StreamController() {
                         errHandler: errHandler,
                         baseURLController: baseURLController
                     });
-                    stream.initialize(streamInfo, protectionController);
                     streams.push(stream);
+                    stream.initialize(streamInfo, protectionController);
 
                 } else {
                     stream.updateData(streamInfo);
@@ -406,7 +412,7 @@ function StreamController() {
             }
 
             if (!activeStream) {
-                //const initStream = streamsInfo[0].manifestInfo.isDynamic ? streams[streams.length -1] :
+                //const initStream = streamsInfo[0].manifestInfo.isDynamic ? streams[streams.length -1] : streams[0];
                 //TODO we need to figure out what the correct starting period is here and not just go to first or last in array.
                 switchStream(null, streams[0], NaN);
             }

@@ -222,19 +222,21 @@ describe('URLUtils', function () {
 
     describe('resolve (native path)', () => {
 
-        global.window = {
-            URL: (a, b) => {
-                if (!a || !b) {
-                    throw new Error();
-                }
-
-                return {
-                    toString: () => {
-                        return b + a;
+        if (typeof window === 'undefined') {
+            global.window = {
+                URL: (a, b) => {
+                    if (!a || !b) {
+                        throw new Error();
                     }
-                };
-            }
-        };
+
+                    return {
+                        toString: () => {
+                            return b + a;
+                        }
+                    };
+                }
+            };
+        }
 
         // new instance on new context to pick up window.URL
         const instance = URLUtils({}).getInstance();
