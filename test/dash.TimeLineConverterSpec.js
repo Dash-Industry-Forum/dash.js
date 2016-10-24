@@ -105,7 +105,7 @@ describe("TimelineConverter", function () {
                 range = timeLineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
 
             expect(range.start).to.be.equal(expectedValue);
-            expectedValue = 9;
+            expectedValue = 49;
             expect(range.end).to.be.equal(expectedValue);
 
             clock.restore();

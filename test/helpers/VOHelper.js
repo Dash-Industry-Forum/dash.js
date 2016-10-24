@@ -26,7 +26,6 @@ class VoHelper {
         mpd.availabilityEndTime = Number.POSITIVE_INFINITY;
         mpd.timeShiftBufferDepth = 50;
         mpd.maxSegmentDuration = 1;
-        mpd.checkTime = 10;
 
         return mpd;
     }

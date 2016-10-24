@@ -4,6 +4,7 @@
   "description": "A reference client implementation for the playback of MPEG DASH via Javascript and compliant browsers.",
   "main": "build/es5/index.js",
   "scripts": {
+    "debug-mocha": "iron-node node_modules/mocha/bin/_mocha --require mochahook",
     "test": "mocha --require mochahook",
     "prepublish": "grunt prepublish",
     "debug": "iron-mocha --require mochahook",
@@ -33,6 +34,7 @@
     "grunt-mocha-istanbul": "^3.0.1",
     "ink-docstrap": "^1.1.1",
     "iron-mocha": "^1.0.3",
+    "iron-node": "^3.0.15",
     "istanbul": "^0.4.1",
     "jsdoc": "^3.4.0",
     "load-grunt-tasks": "^3.1.0",
