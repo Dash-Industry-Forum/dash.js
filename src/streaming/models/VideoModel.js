@@ -44,9 +44,19 @@ function VideoModel() {
         stalledStreams = [];
     }
 
+    function onPlaybackCanPlay() {
+        element.playbackRate = previousPlaybackRate || 1;
+        element.removeEventListener('canplay', onPlaybackCanPlay);
+    }
+
     function setPlaybackRate(value) {
-        if (!element || element.readyState < 2) return;
-        element.playbackRate = value;
+        if (!element) return;
+        if (element.readyState <= 2 && value > 0) {
+            // If media element hasn't loaded enough data to play yet, wait until it has
+            element.addEventListener('canplay', onPlaybackCanPlay);
+        } else {
+            element.playbackRate = value;
+        }
     }
 
     //TODO Move the DVR window calculations from MediaPlayer to Here.
