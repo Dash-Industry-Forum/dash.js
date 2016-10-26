@@ -151,17 +151,15 @@ function DashHandler(config) {
     }
 
     function generateInitRequest(representation, mediaType) {
-        var request = new FragmentRequest();
-        var period,
-            presentationStartTime;
 
-        period = representation.adaptation.period;
+        const request = new FragmentRequest();
+        const period = representation.adaptation.period;
+        const presentationStartTime = period.start;
 
         request.mediaType = mediaType;
         request.type = HTTPRequest.INIT_SEGMENT_TYPE;
         request.range = representation.range;
-        presentationStartTime = period.start;
-        request.availabilityStartTime = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationStartTime, representation.adaptation.period.mpd, isDynamic);
+        request.availabilityStartTime = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationStartTime, period.mpd, isDynamic);
         request.availabilityEndTime = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationStartTime + period.duration, period.mpd, isDynamic);
         request.quality = representation.index;
         request.mediaInfo = streamProcessor.getMediaInfo();
@@ -172,44 +170,25 @@ function DashHandler(config) {
     }
 
     function getInitRequest(representation) {
-        var request;
-
         if (!representation) return null;
-
-        request = generateInitRequest(representation, type);
-
-        //log("Got an initialization.");
-
+        const request = generateInitRequest(representation, type);
         return request;
     }
 
     function isMediaFinished(representation) {
-        var period = representation.adaptation.period;
-        var segmentInfoType = representation.segmentInfoType;
 
-        var isFinished = false;
+        let isFinished = false;
 
-        var sDuration,
-            seg,
-            fTime;
-
-
-
-        if (index < 0 ) {
-            isFinished = false;
-        } else if (isDynamic || index < representation.availableSegmentsNumber) {
-            seg = getSegmentByIndex(index, representation);
-
-            if (seg) {
-                fTime = seg.presentationStartTime - period.start;
-                sDuration = representation.adaptation.period.duration;
-                log(representation.segmentInfoType + ': ' + fTime + ' / ' + sDuration);
-                if (!isDynamic || streamProcessor.getStreamInfo().isLast) {
-                    isFinished = segmentInfoType === 'SegmentTimeline' && isDynamic ? false : fTime >= sDuration;
-                }
-            }
-        } else {
+        if (!isDynamic && index === representation.availableSegmentsNumber) {
             isFinished = true;
+        } else {
+            const seg = getSegmentByIndex(index, representation);
+            if (seg) {
+                const time = seg.presentationStartTime - representation.adaptation.period.start;
+                const duration = representation.adaptation.period.duration;
+                log(representation.segmentInfoType + ': ' + time + ' / ' + duration);
+                isFinished = representation.segmentInfoType === 'SegmentTimeline' && isDynamic ? false : time >= duration;
+            }
         }
 
         return isFinished;
@@ -228,10 +207,10 @@ function DashHandler(config) {
         }
 
         if (isDynamic && isNaN(timelineConverter.getExpectedLiveEdge())) {
-            let lastIdx = segments.length - 1;
-            let lastSegment = segments[lastIdx];
-            let liveEdge = lastSegment.presentationStartTime;
-            let metrics = metricsModel.getMetricsFor('stream');
+            const lastIdx = segments.length - 1;
+            const lastSegment = segments[lastIdx];
+            const liveEdge = lastSegment.presentationStartTime;
+            const metrics = metricsModel.getMetricsFor('stream');
             // the last segment is supposed to be a live edge
             timelineConverter.setExpectedLiveEdge(liveEdge);
             metricsModel.updateManifestUpdateInfo(dashMetrics.getCurrentManifestUpdate(metrics), {presentationStartTime: liveEdge});
