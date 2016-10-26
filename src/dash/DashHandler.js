@@ -207,11 +207,10 @@ function DashHandler(config) {
         }
 
         if (isDynamic && isNaN(timelineConverter.getExpectedLiveEdge())) {
-            const lastIdx = segments.length - 1;
-            const lastSegment = segments[lastIdx];
+            const lastSegment = segments[segments.length - 1];
             const liveEdge = lastSegment.presentationStartTime;
             const metrics = metricsModel.getMetricsFor('stream');
-            // the last segment is supposed to be a live edge
+            // the last segment is the Expected, not calculated, live edge.
             timelineConverter.setExpectedLiveEdge(liveEdge);
             metricsModel.updateManifestUpdateInfo(dashMetrics.getCurrentManifestUpdate(metrics), {presentationStartTime: liveEdge});
         }
