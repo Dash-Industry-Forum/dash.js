@@ -78,7 +78,6 @@ function PlaybackController() {
         isDynamic = streamInfo.manifestInfo.isDynamic;
         liveStartTime = streamInfo.start;
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
-        eventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
         eventBus.on(Events.BYTES_APPENDED, onBytesAppended, this);
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
         eventBus.on(Events.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, this);
@@ -215,7 +214,6 @@ function PlaybackController() {
         if (videoModel && element) {
             eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
-            eventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
             eventBus.off(Events.BYTES_APPENDED, onBytesAppended, this);
             stopUpdatingWallclockTime();
             removeAllListeners();
@@ -359,12 +357,6 @@ function PlaybackController() {
         streamInfo = info;
 
         updateCurrentTime();
-    }
-
-    function onLiveEdgeSearchCompleted(e) {
-        //This is here to catch the case when live edge search takes longer than playback metadata
-        if (e.error || element.readyState === 0) return;
-        seekToStartTimeOffset();
     }
 
     function onCanPlay() {

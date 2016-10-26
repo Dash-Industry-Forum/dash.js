@@ -49,7 +49,6 @@ import TimeSyncController from './controllers/TimeSyncController';
 import ABRRulesCollection from './rules/abr/ABRRulesCollection';
 import VideoModel from './models/VideoModel';
 import RulesController from './rules/RulesController';
-import SynchronizationRulesCollection from './rules/synchronization/SynchronizationRulesCollection';
 import MediaSourceController from './controllers/MediaSourceController';
 import BaseURLController from './controllers/BaseURLController';
 import Debug from './../core/Debug';
@@ -1800,14 +1799,8 @@ function MediaPlayer() {
 
     function createControllers() {
 
-        let synchronizationRulesCollection = SynchronizationRulesCollection(context).getInstance();
-        synchronizationRulesCollection.initialize();
-
         let abrRulesCollection = ABRRulesCollection(context).getInstance();
         abrRulesCollection.initialize();
-
-        //let scheduleRulesCollection = ScheduleRulesCollection(context).getInstance();
-        //scheduleRulesCollection.initialize();
 
         let sourceBufferController = SourceBufferController(context).getInstance();
         sourceBufferController.setConfig({dashManifestModel: dashManifestModel});
@@ -1819,10 +1812,7 @@ function MediaPlayer() {
 
         rulesController = RulesController(context).getInstance();
         rulesController.initialize();
-        rulesController.setConfig({
-            abrRulesCollection: abrRulesCollection,
-            synchronizationRulesCollection: synchronizationRulesCollection
-        });
+        rulesController.setConfig({abrRulesCollection: abrRulesCollection});
 
         streamController = StreamController(context).getInstance();
         streamController.setConfig({

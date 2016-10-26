@@ -155,9 +155,7 @@ function Stream(config) {
             fragmentController = null;
         }
 
-        liveEdgeFinder.abortSearch();
         deactivate();
-
         mediaController = null;
         abrController = null;
         manifestUpdater = null;
