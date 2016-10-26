@@ -70,16 +70,14 @@ describe("TimelineConverter", function () {
         expect(range.end).to.be.equal(expectedValue);
     });
 
-    describe("when the live edge is found", function () {
+    describe("when time sync is complete", function () {
         var updateCompleted,
              eventDelay = specHelper.getExecutionDelay();
 
         beforeEach(function (done) {
             updateCompleted = false;
-            timeLineConverter.setExpectedLiveEdge(100);
-
-            setTimeout(function(){
-                eventBus.trigger(Events.LIVE_EDGE_SEARCH_COMPLETED, {liveEdge: testActualLiveEdge, searchTime: searchTime});
+            setTimeout(() => {
+                eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED, {offset:0});
                 updateCompleted = true;
                 done();
             }, eventDelay);
