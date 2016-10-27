@@ -157,7 +157,7 @@ function ScheduleController(config) {
     }
 
     function start() {
-        if (!currentRepresentationInfo) return;
+        if (!currentRepresentationInfo || bufferController.getIsBufferingCompleted()) return;
         addPlaylistTraceMetrics();
         isStopped = false;
 
@@ -366,7 +366,7 @@ function ScheduleController(config) {
         // the executed requests for which playback time is inside the time interval that has been removed from the buffer
         fragmentModel.removeExecutedRequestsBeforeTime(e.to);
 
-        if (e.hasEnoughSpaceToAppend && !bufferController.getIsBufferingCompleted() && isStopped) {
+        if (e.hasEnoughSpaceToAppend && isStopped) {
             start();
         }
     }
