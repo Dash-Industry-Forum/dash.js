@@ -50,7 +50,7 @@
           "name": "SegmentTimeline (livesim-dev)"
         },
         {
-          "url": " http://vm2.dashif.org/livesim/periods_60/testpic_2s/Manifest.mpd",
+          "url": "http://vm2.dashif.org/livesim-dev/periods_60/continuous_1/testpic_2s/Manifest.mpd",
           "name": "Multiperiod SegmentTemplate. New period every minute (livesim)"
         },
         {
