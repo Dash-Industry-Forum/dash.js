@@ -1,4 +1,3 @@
-import LiveEdgeFinder from '../src/streaming/utils/LiveEdgeFinder';
 import EventBus from '../src/core/EventBus';
 import VoHelper from './helpers/VOHelper';
 import TimeLineConverter from '../src/dash/utils/TimelineConverter';
@@ -10,8 +9,6 @@ const sinon = require('sinon');
 
 describe("TimelineConverter", function () {
     const context = {},
-        testActualLiveEdge = 100,
-        searchTime = 0,
         testType = "video",
         voHelper = new VoHelper(),
         specHelper = new SpecHelper(),
@@ -49,30 +46,23 @@ describe("TimelineConverter", function () {
     });
 
     it("should calculate presentation time from wall-clock time", function () {
-        //representation.adaptation.period.start = 10;
-        //representation.adaptation.period.mpd.manifest.type = "static";
         var expectedValue = 10,
             wallClock = new Date(specHelper.getUnixTime().getTime() + expectedValue * 1000);
         expect(timeLineConverter.calcPresentationTimeFromWallTime(wallClock, representation.adaptation.period)).to.be.equal(expectedValue);
     });
 
-
     it("should calculate availability window for static mpd", function () {
-        //representation.adaptation.period.start = 0;
-        //representation.adaptation.period.duration = 100;
-        //representation.adaptation.period.mpd.manifest.type = "static";
-        var expectedValue = representation.adaptation.period.start,
-            isDynamic = false,
-            range = timeLineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
 
-        expect(range.start).to.be.equal(expectedValue);
-        expectedValue = 100;
-        expect(range.end).to.be.equal(expectedValue);
+        representation.adaptation.period.start = 0;
+        representation.adaptation.period.duration = 100;
+        representation.adaptation.period.mpd.manifest.type = "static";
+        const range = timeLineConverter.calcSegmentAvailabilityRange(representation, false);
+        expect(range.start).to.be.equal(representation.adaptation.period.start);
+        expect(range.end).to.be.equal(representation.adaptation.period.duration);
     });
 
     describe("when time sync is complete", function () {
-        var updateCompleted,
-             eventDelay = specHelper.getExecutionDelay();
+        let updateCompleted;
 
         beforeEach(function (done) {
             updateCompleted = false;
@@ -80,7 +70,7 @@ describe("TimelineConverter", function () {
                 eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED, {offset:0});
                 updateCompleted = true;
                 done();
-            }, eventDelay);
+            }, specHelper.getExecutionDelay());
         });
 
         it("should set isTimeSyncCompleted", function () {
@@ -88,24 +78,14 @@ describe("TimelineConverter", function () {
         });
 
         it("should calculate availability window for dynamic mpd", function () {
-            // useFakeTimers ensure availabilityStartTime below and
-            // calcSegmentAvailabilityRange get the same value.
-            var clock = sinon.useFakeTimers(new Date().getTime());
 
-            //representation.adaptation.period.start = 0;
-            //representation.adaptation.period.duration = 100;
-            //representation.adaptation.period.mpd.manifest.type = "static";
+            var clock = sinon.useFakeTimers(new Date().getTime());
             representation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
             timeLineConverter.setExpectedLiveEdge(100);
 
-            var expectedValue = 0,
-                isDynamic = true,
-                range = timeLineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
-
-            expect(range.start).to.be.equal(expectedValue);
-            expectedValue = 49;
-            expect(range.end).to.be.equal(expectedValue);
-
+            const range = timeLineConverter.calcSegmentAvailabilityRange(representation, true);
+            expect(range.start).to.be.equal(0);
+            expect(range.end).to.be.equal(49);
             clock.restore();
         });
     });

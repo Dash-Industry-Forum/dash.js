@@ -122,8 +122,9 @@ function Stream(config) {
         if (!isStreamActivated) {
             eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
             initializeMedia(mediaSource);
+            isStreamActivated = true;
         } else {
-            createBuffers();
+            createBuffers(); //TODO Why is this here!!
         }
     }
 
@@ -447,7 +448,6 @@ function Stream(config) {
         }
 
         initialized = true;
-        isStreamActivated = true;
         if (!isMediaInitialized) return;
         if (protectionController) {
             protectionController.initialize(manifestModel.getValue(), getMediaInfo('audio'), getMediaInfo('video'));
