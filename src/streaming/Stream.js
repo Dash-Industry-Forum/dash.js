@@ -123,9 +123,10 @@ function Stream(config) {
             eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
             initializeMedia(mediaSource);
             isStreamActivated = true;
-        } else {
-            createBuffers(); //TODO Why is this here!!
         }
+        //else { // TODO Check track change mode but why is this here. commented it out for now to check.
+        //    createBuffers();
+        //}
     }
 
     /**
