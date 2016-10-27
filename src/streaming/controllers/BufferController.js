@@ -177,7 +177,7 @@ function BufferController(config) {
         const eventStreamMedia = adapter.getEventsFor(manifest, currentRepresentation.mediaInfo, streamProcessor);
         const eventStreamTrack = adapter.getEventsFor(manifest, currentRepresentation, streamProcessor);
 
-        if (eventStreamMedia.length > 0 || eventStreamTrack.length > 0) {
+        if (eventStreamMedia && eventStreamMedia.length > 0 || eventStreamTrack && eventStreamTrack.length > 0) {
             const request = streamProcessor.getFragmentModel().getRequests({
                 state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
                 quality: quality,
