@@ -169,7 +169,7 @@ function TimelineConverter() {
     }
 
     function onTimeSyncComplete(e) {
-        if (isClientServerTimeSyncCompleted || e.error) return;
+        if (e.error) return;
         clientServerTimeShift = e.offset / 1000;
         isClientServerTimeSyncCompleted = true;
     }
