@@ -148,7 +148,6 @@ function ScheduleController(config) {
         eventBus.on(Events.INIT_REQUESTED, onInitRequested, this);
         eventBus.on(Events.QUOTA_EXCEEDED, onQuotaExceeded, this);
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
-        eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
         eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
         eventBus.on(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
         eventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
@@ -157,6 +156,7 @@ function ScheduleController(config) {
     }
 
     function start() {
+
         addPlaylistTraceMetrics();
         isStopped = false;
 
@@ -392,12 +392,6 @@ function ScheduleController(config) {
         getInitRequest(e.index);
     }
 
-    function onPlaybackStarted() {
-        if (isStopped) {
-            start();
-        }
-    }
-
     function onPlaybackSeeking(e) {
         seekTarget = e.seekTime;
         setTimeToLoadDelay(0);
@@ -491,7 +485,6 @@ function ScheduleController(config) {
         eventBus.off(Events.INIT_REQUESTED, onInitRequested, this);
         eventBus.off(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
         eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
-        eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
         eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
         eventBus.off(Events.URL_RESOLUTION_FAILED, onURLResolutionFailed, this);
         eventBus.off(Events.FRAGMENT_LOADING_ABANDONED, onFragmentLoadingAbandoned, this);
