@@ -1579,15 +1579,43 @@ function MediaPlayer() {
     }
 
     /**
-     * Sets whether withCredentials on XHR requests is true or false
+     * Sets whether withCredentials on all XHR requests is true or false
      *
      * @default false
      * @param {boolean} value
      * @memberof module:MediaPlayer
      * @instance
+     * @deprecated since version 2.4 - use setXHRWithCredentialsForType
      */
     function setXHRWithCredentials(value) {
-        mediaPlayerModel.setXHRWithCredentials(value);
+        setXHRWithCredentialsForType(undefined, value);
+    }
+
+    /**
+     * Sets whether withCredentials on XHR requests for a particular request
+     * type is true or false
+     *
+     * @default false
+     * @param {string} type - one of HTTPRequest.*_TYPE
+     * @param {boolean} value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setXHRWithCredentialsForType(type, value) {
+        mediaPlayerModel.setXHRWithCredentialsForType(type, value);
+    }
+
+    /**
+     * Gets whether withCredentials on XHR requests for a particular request
+     * type is true or false
+     *
+     * @param {string} type - one of HTTPRequest.*_TYPE
+     * @return {boolean}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getXHRWithCredentialsForType(type) {
+        return mediaPlayerModel.getXHRWithCredentialsForType(type);
     }
 
     /**
@@ -2052,6 +2080,8 @@ function MediaPlayer() {
         setFragmentLoaderRetryAttempts: setFragmentLoaderRetryAttempts,
         setFragmentLoaderRetryInterval: setFragmentLoaderRetryInterval,
         setXHRWithCredentials: setXHRWithCredentials,
+        setXHRWithCredentialsForType: setXHRWithCredentialsForType,
+        getXHRWithCredentialsForType: getXHRWithCredentialsForType,
         setBufferTimeAtTopQualityLongForm: setBufferTimeAtTopQualityLongForm,
         setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,
         setRichBufferThreshold: setRichBufferThreshold,
