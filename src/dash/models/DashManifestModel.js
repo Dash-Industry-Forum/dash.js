@@ -552,7 +552,7 @@ function DashManifestModel() {
             }
 
             if (vo !== null) {
-                vo.id = getPeriodId(p);
+                vo.id = getPeriodId(p, i);
             }
 
             if (vo !== null && p.hasOwnProperty('duration')) {
@@ -585,12 +585,12 @@ function DashManifestModel() {
         return periods;
     }
 
-    function getPeriodId(p) {
+    function getPeriodId(p, i) {
         if (!p) {
             throw new Error('Period cannot be null or undefined');
         }
 
-        var id = Period.DEFAULT_ID;
+        let id = Period.DEFAULT_ID + '_' + i;
 
         if (p.hasOwnProperty('id') && p.id !== '__proto__') {
             id = p.id;
@@ -899,7 +899,6 @@ function DashManifestModel() {
         getRepresentationsForAdaptation: getRepresentationsForAdaptation,
         getAdaptationsForPeriod: getAdaptationsForPeriod,
         getRegularPeriods: getRegularPeriods,
-        getPeriodId: getPeriodId,
         getMpd: getMpd,
         getEventsForPeriod: getEventsForPeriod,
         getEventStreams: getEventStreams,
