@@ -49,7 +49,6 @@ import TimeSyncController from './controllers/TimeSyncController';
 import ABRRulesCollection from './rules/abr/ABRRulesCollection';
 import VideoModel from './models/VideoModel';
 import RulesController from './rules/RulesController';
-import SynchronizationRulesCollection from './rules/synchronization/SynchronizationRulesCollection';
 import MediaSourceController from './controllers/MediaSourceController';
 import BaseURLController from './controllers/BaseURLController';
 import Debug from './../core/Debug';
@@ -482,15 +481,16 @@ function MediaPlayer() {
      * @param {number} time - UTC timestamp to be converted into date and time.
      * @param {string} locales - a region identifier (i.e. en_US).
      * @param {boolean} hour12 - 12 vs 24 hour. Set to true for 12 hour time formatting.
+     * @param {boolean} withDate - default is false. Set to true to append current date to UTC time format.
      * @returns {string} A formatted time and date string.
      * @memberof module:MediaPlayer
      * @instance
      */
-    function formatUTC(time, locales, hour12) {
-        var dt = new Date(time * 1000);
-        var d = dt.toLocaleDateString(locales);
-        var t = dt.toLocaleTimeString(locales, {hour12: hour12});
-        return t + ' ' + d;
+    function formatUTC(time, locales, hour12, withDate = false) {
+        const dt = new Date(time * 1000);
+        const d = dt.toLocaleDateString(locales);
+        const t = dt.toLocaleTimeString(locales, {hour12: hour12});
+        return withDate ? t + ' ' + d : t;
     }
 
     /**
@@ -1827,14 +1827,8 @@ function MediaPlayer() {
 
     function createControllers() {
 
-        let synchronizationRulesCollection = SynchronizationRulesCollection(context).getInstance();
-        synchronizationRulesCollection.initialize();
-
         let abrRulesCollection = ABRRulesCollection(context).getInstance();
         abrRulesCollection.initialize();
-
-        //let scheduleRulesCollection = ScheduleRulesCollection(context).getInstance();
-        //scheduleRulesCollection.initialize();
 
         let sourceBufferController = SourceBufferController(context).getInstance();
         sourceBufferController.setConfig({dashManifestModel: dashManifestModel});
@@ -1846,10 +1840,7 @@ function MediaPlayer() {
 
         rulesController = RulesController(context).getInstance();
         rulesController.initialize();
-        rulesController.setConfig({
-            abrRulesCollection: abrRulesCollection,
-            synchronizationRulesCollection: synchronizationRulesCollection
-        });
+        rulesController.setConfig({abrRulesCollection: abrRulesCollection});
 
         streamController = StreamController(context).getInstance();
         streamController.setConfig({

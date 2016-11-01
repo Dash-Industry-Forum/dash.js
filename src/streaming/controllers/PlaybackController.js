@@ -78,7 +78,6 @@ function PlaybackController() {
         isDynamic = streamInfo.manifestInfo.isDynamic;
         liveStartTime = streamInfo.start;
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
-        eventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
         eventBus.on(Events.BYTES_APPENDED, onBytesAppended, this);
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
         eventBus.on(Events.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, this);
@@ -90,13 +89,15 @@ function PlaybackController() {
     }
 
     function onPeriodSwitchStarted(e) {
-        if (e.fromStreamInfo && commonEarliestTime[e.fromStreamInfo.id]) {
+        if (!isDynamic && e.fromStreamInfo && commonEarliestTime[e.fromStreamInfo.id]) {
             delete commonEarliestTime[e.fromStreamInfo.id];
         }
     }
 
     function getTimeToStreamEnd() {
-        return ((getStreamStartTime(true) + streamInfo.duration) - getTime());
+        const startTime = getStreamStartTime(true);
+        const offset = isDynamic ? startTime - streamInfo.start : 0;
+        return startTime + (streamInfo.duration - offset) - getTime();
     }
 
     function isPlaybackStarted() {
@@ -105,10 +106,6 @@ function PlaybackController() {
 
     function getStreamId() {
         return streamInfo.id;
-    }
-
-    function getStreamDuration() {
-        return streamInfo.duration;
     }
 
     function play() {
@@ -217,7 +214,6 @@ function PlaybackController() {
         if (videoModel && element) {
             eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
-            eventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
             eventBus.off(Events.BYTES_APPENDED, onBytesAppended, this);
             stopUpdatingWallclockTime();
             removeAllListeners();
@@ -363,12 +359,6 @@ function PlaybackController() {
         updateCurrentTime();
     }
 
-    function onLiveEdgeSearchCompleted(e) {
-        //This is here to catch the case when live edge search takes longer than playback metadata
-        if (e.error || element.readyState === 0) return;
-        seekToStartTimeOffset();
-    }
-
     function onCanPlay() {
         eventBus.trigger(Events.CAN_PLAY);
     }
@@ -501,7 +491,6 @@ function PlaybackController() {
         getTimeToStreamEnd: getTimeToStreamEnd,
         isPlaybackStarted: isPlaybackStarted,
         getStreamId: getStreamId,
-        getStreamDuration: getStreamDuration,
         getTime: getTime,
         getPlaybackRate: getPlaybackRate,
         getPlayedRanges: getPlayedRanges,

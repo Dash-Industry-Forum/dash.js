@@ -48,8 +48,6 @@ function TimelineConverter() {
         clientServerTimeShift = 0;
         isClientServerTimeSyncCompleted = false;
         expectedLiveEdge = NaN;
-
-        eventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
         eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncComplete, this);
     }
 
@@ -106,6 +104,7 @@ function TimelineConverter() {
     }
 
     function calcPresentationTimeFromWallTime(wallTime, period) {
+        //console.log("XXX", wallTime.getTime() - period.mpd.availabilityStartTime.getTime(), clientServerTimeShift * 1000, clientServerTimeShift, period.mpd.availabilityStartTime.getTime())
         return ((wallTime.getTime() - period.mpd.availabilityStartTime.getTime() + clientServerTimeShift * 1000) / 1000);
     }
 
@@ -138,31 +137,22 @@ function TimelineConverter() {
     }
 
     function calcSegmentAvailabilityRange(representation, isDynamic) {
-        var start = representation.adaptation.period.start;
-        var end = start + representation.adaptation.period.duration;
-        var range = { start: start, end: end };
-        var d = representation.segmentDuration || ((representation.segments && representation.segments.length) ? representation.segments[representation.segments.length - 1].duration : 0);
 
-        var checkTime,
-            now;
-
+        // Static Range Finder
+        const period = representation.adaptation.period;
+        const range = { start: period.start, end: period.start + period.duration };
         if (!isDynamic) return range;
 
         if (!isClientServerTimeSyncCompleted && representation.segmentAvailabilityRange) {
             return representation.segmentAvailabilityRange;
         }
 
-        checkTime = representation.adaptation.period.mpd.checkTime;
-        now = calcPresentationTimeFromWallTime(new Date(), representation.adaptation.period);
-        //the Media Segment list is further restricted by the CheckTime together with the MPD attribute
-        // MPD@timeShiftBufferDepth such that only Media Segments for which the sum of the start time of the
-        // Media Segment and the Period start time falls in the interval [NOW- MPD@timeShiftBufferDepth - @duration, min(CheckTime, NOW)] are included.
-        start = Math.max((now - representation.adaptation.period.mpd.timeShiftBufferDepth), representation.adaptation.period.start);
-        var timeAnchor = (isNaN(checkTime) ? now : Math.min(checkTime, now));
-        var periodEnd = representation.adaptation.period.start + representation.adaptation.period.duration;
-        end = (timeAnchor >= periodEnd  && (timeAnchor - d) < periodEnd ? periodEnd : timeAnchor) - d;
-        //end = (isNaN(checkTime) ? now : Math.min(checkTime, now)) - d;
-        range = {start: start, end: end};
+        //Dyanmic Range Finder
+        const d = representation.segmentDuration || (representation.segments && representation.segments.length ? representation.segments[representation.segments.length - 1].duration : 0);
+        const now = calcPresentationTimeFromWallTime(new Date(), period);
+        const periodEnd = period.start + period.duration;
+        range.start = Math.max((now - period.mpd.timeShiftBufferDepth), period.start);
+        range.end = now >= periodEnd && now - d < periodEnd ? periodEnd - d : now - d;
 
         return range;
     }
@@ -178,22 +168,9 @@ function TimelineConverter() {
         return periodRelativeTime + periodStartTime;
     }
 
-    function onLiveEdgeSearchCompleted(e) {
-        if (isClientServerTimeSyncCompleted || e.error) return;
-
-        // the difference between expected and actual live edge time is supposed to be a difference between client
-        // and server time as well
-        clientServerTimeShift += e.liveEdge - (expectedLiveEdge + e.searchTime);
-        isClientServerTimeSyncCompleted = true;
-    }
-
     function onTimeSyncComplete(e) {
-        if (isClientServerTimeSyncCompleted || e.error) {
-            return;
-        }
-
+        if (e.error) return;
         clientServerTimeShift = e.offset / 1000;
-
         isClientServerTimeSyncCompleted = true;
     }
 
@@ -205,7 +182,6 @@ function TimelineConverter() {
     }
 
     function reset() {
-        eventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
         eventBus.off(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncComplete, this);
         clientServerTimeShift = 0;
         isClientServerTimeSyncCompleted = false;

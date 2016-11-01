@@ -148,7 +148,12 @@ app.controller('DashController', function($scope, sources, contributors) {
     $scope.audioDownload = "";
     $scope.audioRatioCount = 0;
     $scope.audioRatio = "";
-
+    $scope.autoPlaySelected = true;
+    $scope.loopSelected = true;
+    $scope.scheduleWhilePausedSelected = true;
+    $scope.localStorageSelected = true;
+    $scope.fastSwitchSelected = true;
+    $scope.bolaSelected = false;
     ////////////////////////////////////////
     //
     // Player Setup
@@ -157,7 +162,7 @@ app.controller('DashController', function($scope, sources, contributors) {
 
     $scope.video = document.querySelector(".dash-video-player video");
     $scope.player = dashjs.MediaPlayer().create();
-    $scope.player.initialize($scope.video, null, true);
+    $scope.player.initialize($scope.video, null, $scope.autoPlaySelected);
     $scope.player.setFastSwitchEnabled(true);
     $scope.player.attachVideoContainer(document.getElementById("videoContainer"));
     // Add HTML-rendered TTML subtitles except for Firefox < v49 (issue #1164)
@@ -457,6 +462,10 @@ app.controller('DashController', function($scope, sources, contributors) {
         $scope.player.setFastSwitchEnabled($scope.fastSwitchSelected);
     }
 
+    $scope.toggleScheduleWhilePaused = function () {
+        $scope.player.setScheduleWhilePaused($scope.scheduleWhilePausedSelected);
+    }
+
     $scope.toggleLocalStorage = function () {
         $scope.player.enableLastBitrateCaching($scope.localStorageSelected);
         $scope.player.enableLastMediaSettingsCaching($scope.localStorageSelected);
@@ -477,10 +486,7 @@ app.controller('DashController', function($scope, sources, contributors) {
             protData = $scope.selectedItem.protData;
         }
 
-
-
         $scope.setChartInfo();
-
         $scope.controlbar.reset();
         $scope.player.setProtectionData(protData);
         $scope.player.attachSource($scope.selectedItem.url);

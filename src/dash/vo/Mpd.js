@@ -40,9 +40,8 @@ class Mpd {
         this.availabilityEndTime = Number.POSITIVE_INFINITY;
         this.timeShiftBufferDepth = Number.POSITIVE_INFINITY;
         this.maxSegmentDuration = Number.POSITIVE_INFINITY;
-        this.checkTime = NaN;
-        this.clientServerTimeShift = 0;
-        this.isClientServerTimeSyncCompleted = false;
+        this.minimumUpdatePeriod = NaN;
+        this.mediaPresentationDuration = NaN;
     }
 }
 

@@ -91,7 +91,7 @@ function RepresentationController() {
         eventBus.on(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
         eventBus.on(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
-        eventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, instance);
+
     }
 
     function setConfig(config) {
@@ -132,7 +132,7 @@ function RepresentationController() {
         eventBus.off(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
         eventBus.off(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
-        eventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, instance);
+
 
         data = null;
         dataIndex = -1;
@@ -334,25 +334,6 @@ function RepresentationController() {
     function onWallclockTimeUpdated(e) {
         if (e.isDynamic) {
             updateAvailabilityWindow(e.isDynamic);
-        }
-    }
-
-    function onLiveEdgeSearchCompleted(e) {
-        if (e.error) return;
-
-        updateAvailabilityWindow(true);
-        indexHandler.updateRepresentation(currentRepresentation, false);
-
-        // we need to update checkTime after we have found the live edge because its initial value
-        // does not take into account clientServerTimeShift
-        var manifest = manifestModel.getValue();
-        var period = currentRepresentation.adaptation.period;
-        var streamInfo = streamController.getActiveStreamInfo();
-
-        if (streamInfo.isLast) {
-            period.mpd.checkTime = dashManifestModel.getCheckTime(manifest, period);
-            period.duration = dashManifestModel.getEndTimeForLastPeriod(manifestModel.getValue(), period) - period.start;
-            streamInfo.duration = period.duration;
         }
     }
 
