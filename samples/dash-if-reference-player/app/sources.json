@@ -240,10 +240,10 @@
       ]
     },
     {
-      "name": "Axinom Test Content",
+      "name": "Axinom Test Content (v7.0, modern)",
       "submenu": [
         {
-           "name": "v7 encrypted single-key (1080p)",
+          "name": "1080p with PlayReady and Widevine DRM, single key",
           "url": "http://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_1080p.mpd",
           "protData": {
             "com.widevine.alpha": {
@@ -262,45 +262,7 @@
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
-           "name": "v7 encrypted single-key (4K)",
-          "url": "http://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest.mpd",
-          "protData": {
-            "com.widevine.alpha": {
-              "serverURL": "http://drm-widevine-licensing.axtest.net/AcquireLicense",
-              "httpRequestHeaders": {
-                "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.4lWwW46k-oWcah8oN18LPj5OLS5ZU-_AQv7fe0JhNjA"
-              }
-            },
-            "com.microsoft.playready": {
-              "serverURL": "http://drm-playready-licensing.axtest.net/AcquireLicense",
-              "httpRequestHeaders": {
-                "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.4lWwW46k-oWcah8oN18LPj5OLS5ZU-_AQv7fe0JhNjA"
-              }
-            }
-          },
-          "moreInfo": "https://github.com/Axinom/dash-test-vectors"
-        },
-        {
-           "name": "v7 encrypted single-key (audio only)",
-          "url": "http://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_AudioOnly.mpd",
-          "protData": {
-            "com.widevine.alpha": {
-              "serverURL": "http://drm-widevine-licensing.axtest.net/AcquireLicense",
-              "httpRequestHeaders": {
-                "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.4lWwW46k-oWcah8oN18LPj5OLS5ZU-_AQv7fe0JhNjA"
-              }
-            },
-            "com.microsoft.playready": {
-              "serverURL": "http://drm-playready-licensing.axtest.net/AcquireLicense",
-              "httpRequestHeaders": {
-                "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.4lWwW46k-oWcah8oN18LPj5OLS5ZU-_AQv7fe0JhNjA"
-              }
-            }
-          },
-          "moreInfo": "https://github.com/Axinom/dash-test-vectors"
-        },
-        {
-           "name": "v7 encrypted multi-key (1080p)",
+          "name": "1080p with PlayReady and Widevine DRM, multiple keys",
           "url": "http://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey/Manifest_1080p.mpd",
           "protData": {
             "com.widevine.alpha": {
@@ -319,7 +281,41 @@
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
-           "name": "v7 encrypted multi-key (4K)",
+          "name": "1080p with W3C Clear Key, single key",
+          "url": "http://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_1080p_ClearKey.mpd",
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors"
+        },
+        {
+          "name": "1080p with W3C Clear Key, multiple keys",
+          "url": "http://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey/Manifest_1080p_ClearKey.mpd",
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors"
+        },
+        {
+          "name": "1080p without encryption",
+          "url": "http://media.axprod.net/TestVectors/v7-Clear/Manifest_1080p.mpd",
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors"
+        },
+        {
+           "name": "2160p with PlayReady and Widevine DRM, single key",
+          "url": "http://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest.mpd",
+          "protData": {
+            "com.widevine.alpha": {
+              "serverURL": "http://drm-widevine-licensing.axtest.net/AcquireLicense",
+              "httpRequestHeaders": {
+                "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.4lWwW46k-oWcah8oN18LPj5OLS5ZU-_AQv7fe0JhNjA"
+              }
+            },
+            "com.microsoft.playready": {
+              "serverURL": "http://drm-playready-licensing.axtest.net/AcquireLicense",
+              "httpRequestHeaders": {
+                "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.4lWwW46k-oWcah8oN18LPj5OLS5ZU-_AQv7fe0JhNjA"
+              }
+            }
+          },
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors"
+        },
+        {
+           "name": "2160p with PlayReady and Widevine DRM, multiple keys",
           "url": "http://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey/Manifest.mpd",
           "protData": {
             "com.widevine.alpha": {
@@ -338,7 +334,41 @@
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
-           "name": "v7 encrypted multi-key (audio only)",
+           "name": "2160p with W3C Clear Key, single key",
+          "url": "http://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_ClearKey.mpd",
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors"
+        },
+        {
+           "name": "2160p with W3C Clear Key, multiple keys",
+          "url": "http://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey/Manifest_ClearKey.mpd",
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors"
+        },
+        {
+          "name": "2160p without encryption",
+          "url": "http://media.axprod.net/TestVectors/v7-Clear/Manifest.mpd",
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors"
+        },
+        {
+          "name": "Audio with PlayReady and Widevine DRM, single key",
+          "url": "http://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_AudioOnly.mpd",
+          "protData": {
+            "com.widevine.alpha": {
+              "serverURL": "http://drm-widevine-licensing.axtest.net/AcquireLicense",
+              "httpRequestHeaders": {
+                "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.4lWwW46k-oWcah8oN18LPj5OLS5ZU-_AQv7fe0JhNjA"
+              }
+            },
+            "com.microsoft.playready": {
+              "serverURL": "http://drm-playready-licensing.axtest.net/AcquireLicense",
+              "httpRequestHeaders": {
+                "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.4lWwW46k-oWcah8oN18LPj5OLS5ZU-_AQv7fe0JhNjA"
+              }
+            }
+          },
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors"
+        },
+        {
+          "name": "Audio with PlayReady and Widevine DRM, multiple keys",
           "url": "http://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey/Manifest_AudioOnly.mpd",
           "protData": {
             "com.widevine.alpha": {
@@ -357,7 +387,22 @@
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
-           "name": "v7 encrypted multi-key multi-period (1080p)",
+          "name": "Audio with W3C Clear Key, single key",
+          "url": "http://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_AudioOnly_ClearKey.mpd",
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors"
+        },
+        {
+          "name": "Audio with W3C Clear Key, multiple keys",
+          "url": "http://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey/Manifest_AudioOnly_ClearKey.mpd",
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors"
+        },
+        {
+          "name": "Audio without encryption",
+          "url": "http://media.axprod.net/TestVectors/v7-Clear/Manifest_AudioOnly.mpd",
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors"
+        },
+        {
+          "name": "Multi-period 1080p with PlayReady and Widevine DRM, multiple keys",
           "url": "http://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey-MultiPeriod/Manifest_1080p.mpd",
           "protData": {
             "com.widevine.alpha": {
@@ -376,7 +421,17 @@
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
-           "name": "v7 encrypted multi-key multi-period (4K)",
+          "name": "Multi-period 1080p with W3C Clear Key, multiple keys",
+          "url": "http://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey-MultiPeriod/Manifest_1080p_ClearKey.mpd",
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors"
+        },
+        {
+          "name": "Multi-period 1080p without encryption",
+          "url": "http://media.axprod.net/TestVectors/v7-Clear/Manifest_MultiPeriod_1080p.mpd",
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors"
+        },
+        {
+          "name": "Multi-period 2160p with PlayReady and Widevine DRM, multiple keys",
           "url": "http://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey-MultiPeriod/Manifest.mpd",
           "protData": {
             "com.widevine.alpha": {
@@ -395,7 +450,17 @@
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
-           "name": "v7 encrypted multi-key multi-period (audio only)",
+          "name": "Multi-period 2160p with W3C Clear Key, multiple keys",
+          "url": "http://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey-MultiPeriod/Manifest_ClearKey.mpd",
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors"
+        },
+        {
+          "name": "Multi-period 2160p without encryption",
+          "url": "http://media.axprod.net/TestVectors/v7-Clear/Manifest_MultiPeriod.mpd",
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors"
+        },
+        {
+          "name": "Multi-period audio with PlayReady and Widevine DRM, multiple keys",
           "url": "http://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey-MultiPeriod/Manifest_AudioOnly.mpd",
           "protData": {
             "com.widevine.alpha": {
@@ -413,40 +478,23 @@
           },
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
-        
         {
-          "name": "v7 clear (1080p)",
-          "url": "http://media.axprod.net/TestVectors/v7-Clear/Manifest_1080p.mpd",
+          "name": "Multi-period audio with W3C Clear Key, multiple keys",
+          "url": "http://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey-MultiPeriod/Manifest_AudioOnly_ClearKey.mpd",
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
-          "name": "v7 clear (4K)",
-          "url": "http://media.axprod.net/TestVectors/v7-Clear/Manifest.mpd",
-          "moreInfo": "https://github.com/Axinom/dash-test-vectors"
-        },
-        {
-          "name": "v7 clear (audio only)",
-          "url": "http://media.axprod.net/TestVectors/v7-Clear/Manifest_AudioOnly.mpd",
-          "moreInfo": "https://github.com/Axinom/dash-test-vectors"
-        },
-        {
-          "name": "v7 clear multi-period (1080p)",
-          "url": "http://media.axprod.net/TestVectors/v7-Clear/Manifest_MultiPeriod_1080p.mpd",
-          "moreInfo": "https://github.com/Axinom/dash-test-vectors"
-        },
-        {
-          "name": "v7 clear multi-period (4K)",
-          "url": "http://media.axprod.net/TestVectors/v7-Clear/Manifest_MultiPeriod.mpd",
-          "moreInfo": "https://github.com/Axinom/dash-test-vectors"
-        },
-        {
-          "name": "v7 clear multi-period (audio only)",
+          "name": "Multi-period audio without encryption",
           "url": "http://media.axprod.net/TestVectors/v7-Clear/Manifest_MultiPeriod_AudioOnly.mpd",
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
-        },
-
+        }
+      ]
+    },
+    {
+      "name": "Axinom Test Content (v6.1, conservative)",
+      "submenu": [
         {
-          "name": "v6.1 encrypted (1080p)",
+          "name": "1080p with PlayReady and Widevine DRM, single key",
           "url": "http://media.axprod.net/TestVectors/v6.1-MultiDRM/Manifest_1080p.mpd",
           "protData": {
             "com.widevine.alpha": {
@@ -465,26 +513,7 @@
           "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
         },
         {
-          "name": "v6.1 encrypted (4K)",
-          "url": "http://media.axprod.net/TestVectors/v6.1-MultiDRM/Manifest.mpd",
-          "protData": {
-            "com.widevine.alpha": {
-              "serverURL": "http://drm-widevine-licensing.axtest.net/AcquireLicense",
-              "httpRequestHeaders": {
-                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNmU1YTFkMjYtMjc1Ny00N2Q3LTgwNDYtZWFhNWQxZDM0YjVhIn1dfX0.yF7PflOPv9qHnu3ZWJNZ12jgkqTabmwXbDWk_47tLNE"
-              }
-            },
-            "com.microsoft.playready": {
-              "serverURL": "http://drm-playready-licensing.axtest.net/AcquireLicense",
-              "httpRequestHeaders": {
-                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNmU1YTFkMjYtMjc1Ny00N2Q3LTgwNDYtZWFhNWQxZDM0YjVhIn1dfX0.yF7PflOPv9qHnu3ZWJNZ12jgkqTabmwXbDWk_47tLNE"
-              }
-            }
-          },
-          "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
-        },
-        {
-          "name": "v6.1 encrypted with multiple keys (1080p)",
+          "name": "1080p with PlayReady and Widevine DRM, multiple keys",
           "url": "http://media.axprod.net/TestVectors/v6.1-MultiDRM-MultiKey/Manifest_1080p.mpd",
           "protData": {
             "com.widevine.alpha": {
@@ -503,7 +532,31 @@
           "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
         },
         {
-          "name": "v6.1 encrypted with multiple keys (4K)",
+          "name": "1080p without encryption",
+          "url": "http://media.axprod.net/TestVectors/v6.1-Clear/Manifest_1080p.mpd",
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
+        },
+        {
+          "name": "2160p with PlayReady and Widevine DRM, single key",
+          "url": "http://media.axprod.net/TestVectors/v6.1-MultiDRM/Manifest.mpd",
+          "protData": {
+            "com.widevine.alpha": {
+              "serverURL": "http://drm-widevine-licensing.axtest.net/AcquireLicense",
+              "httpRequestHeaders": {
+                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNmU1YTFkMjYtMjc1Ny00N2Q3LTgwNDYtZWFhNWQxZDM0YjVhIn1dfX0.yF7PflOPv9qHnu3ZWJNZ12jgkqTabmwXbDWk_47tLNE"
+              }
+            },
+            "com.microsoft.playready": {
+              "serverURL": "http://drm-playready-licensing.axtest.net/AcquireLicense",
+              "httpRequestHeaders": {
+                "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNmU1YTFkMjYtMjc1Ny00N2Q3LTgwNDYtZWFhNWQxZDM0YjVhIn1dfX0.yF7PflOPv9qHnu3ZWJNZ12jgkqTabmwXbDWk_47tLNE"
+              }
+            }
+          },
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
+        },
+        {
+          "name": "2160p with PlayReady and Widevine DRM, multiple keys",
           "url": "http://media.axprod.net/TestVectors/v6.1-MultiDRM-MultiKey/Manifest.mpd",
           "protData": {
             "com.widevine.alpha": {
@@ -522,7 +575,12 @@
           "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
         },
         {
-          "name": "v6.1 encrypted with multiple keys and multiple periods (1080p)",
+          "name": "2160p without encryption",
+          "url": "http://media.axprod.net/TestVectors/v6.1-Clear/Manifest.mpd",
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
+        },
+        {
+          "name": "Multi-period 1080p with PlayReady and Widevine DRM, multiple keys",
           "url": "http://media.axprod.net/TestVectors/v6.1-MultiDRM-MultiKey-MultiPeriod/Manifest_1080p.mpd",
           "protData": {
             "com.widevine.alpha": {
@@ -541,7 +599,12 @@
           "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
         },
         {
-          "name": "v6.1 encrypted with multiple keys and multiple periods (4K)",
+          "name": "Multi-period 1080p without encryption",
+          "url": "http://media.axprod.net/TestVectors/v6.1-Clear/MultiPeriod_Manifest_1080p.mpd",
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
+        },
+        {
+          "name": "Multi-period 2160p with PlayReady and Widevine DRM, multiple keys",
           "url": "http://media.axprod.net/TestVectors/v6.1-MultiDRM-MultiKey-MultiPeriod/Manifest.mpd",
           "protData": {
             "com.widevine.alpha": {
@@ -559,24 +622,8 @@
           },
           "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
         },
-
         {
-          "name": "v6.1 clear (1080p)",
-          "url": "http://media.axprod.net/TestVectors/v6.1-Clear/Manifest_1080p.mpd",
-          "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
-        },
-        {
-          "name": "v6.1 clear (4K)",
-          "url": "http://media.axprod.net/TestVectors/v6.1-Clear/Manifest.mpd",
-          "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
-        },
-        {
-          "name": "v6.1 clear multi-period (1080p)",
-          "url": "http://media.axprod.net/TestVectors/v6.1-Clear/MultiPeriod_Manifest_1080p.mpd",
-          "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
-        },
-        {
-          "name": "v6.1 clear multi-period (4K)",
+          "name": "Multi-period 2160p without encryption",
           "url": "http://media.axprod.net/TestVectors/v6.1-Clear/MultiPeriod_Manifest.mpd",
           "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
         }
