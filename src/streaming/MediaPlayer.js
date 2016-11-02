@@ -1253,7 +1253,11 @@ function MediaPlayer() {
     }
 
     /**
+     * Enabled by default. Will return the current state of Fast Switch.
      * @return {boolean} Returns true if FastSwitch ABR is enabled.
+     * @see {@link module:MediaPlayer#setFastSwitchEnabled setFastSwitchEnabled()}
+     * @memberof module:MediaPlayer
+     * @instance
      */
     function getFastSwitchEnabled() {
         return mediaPlayerModel.getFastSwitchEnabled();
