@@ -696,7 +696,7 @@ function TTMLParser() {
                 var fullNsPrefix = nsPrefix + ':';
                 var nsPrefixPos = key.indexOf(fullNsPrefix);
                 if (nsPrefixPos >= 0) {
-                    var newKey = key.slice(key.indexOf(nsPrefix) + fullNsPrefix.length);
+                    var newKey = key.slice(nsPrefixPos + fullNsPrefix.length);
                     json[newKey] = json[key];
                     delete json[key];
                 }
