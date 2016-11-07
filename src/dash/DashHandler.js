@@ -350,10 +350,10 @@ function DashHandler(config) {
             log('Getting the request for ' + type + ' time : ' + time);
         }
 
+        updateSegments(representation);
         index = getIndexForSegments(time, representation, timeThreshold);
         //Index may be -1 if getSegments needs to update.  So after getSegments is called and updated then try to get index again.
         if (index < 0) {
-            updateSegments(representation);
             index = getIndexForSegments(time, representation, timeThreshold);
         }
 
