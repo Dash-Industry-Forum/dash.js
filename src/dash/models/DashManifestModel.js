@@ -324,12 +324,12 @@ function DashManifestModel() {
         return representation.bandwidth;
     }
 
-    function getManifestUpdateDelay(manifest, timeSinceLastUpdate) {
+    function getManifestUpdatePeriod(manifest, latencyOfLastUpdate = 0) {
         let delay = NaN;
         if (manifest.hasOwnProperty('minimumUpdatePeriod')) {
             delay = manifest.minimumUpdatePeriod;
         }
-        return isNaN(delay) ? delay : Math.max(delay - timeSinceLastUpdate, 0);
+        return isNaN(delay) ? delay : Math.max(delay - latencyOfLastUpdate, 0);
     }
 
     function getRepresentationCount(adaptation) {
@@ -889,7 +889,7 @@ function DashManifestModel() {
         getIsDVB: getIsDVB,
         getDuration: getDuration,
         getBandwidth: getBandwidth,
-        getManifestUpdateDelay: getManifestUpdateDelay,
+        getManifestUpdatePeriod: getManifestUpdatePeriod,
         getRepresentationCount: getRepresentationCount,
         getBitrateListForAdaptation: getBitrateListForAdaptation,
         getRepresentationFor: getRepresentationFor,

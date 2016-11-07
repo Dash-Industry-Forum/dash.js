@@ -127,8 +127,8 @@ function ManifestUpdater() {
         manifestModel.setValue(manifest);
 
         const date = new Date();
-        const timeSinceLastUpdate = (date.getTime() - manifest.loadedTime.getTime()) / 1000;
-        refreshDelay = dashManifestModel.getManifestUpdateDelay(manifest, timeSinceLastUpdate);
+        const latencyOfLastUpdate = (date.getTime() - manifest.loadedTime.getTime()) / 1000;
+        refreshDelay = dashManifestModel.getManifestUpdatePeriod(manifest, latencyOfLastUpdate);
 
         eventBus.trigger(Events.MANIFEST_UPDATED, {manifest: manifest});
         log('Manifest has been refreshed at ' + date + '[' + date.getTime() / 1000 + '] ');
