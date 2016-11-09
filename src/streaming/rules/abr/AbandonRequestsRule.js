@@ -69,7 +69,7 @@ function AbandonRequestsRule() {
         const mediaInfo = rulesContext.getMediaInfo();
         const mediaType = mediaInfo.type;
         const req = rulesContext.getCurrentRequest();
-        const switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK, {name: AbandonRequestsRule.__dashjs_factory_name});
+        const switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, {name: AbandonRequestsRule.__dashjs_factory_name});
 
         if (!isNaN(req.index)) {
 
@@ -115,16 +115,14 @@ function AbandonRequestsRule() {
                     const estimateOtherBytesTotal = fragmentInfo.bytesTotal * bitrateList[newQuality].bitrate / bitrateList[abrController.getQualityFor(mediaType, mediaInfo.streamInfo)].bitrate;
 
                     if (bytesRemaining > estimateOtherBytesTotal) {
-
                         switchRequest.value = newQuality;
-                        switchRequest.priority = SwitchRequest.STRONG;
                         switchRequest.reason.throughput = fragmentInfo.measuredBandwidthInKbps;
                         abandonDict[fragmentInfo.id] = fragmentInfo;
                         log('AbandonRequestsRule ( ', mediaType, 'frag id',fragmentInfo.id,') is asking to abandon and switch to quality to ', newQuality, ' measured bandwidth was', fragmentInfo.measuredBandwidthInKbps);
                         delete fragmentDict[mediaType][fragmentInfo.id];
                     }
                 }
-            }else if (fragmentInfo.bytesLoaded === fragmentInfo.bytesTotal) {
+            } else if (fragmentInfo.bytesLoaded === fragmentInfo.bytesTotal) {
                 delete fragmentDict[mediaType][fragmentInfo.id];
             }
         }

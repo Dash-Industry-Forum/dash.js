@@ -33,6 +33,7 @@ import EventBus from '../../../core/EventBus';
 import Events from '../../../core/events/Events';
 import FactoryMaker from '../../../core/FactoryMaker';
 import Debug from '../../../core/Debug';
+import SwitchRequest from '../SwitchRequest.js';
 
 function InsufficientBufferRule(config) {
 
@@ -59,22 +60,24 @@ function InsufficientBufferRule(config) {
         var mediaType = rulesContext.getMediaInfo().type;
         var metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
         var lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
-        let value = -1;
+        let switchRequest = SwitchRequest(context).create();
 
         if (now - lastSwitchTime < waitToSwitchTime ||
             lastBufferStateVO === null) {
-            return value;
+            return switchRequest;
         }
 
         setBufferInfo(mediaType, lastBufferStateVO.state);
+        log("#rule setBufferInfo: " + lastBufferStateVO.state + " mediaType: " + mediaType);
         // After the sessions first buffer loaded event , if we ever have a buffer empty event we want to switch all the way down.
         if (lastBufferStateVO.state === BufferController.BUFFER_EMPTY && bufferStateDict[mediaType].firstBufferLoadedEvent !== undefined) {
             log('Switch to index 0; buffer is empty.');
-            value = 0;
+            switchRequest.value = 0;
+            switchRequest.reason = 'InsufficientBufferRule: Buffer is empty';
         }
 
         lastSwitchTime = now;
-        return value;
+        return switchRequest;
     }
 
     function setBufferInfo(type, state) {

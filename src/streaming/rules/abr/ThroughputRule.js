@@ -34,6 +34,7 @@ import MediaPlayerModel from '../../models/MediaPlayerModel';
 import {HTTPRequest} from '../../vo/metrics/HTTPRequest';
 import FactoryMaker from '../../../core/FactoryMaker';
 import Debug from '../../../core/Debug';
+import SwitchRequest from '../SwitchRequest.js';
 
 function ThroughputRule(config) {
 
@@ -122,7 +123,9 @@ function ThroughputRule(config) {
 
         if (latency < CACHE_LOAD_THRESHOLD_LATENCY) {
             ret = true;
-        } else {
+        }
+
+        if (!ret) {
             switch (mediaType) {
                 case 'video':
                     ret = downloadTime < CACHE_LOAD_THRESHOLD_VIDEO;
@@ -148,9 +151,10 @@ function ThroughputRule(config) {
         const lastRequest = dashMetrics.getCurrentHttpRequest(metrics);
         const bufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
         const hasRichBuffer = rulesContext.hasRichBuffer();
+        const switchRequest = SwitchRequest(context).create();
 
         if (!metrics || !lastRequest || lastRequest.type !== HTTPRequest.MEDIA_SEGMENT_TYPE || !bufferStateVO || hasRichBuffer) {
-            return -1;
+            return switchRequest;
         }
 
         let downloadTimeInMilliseconds;
@@ -167,11 +171,15 @@ function ThroughputRule(config) {
 
             let throughput;
             let latency;
-            let newQuality = -1;
             //Prevent cached fragment loads from skewing the average throughput value - allow first even if cached to set allowance for ABR rules..
             if (isCachedResponse(latencyTimeInMilliseconds, downloadTimeInMilliseconds, mediaType)) {
-                throughput = lastRequestThroughput / 1000;
-                latency = latencyTimeInMilliseconds;
+                if (!throughputArray[mediaType] || !latencyArray[mediaType]) {
+                    throughput = lastRequestThroughput / 1000;
+                    latency = latencyTimeInMilliseconds;
+                } else {
+                    throughput = getAverageThroughput(mediaType, isDynamic);
+                    latency = getAverageLatency(mediaType);
+                }
             } else {
                 storeLastRequestThroughputByType(mediaType, lastRequestThroughput);
                 throughput = getAverageThroughput(mediaType, isDynamic);
@@ -184,18 +192,14 @@ function ThroughputRule(config) {
             if (abrController.getAbandonmentStateFor(mediaType) !== AbrController.ABANDON_LOAD) {
 
                 if (bufferStateVO.state === BufferController.BUFFER_LOADED || isDynamic) {
-                    newQuality = abrController.getQualityForBitrate(mediaInfo, throughput, latency);
+                    switchRequest.value = abrController.getQualityForBitrate(mediaInfo, throughput, latency);
                     streamProcessor.getScheduleController().setTimeToLoadDelay(0);
-                }
-                if (newQuality >= 0 && newQuality < 3) {
-                    log('ThroughputRule requesting switch to index: ', newQuality, 'Average throughput', Math.round(throughput), 'kbps; Average latency', Math.round(latency), 'ms');
-                }
-                if (newQuality >= 3) {
-                    log('ThroughputRule requesting switch to index: ', newQuality, 'Average throughput', Math.round(throughput), 'kbps; Average latency', Math.round(latency), 'ms');
+                    log('ThroughputRule requesting switch to index: ', switchRequest.value, 'type: ',mediaType, 'Average throughput', Math.round(throughput), 'kbps');
+                    switchRequest.reason = {throughput: throughput, latency: latency};
                 }
             }
-            return newQuality;
         }
+        return switchRequest;
     }
 
     function reset() {

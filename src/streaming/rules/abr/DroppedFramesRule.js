@@ -1,9 +1,11 @@
 
 import FactoryMaker from '../../../core/FactoryMaker.js';
+import SwitchRequest from '../SwitchRequest.js';
 import Debug from '../../../core/Debug';
 
 function DroppedFramesRule() {
-    const log = Debug(this.context).getInstance().log;
+    const context = this.context;
+    const log = Debug(context).getInstance().log;
 
     const DROPPED_PERCENTAGE_FORBID = 0.15;
     const GOOD_SAMPLE_SIZE = 375; //Don't apply the rule until this many frames have been rendered(and counted under those indices).
@@ -15,7 +17,7 @@ function DroppedFramesRule() {
             let dfh = droppedFramesHistory.getFrameHistory();
             let droppedFrames = 0;
             let totalFrames = 0;
-            let maxIndex = -1;
+            let maxIndex = SwitchRequest.NO_CHANGE;
             for (let i = 1; i < dfh.length; i++) { //No point in measuring dropped frames for the zeroeth index.
                 if (dfh[i]) {
                     droppedFrames = dfh[i].droppedVideoFrames;
@@ -28,7 +30,7 @@ function DroppedFramesRule() {
                     }
                 }
             }
-            return maxIndex;
+            return SwitchRequest(context).create(maxIndex, 'Dropped Frames: ' + droppedFrames);
         }
 
         return -1;

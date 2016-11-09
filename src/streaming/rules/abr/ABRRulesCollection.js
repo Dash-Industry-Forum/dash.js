@@ -39,6 +39,7 @@ import MediaPlayerModel from '../../models/MediaPlayerModel';
 import MetricsModel from '../../models/MetricsModel';
 import DashMetrics from '../../../dash/DashMetrics';
 import FactoryMaker from '../../../core/FactoryMaker';
+import SwitchRequest from '../SwitchRequest.js';
 
 const QUALITY_SWITCH_RULES = 'qualitySwitchRules';
 const ABANDON_FRAGMENT_RULES = 'abandonFragmentRules';
@@ -98,25 +99,31 @@ function ABRRulesCollection() {
         }
     }
 
-    function getMaxQuality(rulesContext) {
-        let maxQualityArray = qualitySwitchRules.map((rule) => { return rule.getMaxIndex(rulesContext); });
-        let active = maxQualityArray.filter((quality) => {return quality >= 0;});
+    function getActiveRules(srArray) {
+        return srArray.filter(sr => sr.value > SwitchRequest.NO_CHANGE);
+    }
 
-        return active.length > 0 ? Math.min(...active) : -1;
+    function getMinSwitchRequest(srArray) {
+        if (srArray.length === 0) {
+            return;
+        }
+        return srArray.reduce((a, b) => { return a.value < b.value ? a : b; });
+    }
+
+    function getMaxQuality(rulesContext) {
+        let switchRequestArray = qualitySwitchRules.map(rule => rule.getMaxIndex(rulesContext));
+        let activeRules = getActiveRules(switchRequestArray);
+        let maxQuality = getMinSwitchRequest(activeRules);
+
+        return maxQuality || SwitchRequest(context).create();
     }
 
     function shouldAbandonFragment(rulesContext) {
-        let ret = -1;
-        let lastPriority = 0;
-        for (let i = 0; i < abandonFragmentRules.length; i++) {
-            let switchRequest = abandonFragmentRules[i].shouldAbandon(rulesContext);
-            if (switchRequest.priority > lastPriority) {
-                lastPriority = switchRequest.priority;
-                ret = switchRequest.value;
-            }
-        }
+        let abandonRequestArray = abandonFragmentRules.map(rule => rule.shouldAbandon(rulesContext));
+        let activeRules = getActiveRules(abandonRequestArray);
+        let shouldAbandon = getMinSwitchRequest(activeRules);
 
-        return ret;
+        return shouldAbandon || SwitchRequest(context).create();
     }
 
     instance = {

@@ -31,23 +31,15 @@
 
 import FactoryMaker from '../../core/FactoryMaker';
 
-const NO_CHANGE = 999;
-const DEFAULT = 0.5;
-const STRONG = 1;
-const WEAK = 0;
+const NO_CHANGE = -1;
 
-
-
-function SwitchRequest (v, p, r) {
+function SwitchRequest (v, r) {
     //TODO refactor all the calls to this to use config to be like everything else.
     let value = (v === undefined) ? NO_CHANGE : v;
-    let priority = (p === undefined) ? DEFAULT : p;
     let reason = (r === undefined) ? null : r;
 
     let instance = {
         value: value,
-
-        priority: priority,
         reason: reason
     };
 
@@ -57,7 +49,4 @@ function SwitchRequest (v, p, r) {
 SwitchRequest.__dashjs_factory_name = 'SwitchRequest';
 let factory = FactoryMaker.getClassFactory(SwitchRequest);
 factory.NO_CHANGE = NO_CHANGE;
-factory.DEFAULT = DEFAULT;
-factory.STRONG = STRONG;
-factory.WEAK = WEAK;
 export default factory;
