@@ -64,11 +64,10 @@ function ScheduleController(config) {
 
     let instance,
         type,
-        ready,
         fragmentModel,
         isDynamic,
         currentRepresentationInfo,
-        initialPlayback,
+        initialRequest,
         isStopped,
         playListMetrics,
         playListTraceMetrics,
@@ -83,7 +82,6 @@ function ScheduleController(config) {
         streamProcessor,
         streamController,
         fragmentController,
-        liveEdgeFinder,
         bufferController,
         bufferLevelRule,
         nextFragmentRequestRule,
@@ -93,7 +91,7 @@ function ScheduleController(config) {
         replaceRequestArray;
 
     function setup() {
-        initialPlayback = true;
+        initialRequest = true;
         lastInitQuality = NaN;
         lastQualityIndex = NaN;
         replaceRequestArray = [];
@@ -109,7 +107,6 @@ function ScheduleController(config) {
     function initialize(Type, StreamProcessor) {
         type = Type;
         streamProcessor = StreamProcessor;
-        liveEdgeFinder = LiveEdgeFinder(context).getInstance();
         playbackController = PlaybackController(context).getInstance();
         mediaController = MediaController(context).getInstance();
         abrController = AbrController(context).getInstance();
@@ -138,7 +135,7 @@ function ScheduleController(config) {
             eventBus.on(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
         }
 
-        eventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
+        //eventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
         eventBus.on(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, this);
         eventBus.on(Events.DATA_UPDATE_STARTED, onDataUpdateStarted, this);
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
@@ -151,8 +148,8 @@ function ScheduleController(config) {
         eventBus.on(Events.INIT_REQUESTED, onInitRequested, this);
         eventBus.on(Events.QUOTA_EXCEEDED, onQuotaExceeded, this);
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
-        eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
         eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
+        eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
         eventBus.on(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
         eventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
         eventBus.on(Events.URL_RESOLUTION_FAILED, onURLResolutionFailed, this);
@@ -160,20 +157,15 @@ function ScheduleController(config) {
     }
 
     function start() {
-        if (!ready) return;
+        if (!currentRepresentationInfo || bufferController.getIsBufferingCompleted()) return;
         addPlaylistTraceMetrics();
         isStopped = false;
 
-        if (initialPlayback) {
+        if (initialRequest) {
+            initialRequest = false;
             getInitRequest(currentRepresentationInfo.quality);
         } else {
-            //schedule will be first called after the init segment is appended. But in the case where we stop and start
-            //the ScheduleController E.g dateUpdate on manifest refresh for live streams. we need to start schedule again.
             startScheduleTimer(0);
-        }
-
-        if (initialPlayback) {
-            initialPlayback = false;
         }
         log('Schedule controller starting for ' + type);
     }
@@ -206,7 +198,7 @@ function ScheduleController(config) {
                         fragmentModel.executeRequest(request);
                     } else { //Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
                         isFragmentProcessingInProgress = false;
-                        startScheduleTimer(250);
+                        startScheduleTimer(500);
                     }
                 }
             };
@@ -297,12 +289,35 @@ function ScheduleController(config) {
     function onStreamInitialized(e) {
         if (e.error || streamProcessor.getStreamInfo().id !== e.streamInfo.id) return;
         currentRepresentationInfo = streamProcessor.getCurrentRepresentationInfo();
-        if (!isDynamic || liveEdgeFinder.getLiveEdge() !== null) {
-            ready = true;
+
+        if (isDynamic && initialRequest) {
+            setLiveEdgeSeekTarget();
         }
+
         if (isStopped) {
             start();
         }
+    }
+
+    function setLiveEdgeSeekTarget() {
+        const liveEdge = LiveEdgeFinder(context).getInstance().getLiveEdge();
+        const dvrWindowSize = currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo.DVRWindowSize / 2;
+        const startTime = liveEdge - playbackController.computeLiveDelay(currentRepresentationInfo.fragmentDuration, dvrWindowSize);
+        const request = adapter.getFragmentRequestForTime(streamProcessor, currentRepresentationInfo, startTime, {ignoreIsFinished: true});
+
+        seekTarget = playbackController.getLiveStartTime();
+        if (isNaN(seekTarget) || request.startTime > seekTarget) {
+            playbackController.setLiveStartTime(request.startTime);
+            seekTarget = request.startTime;
+        }
+
+        const manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metricsModel.getMetricsFor('stream'));
+        metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {
+            currentTime: seekTarget,
+            presentationStartTime: liveEdge,
+            latency: liveEdge - seekTarget,
+            clientTimeOffset: timelineConverter.getClientTimeOffset()
+        });
     }
 
     function onStreamCompleted(e) {
@@ -352,7 +367,7 @@ function ScheduleController(config) {
         // the executed requests for which playback time is inside the time interval that has been removed from the buffer
         fragmentModel.removeExecutedRequestsBeforeTime(e.to);
 
-        if (e.hasEnoughSpaceToAppend && !bufferController.getIsBufferingCompleted() && isStopped) {
+        if (e.hasEnoughSpaceToAppend && isStopped) {
             start();
         }
     }
@@ -380,12 +395,13 @@ function ScheduleController(config) {
     }
 
     function onPlaybackStarted() {
-        if (isStopped) {
+        if (isStopped || !scheduleWhilePaused) {
             start();
         }
     }
 
     function onPlaybackSeeking(e) {
+
         seekTarget = e.seekTime;
         setTimeToLoadDelay(0);
 
@@ -401,34 +417,6 @@ function ScheduleController(config) {
     function onPlaybackRateChanged(e) {
         if (playListTraceMetrics) {
             playListTraceMetrics.playbackspeed = e.playbackRate.toString();
-        }
-    }
-
-    function onLiveEdgeSearchCompleted (e) {
-        if (e.error) return;
-
-        const dvrWindowSize = currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo.DVRWindowSize / 2;
-        const startTime = e.liveEdge - playbackController.computeLiveDelay(currentRepresentationInfo.fragmentDuration, dvrWindowSize);
-        const manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metricsModel.getMetricsFor('stream'));
-        const currentLiveStart = playbackController.getLiveStartTime();
-        const request = adapter.getFragmentRequestForTime(streamProcessor, currentRepresentationInfo, startTime, {ignoreIsFinished: true});
-
-        seekTarget = currentLiveStart;
-        if (isNaN(currentLiveStart) || request.startTime > currentLiveStart) {
-            playbackController.setLiveStartTime(request.startTime);
-            seekTarget = request.startTime;
-        }
-
-        metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {
-            currentTime: seekTarget,
-            presentationStartTime: e.liveEdge,
-            latency: e.liveEdge - seekTarget,
-            clientTimeOffset: timelineConverter.getClientTimeOffset()
-        });
-
-        ready = true;
-        if (isStopped) {
-            start();
         }
     }
 
@@ -492,7 +480,7 @@ function ScheduleController(config) {
     }
 
     function reset() {
-        eventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
+        //eventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
         eventBus.off(Events.DATA_UPDATE_STARTED, onDataUpdateStarted, this);
         eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);

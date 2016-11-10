@@ -30,9 +30,7 @@ function SwitchHistoryRule() {
 
                 if (drops + noDrops >= SAMPLE_SIZE && (drops / noDrops > MAX_SWITCH)) {
                     switchRequest.value = i > 0 ? i - 1 : 0;
-                    switchRequest.reason.drops = drops;
-                    switchRequest.reason.noDrops = noDrops;
-                    switchRequest.reason.dropSize = dropSize;
+                    switchRequest.reason = {drops: drops, noDrops: noDrops, dropSize: dropSize};
                     log('Switch history rule index: ' + switchRequest.value + ' samples: ' + (drops + noDrops) + ' drops: ' + drops);
                     break;
                 }

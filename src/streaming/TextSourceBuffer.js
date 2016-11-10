@@ -378,7 +378,7 @@ function TextSourceBuffer() {
         var isoFile = boxParser.parse(data);
         var moof = isoFile.getBox('moof');
         var tfdt = isoFile.getBox('tfdt');
-        //var tfhd = isoFile.getBox('tfhd'); //Can have a base_data_offset and other default values
+        var tfhd = isoFile.getBox('tfhd'); //Can have a base_data_offset and other default values
         //log("tfhd: " + tfhd);
         //var saio = isoFile.getBox('saio'); // Offset possibly
         //var saiz = isoFile.getBox('saiz'); // Possible sizes
@@ -402,6 +402,15 @@ function TextSourceBuffer() {
         var accDuration = 0;
         for (var i = 0; i < sampleCount; i++) {
             var sample = trun.samples[i];
+            if (sample.sample_duration === undefined) {
+                sample.sample_duration = tfhd.default_sample_duration;
+            }
+            if (sample.sample_size === undefined) {
+                sample.sample_size = tfhd.default_sample_size;
+            }
+            if (sample.sample_composition_time_offset === undefined) {
+                sample.sample_composition_time_offset = 0;
+            }
             var sampleTime = baseSampleTime + accDuration + sample.sample_composition_time_offset;
             var cea608Ranges = cea608parser.findCea608Nalus(raw, startPos, sample.sample_size);
             for (var j = 0; j < cea608Ranges.length; j++) {

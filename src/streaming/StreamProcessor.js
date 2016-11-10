@@ -196,7 +196,7 @@ function StreamProcessor(config) {
     }
 
     function getStreamInfo() {
-        return stream.getStreamInfo();
+        return stream ? stream.getStreamInfo() : null;
     }
 
     function updateMediaInfo(manifest, newMediaInfo) {

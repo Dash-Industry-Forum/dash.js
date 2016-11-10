@@ -87,6 +87,23 @@ app.directive('chart', function() {
 
 app.controller('DashController', function($scope, sources, contributors) {
 
+    function doesTimeMarchesOn() {
+        var version;
+        var REQUIRED_VERSION = 49.0;
+
+        if (typeof navigator !== 'undefined') {
+            if (!navigator.userAgent.match(/Firefox/)) {
+                return true;
+            }
+
+            version = parseFloat(navigator.userAgent.match(/rv:([0-9.]+)/)[1]);
+
+            if (!isNaN(version) && version >= REQUIRED_VERSION){
+                return true;
+            }
+        }
+    }
+
     $scope.selectedItem = {url:"http://dash.edgesuite.net/akamai/bbb_30fps/bbb_30fps.mpd"};
     $scope.abrEnabled = true;
     $scope.toggleCCBubble = false;
@@ -131,7 +148,12 @@ app.controller('DashController', function($scope, sources, contributors) {
     $scope.audioDownload = "";
     $scope.audioRatioCount = 0;
     $scope.audioRatio = "";
-
+    $scope.autoPlaySelected = true;
+    $scope.loopSelected = true;
+    $scope.scheduleWhilePausedSelected = true;
+    $scope.localStorageSelected = true;
+    $scope.fastSwitchSelected = true;
+    $scope.bolaSelected = false;
     ////////////////////////////////////////
     //
     // Player Setup
@@ -140,11 +162,11 @@ app.controller('DashController', function($scope, sources, contributors) {
 
     $scope.video = document.querySelector(".dash-video-player video");
     $scope.player = dashjs.MediaPlayer().create();
-    $scope.player.initialize($scope.video, null, true);
+    $scope.player.initialize($scope.video, null, $scope.autoPlaySelected);
     $scope.player.setFastSwitchEnabled(true);
     $scope.player.attachVideoContainer(document.getElementById("videoContainer"));
-    // Add HTML-rendered TTML subtitles except for Firefox (issue #1164)
-    if (typeof navigator !== 'undefined' && !navigator.userAgent.match(/Firefox/)) {
+    // Add HTML-rendered TTML subtitles except for Firefox < v49 (issue #1164)
+    if (doesTimeMarchesOn()) {
         $scope.player.attachTTMLRenderingDiv($("#video-caption")[0]);
     }
 
@@ -440,13 +462,17 @@ app.controller('DashController', function($scope, sources, contributors) {
         $scope.player.setFastSwitchEnabled($scope.fastSwitchSelected);
     }
 
+    $scope.toggleScheduleWhilePaused = function () {
+        $scope.player.setScheduleWhilePaused($scope.scheduleWhilePausedSelected);
+    }
+
     $scope.toggleLocalStorage = function () {
         $scope.player.enableLastBitrateCaching($scope.localStorageSelected);
         $scope.player.enableLastMediaSettingsCaching($scope.localStorageSelected);
     }
 
     $scope.setStream = function (item) {
-        $scope.selectedItem = item;
+        $scope.selectedItem = JSON.parse(JSON.stringify(item));
     }
 
     $scope.toggleOptionsGutter = function (bool) {
@@ -460,10 +486,7 @@ app.controller('DashController', function($scope, sources, contributors) {
             protData = $scope.selectedItem.protData;
         }
 
-
-
         $scope.setChartInfo();
-
         $scope.controlbar.reset();
         $scope.player.setProtectionData(protData);
         $scope.player.attachSource($scope.selectedItem.url);

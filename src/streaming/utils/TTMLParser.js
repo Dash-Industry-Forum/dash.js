@@ -60,7 +60,8 @@ function TTMLParser() {
         unicodeBidi,
         displayAlign,
         writingMode,
-        videoModel;
+        videoModel,
+        converter;
 
     let cueCounter = 0; // Used to give every cue a unique ID.
 
@@ -216,8 +217,6 @@ function TTMLParser() {
             type;
 
         var errorMsg = '';
-
-        let converter = new X2JS([], '', false);
 
         // Parse the TTML in a JSON object.
         ttml = converter.xml_str2json(data);
@@ -628,6 +627,15 @@ function TTMLParser() {
                 '-webkit-text-orientation: upright;' +
                 'text-orientation: upright;'
         };
+        converter = new X2JS({
+            escapeMode:         false,
+            attributePrefix:    '',
+            arrayAccessForm:    'property',
+            emptyNodeForm:      'object',
+            stripWhitespaces:   false,
+            enableToStringFunc: false,
+            matchers:           []
+        });
     }
 
     function parseTimings(timingStr) {

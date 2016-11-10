@@ -78,7 +78,7 @@ describe('URLUtils', function () {
 
     describe('parseBaseUrl', () => {
         it('should return the base url of a valid url', () => {
-            const baseUrl = 'http://www.example.com/';
+            const baseUrl = 'http://www.example.com/blah/something/or/another/';
             const pageUrl = 'index.html';
             const url = baseUrl + pageUrl;
 
@@ -100,6 +100,16 @@ describe('URLUtils', function () {
             const pageUrl = 'index.html';
             const queryString = '?hasQueryString=true';
             const url = baseUrl + pageUrl + queryString;
+
+            const result = urlUtils.parseBaseUrl(url);
+
+            expect(result).to.equal(baseUrl); // jshint ignore:line
+        });
+
+        it('should return the base url if scheme-relative and origin only', () => {
+            const baseUrl = '//www.example.com/';
+            const relative = 'example.html';
+            const url = baseUrl + relative;
 
             const result = urlUtils.parseBaseUrl(url);
 
@@ -136,12 +146,116 @@ describe('URLUtils', function () {
             expect(result).to.equal(baseUrl); // jshint ignore:line
         });
 
+        it('should return the original url if scheme and origin only', () => {
+            const baseUrl = 'http://www.example.com';
+
+            const result = urlUtils.parseOrigin(baseUrl);
+
+            expect(result).to.equal(baseUrl); // jshint ignore:line
+        });
+
+        it('should return an empty string if url is scheme-relative', () => {
+            const baseUrl = '//www.example.com';
+
+            const result = urlUtils.parseOrigin(baseUrl);
+
+            expect(result).to.be.empty; // jshint ignore:line
+        });
+
         it('should return an empty string if argument is not a url', () => {
             const arg = 'skjdlkasdhflkhasdlkfhl';
 
             const result = urlUtils.parseOrigin(arg);
 
             expect(result).to.be.empty; // jshint ignore:line
+        });
+    });
+
+    describe('resolve (fallback path)', () => {
+        it('should resolve a baseurl and relative url', () => {
+            const baseUrl = 'http://www.example.com/path/index.html';
+            const url = 'MPDs/example.mpd';
+            const expected = 'http://www.example.com/path/MPDs/example.mpd';
+
+            const result = urlUtils.resolve(url, baseUrl);
+
+            expect(result).to.equal(expected); // jshint ignore:line
+        });
+
+        it('should resolve a baseurl and path absolute url', () => {
+            const baseUrl = 'http://www.example.com/path/index.html';
+            const url = '/MPDs/example.mpd';
+            const expected = 'http://www.example.com/MPDs/example.mpd';
+
+            const result = urlUtils.resolve(url, baseUrl);
+
+            expect(result).to.equal(expected); // jshint ignore:line
+        });
+
+        it('should just return url if absolute', () => {
+            const baseUrl = 'http://www.example.com/path/index.html';
+            const absoluteUrl = 'http://www.anotherexample.com/path/index.html';
+
+            const result = urlUtils.resolve(absoluteUrl, baseUrl);
+
+            expect(result).to.equal(absoluteUrl); // jshint ignore:line
+        });
+
+        it('should resolve a baseurl with no slash and relative url', () => {
+            const baseUrl = 'http://www.example.com';
+            const url = 'MPDs/example.mpd';
+            const expected = 'http://www.example.com/MPDs/example.mpd';
+
+            const result = urlUtils.resolve(url, baseUrl);
+
+            expect(result).to.equal(expected); // jshint ignore:line
+        });
+
+        it('should return url if baseurl is undefined', () => {
+            const url = 'MPDs/example.mpd';
+
+            const result = urlUtils.resolve(url);
+
+            expect(result).to.equal(url); // jshint ignore:line
+        });
+    });
+
+    describe('resolve (native path)', () => {
+
+        if (typeof window === 'undefined') {
+            global.window = {
+                URL: (a, b) => {
+                    if (!a || !b) {
+                        throw new Error();
+                    }
+
+                    return {
+                        toString: () => {
+                            return b + a;
+                        }
+                    };
+                }
+            };
+        }
+
+        // new instance on new context to pick up window.URL
+        const instance = URLUtils({}).getInstance();
+
+        it('should return url when baseurl is invalid', () => {
+            const url = 'test/index.html';
+            const result = instance.resolve(url);
+
+            expect(result).to.equal(url); // jshint ignore:line
+        });
+
+        it('should resolve correctly when input is valid', () => {
+            const baseUrl = 'http://www.example.com/';
+            const url = 'MPDs/example.mpd';
+            const expected = baseUrl + url;
+
+            const result = instance.resolve(url, baseUrl);
+
+            expect(result).to.equal(expected); // jshint ignore:line
         });
     });
 });

@@ -111,7 +111,7 @@ function MediaPlayerModel() {
         bandwidthSafetyFactor = BANDWIDTH_SAFETY_FACTOR;
         abandonLoadTimeout = ABANDON_LOAD_TIMEOUT;
         wallclockTimeUpdateInterval = WALLCLOCK_TIME_UPDATE_INTERVAL;
-        xhrWithCredentials = DEFAULT_XHR_WITH_CREDENTIALS;
+        xhrWithCredentials = { default: DEFAULT_XHR_WITH_CREDENTIALS };
 
 
         retryAttempts = {
@@ -327,13 +327,26 @@ function MediaPlayerModel() {
         return UTCTimingSources;
     }
 
-    function setXHRWithCredentials(value) {
-        xhrWithCredentials = !!value;
+    function setXHRWithCredentialsForType(type, value) {
+        if (!type) {
+            Object.keys(xhrWithCredentials).forEach(key => {
+                setXHRWithCredentialsForType(key, value);
+            });
+        } else {
+            xhrWithCredentials[type] = !!value;
+        }
     }
 
-    function getXHRWithCredentials() {
-        return xhrWithCredentials;
+    function getXHRWithCredentialsForType(type) {
+        const useCreds = xhrWithCredentials[type];
+
+        if (useCreds === undefined) {
+            return xhrWithCredentials.default;
+        }
+
+        return useCreds;
     }
+
 
     function getFastSwitchEnabled() {
         return fastSwitchEnabled;
@@ -395,8 +408,8 @@ function MediaPlayerModel() {
         getUseManifestDateHeaderTimeSource: getUseManifestDateHeaderTimeSource,
         setUTCTimingSources: setUTCTimingSources,
         getUTCTimingSources: getUTCTimingSources,
-        setXHRWithCredentials: setXHRWithCredentials,
-        getXHRWithCredentials: getXHRWithCredentials,
+        setXHRWithCredentialsForType: setXHRWithCredentialsForType,
+        getXHRWithCredentialsForType: getXHRWithCredentialsForType,
         setFastSwitchEnabled: setFastSwitchEnabled,
         getFastSwitchEnabled: getFastSwitchEnabled,
         reset: reset

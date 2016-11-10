@@ -38,6 +38,11 @@
       "name": "Brightcove",
       "logo": "app/img/brightcove.png",
       "link": "https://www.brightcove.com"
+    },
+    {
+      "name": "Edgeware",
+      "logo": "app/img/edgeware.png",
+      "link": "http://www.edgeware.tv/"
     }
   ]
 }
