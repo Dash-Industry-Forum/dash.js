@@ -261,9 +261,8 @@ function TTMLParser() {
 
         if (imageArray) {
             for (i = 0; i < imageArray.length; i++) {
-                let key = 'urn:mpeg:14496-30:subs:' + (i + 1).toString() + '.png';
-                let imageType = 'png';
-                let dataUrl = 'data:image/' + imageType + ';base64,' + btoa(imageArray[i]);
+                let key = 'urn:mpeg:14496-30:subs:' + (i + 1).toString();
+                let dataUrl = 'data:image/png;base64,' + btoa(imageArray[i]);
                 imageDataUrls[key] = dataUrl;
             }
         }
