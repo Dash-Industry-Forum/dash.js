@@ -51,14 +51,6 @@ function FragmentController(/*config*/) {
         eventBus.on(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, instance);
     }
 
-    function process(bytes) {
-        let result = null;
-        if (bytes !== null && bytes !== undefined && bytes.byteLength > 0) {
-            result = new Uint8Array(bytes);
-        }
-        return result;
-    }
-
     function getModel(type) {
         let model = fragmentModels[type];
         if (!model) {
@@ -116,7 +108,6 @@ function FragmentController(/*config*/) {
     }
 
     instance = {
-        process: process,
         getModel: getModel,
         isInitializationRequest: isInitializationRequest,
         reset: reset
