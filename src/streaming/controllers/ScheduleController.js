@@ -199,17 +199,17 @@ function ScheduleController(config) {
 
         validateExecutedFragmentRequest();
 
-        const isReplacement = replaceRequestArray.length > 0;
-        const readyToLoad = bufferLevelRule.execute(streamProcessor, type, streamController.isVideoTrackPresent());
-        const topQualityChanged = hasTopQualityChanged(currentRepresentationInfo.mediaInfo.type, streamProcessor.getStreamInfo().id);
+        let isReplacement, topQualityChanged, readyToLoad;
+        if ( (isReplacement = replaceRequestArray.length > 0) ||
+             (topQualityChanged = hasTopQualityChanged(currentRepresentationInfo.mediaInfo.type, streamProcessor.getStreamInfo().id)) ||
+             (readyToLoad = bufferLevelRule.execute(streamProcessor, type, streamController.isVideoTrackPresent()))
+           ) {
 
-        if (readyToLoad || isReplacement || topQualityChanged) {
             const getNextFragment = function () {
                 if (currentRepresentationInfo.quality !== lastInitQuality) {
                     lastInitQuality = currentRepresentationInfo.quality;
                     bufferController.switchInitData(streamProcessor.getStreamInfo().id, currentRepresentationInfo.quality);
                 } else {
-
                     const request = nextFragmentRequestRule.execute(streamProcessor, replaceRequestArray.shift());
                     if (request) {
                         fragmentModel.executeRequest(request);
