@@ -12,13 +12,6 @@ describe("FragmentController", function () {
     
     Events.extend(MediaPlayerEvents);
 
-    it("should process bytes array", function () {
-        const bytes = new ArrayBuffer(612);
-        const expectedValue = new Uint8Array(bytes);
-        const result = fragmentController.process(bytes);
-        expect(result).to.be.eql(expectedValue);
-    });
-
     it("should create or return model for a given media type", function () {
         const model = fragmentController.getModel('video');
         expect(model).to.exist;
