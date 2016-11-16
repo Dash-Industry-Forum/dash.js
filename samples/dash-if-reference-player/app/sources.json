@@ -100,9 +100,14 @@
           "moreInfo": "http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/"
         },
         {
+          "url": "http://vm2.dashif.org/dash/vod/testpic_2s/img_subs.mpd",
+          "name": "IMSC1 (CMAF) Image Subtitles",
+          "moreInfo": "http://vm2.dashif.org/dash/vod/testpic_2s/img_subs_info.html"
+        },
+        {
           "name": "TTML Image Subtitles embedded (VoD)",
           "url": "http://vm2.dashif.org/dash/vod/testpic_2s/img_subs.mpd",
-          "moreInfo": "http://vm2.dashif.org/dash/vod/testpic_2s/img_subs_info.txt"
+          "moreInfo": "http://vm2.dashif.org/dash/vod/testpic_2s/imsc1_img_subs_info.html"
         }
       ]
     },
@@ -1239,7 +1244,7 @@
         {
           "name": "Microsoft Cenc #1",
           "url": "http://wams.edgesuite.net/media/SintelTrailer_Smooth_from_WAME_720p_Main_Profile_CENC/CENC/sintel_trailer-720p.ism/manifest(format=mpd-time-csf)"
-          
+
         },
         {
           "name": "Microsoft Cenc #4",
