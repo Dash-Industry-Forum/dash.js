@@ -389,22 +389,16 @@ function AbrController() {
     }
 
     function hasRichBuffer(type) {
-        const now = new Date().getTime() / 1000;
-        const representationInfo = streamProcessorDict[type].getCurrentRepresentationInfo();
-        const waitToSwitchTime = !isNaN(representationInfo.fragmentDuration) ? representationInfo.fragmentDuration / 2 : 2;
         const metrics = metricsModel.getReadOnlyMetricsFor(type);
         const lastBufferLevel = dashMetrics.getCurrentBufferLevel(metrics);
         const lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
         let isBufferRich = false;
 
-        if (!(now - lastSwitchTime < waitToSwitchTime ||
-            getAbandonmentStateFor(type) === ABANDON_LOAD ||
-            lastBufferStateVO === null)) {
-            // This will happen when another rule tries to switch from top to any other.
-            // If there is enough buffer why not try to stay at high level.
-            if (lastBufferLevel > lastBufferStateVO.target) {
-                isBufferRich = (lastBufferLevel - lastBufferStateVO.target) > mediaPlayerModel.getRichBufferThreshold();
-            }
+        // This will happen when another rule tries to switch from top to any other.
+        // If there is enough buffer why not try to stay at high level.
+        if (lastBufferLevel > lastBufferStateVO.target ||
+            lastBufferStateVO === null) {
+            isBufferRich = (lastBufferLevel - lastBufferStateVO.target) > mediaPlayerModel.getRichBufferThreshold();
         }
 
         return isBufferRich;
