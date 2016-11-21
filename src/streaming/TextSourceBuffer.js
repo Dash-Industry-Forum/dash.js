@@ -49,7 +49,6 @@ function TextSourceBuffer() {
     let instance,
         boxParser,
         errHandler,
-        adapter,
         dashManifestModel,
         mediaController,
         allTracksAreDisabled,
@@ -759,9 +758,6 @@ function TextSourceBuffer() {
 
         if (config.errHandler) {
             errHandler = config.errHandler;
-        }
-        if (config.adapter) {
-            adapter = config.adapter;
         }
         if (config.dashManifestModel) {
             dashManifestModel = config.dashManifestModel;
