@@ -30,6 +30,8 @@
  */
 import SwitchRequest from '../SwitchRequest';
 import MediaPlayerModel from '../../models/MediaPlayerModel';
+import DashMetrics from '../../../dash/DashMetrics';
+import MetricsModel from '../../models/MetricsModel';
 import FactoryMaker from '../../../core/FactoryMaker';
 import Debug from '../../../core/Debug';
 
@@ -45,13 +47,17 @@ function AbandonRequestsRule() {
     let fragmentDict,
         abandonDict,
         throughputArray,
-        mediaPlayerModel;
+        mediaPlayerModel,
+        dashMetrics,
+        metricsModel;
 
     function setup() {
         fragmentDict = {};
         abandonDict = {};
         throughputArray = [];
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
+        dashMetrics = DashMetrics(context).getInstance();
+        metricsModel = MetricsModel(context).getInstance();
     }
 
     function setFragmentRequestDict(type, id) {
@@ -74,6 +80,12 @@ function AbandonRequestsRule() {
         if (!isNaN(req.index)) {
 
             setFragmentRequestDict(mediaType, req.index);
+
+            const stableBufferTime = mediaPlayerModel.getStableBufferTime();
+            const bufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor(mediaType));
+            if ( bufferLevel > stableBufferTime ) {
+                return switchRequest;
+            }
 
             const fragmentInfo = fragmentDict[mediaType][req.index];
             if (fragmentInfo === null || req.firstByteDate === null || abandonDict.hasOwnProperty(fragmentInfo.id)) {
@@ -101,7 +113,7 @@ function AbandonRequestsRule() {
 
                 const totalSampledValue = throughputArray[mediaType].reduce((a, b) => a + b, 0);
                 fragmentInfo.measuredBandwidthInKbps = Math.round(totalSampledValue / throughputArray[mediaType].length);
-                fragmentInfo.estimatedTimeOfDownload = ((fragmentInfo.bytesTotal * 8 / fragmentInfo.measuredBandwidthInKbps) / 1000).toFixed(2);
+                fragmentInfo.estimatedTimeOfDownload = +((fragmentInfo.bytesTotal * 8 / fragmentInfo.measuredBandwidthInKbps) / 1000).toFixed(2);
                 //log("id:",fragmentInfo.id, "kbps:", fragmentInfo.measuredBandwidthInKbps, "etd:",fragmentInfo.estimatedTimeOfDownload, fragmentInfo.bytesLoaded);
 
                 if (fragmentInfo.estimatedTimeOfDownload < fragmentInfo.segmentDuration * ABANDON_MULTIPLIER || rulesContext.getTrackInfo().quality === 0 ) {
