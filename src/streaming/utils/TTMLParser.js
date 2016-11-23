@@ -764,6 +764,30 @@ function TTMLParser() {
         return primeArray.concat(arrayToAdd);
     }
 
+    function getSizeTypeAndDefinition(cueStyleElement) {
+        let returnTab = new Array(2);
+        let startRef = cueStyleElement.indexOf(':') === -1 ? 0 : cueStyleElement.indexOf(':');
+        let endRef;
+        if (cueStyleElement.indexOf('%') === -1) {
+            if (cueStyleElement.indexOf('c') === -1) {
+                if (cueStyleElement.indexOf('p') === -1) {
+                    returnTab[0] = returnTab[1] = null;
+                } else {
+                    returnTab[0] = 'p';
+                    endRef = cueStyleElement.indexOf('p');
+                }
+            } else {
+                returnTab[0] = 'c';
+                endRef = cueStyleElement.indexOf('c');
+            }
+        } else {
+            returnTab[0] = '%';
+            endRef = cueStyleElement.indexOf('%');
+        }
+        returnTab [1] = cueStyleElement.slice(startRef, endRef);
+        return returnTab;
+    }
+
     /**
      * Processing of styling information:
      * - processStyle: return an array of strings with the cue style under a CSS style form.
@@ -775,6 +799,8 @@ function TTMLParser() {
     // Compute the style properties to return an array with the cleaned properties.
     function processStyle(cueStyle, cellUnit, includeRegionStyles) {
         var properties = [];
+        var valueFtSizeInPx,
+            valueLHSizeInPx;
 
         // Clean up from the xml2json parsing:
         for (var key in cueStyle) {
@@ -804,12 +830,18 @@ function TTMLParser() {
         }
         // Font size is computed from the cellResolution.
         if ('font-size' in cueStyle) {
-            var valueFtSize = parseFloat(cueStyle['font-size'].slice(cueStyle['font-size'].indexOf(':') + 1,
-                cueStyle['font-size'].indexOf('%')));
+            var fontSizeTab = getSizeTypeAndDefinition(cueStyle['font-size']);
+            var valueFtSize = parseFloat(fontSizeTab[1]);
             if ('id' in cueStyle) {
-                fontSize[cueStyle.id] = valueFtSize;
+                fontSize[cueStyle.id] = fontSizeTab;
             }
-            var valueFtSizeInPx = valueFtSize / 100 * cellUnit[1] + 'px;';
+
+            if (fontSizeTab[0] === '%') {
+                valueFtSizeInPx = valueFtSize / 100 * cellUnit[1] + 'px;';
+            } else if (fontSizeTab[0] === 'c') {
+                valueFtSizeInPx = valueFtSize * cellUnit[1] + 'px;';
+            }
+
             properties.push('font-size:' + valueFtSizeInPx);
         }
         // Line height is computed from the cellResolution.
@@ -817,13 +849,19 @@ function TTMLParser() {
             if (cueStyle['line-height'] === 'normal') {
                 properties.push('line-height: normal;');
             } else {
-                var valueLHSize = parseFloat(cueStyle['line-height'].slice(cueStyle['line-height'].indexOf(':') + 1,
-                    cueStyle['line-height'].indexOf('%')));
+                var LineHeightTab = getSizeTypeAndDefinition(cueStyle['line-height']);
+                var valueLHSize = parseFloat(LineHeightTab[1]);
                 if ('id' in cueStyle) {
-                    lineHeight[cueStyle.id] = valueLHSize;
+                    lineHeight[cueStyle.id] = LineHeightTab;
                 }
-                var valueLHSizeInPx = valueLHSize / 100 * cellUnit[1] + 'px;';
-                properties.push('line-height' + ':' + valueLHSizeInPx);
+
+                if (LineHeightTab[0] === '%') {
+                    valueLHSizeInPx = valueLHSize / 100 * cellUnit[1] + 'px;';
+                } else if (LineHeightTab[0] === 'c') {
+                    valueLHSizeInPx = valueLHSize * cellUnit[1] + 'px;';
+                }
+
+                properties.push('line-height:' + valueLHSizeInPx);
             }
         }
         // Font-family can be specified by a generic family name or a custom family name.
