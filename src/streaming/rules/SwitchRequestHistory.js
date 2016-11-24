@@ -9,6 +9,7 @@ function SwitchRequestHistory() {
 
     function push(switchRequest, type) {
 
+        switchRequests[type] = switchRequests[type] || [];
         if (!switchRequests[type][switchRequest.oldValue]) {
             switchRequests[type][switchRequest.oldValue] = {noDrops: 0, drops: 0, dropSize: 0};
         }
@@ -43,8 +44,12 @@ function SwitchRequestHistory() {
         return switchRequests[type];
     }
 
-    function reset() {
-        switchRequests = [];
+    function reset(type) {
+        if (type === null || type === undefined) {
+            switchRequests = [];
+        } else {
+            switchRequests[type] = [];
+        }
     }
 
     return {
