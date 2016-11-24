@@ -41,6 +41,7 @@ import ManifestModel from '../models/ManifestModel';
 import DashManifestModel from '../../dash/models/DashManifestModel';
 import VideoModel from '../models/VideoModel';
 import RulesContext from '../rules/RulesContext.js';
+import SwitchRequest from '../rules/SwitchRequest.js';
 import SwitchRequestHistory from '../rules/SwitchRequestHistory.js';
 import DroppedFramesHistory from '../rules/DroppedFramesHistory.js';
 import MetricsModel from '../models/MetricsModel.js';
@@ -289,12 +290,12 @@ function AbrController() {
             const topQualityIdx = getTopQualityIndexFor(type, streamId);
             const switchRequest = abrRulesCollection.getMaxQuality(rulesContext);
             let newQuality = switchRequest.value;
-            if (newQuality < 0 || newQuality > topQualityIdx) {
+            if (newQuality > topQualityIdx) {
                 newQuality = topQualityIdx;
             }
             switchHistory.push({oldValue: oldQuality, newValue: newQuality},type);
 
-            if (newQuality != oldQuality) {
+            if (newQuality > SwitchRequest.NO_CHANGE && newQuality != oldQuality) {
                 if (abandonmentStateDict[type].state === ALLOW_LOAD || newQuality > oldQuality) {
                     changeQuality(type, streamInfo, oldQuality, newQuality, topQualityIdx, switchRequest.reason);
                 }
