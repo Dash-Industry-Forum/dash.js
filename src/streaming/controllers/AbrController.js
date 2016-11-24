@@ -46,6 +46,7 @@ import SwitchRequestHistory from '../rules/SwitchRequestHistory.js';
 import DroppedFramesHistory from '../rules/DroppedFramesHistory.js';
 import MetricsModel from '../models/MetricsModel.js';
 import DashMetrics from '../../dash/DashMetrics.js';
+import Debug from '../../core/Debug';
 
 const ABANDON_LOAD = 'abandonload';
 const ALLOW_LOAD = 'allowload';
@@ -56,6 +57,8 @@ const QUALITY_DEFAULT = 0;
 function AbrController() {
 
     let context = this.context;
+    let debug = Debug(context).getInstance();
+    const log = debug.log;
     let eventBus = EventBus(context).getInstance();
 
     let instance,
@@ -299,6 +302,9 @@ function AbrController() {
                 if (abandonmentStateDict[type].state === ALLOW_LOAD || newQuality > oldQuality) {
                     changeQuality(type, streamInfo, oldQuality, newQuality, topQualityIdx, switchRequest.reason);
                 }
+            } else if (debug.getLogToBrowserConsole()) {
+                const bufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor(type));
+                log('AbrController (' + type + ') stay on ' + oldQuality + '/' + topQualityIdx + ' (buffer: ' + bufferLevel + ')');
             }
         }
     }
@@ -310,12 +316,17 @@ function AbrController() {
 
         if (!isInt) throw new Error('argument is not an integer');
 
-        if (newQuality !== oldQuality && newQuality >= 0 && newQuality <= getTopQualityIndexFor(type, id)) {
-            changeQuality(type, streamInfo, oldQuality, newQuality, reason);
+        const topQualityIdx = getTopQualityIndexFor(type, id);
+        if (newQuality !== oldQuality && newQuality >= 0 && newQuality <= topQualityIdx) {
+            changeQuality(type, streamInfo, oldQuality, newQuality, topQualityIdx, reason);
         }
     }
 
-    function changeQuality(type, streamInfo, oldQuality, newQuality, reason) {
+    function changeQuality(type, streamInfo, oldQuality, newQuality, topQualityIdx, reason) {
+        if (debug.getLogToBrowserConsole()) {
+            const bufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor(type));
+            log('AbrController (' + type + ') switch from ' + oldQuality + ' to ' + newQuality + '/' + topQualityIdx + ' (buffer: ' + bufferLevel + ')\n' + JSON.stringify(reason));
+        }
         setQualityFor(type, streamInfo.id, newQuality);
         eventBus.trigger(Events.QUALITY_CHANGE_REQUESTED, {mediaType: type, streamInfo: streamInfo, oldQuality: oldQuality, newQuality: newQuality, reason: reason});
     }

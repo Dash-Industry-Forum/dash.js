@@ -129,6 +129,7 @@ function AbandonRequestsRule() {
                     if (bytesRemaining > estimateOtherBytesTotal) {
                         switchRequest.value = newQuality;
                         switchRequest.reason.throughput = fragmentInfo.measuredBandwidthInKbps;
+                        switchRequest.reason.fragmentID = fragmentInfo.id;
                         abandonDict[fragmentInfo.id] = fragmentInfo;
                         log('AbandonRequestsRule ( ', mediaType, 'frag id',fragmentInfo.id,') is asking to abandon and switch to quality to ', newQuality, ' measured bandwidth was', fragmentInfo.measuredBandwidthInKbps);
                         delete fragmentDict[mediaType][fragmentInfo.id];
