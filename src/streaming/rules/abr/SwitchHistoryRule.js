@@ -15,8 +15,9 @@ function SwitchHistoryRule() {
 
 
     function getMaxIndex(rulesContext) {
+        const mediaInfo = rulesContext.getMediaInfo();
         const switchRequestHistory = rulesContext.getSwitchHistory();
-        let switchRequests = switchRequestHistory.getSwitchRequests();
+        let switchRequests = switchRequestHistory.getSwitchRequests(mediaInfo.type);
         let drops = 0;
         let noDrops = 0;
         let dropSize = 0;

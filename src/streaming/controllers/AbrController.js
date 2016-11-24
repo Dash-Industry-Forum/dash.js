@@ -292,12 +292,11 @@ function AbrController() {
             if (newQuality < 0 || newQuality > topQualityIdx) {
                 newQuality = topQualityIdx;
             }
-
-            switchHistory.push({oldValue: oldQuality, newValue: newQuality});
+            switchHistory.push({oldValue: oldQuality, newValue: newQuality},type);
 
             if (newQuality != oldQuality) {
                 if (abandonmentStateDict[type].state === ALLOW_LOAD || newQuality > oldQuality) {
-                    changeQuality(type, streamInfo, oldQuality, newQuality, switchRequest.reason);
+                    changeQuality(type, streamInfo, oldQuality, newQuality, topQualityIdx, switchRequest.reason);
                 }
             }
         }
@@ -545,7 +544,7 @@ function AbrController() {
                     //TODO Check if we should abort or if better to finish download. check bytesLoaded/Total
                     fragmentModel.abortRequests();
                     setAbandonmentStateFor(type, ABANDON_LOAD);
-                    switchHistory.push({oldValue: getQualityFor(type, streamController.getActiveStreamInfo()), newValue: switchRequest.value, confidence: 1, reason: switchRequest.reason});
+                    switchHistory.push({oldValue: getQualityFor(type, streamController.getActiveStreamInfo()), newValue: switchRequest.value, confidence: 1, reason: switchRequest.reason},type);
                     setPlaybackQuality(type, streamController.getActiveStreamInfo(), switchRequest.value, switchRequest.reason);
                     eventBus.trigger(Events.FRAGMENT_LOADING_ABANDONED, {streamProcessor: streamProcessorDict[type], request: request, mediaType: type});
 
