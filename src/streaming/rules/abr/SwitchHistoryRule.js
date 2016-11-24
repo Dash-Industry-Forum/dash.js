@@ -11,7 +11,8 @@ function SwitchHistoryRule() {
     const MAX_SWITCH = 0.075;
 
     //Before this number of switch requests(no switch or actual), don't apply the rule.
-    const SAMPLE_SIZE = 8;
+    //must be < SwitchRequestHistory SWITCH_REQUEST_HISTORY_DEPTH to enable rule
+    const SAMPLE_SIZE = 6;
 
 
     function getMaxIndex(rulesContext) {

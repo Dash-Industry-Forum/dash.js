@@ -1,7 +1,7 @@
 
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-const SWITCH_REQUEST_HISTORY_DEPTH = 6;
+const SWITCH_REQUEST_HISTORY_DEPTH = 8; // must be > SwitchHistoryRule SAMPLE_SIZE to enable rule
 
 function SwitchRequestHistory() {
     let switchRequests = []; // running total
