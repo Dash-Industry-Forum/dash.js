@@ -389,15 +389,15 @@ function AbrController() {
 
     function hasRichBuffer(type) {
         const metrics = metricsModel.getReadOnlyMetricsFor(type);
-        const lastBufferLevel = dashMetrics.getCurrentBufferLevel(metrics);
-        const lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
+        const bufferLevel = dashMetrics.getCurrentBufferLevel(metrics);
+        const bufferState = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
         let isBufferRich = false;
 
-        // This will happen when another rule tries to switch from top to any other.
-        // If there is enough buffer why not try to stay at high level.
-        if (lastBufferLevel > lastBufferStateVO.target ||
-            lastBufferStateVO === null) {
-            isBufferRich = (lastBufferLevel - lastBufferStateVO.target) > mediaPlayerModel.getRichBufferThreshold();
+        // This will happen when another rule tries to switch down from highest quality index
+        // If there is enough buffer why not try to stay at high level
+        if (bufferState && bufferLevel > bufferState.target) {
+            // Are we currently over the buffer target by at least RICH_BUFFER_THRESHOLD?
+            isBufferRich = bufferLevel > ( bufferState.target + mediaPlayerModel.getRichBufferThreshold() );
         }
 
         return isBufferRich;
