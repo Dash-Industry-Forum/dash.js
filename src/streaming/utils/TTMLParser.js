@@ -728,14 +728,13 @@ function TTMLParser() {
     // Convert an RGBA value written in TTML rgba(v,v,v,a => 0 to 255) to CSS rgba(v,v,v,a => 0 to 1).
     function convertAlphaValue(rgbaTTML) {
         let rgba,
-            alpha;
-        let resu = rgbaTTML;
+            alpha,
+            resu;
 
         rgba = rgbaTTML.replace(/^(rgb|rgba)\(/,'').replace(/\)$/,'').replace(/\s/g,'').split(',');
-        if (rgba[rgba.length - 1] > 1) {
-            alpha = parseInt(rgba[rgba.length - 1], 10) / 255;
-            resu = 'rgba(' + rgba[0] + ',' + rgba[1] + ',' + rgba[2] + ',' + alpha + ');';
-        }
+        alpha = parseInt(rgba[rgba.length - 1], 10) / 255;
+        resu = 'rgba(' + rgba[0] + ',' + rgba[1] + ',' + rgba[2] + ',' + alpha + ');';
+
         return resu;
     }
 
