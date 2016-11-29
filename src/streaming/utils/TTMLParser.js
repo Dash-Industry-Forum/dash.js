@@ -743,6 +743,19 @@ function TTMLParser() {
         return 'rgba(' + rgb.join(',') + ',' + alpha + ');';
     }
 
+    // Convert an RGBA value written in TTML rgba(v,v,v,a => 0 to 255) to CSS rgba(v,v,v,a => 0 to 1).
+    function convertAlphaValue(rgbaTTML) {
+        let rgba,
+            alpha,
+            resu;
+
+        rgba = rgbaTTML.replace(/^(rgb|rgba)\(/,'').replace(/\)$/,'').replace(/\s/g,'').split(',');
+        alpha = parseInt(rgba[rgba.length - 1], 10) / 255;
+        resu = 'rgba(' + rgba[0] + ',' + rgba[1] + ',' + rgba[2] + ',' + alpha + ');';
+
+        return resu;
+    }
+
     // Return whether or not an array contains a certain text
     function arrayContains(text, array) {
         for (var i = 0; i < array.length; i++) {
@@ -914,19 +927,23 @@ function TTMLParser() {
         if ('background-color' in cueStyle) {
             if (cueStyle['background-color'].indexOf('#') > -1 && (cueStyle['background-color'].length - 1) === 8) {
                 rgbaValue = convertHexToRGBA(cueStyle['background-color']);
-                properties.push('background-color: ' + rgbaValue);
-            } else {
-                properties.push('background-color:' + cueStyle['background-color'] + ';');
+            } else if (cueStyle['background-color'].indexOf('rgba') > -1) {
+                rgbaValue = convertAlphaValue(cueStyle['background-color']);
+            }  else {
+                rgbaValue = cueStyle['background-color'] + ';';
             }
+            properties.push('background-color: ' + rgbaValue);
         }
         // Color can be specified from hexadecimal (RGB or RGBA) value.
         if ('color' in cueStyle) {
             if (cueStyle.color.indexOf('#') > -1 && (cueStyle.color.length - 1) === 8) {
                 rgbaValue = convertHexToRGBA(cueStyle.color);
-                properties.push('color: ' + rgbaValue);
-            } else {
-                properties.push('color:' + cueStyle.color + ';');
+            } else if (cueStyle.color.indexOf('rgba') > -1) {
+                rgbaValue = convertAlphaValue(cueStyle.color);
+            }  else {
+                rgbaValue = cueStyle.color + ';';
             }
+            properties.push('color: ' + rgbaValue);
         }
         // Wrap option is determined by the white-space CSS property.
         if ('wrap-option' in cueStyle) {
