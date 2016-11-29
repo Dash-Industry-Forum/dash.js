@@ -135,7 +135,7 @@ function TextSourceBuffer() {
     function append(bytes, chunk) {
         var result,
             sampleList,
-            i,
+            i, j, k,
             samplesInfo,
             ccContent;
         var mediaInfo = chunk.mediaInfo;
@@ -201,10 +201,18 @@ function TextSourceBuffer() {
                         let sampleStart = sample.cts;
                         let sampleRelStart = sampleStart - firstSubtitleStart;
                         this.buffered.add(sampleRelStart / timescale, (sampleRelStart + sample.duration) / timescale);
-                        let dataView = new DataView(bytes, sample.offset, sample.size);
+                        let dataView = new DataView(bytes, sample.offset, sample.subSizes[0]);
                         ccContent = ISOBoxer.Utils.dataViewToString(dataView, 'utf-8');
+                        let images = [];
+                        let subOffset = sample.offset + sample.subSizes[0];
+                        for (j = 1; j < sample.subSizes.length; j++) {
+                            let inData = new Uint8Array(bytes, subOffset, sample.subSizes[j]);
+                            let raw = String.fromCharCode.apply(null, inData);
+                            images.push(raw);
+                            subOffset += sample.subSizes[j];
+                        }
                         try {
-                            result = parser.parse(ccContent, sampleStart / timescale, (sampleStart + sample.duration) / timescale);
+                            result = parser.parse(ccContent, sampleStart / timescale, (sampleStart + sample.duration) / timescale, images);
                             textTracks.addCaptions(currFragmentedTrackIdx, firstSubtitleStart / timescale, result);
                         } catch (e) {
                             log('TTML parser error: ' + e.message);
@@ -221,7 +229,7 @@ function TextSourceBuffer() {
                         // There are boxes inside the sampleData, so we need a ISOBoxer to get at it.
                         var sampleBoxes = ISOBoxer.parseBuffer(sampleData);
 
-                        for (var j = 0 ; j < sampleBoxes.boxes.length; j++) {
+                        for (j = 0 ; j < sampleBoxes.boxes.length; j++) {
                             var box1 = sampleBoxes.boxes[j];
                             log('VTT box1: ' + box1.type);
                             if (box1.type === 'vtte') {
@@ -229,7 +237,7 @@ function TextSourceBuffer() {
                             }
                             if (box1.type === 'vttc') {
                                 log('VTT vttc boxes.length = ' + box1.boxes.length);
-                                for (var k = 0 ; k < box1.boxes.length; k++) {
+                                for (k = 0 ; k < box1.boxes.length; k++) {
                                     var box2 = box1.boxes[k];
                                     log('VTT box2: ' + box2.type);
                                     if (box2.type === 'payl') {

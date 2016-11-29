@@ -37,6 +37,7 @@
 * @JaapHaitsma
 * @72lions [Thodoris Tsiridis, 72lions]
 * @TobbeMobiTV [Torbjörn Einarsson, MobiTV]
+* @TobbeEdgeware [Torbjörn Einarsson, Edgeware]
 * @mstorsjo [Martin Storsjö]
 * @Hyddan [Daniel Hedenius]
 * @qjia7

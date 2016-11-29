@@ -66,8 +66,9 @@ function DashManifestModel() {
 
         if ((adaptation.Representation_asArray.length > 0) &&
             (adaptation.Representation_asArray[0].hasOwnProperty('codecs'))) {
+            // Just check the start of the codecs string
             var codecs = adaptation.Representation_asArray[0].codecs;
-            if (codecs === 'stpp' || codecs === 'wvtt') {
+            if (codecs.search('stpp') === 0 || codecs.search('wvtt') === 0) {
                 return type === 'fragmentedText';
             }
         }

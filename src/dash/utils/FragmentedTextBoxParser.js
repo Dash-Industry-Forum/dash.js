@@ -51,6 +51,7 @@ function FragmentedTextBoxParser() {
         var trunBox = isoFile.getBox('trun');
         var moofBox = isoFile.getBox('moof');
         var mfhdBox = isoFile.getBox('mfhd');
+        var subsBox = isoFile.getBox('subs');
 
         var sampleDuration,
             sampleCompositionTimeOffset,
@@ -59,10 +60,11 @@ function FragmentedTextBoxParser() {
             sampleDts,
             sampleList,
             sample,
-            i,
+            i, j,
             dataOffset,
             sequenceNumber,
-            totalDuration;
+            totalDuration,
+            sampleWithSubsIndex;
 
         sequenceNumber = mfhdBox.sequence_number;
         sampleCount = trunBox.sample_count;
@@ -70,17 +72,30 @@ function FragmentedTextBoxParser() {
         dataOffset = (tfhdBox.base_data_offset || 0) + (trunBox.data_offset || 0);
 
         sampleList = [];
+        sampleWithSubsIndex = 0;
         for (i = 0; i < sampleCount; i++) {
             sample = trunBox.samples[i];
             sampleDuration = (sample.sample_duration !== undefined) ? sample.sample_duration : tfhdBox.default_sample_duration;
             sampleSize = (sample.sample_size !== undefined) ? sample.sample_size : tfhdBox.default_sample_size;
             sampleCompositionTimeOffset = (sample.sample_composition_time_offset !== undefined) ? sample.sample_composition_time_offset : 0;
-
-            sampleList.push({'dts': sampleDts,
+            var sampleData = {
+                'dts': sampleDts,
                 'cts': (sampleDts + sampleCompositionTimeOffset),
                 'duration': sampleDuration,
                 'offset': moofBox.offset + dataOffset,
-                'size': sampleSize});
+                'size': sampleSize,
+                'subSizes': [sampleSize]
+            };
+            if (subsBox && sampleWithSubsIndex < subsBox.samples_with_subsamples.length &&
+                subsBox.samples_with_subsamples[sampleWithSubsIndex].nr == (i + 1)) {
+                sampleData.subSizes = [];
+                for (j = 0; j < subsBox.samples_with_subsamples[sampleWithSubsIndex].subsamples.length; j++) {
+                    let subSize = subsBox.samples_with_subsamples[sampleWithSubsIndex].subsamples[j].size;
+                    sampleData.subSizes.push(subSize);
+                }
+                sampleWithSubsIndex++;
+            }
+            sampleList.push(sampleData);
             dataOffset += sampleSize;
             sampleDts += sampleDuration;
         }

@@ -206,15 +206,16 @@ function TTMLParser() {
      * @param {string} data - raw data received from the TextSourceBuffer
      * @param {number} intervalStart
      * @param {number} intervalEnd
-     *
+     * @param {array} imageArray - images represented as binary strings
      */
 
-    function parse(data, intervalStart, intervalEnd) {
+    function parse(data, intervalStart, intervalEnd, imageArray) {
         let tt, // Top element
             head, // head in tt
             body, // body in tt
             ttExtent, // extent attribute of tt element
-            type;
+            type,
+            i;
 
         var errorMsg = '';
 
@@ -255,6 +256,28 @@ function TTMLParser() {
         if (head.styling) {
             ttmlStyling = head.styling.style_asArray; // Mandatory in EBU-TT-D
         }
+
+        let imageDataUrls = {};
+
+        if (imageArray) {
+            for (i = 0; i < imageArray.length; i++) {
+                let key = 'urn:mpeg:14496-30:subs:' + (i + 1).toString();
+                let dataUrl = 'data:image/png;base64,' + btoa(imageArray[i]);
+                imageDataUrls[key] = dataUrl;
+            }
+        }
+
+        let embeddedImages = tt.head.metadata.image_asArray; // Handle embedded images
+
+        if (embeddedImages) {
+            for (i = 0; i < embeddedImages.length; i++) {
+                let key = '#' + embeddedImages[i]['xml:id'];
+                let imageType = embeddedImages[i].imagetype.toLowerCase();
+                let dataUrl = 'data:image/' + imageType + ';base64,' + embeddedImages[i].__text;
+                imageDataUrls[key] = dataUrl;
+            }
+        }
+
         body = tt.body;
         if (!body) {
             throw new Error('TTML document lacks body element');
@@ -273,7 +296,7 @@ function TTMLParser() {
 
         var regions = [];
         if (ttmlLayout) {
-            for (var i = 0; i < ttmlLayout.length; i++) {
+            for (i = 0; i < ttmlLayout.length; i++) {
                 regions.push(processRegion(JSON.parse(JSON.stringify(ttmlLayout[i])), cellUnit));
             }
         }
@@ -310,21 +333,16 @@ function TTMLParser() {
                     layout = getRelativePositioning(div, ttExtent);
                 }
 
-                let images = tt.head.metadata.image_asArray; // TODO. Add URL image sources
-
-                if (div['smpte:backgroundImage'] !== undefined) {
-                    for (let j = 0; j < images.length; j++) {
-                        if (('#' + images[j]['xml:id']) === div['smpte:backgroundImage']) {
-                            captionArray.push({
-                                start: divInterval[0],
-                                end: divInterval[1],
-                                id: getCueID(),
-                                data: 'data:image/' + images[j].imagetype.toLowerCase() + ';base64, ' + images[j].__text,
-                                type: 'image',
-                                layout: layout
-                            });
-                        }
-                    }
+                let imgKey = div['smpte:backgroundImage'];
+                if (imgKey !== undefined && imageDataUrls[imgKey] !== undefined) {
+                    captionArray.push({
+                        start: divInterval[0],
+                        end: divInterval[1],
+                        id: getCueID(),
+                        data: imageDataUrls[imgKey],
+                        type: 'image',
+                        layout: layout
+                    });
                 }
                 continue; // Next div
             }
