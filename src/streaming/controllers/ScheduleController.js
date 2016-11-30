@@ -182,7 +182,7 @@ function ScheduleController(config) {
     function hasTopQualityChanged(type, id) {
 
         topQualityIndex[id] = topQualityIndex[id] || {};
-        let newTopQualityIndex = abrController.getTopQualityIndexFor(type,id);
+        const newTopQualityIndex = abrController.getTopQualityIndexFor(type,id);
 
         if ( topQualityIndex[id][type] != newTopQualityIndex ) {
             log('Top quality'  + type + ' index has changed from ' + topQualityIndex[id][type] + ' to ' + newTopQualityIndex);
@@ -199,10 +199,10 @@ function ScheduleController(config) {
 
         validateExecutedFragmentRequest();
 
-        let isReplacement, topQualityChanged, readyToLoad;
-        if ( (isReplacement = replaceRequestArray.length > 0) ||
-             (topQualityChanged = hasTopQualityChanged(currentRepresentationInfo.mediaInfo.type, streamProcessor.getStreamInfo().id)) ||
-             (readyToLoad = bufferLevelRule.execute(streamProcessor, type, streamController.isVideoTrackPresent()))
+        const isReplacement = replaceRequestArray.length > 0;
+        if ( isReplacement ||
+             hasTopQualityChanged(currentRepresentationInfo.mediaInfo.type, streamProcessor.getStreamInfo().id) ||
+             bufferLevelRule.execute(streamProcessor, type, streamController.isVideoTrackPresent())
            ) {
 
             const getNextFragment = function () {
