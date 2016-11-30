@@ -67,7 +67,6 @@ function ScheduleController(config) {
         fragmentModel,
         isDynamic,
         currentRepresentationInfo,
-        initialRequest,
         isStopped,
         playListMetrics,
         playListTraceMetrics,
@@ -92,7 +91,6 @@ function ScheduleController(config) {
         replaceRequestArray;
 
     function setup() {
-        initialRequest = true;
         lastInitQuality = NaN;
         lastQualityIndex = NaN;
         topQualityIndex = {};
@@ -163,12 +161,8 @@ function ScheduleController(config) {
         addPlaylistTraceMetrics();
         isStopped = false;
 
-        if (initialRequest) {
-            initialRequest = false;
-            getInitRequest(currentRepresentationInfo.quality);
-        } else {
-            startScheduleTimer(0);
-        }
+        startScheduleTimer(0);
+
         log('Schedule controller starting for ' + type);
     }
 
@@ -306,7 +300,7 @@ function ScheduleController(config) {
         if (e.error || streamProcessor.getStreamInfo().id !== e.streamInfo.id) return;
         currentRepresentationInfo = streamProcessor.getCurrentRepresentationInfo();
 
-        if (isDynamic && initialRequest) {
+        if (isDynamic) {
             setLiveEdgeSeekTarget();
         }
 
