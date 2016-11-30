@@ -87,6 +87,7 @@ function ScheduleController(config) {
         nextFragmentRequestRule,
         scheduleWhilePaused,
         lastQualityIndex,
+        topQualityIndex,
         lastInitQuality,
         replaceRequestArray;
 
@@ -94,6 +95,7 @@ function ScheduleController(config) {
         initialRequest = true;
         lastInitQuality = NaN;
         lastQualityIndex = NaN;
+        topQualityIndex = {};
         replaceRequestArray = [];
         isStopped = false;
         playListMetrics = null;
@@ -177,6 +179,20 @@ function ScheduleController(config) {
         log('Schedule controller stopping for ' + type);
     }
 
+    function hasTopQualityChanged(type, id) {
+
+        topQualityIndex[id] = topQualityIndex[id] || {};
+        const newTopQualityIndex = abrController.getTopQualityIndexFor(type,id);
+
+        if ( topQualityIndex[id][type] != newTopQualityIndex ) {
+            log('Top quality'  + type + ' index has changed from ' + topQualityIndex[id][type] + ' to ' + newTopQualityIndex);
+            topQualityIndex[id][type] = newTopQualityIndex;
+            return true;
+        }
+        return false;
+
+    }
+
     function schedule() {
 
         if (isStopped || isFragmentProcessingInProgress || !bufferController || playbackController.isPaused() && !scheduleWhilePaused) return;
@@ -184,15 +200,16 @@ function ScheduleController(config) {
         validateExecutedFragmentRequest();
 
         const isReplacement = replaceRequestArray.length > 0;
-        const readyToLoad = bufferLevelRule.execute(streamProcessor, type, streamController.isVideoTrackPresent());
+        if ( isReplacement ||
+             hasTopQualityChanged(currentRepresentationInfo.mediaInfo.type, streamProcessor.getStreamInfo().id) ||
+             bufferLevelRule.execute(streamProcessor, type, streamController.isVideoTrackPresent())
+           ) {
 
-        if (readyToLoad || isReplacement) {
             const getNextFragment = function () {
                 if (currentRepresentationInfo.quality !== lastInitQuality) {
                     lastInitQuality = currentRepresentationInfo.quality;
                     bufferController.switchInitData(streamProcessor.getStreamInfo().id, currentRepresentationInfo.quality);
                 } else {
-
                     const request = nextFragmentRequestRule.execute(streamProcessor, replaceRequestArray.shift());
                     if (request) {
                         fragmentModel.executeRequest(request);
