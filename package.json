@@ -46,7 +46,9 @@
   },
   "dependencies": {
     "codem-isoboxer": "^0.3.3",
-    "round10": "^1.0.3"
+    "round10": "^1.0.3",
+    "imsc": "^1.0.0-beta.0",
+    "sax": "^1.2.1"
   },
   "repository": {
     "type": "git",
