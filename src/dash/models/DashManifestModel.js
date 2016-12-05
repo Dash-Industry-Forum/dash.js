@@ -315,7 +315,7 @@ function DashManifestModel() {
         if (manifest.hasOwnProperty('mediaPresentationDuration')) {
             mpdDuration = manifest.mediaPresentationDuration;
         } else {
-            mpdDuration = Number.MAX_SAFE_INTEGER;
+            mpdDuration = Number.MAX_SAFE_INTEGER || Number.MAX_VALUE;
         }
 
         return mpdDuration;
