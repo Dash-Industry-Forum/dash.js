@@ -48,6 +48,22 @@ describe('URLUtils', function () {
 
             expect(result).to.be.false; // jshint ignore:line
         });
+
+        it('should return true for a path-absolute url', () => {
+            const pathAbsoluteUrl = '/path/to/some/file';
+
+            const result = urlUtils.isRelative(pathAbsoluteUrl);
+
+            expect(result).to.be.true; // jshint ignore:line
+        });
+
+        it('should return true for a protocol-relative url', () => {
+            const protocolRelativeUrl = '//path/to/some/file';
+
+            const result = urlUtils.isRelative(protocolRelativeUrl);
+
+            expect(result).to.be.true; // jshint ignore:line
+        });
     });
 
     describe('isPathAbsolute', () => {
