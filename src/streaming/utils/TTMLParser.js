@@ -267,14 +267,15 @@ function TTMLParser() {
             }
         }
 
-        let embeddedImages = tt.head.metadata.image_asArray; // Handle embedded images
-
-        if (embeddedImages) {
-            for (i = 0; i < embeddedImages.length; i++) {
-                let key = '#' + embeddedImages[i]['xml:id'];
-                let imageType = embeddedImages[i].imagetype.toLowerCase();
-                let dataUrl = 'data:image/' + imageType + ';base64,' + embeddedImages[i].__text;
-                imageDataUrls[key] = dataUrl;
+        if (head.metadata) {
+            let embeddedImages = head.metadata.image_asArray; // Handle embedded images
+            if (embeddedImages) {
+                for (i = 0; i < embeddedImages.length; i++) {
+                    let key = '#' + embeddedImages[i]['xml:id'];
+                    let imageType = embeddedImages[i].imagetype.toLowerCase();
+                    let dataUrl = 'data:image/' + imageType + ';base64,' + embeddedImages[i].__text;
+                    imageDataUrls[key] = dataUrl;
+                }
             }
         }
 

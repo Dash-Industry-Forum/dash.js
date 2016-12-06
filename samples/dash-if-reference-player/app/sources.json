@@ -100,14 +100,14 @@
           "moreInfo": "http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/"
         },
         {
-          "url": "http://vm2.dashif.org/dash/vod/testpic_2s/img_subs.mpd",
+          "url": "http://vm2.dashif.org/dash/vod/testpic_2s/imsc1_img.mpd",
           "name": "IMSC1 (CMAF) Image Subtitles",
-          "moreInfo": "http://vm2.dashif.org/dash/vod/testpic_2s/img_subs_info.html"
+          "moreInfo": "http://vm2.dashif.org/dash/vod/testpic_2s/imsc1_img_subs_info.html"
         },
         {
           "name": "TTML Image Subtitles embedded (VoD)",
           "url": "http://vm2.dashif.org/dash/vod/testpic_2s/img_subs.mpd",
-          "moreInfo": "http://vm2.dashif.org/dash/vod/testpic_2s/imsc1_img_subs_info.html"
+          "moreInfo": "http://vm2.dashif.org/dash/vod/testpic_2s/img_subs_info.html"
         }
       ]
     },
