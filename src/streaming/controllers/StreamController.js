@@ -274,12 +274,14 @@ function StreamController() {
     }
 
     function getNextStream() {
-        const start = activeStream.getStreamInfo().start;
-        const duration = activeStream.getStreamInfo().duration;
+        if (activeStream) {
+            const start = activeStream.getStreamInfo().start;
+            const duration = activeStream.getStreamInfo().duration;
 
-        return streams.filter(function (stream) {
-            return (stream.getStreamInfo().start === (start + duration));
-        })[0];
+            return streams.filter(function (stream) {
+                return (stream.getStreamInfo().start === (start + duration));
+            })[0];
+        }
     }
 
     function switchStream(oldStream, newStream, seekTime) {
