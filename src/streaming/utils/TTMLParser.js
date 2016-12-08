@@ -30,8 +30,7 @@
  */
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
-import { fromXML } from 'imsc';
-import { generateISD } from 'imsc';
+import { fromXML, generateISD } from 'imsc';
 
 function TTMLParser() {
 
