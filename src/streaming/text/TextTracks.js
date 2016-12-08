@@ -459,9 +459,9 @@ function TextTracks() {
                     if (track.mode === 'showing') {
                         var finalCue = document.createElement('div');
                         log('Cue enter id:' + this.cueID);
+                        captionContainer.appendChild(finalCue);
                         renderHTML(this.isd, finalCue, null, captionContainer.clientWidth, captionContainer.clientHeight);
                         finalCue.id = this.cueID;
-                        captionContainer.appendChild(finalCue);
                         //scaleCue.call(self, this);
                     }
                 };
