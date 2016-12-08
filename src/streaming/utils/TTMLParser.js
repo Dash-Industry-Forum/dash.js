@@ -30,6 +30,8 @@
  */
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
+import { fromXML } from 'imsc';
+import { generateISD } from 'imsc';
 
 function TTMLParser() {
 
@@ -39,8 +41,7 @@ function TTMLParser() {
     /*
      * This TTML parser follows "EBU-TT-D SUBTITLING DISTRIBUTION FORMAT - tech3380" spec - https://tech.ebu.ch/docs/tech/tech3380.pdf.
      * */
-    let instance,
-        imsc1Parser;
+    let instance;
 
     let cueCounter = 0; // Used to give every cue a unique ID.
 
@@ -64,13 +65,13 @@ function TTMLParser() {
         var errorMsg = '';
         var captionArray = [];
 
-        var imsc1doc = imsc1Parser.fromXML(data, function (msg) {
+        var imsc1doc = fromXML(data, function (msg) {
             errorMsg = msg;
         });
         var mediaTimeEvents = imsc1doc.getMediaTimeEvents();
 
         for (i = 0; i < mediaTimeEvents.length; i++) {
-            var isd = imsc1Parser.generateISD(imsc1doc, mediaTimeEvents[i], function (error) {
+            var isd = generateISD(imsc1doc, mediaTimeEvents[i], function (error) {
                 errorMsg = error;
             });
             for (j = 0; j < isd.contents.length; j++) {
@@ -98,7 +99,6 @@ function TTMLParser() {
     }
 
     function setup() {
-        imsc1Parser = require('imsc');
     }
 
     instance = {
