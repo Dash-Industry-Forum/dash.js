@@ -330,7 +330,7 @@ function DashManifestModel() {
         if (manifest.hasOwnProperty('minimumUpdatePeriod')) {
             delay = manifest.minimumUpdatePeriod;
         }
-        return isNaN(delay) ? delay : Math.max(delay - latencyOfLastUpdate, 0);
+        return isNaN(delay) ? delay : Math.max(delay - latencyOfLastUpdate, 1);
     }
 
     function getRepresentationCount(adaptation) {
