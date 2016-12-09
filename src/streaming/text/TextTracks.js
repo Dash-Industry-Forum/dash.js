@@ -448,6 +448,7 @@ function TextTracks() {
                 cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, '');
                 cue.cueHTMLElement = currentItem.cueHTMLElement;
                 cue.isd = currentItem.isd;
+                cue.images = currentItem.images;
                 cue.cueID = currentItem.cueID;
                 cue.scaleCue = scaleCue.bind(self);
                 captionContainer.style.left = actualVideoLeft + 'px';
@@ -460,7 +461,18 @@ function TextTracks() {
                         var finalCue = document.createElement('div');
                         log('Cue enter id:' + this.cueID);
                         captionContainer.appendChild(finalCue);
-                        renderHTML(this.isd, finalCue, null, captionContainer.clientWidth, captionContainer.clientHeight);
+                        renderHTML(this.isd, finalCue,  function (uri) {
+                            let urnTester = /^(urn:)(mpeg:[a-z0-9][a-z0-9-]{0,31}:)(subs:)([0-9])$/ ;
+                            if (urnTester.test(uri)) {
+                                let match = urnTester.exec(uri);
+                                let imageId = parseInt(match[4],10) - 1;
+                                let imageData = btoa(cue.images[imageId]);
+                                let dataUrl = 'data:image/png;base64,' + imageData;
+                                return dataUrl;
+                            }else {
+                                return null;
+                            }
+                        }, captionContainer.clientWidth, captionContainer.clientHeight);
                         finalCue.id = this.cueID;
                         //scaleCue.call(self, this);
                     }
