@@ -571,6 +571,10 @@ function StreamController() {
 
         hasMediaError = true;
 
+        if (e.error.message) {
+            msg += ' (' + e.error.message + ')';
+        }
+
         if (e.error.msExtendedCode) {
             msg += ' (0x' + (e.error.msExtendedCode >>> 0).toString(16).toUpperCase() + ')';
         }
