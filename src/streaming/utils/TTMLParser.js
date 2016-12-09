@@ -55,9 +55,12 @@ function TTMLParser() {
      * Parse the raw data and process it to return the HTML element representing the cue.
      * Return the region to be processed and controlled (hide/show) by the caption controller.
      * @param {string} data - raw data received from the TextSourceBuffer
+     * @param {integer} startTime - startTime for the current segment
+     * @param {integer} endTime - endTime for the current segment
+     * @param {Array} images - images array referenced by subs MP4 box
      */
 
-    function parse(data) {
+    function parse(data, startTime, endTime, images) {
         let i,
             j;
 
@@ -80,7 +83,8 @@ function TTMLParser() {
                         end: mediaTimeEvents[i + 1],
                         type: 'html',
                         cueID: getCueID(),
-                        isd: isd
+                        isd: isd,
+                        images: images
                     });
                 }
             }
