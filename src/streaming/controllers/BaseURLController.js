@@ -59,6 +59,16 @@ function BaseURLController() {
         eventBus.on(Events.SERVICE_LOCATION_BLACKLIST_CHANGED, onBlackListChanged, instance);
     }
 
+    function setConfig(config) {
+        if (config.baseURLTreeModel) {
+            baseURLTreeModel = config.baseURLTreeModel;
+        }
+
+        if (config.baseURLSelector) {
+            baseURLSelector = config.baseURLSelector;
+        }
+    }
+
     function update(manifest) {
         baseURLTreeModel.update(manifest);
         baseURLSelector.chooseSelectorFromManifest(manifest);
@@ -77,6 +87,8 @@ function BaseURLController() {
                 } else {
                     p.url = urlUtils.resolve(b.url, p.url);
                 }
+            } else {
+                return new BaseURL();
             }
 
             return p;
@@ -99,7 +111,8 @@ function BaseURLController() {
     instance = {
         reset: reset,
         initialize: initialize,
-        resolve: resolve
+        resolve: resolve,
+        setConfig: setConfig
     };
 
     setup();
