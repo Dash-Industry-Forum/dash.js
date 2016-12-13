@@ -350,7 +350,7 @@ function ScheduleController(config) {
             isFragmentProcessingInProgress = false;
         }
 
-        if (e.error && e.serviceLocation && !isStopped) {
+        if (e.error && e.request.serviceLocation && !isStopped) {
             replaceRequest(e.request);
         }
     }
