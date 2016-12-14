@@ -692,10 +692,10 @@ function TextSourceBuffer() {
 
             finalDiv.appendChild(bodyDiv);
 
-            let fontSize = { 'bodyStyle': 90 };
+            let fontSize = { 'bodyStyle': ['%', 90] };
             for (s in styleStates) {
                 if (styleStates.hasOwnProperty(s)) {
-                    fontSize[s] = 90;
+                    fontSize[s] = ['%', 90];
                 }
             }
 
@@ -710,9 +710,7 @@ function TextSourceBuffer() {
                                  regionID: region.name,
                                  videoHeight: videoElement.videoHeight,
                                  videoWidth: videoElement.videoWidth,
-                                 fontSize: fontSize || {
-                                     defaultFontSize: '100'
-                                 },
+                                 fontSize: fontSize,
                                  lineHeight: {},
                                  linePadding: {},
                                });
