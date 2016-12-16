@@ -828,13 +828,13 @@ function TextSourceBuffer() {
         // Is there a way to mark a text adaptation set as the default one? DASHIF meeting talk about using role which is being used for track KIND
         // Eg subtitles etc. You can have multiple role tags per adaptation Not defined in the spec yet.
         var isDefault = false;
-        if (embeddedTracks.length > 1) {
+        if (embeddedTracks.length > 1 && mediaInfo.isEmbedded) {
             isDefault = (mediaInfo.id && mediaInfo.id === 'CC1'); // CC1 if both CC1 and CC3 exist
         } else if (embeddedTracks.length === 1) {
             if (mediaInfo.id && mediaInfo.id.substring(0, 2) === 'CC') {// Either CC1 or CC3
                 isDefault = true;
             }
-        } else {
+        } else if (embeddedTracks.length === 0) {
             isDefault = (mediaInfo.index === mediaInfos[0].index);
         }
         return isDefault;
@@ -851,10 +851,15 @@ function TextSourceBuffer() {
         return parser;
     }
 
+    function getCurrentTrackIdx() {
+        return textTracks.getCurrentTrackIdx();
+    }
+
     instance = {
         initialize: initialize,
         append: append,
         abort: abort,
+        getCurrentTrackIdx: getCurrentTrackIdx,
         getAllTracksAreDisabled: getAllTracksAreDisabled,
         setTextTrack: setTextTrack,
         setConfig: setConfig,
