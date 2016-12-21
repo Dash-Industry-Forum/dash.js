@@ -31,25 +31,23 @@
 import EventsBase from './EventsBase';
 
 /**
+ * These are internal events that should not be needed at the player level.
+ * If you find and event in here that you would like access to from MediaPlayer level
+ * please add an issue at https://github.com/Dash-Industry-Forum/dash.js/issues/new
  * @class
  * @ignore
  */
 class CoreEvents extends EventsBase {
     constructor () {
         super();
-        this.AST_IN_FUTURE = 'astinfuture';
         this.BUFFERING_COMPLETED = 'bufferingCompleted';
         this.BUFFER_CLEARED = 'bufferCleared';
         this.BUFFER_LEVEL_UPDATED = 'bufferLevelUpdated';
         this.BYTES_APPENDED = 'bytesAppended';
         this.CHECK_FOR_EXISTENCE_COMPLETED = 'checkForExistenceCompleted';
-        this.CHUNK_APPENDED = 'chunkAppended';
-        this.CURRENT_TRACK_CHANGED = 'currenttrackchanged';
+        this.CURRENT_TRACK_CHANGED = 'currentTrackChanged';
         this.DATA_UPDATE_COMPLETED = 'dataUpdateCompleted';
         this.DATA_UPDATE_STARTED = 'dataUpdateStarted';
-        this.FRAGMENT_LOADING_COMPLETED = 'fragmentLoadingCompleted';
-        this.FRAGMENT_LOADING_STARTED = 'fragmentLoadingStarted';
-        this.FRAGMENT_LOADING_ABANDONED = 'fragmentLoadingAbandoned';
         this.INITIALIZATION_LOADED = 'initializationLoaded';
         this.INIT_FRAGMENT_LOADED = 'initFragmentLoaded';
         this.INIT_REQUESTED = 'initRequested';
@@ -68,13 +66,11 @@ class CoreEvents extends EventsBase {
         this.STREAMS_COMPOSED = 'streamsComposed';
         this.STREAM_BUFFERING_COMPLETED = 'streamBufferingCompleted';
         this.STREAM_COMPLETED = 'streamCompleted';
-        this.STREAM_INITIALIZED = 'streaminitialized';
         this.STREAM_TEARDOWN_COMPLETE = 'streamTeardownComplete';
         this.TIMED_TEXT_REQUESTED = 'timedTextRequested';
         this.TIME_SYNCHRONIZATION_COMPLETED = 'timeSynchronizationComplete';
         this.URL_RESOLUTION_FAILED = 'urlResolutionFailed';
         this.WALLCLOCK_TIME_UPDATED = 'wallclockTimeUpdated';
-        this.XLINK_ALL_ELEMENTS_LOADED = 'xlinkAllElementsLoaded';
         this.XLINK_ELEMENT_LOADED = 'xlinkElementLoaded';
         this.XLINK_READY = 'xlinkReady';
     }

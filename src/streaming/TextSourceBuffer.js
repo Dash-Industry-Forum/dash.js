@@ -49,7 +49,6 @@ function TextSourceBuffer() {
     let instance,
         boxParser,
         errHandler,
-        adapter,
         dashManifestModel,
         mediaController,
         allTracksAreDisabled,
@@ -135,7 +134,7 @@ function TextSourceBuffer() {
     function append(bytes, chunk) {
         var result,
             sampleList,
-            i,
+            i, j, k,
             samplesInfo,
             ccContent;
         var mediaInfo = chunk.mediaInfo;
@@ -201,10 +200,18 @@ function TextSourceBuffer() {
                         let sampleStart = sample.cts;
                         let sampleRelStart = sampleStart - firstSubtitleStart;
                         this.buffered.add(sampleRelStart / timescale, (sampleRelStart + sample.duration) / timescale);
-                        let dataView = new DataView(bytes, sample.offset, sample.size);
+                        let dataView = new DataView(bytes, sample.offset, sample.subSizes[0]);
                         ccContent = ISOBoxer.Utils.dataViewToString(dataView, 'utf-8');
+                        let images = [];
+                        let subOffset = sample.offset + sample.subSizes[0];
+                        for (j = 1; j < sample.subSizes.length; j++) {
+                            let inData = new Uint8Array(bytes, subOffset, sample.subSizes[j]);
+                            let raw = String.fromCharCode.apply(null, inData);
+                            images.push(raw);
+                            subOffset += sample.subSizes[j];
+                        }
                         try {
-                            result = parser.parse(ccContent, sampleStart / timescale, (sampleStart + sample.duration) / timescale);
+                            result = parser.parse(ccContent, sampleStart / timescale, (sampleStart + sample.duration) / timescale, images);
                             textTracks.addCaptions(currFragmentedTrackIdx, firstSubtitleStart / timescale, result);
                         } catch (e) {
                             log('TTML parser error: ' + e.message);
@@ -221,7 +228,7 @@ function TextSourceBuffer() {
                         // There are boxes inside the sampleData, so we need a ISOBoxer to get at it.
                         var sampleBoxes = ISOBoxer.parseBuffer(sampleData);
 
-                        for (var j = 0 ; j < sampleBoxes.boxes.length; j++) {
+                        for (j = 0 ; j < sampleBoxes.boxes.length; j++) {
                             var box1 = sampleBoxes.boxes[j];
                             log('VTT box1: ' + box1.type);
                             if (box1.type === 'vtte') {
@@ -229,7 +236,7 @@ function TextSourceBuffer() {
                             }
                             if (box1.type === 'vttc') {
                                 log('VTT vttc boxes.length = ' + box1.boxes.length);
-                                for (var k = 0 ; k < box1.boxes.length; k++) {
+                                for (k = 0 ; k < box1.boxes.length; k++) {
                                     var box2 = box1.boxes[k];
                                     log('VTT box2: ' + box2.type);
                                     if (box2.type === 'payl') {
@@ -378,7 +385,7 @@ function TextSourceBuffer() {
         var isoFile = boxParser.parse(data);
         var moof = isoFile.getBox('moof');
         var tfdt = isoFile.getBox('tfdt');
-        //var tfhd = isoFile.getBox('tfhd'); //Can have a base_data_offset and other default values
+        var tfhd = isoFile.getBox('tfhd'); //Can have a base_data_offset and other default values
         //log("tfhd: " + tfhd);
         //var saio = isoFile.getBox('saio'); // Offset possibly
         //var saiz = isoFile.getBox('saiz'); // Possible sizes
@@ -402,6 +409,15 @@ function TextSourceBuffer() {
         var accDuration = 0;
         for (var i = 0; i < sampleCount; i++) {
             var sample = trun.samples[i];
+            if (sample.sample_duration === undefined) {
+                sample.sample_duration = tfhd.default_sample_duration;
+            }
+            if (sample.sample_size === undefined) {
+                sample.sample_size = tfhd.default_sample_size;
+            }
+            if (sample.sample_composition_time_offset === undefined) {
+                sample.sample_composition_time_offset = 0;
+            }
             var sampleTime = baseSampleTime + accDuration + sample.sample_composition_time_offset;
             var cea608Ranges = cea608parser.findCea608Nalus(raw, startPos, sample.sample_size);
             for (var j = 0; j < cea608Ranges.length; j++) {
@@ -676,10 +692,10 @@ function TextSourceBuffer() {
 
             finalDiv.appendChild(bodyDiv);
 
-            let fontSize = { 'bodyStyle': 90 };
+            let fontSize = { 'bodyStyle': ['%', 90] };
             for (s in styleStates) {
                 if (styleStates.hasOwnProperty(s)) {
-                    fontSize[s] = 90;
+                    fontSize[s] = ['%', 90];
                 }
             }
 
@@ -694,9 +710,7 @@ function TextSourceBuffer() {
                                  regionID: region.name,
                                  videoHeight: videoElement.videoHeight,
                                  videoWidth: videoElement.videoWidth,
-                                 fontSize: fontSize || {
-                                     defaultFontSize: '100'
-                                 },
+                                 fontSize: fontSize,
                                  lineHeight: {},
                                  linePadding: {},
                                });
@@ -750,9 +764,6 @@ function TextSourceBuffer() {
 
         if (config.errHandler) {
             errHandler = config.errHandler;
-        }
-        if (config.adapter) {
-            adapter = config.adapter;
         }
         if (config.dashManifestModel) {
             dashManifestModel = config.dashManifestModel;
@@ -817,13 +828,13 @@ function TextSourceBuffer() {
         // Is there a way to mark a text adaptation set as the default one? DASHIF meeting talk about using role which is being used for track KIND
         // Eg subtitles etc. You can have multiple role tags per adaptation Not defined in the spec yet.
         var isDefault = false;
-        if (embeddedTracks.length > 1) {
+        if (embeddedTracks.length > 1 && mediaInfo.isEmbedded) {
             isDefault = (mediaInfo.id && mediaInfo.id === 'CC1'); // CC1 if both CC1 and CC3 exist
         } else if (embeddedTracks.length === 1) {
             if (mediaInfo.id && mediaInfo.id.substring(0, 2) === 'CC') {// Either CC1 or CC3
                 isDefault = true;
             }
-        } else {
+        } else if (embeddedTracks.length === 0) {
             isDefault = (mediaInfo.index === mediaInfos[0].index);
         }
         return isDefault;
@@ -840,10 +851,15 @@ function TextSourceBuffer() {
         return parser;
     }
 
+    function getCurrentTrackIdx() {
+        return textTracks.getCurrentTrackIdx();
+    }
+
     instance = {
         initialize: initialize,
         append: append,
         abort: abort,
+        getCurrentTrackIdx: getCurrentTrackIdx,
         getAllTracksAreDisabled: getAllTracksAreDisabled,
         setTextTrack: setTextTrack,
         setConfig: setConfig,

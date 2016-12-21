@@ -69,6 +69,12 @@ function BaseURLSelector() {
         selector = basicSelector;
     }
 
+    function setConfig(config) {
+        if (config.selector) {
+            selector = config.selector;
+        }
+    }
+
     function chooseSelectorFromManifest(manifest) {
         if (dashManifestModel.getIsDVB(manifest)) {
             selector = dvbSelector;
@@ -116,7 +122,8 @@ function BaseURLSelector() {
     instance = {
         chooseSelectorFromManifest: chooseSelectorFromManifest,
         select: select,
-        reset: reset
+        reset: reset,
+        setConfig: setConfig
     };
 
     setup();

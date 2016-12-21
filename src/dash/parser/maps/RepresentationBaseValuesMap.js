@@ -39,7 +39,7 @@ class RepresentationBaseValuesMap extends MapNode {
             'profiles', 'width', 'height', 'sar', 'frameRate', 'audioSamplingRate', 'mimeType','segmentProfiles', 'codecs', 'maximumSAPPeriod', 'startWithSAP', 'maxPlayoutRate', 'codingDependency', 'scanType', 'FramePacking', 'AudioChannelConfiguration', 'ContentProtection', 'EssentialProperty', 'SupplementalProperty', 'InbandEventStream'
         ];
 
-        return super('AdaptationSet', commonProperties, [
+        super('AdaptationSet', commonProperties, [
             new MapNode('Representation', commonProperties, [
                 new MapNode('SubRepresentation', commonProperties)
             ])

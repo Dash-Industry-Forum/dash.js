@@ -98,7 +98,7 @@
                         Stream <span class="caret"></span>
                     </button>
                 </div>
-                <input type="text" class="form-control" ng-cloak ng-bind="selectedItem.url" ng-model="selectedItem.url">
+                <input type="text" class="form-control" ng-model="selectedItem.url">
                 <span class="input-group-btn">
                     <button class="btn btn-default" ng-click="toggleOptionsGutter(!optionsGutter)" ng-cloak>{{getOptionsButtonLabel()}}</button>
                     <button class="btn btn-primary" type="button" ng-click="doLoad()">Load</button>
@@ -114,27 +114,32 @@
                 <div class="options-item-body">
                     <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                            title="Enables automatic startup of the media once the media is loaded">
-                        <input type="checkbox" ng-model="autoPlaySelected" ng-change="toggleAutoPlay()" ng-checked="true">
+                        <input type="checkbox" ng-model="autoPlaySelected" ng-change="toggleAutoPlay()" ng-checked="autoPlaySelected">
                         Auto-Play
                     </label>
                     <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                            title="Enables looping of the media once playback has completed">
-                        <input type="checkbox" id="loop-cb" ng-checked="true">
+                        <input type="checkbox" id="loop-cb" ng-checked="loopSelected">
                         Loop
                     </label>
                     <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                           title="Enables scheduling fragments whiled paused increasing the buffer.">
+                        <input type="checkbox" ng-model="scheduleWhilePausedSelected" ng-change="toggleScheduleWhilePaused()" ng-checked="scheduleWhilePausedSelected">
+                        Schedule While Paused
+                    </label>
+                    <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                            title="Enables local storage of player state (last bitrate, a/v or text track etc). This is then used when the next time media is played.">
-                        <input type="checkbox" id="localStorageCB" ng-model="localStorageSelected" ng-change="toggleLocalStorage()" ng-checked="true">
-                        Local-Storage
+                        <input type="checkbox" id="localStorageCB" ng-model="localStorageSelected" ng-change="toggleLocalStorage()" ng-checked="localStorageSelected">
+                        Allow Local Storage
                     </label>
                     <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                            title="Enables faster ABR switching (time to render). Only when the new quality is higher than the current.">
-                        <input type="checkbox" id="fastSwitchCB" ng-model="fastSwitchSelected" ng-change="toggleFastSwitch()" ng-checked="true">
+                        <input type="checkbox" id="fastSwitchCB" ng-model="fastSwitchSelected" ng-change="toggleFastSwitch()" ng-checked="fastSwitchSelected">
                         Fast Switching ABR
                     </label>
                     <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                            title="BOLA is an ABR ruleset. When enabled, it will disable the default heuristics in Dash.js that depend strictly on average and real-time throughput measurements">
-                        <input type="checkbox" id="bolaCB" ng-model="bolaSelected" ng-change="toggleBufferOccupancyABR()" ng-checked="false">
+                        <input type="checkbox" id="bolaCB" ng-model="bolaSelected" ng-change="toggleBufferOccupancyABR()" ng-checked="bolaSelected">
                         Buffer Occupancy ABR
                     </label>
                 </div>
@@ -165,7 +170,7 @@
                     <label>Audio:</label>
                     <input type="text" class="form-control" placeholder="initial lang, e.g. 'en'" ng-model="initialSettings.audio">
                     <label>Video:</label>
-                    <input type="text" class="form-control" placeholder="initial role, e.g. 'alternate'"ng-model="initialSettings.video">
+                    <input type="text" class="form-control" placeholder="initial role, e.g. 'alternate'" ng-model="initialSettings.video">
                     <label data-toggle="tooltip" data-placement="right"
                            title="When a track is switched, the portion of the buffer that contains old track data is cleared">
                         <input  type="radio" id="always-replace" autocomplete="off" name="track-switch" checked="checked" ng-click="changeTrackSwitchMode('alwaysReplace', 'video')" >

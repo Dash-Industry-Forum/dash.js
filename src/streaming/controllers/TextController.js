@@ -41,6 +41,7 @@ function TextController(config) {
     let errHandler = config.errHandler;
 
     let instance,
+        isBufferingCompleted,
         initialized,
         mediaSource,
         buffer,
@@ -56,6 +57,7 @@ function TextController(config) {
         type = null;
         streamProcessor = null;
         representationController = null;
+        isBufferingCompleted = false;
 
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         eventBus.on(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
@@ -127,12 +129,17 @@ function TextController(config) {
         sourceBufferController.append(buffer, e.chunk);
     }
 
+    function getIsBufferingCompleted() {
+        return isBufferingCompleted;
+    }
+
     instance = {
         initialize: initialize,
         createBuffer: createBuffer,
         getBuffer: getBuffer,
         setBuffer: setBuffer,
         getStreamProcessor: getStreamProcessor,
+        getIsBufferingCompleted: getIsBufferingCompleted,
         setMediaSource: setMediaSource,
         reset: reset
     };

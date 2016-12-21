@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-var ControlBar = function (dashjsMediaPlayer) {
+var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
     var player = dashjsMediaPlayer,
         video,
@@ -77,7 +77,7 @@ var ControlBar = function (dashjsMediaPlayer) {
         },
 
         onPlayStart = function (e) {
-            setTime(player.time());
+            setTime(displayUTCTimeCodes ? player.timeAsUTC() : player.time());
             updateDuration();
             togglePlayPauseBtnState();
         },
@@ -85,7 +85,7 @@ var ControlBar = function (dashjsMediaPlayer) {
         onPlayTimeUpdate = function (e) {
             updateDuration();
             if (!seeking) {
-                setTime(player.time());
+                setTime(displayUTCTimeCodes ? player.timeAsUTC() : player.time());
                 seekbar.value = player.time();
             }
         },
@@ -139,7 +139,9 @@ var ControlBar = function (dashjsMediaPlayer) {
         onSeeking = function (e) {
             //TODO Add call to seek in trick-mode once implemented. Preview Frames.
             seeking = true;
-            setTime(parseFloat(seekbar.value));
+            var seekValue = parseFloat(seekbar.value);
+            var value = displayUTCTimeCodes ? (player.timeAsUTC() - player.duration()) + seekValue : seekValue;
+            setTime(value);
         },
 
         onSeeked = function (e) {
@@ -152,20 +154,20 @@ var ControlBar = function (dashjsMediaPlayer) {
 
         setDuration = function (value) {
             if (!isNaN(value)) {
-                durationDisplay.textContent = player.convertToTimeCode(value);
+                durationDisplay.textContent = displayUTCTimeCodes ? player.formatUTC(value) : player.convertToTimeCode(value);
             }
         },
 
         setTime = function (value) {
             if (!isNaN(value)) {
-                timeDisplay.textContent = player.convertToTimeCode(value);
+                timeDisplay.textContent = displayUTCTimeCodes ? player.formatUTC(value) : player.convertToTimeCode(value);
             }
         },
 
         updateDuration = function () {
             var duration = player.duration();
             if (duration !== parseFloat(seekbar.max)) { //check if duration changes for live streams..
-                setDuration(duration);
+                setDuration(displayUTCTimeCodes ? player.durationAsUTC() : duration);
                 seekbar.max = duration;
             }
         },
@@ -281,10 +283,13 @@ var ControlBar = function (dashjsMediaPlayer) {
             //Bitrate Menu
             if (bitrateListBtn) {
                 destroyBitrateMenu();
+
                 var availableBitrates = {menuType: 'bitrate'};
-                availableBitrates.audio = player.getBitrateInfoListFor("audio");
-                availableBitrates.video = player.getBitrateInfoListFor("video");
+                availableBitrates.audio = player.getBitrateInfoListFor("audio") || [];
+                availableBitrates.video = player.getBitrateInfoListFor("video") || [];
+
                 if (availableBitrates.audio.length > 1 || availableBitrates.video.length > 1) {
+
                     contentFunc = function (element, index) {
                         return isNaN(index) ? " Auto Switch" : Math.floor(element.bitrate / 1000) + " kbps";
                     }
@@ -302,11 +307,11 @@ var ControlBar = function (dashjsMediaPlayer) {
             }
 
             //Track Switch Menu
-
             if (!trackSwitchMenu && trackSwitchBtn) {
                 var availableTracks = {menuType: "track"};
                 availableTracks.audio = player.getTracksFor("audio");
-                availableTracks.video = player.getTracksFor("video");
+                availableTracks.video = player.getTracksFor("video"); // these return empty arrays so no need to cehck for null
+
                 if (availableTracks.audio.length > 1 || availableTracks.video.length > 1) {
                     contentFunc = function (element) {
                         return 'Language: ' + element.lang + ' - Role: ' + element.roles[0];
@@ -337,8 +342,8 @@ var ControlBar = function (dashjsMediaPlayer) {
             switch (menuType) {
                 case 'caption' :
                     el.appendChild(document.createElement("ul"));
-                    el = createMenuContent(el, getMenuContent(menuType, info.arr, contentFunc), 'caption', "captionMenuList");
-                    setMenuItemsState(1, 'captionMenuList'); // Should not be harcoded.  get initial index or state from dash.js - not available yet in dash.js
+                    el = createMenuContent(el, getMenuContent(menuType, info.arr, contentFunc), 'caption', menuType + '-list');
+                    setMenuItemsState(getMenuInitialIndex(info, menuType), menuType + '-list');
                     break;
                 case 'track' :
                 case 'bitrate' :
@@ -373,7 +378,17 @@ var ControlBar = function (dashjsMediaPlayer) {
                 return idx;
 
             } else if (menuType === "bitrate") {
-                return player.getAutoSwitchQualityFor(mediaType) ? 0 : getQualityFor(mediaType);
+                return player.getAutoSwitchQualityFor(mediaType) ? 0 : player.getQualityFor(mediaType);
+            } else if (menuType === "caption") {
+                var idx = 0
+                info.arr.some(function(element, index){
+                    if (element.defaultTrack) {
+                        idx = index + 1;
+                        return true;
+                    }
+                })
+
+                return idx;
             }
         },
 
@@ -427,7 +442,7 @@ var ControlBar = function (dashjsMediaPlayer) {
                 var item = document.createElement("li");
                 item.id = name + "Item_" + i;
                 item.index = i;
-                item.type = mediaType;
+                item.mediaType = mediaType;
                 item.name = name;
                 item.selected = false;
                 item.textContent = arr[i];
@@ -492,22 +507,23 @@ var ControlBar = function (dashjsMediaPlayer) {
                     case 'video-bitrate-list':
                     case 'audio-bitrate-list':
                         if (self.index > 0) {
-                            player.setAutoSwitchQualityFor(self.type, false);
-                            player.setQualityFor(self.type, self.index - 1);
+                            if (player.getAutoSwitchQualityFor(self.mediaType)) {
+                                player.setAutoSwitchQualityFor(self.mediaType, false);
+                            }
+                            player.setQualityFor(self.mediaType, self.index - 1);
                         } else {
-                            player.setAutoSwitchQualityFor(self.type, true);
+                            player.setAutoSwitchQualityFor(self.mediaType, true);
                         }
                         break;
-                    case 'caption' :
+                    case 'caption-list' :
                         player.setTextTrack(self.index - 1);
                         break
                     case 'video-track-list' :
                     case 'audio-track-list' :
-                        player.setCurrentTrack(player.getTracksFor(self.type)[self.index]);
+                        player.setCurrentTrack(player.getTracksFor(self.mediaType)[self.index]);
                         break;
                 }
             }
-
         },
 
         handleMenuPositionOnResize = function (e) {
@@ -589,6 +605,8 @@ var ControlBar = function (dashjsMediaPlayer) {
             if (!video) {
                 throw new Error("Please call initialize after you have called attachView on MediaPlayer.js");
             }
+
+            displayUTCTimeCodes = displayUTCTimeCodes === undefined ? false : displayUTCTimeCodes;
 
             video.controls = false;
             videoContainer = player.getVideoContainer();

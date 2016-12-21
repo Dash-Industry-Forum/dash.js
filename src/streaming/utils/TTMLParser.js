@@ -60,7 +60,8 @@ function TTMLParser() {
         unicodeBidi,
         displayAlign,
         writingMode,
-        videoModel;
+        videoModel,
+        converter;
 
     let cueCounter = 0; // Used to give every cue a unique ID.
 
@@ -205,19 +206,18 @@ function TTMLParser() {
      * @param {string} data - raw data received from the TextSourceBuffer
      * @param {number} intervalStart
      * @param {number} intervalEnd
-     *
+     * @param {array} imageArray - images represented as binary strings
      */
 
-    function parse(data, intervalStart, intervalEnd) {
+    function parse(data, intervalStart, intervalEnd, imageArray) {
         let tt, // Top element
             head, // head in tt
             body, // body in tt
             ttExtent, // extent attribute of tt element
-            type;
+            type,
+            i;
 
         var errorMsg = '';
-
-        let converter = new X2JS([], '', false);
 
         // Parse the TTML in a JSON object.
         ttml = converter.xml_str2json(data);
@@ -256,6 +256,29 @@ function TTMLParser() {
         if (head.styling) {
             ttmlStyling = head.styling.style_asArray; // Mandatory in EBU-TT-D
         }
+
+        let imageDataUrls = {};
+
+        if (imageArray) {
+            for (i = 0; i < imageArray.length; i++) {
+                let key = 'urn:mpeg:14496-30:subs:' + (i + 1).toString();
+                let dataUrl = 'data:image/png;base64,' + btoa(imageArray[i]);
+                imageDataUrls[key] = dataUrl;
+            }
+        }
+
+        if (head.metadata) {
+            let embeddedImages = head.metadata.image_asArray; // Handle embedded images
+            if (embeddedImages) {
+                for (i = 0; i < embeddedImages.length; i++) {
+                    let key = '#' + embeddedImages[i]['xml:id'];
+                    let imageType = embeddedImages[i].imagetype.toLowerCase();
+                    let dataUrl = 'data:image/' + imageType + ';base64,' + embeddedImages[i].__text;
+                    imageDataUrls[key] = dataUrl;
+                }
+            }
+        }
+
         body = tt.body;
         if (!body) {
             throw new Error('TTML document lacks body element');
@@ -274,7 +297,7 @@ function TTMLParser() {
 
         var regions = [];
         if (ttmlLayout) {
-            for (var i = 0; i < ttmlLayout.length; i++) {
+            for (i = 0; i < ttmlLayout.length; i++) {
                 regions.push(processRegion(JSON.parse(JSON.stringify(ttmlLayout[i])), cellUnit));
             }
         }
@@ -311,21 +334,16 @@ function TTMLParser() {
                     layout = getRelativePositioning(div, ttExtent);
                 }
 
-                let images = tt.head.metadata.image_asArray; // TODO. Add URL image sources
-
-                if (div['smpte:backgroundImage'] !== undefined) {
-                    for (let j = 0; j < images.length; j++) {
-                        if (('#' + images[j]['xml:id']) === div['smpte:backgroundImage']) {
-                            captionArray.push({
-                                start: divInterval[0],
-                                end: divInterval[1],
-                                id: getCueID(),
-                                data: 'data:image/' + images[j].imagetype.toLowerCase() + ';base64, ' + images[j].__text,
-                                type: 'image',
-                                layout: layout
-                            });
-                        }
-                    }
+                let imgKey = div['smpte:backgroundImage'];
+                if (imgKey !== undefined && imageDataUrls[imgKey] !== undefined) {
+                    captionArray.push({
+                        start: divInterval[0],
+                        end: divInterval[1],
+                        id: getCueID(),
+                        data: imageDataUrls[imgKey],
+                        type: 'image',
+                        layout: layout
+                    });
                 }
                 continue; // Next div
             }
@@ -628,6 +646,15 @@ function TTMLParser() {
                 '-webkit-text-orientation: upright;' +
                 'text-orientation: upright;'
         };
+        converter = new X2JS({
+            escapeMode:         false,
+            attributePrefix:    '',
+            arrayAccessForm:    'property',
+            emptyNodeForm:      'object',
+            stripWhitespaces:   false,
+            enableToStringFunc: false,
+            matchers:           []
+        });
     }
 
     function parseTimings(timingStr) {
@@ -685,9 +712,13 @@ function TTMLParser() {
                         removeNamespacePrefix(json[key][i], nsPrefix);
                     }
                 }
-                var newKey = key.slice(key.indexOf(nsPrefix) + nsPrefix.length + 1);
-                json[newKey] = json[key];
-                delete json[key];
+                var fullNsPrefix = nsPrefix + ':';
+                var nsPrefixPos = key.indexOf(fullNsPrefix);
+                if (nsPrefixPos >= 0) {
+                    var newKey = key.slice(nsPrefixPos + fullNsPrefix.length);
+                    json[newKey] = json[key];
+                    delete json[key];
+                }
             }
         }
     }
@@ -711,6 +742,19 @@ function TTMLParser() {
         });
         // Return the RGBA value for CSS.
         return 'rgba(' + rgb.join(',') + ',' + alpha + ');';
+    }
+
+    // Convert an RGBA value written in TTML rgba(v,v,v,a => 0 to 255) to CSS rgba(v,v,v,a => 0 to 1).
+    function convertAlphaValue(rgbaTTML) {
+        let rgba,
+            alpha,
+            resu;
+
+        rgba = rgbaTTML.replace(/^(rgb|rgba)\(/,'').replace(/\)$/,'').replace(/\s/g,'').split(',');
+        alpha = parseInt(rgba[rgba.length - 1], 10) / 255;
+        resu = 'rgba(' + rgba[0] + ',' + rgba[1] + ',' + rgba[2] + ',' + alpha + ');';
+
+        return resu;
     }
 
     // Return whether or not an array contains a certain text
@@ -752,6 +796,30 @@ function TTMLParser() {
         return primeArray.concat(arrayToAdd);
     }
 
+    function getSizeTypeAndDefinition(cueStyleElement) {
+        let returnTab = new Array(2);
+        let startRef = cueStyleElement.indexOf(':') === -1 ? 0 : cueStyleElement.indexOf(':');
+        let endRef;
+        if (cueStyleElement.indexOf('%') === -1) {
+            if (cueStyleElement.indexOf('c') === -1) {
+                if (cueStyleElement.indexOf('p') === -1) {
+                    returnTab[0] = returnTab[1] = null;
+                } else {
+                    returnTab[0] = 'p';
+                    endRef = cueStyleElement.indexOf('p');
+                }
+            } else {
+                returnTab[0] = 'c';
+                endRef = cueStyleElement.indexOf('c');
+            }
+        } else {
+            returnTab[0] = '%';
+            endRef = cueStyleElement.indexOf('%');
+        }
+        returnTab [1] = cueStyleElement.slice(startRef, endRef);
+        return returnTab;
+    }
+
     /**
      * Processing of styling information:
      * - processStyle: return an array of strings with the cue style under a CSS style form.
@@ -763,6 +831,8 @@ function TTMLParser() {
     // Compute the style properties to return an array with the cleaned properties.
     function processStyle(cueStyle, cellUnit, includeRegionStyles) {
         var properties = [];
+        var valueFtSizeInPx,
+            valueLHSizeInPx;
 
         // Clean up from the xml2json parsing:
         for (var key in cueStyle) {
@@ -792,12 +862,18 @@ function TTMLParser() {
         }
         // Font size is computed from the cellResolution.
         if ('font-size' in cueStyle) {
-            var valueFtSize = parseFloat(cueStyle['font-size'].slice(cueStyle['font-size'].indexOf(':') + 1,
-                cueStyle['font-size'].indexOf('%')));
+            var fontSizeTab = getSizeTypeAndDefinition(cueStyle['font-size']);
+            var valueFtSize = parseFloat(fontSizeTab[1]);
             if ('id' in cueStyle) {
-                fontSize[cueStyle.id] = valueFtSize;
+                fontSize[cueStyle.id] = fontSizeTab;
             }
-            var valueFtSizeInPx = valueFtSize / 100 * cellUnit[1] + 'px;';
+
+            if (fontSizeTab[0] === '%') {
+                valueFtSizeInPx = valueFtSize / 100 * cellUnit[1] + 'px;';
+            } else if (fontSizeTab[0] === 'c') {
+                valueFtSizeInPx = valueFtSize * cellUnit[1] + 'px;';
+            }
+
             properties.push('font-size:' + valueFtSizeInPx);
         }
         // Line height is computed from the cellResolution.
@@ -805,13 +881,19 @@ function TTMLParser() {
             if (cueStyle['line-height'] === 'normal') {
                 properties.push('line-height: normal;');
             } else {
-                var valueLHSize = parseFloat(cueStyle['line-height'].slice(cueStyle['line-height'].indexOf(':') + 1,
-                    cueStyle['line-height'].indexOf('%')));
+                var LineHeightTab = getSizeTypeAndDefinition(cueStyle['line-height']);
+                var valueLHSize = parseFloat(LineHeightTab[1]);
                 if ('id' in cueStyle) {
-                    lineHeight[cueStyle.id] = valueLHSize;
+                    lineHeight[cueStyle.id] = LineHeightTab;
                 }
-                var valueLHSizeInPx = valueLHSize / 100 * cellUnit[1] + 'px;';
-                properties.push('line-height' + ':' + valueLHSizeInPx);
+
+                if (LineHeightTab[0] === '%') {
+                    valueLHSizeInPx = valueLHSize / 100 * cellUnit[1] + 'px;';
+                } else if (LineHeightTab[0] === 'c') {
+                    valueLHSizeInPx = valueLHSize * cellUnit[1] + 'px;';
+                }
+
+                properties.push('line-height:' + valueLHSizeInPx);
             }
         }
         // Font-family can be specified by a generic family name or a custom family name.
@@ -846,19 +928,23 @@ function TTMLParser() {
         if ('background-color' in cueStyle) {
             if (cueStyle['background-color'].indexOf('#') > -1 && (cueStyle['background-color'].length - 1) === 8) {
                 rgbaValue = convertHexToRGBA(cueStyle['background-color']);
-                properties.push('background-color: ' + rgbaValue);
-            } else {
-                properties.push('background-color:' + cueStyle['background-color'] + ';');
+            } else if (cueStyle['background-color'].indexOf('rgba') > -1) {
+                rgbaValue = convertAlphaValue(cueStyle['background-color']);
+            }  else {
+                rgbaValue = cueStyle['background-color'] + ';';
             }
+            properties.push('background-color: ' + rgbaValue);
         }
         // Color can be specified from hexadecimal (RGB or RGBA) value.
         if ('color' in cueStyle) {
             if (cueStyle.color.indexOf('#') > -1 && (cueStyle.color.length - 1) === 8) {
                 rgbaValue = convertHexToRGBA(cueStyle.color);
-                properties.push('color: ' + rgbaValue);
-            } else {
-                properties.push('color:' + cueStyle.color + ';');
+            } else if (cueStyle.color.indexOf('rgba') > -1) {
+                rgbaValue = convertAlphaValue(cueStyle.color);
+            }  else {
+                rgbaValue = cueStyle.color + ';';
             }
+            properties.push('color: ' + rgbaValue);
         }
         // Wrap option is determined by the white-space CSS property.
         if ('wrap-option' in cueStyle) {

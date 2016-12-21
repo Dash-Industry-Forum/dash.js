@@ -49,7 +49,6 @@ import TimeSyncController from './controllers/TimeSyncController';
 import ABRRulesCollection from './rules/abr/ABRRulesCollection';
 import VideoModel from './models/VideoModel';
 import RulesController from './rules/RulesController';
-import SynchronizationRulesCollection from './rules/synchronization/SynchronizationRulesCollection';
 import MediaSourceController from './controllers/MediaSourceController';
 import BaseURLController from './controllers/BaseURLController';
 import Debug from './../core/Debug';
@@ -239,6 +238,19 @@ function MediaPlayer() {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
         return playbackController.isSeeking();
+    }
+
+    /**
+     * Returns a Boolean that indicates whether the media is in the process of dynamic.
+     * @return {boolean}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function isDynamic() {
+        if (!playbackInitialized) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
+        return playbackController.getIsDynamic();
     }
 
     /**
@@ -482,15 +494,16 @@ function MediaPlayer() {
      * @param {number} time - UTC timestamp to be converted into date and time.
      * @param {string} locales - a region identifier (i.e. en_US).
      * @param {boolean} hour12 - 12 vs 24 hour. Set to true for 12 hour time formatting.
+     * @param {boolean} withDate - default is false. Set to true to append current date to UTC time format.
      * @returns {string} A formatted time and date string.
      * @memberof module:MediaPlayer
      * @instance
      */
-    function formatUTC(time, locales, hour12) {
-        var dt = new Date(time * 1000);
-        var d = dt.toLocaleDateString(locales);
-        var t = dt.toLocaleTimeString(locales, {hour12: hour12});
-        return t + ' ' + d;
+    function formatUTC(time, locales, hour12, withDate = false) {
+        const dt = new Date(time * 1000);
+        const d = dt.toLocaleDateString(locales);
+        const t = dt.toLocaleTimeString(locales, {hour12: hour12});
+        return withDate ? t + ' ' + d : t;
     }
 
     /**
@@ -635,6 +648,16 @@ function MediaPlayer() {
      */
     function setLiveDelay(value) {
         mediaPlayerModel.setLiveDelay(value);
+    }
+
+    /**
+     * @memberof module:MediaPlayer
+     * @see {@link module:MediaPlayer#setLiveDelay setLiveDelay()}
+     * @instance
+     * @returns {number|undefined} Current live stream delay in seconds when previously set, or `undefined`
+     */
+    function getLiveDelay() {
+        return mediaPlayerModel.getLiveDelay();
     }
 
     /**
@@ -848,6 +871,20 @@ function MediaPlayer() {
     }
 
     /**
+     * Update the video element size variables
+     * Should be called on window resize (or any other time player is resized). Fullscreen does trigger a window resize event.
+     *
+     * Once windowResizeEventCalled = true, abrController.checkPortalSize() will use element size variables rather than querying clientWidth every time.
+     *
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function updatePortalSize() {
+        abrController.setElementSize();
+        abrController.setWindowResizeEventCalled(true);
+    }
+
+    /**
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -919,6 +956,14 @@ function MediaPlayer() {
         }
 
         textSourceBuffer.setTextTrack();
+    }
+
+    function getCurrentTextTrackIndex() {
+        let idx = NaN;
+        if (textSourceBuffer) {
+            idx = textSourceBuffer.getCurrentTrackIdx();
+        }
+        return idx;
     }
 
     /**
@@ -1229,7 +1274,11 @@ function MediaPlayer() {
     }
 
     /**
+     * Enabled by default. Will return the current state of Fast Switch.
      * @return {boolean} Returns true if FastSwitch ABR is enabled.
+     * @see {@link module:MediaPlayer#setFastSwitchEnabled setFastSwitchEnabled()}
+     * @memberof module:MediaPlayer
+     * @instance
      */
     function getFastSwitchEnabled() {
         return mediaPlayerModel.getFastSwitchEnabled();
@@ -1555,15 +1604,43 @@ function MediaPlayer() {
     }
 
     /**
-     * Sets whether withCredentials on XHR requests is true or false
+     * Sets whether withCredentials on all XHR requests is true or false
      *
      * @default false
      * @param {boolean} value
      * @memberof module:MediaPlayer
      * @instance
+     * @deprecated since version 2.4 - use setXHRWithCredentialsForType
      */
     function setXHRWithCredentials(value) {
-        mediaPlayerModel.setXHRWithCredentials(value);
+        setXHRWithCredentialsForType(undefined, value);
+    }
+
+    /**
+     * Sets whether withCredentials on XHR requests for a particular request
+     * type is true or false
+     *
+     * @default false
+     * @param {string} type - one of HTTPRequest.*_TYPE
+     * @param {boolean} value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setXHRWithCredentialsForType(type, value) {
+        mediaPlayerModel.setXHRWithCredentialsForType(type, value);
+    }
+
+    /**
+     * Gets whether withCredentials on XHR requests for a particular request
+     * type is true or false
+     *
+     * @param {string} type - one of HTTPRequest.*_TYPE
+     * @return {boolean}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getXHRWithCredentialsForType(type) {
+        return mediaPlayerModel.getXHRWithCredentialsForType(type);
     }
 
     /**
@@ -1775,14 +1852,8 @@ function MediaPlayer() {
 
     function createControllers() {
 
-        let synchronizationRulesCollection = SynchronizationRulesCollection(context).getInstance();
-        synchronizationRulesCollection.initialize();
-
         let abrRulesCollection = ABRRulesCollection(context).getInstance();
         abrRulesCollection.initialize();
-
-        //let scheduleRulesCollection = ScheduleRulesCollection(context).getInstance();
-        //scheduleRulesCollection.initialize();
 
         let sourceBufferController = SourceBufferController(context).getInstance();
         sourceBufferController.setConfig({dashManifestModel: dashManifestModel});
@@ -1794,10 +1865,7 @@ function MediaPlayer() {
 
         rulesController = RulesController(context).getInstance();
         rulesController.initialize();
-        rulesController.setConfig({
-            abrRulesCollection: abrRulesCollection,
-            synchronizationRulesCollection: synchronizationRulesCollection
-        });
+        rulesController.setConfig({abrRulesCollection: abrRulesCollection});
 
         streamController = StreamController(context).getInstance();
         streamController.setConfig({
@@ -1944,6 +2012,7 @@ function MediaPlayer() {
         isPaused: isPaused,
         pause: pause,
         isSeeking: isSeeking,
+        isDynamic: isDynamic,
         seek: seek,
         setMute: setMute,
         isMuted: isMuted,
@@ -1968,6 +2037,7 @@ function MediaPlayer() {
         getSource: getSource,
         setLiveDelayFragmentCount: setLiveDelayFragmentCount,
         setLiveDelay: setLiveDelay,
+        getLiveDelay: getLiveDelay,
         useSuggestedPresentationDelay: useSuggestedPresentationDelay,
         enableLastBitrateCaching: enableLastBitrateCaching,
         enableLastMediaSettingsCaching: enableLastMediaSettingsCaching,
@@ -1983,6 +2053,7 @@ function MediaPlayer() {
         getMetricsFor: getMetricsFor,
         getQualityFor: getQualityFor,
         setQualityFor: setQualityFor,
+        updatePortalSize: updatePortalSize,
         getLimitBitrateByPortal: getLimitBitrateByPortal,
         setLimitBitrateByPortal: setLimitBitrateByPortal,
         getUsePixelRatioInLimitBitrateByPortal: getUsePixelRatioInLimitBitrateByPortal,
@@ -2026,6 +2097,8 @@ function MediaPlayer() {
         setFragmentLoaderRetryAttempts: setFragmentLoaderRetryAttempts,
         setFragmentLoaderRetryInterval: setFragmentLoaderRetryInterval,
         setXHRWithCredentials: setXHRWithCredentials,
+        setXHRWithCredentialsForType: setXHRWithCredentialsForType,
+        getXHRWithCredentialsForType: getXHRWithCredentialsForType,
         setBufferTimeAtTopQualityLongForm: setBufferTimeAtTopQualityLongForm,
         setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,
         setRichBufferThreshold: setRichBufferThreshold,
@@ -2036,6 +2109,7 @@ function MediaPlayer() {
         displayCaptionsOnTop: displayCaptionsOnTop,
         attachVideoContainer: attachVideoContainer,
         attachTTMLRenderingDiv: attachTTMLRenderingDiv,
+        getCurrentTextTrackIndex: getCurrentTextTrackIndex,
         reset: reset
     };
 

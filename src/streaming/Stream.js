@@ -122,9 +122,11 @@ function Stream(config) {
         if (!isStreamActivated) {
             eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
             initializeMedia(mediaSource);
-        } else {
-            createBuffers();
+            isStreamActivated = true;
         }
+        //else { // TODO Check track change mode but why is this here. commented it out for now to check.
+        //    createBuffers();
+        //}
     }
 
     /**
@@ -155,9 +157,7 @@ function Stream(config) {
             fragmentController = null;
         }
 
-        liveEdgeFinder.abortSearch();
         deactivate();
-
         mediaController = null;
         abrController = null;
         manifestUpdater = null;
@@ -449,7 +449,6 @@ function Stream(config) {
         }
 
         initialized = true;
-        isStreamActivated = true;
         if (!isMediaInitialized) return;
         if (protectionController) {
             protectionController.initialize(manifestModel.getValue(), getMediaInfo('audio'), getMediaInfo('video'));

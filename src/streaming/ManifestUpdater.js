@@ -31,22 +31,24 @@
 import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import FactoryMaker from '../core/FactoryMaker';
+import MediaPlayerModel from './models/MediaPlayerModel';
 import Debug from '../core/Debug';
 
 function ManifestUpdater() {
 
-    let context = this.context;
-    let log = Debug(context).getInstance().log;
-    let eventBus = EventBus(context).getInstance();
+    const context = this.context;
+    const log = Debug(context).getInstance().log;
+    const eventBus = EventBus(context).getInstance();
 
     let instance,
         refreshDelay,
         refreshTimer,
-        isStopped,
+        isPaused,
         isUpdating,
         manifestLoader,
         manifestModel,
-        dashManifestModel;
+        dashManifestModel,
+        mediaPlayerModel;
 
     function setConfig(config) {
         if (!config) return;
@@ -64,7 +66,8 @@ function ManifestUpdater() {
         refreshDelay = NaN;
         refreshTimer = null;
         isUpdating = false;
-        isStopped = true;
+        isPaused = true;
+        mediaPlayerModel = MediaPlayerModel(context).getInstance();
 
         eventBus.on(Events.STREAMS_COMPOSED, onStreamsComposed, this);
         eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
@@ -81,18 +84,19 @@ function ManifestUpdater() {
     }
 
     function reset() {
+
         eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
         eventBus.off(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
         eventBus.off(Events.STREAMS_COMPOSED, onStreamsComposed, this);
         eventBus.off(Events.INTERNAL_MANIFEST_LOADED, onManifestLoaded, this);
-
-        isStopped = true;
+        stopManifestRefreshTimer();
+        isPaused = true;
         isUpdating = false;
-        clear();
         refreshDelay = NaN;
+        mediaPlayerModel = null;
     }
 
-    function clear() {
+    function stopManifestRefreshTimer() {
         if (refreshTimer !== null) {
             clearInterval(refreshTimer);
             refreshTimer = null;
@@ -100,51 +104,43 @@ function ManifestUpdater() {
     }
 
     function startManifestRefreshTimer() {
-        clear();
+        stopManifestRefreshTimer();
         if (!isNaN(refreshDelay)) {
             log('Refresh manifest in ' + refreshDelay + ' seconds.');
-            refreshTimer = setTimeout(onRefreshTimer, Math.min(refreshDelay * 1000, Math.pow(2, 31) - 1), this);
+            refreshTimer = setTimeout(onRefreshTimer, refreshDelay * 1000);
         }
     }
 
-    function update(manifest) {
-        var delay,
-            timeSinceLastUpdate;
+    function refreshManifest() {
+        isUpdating = true;
+        const manifest = manifestModel.getValue();
+        let url = manifest.url;
+        const location = dashManifestModel.getLocation(manifest);
+        if (location) {
+            url = location;
+        }
+        manifestLoader.load(url);
+    }
 
-        var date = new Date();
+    function update(manifest) {
 
         manifestModel.setValue(manifest);
-        log('Manifest has been refreshed at ' + date + '[' + date.getTime() / 1000 + '] ');
 
-        delay = dashManifestModel.getRefreshDelay(manifest);
-        timeSinceLastUpdate = (new Date().getTime() - manifest.loadedTime.getTime()) / 1000;
-        refreshDelay = Math.max(delay - timeSinceLastUpdate, 0);
+        const date = new Date();
+        const latencyOfLastUpdate = (date.getTime() - manifest.loadedTime.getTime()) / 1000;
+        refreshDelay = dashManifestModel.getManifestUpdatePeriod(manifest, latencyOfLastUpdate);
 
         eventBus.trigger(Events.MANIFEST_UPDATED, {manifest: manifest});
+        log('Manifest has been refreshed at ' + date + '[' + date.getTime() / 1000 + '] ');
 
-        if (!isStopped) {
+        if (!isPaused) {
             startManifestRefreshTimer();
         }
     }
 
     function onRefreshTimer() {
-        var manifest,
-            url;
-
-        if (isStopped || isUpdating) return;
-
-        isUpdating = true;
-        manifest = manifestModel.getValue();
-        url = manifest.url;
-
-        const location = dashManifestModel.getLocation(manifest);
-        if (location) {
-            url = location;
-        }
-
-        //log("Refresh manifest @ " + url);
-
-        manifestLoader.load(url);
+        if (isPaused && !mediaPlayerModel.getScheduleWhilePaused() || isUpdating) return;
+        refreshManifest();
     }
 
     function onManifestLoaded(e) {
@@ -154,13 +150,13 @@ function ManifestUpdater() {
     }
 
     function onPlaybackStarted (/*e*/) {
-        isStopped = false;
+        isPaused = false;
         startManifestRefreshTimer();
     }
 
     function onPlaybackPaused(/*e*/) {
-        isStopped = true;
-        clear();
+        isPaused = true;
+        stopManifestRefreshTimer();
     }
 
     function onStreamsComposed(/*e*/) {
@@ -172,6 +168,7 @@ function ManifestUpdater() {
         initialize: initialize,
         setManifest: setManifest,
         getManifestLoader: getManifestLoader,
+        refreshManifest: refreshManifest,
         setConfig: setConfig,
         reset: reset
     };
