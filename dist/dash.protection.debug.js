@@ -513,7 +513,7 @@ module.exports = exports["default"];
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
-    value: true
+  value: true
 });
 
 var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
@@ -529,60 +529,56 @@ var _EventsBase2 = _dereq_(6);
 var _EventsBase3 = _interopRequireDefault(_EventsBase2);
 
 /**
+ * These are internal events that should not be needed at the player level.
+ * If you find and event in here that you would like access to from MediaPlayer level
+ * please add an issue at https://github.com/Dash-Industry-Forum/dash.js/issues/new
  * @class
  * @ignore
  */
 
 var CoreEvents = (function (_EventsBase) {
-    _inherits(CoreEvents, _EventsBase);
+  _inherits(CoreEvents, _EventsBase);
 
-    function CoreEvents() {
-        _classCallCheck(this, CoreEvents);
+  function CoreEvents() {
+    _classCallCheck(this, CoreEvents);
 
-        _get(Object.getPrototypeOf(CoreEvents.prototype), 'constructor', this).call(this);
-        this.AST_IN_FUTURE = 'astinfuture';
-        this.BUFFERING_COMPLETED = 'bufferingCompleted';
-        this.BUFFER_CLEARED = 'bufferCleared';
-        this.BUFFER_LEVEL_UPDATED = 'bufferLevelUpdated';
-        this.BYTES_APPENDED = 'bytesAppended';
-        this.CHECK_FOR_EXISTENCE_COMPLETED = 'checkForExistenceCompleted';
-        this.CHUNK_APPENDED = 'chunkAppended';
-        this.CURRENT_TRACK_CHANGED = 'currenttrackchanged';
-        this.DATA_UPDATE_COMPLETED = 'dataUpdateCompleted';
-        this.DATA_UPDATE_STARTED = 'dataUpdateStarted';
-        this.FRAGMENT_LOADING_COMPLETED = 'fragmentLoadingCompleted';
-        this.FRAGMENT_LOADING_STARTED = 'fragmentLoadingStarted';
-        this.FRAGMENT_LOADING_ABANDONED = 'fragmentLoadingAbandoned';
-        this.INITIALIZATION_LOADED = 'initializationLoaded';
-        this.INIT_FRAGMENT_LOADED = 'initFragmentLoaded';
-        this.INIT_REQUESTED = 'initRequested';
-        this.INTERNAL_MANIFEST_LOADED = 'internalManifestLoaded';
-        this.LIVE_EDGE_SEARCH_COMPLETED = 'liveEdgeSearchCompleted';
-        this.LOADING_COMPLETED = 'loadingCompleted';
-        this.LOADING_PROGRESS = 'loadingProgress';
-        this.MANIFEST_UPDATED = 'manifestUpdated';
-        this.MEDIA_FRAGMENT_LOADED = 'mediaFragmentLoaded';
-        this.QUOTA_EXCEEDED = 'quotaExceeded';
-        this.REPRESENTATION_UPDATED = 'representationUpdated';
-        this.SEGMENTS_LOADED = 'segmentsLoaded';
-        this.SERVICE_LOCATION_BLACKLIST_CHANGED = 'serviceLocationBlacklistChanged';
-        this.SOURCEBUFFER_APPEND_COMPLETED = 'sourceBufferAppendCompleted';
-        this.SOURCEBUFFER_REMOVE_COMPLETED = 'sourceBufferRemoveCompleted';
-        this.STREAMS_COMPOSED = 'streamsComposed';
-        this.STREAM_BUFFERING_COMPLETED = 'streamBufferingCompleted';
-        this.STREAM_COMPLETED = 'streamCompleted';
-        this.STREAM_INITIALIZED = 'streaminitialized';
-        this.STREAM_TEARDOWN_COMPLETE = 'streamTeardownComplete';
-        this.TIMED_TEXT_REQUESTED = 'timedTextRequested';
-        this.TIME_SYNCHRONIZATION_COMPLETED = 'timeSynchronizationComplete';
-        this.URL_RESOLUTION_FAILED = 'urlResolutionFailed';
-        this.WALLCLOCK_TIME_UPDATED = 'wallclockTimeUpdated';
-        this.XLINK_ALL_ELEMENTS_LOADED = 'xlinkAllElementsLoaded';
-        this.XLINK_ELEMENT_LOADED = 'xlinkElementLoaded';
-        this.XLINK_READY = 'xlinkReady';
-    }
+    _get(Object.getPrototypeOf(CoreEvents.prototype), 'constructor', this).call(this);
+    this.BUFFERING_COMPLETED = 'bufferingCompleted';
+    this.BUFFER_CLEARED = 'bufferCleared';
+    this.BUFFER_LEVEL_UPDATED = 'bufferLevelUpdated';
+    this.BYTES_APPENDED = 'bytesAppended';
+    this.CHECK_FOR_EXISTENCE_COMPLETED = 'checkForExistenceCompleted';
+    this.CURRENT_TRACK_CHANGED = 'currentTrackChanged';
+    this.DATA_UPDATE_COMPLETED = 'dataUpdateCompleted';
+    this.DATA_UPDATE_STARTED = 'dataUpdateStarted';
+    this.INITIALIZATION_LOADED = 'initializationLoaded';
+    this.INIT_FRAGMENT_LOADED = 'initFragmentLoaded';
+    this.INIT_REQUESTED = 'initRequested';
+    this.INTERNAL_MANIFEST_LOADED = 'internalManifestLoaded';
+    this.LIVE_EDGE_SEARCH_COMPLETED = 'liveEdgeSearchCompleted';
+    this.LOADING_COMPLETED = 'loadingCompleted';
+    this.LOADING_PROGRESS = 'loadingProgress';
+    this.MANIFEST_UPDATED = 'manifestUpdated';
+    this.MEDIA_FRAGMENT_LOADED = 'mediaFragmentLoaded';
+    this.QUOTA_EXCEEDED = 'quotaExceeded';
+    this.REPRESENTATION_UPDATED = 'representationUpdated';
+    this.SEGMENTS_LOADED = 'segmentsLoaded';
+    this.SERVICE_LOCATION_BLACKLIST_CHANGED = 'serviceLocationBlacklistChanged';
+    this.SOURCEBUFFER_APPEND_COMPLETED = 'sourceBufferAppendCompleted';
+    this.SOURCEBUFFER_REMOVE_COMPLETED = 'sourceBufferRemoveCompleted';
+    this.STREAMS_COMPOSED = 'streamsComposed';
+    this.STREAM_BUFFERING_COMPLETED = 'streamBufferingCompleted';
+    this.STREAM_COMPLETED = 'streamCompleted';
+    this.STREAM_TEARDOWN_COMPLETE = 'streamTeardownComplete';
+    this.TIMED_TEXT_REQUESTED = 'timedTextRequested';
+    this.TIME_SYNCHRONIZATION_COMPLETED = 'timeSynchronizationComplete';
+    this.URL_RESOLUTION_FAILED = 'urlResolutionFailed';
+    this.WALLCLOCK_TIME_UPDATED = 'wallclockTimeUpdated';
+    this.XLINK_ELEMENT_LOADED = 'xlinkElementLoaded';
+    this.XLINK_READY = 'xlinkReady';
+  }
 
-    return CoreEvents;
+  return CoreEvents;
 })(_EventsBase3['default']);
 
 exports['default'] = CoreEvents;
@@ -1247,7 +1243,7 @@ var ProtectionEvents = (function (_EventsBase) {
   /**
    * @description Public facing external events to be used when including protection package.
    * All public events will be aggregated into the MediaPlayerEvents Class and can be accessed
-   * via MediaPlayer.events
+   * via MediaPlayer.events.  public_ is the prefix that we use to move event names to MediaPlayerEvents.
    */
 
   function ProtectionEvents() {
@@ -4876,7 +4872,7 @@ module.exports = exports["default"];
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
-  value: true
+    value: true
 });
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
@@ -4898,14 +4894,18 @@ var KeySystemConfiguration =
  * @class
  */
 function KeySystemConfiguration(audioCapabilities, videoCapabilities, distinctiveIdentifier, persistentState, sessionTypes) {
-  _classCallCheck(this, KeySystemConfiguration);
+    _classCallCheck(this, KeySystemConfiguration);
 
-  this.initDataTypes = ['cenc'];
-  this.audioCapabilities = audioCapabilities;
-  this.videoCapabilities = videoCapabilities;
-  this.distinctiveIdentifier = distinctiveIdentifier;
-  this.persistentState = persistentState;
-  this.sessionTypes = sessionTypes;
+    this.initDataTypes = ['cenc'];
+    if (audioCapabilities && audioCapabilities.length) {
+        this.audioCapabilities = audioCapabilities;
+    }
+    if (videoCapabilities && videoCapabilities.length) {
+        this.videoCapabilities = videoCapabilities;
+    }
+    this.distinctiveIdentifier = distinctiveIdentifier;
+    this.persistentState = persistentState;
+    this.sessionTypes = sessionTypes;
 };
 
 exports['default'] = KeySystemConfiguration;

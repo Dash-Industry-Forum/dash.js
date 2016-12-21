@@ -210,7 +210,7 @@ module.exports = exports["default"];
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
-    value: true
+  value: true
 });
 
 var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
@@ -226,60 +226,56 @@ var _EventsBase2 = _dereq_(4);
 var _EventsBase3 = _interopRequireDefault(_EventsBase2);
 
 /**
+ * These are internal events that should not be needed at the player level.
+ * If you find and event in here that you would like access to from MediaPlayer level
+ * please add an issue at https://github.com/Dash-Industry-Forum/dash.js/issues/new
  * @class
  * @ignore
  */
 
 var CoreEvents = (function (_EventsBase) {
-    _inherits(CoreEvents, _EventsBase);
+  _inherits(CoreEvents, _EventsBase);
 
-    function CoreEvents() {
-        _classCallCheck(this, CoreEvents);
+  function CoreEvents() {
+    _classCallCheck(this, CoreEvents);
 
-        _get(Object.getPrototypeOf(CoreEvents.prototype), 'constructor', this).call(this);
-        this.AST_IN_FUTURE = 'astinfuture';
-        this.BUFFERING_COMPLETED = 'bufferingCompleted';
-        this.BUFFER_CLEARED = 'bufferCleared';
-        this.BUFFER_LEVEL_UPDATED = 'bufferLevelUpdated';
-        this.BYTES_APPENDED = 'bytesAppended';
-        this.CHECK_FOR_EXISTENCE_COMPLETED = 'checkForExistenceCompleted';
-        this.CHUNK_APPENDED = 'chunkAppended';
-        this.CURRENT_TRACK_CHANGED = 'currenttrackchanged';
-        this.DATA_UPDATE_COMPLETED = 'dataUpdateCompleted';
-        this.DATA_UPDATE_STARTED = 'dataUpdateStarted';
-        this.FRAGMENT_LOADING_COMPLETED = 'fragmentLoadingCompleted';
-        this.FRAGMENT_LOADING_STARTED = 'fragmentLoadingStarted';
-        this.FRAGMENT_LOADING_ABANDONED = 'fragmentLoadingAbandoned';
-        this.INITIALIZATION_LOADED = 'initializationLoaded';
-        this.INIT_FRAGMENT_LOADED = 'initFragmentLoaded';
-        this.INIT_REQUESTED = 'initRequested';
-        this.INTERNAL_MANIFEST_LOADED = 'internalManifestLoaded';
-        this.LIVE_EDGE_SEARCH_COMPLETED = 'liveEdgeSearchCompleted';
-        this.LOADING_COMPLETED = 'loadingCompleted';
-        this.LOADING_PROGRESS = 'loadingProgress';
-        this.MANIFEST_UPDATED = 'manifestUpdated';
-        this.MEDIA_FRAGMENT_LOADED = 'mediaFragmentLoaded';
-        this.QUOTA_EXCEEDED = 'quotaExceeded';
-        this.REPRESENTATION_UPDATED = 'representationUpdated';
-        this.SEGMENTS_LOADED = 'segmentsLoaded';
-        this.SERVICE_LOCATION_BLACKLIST_CHANGED = 'serviceLocationBlacklistChanged';
-        this.SOURCEBUFFER_APPEND_COMPLETED = 'sourceBufferAppendCompleted';
-        this.SOURCEBUFFER_REMOVE_COMPLETED = 'sourceBufferRemoveCompleted';
-        this.STREAMS_COMPOSED = 'streamsComposed';
-        this.STREAM_BUFFERING_COMPLETED = 'streamBufferingCompleted';
-        this.STREAM_COMPLETED = 'streamCompleted';
-        this.STREAM_INITIALIZED = 'streaminitialized';
-        this.STREAM_TEARDOWN_COMPLETE = 'streamTeardownComplete';
-        this.TIMED_TEXT_REQUESTED = 'timedTextRequested';
-        this.TIME_SYNCHRONIZATION_COMPLETED = 'timeSynchronizationComplete';
-        this.URL_RESOLUTION_FAILED = 'urlResolutionFailed';
-        this.WALLCLOCK_TIME_UPDATED = 'wallclockTimeUpdated';
-        this.XLINK_ALL_ELEMENTS_LOADED = 'xlinkAllElementsLoaded';
-        this.XLINK_ELEMENT_LOADED = 'xlinkElementLoaded';
-        this.XLINK_READY = 'xlinkReady';
-    }
+    _get(Object.getPrototypeOf(CoreEvents.prototype), 'constructor', this).call(this);
+    this.BUFFERING_COMPLETED = 'bufferingCompleted';
+    this.BUFFER_CLEARED = 'bufferCleared';
+    this.BUFFER_LEVEL_UPDATED = 'bufferLevelUpdated';
+    this.BYTES_APPENDED = 'bytesAppended';
+    this.CHECK_FOR_EXISTENCE_COMPLETED = 'checkForExistenceCompleted';
+    this.CURRENT_TRACK_CHANGED = 'currentTrackChanged';
+    this.DATA_UPDATE_COMPLETED = 'dataUpdateCompleted';
+    this.DATA_UPDATE_STARTED = 'dataUpdateStarted';
+    this.INITIALIZATION_LOADED = 'initializationLoaded';
+    this.INIT_FRAGMENT_LOADED = 'initFragmentLoaded';
+    this.INIT_REQUESTED = 'initRequested';
+    this.INTERNAL_MANIFEST_LOADED = 'internalManifestLoaded';
+    this.LIVE_EDGE_SEARCH_COMPLETED = 'liveEdgeSearchCompleted';
+    this.LOADING_COMPLETED = 'loadingCompleted';
+    this.LOADING_PROGRESS = 'loadingProgress';
+    this.MANIFEST_UPDATED = 'manifestUpdated';
+    this.MEDIA_FRAGMENT_LOADED = 'mediaFragmentLoaded';
+    this.QUOTA_EXCEEDED = 'quotaExceeded';
+    this.REPRESENTATION_UPDATED = 'representationUpdated';
+    this.SEGMENTS_LOADED = 'segmentsLoaded';
+    this.SERVICE_LOCATION_BLACKLIST_CHANGED = 'serviceLocationBlacklistChanged';
+    this.SOURCEBUFFER_APPEND_COMPLETED = 'sourceBufferAppendCompleted';
+    this.SOURCEBUFFER_REMOVE_COMPLETED = 'sourceBufferRemoveCompleted';
+    this.STREAMS_COMPOSED = 'streamsComposed';
+    this.STREAM_BUFFERING_COMPLETED = 'streamBufferingCompleted';
+    this.STREAM_COMPLETED = 'streamCompleted';
+    this.STREAM_TEARDOWN_COMPLETE = 'streamTeardownComplete';
+    this.TIMED_TEXT_REQUESTED = 'timedTextRequested';
+    this.TIME_SYNCHRONIZATION_COMPLETED = 'timeSynchronizationComplete';
+    this.URL_RESOLUTION_FAILED = 'urlResolutionFailed';
+    this.WALLCLOCK_TIME_UPDATED = 'wallclockTimeUpdated';
+    this.XLINK_ELEMENT_LOADED = 'xlinkElementLoaded';
+    this.XLINK_READY = 'xlinkReady';
+  }
 
-    return CoreEvents;
+  return CoreEvents;
 })(_EventsBase3['default']);
 
 exports['default'] = CoreEvents;
@@ -492,17 +488,23 @@ var MediaPlayerEvents = (function (_EventsBase) {
 
     _get(Object.getPrototypeOf(MediaPlayerEvents.prototype), 'constructor', this).call(this);
     /**
+     * Triggered when playback will not start yet
+     * as the MPD's availabilityStartTime is in the future.
+     * Check delay property in payload to determine time before playback will start.
+     */
+    this.AST_IN_FUTURE = 'astInFuture';
+    /**
      * Triggered when the video element's buffer state changes to stalled.
      * Check mediaType in payload to determine type (Video, Audio, FragmentedText).
      * @event MediaPlayerEvents#BUFFER_EMPTY
      */
-    this.BUFFER_EMPTY = 'bufferstalled';
+    this.BUFFER_EMPTY = 'bufferStalled';
     /**
      * Triggered when the video element's buffer state changes to loaded.
      * Check mediaType in payload to determine type (Video, Audio, FragmentedText).
      * @event MediaPlayerEvents#BUFFER_LOADED
      */
-    this.BUFFER_LOADED = 'bufferloaded';
+    this.BUFFER_LOADED = 'bufferLoaded';
 
     /**
      * Triggered when the video element's buffer state changes, either stalled or loaded. Check payload for state.
@@ -511,10 +513,26 @@ var MediaPlayerEvents = (function (_EventsBase) {
     this.BUFFER_LEVEL_STATE_CHANGED = 'bufferStateChanged';
 
     /**
-     * Triggered when
-     * @event MediaPlayerEvents#ERROR
-     */
+    * Triggered when there is an error from the element or MSE source buffer.
+    * @event MediaPlayerEvents#ERROR
+    */
     this.ERROR = 'error';
+
+    /**
+    * Triggered when a fragment download has completed.
+    * @event MediaPlayerEvents#FRAGMENT_LOADING_COMPLETED
+    */
+    this.FRAGMENT_LOADING_COMPLETED = 'fragmentLoadingCompleted';
+    /**
+    * Triggered when a fragment download has started.
+    * @event MediaPlayerEvents#FRAGMENT_LOADING_STARTED
+    */
+    this.FRAGMENT_LOADING_STARTED = 'fragmentLoadingStarted';
+    /**
+    * Triggered when a fragment download is abandoned due to detection of slow download base on the ABR abandon rule..
+    * @event MediaPlayerEvents#FRAGMENT_LOADING_ABANDONED
+    */
+    this.FRAGMENT_LOADING_ABANDONED = 'fragmentLoadingAbandoned';
     /**
      * Triggered when {@link module:Debug} log method is called.
      * @event MediaPlayerEvents#LOG
@@ -525,37 +543,37 @@ var MediaPlayerEvents = (function (_EventsBase) {
      * Triggered when the manifest load is complete
      * @event MediaPlayerEvents#MANIFEST_LOADED
      */
-    this.MANIFEST_LOADED = 'manifestloaded';
+    this.MANIFEST_LOADED = 'manifestLoaded';
     /**
      * Triggered anytime there is a change to the overall metrics.
      * @event MediaPlayerEvents#METRICS_CHANGED
      */
-    this.METRICS_CHANGED = 'metricschanged';
+    this.METRICS_CHANGED = 'metricsChanged';
     /**
      * Triggered when an individual metric is added, updated or cleared.
      * @event MediaPlayerEvents#METRIC_CHANGED
      */
-    this.METRIC_CHANGED = 'metricchanged';
+    this.METRIC_CHANGED = 'metricChanged';
     /**
      * Triggered every time a new metric is added.
      * @event MediaPlayerEvents#METRIC_ADDED
      */
-    this.METRIC_ADDED = 'metricadded';
+    this.METRIC_ADDED = 'metricAdded';
     /**
      * Triggered every time a metric is updated.
      * @event MediaPlayerEvents#METRIC_UPDATED
      */
-    this.METRIC_UPDATED = 'metricupdated';
+    this.METRIC_UPDATED = 'metricUpdated';
     /**
      * Triggered at the stream end of a period.
      * @event MediaPlayerEvents#PERIOD_SWITCH_COMPLETED
      */
-    this.PERIOD_SWITCH_COMPLETED = 'streamswitchcompleted';
+    this.PERIOD_SWITCH_COMPLETED = 'periodSwitchCompleted';
     /**
      * Triggered when a new period starts.
      * @event MediaPlayerEvents#PERIOD_SWITCH_STARTED
      */
-    this.PERIOD_SWITCH_STARTED = 'streamswitchstarted';
+    this.PERIOD_SWITCH_STARTED = 'periodSwitchStarted';
 
     /**
      * Triggered when an ABR up /down switch is initialed; either by user in manual mode or auto mode via ABR rules.
@@ -573,17 +591,17 @@ var MediaPlayerEvents = (function (_EventsBase) {
      * Triggered when the stream is setup and ready.
      * @event MediaPlayerEvents#STREAM_INITIALIZED
      */
-    this.STREAM_INITIALIZED = 'streaminitialized';
+    this.STREAM_INITIALIZED = 'streamInitialized';
     /**
      * Triggered once all text tracks detected in the MPD are added to the video element.
      * @event MediaPlayerEvents#TEXT_TRACKS_ADDED
      */
-    this.TEXT_TRACKS_ADDED = 'alltexttracksadded';
+    this.TEXT_TRACKS_ADDED = 'allTextTracksAdded';
     /**
      * Triggered when a text track is added to the video element's TextTrackList
      * @event MediaPlayerEvents#TEXT_TRACK_ADDED
      */
-    this.TEXT_TRACK_ADDED = 'texttrackadded';
+    this.TEXT_TRACK_ADDED = 'textTrackAdded';
 
     /**
      * Sent when enough data is available that the media can be played,
@@ -2781,7 +2799,7 @@ function MetricSerialiser() {
                         obj.push(isBuiltIn ? v : serialise(v));
                     });
 
-                    value = encodeURIComponent(obj.join(','));
+                    value = obj.map(encodeURIComponent).join(',');
                 } else if (typeof value === 'string') {
                     value = encodeURIComponent(value);
                 } else if (value instanceof Date) {
