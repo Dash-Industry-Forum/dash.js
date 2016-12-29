@@ -155,7 +155,7 @@ function TextTracks() {
             }
             setCurrentTrackIdx.call(this, defaultIndex);
             if (defaultIndex >= 0) {
-                for (let idx = 0; i < video.textTracks.length; idx++) {
+                for (let idx = 0; idx < video.textTracks.length; idx++) {
                     video.textTracks[idx].mode = (idx === defaultIndex) ? 'showing' : 'hidden';
                 }
                 this.addCaptions(defaultIndex, 0, null);
