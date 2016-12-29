@@ -657,25 +657,30 @@ app.controller('DashController', function($scope, sources, contributors) {
         }
 
         var vars = getUrlVars();
-        var paramUrl = null;
+        var item = {};
 
         if (vars && vars.hasOwnProperty("url")) {
-            paramUrl = vars.url;
+            item.url = vars.url;
         }
 
         if (vars && vars.hasOwnProperty("mpd")) {
-            paramUrl = vars.mpd;
+            item.url = vars.mpd;
         }
 
         if (vars && vars.hasOwnProperty("source")) {
-            paramUrl = vars.source;
+            item.url = vars.source;
         }
 
-        if (paramUrl !== null) {
+        if (vars && vars.hasOwnProperty("stream")) {
+            try {
+                item = JSON.parse(atob(vars.stream));
+            } catch (e) {}
+        }
+
+        if (item.url) {
             var startPlayback = false;
 
-            $scope.selectedItem = {};
-            $scope.selectedItem.url = paramUrl;
+            $scope.selectedItem = item;
 
             if (vars.hasOwnProperty("autoplay")) {
                 startPlayback = (vars.autoplay === 'true');
