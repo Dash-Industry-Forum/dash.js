@@ -1,6 +1,40 @@
 {
   "items": [
     {
+      "name": "Kevs",
+      "submenu": [
+        {
+          "url": "https://vod.switchmedia.asia/vodfs/_definst_/fs/261_0/1542383_DYNAMIC_SMIL.smil/manifest.mpd",
+          "name": "Switch Media AssetID: 261_0/1542383",
+          "moreInfo": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/"
+        },
+        {
+          "url": "/switch_player/v3/chromecast/unittest/manifests/dash_kevs_test_1.mpd",
+          "name": "(switch_player) manifests/dash_kevs_test_1.mpd"
+        },
+        {
+          "url": "/switch_player/v3/chromecast/unittest/manifests/dash_kevs_test_2.mpd",
+          "name": "(switch_player) manifests/dash_kevs_test_2.mpd"
+        },
+        {
+          "url": "/switch_player/v3/chromecast/unittest/manifests/dash_kevs_test_3.mpd",
+          "name": "(switch_player) manifests/dash_kevs_test_3.mpd"
+        },
+        {
+          "url": "/switch_player/v3/chromecast/unittest/manifests/dash_kevs_test_4.mpd",
+          "name": "(switch_player) manifests/dash_kevs_test_4.mpd"
+        },
+        {
+          "url": "/switch_player/v3/chromecast/unittest/manifests/dash_kevs_test_5.mpd",
+          "name": "(switch_player) manifests/dash_kevs_test_5.mpd"
+        },
+        {
+          "url": "/switch_player/v3/chromecast/unittest/manifests/dash_kevs_test_6.mpd",
+          "name": "(switch_player) manifests/dash_kevs_test_6.mpd"
+        }
+      ]
+    },
+    {
       "name": "VOD (Static MPD)",
       "submenu": [
         {
