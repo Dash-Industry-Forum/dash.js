@@ -66,8 +66,9 @@ function DashManifestModel() {
 
         if ((adaptation.Representation_asArray.length > 0) &&
             (adaptation.Representation_asArray[0].hasOwnProperty('codecs'))) {
+            // Just check the start of the codecs string
             var codecs = adaptation.Representation_asArray[0].codecs;
-            if (codecs === 'stpp' || codecs === 'wvtt') {
+            if (codecs.search('stpp') === 0 || codecs.search('wvtt') === 0) {
                 return type === 'fragmentedText';
             }
         }
@@ -324,15 +325,12 @@ function DashManifestModel() {
         return representation.bandwidth;
     }
 
-    function getRefreshDelay(manifest) {
-        var delay = NaN;
-        var minDelay = 2;
-
+    function getManifestUpdatePeriod(manifest, latencyOfLastUpdate = 0) {
+        let delay = NaN;
         if (manifest.hasOwnProperty('minimumUpdatePeriod')) {
-            delay = Math.max(parseFloat(manifest.minimumUpdatePeriod), minDelay);
+            delay = manifest.minimumUpdatePeriod;
         }
-
-        return delay;
+        return isNaN(delay) ? delay : Math.max(delay - latencyOfLastUpdate, 1);
     }
 
     function getRepresentationCount(adaptation) {
@@ -433,6 +431,7 @@ function DashManifestModel() {
                     representation.initialization = initialization.sourceURL;
                 } else if (initialization.hasOwnProperty('range')) {
                     representation.range = initialization.range;
+                    representation.initialization = r.BaseURL;
                 }
             } else if (r.hasOwnProperty('mimeType') && getIsTextTrack(r.mimeType)) {
                 representation.range = 0;
@@ -892,7 +891,7 @@ function DashManifestModel() {
         getIsDVB: getIsDVB,
         getDuration: getDuration,
         getBandwidth: getBandwidth,
-        getRefreshDelay: getRefreshDelay,
+        getManifestUpdatePeriod: getManifestUpdatePeriod,
         getRepresentationCount: getRepresentationCount,
         getBitrateListForAdaptation: getBitrateListForAdaptation,
         getRepresentationFor: getRepresentationFor,

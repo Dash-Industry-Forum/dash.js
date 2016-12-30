@@ -42,6 +42,29 @@ describe('DashManifestModel', function () {
         expect(isOnDemand).to.be.true; // jshint ignore:line
     });
 
+    it('should return NaN when minimumUpdatePeriod is not present in manifest', () => {
+        const manifest = {};
+        const updatePeriod = dashManifestModel.getManifestUpdatePeriod(manifest);
+        expect(updatePeriod).to.be.NaN; // jshint ignore:line
+    });
+
+    it('should return valid value when minimumUpdatePeriod is present in manifest and latencyOfLastUpdate is defined', () => {
+        const minimumUpdatePeriod = 30;
+        const latencyOfLastUpdate = 0.5;
+        const manifest = { minimumUpdatePeriod:minimumUpdatePeriod };
+        const expectedResult = minimumUpdatePeriod - latencyOfLastUpdate;
+        const updatePeriod = dashManifestModel.getManifestUpdatePeriod(manifest, latencyOfLastUpdate);
+        expect(updatePeriod).to.equal(expectedResult); // jshint ignore:line
+    });
+
+    it('should return valid value when minimumUpdatePeriod is present in manifest and latencyOfLastUpdate is not defined', () => {
+        const minimumUpdatePeriod = 30;
+        const manifest = { minimumUpdatePeriod:minimumUpdatePeriod };
+        const expectedResult = minimumUpdatePeriod
+        const updatePeriod = dashManifestModel.getManifestUpdatePeriod(manifest);
+        expect(updatePeriod).to.equal(expectedResult); // jshint ignore:line
+    });
+
     describe('getBaseUrlsFromElement', () => {
         it('returns an empty Array when no BaseURLs or baseUri are present on a node', () => {
             const node = {};

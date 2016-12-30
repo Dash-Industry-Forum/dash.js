@@ -472,7 +472,7 @@ app.controller('DashController', function($scope, sources, contributors) {
     }
 
     $scope.setStream = function (item) {
-        $scope.selectedItem = item;
+        $scope.selectedItem = JSON.parse(JSON.stringify(item));
     }
 
     $scope.toggleOptionsGutter = function (bool) {

@@ -42,9 +42,9 @@ function URLUtils() {
 
     let resolveFunction;
 
-    const absUrl = /^(?:(?:[a-z]+:)?\/)?\//i;
+    const schemeRegex = /^[a-z][a-z0-9+\-.]*:/i;
     const httpUrlRegex = /^https?:\/\//i;
-    const originRegex = /^(https?:\/\/[^\/]+)\/?/i;
+    const originRegex = /^([a-z][a-z0-9+\-.]*:\/\/[^\/]+)\/?/i;
 
     /**
      * Resolves a url given an optional base url
@@ -87,11 +87,11 @@ function URLUtils() {
         }
 
         if (!isRelative(url)) {
-            if (isPathAbsolute(url)) {
-                baseUrlParseFunc = parseOrigin;
-            } else {
-                return url;
-            }
+            return url;
+        }
+
+        if (isPathAbsolute(url)) {
+            baseUrlParseFunc = parseOrigin;
         }
 
         const base = baseUrlParseFunc(baseUrl);
@@ -167,7 +167,7 @@ function URLUtils() {
      * @instance
      */
     function isRelative(url) {
-        return !absUrl.test(url);
+        return !schemeRegex.test(url);
     }
 
 
@@ -179,7 +179,7 @@ function URLUtils() {
      * @instance
      */
     function isPathAbsolute(url) {
-        return absUrl.test(url) && url.charAt(0) === '/';
+        return isRelative(url) && url.charAt(0) === '/';
     }
 
     /**

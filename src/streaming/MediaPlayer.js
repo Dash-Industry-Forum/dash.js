@@ -241,6 +241,19 @@ function MediaPlayer() {
     }
 
     /**
+     * Returns a Boolean that indicates whether the media is in the process of dynamic.
+     * @return {boolean}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function isDynamic() {
+        if (!playbackInitialized) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
+        return playbackController.getIsDynamic();
+    }
+
+    /**
      * Use this method to set the native Video Element's muted state. Takes a Boolean that determines whether audio is muted. true if the audio is muted and false otherwise.
      * @param {boolean} value
      * @memberof module:MediaPlayer
@@ -945,6 +958,14 @@ function MediaPlayer() {
         textSourceBuffer.setTextTrack();
     }
 
+    function getCurrentTextTrackIndex() {
+        let idx = NaN;
+        if (textSourceBuffer) {
+            idx = textSourceBuffer.getCurrentTrackIdx();
+        }
+        return idx;
+    }
+
     /**
      * @param {string} type
      * @returns {Array}
@@ -1253,7 +1274,11 @@ function MediaPlayer() {
     }
 
     /**
+     * Enabled by default. Will return the current state of Fast Switch.
      * @return {boolean} Returns true if FastSwitch ABR is enabled.
+     * @see {@link module:MediaPlayer#setFastSwitchEnabled setFastSwitchEnabled()}
+     * @memberof module:MediaPlayer
+     * @instance
      */
     function getFastSwitchEnabled() {
         return mediaPlayerModel.getFastSwitchEnabled();
@@ -1987,6 +2012,7 @@ function MediaPlayer() {
         isPaused: isPaused,
         pause: pause,
         isSeeking: isSeeking,
+        isDynamic: isDynamic,
         seek: seek,
         setMute: setMute,
         isMuted: isMuted,
@@ -2083,6 +2109,7 @@ function MediaPlayer() {
         displayCaptionsOnTop: displayCaptionsOnTop,
         attachVideoContainer: attachVideoContainer,
         attachTTMLRenderingDiv: attachTTMLRenderingDiv,
+        getCurrentTextTrackIndex: getCurrentTextTrackIndex,
         reset: reset
     };
 

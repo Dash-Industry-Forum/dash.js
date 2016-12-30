@@ -274,12 +274,14 @@ function StreamController() {
     }
 
     function getNextStream() {
-        const start = activeStream.getStreamInfo().start;
-        const duration = activeStream.getStreamInfo().duration;
+        if (activeStream) {
+            const start = activeStream.getStreamInfo().start;
+            const duration = activeStream.getStreamInfo().duration;
 
-        return streams.filter(function (stream) {
-            return (stream.getStreamInfo().start === (start + duration));
-        })[0];
+            return streams.filter(function (stream) {
+                return (stream.getStreamInfo().start === (start + duration));
+            })[0];
+        }
     }
 
     function switchStream(oldStream, newStream, seekTime) {
@@ -568,6 +570,10 @@ function StreamController() {
         }
 
         hasMediaError = true;
+
+        if (e.error.message) {
+            msg += ' (' + e.error.message + ')';
+        }
 
         if (e.error.msExtendedCode) {
             msg += ' (0x' + (e.error.msExtendedCode >>> 0).toString(16).toUpperCase() + ')';

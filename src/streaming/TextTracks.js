@@ -155,7 +155,9 @@ function TextTracks() {
             }
             setCurrentTrackIdx.call(this, defaultIndex);
             if (defaultIndex >= 0) {
-                video.textTracks[defaultIndex].mode = 'showing';
+                for (let idx = 0; i < video.textTracks.length; idx++) {
+                    video.textTracks[idx].mode = (idx === defaultIndex) ? 'showing' : 'hidden';
+                }
                 this.addCaptions(defaultIndex, 0, null);
             }
             eventBus.trigger(Events.TEXT_TRACKS_ADDED, {index: currentTrackIdx, tracks: textTrackQueue});//send default idx.
@@ -288,10 +290,11 @@ function TextTracks() {
         var videoHeight = actualVideoHeight;
         var key,
             replaceValue,
+            valueFontSize,
+            valueLineHeight,
             elements;
 
         var cellUnit = [videoWidth / activeCue.cellResolution[0], videoHeight / activeCue.cellResolution[1]];
-
         if (activeCue.linePadding) {
             for (key in activeCue.linePadding) {
                 if (activeCue.linePadding.hasOwnProperty(key)) {
@@ -310,7 +313,12 @@ function TextTracks() {
         if (activeCue.fontSize) {
             for (key in activeCue.fontSize) {
                 if (activeCue.fontSize.hasOwnProperty(key)) {
-                    var valueFontSize = activeCue.fontSize[key] / 100;
+                    if (activeCue.fontSize[key][0] === '%') {
+                        valueFontSize = activeCue.fontSize[key][1] / 100;
+                    }else if (activeCue.fontSize[key][0] === 'c') {
+                        valueFontSize = activeCue.fontSize[key][1];
+                    }
+
                     replaceValue  = (valueFontSize * cellUnit[1]).toString();
 
                     if (key !== 'defaultFontSize') {
@@ -329,7 +337,12 @@ function TextTracks() {
         if (activeCue.lineHeight) {
             for (key in activeCue.lineHeight) {
                 if (activeCue.lineHeight.hasOwnProperty(key)) {
-                    var valueLineHeight = activeCue.lineHeight[key] / 100;
+                    if (activeCue.lineHeight[key][0] === '%') {
+                        valueLineHeight = activeCue.lineHeight[key][1] / 100;
+                    }else if (activeCue.fontSize[key][0] === 'c') {
+                        valueLineHeight = activeCue.lineHeight[key][1];
+                    }
+
                     replaceValue = (valueLineHeight * cellUnit[1]).toString();
                     elements = document.getElementsByClassName(key);
                     for (var k = 0; k < elements.length; k++) {

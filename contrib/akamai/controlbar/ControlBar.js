@@ -343,7 +343,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                 case 'caption' :
                     el.appendChild(document.createElement("ul"));
                     el = createMenuContent(el, getMenuContent(menuType, info.arr, contentFunc), 'caption', menuType + '-list');
-                    setMenuItemsState(1, menuType + '-list'); // Should not be harcoded.  get initial index or state from dash.js - not available yet in dash.js
+                    setMenuItemsState(getMenuInitialIndex(info, menuType), menuType + '-list');
                     break;
                 case 'track' :
                 case 'bitrate' :
@@ -379,6 +379,16 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
             } else if (menuType === "bitrate") {
                 return player.getAutoSwitchQualityFor(mediaType) ? 0 : player.getQualityFor(mediaType);
+            } else if (menuType === "caption") {
+                var idx = 0
+                info.arr.some(function(element, index){
+                    if (element.defaultTrack) {
+                        idx = index + 1;
+                        return true;
+                    }
+                })
+
+                return idx;
             }
         },
 
