@@ -309,7 +309,10 @@ function DashMetrics() {
         if (!headerStr) {
             return headers;
         }
-        var headerPairs = headerStr.split('\u000d\u000a');
+        
+        // Trim headerStr to fix a MS Edge bug with xhr.getAllResponseHeaders method 
+        // which send a string starting with a "\n" character
+        var headerPairs = headerStr.trim().split('\u000d\u000a');
         for (var i = 0, ilen = headerPairs.length; i < ilen; i++) {
             var headerPair = headerPairs[i];
             var index = headerPair.indexOf('\u003a\u0020');
