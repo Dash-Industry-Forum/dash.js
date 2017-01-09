@@ -30,6 +30,8 @@
  */
 import SwitchRequest from '../SwitchRequest';
 import MediaPlayerModel from '../../models/MediaPlayerModel';
+import DashMetrics from '../../../dash/DashMetrics';
+import MetricsModel from '../../models/MetricsModel';
 import FactoryMaker from '../../../core/FactoryMaker';
 import Debug from '../../../core/Debug';
 
@@ -45,13 +47,17 @@ function AbandonRequestsRule() {
     let fragmentDict,
         abandonDict,
         throughputArray,
-        mediaPlayerModel;
+        mediaPlayerModel,
+        dashMetrics,
+        metricsModel;
 
     function setup() {
         fragmentDict = {};
         abandonDict = {};
         throughputArray = [];
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
+        dashMetrics = DashMetrics(context).getInstance();
+        metricsModel = MetricsModel(context).getInstance();
     }
 
     function setFragmentRequestDict(type, id) {
@@ -64,21 +70,26 @@ function AbandonRequestsRule() {
         throughputArray[type].push(throughput);
     }
 
-    function execute(rulesContext, callback) {
+    function shouldAbandon(rulesContext) {
 
         const mediaInfo = rulesContext.getMediaInfo();
         const mediaType = mediaInfo.type;
-        const req = rulesContext.getCurrentValue().request;
-        const switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK, {name: AbandonRequestsRule.__dashjs_factory_name});
+        const req = rulesContext.getCurrentRequest();
+        const switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, {name: AbandonRequestsRule.__dashjs_factory_name});
 
         if (!isNaN(req.index)) {
 
             setFragmentRequestDict(mediaType, req.index);
 
+            const stableBufferTime = mediaPlayerModel.getStableBufferTime();
+            const bufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor(mediaType));
+            if ( bufferLevel > stableBufferTime ) {
+                return switchRequest;
+            }
+
             const fragmentInfo = fragmentDict[mediaType][req.index];
             if (fragmentInfo === null || req.firstByteDate === null || abandonDict.hasOwnProperty(fragmentInfo.id)) {
-                callback(switchRequest);
-                return;
+                return switchRequest;
             }
 
             //setup some init info based on first progress event
@@ -102,14 +113,11 @@ function AbandonRequestsRule() {
 
                 const totalSampledValue = throughputArray[mediaType].reduce((a, b) => a + b, 0);
                 fragmentInfo.measuredBandwidthInKbps = Math.round(totalSampledValue / throughputArray[mediaType].length);
-                fragmentInfo.estimatedTimeOfDownload = ((fragmentInfo.bytesTotal * 8 / fragmentInfo.measuredBandwidthInKbps) / 1000).toFixed(2);
+                fragmentInfo.estimatedTimeOfDownload = +((fragmentInfo.bytesTotal * 8 / fragmentInfo.measuredBandwidthInKbps) / 1000).toFixed(2);
                 //log("id:",fragmentInfo.id, "kbps:", fragmentInfo.measuredBandwidthInKbps, "etd:",fragmentInfo.estimatedTimeOfDownload, fragmentInfo.bytesLoaded);
 
                 if (fragmentInfo.estimatedTimeOfDownload < fragmentInfo.segmentDuration * ABANDON_MULTIPLIER || rulesContext.getTrackInfo().quality === 0 ) {
-
-                    callback(switchRequest);
-                    return;
-
+                    return switchRequest;
                 } else if (!abandonDict.hasOwnProperty(fragmentInfo.id)) {
 
                     const abrController = rulesContext.getStreamProcessor().getABRController();
@@ -119,21 +127,20 @@ function AbandonRequestsRule() {
                     const estimateOtherBytesTotal = fragmentInfo.bytesTotal * bitrateList[newQuality].bitrate / bitrateList[abrController.getQualityFor(mediaType, mediaInfo.streamInfo)].bitrate;
 
                     if (bytesRemaining > estimateOtherBytesTotal) {
-
                         switchRequest.value = newQuality;
-                        switchRequest.priority = SwitchRequest.STRONG;
                         switchRequest.reason.throughput = fragmentInfo.measuredBandwidthInKbps;
+                        switchRequest.reason.fragmentID = fragmentInfo.id;
                         abandonDict[fragmentInfo.id] = fragmentInfo;
                         log('AbandonRequestsRule ( ', mediaType, 'frag id',fragmentInfo.id,') is asking to abandon and switch to quality to ', newQuality, ' measured bandwidth was', fragmentInfo.measuredBandwidthInKbps);
                         delete fragmentDict[mediaType][fragmentInfo.id];
                     }
                 }
-            }else if (fragmentInfo.bytesLoaded === fragmentInfo.bytesTotal) {
+            } else if (fragmentInfo.bytesLoaded === fragmentInfo.bytesTotal) {
                 delete fragmentDict[mediaType][fragmentInfo.id];
             }
         }
 
-        callback(switchRequest);
+        return switchRequest;
     }
 
     function reset() {
@@ -141,7 +148,7 @@ function AbandonRequestsRule() {
     }
 
     const instance = {
-        execute: execute,
+        shouldAbandon: shouldAbandon,
         reset: reset
     };
 
