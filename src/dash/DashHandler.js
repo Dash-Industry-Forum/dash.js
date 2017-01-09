@@ -36,6 +36,7 @@ import EventBus from '../core/EventBus';
 import FactoryMaker from '../core/FactoryMaker';
 import Debug from '../core/Debug';
 import URLUtils from '../streaming/utils/URLUtils';
+import Representation from './vo/Representation';
 
 import {replaceTokenForTemplate, getTimeBasedSegment, getSegmentByIndex} from './utils/SegmentsUtils';
 import SegmentsGetter from './utils/SegmentsGetter';
@@ -115,11 +116,11 @@ function DashHandler(config) {
     }
 
     function unescapeDollarsInTemplate(url) {
-        return url.split('$$').join('$');
+        return url ? url.split('$$').join('$') : url;
     }
 
     function replaceIDForTemplate(url, value) {
-        if (value === null || url.indexOf('$RepresentationID$') === -1) { return url; }
+        if (value === null || url === null || url.indexOf('$RepresentationID$') === -1) { return url; }
         var v = value.toString();
         return url.split('$RepresentationID$').join(v);
     }
@@ -230,8 +231,8 @@ function DashHandler(config) {
     }
 
     function updateRepresentation(representation, keepIdx) {
-        var hasInitialization = representation.initialization;
-        var hasSegments = representation.segmentInfoType !== 'BaseURL' && representation.segmentInfoType !== 'SegmentBase' && !representation.indexRange;
+        var hasInitialization = Representation.hasInitialization(representation);
+        var hasSegments = Representation.hasSegments(representation);
         var error;
 
         if (!representation.segmentDuration && !representation.segments) {
@@ -475,7 +476,7 @@ function DashHandler(config) {
 
         onSegmentListUpdated(representation, segments);
 
-        if (!representation.initialization) return;
+        if (!Representation.hasInitialization(representation)) return;
 
         eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: representation});
     }

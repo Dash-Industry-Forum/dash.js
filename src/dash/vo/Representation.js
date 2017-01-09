@@ -52,6 +52,17 @@ class Representation {
         this.bandwidth = NaN;
         this.maxPlayoutRate = NaN;
     }
+
+    static hasInitialization(r) {
+        return r.initialization ||
+            ((r.segmentInfoType !== 'BaseURL' || r.segmentInfoType !== 'SegmentBase') && r.range);
+    }
+
+    static hasSegments(r) {
+        return r.segmentInfoType !== 'BaseURL' &&
+            r.segmentInfoType !== 'SegmentBase' &&
+            !r.indexRange;
+    }
 }
 
 export default Representation;
