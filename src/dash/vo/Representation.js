@@ -54,8 +54,8 @@ class Representation {
     }
 
     static hasInitialization(r) {
-        return r.initialization ||
-            ((r.segmentInfoType !== 'BaseURL' || r.segmentInfoType !== 'SegmentBase') && r.range);
+        return !!r.initialization ||
+            ((r.segmentInfoType !== 'BaseURL' || r.segmentInfoType !== 'SegmentBase') && !!r.range);
     }
 
     static hasSegments(r) {
