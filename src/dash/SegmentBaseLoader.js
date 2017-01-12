@@ -93,7 +93,8 @@ function SegmentBaseLoader() {
 
             if (initRange) {
                 representation.range = initRange;
-                representation.initialization = info.url;
+                // note that we don't explicitly set rep.initialization as this
+                // will be computed when all BaseURLs are resolved later
                 eventBus.trigger(Events.INITIALIZATION_LOADED, {representation: representation});
             } else {
                 info.range.end = info.bytesLoaded + info.bytesToLoad;
@@ -249,8 +250,9 @@ function SegmentBaseLoader() {
             size = refs[i].referenced_size;
 
             segment = new Segment();
+            // note that we don't explicitly set segment.media as this will be
+            // computed when all BaseURLs are resolved later
             segment.duration = duration;
-            segment.media = info.url;
             segment.startTime = time;
             segment.timescale = timescale;
             end = start + size - 1;
