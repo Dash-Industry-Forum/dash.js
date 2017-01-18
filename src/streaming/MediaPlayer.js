@@ -60,7 +60,6 @@ import {getVersionString} from './../core/Version';
 
 //Dash
 import DashAdapter from '../dash/DashAdapter';
-import DashParser from '../dash/parser/DashParser';
 import DashManifestModel from '../dash/models/DashManifestModel';
 import DashMetrics from '../dash/DashMetrics';
 import TimelineConverter from '../dash/utils/TimelineConverter';
@@ -1896,15 +1895,9 @@ function MediaPlayer() {
     function createManifestLoader() {
         return ManifestLoader(context).create({
             errHandler: errHandler,
-            parser: createManifestParser(),
             metricsModel: metricsModel,
             requestModifier: RequestModifier(context).getInstance()
         });
-    }
-
-    function createManifestParser() {
-        //TODO-Refactor Need to be able to switch this create out so will need API to set which parser to use?
-        return DashParser(context).create();
     }
 
     function createAdaptor() {
