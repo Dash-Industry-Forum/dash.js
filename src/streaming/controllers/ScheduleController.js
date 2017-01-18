@@ -164,10 +164,10 @@ function ScheduleController(config) {
 
         if (initialRequest) {
             initialRequest = false;
-            getInitRequest(currentRepresentationInfo.quality);
-        } else {
-            startScheduleTimer(0);
         }
+
+        startScheduleTimer(0);
+
         log('Schedule controller starting for ' + type);
     }
 
@@ -262,7 +262,7 @@ function ScheduleController(config) {
     }
 
     function onInitRequested(e) {
-        if (e.sender.getStreamProcessor() !== streamProcessor) return;
+        if (!e.sender || e.sender.getStreamProcessor() !== streamProcessor) return;
         getInitRequest(currentRepresentationInfo.quality);
     }
 
@@ -340,6 +340,8 @@ function ScheduleController(config) {
             latency: liveEdge - seekTarget,
             clientTimeOffset: timelineConverter.getClientTimeOffset()
         });
+
+        timelineConverter.setTimeSyncCompleted(true);
     }
 
     function onStreamCompleted(e) {
