@@ -1,110 +1,117 @@
 'use strict';
 
+var app = angular.module('DashPlayer', ['DashSourcesService', 'DashContributorsService', 'angular-flot']);
+
 $(document).ready(function () {
     $('[data-toggle="tooltip"]').tooltip();
 });
 
-angular.module('DashSourcesService', ['ngResource'])
-    .factory('sources', function($resource){
-        return $resource('app/sources.json', {}, {
-            query: {method:'GET', isArray:false}
-        });
+angular.module('DashSourcesService', ['ngResource']).factory('sources', function($resource){
+    return $resource('app/sources.json', {}, {
+        query: {method:'GET', isArray:false}
     });
+});
 
-angular.module('DashContributorsService', ['ngResource'])
-    .factory('contributors', function($resource){
-        return $resource('app/contributors.json', {}, {
-            query: {method:'GET', isArray:false}
-        });
+angular.module('DashContributorsService', ['ngResource']).factory('contributors', function($resource){
+    return $resource('app/contributors.json', {}, {
+        query: {method:'GET', isArray:false}
     });
-
-
-var app = angular.module('DashPlayer', ['DashSourcesService', 'DashContributorsService']);
-
-app.directive('chart', function() {
-    return {
-        restrict: 'E',
-        link: function ($scope, elem, attrs) {
-
-            if (!$scope.chart) {
-
-                $scope.options = {
-                    legend: {
-                        noColumns: 3,
-                        placement: 'outsideGrid',
-                        container: $('#legend-wrapper')
-                        //labelFormatter: function(label, series) {
-                        //    return '<a href="#" ng-click="onChartLegendClick">'+label+'</a>';
-                        //}
-                    },
-                    series: { shadowSize: 3 },
-                    xaxis: {
-                        show: true,
-                        tickDecimals:0
-                    },
-                    yaxis: {
-                        show: true,
-                        ticks: 5,
-                        position: 'right',
-                        min:0,
-                        tickDecimals:0
-                    },
-                };
-
-                $scope.chart = $.plot(elem, [], $scope.options);
-                $scope.invalidateDisplay(true);
-            }
-
-            $scope.chartLegendClick = function(label) {
-                alert(label)
-            }
-
-            $scope.$watch('invalidateChartDisplay', function(v) {
-                if (v && $scope.chart) {
-                    var data = $scope[attrs.ngModel];
-                    $scope.chart.setData(data);
-                    $scope.drawChart = true;
-                    $scope.invalidateDisplay(false);
-                }
-            });
-
-            $scope.$watch('drawChart', function (v) {
-                if (v && $scope.chart) {
-                    $scope.chart.setupGrid();
-                    $scope.chart.draw();
-                    $scope.drawChart = false;
-                }
-            });
-
-            $(window).resize(function () {
-                $scope.chart.resize();
-                $scope.drawChart = true;
-                $scope.safeApply();
-            });
-        }
-    };
 });
 
 app.controller('DashController', function($scope, sources, contributors) {
 
-    function doesTimeMarchesOn() {
-        var version;
-        var REQUIRED_VERSION = 49.0;
-
-        if (typeof navigator !== 'undefined') {
-            if (!navigator.userAgent.match(/Firefox/)) {
-                return true;
-            }
-
-            version = parseFloat(navigator.userAgent.match(/rv:([0-9.]+)/)[1]);
-
-            if (!isNaN(version) && version >= REQUIRED_VERSION){
-                return true;
-            }
-        }
-    }
 
     $scope.selectedItem = {url:"http://dash.edgesuite.net/akamai/bbb_30fps/bbb_30fps.mpd"};
+
+    sources.query(function (data) {
+        $scope.availableStreams = data.items;
+    });
+
+    contributors.query(function (data) {
+        $scope.contributors = data.items;
+    });
+
+
+    $scope.chartOptions = {
+        legend: {
+            labelBoxBorderColor: '#ffffff',
+            placement: 'outsideGrid',
+            container: '#legend-wrapper',
+            labelFormatter: function(label, series) {
+                return '<div  style="cursor: pointer;" id="'+ series.type + '.' + series.id +'" onclick="legendLabelClickHandler(this)">'+ label +'</div>';
+            }
+        },
+        series: {
+            lines: {
+                show: true,
+                lineWidth: 2,
+                shadowSize: 1,
+                steps: false,
+                fill: false,
+            },
+            points: {
+                radius: 4,
+                fill: true,
+                show: true
+            }
+        },
+        grid:{
+            clickable: false,
+            hoverable: false,
+            autoHighlight:true,
+            color:'#136bfb',
+            backgroundColor:'#ffffff'
+        },
+        axisLabels: {
+            position: 'left'
+        },
+        xaxis: {
+            tickFormatter: function tickFormatter(value) {
+                return $scope.player.convertToTimeCode(value);
+            },
+            tickDecimals: 0,
+            color: '#136bfb',
+            alignTicksWithAxis:1
+        },
+        yaxis: {
+            min:0,
+            tickLength:0,
+            tickDecimals: 0,
+            color: '#136bfb',
+            position: 'right',
+            axisLabelPadding: 20,
+        },
+        yaxes: []
+    };
+
+    $scope.chartEnabled = true;
+    $scope.maxPointsToChart = 30;
+    $scope.chartCount = 0;
+    $scope.chartData = [];
+
+    $scope.chartState = {
+        audio:{
+            buffer:         {data: [], selected: false, color: '#65080c', label: 'Audio Buffer Level'},
+            bitrate:        {data: [], selected: false, color: '#00CCBE', label: 'Audio Bitrate (Mbps)'},
+            index:          {data: [], selected: false, color: '#ffd446', label: 'Audio Current Index'},
+            pendingIndex:   {data: [], selected: false, color: '#FF6700', label: 'AudioPending Index'},
+            ratio:          {data: [], selected: false, color: '#329d61', label: 'Audio Ratio (Mbps)'},
+            download:       {data: [], selected: false, color: '#44c248', label: 'Audio Download Rate (Mbps)'},
+            latency:        {data: [], selected: false, color: '#326e88', label: 'Audio Latency (ms)'},
+            droppedFPS:     {data: [], selected: false, color: '#004E64', label: 'Audio Dropped FPS'}
+        },
+        video:{
+            buffer:         {data: [], selected: true, color: '#004E64', label: 'Video Buffer Level'},
+            bitrate:        {data: [], selected: true, color: '#329d61', label: 'Video Bitrate (Mbps)'},
+            index:          {data: [], selected: false, color: '#326e88', label: 'Video Current Quality'},
+            pendingIndex:   {data: [], selected: false, color: '#44c248', label: 'Video Pending Index'},
+            ratio:          {data: [], selected: false, color: '#00CCBE', label: 'Video Ratio (Mbps)'},
+            download:       {data: [], selected: false, color: '#FF6700', label: 'Video Download Rate (Mbps)'},
+            latency:        {data: [], selected: false, color: '#ffd446', label: 'Video Latency (ms)'},
+            droppedFPS:     {data: [], selected: false, color: '#65080c', label: 'Video Dropped FPS'}
+        }
+    };
+
     $scope.abrEnabled = true;
     $scope.toggleCCBubble = false;
     $scope.debugEnabled = false;
@@ -115,13 +122,9 @@ app.controller('DashController', function($scope, sources, contributors) {
     $scope.drmData = [];
     $scope.initialSettings = {audio: null, video: null};
     $scope.mediaSettingsCacheEnabled = true;
-    $scope.invalidateChartDisplay = false;
-    $scope.chartEnabled = true;
     $scope.metricsTimer = null;
-    $scope.maxGraphPoints = 50;
     $scope.updateMetricsInterval = 1000;
-    $scope.audioGraphColor = "#E74C3C"
-    $scope.videoGraphColor = "#2980B9"
+
     //metrics
     $scope.videoBitrate = 0;
     $scope.videoIndex = 0;
@@ -148,6 +151,9 @@ app.controller('DashController', function($scope, sources, contributors) {
     $scope.audioDownload = "";
     $scope.audioRatioCount = 0;
     $scope.audioRatio = "";
+
+
+    //Starting Options
     $scope.autoPlaySelected = true;
     $scope.loopSelected = true;
     $scope.scheduleWhilePausedSelected = true;
@@ -173,37 +179,21 @@ app.controller('DashController', function($scope, sources, contributors) {
     $scope.controlbar = new ControlBar($scope.player);
     $scope.controlbar.initialize();
     $scope.controlbar.disable();
-
-    ////////////////////////////////////////
-    //
-    // Page Setup
-    //
-    ////////////////////////////////////////
     $scope.version = $scope.player.getVersion();
-
-    sources.query(function (data) {
-        $scope.availableStreams = data.items;
-    });
-
-    contributors.query(function (data) {
-        $scope.contributors = data.items;
-    });
-    ////////////////////////////////////////
-    //
-    // Player Events
-    //
-    ////////////////////////////////////////
 
     $scope.player.on(dashjs.MediaPlayer.events.ERROR, function (e) {}, $scope);
 
     $scope.player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_REQUESTED, function (e) {
         $scope[e.mediaType + "Index"] = e.oldQuality + 1 ;
         $scope[e.mediaType+ "PendingIndex"] = e.newQuality + 1;
+        $scope.plotPoint('pendingIndex', e.mediaType, e.newQuality + 1);
+
     }, $scope);
 
     $scope.player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, function (e) {
         $scope[e.mediaType + "Index"] = e.newQuality + 1;
         $scope[e.mediaType + "PendingIndex"] = e.newQuality + 1;
+        $scope.plotPoint('index', e.mediaType, e.newQuality + 1);
     }, $scope);
 
     $scope.player.on(dashjs.MediaPlayer.events.PERIOD_SWITCH_COMPLETED, function (e) {
@@ -212,10 +202,11 @@ app.controller('DashController', function($scope, sources, contributors) {
 
     $scope.player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, function (e) {
         clearInterval($scope.metricsTimer);
+        $scope.chartCount = 0;
         $scope.metricsTimer = setInterval(function () {
             updateMetrics("video");
             updateMetrics("audio");
-            //updateMetrics("text");
+            $scope.chartCount++;
         }, $scope.updateMetricsInterval)
     }, $scope);
 
@@ -450,6 +441,11 @@ app.controller('DashController', function($scope, sources, contributors) {
     //
     ////////////////////////////////////////
 
+    $scope.onChartEnableButtonClick = function () {
+        $scope.chartEnabled = !$scope.chartEnabled;
+        $('#chart-wrapper').fadeTo(500, $scope.chartEnabled ? 1 : .3);
+    }
+
     $scope.toggleAutoPlay = function () {
         $scope.player.setAutoPlay($scope.autoPlaySelected);
     }
@@ -481,12 +477,14 @@ app.controller('DashController', function($scope, sources, contributors) {
 
     $scope.doLoad = function () {
 
+        $scope.initSession();
+
         var protData = null;
         if ($scope.selectedItem.hasOwnProperty("protData")) {
             protData = $scope.selectedItem.protData;
         }
 
-        $scope.setChartInfo();
+
         $scope.controlbar.reset();
         $scope.player.setProtectionData(protData);
         $scope.player.attachSource($scope.selectedItem.url);
@@ -524,41 +522,16 @@ app.controller('DashController', function($scope, sources, contributors) {
             this.$apply(fn);
     };
 
-    $scope.invalidateDisplay = function (value) {
-        $scope.invalidateChartDisplay = value;
-        $scope.safeApply();
-    }
-
-    $scope.setChartInfo = function () {
-        $scope.sessionStartTime = new Date().getTime()/1000;
-
-        clearInterval($scope.metricsTimer);
-        $scope.graphPoints = {video: [], audio: [], text: []};
-        $scope.chartData = [
-            {
-                data: $scope.graphPoints.video,
-                label: "Video Buffer Level",
-                color: $scope.videoGraphColor,
-            },
-            {
-                data: $scope.graphPoints.audio,
-                label: "Audio Buffer Level",
-                color: $scope.audioGraphColor,
-            }
-            //,
-            //{
-            //    data: $scope.graphPoints.text,
-            //    label: "Text",
-            //    color: "#888"
-            //}
-        ];
-    }
-
     ////////////////////////////////////////
     //
     // Metrics
     //
     ////////////////////////////////////////
+    $scope.initSession = function () {
+        $scope.clearChartData();
+        $scope.sessionStartTime = new Date().getTime() / 1000;
+    }
+
     function calculateHTTPMetrics(type, requests) {
 
         var latency = {},
@@ -604,6 +577,53 @@ app.controller('DashController', function($scope, sources, contributors) {
         return null;
     };
 
+    $scope.clearChartData = function () {
+        for (var key in $scope.chartState) {
+            for (var i in $scope.chartState[key]) {
+                $scope.chartState[key][i].data.length = 0;
+            }
+        }
+    }
+
+    $scope.plotPoint = function(name, type, value) {
+        if ($scope.chartEnabled) {
+            var data = $scope.chartState[type][name].data;
+            data.push([$scope.video.currentTime, value]);
+            if (data.length > $scope.maxPointsToChart) {
+                data.splice(0, 1);
+            }
+        }
+        $scope.safeApply();
+    }
+
+    $scope.enableChartByName = function (id, type) {
+        //enable stat item
+        if ($scope.chartState[type][id].selected) {
+            var data = {
+                id: id,
+                data: $scope.chartState[type][id].data,
+                label: $scope.chartState[type][id].label,
+                color: $scope.chartState[type][id].color,
+                yaxis: $scope.chartData.length + 1,
+                type: type
+            }
+            $scope.chartData.push(data);
+            $scope.chartOptions.yaxes.push({axisLabel: data.label})
+        } else { //remove stat item from charts
+            for (var i = 0; i < $scope.chartData.length; i++) {
+                if ($scope.chartData[i].id === id && $scope.chartData[i].type === type) {
+                    $scope.chartData.splice(i, 1);
+                    $scope.chartOptions.yaxes.splice(i, 1);
+                }
+                if ($scope.chartData.length > i) {
+                    $scope.chartData[i].yaxis = i + 1;
+                }
+            }
+        }
+
+        $scope.chartOptions.legend.noColumns = Math.min($scope.chartData.length, 5);
+    }
+
     function updateMetrics(type) {
 
         var metrics = $scope.player.getMetricsFor(type);
@@ -614,11 +634,15 @@ app.controller('DashController', function($scope, sources, contributors) {
             var periodIdx = $scope.streamInfo.index;
             var repSwitch = dashMetrics.getCurrentRepresentationSwitch(metrics);
             var bufferLevel = dashMetrics.getCurrentBufferLevel(metrics);
+            var maxIndex = dashMetrics.getMaxIndexForBufferType(type, periodIdx);
+            var index = $scope.player.getQualityFor(type);
+            var bitrate = Math.round(dashMetrics.getBandwidthForRepresentation(repSwitch.to, periodIdx) / 1000);
+            var droppedFPS = dashMetrics.getCurrentDroppedFrames(metrics) ? dashMetrics.getCurrentDroppedFrames(metrics).droppedFrames : 0;
 
             $scope[type + "BufferLength"] = bufferLevel;
-            $scope[type + "MaxIndex"] = dashMetrics.getMaxIndexForBufferType(type, periodIdx);
-            $scope[type + "Bitrate"] = Math.round(dashMetrics.getBandwidthForRepresentation(repSwitch.to, periodIdx) / 1000);
-            $scope[type + "DroppedFrames"] = dashMetrics.getCurrentDroppedFrames(metrics) ? dashMetrics.getCurrentDroppedFrames(metrics).droppedFrames : 0;
+            $scope[type + "MaxIndex"] = maxIndex
+            $scope[type + "Bitrate"] = bitrate;
+            $scope[type + "DroppedFrames"] = droppedFPS;
 
             var httpMetrics = calculateHTTPMetrics(type, dashMetrics.getHttpRequests(metrics));
             if (httpMetrics) {
@@ -627,17 +651,26 @@ app.controller('DashController', function($scope, sources, contributors) {
                 $scope[type + "Ratio"] = httpMetrics.ratio[type].low.toFixed(2) + " | " + httpMetrics.ratio[type].average.toFixed(2) + " | " + httpMetrics.ratio[type].high.toFixed(2);
             }
 
-            if ($scope.chartEnabled) {
-                var chartTime = (new Date().getTime() / 1000 ) -  $scope.sessionStartTime;
-                var point = [parseInt(chartTime).toFixed(1), Math.round(parseFloat(bufferLevel))];
-                $scope.graphPoints[type].push(point);
-                if ($scope.graphPoints[type].length > $scope.maxGraphPoints) {
-                    $scope.graphPoints[type].splice(0, 1);
-                }
+            if ($scope.chartCount % 3 === 0) {
+                $scope.plotPoint('buffer', type, bufferLevel);
+                $scope.plotPoint('index', type, index);
+                $scope.plotPoint('bitrate', type, bitrate);
+                $scope.plotPoint('droppedFPS', type, droppedFPS);
+                $scope.plotPoint('download', type, httpMetrics.download[type].average.toFixed(2));
+                $scope.plotPoint('latency', type, httpMetrics.latency[type].average.toFixed(2));
+                $scope.plotPoint('ratio', type, httpMetrics.ratio[type].average.toFixed(2));
             }
         }
+    }
 
-        $scope.invalidateDisplay(true);
+     $scope.initChartingByMediaType = function(type) {
+        var arr = $scope.chartState[type];
+        for (var key in arr) {
+            var obj = arr[key];
+            if (obj.selected) {
+                $scope.enableChartByName(key, type);
+            }
+        }
     }
 
 
@@ -646,8 +679,31 @@ app.controller('DashController', function($scope, sources, contributors) {
     // Init
     //
     ////////////////////////////////////////
+
+    function doesTimeMarchesOn() {
+        var version;
+        var REQUIRED_VERSION = 49.0;
+
+        if (typeof navigator !== 'undefined') {
+            if (!navigator.userAgent.match(/Firefox/)) {
+                return true;
+            }
+
+            version = parseFloat(navigator.userAgent.match(/rv:([0-9.]+)/)[1]);
+
+            if (!isNaN(version) && version >= REQUIRED_VERSION){
+                return true;
+            }
+        }
+    }
+
+
     (function init() {
-        $scope.setChartInfo();
+
+        $scope.initChartingByMediaType("video");
+        $scope.initChartingByMediaType("audio");
+
+
         function getUrlVars() {
             var vars = {};
             var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
@@ -692,3 +748,12 @@ app.controller('DashController', function($scope, sources, contributors) {
         }
     })();
 });
+
+function legendLabelClickHandler(obj) {
+    var scope = angular.element($('body')).scope();
+    var id = obj.id.split(".");
+    var target = scope.chartState[id[0]][id[1]]
+    target.selected = !target.selected;
+    scope.enableChartByName(id[1], id[0]);
+    scope.safeApply();
+ }
