@@ -31,6 +31,7 @@
 import XlinkController from './controllers/XlinkController';
 import XHRLoader from './XHRLoader';
 import URLUtils from './utils/URLUtils';
+import ErrorHandler from './utils/ErrorHandler';
 import TextRequest from './vo/TextRequest';
 import Error from './vo/Error';
 import {HTTPRequest} from './vo/metrics/HTTPRequest';
@@ -38,8 +39,6 @@ import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import FactoryMaker from '../core/FactoryMaker';
 import DashParser from '../dash/parser/DashParser';
-import MssParser from '../mss/parser/MssParser';
-import MssHandler from '../mss/MssHandler';
 
 const MANIFEST_LOADER_ERROR_PARSING_FAILURE = 1;
 const MANIFEST_LOADER_ERROR_LOADING_FAILURE = 2;
@@ -50,12 +49,13 @@ function ManifestLoader(config) {
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
     const urlUtils = URLUtils(context).getInstance();
+    const errorHandler = ErrorHandler(context).getInstance();
 
     let instance,
         xhrLoader,
         xlinkController,
-        mssHandler,
         parser;
+    let mssHandler = config.mssHandler;
 
     function setup() {
         eventBus.on(Events.XLINK_READY, onXlinkReady, instance);
@@ -84,21 +84,24 @@ function ManifestLoader(config) {
     }
 
     function createParser(data) {
-
+        var parser = null;
         // Analyze manifest content to detect protocol and select appropriate parser
         if (data.indexOf('SmoothStreamingMedia') > -1) {
             //do some business to transform it into a Dash Manifest
-            mssHandler = MssHandler(context).create();
-            return MssParser(context).create();
-        }
-        else if (data.indexOf('MPD') > -1) {
+            if (mssHandler) {
+                parser = mssHandler.createMssParser();
+            }else {
+                errorHandler.manifestError('manifest type unsupported', 'createParser');
+            }
+            return parser;
+        } else if (data.indexOf('MPD') > -1) {
             return DashParser(context).create();
         } else {
-            return null;
+            return parser;
         }
     }
 
-    function load (url) {
+    function load(url) {
         const request = new TextRequest(url, HTTPRequest.MPD_TYPE);
 
         xhrLoader.load({
