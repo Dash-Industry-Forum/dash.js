@@ -90,6 +90,7 @@ function ManifestLoader(config) {
             //do some business to transform it into a Dash Manifest
             if (mssHandler) {
                 parser = mssHandler.createMssParser();
+                mssHandler.registerEvents();
             }else {
                 errorHandler.manifestError('manifest type unsupported', 'createParser');
             }

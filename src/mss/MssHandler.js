@@ -51,8 +51,6 @@ function MssHandler(config) {
     let instance;
 
     function setup() {
-        eventBus.on(Events.INIT_REQUESTED, onInitializationRequested, instance, EventBus.EVENT_PRIORITY_HIGH);
-        eventBus.on(MediaPlayerEvents.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, instance, EventBus.EVENT_PRIORITY_HIGH);
     }
 
     function onInitializationRequested(e) {
@@ -106,9 +104,14 @@ function MssHandler(config) {
         mssFragmentProcessor.processMoof(e);
     }
 
+    function registerEvents() {
+        eventBus.on(Events.INIT_REQUESTED, onInitializationRequested, instance, EventBus.EVENT_PRIORITY_HIGH);
+        eventBus.on(MediaPlayerEvents.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, instance, EventBus.EVENT_PRIORITY_HIGH);
+    }
+
     function reset() {
         eventBus.off(Events.INIT_REQUESTED, onInitializationRequested, this);
-        eventBus.off(Events.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, this);
+        eventBus.off(MediaPlayerEvents.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, this);
     }
 
     function createMssParser() {
@@ -118,7 +121,8 @@ function MssHandler(config) {
 
     instance = {
         reset: reset,
-        createMssParser: createMssParser
+        createMssParser: createMssParser,
+        registerEvents: registerEvents
     };
 
     setup();
