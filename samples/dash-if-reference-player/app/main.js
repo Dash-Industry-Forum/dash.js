@@ -185,7 +185,7 @@ app.controller('DashController', function($scope, sources, contributors) {
     $scope.controlbar.disable();
     $scope.version = $scope.player.getVersion();
 
-    $scope.player.on(dashjs.MediaPlayer.events.ERROR, function (e) {}, $scope);
+    $scope.player.on(dashjs.MediaPlayer.events.ERROR, function (e) { console.error(e.error + ' : ' + e.event.message);}, $scope);
 
     $scope.player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_REQUESTED, function (e) {
         $scope[e.mediaType + "Index"] = e.oldQuality + 1 ;
