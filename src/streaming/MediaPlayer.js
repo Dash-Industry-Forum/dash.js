@@ -92,6 +92,7 @@ function MediaPlayer() {
         mediaController,
         protectionController,
         metricsReportingController,
+        mssHandler,
         adapter,
         metricsModel,
         mediaPlayerModel,
@@ -1741,6 +1742,7 @@ function MediaPlayer() {
             videoModel.setElement(element);
             detectProtection();
             detectMetricsReporting();
+            detectMss();
         }
         resetAndInitializePlayback();
     }
@@ -1896,7 +1898,8 @@ function MediaPlayer() {
         return ManifestLoader(context).create({
             errHandler: errHandler,
             metricsModel: metricsModel,
-            requestModifier: RequestModifier(context).getInstance()
+            requestModifier: RequestModifier(context).getInstance(),
+            mssHandler: mssHandler
         });
     }
 
@@ -1949,6 +1952,22 @@ function MediaPlayer() {
             });
 
             return metricsReportingController;
+        }
+
+        return null;
+    }
+
+    function detectMss() {
+        if (mssHandler) {
+            return mssHandler;
+        }
+        // do not require MssHandler as dependencies as this is optional and intended to be loaded separately
+        let MssHandler = dashjs.MssHandler; /* jshint ignore:line */
+        if (typeof MssHandler === 'function') {//TODO need a better way to register/detect plugin components
+            mssHandler = MssHandler(context).create({
+                eventBus: eventBus,
+                mediaPlayerModel: mediaPlayerModel});
+            return mssHandler;
         }
 
         return null;
