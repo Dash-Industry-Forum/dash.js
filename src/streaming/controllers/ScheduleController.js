@@ -327,7 +327,7 @@ function ScheduleController(config) {
         const dvrWindowSize = currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo.DVRWindowSize / 2;
         const startTime = liveEdge - playbackController.computeLiveDelay(currentRepresentationInfo.fragmentDuration, dvrWindowSize);
         const request = adapter.getFragmentRequestForTime(streamProcessor, currentRepresentationInfo, startTime, {ignoreIsFinished: true});
-
+        timelineConverter.setTimeSyncCompleted(true);
         seekTarget = playbackController.getLiveStartTime();
         if (isNaN(seekTarget) || request.startTime > seekTarget) {
             playbackController.setLiveStartTime(request.startTime);
