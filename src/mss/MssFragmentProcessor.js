@@ -30,12 +30,8 @@
  */
 
 import FactoryMaker from '../core/FactoryMaker';
-// import Debug from '../core/Debug';
-// import ErrorHandler from '../streaming/utils/ErrorHandler';
-// import BASE64 from '../../../externals/base64';
 import ISOBoxer from 'codem-isoboxer';
-import ProtectionKeyController from '../streaming/protection/controllers/ProtectionKeyController';
-
+import BASE64 from '../../externals/base64';
 
 // Add specific box processors not provided by codem-isoboxer library
 
@@ -128,12 +124,6 @@ ISOBoxer.addBoxProcessor('senc', sencProcessor);
 
 
 function MssFragmentProcessor() {
-
-    let context = this.context;
-    let protectionKeyController = ProtectionKeyController(context).getInstance();
-    // const log = Debug(context).getInstance().log;
-    // const errorHandler = ErrorHandler(context).getInstance();
-
     const TIME_SCALE = 10000000;
     const NALUTYPE_SPS = 7;
     const NALUTYPE_PPS = 8;
@@ -236,8 +226,7 @@ function MssFragmentProcessor() {
         createTrexBox(mvex);
 
         if (contentProtection) {
-            let supportedKS = protectionKeyController.getSupportedKeySystemsFromContentProtection(contentProtection);
-            createProtectionSystemSpecificHeaderBox(moov, supportedKS);
+            createProtectionSystemSpecificHeaderBoxForPR(moov, contentProtection[0].pro.__text);
         }
     }
 
@@ -654,16 +643,16 @@ function MssFragmentProcessor() {
         createTrackEncryptionBox(schi);
     }
 
-    function createProtectionSystemSpecificHeaderBox(moov, keySystems) {
-        let pssh_bytes,
-            pssh,
-            i;
+    function createProtectionSystemSpecificHeaderBoxForPR(moov, initData) {
+        let pssh = ISOBoxer.createFullBox('pssh', moov);
+        let uint8arraydecodedPROHeader = BASE64.decodeArray(initData);
 
-        for (i = 0; i < keySystems.length; i += 1) {
-            pssh_bytes = new Uint8Array(keySystems[i].initData);
-            pssh = ISOBoxer.parseBuffer(keySystems[i].initData).boxes[0];
-            moov.append(pssh);
-        }
+        pssh.flags = 0;
+        pssh.version = 0;
+        pssh.SystemID = new Uint8Array([0x9a, 0x04, 0xf0, 0x79, 0x98, 0x40, 0x42, 0x86, 0xab, 0x92, 0xe6, 0x5b, 0xe0, 0x88, 0x5f, 0x95]); //PlayReady System ID
+
+        pssh.DataSize = uint8arraydecodedPROHeader.length;
+        pssh.Data = uint8arraydecodedPROHeader;
     }
 
     function createTrackEncryptionBox(schi) {
@@ -677,7 +666,6 @@ function MssFragmentProcessor() {
         tenc.default_KID = (contentProtection && (contentProtection.length) > 0 && contentProtection[0]['cenc:default_KID']) ?
             contentProtection[0]['cenc:default_KID'] :
             [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0];
-
     }
 
     function createTrexBox(moov) {

@@ -30,15 +30,11 @@
  */
 
 import FactoryMaker from '../../core/FactoryMaker';
-import MediaPlayerModel from '../../streaming/models/MediaPlayerModel';
-import MetricsModel from '../../streaming/models/MetricsModel';
 import Debug from '../../core/Debug';
 import ErrorHandler from '../../streaming/utils/ErrorHandler';
 import BASE64 from '../../../externals/base64';
-import KeySystemPlayReady from './../../streaming/protection/drm/KeySystemPlayReady';
-import KeySystemWidevine from './../../streaming/protection/drm/KeySystemWidevine';
 
-function MssParser() {
+function MssParser(config) {
 
     const context = this.context;
     const log = Debug(context).getInstance().log;
@@ -68,13 +64,11 @@ function MssParser() {
         };
 
     let instance,
-        mediaPlayerModel,
-        metricsModel;
+        mediaPlayerModel;
 
 
     function setup() {
-        mediaPlayerModel = MediaPlayerModel(context).getInstance();
-        metricsModel = MetricsModel(context).getInstance();
+        mediaPlayerModel = config.mediaPlayerModel;
     }
 
     function mapPeriod(smoothStreamingMedia) {
@@ -160,8 +154,6 @@ function MssParser() {
             start: segments[0].t / segmentTemplate.timescale,
             end: (segments[segments.length - 1].t + segments[segments.length - 1].d) / segmentTemplate.timescale
         };
-
-        //metricsModel.addDVRInfo(adaptationSet.contentType, new Date(), null, range);
 
         return adaptationSet;
     }
@@ -440,7 +432,6 @@ function MssParser() {
     function createPRContentProtection(protectionHeader) {
 
         let contentProtection = {};
-        let keySystem = KeySystemPlayReady(context).getInstance();
         let pro;
 
         pro = {
@@ -448,21 +439,10 @@ function MssParser() {
             __prefix: 'mspr'
         };
 
-        contentProtection.schemeIdUri = keySystem.schemeIdURI;
-        contentProtection.value = keySystem.systemString;
+        contentProtection.schemeIdUri = 'urn:uuid:9a04f079-9840-4286-ab92-e65be0885f95';
+        contentProtection.value = 'com.microsoft.playready';
         contentProtection.pro = pro;
         contentProtection.pro_asArray = pro;
-
-        return contentProtection;
-    }
-
-    function createWidevineContentProtection( /*protectionHeader*/ ) {
-
-        let contentProtection = {};
-        let keySystem = KeySystemWidevine(context).getInstance();
-
-        contentProtection.schemeIdUri = keySystem.schemeIdURI;
-        contentProtection.value = keySystem.systemString;
 
         return contentProtection;
     }
@@ -520,12 +500,7 @@ function MssParser() {
             contentProtection['cenc:default_KID'] = KID;
             contentProtections.push(contentProtection);
 
-            // Create ContentProtection for Widevine (as a CENC protection)
-            contentProtection = createWidevineContentProtection(protectionHeader);
-            contentProtection['cenc:default_KID'] = KID;
-            contentProtections.push(contentProtection);
-
-            manifest.ContentProtection = (contentProtections.length > 1) ? contentProtections : contentProtections[0];
+            manifest.ContentProtection = contentProtections;
             manifest.ContentProtection_asArray = contentProtections;
         }
 

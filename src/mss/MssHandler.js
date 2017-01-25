@@ -30,6 +30,7 @@
  */
 
 import Events from '../core/events/Events';
+import MediaPlayerEvents from '../streaming/MediaPlayerEvents';
 import EventBus from '../core/EventBus';
 import FactoryMaker from '../core/FactoryMaker';
 //import Debug from '../core/Debug';
@@ -37,19 +38,21 @@ import DataChunk from '../streaming/vo/DataChunk';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
 import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
 import MssFragmentProcessor from './MssFragmentProcessor';
+import MssParser from './parser/MssParser';
 
-function MssHandler() {
+function MssHandler(config) {
 
     let context = this.context;
     //let log = Debug(context).getInstance().log;
-    let eventBus = EventBus(context).getInstance();
+    let eventBus = config.eventBus;
     let mssFragmentProcessor = MssFragmentProcessor(context).create();
+    let mssParser;
 
     let instance;
 
     function setup() {
         eventBus.on(Events.INIT_REQUESTED, onInitializationRequested, instance, EventBus.EVENT_PRIORITY_HIGH);
-        eventBus.on(Events.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, instance, EventBus.EVENT_PRIORITY_HIGH);
+        eventBus.on(MediaPlayerEvents.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, instance, EventBus.EVENT_PRIORITY_HIGH);
     }
 
     function onInitializationRequested(e) {
@@ -108,8 +111,14 @@ function MssHandler() {
         eventBus.off(Events.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, this);
     }
 
+    function createMssParser() {
+        mssParser = MssParser(context).create(config);
+        return mssParser;
+    }
+
     instance = {
-        reset: reset
+        reset: reset,
+        createMssParser: createMssParser
     };
 
     setup();
