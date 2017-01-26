@@ -445,36 +445,36 @@ app.controller('DashController', function($scope, sources, contributors) {
     $scope.onChartEnableButtonClick = function () {
         $scope.chartEnabled = !$scope.chartEnabled;
         $('#chart-wrapper').fadeTo(500, $scope.chartEnabled ? 1 : .3);
-    }
+    };
 
     $scope.toggleAutoPlay = function () {
         $scope.player.setAutoPlay($scope.autoPlaySelected);
-    }
+    };
 
     $scope.toggleBufferOccupancyABR = function () {
         $scope.player.enableBufferOccupancyABR($scope.bolaSelected);
-    }
+    };
 
     $scope.toggleFastSwitch = function () {
         $scope.player.setFastSwitchEnabled($scope.fastSwitchSelected);
-    }
+    };
 
     $scope.toggleScheduleWhilePaused = function () {
         $scope.player.setScheduleWhilePaused($scope.scheduleWhilePausedSelected);
-    }
+    };
 
     $scope.toggleLocalStorage = function () {
         $scope.player.enableLastBitrateCaching($scope.localStorageSelected);
         $scope.player.enableLastMediaSettingsCaching($scope.localStorageSelected);
-    }
+    };
 
     $scope.setStream = function (item) {
         $scope.selectedItem = JSON.parse(JSON.stringify(item));
-    }
+    };
 
     $scope.toggleOptionsGutter = function (bool) {
         $scope.optionsGutter = bool;
-    }
+    };
 
     $scope.doLoad = function () {
 
@@ -496,23 +496,23 @@ app.controller('DashController', function($scope, sources, contributors) {
             $scope.player.setInitialMediaSettingsFor("video", {role: $scope.initialSettings.video});
         }
         $scope.controlbar.enable();
-    }
+    };
 
     $scope.changeTrackSwitchMode = function(mode, type) {
         $scope.player.setTrackSwitchModeFor(type, mode);
-    }
+    };
 
     $scope.hasLogo = function (item) {
         return (item.hasOwnProperty("logo") && item.logo !== null && item.logo !== undefined && item.logo !== "");
-    }
+    };
 
     $scope.getChartButtonLabel = function () {
         return $scope.chartEnabled ? "Disable" : "Enable";
-    }
+    };
 
     $scope.getOptionsButtonLabel = function () {
         return $scope.optionsGutter ? "Hide Options" : "Show Options";
-    }
+    };
 
     // from: https://gist.github.com/siongui/4969449
     $scope.safeApply = function (fn) {
@@ -531,7 +531,7 @@ app.controller('DashController', function($scope, sources, contributors) {
     $scope.initSession = function () {
         $scope.clearChartData();
         $scope.sessionStartTime = new Date().getTime() / 1000;
-    }
+    };
 
     function calculateHTTPMetrics(type, requests) {
 
@@ -572,11 +572,11 @@ app.controller('DashController', function($scope, sources, contributors) {
                 count: durationTimes.length
             };
 
-            return {latency: latency, download: download, ratio: ratio}
+            return {latency: latency, download: download, ratio: ratio};
 
         }
         return null;
-    };
+    }
 
     $scope.clearChartData = function () {
         for (var key in $scope.chartState) {
@@ -584,7 +584,7 @@ app.controller('DashController', function($scope, sources, contributors) {
                 $scope.chartState[key][i].data.length = 0;
             }
         }
-    }
+    };
 
     $scope.plotPoint = function(name, type, value) {
         if ($scope.chartEnabled) {
@@ -595,7 +595,7 @@ app.controller('DashController', function($scope, sources, contributors) {
             }
         }
         $scope.safeApply();
-    }
+    };
 
     $scope.enableChartByName = function (id, type) {
         //enable stat item
@@ -615,9 +615,9 @@ app.controller('DashController', function($scope, sources, contributors) {
                 color: $scope.chartState[type][id].color,
                 yaxis: $scope.chartData.length + 1,
                 type: type
-            }
+            };
             $scope.chartData.push(data);
-            $scope.chartOptions.yaxes.push({axisLabel: data.label})
+            $scope.chartOptions.yaxes.push({axisLabel: data.label});
         } else { //remove stat item from charts
             for (var i = 0; i < $scope.chartData.length; i++) {
                 if ($scope.chartData[i].id === id && $scope.chartData[i].type === type) {
@@ -631,7 +631,7 @@ app.controller('DashController', function($scope, sources, contributors) {
         }
 
         $scope.chartOptions.legend.noColumns = Math.min($scope.chartData.length, 5);
-    }
+    };
 
     function updateMetrics(type) {
 
@@ -649,7 +649,7 @@ app.controller('DashController', function($scope, sources, contributors) {
             var droppedFPS = dashMetrics.getCurrentDroppedFrames(metrics) ? dashMetrics.getCurrentDroppedFrames(metrics).droppedFrames : 0;
 
             $scope[type + "BufferLength"] = bufferLevel;
-            $scope[type + "MaxIndex"] = maxIndex
+            $scope[type + "MaxIndex"] = maxIndex;
             $scope[type + "Bitrate"] = bitrate;
             $scope[type + "DroppedFrames"] = droppedFPS;
 
@@ -665,9 +665,11 @@ app.controller('DashController', function($scope, sources, contributors) {
                 $scope.plotPoint('index', type, index);
                 $scope.plotPoint('bitrate', type, bitrate);
                 $scope.plotPoint('droppedFPS', type, droppedFPS);
-                $scope.plotPoint('download', type, httpMetrics.download[type].average.toFixed(2));
-                $scope.plotPoint('latency', type, httpMetrics.latency[type].average.toFixed(2));
-                $scope.plotPoint('ratio', type, httpMetrics.ratio[type].average.toFixed(2));
+                if (httpMetrics) {
+                    $scope.plotPoint('download', type, httpMetrics.download[type].average.toFixed(2));
+                    $scope.plotPoint('latency', type, httpMetrics.latency[type].average.toFixed(2));
+                    $scope.plotPoint('ratio', type, httpMetrics.ratio[type].average.toFixed(2));
+                }
             }
         }
     }
@@ -680,7 +682,7 @@ app.controller('DashController', function($scope, sources, contributors) {
                 $scope.enableChartByName(key, type);
             }
         }
-    }
+    };
 
 
     ////////////////////////////////////////
@@ -761,7 +763,7 @@ app.controller('DashController', function($scope, sources, contributors) {
 function legendLabelClickHandler(obj) {
     var scope = angular.element($('body')).scope();
     var id = obj.id.split(".");
-    var target = scope.chartState[id[0]][id[1]]
+    var target = scope.chartState[id[0]][id[1]];
     target.selected = !target.selected;
     scope.enableChartByName(id[1], id[0]);
     scope.safeApply();
