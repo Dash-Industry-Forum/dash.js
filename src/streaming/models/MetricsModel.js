@@ -46,6 +46,8 @@ import BolaState from '../vo/metrics/BolaState';
 
 function MetricsModel() {
 
+    const MAXIMUM_LIST_DEPTH = 1000;
+
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
 
@@ -115,6 +117,14 @@ function MetricsModel() {
         return metrics;
     }
 
+    function pushMetrics(type, list, value) {
+        var metrics = getMetricsFor(type);
+        metrics[list].push(value);
+        if ( metrics[list].length > MAXIMUM_LIST_DEPTH ) {
+            metrics[list].shift();
+        }
+    }
+
     function addTcpConnection(mediaType, tcpid, dest, topen, tclose, tconnect) {
         var vo = new TCPConnection();
 
@@ -124,7 +134,7 @@ function MetricsModel() {
         vo.tclose = tclose;
         vo.tconnect = tconnect;
 
-        getMetricsFor(mediaType).TcpList.push(vo);
+        pushMetrics(mediaType, 'TcpList', vo);
 
         metricAdded(mediaType, adapter.metricsList.TCP_CONNECTION, vo);
         return vo;
@@ -205,7 +215,7 @@ function MetricsModel() {
             delete vo.trace;
         }
 
-        getMetricsFor(mediaType).HttpList.push(vo);
+        pushMetrics(mediaType, 'HttpList', vo);
 
         metricAdded(mediaType, adapter.metricsList.HTTP_REQUEST, vo);
         return vo;
@@ -224,7 +234,7 @@ function MetricsModel() {
             delete vo.lto;
         }
 
-        getMetricsFor(mediaType).RepSwitchList.push(vo);
+        pushMetrics(mediaType, 'RepSwitchList', vo);
 
         metricAdded(mediaType, adapter.metricsList.TRACK_SWITCH, vo);
         return vo;
@@ -234,7 +244,7 @@ function MetricsModel() {
         var vo = new BufferLevel();
         vo.t = t;
         vo.level = level;
-        getMetricsFor(mediaType).BufferLevel.push(vo);
+        pushMetrics(mediaType, 'BufferLevel', vo);
 
         metricAdded(mediaType, adapter.metricsList.BUFFER_LEVEL, vo);
         return vo;
@@ -244,7 +254,7 @@ function MetricsModel() {
         var vo = new BufferState();
         vo.target = target;
         vo.state = state;
-        getMetricsFor(mediaType).BufferState.push(vo);
+        pushMetrics(mediaType, 'BufferState', vo);
 
         metricAdded(mediaType, adapter.metricsList.BUFFER_STATE, vo);
         return vo;
@@ -253,14 +263,12 @@ function MetricsModel() {
 
     function addDVRInfo(mediaType, currentTime, mpd, range) {
         var vo = new DVRInfo();
-
         vo.time = currentTime ;
         vo.range = range;
         vo.manifestInfo = mpd;
+        pushMetrics(mediaType, 'DVRInfo', vo);
 
-        getMetricsFor(mediaType).DVRInfo.push(vo);
         metricAdded(mediaType, adapter.metricsList.DVR_INFO, vo);
-
         return vo;
     }
 
@@ -275,7 +283,7 @@ function MetricsModel() {
             return list[list.length - 1];
         }
 
-        list.push(vo);
+        pushMetrics(mediaType, 'DroppedFrames', vo);
 
         metricAdded(mediaType, adapter.metricsList.DROPPED_FRAMES, vo);
         return vo;
@@ -296,7 +304,7 @@ function MetricsModel() {
 
         vo.state = state;
 
-        getMetricsFor(mediaType).SchedulingInfo.push(vo);
+        pushMetrics(mediaType, 'SchedulingInfo', vo);
 
         metricAdded(mediaType, adapter.metricsList.SCHEDULING_INFO, vo);
         return vo;
@@ -313,7 +321,6 @@ function MetricsModel() {
 
     function addManifestUpdate(mediaType, type, requestTime, fetchTime, availabilityStartTime, presentationStartTime, clientTimeOffset, currentTime, buffered, latency) {
         var vo = new ManifestUpdate();
-        var metrics = getMetricsFor('stream');
 
         vo.mediaType = mediaType;
         vo.type = type;
@@ -326,7 +333,7 @@ function MetricsModel() {
         vo.buffered = buffered; // actual element.ranges
         vo.latency = latency; // (static is fixed value of zero. dynamic should be ((Now-@availabilityStartTime) - currentTime)
 
-        metrics.ManifestUpdate.push(vo);
+        pushMetrics('stream', 'ManifestUpdate', vo);
         metricAdded(mediaType, adapter.metricsList.MANIFEST_UPDATE, vo);
 
         return vo;
@@ -392,7 +399,7 @@ function MetricsModel() {
             delete vo.trace;
         }
 
-        getMetricsFor(type).PlayList.push(vo);
+        pushMetrics(type, 'PlayList', vo);
 
         metricAdded(type, adapter.metricsList.PLAY_LIST, vo);
         return vo;
@@ -401,7 +408,7 @@ function MetricsModel() {
     function addDVBErrors(vo) {
         var type = 'stream';
 
-        getMetricsFor(type).DVBErrors.push(vo);
+        pushMetrics(type, 'DVBErrors', vo);
 
         metricAdded(type, adapter.metricsList.DVB_ERRORS, vo);
 
