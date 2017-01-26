@@ -86,6 +86,7 @@ app.controller('DashController', function($scope, sources, contributors) {
 
     $scope.chartEnabled = true;
     $scope.maxPointsToChart = 30;
+    $scope.maxChartableItems = 5;
     $scope.chartCount = 0;
     $scope.chartData = [];
 
@@ -599,6 +600,14 @@ app.controller('DashController', function($scope, sources, contributors) {
     $scope.enableChartByName = function (id, type) {
         //enable stat item
         if ($scope.chartState[type][id].selected) {
+
+            //block stat item if too many already.
+            if ($scope.chartData.length === $scope.maxChartableItems) {
+                alert("You have selected too many items to chart simultaneously. Max allowd is "+ $scope.maxChartableItems+". Please unselect another item first, then reselected " + $scope.chartState[type][id].label);
+                $scope.chartState[type][id].selected = false;
+                return;
+            }
+
             var data = {
                 id: id,
                 data: $scope.chartState[type][id].data,
