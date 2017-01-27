@@ -30,7 +30,6 @@
  */
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
-
 import FactoryMaker from '../../core/FactoryMaker';
 
 function TimelineConverter() {
@@ -61,6 +60,10 @@ function TimelineConverter() {
 
     function getClientTimeOffset() {
         return clientServerTimeShift;
+    }
+
+    function setClientTimeOffset(value) {
+        clientServerTimeShift = value;
     }
 
     function getExpectedLiveEdge() {
@@ -168,10 +171,21 @@ function TimelineConverter() {
         return periodRelativeTime + periodStartTime;
     }
 
+    /*
+    * We need to figure out if we want to timesync for segmentTimeine where useCalculatedLiveEdge = true
+    * seems we figure out client offset based on logic in liveEdgeFinder getLiveEdge timelineConverter.setClientTimeOffset(liveEdge - representationInfo.DVRWindow.end);
+    * FYI StreamController's onManifestUpdated entry point to timeSync
+    * */
     function onTimeSyncComplete(e) {
-        if (e.error) return;
-        clientServerTimeShift = e.offset / 1000;
-        isClientServerTimeSyncCompleted = true;
+
+        if (isClientServerTimeSyncCompleted) return;
+
+        if (e.offset !== undefined) {
+
+            setClientTimeOffset(e.offset / 1000);
+            isClientServerTimeSyncCompleted = true;
+
+        }
     }
 
     function calcMSETimeOffset(representation) {
@@ -193,6 +207,7 @@ function TimelineConverter() {
         isTimeSyncCompleted: isTimeSyncCompleted,
         setTimeSyncCompleted: setTimeSyncCompleted,
         getClientTimeOffset: getClientTimeOffset,
+        setClientTimeOffset: setClientTimeOffset,
         getExpectedLiveEdge: getExpectedLiveEdge,
         setExpectedLiveEdge: setExpectedLiveEdge,
         calcAvailabilityStartTimeFromPresentationTime: calcAvailabilityStartTimeFromPresentationTime,
