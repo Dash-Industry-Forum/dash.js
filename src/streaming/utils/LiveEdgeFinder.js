@@ -48,7 +48,11 @@ function LiveEdgeFinder() {
 
     function getLiveEdge() {
         const representationInfo = streamProcessor.getCurrentRepresentationInfo();
-        const liveEdge = representationInfo.useCalculatedLiveEdgeTime ? timelineConverter.getExpectedLiveEdge() : representationInfo.DVRWindow.end;
+        let liveEdge = representationInfo.DVRWindow.end;
+        if (representationInfo.useCalculatedLiveEdgeTime) {
+            liveEdge = timelineConverter.getExpectedLiveEdge();
+            timelineConverter.setClientTimeOffset(liveEdge - representationInfo.DVRWindow.end);
+        }
         return liveEdge;
     }
 
