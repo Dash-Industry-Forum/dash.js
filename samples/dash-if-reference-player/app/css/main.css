@@ -80,6 +80,10 @@ a:hover {
     float: left;
 }
 
+.options-label {
+    margin-left: 4px;
+}
+
 .options-item-body input,
 .options-item-body label {
     cursor: pointer;
@@ -129,12 +133,12 @@ a:hover {
 }
 
 .col-md-9 {
+    width: 65%;
     padding-top: 15px;
 }
 
 .col-md-3 {
-    padding-right: 0px;
-    padding-left: 0px;
+    width: 35%;
 }
 
 .video-controller {
@@ -164,16 +168,19 @@ a:hover {
 
 .text-success {
     color:black !important;
-    font-size: 1.15em !important;
+    font-size: 1.05em ;
+    white-space: nowrap;
+    overflow: hidden
 }
 
-.text-primary span em {
-    color:#136bfb;
-    font-style: normal;
+.text-primary {
+    color:#428bca;
+    font-weight: 500;
+    padding-right: 3px;
 }
 
-.panel-stats p {
-    display: block;
+.panel-stats label {
+    margin-left: 5px;
 }
 
 .tabs-section .nav > li > a {
@@ -194,34 +201,36 @@ a:hover {
     CHARTING AND CHART TABS
 *****************************/
 
-chart, chart canvas {
+flot{
     display: block;
     width: 100%;
-    height: 185px;
+    height: 200px;
 }
 
 #chart-inventory {
     position:relative;
+    background-color: #ececec;
 }
 
-#statsChart {
-    position: absolute;
-    left: 46px;
-    top: 25px;
-    z-index: 100;
+.legendLabel {
+    color:black;
+    padding-right: 15px;
+    padding-left: 10px;
 }
 
-.chartControls {
+.chart-controls {
     padding-top: 15px;
     padding-left: 15px;
+    height: 50px;
+    width: 100%;
 }
 
-#chartWrapper{
+div#chart-wrapper{
     padding: 15px;
 }
 
-.chartPanel {
-    background-color: #fff;
+.chart-panel {
+    background-color: #ffffff;
     margin-top: 15px;
     margin-bottom: 15px;
 }
@@ -232,9 +241,9 @@ button#disable-chart-btn {
 
 div#legend-wrapper {
     margin-top: 10px;
-    margin-left: 80px;
+    margin-left: 10px;
+    float: right;
 }
-
 
 /****************************
         FOOTER SECTION
@@ -280,8 +289,13 @@ div#legend-wrapper {
 }
 
 @media (min-width: 0px) and (max-width: 992px) {
+    .col-md-9 {
+        width: 100%;
+    }
 
     .col-md-3 {
+        width: 100%;
+        padding: 0;
         margin-top: 15px;
     }
 
@@ -296,6 +310,10 @@ div#legend-wrapper {
     #big-title {
         display: none;
     }
+
+    .legend-row {
+        display: none;
+    }
 }
 
 @media (max-width: 530px) {
@@ -303,45 +321,6 @@ div#legend-wrapper {
         display: none;
     }
 }
-
-
-
-@media (min-width: 1201px) and (max-width: 1400px) {
-
-    .col-md-9 {
-        width: 70%;
-    }
-
-    .col-md-3 {
-        width: 30%;
-        padding-left: 15px;
-    }
-}
-
-@media (min-width: 1401px){
-
-    .col-md-9 {
-        width: 75%;
-    }
-
-    .col-md-3 {
-        width: 25%;
-        padding-left: 15px;
-    }
-}
-
-@media (min-width: 993px) and (max-width: 1200px) {
-
-    .col-md-9 {
-        width: 64%;
-    }
-    .col-md-3 {
-        width: 36%;
-        padding-left: 15px;
-    }
-}
-
-
 
 /****************************
 MOBILE SOURCE MENU MODAL LIST
@@ -387,6 +366,9 @@ MOBILE SOURCE MENU MODAL LIST
 /****************************
         DESKTOP MENU
 *****************************/
+.tooltip-inner {
+    white-space:pre-wrap;
+}
 
 .dropdown-submenu {
     position: relative;

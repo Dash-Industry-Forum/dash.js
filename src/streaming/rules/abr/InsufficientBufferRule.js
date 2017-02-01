@@ -28,12 +28,12 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import SwitchRequest from '../SwitchRequest';
 import BufferController from '../../controllers/BufferController';
 import EventBus from '../../../core/EventBus';
 import Events from '../../../core/events/Events';
 import FactoryMaker from '../../../core/FactoryMaker';
 import Debug from '../../../core/Debug';
+import SwitchRequest from '../SwitchRequest.js';
 
 function InsufficientBufferRule(config) {
 
@@ -55,38 +55,28 @@ function InsufficientBufferRule(config) {
         eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
     }
 
-    function execute (rulesContext, callback) {
+    function getMaxIndex (rulesContext) {
         var now = new Date().getTime();
         var mediaType = rulesContext.getMediaInfo().type;
-        var current = rulesContext.getCurrentValue();
         var metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
         var lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
-        var switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK, {name: InsufficientBufferRule.__dashjs_factory_name});
+        let switchRequest = SwitchRequest(context).create();
 
         if (now - lastSwitchTime < waitToSwitchTime ||
             lastBufferStateVO === null) {
-            callback(switchRequest);
-            return;
+            return switchRequest;
         }
 
         setBufferInfo(mediaType, lastBufferStateVO.state);
         // After the sessions first buffer loaded event , if we ever have a buffer empty event we want to switch all the way down.
         if (lastBufferStateVO.state === BufferController.BUFFER_EMPTY && bufferStateDict[mediaType].firstBufferLoadedEvent !== undefined) {
+            log('Switch to index 0; buffer is empty.');
             switchRequest.value = 0;
-            switchRequest.priority = SwitchRequest.STRONG;
-            switchRequest.reason.bufferState = lastBufferStateVO.state;
-
-            switchRequest = SwitchRequest(context).create(0, SwitchRequest.STRONG);
-        }
-
-        if (switchRequest.value !== SwitchRequest.NO_CHANGE && switchRequest.value !== current) {
-            log('InsufficientBufferRule requesting switch to index: ', switchRequest.value, 'type: ',mediaType, ' Priority: ',
-                switchRequest.priority === SwitchRequest.DEFAULT ? 'Default' :
-                    switchRequest.priority === SwitchRequest.STRONG ? 'Strong' : 'Weak');
+            switchRequest.reason = 'InsufficientBufferRule: Buffer is empty';
         }
 
         lastSwitchTime = now;
-        callback(switchRequest);
+        return switchRequest;
     }
 
     function setBufferInfo(type, state) {
@@ -108,7 +98,7 @@ function InsufficientBufferRule(config) {
     }
 
     instance = {
-        execute: execute,
+        getMaxIndex: getMaxIndex,
         reset: reset
     };
 

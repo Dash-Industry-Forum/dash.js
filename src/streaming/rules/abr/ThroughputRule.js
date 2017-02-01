@@ -28,21 +28,23 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import SwitchRequest from '../SwitchRequest';
 import BufferController from '../../controllers/BufferController';
 import AbrController from '../../controllers/AbrController';
 import MediaPlayerModel from '../../models/MediaPlayerModel';
 import {HTTPRequest} from '../../vo/metrics/HTTPRequest';
 import FactoryMaker from '../../../core/FactoryMaker';
 import Debug from '../../../core/Debug';
+import SwitchRequest from '../SwitchRequest.js';
 
 function ThroughputRule(config) {
 
     const MAX_MEASUREMENTS_TO_KEEP = 20;
     const AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE = 3;
     const AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD = 4;
+    const AVERAGE_LATENCY_SAMPLES = AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD;
     const CACHE_LOAD_THRESHOLD_VIDEO = 50;
     const CACHE_LOAD_THRESHOLD_AUDIO = 5;
+    const CACHE_LOAD_THRESHOLD_LATENCY = 50;
     const THROUGHPUT_DECREASE_SCALE = 1.3;
     const THROUGHPUT_INCREASE_SCALE = 1.3;
 
@@ -52,18 +54,40 @@ function ThroughputRule(config) {
     const metricsModel = config.metricsModel;
 
     let throughputArray,
-        cacheLoadDict,
+        latencyArray,
         mediaPlayerModel;
 
     function setup() {
         throughputArray = [];
-        cacheLoadDict = {audio: {threshold: CACHE_LOAD_THRESHOLD_AUDIO, value: NaN}, video: {threshold: CACHE_LOAD_THRESHOLD_VIDEO, value: NaN}};//threshold is in milliseconds
+        latencyArray = [];
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
     }
 
     function storeLastRequestThroughputByType(type, throughput) {
         throughputArray[type] = throughputArray[type] || [];
         throughputArray[type].push(throughput);
+    }
+
+    function storeLatency(mediaType, latency) {
+        if (!latencyArray[mediaType]) {
+            latencyArray[mediaType] = [];
+        }
+        latencyArray[mediaType].push(latency);
+
+        if (latencyArray[mediaType].length > AVERAGE_LATENCY_SAMPLES) {
+            return latencyArray[mediaType].shift();
+        }
+
+        return undefined;
+    }
+
+    function getAverageLatency(mediaType) {
+        let average;
+        if (latencyArray[mediaType] && latencyArray[mediaType].length > 0) {
+            average = latencyArray[mediaType].reduce((a, b) => { return a + b; }) / latencyArray[mediaType].length;
+        }
+
+        return average;
     }
 
     function getSample(type, isDynamic) {
@@ -94,63 +118,88 @@ function ThroughputRule(config) {
         return (averageThroughput / 1000 ) * mediaPlayerModel.getBandwidthSafetyFactor();
     }
 
-    function execute (rulesContext, callback) {
+    function isCachedResponse(latency, downloadTime, mediaType) {
+        let ret = false;
 
+        if (latency < CACHE_LOAD_THRESHOLD_LATENCY) {
+            ret = true;
+        }
+
+        if (!ret) {
+            switch (mediaType) {
+                case 'video':
+                    ret = downloadTime < CACHE_LOAD_THRESHOLD_VIDEO;
+                    break;
+                case 'audio':
+                    ret = downloadTime < CACHE_LOAD_THRESHOLD_AUDIO;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        return ret;
+    }
+
+    function getMaxIndex(rulesContext) {
         const mediaInfo = rulesContext.getMediaInfo();
         const mediaType = mediaInfo.type;
-        const currentQuality = rulesContext.getCurrentValue();
         const metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
         const streamProcessor = rulesContext.getStreamProcessor();
         const abrController = streamProcessor.getABRController();
         const isDynamic = streamProcessor.isDynamic();
         const lastRequest = dashMetrics.getCurrentHttpRequest(metrics);
         const bufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
-        const switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK, {name: ThroughputRule.__dashjs_factory_name});
+        const hasRichBuffer = rulesContext.hasRichBuffer();
+        const switchRequest = SwitchRequest(context).create();
 
-        if (!metrics || !lastRequest || lastRequest.type !== HTTPRequest.MEDIA_SEGMENT_TYPE || !bufferStateVO ) {
-            callback(switchRequest);
-            return;
+        if (!metrics || !lastRequest || lastRequest.type !== HTTPRequest.MEDIA_SEGMENT_TYPE || !bufferStateVO || hasRichBuffer) {
+            return switchRequest;
         }
 
         let downloadTimeInMilliseconds;
+        let latencyTimeInMilliseconds;
 
         if (lastRequest.trace && lastRequest.trace.length) {
 
-            downloadTimeInMilliseconds = lastRequest._tfinish.getTime() - lastRequest.tresponse.getTime() + 1; //Make sure never 0 we divide by this value. Avoid infinity!
+            latencyTimeInMilliseconds = (lastRequest.tresponse.getTime() - lastRequest.trequest.getTime()) || 1;
+            downloadTimeInMilliseconds = (lastRequest._tfinish.getTime() - lastRequest.tresponse.getTime()) || 1; //Make sure never 0 we divide by this value. Avoid infinity!
 
             const bytes = lastRequest.trace.reduce((a, b) => a + b.b[0], 0);
+
             const lastRequestThroughput = Math.round((bytes * 8) / (downloadTimeInMilliseconds / 1000));
 
+            let throughput;
+            let latency;
             //Prevent cached fragment loads from skewing the average throughput value - allow first even if cached to set allowance for ABR rules..
-            if (downloadTimeInMilliseconds <= cacheLoadDict[mediaType].threshold) {
-                cacheLoadDict[mediaType].value = lastRequestThroughput / 1000;
+            if (isCachedResponse(latencyTimeInMilliseconds, downloadTimeInMilliseconds, mediaType)) {
+                if (!throughputArray[mediaType] || !latencyArray[mediaType]) {
+                    throughput = lastRequestThroughput / 1000;
+                    latency = latencyTimeInMilliseconds;
+                } else {
+                    throughput = getAverageThroughput(mediaType, isDynamic);
+                    latency = getAverageLatency(mediaType);
+                }
             } else {
-                cacheLoadDict[mediaType].value = NaN;
                 storeLastRequestThroughputByType(mediaType, lastRequestThroughput);
+                throughput = getAverageThroughput(mediaType, isDynamic);
+                storeLatency(mediaType, latencyTimeInMilliseconds);
+                latency = getAverageLatency(mediaType, isDynamic);
+            }
+
+            abrController.setAverageThroughput(mediaType, throughput);
+
+            if (abrController.getAbandonmentStateFor(mediaType) !== AbrController.ABANDON_LOAD) {
+
+                if (bufferStateVO.state === BufferController.BUFFER_LOADED || isDynamic) {
+                    switchRequest.value = abrController.getQualityForBitrate(mediaInfo, throughput, latency);
+                    streamProcessor.getScheduleController().setTimeToLoadDelay(0);
+                    log('ThroughputRule requesting switch to index: ', switchRequest.value, 'type: ',mediaType, 'Average throughput', Math.round(throughput), 'kbps');
+                    switchRequest.reason = {throughput: throughput, latency: latency};
+                }
             }
         }
-
-        const throughput = Math.round(!isNaN(cacheLoadDict[mediaType].value) ? cacheLoadDict[mediaType].value  : getAverageThroughput(mediaType, isDynamic));
-        abrController.setAverageThroughput(mediaType, throughput);
-
-        if (abrController.getAbandonmentStateFor(mediaType) !== AbrController.ABANDON_LOAD) {
-
-            if (bufferStateVO.state === BufferController.BUFFER_LOADED || isDynamic) {
-                const newQuality = abrController.getQualityForBitrate(mediaInfo, throughput);
-                streamProcessor.getScheduleController().setTimeToLoadDelay(0);
-                switchRequest.value = newQuality;
-                switchRequest.priority = SwitchRequest.DEFAULT;
-                switchRequest.reason.throughput = throughput;
-            }
-
-            if (switchRequest.value !== SwitchRequest.NO_CHANGE && switchRequest.value !== currentQuality) {
-                log('ThroughputRule requesting switch to index: ', switchRequest.value, 'type: ',mediaType, ' Priority: ',
-                    switchRequest.priority === SwitchRequest.DEFAULT ? 'Default' :
-                        switchRequest.priority === SwitchRequest.STRONG ? 'Strong' : 'Weak', 'Average throughput', Math.round(throughput), 'kbps');
-            }
-        }
-
-        callback(switchRequest);
+        return switchRequest;
     }
 
     function reset() {
@@ -158,7 +207,7 @@ function ThroughputRule(config) {
     }
 
     const instance = {
-        execute: execute,
+        getMaxIndex: getMaxIndex,
         reset: reset
     };
 

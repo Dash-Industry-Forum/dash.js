@@ -37,6 +37,9 @@ import EventBus from '../core/EventBus';
 import BoxParser from '../streaming/utils/BoxParser';
 import FactoryMaker from '../core/FactoryMaker';
 import Debug from '../core/Debug';
+import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
+import FragmentRequest from '../streaming/vo/FragmentRequest';
+import XHRLoader from '../streaming/XHRLoader';
 
 function SegmentBaseLoader() {
 
@@ -48,27 +51,37 @@ function SegmentBaseLoader() {
         errHandler,
         boxParser,
         requestModifier,
+        metricsModel,
+        xhrLoader,
         baseURLController;
 
     function initialize() {
         errHandler = ErrorHandler(context).getInstance();
         boxParser = BoxParser(context).getInstance();
         requestModifier = RequestModifier(context).getInstance();
+        xhrLoader = XHRLoader(context).create({
+            errHandler: errHandler,
+            metricsModel: metricsModel,
+            requestModifier: requestModifier
+        });
     }
 
     function setConfig(config) {
         if (config.baseURLController) {
             baseURLController = config.baseURLController;
         }
+
+        if (config.metricsModel) {
+            metricsModel = config.metricsModel;
+        }
     }
 
     function loadInitialization(representation, loadingInfo) {
-        var needFailureReport = true;
         var initRange = null;
         var isoFile = null;
-        var request = new XMLHttpRequest();
         var baseUrl = baseURLController.resolve(representation.path);
         var info = loadingInfo || {
+            init: true,
             url: baseUrl ? baseUrl.url : undefined,
             range: {
                 start: 0,
@@ -76,24 +89,23 @@ function SegmentBaseLoader() {
             },
             searching: false,
             bytesLoaded: 0,
-            bytesToLoad: 1500,
-            request: request
+            bytesToLoad: 1500
         };
 
         log('Start searching for initialization.');
 
-        request.onload = function () {
-            if (request.status < 200 || request.status > 299) return;
+        const request = getFragmentRequest(info);
 
-            needFailureReport = false;
+        const onload = function (response) {
 
             info.bytesLoaded = info.range.end;
-            isoFile = boxParser.parse(request.response);
+            isoFile = boxParser.parse(response);
             initRange = findInitRange(isoFile);
 
             if (initRange) {
                 representation.range = initRange;
-                representation.initialization = info.url;
+                // note that we don't explicitly set rep.initialization as this
+                // will be computed when all BaseURLs are resolved later
                 eventBus.trigger(Events.INITIALIZATION_LOADED, {representation: representation});
             } else {
                 info.range.end = info.bytesLoaded + info.bytesToLoad;
@@ -102,15 +114,12 @@ function SegmentBaseLoader() {
 
         };
 
-        request.onloadend = request.onerror = function () {
-            if (!needFailureReport) return;
-            needFailureReport = false;
-
-            errHandler.downloadError('initialization', info.url, request);
+        const onerror = function () {
             eventBus.trigger(Events.INITIALIZATION_LOADED, {representation: representation});
         };
 
-        sendRequest(request, info);
+        xhrLoader.load({request: request, success: onload, error: onerror});
+
         log('Perform init search: ' + info.url);
     }
 
@@ -121,30 +130,27 @@ function SegmentBaseLoader() {
         }
 
         callback = !callback ? onLoaded : callback;
-        var needFailureReport = true;
         var isoFile = null;
         var sidx = null;
         var hasRange = !!range;
-        var request = new XMLHttpRequest();
         var baseUrl = baseURLController.resolve(representation.path);
         var info = {
+            init: false,
             url: baseUrl ? baseUrl.url : undefined,
             range: hasRange ? range : { start: 0, end: 1500 },
             searching: !hasRange,
             bytesLoaded: loadingInfo ? loadingInfo.bytesLoaded : 0,
-            bytesToLoad: 1500,
-            request: request
+            bytesToLoad: 1500
         };
 
-        request.onload = function () {
-            if (request.status < 200 || request.status > 299) return;
+        const request = getFragmentRequest(info);
 
+        const onload = function (response) {
             var extraBytes = info.bytesToLoad;
-            var loadedLength = request.response.byteLength;
+            var loadedLength = response.byteLength;
 
-            needFailureReport = false;
             info.bytesLoaded = info.range.end - info.range.start;
-            isoFile = boxParser.parse(request.response);
+            isoFile = boxParser.parse(response);
             sidx = isoFile.getBox('sidx');
 
             if (!sidx || !sidx.isComplete) {
@@ -212,23 +218,20 @@ function SegmentBaseLoader() {
             }
         };
 
-        request.onloadend = request.onerror = function () {
-            if (!needFailureReport) return;
-
-            needFailureReport = false;
-            errHandler.downloadError('SIDX', info.url, request);
+        const onerror = function () {
             callback(null, representation, type);
         };
 
-        sendRequest(request, info);
+        xhrLoader.load({request: request, success: onload, error: onerror});
         log('Perform SIDX load: ' + info.url);
     }
 
     function reset() {
+        xhrLoader.abort();
+        xhrLoader = null;
         errHandler = null;
         boxParser = null;
         requestModifier = null;
-        log = null;
     }
 
     function getSegmentsForSidx(sidx, info) {
@@ -249,8 +252,9 @@ function SegmentBaseLoader() {
             size = refs[i].referenced_size;
 
             segment = new Segment();
+            // note that we don't explicitly set segment.media as this will be
+            // computed when all BaseURLs are resolved later
             segment.duration = duration;
-            segment.media = info.url;
             segment.startTime = time;
             segment.timescale = timescale;
             end = start + size - 1;
@@ -284,16 +288,18 @@ function SegmentBaseLoader() {
         return initRange;
     }
 
-    function sendRequest(request, info) {
+    function getFragmentRequest(info) {
         if (!info.url) {
             return;
         }
 
-        request.open('GET', requestModifier.modifyRequestURL(info.url));
-        request.responseType = 'arraybuffer';
-        request.setRequestHeader('Range', 'bytes=' + info.range.start + '-' + info.range.end);
-        request = requestModifier.modifyRequestHeader(request);
-        request.send(null);
+        let request = new FragmentRequest();
+
+        request.type = info.init ? HTTPRequest.INIT_SEGMENT_TYPE : HTTPRequest.MEDIA_SEGMENT_TYPE;
+        request.url = info.url;
+        request.range = info.range.start + '-' + info.range.end;
+
+        return request;
     }
 
     function onLoaded(segments, representation, type) {

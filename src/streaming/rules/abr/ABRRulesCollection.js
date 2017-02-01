@@ -29,15 +29,17 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import ThroughputRule from './ThroughputRule';
-import BufferOccupancyRule from './BufferOccupancyRule';
 import InsufficientBufferRule from './InsufficientBufferRule';
 import AbandonRequestsRule from './AbandonRequestsRule';
+import DroppedFramesRule from './DroppedFramesRule.js';
+import SwitchHistoryRule from './SwitchHistoryRule.js';
 import BolaRule from './BolaRule';
 import BolaAbandonRule from './BolaAbandonRule';
 import MediaPlayerModel from '../../models/MediaPlayerModel';
 import MetricsModel from '../../models/MetricsModel';
 import DashMetrics from '../../../dash/DashMetrics';
 import FactoryMaker from '../../../core/FactoryMaker';
+import SwitchRequest from '../SwitchRequest.js';
 
 const QUALITY_SWITCH_RULES = 'qualitySwitchRules';
 const ABANDON_FRAGMENT_RULES = 'abandonFragmentRules';
@@ -79,14 +81,9 @@ function ABRRulesCollection() {
                 })
             );
 
-            qualitySwitchRules.push(
-                BufferOccupancyRule(context).create({
-                    metricsModel: metricsModel,
-                    dashMetrics: dashMetrics
-                })
-            );
-
             qualitySwitchRules.push(InsufficientBufferRule(context).create({metricsModel: metricsModel}));
+            qualitySwitchRules.push(SwitchHistoryRule(context).create());
+            qualitySwitchRules.push(DroppedFramesRule(context).create());
             abandonFragmentRules.push(AbandonRequestsRule(context).create());
         }
     }
@@ -102,9 +99,38 @@ function ABRRulesCollection() {
         }
     }
 
+    function getActiveRules(srArray) {
+        return srArray.filter(sr => sr.value > SwitchRequest.NO_CHANGE);
+    }
+
+    function getMinSwitchRequest(srArray) {
+        if (srArray.length === 0) {
+            return;
+        }
+        return srArray.reduce((a, b) => { return a.value < b.value ? a : b; });
+    }
+
+    function getMaxQuality(rulesContext) {
+        let switchRequestArray = qualitySwitchRules.map(rule => rule.getMaxIndex(rulesContext));
+        let activeRules = getActiveRules(switchRequestArray);
+        let maxQuality = getMinSwitchRequest(activeRules);
+
+        return maxQuality || SwitchRequest(context).create();
+    }
+
+    function shouldAbandonFragment(rulesContext) {
+        let abandonRequestArray = abandonFragmentRules.map(rule => rule.shouldAbandon(rulesContext));
+        let activeRules = getActiveRules(abandonRequestArray);
+        let shouldAbandon = getMinSwitchRequest(activeRules);
+
+        return shouldAbandon || SwitchRequest(context).create();
+    }
+
     instance = {
         initialize: initialize,
-        getRules: getRules
+        getRules: getRules,
+        getMaxQuality: getMaxQuality,
+        shouldAbandonFragment: shouldAbandonFragment
     };
 
     return instance;

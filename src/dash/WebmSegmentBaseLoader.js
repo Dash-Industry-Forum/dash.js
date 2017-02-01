@@ -171,7 +171,7 @@ function WebmSegmentBaseLoader() {
         return cues;
     }
 
-    function parseSegments(data, media, segmentStart, segmentEnd, segmentDuration) {
+    function parseSegments(data, segmentStart, segmentEnd, segmentDuration) {
         let duration;
         let parsed;
         let segments;
@@ -197,8 +197,9 @@ function WebmSegmentBaseLoader() {
                 duration = segmentDuration - parsed[i].CueTime;
             }
 
+            // note that we don't explicitly set segment.media as this will be
+            // computed when all BaseURLs are resolved later
             segment.duration = duration;
-            segment.media = media;
             segment.startTime = parsed[i].CueTime;
             segment.timescale = 1000; // hardcoded for ms
             start = parsed[i].CueTracks[0].ClusterPosition + segmentStart;
@@ -278,7 +279,7 @@ function WebmSegmentBaseLoader() {
         request = getFragmentRequest(info);
 
         const onload = function (response) {
-            segments = parseSegments(response, info.url, segmentStart, segmentEnd, duration);
+            segments = parseSegments(response, segmentStart, segmentEnd, duration);
             callback(segments);
         };
 
@@ -312,7 +313,8 @@ function WebmSegmentBaseLoader() {
         request = getFragmentRequest(info);
 
         const onload = function () {
-            representation.initialization = info.url;
+            // note that we don't explicitly set rep.initialization as this
+            // will be computed when all BaseURLs are resolved later
             eventBus.trigger(Events.INITIALIZATION_LOADED, {representation: representation});
         };
 

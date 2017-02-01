@@ -66,20 +66,18 @@ function BolaAbandonRule(config) {
         return index !== a.index || quality < a.quality;
     }
 
-    function execute(rulesContext, callback) {
+    function shouldAbandon(rulesContext) {
         let mediaInfo = rulesContext.getMediaInfo();
         let mediaType = mediaInfo.type;
         let metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
-        let progressEvent = rulesContext.getCurrentValue();
-        let request = progressEvent.request;
-        let switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK, {name: BolaAbandonRule.__dashjs_factory_name});
+        let request = rulesContext.getCurrentRequest();
+        let switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, {name: BolaAbandonRule.__dashjs_factory_name});
 
         if (metrics.BolaState.length === 0) {
             // should not arrive here - we shouldn't be downloading a fragment before BOLA is initialized
             log('WARNING: executing BolaAbandonRule before initializing BolaRule');
             abandonDict[mediaType] = null;
-            callback(switchRequest);
-            return;
+            return switchRequest;
         }
 
         let bolaState = metrics.BolaState[0]._s;
@@ -89,8 +87,7 @@ function BolaAbandonRule(config) {
         let quality = request.quality;
 
         if (isNaN(index) || quality === 0 || !canAbandon(mediaType, index, quality) || !request.firstByteDate) {
-            callback(switchRequest);
-            return;
+            return switchRequest;
         }
 
         let nowMs = Date.now();
@@ -131,8 +128,7 @@ function BolaAbandonRule(config) {
             // Do not abandon if buffer level is above bufferTarget because the schedule controller will not download anything anyway.
             // Do not abandon if after latencyS bytesRemaining is estimated to drop below size of lowest quality fragment.
             // Do not abandon if fragment takes less than 1 fragment duration to download.
-            callback(switchRequest);
-            return;
+            return switchRequest;
         }
 
         // If we abandon, there will be latencyS time before we get first byte at lower quality.
@@ -193,8 +189,7 @@ function BolaAbandonRule(config) {
 
         if (newQuality === quality) {
             // no change
-            callback(switchRequest);
-            return;
+            return switchRequest;
         }
 
         // newQuality < quality, we are abandoning
@@ -238,7 +233,6 @@ function BolaAbandonRule(config) {
 
         rememberAbandon(mediaType, index, quality);
         switchRequest.value = newQuality;
-        switchRequest.priority = SwitchRequest.STRONG;
         switchRequest.reason.state = bolaState.state;
         switchRequest.reason.throughput = estimateThroughput;
         switchRequest.reason.bufferLevel = bufferLevel;
@@ -247,7 +241,7 @@ function BolaAbandonRule(config) {
         switchRequest.reason.bytesTotal = request.bytesTotal;
         switchRequest.reason.elapsedTimeMs = elapsedTimeMs;
 
-        callback(switchRequest);
+        return switchRequest;
     }
 
     function reset() {
@@ -255,7 +249,7 @@ function BolaAbandonRule(config) {
     }
 
     instance = {
-        execute: execute,
+        shouldAbandon: shouldAbandon,
         reset: reset
     };
 

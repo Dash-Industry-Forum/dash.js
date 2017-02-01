@@ -186,7 +186,7 @@ function VideoModel() {
     }
 
     function getPlaybackQuality() {
-        let hasWebKit = ('webkitDroppedFrameCount' in element);
+        let hasWebKit = ('webkitDroppedFrameCount' in element) && ('webkitDecodedFrameCount' in element);
         let hasQuality = ('getVideoPlaybackQuality' in element);
         let result = null;
 
@@ -194,7 +194,11 @@ function VideoModel() {
             result = element.getVideoPlaybackQuality();
         }
         else if (hasWebKit) {
-            result = {droppedVideoFrames: element.webkitDroppedFrameCount, creationTime: new Date()};
+            result = {
+                droppedVideoFrames: element.webkitDroppedFrameCount,
+                totalVideoFrames: element.webkitDroppedFrameCount + element.webkitDecodedFrameCount,
+                creationTime: new Date()
+            };
         }
 
         return result;

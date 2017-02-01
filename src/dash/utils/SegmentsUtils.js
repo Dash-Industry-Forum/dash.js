@@ -55,6 +55,10 @@ export function replaceTokenForTemplate(url, token, value) {
     var tokenLen = token.length;
     var formatTagLen = formatTag.length;
 
+    if (!url) {
+        return url;
+    }
+
     // keep looping round until all instances of <token> have been
     // replaced. once that has happened, startPos below will be -1
     // and the completed url will be returned.

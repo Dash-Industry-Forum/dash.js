@@ -421,41 +421,43 @@ function DashManifestModel() {
                         .join(r.bandwidth).split('$RepresentationID$').join(r.id);
                 }
             } else {
-                segmentInfo = r.BaseURL;
                 representation.segmentInfoType = 'BaseURL';
             }
 
-            if (segmentInfo.hasOwnProperty('Initialization')) {
-                initialization = segmentInfo.Initialization;
-                if (initialization.hasOwnProperty('sourceURL')) {
-                    representation.initialization = initialization.sourceURL;
-                } else if (initialization.hasOwnProperty('range')) {
-                    representation.range = initialization.range;
-                    representation.initialization = r.BaseURL;
+            if (segmentInfo) {
+                if (segmentInfo.hasOwnProperty('Initialization')) {
+                    initialization = segmentInfo.Initialization;
+                    if (initialization.hasOwnProperty('sourceURL')) {
+                        representation.initialization = initialization.sourceURL;
+                    } else if (initialization.hasOwnProperty('range')) {
+                        representation.range = initialization.range;
+                        // initialization source url will be determined from
+                        // BaseURL when resolved at load time.
+                    }
+                } else if (r.hasOwnProperty('mimeType') && getIsTextTrack(r.mimeType)) {
+                    representation.range = 0;
                 }
-            } else if (r.hasOwnProperty('mimeType') && getIsTextTrack(r.mimeType)) {
-                representation.range = 0;
-            }
 
-            if (segmentInfo.hasOwnProperty('timescale')) {
-                representation.timescale = segmentInfo.timescale;
-            }
-            if (segmentInfo.hasOwnProperty('duration')) {
-                // TODO according to the spec @maxSegmentDuration specifies the maximum duration of any Segment in any Representation in the Media Presentation
-                // It is also said that for a SegmentTimeline any @d value shall not exceed the value of MPD@maxSegmentDuration, but nothing is said about
-                // SegmentTemplate @duration attribute. We need to find out if @maxSegmentDuration should be used instead of calculated duration if the the duration
-                // exceeds @maxSegmentDuration
-                //representation.segmentDuration = Math.min(segmentInfo.duration / representation.timescale, adaptation.period.mpd.maxSegmentDuration);
-                representation.segmentDuration = segmentInfo.duration / representation.timescale;
-            }
-            if (segmentInfo.hasOwnProperty('startNumber')) {
-                representation.startNumber = segmentInfo.startNumber;
-            }
-            if (segmentInfo.hasOwnProperty('indexRange')) {
-                representation.indexRange = segmentInfo.indexRange;
-            }
-            if (segmentInfo.hasOwnProperty('presentationTimeOffset')) {
-                representation.presentationTimeOffset = segmentInfo.presentationTimeOffset / representation.timescale;
+                if (segmentInfo.hasOwnProperty('timescale')) {
+                    representation.timescale = segmentInfo.timescale;
+                }
+                if (segmentInfo.hasOwnProperty('duration')) {
+                    // TODO according to the spec @maxSegmentDuration specifies the maximum duration of any Segment in any Representation in the Media Presentation
+                    // It is also said that for a SegmentTimeline any @d value shall not exceed the value of MPD@maxSegmentDuration, but nothing is said about
+                    // SegmentTemplate @duration attribute. We need to find out if @maxSegmentDuration should be used instead of calculated duration if the the duration
+                    // exceeds @maxSegmentDuration
+                    //representation.segmentDuration = Math.min(segmentInfo.duration / representation.timescale, adaptation.period.mpd.maxSegmentDuration);
+                    representation.segmentDuration = segmentInfo.duration / representation.timescale;
+                }
+                if (segmentInfo.hasOwnProperty('startNumber')) {
+                    representation.startNumber = segmentInfo.startNumber;
+                }
+                if (segmentInfo.hasOwnProperty('indexRange')) {
+                    representation.indexRange = segmentInfo.indexRange;
+                }
+                if (segmentInfo.hasOwnProperty('presentationTimeOffset')) {
+                    representation.presentationTimeOffset = segmentInfo.presentationTimeOffset / representation.timescale;
+                }
             }
 
             representation.MSETimeOffset = timelineConverter.calcMSETimeOffset(representation);
