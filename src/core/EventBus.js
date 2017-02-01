@@ -72,6 +72,7 @@ function EventBus() {
         if (!type || !listener || !handlers[type]) return;
         const idx = getHandlerIdx(type, listener, scope);
         if (idx < 0) return;
+        handlers[type] = handlers[type].slice(0);
         handlers[type].splice(idx, 1);
     }
 
