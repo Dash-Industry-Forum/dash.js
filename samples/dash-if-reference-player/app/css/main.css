@@ -80,6 +80,10 @@ a:hover {
     float: left;
 }
 
+.options-label {
+    margin-left: 4px;
+}
+
 .options-item-body input,
 .options-item-body label {
     cursor: pointer;
