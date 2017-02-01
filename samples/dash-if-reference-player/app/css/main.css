@@ -366,6 +366,9 @@ MOBILE SOURCE MENU MODAL LIST
 /****************************
         DESKTOP MENU
 *****************************/
+.tooltip-inner {
+    white-space:pre-wrap;
+}
 
 .dropdown-submenu {
     position: relative;
