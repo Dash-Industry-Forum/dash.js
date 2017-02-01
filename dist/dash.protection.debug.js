@@ -1874,18 +1874,16 @@ function ProtectionController(config) {
 
         // Determine license server URL
         var url = null;
-        if (protData) {
-            if (protData.serverURL) {
-                var serverURL = protData.serverURL;
-                if (typeof serverURL === 'string' && serverURL !== '') {
-                    url = serverURL;
-                } else if (typeof serverURL === 'object' && serverURL.hasOwnProperty(messageType)) {
-                    url = serverURL[messageType];
-                }
-            } else if (protData.laURL && protData.laURL !== '') {
-                // TODO: Deprecated!
-                url = protData.laURL;
+        if (protData && protData.serverURL) {
+            var serverURL = protData.serverURL;
+            if (typeof serverURL === 'string' && serverURL !== '') {
+                url = serverURL;
+            } else if (typeof serverURL === 'object' && serverURL.hasOwnProperty(messageType)) {
+                url = serverURL[messageType];
             }
+        } else if (protData && protData.laURL && protData.laURL !== '') {
+            // TODO: Deprecated!
+            url = protData.laURL;
         } else {
             url = keySystem.getLicenseServerURLFromInitData(_CommonEncryption2['default'].getPSSHData(sessionToken.initData));
             if (!url) {
