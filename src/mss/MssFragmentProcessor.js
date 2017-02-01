@@ -735,7 +735,7 @@ function MssFragmentProcessor() {
         let tfdt = isoFile.fetch('tfdt');
         let traf = isoFile.fetch('traf');
         if (tfdt === null) {
-            tfdt = ISOBoxer.createBox('tfdt', traf, tfhd);
+            tfdt = ISOBoxer.createFullBox('tfdt', traf, tfhd);
             tfdt.version = 1;
             tfdt.flags = 0;
             tfdt.baseMediaDecodeTime = Math.floor(e.request.startTime * e.request.timescale);
