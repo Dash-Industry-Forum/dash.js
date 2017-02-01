@@ -4,6 +4,7 @@ var app = angular.module('DashPlayer', ['DashSourcesService', 'DashContributorsS
 
 $(document).ready(function () {
     $('[data-toggle="tooltip"]').tooltip();
+    $('#drmLicenseForm').hide();
 });
 
 angular.module('DashSourcesService', ['ngResource']).factory('sources', function($resource){
@@ -30,7 +31,6 @@ app.controller('DashController', function($scope, sources, contributors) {
     contributors.query(function (data) {
         $scope.contributors = data.items;
     });
-
 
     $scope.chartOptions = {
         legend: {
@@ -125,6 +125,9 @@ app.controller('DashController', function($scope, sources, contributors) {
     $scope.mediaSettingsCacheEnabled = true;
     $scope.metricsTimer = null;
     $scope.updateMetricsInterval = 1000;
+    $scope.drmKeySystems = ['com.widevine.alpha', 'com.microsoft.playready'];
+    $scope.drmKeySystem = "";
+    $scope.drmLicenseURL = "";
 
     //metrics
     $scope.videoBitrate = 0;
@@ -480,11 +483,14 @@ app.controller('DashController', function($scope, sources, contributors) {
 
         $scope.initSession();
 
-        var protData = null;
+        var protData = {};
         if ($scope.selectedItem.hasOwnProperty("protData")) {
             protData = $scope.selectedItem.protData;
+        } else if ($scope.drmLicenseURL !== "" && $scope.drmKeySystem !== "") {
+            protData[$scope.drmKeySystem] = {serverURL:$scope.drmLicenseURL};
+        } else {
+            protData = null;
         }
-
 
         $scope.controlbar.reset();
         $scope.player.setProtectionData(protData);
@@ -512,6 +518,11 @@ app.controller('DashController', function($scope, sources, contributors) {
 
     $scope.getOptionsButtonLabel = function () {
         return $scope.optionsGutter ? "Hide Options" : "Show Options";
+    };
+
+    $scope.setDrmKeySystem = function(item) {
+        $scope.drmKeySystem = item;
+        $('#drmLicenseForm').show();
     };
 
     // from: https://gist.github.com/siongui/4969449

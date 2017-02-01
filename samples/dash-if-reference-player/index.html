@@ -149,31 +149,33 @@
                 </div>
             </div>
 
-            <!--<div class="options-item">-->
-                <!--<div class="options-item-title">DRM Options</div>-->
-                <!--<div class="options-item-body">-->
-                    <!--<label>-->
-                        <!--<input type="radio" value="temporary" name="drm" ng-model="drmOptionsValue" ng-change="drmOptionsHandler()" ng-checked="true">-->
-                        <!--temporary-->
-                    <!--</label>-->
-                    <!--<label>-->
-                        <!--<input type="radio" value="persistent-license" name="drm" ng-model="drmOptionsValue" ng-change="drmOptionsHandler()" >-->
-                        <!--persistent-license-->
-                    <!--</label>-->
-                    <!--<label>-->
-                        <!--<input type="radio" value="persistent-release-message" name="drm" ng-model="drmOptionsValue" ng-change="drmOptionsHandler()" >-->
-                        <!--persistent-release-->
-                    <!--</label>-->
+            <div class="options-item">
+                <div class="options-item-title">DRM Options</div>
+                <div class="options-item-body">
+                    <div class="dropdown" data-toggle="tooltip" data-placement="left"
+                           title="Please select a DRM Key System">
+                        <button class="btn btn-primary dropdown-toggle" type="button" id="menu1" data-toggle="dropdown">DRM KeySystem
+                            <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu" role="menu" aria-labelledby="menu1">
+                           <li ng-repeat="item in drmKeySystems"><a ng-click="setDrmKeySystem(item)">{{item}}</a></li>
+                        </ul>
+                    </div>
+                    <p><label  class="options-label" >{{drmKeySystem}}</label></p>
+                    <div id="drmLicenseForm" >
+                        <label class="options-label">License URL:</label>
+                        <input type="text" class="form-control" placeholder="" ng-model="drmLicenseURL">
+                    </div>
                     <!--<button class="btn btn-primary license" type="button" ng-click="doLicenseFetch()">Pre-Fetch Licenses</button>-->
-                <!--</div>-->
-            <!--</div>-->
+                </div>
+            </div>
 
             <div class="options-item">
                 <div class="options-item-title">Track Switch Mode</div>
                 <div class="options-item-body">
-                    <label>Audio:</label>
+                    <label class="options-label">Audio:</label>
                     <input type="text" class="form-control" placeholder="initial lang, e.g. 'en'" ng-model="initialSettings.audio">
-                    <label>Video:</label>
+                    <label class="options-label">Video:</label>
                     <input type="text" class="form-control" placeholder="initial role, e.g. 'alternate'" ng-model="initialSettings.video">
                     <label data-toggle="tooltip" data-placement="right"
                            title="When a track is switched, the portion of the buffer that contains old track data is cleared">
