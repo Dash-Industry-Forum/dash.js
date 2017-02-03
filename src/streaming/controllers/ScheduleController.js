@@ -327,6 +327,11 @@ function ScheduleController(config) {
         const request = adapter.getFragmentRequestForTime(streamProcessor, currentRepresentationInfo, startTime, {ignoreIsFinished: true});
         seekTarget = playbackController.getLiveStartTime();
         if (isNaN(seekTarget) || request.startTime > seekTarget) {
+            //special use case for multi period stream. If the startTime is out of the current period, send a seek command.
+            //in onPlaybackSeeking callback (StreamController), the detection of switch stream is done.
+            if (request.startTime > (currentRepresentationInfo.mediaInfo.streamInfo.start + currentRepresentationInfo.mediaInfo.streamInfo.duration)) {
+                playbackController.seek(request.startTime);
+            }
             playbackController.setLiveStartTime(request.startTime);
             seekTarget = request.startTime;
         }
