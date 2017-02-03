@@ -66,7 +66,7 @@ function DashAdapter() {
     }
 
     function getAdaptationForMediaInfo(mediaInfo) {
-        if (!adaptations) return null;
+        if (!adaptations || !mediaInfo || !adaptations[mediaInfo.streamInfo.id]) return null;
         return adaptations[mediaInfo.streamInfo.id][mediaInfo.index];
     }
 
