@@ -45,7 +45,7 @@
     "uglify-js": "^2.4.21"
   },
   "dependencies": {
-    "codem-isoboxer": "^0.3.0",
+    "codem-isoboxer": "^0.3.2",
     "round10": "^1.0.3"
   },
   "repository": {
