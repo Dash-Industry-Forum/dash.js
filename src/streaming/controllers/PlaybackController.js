@@ -89,7 +89,7 @@ function PlaybackController() {
     }
 
     function onPeriodSwitchStarted(e) {
-        if (!isDynamic && e.fromStreamInfo && commonEarliestTime[e.fromStreamInfo.id]) {
+        if (!isDynamic && e.fromStreamInfo && commonEarliestTime[e.fromStreamInfo.id] !== undefined) {
             delete commonEarliestTime[e.fromStreamInfo.id];
         }
     }
