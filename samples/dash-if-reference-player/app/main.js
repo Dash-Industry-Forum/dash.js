@@ -599,10 +599,13 @@ app.controller('DashController', function($scope, sources, contributors) {
 
     $scope.plotPoint = function(name, type, value) {
         if ($scope.chartEnabled) {
-            var data = $scope.chartState[type][name].data;
-            data.push([$scope.video.currentTime, value]);
-            if (data.length > $scope.maxPointsToChart) {
-                data.splice(0, 1);
+            var specificChart = $scope.chartState[type];
+            if (specificChart) {
+                var data = specificChart[name].data;
+                data.push([$scope.video.currentTime, value]);
+                if (data.length > $scope.maxPointsToChart) {
+                    data.splice(0, 1);
+                }
             }
         }
         $scope.safeApply();
