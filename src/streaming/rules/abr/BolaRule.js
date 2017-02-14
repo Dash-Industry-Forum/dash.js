@@ -40,6 +40,7 @@ import DashAdapter from '../../../dash/DashAdapter';
 import EventBus from '../../../core/EventBus';
 import Events from '../../../core/events/Events';
 import Debug from '../../../core/Debug';
+import BufferController from '../../controllers/BufferController';
 
 // BOLA_STATE_ONE_BITRATE   : If there is only one bitrate (or initialization failed), always return NO_CHANGE.
 // BOLA_STATE_STARTUP       : Set placeholder buffer such that we download fragments at most recently measured throughput.
@@ -82,7 +83,7 @@ function BolaRule(config) {
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
         playbackController = PlaybackController(context).getInstance();
         adapter = DashAdapter(context).getInstance();
-        eventBus.on(Events.BUFFER_EMPTY, onBufferEmpty, instance);
+        eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferEmpty, instance);
         eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
         eventBus.on(Events.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, instance);
         eventBus.on(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, instance);
@@ -284,19 +285,21 @@ function BolaRule(config) {
         return 0.001 * delayMs;
     }
 
-    function onBufferEmpty() {
-        if (BOLA_DEBUG) log('BolaDebug BUFFER_EMPTY');
-        // if we rebuffer, we don't want the placeholder buffer to artificially raise BOLA quality
-        eventMediaTypes.forEach(function (mediaType) {
-            let metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
-            if (metrics.BolaState.length !== 0) {
-                let bolaState = metrics.BolaState[0]._s;
-                if (bolaState.state === BOLA_STATE_STEADY) {
-                    bolaState.placeholderBuffer = 0;
-                    metricsModel.updateBolaState(mediaType, bolaState);
+    function onBufferEmpty(e) {
+        if (e.state === BufferController.BUFFER_EMPTY) {
+            if (BOLA_DEBUG) log('BolaDebug BUFFER_EMPTY');
+            // if we rebuffer, we don't want the placeholder buffer to artificially raise BOLA quality
+            eventMediaTypes.forEach(function (mediaType) {
+                let metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
+                if (metrics.BolaState.length !== 0) {
+                    let bolaState = metrics.BolaState[0]._s;
+                    if (bolaState.state === BOLA_STATE_STEADY) {
+                        bolaState.placeholderBuffer = 0;
+                        metricsModel.updateBolaState(mediaType, bolaState);
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
     function onPlaybackSeeking(e) {
@@ -522,7 +525,7 @@ function BolaRule(config) {
     }
 
     function reset() {
-        eventBus.off(Events.BUFFER_EMPTY, onBufferEmpty, instance);
+        eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferEmpty, instance);
         eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
         eventBus.off(Events.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, instance);
         eventBus.off(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, instance);

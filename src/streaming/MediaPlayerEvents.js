@@ -47,19 +47,6 @@ class MediaPlayerEvents extends EventsBase {
          */
         this.AST_IN_FUTURE = 'astInFuture';
         /**
-         * Triggered when the video element's buffer state changes to stalled.
-         * Check mediaType in payload to determine type (Video, Audio, FragmentedText).
-         * @event MediaPlayerEvents#BUFFER_EMPTY
-         */
-        this.BUFFER_EMPTY = 'bufferStalled';
-        /**
-         * Triggered when the video element's buffer state changes to loaded.
-         * Check mediaType in payload to determine type (Video, Audio, FragmentedText).
-         * @event MediaPlayerEvents#BUFFER_LOADED
-         */
-        this.BUFFER_LOADED = 'bufferLoaded';
-
-        /**
          * Triggered when the video element's buffer state changes, either stalled or loaded. Check payload for state.
          * @event MediaPlayerEvents#BUFFER_LEVEL_STATE_CHANGED
          */
