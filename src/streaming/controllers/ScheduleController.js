@@ -439,6 +439,11 @@ function ScheduleController(config) {
         const manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metricsModel.getMetricsFor('stream'));
         const latency = currentRepresentationInfo.DVRWindow ? currentRepresentationInfo.DVRWindow.end - playbackController.getTime() : NaN;
         metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: latency});
+
+        //if, during the seek command, the scheduleController is waiting : stop waiting, request chunk as soon as possible
+        if (!isFragmentProcessingInProgress) {
+            startScheduleTimer(0);
+        }
     }
 
     function onPlaybackRateChanged(e) {
