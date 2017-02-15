@@ -462,16 +462,16 @@ function TextTracks() {
             else {
                 cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, currentItem.data);
                 if (currentItem.styles) {
-                    if (currentItem.styles.align !== undefined && cue.hasOwnProperty('align')) {
+                    if (currentItem.styles.align !== undefined && 'align' in cue) {
                         cue.align = currentItem.styles.align;
                     }
-                    if (currentItem.styles.line !== undefined && cue.hasOwnProperty('line')) {
+                    if (currentItem.styles.line !== undefined && 'line' in cue) {
                         cue.line = currentItem.styles.line;
                     }
-                    if (currentItem.styles.position !== undefined && cue.hasOwnProperty('position')) {
+                    if (currentItem.styles.position !== undefined && 'position' in cue) {
                         cue.position = currentItem.styles.position ;
                     }
-                    if (currentItem.styles.size !== undefined && cue.hasOwnProperty('size')) {
+                    if (currentItem.styles.size !== undefined && 'size' in cue) {
                         cue.size = currentItem.styles.size;
                     }
                 }
