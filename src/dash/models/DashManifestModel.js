@@ -729,6 +729,7 @@ function DashManifestModel() {
     }
 
     function getEventStreamForAdaptationSet(manifest, adaptation) {
+        if (!adaptation || !manifest) return [];
         var inbandStreams = manifest.Period_asArray[adaptation.period.index].
             AdaptationSet_asArray[adaptation.index].InbandEventStream_asArray;
 
