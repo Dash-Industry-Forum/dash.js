@@ -55,6 +55,7 @@ function TextTracks() {
         isChrome,
         fullscreenAttribute,
         displayCCOnTop,
+        imsc1Parser,
         topZIndex;
 
     function initialize () {
@@ -70,6 +71,8 @@ function TextTracks() {
         videoSizeCheckInterval = null;
         displayCCOnTop = false;
         topZIndex = 2147483647;
+
+        imsc1Parser = require('imsc');
 
         //TODO Check if IE has resolved issues: Then revert to not using the addTextTrack API for all browsers.
         // https://connect.microsoft.com/IE/feedbackdetail/view/1660701/text-tracks-do-not-fire-change-addtrack-or-removetrack-events
@@ -425,17 +428,11 @@ function TextTracks() {
                 };
             }
             else if (currentItem.type === 'html') {
+                log('Create Cue id:' + currentItem.cueID + ' start : ' + currentItem.start + ' end : ' + currentItem.end + ' timeOffset : ' + timeOffset);
                 cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, '');
                 cue.cueHTMLElement = currentItem.cueHTMLElement;
-                cue.regions = currentItem.regions;
-                cue.regionID = currentItem.regionID;
+                cue.isd = currentItem.isd;
                 cue.cueID = currentItem.cueID;
-                cue.videoWidth = currentItem.videoWidth;
-                cue.videoHeight = currentItem.videoHeight;
-                cue.cellResolution = currentItem.cellResolution;
-                cue.fontSize = currentItem.fontSize;
-                cue.lineHeight = currentItem.lineHeight;
-                cue.linePadding = currentItem.linePadding;
                 cue.scaleCue = scaleCue.bind(self);
                 captionContainer.style.left = actualVideoLeft + 'px';
                 captionContainer.style.top = actualVideoTop + 'px';
@@ -444,9 +441,12 @@ function TextTracks() {
 
                 cue.onenter =  function () {
                     if (track.mode === 'showing') {
-                        log('Cue ' + this.startTime + '-' + this.endTime + ' : ' + this.cueHTMLElement.id + ' : ' + this.cueHTMLElement.innerText);
-                        captionContainer.appendChild(this.cueHTMLElement);
-                        scaleCue.call(self, this);
+                        var finalCue = document.createElement('div');
+                        log('Cue enter id:' + this.cueID);
+                        imsc1Parser.renderHTML(this.isd, finalCue, null, captionContainer.clientWidth, captionContainer.clientHeight);
+                        finalCue.id = this.cueID;
+                        captionContainer.appendChild(finalCue);
+                        //scaleCue.call(self, this);
                     }
                 };
 
@@ -454,6 +454,7 @@ function TextTracks() {
                     var divs = captionContainer.childNodes;
                     for (var i = 0; i < divs.length; ++i) {
                         if (divs[i].id === this.cueID) {
+                            log('Cue exit id:' + divs[i].id);
                             captionContainer.removeChild(divs[i]);
                         }
                     }
