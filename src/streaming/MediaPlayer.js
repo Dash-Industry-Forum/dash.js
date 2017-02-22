@@ -729,6 +729,26 @@ function MediaPlayer() {
     }
 
     /**
+     * When switching multi-bitrate content (auto or manual mode) this property specifies the minimum bitrate allowed.
+     * If you set this property to a value higher than that currently playing, the switching engine will switch up to
+     * satisfy this requirement. If you set it to a value that is lower than the lowest bitrate, it will still play
+     * that lowest bitrate.
+     *
+     * You can set or remove this bitrate limit at anytime before or during playback. To clear this setting you must use the API
+     * and set the value param to NaN.
+     *
+     * This feature is used to force higher quality playback.
+     *
+     * @param {string} type - 'video' or 'audio' are the type options.
+     * @param {number} value - Value in kbps representing the minimum bitrate allowed.
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setMinAllowedBitrateFor(type, value) {
+        abrController.setMinAllowedBitrateFor(type, value);
+    }
+
+    /**
      * @param {string} type - 'video' or 'audio' are the type options.
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#setMaxAllowedBitrateFor setMaxAllowedBitrateFor()}
@@ -736,6 +756,16 @@ function MediaPlayer() {
      */
     function getMaxAllowedBitrateFor(type) {
         return abrController.getMaxAllowedBitrateFor(type);
+    }
+
+    /**
+     * @param {string} type - 'video' or 'audio' are the type options.
+     * @memberof module:MediaPlayer
+     * @see {@link module:MediaPlayer#setMinAllowedBitrateFor setMinAllowedBitrateFor()}
+     * @instance
+     */
+    function getMinAllowedBitrateFor(type) {
+        return abrController.getMinAllowedBitrateFor(type);
     }
 
     /**
@@ -2043,6 +2073,8 @@ function MediaPlayer() {
         enableLastMediaSettingsCaching: enableLastMediaSettingsCaching,
         setMaxAllowedBitrateFor: setMaxAllowedBitrateFor,
         getMaxAllowedBitrateFor: getMaxAllowedBitrateFor,
+        setMinAllowedBitrateFor: setMinAllowedBitrateFor,
+        getMinAllowedBitrateFor: getMinAllowedBitrateFor,
         setMaxAllowedRepresentationRatioFor: setMaxAllowedRepresentationRatioFor,
         getMaxAllowedRepresentationRatioFor: getMaxAllowedRepresentationRatioFor,
         setAutoPlay: setAutoPlay,
