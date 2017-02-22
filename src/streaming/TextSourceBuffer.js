@@ -176,6 +176,7 @@ function TextSourceBuffer() {
             textTrackInfo.isFragmented = isFragmented;
             textTrackInfo.isEmbedded = mediaInfo.isEmbedded ? true : false;
             textTrackInfo.kind = getKind();
+            textTrackInfo.roles = mediaInfo.roles;
             var totalNrTracks = (mediaInfos ? mediaInfos.length : 0) + embeddedTracks.length;
             textTracks.addTextTrack(textTrackInfo, totalNrTracks);
         }
