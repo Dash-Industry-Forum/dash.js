@@ -379,8 +379,21 @@ function DashManifestModel() {
                 representation.id = r.id;
             }
 
+            if (r.hasOwnProperty('codecs')) {
+                representation.codecs = r.codecs;
+            }
+            if (r.hasOwnProperty('codecPrivateData')) {
+                representation.codecPrivateData = r.codecPrivateData;
+            }
+
             if (r.hasOwnProperty('bandwidth')) {
                 representation.bandwidth = r.bandwidth;
+            }
+            if (r.hasOwnProperty('width')) {
+                representation.width = r.width;
+            }
+            if (r.hasOwnProperty('height')) {
+                representation.height = r.height;
             }
             if (r.hasOwnProperty('maxPlayoutRate')) {
                 representation.maxPlayoutRate = r.maxPlayoutRate;

@@ -31,12 +31,14 @@
 import XlinkController from './controllers/XlinkController';
 import XHRLoader from './XHRLoader';
 import URLUtils from './utils/URLUtils';
+import ErrorHandler from './utils/ErrorHandler';
 import TextRequest from './vo/TextRequest';
 import Error from './vo/Error';
 import {HTTPRequest} from './vo/metrics/HTTPRequest';
 import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import FactoryMaker from '../core/FactoryMaker';
+import DashParser from '../dash/parser/DashParser';
 
 const MANIFEST_LOADER_ERROR_PARSING_FAILURE = 1;
 const MANIFEST_LOADER_ERROR_LOADING_FAILURE = 2;
@@ -47,11 +49,13 @@ function ManifestLoader(config) {
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
     const urlUtils = URLUtils(context).getInstance();
-    const parser = config.parser;
+    const errorHandler = ErrorHandler(context).getInstance();
 
     let instance,
         xhrLoader,
-        xlinkController;
+        xlinkController,
+        parser;
+    let mssHandler = config.mssHandler;
 
     function setup() {
         eventBus.on(Events.XLINK_READY, onXlinkReady, instance);
@@ -67,6 +71,8 @@ function ManifestLoader(config) {
             metricsModel: config.metricsModel,
             requestModifier: config.requestModifier
         });
+
+        parser = null;
     }
 
     function onXlinkReady(event) {
@@ -77,7 +83,26 @@ function ManifestLoader(config) {
         );
     }
 
-    function load (url) {
+    function createParser(data) {
+        var parser = null;
+        // Analyze manifest content to detect protocol and select appropriate parser
+        if (data.indexOf('SmoothStreamingMedia') > -1) {
+            //do some business to transform it into a Dash Manifest
+            if (mssHandler) {
+                parser = mssHandler.createMssParser();
+                mssHandler.registerEvents();
+            }else {
+                errorHandler.manifestError('manifest type unsupported', 'createParser');
+            }
+            return parser;
+        } else if (data.indexOf('MPD') > -1) {
+            return DashParser(context).create();
+        } else {
+            return parser;
+        }
+    }
+
+    function load(url) {
         const request = new TextRequest(url, HTTPRequest.MPD_TYPE);
 
         xhrLoader.load({
@@ -100,6 +125,24 @@ function ManifestLoader(config) {
                     }
 
                     baseUri = urlUtils.parseBaseUrl(url);
+                }
+
+                // Create parser according to manifest type
+                if (parser === null) {
+                    parser = createParser(data);
+                }
+
+                if (parser === null) {
+                    eventBus.trigger(
+                        Events.INTERNAL_MANIFEST_LOADED, {
+                            manifest: null,
+                            error: new Error(
+                                MANIFEST_LOADER_ERROR_PARSING_FAILURE,
+                                `Failed detecting manifest type: ${url}`
+                            )
+                        }
+                    );
+                    return;
                 }
 
                 const manifest = parser.parse(data, xlinkController);
@@ -152,6 +195,10 @@ function ManifestLoader(config) {
         if (xhrLoader) {
             xhrLoader.abort();
             xhrLoader = null;
+        }
+
+        if (mssHandler) {
+            mssHandler.reset();
         }
     }
 

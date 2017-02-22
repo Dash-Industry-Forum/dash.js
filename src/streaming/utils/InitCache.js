@@ -50,7 +50,11 @@ function InitCache() {
     }
 
     function extract (streamId, mediaType, quality) {
-        return data[streamId][mediaType][quality];
+        if (data && data[streamId] && data[streamId][mediaType] && data[streamId][mediaType][quality]) {
+            return data[streamId][mediaType][quality];
+        } else {
+            return null;
+        }
     }
 
 
