@@ -490,13 +490,13 @@ function AbrController() {
         }
 
         var minBitrate = getMinAllowedBitrateFor(type);
-        if (!isNaN(minBitrate)) {
+        if (minBitrate) {
             var minIdx = getQualityForBitrate(streamProcessorDict[type].getMediaInfo(), minBitrate);
             newIdx = Math.max (idx , minIdx);
         }
 
         var maxBitrate = getMaxAllowedBitrateFor(type);
-        if (!isNaN(maxBitrate)) {
+        if (maxBitrate) {
             var maxIdx = getQualityForBitrate(streamProcessorDict[type].getMediaInfo(), maxBitrate);
             newIdx = Math.min (newIdx , maxIdx);
         }
