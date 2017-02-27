@@ -26,6 +26,16 @@ app.controller('DashController', function($scope, sources, contributors) {
 
     sources.query(function (data) {
         $scope.availableStreams = data.items;
+        //if no mss package, remove mss samples.
+        let MssHandler = dashjs.MssHandler; /* jshint ignore:line */
+        if (typeof MssHandler !== 'function')
+        {
+            for(var i = $scope.availableStreams.length - 1; i >= 0; i--){
+                if($scope.availableStreams[i].name === 'Smooth Streaming'){
+                    $scope.availableStreams.splice(i,1);
+                }
+            }
+        }
     });
 
     contributors.query(function (data) {
