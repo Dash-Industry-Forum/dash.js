@@ -280,8 +280,8 @@ function SourceBufferController() {
 
         if (!appendMethod) return;
 
-        try {
-            waitForUpdateEnd(buffer, function () {
+        waitForUpdateEnd(buffer, function () {
+            try {
                 if (acceptsChunk) {
                     // chunk.start is used in calculations by TextSourceBuffer
                     buffer[appendMethod](bytes, chunk);
@@ -292,17 +292,17 @@ function SourceBufferController() {
                 waitForUpdateEnd(buffer, function () {
                     eventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes});
                 });
-            });
-        } catch (err) {
-            eventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes, error: new Error(err.code, err.message, null)});
-        }
+            } catch (err) {
+                eventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes, error: new Error(err.code, err.message, null)});
+            }
+        });
     }
 
     function remove(buffer, start, end, mediaSource) {
 
-        try {
-            // make sure that the given time range is correct. Otherwise we will get InvalidAccessError
-            waitForUpdateEnd(buffer, function () {
+        // make sure that the given time range is correct. Otherwise we will get InvalidAccessError
+        waitForUpdateEnd(buffer, function () {
+            try {
                 if ((start >= 0) && (end > start) && (mediaSource.readyState !== 'ended')) {
                     buffer.remove(start, end);
                 }
@@ -310,10 +310,10 @@ function SourceBufferController() {
                 waitForUpdateEnd(buffer, function () {
                     eventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end});
                 });
-            });
-        } catch (err) {
-            eventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end, error: new Error(err.code, err.message, null)});
-        }
+            } catch (err) {
+                eventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end, error: new Error(err.code, err.message, null)});
+            }
+        });
     }
 
     function abort(mediaSource, buffer) {
