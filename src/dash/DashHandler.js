@@ -164,7 +164,7 @@ function DashHandler(config) {
         request.availabilityEndTime = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationStartTime + period.duration, period.mpd, isDynamic);
         request.quality = representation.index;
         request.mediaInfo = streamProcessor.getMediaInfo();
-        request.adaptationSetId = representation.adaptation.id;
+        request.representationId = representation.id;
 
         if (setRequestUrl(request, representation.initialization, representation)) {
             return request;

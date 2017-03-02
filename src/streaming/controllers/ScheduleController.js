@@ -202,7 +202,7 @@ function ScheduleController(config) {
             const getNextFragment = function () {
                 if (currentRepresentationInfo.quality !== lastInitQuality) {
                     lastInitQuality = currentRepresentationInfo.quality;
-                    bufferController.switchInitData(streamProcessor.getStreamInfo().id, currentRepresentationInfo.quality, adapter.getDataForMedia(currentRepresentationInfo.mediaInfo).id);
+                    bufferController.switchInitData(streamProcessor.getStreamInfo().id, currentRepresentationInfo.id);
                 } else {
                     const replacement = replaceRequestArray.shift();
 

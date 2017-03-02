@@ -56,7 +56,7 @@ class FragmentRequest {
         this.bytesTotal = NaN;
         this.delayLoadingTime = NaN;
         this.responseType = 'arraybuffer';
-        this.adaptationSetId = null;
+        this.representationId = null;
     }
 }
 
