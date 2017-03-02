@@ -43,15 +43,17 @@ function InitCache() {
         const id = chunk.streamId;
         const type = chunk.mediaInfo.type;
         const quality = chunk.quality;
+        const adaptationSetId = chunk.adaptationSetId;
 
         data[id] = data[id] || {};
         data[id][type] = data[id][type] || {};
-        data[id][type][quality] = chunk;
+        data[id][type][adaptationSetId] = data[id][type][adaptationSetId] || {};
+        data[id][type][adaptationSetId][quality] = chunk;
     }
 
-    function extract (streamId, mediaType, quality) {
-        if (data && data[streamId] && data[streamId][mediaType] && data[streamId][mediaType][quality]) {
-            return data[streamId][mediaType][quality];
+    function extract (streamId, mediaType, quality, adaptationSetId) {
+        if (data && data[streamId] && data[streamId][mediaType] && data[streamId][mediaType][adaptationSetId] && data[streamId][mediaType][adaptationSetId][quality]) {
+            return data[streamId][mediaType][adaptationSetId][quality];
         } else {
             return null;
         }
