@@ -85,6 +85,7 @@ function FragmentController(/*config*/) {
         chunk.bytes = bytes;
         chunk.index = request.index;
         chunk.quality = request.quality;
+        chunk.adaptationSetId = request.adaptationSetId;
 
         return chunk;
     }
