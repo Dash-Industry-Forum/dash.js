@@ -147,7 +147,7 @@ function BufferController(config) {
     }
 
     function isActive() {
-        return streamProcessor.getStreamInfo().id === streamController.getActiveStreamInfo().id;
+        return streamProcessor && streamController ? streamProcessor.getStreamInfo().id === streamController.getActiveStreamInfo().id : false;
     }
 
     function onInitFragmentLoaded(e) {
@@ -263,9 +263,11 @@ function BufferController(config) {
     }
 
     function updateBufferLevel() {
-        bufferLevel = sourceBufferController.getBufferLength(buffer, playbackController.getTime());
-        eventBus.trigger(Events.BUFFER_LEVEL_UPDATED, {sender: instance, bufferLevel: bufferLevel});
-        checkIfSufficientBuffer();
+        if (playbackController) {
+            bufferLevel = sourceBufferController.getBufferLength(buffer, playbackController.getTime());
+            eventBus.trigger(Events.BUFFER_LEVEL_UPDATED, {sender: instance, bufferLevel: bufferLevel});
+            checkIfSufficientBuffer();
+        }
     }
 
     function addBufferMetrics() {
