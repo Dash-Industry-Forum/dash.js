@@ -217,7 +217,7 @@ function BufferController(config) {
                 return;
             }
 
-            if (!isNaN(appendedBytesInfo.index)) {
+            if (appendedBytesInfo && !isNaN(appendedBytesInfo.index)) {
                 maxAppendedIndex = Math.max(appendedBytesInfo.index, maxAppendedIndex);
                 checkIfBufferingCompleted();
             }
@@ -231,13 +231,15 @@ function BufferController(config) {
 
             onPlaybackProgression();
             isAppendingInProgress = false;
-            eventBus.trigger(Events.BYTES_APPENDED, {
-                sender: instance,
-                quality: appendedBytesInfo.quality,
-                startTime: appendedBytesInfo.start,
-                index: appendedBytesInfo.index,
-                bufferedRanges: ranges
-            });
+            if (appendedBytesInfo) {
+                eventBus.trigger(Events.BYTES_APPENDED, {
+                    sender: instance,
+                    quality: appendedBytesInfo.quality,
+                    startTime: appendedBytesInfo.start,
+                    index: appendedBytesInfo.index,
+                    bufferedRanges: ranges
+                });
+            }
         }
     }
 
