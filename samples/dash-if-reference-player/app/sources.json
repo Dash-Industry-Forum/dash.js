@@ -1,27 +1,6 @@
 {
   "items": [
     {
-      "name": "Smooth Streaming",
-      "submenu": [
-        {
-          "url": "http://2is7server2.rd.francetelecom.com/hasplayer/VOD_1/VOD_1.ism/manifest",
-          "name": "Prince Of Persia"
-        },
-        {
-          "url": "http://2is7server1.rd.francetelecom.com/VOD/BBB-SD/big_buck_bunny_1080p_stereo.ism/Manifest",
-          "name": "Big Buck Bunny"
-        },
-        {
-          "url": "http://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest",
-          "name": "Super Speedway"
-        },
-        {
-          "url": "http://playready.directtaps.net/smoothstreaming/SSWSS720H264PR/SuperSpeedway_720.ism/Manifest",
-          "name": "Super Speedway + PlayReady DRM"
-        }
-      ]
-    },
-    {
       "name": "VOD (Static MPD)",
       "submenu": [
         {
@@ -1414,6 +1393,27 @@
         {
           "name": "Unified Streaming Live",
           "url": "http://live.unified-streaming.com/loop/loop.isml/loop.mpd?format=mp4&session_id=25020"
+        }
+      ]
+    },
+    {
+      "name": "Smooth Streaming",
+      "submenu": [
+        {
+          "url": "http://2is7server2.rd.francetelecom.com/hasplayer/VOD_1/VOD_1.ism/manifest",
+          "name": "Prince Of Persia"
+        },
+        {
+          "url": "http://2is7server1.rd.francetelecom.com/VOD/BBB-SD/big_buck_bunny_1080p_stereo.ism/Manifest",
+          "name": "Big Buck Bunny"
+        },
+        {
+          "url": "http://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest",
+          "name": "Super Speedway"
+        },
+        {
+          "url": "http://playready.directtaps.net/smoothstreaming/SSWSS720H264PR/SuperSpeedway_720.ism/Manifest",
+          "name": "Super Speedway + PlayReady DRM"
         }
       ]
     }
