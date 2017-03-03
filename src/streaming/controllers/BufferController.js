@@ -157,8 +157,8 @@ function BufferController(config) {
         appendToBuffer(e.chunk);
     }
 
-    function switchInitData(streamId, adaptationSetId) {
-        const chunk = initCache.extract(streamId, adaptationSetId);
+    function switchInitData(streamId, representationId) {
+        const chunk = initCache.extract(streamId, representationId);
         if (chunk) {
             appendToBuffer(chunk);
         } else {
