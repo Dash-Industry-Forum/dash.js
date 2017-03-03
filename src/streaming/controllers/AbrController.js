@@ -228,11 +228,23 @@ function AbrController() {
         return NaN;
     }
 
+    function getMinAllowedBitrateFor(type) {
+        if (bitrateDict.hasOwnProperty('min') && bitrateDict.min.hasOwnProperty(type)) {
+            return bitrateDict.min[type];
+        }
+        return NaN;
+    }
+
     //TODO  change bitrateDict structure to hold one object for video and audio with initial and max values internal.
     // This means you need to update all the logic around initial bitrate DOMStorage, RebController etc...
     function setMaxAllowedBitrateFor(type, value) {
         bitrateDict.max = bitrateDict.max || {};
         bitrateDict.max[type] = value;
+    }
+
+    function setMinAllowedBitrateFor(type, value) {
+        bitrateDict.min = bitrateDict.min || {};
+        bitrateDict.min[type] = value;
     }
 
     function getMaxAllowedRepresentationRatioFor(type) {
@@ -471,12 +483,25 @@ function AbrController() {
     }
 
     function checkMaxBitrate(idx, type) {
-        var maxBitrate = getMaxAllowedBitrateFor(type);
-        if (isNaN(maxBitrate) || !streamProcessorDict[type]) {
-            return idx;
+        var newIdx = idx;
+
+        if (!streamProcessorDict[type]) {
+            return newIdx;
         }
-        var maxIdx = getQualityForBitrate(streamProcessorDict[type].getMediaInfo(), maxBitrate);
-        return Math.min (idx , maxIdx);
+
+        var minBitrate = getMinAllowedBitrateFor(type);
+        if (minBitrate) {
+            var minIdx = getQualityForBitrate(streamProcessorDict[type].getMediaInfo(), minBitrate);
+            newIdx = Math.max (idx , minIdx);
+        }
+
+        var maxBitrate = getMaxAllowedBitrateFor(type);
+        if (maxBitrate) {
+            var maxIdx = getQualityForBitrate(streamProcessorDict[type].getMediaInfo(), maxBitrate);
+            newIdx = Math.min (newIdx , maxIdx);
+        }
+
+        return newIdx;
     }
 
     function checkMaxRepresentationRatio(idx, type, maxIdx) {
@@ -579,7 +604,9 @@ function AbrController() {
         getBitrateList: getBitrateList,
         getQualityForBitrate: getQualityForBitrate,
         getMaxAllowedBitrateFor: getMaxAllowedBitrateFor,
+        getMinAllowedBitrateFor: getMinAllowedBitrateFor,
         setMaxAllowedBitrateFor: setMaxAllowedBitrateFor,
+        setMinAllowedBitrateFor: setMinAllowedBitrateFor,
         getMaxAllowedRepresentationRatioFor: getMaxAllowedRepresentationRatioFor,
         setMaxAllowedRepresentationRatioFor: setMaxAllowedRepresentationRatioFor,
         getInitialBitrateFor: getInitialBitrateFor,
