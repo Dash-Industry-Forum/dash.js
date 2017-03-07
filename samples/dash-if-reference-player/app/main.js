@@ -669,7 +669,7 @@ app.controller('DashController', function($scope, sources, contributors) {
             var bufferLevel = dashMetrics.getCurrentBufferLevel(metrics);
             var maxIndex = dashMetrics.getMaxIndexForBufferType(type, periodIdx);
             var index = $scope.player.getQualityFor(type);
-            var bitrate = Math.round(dashMetrics.getBandwidthForRepresentation(repSwitch.to, periodIdx) / 1000);
+            var bitrate = repSwitch ? Math.round(dashMetrics.getBandwidthForRepresentation(repSwitch.to, periodIdx) / 1000) : NaN;
             var droppedFPS = dashMetrics.getCurrentDroppedFrames(metrics) ? dashMetrics.getCurrentDroppedFrames(metrics).droppedFrames : 0;
 
             $scope[type + "BufferLength"] = bufferLevel;
