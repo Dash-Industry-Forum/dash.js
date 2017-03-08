@@ -310,9 +310,13 @@ function ScheduleController(config) {
         if (e.error || streamProcessor.getStreamInfo().id !== e.streamInfo.id) return;
         currentRepresentationInfo = streamProcessor.getCurrentRepresentationInfo();
 
-        if (isDynamic && initialRequest) {
-            timelineConverter.setTimeSyncCompleted(true);
-            setLiveEdgeSeekTarget();
+        if (initialRequest) {
+            if (isDynamic) {
+                timelineConverter.setTimeSyncCompleted(true);
+                setLiveEdgeSeekTarget();
+            } else {
+                seekTarget = playbackController.getStreamStartTime(false);
+            }
         }
 
         if (isStopped) {
