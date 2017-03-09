@@ -240,13 +240,18 @@ function MetricsModel() {
         return vo;
     }
 
+    function pushAndNotify(mediaType, metricType, metricObject) {
+        pushMetrics(mediaType, metricType, metricObject);
+        metricAdded(mediaType, metricType, metricObject);
+    }
+
     function addBufferLevel(mediaType, t, level) {
         var vo = new BufferLevel();
         vo.t = t;
         vo.level = level;
-        pushMetrics(mediaType, 'BufferLevel', vo);
 
-        metricAdded(mediaType, adapter.metricsList.BUFFER_LEVEL, vo);
+        pushAndNotify(mediaType, adapter.metricsList.BUFFER_LEVEL, vo);
+
         return vo;
     }
 
@@ -254,21 +259,20 @@ function MetricsModel() {
         var vo = new BufferState();
         vo.target = target;
         vo.state = state;
-        pushMetrics(mediaType, 'BufferState', vo);
 
-        metricAdded(mediaType, adapter.metricsList.BUFFER_STATE, vo);
+        pushAndNotify(mediaType, adapter.metricsList.BUFFER_STATE, vo);
+
         return vo;
     }
-
 
     function addDVRInfo(mediaType, currentTime, mpd, range) {
         var vo = new DVRInfo();
         vo.time = currentTime ;
         vo.range = range;
         vo.manifestInfo = mpd;
-        pushMetrics(mediaType, 'DVRInfo', vo);
 
-        metricAdded(mediaType, adapter.metricsList.DVR_INFO, vo);
+        pushAndNotify(mediaType, adapter.metricsList.DVR_INFO, vo);
+
         return vo;
     }
 
