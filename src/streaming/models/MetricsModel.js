@@ -134,9 +134,8 @@ function MetricsModel() {
         vo.tclose = tclose;
         vo.tconnect = tconnect;
 
-        pushMetrics(mediaType, 'TcpList', vo);
+        pushAndNotify(mediaType, adapter.metricsList.TCP_CONNECTION, vo);
 
-        metricAdded(mediaType, adapter.metricsList.TCP_CONNECTION, vo);
         return vo;
     }
 
@@ -215,9 +214,8 @@ function MetricsModel() {
             delete vo.trace;
         }
 
-        pushMetrics(mediaType, 'HttpList', vo);
+        pushAndNotify(mediaType, adapter.metricsList.HTTP_REQUEST, vo);
 
-        metricAdded(mediaType, adapter.metricsList.HTTP_REQUEST, vo);
         return vo;
     }
 
@@ -234,9 +232,8 @@ function MetricsModel() {
             delete vo.lto;
         }
 
-        pushMetrics(mediaType, 'RepSwitchList', vo);
+        pushAndNotify(mediaType, adapter.metricsList.TRACK_SWITCH, vo);
 
-        metricAdded(mediaType, adapter.metricsList.TRACK_SWITCH, vo);
         return vo;
     }
 
@@ -287,9 +284,8 @@ function MetricsModel() {
             return list[list.length - 1];
         }
 
-        pushMetrics(mediaType, 'DroppedFrames', vo);
+        pushAndNotify(mediaType, adapter.metricsList.DROPPED_FRAMES, vo);
 
-        metricAdded(mediaType, adapter.metricsList.DROPPED_FRAMES, vo);
         return vo;
     }
 
@@ -308,9 +304,8 @@ function MetricsModel() {
 
         vo.state = state;
 
-        pushMetrics(mediaType, 'SchedulingInfo', vo);
+        pushAndNotify(mediaType, adapter.metricsList.SCHEDULING_INFO, vo);
 
-        metricAdded(mediaType, adapter.metricsList.SCHEDULING_INFO, vo);
         return vo;
     }
 
