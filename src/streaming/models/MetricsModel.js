@@ -398,18 +398,15 @@ function MetricsModel() {
             delete vo.trace;
         }
 
-        pushMetrics(type, 'PlayList', vo);
+        pushAndNotify(type, adapter.metricsList.PLAY_LIST, vo);
 
-        metricAdded(type, adapter.metricsList.PLAY_LIST, vo);
         return vo;
     }
 
     function addDVBErrors(vo) {
         var type = 'stream';
 
-        pushMetrics(type, 'DVBErrors', vo);
-
-        metricAdded(type, adapter.metricsList.DVB_ERRORS, vo);
+        pushAndNotify(type, adapter.metricsList.DVB_ERRORS, vo);
 
         return vo;
     }
