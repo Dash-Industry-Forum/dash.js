@@ -33,7 +33,6 @@ import Events from '../core/events/Events';
 import MediaPlayerEvents from '../streaming/MediaPlayerEvents';
 import EventBus from '../core/EventBus';
 import FactoryMaker from '../core/FactoryMaker';
-//import Debug from '../core/Debug';
 import DataChunk from '../streaming/vo/DataChunk';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
 import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
@@ -43,7 +42,6 @@ import MssParser from './parser/MssParser';
 function MssHandler(config) {
 
     let context = this.context;
-    //let log = Debug(context).getInstance().log;
     let eventBus = config.eventBus;
     let mssFragmentProcessor = MssFragmentProcessor(context).create();
     let mssParser;
