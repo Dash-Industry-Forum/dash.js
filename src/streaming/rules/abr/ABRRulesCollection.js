@@ -64,13 +64,13 @@ function ABRRulesCollection() {
             qualitySwitchRules.push(
                 BolaRule(context).create({
                     metricsModel: metricsModel,
-                    dashMetrics: DashMetrics(context).getInstance()
+                    dashMetrics: dashMetrics
                 })
             );
             abandonFragmentRules.push(
                 BolaAbandonRule(context).create({
                     metricsModel: metricsModel,
-                    dashMetrics: DashMetrics(context).getInstance()
+                    dashMetrics: dashMetrics
                 })
             );
         } else {
