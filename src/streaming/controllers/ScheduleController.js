@@ -37,10 +37,7 @@ import MediaController from './MediaController';
 import BufferLevelRule from '../rules/scheduling/BufferLevelRule';
 import NextFragmentRequestRule from '../rules/scheduling/NextFragmentRequestRule';
 import TextSourceBuffer from '../TextSourceBuffer';
-import MetricsModel from '../models/MetricsModel';
 import FragmentModel from '../models/FragmentModel';
-import DashMetrics from '../../dash/DashMetrics';
-import DashAdapter from '../../dash/DashAdapter';
 import SourceBufferController from '../controllers/SourceBufferController';
 import LiveEdgeFinder from '../utils/LiveEdgeFinder';
 import EventBus from '../../core/EventBus';
@@ -121,13 +118,13 @@ function ScheduleController(config) {
         scheduleWhilePaused = mediaPlayerModel.getScheduleWhilePaused();
 
         bufferLevelRule = BufferLevelRule(context).create({
-            dashMetrics: DashMetrics(context).getInstance(),
-            metricsModel: MetricsModel(context).getInstance(),
+            dashMetrics: dashMetrics,
+            metricsModel: metricsModel,
             textSourceBuffer: TextSourceBuffer(context).getInstance()
         });
 
         nextFragmentRequestRule = NextFragmentRequestRule(context).create({
-            adapter: DashAdapter(context).getInstance(),
+            adapter: adapter,
             sourceBufferController: SourceBufferController(context).getInstance(),
             textSourceBuffer: TextSourceBuffer(context).getInstance()
 
