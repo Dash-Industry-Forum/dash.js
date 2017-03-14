@@ -105,7 +105,6 @@ function StreamController() {
 
         manifestUpdater = ManifestUpdater(context).getInstance();
         manifestUpdater.setConfig({
-            log: log,
             manifestModel: manifestModel,
             dashManifestModel: dashManifestModel
         });
