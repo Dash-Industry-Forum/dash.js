@@ -36,7 +36,6 @@ import PlaybackController from '../../streaming/controllers/PlaybackController';
 import StreamController from '../../streaming/controllers/StreamController';
 import ManifestModel from '../../streaming/models/ManifestModel';
 import MetricsModel from '../../streaming/models/MetricsModel';
-import MediaPlayerModel from '../../streaming/models/MediaPlayerModel';
 import DOMStorage from '../../streaming/utils/DOMStorage';
 import Error from '../../streaming/vo/Error';
 import EventBus from '../../core/EventBus';
@@ -68,8 +67,7 @@ function RepresentationController() {
         domStorage,
         timelineConverter,
         dashManifestModel,
-        dashMetrics,
-        mediaPlayerModel;
+        dashMetrics;
 
     function setup() {
         data = null;
@@ -86,13 +84,11 @@ function RepresentationController() {
         timelineConverter = TimelineConverter(context).getInstance();
         dashManifestModel = DashManifestModel(context).getInstance();
         dashMetrics = DashMetrics(context).getInstance();
-        mediaPlayerModel = MediaPlayerModel(context).getInstance();
 
         eventBus.on(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
         eventBus.on(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
         eventBus.on(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
-
     }
 
     function setConfig(config) {
@@ -148,8 +144,6 @@ function RepresentationController() {
         timelineConverter = null;
         dashManifestModel = null;
         dashMetrics = null;
-        mediaPlayerModel = null;
-
     }
 
     function updateData(dataValue, adaptation, type) {
