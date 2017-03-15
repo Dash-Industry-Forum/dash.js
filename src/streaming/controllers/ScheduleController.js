@@ -127,7 +127,6 @@ function ScheduleController(config) {
             adapter: adapter,
             sourceBufferController: SourceBufferController(context).getInstance(),
             textSourceBuffer: TextSourceBuffer(context).getInstance()
-
         });
 
         if (dashManifestModel.getIsTextTrack(type)) {
