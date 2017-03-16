@@ -273,7 +273,7 @@ function X2JS(config) {
             // Attributes
             var nodeLocalName = getNodeLocalName(node)
             for(var aidx=0; aidx <node.attributes.length; aidx++) {
-                var attr = node.attributes.[aidx];
+                var attr = node.attributes[aidx];
                 result.__cnt++;
 
                 var value2 = attr.value;
