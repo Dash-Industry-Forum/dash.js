@@ -205,40 +205,40 @@ function BufferController(config) {
     }
 
     function onAppended(e) {
-        if (buffer !== e.buffer) return;
-
-        if (e.error || !hasEnoughSpaceToAppend()) {
-            if (e.error.code === SourceBufferController.QUOTA_EXCEEDED_ERROR_CODE) {
-                criticalBufferLevel = sourceBufferController.getTotalBufferedTime(buffer) * 0.8;
+        if (buffer === e.buffer) {
+            if (e.error || !hasEnoughSpaceToAppend()) {
+                if (e.error.code === SourceBufferController.QUOTA_EXCEEDED_ERROR_CODE) {
+                    criticalBufferLevel = sourceBufferController.getTotalBufferedTime(buffer) * 0.8;
+                }
+                if (e.error.code === SourceBufferController.QUOTA_EXCEEDED_ERROR_CODE || !hasEnoughSpaceToAppend()) {
+                    eventBus.trigger(Events.QUOTA_EXCEEDED, {sender: instance, criticalBufferLevel: criticalBufferLevel}); //Tells ScheduleController to stop scheduling.
+                    clearBuffer(getClearRange()); // Then we clear the buffer and onCleared event will tell ScheduleController to start scheduling again.
+                }
+                return;
             }
-            if (e.error.code === SourceBufferController.QUOTA_EXCEEDED_ERROR_CODE || !hasEnoughSpaceToAppend()) {
-                eventBus.trigger(Events.QUOTA_EXCEEDED, {sender: instance, criticalBufferLevel: criticalBufferLevel}); //Tells ScheduleController to stop scheduling.
-                clearBuffer(getClearRange()); // Then we clear the buffer and onCleared event will tell ScheduleController to start scheduling again.
+
+            if (!isNaN(appendedBytesInfo.index)) {
+                maxAppendedIndex = Math.max(appendedBytesInfo.index, maxAppendedIndex);
+                checkIfBufferingCompleted();
             }
-            return;
-        }
 
-        if (!isNaN(appendedBytesInfo.index)) {
-            maxAppendedIndex = Math.max(appendedBytesInfo.index, maxAppendedIndex);
-            checkIfBufferingCompleted();
-        }
-
-        const ranges = sourceBufferController.getAllRanges(buffer);
-        if (ranges && ranges.length > 0) {
-            for (let i = 0, len = ranges.length; i < len; i++) {
-                log('Buffered Range for type:', type , ':' ,ranges.start(i) ,  ' - ' ,  ranges.end(i));
+            const ranges = sourceBufferController.getAllRanges(buffer);
+            if (ranges && ranges.length > 0) {
+                for (let i = 0, len = ranges.length; i < len; i++) {
+                    log('Buffered Range for type:', type , ':' ,ranges.start(i) ,  ' - ' ,  ranges.end(i));
+                }
             }
-        }
 
-        onPlaybackProgression();
-        isAppendingInProgress = false;
-        eventBus.trigger(Events.BYTES_APPENDED, {
-            sender: instance,
-            quality: appendedBytesInfo.quality,
-            startTime: appendedBytesInfo.start,
-            index: appendedBytesInfo.index,
-            bufferedRanges: ranges
-        });
+            onPlaybackProgression();
+            isAppendingInProgress = false;
+            eventBus.trigger(Events.BYTES_APPENDED, {
+                sender: instance,
+                quality: appendedBytesInfo.quality,
+                startTime: appendedBytesInfo.start,
+                index: appendedBytesInfo.index,
+                bufferedRanges: ranges
+            });
+        }
     }
 
     function onQualityChanged(e) {

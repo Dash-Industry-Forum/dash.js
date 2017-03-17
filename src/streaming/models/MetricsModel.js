@@ -134,9 +134,8 @@ function MetricsModel() {
         vo.tclose = tclose;
         vo.tconnect = tconnect;
 
-        pushMetrics(mediaType, 'TcpList', vo);
+        pushAndNotify(mediaType, adapter.metricsList.TCP_CONNECTION, vo);
 
-        metricAdded(mediaType, adapter.metricsList.TCP_CONNECTION, vo);
         return vo;
     }
 
@@ -215,9 +214,8 @@ function MetricsModel() {
             delete vo.trace;
         }
 
-        pushMetrics(mediaType, 'HttpList', vo);
+        pushAndNotify(mediaType, adapter.metricsList.HTTP_REQUEST, vo);
 
-        metricAdded(mediaType, adapter.metricsList.HTTP_REQUEST, vo);
         return vo;
     }
 
@@ -234,19 +232,23 @@ function MetricsModel() {
             delete vo.lto;
         }
 
-        pushMetrics(mediaType, 'RepSwitchList', vo);
+        pushAndNotify(mediaType, adapter.metricsList.TRACK_SWITCH, vo);
 
-        metricAdded(mediaType, adapter.metricsList.TRACK_SWITCH, vo);
         return vo;
+    }
+
+    function pushAndNotify(mediaType, metricType, metricObject) {
+        pushMetrics(mediaType, metricType, metricObject);
+        metricAdded(mediaType, metricType, metricObject);
     }
 
     function addBufferLevel(mediaType, t, level) {
         var vo = new BufferLevel();
         vo.t = t;
         vo.level = level;
-        pushMetrics(mediaType, 'BufferLevel', vo);
 
-        metricAdded(mediaType, adapter.metricsList.BUFFER_LEVEL, vo);
+        pushAndNotify(mediaType, adapter.metricsList.BUFFER_LEVEL, vo);
+
         return vo;
     }
 
@@ -254,21 +256,20 @@ function MetricsModel() {
         var vo = new BufferState();
         vo.target = target;
         vo.state = state;
-        pushMetrics(mediaType, 'BufferState', vo);
 
-        metricAdded(mediaType, adapter.metricsList.BUFFER_STATE, vo);
+        pushAndNotify(mediaType, adapter.metricsList.BUFFER_STATE, vo);
+
         return vo;
     }
-
 
     function addDVRInfo(mediaType, currentTime, mpd, range) {
         var vo = new DVRInfo();
         vo.time = currentTime ;
         vo.range = range;
         vo.manifestInfo = mpd;
-        pushMetrics(mediaType, 'DVRInfo', vo);
 
-        metricAdded(mediaType, adapter.metricsList.DVR_INFO, vo);
+        pushAndNotify(mediaType, adapter.metricsList.DVR_INFO, vo);
+
         return vo;
     }
 
@@ -283,9 +284,8 @@ function MetricsModel() {
             return list[list.length - 1];
         }
 
-        pushMetrics(mediaType, 'DroppedFrames', vo);
+        pushAndNotify(mediaType, adapter.metricsList.DROPPED_FRAMES, vo);
 
-        metricAdded(mediaType, adapter.metricsList.DROPPED_FRAMES, vo);
         return vo;
     }
 
@@ -304,9 +304,8 @@ function MetricsModel() {
 
         vo.state = state;
 
-        pushMetrics(mediaType, 'SchedulingInfo', vo);
+        pushAndNotify(mediaType, adapter.metricsList.SCHEDULING_INFO, vo);
 
-        metricAdded(mediaType, adapter.metricsList.SCHEDULING_INFO, vo);
         return vo;
     }
 
@@ -399,18 +398,15 @@ function MetricsModel() {
             delete vo.trace;
         }
 
-        pushMetrics(type, 'PlayList', vo);
+        pushAndNotify(type, adapter.metricsList.PLAY_LIST, vo);
 
-        metricAdded(type, adapter.metricsList.PLAY_LIST, vo);
         return vo;
     }
 
     function addDVBErrors(vo) {
         var type = 'stream';
 
-        pushMetrics(type, 'DVBErrors', vo);
-
-        metricAdded(type, adapter.metricsList.DVB_ERRORS, vo);
+        pushAndNotify(type, adapter.metricsList.DVB_ERRORS, vo);
 
         return vo;
     }
