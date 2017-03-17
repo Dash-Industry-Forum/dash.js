@@ -66,14 +66,6 @@ function FragmentModel(config) {
         fragmentLoader = value;
     }
 
-    function setScheduleController(value) {
-        scheduleController = value;
-    }
-
-    function getScheduleController() {
-        return scheduleController;
-    }
-
     function isFragmentLoaded(request) {
         const isEqualComplete = function (req1, req2) {
             return ((req1.action === FragmentRequest.ACTION_COMPLETE) && (req1.action === req2.action));
@@ -255,8 +247,6 @@ function FragmentModel(config) {
 
     instance = {
         setLoader: setLoader,
-        setScheduleController: setScheduleController,
-        getScheduleController: getScheduleController,
         getRequests: getRequests,
         isFragmentLoaded: isFragmentLoaded,
         removeExecutedRequestsBeforeTime: removeExecutedRequestsBeforeTime,

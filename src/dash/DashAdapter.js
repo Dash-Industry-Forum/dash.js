@@ -60,7 +60,6 @@ function DashAdapter() {
         adaptations = {};
     }
 
-
     function getRepresentationForTrackInfo(trackInfo, representationController) {
         return representationController.getRepresentationForQuality(trackInfo.quality);
     }

@@ -92,11 +92,10 @@ function FragmentController(/*config*/) {
     function onFragmentLoadingCompleted(e) {
         if (fragmentModels[e.request.mediaType] !== e.sender) return;
 
-        const scheduleController = e.sender.getScheduleController();
         const request = e.request;
         const bytes = e.response;
         const isInit = isInitializationRequest(request);
-        const streamInfo = scheduleController.getStreamProcessor().getStreamInfo();
+        const streamInfo = request.mediaInfo.streamInfo;
 
         if (!bytes || !streamInfo) {
             log('No ' + request.mediaType + ' bytes to push or stream is inactive.');
