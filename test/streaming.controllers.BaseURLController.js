@@ -1,5 +1,5 @@
 import BaseURLController from '../src/streaming/controllers/BaseURLController';
-import BasicSelector from '../src/streaming/rules/baseUrlResolution/BasicSelector';
+import BasicSelector from '../src/streaming/utils/baseUrlResolution/BasicSelector';
 import BaseURLSelector from '../src/streaming/utils/BaseURLSelector';
 import BaseURL from '../src/dash/vo/BaseURL';
 
