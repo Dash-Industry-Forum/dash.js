@@ -298,7 +298,6 @@ function StreamController() {
         if (oldStream) oldStream.deactivate();
         activeStream = newStream;
         playbackController.initialize(activeStream.getStreamInfo());
-        videoTrackDetected = checkVideoPresence();
 
         //TODO detect if we should close and repose or jump to activateStream.
         openMediaSource(seekTime);
@@ -343,6 +342,8 @@ function StreamController() {
                 });
                 playbackController.seek(startTime); //seek to period start time
             }
+        }else {
+            videoTrackDetected = checkVideoPresence();
         }
 
         activeStream.startEventController();

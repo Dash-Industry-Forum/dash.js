@@ -356,8 +356,6 @@ function Stream(config) {
         }else {
             streamProcessor.updateMediaInfo(manifest, mediaInfo);
         }
-
-        return streamProcessor;
     }
 
     function initializeMediaForType(type, mediaSource) {
