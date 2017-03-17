@@ -113,7 +113,6 @@ function ScheduleController(config) {
         fragmentController = streamProcessor.getFragmentController();
         bufferController = streamProcessor.getBufferController();
         fragmentModel = fragmentController.getModel(type);
-        fragmentModel.setScheduleController(this);
         isDynamic = streamProcessor.isDynamic();
         scheduleWhilePaused = mediaPlayerModel.getScheduleWhilePaused();
 
