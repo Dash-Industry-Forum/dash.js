@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import MediaPlayerModel from '../../models/MediaPlayerModel';
-import PlaybackController from '../../controllers/PlaybackController';
 import FactoryMaker from '../../../core/FactoryMaker';
 
 function BufferLevelRule(config) {
@@ -39,12 +38,10 @@ function BufferLevelRule(config) {
     const metricsModel = config.metricsModel;
     const textSourceBuffer = config.textSourceBuffer;
 
-    let mediaPlayerModel,
-        playbackController;
+    let mediaPlayerModel;
 
     function setup() {
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
-        playbackController = PlaybackController(context).getInstance();
     }
 
     function execute(streamProcessor, type, videoTrackPresent) {

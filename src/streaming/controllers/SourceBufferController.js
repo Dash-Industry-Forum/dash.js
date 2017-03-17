@@ -30,7 +30,6 @@
  */
 import TextSourceBuffer from '../TextSourceBuffer';
 import MediaController from './MediaController';
-import DashAdapter from '../../dash/DashAdapter';
 import ErrorHandler from '../utils/ErrorHandler';
 import StreamController from './StreamController';
 import TextTracks from '../TextTracks';
@@ -41,7 +40,6 @@ import Error from '../vo/Error';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
-
 
 const QUOTA_EXCEEDED_ERROR_CODE = 22;
 
@@ -75,7 +73,6 @@ function SourceBufferController() {
                 buffer = TextSourceBuffer(context).getInstance();
                 buffer.setConfig({
                     errHandler: ErrorHandler(context).getInstance(),
-                    adapter: DashAdapter(context).getInstance(),
                     dashManifestModel: dashManifestModel,
                     mediaController: MediaController(context).getInstance(),
                     videoModel: VideoModel(context).getInstance(),

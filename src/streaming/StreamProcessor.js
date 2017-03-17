@@ -103,7 +103,6 @@ function StreamProcessor(config) {
         bufferController.initialize(type, mediaSource, this);
         scheduleController.initialize(type, this);
 
-
         fragmentLoader = FragmentLoader(context).create({
             metricsModel: MetricsModel(context).getInstance(),
             errHandler: ErrorHandler(context).getInstance(),
