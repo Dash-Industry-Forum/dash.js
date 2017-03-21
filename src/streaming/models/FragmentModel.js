@@ -52,14 +52,11 @@ function FragmentModel(config) {
     const metricsModel = config.metricsModel;
 
     let instance,
-        scheduleController,
         executedRequests,
         loadingRequests,
         fragmentLoader;
 
     function setup() {
-        scheduleController = null;
-        fragmentLoader = null;
         executedRequests = [];
         loadingRequests = [];
         eventBus.on(Events.LOADING_COMPLETED, onLoadingCompleted, instance);
