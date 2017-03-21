@@ -1893,9 +1893,6 @@ function MediaPlayer() {
         let abrRulesCollection = ABRRulesCollection(context).getInstance();
         abrRulesCollection.initialize();
 
-        let sourceBufferController = SourceBufferController(context).getInstance();
-        sourceBufferController.setConfig({dashManifestModel: dashManifestModel});
-
         mediaController.initialize();
         mediaController.setConfig({
             errHandler: errHandler

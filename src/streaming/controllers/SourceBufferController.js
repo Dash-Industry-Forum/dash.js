@@ -33,6 +33,7 @@ import Error from '../vo/Error';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
+import DashManifestModel from '../../dash/models/DashManifestModel';
 
 const QUOTA_EXCEEDED_ERROR_CODE = 22;
 
@@ -41,8 +42,7 @@ function SourceBufferController() {
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
 
-    let instance,
-        dashManifestModel;
+    let instance;
 
     function createSourceBuffer(mediaSource, mediaInfo) {
 
@@ -345,14 +345,6 @@ function SourceBufferController() {
         } catch (ex) {}
     }
 
-    function setConfig(config) {
-        if (!config) return;
-
-        if (config.dashManifestModel) {
-            dashManifestModel = config.dashManifestModel;
-        }
-    }
-
     function waitForUpdateEnd(buffer, callback) {
         var intervalId;
         var CHECK_INTERVAL = 50;
@@ -401,8 +393,7 @@ function SourceBufferController() {
         getAllRanges: getAllRanges,
         getTotalBufferedTime: getTotalBufferedTime,
         getBufferLength: getBufferLength,
-        getRangeDifference: getRangeDifference,
-        setConfig: setConfig
+        getRangeDifference: getRangeDifference
     };
 
     return instance;
