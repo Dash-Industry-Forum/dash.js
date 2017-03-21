@@ -77,7 +77,7 @@ function TextSourceBuffer() {
         embeddedCea608FieldParsers,
         embeddedTextHtmlRender;
 
-    function initialize(type, bufferController) {
+    function initialize(type, streamProcessor) {
         parser = null;
         fragmentModel = null;
         initializationSegmentReceived = false;
@@ -88,8 +88,6 @@ function TextSourceBuffer() {
         if (!embeddedInitialized) {
             initEmbedded();
         }
-
-        let streamProcessor = bufferController.getStreamProcessor();
 
         mediaInfos = streamProcessor.getMediaInfoArr();
         textTracks.setConfig({
