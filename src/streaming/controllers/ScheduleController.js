@@ -80,7 +80,6 @@ function ScheduleController(config) {
         streamProcessor,
         streamController,
         fragmentController,
-        bufferController,
         bufferLevelRule,
         nextFragmentRequestRule,
         scheduleWhilePaused,
@@ -114,7 +113,6 @@ function ScheduleController(config) {
         abrController = AbrController(context).getInstance();
         streamController = StreamController(context).getInstance();
         fragmentController = streamProcessor.getFragmentController();
-        bufferController = streamProcessor.getBufferController();
         fragmentModel = fragmentController.getModel(type);
         fragmentModel.setScheduleController(instance);
         isDynamic = streamProcessor.isDynamic();
@@ -158,7 +156,7 @@ function ScheduleController(config) {
     }
 
     function start() {
-        if (!currentRepresentationInfo || bufferController.getIsBufferingCompleted()) return;
+        if (!currentRepresentationInfo || streamProcessor.isBufferingCompleted()) return;
         addPlaylistTraceMetrics();
         isStopped = false;
 
@@ -194,7 +192,7 @@ function ScheduleController(config) {
 
     function schedule() {
 
-        if (isStopped || isFragmentProcessingInProgress || !bufferController || playbackController.isPaused() && !scheduleWhilePaused) return;
+        if (isStopped || isFragmentProcessingInProgress || playbackController.isPaused() && !scheduleWhilePaused) return;
 
         validateExecutedFragmentRequest();
 
@@ -213,7 +211,8 @@ function ScheduleController(config) {
                 } else if (currentRepresentationInfo.quality !== lastInitQuality) {
                     log('ScheduleController - quality has changed, get init request');
                     lastInitQuality = currentRepresentationInfo.quality;
-                    bufferController.switchInitData(streamProcessor.getStreamInfo().id, currentRepresentationInfo.id);
+
+                    streamProcessor.switchInitData(currentRepresentationInfo.quality);
                 } else {
                     const replacement = replaceRequestArray.shift();
 
@@ -261,7 +260,7 @@ function ScheduleController(config) {
         if (request && replaceRequestArray.indexOf(request) === -1 && !dashManifestModel.getIsTextTrack(type)) {
             const isCurrentTrack = mediaController.isCurrentTrack(request.mediaInfo);
             const fastSwitchModeEnabled = mediaPlayerModel.getFastSwitchEnabled();
-            const bufferLevel = bufferController.getBufferLevel();
+            const bufferLevel = streamProcessor.getBufferLevel();
             const abandonmentState = abrController.getAbandonmentStateFor(type);
 
             if (!isCurrentTrack ||
@@ -270,7 +269,7 @@ function ScheduleController(config) {
                 log('Reloading outdated fragment at index: ', request.index);
             } else if (request.quality > currentRepresentationInfo.quality) {
                 //The buffer has better quality it in then what we would request so set append point to end of buffer!!
-                setSeekTarget(playbackController.getTime() + bufferController.getBufferLevel());
+                setSeekTarget(playbackController.getTime() + streamProcessor.getBufferLevel());
             }
         }
     }
