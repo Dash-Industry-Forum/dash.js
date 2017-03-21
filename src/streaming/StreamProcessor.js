@@ -37,8 +37,6 @@ import TextBufferController from './text/TextBufferController';
 import ScheduleController from './controllers/ScheduleController';
 import MediaPlayerModel from './models/MediaPlayerModel';
 import MetricsModel from './models/MetricsModel';
-import FragmentLoader from './FragmentLoader';
-import RequestModifier from './utils/RequestModifier';
 import SourceBufferController from './controllers/SourceBufferController';
 import TextController from './text/TextController';
 import DashManifestModel from '../dash/models/DashManifestModel';
@@ -69,10 +67,8 @@ function StreamProcessor(config) {
         scheduleController,
         representationController,
         fragmentController,
-        fragmentLoader,
         fragmentModel,
         spExternalControllers;
-
 
     function setup() {
         mediaInfoArr = [];
@@ -113,14 +109,7 @@ function StreamProcessor(config) {
         bufferController.initialize(type, mediaSource, this);
         scheduleController.initialize(type, this);
 
-        fragmentLoader = FragmentLoader(context).create({
-            metricsModel: MetricsModel(context).getInstance(),
-            errHandler: ErrorHandler(context).getInstance(),
-            requestModifier: RequestModifier(context).getInstance()
-        });
-
         fragmentModel = scheduleController.getFragmentModel();
-        fragmentModel.setLoader(fragmentLoader);
 
         representationController = RepresentationController(context).create();
         representationController.initialize(this);
@@ -167,7 +156,6 @@ function StreamProcessor(config) {
         unregisterAllExternalController();
 
         fragmentController = null;
-        fragmentLoader = null;
 
         eventController = null;
         stream = null;
@@ -187,10 +175,6 @@ function StreamProcessor(config) {
 
     function getRepresentationController() {
         return representationController;
-    }
-
-    function getFragmentLoader() {
-        return fragmentLoader;
     }
 
     function getIndexHandler() {
@@ -317,7 +301,6 @@ function StreamProcessor(config) {
         isUpdating: isUpdating,
         getType: getType,
         getBufferController: getBufferController,
-        getFragmentLoader: getFragmentLoader,
         getFragmentModel: getFragmentModel,
         getScheduleController: getScheduleController,
         getEventController: getEventController,
