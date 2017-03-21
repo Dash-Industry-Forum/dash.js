@@ -134,7 +134,7 @@ function BufferController(config) {
             sourceBuffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
 
             if (sourceBuffer && sourceBuffer.hasOwnProperty('initialize')) {
-                sourceBuffer.initialize(type, this);
+                sourceBuffer.initialize(type, streamProcessor);
             }
         } catch (e) {
             errHandler.mediaSourceError('Error creating ' + type + ' source buffer.');
