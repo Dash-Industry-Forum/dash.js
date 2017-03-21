@@ -235,14 +235,6 @@ function StreamProcessor(config) {
         return eventController;
     }
 
-    function start() {
-        scheduleController.start();
-    }
-
-    function stop() {
-        scheduleController.stop();
-    }
-
     function getCurrentRepresentationInfo() {
         return adapter.getCurrentRepresentationInfo(representationController);
     }
@@ -322,8 +314,6 @@ function StreamProcessor(config) {
         registerExternalController: registerExternalController,
         unregisterExternalController: unregisterExternalController,
         unregisterAllExternalController: unregisterAllExternalController,
-        start: start,
-        stop: stop,
         isDynamic: isDynamic,
         reset: reset
     };
