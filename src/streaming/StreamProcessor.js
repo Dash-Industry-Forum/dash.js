@@ -222,7 +222,7 @@ function StreamProcessor(config) {
             return bufferController.getIsBufferingCompleted();
         }
 
-        return null;
+        return false;
     }
 
     function getBufferLevel() {
