@@ -221,6 +221,14 @@ function StreamProcessor(config) {
         return bufferController.getIsBufferingCompleted();
     }
 
+    function getBufferLevel() {
+        return bufferController.getBufferLevel();
+    }
+
+    function switchInitData(quality) {
+        bufferController.switchInitData(getStreamInfo().id, quality);
+    }
+
     function createBuffer() {
         return (bufferController.getBuffer() || bufferController.createBuffer(mediaInfo));
     }
@@ -274,6 +282,8 @@ function StreamProcessor(config) {
         getIndexHandler: getIndexHandler,
         getCurrentRepresentationInfo: getCurrentRepresentationInfo,
         getRepresentationInfoForQuality: getRepresentationInfoForQuality,
+        getBufferLevel: getBufferLevel,
+        switchInitData: switchInitData,
         isBufferingCompleted: isBufferingCompleted,
         createBuffer: createBuffer,
         getStreamInfo: getStreamInfo,
