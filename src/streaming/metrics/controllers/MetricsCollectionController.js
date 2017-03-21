@@ -91,8 +91,6 @@ function MetricsCollectionController(config) {
     }
 
     function setup() {
-
-
         eventBus.on(Events.MANIFEST_UPDATED, update);
         eventBus.on(Events.STREAM_TEARDOWN_COMPLETE, reset);
     }
