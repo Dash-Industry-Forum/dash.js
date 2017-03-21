@@ -431,7 +431,7 @@ function ScheduleController(config) {
         }
 
         const manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metricsModel.getMetricsFor('stream'));
-        const latency = currentRepresentationInfo.DVRWindow ? currentRepresentationInfo.DVRWindow.end - playbackController.getTime() : NaN;
+        const latency = currentRepresentationInfo.DVRWindow && playbackController ? currentRepresentationInfo.DVRWindow.end - playbackController.getTime() : NaN;
         metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: latency});
     }
 
