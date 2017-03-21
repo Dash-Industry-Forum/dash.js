@@ -68,7 +68,7 @@ function PlayReady() {
         getHTTPMethod: getHTTPMethod,
         getResponseType: getResponseType,
         getLicenseMessage: getLicenseMessage,
-        getErrorResponse: getErrorResponse,
+        getErrorResponse: getErrorResponse
     };
 
     return instance;

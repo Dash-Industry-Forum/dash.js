@@ -588,7 +588,7 @@ function MssParser(config) {
     }
 
     instance = {
-        parse: internalParse,
+        parse: internalParse
     };
 
     setup();

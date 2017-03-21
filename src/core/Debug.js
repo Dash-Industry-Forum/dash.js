@@ -115,7 +115,7 @@ function Debug() {
         log: log,
         setLogTimestampVisible: setLogTimestampVisible,
         setLogToBrowserConsole: setLogToBrowserConsole,
-        getLogToBrowserConsole: getLogToBrowserConsole,
+        getLogToBrowserConsole: getLogToBrowserConsole
     };
 
     setup();

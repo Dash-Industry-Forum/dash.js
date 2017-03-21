@@ -1,12 +1,10 @@
 {
     "esnext": true,
     "noarg": true,
-    "noempty": true,
     "latedef": "nofunc",
     "undef": true,
     "unused": true,
     "strict": false,
-    "trailing": true,
     "node": true,
     "jquery" : true,
     "devel" : true,

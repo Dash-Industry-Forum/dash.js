@@ -39,7 +39,7 @@ class StringMatcher extends BaseMatcher {
             (attr, nodeName) => {
                 const stringAttrsInElements = {
                     'MPD':                        [ 'id', 'profiles' ],
-                    'Period':                     [ 'id', ],
+                    'Period':                     [ 'id' ],
                     'BaseURL':                    [ 'serviceLocation', 'byteRange' ],
                     'SegmentBase':                [ 'indexRange' ],
                     'Initialization':             [ 'range' ],
