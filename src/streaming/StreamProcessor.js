@@ -244,7 +244,11 @@ function StreamProcessor(config) {
     }
 
     function isBufferingCompleted() {
-        return bufferController.getIsBufferingCompleted();
+        if (bufferController) {
+            return bufferController.getIsBufferingCompleted();
+        }
+
+        return null;
     }
 
     function getBufferLevel() {
@@ -252,7 +256,9 @@ function StreamProcessor(config) {
     }
 
     function switchInitData(quality) {
-        bufferController.switchInitData(getStreamInfo().id, quality);
+        if (bufferController) {
+            bufferController.switchInitData(getStreamInfo().id, quality);
+        }
     }
 
     function createBuffer() {
