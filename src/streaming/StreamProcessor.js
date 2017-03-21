@@ -209,14 +209,6 @@ function StreamProcessor(config) {
         return eventController;
     }
 
-    function start() {
-        scheduleController.start();
-    }
-
-    function stop() {
-        scheduleController.stop();
-    }
-
     function getCurrentRepresentationInfo() {
         return adapter.getCurrentRepresentationInfo(manifestModel.getValue(), representationController);
     }
@@ -291,8 +283,6 @@ function StreamProcessor(config) {
         getMediaSource: getMediaSource,
         getBuffer: getBuffer,
         setBuffer: setBuffer,
-        start: start,
-        stop: stop,
         isDynamic: isDynamic,
         reset: reset
     };
