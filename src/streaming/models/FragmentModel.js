@@ -35,9 +35,6 @@ import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import FragmentRequest from '../vo/FragmentRequest';
 import Debug from '../../core/Debug';
-import FragmentLoader from '../FragmentLoader';
-import RequestModifier from '../utils/RequestModifier';
-import ErrorHandler from '../utils/ErrorHandler';
 
 const FRAGMENT_MODEL_LOADING = 'loading';
 const FRAGMENT_MODEL_EXECUTED = 'executed';
@@ -60,24 +57,8 @@ function FragmentModel(config) {
         executedRequests = [];
         loadingRequests = [];
         eventBus.on(Events.LOADING_COMPLETED, onLoadingCompleted, instance);
-        
-        fragmentLoader = FragmentLoader(context).create({
-            metricsModel: config.metricsModel,
-            errHandler: ErrorHandler(context).getInstance(),
-            requestModifier: RequestModifier(context).getInstance()
-        });
-    }
-    
-    function setScheduleController(value) {
-        scheduleController = value;
-    }
 
-    function getScheduleController() {
-        return scheduleController;
-    }
-
-    function getStreamProcessor() {
-        return scheduleController ? scheduleController.getStreamProcessor() : null;
+        fragmentLoader = config.fragmentLoader;
     }
 
     function isFragmentLoaded(request) {
@@ -287,9 +268,6 @@ function FragmentModel(config) {
     }
 
     instance = {
-        setScheduleController: setScheduleController,
-        getScheduleController: getScheduleController,
-        getStreamProcessor: getStreamProcessor,
         getRequests: getRequests,
         isFragmentLoaded: isFragmentLoaded,
         isFragmentLoadedOrPending: isFragmentLoadedOrPending,
