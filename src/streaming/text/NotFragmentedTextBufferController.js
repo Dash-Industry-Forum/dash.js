@@ -49,7 +49,6 @@ function NotFragmentedTextBufferController(config) {
         type,
         streamProcessor,
         seekStartTime,
-        representationController,
         initCache;
 
     function setup() {
@@ -59,7 +58,6 @@ function NotFragmentedTextBufferController(config) {
         buffer = null;
         type = null;
         streamProcessor = null;
-        representationController = null;
         isBufferingCompleted = false;
 
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
@@ -70,7 +68,6 @@ function NotFragmentedTextBufferController(config) {
         type = Type;
         setMediaSource(source);
         streamProcessor = StreamProcessor;
-        representationController = streamProcessor.getRepresentationController();
         initCache = InitCache(context).getInstance();
     }
 
