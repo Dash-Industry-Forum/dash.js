@@ -47,11 +47,13 @@ import RepresentationController from '../dash/controllers/RepresentationControll
 import ErrorHandler from './utils/ErrorHandler';
 import FactoryMaker from '../core/FactoryMaker';
 
+import DashHandler from '../dash/DashHandler';
+
 function StreamProcessor(config) {
 
     let context = this.context;
 
-    let indexHandler = config.indexHandler;
+    let indexHandler;
     let timelineConverter = config.timelineConverter;
     let adapter = config.adapter;
     let manifestModel = config.manifestModel;
@@ -83,6 +85,14 @@ function StreamProcessor(config) {
         eventController = EventController;
         fragmentController = FragmentController;
         dynamic = stream.getStreamInfo().manifestInfo.isDynamic;
+
+        indexHandler = DashHandler(context).create({
+            mediaInfo: config.mediaInfo.mimeType,
+            timelineConverter: timelineConverter,
+            dashMetrics: DashMetrics(context).getInstance(),
+            metricsModel: MetricsModel(context).getInstance(),
+            baseURLController: config.baseURLController
+        });
 
         indexHandler.initialize(this);
 
