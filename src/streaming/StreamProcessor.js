@@ -33,14 +33,14 @@ import AbrController from './controllers/AbrController';
 import BufferController from './controllers/BufferController';
 import StreamController from './controllers/StreamController';
 import MediaController from './controllers/MediaController';
-import TextController from './controllers/TextController';
+import TextBufferController from './text/TextBufferController';
 import ScheduleController from './controllers/ScheduleController';
 import MediaPlayerModel from './models/MediaPlayerModel';
 import MetricsModel from './models/MetricsModel';
 import FragmentLoader from './FragmentLoader';
 import RequestModifier from './utils/RequestModifier';
 import SourceBufferController from './controllers/SourceBufferController';
-import TextSourceBuffer from './TextSourceBuffer';
+import TextSourceBuffer from './text/TextSourceBuffer';
 import DashManifestModel from '../dash/models/DashManifestModel';
 import DashMetrics from '../dash/DashMetrics';
 import RepresentationController from '../dash/controllers/RepresentationController';
@@ -267,7 +267,7 @@ function StreamProcessor(config) {
                 textSourceBuffer: TextSourceBuffer(context).getInstance()
             });
         }else {
-            controller = TextController(context).create({
+            controller = TextBufferController(context).create({
                 errHandler: ErrorHandler(context).getInstance(),
                 sourceBufferController: SourceBufferController(context).getInstance()
             });

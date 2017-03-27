@@ -28,11 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import TextSourceBuffer from '../TextSourceBuffer';
+import TextSourceBuffer from '../text/TextSourceBuffer';
 import MediaController from './MediaController';
 import ErrorHandler from '../utils/ErrorHandler';
 import StreamController from './StreamController';
-import TextTracks from '../TextTracks';
+import TextTracks from '../text/TextTracks';
 import VTTParser from '../utils/VTTParser';
 import TTMLParser from '../utils/TTMLParser';
 import VideoModel from '../models/VideoModel';

@@ -45,7 +45,7 @@ import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import Debug from '../core/Debug';
 import FactoryMaker from '../core/FactoryMaker';
-import TextSourceBuffer from './TextSourceBuffer';
+import TextSourceBuffer from './text/TextSourceBuffer';
 
 function Stream(config) {
 

@@ -36,7 +36,7 @@ import BufferController from './BufferController';
 import MediaController from './MediaController';
 import BufferLevelRule from '../rules/scheduling/BufferLevelRule';
 import NextFragmentRequestRule from '../rules/scheduling/NextFragmentRequestRule';
-import TextSourceBuffer from '../TextSourceBuffer';
+import TextSourceBuffer from '../text/TextSourceBuffer';
 import FragmentModel from '../models/FragmentModel';
 import SourceBufferController from '../controllers/SourceBufferController';
 import LiveEdgeFinder from '../utils/LiveEdgeFinder';

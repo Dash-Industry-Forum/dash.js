@@ -32,7 +32,7 @@ import Events from '../../core/events/Events';
 import EventBus from '../../core/EventBus';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
-import TextSourceBuffer from '../TextSourceBuffer';
+import TextSourceBuffer from '../text/TextSourceBuffer';
 import DOMStorage from '../utils/DOMStorage';
 
 const TRACK_SWITCH_MODE_NEVER_REPLACE = 'neverReplace';
