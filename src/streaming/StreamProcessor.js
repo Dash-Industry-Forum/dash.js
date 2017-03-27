@@ -87,7 +87,7 @@ function StreamProcessor(config) {
         dynamic = stream.getStreamInfo().manifestInfo.isDynamic;
 
         indexHandler = DashHandler(context).create({
-            mediaInfo: config.mediaInfo.mimeType,
+            mimeType: config.mimeType,
             timelineConverter: timelineConverter,
             dashMetrics: DashMetrics(context).getInstance(),
             metricsModel: MetricsModel(context).getInstance(),
