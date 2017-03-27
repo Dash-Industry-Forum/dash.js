@@ -36,7 +36,7 @@ function BufferLevelRule(config) {
     const context = this.context;
     const dashMetrics = config.dashMetrics;
     const metricsModel = config.metricsModel;
-    const textSourceBuffer = config.textSourceBuffer;
+    const textController = config.textController;
 
     let mediaPlayerModel;
 
@@ -53,7 +53,7 @@ function BufferLevelRule(config) {
         let bufferTarget = NaN;
         const representationInfo = streamProcessor.getCurrentRepresentationInfo();
         if (type === 'fragmentedText') {
-            bufferTarget = textSourceBuffer.getAllTracksAreDisabled() ? 0 : representationInfo.fragmentDuration;
+            bufferTarget = textController.getAllTracksAreDisabled() ? 0 : representationInfo.fragmentDuration;
         } else if (type === 'audio' && videoTrackPresent) {
             const videoBufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor('video'));
             bufferTarget = Math.floor(Math.max(videoBufferLevel, representationInfo.fragmentDuration));

@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import TextSourceBuffer from '../text/TextSourceBuffer';
+import TextController from '../text/TextController';
 import MediaController from './MediaController';
 import ErrorHandler from '../utils/ErrorHandler';
 import StreamController from './StreamController';
@@ -70,8 +70,8 @@ function SourceBufferController() {
         } catch (ex) {
             // Note that in the following, the quotes are open to allow for extra text after stpp and wvtt
             if ((mediaInfo.isText) || (codec.indexOf('codecs="stpp') !== -1) ||  (codec.indexOf('codecs="wvtt') !== -1) ) {
-                buffer = TextSourceBuffer(context).getInstance();
-                buffer.setConfig({
+                var textController = TextController(context).getInstance();
+                buffer = textController.getTextSourceBuffer({
                     errHandler: ErrorHandler(context).getInstance(),
                     dashManifestModel: dashManifestModel,
                     mediaController: MediaController(context).getInstance(),
@@ -80,7 +80,6 @@ function SourceBufferController() {
                     textTracks: TextTracks(context).getInstance(),
                     VTTParser: VTTParser(context).getInstance(),
                     TTMLParser: TTMLParser(context).getInstance()
-
                 });
             } else {
                 throw ex;

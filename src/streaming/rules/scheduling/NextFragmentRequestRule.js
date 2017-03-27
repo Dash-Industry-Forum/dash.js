@@ -37,7 +37,7 @@ function NextFragmentRequestRule(config) {
     const log = Debug(context).getInstance().log;
     const adapter = config.adapter;
     const sourceBufferController = config.sourceBufferController;
-    const textSourceBuffer = config.textSourceBuffer;
+    const textController = config.textController;
 
     function execute(streamProcessor, requestToReplace) {
 
@@ -51,7 +51,7 @@ function NextFragmentRequestRule(config) {
 
         let time = hasSeekTarget ? seekTarget : adapter.getIndexHandlerTime(streamProcessor);
 
-        if (isNaN(time) || (mediaType === 'fragmentedText' && textSourceBuffer.getAllTracksAreDisabled())) {
+        if (isNaN(time) || (mediaType === 'fragmentedText' && textController.getAllTracksAreDisabled())) {
             return null;
         }
 

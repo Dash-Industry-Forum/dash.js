@@ -39,7 +39,7 @@ import Capabilities from './utils/Capabilities';
 import TextTracks from './text/TextTracks';
 import SourceBufferController from './controllers/SourceBufferController';
 import RequestModifier from './utils/RequestModifier';
-import TextSourceBuffer from './text/TextSourceBuffer';
+import TextController from './text/TextController';
 import URIQueryAndFragmentModel from './models/URIQueryAndFragmentModel';
 import ManifestModel from './models/ManifestModel';
 import MediaPlayerModel from './models/MediaPlayerModel';
@@ -104,7 +104,7 @@ function MediaPlayer() {
         dashMetrics,
         dashManifestModel,
         videoModel,
-        textSourceBuffer;
+        textController;
 
     function setup() {
         mediaPlayerInitialized = false;
@@ -968,9 +968,9 @@ function MediaPlayer() {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
         //For external time text file,  the only action needed to change a track is marking the track mode to showing.
-        // Fragmented text tracks need the additional step of calling textSourceBuffer.setTextTrack();
-        if (textSourceBuffer === undefined) {
-            textSourceBuffer = TextSourceBuffer(context).getInstance();
+        // Fragmented text tracks need the additional step of calling TextController.setTextTrack();
+        if (textController === undefined) {
+            textController = TextController(context).getInstance();
         }
 
         var tracks = getVideoElement().textTracks;
@@ -985,13 +985,13 @@ function MediaPlayer() {
             }
         }
 
-        textSourceBuffer.setTextTrack();
+        textController.setTextTrack();
     }
 
     function getCurrentTextTrackIndex() {
         let idx = NaN;
-        if (textSourceBuffer) {
-            idx = textSourceBuffer.getCurrentTrackIdx();
+        if (textController) {
+            idx = textController.getCurrentTrackIdx();
         }
         return idx;
     }

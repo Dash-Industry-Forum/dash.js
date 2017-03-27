@@ -40,7 +40,7 @@ import MetricsModel from './models/MetricsModel';
 import FragmentLoader from './FragmentLoader';
 import RequestModifier from './utils/RequestModifier';
 import SourceBufferController from './controllers/SourceBufferController';
-import TextSourceBuffer from './text/TextSourceBuffer';
+import TextController from './text/TextController';
 import DashManifestModel from '../dash/models/DashManifestModel';
 import DashMetrics from '../dash/DashMetrics';
 import RepresentationController from '../dash/controllers/RepresentationController';
@@ -264,7 +264,7 @@ function StreamProcessor(config) {
                 streamController: StreamController(context).getInstance(),
                 mediaController: MediaController(context).getInstance(),
                 adapter: adapter,
-                textSourceBuffer: TextSourceBuffer(context).getInstance()
+                textController: TextController(context).getInstance()
             });
         }else {
             controller = TextBufferController(context).create({
