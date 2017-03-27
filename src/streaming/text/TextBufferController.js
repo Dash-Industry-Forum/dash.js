@@ -29,7 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import FactoryMaker from '../../core/FactoryMaker';
-import NotFragmentedTextController from './NotFragmentedTextController';
+import BufferController from './../controllers/BufferController';
+import NotFragmentedTextSourceBufferController from './NotFragmentedTextSourceBufferController';
 
 function TextBufferController(config) {
 
@@ -42,10 +43,27 @@ function TextBufferController(config) {
     function setup(config) {
 
         // according to text type, we create corresponding buffer controller
-        _BufferControllerImpl = NotFragmentedTextController(context).create({
-            errHandler: config.errHandler,
-            sourceBufferController: config.sourceBufferController
-        });
+        if (config.type === 'fragmentedText') {
+
+            // in this case, internal buffer ocntroller is a classical BufferController object
+            _BufferControllerImpl = BufferController(context).create({
+                metricsModel: config.metricsModel,
+                manifestModel: config.manifestModel,
+                sourceBufferController: config.sourceBufferController,
+                errHandler: config.errHandler,
+                streamController: config.streamController,
+                mediaController: config.mediaController,
+                adapter: config.adapter,
+                textController: config.textController
+            });
+        } else {
+
+            // in this case, internal buffer controller is a not fragmented text controller  object
+            _BufferControllerImpl = NotFragmentedTextSourceBufferController(context).create({
+                errHandler: config.errHandler,
+                sourceBufferController: config.sourceBufferController
+            });
+        }
     }
 
     function initialize(Type, source, StreamProcessor) {
@@ -61,6 +79,10 @@ function TextBufferController(config) {
         return _BufferControllerImpl.createBuffer(mediaInfo);
     }
 
+    function getType() {
+        return _BufferControllerImpl.getType();
+    }
+
     function getBuffer() {
         return _BufferControllerImpl.getBuffer();
     }
@@ -69,12 +91,28 @@ function TextBufferController(config) {
         _BufferControllerImpl.setBuffer(value);
     }
 
+    function getMediaSource() {
+        return _BufferControllerImpl.getMediaSource();
+    }
+
     function setMediaSource(value) {
         _BufferControllerImpl.setMediaSource(value);
     }
 
+    function setStreamProcessor(streamProcessor) {
+        _BufferControllerImpl.setStreamProcessor(streamProcessor);
+    }
+
     function getStreamProcessor() {
         _BufferControllerImpl.getStreamProcessor();
+    }
+
+    function getBufferLevel() {
+        return _BufferControllerImpl.getBufferLevel();
+    }
+
+    function getCriticalBufferLevel() {
+        return _BufferControllerImpl.getCriticalBufferLevel();
     }
 
     function reset(errored) {
@@ -92,11 +130,16 @@ function TextBufferController(config) {
     instance = {
         initialize: initialize,
         createBuffer: createBuffer,
+        getType: getType,
+        getStreamProcessor: getStreamProcessor,
+        setStreamProcessor: setStreamProcessor,
         getBuffer: getBuffer,
         setBuffer: setBuffer,
-        getStreamProcessor: getStreamProcessor,
-        getIsBufferingCompleted: getIsBufferingCompleted,
+        getBufferLevel: getBufferLevel,
+        getCriticalBufferLevel: getCriticalBufferLevel,
         setMediaSource: setMediaSource,
+        getMediaSource: getMediaSource,
+        getIsBufferingCompleted: getIsBufferingCompleted,
         switchInitData: switchInitData,
         reset: reset
     };
@@ -107,4 +150,5 @@ function TextBufferController(config) {
 }
 
 TextBufferController.__dashjs_factory_name = 'TextBufferController';
+export default FactoryMaker.getClassFactory(TextBufferController);
 export default FactoryMaker.getClassFactory(TextBufferController);

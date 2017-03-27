@@ -255,7 +255,7 @@ function StreamProcessor(config) {
     function createBufferControllerForType(type) {
         var controller = null;
 
-        if (type === 'video' || type === 'audio' || type === 'fragmentedText') {
+        if (type === 'video' || type === 'audio') {
             controller = BufferController(context).create({
                 metricsModel: MetricsModel(context).getInstance(),
                 manifestModel: manifestModel,
@@ -268,8 +268,15 @@ function StreamProcessor(config) {
             });
         }else {
             controller = TextBufferController(context).create({
+                type: type,
+                metricsModel: MetricsModel(context).getInstance(),
+                manifestModel: manifestModel,
+                sourceBufferController: SourceBufferController(context).getInstance(),
                 errHandler: ErrorHandler(context).getInstance(),
-                sourceBufferController: SourceBufferController(context).getInstance()
+                streamController: StreamController(context).getInstance(),
+                mediaController: MediaController(context).getInstance(),
+                adapter: adapter,
+                textController: TextController(context).getInstance()
             });
         }
 
