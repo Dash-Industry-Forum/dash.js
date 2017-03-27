@@ -19,9 +19,11 @@ describe('DashHandler', function () {
         const baseURLController = objectsHelper.getDummyBaseURLController();
 
         const config = {
+            mimeType: streamProcessor.getMediaInfo().mimeType,
             timelineConverter: timelineConverter,
             baseURLController: baseURLController
         };
+
         const dashHandler = DashHandler(context).create(config);
         dashHandler.initialize(streamProcessor);
 
