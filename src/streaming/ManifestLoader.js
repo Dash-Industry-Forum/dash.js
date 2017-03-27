@@ -31,7 +31,6 @@
 import XlinkController from './controllers/XlinkController';
 import XHRLoader from './XHRLoader';
 import URLUtils from './utils/URLUtils';
-import ErrorHandler from './utils/ErrorHandler';
 import TextRequest from './vo/TextRequest';
 import Error from './vo/Error';
 import {HTTPRequest} from './vo/metrics/HTTPRequest';
@@ -50,28 +49,27 @@ function ManifestLoader(config) {
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
     const urlUtils = URLUtils(context).getInstance();
-    const errorHandler = ErrorHandler(context).getInstance();
     const debug = Debug(context).getInstance();
     const log = debug.log;
-
 
     let instance,
         xhrLoader,
         xlinkController,
         parser;
     let mssHandler = config.mssHandler;
+    let errHandler = config.errHandler;
 
     function setup() {
         eventBus.on(Events.XLINK_READY, onXlinkReady, instance);
 
         xhrLoader = XHRLoader(context).create({
-            errHandler: config.errHandler,
+            errHandler: errHandler,
             metricsModel: config.metricsModel,
             requestModifier: config.requestModifier
         });
 
         xlinkController = XlinkController(context).create({
-            errHandler: config.errHandler,
+            errHandler: errHandler,
             metricsModel: config.metricsModel,
             requestModifier: config.requestModifier
         });
@@ -96,7 +94,7 @@ function ManifestLoader(config) {
                 parser = mssHandler.createMssParser();
                 mssHandler.registerEvents();
             }else {
-                errorHandler.manifestError('manifest type unsupported', 'createParser');
+                errHandler.manifestError('manifest type unsupported', 'createParser');
             }
             return parser;
         } else if (data.indexOf('MPD') > -1) {
