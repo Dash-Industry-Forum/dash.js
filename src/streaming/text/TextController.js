@@ -30,6 +30,9 @@
  */
 import FactoryMaker from '../../core/FactoryMaker';
 import TextSourceBuffer from './TextSourceBuffer';
+import TextTracks from './TextTracks';
+import VTTParser from '../utils/VTTParser';
+import TTMLParser from '../utils/TTMLParser';
 
 function TextController() {
 
@@ -37,20 +40,73 @@ function TextController() {
     let instance;
     let textSourceBuffer;
 
+    let allTracksAreDisabled,
+        errHandler,
+        dashManifestModel,
+        mediaController,
+        videoModel,
+        streamController,
+        textTracks,
+        vttParser,
+        ttmlParser;
+
     function setup() {
+
+        textTracks = TextTracks(context).getInstance();
+        vttParser = VTTParser(context).getInstance();
+        ttmlParser = TTMLParser(context).getInstance();
         textSourceBuffer = TextSourceBuffer(context).getInstance();
+
+        allTracksAreDisabled = false;
     }
 
-    function getTextSourceBuffer(config) {
-        if (config) {
-            textSourceBuffer.setConfig(config);
+    function setConfig(config) {
+        if (!config) return;
+
+        if (config.errHandler) {
+            errHandler = config.errHandler;
+        }
+        if (config.dashManifestModel) {
+            dashManifestModel = config.dashManifestModel;
+        }
+        if (config.mediaController) {
+            mediaController = config.mediaController;
+        }
+        if (config.videoModel) {
+            videoModel = config.videoModel;
+        }
+        if (config.streamController) {
+            streamController = config.streamController;
+        }
+        if (config.textTracks) {
+            textTracks = config.textTracks;
+        }
+        if (config.vttParser) {
+            vttParser = config.vttParser;
+        }
+        if (config.ttmlParser) {
+            ttmlParser = config.ttmlParser;
         }
 
+        // create config for source buffer
+        textSourceBuffer.setConfig({
+            errHandler: errHandler,
+            dashManifestModel: dashManifestModel,
+            mediaController: mediaController,
+            videoModel: videoModel,
+            streamController: streamController,
+            textTracks: textTracks,
+            vttParser: vttParser,
+            ttmlParser: ttmlParser
+        });
+    }
+
+    function getTextSourceBuffer() {
         return textSourceBuffer;
     }
 
     function getAllTracksAreDisabled() {
-        return textSourceBuffer.getAllTracksAreDisabled();
+        return allTracksAreDisabled;
     }
 
     function addEmbeddedTrack(mediaInfo) {
@@ -62,18 +118,61 @@ function TextController() {
     }
 
     function setTextTrack() {
-        textSourceBuffer.setTextTrack();
+
+        var config = textSourceBuffer.getConfig();
+        var fragmentModel = config.fragmentModel;
+        var embeddedTracks = config.embeddedTracks;
+        var isFragmented = config.isFragmented;
+        var fragmentedTracks = config.fragmentedTracks;
+        var allTracksAreDisabled = config.allTracksAreDisabled;
+
+        var el = videoModel.getElement();
+        var tracks = el.textTracks;
+        var ln = tracks.length;
+        var nrNonEmbeddedTracks = ln - embeddedTracks.length;
+        var oldTrackIdx = textTracks.getCurrentTrackIdx();
+
+        for (var i = 0; i < ln; i++) {
+            var track = tracks[i];
+            allTracksAreDisabled = track.mode !== 'showing';
+            if (track.mode === 'showing') {
+                if (oldTrackIdx !== i) { // do not reset track if already the current track.  This happens when all captions get turned off via UI and then turned on again and with videojs.
+                    textTracks.setCurrentTrackIdx(i);
+                    textTracks.addCaptions(i, 0, null); // Make sure that previously queued captions are added as cues
+
+                    // specific to fragmented texe
+                    if (isFragmented && i < nrNonEmbeddedTracks) {
+                        var currentFragTrack = mediaController.getCurrentTrackFor('fragmentedText', streamController.getActiveStreamInfo());
+                        var newFragTrack = fragmentedTracks[i];
+                        if (newFragTrack !== currentFragTrack) {
+                            fragmentModel.abortRequests();
+                            textTracks.deleteTrackCues(currentFragTrack);
+                            mediaController.setTrack(newFragTrack);
+                            textSourceBuffer.setCurrentFragmentedTrackIdx(i);
+                        }
+                    }
+                }
+                break;
+            }
+        }
+
+        if (allTracksAreDisabled) {
+            textTracks.setCurrentTrackIdx(-1);
+        }
     }
 
     function getCurrentTrackIdx() {
-        return textSourceBuffer.getCurrentTrackIdx();
+        var textTracks = textSourceBuffer.getConfig().textTracks;
+        return textTracks.getCurrentTrackIdx();
     }
 
     function reset() {
+        allTracksAreDisabled = false;
         textSourceBuffer.resetEmbedded();
     }
 
     instance = {
+        setConfig: setConfig,
         getTextSourceBuffer: getTextSourceBuffer,
         append: append,
         getAllTracksAreDisabled: getAllTracksAreDisabled,

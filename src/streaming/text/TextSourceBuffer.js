@@ -51,10 +51,9 @@ function TextSourceBuffer() {
         errHandler,
         dashManifestModel,
         mediaController,
-        allTracksAreDisabled,
         parser,
-        VTTParser,
-        TTMLParser,
+        vttParser,
+        ttmlParser,
         fragmentedTextBoxParser,
         mediaInfos,
         textTracks,
@@ -76,7 +75,6 @@ function TextSourceBuffer() {
         embeddedTextHtmlRender;
 
     function initialize(type, bufferController) {
-        allTracksAreDisabled = false;
         parser = null;
         fragmentModel = null;
         initializationSegmentReceived = false;
@@ -91,19 +89,23 @@ function TextSourceBuffer() {
         let streamProcessor = bufferController.getStreamProcessor();
 
         mediaInfos = streamProcessor.getMediaInfoArr();
-        textTracks.setConfig({videoModel: videoModel});
+        textTracks.setConfig({
+            videoModel: videoModel
+        });
         textTracks.initialize();
         isFragmented = !dashManifestModel.getIsTextTrack(type);
         boxParser = BoxParser(context).getInstance();
         fragmentedTextBoxParser = FragmentedTextBoxParser(context).getInstance();
-        fragmentedTextBoxParser.setConfig({boxParser: boxParser});
+        fragmentedTextBoxParser.setConfig({
+            boxParser: boxParser
+        });
 
         if (isFragmented) {
             fragmentModel = streamProcessor.getFragmentModel();
-            this.buffered =  CustomTimeRanges(context).create();
+            this.buffered = CustomTimeRanges(context).create();
             fragmentedTracks = mediaController.getTracksFor('fragmentedText', streamController.getActiveStreamInfo());
             var currFragTrack = mediaController.getCurrentTrackFor('fragmentedText', streamController.getActiveStreamInfo());
-            for (var i = 0 ; i < fragmentedTracks.length; i++) {
+            for (var i = 0; i < fragmentedTracks.length; i++) {
                 if (fragmentedTracks[i] === currFragTrack) {
                     currFragmentedTrackIdx = i;
                     break;
@@ -117,11 +119,15 @@ function TextSourceBuffer() {
         mediaInfos = [];
         videoModel = VideoModel(context).getInstance();
         textTracks = TextTracks(context).getInstance();
-        textTracks.setConfig({videoModel: videoModel});
+        textTracks.setConfig({
+            videoModel: videoModel
+        });
         textTracks.initialize();
         boxParser = BoxParser(context).getInstance();
         fragmentedTextBoxParser = FragmentedTextBoxParser(context).getInstance();
-        fragmentedTextBoxParser.setConfig({boxParser: boxParser});
+        fragmentedTextBoxParser.setConfig({
+            boxParser: boxParser
+        });
         isFragmented = false;
         currFragmentedTrackIdx = null;
         embeddedInitializationSegmentReceived = false;
@@ -150,7 +156,10 @@ function TextSourceBuffer() {
 
         function createTextTrackFromMediaInfo(captionData, mediaInfo) {
             var textTrackInfo = new TextTrackInfo();
-            var trackKindMap = { subtitle: 'subtitles', caption: 'captions' }; //Dash Spec has no "s" on end of KIND but HTML needs plural.
+            var trackKindMap = {
+                subtitle: 'subtitles',
+                caption: 'captions'
+            }; //Dash Spec has no "s" on end of KIND but HTML needs plural.
             var getKind = function () {
                 var kind = (mediaInfo.roles.length > 0) ? trackKindMap[mediaInfo.roles[0]] : trackKindMap.caption;
                 kind = (kind === trackKindMap.caption || kind === trackKindMap.subtitle) ? kind : trackKindMap.caption;
@@ -223,7 +232,7 @@ function TextSourceBuffer() {
                 } else {
                     // WebVTT case
                     var captionArray = [];
-                    for (i = 0 ; i < sampleList.length; i++) {
+                    for (i = 0; i < sampleList.length; i++) {
                         var sample = sampleList[i];
                         sample.cts -= firstSubtitleStart;
                         this.buffered.add(sample.cts / timescale, (sample.cts + sample.duration) / timescale);
@@ -231,7 +240,7 @@ function TextSourceBuffer() {
                         // There are boxes inside the sampleData, so we need a ISOBoxer to get at it.
                         var sampleBoxes = ISOBoxer.parseBuffer(sampleData);
 
-                        for (j = 0 ; j < sampleBoxes.boxes.length; j++) {
+                        for (j = 0; j < sampleBoxes.boxes.length; j++) {
                             var box1 = sampleBoxes.boxes[j];
                             log('VTT box1: ' + box1.type);
                             if (box1.type === 'vtte') {
@@ -239,7 +248,7 @@ function TextSourceBuffer() {
                             }
                             if (box1.type === 'vttc') {
                                 log('VTT vttc boxes.length = ' + box1.boxes.length);
-                                for (k = 0 ; k < box1.boxes.length; k++) {
+                                for (k = 0; k < box1.boxes.length; k++) {
                                     var box2 = box1.boxes[k];
                                     log('VTT box2: ' + box2.type);
                                     if (box2.type === 'payl') {
@@ -295,7 +304,12 @@ function TextSourceBuffer() {
                         } else {
                             var text = captionScreen.getDisplayText();
                             //log("CEA text: " + startTime + "-" + endTime + "  '" + text + "'");
-                            captionsArray = [{ start: startTime, end: endTime, data: text, styles: {} }];
+                            captionsArray = [{
+                                start: startTime,
+                                end: endTime,
+                                data: text,
+                                styles: {}
+                            }];
                         }
                         if (captionsArray) {
                             textTracks.addCaptions(trackIndex, 0, captionsArray);
@@ -324,7 +338,9 @@ function TextSourceBuffer() {
                             return;
                         }
                         handler = makeCueAdderForIndex(this, trackIdx);
-                        embeddedCea608FieldParsers[i] = new cea608parser.Cea608Parser(i, { 'newCue': handler }, null);
+                        embeddedCea608FieldParsers[i] = new cea608parser.Cea608Parser(i, {
+                            'newCue': handler
+                        }, null);
                     }
                 }
 
@@ -363,7 +379,7 @@ function TextSourceBuffer() {
      * Extract CEA-608 data from a buffer of data.
      * @param {ArrayBuffer} data
      * @returns {Object|null} ccData corresponding to one segment.
-    */
+     */
     function extractCea608Data(data) {
 
         var isoFile = boxParser.parse(data);
@@ -389,7 +405,11 @@ function TextSourceBuffer() {
         var startPos = baseOffset;
         var baseSampleTime = tfdt.baseMediaDecodeTime;
         var raw = new DataView(data);
-        var allCcData = { 'startTime': null, 'endTime': null, fields: [[], []] };
+        var allCcData = {
+            'startTime': null,
+            'endTime': null,
+            fields: [[], []]
+        };
         var accDuration = 0;
         for (var i = 0; i < sampleCount; i++) {
             var sample = trun.samples[i];
@@ -418,8 +438,12 @@ function TextSourceBuffer() {
         }
 
         // Sort by sampleTime ascending order
-        allCcData.fields[0].sort(function (a, b) { return a[0] - b[0]; });
-        allCcData.fields[1].sort(function (a, b) { return a[0] - b[0]; });
+        allCcData.fields[0].sort(function (a, b) {
+            return a[0] - b[0];
+        });
+        allCcData.fields[1].sort(function (a, b) {
+            return a[0] - b[0];
+        });
 
         var endSampleTime = baseSampleTime + accDuration;
         allCcData.startTime = baseSampleTime;
@@ -429,7 +453,6 @@ function TextSourceBuffer() {
 
     function abort() {
         textTracks.deleteAllTextTracks();
-        allTracksAreDisabled = false;
         parser = null;
         fragmentedTextBoxParser = null;
         mediaInfos = null;
@@ -464,10 +487,6 @@ function TextSourceBuffer() {
         embeddedLastSequenceNumber = null;
     }
 
-    function getAllTracksAreDisabled() {
-        return allTracksAreDisabled;
-    }
-
     function setConfig(config) {
         if (!config) return;
 
@@ -489,47 +508,33 @@ function TextSourceBuffer() {
         if (config.textTracks) {
             textTracks = config.textTracks;
         }
-        if (config.VTTParser) {
-            VTTParser = config.VTTParser;
+        if (config.vttParser) {
+            vttParser = config.vttParser;
         }
-        if (config.TTMLParser) {
-            TTMLParser = config.TTMLParser;
+        if (config.ttmlParser) {
+            ttmlParser = config.ttmlParser;
         }
     }
 
-    function setTextTrack() {
+    function getConfig() {
+        var config = {
+            errHandler: errHandler,
+            dashManifestModel: dashManifestModel,
+            mediaController: mediaController,
+            videoModel: videoModel,
+            fragmentModel: fragmentModel,
+            streamController: streamController,
+            textTracks: textTracks,
+            isFragmented: isFragmented,
+            embeddedTracks: embeddedTracks,
+            fragmentedTracks: fragmentedTracks
+        };
 
-        var el = videoModel.getElement();
-        var tracks = el.textTracks;
-        var ln = tracks.length;
-        var nrNonEmbeddedTracks = ln - embeddedTracks.length;
-        var oldTrackIdx = textTracks.getCurrentTrackIdx();
+        return config;
+    }
 
-        for (var i = 0; i < ln; i++ ) {
-            var track = tracks[i];
-            allTracksAreDisabled = track.mode !== 'showing';
-            if (track.mode === 'showing') {
-                if (oldTrackIdx !== i) { // do not reset track if already the current track.  This happens when all captions get turned off via UI and then turned on again and with videojs.
-                    textTracks.setCurrentTrackIdx(i);
-                    textTracks.addCaptions(i, 0, null); // Make sure that previously queued captions are added as cues
-                    if (isFragmented && i < nrNonEmbeddedTracks) {
-                        var currentFragTrack = mediaController.getCurrentTrackFor('fragmentedText', streamController.getActiveStreamInfo());
-                        var newFragTrack = fragmentedTracks[i];
-                        if (newFragTrack !== currentFragTrack) {
-                            fragmentModel.abortRequests();
-                            textTracks.deleteTrackCues(currentFragTrack);
-                            mediaController.setTrack(newFragTrack);
-                            currFragmentedTrackIdx = i;
-                        }
-                    }
-                }
-                break;
-            }
-        }
-
-        if (allTracksAreDisabled) {
-            textTracks.setCurrentTrackIdx(-1);
-        }
+    function setCurrentFragmentedTrackIdx(idx) {
+        currFragmentedTrackIdx = idx;
     }
 
     function getIsDefault(mediaInfo) {
@@ -540,7 +545,7 @@ function TextSourceBuffer() {
         if (embeddedTracks.length > 1 && mediaInfo.isEmbedded) {
             isDefault = (mediaInfo.id && mediaInfo.id === 'CC1'); // CC1 if both CC1 and CC3 exist
         } else if (embeddedTracks.length === 1) {
-            if (mediaInfo.id && mediaInfo.id.substring(0, 2) === 'CC') {// Either CC1 or CC3
+            if (mediaInfo.id && mediaInfo.id.substring(0, 2) === 'CC') { // Either CC1 or CC3
                 isDefault = true;
             }
         } else if (embeddedTracks.length === 0) {
@@ -552,28 +557,25 @@ function TextSourceBuffer() {
     function getParser(codecType) {
         var parser;
         if (codecType.search('vtt') >= 0) {
-            parser = VTTParser;
+            parser = vttParser;
         } else if (codecType.search('ttml') >= 0 || codecType.search('stpp') >= 0) {
-            parser = TTMLParser;
-            parser.setConfig({videoModel: videoModel});
+            parser = ttmlParser;
+            parser.setConfig({
+                videoModel: videoModel
+            });
         }
         return parser;
-    }
-
-    function getCurrentTrackIdx() {
-        return textTracks.getCurrentTrackIdx();
     }
 
     instance = {
         initialize: initialize,
         append: append,
         abort: abort,
-        getCurrentTrackIdx: getCurrentTrackIdx,
-        getAllTracksAreDisabled: getAllTracksAreDisabled,
-        setTextTrack: setTextTrack,
-        setConfig: setConfig,
         addEmbeddedTrack: addEmbeddedTrack,
-        resetEmbedded: resetEmbedded
+        resetEmbedded: resetEmbedded,
+        setConfig: setConfig,
+        getConfig: getConfig,
+        setCurrentFragmentedTrackIdx: setCurrentFragmentedTrackIdx
     };
 
     return instance;
