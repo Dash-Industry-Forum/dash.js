@@ -33,7 +33,7 @@ import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import InitCache from '../utils/InitCache';
 
-function NotFragmentedTextSourceBufferController(config) {
+function NotFragmentedTextBufferController(config) {
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
@@ -192,5 +192,5 @@ function NotFragmentedTextSourceBufferController(config) {
     return instance;
 }
 
-NotFragmentedTextSourceBufferController.__dashjs_factory_name = 'NotFragmentedTextSourceBufferController';
-export default FactoryMaker.getClassFactory(NotFragmentedTextSourceBufferController);
+NotFragmentedTextBufferController.__dashjs_factory_name = 'NotFragmentedTextBufferController';
+export default FactoryMaker.getClassFactory(NotFragmentedTextBufferController);

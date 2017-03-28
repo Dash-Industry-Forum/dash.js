@@ -198,9 +198,7 @@ function BufferController(config) {
         sourceBufferController.append(buffer, chunk);
 
         if (chunk.mediaInfo.type === 'video') {
-            if (chunk.mediaInfo.embeddedCaptions) {
-                textController.append(chunk.bytes, chunk);
-            }
+            eventBus.trigger(Events.VIDEO_CHUNK_RECEIVED, chunk);
         }
     }
 

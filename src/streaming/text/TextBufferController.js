@@ -30,7 +30,7 @@
  */
 import FactoryMaker from '../../core/FactoryMaker';
 import BufferController from './../controllers/BufferController';
-import NotFragmentedTextSourceBufferController from './NotFragmentedTextSourceBufferController';
+import NotFragmentedTextBufferController from './NotFragmentedTextBufferController';
 
 function TextBufferController(config) {
 
@@ -59,7 +59,7 @@ function TextBufferController(config) {
         } else {
 
             // in this case, internal buffer controller is a not fragmented text controller  object
-            _BufferControllerImpl = NotFragmentedTextSourceBufferController(context).create({
+            _BufferControllerImpl = NotFragmentedTextBufferController(context).create({
                 errHandler: config.errHandler,
                 sourceBufferController: config.sourceBufferController
             });

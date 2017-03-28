@@ -39,11 +39,14 @@ import TextTracks from './TextTracks';
 import EmbeddedTextHtmlRender from './EmbeddedTextHtmlRender';
 import ISOBoxer from 'codem-isoboxer';
 import cea608parser from '../../../externals/cea608-parser';
+import EventBus from '../../core/EventBus';
+import Events from '../../core/events/Events';
 
 function TextSourceBuffer() {
 
     let context = this.context;
     let log = Debug(context).getInstance().log;
+    const eventBus = EventBus(context).getInstance();
     let embeddedInitialized = false;
 
     let instance,
@@ -114,6 +117,30 @@ function TextSourceBuffer() {
         }
     }
 
+    function abort() {
+        textTracks.deleteAllTextTracks();
+        parser = null;
+        fragmentedTextBoxParser = null;
+        mediaInfos = null;
+        textTracks = null;
+        isFragmented = false;
+        fragmentModel = null;
+        initializationSegmentReceived = false;
+        timescale = NaN;
+        fragmentedTracks = [];
+        videoModel = null;
+        streamController = null;
+        embeddedInitialized = false;
+        embeddedTracks = null;
+    }
+
+
+    function onVideoChunkReceived(chunk) {
+        if (chunk.mediaInfo.embeddedCaptions) {
+            append(chunk.bytes, chunk);
+        }
+    }
+
     function initEmbedded() {
         embeddedTracks = [];
         mediaInfos = [];
@@ -137,6 +164,80 @@ function TextSourceBuffer() {
         embeddedLastSequenceNumber = null;
         embeddedInitialized = true;
         embeddedTextHtmlRender = EmbeddedTextHtmlRender(context).getInstance();
+
+        eventBus.on(Events.VIDEO_CHUNK_RECEIVED, onVideoChunkReceived, this);
+    }
+
+    function resetEmbedded() {
+
+        eventBus.off(Events.VIDEO_CHUNK_RECEIVED, onVideoChunkReceived, this);
+
+        embeddedInitialized = false;
+        embeddedTracks = [];
+        embeddedCea608FieldParsers = [null, null];
+        embeddedSequenceNumbers = [];
+        embeddedLastSequenceNumber = null;
+    }
+
+    function addEmbeddedTrack(mediaInfo) {
+        if (!embeddedInitialized) {
+            initEmbedded();
+        }
+        if (mediaInfo.id === 'CC1' || mediaInfo.id === 'CC3') {
+            embeddedTracks.push(mediaInfo);
+        } else {
+            log('Warning: Embedded track ' + mediaInfo.id + ' not supported!');
+        }
+    }
+
+    function setConfig(config) {
+        if (!config) return;
+
+        if (config.errHandler) {
+            errHandler = config.errHandler;
+        }
+        if (config.dashManifestModel) {
+            dashManifestModel = config.dashManifestModel;
+        }
+        if (config.mediaController) {
+            mediaController = config.mediaController;
+        }
+        if (config.videoModel) {
+            videoModel = config.videoModel;
+        }
+        if (config.streamController) {
+            streamController = config.streamController;
+        }
+        if (config.textTracks) {
+            textTracks = config.textTracks;
+        }
+        if (config.vttParser) {
+            vttParser = config.vttParser;
+        }
+        if (config.ttmlParser) {
+            ttmlParser = config.ttmlParser;
+        }
+    }
+
+    function getConfig() {
+        var config = {
+            errHandler: errHandler,
+            dashManifestModel: dashManifestModel,
+            mediaController: mediaController,
+            videoModel: videoModel,
+            fragmentModel: fragmentModel,
+            streamController: streamController,
+            textTracks: textTracks,
+            isFragmented: isFragmented,
+            embeddedTracks: embeddedTracks,
+            fragmentedTracks: fragmentedTracks
+        };
+
+        return config;
+    }
+
+    function setCurrentFragmentedTrackIdx(idx) {
+        currFragmentedTrackIdx = idx;
     }
 
     function append(bytes, chunk) {
@@ -449,92 +550,6 @@ function TextSourceBuffer() {
         allCcData.startTime = baseSampleTime;
         allCcData.endTime = endSampleTime;
         return allCcData;
-    }
-
-    function abort() {
-        textTracks.deleteAllTextTracks();
-        parser = null;
-        fragmentedTextBoxParser = null;
-        mediaInfos = null;
-        textTracks = null;
-        isFragmented = false;
-        fragmentModel = null;
-        initializationSegmentReceived = false;
-        timescale = NaN;
-        fragmentedTracks = [];
-        videoModel = null;
-        streamController = null;
-        embeddedInitialized = false;
-        embeddedTracks = null;
-    }
-
-    function addEmbeddedTrack(mediaInfo) {
-        if (!embeddedInitialized) {
-            initEmbedded();
-        }
-        if (mediaInfo.id === 'CC1' || mediaInfo.id === 'CC3') {
-            embeddedTracks.push(mediaInfo);
-        } else {
-            log('Warning: Embedded track ' + mediaInfo.id + ' not supported!');
-        }
-    }
-
-    function resetEmbedded() {
-        embeddedInitialized = false;
-        embeddedTracks = [];
-        embeddedCea608FieldParsers = [null, null];
-        embeddedSequenceNumbers = [];
-        embeddedLastSequenceNumber = null;
-    }
-
-    function setConfig(config) {
-        if (!config) return;
-
-        if (config.errHandler) {
-            errHandler = config.errHandler;
-        }
-        if (config.dashManifestModel) {
-            dashManifestModel = config.dashManifestModel;
-        }
-        if (config.mediaController) {
-            mediaController = config.mediaController;
-        }
-        if (config.videoModel) {
-            videoModel = config.videoModel;
-        }
-        if (config.streamController) {
-            streamController = config.streamController;
-        }
-        if (config.textTracks) {
-            textTracks = config.textTracks;
-        }
-        if (config.vttParser) {
-            vttParser = config.vttParser;
-        }
-        if (config.ttmlParser) {
-            ttmlParser = config.ttmlParser;
-        }
-    }
-
-    function getConfig() {
-        var config = {
-            errHandler: errHandler,
-            dashManifestModel: dashManifestModel,
-            mediaController: mediaController,
-            videoModel: videoModel,
-            fragmentModel: fragmentModel,
-            streamController: streamController,
-            textTracks: textTracks,
-            isFragmented: isFragmented,
-            embeddedTracks: embeddedTracks,
-            fragmentedTracks: fragmentedTracks
-        };
-
-        return config;
-    }
-
-    function setCurrentFragmentedTrackIdx(idx) {
-        currFragmentedTrackIdx = idx;
     }
 
     function getIsDefault(mediaInfo) {

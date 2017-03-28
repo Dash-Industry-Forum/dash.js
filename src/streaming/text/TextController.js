@@ -113,10 +113,6 @@ function TextController() {
         textSourceBuffer.addEmbeddedTrack(mediaInfo);
     }
 
-    function append(bytes, chunk) {
-        textSourceBuffer.append(bytes, chunk);
-    }
-
     function setTextTrack() {
 
         var config = textSourceBuffer.getConfig();
@@ -174,7 +170,6 @@ function TextController() {
     instance = {
         setConfig: setConfig,
         getTextSourceBuffer: getTextSourceBuffer,
-        append: append,
         getAllTracksAreDisabled: getAllTracksAreDisabled,
         addEmbeddedTrack: addEmbeddedTrack,
         setTextTrack: setTextTrack,
