@@ -169,9 +169,9 @@ function TextSourceBuffer() {
     }
 
     function resetEmbedded() {
-
         eventBus.off(Events.VIDEO_CHUNK_RECEIVED, onVideoChunkReceived, this);
 
+        textTracks.deleteAllTextTracks();
         embeddedInitialized = false;
         embeddedTracks = [];
         embeddedCea608FieldParsers = [null, null];
