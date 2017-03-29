@@ -30,6 +30,7 @@
     <script src="../../dist/dash.all.debug.js"></script>
     <script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
     <script src="app/main.js"></script>
+    <script src="app/rules/DownloadRatioRule.js"></script>
 
 </head>
 <body ng-controller="DashController" >
@@ -145,6 +146,11 @@
                            title="BOLA is an ABR ruleset. When enabled, it will disable the default heuristics in Dash.js that depend strictly on average and real-time throughput measurements">
                         <input type="checkbox" id="bolaCB" ng-model="bolaSelected" ng-change="toggleBufferOccupancyABR()" ng-checked="bolaSelected">
                         Buffer Occupancy ABR
+                    </label>
+                    <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                           title="ABR - Download Ratio Rule ">
+                        <input type="checkbox" id="downloadRatioCB" ng-model="downloadRatioRuleSelected" ng-change="toggleDownloadRatioRuleSelected()" ng-checked="downloadRatioRuleSelected">
+                        Download Ratio Rule ABR
                     </label>
                 </div>
             </div>
