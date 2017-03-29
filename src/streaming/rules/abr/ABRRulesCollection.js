@@ -81,21 +81,35 @@ function ABRRulesCollection() {
                 })
             );
 
-            qualitySwitchRules.push(InsufficientBufferRule(context).create({metricsModel: metricsModel}));
+            qualitySwitchRules.push(InsufficientBufferRule(context).create({
+                metricsModel: metricsModel
+            }));
             qualitySwitchRules.push(SwitchHistoryRule(context).create());
             qualitySwitchRules.push(DroppedFramesRule(context).create());
             abandonFragmentRules.push(AbandonRequestsRule(context).create());
         }
+
+        // add custom ABR rules
+        let customRules = mediaPlayerModel.getABRCustomRules();
+        customRules.forEach(function (rule) {
+            if (rule.type === QUALITY_SWITCH_RULES) {
+                qualitySwitchRules.push(rule.rule(context).create());
+            }
+
+            if (rule.type === ABANDON_FRAGMENT_RULES) {
+                abandonFragmentRules.push(rule.rule);
+            }
+        });
     }
 
-    function getRules (type) {
+    function getRules(type) {
         switch (type) {
-            case QUALITY_SWITCH_RULES:
-                return qualitySwitchRules;
-            case ABANDON_FRAGMENT_RULES:
-                return abandonFragmentRules;
-            default:
-                return null;
+        case QUALITY_SWITCH_RULES:
+            return qualitySwitchRules;
+        case ABANDON_FRAGMENT_RULES:
+            return abandonFragmentRules;
+        default:
+            return null;
         }
     }
 
@@ -107,7 +121,9 @@ function ABRRulesCollection() {
         if (srArray.length === 0) {
             return;
         }
-        return srArray.reduce((a, b) => { return a.value < b.value ? a : b; });
+        return srArray.reduce((a, b) => {
+            return a.value < b.value ? a : b;
+        });
     }
 
     function getMaxQuality(rulesContext) {
@@ -137,7 +153,9 @@ function ABRRulesCollection() {
 }
 
 ABRRulesCollection.__dashjs_factory_name = 'ABRRulesCollection';
-let factory =  FactoryMaker.getSingletonFactory(ABRRulesCollection);
+let factory = FactoryMaker.getSingletonFactory(ABRRulesCollection);
 factory.QUALITY_SWITCH_RULES = QUALITY_SWITCH_RULES;
 factory.ABANDON_FRAGMENT_RULES = ABANDON_FRAGMENT_RULES;
+FactoryMaker.updateSingletonFactory(ABRRulesCollection.__dashjs_factory_name, factory);
+
 export default factory;

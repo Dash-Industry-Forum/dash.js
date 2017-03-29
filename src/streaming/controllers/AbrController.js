@@ -642,4 +642,5 @@ AbrController.__dashjs_factory_name = 'AbrController';
 let factory = FactoryMaker.getSingletonFactory(AbrController);
 factory.ABANDON_LOAD = ABANDON_LOAD;
 factory.QUALITY_DEFAULT = QUALITY_DEFAULT;
+FactoryMaker.updateSingletonFactory(AbrController.__dashjs_factory_name, factory);
 export default factory;

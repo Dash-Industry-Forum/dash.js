@@ -47,7 +47,7 @@ function SwitchHistoryRule() {
 }
 
 
-SwitchHistoryRule.__dashjs_factory_name = 'SwitchRequest';
+SwitchHistoryRule.__dashjs_factory_name = 'SwitchHistoryRule';
 let factory = FactoryMaker.getClassFactory(SwitchHistoryRule);
 
 export default factory;

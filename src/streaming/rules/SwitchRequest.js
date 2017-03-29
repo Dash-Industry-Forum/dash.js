@@ -49,4 +49,6 @@ function SwitchRequest (v, r) {
 SwitchRequest.__dashjs_factory_name = 'SwitchRequest';
 let factory = FactoryMaker.getClassFactory(SwitchRequest);
 factory.NO_CHANGE = NO_CHANGE;
+FactoryMaker.updateClassFactory(SwitchRequest.__dashjs_factory_name, factory);
+
 export default factory;

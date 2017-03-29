@@ -194,4 +194,5 @@ function Protection() {
 Protection.__dashjs_factory_name = 'Protection';
 let factory = FactoryMaker.getClassFactory(Protection);
 factory.events = ProtectionEvents;
+FactoryMaker.updateClassFactory(Protection.__dashjs_factory_name, factory);
 export default factory;

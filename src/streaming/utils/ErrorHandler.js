@@ -114,4 +114,6 @@ factory.MANIFEST_ERROR_ID_PARSE             = MANIFEST_ERROR_ID_PARSE;
 factory.MANIFEST_ERROR_ID_NOSTREAMS         = MANIFEST_ERROR_ID_NOSTREAMS;
 factory.TIMED_TEXT_ERROR_ID_PARSE           = TIMED_TEXT_ERROR_ID_PARSE;
 
+FactoryMaker.updateSingletonFactory(ErrorHandler.__dashjs_factory_name, factory);
+
 export default factory;

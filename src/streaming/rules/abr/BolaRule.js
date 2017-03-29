@@ -541,4 +541,5 @@ factory.BOLA_STATE_ONE_BITRATE    = BOLA_STATE_ONE_BITRATE;
 factory.BOLA_STATE_STARTUP        = BOLA_STATE_STARTUP;
 factory.BOLA_STATE_STEADY         = BOLA_STATE_STEADY;
 factory.BOLA_DEBUG = BOLA_DEBUG; // TODO: remove
+FactoryMaker.updateClassFactory(BolaRule.__dashjs_factory_name, factory);
 export default factory;
