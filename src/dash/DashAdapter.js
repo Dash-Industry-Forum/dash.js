@@ -284,11 +284,6 @@ function DashAdapter() {
         return streams;
     }
 
-    function getManifestInfo(manifest) {
-        var mpd = dashManifestModel.getMpd(manifest);
-        return convertMpdToManifestInfo(manifest, mpd);
-    }
-
     function getInitRequest(streamProcessor, quality) {
         var representation = streamProcessor.getRepresentationController().getRepresentationForQuality(quality);
         return streamProcessor.getIndexHandler().getInitRequest(representation);
@@ -394,7 +389,6 @@ function DashAdapter() {
         getDataForMedia: getAdaptationForMediaInfo,
         getDataForStream: getPeriodForStreamInfo,
         getStreamsInfo: getStreamsInfo,
-        getManifestInfo: getManifestInfo,
         getMediaInfoForType: getMediaInfoForType,
         getAllMediaInfoForType: getAllMediaInfoForType,
         getCurrentRepresentationInfo: getCurrentRepresentationInfo,

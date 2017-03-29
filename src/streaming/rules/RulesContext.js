@@ -64,10 +64,6 @@ function RulesContext(config) {
         return currentValue;
     }
 
-    function getManifestInfo() {
-        return representationInfo.mediaInfo.streamInfo.manifestInfo;
-    }
-
     function getStreamProcessor() {
         return sp;
     }
@@ -99,7 +95,6 @@ function RulesContext(config) {
     instance = {
         getMediaType: getMediaType,
         getCurrentValue: getCurrentValue,
-        getManifestInfo: getManifestInfo,
         getMediaInfo: getMediaInfo,
         getPlaybackIndex: getPlaybackIndex,
         getDroppedFramesHistory: getDroppedFramesHistory,
