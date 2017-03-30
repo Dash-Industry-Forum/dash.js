@@ -49,7 +49,7 @@ function DownloadRatioRuleClass() {
         // this sample only display metrics in console
         console.log(metrics);
 
-        return SwitchRequest.NO_CHANGE;
+        return SwitchRequest(context).create();
     }
 
     const instance = {
