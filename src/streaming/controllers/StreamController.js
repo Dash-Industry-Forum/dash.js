@@ -374,7 +374,7 @@ function StreamController() {
     function composeStreams(manifest) {
 
         try {
-            const streamsInfo = adapter.getStreamsInfo(manifest);
+            const streamsInfo = adapter.getStreamsInfo();
             if (streamsInfo.length === 0) {
                 throw new Error('There are no streams');
             }

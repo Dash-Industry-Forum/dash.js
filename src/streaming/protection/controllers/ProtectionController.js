@@ -107,7 +107,7 @@ function ProtectionController(config) {
             if (!aInfo && !vInfo) {
                 // Look for ContentProtection elements.  InitData can be provided by either the
                 // dash264drm:Pssh ContentProtection format or a DRM-specific format.
-                streamInfo = adapter.getStreamsInfo(manifest)[0]; // TODO: Single period only for now. See TODO above
+                streamInfo = adapter.getStreamsInfo()[0]; // TODO: Single period only for now. See TODO above
             }
 
             audioInfo = aInfo || (streamInfo ? adapter.getMediaInfoForType(manifest, streamInfo, 'audio') : null);
