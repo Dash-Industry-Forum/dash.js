@@ -368,7 +368,6 @@ function Stream(config) {
     }
 
     function initializeMedia(mediaSource) {
-        var manifest = manifestModel.getValue();
         var events;
 
         eventController = EventController(context).getInstance();
@@ -377,7 +376,7 @@ function Stream(config) {
             manifestModel: manifestModel,
             manifestUpdater: manifestUpdater
         });
-        events = adapter.getEventsFor(manifest, streamInfo);
+        events = adapter.getEventsFor(streamInfo);
         eventController.addInlineEvents(events);
 
         isUpdating = true;
@@ -397,7 +396,7 @@ function Stream(config) {
 
         if (streamProcessors.length === 0) {
             var msg = 'No streams to play.';
-            errHandler.manifestError(msg, 'nostreams', manifest);
+            errHandler.manifestError(msg, 'nostreams', manifestModel.getValue());
             log(msg);
         } else {
             liveEdgeFinder.initialize(timelineConverter, streamProcessors[0]);
@@ -501,15 +500,13 @@ function Stream(config) {
 
         log('Manifest updated... updating data system wide.');
 
-        let manifest = manifestModel.getValue();
-
         isStreamActivated = false;
         isUpdating = true;
         initialized = false;
         streamInfo = updatedStreamInfo;
 
         if (eventController) {
-            let events = adapter.getEventsFor(manifest, streamInfo);
+            let events = adapter.getEventsFor(streamInfo);
             eventController.addInlineEvents(events);
         }
 

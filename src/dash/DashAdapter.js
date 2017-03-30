@@ -371,11 +371,17 @@ function DashAdapter() {
         return event;
     }
 
-    function getEventsFor(manifest, info, streamProcessor) {
+    function getEventsFor(info, streamProcessor) {
         var events = [];
 
+        if (periods.length === 0) {
+            return events;
+        }
+
+        var manifest = periods[0].mpd.manifest;
+
         if (info instanceof StreamInfo) {
-            events = dashManifestModel.getEventsForPeriod(manifest, getPeriodForStreamInfo(info));
+            events = dashManifestModel.getEventsForPeriod(manifest, getPeriodForStreamInfo(info, periods));
         } else if (info instanceof MediaInfo) {
             events = dashManifestModel.getEventStreamForAdaptationSet(manifest, getAdaptationForMediaInfo(info));
         } else if (info instanceof TrackInfo) {
