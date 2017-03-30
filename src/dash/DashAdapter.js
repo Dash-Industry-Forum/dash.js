@@ -69,11 +69,11 @@ function DashAdapter() {
         return adaptations[mediaInfo.streamInfo.id][mediaInfo.index];
     }
 
-    function getPeriodForStreamInfo(streamInfo) {
-        var ln = periods.length;
+    function getPeriodForStreamInfo(streamInfo, periodsArray) {
+        var ln = periodsArray.length;
 
         for (let i = 0; i < ln; i++) {
-            let period = periods[i];
+            let period = periodsArray[i];
 
             if (streamInfo.id === period.id) return period;
         }
@@ -339,8 +339,8 @@ function DashAdapter() {
         return streamProcessor.getIndexHandler().setCurrentTime(value);
     }
 
-    function updateData(manifest, streamProcessor) {
-        var periodInfo = getPeriodForStreamInfo(streamProcessor.getStreamInfo());
+    function updateData(streamProcessor) {
+        var periodInfo = getPeriodForStreamInfo(streamProcessor.getStreamInfo(), periods);
         var mediaInfo = streamProcessor.getMediaInfo();
         var adaptation = getAdaptationForMediaInfo(mediaInfo);
         var type = streamProcessor.getType();
@@ -349,18 +349,20 @@ function DashAdapter() {
             data;
 
         id = mediaInfo.id;
-        data = id ? dashManifestModel.getAdaptationForId(id, manifest, periodInfo.index) : dashManifestModel.getAdaptationForIndex(mediaInfo.index, manifest, periodInfo.index);
-        streamProcessor.getRepresentationController().updateData(data, adaptation, type);
+        if (periods.length > 0) {
+            data = id ? dashManifestModel.getAdaptationForId(id, periods[0].mpd.manifest, periodInfo.index) : dashManifestModel.getAdaptationForIndex(mediaInfo.index, periods[0].mpd.manifest, periodInfo.index);
+            streamProcessor.getRepresentationController().updateData(data, adaptation, type);
+        }
     }
 
-    function getRepresentationInfoForQuality(manifest, representationController, quality) {
+    function getRepresentationInfoForQuality(representationController, quality) {
         var representation = representationController.getRepresentationForQuality(quality);
-        return representation ? convertRepresentationToTrackInfo(manifest, representation) : null;
+        return representation ? convertRepresentationToTrackInfo(representation) : null;
     }
 
-    function getCurrentRepresentationInfo(manifest, representationController) {
+    function getCurrentRepresentationInfo(representationController) {
         var representation = representationController.getCurrentRepresentation();
-        return representation ? convertRepresentationToTrackInfo(manifest, representation) : null;
+        return representation ? convertRepresentationToTrackInfo(representation) : null;
     }
 
     function getEvent(eventBox, eventStreams, startTime) {

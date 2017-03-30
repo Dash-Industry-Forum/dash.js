@@ -240,7 +240,7 @@ function Stream(config) {
         return mediaInfo.type === 'text' ? mediaInfo.mimeType : mediaInfo.type;
     }
 
-    function isMediaSupported(mediaInfo, mediaSource, manifest) {
+    function isMediaSupported(mediaInfo) {
         var type = mediaInfo.type;
         var codec,
             msg;
@@ -261,7 +261,7 @@ function Stream(config) {
             errHandler.capabilityError('encryptedmedia');
         } else if (!capabilities.supportsCodec(VideoModel(context).getInstance().getElement(), codec)) {
             msg = type + 'Codec (' + codec + ') is not supported.';
-            errHandler.manifestError(msg, 'codec', manifest);
+            errHandler.manifestError(msg, 'codec', manifestModel.getValue());
             log(msg);
             return false;
         }
@@ -278,25 +278,23 @@ function Stream(config) {
         var currentTime = playbackController.getTime();
         var buffer = processor.getBuffer();
         var mediaInfo = e.newMediaInfo;
-        var manifest = manifestModel.getValue();
         var idx = streamProcessors.indexOf(processor);
         var mediaSource = processor.getMediaSource();
 
         if (mediaInfo.type !== 'fragmentedText') {
             processor.reset(true);
-            createStreamProcessor(mediaInfo, manifest, mediaSource, {buffer: buffer, replaceIdx: idx, currentTime: currentTime});
+            createStreamProcessor(mediaInfo, mediaSource, {buffer: buffer, replaceIdx: idx, currentTime: currentTime});
             playbackController.seek(playbackController.getTime());
         }else {
-            processor.updateMediaInfo(manifest, mediaInfo);
+            processor.updateMediaInfo(mediaInfo);
         }
     }
 
-    function createStreamProcessor(mediaInfo, manifest, mediaSource, optionalSettings) {
+    function createStreamProcessor(mediaInfo, mediaSource, optionalSettings) {
         var streamProcessor = StreamProcessor(context).create({
             mimeType: mediaInfo.mimeType,
             timelineConverter: timelineConverter,
             adapter: adapter,
-            manifestModel: manifestModel,
             baseURLController: baseURLController
         });
 
@@ -318,13 +316,13 @@ function Stream(config) {
                 if (allMediaForType[i].index === mediaInfo.index) {
                     idx = i;
                 }
-                streamProcessor.updateMediaInfo(manifest, allMediaForType[i]);//creates text tracks for all adaptations in one stream processor
+                streamProcessor.updateMediaInfo(allMediaForType[i]);//creates text tracks for all adaptations in one stream processor
             }
             if (mediaInfo.type === 'fragmentedText') {
-                streamProcessor.updateMediaInfo(manifest, allMediaForType[idx]);//sets the initial media info
+                streamProcessor.updateMediaInfo(allMediaForType[idx]);//sets the initial media info
             }
         }else {
-            streamProcessor.updateMediaInfo(manifest, mediaInfo);
+            streamProcessor.updateMediaInfo(mediaInfo);
         }
     }
 
@@ -345,7 +343,7 @@ function Stream(config) {
             if (type === 'embeddedText') {
                 textController.addEmbeddedTrack(mediaInfo);
             } else {
-                if (!isMediaSupported(mediaInfo, mediaSource, manifest)) continue;
+                if (!isMediaSupported(mediaInfo)) continue;
 
                 if (mediaController.isMultiTrackSupportedByType(mediaInfo.type)) {
                     mediaController.addTrack(mediaInfo, streamInfo);
@@ -363,7 +361,7 @@ function Stream(config) {
         // TODO : How to tell index handler live/duration?
         // TODO : Pass to controller and then pass to each method on handler?
 
-        createStreamProcessor(initialMediaInfo, manifest, mediaSource);
+        createStreamProcessor(initialMediaInfo, mediaSource);
     }
 
     function initializeMedia(mediaSource) {
@@ -513,7 +511,7 @@ function Stream(config) {
             let streamProcessor = streamProcessors[i];
             let mediaInfo = adapter.getMediaInfoForType(streamInfo, streamProcessor.getType());
             abrController.updateTopQualityIndex(mediaInfo);
-            streamProcessor.updateMediaInfo(manifest, mediaInfo);
+            streamProcessor.updateMediaInfo(mediaInfo);
         }
 
         isUpdating = false;
