@@ -449,7 +449,8 @@ function StreamController() {
             //Since streams are not composed yet , need to manually look up useCalculatedLiveEdgeTime to detect if stream
             //is SegmentTimeline to avoid using time source
             var manifest = e.manifest;
-            var streamInfo = adapter.getStreamsInfo(manifest)[0];
+            adapter.updatePeriods(manifest);
+            var streamInfo = adapter.getStreamsInfo()[0];
             var mediaInfo = (
                 adapter.getMediaInfoForType(manifest, streamInfo, 'video') ||
                 adapter.getMediaInfoForType(manifest, streamInfo, 'audio')

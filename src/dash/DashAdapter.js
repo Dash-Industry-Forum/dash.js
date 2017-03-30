@@ -157,7 +157,7 @@ function DashAdapter() {
         mediaInfo.roles = ['caption'];
     }
 
-    function convertPeriodToStreamInfo(manifest, period) {
+    function convertPeriodToStreamInfo(period) {
         let streamInfo = new StreamInfo();
         const THRESHOLD = 1;
 
@@ -165,14 +165,14 @@ function DashAdapter() {
         streamInfo.index = period.index;
         streamInfo.start = period.start;
         streamInfo.duration = period.duration;
-        streamInfo.manifestInfo = convertMpdToManifestInfo(manifest, period.mpd);
-        streamInfo.isLast = manifest.Period_asArray.length === 1 || Math.abs((streamInfo.start + streamInfo.duration) - streamInfo.manifestInfo.duration) < THRESHOLD;
-        streamInfo.isFirst = manifest.Period_asArray.length === 1 || dashManifestModel.getRegularPeriods(manifest, dashManifestModel.getMpd(manifest))[0].id === period.id;
+        streamInfo.manifestInfo = convertMpdToManifestInfo(period.mpd);
+        streamInfo.isLast = period.mpd.manifest.Period_asArray.length === 1 || Math.abs((streamInfo.start + streamInfo.duration) - streamInfo.manifestInfo.duration) < THRESHOLD;
+        streamInfo.isFirst = period.mpd.manifest.Period_asArray.length === 1 || dashManifestModel.getRegularPeriods(period.mpd.manifest, dashManifestModel.getMpd(period.mpd.manifest))[0].id === period.id;
 
         return streamInfo;
     }
 
-    function convertMpdToManifestInfo(manifest, mpd) {
+    function convertMpdToManifestInfo(mpd) {
         var manifestInfo = new ManifestInfo();
 
         manifestInfo.DVRWindowSize = mpd.timeShiftBufferDepth;
@@ -180,8 +180,8 @@ function DashAdapter() {
         manifestInfo.availableFrom = mpd.availabilityStartTime;
         manifestInfo.minBufferTime = mpd.manifest.minBufferTime;
         manifestInfo.maxFragmentDuration = mpd.maxSegmentDuration;
-        manifestInfo.duration = dashManifestModel.getDuration(manifest);
-        manifestInfo.isDynamic = dashManifestModel.getIsDynamic(manifest);
+        manifestInfo.duration = dashManifestModel.getDuration(mpd.manifest);
+        manifestInfo.isDynamic = dashManifestModel.getIsDynamic(mpd.manifest);
 
         return manifestInfo;
     }
@@ -267,18 +267,28 @@ function DashAdapter() {
         return mediaArr;
     }
 
-    function getStreamsInfo(manifest) {
+    function updatePeriods(newManifest) {
+        if (!newManifest) return null;
 
-        if (!manifest) return null;
+        const mpd = dashManifestModel.getMpd(newManifest);
 
-        const streams = [];
-        const mpd = dashManifestModel.getMpd(manifest);
-
-        periods = dashManifestModel.getRegularPeriods(manifest, mpd);
+        periods = dashManifestModel.getRegularPeriods(newManifest, mpd);
         adaptations = {};
+    }
 
-        for (let i = 0, ln = periods.length; i < ln; i++) {
-            streams.push(convertPeriodToStreamInfo(manifest, periods[i]));
+    function getStreamsInfo(externalManifest) {
+        const streams = [];
+        var localPeriods = periods;
+
+        //if manifest is defined, getStreamsInfo is for an outside manifest, not the current one
+        if (externalManifest) {
+            const mpd = dashManifestModel.getMpd(externalManifest);
+
+            localPeriods = dashManifestModel.getRegularPeriods(externalManifest, mpd);
+        }
+
+        for (let i = 0; i < localPeriods.length; i++) {
+            streams.push(convertPeriodToStreamInfo(localPeriods[i]));
         }
 
         return streams;
@@ -403,6 +413,7 @@ function DashAdapter() {
         getEventsFor: getEventsFor,
         getEvent: getEvent,
         setConfig: setConfig,
+        updatePeriods: updatePeriods,
         reset: reset,
         metricsList: METRIC_LIST
     };
