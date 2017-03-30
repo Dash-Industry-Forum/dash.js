@@ -1319,7 +1319,6 @@ function MediaPlayer() {
         return mediaPlayerModel.getFastSwitchEnabled();
     }
 
-
     /**
      * Enabling buffer-occupancy ABR will switch to the *experimental* implementation of BOLA,
      * replacing the throughput-based ABR rule set (ThroughputRule, BufferOccupancyRule,
@@ -1335,6 +1334,17 @@ function MediaPlayer() {
      */
     function enableBufferOccupancyABR(value) {
         mediaPlayerModel.setBufferOccupancyABREnabled(value);
+    }
+
+    /**
+     * Enable/disable builtin dashjs ABR rules
+     * @param {boolean} value
+     * @default true
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function useDefaultABRRules(value) {
+        mediaPlayerModel.setUseDefaultABRRules(value);
     }
 
     /**
@@ -2179,6 +2189,7 @@ function MediaPlayer() {
         getAutoSwitchQualityFor: getAutoSwitchQualityFor,
         setAutoSwitchQualityFor: setAutoSwitchQualityFor,
         enableBufferOccupancyABR: enableBufferOccupancyABR,
+        useDefaultABRRules: useDefaultABRRules,
         addABRCustomRule: addABRCustomRule,
         removeABRCustomRule: removeABRCustomRule,
         removeAllABRCustomRule: removeAllABRCustomRule,

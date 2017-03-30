@@ -93,6 +93,7 @@ function MediaPlayerModel() {
         retryIntervals,
         wallclockTimeUpdateInterval,
         bufferOccupancyABREnabled,
+        useDefaultABRRules,
         xhrWithCredentials,
         fastSwitchEnabled,
         customABRRule;
@@ -103,6 +104,7 @@ function MediaPlayerModel() {
         useManifestDateHeaderTimeSource = true;
         scheduleWhilePaused = true;
         bufferOccupancyABREnabled = false;
+        useDefaultABRRules = true;
         fastSwitchEnabled = false;
         lastBitrateCachingInfo = {
             enabled: true,
@@ -145,6 +147,14 @@ function MediaPlayerModel() {
 
     function getBufferOccupancyABREnabled() {
         return bufferOccupancyABREnabled;
+    }
+
+    function setUseDefaultABRRules(value) {
+        useDefaultABRRules = value;
+    }
+
+    function getUseDefaultABRRules() {
+        return useDefaultABRRules;
     }
 
     function findABRCustomRule(rulename) {
@@ -410,6 +420,8 @@ function MediaPlayerModel() {
     instance = {
         setBufferOccupancyABREnabled: setBufferOccupancyABREnabled,
         getBufferOccupancyABREnabled: getBufferOccupancyABREnabled,
+        setUseDefaultABRRules: setUseDefaultABRRules,
+        getUseDefaultABRRules: getUseDefaultABRRules,
         getABRCustomRules: getABRCustomRules,
         addABRCustomRule: addABRCustomRule,
         removeABRCustomRule: removeABRCustomRule,

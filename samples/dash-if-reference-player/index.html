@@ -31,6 +31,7 @@
     <script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
     <script src="app/main.js"></script>
     <script src="app/rules/DownloadRatioRule.js"></script>
+    <script src="app/rules/ThroughputRule.js"></script>
 
 </head>
 <body ng-controller="DashController" >
@@ -148,9 +149,9 @@
                         Buffer Occupancy ABR
                     </label>
                     <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
-                           title="ABR - Download Ratio Rule ">
-                        <input type="checkbox" id="downloadRatioCB" ng-model="downloadRatioRuleSelected" ng-change="toggleDownloadRatioRuleSelected()" ng-checked="downloadRatioRuleSelected">
-                        Download Ratio Rule ABR
+                           title="ABR - Use custom abr rules">
+                        <input type="checkbox" id="customABRRules" ng-model="customABRRulesSelected" ng-change="toggleUseCustomABRRules()" ng-checked="customABRRulesSelected">
+                        ABR - Use custom abr rules
                     </label>
                 </div>
             </div>

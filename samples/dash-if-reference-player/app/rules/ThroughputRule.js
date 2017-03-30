@@ -29,9 +29,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-var DownloadRatioRule;
+var CustomThroughputRule;
 
-function DownloadRatioRuleClass() {
+function CustomThroughputRuleClass() {
 
     let factory = dashjs.FactoryMaker;
     let SwitchRequest = factory.getClassFactoryByName('SwitchRequest');
@@ -58,6 +58,6 @@ function DownloadRatioRuleClass() {
     return instance;
 }
 
-DownloadRatioRuleClass.__dashjs_factory_name = 'DownloadRatioRule';
-DownloadRatioRule = dashjs.FactoryMaker.getClassFactory(DownloadRatioRuleClass);
+CustomThroughputRuleClass.__dashjs_factory_name = 'CustomThroughputRule';
+CustomThroughputRule = dashjs.FactoryMaker.getClassFactory(CustomThroughputRuleClass);
 

@@ -481,12 +481,16 @@ app.controller('DashController', function ($scope, sources, contributors) {
         $scope.player.enableBufferOccupancyABR($scope.bolaSelected);
     };
 
-    $scope.toggleDownloadRatioRuleSelected = function () {
+    $scope.toggleUseCustomABRRules = function () {
 
-        if ($scope.downloadRatioRuleSelected) {
+        if ($scope.customABRRulesSelected) {
+            $scope.player.useDefaultABRRules(false);
             $scope.player.addABRCustomRule('qualitySwitchRules', 'DownloadRatioRule', DownloadRatioRule);
+            $scope.player.addABRCustomRule('qualitySwitchRules', 'ThroughputRule', CustomThroughputRule);
         } else {
+            $scope.player.useDefaultABRRules(true);
             $scope.player.removeABRCustomRule('DownloadRatioRule');
+            $scope.player.removeABRCustomRule('ThroughputRule');
         }
     };
 

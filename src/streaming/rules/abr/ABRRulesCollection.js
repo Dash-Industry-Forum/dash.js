@@ -60,36 +60,38 @@ function ABRRulesCollection() {
         let dashMetrics = DashMetrics(context).getInstance();
         let mediaPlayerModel = MediaPlayerModel(context).getInstance();
 
-        if (mediaPlayerModel.getBufferOccupancyABREnabled()) {
-            qualitySwitchRules.push(
-                BolaRule(context).create({
-                    metricsModel: metricsModel,
-                    dashMetrics: dashMetrics
-                })
-            );
-            abandonFragmentRules.push(
-                BolaAbandonRule(context).create({
-                    metricsModel: metricsModel,
-                    dashMetrics: dashMetrics
-                })
-            );
-        } else {
-            qualitySwitchRules.push(
-                ThroughputRule(context).create({
-                    metricsModel: metricsModel,
-                    dashMetrics: dashMetrics
-                })
-            );
+        if (mediaPlayerModel.getUseDefaultABRRules()) {
+            if (mediaPlayerModel.getBufferOccupancyABREnabled()) {
+                qualitySwitchRules.push(
+                    BolaRule(context).create({
+                        metricsModel: metricsModel,
+                        dashMetrics: dashMetrics
+                    })
+                );
+                abandonFragmentRules.push(
+                    BolaAbandonRule(context).create({
+                        metricsModel: metricsModel,
+                        dashMetrics: dashMetrics
+                    })
+                );
+            } else {
+                qualitySwitchRules.push(
+                    ThroughputRule(context).create({
+                        metricsModel: metricsModel,
+                        dashMetrics: dashMetrics
+                    })
+                );
 
-            qualitySwitchRules.push(InsufficientBufferRule(context).create({
-                metricsModel: metricsModel
-            }));
-            qualitySwitchRules.push(SwitchHistoryRule(context).create());
-            qualitySwitchRules.push(DroppedFramesRule(context).create());
-            abandonFragmentRules.push(AbandonRequestsRule(context).create());
+                qualitySwitchRules.push(InsufficientBufferRule(context).create({
+                    metricsModel: metricsModel
+                }));
+                qualitySwitchRules.push(SwitchHistoryRule(context).create());
+                qualitySwitchRules.push(DroppedFramesRule(context).create());
+                abandonFragmentRules.push(AbandonRequestsRule(context).create());
+            }
         }
 
-        // add custom ABR rules
+        // add custom ABR rules if any
         let customRules = mediaPlayerModel.getABRCustomRules();
         customRules.forEach(function (rule) {
             if (rule.type === QUALITY_SWITCH_RULES) {
