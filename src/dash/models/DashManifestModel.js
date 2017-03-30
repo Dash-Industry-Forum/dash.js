@@ -234,7 +234,7 @@ function DashManifestModel() {
 
         if (adaptations.length > 1 && streamInfo) {
             let currentTrack = mediaController.getCurrentTrackFor(type, streamInfo);
-            let allMediaInfoForType = adaptor.getAllMediaInfoForType(manifest, streamInfo, type);
+            let allMediaInfoForType = adaptor.getAllMediaInfoForType(streamInfo, type);
             for (let i = 0, ln = adaptations.length; i < ln; i++) {
                 if (currentTrack && mediaController.isTracksEqual(currentTrack, allMediaInfoForType[i])) {
                     return adaptations[i];

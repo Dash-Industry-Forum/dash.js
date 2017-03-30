@@ -200,19 +200,31 @@ function DashAdapter() {
         return convertAdaptationToMediaInfo(manifest, adaptations[periodId][idx]);
     }
 
-    function getAllMediaInfoForType(manifest, streamInfo, type) {
-        var periodInfo = getPeriodForStreamInfo(streamInfo);
-        var periodId = periodInfo.id;
-        var adaptationsForType = dashManifestModel.getAdaptationsForType(manifest, streamInfo.index, type !== 'embeddedText' ? type : 'video');
-
+    function getAllMediaInfoForType(streamInfo, type, externalManifest) {
+        var localPeriods = periods;
+        var manifest = externalManifest;
         var mediaArr = [];
-
         var data,
             media,
             idx,
             i,
             j,
             ln;
+
+        if (manifest) {
+            const mpd = dashManifestModel.getMpd(manifest);
+
+            localPeriods = dashManifestModel.getRegularPeriods(manifest, mpd);
+
+        }else if (periods.length > 0) {
+            manifest = periods[0].mpd.manifest;
+        } else {
+            return mediaArr;
+        }
+
+        var periodInfo = getPeriodForStreamInfo(streamInfo, localPeriods);
+        var periodId = periodInfo.id;
+        var adaptationsForType = dashManifestModel.getAdaptationsForType(manifest, streamInfo.index, type !== 'embeddedText' ? type : 'video');
 
         if (!adaptationsForType) return mediaArr;
 
@@ -221,7 +233,7 @@ function DashAdapter() {
         for (i = 0, ln = adaptationsForType.length; i < ln; i++) {
             data = adaptationsForType[i];
             idx = dashManifestModel.getIndexForAdaptation(data, manifest, streamInfo.index);
-            media = convertAdaptationToMediaInfo(manifest, adaptations[periodId][idx]);
+            media = convertAdaptationToMediaInfo(adaptations[periodId][idx]);
 
             if (type === 'embeddedText') {
                 var accessibilityLength = media.accessibility.length;
@@ -236,7 +248,7 @@ function DashAdapter() {
                         if (parts[0].substring(0, 2) === 'CC') {
                             for (j = 0; j < parts.length; j++) {
                                 if (!media) {
-                                    media = convertAdaptationToMediaInfo.call(this, manifest, adaptations[periodId][idx]);
+                                    media = convertAdaptationToMediaInfo.call(this, adaptations[periodId][idx]);
                                 }
                                 convertVideoInfoToEmbeddedTextInfo(media, parts[j].substring(0, 3), parts[j].substring(4));
                                 mediaArr.push(media);
@@ -245,7 +257,7 @@ function DashAdapter() {
                         } else {
                             for (j = 0; j < parts.length; j++) { // Only languages for CC1, CC2, ...
                                 if (!media) {
-                                    media = convertAdaptationToMediaInfo.call(this, manifest, adaptations[periodId][idx]);
+                                    media = convertAdaptationToMediaInfo.call(this, adaptations[periodId][idx]);
                                 }
                                 convertVideoInfoToEmbeddedTextInfo(media, 'CC' + (j + 1), parts[j]);
                                 mediaArr.push(media);
