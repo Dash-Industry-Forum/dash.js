@@ -53,7 +53,7 @@ function CustomThroughputRuleClass() {
     }
 
     const instance = {
-        getMaxIndex: getMaxIndex,
+        getMaxIndex: getMaxIndex
     };
     return instance;
 }

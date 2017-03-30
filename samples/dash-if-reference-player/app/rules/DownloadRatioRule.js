@@ -53,7 +53,7 @@ function DownloadRatioRuleClass() {
     }
 
     const instance = {
-        getMaxIndex: getMaxIndex,
+        getMaxIndex: getMaxIndex
     };
     return instance;
 }
