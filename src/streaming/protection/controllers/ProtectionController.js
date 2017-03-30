@@ -110,8 +110,8 @@ function ProtectionController(config) {
                 streamInfo = adapter.getStreamsInfo()[0]; // TODO: Single period only for now. See TODO above
             }
 
-            audioInfo = aInfo || (streamInfo ? adapter.getMediaInfoForType(manifest, streamInfo, 'audio') : null);
-            videoInfo = vInfo || (streamInfo ? adapter.getMediaInfoForType(manifest, streamInfo, 'video') : null);
+            audioInfo = aInfo || (streamInfo ? adapter.getMediaInfoForType(streamInfo, 'audio') : null);
+            videoInfo = vInfo || (streamInfo ? adapter.getMediaInfoForType(streamInfo, 'video') : null);
 
             var mediaInfo = (videoInfo) ? videoInfo : audioInfo; // We could have audio or video only
 

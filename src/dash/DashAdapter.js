@@ -186,18 +186,23 @@ function DashAdapter() {
         return manifestInfo;
     }
 
-    function getMediaInfoForType(manifest, streamInfo, type) {
+    function getMediaInfoForType(streamInfo, type) {
 
-        let data = dashManifestModel.getAdaptationForType(manifest, streamInfo.index, type, streamInfo);
-        if (!data) return null;
+        if (periods.length === 0) {
+            return null;
+        }
 
-        let periodInfo = getPeriodForStreamInfo(streamInfo);
+        var manifest = periods[0].mpd.manifest;
+        let adaptation = dashManifestModel.getAdaptationForType(manifest, streamInfo.index, type, streamInfo);
+        if (!adaptation) return null;
+
+        let periodInfo = getPeriodForStreamInfo(streamInfo, periods);
         let periodId = periodInfo.id;
-        let idx = dashManifestModel.getIndexForAdaptation(data, manifest, streamInfo.index);
+        let idx = dashManifestModel.getIndexForAdaptation(adaptation, manifest, streamInfo.index);
 
         adaptations[periodId] = adaptations[periodId] || dashManifestModel.getAdaptationsForPeriod(manifest, periodInfo);
 
-        return convertAdaptationToMediaInfo(manifest, adaptations[periodId][idx]);
+        return convertAdaptationToMediaInfo(adaptations[periodId][idx]);
     }
 
     function getAllMediaInfoForType(streamInfo, type, externalManifest) {

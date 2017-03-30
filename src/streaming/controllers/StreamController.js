@@ -452,8 +452,8 @@ function StreamController() {
             adapter.updatePeriods(manifest);
             var streamInfo = adapter.getStreamsInfo()[0];
             var mediaInfo = (
-                adapter.getMediaInfoForType(manifest, streamInfo, 'video') ||
-                adapter.getMediaInfoForType(manifest, streamInfo, 'audio')
+                adapter.getMediaInfoForType(streamInfo, 'video') ||
+                adapter.getMediaInfoForType(streamInfo, 'audio')
             );
 
             var adaptation,

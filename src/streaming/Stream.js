@@ -511,7 +511,7 @@ function Stream(config) {
 
         for (let i = 0, ln = streamProcessors.length; i < ln; i++) {
             let streamProcessor = streamProcessors[i];
-            let mediaInfo = adapter.getMediaInfoForType(manifest, streamInfo, streamProcessor.getType());
+            let mediaInfo = adapter.getMediaInfoForType(streamInfo, streamProcessor.getType());
             abrController.updateTopQualityIndex(mediaInfo);
             streamProcessor.updateMediaInfo(manifest, mediaInfo);
         }
