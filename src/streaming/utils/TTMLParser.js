@@ -148,7 +148,7 @@ function TTMLParser() {
 
 
     function clipStartTime(startTime, intervalStart) {
-        if (typeof startInterval !== 'undefined') {
+        if (typeof intervalStart !== 'undefined') {
             if (startTime < intervalStart) {
                 startTime = intervalStart;
             }
