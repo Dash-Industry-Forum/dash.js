@@ -403,7 +403,6 @@ function DashAdapter() {
         convertDataToStream: convertPeriodToStreamInfo,
         getDataForTrack: getRepresentationForTrackInfo,
         getDataForMedia: getAdaptationForMediaInfo,
-        getDataForStream: getPeriodForStreamInfo,
         getStreamsInfo: getStreamsInfo,
         getMediaInfoForType: getMediaInfoForType,
         getAllMediaInfoForType: getAllMediaInfoForType,
