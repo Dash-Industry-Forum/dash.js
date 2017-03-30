@@ -81,7 +81,7 @@ function DashAdapter() {
         return null;
     }
 
-    function convertRepresentationToTrackInfo(manifest, representation) {
+    function convertRepresentationToTrackInfo(representation) {
         var trackInfo = new TrackInfo();
         var a = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index];
         var r = dashManifestModel.getRepresentationFor(representation.index, a);
@@ -93,12 +93,12 @@ function DashAdapter() {
         trackInfo.fragmentDuration = representation.segmentDuration || (representation.segments && representation.segments.length > 0 ? representation.segments[0].duration : NaN);
         trackInfo.MSETimeOffset = representation.MSETimeOffset;
         trackInfo.useCalculatedLiveEdgeTime = representation.useCalculatedLiveEdgeTime;
-        trackInfo.mediaInfo = convertAdaptationToMediaInfo(manifest, representation.adaptation);
+        trackInfo.mediaInfo = convertAdaptationToMediaInfo(representation.adaptation);
 
         return trackInfo;
     }
 
-    function convertAdaptationToMediaInfo(manifest, adaptation) {
+    function convertAdaptationToMediaInfo(adaptation) {
         var mediaInfo = new MediaInfo();
         var a = adaptation.period.mpd.manifest.Period_asArray[adaptation.period.index].AdaptationSet_asArray[adaptation.index];
         var viewpoint;
@@ -106,7 +106,7 @@ function DashAdapter() {
         mediaInfo.id = adaptation.id;
         mediaInfo.index = adaptation.index;
         mediaInfo.type = adaptation.type;
-        mediaInfo.streamInfo = convertPeriodToStreamInfo(manifest, adaptation.period);
+        mediaInfo.streamInfo = convertPeriodToStreamInfo(adaptation.period);
         mediaInfo.representationCount = dashManifestModel.getRepresentationCount(a);
         mediaInfo.lang = dashManifestModel.getLanguageForAdaptation(a);
         viewpoint = dashManifestModel.getViewpointForAdaptation(a);

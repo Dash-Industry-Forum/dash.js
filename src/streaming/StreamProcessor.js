@@ -102,7 +102,6 @@ function StreamProcessor(config) {
         bufferController = createBufferControllerForType(Type);
         scheduleController = ScheduleController(context).create({
             metricsModel: MetricsModel(context).getInstance(),
-            manifestModel: manifestModel,
             adapter: adapter,
             dashMetrics: DashMetrics(context).getInstance(),
             dashManifestModel: DashManifestModel(context).getInstance(),
