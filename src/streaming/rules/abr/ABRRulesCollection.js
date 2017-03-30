@@ -99,7 +99,7 @@ function ABRRulesCollection() {
             }
 
             if (rule.type === ABANDON_FRAGMENT_RULES) {
-                abandonFragmentRules.push(rule.rule);
+                abandonFragmentRules.push(rule.rule(context).create());
             }
         });
     }
