@@ -676,8 +676,8 @@ function DashManifestModel() {
         return periodEnd;
     }
 
-    function getEventsForPeriod(manifest, period) {
-
+    function getEventsForPeriod(period) {
+        var manifest = period.mpd.manifest;
         var periodArray = manifest.Period_asArray;
         var eventStreams = periodArray[period.index].EventStream_asArray;
         var events = [];

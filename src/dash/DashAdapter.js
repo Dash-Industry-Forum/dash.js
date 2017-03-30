@@ -400,7 +400,7 @@ function DashAdapter() {
         var manifest = periods[0].mpd.manifest;
 
         if (info instanceof StreamInfo) {
-            events = dashManifestModel.getEventsForPeriod(manifest, getPeriodForStreamInfo(info, periods));
+            events = dashManifestModel.getEventsForPeriod(getPeriodForStreamInfo(info, periods));
         } else if (info instanceof MediaInfo) {
             events = dashManifestModel.getEventStreamForAdaptationSet(manifest, getAdaptationForMediaInfo(info));
         } else if (info instanceof TrackInfo) {
