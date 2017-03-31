@@ -498,7 +498,7 @@ function MssFragmentProcessor() {
         // length
         avcC[i++] = (avcCLength & 0xFF000000) >> 24;
         avcC[i++] = (avcCLength & 0x00FF0000) >> 16;
-        avcC[i++] = (avcCLength & 0x0000F000) >> 8;
+        avcC[i++] = (avcCLength & 0x0000FF00) >> 8;
         avcC[i++] = (avcCLength & 0x000000FF);
         avcC.set([0x61, 0x76, 0x63, 0x43], i); // type = 'avcC'
         i += 4;
@@ -582,7 +582,7 @@ function MssFragmentProcessor() {
         // esds box
         esds[i++] = (esdsLength & 0xFF000000) >> 24; // esds box length
         esds[i++] = (esdsLength & 0x00FF0000) >> 16; // ''
-        esds[i++] = (esdsLength & 0x0000F000) >> 8; // ''
+        esds[i++] = (esdsLength & 0x0000FF00) >> 8; // ''
         esds[i++] = (esdsLength & 0x000000FF); // ''
         esds.set([0x65, 0x73, 0x64, 0x73], i); // type = 'esds'
         i += 4;
