@@ -699,7 +699,7 @@ function TextSourceBuffer() {
                                  videoWidth: videoElement.videoWidth,
                                  fontSize: fontSize,
                                  lineHeight: {},
-                                 linePadding: {},
+                                 linePadding: {}
                                });
         }
         return captionsArray;

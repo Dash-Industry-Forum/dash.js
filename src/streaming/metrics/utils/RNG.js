@@ -86,7 +86,7 @@ function RNG() {
     }
 
     instance = {
-        random: rand,
+        random: rand
     };
 
     initialise();

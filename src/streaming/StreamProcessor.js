@@ -97,7 +97,7 @@ function StreamProcessor(config) {
             dashMetrics: DashMetrics(context).getInstance(),
             dashManifestModel: DashManifestModel(context).getInstance(),
             timelineConverter: timelineConverter,
-            mediaPlayerModel: MediaPlayerModel(context).getInstance(),
+            mediaPlayerModel: MediaPlayerModel(context).getInstance()
         });
 
         bufferController.initialize(type, mediaSource, this);
@@ -264,7 +264,7 @@ function StreamProcessor(config) {
                 streamController: StreamController(context).getInstance(),
                 mediaController: MediaController(context).getInstance(),
                 adapter: adapter,
-                textSourceBuffer: TextSourceBuffer(context).getInstance(),
+                textSourceBuffer: TextSourceBuffer(context).getInstance()
             });
         }else {
             controller = TextController(context).create({
