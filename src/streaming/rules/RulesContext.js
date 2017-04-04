@@ -35,7 +35,7 @@ function RulesContext(config) {
 
     let instance;
     let abrController = config.abrController;
-    let sp = config.streamProcessor;
+    let streamProcessor = config.streamProcessor;
     let representationInfo = config.streamProcessor.getCurrentRepresentationInfo();
     let switchHistory = config.switchHistory;
     let droppedFramesHistory = config.droppedFramesHistory;
@@ -54,12 +54,12 @@ function RulesContext(config) {
         return representationInfo.mediaInfo;
     }
 
-    function getTrackInfo() {
+    function getRepresentationInfo() {
         return representationInfo;
     }
 
     function getStreamProcessor() {
-        return sp;
+        return streamProcessor;
     }
 
     function getAbrController() {
@@ -91,7 +91,7 @@ function RulesContext(config) {
         getStreamInfo: getStreamInfo,
         getStreamProcessor: getStreamProcessor,
         getAbrController: getAbrController,
-        getTrackInfo: getTrackInfo,
+        getRepresentationInfo: getRepresentationInfo,
         useBufferOccupancyABR: useBufferOccupancyABR
     };
 

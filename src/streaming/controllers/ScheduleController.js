@@ -332,7 +332,7 @@ function ScheduleController(config) {
             return;
         }
 
-        currentRepresentationInfo = adapter.convertDataToTrack(e.currentRepresentation);
+        currentRepresentationInfo = adapter.convertDataToRepresentationInfo(e.currentRepresentation);
     }
 
     function onStreamInitialized(e) {
