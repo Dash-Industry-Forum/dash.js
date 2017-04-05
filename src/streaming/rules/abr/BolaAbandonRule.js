@@ -232,7 +232,7 @@ function BolaAbandonRule(config) {
         if (BolaRule.BOLA_DEBUG) log('BolaDebug ' + mediaType + ' BolaAbandonRule abandon to ' + newQuality + ' - ' + diagnosticMessage);
 
         rememberAbandon(mediaType, index, quality);
-        switchRequest.value = newQuality;
+        switchRequest.quality = newQuality;
         switchRequest.reason.state = bolaState.state;
         switchRequest.reason.throughput = estimateThroughput;
         switchRequest.reason.bufferLevel = bufferLevel;

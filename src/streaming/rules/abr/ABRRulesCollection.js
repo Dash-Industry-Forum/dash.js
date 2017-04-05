@@ -106,26 +106,60 @@ function ABRRulesCollection() {
 
     function getRules(type) {
         switch (type) {
-        case QUALITY_SWITCH_RULES:
-            return qualitySwitchRules;
-        case ABANDON_FRAGMENT_RULES:
-            return abandonFragmentRules;
-        default:
-            return null;
+            case QUALITY_SWITCH_RULES:
+                return qualitySwitchRules;
+            case ABANDON_FRAGMENT_RULES:
+                return abandonFragmentRules;
+            default:
+                return null;
         }
     }
 
     function getActiveRules(srArray) {
-        return srArray.filter(sr => sr.value > SwitchRequest.NO_CHANGE);
+        return srArray.filter(sr => sr.quality > SwitchRequest.NO_CHANGE);
     }
 
     function getMinSwitchRequest(srArray) {
+
+        let values = {};
+        let i,
+            len,
+            req,
+            newQuality,
+            quality;
+
         if (srArray.length === 0) {
             return;
         }
-        return srArray.reduce((a, b) => {
-            return a.value < b.value ? a : b;
-        });
+
+        values[SwitchRequest.PRIORITY.STRONG] = SwitchRequest.NO_CHANGE;
+        values[SwitchRequest.PRIORITY.WEAK] = SwitchRequest.NO_CHANGE;
+        values[SwitchRequest.PRIORITY.DEFAULT] = SwitchRequest.NO_CHANGE;
+
+        for (i = 0, len = srArray.length; i < len; i += 1) {
+            req = srArray[i];
+            if (req.quality !== SwitchRequest.NO_CHANGE) {
+                values[req.priority] = values[req.priority] > SwitchRequest.NO_CHANGE ? Math.min(values[req.priority], req.quality) : req.quality;
+            }
+        }
+
+        if (values[SwitchRequest.PRIORITY.WEAK] !== SwitchRequest.NO_CHANGE) {
+            newQuality = values[SwitchRequest.PRIORITY.WEAK];
+        }
+
+        if (values[SwitchRequest.PRIORITY.DEFAULT] !== SwitchRequest.NO_CHANGE) {
+            newQuality = values[SwitchRequest.PRIORITY.DEFAULT];
+        }
+
+        if (values[SwitchRequest.PRIORITY.STRONG] !== SwitchRequest.NO_CHANGE) {
+            newQuality = values[SwitchRequest.PRIORITY.STRONG];
+        }
+
+        if (newQuality !== SwitchRequest.NO_CHANGE) {
+            quality = newQuality;
+        }
+
+        return SwitchRequest(context).create(quality);
     }
 
     function getMaxQuality(rulesContext) {

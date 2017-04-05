@@ -32,15 +32,39 @@
 import FactoryMaker from '../../core/FactoryMaker';
 
 const NO_CHANGE = -1;
+const PRIORITY = {
+    DEFAULT: 0.5,
+    STRONG: 1,
+    WEAK: 0
+};
 
-function SwitchRequest (v, r) {
+function SwitchRequest(q, r, p) {
     //TODO refactor all the calls to this to use config to be like everything else.
-    let value = (v === undefined) ? NO_CHANGE : v;
-    let reason = (r === undefined) ? null : r;
+    let instance;
+    let quality;
+    let priority;
+    let reason;
 
-    let instance = {
-        value: value,
-        reason: reason
+    // check priority value
+    function getPriority(p) {
+        let ret = PRIORITY.DEFAULT;
+
+        // check that p is one of declared priority value
+        if (p === PRIORITY.DEFAULT || p === PRIORITY.STRONG || p === PRIORITY.WEAK) {
+            ret = p;
+        }
+        return ret;
+    }
+
+    // init attributes
+    quality = (q === undefined) ? NO_CHANGE : q;
+    priority = getPriority(p);
+    reason = (r === undefined) ? null : r;
+
+    instance = {
+        quality: quality,
+        reason: reason,
+        priority: priority,
     };
 
     return instance;
@@ -49,6 +73,7 @@ function SwitchRequest (v, r) {
 SwitchRequest.__dashjs_factory_name = 'SwitchRequest';
 let factory = FactoryMaker.getClassFactory(SwitchRequest);
 factory.NO_CHANGE = NO_CHANGE;
+factory.PRIORITY = PRIORITY;
 FactoryMaker.updateClassFactory(SwitchRequest.__dashjs_factory_name, factory);
 
 export default factory;

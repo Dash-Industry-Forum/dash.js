@@ -29,6 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*global dashjs*/
+
 var DownloadRatioRule;
 
 function DownloadRatioRuleClass() {
@@ -36,20 +38,147 @@ function DownloadRatioRuleClass() {
     let factory = dashjs.FactoryMaker;
     let SwitchRequest = factory.getClassFactoryByName('SwitchRequest');
     let MetricsModel = factory.getSingletonFactoryByName('MetricsModel');
+    let DashMetrics = factory.getSingletonFactoryByName('DashMetrics');
+    let DashManifestModel = factory.getSingletonFactoryByName('DashManifestModel');
+    let Debug = factory.getSingletonFactoryByName('Debug');
 
     let context = this.context;
+    let debug = Debug(context).getInstance();
+
+    function getBytesLength(request) {
+        return request.trace.reduce((a, b) => a + b.b[0], 0);
+    }
 
     function getMaxIndex(rulesContext) {
 
-        // here you can get some informations aboit metrics for example, to implement the rule
-        let metricsModel = MetricsModel(context).getInstance();
         var mediaType = rulesContext.getMediaInfo().type;
+        var current = rulesContext.getCurrentValue();
+
+        let metricsModel = MetricsModel(context).getInstance();
+        let dashMetrics = DashMetrics(context).getInstance();
+        let dashManifest = DashManifestModel(context).getInstance();
         var metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
 
-        // this sample only display metrics in console
-        console.log(metrics);
+        var requests = dashMetrics.getHttpRequests(metrics),
+            lastRequest = null,
+            currentRequest = null,
+            downloadTime,
+            totalTime,
+            calculatedBandwidth,
+            currentBandwidth,
+            latencyInBandwidth,
+            switchUpRatioSafetyFactor,
+            currentRepresentation,
+            count,
+            bandwidths = [],
+            i,
+            q = SwitchRequest.NO_CHANGE,
+            p = SwitchRequest.PRIORITY.DEFAULT,
+            totalBytesLength = 0;
 
-        return SwitchRequest(context).create();
+        latencyInBandwidth = true;
+        switchUpRatioSafetyFactor = 1.5;
+        //debug.log("Checking download ratio rule...");
+        debug.log("[CustomRules][" + mediaType + "][DownloadRatioRule] Checking download ratio rule... (current = " + current + ")");
+
+        if (!metrics) {
+            debug.log("[CustomRules][" + mediaType + "][DownloadRatioRule] No metrics, bailing.");
+            return SwitchRequest(context).create();
+        }
+
+        // Get last valid request
+        i = requests.length - 1;
+        while (i >= 0 && lastRequest === null) {
+            currentRequest = requests[i];
+            if (currentRequest._tfinish && currentRequest.trequest && currentRequest.tresponse && currentRequest.trace && currentRequest.trace.length > 0) {
+                lastRequest = requests[i];
+            }
+            i--;
+        }
+
+        if (lastRequest === null) {
+            debug.log("[CustomRules][" + mediaType + "][DownloadRatioRule] No valid requests made for this stream yet, bailing.");
+            return SwitchRequest(context).create();
+        }
+
+        if(lastRequest.type !== 'MediaSegment' ) {
+            debug.log("[CustomRules][" + mediaType + "][DownloadRatioRule] Last request is not a media segment, bailing.");
+            return SwitchRequest(context).create();
+        }
+
+        totalTime = (lastRequest._tfinish.getTime() - lastRequest.trequest.getTime()) / 1000;
+        downloadTime = (lastRequest._tfinish.getTime() - lastRequest.tresponse.getTime()) / 1000;
+
+        if (totalTime <= 0) {
+            debug.log("[CustomRules][" + mediaType + "][DownloadRatioRule] Don't know how long the download of the last fragment took, bailing.");
+            return SwitchRequest(context).create();
+        }
+
+        totalBytesLength = getBytesLength(lastRequest);
+
+        debug.log("[CustomRules][" + mediaType + "][DownloadRatioRule] DL: " + Number(downloadTime.toFixed(3)) + "s, Total: " + Number(totalTime.toFixed(3)) + "s, Length: " + totalBytesLength);
+
+        // Take average bandwidth over 3 requests
+        count = 1;
+        while (i >= 0 && count < 3) {
+            currentRequest = requests[i];
+
+            if (currentRequest.type !== 'MediaSegment' && currentRequest._tfinish && currentRequest.trequest && currentRequest.tresponse && currentRequest.trace && currentRequest.trace.length > 0) {
+
+                var _totalTime = (currentRequest._tfinish.getTime() - currentRequest.trequest.getTime()) / 1000;
+                var _downloadTime = (currentRequest._tfinish.getTime() - currentRequest.tresponse.getTime()) / 1000;
+                debug.log("[CustomRules][" + mediaType + "][DownloadRatioRule] DL: " + Number(_downloadTime.toFixed(3)) + "s, Total: " + Number(_totalTime.toFixed(3)) + "s, Length: " + getBytesLength(currentRequest));
+
+                totalTime += _totalTime;
+                downloadTime += _downloadTime;
+                totalBytesLength += getBytesLength(currentRequest);
+                count += 1;
+            }
+            i--;
+        }
+
+        // Set length in bits
+        totalBytesLength *= 8;
+
+        calculatedBandwidth = latencyInBandwidth ? (totalBytesLength / totalTime) : (totalBytesLength / downloadTime);
+
+        debug.log("[CustomRules][" + mediaType + "][DownloadRatioRule] BW = " + Math.round(calculatedBandwidth / 1000) + " kb/s");
+
+        if (isNaN(calculatedBandwidth)) {
+            return SwitchRequest(context).create();
+        }
+
+        count = rulesContext.getMediaInfo().representationCount;
+        currentRepresentation = rulesContext.getTrackInfo();
+        currentBandwidth = dashManifest.getBandwidth(currentRepresentation);
+        for (i = 0; i < count; i += 1) {
+            bandwidths.push(rulesContext.getMediaInfo().bitrateList[i].bandwidth);
+        }
+        if (calculatedBandwidth <= currentBandwidth) {
+            for (i = current - 1; i > 0; i -= 1) {
+                if (bandwidths[i] <= calculatedBandwidth) {
+                    break;
+                }
+            }
+            q = i;
+            p = SwitchRequest.PRIORITY.WEAK;
+
+            debug.log("[CustomRules][" + mediaType + "][DownloadRatioRule] SwitchRequest: q=" + q + "/" + (count - 1) + " (" + bandwidths[q] + ")"/* + ", p=" + p*/);
+            return SwitchRequest(context).create(q, {name : DownloadRatioRuleClass.__dashjs_factory_name},  p);
+        } else {
+            for (i = count - 1; i > current; i -= 1) {
+                if (calculatedBandwidth > (bandwidths[i] * switchUpRatioSafetyFactor)) {
+                    // debug.log("[CustomRules][" + mediaType + "][DownloadRatioRule] bw = " + calculatedBandwidth + " results[i] * switchUpRatioSafetyFactor =" + (bandwidths[i] * switchUpRatioSafetyFactor) + " with i=" + i);
+                    break;
+                }
+            }
+
+            q = i;
+            p = SwitchRequest.PRIORITY.STRONG;
+
+            debug.log("[CustomRules][" + mediaType + "][DownloadRatioRule] SwitchRequest: q=" + q + "/" + (count - 1) + " (" + bandwidths[q] + ")"/* + ", p=" + p*/);
+            return SwitchRequest(context).create(q, {name : DownloadRatioRuleClass.__dashjs_factory_name},  p);
+        }
     }
 
     const instance = {

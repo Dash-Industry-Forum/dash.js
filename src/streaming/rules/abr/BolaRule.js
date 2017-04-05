@@ -370,7 +370,7 @@ function BolaRule(config) {
                 }
                 q = getQualityFromThroughput(initState, initThroughput * initState.bandwidthSafetyFactor);
                 initState.lastQuality = q;
-                switchRequest.value = q;
+                switchRequest.quality = q;
                 switchRequest.reason.state = initState.state;
                 switchRequest.reason.throughput = initThroughput;
             }
@@ -444,7 +444,7 @@ function BolaRule(config) {
             if (BOLA_DEBUG) log('BolaDebug ' + mediaType + ' BolaRule quality ' + q + ' for STARTUP');
             bolaState.lastQuality = q;
             metricsModel.updateBolaState(mediaType, bolaState);
-            switchRequest.value = q;
+            switchRequest.quality = q;
             switchRequest.reason.state = BOLA_STATE_STARTUP;
             switchRequest.reason.throughput = recentThroughput;
             return switchRequest;
@@ -509,7 +509,7 @@ function BolaRule(config) {
         bolaState.lastQuality = bolaQuality;
         metricsModel.updateBolaState(mediaType, bolaState);
 
-        switchRequest.value = bolaQuality;
+        switchRequest.quality = bolaQuality;
         switchRequest.reason.state = bolaState.state;
         switchRequest.reason.throughput = recentThroughput;
         switchRequest.reason.bufferLevel = bufferLevel;
