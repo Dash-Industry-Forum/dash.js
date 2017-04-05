@@ -64,7 +64,7 @@ function SwitchRequest(q, r, p) {
     instance = {
         quality: quality,
         reason: reason,
-        priority: priority,
+        priority: priority
     };
 
     return instance;
