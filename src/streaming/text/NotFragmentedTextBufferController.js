@@ -143,7 +143,10 @@ function NotFragmentedTextBufferController(config) {
     }
 
     function onDataUpdateCompleted(e) {
-        if (e.sender.getStreamProcessor() !== streamProcessor) return;
+        if (e.sender.getStreamProcessor() !== streamProcessor) {
+            return;
+        }
+
         eventBus.trigger(Events.TIMED_TEXT_REQUESTED, {
             index: 0,
             sender: e.sender
@@ -151,7 +154,10 @@ function NotFragmentedTextBufferController(config) {
     }
 
     function onInitFragmentLoaded(e) {
-        if (e.fragmentModel !== streamProcessor.getFragmentModel() || (!e.chunk.bytes)) return;
+        if (e.fragmentModel !== streamProcessor.getFragmentModel() || (!e.chunk.bytes)) {
+            return;
+        }
+
         sourceBufferController.append(buffer, e.chunk);
     }
 

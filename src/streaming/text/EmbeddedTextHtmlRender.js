@@ -54,21 +54,21 @@ function EmbeddedTextHtmlRender() {
     }
 
     function createRGB(color) {
-        if (color == 'red') {
+        if (color === 'red') {
             return 'rgb(255, 0, 0)';
-        } else if (color == 'green') {
+        } else if (color === 'green') {
             return 'rgb(0, 255, 0)';
-        } else if (color == 'blue') {
+        } else if (color === 'blue') {
             return 'rgb(0, 0, 255)';
-        } else if (color == 'cyan') {
+        } else if (color === 'cyan') {
             return 'rgb(0, 255, 255)';
-        } else if (color == 'magenta') {
+        } else if (color === 'magenta') {
             return 'rgb(255, 0, 255)';
-        } else if (color == 'yellow') {
+        } else if (color === 'yellow') {
             return 'rgb(255, 255, 0)';
-        } else if (color == 'white') {
+        } else if (color === 'white') {
             return 'rgb(255, 255, 255)';
-        } else if (color == 'black') {
+        } else if (color === 'black') {
             return 'rgb(0, 0, 0)';
         }
         return color;
@@ -91,6 +91,7 @@ function EmbeddedTextHtmlRender() {
         var trimmed = s.replace(/\s+$/g, '');
         return trimmed;
     }
+
 
     function createHTMLCaptionsFromScreen(videoElement, startTime, endTime, captionScreen) {
 
@@ -308,7 +309,7 @@ function EmbeddedTextHtmlRender() {
                                 videoWidth: videoElement.videoWidth,
                                 fontSize: fontSize,
                                 lineHeight: {},
-                                linePadding: {},
+                                linePadding: {}
                                });
         }
         return captionsArray;

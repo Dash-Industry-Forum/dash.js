@@ -191,8 +191,9 @@ function TextSourceBuffer() {
     }
 
     function setConfig(config) {
-        if (!config) return;
-
+        if (!config) {
+            return;
+        }
         if (config.errHandler) {
             errHandler = config.errHandler;
         }
