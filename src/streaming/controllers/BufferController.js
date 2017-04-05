@@ -157,8 +157,8 @@ function BufferController(config) {
         appendToBuffer(e.chunk);
     }
 
-    function switchInitData(streamId, quality) {
-        const chunk = initCache.extract(streamId, type, quality);
+    function switchInitData(streamId, representationId) {
+        const chunk = initCache.extract(streamId, representationId);
         if (chunk) {
             appendToBuffer(chunk);
         } else {
@@ -217,7 +217,7 @@ function BufferController(config) {
                 return;
             }
 
-            if (!isNaN(appendedBytesInfo.index)) {
+            if (appendedBytesInfo && !isNaN(appendedBytesInfo.index)) {
                 maxAppendedIndex = Math.max(appendedBytesInfo.index, maxAppendedIndex);
                 checkIfBufferingCompleted();
             }
@@ -231,13 +231,15 @@ function BufferController(config) {
 
             onPlaybackProgression();
             isAppendingInProgress = false;
-            eventBus.trigger(Events.BYTES_APPENDED, {
-                sender: instance,
-                quality: appendedBytesInfo.quality,
-                startTime: appendedBytesInfo.start,
-                index: appendedBytesInfo.index,
-                bufferedRanges: ranges
-            });
+            if (appendedBytesInfo) {
+                eventBus.trigger(Events.BYTES_APPENDED, {
+                    sender: instance,
+                    quality: appendedBytesInfo.quality,
+                    startTime: appendedBytesInfo.start,
+                    index: appendedBytesInfo.index,
+                    bufferedRanges: ranges
+                });
+            }
         }
     }
 
@@ -379,13 +381,13 @@ function BufferController(config) {
         }
     }
 
-    function getClearRange() {
+    function getClearRange(threshold) {
 
         if (!buffer) return null;
 
         // we need to remove data that is more than one fragment before the video currentTime
         const currentTime = playbackController.getTime();
-        const req = streamProcessor.getFragmentModel().getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED, time: currentTime })[0];
+        const req = streamProcessor.getFragmentModel().getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED, time: currentTime, threshold: threshold})[0];
         const range = sourceBufferController.getBufferRange(buffer, currentTime);
 
         let removeEnd = (req && !isNaN(req.startTime)) ? req.startTime : Math.floor(currentTime);
@@ -435,7 +437,7 @@ function BufferController(config) {
     function onCurrentTrackChanged(e) {
         if (!buffer || (e.newMediaInfo.type !== type) || (e.newMediaInfo.streamInfo.id !== streamProcessor.getStreamInfo().id)) return;
         if (mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE) {
-            clearBuffer(getClearRange());
+            clearBuffer(getClearRange(0));
         }
     }
 

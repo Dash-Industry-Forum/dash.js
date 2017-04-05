@@ -94,7 +94,7 @@ function ScheduleController(config) {
         lastQualityIndex = NaN;
         topQualityIndex = {};
         replaceRequestArray = [];
-        isStopped = false;
+        isStopped = true;
         playListMetrics = null;
         playListTraceMetrics = null;
         playListTraceMetricsClosed = true;
@@ -202,12 +202,13 @@ function ScheduleController(config) {
             const getNextFragment = function () {
                 if (currentRepresentationInfo.quality !== lastInitQuality) {
                     lastInitQuality = currentRepresentationInfo.quality;
-                    bufferController.switchInitData(streamProcessor.getStreamInfo().id, currentRepresentationInfo.quality);
+                    bufferController.switchInitData(streamProcessor.getStreamInfo().id, currentRepresentationInfo.id);
                 } else {
                     const replacement = replaceRequestArray.shift();
 
                     if (fragmentController.isInitializationRequest(replacement)) {
-                        getInitRequest(replacement.quality);
+                        //to be sure the specific init segment had not already been loaded.
+                        bufferController.switchInitData(replacement.mediaInfo.streamInfo.id, replacement.representationId);
                     } else {
                         const request = nextFragmentRequestRule.execute(streamProcessor, replacement);
                         if (request) {
