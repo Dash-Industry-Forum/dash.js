@@ -281,6 +281,11 @@ function TextTracks() {
                 image.style.top = '0px';
                 image.style.width = width;
                 image.style.height = height;
+                if ((fullscreenAttribute && document[fullscreenAttribute]) || displayCCOnTop) {
+                    image.style.zIndex = topZIndex;
+                } else {
+                    image.style.zIndex = null;
+                }
             }
         }
     }
@@ -406,7 +411,7 @@ function TextTracks() {
                         img.id = 'ttmlImage_' + this.id;
                         img.src = this.image;
                         //img.className = 'cue-image';
-                        img.style.cssText = 'z-index: 2147483648; pointer-events: none; display: block; visibility: visible !important; position: relative !important;';
+                        img.style.cssText = 'pointer-events: none; display: block; visibility: visible !important; position: relative !important;';
                         captionContainer.appendChild(img);
                         scaleImageCue.call(self, this);
                     }
