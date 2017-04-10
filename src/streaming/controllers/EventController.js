@@ -219,4 +219,4 @@ function EventController() {
 }
 
 EventController.__dashjs_factory_name = 'EventController';
-export default FactoryMaker.getSingletonFactory(EventController);
+export default FactoryMaker.getClassFactory(EventController);

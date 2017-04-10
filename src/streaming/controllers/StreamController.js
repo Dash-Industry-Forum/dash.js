@@ -28,16 +28,17 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import PlaybackController from './PlaybackController';
 import Stream from '../Stream';
 import ManifestUpdater from '../ManifestUpdater';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import URIQueryAndFragmentModel from '../models/URIQueryAndFragmentModel';
-import VideoModel from '../models/VideoModel';
 import MediaPlayerModel from '../models/MediaPlayerModel';
 import FactoryMaker from '../../core/FactoryMaker';
-import {PlayList, PlayListTrace} from '../vo/metrics/PlayList';
+import {
+    PlayList,
+    PlayListTrace
+} from '../vo/metrics/PlayList';
 import Debug from '../../core/Debug';
 import InitCache from '../utils/InitCache';
 import MediaPlayerEvents from '../MediaPlayerEvents';
@@ -102,25 +103,13 @@ function StreamController() {
         timelineConverter.initialize();
         initCache = InitCache(context).getInstance();
 
-        manifestUpdater = ManifestUpdater(context).getInstance();
+        manifestUpdater = ManifestUpdater(context).create();
         manifestUpdater.setConfig({
             manifestModel: manifestModel,
             dashManifestModel: dashManifestModel
         });
         manifestUpdater.initialize(manifestLoader);
 
-        videoModel = VideoModel(context).getInstance();
-        playbackController = PlaybackController(context).getInstance();
-        playbackController.setConfig({
-            streamController: instance,
-            timelineConverter: timelineConverter,
-            metricsModel: metricsModel,
-            dashMetrics: dashMetrics,
-            manifestModel: manifestModel,
-            dashManifestModel: dashManifestModel,
-            adapter: adapter,
-            videoModel: videoModel
-        });
 
         eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, this);
         eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
@@ -170,7 +159,7 @@ function StreamController() {
         addPlaylistMetrics(PlayList.SEEK_START_REASON);
     }
 
-    function onPlaybackStarted(/*e*/) {
+    function onPlaybackStarted( /*e*/ ) {
         if (initialPlayback) {
             initialPlayback = false;
             addPlaylistMetrics(PlayList.INITIAL_PLAYOUT_START_REASON);
@@ -292,11 +281,10 @@ function StreamController() {
         if (isStreamSwitchingInProgress || !newStream || oldStream === newStream) return;
         isStreamSwitchingInProgress = true;
 
-        eventBus.trigger(Events.PERIOD_SWITCH_STARTED,
-            {
-                fromStreamInfo: oldStream ? oldStream.getStreamInfo() : null,
-                toStreamInfo: newStream.getStreamInfo()
-            });
+        eventBus.trigger(Events.PERIOD_SWITCH_STARTED, {
+            fromStreamInfo: oldStream ? oldStream.getStreamInfo() : null,
+            toStreamInfo: newStream.getStreamInfo()
+        });
 
         if (oldStream) oldStream.deactivate();
         activeStream = newStream;
@@ -345,7 +333,7 @@ function StreamController() {
                 });
                 playbackController.seek(startTime); //seek to period start time
             }
-        }else {
+        } else {
             videoTrackDetected = checkVideoPresence();
         }
 
@@ -355,7 +343,9 @@ function StreamController() {
         }
 
         isStreamSwitchingInProgress = false;
-        eventBus.trigger(Events.PERIOD_SWITCH_COMPLETED, {toStreamInfo: activeStream.getStreamInfo()});
+        eventBus.trigger(Events.PERIOD_SWITCH_COMPLETED, {
+            toStreamInfo: activeStream.getStreamInfo()
+        });
     }
 
     function setMediaDuration() {
@@ -432,11 +422,14 @@ function StreamController() {
         }
     }
 
-    function onTimeSyncCompleted(/*e*/) {
+    function onTimeSyncCompleted( /*e*/ ) {
         const manifest = manifestModel.getValue();
         //TODO check if we can move this to initialize??
         if (protectionController) {
-            eventBus.trigger(Events.PROTECTION_CREATED, {controller: protectionController, manifest: manifest});
+            eventBus.trigger(Events.PROTECTION_CREATED, {
+                controller: protectionController,
+                manifest: manifest
+            });
             protectionController.setMediaElement(videoModel.getElement());
             if (protectionData) {
                 protectionController.setProtectionData(protectionData);
@@ -655,6 +648,14 @@ function StreamController() {
         if (config.timelineConverter) {
             timelineConverter = config.timelineConverter;
         }
+
+        if (config.videoModel) {
+            videoModel = config.videoModel;
+        }
+
+        if (config.playbackController) {
+            playbackController = config.playbackController;
+        }
     }
 
     function reset() {
@@ -662,8 +663,8 @@ function StreamController() {
 
         flushPlaylistMetrics(
             hasMediaError || hasInitialisationError ?
-                PlayListTrace.FAILURE_STOP_REASON :
-                PlayListTrace.USER_REQUEST_STOP_REASON
+            PlayListTrace.FAILURE_STOP_REASON :
+            PlayListTrace.USER_REQUEST_STOP_REASON
         );
 
         for (let i = 0, ln = streams.length; i < ln; i++) {
@@ -709,7 +710,9 @@ function StreamController() {
             protectionController = null;
             protectionData = null;
             if (manifestModel.getValue()) {
-                eventBus.trigger(Events.PROTECTION_DESTROYED, {data: manifestModel.getValue().url});
+                eventBus.trigger(Events.PROTECTION_DESTROYED, {
+                    data: manifestModel.getValue().url
+                });
             }
         }
 

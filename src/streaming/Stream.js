@@ -367,7 +367,7 @@ function Stream(config) {
     function initializeMedia(mediaSource) {
         let events;
 
-        eventController = EventController(context).getInstance();
+        eventController = EventController(context).create();
         eventController.initialize();
         eventController.setConfig({
             manifestModel: manifestModel,
