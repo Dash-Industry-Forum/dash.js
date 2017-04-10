@@ -58,7 +58,7 @@ function BufferController(config) {
     const streamController = config.streamController;
     const mediaController = config.mediaController;
     const adapter = config.adapter;
-    const textSourceBuffer = config.textSourceBuffer;
+    const textController = config.textController;
 
 
     let instance,
@@ -198,9 +198,7 @@ function BufferController(config) {
         sourceBufferController.append(buffer, chunk);
 
         if (chunk.mediaInfo.type === 'video') {
-            if (chunk.mediaInfo.embeddedCaptions) {
-                textSourceBuffer.append(chunk.bytes, chunk);
-            }
+            eventBus.trigger(Events.VIDEO_CHUNK_RECEIVED, chunk);
         }
     }
 
@@ -295,7 +293,7 @@ function BufferController(config) {
     }
 
     function notifyBufferStateChanged(state) {
-        if (bufferState === state || (type === 'fragmentedText' && textSourceBuffer.getAllTracksAreDisabled())) return;
+        if (bufferState === state || (type === 'fragmentedText' && textController.getAllTracksAreDisabled())) return;
         bufferState = state;
         addBufferMetrics();
         eventBus.trigger(Events.BUFFER_LEVEL_STATE_CHANGED, {sender: instance, state: state, mediaType: type, streamInfo: streamProcessor.getStreamInfo()});

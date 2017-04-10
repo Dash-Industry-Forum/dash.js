@@ -45,7 +45,7 @@ import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import Debug from '../core/Debug';
 import FactoryMaker from '../core/FactoryMaker';
-import TextSourceBuffer from './TextSourceBuffer';
+import TextController from './text/TextController';
 
 function Stream(config) {
 
@@ -78,7 +78,7 @@ function Stream(config) {
         fragmentController,
         eventController,
         abrController,
-        textSourceBuffer;
+        textController;
 
 
     function setup() {
@@ -95,7 +95,7 @@ function Stream(config) {
         abrController = AbrController(context).getInstance();
         mediaController = MediaController(context).getInstance();
         fragmentController = FragmentController(context).create();
-        textSourceBuffer = TextSourceBuffer(context).getInstance();
+        textController = TextController(context).getInstance();
 
         eventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
@@ -374,7 +374,7 @@ function Stream(config) {
             mediaInfo = allMediaForType[i];
 
             if (type === 'embeddedText') {
-                textSourceBuffer.addEmbeddedTrack(mediaInfo);
+                textController.addEmbeddedTrack(mediaInfo);
             } else {
                 if (!isMediaSupported(mediaInfo, mediaSource, manifest)) continue;
 

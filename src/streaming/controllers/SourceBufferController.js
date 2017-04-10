@@ -28,14 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import TextSourceBuffer from '../TextSourceBuffer';
-import MediaController from './MediaController';
-import ErrorHandler from '../utils/ErrorHandler';
-import StreamController from './StreamController';
-import TextTracks from '../TextTracks';
-import VTTParser from '../utils/VTTParser';
-import TTMLParser from '../utils/TTMLParser';
-import VideoModel from '../models/VideoModel';
+import TextController from '../text/TextController';
 import Error from '../vo/Error';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
@@ -69,19 +62,9 @@ function SourceBufferController() {
 
         } catch (ex) {
             // Note that in the following, the quotes are open to allow for extra text after stpp and wvtt
-            if ((mediaInfo.isText) || (codec.indexOf('codecs="stpp') !== -1) ||  (codec.indexOf('codecs="wvtt') !== -1) ) {
-                buffer = TextSourceBuffer(context).getInstance();
-                buffer.setConfig({
-                    errHandler: ErrorHandler(context).getInstance(),
-                    dashManifestModel: dashManifestModel,
-                    mediaController: MediaController(context).getInstance(),
-                    videoModel: VideoModel(context).getInstance(),
-                    streamController: StreamController(context).getInstance(),
-                    textTracks: TextTracks(context).getInstance(),
-                    VTTParser: VTTParser(context).getInstance(),
-                    TTMLParser: TTMLParser(context).getInstance()
-
-                });
+            if ((mediaInfo.isText) || (codec.indexOf('codecs="stpp') !== -1) || (codec.indexOf('codecs="wvtt') !== -1)) {
+                var textController = TextController(context).getInstance();
+                buffer = textController.getTextSourceBuffer();
             } else {
                 throw ex;
             }
@@ -93,8 +76,7 @@ function SourceBufferController() {
     function removeSourceBuffer(mediaSource, buffer) {
         try {
             mediaSource.removeSourceBuffer(buffer);
-        } catch (ex) {
-        }
+        } catch (ex) {}
     }
 
     function getBufferRange(buffer, time, tolerance) {
@@ -143,7 +125,10 @@ function SourceBufferController() {
             }
 
             if (firstStart !== null) {
-                return {start: firstStart, end: lastEnd};
+                return {
+                    start: firstStart,
+                    end: lastEnd
+                };
             }
         }
 
@@ -213,7 +198,10 @@ function SourceBufferController() {
 
         for (var i = 0, ln = newRanges.length; i < ln; i++) {
             hasRange = currentRanges.length > i;
-            currentRange = hasRange ? {start: currentRanges.start(i), end: currentRanges.end(i)} : null;
+            currentRange = hasRange ? {
+                start: currentRanges.start(i),
+                end: currentRanges.end(i)
+            } : null;
             newStart = newRanges.start(i);
             newEnd = newRanges.end(i);
 
@@ -226,7 +214,10 @@ function SourceBufferController() {
             // 0|---range1---|4| 8|--range2--|12  16|--range3--|20
 
             if (!currentRange) {
-                diff = {start: newStart, end: newEnd};
+                diff = {
+                    start: newStart,
+                    end: newEnd
+                };
                 return diff;
             }
 
@@ -238,12 +229,21 @@ function SourceBufferController() {
 
             // start or/and end of the range has been changed
             if (equalStart) {
-                diff = {start: currentRange.end, end: newEnd};
+                diff = {
+                    start: currentRange.end,
+                    end: newEnd
+                };
             } else if (equalEnd) {
-                diff = {start: newStart, end: currentRange.start};
+                diff = {
+                    start: newStart,
+                    end: currentRange.start
+                };
             } else {
                 // new range has been added before the current one
-                diff = {start: newStart, end: newEnd};
+                diff = {
+                    start: newStart,
+                    end: newEnd
+                };
                 return diff;
             }
 
@@ -254,8 +254,14 @@ function SourceBufferController() {
             // 0|---range1---|4  8|--range2--|12  16|---range3---|
             // new ranges
             // 0|-----------range1-----------|12  16|---range3--|
-            nextCurrentRange = currentRanges.length > (i + 1) ? {start: currentRanges.start(i + 1), end: currentRanges.end(i + 1)} : null;
-            nextNewRange = (i + 1) < ln ? {start: newRanges.start(i + 1), end: newRanges.end(i + 1)} : null;
+            nextCurrentRange = currentRanges.length > (i + 1) ? {
+                start: currentRanges.start(i + 1),
+                end: currentRanges.end(i + 1)
+            } : null;
+            nextNewRange = (i + 1) < ln ? {
+                start: newRanges.start(i + 1),
+                end: newRanges.end(i + 1)
+            } : null;
 
             if (nextCurrentRange && (!nextNewRange || (nextNewRange.start !== nextCurrentRange.start || nextNewRange.end !== nextCurrentRange.end))) {
                 diff.end = nextCurrentRange.start;
@@ -287,10 +293,17 @@ function SourceBufferController() {
                 }
                 // updating is in progress, we should wait for it to complete before signaling that this operation is done
                 waitForUpdateEnd(buffer, function () {
-                    eventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes});
+                    eventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {
+                        buffer: buffer,
+                        bytes: bytes
+                    });
                 });
             } catch (err) {
-                eventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes, error: new Error(err.code, err.message, null)});
+                eventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {
+                    buffer: buffer,
+                    bytes: bytes,
+                    error: new Error(err.code, err.message, null)
+                });
             }
         });
     }
@@ -305,10 +318,19 @@ function SourceBufferController() {
                 }
                 // updating is in progress, we should wait for it to complete before signaling that this operation is done
                 waitForUpdateEnd(buffer, function () {
-                    eventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end});
+                    eventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {
+                        buffer: buffer,
+                        from: start,
+                        to: end
+                    });
                 });
             } catch (err) {
-                eventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end, error: new Error(err.code, err.message, null)});
+                eventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {
+                    buffer: buffer,
+                    from: start,
+                    to: end,
+                    error: new Error(err.code, err.message, null)
+                });
             }
         });
     }
@@ -320,8 +342,7 @@ function SourceBufferController() {
             } else if (buffer.setTextTrack && mediaSource.readyState === 'ended') {
                 buffer.abort(); //The cues need to be removed from the TextSourceBuffer via a call to abort()
             }
-        } catch (ex) {
-        }
+        } catch (ex) {}
     }
 
     function setConfig(config) {

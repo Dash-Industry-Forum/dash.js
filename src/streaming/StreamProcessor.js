@@ -33,14 +33,14 @@ import AbrController from './controllers/AbrController';
 import BufferController from './controllers/BufferController';
 import StreamController from './controllers/StreamController';
 import MediaController from './controllers/MediaController';
-import TextController from './controllers/TextController';
+import TextBufferController from './text/TextBufferController';
 import ScheduleController from './controllers/ScheduleController';
 import MediaPlayerModel from './models/MediaPlayerModel';
 import MetricsModel from './models/MetricsModel';
 import FragmentLoader from './FragmentLoader';
 import RequestModifier from './utils/RequestModifier';
 import SourceBufferController from './controllers/SourceBufferController';
-import TextSourceBuffer from './TextSourceBuffer';
+import TextController from './text/TextController';
 import DashManifestModel from '../dash/models/DashManifestModel';
 import DashMetrics from '../dash/DashMetrics';
 import RepresentationController from '../dash/controllers/RepresentationController';
@@ -255,7 +255,7 @@ function StreamProcessor(config) {
     function createBufferControllerForType(type) {
         var controller = null;
 
-        if (type === 'video' || type === 'audio' || type === 'fragmentedText') {
+        if (type === 'video' || type === 'audio') {
             controller = BufferController(context).create({
                 metricsModel: MetricsModel(context).getInstance(),
                 manifestModel: manifestModel,
@@ -264,12 +264,19 @@ function StreamProcessor(config) {
                 streamController: StreamController(context).getInstance(),
                 mediaController: MediaController(context).getInstance(),
                 adapter: adapter,
-                textSourceBuffer: TextSourceBuffer(context).getInstance()
+                textController: TextController(context).getInstance()
             });
         }else {
-            controller = TextController(context).create({
+            controller = TextBufferController(context).create({
+                type: type,
+                metricsModel: MetricsModel(context).getInstance(),
+                manifestModel: manifestModel,
+                sourceBufferController: SourceBufferController(context).getInstance(),
                 errHandler: ErrorHandler(context).getInstance(),
-                sourceBufferController: SourceBufferController(context).getInstance()
+                streamController: StreamController(context).getInstance(),
+                mediaController: MediaController(context).getInstance(),
+                adapter: adapter,
+                textController: TextController(context).getInstance()
             });
         }
 

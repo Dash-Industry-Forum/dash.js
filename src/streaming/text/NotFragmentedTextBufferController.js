@@ -33,7 +33,7 @@ import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import InitCache from '../utils/InitCache';
 
-function TextController(config) {
+function NotFragmentedTextBufferController(config) {
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
@@ -95,6 +95,10 @@ function TextController(config) {
         return buffer;
     }
 
+    function getType() {
+        return type;
+    }
+
     function getBuffer() {
         return buffer;
     }
@@ -107,8 +111,24 @@ function TextController(config) {
         mediaSource = value;
     }
 
+    function getMediaSource() {
+        return mediaSource;
+    }
+
+    function setStreamProcessor(value) {
+        streamProcessor = value;
+    }
+
     function getStreamProcessor() {
         return streamProcessor;
+    }
+
+    function getBufferLevel() {
+        return 0;
+    }
+
+    function getCriticalBufferLevel() {
+        return 0;
     }
 
     function reset(errored) {
@@ -123,12 +143,21 @@ function TextController(config) {
     }
 
     function onDataUpdateCompleted(e) {
-        if (e.sender.getStreamProcessor() !== streamProcessor) return;
-        eventBus.trigger(Events.TIMED_TEXT_REQUESTED, { index: 0, sender: e.sender }); //TODO make index dynamic if referring to MP?
+        if (e.sender.getStreamProcessor() !== streamProcessor) {
+            return;
+        }
+
+        eventBus.trigger(Events.TIMED_TEXT_REQUESTED, {
+            index: 0,
+            sender: e.sender
+        }); //TODO make index dynamic if referring to MP?
     }
 
     function onInitFragmentLoaded(e) {
-        if (e.fragmentModel !== streamProcessor.getFragmentModel() || (!e.chunk.bytes)) return;
+        if (e.fragmentModel !== streamProcessor.getFragmentModel() || (!e.chunk.bytes)) {
+            return;
+        }
+
         sourceBufferController.append(buffer, e.chunk);
     }
 
@@ -141,18 +170,25 @@ function TextController(config) {
         if (chunk) {
             sourceBufferController.append(chunk);
         } else {
-            eventBus.trigger(Events.INIT_REQUESTED, {sender: instance});
+            eventBus.trigger(Events.INIT_REQUESTED, {
+                sender: instance
+            });
         }
     }
 
     instance = {
         initialize: initialize,
         createBuffer: createBuffer,
+        getType: getType,
+        getStreamProcessor: getStreamProcessor,
+        setStreamProcessor: setStreamProcessor,
         getBuffer: getBuffer,
         setBuffer: setBuffer,
-        getStreamProcessor: getStreamProcessor,
-        getIsBufferingCompleted: getIsBufferingCompleted,
+        getBufferLevel: getBufferLevel,
+        getCriticalBufferLevel: getCriticalBufferLevel,
         setMediaSource: setMediaSource,
+        getMediaSource: getMediaSource,
+        getIsBufferingCompleted: getIsBufferingCompleted,
         switchInitData: switchInitData,
         reset: reset
     };
@@ -162,5 +198,5 @@ function TextController(config) {
     return instance;
 }
 
-TextController.__dashjs_factory_name = 'TextController';
-export default FactoryMaker.getClassFactory(TextController);
+NotFragmentedTextBufferController.__dashjs_factory_name = 'NotFragmentedTextBufferController';
+export default FactoryMaker.getClassFactory(NotFragmentedTextBufferController);

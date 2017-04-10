@@ -36,10 +36,10 @@ import ManifestLoader from './ManifestLoader';
 import LiveEdgeFinder from './utils/LiveEdgeFinder';
 import ErrorHandler from './utils/ErrorHandler';
 import Capabilities from './utils/Capabilities';
-import TextTracks from './TextTracks';
+import TextTracks from './text/TextTracks';
 import SourceBufferController from './controllers/SourceBufferController';
 import RequestModifier from './utils/RequestModifier';
-import TextSourceBuffer from './TextSourceBuffer';
+import TextController from './text/TextController';
 import URIQueryAndFragmentModel from './models/URIQueryAndFragmentModel';
 import ManifestModel from './models/ManifestModel';
 import MediaPlayerModel from './models/MediaPlayerModel';
@@ -56,7 +56,10 @@ import EventBus from './../core/EventBus';
 import Events from './../core/events/Events';
 import MediaPlayerEvents from './MediaPlayerEvents';
 import FactoryMaker from '../core/FactoryMaker';
-import {getVersionString} from './../core/Version';
+import {
+    getVersionString
+}
+from './../core/Version';
 
 //Dash
 import DashAdapter from '../dash/DashAdapter';
@@ -104,7 +107,7 @@ function MediaPlayer() {
         dashMetrics,
         dashManifestModel,
         videoModel,
-        textSourceBuffer;
+        textController;
 
     function setup() {
         mediaPlayerInitialized = false;
@@ -155,7 +158,9 @@ function MediaPlayer() {
         dashManifestModel = DashManifestModel(context).getInstance();
         dashMetrics = DashMetrics(context).getInstance();
         metricsModel = MetricsModel(context).getInstance();
-        metricsModel.setConfig({adapter: createAdaptor()});
+        metricsModel.setConfig({
+            adapter: createAdaptor()
+        });
 
         restoreDefaultUTCTimingSources();
         setAutoPlay(AutoPlay !== undefined ? AutoPlay : true);
@@ -502,7 +507,9 @@ function MediaPlayer() {
     function formatUTC(time, locales, hour12, withDate = false) {
         const dt = new Date(time * 1000);
         const d = dt.toLocaleDateString(locales);
-        const t = dt.toLocaleTimeString(locales, {hour12: hour12});
+        const t = dt.toLocaleTimeString(locales, {
+            hour12: hour12
+        });
         return withDate ? t + ' ' + d : t;
     }
 
@@ -968,9 +975,9 @@ function MediaPlayer() {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
         //For external time text file,  the only action needed to change a track is marking the track mode to showing.
-        // Fragmented text tracks need the additional step of calling textSourceBuffer.setTextTrack();
-        if (textSourceBuffer === undefined) {
-            textSourceBuffer = TextSourceBuffer(context).getInstance();
+        // Fragmented text tracks need the additional step of calling TextController.setTextTrack();
+        if (textController === undefined) {
+            textController = TextController(context).getInstance();
         }
 
         var tracks = getVideoElement().textTracks;
@@ -985,13 +992,13 @@ function MediaPlayer() {
             }
         }
 
-        textSourceBuffer.setTextTrack();
+        textController.setTextTrack();
     }
 
     function getCurrentTextTrackIndex() {
         let idx = NaN;
-        if (textSourceBuffer) {
-            idx = textSourceBuffer.getCurrentTrackIdx();
+        if (textController) {
+            idx = textController.getCurrentTrackIdx();
         }
         return idx;
     }
@@ -1125,10 +1132,10 @@ function MediaPlayer() {
      * This method allows to set media settings that will be used to pick the initial track. Format of the settings
      * is following:
      * {lang: langValue,
-         *  viewpoint: viewpointValue,
-         *  audioChannelConfiguration: audioChannelConfigurationValue,
-         *  accessibility: accessibilityValue,
-         *  role: roleValue}
+     *  viewpoint: viewpointValue,
+     *  audioChannelConfiguration: audioChannelConfigurationValue,
+     *  accessibility: accessibilityValue,
+     *  role: roleValue}
      *
      *
      * @param {string} type
@@ -1144,10 +1151,10 @@ function MediaPlayer() {
      * This method returns media settings that is used to pick the initial track. Format of the settings
      * is following:
      * {lang: langValue,
-         *  viewpoint: viewpointValue,
-         *  audioChannelConfiguration: audioChannelConfigurationValue,
-         *  accessibility: accessibilityValue,
-         *  role: roleValue}
+     *  viewpoint: viewpointValue,
+     *  audioChannelConfiguration: audioChannelConfigurationValue,
+     *  accessibility: accessibilityValue,
+     *  role: roleValue}
      * @param {string} type
      * @returns {Object}
      * @memberof module:MediaPlayer
@@ -1393,7 +1400,7 @@ function MediaPlayer() {
      * @instance
      */
     function addUTCTimingSource(schemeIdUri, value) {
-        removeUTCTimingSource(schemeIdUri, value);//check if it already exists and remove if so.
+        removeUTCTimingSource(schemeIdUri, value); //check if it already exists and remove if so.
         var vo = new UTCTiming();
         vo.schemeIdUri = schemeIdUri;
         vo.value = value;
@@ -1521,7 +1528,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
-    function setBufferTimeAtTopQuality (value) {
+    function setBufferTimeAtTopQuality(value) {
         mediaPlayerModel.setBufferTimeAtTopQuality(value);
     }
 
@@ -1535,7 +1542,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
-    function setBufferTimeAtTopQualityLongForm (value) {
+    function setBufferTimeAtTopQualityLongForm(value) {
         mediaPlayerModel.setBufferTimeAtTopQualityLongForm(value);
     }
 
@@ -1549,7 +1556,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
-    function setLongFormContentDurationThreshold (value) {
+    function setLongFormContentDurationThreshold(value) {
         mediaPlayerModel.setLongFormContentDurationThreshold(value);
     }
 
@@ -1564,7 +1571,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
-    function setRichBufferThreshold (value) {
+    function setRichBufferThreshold(value) {
         mediaPlayerModel.setRichBufferThreshold(value);
     }
 
@@ -1617,7 +1624,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
-    function setFragmentLoaderRetryAttempts (value) {
+    function setFragmentLoaderRetryAttempts(value) {
         mediaPlayerModel.setFragmentRetryAttempts(value);
     }
 
@@ -1629,7 +1636,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
-    function setFragmentLoaderRetryInterval (value) {
+    function setFragmentLoaderRetryInterval(value) {
         mediaPlayerModel.setFragmentRetryInterval(value);
     }
 
@@ -1712,7 +1719,9 @@ function MediaPlayer() {
      */
     function displayCaptionsOnTop(value) {
         let textTracks = TextTracks(context).getInstance();
-        textTracks.setConfig({videoModel: videoModel});
+        textTracks.setConfig({
+            videoModel: videoModel
+        });
         textTracks.initialize();
         textTracks.displayCConTop(value);
     }
@@ -1871,6 +1880,7 @@ function MediaPlayer() {
             abrController.reset();
             rulesController.reset();
             mediaController.reset();
+            textController.reset();
             streamController = null;
             metricsReportingController = null;
             if (isReady()) {
@@ -1896,7 +1906,9 @@ function MediaPlayer() {
 
         rulesController = RulesController(context).getInstance();
         rulesController.initialize();
-        rulesController.setConfig({abrRulesCollection: abrRulesCollection});
+        rulesController.setConfig({
+            abrRulesCollection: abrRulesCollection
+        });
 
         streamController = StreamController(context).getInstance();
         streamController.setConfig({
@@ -1922,6 +1934,15 @@ function MediaPlayer() {
             rulesController: rulesController,
             streamController: streamController
         });
+
+        textController = TextController(context).getInstance();
+        textController.setConfig({
+            errHandler: errHandler,
+            dashManifestModel: dashManifestModel,
+            mediaController: mediaController,
+            streamController: streamController,
+            videoModel: videoModel
+        });
     }
 
     function createManifestLoader() {
@@ -1937,7 +1958,9 @@ function MediaPlayer() {
         //TODO-Refactor Need to be able to switch this create out so will need API to set which adapter to use? Handler is created is inside streamProcessor so need to figure that out as well
         adapter = DashAdapter(context).getInstance();
         adapter.initialize();
-        adapter.setConfig({dashManifestModel: dashManifestModel});
+        adapter.setConfig({
+            dashManifestModel: dashManifestModel
+        });
         return adapter;
     }
 
@@ -1947,10 +1970,12 @@ function MediaPlayer() {
         }
         // do not require Protection as dependencies as this is optional and intended to be loaded separately
         let Protection = dashjs.Protection; /* jshint ignore:line */
-        if (typeof Protection === 'function') {//TODO need a better way to register/detect plugin components
+        if (typeof Protection === 'function') { //TODO need a better way to register/detect plugin components
             let protection = Protection(context).create();
             Events.extend(Protection.events);
-            MediaPlayerEvents.extend(Protection.events, { publicOnly: true });
+            MediaPlayerEvents.extend(Protection.events, {
+                publicOnly: true
+            });
             protectionController = protection.createProtectionSystem({
                 log: log,
                 videoModel: videoModel,
@@ -1970,7 +1995,7 @@ function MediaPlayer() {
         }
         // do not require MetricsReporting as dependencies as this is optional and intended to be loaded separately
         let MetricsReporting = dashjs.MetricsReporting; /* jshint ignore:line */
-        if (typeof MetricsReporting === 'function') {//TODO need a better way to register/detect plugin components
+        if (typeof MetricsReporting === 'function') { //TODO need a better way to register/detect plugin components
             let metricsReporting = MetricsReporting(context).create();
 
             metricsReportingController = metricsReporting.createMetricsReporting({
@@ -1993,10 +2018,11 @@ function MediaPlayer() {
         }
         // do not require MssHandler as dependencies as this is optional and intended to be loaded separately
         let MssHandler = dashjs.MssHandler; /* jshint ignore:line */
-        if (typeof MssHandler === 'function') {//TODO need a better way to register/detect plugin components
+        if (typeof MssHandler === 'function') { //TODO need a better way to register/detect plugin components
             mssHandler = MssHandler(context).create({
                 eventBus: eventBus,
-                mediaPlayerModel: mediaPlayerModel});
+                mediaPlayerModel: mediaPlayerModel
+            });
             return mssHandler;
         }
 

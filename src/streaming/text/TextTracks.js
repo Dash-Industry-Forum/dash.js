@@ -28,10 +28,10 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventBus from '../core/EventBus';
-import Events from '../core/events/Events';
-import FactoryMaker from '../core/FactoryMaker';
-import Debug from '../core/Debug';
+import EventBus from '../../core/EventBus';
+import Events from '../../core/events/Events';
+import FactoryMaker from '../../core/FactoryMaker';
+import Debug from '../../core/Debug';
 
 function TextTracks() {
 
@@ -107,7 +107,9 @@ function TextTracks() {
 
     function displayCConTop (value) {
         displayCCOnTop = value;
-        if (!captionContainer || document[fullscreenAttribute]) return;
+        if (!captionContainer || document[fullscreenAttribute]) {
+            return;
+        }
         captionContainer.style.zIndex = value ? topZIndex : null;
     }
 
@@ -365,7 +367,9 @@ function TextTracks() {
         var track = trackIdx >= 0 ?  video.textTracks[trackIdx] : null;
         var self = this;
 
-        if (!track) return;
+        if (!track) {
+            return;
+        }
         if (track.mode !== 'showing') {
             if (captionData && captionData.length > 0) {
                 track.nonAddedCues = track.nonAddedCues.concat(captionData);
@@ -565,9 +569,13 @@ function TextTracks() {
 
     /* Set native cue style to transparent background to avoid it being displayed. */
     function setNativeCueStyle() {
-        if (!isChrome) return;
+        if (!isChrome) {
+            return;
+        }
         var styleElement = document.getElementById('native-cue-style');
-        if (styleElement) return; //Already set
+        if (styleElement) {
+            return; //Already set
+        }
 
         styleElement = document.createElement('style');
         styleElement.id  = 'native-cue-style';
@@ -584,7 +592,9 @@ function TextTracks() {
 
     /* Remove the extra cue style with transparent background for native cues. */
     function removeNativeCueStyle() {
-        if (!isChrome) return;
+        if (!isChrome) {
+            return;
+        }
         var styleElement = document.getElementById('native-cue-style');
         if (styleElement) {
             document.head.removeChild(styleElement);
@@ -600,8 +610,9 @@ function TextTracks() {
     }
 
     function setConfig(config) {
-        if (!config) return;
-
+        if (!config) {
+            return;
+        }
         if (config.videoModel) {
             videoModel = config.videoModel;
         }

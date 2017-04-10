@@ -36,7 +36,7 @@ import BufferController from './BufferController';
 import MediaController from './MediaController';
 import BufferLevelRule from '../rules/scheduling/BufferLevelRule';
 import NextFragmentRequestRule from '../rules/scheduling/NextFragmentRequestRule';
-import TextSourceBuffer from '../TextSourceBuffer';
+import TextController from '../text/TextController';
 import FragmentModel from '../models/FragmentModel';
 import SourceBufferController from '../controllers/SourceBufferController';
 import LiveEdgeFinder from '../utils/LiveEdgeFinder';
@@ -119,13 +119,13 @@ function ScheduleController(config) {
         bufferLevelRule = BufferLevelRule(context).create({
             dashMetrics: dashMetrics,
             metricsModel: metricsModel,
-            textSourceBuffer: TextSourceBuffer(context).getInstance()
+            textController: TextController(context).getInstance()
         });
 
         nextFragmentRequestRule = NextFragmentRequestRule(context).create({
             adapter: adapter,
             sourceBufferController: SourceBufferController(context).getInstance(),
-            textSourceBuffer: TextSourceBuffer(context).getInstance()
+            textController: TextController(context).getInstance()
         });
 
         if (dashManifestModel.getIsTextTrack(type)) {
