@@ -93,21 +93,25 @@ function StreamProcessor(config) {
 
         bufferController = createBufferControllerForType(type);
         scheduleController = ScheduleController(context).create({
+            type: type,
             metricsModel: MetricsModel(context).getInstance(),
             adapter: adapter,
             dashMetrics: DashMetrics(context).getInstance(),
             dashManifestModel: DashManifestModel(context).getInstance(),
             timelineConverter: timelineConverter,
-            mediaPlayerModel: MediaPlayerModel(context).getInstance()
+            mediaPlayerModel: MediaPlayerModel(context).getInstance(),
+            streamProcessor: this
         });
 
-        bufferController.initialize(type, mediaSource, this);
-        scheduleController.initialize(type, this);
+        bufferController.initialize(mediaSource);
+        scheduleController.initialize();
 
         fragmentModel = scheduleController.getFragmentModel();
 
-        representationController = RepresentationController(context).create();
-        representationController.initialize(this);
+        representationController = RepresentationController(context).create({
+            streamProcessor: this
+        });
+        representationController.initialize();
     }
 
     function registerExternalController(controller) {
@@ -273,13 +277,15 @@ function StreamProcessor(config) {
 
         if (type === 'video' || type === 'audio') {
             controller = BufferController(context).create({
+                type: type,
                 metricsModel: MetricsModel(context).getInstance(),
                 sourceBufferController: SourceBufferController(context).getInstance(),
                 errHandler: ErrorHandler(context).getInstance(),
                 streamController: StreamController(context).getInstance(),
                 mediaController: MediaController(context).getInstance(),
                 adapter: adapter,
-                textController: TextController(context).getInstance()
+                textController: TextController(context).getInstance(),
+                streamProcessor: instance
             });
         } else {
             controller = TextBufferController(context).create({
@@ -290,7 +296,8 @@ function StreamProcessor(config) {
                 streamController: StreamController(context).getInstance(),
                 mediaController: MediaController(context).getInstance(),
                 adapter: adapter,
-                textController: TextController(context).getInstance()
+                textController: TextController(context).getInstance(),
+                streamProcessor: instance
             });
         }
 

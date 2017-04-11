@@ -58,10 +58,11 @@ function ScheduleController(config) {
     const dashManifestModel = config.dashManifestModel;
     const timelineConverter = config.timelineConverter;
     const mediaPlayerModel = config.mediaPlayerModel;
+    const type = config.type;
+    let streamProcessor = config.streamProcessor;
 
     let instance,
         log,
-        type,
         fragmentModel,
         isDynamic,
         currentRepresentationInfo,
@@ -77,7 +78,6 @@ function ScheduleController(config) {
         playbackController,
         mediaController,
         abrController,
-        streamProcessor,
         streamController,
         fragmentController,
         bufferLevelRule,
@@ -105,9 +105,7 @@ function ScheduleController(config) {
         seekTarget = NaN;
     }
 
-    function initialize(Type, StreamProcessor) {
-        type = Type;
-        streamProcessor = StreamProcessor;
+    function initialize() {
         playbackController = PlaybackController(context).getInstance();
         mediaController = MediaController(context).getInstance();
         abrController = AbrController(context).getInstance();
@@ -192,7 +190,7 @@ function ScheduleController(config) {
 
     function schedule() {
 
-        if (isStopped || isFragmentProcessingInProgress || playbackController.isPaused() && !scheduleWhilePaused) return;
+        if (isStopped || isFragmentProcessingInProgress || !streamProcessor.getBufferController() || playbackController.isPaused() && !scheduleWhilePaused) return;
 
         validateExecutedFragmentRequest();
 

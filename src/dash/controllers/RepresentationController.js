@@ -43,12 +43,13 @@ import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
 import FactoryMaker from '../../core/FactoryMaker';
 import Representation from '../vo/Representation';
 
-function RepresentationController() {
+function RepresentationController(config) {
 
     const SEGMENTS_UPDATE_FAILED_ERROR_CODE = 1;
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
+    let streamProcessor = config.streamProcessor;
 
     let instance,
         realAdaptation,
@@ -56,7 +57,6 @@ function RepresentationController() {
         updating,
         voAvailableRepresentations,
         currentVoRepresentation,
-        streamProcessor,
         abrController,
         indexHandler,
         playbackController,
@@ -95,8 +95,7 @@ function RepresentationController() {
         }
     }
 
-    function initialize(StreamProcessor) {
-        streamProcessor = StreamProcessor;
+    function initialize() {
         indexHandler = streamProcessor.getIndexHandler();
     }
 

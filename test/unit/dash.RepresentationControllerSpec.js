@@ -38,8 +38,8 @@ describe("RepresentationController", function () {
     const abrController = AbrController(context).getInstance();
     abrController.registerStreamProcessor(testType, streamProcessor);
 
-    const representationController = RepresentationController(context).create();
-    representationController.initialize(streamProcessor);
+    const representationController = RepresentationController(context).create({streamProcessor : streamProcessor});
+    representationController.initialize();
     representationController.setConfig({abrController: abrController});
 
     it("should not contain data before it is set", function () {

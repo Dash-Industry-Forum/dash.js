@@ -57,6 +57,8 @@ function BufferController(config) {
     const mediaController = config.mediaController;
     const adapter = config.adapter;
     const textController = config.textController;
+    const type = config.type;
+    let streamProcessor = config.streamProcessor;
 
     let instance,
         log,
@@ -67,7 +69,6 @@ function BufferController(config) {
         mediaSource,
         maxAppendedIndex,
         lastIndex,
-        type,
         buffer,
         bufferState,
         appendedBytesInfo,
@@ -76,9 +77,7 @@ function BufferController(config) {
         isAppendingInProgress,
         isPruningInProgress,
         playbackController,
-        streamProcessor,
         abrController,
-        scheduleController,
         mediaPlayerModel,
         initCache,
         seekStartTime;
@@ -99,15 +98,12 @@ function BufferController(config) {
         isPruningInProgress = false;
     }
 
-    function initialize(Type, Source, StreamProcessor) {
-        type = Type;
+    function initialize(Source) {
         setMediaSource(Source);
-        streamProcessor = StreamProcessor;
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
         playbackController = PlaybackController(context).getInstance();
         abrController = AbrController(context).getInstance();
         initCache = InitCache(context).getInstance();
-        scheduleController = streamProcessor.getScheduleController();
         requiredQuality = abrController.getQualityFor(type, streamProcessor.getStreamInfo());
 
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
@@ -284,7 +280,7 @@ function BufferController(config) {
 
     function addBufferMetrics() {
         if (!isActive()) return;
-        metricsModel.addBufferState(type, bufferState, scheduleController.getBufferTarget());
+        metricsModel.addBufferState(type, bufferState, streamProcessor.getScheduleController().getBufferTarget());
         metricsModel.addBufferLevel(type, new Date(), bufferLevel * 1000);
     }
 
@@ -501,9 +497,7 @@ function BufferController(config) {
         isAppendingInProgress = false;
         isPruningInProgress = false;
         playbackController = null;
-        streamProcessor = null;
         abrController = null;
-        scheduleController = null;
 
         if (!errored) {
             sourceBufferController.abort(mediaSource, buffer);
