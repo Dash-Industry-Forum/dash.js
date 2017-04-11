@@ -57,6 +57,7 @@ function TextController() {
         ttmlParser = TTMLParser(context).getInstance();
         textSourceBuffer = TextSourceBuffer(context).getInstance();
 
+        textTracks.initialize();
         allTracksAreDisabled = false;
     }
 
