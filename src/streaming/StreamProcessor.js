@@ -88,8 +88,15 @@ function StreamProcessor(config) {
 
         // initialize controllers
         indexHandler.initialize(this);
-
         abrController.registerStreamProcessor(type, this);
+
+        fragmentLoader = FragmentLoader(context).create({
+            metricsModel: MetricsModel(context).getInstance(),
+            errHandler: ErrorHandler(context).getInstance(),
+            requestModifier: RequestModifier(context).getInstance()
+        });
+        fragmentModel = fragmentController.getModel(type);
+        fragmentModel.setLoader(fragmentLoader);
 
         bufferController = createBufferControllerForType(type);
         scheduleController = ScheduleController(context).create({
@@ -103,14 +110,12 @@ function StreamProcessor(config) {
             streamProcessor: this
         });
 
-        bufferController.initialize(mediaSource);
-        scheduleController.initialize();
-
-        fragmentModel = scheduleController.getFragmentModel();
-
         representationController = RepresentationController(context).create({
             streamProcessor: this
         });
+
+        bufferController.initialize(mediaSource);
+        scheduleController.initialize();
         representationController.initialize();
     }
 

@@ -111,8 +111,7 @@ function ScheduleController(config) {
         abrController = AbrController(context).getInstance();
         streamController = StreamController(context).getInstance();
         fragmentController = streamProcessor.getFragmentController();
-        fragmentModel = fragmentController.getModel(type);
-        fragmentModel.setScheduleController(instance);
+        fragmentModel = streamProcessor.getFragmentModel();
         isDynamic = streamProcessor.isDynamic();
         scheduleWhilePaused = mediaPlayerModel.getScheduleWhilePaused();
 
