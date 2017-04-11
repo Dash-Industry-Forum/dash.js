@@ -48,7 +48,6 @@ import AbrController from './controllers/AbrController';
 import TimeSyncController from './controllers/TimeSyncController';
 import ABRRulesCollection from './rules/abr/ABRRulesCollection';
 import VideoModel from './models/VideoModel';
-import RulesController from './rules/RulesController';
 import MediaSourceController from './controllers/MediaSourceController';
 import BaseURLController from './controllers/BaseURLController';
 import Debug from './../core/Debug';
@@ -102,7 +101,6 @@ function MediaPlayer() {
         errHandler,
         capabilities,
         streamController,
-        rulesController,
         playbackController,
         dashMetrics,
         dashManifestModel,
@@ -1878,7 +1876,6 @@ function MediaPlayer() {
             streamController.reset();
             playbackController.reset();
             abrController.reset();
-            rulesController.reset();
             mediaController.reset();
             textController.reset();
             streamController = null;
@@ -1904,12 +1901,6 @@ function MediaPlayer() {
             errHandler: errHandler
         });
 
-        rulesController = RulesController(context).getInstance();
-        rulesController.initialize();
-        rulesController.setConfig({
-            abrRulesCollection: abrRulesCollection
-        });
-
         streamController = StreamController(context).getInstance();
         streamController.setConfig({
             capabilities: capabilities,
@@ -1931,7 +1922,6 @@ function MediaPlayer() {
 
         abrController.setConfig({
             abrRulesCollection: abrRulesCollection,
-            rulesController: rulesController,
             streamController: streamController
         });
 
