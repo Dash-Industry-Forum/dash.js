@@ -66,6 +66,24 @@ describe('URLUtils', function () {
         });
     });
 
+    describe('isSchemeRelative', () => {
+        it('should return false for a non-scheme-relative url', () => {
+            const absoluteUrl = 'https://www.example.com';
+
+            const result = urlUtils.isSchemeRelative(absoluteUrl);
+
+            expect(result).to.be.false; // jshint ignore:line
+        });
+
+        it('should return true for a protocol-relative url', () => {
+            const protocolRelativeUrl = '//path/to/some/file';
+
+            const result = urlUtils.isSchemeRelative(protocolRelativeUrl);
+
+            expect(result).to.be.true; // jshint ignore:line
+        });
+    });
+
     describe('isPathAbsolute', () => {
         it('should return true for a path-absolute url', () => {
             const pathAbsoluteUrl = '/path/to/some/file';
@@ -187,6 +205,33 @@ describe('URLUtils', function () {
         });
     });
 
+    describe('parseScheme', () => {
+        it('should return the scheme of a valid url', () => {
+            const origin = '//www.example.com';
+            const scheme = 'http:';
+
+            const result = urlUtils.parseScheme(scheme + origin);
+
+            expect(result).to.equal(scheme); // jshint ignore:line
+        });
+
+        it('should return an empty string if url is scheme-relative', () => {
+            const baseUrl = '//www.example.com';
+
+            const result = urlUtils.parseOrigin(baseUrl);
+
+            expect(result).to.be.empty; // jshint ignore:line
+        });
+
+        it('should return an empty string if argument is not a url', () => {
+            const arg = 'skjdlkasdhflkhasdlkfhl';
+
+            const result = urlUtils.parseOrigin(arg);
+
+            expect(result).to.be.empty; // jshint ignore:line
+        });
+    });
+
     describe('resolve (fallback path)', () => {
         it('should resolve a baseurl and relative url', () => {
             const baseUrl = 'http://www.example.com/path/index.html';
@@ -233,6 +278,16 @@ describe('URLUtils', function () {
             const result = urlUtils.resolve(url);
 
             expect(result).to.equal(url); // jshint ignore:line
+        });
+
+        it('should resolve a baseurl and scheme-relative url', () => {
+            const baseUrl = 'https://www.example.com';
+            const url = '//www.anotherexample.com/example.mpd';
+            const expected = 'https://www.anotherexample.com/example.mpd';
+
+            const result = urlUtils.resolve(url, baseUrl);
+
+            expect(result).to.equal(expected); // jshint ignore:line
         });
     });
 
