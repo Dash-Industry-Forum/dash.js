@@ -103,7 +103,7 @@ function AbrController() {
         reset();
     }
 
-    function initialize(type, streamProcessor) {
+    function registerStreamProcessor(type, streamProcessor) {
         switchHistoryDict[type] = SwitchRequestHistory(context).create();
         streamProcessorDict[type] = streamProcessor;
         abandonmentStateDict[type] = abandonmentStateDict[type] || {};
@@ -657,8 +657,8 @@ function AbrController() {
         getTopQualityIndexFor: getTopQualityIndexFor,
         setElementSize: setElementSize,
         setWindowResizeEventCalled: setWindowResizeEventCalled,
-        initialize: initialize,
         createAbrRulesCollection: createAbrRulesCollection,
+        registerStreamProcessor: registerStreamProcessor,
         setConfig: setConfig,
         reset: reset
     };

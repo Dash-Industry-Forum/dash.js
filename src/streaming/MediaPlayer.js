@@ -45,7 +45,6 @@ import MediaPlayerModel from './models/MediaPlayerModel';
 import MetricsModel from './models/MetricsModel';
 import AbrController from './controllers/AbrController';
 import TimeSyncController from './controllers/TimeSyncController';
-import SourceBufferController from './controllers/SourceBufferController';
 import VideoModel from './models/VideoModel';
 import MediaSourceController from './controllers/MediaSourceController';
 import BaseURLController from './controllers/BaseURLController';
@@ -2012,7 +2011,6 @@ function MediaPlayer() {
     function createPlaybackControllers() {
 
         // creates or get objects instances
-        let sourceBufferController = SourceBufferController(context).getInstance();
         let manifestLoader = createManifestLoader();
         let manifestModel = ManifestModel(context).getInstance();
         let liveEdgeFinder = LiveEdgeFinder(context).getInstance();
@@ -2027,10 +2025,6 @@ function MediaPlayer() {
         // configure controllers
         mediaController.setConfig({
             errHandler: errHandler
-        });
-
-        sourceBufferController.setConfig({
-            dashManifestModel: dashManifestModel
         });
 
         streamController.setConfig({

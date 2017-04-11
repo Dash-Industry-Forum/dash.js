@@ -16,7 +16,7 @@ describe("AbrController", function () {
     const representationCount = dummyMediaInfo.representationCount;
     const streamProcessor = objectsHelper.getDummyStreamProcessor(testType);
 
-    abrCtrl.initialize('video', streamProcessor);
+    abrCtrl.registerStreamProcessor('video', streamProcessor);
 
     it("should update top quality index", function () {
         const expectedTopQuality = representationCount - 1;
