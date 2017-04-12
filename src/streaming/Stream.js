@@ -188,6 +188,21 @@ function Stream(config) {
         return streamInfo;
     }
 
+<<<<<<< HEAD
+=======
+    function getEventController() {
+        return eventController;
+    }
+
+    function getFragmentController() {
+        return fragmentController;
+    }
+
+    function hasMedia(type) {
+        return (getMediaInfo(type) !== null);
+    }
+
+>>>>>>> StreamProcessor :
     /**
      * @param {string} type
      * @returns {Array}
@@ -293,6 +308,8 @@ function Stream(config) {
             timelineConverter: timelineConverter,
             adapter: adapter,
             baseURLController: baseURLController
+            stream: instance,
+            abrController: abrController
         });
 
         let allMediaForType = adapter.getAllMediaInfoForType(streamInfo, mediaInfo.type);
@@ -551,6 +568,9 @@ function Stream(config) {
         getStartTime: getStartTime,
         getId: getId,
         getStreamInfo: getStreamInfo,
+        getFragmentController: getFragmentController,
+        getEventController: getEventController,
+        hasMedia: hasMedia,
         getBitrateListFor: getBitrateListFor,
         startEventController: startEventController,
         updateData: updateData,

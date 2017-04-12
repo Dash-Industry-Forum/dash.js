@@ -54,7 +54,6 @@ function StreamProcessor(config) {
     let type = config.type;
     let timelineConverter = config.timelineConverter;
     let adapter = config.adapter;
-    let fragmentController = config.fragmentController;
     let eventController = config.eventController;
     let stream = config.stream;
     let abrController = config.abrController;
@@ -90,7 +89,7 @@ function StreamProcessor(config) {
         indexHandler.initialize(this);
         abrController.registerStreamType(type, this);
 
-        fragmentModel = fragmentController.getModel(type);
+        fragmentModel = stream.getFragmentController().getModel(type);
 
         bufferController = createBufferControllerForType(type);
         scheduleController = ScheduleController(context).create({
@@ -153,8 +152,6 @@ function StreamProcessor(config) {
         });
         unregisterAllExternalController();
 
-        fragmentController = null;
-
         eventController = null;
         stream = null;
         dynamic = null;
@@ -180,7 +177,7 @@ function StreamProcessor(config) {
     }
 
     function getFragmentController() {
-        return fragmentController;
+        return stream ? stream.getFragmentController() : null;
     }
 
     function getBuffer() {
@@ -201,6 +198,10 @@ function StreamProcessor(config) {
 
     function getStreamInfo() {
         return stream ? stream.getStreamInfo() : null;
+    }
+
+    function getEventController() {
+        return stream ? stream.getEventController() : null;
     }
 
     function updateMediaInfo(newMediaInfo) {
