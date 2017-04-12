@@ -79,7 +79,6 @@ function ScheduleController(config) {
         mediaController,
         abrController,
         streamController,
-        fragmentController,
         bufferLevelRule,
         nextFragmentRequestRule,
         scheduleWhilePaused,
@@ -110,7 +109,6 @@ function ScheduleController(config) {
         mediaController = MediaController(context).getInstance();
         abrController = AbrController(context).getInstance();
         streamController = StreamController(context).getInstance();
-        fragmentController = streamProcessor.getFragmentController();
         fragmentModel = streamProcessor.getFragmentModel();
         isDynamic = streamProcessor.isDynamic();
         scheduleWhilePaused = mediaPlayerModel.getScheduleWhilePaused();
@@ -153,7 +151,10 @@ function ScheduleController(config) {
     }
 
     function start() {
-        if (!currentRepresentationInfo || streamProcessor.isBufferingCompleted()) return;
+        if (!currentRepresentationInfo || streamProcessor.isBufferingCompleted()) {
+            return;
+        }
+
         addPlaylistTraceMetrics();
         isStopped = false;
 
@@ -167,7 +168,10 @@ function ScheduleController(config) {
     }
 
     function stop() {
-        if (isStopped) return;
+        if (isStopped) {
+            return;
+        }
+
         isStopped = true;
         clearTimeout(scheduleTimeout);
         log('Schedule controller stopping for ' + type);
@@ -189,7 +193,9 @@ function ScheduleController(config) {
 
     function schedule() {
 
-        if (isStopped || isFragmentProcessingInProgress || !streamProcessor.getBufferController() || playbackController.isPaused() && !scheduleWhilePaused) return;
+        if (isStopped || isFragmentProcessingInProgress || !streamProcessor.getBufferController() || playbackController.isPaused() && !scheduleWhilePaused) {
+            return;
+        }
 
         validateExecutedFragmentRequest();
 
@@ -201,6 +207,7 @@ function ScheduleController(config) {
 
             const getNextFragment = function () {
                 log('ScheduleController - getNextFragment');
+                let fragmentController = streamProcessor.getFragmentController();
                 if (switchTrack) {
                     log('ScheduleController - switch track has been asked, get init request');
                     streamProcessor.switchInitData(streamProcessor.getStreamInfo().id, currentRepresentationInfo.id);
@@ -276,7 +283,10 @@ function ScheduleController(config) {
     }
 
     function onInitRequested(e) {
-        if (!e.sender || e.sender.getStreamProcessor() !== streamProcessor) return;
+        if (!e.sender || e.sender.getStreamProcessor() !== streamProcessor) {
+            return;
+        }
+
         getInitRequest(currentRepresentationInfo.quality);
     }
 
@@ -299,7 +309,9 @@ function ScheduleController(config) {
     }
 
     function onQualityChanged(e) {
-        if (type !== e.mediaType || streamProcessor.getStreamInfo().id !== e.streamInfo.id) return;
+        if (type !== e.mediaType || streamProcessor.getStreamInfo().id !== e.streamInfo.id) {
+            return;
+        }
 
         currentRepresentationInfo = streamProcessor.getRepresentationInfoForQuality(e.newQuality);
 
@@ -332,12 +344,18 @@ function ScheduleController(config) {
     }
 
     function onDataUpdateCompleted(e) {
-        if (e.error || e.sender.getStreamProcessor() !== streamProcessor) return;
+        if (e.error || e.sender.getStreamProcessor() !== streamProcessor) {
+            return;
+        }
+
         currentRepresentationInfo = adapter.convertDataToTrack(e.currentRepresentation);
     }
 
     function onStreamInitialized(e) {
-        if (e.error || streamProcessor.getStreamInfo().id !== e.streamInfo.id) return;
+        if (e.error || streamProcessor.getStreamInfo().id !== e.streamInfo.id) {
+            return;
+        }
+
         currentRepresentationInfo = streamProcessor.getCurrentRepresentationInfo();
 
         if (initialRequest) {
@@ -383,14 +401,19 @@ function ScheduleController(config) {
     }
 
     function onStreamCompleted(e) {
-        if (e.fragmentModel !== fragmentModel) return;
+        if (e.fragmentModel !== fragmentModel) {
+            return;
+        }
+
         stop();
         isFragmentProcessingInProgress = false;
         log('Stream is complete');
     }
 
     function onFragmentLoadingCompleted(e) {
-        if (e.sender !== fragmentModel) return;
+        if (e.sender !== fragmentModel) {
+            return;
+        }
 
         if (dashManifestModel.getIsTextTrack(type)) {
             isFragmentProcessingInProgress = false;
@@ -408,25 +431,37 @@ function ScheduleController(config) {
     }
 
     function onBytesAppended(e) {
-        if (e.sender.getStreamProcessor() !== streamProcessor) return;
+        if (e.sender.getStreamProcessor() !== streamProcessor) {
+            return;
+        }
+
         isFragmentProcessingInProgress = false;
         startScheduleTimer(0);
     }
 
     function onFragmentLoadingAbandoned(e) {
-        if (e.streamProcessor !== streamProcessor) return;
+        if (e.streamProcessor !== streamProcessor) {
+            return;
+        }
+
         replaceRequest(e.request);
         isFragmentProcessingInProgress = false;
         startScheduleTimer(0);
     }
 
     function onDataUpdateStarted(e) {
-        if (e.sender.getStreamProcessor() !== streamProcessor) return;
+        if (e.sender.getStreamProcessor() !== streamProcessor) {
+            return;
+        }
+
         stop();
     }
 
     function onBufferCleared(e) {
-        if (e.sender.getStreamProcessor() !== streamProcessor) return;
+        if (e.sender.getStreamProcessor() !== streamProcessor) {
+            return;
+        }
+
         // after the data has been removed from the buffer we should remove the requests from the list of
         // the executed requests for which playback time is inside the time interval that has been removed from the buffer
         fragmentModel.removeExecutedRequestsBeforeTime(e.to);
@@ -444,7 +479,10 @@ function ScheduleController(config) {
     }
 
     function onQuotaExceeded(e) {
-        if (e.sender.getStreamProcessor() !== streamProcessor) return;
+        if (e.sender.getStreamProcessor() !== streamProcessor) {
+            return;
+        }
+
         stop();
         isFragmentProcessingInProgress = false;
     }
@@ -455,7 +493,10 @@ function ScheduleController(config) {
     }
 
     function onTimedTextRequested(e) {
-        if (e.sender.getStreamProcessor() !== streamProcessor) return;
+        if (e.sender.getStreamProcessor() !== streamProcessor) {
+            return;
+        }
+
         getInitRequest(e.index);
     }
 
@@ -498,10 +539,6 @@ function ScheduleController(config) {
 
     function setSeekTarget(value) {
         seekTarget = value;
-    }
-
-    function getFragmentModel() {
-        return fragmentModel;
     }
 
     function setTimeToLoadDelay(value) {
@@ -588,7 +625,6 @@ function ScheduleController(config) {
         getType: getType,
         getSeekTarget: getSeekTarget,
         setSeekTarget: setSeekTarget,
-        getFragmentModel: getFragmentModel,
         setTimeToLoadDelay: setTimeToLoadDelay,
         getTimeToLoadDelay: getTimeToLoadDelay,
         replaceRequest: replaceRequest,

@@ -591,12 +591,12 @@ function AbrController() {
     function onFragmentLoadProgress(e) {
         const type = e.request.mediaType;
         if (getAutoSwitchBitrateFor(type)) {
-            const scheduleController = streamProcessorDict[type].getScheduleController();
-            if (!scheduleController) return;// There may be a fragment load in progress when we switch periods and recreated some controllers.
+            const streamProcessor = streamProcessorDict[type];
+            if (!streamProcessor) return;// There may be a fragment load in progress when we switch periods and recreated some controllers.
 
             let rulesContext = RulesContext(context).create({
                 abrController: instance,
-                streamProcessor: streamProcessorDict[type],
+                streamProcessor: streamProcessor,
                 currentRequest: e.request,
                 hasRichBuffer: hasRichBuffer(type)
             });
@@ -606,8 +606,8 @@ function AbrController() {
             //        return newValue;
             //    });
 
-            if (switchRequest.quality > SwitchRequest.NO_CHANGE) {
-                const fragmentModel = scheduleController.getFragmentModel();
+            if (switchRequest.value > SwitchRequest.NO_CHANGE) {
+                const fragmentModel = streamProcessor.getFragmentModel();
                 const request = fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_LOADING, index: e.request.index})[0];
                 if (request) {
                     //TODO Check if we should abort or if better to finish download. check bytesLoaded/Total
