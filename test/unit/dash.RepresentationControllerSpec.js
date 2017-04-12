@@ -36,7 +36,7 @@ describe("RepresentationController", function () {
     manifestModel.setValue(mpd);
 
     const abrController = AbrController(context).getInstance();
-    abrController.registerStreamProcessor(testType, streamProcessor);
+    abrController.registerStreamType(testType, streamProcessor);
 
     const representationController = RepresentationController(context).create({streamProcessor : streamProcessor});
     representationController.initialize();
