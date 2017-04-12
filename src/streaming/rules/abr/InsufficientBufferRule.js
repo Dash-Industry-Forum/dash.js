@@ -57,7 +57,7 @@ function InsufficientBufferRule(config) {
 
     function getMaxIndex (rulesContext) {
         var now = new Date().getTime();
-        var mediaType = rulesContext.getMediaInfo().type;
+        var mediaType = rulesContext.getMediaType();
         var metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
         var lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
         let switchRequest = SwitchRequest(context).create();

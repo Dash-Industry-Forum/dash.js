@@ -67,8 +67,7 @@ function BolaAbandonRule(config) {
     }
 
     function shouldAbandon(rulesContext) {
-        let mediaInfo = rulesContext.getMediaInfo();
-        let mediaType = mediaInfo.type;
+        let mediaType = rulesContext.getMediaType();
         let metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
         let request = rulesContext.getCurrentRequest();
         let switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, {name: BolaAbandonRule.__dashjs_factory_name});
