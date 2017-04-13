@@ -38,6 +38,7 @@ class BitrateInfo {
         this.bitrate = null;
         this.width = null;
         this.height = null;
+        this.scanType = null;
         this.qualityIndex = NaN;
     }
 }

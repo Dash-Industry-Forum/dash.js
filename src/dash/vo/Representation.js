@@ -54,6 +54,7 @@ class Representation {
         this.bandwidth = NaN;
         this.width = NaN;
         this.height = NaN;
+        this.scanType = null;
         this.maxPlayoutRate = NaN;
     }
 

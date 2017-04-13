@@ -16,6 +16,7 @@ declare namespace dashjs {
         width?: number;
         height?: number;
         bandwidth?: number;
+        scanType?: string;
     }
 
     export interface MediaInfo {
