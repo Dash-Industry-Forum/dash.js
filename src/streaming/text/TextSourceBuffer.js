@@ -135,7 +135,9 @@ function TextSourceBuffer() {
     }
 
 
-    function onVideoChunkReceived(chunk) {
+    function onVideoChunkReceived(e) {
+        const chunk = e.chunk;
+
         if (chunk.mediaInfo.embeddedCaptions) {
             append(chunk.bytes, chunk);
         }
