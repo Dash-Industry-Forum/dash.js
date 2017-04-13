@@ -134,8 +134,8 @@ function TextSourceBuffer() {
         embeddedTracks = null;
     }
 
-
-    function onVideoChunkReceived(chunk) {
+    function onVideoChunkReceived(e) {
+        let chunk = e.chunk;
         if (chunk.mediaInfo.embeddedCaptions) {
             append(chunk.bytes, chunk);
         }
