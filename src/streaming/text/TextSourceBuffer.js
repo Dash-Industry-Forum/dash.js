@@ -53,6 +53,7 @@ function TextSourceBuffer() {
         boxParser,
         errHandler,
         dashManifestModel,
+        manifestModel,
         mediaController,
         parser,
         vttParser,
@@ -203,6 +204,9 @@ function TextSourceBuffer() {
         if (config.dashManifestModel) {
             dashManifestModel = config.dashManifestModel;
         }
+        if (config.manifestModel) {
+            manifestModel = config.manifestModel;
+        }
         if (config.mediaController) {
             mediaController = config.mediaController;
         }
@@ -328,7 +332,10 @@ function TextSourceBuffer() {
                             subOffset += sample.subSizes[j];
                         }
                         try {
-                            result = parser.parse(ccContent, sampleStart / timescale, (sampleStart + sample.duration) / timescale, images);
+                            // check if we must apply an offset to ttml time
+                            let manifest = manifestModel.getValue();
+                            let offsetTime = manifest.ttmlTimeIsRelative ? sampleStart / timescale : 0;
+                            result = parser.parse(ccContent, sampleStart / timescale, (sampleStart + sample.duration) / timescale, images, offsetTime);
                             textTracks.addCaptions(currFragmentedTrackIdx, firstSubtitleStart / timescale, result);
                         } catch (e) {
                             log('TTML parser error: ' + e.message);

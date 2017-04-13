@@ -43,6 +43,7 @@ function TextController() {
     let allTracksAreDisabled,
         errHandler,
         dashManifestModel,
+        manifestModel,
         mediaController,
         videoModel,
         streamController,
@@ -71,6 +72,9 @@ function TextController() {
         if (config.dashManifestModel) {
             dashManifestModel = config.dashManifestModel;
         }
+        if (config.manifestModel) {
+            manifestModel = config.manifestModel;
+        }
         if (config.mediaController) {
             mediaController = config.mediaController;
         }
@@ -94,6 +98,7 @@ function TextController() {
         textSourceBuffer.setConfig({
             errHandler: errHandler,
             dashManifestModel: dashManifestModel,
+            manifestModel: manifestModel,
             mediaController: mediaController,
             videoModel: videoModel,
             streamController: streamController,

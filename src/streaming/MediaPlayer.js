@@ -1928,6 +1928,7 @@ function MediaPlayer() {
         textController = TextController(context).getInstance();
         textController.setConfig({
             errHandler: errHandler,
+            manifestModel: ManifestModel(context).getInstance(),
             dashManifestModel: dashManifestModel,
             mediaController: mediaController,
             streamController: streamController,
