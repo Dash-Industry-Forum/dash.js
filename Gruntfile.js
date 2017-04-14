@@ -91,6 +91,7 @@ module.exports = function (grunt) {
         },
         copy: {
             dist: {
+              files: [{
                 expand: true,
                 cwd: 'build/temp/',
                 src: [
@@ -107,7 +108,21 @@ module.exports = function (grunt) {
                 ],
                 dest: 'dist/',
                 filter: 'isFile'
-            }
+            }, {
+                expand: true,
+                cwd: '.',
+                src: 'index.d.ts',
+                dest: 'dist/',
+                rename: function(dest) {
+                  return dest + 'dash.d.ts';
+                }
+            }, {
+                expand: true,
+                cwd: '.',
+                src: 'index.d.ts',
+                dest: 'build/typings/'
+            }]
+          }
         },
         exorcise: {
             mediaplayer: {
