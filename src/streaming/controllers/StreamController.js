@@ -456,12 +456,12 @@ function StreamController() {
                 adapter.getMediaInfoForType(streamInfo, 'audio')
             );
 
-            var adaptation,
+            var voAdaptation,
                 useCalculatedLiveEdgeTime;
 
             if (mediaInfo) {
-                adaptation = adapter.getDataForMedia(mediaInfo);
-                useCalculatedLiveEdgeTime = dashManifestModel.getRepresentationsForAdaptation(manifest, adaptation)[0].useCalculatedLiveEdgeTime;
+                voAdaptation = adapter.getDataForMedia(mediaInfo);
+                useCalculatedLiveEdgeTime = dashManifestModel.getRepresentationsForAdaptation(voAdaptation)[0].useCalculatedLiveEdgeTime;
 
                 if (useCalculatedLiveEdgeTime) {
                     log('SegmentTimeline detected using calculated Live Edge Time');

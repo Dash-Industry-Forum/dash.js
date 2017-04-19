@@ -69,8 +69,6 @@ function SegmentsGetter(config, isDynamic) {
                 onSegmentListUpdatedCallback(representation, segments);
             }
         }
-
-        return segments;
     }
 
     function isSegmentListUpdateRequired(representation, index) {

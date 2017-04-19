@@ -219,13 +219,13 @@ function DashHandler(config) {
         return isFinished;
     }
 
-    function updateSegments(representation) {
-        return segmentsGetter.getSegments(representation, requestedTime, index, onSegmentListUpdated);
+    function updateSegments(voRepresentation) {
+        segmentsGetter.getSegments(voRepresentation, requestedTime, index, onSegmentListUpdated);
     }
 
-    function onSegmentListUpdated(representation, segments) {
+    function onSegmentListUpdated(voRepresentation, segments) {
 
-        representation.segments = segments;
+        voRepresentation.segments = segments;
 
         if (segments && segments.length > 0) {
             earliestTime = isNaN(earliestTime) ? segments[0].presentationStartTime : Math.min(segments[0].presentationStartTime,  earliestTime);
@@ -240,53 +240,51 @@ function DashHandler(config) {
         }
     }
 
-    function updateSegmentList(representation) {
+    function updateSegmentList(voRepresentation) {
 
-        if (!representation) {
+        if (!voRepresentation) {
             throw new Error('no representation');
         }
 
-        representation.segments = null;
+        voRepresentation.segments = null;
 
-        updateSegments(representation);
-
-        return representation;
+        updateSegments(voRepresentation);
     }
 
-    function updateRepresentation(representation, keepIdx) {
-        var hasInitialization = Representation.hasInitialization(representation);
-        var hasSegments = Representation.hasSegments(representation);
+    function updateRepresentation(voRepresentation, keepIdx) {
+        var hasInitialization = Representation.hasInitialization(voRepresentation);
+        var hasSegments = Representation.hasSegments(voRepresentation);
         var error;
 
-        if (!representation.segmentDuration && !representation.segments) {
-            updateSegmentList(representation);
+        if (!voRepresentation.segmentDuration && !voRepresentation.segments) {
+            updateSegmentList(voRepresentation);
         }
 
-        representation.segmentAvailabilityRange = null;
-        representation.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
+        voRepresentation.segmentAvailabilityRange = null;
+        voRepresentation.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(voRepresentation, isDynamic);
 
-        if ((representation.segmentAvailabilityRange.end < representation.segmentAvailabilityRange.start) && !representation.useCalculatedLiveEdgeTime) {
-            error = new Error(SEGMENTS_UNAVAILABLE_ERROR_CODE, 'no segments are available yet', {availabilityDelay: representation.segmentAvailabilityRange.start - representation.segmentAvailabilityRange.end});
-            eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: representation, error: error});
+        if ((voRepresentation.segmentAvailabilityRange.end < voRepresentation.segmentAvailabilityRange.start) && !voRepresentation.useCalculatedLiveEdgeTime) {
+            error = new Error(SEGMENTS_UNAVAILABLE_ERROR_CODE, 'no segments are available yet', {availabilityDelay: voRepresentation.segmentAvailabilityRange.start - voRepresentation.segmentAvailabilityRange.end});
+            eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: voRepresentation, error: error});
             return;
         }
 
         if (!keepIdx) index = -1;
 
-        if (representation.segmentDuration) {
-            updateSegmentList(representation);
+        if (voRepresentation.segmentDuration) {
+            updateSegmentList(voRepresentation);
         }
 
         if (!hasInitialization) {
-            segmentBaseLoader.loadInitialization(representation);
+            segmentBaseLoader.loadInitialization(voRepresentation);
         }
 
         if (!hasSegments) {
-            segmentBaseLoader.loadSegments(representation, type, representation.indexRange);
+            segmentBaseLoader.loadSegments(voRepresentation, type, voRepresentation.indexRange);
         }
 
         if (hasInitialization && hasSegments) {
-            eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: representation});
+            eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: voRepresentation});
         }
     }
 

@@ -139,22 +139,22 @@ function TimelineConverter() {
         return wallTime;
     }
 
-    function calcSegmentAvailabilityRange(representation, isDynamic) {
+    function calcSegmentAvailabilityRange(voRepresentation, isDynamic) {
 
         // Static Range Finder
-        const period = representation.adaptation.period;
-        const range = { start: period.start, end: period.start + period.duration };
+        const voPeriod = voRepresentation.adaptation.period;
+        const range = { start: voPeriod.start, end: voPeriod.start + voPeriod.duration };
         if (!isDynamic) return range;
 
-        if (!isClientServerTimeSyncCompleted && representation.segmentAvailabilityRange) {
-            return representation.segmentAvailabilityRange;
+        if (!isClientServerTimeSyncCompleted && voRepresentation.segmentAvailabilityRange) {
+            return voRepresentation.segmentAvailabilityRange;
         }
 
         //Dyanmic Range Finder
-        const d = representation.segmentDuration || (representation.segments && representation.segments.length ? representation.segments[representation.segments.length - 1].duration : 0);
-        const now = calcPresentationTimeFromWallTime(new Date(), period);
-        const periodEnd = period.start + period.duration;
-        range.start = Math.max((now - period.mpd.timeShiftBufferDepth), period.start);
+        const d = voRepresentation.segmentDuration || (voRepresentation.segments && voRepresentation.segments.length ? voRepresentation.segments[voRepresentation.segments.length - 1].duration : 0);
+        const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
+        const periodEnd = voPeriod.start + voPeriod.duration;
+        range.start = Math.max((now - voPeriod.mpd.timeShiftBufferDepth), voPeriod.start);
         range.end = now >= periodEnd && now - d < periodEnd ? periodEnd - d : now - d;
 
         return range;
