@@ -220,7 +220,7 @@ function RepresentationController() {
         var manifest = manifestModel.getValue();
 
         dataIndex = dashManifestModel.getIndexForAdaptation(data, manifest, adaptation.period.index);
-        reps = dashManifestModel.getRepresentationsForAdaptation(manifest, adaptation);
+        reps = dashManifestModel.getRepresentationsForAdaptation(adaptation);
 
         return reps;
     }
