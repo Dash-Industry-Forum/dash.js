@@ -142,7 +142,7 @@ function RepresentationController() {
         dashMetrics = null;
     }
 
-    function updateData(dataValue, adaptation, type) {
+    function updateData(dataValue, voAdaptation, type) {
         var quality,
             averageThroughput;
 
@@ -153,7 +153,7 @@ function RepresentationController() {
         updating = true;
         eventBus.trigger(Events.DATA_UPDATE_STARTED, {sender: this});
 
-        voAvailableRepresentations = updateRepresentations(adaptation);
+        voAvailableRepresentations = updateRepresentations(voAdaptation);
 
         if (data === null && type !== 'fragmentedText') {
             averageThroughput = abrController.getAverageThroughput(type);
