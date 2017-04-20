@@ -77,7 +77,7 @@ function DashParser(/*config*/) {
     }
 
     function parse(data, xlinkController) {
-        var manifest;
+        let manifest;
 
         try {
             const startTime = window.performance.now();

@@ -75,7 +75,7 @@ function TimelineConverter() {
     }
 
     function calcAvailabilityTimeFromPresentationTime(presentationTime, mpd, isDynamic, calculateEnd) {
-        var availabilityTime = NaN;
+        let availabilityTime = NaN;
 
         if (calculateEnd) {
             //@timeShiftBufferDepth specifies the duration of the time shifting buffer that is guaranteed
@@ -112,21 +112,21 @@ function TimelineConverter() {
     }
 
     function calcPresentationTimeFromMediaTime(mediaTime, representation) {
-        var periodStart = representation.adaptation.period.start;
-        var presentationOffset = representation.presentationTimeOffset;
+        const periodStart = representation.adaptation.period.start;
+        const presentationOffset = representation.presentationTimeOffset;
 
         return mediaTime + (periodStart - presentationOffset);
     }
 
     function calcMediaTimeFromPresentationTime(presentationTime, representation) {
-        var periodStart = representation.adaptation.period.start;
-        var presentationOffset = representation.presentationTimeOffset;
+        const periodStart = representation.adaptation.period.start;
+        const presentationOffset = representation.presentationTimeOffset;
 
         return presentationTime - periodStart + presentationOffset;
     }
 
     function calcWallTimeForSegment(segment, isDynamic) {
-        var suggestedPresentationDelay,
+        let suggestedPresentationDelay,
             displayStartTime,
             wallTime;
 
@@ -161,12 +161,12 @@ function TimelineConverter() {
     }
 
     function calcPeriodRelativeTimeFromMpdRelativeTime(representation, mpdRelativeTime) {
-        var periodStartTime = representation.adaptation.period.start;
+        const periodStartTime = representation.adaptation.period.start;
         return mpdRelativeTime - periodStartTime;
     }
 
     function calcMpdRelativeTimeFromPeriodRelativeTime(representation, periodRelativeTime) {
-        var periodStartTime = representation.adaptation.period.start;
+        const periodStartTime = representation.adaptation.period.start;
 
         return periodRelativeTime + periodStartTime;
     }
@@ -190,8 +190,8 @@ function TimelineConverter() {
 
     function calcMSETimeOffset(representation) {
         // The MSEOffset is offset from AST for media. It is Period@start - presentationTimeOffset
-        var presentationOffset = representation.presentationTimeOffset;
-        var periodStart = representation.adaptation.period.start;
+        const presentationOffset = representation.presentationTimeOffset;
+        const periodStart = representation.adaptation.period.start;
         return (periodStart - presentationOffset);
     }
 

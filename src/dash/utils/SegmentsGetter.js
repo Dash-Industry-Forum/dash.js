@@ -50,8 +50,8 @@ function SegmentsGetter(config, isDynamic) {
     }
 
     function getSegments(representation, requestedTime, index, onSegmentListUpdatedCallback, availabilityUpperLimit) {
-        var segments;
-        var type = representation.segmentInfoType;
+        let segments;
+        const type = representation.segmentInfoType;
 
         // Already figure out the segments.
         if (type === 'SegmentBase' || type === 'BaseURL' || !isSegmentListUpdateRequired(representation, index)) {
@@ -72,10 +72,10 @@ function SegmentsGetter(config, isDynamic) {
     }
 
     function isSegmentListUpdateRequired(representation, index) {
-        var segments = representation.segments;
-        var updateRequired = false;
+        let segments = representation.segments;
+        let updateRequired = false;
 
-        var upperIdx,
+        let upperIdx,
             lowerIdx;
 
         if (!segments || segments.length === 0) {

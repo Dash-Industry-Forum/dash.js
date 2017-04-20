@@ -45,13 +45,15 @@ function FragmentedTextBoxParser() {
     }
 
     function getSamplesInfo(ab) {
-        var isoFile = boxParser.parse(ab);
-        // zero or more moofs
-        var moofBoxes = isoFile.getBoxes('moof');
-        // exactly one mfhd per moof
-        var mfhdBoxes = isoFile.getBoxes('mfhd');
+        let isoFile = boxParser.parse(ab);
+        let tfhdBox = isoFile.getBox('tfhd');
+        let tfdtBox = isoFile.getBox('tfdt');
+        let trunBox = isoFile.getBox('trun');
+        let moofBox = isoFile.getBox('moof');
+        let mfhdBox = isoFile.getBox('mfhd');
+        let subsBox = isoFile.getBox('subs');
 
-        var sampleDuration,
+        let sampleDuration,
             sampleCompositionTimeOffset,
             sampleCount,
             sampleSize,
@@ -132,8 +134,8 @@ function FragmentedTextBoxParser() {
     }
 
     function getMediaTimescaleFromMoov(ab) {
-        var isoFile = boxParser.parse(ab);
-        var mdhdBox = isoFile.getBox('mdhd');
+        let isoFile = boxParser.parse(ab);
+        let mdhdBox = isoFile.getBox('mdhd');
 
         return mdhdBox ? mdhdBox.timescale : NaN;
     }

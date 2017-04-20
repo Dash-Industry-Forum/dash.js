@@ -144,14 +144,14 @@ function DashHandler(config) {
 
     function replaceIDForTemplate(url, value) {
         if (value === null || url === null || url.indexOf('$RepresentationID$') === -1) { return url; }
-        var v = value.toString();
+        let v = value.toString();
         return url.split('$RepresentationID$').join(v);
     }
 
     function setRequestUrl(request, destination, representation) {
-        var baseURL = baseURLController.resolve(representation.path);
-        var url;
-        var serviceLocation;
+        const baseURL = baseURLController.resolve(representation.path);
+        let url,
+            serviceLocation;
 
         if (!baseURL || (destination === baseURL.url) || (!urlUtils.isRelative(destination))) {
             url = destination;
@@ -252,9 +252,9 @@ function DashHandler(config) {
     }
 
     function updateRepresentation(voRepresentation, keepIdx) {
-        var hasInitialization = Representation.hasInitialization(voRepresentation);
-        var hasSegments = Representation.hasSegments(voRepresentation);
-        var error;
+        const hasInitialization = Representation.hasInitialization(voRepresentation);
+        const hasSegments = Representation.hasSegments(voRepresentation);
+        let error;
 
         if (!voRepresentation.segmentDuration && !voRepresentation.segments) {
             updateSegmentList(voRepresentation);
@@ -289,11 +289,11 @@ function DashHandler(config) {
     }
 
     function getIndexForSegments(time, representation, timeThreshold) {
-        var segments = representation.segments;
-        var ln = segments ? segments.length : null;
+        const segments = representation.segments;
+        const ln = segments ? segments.length : null;
 
-        var idx = -1;
-        var epsilon,
+        let idx = -1;
+        let epsilon,
             frag,
             ft,
             fd,
@@ -321,11 +321,11 @@ function DashHandler(config) {
             return null;
         }
 
-        var request = new FragmentRequest();
-        var representation = segment.representation;
-        var bandwidth = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
+        let request = new FragmentRequest();
+        let representation = segment.representation;
+        let bandwidth = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
             AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].bandwidth;
-        var url = segment.media;
+        let url = segment.media;
 
         url = replaceTokenForTemplate(url, 'Number', segment.replacementNumber);
         url = replaceTokenForTemplate(url, 'Time', segment.replacementTime);
@@ -353,15 +353,15 @@ function DashHandler(config) {
     }
 
     function getSegmentRequestForTime(representation, time, options) {
-        var request,
+        let request,
             segment,
             finished;
 
-        var idx = index;
+        let idx = index;
 
-        var keepIdx = options ? options.keepIdx : false;
-        var timeThreshold = options ? options.timeThreshold : null;
-        var ignoreIsFinished = (options && options.ignoreIsFinished) ? true : false;
+        let keepIdx = options ? options.keepIdx : false;
+        let timeThreshold = options ? options.timeThreshold : null;
+        let ignoreIsFinished = (options && options.ignoreIsFinished) ? true : false;
 
         if (!representation) {
             return null;
@@ -406,7 +406,7 @@ function DashHandler(config) {
     }
 
     function generateSegmentRequestForTime(representation, time) {
-        var step = (representation.segmentAvailabilityRange.end - representation.segmentAvailabilityRange.start) / 2;
+        const step = (representation.segmentAvailabilityRange.end - representation.segmentAvailabilityRange.start) / 2;
 
         representation.segments = null;
         representation.segmentAvailabilityRange = {start: time - step, end: time + step};
@@ -414,7 +414,7 @@ function DashHandler(config) {
     }
 
     function getNextSegmentRequest(representation) {
-        var request,
+        let request,
             segment,
             finished;
 
@@ -454,7 +454,7 @@ function DashHandler(config) {
     }
 
     function onInitializationLoaded(e) {
-        var representation = e.representation;
+        let representation = e.representation;
         //log("Got an initialization.");
         if (!representation.segments) return;
 
@@ -464,12 +464,12 @@ function DashHandler(config) {
     function onSegmentsLoaded(e) {
         if (e.error || (type !== e.mediaType)) return;
 
-        var fragments = e.segments;
-        var representation = e.representation;
-        var segments = [];
-        var count = 0;
+        const fragments = e.segments;
+        let representation = e.representation;
+        let segments = [];
+        let count = 0;
 
-        var i,
+        let i,
             len,
             s,
             seg;

@@ -40,13 +40,13 @@ function ListSegmentsGetter(config, isDynamic) {
     let instance;
 
     function getSegmentsFromList(representation, requestedTime, index, availabilityUpperLimit) {
-        var list = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
+        let list = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
             AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList;
-        var len = list.SegmentURL_asArray.length;
+        const len = list.SegmentURL_asArray.length;
 
-        var segments = [];
+        let segments = [];
 
-        var periodSegIdx,
+        let periodSegIdx,
             seg,
             s,
             range,
