@@ -206,20 +206,19 @@ function ScheduleController(config) {
                 log('ScheduleController - getNextFragment');
                 if (switchTrack) {
                     log('ScheduleController - switch track has been asked, get init request');
-                    bufferController.switchInitData(streamProcessor.getStreamInfo().id, currentRepresentationInfo.id);
+                    streamProcessor.switchInitData(streamProcessor.getStreamInfo().id, currentRepresentationInfo.id);
                     switchTrack = false;
                 } else if (currentRepresentationInfo.quality !== lastInitQuality) {
                     log('ScheduleController - quality has changed, get init request');
                     lastInitQuality = currentRepresentationInfo.quality;
 
-                    streamProcessor.switchInitData(currentRepresentationInfo.quality);
+                    streamProcessor.switchInitData(currentRepresentationInfo.id);
                 } else {
                     const replacement = replaceRequestArray.shift();
 
                     if (fragmentController.isInitializationRequest(replacement)) {
                         //to be sure the specific init segment had not already been loaded.
-                        log('ScheduleController - request is an init replacement request');
-                        bufferController.switchInitData(replacement.mediaInfo.streamInfo.id, replacement.representationId);
+                        streamProcessor.switchInitData(replacement.representationId);
                     } else {
                         const request = nextFragmentRequestRule.execute(streamProcessor, replacement);
                         if (request) {
