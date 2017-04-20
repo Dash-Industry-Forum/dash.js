@@ -51,8 +51,8 @@ function RepresentationController() {
     let eventBus = EventBus(context).getInstance();
 
     let instance,
-        data,
-        dataIndex,
+        realAdaptation,
+        realAdaptationIndex,
         updating,
         voAvailableRepresentations,
         currentVoRepresentation,
@@ -68,8 +68,8 @@ function RepresentationController() {
         dashMetrics;
 
     function setup() {
-        data = null;
-        dataIndex = -1;
+        realAdaptation = null;
+        realAdaptationIndex = -1;
         updating = true;
         voAvailableRepresentations = [];
 
@@ -105,11 +105,11 @@ function RepresentationController() {
     }
 
     function getData() {
-        return data;
+        return realAdaptation;
     }
 
     function getDataIndex() {
-        return dataIndex;
+        return realAdaptationIndex;
     }
 
     function isUpdating() {
@@ -128,8 +128,8 @@ function RepresentationController() {
         eventBus.off(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
 
 
-        data = null;
-        dataIndex = -1;
+        realAdaptation = null;
+        realAdaptationIndex = -1;
         updating = true;
         voAvailableRepresentations = [];
         abrController = null;
@@ -155,7 +155,7 @@ function RepresentationController() {
 
         voAvailableRepresentations = updateRepresentations(voAdaptation);
 
-        if (data === null && type !== 'fragmentedText') {
+        if (realAdaptation === null && type !== 'fragmentedText') {
             averageThroughput = abrController.getAverageThroughput(type);
             bitrate = averageThroughput || abrController.getInitialBitrateFor(type, streamInfo);
             quality = abrController.getQualityForBitrate(streamProcessor.getMediaInfo(), bitrate);
@@ -168,11 +168,11 @@ function RepresentationController() {
         }
 
         currentVoRepresentation = getRepresentationForQuality(quality);
-        data = newRealAdaptation;
+        realAdaptation = newRealAdaptation;
 
         if (type !== 'video' && type !== 'audio' && type !== 'fragmentedText') {
             updating = false;
-            eventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: this, data: data, currentRepresentation: currentVoRepresentation});
+            eventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: this, data: realAdaptation, currentRepresentation: currentVoRepresentation});
             return;
         }
 
@@ -216,13 +216,13 @@ function RepresentationController() {
     }
 
     function updateRepresentations(voAdaptation) {
-        var reps;
+        var voReps;
         var manifest = manifestModel.getValue();
 
-        dataIndex = dashManifestModel.getIndexForAdaptation(data, manifest, voAdaptation.period.index);
-        reps = dashManifestModel.getRepresentationsForAdaptation(voAdaptation);
+        realAdaptationIndex = dashManifestModel.getIndexForAdaptation(realAdaptation, manifest, voAdaptation.period.index);
+        voReps = dashManifestModel.getRepresentationsForAdaptation(voAdaptation);
 
-        return reps;
+        return voReps;
     }
 
     function updateAvailabilityWindow(isDynamic) {
@@ -287,7 +287,7 @@ function RepresentationController() {
             addDVRMetric();
             postponeUpdate(postponeTimePeriod);
             err = new Error(SEGMENTS_UPDATE_FAILED_ERROR_CODE, 'Segments update failed', null);
-            eventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: this, data: data, currentRepresentation: currentVoRepresentation, error: err});
+            eventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: this, data: realAdaptation, currentRepresentation: currentVoRepresentation, error: err});
 
             return;
         }
@@ -318,7 +318,7 @@ function RepresentationController() {
                 addRepresentationSwitch();
             }
 
-            eventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: this, data: data, currentRepresentation: currentVoRepresentation});
+            eventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: this, data: realAdaptation, currentRepresentation: currentVoRepresentation});
         }
     }
 
