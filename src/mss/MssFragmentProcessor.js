@@ -656,7 +656,7 @@ function MssFragmentProcessor() {
     }
 
     function createTrackEncryptionBox(schi) {
-        var tenc = ISOBoxer.createFullBox('tenc', schi);
+        let tenc = ISOBoxer.createFullBox('tenc', schi);
 
         tenc.flags = 0;
         tenc.version = 0;
