@@ -201,13 +201,13 @@ function ScheduleController(config) {
                 if (currentRepresentationInfo.quality !== lastInitQuality) {
                     lastInitQuality = currentRepresentationInfo.quality;
 
-                    streamProcessor.switchInitData(currentRepresentationInfo.quality);
+                    streamProcessor.switchInitData(currentRepresentationInfo.id);
                 } else {
                     const replacement = replaceRequestArray.shift();
 
                     if (fragmentController.isInitializationRequest(replacement)) {
                         //to be sure the specific init segment had not already been loaded.
-                        bufferController.switchInitData(replacement.mediaInfo.streamInfo.id, replacement.representationId);
+                        streamProcessor.switchInitData(replacement.representationId);
                     } else {
                         const request = nextFragmentRequestRule.execute(streamProcessor, replacement);
                         if (request) {
