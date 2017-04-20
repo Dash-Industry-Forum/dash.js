@@ -142,7 +142,7 @@ function RepresentationController() {
         dashMetrics = null;
     }
 
-    function updateData(dataValue, voAdaptation, type) {
+    function updateData(newRealAdaptation, voAdaptation, type) {
         var quality,
             averageThroughput;
 
@@ -168,7 +168,7 @@ function RepresentationController() {
         }
 
         currentVoRepresentation = getRepresentationForQuality(quality);
-        data = dataValue;
+        data = newRealAdaptation;
 
         if (type !== 'video' && type !== 'audio' && type !== 'fragmentedText') {
             updating = false;
@@ -226,11 +226,11 @@ function RepresentationController() {
     }
 
     function updateAvailabilityWindow(isDynamic) {
-        var rep;
+        var voRepresentation;
 
         for (var i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
-            rep = voAvailableRepresentations[i];
-            rep.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(rep, isDynamic);
+            voRepresentation = voAvailableRepresentations[i];
+            voRepresentation.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(voRepresentation, isDynamic);
         }
     }
 
