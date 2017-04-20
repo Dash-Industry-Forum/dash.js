@@ -37,7 +37,6 @@ import LiveEdgeFinder from './utils/LiveEdgeFinder';
 import ErrorHandler from './utils/ErrorHandler';
 import Capabilities from './utils/Capabilities';
 import TextTracks from './text/TextTracks';
-import SourceBufferController from './controllers/SourceBufferController';
 import RequestModifier from './utils/RequestModifier';
 import TextController from './text/TextController';
 import URIQueryAndFragmentModel from './models/URIQueryAndFragmentModel';

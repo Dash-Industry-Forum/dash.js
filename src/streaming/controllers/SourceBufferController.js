@@ -33,7 +33,6 @@ import Error from '../vo/Error';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
-import DashManifestModel from '../../dash/models/DashManifestModel';
 
 const QUOTA_EXCEEDED_ERROR_CODE = 22;
 
