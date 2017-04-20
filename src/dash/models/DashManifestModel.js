@@ -55,19 +55,19 @@ function DashManifestModel() {
 
     function getIsTypeOf(adaptation, type) {
 
-        var i,
+        let i,
             len,
             representation;
-        var result = false;
-        var found = false;
+        let result = false;
+        let found = false;
 
-        var col = adaptation.ContentComponent_asArray;
-        var mimeTypeRegEx = (type !== 'text') ? new RegExp(type) : new RegExp('(vtt|ttml)');
+        let col = adaptation.ContentComponent_asArray;
+        let mimeTypeRegEx = (type !== 'text') ? new RegExp(type) : new RegExp('(vtt|ttml)');
 
         if ((adaptation.Representation_asArray.length > 0) &&
             (adaptation.Representation_asArray[0].hasOwnProperty('codecs'))) {
             // Just check the start of the codecs string
-            var codecs = adaptation.Representation_asArray[0].codecs;
+            let codecs = adaptation.Representation_asArray[0].codecs;
             if (codecs.search('stpp') === 0 || codecs.search('wvtt') === 0) {
                 return type === 'fragmentedText';
             }
@@ -131,7 +131,7 @@ function DashManifestModel() {
     }
 
     function getLanguageForAdaptation(adaptation) {
-        var lang = '';
+        let lang = '';
 
         if (adaptation.hasOwnProperty('lang')) {
             //Filter out any other characters not allowed according to RFC5646
@@ -177,8 +177,8 @@ function DashManifestModel() {
 
     function getAdaptationForId(id, manifest, periodIndex) {
 
-        var realAdaptations = manifest.Period_asArray[periodIndex].AdaptationSet_asArray;
-        var i,
+        let realAdaptations = manifest.Period_asArray[periodIndex].AdaptationSet_asArray;
+        let i,
             len;
 
         for (i = 0, len = realAdaptations.length; i < len; i++) {
@@ -191,14 +191,14 @@ function DashManifestModel() {
     }
 
     function getAdaptationForIndex(index, manifest, periodIndex) {
-        var realAdaptations = manifest.Period_asArray[periodIndex].AdaptationSet_asArray;
+        let realAdaptations = manifest.Period_asArray[periodIndex].AdaptationSet_asArray;
         return realAdaptations[index];
     }
 
     function getIndexForAdaptation(realAdaptation, manifest, periodIndex) {
 
-        var realAdaptations = manifest.Period_asArray[periodIndex].AdaptationSet_asArray;
-        var i,
+        let realAdaptations = manifest.Period_asArray[periodIndex].AdaptationSet_asArray;
+        let i,
             len;
 
         //if (!realAdaptation) {
@@ -214,10 +214,10 @@ function DashManifestModel() {
 
     function getAdaptationsForType(manifest, periodIndex, type) {
 
-        var realAdaptationSet = manifest.Period_asArray[periodIndex].AdaptationSet_asArray;
-        var i,
+        let realAdaptationSet = manifest.Period_asArray[periodIndex].AdaptationSet_asArray;
+        let i,
             len;
-        var adaptations = [];
+        let adaptations = [];
 
         for (i = 0, len = realAdaptationSet.length; i < len; i++) {
             if (getIsTypeOf(realAdaptationSet[i], type)) {
@@ -251,7 +251,7 @@ function DashManifestModel() {
     }
 
     function getCodec(adaptation) {
-        var representation = adaptation.Representation_asArray[0];
+        let representation = adaptation.Representation_asArray[0];
         return (representation.mimeType + ';codecs="' + representation.codecs + '"');
     }
 
@@ -274,7 +274,7 @@ function DashManifestModel() {
     }
 
     function getIsDynamic(manifest) {
-        var isDynamic = false;
+        let isDynamic = false;
         if (manifest.hasOwnProperty('type')) {
             isDynamic = (manifest.type === 'dynamic');
         }
@@ -282,8 +282,8 @@ function DashManifestModel() {
     }
 
     function getIsDVR(manifest) {
-        var isDynamic = getIsDynamic(manifest);
-        var containsDVR,
+        let isDynamic = getIsDynamic(manifest);
+        let containsDVR,
             isDVR;
 
         containsDVR = !isNaN(manifest.timeShiftBufferDepth);
@@ -293,7 +293,7 @@ function DashManifestModel() {
     }
 
     function hasProfile(manifest, profile) {
-        var has = false;
+        let has = false;
 
         if (manifest.profiles && manifest.profiles.length > 0) {
             has = (manifest.profiles.indexOf(profile) !== -1);
@@ -311,7 +311,7 @@ function DashManifestModel() {
     }
 
     function getDuration(manifest) {
-        var mpdDuration;
+        let mpdDuration;
         //@mediaPresentationDuration specifies the duration of the entire Media Presentation.
         //If the attribute is not present, the duration of the Media Presentation is unknown.
         if (manifest.hasOwnProperty('mediaPresentationDuration')) {
@@ -342,11 +342,11 @@ function DashManifestModel() {
     function getBitrateListForAdaptation(realAdaptation) {
         if (!realAdaptation || !realAdaptation.Representation_asArray || !realAdaptation.Representation_asArray.length) return null;
 
-        var processedRealAdaptation = processAdaptation(realAdaptation);
-        var realRepresentations = processedRealAdaptation.Representation_asArray;
-        var ln = realRepresentations.length;
-        var bitrateList = [];
-        var i = 0;
+        let processedRealAdaptation = processAdaptation(realAdaptation);
+        let realRepresentations = processedRealAdaptation.Representation_asArray;
+        let ln = realRepresentations.length;
+        let bitrateList = [];
+        let i = 0;
 
         for (i = 0; i < ln; i++) {
             bitrateList.push({
@@ -365,9 +365,9 @@ function DashManifestModel() {
     }
 
     function getRepresentationsForAdaptation(voAdaptation) {
-        var processedRealAdaptation = processAdaptation(voAdaptation.period.mpd.manifest.Period_asArray[voAdaptation.period.index].AdaptationSet_asArray[voAdaptation.index]);
-        var voRepresentations = [];
-        var voRepresentation,
+        let processedRealAdaptation = processAdaptation(voAdaptation.period.mpd.manifest.Period_asArray[voAdaptation.period.index].AdaptationSet_asArray[voAdaptation.index]);
+        let voRepresentations = [];
+        let voRepresentation,
             initialization,
             segmentInfo,
             realRepresentation,
@@ -492,9 +492,9 @@ function DashManifestModel() {
     }
 
     function getAdaptationsForPeriod(voPeriod) {
-        var realPeriod = voPeriod.mpd.manifest.Period_asArray[voPeriod.index];
-        var voAdaptations = [];
-        var voAdaptationSet,
+        let realPeriod = voPeriod.mpd.manifest.Period_asArray[voPeriod.index];
+        let voAdaptations = [];
+        let voAdaptationSet,
             realAdaptationSet,
             i;
 
@@ -528,13 +528,13 @@ function DashManifestModel() {
     }
 
     function getRegularPeriods(mpd) {
-        var isDynamic = getIsDynamic(mpd.manifest);
-        var voPeriods = [];
-        var realPeriod1 = null;
-        var realPeriod = null;
-        var voPeriod1 = null;
-        var voPeriod = null;
-        var len,
+        let isDynamic = getIsDynamic(mpd.manifest);
+        let voPeriods = [];
+        let realPeriod1 = null;
+        let realPeriod = null;
+        let voPeriod1 = null;
+        let voPeriod = null;
+        let len,
             i;
 
         for (i = 0, len = mpd.manifest.Period_asArray.length; i < len; i++) {
@@ -622,7 +622,7 @@ function DashManifestModel() {
     }
 
     function getMpd(manifest) {
-        var mpd = new Mpd();
+        let mpd = new Mpd();
 
         mpd.manifest = manifest;
 
@@ -678,16 +678,16 @@ function DashManifestModel() {
     }
 
     function getEventsForPeriod(period) {
-        var manifest = period.mpd.manifest;
-        var periodArray = manifest.Period_asArray;
-        var eventStreams = periodArray[period.index].EventStream_asArray;
-        var events = [];
-        var i,
+        let manifest = period.mpd.manifest;
+        let periodArray = manifest.Period_asArray;
+        let eventStreams = periodArray[period.index].EventStream_asArray;
+        let events = [];
+        let i,
             j;
 
         if (eventStreams) {
             for (i = 0; i < eventStreams.length; i++) {
-                var eventStream = new EventStream();
+                let eventStream = new EventStream();
                 eventStream.period = period;
                 eventStream.timescale = 1;
 
@@ -703,7 +703,7 @@ function DashManifestModel() {
                     eventStream.value = eventStreams[i].value;
                 }
                 for (j = 0; j < eventStreams[i].Event_asArray.length; j++) {
-                    var event = new Event();
+                    let event = new Event();
                     event.presentationTime = 0;
                     event.eventStream = eventStream;
 
@@ -725,13 +725,13 @@ function DashManifestModel() {
     }
 
     function getEventStreams(inbandStreams, representation) {
-        var eventStreams = [];
-        var i;
+        let eventStreams = [];
+        let i;
 
         if (!inbandStreams) return eventStreams;
 
         for (i = 0; i < inbandStreams.length ; i++ ) {
-            var eventStream = new EventStream();
+            let eventStream = new EventStream();
             eventStream.timescale = 1;
             eventStream.representation =  representation;
 
@@ -754,14 +754,14 @@ function DashManifestModel() {
 
     function getEventStreamForAdaptationSet(manifest, adaptation) {
         if (!adaptation || !manifest) return [];
-        var inbandStreams = manifest.Period_asArray[adaptation.period.index].
+        let inbandStreams = manifest.Period_asArray[adaptation.period.index].
             AdaptationSet_asArray[adaptation.index].InbandEventStream_asArray;
 
         return getEventStreams(inbandStreams, null);
     }
 
     function getEventStreamForRepresentation(manifest, representation) {
-        var inbandStreams = manifest.Period_asArray[representation.adaptation.period.index].
+        let inbandStreams = manifest.Period_asArray[representation.adaptation.period.index].
             AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].InbandEventStream_asArray;
 
         return getEventStreams(inbandStreams, representation);
@@ -769,10 +769,10 @@ function DashManifestModel() {
 
     function getUTCTimingSources(manifest) {
 
-        var isDynamic = getIsDynamic(manifest);
-        var hasAST = manifest.hasOwnProperty('availabilityStartTime');
-        var utcTimingsArray = manifest.UTCTiming_asArray;
-        var utcTimingEntries = [];
+        let isDynamic = getIsDynamic(manifest);
+        let hasAST = manifest.hasOwnProperty('availabilityStartTime');
+        let utcTimingsArray = manifest.UTCTiming_asArray;
+        let utcTimingEntries = [];
 
         // do not bother synchronizing the clock unless MPD is live,
         // or it is static and has availabilityStartTime attribute
@@ -782,7 +782,7 @@ function DashManifestModel() {
                 // in the manifest "indicates relative preference, first having
                 // the highest, and the last the lowest priority".
                 utcTimingsArray.forEach(function (utcTiming) {
-                    var entry = new UTCTiming();
+                    let entry = new UTCTiming();
 
                     if (utcTiming.hasOwnProperty('schemeIdUri')) {
                         entry.schemeIdUri = utcTiming.schemeIdUri;
