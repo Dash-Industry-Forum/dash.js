@@ -215,12 +215,12 @@ function RepresentationController() {
         return true;
     }
 
-    function updateRepresentations(adaptation) {
+    function updateRepresentations(voAdaptation) {
         var reps;
         var manifest = manifestModel.getValue();
 
-        dataIndex = dashManifestModel.getIndexForAdaptation(data, manifest, adaptation.period.index);
-        reps = dashManifestModel.getRepresentationsForAdaptation(adaptation);
+        dataIndex = dashManifestModel.getIndexForAdaptation(data, manifest, voAdaptation.period.index);
+        reps = dashManifestModel.getRepresentationsForAdaptation(voAdaptation);
 
         return reps;
     }
