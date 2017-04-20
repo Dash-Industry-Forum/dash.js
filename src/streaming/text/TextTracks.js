@@ -95,11 +95,11 @@ function TextTracks() {
 
     }
 
-    function createTrackForUserAgent(i) {
-        var kind = textTrackQueue[i].kind;
-        var label = textTrackQueue[i].label !== undefined ? textTrackQueue[i].label : textTrackQueue[i].lang;
-        var lang = textTrackQueue[i].lang;
-        var track = isChrome ? document.createElement('track') : video.addTextTrack(kind, label, lang);
+    function createTrackForUserAgent (i) {
+        let kind = textTrackQueue[i].kind;
+        let label = textTrackQueue[i].label !== undefined ? textTrackQueue[i].label : textTrackQueue[i].lang;
+        let lang = textTrackQueue[i].lang;
+        let track = isChrome ? document.createElement('track') : video.addTextTrack(kind, label, lang);
 
         if (isChrome) {
             track.kind = kind;
@@ -135,9 +135,9 @@ function TextTracks() {
                 return a.index - b.index;
             });
             captionContainer = videoModel.getTTMLRenderingDiv();
-            var defaultIndex = -1;
-            for (var i = 0; i < textTrackQueue.length; i++) {
-                var track = createTrackForUserAgent.call(this, i);
+            let defaultIndex = -1;
+            for (let i = 0 ; i < textTrackQueue.length; i++) {
+                let track = createTrackForUserAgent.call(this, i);
                 trackElementArr.push(track); //used to remove tracks from video element when added manually
 
                 if (textTrackQueue[i].defaultTrack) {
@@ -150,7 +150,7 @@ function TextTracks() {
                 if (isChrome) {
                     video.appendChild(track);
                 }
-                var textTrack = video.textTracks[i];
+                let textTrack = video.textTracks[i];
                 textTrack.nonAddedCues = [];
                 if (captionContainer && (textTrackQueue[i].isTTML || textTrackQueue[i].isEmbedded)) {
                     textTrack.renderingType = 'html';
@@ -175,11 +175,11 @@ function TextTracks() {
     }
 
     function getVideoVisibleVideoSize(viewWidth, viewHeight, videoWidth, videoHeight, aspectRatio, use80Percent) {
-        var viewAspectRatio = viewWidth / viewHeight;
-        var videoAspectRatio = videoWidth / videoHeight;
+        const viewAspectRatio = viewWidth / viewHeight;
+        const videoAspectRatio = videoWidth / videoHeight;
 
-        var videoPictureWidth = 0;
-        var videoPictureHeight = 0;
+        let videoPictureWidth = 0;
+        let videoPictureHeight = 0;
 
         if (viewAspectRatio > videoAspectRatio) {
             videoPictureHeight = viewHeight;
@@ -189,11 +189,11 @@ function TextTracks() {
             videoPictureHeight = (videoPictureWidth / videoWidth) * videoHeight;
         }
 
-        var videoPictureXAspect = 0;
-        var videoPictureYAspect = 0;
-        var videoPictureWidthAspect = 0;
-        var videoPictureHeightAspect = 0;
-        var videoPictureAspect = videoPictureWidth / videoPictureHeight;
+        let videoPictureXAspect = 0;
+        let videoPictureYAspect = 0;
+        let videoPictureWidthAspect = 0;
+        let videoPictureHeightAspect = 0;
+        const videoPictureAspect = videoPictureWidth / videoPictureHeight;
 
         if (videoPictureAspect > aspectRatio) {
             videoPictureHeightAspect = videoPictureHeight;
@@ -226,7 +226,7 @@ function TextTracks() {
 
 
     function checkVideoSize() {
-        var track = this.getCurrentTextTrack();
+        let track = this.getCurrentTextTrack();
         if (track && track.renderingType === 'html') {
             let aspectRatio = video.clientWidth / video.clientHeight;
             let use80Percent = false;
@@ -272,8 +272,8 @@ function TextTracks() {
     }
 
     function scaleImageCue(activeCue) {
-        var videoWidth = actualVideoWidth;
-        var videoHeight = actualVideoHeight;
+        let videoWidth = actualVideoWidth;
+        let videoHeight = actualVideoHeight;
 
         if (videoWidth * videoHeight === 0) {
             return; //At least one of the measures is still zero
@@ -305,24 +305,24 @@ function TextTracks() {
     }
 
     function scaleCue(activeCue) {
-        var videoWidth = actualVideoWidth;
-        var videoHeight = actualVideoHeight;
-        var key,
+        const videoWidth = actualVideoWidth;
+        const videoHeight = actualVideoHeight;
+        let key,
             replaceValue,
             valueFontSize,
             valueLineHeight,
             elements;
 
         if (activeCue.cellResolution) {
-            var cellUnit = [videoWidth / activeCue.cellResolution[0], videoHeight / activeCue.cellResolution[1]];
+            let cellUnit = [videoWidth / activeCue.cellResolution[0], videoHeight / activeCue.cellResolution[1]];
             if (activeCue.linePadding) {
                 for (key in activeCue.linePadding) {
                     if (activeCue.linePadding.hasOwnProperty(key)) {
-                        var valueLinePadding = activeCue.linePadding[key];
+                        let valueLinePadding = activeCue.linePadding[key];
                         replaceValue = (valueLinePadding * cellUnit[0]).toString();
                         // Compute the CellResolution unit in order to process properties using sizing (fontSize, linePadding, etc).
-                        var elementsSpan = document.getElementsByClassName('spanPadding');
-                        for (var i = 0; i < elementsSpan.length; i++) {
+                        let elementsSpan = document.getElementsByClassName('spanPadding');
+                        for (let i = 0; i < elementsSpan.length; i++) {
                             elementsSpan[i].style.cssText = elementsSpan[i].style.cssText.replace(/(padding-left\s*:\s*)[\d.,]+(?=\s*px)/gi, '$1' + replaceValue);
                             elementsSpan[i].style.cssText = elementsSpan[i].style.cssText.replace(/(padding-right\s*:\s*)[\d.,]+(?=\s*px)/gi, '$1' + replaceValue);
                         }
@@ -347,9 +347,8 @@ function TextTracks() {
                             elements = document.getElementsByClassName('paragraph');
                         }
 
-                        for (var j = 0; j < elements.length; j++) {
-                            elements[j].style.cssText = elements[j].style.cssText.replace(/(font-size\s*:\s*)[\d.,]+(?=\s*px)/gi, '$1' + replaceValue);
-                        }
+                    for (let j = 0; j < elements.length; j++) {
+                        elements[j].style.cssText = elements[j].style.cssText.replace(/(font-size\s*:\s*)[\d.,]+(?=\s*px)/gi, '$1' + replaceValue);
                     }
                 }
             }
@@ -363,11 +362,10 @@ function TextTracks() {
                             valueLineHeight = activeCue.lineHeight[key][1];
                         }
 
-                        replaceValue = (valueLineHeight * cellUnit[1]).toString();
-                        elements = document.getElementsByClassName(key);
-                        for (var k = 0; k < elements.length; k++) {
-                            elements[k].style.cssText = elements[k].style.cssText.replace(/(line-height\s*:\s*)[\d.,]+(?=\s*px)/gi, '$1' + replaceValue);
-                        }
+                    replaceValue = (valueLineHeight * cellUnit[1]).toString();
+                    elements = document.getElementsByClassName(key);
+                    for (let k = 0; k < elements.length; k++) {
+                        elements[k].style.cssText = elements[k].style.cssText.replace(/(line-height\s*:\s*)[\d.,]+(?=\s*px)/gi, '$1' + replaceValue);
                     }
                 }
             }
@@ -378,8 +376,8 @@ function TextTracks() {
      * Add captions to track, store for later adding, or add captions added before
      */
     function addCaptions(trackIdx, timeOffset, captionData) {
-        var track = trackIdx >= 0 ? video.textTracks[trackIdx] : null;
-        var self = this;
+        let track = trackIdx >= 0 ?  video.textTracks[trackIdx] : null;
+        let self = this;
 
         if (!track) {
             return;
@@ -400,9 +398,9 @@ function TextTracks() {
             return;
         }
 
-        for (var item in captionData) {
-            var cue;
-            var currentItem = captionData[item];
+        for (let item in captionData) {
+            let cue;
+            const currentItem = captionData[item];
 
             track.cellResolution = currentItem.cellResolution;
             track.isFromCEA608 = currentItem.isFromCEA608;
@@ -425,7 +423,7 @@ function TextTracks() {
                         return;
                     }
                     if (track.mode === 'showing') {
-                        var img = new Image();
+                        let img = new Image();
                         img.id = 'ttmlImage_' + this.id;
                         img.src = this.image;
                         //img.className = 'cue-image';
@@ -497,9 +495,9 @@ function TextTracks() {
                     }
                 };
 
-                cue.onexit = function () {
-                    var divs = captionContainer.childNodes;
-                    for (var i = 0; i < divs.length; ++i) {
+                cue.onexit =  function () {
+                    let divs = captionContainer.childNodes;
+                    for (let i = 0; i < divs.length; ++i) {
                         if (divs[i].id === this.cueID) {
                             log('Cue exit id:' + divs[i].id);
                             captionContainer.removeChild(divs[i]);
@@ -537,8 +535,8 @@ function TextTracks() {
     }
 
     function getTrackIdxForId(trackId) {
-        var idx = -1;
-        for (var i = 0; i < video.textTracks.length; i++) {
+        let idx = -1;
+        for (let i = 0; i < video.textTracks.length; i++) {
             if (video.textTracks[i].label === trackId) {
                 idx = i;
                 break;
@@ -551,7 +549,7 @@ function TextTracks() {
         currentTrackIdx = idx;
         clearCaptionContainer.call(this);
         if (idx >= 0) {
-            var track = video.textTracks[idx];
+            let track = video.textTracks[idx];
             if (track.renderingType === 'html') {
                 setNativeCueStyle.call(this);
             } else {
@@ -568,10 +566,10 @@ function TextTracks() {
 
     function deleteTrackCues(track) {
         if (track.cues) {
-            var cues = track.cues;
-            var lastIdx = cues.length - 1;
+            let cues = track.cues;
+            const lastIdx = cues.length - 1;
 
-            for (var r = lastIdx; r >= 0; r--) {
+            for (let r = lastIdx; r >= 0 ; r--) {
                 track.removeCue(cues[r]);
             }
 
@@ -588,12 +586,12 @@ function TextTracks() {
     }
 
     function deleteAllTextTracks() {
-        var ln = trackElementArr.length;
-        for (var i = 0; i < ln; i++) {
+        const ln = trackElementArr.length;
+        for (let i = 0; i < ln; i++) {
             if (isChrome) {
                 video.removeChild(trackElementArr[i]);
-            } else {
-                var track = getTextTrack.call(this, i);
+            }else {
+                let track = getTextTrack.call(this, i);
                 track.nonAddedCues = [];
                 deleteTrackCues.call(this, track);
             }
@@ -618,15 +616,16 @@ function TextTracks() {
         if (!isChrome) {
             return;
         }
-        var styleElement = document.getElementById('native-cue-style');
+        let styleElement = document.getElementById('native-cue-style');
         if (styleElement) {
             return; //Already set
         }
 
+
         styleElement = document.createElement('style');
         styleElement.id = 'native-cue-style';
         document.head.appendChild(styleElement);
-        var stylesheet = styleElement.sheet;
+        let stylesheet = styleElement.sheet;
         if (video.id) {
             stylesheet.insertRule('#' + video.id + '::cue {background: transparent}', 0);
         } else if (video.classList.length !== 0) {
@@ -641,7 +640,7 @@ function TextTracks() {
         if (!isChrome) {
             return;
         }
-        var styleElement = document.getElementById('native-cue-style');
+        let styleElement = document.getElementById('native-cue-style');
         if (styleElement) {
             document.head.removeChild(styleElement);
         }

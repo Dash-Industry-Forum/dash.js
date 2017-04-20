@@ -47,7 +47,7 @@ function ReportingController(config) {
         // to ignore this, and support multiple Reporting per Metric,
         // simply change the 'some' below to 'forEach'
         reporting.some(r => {
-            var reporter = reportingFactory.create(r, rangeController);
+            let reporter = reportingFactory.create(r, rangeController);
 
             if (reporter) {
                 reporters.push(reporter);

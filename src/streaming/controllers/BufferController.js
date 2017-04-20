@@ -376,7 +376,7 @@ function BufferController(config) {
     }
 
     function hasEnoughSpaceToAppend() {
-        var totalBufferedTime = sourceBufferController.getTotalBufferedTime(buffer);
+        const totalBufferedTime = sourceBufferController.getTotalBufferedTime(buffer);
         return (totalBufferedTime < criticalBufferLevel);
     }
 

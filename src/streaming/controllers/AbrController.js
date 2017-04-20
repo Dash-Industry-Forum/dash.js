@@ -172,7 +172,7 @@ function AbrController() {
     }
 
     function getTopQualityIndexFor(type, id) {
-        var idx;
+        let idx;
         topQualities[id] = topQualities[id] || {};
 
         if (!topQualities[id].hasOwnProperty(type)) {
@@ -414,13 +414,13 @@ function AbrController() {
     function getBitrateList(mediaInfo) {
         if (!mediaInfo || !mediaInfo.bitrateList) return null;
 
-        var bitrateList = mediaInfo.bitrateList;
-        var type = mediaInfo.type;
+        let bitrateList = mediaInfo.bitrateList;
+        let type = mediaInfo.type;
 
-        var infoList = [];
-        var bitrateInfo;
+        let infoList = [];
+        let bitrateInfo;
 
-        for (var i = 0, ln = bitrateList.length; i < ln; i++) {
+        for (let i = 0, ln = bitrateList.length; i < ln; i++) {
             bitrateInfo = new BitrateInfo();
             bitrateInfo.mediaType = type;
             bitrateInfo.qualityIndex = i;
@@ -459,9 +459,9 @@ function AbrController() {
     }
 
     function updateTopQualityIndex(mediaInfo) {
-        var type = mediaInfo.type;
-        var streamId = mediaInfo.streamInfo.id;
-        var max = mediaInfo.representationCount - 1;
+        let type = mediaInfo.type;
+        let streamId = mediaInfo.streamInfo.id;
+        let max = mediaInfo.representationCount - 1;
 
         setTopQualityIndex(type, streamId, max);
 
@@ -469,10 +469,10 @@ function AbrController() {
     }
 
     function isPlayingAtTopQuality(streamInfo) {
-        var isAtTop;
-        var streamId = streamInfo.id;
-        var audioQuality = getQualityFor('audio');
-        var videoQuality = getQualityFor('video');
+        let isAtTop;
+        let streamId = streamInfo.id;
+        const audioQuality = getQualityFor('audio');
+        const videoQuality = getQualityFor('video');
 
         isAtTop = (audioQuality === getTopQualityIndexFor('audio', streamId)) &&
             (videoQuality === getTopQualityIndexFor('video', streamId));
@@ -482,9 +482,9 @@ function AbrController() {
 
     function getQualityFor(type) {
         if (type && streamProcessorDict[type]) {
-            var streamInfo = streamProcessorDict[type].getStreamInfo();
-            var id = streamInfo ? streamInfo.id : null;
-            var quality;
+            let streamInfo = streamProcessorDict[type].getStreamInfo();
+            const id = streamInfo ? streamInfo.id : null;
+            let quality;
 
             if (id) {
                 qualityDict[id] = qualityDict[id] || {};
@@ -511,21 +511,21 @@ function AbrController() {
     }
 
     function checkMaxBitrate(idx, type) {
-        var newIdx = idx;
+        let newIdx = idx;
 
         if (!streamProcessorDict[type]) {
             return newIdx;
         }
 
-        var minBitrate = getMinAllowedBitrateFor(type);
+        let minBitrate = getMinAllowedBitrateFor(type);
         if (minBitrate) {
-            var minIdx = getQualityForBitrate(streamProcessorDict[type].getMediaInfo(), minBitrate);
+            let minIdx = getQualityForBitrate(streamProcessorDict[type].getMediaInfo(), minBitrate);
             newIdx = Math.max (idx , minIdx);
         }
 
-        var maxBitrate = getMaxAllowedBitrateFor(type);
+        let maxBitrate = getMaxAllowedBitrateFor(type);
         if (maxBitrate) {
-            var maxIdx = getQualityForBitrate(streamProcessorDict[type].getMediaInfo(), maxBitrate);
+            let maxIdx = getQualityForBitrate(streamProcessorDict[type].getMediaInfo(), maxBitrate);
             newIdx = Math.min (newIdx , maxIdx);
         }
 
@@ -533,7 +533,7 @@ function AbrController() {
     }
 
     function checkMaxRepresentationRatio(idx, type, maxIdx) {
-        var maxRepresentationRatio = getMaxAllowedRepresentationRatioFor(type);
+        let maxRepresentationRatio = getMaxAllowedRepresentationRatioFor(type);
         if (isNaN(maxRepresentationRatio) || maxRepresentationRatio >= 1 || maxRepresentationRatio < 0) {
             return idx;
         }
@@ -545,8 +545,8 @@ function AbrController() {
     }
 
     function setElementSize() {
-        var hasPixelRatio = usePixelRatioInLimitBitrateByPortal && window.hasOwnProperty('devicePixelRatio');
-        var pixelRatio = hasPixelRatio ? window.devicePixelRatio : 1;
+        let hasPixelRatio = usePixelRatioInLimitBitrateByPortal && window.hasOwnProperty('devicePixelRatio');
+        let pixelRatio = hasPixelRatio ? window.devicePixelRatio : 1;
         elementWidth = videoModel.getClientWidth() * pixelRatio;
         elementHeight = videoModel.getClientHeight() * pixelRatio;
     }
@@ -560,9 +560,9 @@ function AbrController() {
             setElementSize();
         }
 
-        var manifest = manifestModel.getValue();
-        var representation = dashManifestModel.getAdaptationForType(manifest, 0, type).Representation;
-        var newIdx = idx;
+        let manifest = manifestModel.getValue();
+        let representation = dashManifestModel.getAdaptationForType(manifest, 0, type).Representation;
+        let newIdx = idx;
 
         if (elementWidth > 0 && elementHeight > 0) {
             while (

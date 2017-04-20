@@ -199,16 +199,16 @@ function StreamController() {
     }
 
     function getStreamForTime(time) {
-        var duration = 0;
-        var stream = null;
+        let duration = 0;
+        let stream = null;
 
-        var ln = streams.length;
+        const ln = streams.length;
 
         if (ln > 0) {
             duration += streams[0].getStartTime();
         }
 
-        for (var i = 0; i < ln; i++) {
+        for (let i = 0; i < ln; i++) {
             stream = streams[i];
             duration += stream.getDuration();
 
@@ -228,14 +228,14 @@ function StreamController() {
      * @returns {number|null}
      */
     function getTimeRelativeToStreamId(time, id) {
-        var stream = null;
-        var baseStart = 0;
-        var streamStart = 0;
-        var streamDur = null;
+        let stream = null;
+        let baseStart = 0;
+        let streamStart = 0;
+        let streamDur = null;
 
-        var ln = streams.length;
+        const ln = streams.length;
 
-        for (var i = 0; i < ln; i++) {
+        for (let i = 0; i < ln; i++) {
             stream = streams[i];
             streamStart = stream.getStartTime();
             streamDur = stream.getDuration();
@@ -448,15 +448,15 @@ function StreamController() {
         if (!e.error) {
             //Since streams are not composed yet , need to manually look up useCalculatedLiveEdgeTime to detect if stream
             //is SegmentTimeline to avoid using time source
-            var manifest = e.manifest;
+            let manifest = e.manifest;
             adapter.updatePeriods(manifest);
-            var streamInfo = adapter.getStreamsInfo()[0];
-            var mediaInfo = (
+            let streamInfo = adapter.getStreamsInfo()[0];
+            let mediaInfo = (
                 adapter.getMediaInfoForType(streamInfo, 'video') ||
                 adapter.getMediaInfoForType(streamInfo, 'audio')
             );
 
-            var voAdaptation,
+            let voAdaptation,
                 useCalculatedLiveEdgeTime;
 
             if (mediaInfo) {
@@ -469,9 +469,9 @@ function StreamController() {
                 }
             }
 
-            var manifestUTCTimingSources = dashManifestModel.getUTCTimingSources(e.manifest);
-            var allUTCTimingSources = (!dashManifestModel.getIsDynamic(manifest) || useCalculatedLiveEdgeTime) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(mediaPlayerModel.getUTCTimingSources());
-            var isHTTPS = URIQueryAndFragmentModel(context).getInstance().isManifestHTTPS();
+            let manifestUTCTimingSources = dashManifestModel.getUTCTimingSources(e.manifest);
+            let allUTCTimingSources = (!dashManifestModel.getIsDynamic(manifest) || useCalculatedLiveEdgeTime) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(mediaPlayerModel.getUTCTimingSources());
+            let isHTTPS = URIQueryAndFragmentModel(context).getInstance().isManifestHTTPS();
 
             //If https is detected on manifest then lets apply that protocol to only the default time source(s). In the future we may find the need to apply this to more then just default so left code at this level instead of in MediaPlayer.
             allUTCTimingSources.forEach(function (item) {
@@ -517,7 +517,7 @@ function StreamController() {
         if (playListMetrics) {
             if (activeStream) {
                 activeStream.getProcessors().forEach(p => {
-                    var ctrlr = p.getScheduleController();
+                    let ctrlr = p.getScheduleController();
                     if (ctrlr) {
                         ctrlr.finalisePlayList(time, reason);
                     }
@@ -536,7 +536,7 @@ function StreamController() {
 
         if (activeStream) {
             activeStream.getProcessors().forEach(p => {
-                var ctrlr = p.getScheduleController();
+                let ctrlr = p.getScheduleController();
                 if (ctrlr) {
                     ctrlr.setPlayList(playListMetrics);
                 }

@@ -88,7 +88,7 @@ function ManifestLoader(config) {
     }
 
     function createParser(data) {
-        var parser = null;
+        let parser = null;
         // Analyze manifest content to detect protocol and select appropriate parser
         if (data.indexOf('SmoothStreamingMedia') > -1) {
             //do some business to transform it into a Dash Manifest
@@ -112,8 +112,8 @@ function ManifestLoader(config) {
         xhrLoader.load({
             request: request,
             success: function (data, textStatus, xhr) {
-                var actualUrl;
-                var baseUri;
+                let actualUrl,
+                    baseUri;
 
                 // Handle redirects for the MPD - as per RFC3986 Section 5.1.3
                 // also handily resolves relative MPD URLs to absolute

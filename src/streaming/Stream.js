@@ -204,7 +204,7 @@ function Stream(config) {
      * @memberof Stream#
      */
     function getBitrateListFor(type) {
-        var mediaInfo = getMediaInfo(type);
+        let mediaInfo = getMediaInfo(type);
         return abrController.getBitrateList(mediaInfo);
     }
 
@@ -241,8 +241,8 @@ function Stream(config) {
     }
 
     function isMediaSupported(mediaInfo) {
-        var type = mediaInfo.type;
-        var codec,
+        const type = mediaInfo.type;
+        let codec,
             msg;
 
         if (type === 'muxed' && mediaInfo) {
@@ -272,14 +272,14 @@ function Stream(config) {
     function onCurrentTrackChanged(e) {
         if (e.newMediaInfo.streamInfo.id !== streamInfo.id) return;
 
-        var processor = getProcessorForMediaInfo(e.oldMediaInfo);
+        let processor = getProcessorForMediaInfo(e.oldMediaInfo);
         if (!processor) return;
 
-        var currentTime = playbackController.getTime();
-        var buffer = processor.getBuffer();
-        var mediaInfo = e.newMediaInfo;
-        var idx = streamProcessors.indexOf(processor);
-        var mediaSource = processor.getMediaSource();
+        let currentTime = playbackController.getTime();
+        let buffer = processor.getBuffer();
+        let mediaInfo = e.newMediaInfo;
+        let idx = streamProcessors.indexOf(processor);
+        let mediaSource = processor.getMediaSource();
 
         if (mediaInfo.type !== 'fragmentedText') {
             processor.reset(true);
@@ -291,14 +291,14 @@ function Stream(config) {
     }
 
     function createStreamProcessor(mediaInfo, mediaSource, optionalSettings) {
-        var streamProcessor = StreamProcessor(context).create({
+        let streamProcessor = StreamProcessor(context).create({
             mimeType: mediaInfo.mimeType,
             timelineConverter: timelineConverter,
             adapter: adapter,
             baseURLController: baseURLController
         });
 
-        var allMediaForType = adapter.getAllMediaInfoForType(streamInfo, mediaInfo.type);
+        let allMediaForType = adapter.getAllMediaInfoForType(streamInfo, mediaInfo.type);
         streamProcessor.initialize(getMimeTypeOrType(mediaInfo), fragmentController, mediaSource, instance, eventController);
         abrController.updateTopQualityIndex(mediaInfo);
 
@@ -311,8 +311,8 @@ function Stream(config) {
         }
 
         if ((mediaInfo.type === 'text' || mediaInfo.type === 'fragmentedText')) {
-            var idx;
-            for (var i = 0; i < allMediaForType.length; i++) {
+            let idx;
+            for (let i = 0; i < allMediaForType.length; i++) {
                 if (allMediaForType[i].index === mediaInfo.index) {
                     idx = i;
                 }
@@ -327,17 +327,17 @@ function Stream(config) {
     }
 
     function initializeMediaForType(type, mediaSource) {
-        var allMediaForType = adapter.getAllMediaInfoForType(streamInfo, type);
+        const allMediaForType = adapter.getAllMediaInfoForType(streamInfo, type);
 
-        var mediaInfo = null;
-        var initialMediaInfo;
+        let mediaInfo = null;
+        let initialMediaInfo;
 
         if (!allMediaForType || allMediaForType.length === 0) {
             log('No ' + type + ' data.');
             return;
         }
 
-        for (var i = 0, ln = allMediaForType.length; i < ln; i++) {
+        for (let i = 0, ln = allMediaForType.length; i < ln; i++) {
             mediaInfo = allMediaForType[i];
 
             if (type === 'embeddedText') {
@@ -365,7 +365,7 @@ function Stream(config) {
     }
 
     function initializeMedia(mediaSource) {
-        var events;
+        let events;
 
         eventController = EventController(context).getInstance();
         eventController.initialize();
@@ -392,7 +392,7 @@ function Stream(config) {
         isUpdating = false;
 
         if (streamProcessors.length === 0) {
-            var msg = 'No streams to play.';
+            let msg = 'No streams to play.';
             errHandler.manifestError(msg, 'nostreams', manifestModel.getValue());
             log(msg);
         } else {
@@ -403,12 +403,11 @@ function Stream(config) {
     }
 
     function checkIfInitializationCompleted() {
-        var ln = streamProcessors.length;
-        var hasError = !!updateError.audio || !!updateError.video;
-        var error = hasError ? new Error(DATA_UPDATE_FAILED_ERROR_CODE, 'Data update failed', null) : null;
-        var i = 0;
+        const ln = streamProcessors.length;
+        const hasError = !!updateError.audio || !!updateError.video;
+        let error = hasError ? new Error(DATA_UPDATE_FAILED_ERROR_CODE, 'Data update failed', null) : null;
 
-        for (i; i < ln; i++) {
+        for (let i = 0; i < ln; i++) {
             if (streamProcessors[i].isUpdating() || isUpdating) return;
         }
 
@@ -421,10 +420,10 @@ function Stream(config) {
     }
 
     function getMediaInfo(type) {
-        var ln = streamProcessors.length;
-        var mediaCtrl = null;
+        const ln = streamProcessors.length;
+        let mediaCtrl = null;
 
-        for (var i = 0; i < ln; i++) {
+        for (let i = 0; i < ln; i++) {
             mediaCtrl = streamProcessors[i];
 
             if (mediaCtrl.getType() === type) return mediaCtrl.getMediaInfo();
@@ -434,7 +433,7 @@ function Stream(config) {
     }
 
     function createBuffers() {
-        for (var i = 0, ln = streamProcessors.length; i < ln; i++) {
+        for (let i = 0, ln = streamProcessors.length; i < ln; i++) {
             streamProcessors[i].createBuffer();
         }
     }
@@ -442,12 +441,11 @@ function Stream(config) {
     function onBufferingCompleted(e) {
         if (e.streamInfo !== streamInfo) return;
 
-        var processors = getProcessors();
-        var ln = processors.length;
-        var i = 0;
+        let processors = getProcessors();
+        const ln = processors.length;
 
         // if there is at least one buffer controller that has not completed buffering yet do nothing
-        for (i; i < ln; i++) {
+        for (let i = 0; i < ln; i++) {
             if (!processors[i].isBufferingCompleted()) return;
         }
 
@@ -455,7 +453,7 @@ function Stream(config) {
     }
 
     function onDataUpdateCompleted(e) {
-        var sp = e.sender.getStreamProcessor();
+        let sp = e.sender.getStreamProcessor();
 
         if (sp.getStreamInfo() !== streamInfo) return;
 
@@ -466,7 +464,7 @@ function Stream(config) {
     function getProcessorForMediaInfo(mediaInfo) {
         if (!mediaInfo) return false;
 
-        var processors = getProcessors();
+        let processors = getProcessors();
 
         return processors.filter(function (processor) {
             return (processor.getType() === mediaInfo.type);
@@ -474,14 +472,13 @@ function Stream(config) {
     }
 
     function getProcessors() {
-        var ln = streamProcessors.length;
-        var arr = [];
-        var i = 0;
+        const ln = streamProcessors.length;
+        let arr = [];
 
-        var type,
+        let type,
             controller;
 
-        for (i; i < ln; i++) {
+        for (let i = 0; i < ln; i++) {
             controller = streamProcessors[i];
             type = controller.getType();
 

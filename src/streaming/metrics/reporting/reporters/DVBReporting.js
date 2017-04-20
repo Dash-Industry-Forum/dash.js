@@ -48,9 +48,9 @@ function DVBReporting() {
     let pendingRequests = [];
 
     function doGetRequest(url, successCB, failureCB) {
-        var req = new XMLHttpRequest();
-        var oncomplete = function () {
-            var reqIndex = pendingRequests.indexOf(req);
+        let req = new XMLHttpRequest();
+        const oncomplete = function () {
+            let reqIndex = pendingRequests.indexOf(req);
 
             if (reqIndex === -1) {
                 return;
@@ -95,7 +95,7 @@ function DVBReporting() {
             // This reporting mechanism operates by creating one HTTP GET
             // request for every entry in the top level list of the metric.
             vos.forEach(function (vo) {
-                var url = metricSerialiser.serialise(vo);
+                let url = metricSerialiser.serialise(vo);
 
                 // this has been proposed for errata
                 if (USE_DRAFT_DVB_SPEC && (type !== 'DVBErrors')) {
@@ -123,7 +123,7 @@ function DVBReporting() {
     }
 
     function initialize(entry, rc) {
-        var probability;
+        let probability;
 
         rangeController = rc;
 

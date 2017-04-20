@@ -41,9 +41,9 @@ class CommonEncryption {
      * null if one was not found
      */
     static findCencContentProtection(cpArray) {
-        var retVal = null;
-        for (var i = 0; i < cpArray.length; ++i) {
-            var cp = cpArray[i];
+        let retVal = null;
+        for (let i = 0; i < cpArray.length; ++i) {
+            let cp = cpArray[i];
             if (cp.schemeIdUri.toLowerCase() === 'urn:mpeg:dash:mp4protection:2011' &&
                     cp.value.toLowerCase() === 'cenc')
                 retVal = cp;
@@ -58,11 +58,11 @@ class CommonEncryption {
      * @return {ArrayBuffer} data portion of the PSSH
      */
     static getPSSHData(pssh) {
-        var offset = 8; // Box size and type fields
-        var view = new DataView(pssh);
+        let offset = 8; // Box size and type fields
+        let view = new DataView(pssh);
 
         // Read version
-        var version = view.getUint8(offset);
+        let version = view.getUint8(offset);
 
         offset += 20; // Version (1), flags (3), system ID (16)
 
@@ -85,7 +85,7 @@ class CommonEncryption {
      * or null if a valid association could not be found.
      */
     static getPSSHForKeySystem(keySystem, initData) {
-        var psshList = CommonEncryption.parsePSSHList(initData);
+        let psshList = CommonEncryption.parsePSSHList(initData);
         if (psshList.hasOwnProperty(keySystem.uuid.toLowerCase())) {
             return psshList[keySystem.uuid.toLowerCase()];
         }
@@ -120,20 +120,20 @@ class CommonEncryption {
         if (data === null)
             return [];
 
-        var dv = new DataView(data);
-        var done = false;
-        var pssh = {};
+        let dv = new DataView(data);
+        let done = false;
+        let pssh = {};
 
         // TODO: Need to check every data read for end of buffer
-        var byteCursor = 0;
+        let byteCursor = 0;
         while (!done) {
 
-            var size,
+            let size,
                 nextBox,
                 version,
                 systemID,
                 psshDataSize;
-            var boxStart = byteCursor;
+            let boxStart = byteCursor;
 
             if (byteCursor >= dv.buffer.byteLength)
                 break;
@@ -162,7 +162,7 @@ class CommonEncryption {
 
             // 16-byte UUID/SystemID
             systemID = '';
-            var i, val;
+            let i, val;
             for (i = 0; i < 4; i++) {
                 val = dv.getUint8(byteCursor + i).toString(16);
                 systemID += (val.length === 1) ? '0' + val : val;
