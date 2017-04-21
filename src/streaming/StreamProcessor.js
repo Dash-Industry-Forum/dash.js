@@ -273,7 +273,6 @@ function StreamProcessor(config) {
             controller = TextBufferController(context).create({
                 type: type,
                 metricsModel: MetricsModel(context).getInstance(),
-                manifestModel: manifestModel,
                 sourceBufferController: SourceBufferController(context).getInstance(),
                 errHandler: ErrorHandler(context).getInstance(),
                 streamController: StreamController(context).getInstance(),

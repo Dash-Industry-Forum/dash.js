@@ -48,7 +48,6 @@ function TextBufferController(config) {
             // in this case, internal buffer ocntroller is a classical BufferController object
             _BufferControllerImpl = BufferController(context).create({
                 metricsModel: config.metricsModel,
-                manifestModel: config.manifestModel,
                 sourceBufferController: config.sourceBufferController,
                 errHandler: config.errHandler,
                 streamController: config.streamController,
