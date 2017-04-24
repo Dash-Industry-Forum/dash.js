@@ -116,7 +116,6 @@ function MediaController() {
 
     /**
      * @param {MediaInfo} track
-     * @returns {boolean}
      * @memberof MediaController#
      */
     function addTrack(track) {
@@ -124,19 +123,17 @@ function MediaController() {
         var streamId = track ? track.streamInfo.id : null;
         var initSettings = getInitialSettings(mediaType);
 
-        if (!track || (!isMultiTrackSupportedByType(mediaType))) return false;
+        if (!track || (!isMultiTrackSupportedByType(mediaType))) return;
 
         tracks[streamId] = tracks[streamId] || createTrackInfo();
 
-        if (tracks[streamId][mediaType].list.indexOf(track) >= 0) return false;
+        if (tracks[streamId][mediaType].list.indexOf(track) >= 0) return;
 
         tracks[streamId][mediaType].list.push(track);
 
         if (initSettings && (matchSettings(initSettings, track)) && !getCurrentTrackFor(mediaType, track.streamInfo)) {
             setTrack(track);
         }
-
-        return true;
     }
 
     /**
