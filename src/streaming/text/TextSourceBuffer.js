@@ -332,7 +332,7 @@ function TextSourceBuffer() {
                             subOffset += sample.subSizes[j];
                         }
                         try {
-                            // check if we must apply an offset to ttml time
+                            // Only used for Miscrosoft Smooth Streaming support - caption time is relative to sample time. In this case, we apply an offset.
                             let manifest = manifestModel.getValue();
                             let offsetTime = manifest.ttmlTimeIsRelative ? sampleStart / timescale : 0;
                             result = parser.parse(ccContent, sampleStart / timescale, (sampleStart + sample.duration) / timescale, images, offsetTime);
