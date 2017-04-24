@@ -33,7 +33,6 @@ import DashMetrics from '../DashMetrics';
 import TimelineConverter from '../utils/TimelineConverter';
 import AbrController from '../../streaming/controllers/AbrController';
 import PlaybackController from '../../streaming/controllers/PlaybackController';
-import ManifestModel from '../../streaming/models/ManifestModel';
 import MetricsModel from '../../streaming/models/MetricsModel';
 import DOMStorage from '../../streaming/utils/DOMStorage';
 import Error from '../../streaming/vo/Error';
@@ -60,7 +59,6 @@ function RepresentationController() {
         abrController,
         indexHandler,
         playbackController,
-        manifestModel,
         metricsModel,
         domStorage,
         timelineConverter,
@@ -75,7 +73,6 @@ function RepresentationController() {
 
         abrController = AbrController(context).getInstance();
         playbackController = PlaybackController(context).getInstance();
-        manifestModel = ManifestModel(context).getInstance();
         metricsModel = MetricsModel(context).getInstance();
         domStorage = DOMStorage(context).getInstance();
         timelineConverter = TimelineConverter(context).getInstance();
@@ -134,7 +131,6 @@ function RepresentationController() {
         voAvailableRepresentations = [];
         abrController = null;
         playbackController = null;
-        manifestModel = null;
         metricsModel = null;
         domStorage = null;
         timelineConverter = null;
@@ -217,9 +213,8 @@ function RepresentationController() {
 
     function updateRepresentations(voAdaptation) {
         let voReps;
-        let manifest = manifestModel.getValue();
 
-        realAdaptationIndex = dashManifestModel.getIndexForAdaptation(realAdaptation, manifest, voAdaptation.period.index);
+        realAdaptationIndex = dashManifestModel.getIndexForAdaptation(realAdaptation, voAdaptation.period.mpd.manifest, voAdaptation.period.index);
         voReps = dashManifestModel.getRepresentationsForAdaptation(voAdaptation);
 
         return voReps;

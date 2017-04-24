@@ -196,18 +196,16 @@ function DashManifestModel() {
     }
 
     function getIndexForAdaptation(realAdaptation, manifest, periodIndex) {
-
         let realAdaptations = manifest.Period_asArray[periodIndex].AdaptationSet_asArray;
-        let i,
-            len;
+        const len = realAdaptations.length;
 
-        //if (!realAdaptation) {
-        for (i = 0, len = realAdaptations.length; i < len; i++) {
-            if (realAdaptations[i] === realAdaptation) {
-                return i;
+        if (realAdaptation) {
+            for (let i = 0; i < len; i++) {
+                if (JSON.stringify(realAdaptations[i]) === JSON.stringify(realAdaptation)) {
+                    return i;
+                }
             }
         }
-        //}
 
         return -1;
     }
