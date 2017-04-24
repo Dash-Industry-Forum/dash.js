@@ -1891,6 +1891,7 @@ function MediaPlayer() {
     function createControllers() {
 
         let abrRulesCollection = ABRRulesCollection(context).getInstance();
+        abrRulesCollection.reset();
         abrRulesCollection.initialize();
 
         let sourceBufferController = SourceBufferController(context).getInstance();
