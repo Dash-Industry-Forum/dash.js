@@ -62,18 +62,6 @@ function FragmentModel(config) {
         eventBus.on(Events.LOADING_COMPLETED, onLoadingCompleted, instance);
     }
 
-    function setScheduleController(value) {
-        scheduleController = value;
-    }
-
-    function getScheduleController() {
-        return scheduleController;
-    }
-
-    function getStreamProcessor() {
-        return scheduleController ? scheduleController.getStreamProcessor() : null;
-    }
-
     function setLoader(value) {
         fragmentLoader = value;
     }
@@ -259,9 +247,6 @@ function FragmentModel(config) {
 
     instance = {
         setLoader: setLoader,
-        setScheduleController: setScheduleController,
-        getScheduleController: getScheduleController,
-        getStreamProcessor: getStreamProcessor,
         getRequests: getRequests,
         isFragmentLoaded: isFragmentLoaded,
         removeExecutedRequestsBeforeTime: removeExecutedRequestsBeforeTime,
