@@ -8,6 +8,9 @@ function SwitchRequestHistory() {
     let srHistory = []; // history of each switch
 
     function push(switchRequest) {
+        if (switchRequest.newValue < 0) {
+            return
+        }
         if (!switchRequests[switchRequest.oldValue]) {
             switchRequests[switchRequest.oldValue] = {noDrops: 0, drops: 0, dropSize: 0};
         }
