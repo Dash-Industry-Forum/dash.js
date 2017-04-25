@@ -43,7 +43,10 @@ function MssHandler(config) {
 
     let context = this.context;
     let eventBus = config.eventBus;
-    let mssFragmentProcessor = MssFragmentProcessor(context).create();
+    let metricsModel = config.metricsModel;
+    let mssFragmentProcessor = MssFragmentProcessor(context).create({
+        metricsModel: metricsModel
+    });
     let mssParser;
 
     let instance;
@@ -98,10 +101,10 @@ function MssHandler(config) {
         return chunk;
     }
 
-
     function onSegmentMediaLoaded(e) {
         // Process moof to transcode it from MSS to DASH
-        mssFragmentProcessor.processMoof(e);
+        let streamProcessor = e.sender.getStreamProcessor();
+        mssFragmentProcessor.processMoof(e, streamProcessor);
     }
 
     function registerEvents() {
