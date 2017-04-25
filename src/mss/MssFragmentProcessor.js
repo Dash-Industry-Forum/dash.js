@@ -124,10 +124,9 @@ ISOBoxer.addBoxProcessor('senc', sencProcessor);
 
 
 
-function MssFragmentProcessor(config) {
+function MssFragmentProcessor() {
 
     let context = this.context;
-    let metricsModel = config.metricsModel;
     let instance;
 
     function setup() {}
@@ -137,11 +136,9 @@ function MssFragmentProcessor(config) {
         return mssFragmentMoovProcessor.generateMoov(rep);
     }
 
-    function processMoof(e, sp) {
-        let mssFragmentMoofProcessor = MSSFragmentMoofProcessor(context).create({
-            metricsModel: metricsModel
-        });
-        mssFragmentMoofProcessor.processMoof(e, sp);
+    function processMoof(e) {
+        let mssFragmentMoofProcessor = MSSFragmentMoofProcessor(context).create();
+        mssFragmentMoofProcessor.processMoof(e);
     }
 
     instance = {
