@@ -695,7 +695,6 @@ function StreamController() {
         manifestLoader.reset();
         timelineConverter.reset();
         liveEdgeFinder.reset();
-        adapter.reset();
         initCache.reset();
         isStreamSwitchingInProgress = false;
         isUpdating = false;
