@@ -91,21 +91,6 @@ function AbrController() {
         dashMetrics;
 
     function setup() {
-        log = debug.log.bind(instance);
-        autoSwitchBitrate = {video: true, audio: true};
-        topQualities = {};
-        qualityDict = {};
-        bitrateDict = {};
-        ratioDict = {};
-        averageThroughputDict = {};
-        abandonmentStateDict = {};
-        streamProcessorDict = {};
-        switchHistoryDict = {};
-        limitBitrateByPortal = false;
-        usePixelRatioInLimitBitrateByPortal = false;
-        if (windowResizeEventCalled === undefined) {
-            windowResizeEventCalled = false;
-        }
         domStorage = DOMStorage(context).getInstance();
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
         manifestModel = ManifestModel(context).getInstance();
@@ -113,6 +98,7 @@ function AbrController() {
         videoModel = VideoModel(context).getInstance();
         metricsModel = MetricsModel(context).getInstance();
         dashMetrics = DashMetrics(context).getInstance();
+        reset();
     }
 
     function initialize(type, streamProcessor) {
@@ -139,6 +125,21 @@ function AbrController() {
     }
 
     function reset() {
+        log = debug.log.bind(instance);
+        autoSwitchBitrate = {video: true, audio: true};
+        topQualities = {};
+        qualityDict = {};
+        bitrateDict = {};
+        ratioDict = {};
+        averageThroughputDict = {};
+        abandonmentStateDict = {};
+        streamProcessorDict = {};
+        switchHistoryDict = {};
+        limitBitrateByPortal = false;
+        usePixelRatioInLimitBitrateByPortal = false;
+        if (windowResizeEventCalled === undefined) {
+            windowResizeEventCalled = false;
+        }
         eventBus.off(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
         eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_RENDERED, onQualityChangeRendered, this);
         playbackIndex = undefined;
