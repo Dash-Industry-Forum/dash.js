@@ -50,9 +50,10 @@ function AbandonRequestsRule(config) {
         throughputArray;
 
     function setup() {
-        fragmentDict = {};
-        abandonDict = {};
-        throughputArray = [];
+        mediaPlayerModel = MediaPlayerModel(context).getInstance();
+        dashMetrics = DashMetrics(context).getInstance();
+        metricsModel = MetricsModel(context).getInstance();
+        reset();
     }
 
     function setFragmentRequestDict(type, id) {
@@ -139,7 +140,9 @@ function AbandonRequestsRule(config) {
     }
 
     function reset() {
-        setup();
+        fragmentDict = {};
+        abandonDict = {};
+        throughputArray = [];
     }
 
     const instance = {

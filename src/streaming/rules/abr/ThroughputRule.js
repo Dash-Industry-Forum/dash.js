@@ -56,8 +56,8 @@ function ThroughputRule(config) {
         latencyArray;
 
     function setup() {
-        throughputArray = [];
-        latencyArray = [];
+        mediaPlayerModel = MediaPlayerModel(context).getInstance();
+        reset();
     }
 
     function storeLastRequestThroughputByType(type, throughput) {
@@ -192,7 +192,8 @@ function ThroughputRule(config) {
     }
 
     function reset() {
-        setup();
+        throughputArray = [];
+        latencyArray = [];
     }
 
     const instance = {
