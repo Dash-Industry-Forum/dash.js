@@ -1,5 +1,6 @@
 
 import FactoryMaker from '../../core/FactoryMaker.js';
+import SwitchRequest from 'SwitchRequest.js';
 
 const SWITCH_REQUEST_HISTORY_DEPTH = 8; // must be > SwitchHistoryRule SAMPLE_SIZE to enable rule
 
@@ -8,8 +9,8 @@ function SwitchRequestHistory() {
     let srHistory = []; // history of each switch
 
     function push(switchRequest) {
-        if (switchRequest.newValue < 0) {
-            return
+        if (switchRequest.newValue === SwitchRequest.NO_CHANGE) {
+            switchRequest.newValue = switchRequest.oldValue;
         }
         if (!switchRequests[switchRequest.oldValue]) {
             switchRequests[switchRequest.oldValue] = {noDrops: 0, drops: 0, dropSize: 0};
