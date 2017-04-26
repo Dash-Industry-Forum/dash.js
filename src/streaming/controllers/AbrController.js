@@ -88,8 +88,7 @@ function AbrController() {
         switchHistoryDict,
         droppedFramesHistory,
         metricsModel,
-        dashMetrics,
-        lastSwitchTime;
+        dashMetrics;
 
     function setup() {
         log = debug.log.bind(instance);
@@ -114,7 +113,6 @@ function AbrController() {
         videoModel = VideoModel(context).getInstance();
         metricsModel = MetricsModel(context).getInstance();
         dashMetrics = DashMetrics(context).getInstance();
-        lastSwitchTime = new Date().getTime() / 1000;
     }
 
     function initialize(type, streamProcessor) {
