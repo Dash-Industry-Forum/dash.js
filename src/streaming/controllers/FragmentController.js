@@ -41,9 +41,6 @@ import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
-import FragmentLoader from '../FragmentLoader';
-import RequestModifier from '../utils/RequestModifier';
-import ErrorHandler from '../utils/ErrorHandler';
 
 function FragmentController( /*config*/ ) {
 

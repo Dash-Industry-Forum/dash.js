@@ -230,10 +230,6 @@ function StreamProcessor(config) {
         return scheduleController;
     }
 
-    function getEventController() {
-        return eventController;
-    }
-
     function getCurrentRepresentationInfo() {
         return adapter.getCurrentRepresentationInfo(representationController);
     }
