@@ -66,10 +66,8 @@ function MediaController() {
         TRACK_SELECTION_MODE_WIDEST_RANGE
     ];
 
-    function initialize() {
-        tracks = {};
-        resetInitialSettings();
-        resetSwitchMode();
+    function setup() {
+        reset();
     }
 
     /**
@@ -322,7 +320,9 @@ function MediaController() {
      * @memberof MediaController#
      */
     function reset() {
-        initialize();
+        tracks = {};
+        resetInitialSettings();
+        resetSwitchMode();
         textController.reset();
     }
 
@@ -459,7 +459,6 @@ function MediaController() {
     }
 
     instance = {
-        initialize: initialize,
         checkInitialMediaSettingsForType: checkInitialMediaSettingsForType,
         addTrack: addTrack,
         getTracksFor: getTracksFor,
@@ -477,6 +476,8 @@ function MediaController() {
         setConfig: setConfig,
         reset: reset
     };
+
+    setup();
 
     return instance;
 }
