@@ -1563,6 +1563,21 @@ function MediaPlayer() {
     }
 
     /**
+     * The time that the internal buffer target will be set to post startup/seeks (NOT top quality).
+     *
+     * When the time is set higher than the default you will have to wait longer
+     * to see automatic bitrate switches but will have a larger buffer which
+     * will increase stability.
+     *
+     * @default 12 seconds.
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getStableBufferTime() {
+        return mediaPlayerModel.getStableBufferTime();
+    }
+
+    /**
      * The time that the internal buffer target will be set to once playing the top quality.
      * If there are multiple bitrates in your adaptation, and the media is playing at the highest
      * bitrate, then we try to build a larger buffer at the top quality to increase stability
@@ -1578,6 +1593,20 @@ function MediaPlayer() {
     }
 
     /**
+     * The time that the internal buffer target will be set to once playing the top quality.
+     * If there are multiple bitrates in your adaptation, and the media is playing at the highest
+     * bitrate, then we try to build a larger buffer at the top quality to increase stability
+     * and to maintain media quality.
+     *
+     * @default 30 seconds.
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getBufferTimeAtTopQuality() {
+        return mediaPlayerModel.getBufferTimeAtTopQuality();
+    }
+
+    /**
      * The time that the internal buffer target will be set to once playing the top quality for long form content.
      *
      * @default 60 seconds.
@@ -1589,6 +1618,19 @@ function MediaPlayer() {
      */
     function setBufferTimeAtTopQualityLongForm(value) {
         mediaPlayerModel.setBufferTimeAtTopQualityLongForm(value);
+    }
+
+    /**
+     * The time that the internal buffer target will be set to once playing the top quality for long form content.
+     *
+     * @default 60 seconds.
+     * @see {@link module:MediaPlayer#setLongFormContentDurationThreshold setLongFormContentDurationThreshold()}
+     * @see {@link module:MediaPlayer#setBufferTimeAtTopQuality setBufferTimeAtTopQuality()}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getBufferTimeAtTopQualityLongForm() {
+        return mediaPlayerModel.getBufferTimeAtTopQualityLongForm();
     }
 
     /**
@@ -2224,7 +2266,11 @@ function MediaPlayer() {
         setBufferToKeep: setBufferToKeep,
         setBufferPruningInterval: setBufferPruningInterval,
         setStableBufferTime: setStableBufferTime,
+        getStableBufferTime: getStableBufferTime,
         setBufferTimeAtTopQuality: setBufferTimeAtTopQuality,
+        getBufferTimeAtTopQuality: getBufferTimeAtTopQuality,
+        setBufferTimeAtTopQualityLongForm: setBufferTimeAtTopQualityLongForm,
+        getBufferTimeAtTopQualityLongForm: getBufferTimeAtTopQualityLongForm,
         setFragmentLoaderRetryAttempts: setFragmentLoaderRetryAttempts,
         setFragmentLoaderRetryInterval: setFragmentLoaderRetryInterval,
         setManifestLoaderRetryAttempts: setManifestLoaderRetryAttempts,
@@ -2232,7 +2278,6 @@ function MediaPlayer() {
         setXHRWithCredentials: setXHRWithCredentials,
         setXHRWithCredentialsForType: setXHRWithCredentialsForType,
         getXHRWithCredentialsForType: getXHRWithCredentialsForType,
-        setBufferTimeAtTopQualityLongForm: setBufferTimeAtTopQualityLongForm,
         setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,
         setRichBufferThreshold: setRichBufferThreshold,
         getProtectionController: getProtectionController,

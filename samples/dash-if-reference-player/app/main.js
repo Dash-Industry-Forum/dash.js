@@ -201,6 +201,12 @@ app.controller('DashController', function ($scope, sources, contributors) {
         $scope.player.attachTTMLRenderingDiv($("#video-caption")[0]);
     }
 
+    // get buffer default value
+    $scope.defaultLiveDelay = $scope.player.getLiveDelay();
+    $scope.defaultStableBufferDelay = $scope.player.getStableBufferTime();
+    $scope.defaultBufferTimeAtTopQuality = $scope.player.getBufferTimeAtTopQuality();
+    $scope.defaultBufferTimeAtTopQualityLongForm = $scope.player.getBufferTimeAtTopQualityLongForm();
+
     $scope.controlbar = new ControlBar($scope.player);
     $scope.controlbar.initialize();
     $scope.controlbar.disable();
@@ -529,6 +535,37 @@ app.controller('DashController', function ($scope, sources, contributors) {
         } else {
             protData = null;
         }
+
+        var bufferConfig = {
+            liveDelay: $scope.defaultLiveDelay,
+            stableBufferTime: $scope.defaultStableBufferDelay,
+            bufferTimeAtTopQuality: $scope.defaultBufferTimeAtTopQuality,
+            bufferTimeAtTopQualityLongForm: $scope.defaultBufferTimeAtTopQualityLongForm
+        };
+        if ($scope.selectedItem.hasOwnProperty("bufferConfig")) {
+            var selectedConfig = $scope.selectedItem.bufferConfig;
+
+            if (selectedConfig.liveDelay) {
+                bufferConfig.liveDelay = selectedConfig.liveDelay;
+            }
+
+            if (selectedConfig.stableBufferTime) {
+                bufferConfig.stableBufferTime = selectedConfig.stableBufferTime;
+            }
+
+            if (selectedConfig.bufferTimeAtTopQuality) {
+                bufferConfig.bufferTimeAtTopQuality = selectedConfig.bufferTimeAtTopQuality;
+            }
+
+            if (selectedConfig.bufferTimeAtTopQualityLongForm) {
+                bufferConfig.bufferTimeAtTopQualityLongForm = selectedConfig.bufferTimeAtTopQualityLongForm;
+            }
+        }
+
+        $scope.player.setLiveDelay(bufferConfig.liveDelay);
+        $scope.player.setStableBufferTime(bufferConfig.stableBufferTime);
+        $scope.player.setBufferTimeAtTopQuality(bufferConfig.bufferTimeAtTopQuality);
+        $scope.player.setBufferTimeAtTopQualityLongForm(bufferConfig.bufferTimeAtTopQualityLongForm);
 
         $scope.controlbar.reset();
         $scope.player.setProtectionData(protData);
