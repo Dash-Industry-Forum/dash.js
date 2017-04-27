@@ -63,8 +63,7 @@ function FragmentedTextBoxParser() {
             i, j,
             dataOffset,
             sequenceNumber,
-            totalDuration,
-            sampleWithSubsIndex;
+            totalDuration;
 
         sequenceNumber = mfhdBox.sequence_number;
         sampleCount = trunBox.sample_count;
@@ -72,13 +71,14 @@ function FragmentedTextBoxParser() {
         dataOffset = (tfhdBox.base_data_offset || 0) + (trunBox.data_offset || 0);
 
         sampleList = [];
-        sampleWithSubsIndex = 0;
+        let subsIndex = -1;
+        let nextSubsSample = -1;
         for (i = 0; i < sampleCount; i++) {
             sample = trunBox.samples[i];
             sampleDuration = (sample.sample_duration !== undefined) ? sample.sample_duration : tfhdBox.default_sample_duration;
             sampleSize = (sample.sample_size !== undefined) ? sample.sample_size : tfhdBox.default_sample_size;
             sampleCompositionTimeOffset = (sample.sample_composition_time_offset !== undefined) ? sample.sample_composition_time_offset : 0;
-            var sampleData = {
+            let sampleData = {
                 'dts': sampleDts,
                 'cts': (sampleDts + sampleCompositionTimeOffset),
                 'duration': sampleDuration,
@@ -86,14 +86,18 @@ function FragmentedTextBoxParser() {
                 'size': sampleSize,
                 'subSizes': [sampleSize]
             };
-            if (subsBox && sampleWithSubsIndex < subsBox.samples_with_subsamples.length &&
-                subsBox.samples_with_subsamples[sampleWithSubsIndex].nr == (i + 1)) {
-                sampleData.subSizes = [];
-                for (j = 0; j < subsBox.samples_with_subsamples[sampleWithSubsIndex].subsamples.length; j++) {
-                    let subSize = subsBox.samples_with_subsamples[sampleWithSubsIndex].subsamples[j].size;
-                    sampleData.subSizes.push(subSize);
+            if (subsBox) {
+                if (subsIndex < subsBox.entry_count && i > nextSubsSample) {
+                    subsIndex++;
+                    nextSubsSample += subsBox.entries[subsIndex].sample_delta;
                 }
-                sampleWithSubsIndex++;
+                if (i == nextSubsSample) {
+                    sampleData.subSizes = [];
+                    let entry = subsBox.entries[subsIndex];
+                    for (j = 0; j < entry.subsample_count; j++) {
+                        sampleData.subSizes.push(entry.subsamples[j].subsample_size);
+                    }
+                }
             }
             sampleList.push(sampleData);
             dataOffset += sampleSize;

@@ -148,7 +148,8 @@ function IsoFile() {
         };
 
         subsProps = {
-            samples_with_subsamples: 'samples_with_subsamples'
+            entry_count: 'entry_count',
+            entries: 'entries'
         };
 
         tfhdProps = {

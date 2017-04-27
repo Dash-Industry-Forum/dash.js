@@ -34,7 +34,6 @@
 import SwitchRequest from '../SwitchRequest';
 import FactoryMaker from '../../../core/FactoryMaker';
 import MediaPlayerModel from '../../models/MediaPlayerModel';
-import PlaybackController from '../../controllers/PlaybackController';
 import {HTTPRequest} from '../../vo/metrics/HTTPRequest';
 import DashAdapter from '../../../dash/DashAdapter';
 import EventBus from '../../../core/EventBus';
@@ -71,7 +70,6 @@ function BolaRule(config) {
         lastFragmentWasSwitchDict,
         eventMediaTypes,
         mediaPlayerModel,
-        playbackController,
         adapter;
 
     function setup() {
@@ -80,7 +78,6 @@ function BolaRule(config) {
         lastFragmentWasSwitchDict = {};
         eventMediaTypes = [];
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
-        playbackController = PlaybackController(context).getInstance();
         adapter = DashAdapter(context).getInstance();
         eventBus.on(Events.BUFFER_EMPTY, onBufferEmpty, instance);
         eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);

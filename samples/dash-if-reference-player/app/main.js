@@ -26,6 +26,16 @@ app.controller('DashController', function($scope, sources, contributors) {
 
     sources.query(function (data) {
         $scope.availableStreams = data.items;
+        //if no mss package, remove mss samples.
+        let MssHandler = dashjs.MssHandler; /* jshint ignore:line */
+        if (typeof MssHandler !== 'function')
+        {
+            for(var i = $scope.availableStreams.length - 1; i >= 0; i--){
+                if($scope.availableStreams[i].name === 'Smooth Streaming'){
+                    $scope.availableStreams.splice(i,1);
+                }
+            }
+        }
     });
 
     contributors.query(function (data) {
@@ -93,20 +103,20 @@ app.controller('DashController', function($scope, sources, contributors) {
     $scope.chartState = {
         audio:{
             buffer:         {data: [], selected: false, color: '#65080c', label: 'Audio Buffer Level'},
-            bitrate:        {data: [], selected: false, color: '#00CCBE', label: 'Audio Bitrate (Mbps)'},
+            bitrate:        {data: [], selected: false, color: '#00CCBE', label: 'Audio Bitrate (kbps)'},
             index:          {data: [], selected: false, color: '#ffd446', label: 'Audio Current Index'},
             pendingIndex:   {data: [], selected: false, color: '#FF6700', label: 'AudioPending Index'},
-            ratio:          {data: [], selected: false, color: '#329d61', label: 'Audio Ratio (Mbps)'},
+            ratio:          {data: [], selected: false, color: '#329d61', label: 'Audio Ratio'},
             download:       {data: [], selected: false, color: '#44c248', label: 'Audio Download Rate (Mbps)'},
             latency:        {data: [], selected: false, color: '#326e88', label: 'Audio Latency (ms)'},
             droppedFPS:     {data: [], selected: false, color: '#004E64', label: 'Audio Dropped FPS'}
         },
         video:{
             buffer:         {data: [], selected: true, color: '#00589d', label: 'Video Buffer Level'},
-            bitrate:        {data: [], selected: true, color: '#ff7900', label: 'Video Bitrate (Mbps)'},
+            bitrate:        {data: [], selected: true, color: '#ff7900', label: 'Video Bitrate (kbps)'},
             index:          {data: [], selected: false, color: '#326e88', label: 'Video Current Quality'},
             pendingIndex:   {data: [], selected: false, color: '#44c248', label: 'Video Pending Index'},
-            ratio:          {data: [], selected: false, color: '#00CCBE', label: 'Video Ratio (Mbps)'},
+            ratio:          {data: [], selected: false, color: '#00CCBE', label: 'Video Ratio'},
             download:       {data: [], selected: false, color: '#FF6700', label: 'Video Download Rate (Mbps)'},
             latency:        {data: [], selected: false, color: '#329d61', label: 'Video Latency (ms)'},
             droppedFPS:     {data: [], selected: false, color: '#65080c', label: 'Video Dropped FPS'}
@@ -185,7 +195,7 @@ app.controller('DashController', function($scope, sources, contributors) {
     $scope.controlbar.disable();
     $scope.version = $scope.player.getVersion();
 
-    $scope.player.on(dashjs.MediaPlayer.events.ERROR, function (e) {}, $scope);
+    $scope.player.on(dashjs.MediaPlayer.events.ERROR, function (e) { console.error(e.error + ' : ' + e.event.message);}, $scope);
 
     $scope.player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_REQUESTED, function (e) {
         $scope[e.mediaType + "Index"] = e.oldQuality + 1 ;
@@ -599,10 +609,13 @@ app.controller('DashController', function($scope, sources, contributors) {
 
     $scope.plotPoint = function(name, type, value) {
         if ($scope.chartEnabled) {
-            var data = $scope.chartState[type][name].data;
-            data.push([$scope.video.currentTime, value]);
-            if (data.length > $scope.maxPointsToChart) {
-                data.splice(0, 1);
+            var specificChart = $scope.chartState[type];
+            if (specificChart) {
+                var data = specificChart[name].data;
+                data.push([$scope.video.currentTime, value]);
+                if (data.length > $scope.maxPointsToChart) {
+                    data.splice(0, 1);
+                }
             }
         }
         $scope.safeApply();
@@ -656,7 +669,7 @@ app.controller('DashController', function($scope, sources, contributors) {
             var bufferLevel = dashMetrics.getCurrentBufferLevel(metrics);
             var maxIndex = dashMetrics.getMaxIndexForBufferType(type, periodIdx);
             var index = $scope.player.getQualityFor(type);
-            var bitrate = Math.round(dashMetrics.getBandwidthForRepresentation(repSwitch.to, periodIdx) / 1000);
+            var bitrate = repSwitch ? Math.round(dashMetrics.getBandwidthForRepresentation(repSwitch.to, periodIdx) / 1000) : NaN;
             var droppedFPS = dashMetrics.getCurrentDroppedFrames(metrics) ? dashMetrics.getCurrentDroppedFrames(metrics).droppedFrames : 0;
 
             $scope[type + "BufferLength"] = bufferLevel;

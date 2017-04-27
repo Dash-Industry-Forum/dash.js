@@ -208,7 +208,7 @@ function X2JS(config) {
             var nodeChildren = node.childNodes;
             // Alternative for firstElementChild which is not supported in some environments
             for(var cidx=0; cidx <nodeChildren.length; cidx++) {
-                var child = nodeChildren.item(cidx);
+                var child = nodeChildren[cidx];
                 if(child.nodeType == DOMNodeTypes.ELEMENT_NODE) {
                     if (config.ignoreRoot) {
                         result = parseDOMChildren(child);
@@ -231,7 +231,7 @@ function X2JS(config) {
 
             // Children nodes
             for(var cidx=0; cidx <nodeChildren.length; cidx++) {
-                var child = nodeChildren.item(cidx); // nodeChildren[cidx];
+                var child = nodeChildren[cidx];
                 var childName = getNodeLocalName(child);
 
                 if(child.nodeType!= DOMNodeTypes.COMMENT_NODE) {
@@ -273,7 +273,7 @@ function X2JS(config) {
             // Attributes
             var nodeLocalName = getNodeLocalName(node)
             for(var aidx=0; aidx <node.attributes.length; aidx++) {
-                var attr = node.attributes.item(aidx); // [aidx];
+                var attr = node.attributes[aidx];
                 result.__cnt++;
 
                 var value2 = attr.value;

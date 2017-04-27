@@ -57,7 +57,7 @@ function EventBus() {
         };
 
         const inserted = handlers[type].some((item , idx) => {
-            if (priority > item.priority ) {
+            if (item && priority > item.priority ) {
                 handlers[type].splice(idx, 0, handler);
                 return true;
             }
@@ -72,7 +72,7 @@ function EventBus() {
         if (!type || !listener || !handlers[type]) return;
         const idx = getHandlerIdx(type, listener, scope);
         if (idx < 0) return;
-        handlers[type].splice(idx, 1);
+        handlers[type][idx] = null;
     }
 
     function trigger(type, payload) {
@@ -84,6 +84,7 @@ function EventBus() {
 
         payload.type = type;
 
+        handlers[type] = handlers[type].filter((item) => item);
         handlers[type].forEach( handler => handler.callback.call(handler.scope, payload) );
     }
 
@@ -94,7 +95,7 @@ function EventBus() {
         if (!handlers[type]) return idx;
 
         handlers[type].some( (item, index) => {
-            if (item.callback === listener && (!scope || scope === item.scope)) {
+            if (item && item.callback === listener && (!scope || scope === item.scope)) {
                 idx = index;
                 return true;
             }

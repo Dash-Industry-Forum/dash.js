@@ -51,7 +51,7 @@ function MetricsReporting() {
     function createMetricsReporting(config) {
         dvbErrorsTranslator = DVBErrorsTranslator(context).getInstance({
             eventBus: config.eventBus,
-            metricsModel: config.metricsModel,
+            metricsModel: config.metricsModel
         });
 
         return MetricsCollectionController(context).create(config);

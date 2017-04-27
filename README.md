@@ -17,7 +17,7 @@ All new work should be in the development branch. Master is now reserved for tag
 ## Documentation
 Before you get started, please read the Dash.js v2.0 [Migration Document](https://github.com/Dash-Industry-Forum/dash.js/wiki/Migration-2.0).
 
-Full [API Documentation ](http://cdn.dashjs.org/latest/jsdoc/index.html) is available describing all public methods, interfaces, properties, and events.
+Full [API Documentation](http://cdn.dashjs.org/latest/jsdoc/module-MediaPlayer.html) is available describing all public methods, interfaces, properties, and events.
 
 For help, join our [Slack channel](https://dashif-slack.azurewebsites.net), our [email list](https://groups.google.com/d/forum/dashjs) and read our [wiki](https://github.com/Dash-Industry-Forum/dash.js/wiki).
 

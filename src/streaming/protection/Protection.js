@@ -118,7 +118,7 @@ function Protection() {
         let controller = null;
 
         let protectionKeyController = ProtectionKeyController(context).getInstance();
-        protectionKeyController.setConfig({log: config.log,});
+        protectionKeyController.setConfig({log: config.log});
         protectionKeyController.initialize();
 
         let protectionModel =  getProtectionModel(config);

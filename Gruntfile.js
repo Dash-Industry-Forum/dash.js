@@ -70,6 +70,15 @@ module.exports = function (grunt) {
                 }
             },
 
+            build_mss: {
+                options: {
+                    sourceMapIn: 'build/temp/dash.mss.debug.js.map'
+                },
+                files: {
+                    'build/temp/dash.mss.min.js': 'build/temp/dash.mss.debug.js'
+                }
+            },
+
             build_all: {
                 options: {
                     sourceMapIn: 'build/temp/dash.all.debug.js.map'
@@ -77,7 +86,7 @@ module.exports = function (grunt) {
                 files: {
                     'build/temp/dash.all.min.js': 'build/temp/dash.all.debug.js'
                 }
-            },
+            }
 
         },
         copy: {
@@ -90,9 +99,11 @@ module.exports = function (grunt) {
                     'dash.protection.min.js', 'dash.protection.min.js.map',
                     'dash.all.debug.js', 'dash.all.debug.js.map',
                     'dash.reporting.min.js', 'dash.reporting.min.js.map',
+                    'dash.mss.min.js', 'dash.mss.min.js.map',
                     'dash.mediaplayer.debug.js', 'dash.mediaplayer.debug.js.map',
                     'dash.protection.debug.js', 'dash.protection.debug.js.map',
-                    'dash.reporting.debug.js', 'dash.reporting.debug.js.map'
+                    'dash.reporting.debug.js', 'dash.reporting.debug.js.map',
+                    'dash.mss.debug.js', 'dash.mss.debug.js.map'
                 ],
                 dest: 'dist/',
                 filter: 'isFile'
@@ -102,7 +113,7 @@ module.exports = function (grunt) {
             mediaplayer: {
                 options: {},
                 files: {
-                    'build/temp/dash.mediaplayer.debug.js.map': ['build/temp/dash.mediaplayer.debug.js'],
+                    'build/temp/dash.mediaplayer.debug.js.map': ['build/temp/dash.mediaplayer.debug.js']
                 }
             },
             protection: {
@@ -122,6 +133,12 @@ module.exports = function (grunt) {
                 files: {
                     'build/temp/dash.reporting.debug.js.map': ['build/temp/dash.reporting.debug.js']
                 }
+            },
+            mss: {
+                options: {},
+                files: {
+                    'build/temp/dash.mss.debug.js.map': ['build/temp/dash.mss.debug.js']
+                }
             }
         },
 
@@ -133,7 +150,7 @@ module.exports = function (grunt) {
                 files: [{
                     expand: true,
                     src: ['index.js', 'src/**/*.js', 'externals/**/*.js'],
-                    dest: 'build/es5/',
+                    dest: 'build/es5/'
                 }]
             }
         },
@@ -184,6 +201,21 @@ module.exports = function (grunt) {
                     transform: ['babelify']
                 }
             },
+            mss: {
+                files: {
+                    'build/temp/dash.mss.debug.js': ['src/mss/MssHandler.js']
+                },
+                options: {
+                    browserifyOptions: {
+                        debug: true,
+                        standalone: 'dashjs.MssHandler'
+                    },
+                    plugin: [
+                        'browserify-derequire', 'bundle-collapser/plugin'
+                    ],
+                    transform: ['babelify']
+                }
+            },
             all: {
                 files: {
                     'build/temp/dash.all.debug.js': ['index.js']
@@ -210,7 +242,7 @@ module.exports = function (grunt) {
                         debug: true
                     },
                     plugin: [
-                      ['browserify-derequire']
+                        ['browserify-derequire']
                     ],
                     transform: ['babelify']
                 }
@@ -250,13 +282,13 @@ module.exports = function (grunt) {
     });
 
     require('load-grunt-tasks')(grunt);
-    grunt.registerTask('default',   ['dist', 'test']);
-    grunt.registerTask('dist',      ['clean', 'jshint', 'jscs', 'browserify:mediaplayer' , 'browserify:protection', 'browserify:reporting', 'browserify:all', 'babel:es5', 'minimize', 'copy:dist']);
-    grunt.registerTask('minimize',  ['exorcise', 'githash', 'uglify']);
-    grunt.registerTask('test',      ['mocha_istanbul:test']);
-    grunt.registerTask('watch',     ['browserify:watch']);
-    grunt.registerTask('release',   ['default', 'jsdoc']);
-    grunt.registerTask('debug',     ['clean', 'browserify:all', 'exorcise:all', 'copy:dist']);
-    grunt.registerTask('lint',      ['jshint', 'jscs']);
+    grunt.registerTask('default', ['dist', 'test']);
+    grunt.registerTask('dist', ['clean', 'jshint', 'jscs', 'browserify:mediaplayer', 'browserify:protection', 'browserify:reporting', 'browserify:mss', 'browserify:all', 'babel:es5', 'minimize', 'copy:dist']);
+    grunt.registerTask('minimize', ['exorcise', 'githash', 'uglify']);
+    grunt.registerTask('test', ['mocha_istanbul:test']);
+    grunt.registerTask('watch', ['browserify:watch']);
+    grunt.registerTask('release', ['default', 'jsdoc']);
+    grunt.registerTask('debug', ['clean', 'browserify:all', 'exorcise:all', 'copy:dist']);
+    grunt.registerTask('lint', ['jshint', 'jscs']);
     grunt.registerTask('prepublish', ['githooks', 'dist']);
 };

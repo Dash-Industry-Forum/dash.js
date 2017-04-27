@@ -33,8 +33,8 @@ import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import DashManifestModel from '../../dash/models/DashManifestModel';
 import BlacklistController from '../controllers/BlacklistController';
-import DVBSelector from '../rules/baseUrlResolution/DVBSelector';
-import BasicSelector from '../rules/baseUrlResolution/BasicSelector';
+import DVBSelector from './baseUrlResolution/DVBSelector';
+import BasicSelector from './baseUrlResolution/BasicSelector';
 import FactoryMaker from '../../core/FactoryMaker';
 
 const URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE = 1;

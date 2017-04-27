@@ -70,7 +70,7 @@ function KeySystemWidevine() {
         getInitData: getInitData,
         getRequestHeadersFromMessage: getRequestHeadersFromMessage,
         getLicenseRequestFromMessage: getLicenseRequestFromMessage,
-        getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
+        getLicenseServerURLFromInitData: getLicenseServerURLFromInitData
     };
 
     return instance;
