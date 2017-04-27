@@ -2088,7 +2088,7 @@ function MediaPlayer() {
     function createAdaptor() {
         //TODO-Refactor Need to be able to switch this create out so will need API to set which adapter to use? Handler is created is inside streamProcessor so need to figure that out as well
         adapter = DashAdapter(context).getInstance();
-        adapter.initialize();
+        adapter.reset();
         adapter.setConfig({
             dashManifestModel: dashManifestModel
         });

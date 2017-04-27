@@ -55,11 +55,14 @@ function DashAdapter() {
         }
     }
 
+<<<<<<< HEAD
     function initialize() {
         voPeriods = [];
         voAdaptations = {};
     }
 
+=======
+>>>>>>> initialize and reset functions do the same job.....remove initialize function
     function getRepresentationForTrackInfo(trackInfo, representationController) {
         return representationController.getRepresentationForQuality(trackInfo.quality);
     }
@@ -415,7 +418,6 @@ function DashAdapter() {
     }
 
     instance = {
-        initialize: initialize,
         convertDataToTrack: convertRepresentationToTrackInfo,
         getDataForTrack: getRepresentationForTrackInfo,
         getDataForMedia: getAdaptationForMediaInfo,
