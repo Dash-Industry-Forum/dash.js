@@ -233,7 +233,7 @@ function EventBus() {
         };
 
         var inserted = handlers[type].some(function (item, idx) {
-            if (priority > item.priority) {
+            if (item && priority > item.priority) {
                 handlers[type].splice(idx, 0, handler);
                 return true;
             }
@@ -248,7 +248,7 @@ function EventBus() {
         if (!type || !listener || !handlers[type]) return;
         var idx = getHandlerIdx(type, listener, scope);
         if (idx < 0) return;
-        handlers[type].splice(idx, 1);
+        handlers[type][idx] = null;
     }
 
     function trigger(type, payload) {
@@ -260,6 +260,9 @@ function EventBus() {
 
         payload.type = type;
 
+        handlers[type] = handlers[type].filter(function (item) {
+            return item;
+        });
         handlers[type].forEach(function (handler) {
             return handler.callback.call(handler.scope, payload);
         });
@@ -272,7 +275,7 @@ function EventBus() {
         if (!handlers[type]) return idx;
 
         handlers[type].some(function (item, index) {
-            if (item.callback === listener && (!scope || scope === item.scope)) {
+            if (item && item.callback === listener && (!scope || scope === item.scope)) {
                 idx = index;
                 return true;
             }
@@ -513,7 +516,7 @@ module.exports = exports["default"];
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
-  value: true
+    value: true
 });
 
 var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
@@ -537,48 +540,49 @@ var _EventsBase3 = _interopRequireDefault(_EventsBase2);
  */
 
 var CoreEvents = (function (_EventsBase) {
-  _inherits(CoreEvents, _EventsBase);
+    _inherits(CoreEvents, _EventsBase);
 
-  function CoreEvents() {
-    _classCallCheck(this, CoreEvents);
+    function CoreEvents() {
+        _classCallCheck(this, CoreEvents);
 
-    _get(Object.getPrototypeOf(CoreEvents.prototype), 'constructor', this).call(this);
-    this.BUFFERING_COMPLETED = 'bufferingCompleted';
-    this.BUFFER_CLEARED = 'bufferCleared';
-    this.BUFFER_LEVEL_UPDATED = 'bufferLevelUpdated';
-    this.BYTES_APPENDED = 'bytesAppended';
-    this.CHECK_FOR_EXISTENCE_COMPLETED = 'checkForExistenceCompleted';
-    this.CURRENT_TRACK_CHANGED = 'currentTrackChanged';
-    this.DATA_UPDATE_COMPLETED = 'dataUpdateCompleted';
-    this.DATA_UPDATE_STARTED = 'dataUpdateStarted';
-    this.INITIALIZATION_LOADED = 'initializationLoaded';
-    this.INIT_FRAGMENT_LOADED = 'initFragmentLoaded';
-    this.INIT_REQUESTED = 'initRequested';
-    this.INTERNAL_MANIFEST_LOADED = 'internalManifestLoaded';
-    this.LIVE_EDGE_SEARCH_COMPLETED = 'liveEdgeSearchCompleted';
-    this.LOADING_COMPLETED = 'loadingCompleted';
-    this.LOADING_PROGRESS = 'loadingProgress';
-    this.MANIFEST_UPDATED = 'manifestUpdated';
-    this.MEDIA_FRAGMENT_LOADED = 'mediaFragmentLoaded';
-    this.QUOTA_EXCEEDED = 'quotaExceeded';
-    this.REPRESENTATION_UPDATED = 'representationUpdated';
-    this.SEGMENTS_LOADED = 'segmentsLoaded';
-    this.SERVICE_LOCATION_BLACKLIST_CHANGED = 'serviceLocationBlacklistChanged';
-    this.SOURCEBUFFER_APPEND_COMPLETED = 'sourceBufferAppendCompleted';
-    this.SOURCEBUFFER_REMOVE_COMPLETED = 'sourceBufferRemoveCompleted';
-    this.STREAMS_COMPOSED = 'streamsComposed';
-    this.STREAM_BUFFERING_COMPLETED = 'streamBufferingCompleted';
-    this.STREAM_COMPLETED = 'streamCompleted';
-    this.STREAM_TEARDOWN_COMPLETE = 'streamTeardownComplete';
-    this.TIMED_TEXT_REQUESTED = 'timedTextRequested';
-    this.TIME_SYNCHRONIZATION_COMPLETED = 'timeSynchronizationComplete';
-    this.URL_RESOLUTION_FAILED = 'urlResolutionFailed';
-    this.WALLCLOCK_TIME_UPDATED = 'wallclockTimeUpdated';
-    this.XLINK_ELEMENT_LOADED = 'xlinkElementLoaded';
-    this.XLINK_READY = 'xlinkReady';
-  }
+        _get(Object.getPrototypeOf(CoreEvents.prototype), 'constructor', this).call(this);
+        this.BUFFERING_COMPLETED = 'bufferingCompleted';
+        this.BUFFER_CLEARED = 'bufferCleared';
+        this.BUFFER_LEVEL_UPDATED = 'bufferLevelUpdated';
+        this.BYTES_APPENDED = 'bytesAppended';
+        this.CHECK_FOR_EXISTENCE_COMPLETED = 'checkForExistenceCompleted';
+        this.CURRENT_TRACK_CHANGED = 'currentTrackChanged';
+        this.DATA_UPDATE_COMPLETED = 'dataUpdateCompleted';
+        this.DATA_UPDATE_STARTED = 'dataUpdateStarted';
+        this.INITIALIZATION_LOADED = 'initializationLoaded';
+        this.INIT_FRAGMENT_LOADED = 'initFragmentLoaded';
+        this.INIT_REQUESTED = 'initRequested';
+        this.INTERNAL_MANIFEST_LOADED = 'internalManifestLoaded';
+        this.LIVE_EDGE_SEARCH_COMPLETED = 'liveEdgeSearchCompleted';
+        this.LOADING_COMPLETED = 'loadingCompleted';
+        this.LOADING_PROGRESS = 'loadingProgress';
+        this.MANIFEST_UPDATED = 'manifestUpdated';
+        this.MEDIA_FRAGMENT_LOADED = 'mediaFragmentLoaded';
+        this.QUOTA_EXCEEDED = 'quotaExceeded';
+        this.REPRESENTATION_UPDATED = 'representationUpdated';
+        this.SEGMENTS_LOADED = 'segmentsLoaded';
+        this.SERVICE_LOCATION_BLACKLIST_CHANGED = 'serviceLocationBlacklistChanged';
+        this.SOURCEBUFFER_APPEND_COMPLETED = 'sourceBufferAppendCompleted';
+        this.SOURCEBUFFER_REMOVE_COMPLETED = 'sourceBufferRemoveCompleted';
+        this.STREAMS_COMPOSED = 'streamsComposed';
+        this.STREAM_BUFFERING_COMPLETED = 'streamBufferingCompleted';
+        this.STREAM_COMPLETED = 'streamCompleted';
+        this.STREAM_TEARDOWN_COMPLETE = 'streamTeardownComplete';
+        this.TIMED_TEXT_REQUESTED = 'timedTextRequested';
+        this.TIME_SYNCHRONIZATION_COMPLETED = 'timeSynchronizationComplete';
+        this.URL_RESOLUTION_FAILED = 'urlResolutionFailed';
+        this.VIDEO_CHUNK_RECEIVED = 'videoChunkReceived';
+        this.WALLCLOCK_TIME_UPDATED = 'wallclockTimeUpdated';
+        this.XLINK_ELEMENT_LOADED = 'xlinkElementLoaded';
+        this.XLINK_READY = 'xlinkReady';
+    }
 
-  return CoreEvents;
+    return CoreEvents;
 })(_EventsBase3['default']);
 
 exports['default'] = CoreEvents;
