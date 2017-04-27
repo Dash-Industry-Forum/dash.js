@@ -161,6 +161,9 @@ function MediaPlayer() {
             adapter: createAdaptor()
         });
 
+        textController = TextController(context).getInstance();
+        playbackController = PlaybackController(context).getInstance();
+
         restoreDefaultUTCTimingSources();
         setAutoPlay(AutoPlay !== undefined ? AutoPlay : true);
 
@@ -2018,9 +2021,7 @@ function MediaPlayer() {
         let timeSyncController = TimeSyncController(context).getInstance();
         let baseURLController = BaseURLController(context).getInstance();
         let timelineConverter = TimelineConverter(context).getInstance();
-        playbackController = PlaybackController(context).getInstance();
         streamController = StreamController(context).getInstance();
-        textController = TextController(context).getInstance();
 
         // configure controllers
         mediaController.setConfig({
