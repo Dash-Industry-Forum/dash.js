@@ -151,7 +151,6 @@ function MediaPlayer() {
 
         playbackController = PlaybackController(context).getInstance();
         mediaController = MediaController(context).getInstance();
-        mediaController.initialize();
         dashManifestModel = DashManifestModel(context).getInstance();
         dashMetrics = DashMetrics(context).getInstance();
         metricsModel = MetricsModel(context).getInstance();
@@ -1969,7 +1968,6 @@ function MediaPlayer() {
             dashManifestModel: dashManifestModel
         });
 
-        mediaController.initialize();
         mediaController.setConfig({
             errHandler: errHandler
         });
