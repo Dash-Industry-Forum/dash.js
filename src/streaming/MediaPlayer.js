@@ -1863,6 +1863,11 @@ function MediaPlayer() {
         attachView(null);
         protectionData = null;
         protectionController = null;
+        if (metricsReportingController) {
+            metricsReportingController.reset();
+            metricsReportingController = null;
+        }
+        mediaPlayerInitialized = false;
     }
 
     //***********************************
@@ -1879,7 +1884,6 @@ function MediaPlayer() {
             mediaController.reset();
             textController.reset();
             streamController = null;
-            metricsReportingController = null;
             if (isReady()) {
                 initializePlayback();
             }
