@@ -598,9 +598,6 @@ function TextSourceBuffer() {
             parser = vttParser;
         } else if (codecType.search('ttml') >= 0 || codecType.search('stpp') >= 0) {
             parser = ttmlParser;
-            parser.setConfig({
-                videoModel: videoModel
-            });
         }
         return parser;
     }
