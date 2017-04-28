@@ -1982,7 +1982,7 @@ function MediaPlayer() {
 
     function detectMetricsReporting() {
         if (metricsReportingController) {
-            return metricsReportingController;
+            return;
         }
         // do not require MetricsReporting as dependencies as this is optional and intended to be loaded separately
         let MetricsReporting = dashjs.MetricsReporting; /* jshint ignore:line */
@@ -1996,16 +1996,12 @@ function MediaPlayer() {
                 dashManifestModel: dashManifestModel,
                 metricsModel: metricsModel
             });
-
-            return metricsReportingController;
         }
-
-        return null;
     }
 
     function detectMss() {
         if (mssHandler) {
-            return mssHandler;
+            return;
         }
         // do not require MssHandler as dependencies as this is optional and intended to be loaded separately
         let MssHandler = dashjs.MssHandler; /* jshint ignore:line */
@@ -2014,10 +2010,7 @@ function MediaPlayer() {
                 eventBus: eventBus,
                 mediaPlayerModel: mediaPlayerModel
             });
-            return mssHandler;
         }
-
-        return null;
     }
 
     function getDVRInfoMetric() {
