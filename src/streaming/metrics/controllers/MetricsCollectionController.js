@@ -102,7 +102,6 @@ function MetricsCollectionController(config) {
 
     setup();
 
-    // don't export any actual methods
     return {
         reset: reset
     };
