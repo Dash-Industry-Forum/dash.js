@@ -151,4 +151,3 @@ function TextBufferController(config) {
 
 TextBufferController.__dashjs_factory_name = 'TextBufferController';
 export default FactoryMaker.getClassFactory(TextBufferController);
-export default FactoryMaker.getClassFactory(TextBufferController);
