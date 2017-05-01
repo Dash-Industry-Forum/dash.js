@@ -529,11 +529,19 @@ function TextSourceBuffer() {
             }
             var sampleTime = baseSampleTime + accDuration + sample.sample_composition_time_offset;
             var cea608Ranges = cea608parser.findCea608Nalus(raw, startPos, sample.sample_size);
+            var lastSampleTime = null;
+            var idx = 0;
             for (var j = 0; j < cea608Ranges.length; j++) {
                 var ccData = cea608parser.extractCea608DataFromRange(raw, cea608Ranges[j]);
                 for (var k = 0; k < 2; k++) {
                     if (ccData[k].length > 0) {
-                        allCcData.fields[k].push([sampleTime, ccData[k]]);
+                        if (sampleTime !== lastSampleTime) {
+                            idx = 0;
+                        } else {
+                            idx += 1;
+                        }
+                        allCcData.fields[k].push([sampleTime, ccData[k], idx]);
+                        lastSampleTime = sampleTime;
                     }
                 }
             }
@@ -543,11 +551,15 @@ function TextSourceBuffer() {
         }
 
         // Sort by sampleTime ascending order
-        allCcData.fields[0].sort(function (a, b) {
-            return a[0] - b[0];
-        });
-        allCcData.fields[1].sort(function (a, b) {
-            return a[0] - b[0];
+        // If two packets have the same sampleTime, use them in the order
+        // they were received
+        allCcData.fields.forEach(function sortField(field) {
+            field.sort(function (a, b) {
+                if (a[0] === b[0]) {
+                    return a[2] - b[2];
+                }
+                return a[0] - b[0];
+            });
         });
 
         var endSampleTime = baseSampleTime + accDuration;
