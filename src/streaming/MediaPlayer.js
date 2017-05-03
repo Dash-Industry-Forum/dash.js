@@ -1862,7 +1862,10 @@ function MediaPlayer() {
         attachSource(null);
         attachView(null);
         protectionData = null;
-        protectionController = null;
+        if (protectionController) {
+            protectionController.reset();
+            protectionController = null;
+        }
         if (metricsReportingController) {
             metricsReportingController.reset();
             metricsReportingController = null;
