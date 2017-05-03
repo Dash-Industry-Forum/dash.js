@@ -475,7 +475,7 @@ function TextTracks() {
                                 }else {
                                     return null;
                                 }
-                            }, captionContainer.clientWidth, captionContainer.clientHeight);
+                            }, captionContainer.clientHeight, captionContainer.clientWidth);
                             finalCue.id = this.cueID;
                         } else {
                             captionContainer.appendChild(this.cueHTMLElement);
