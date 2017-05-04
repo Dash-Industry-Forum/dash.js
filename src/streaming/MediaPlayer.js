@@ -33,7 +33,6 @@ import PlaybackController from './controllers/PlaybackController';
 import StreamController from './controllers/StreamController';
 import MediaController from './controllers/MediaController';
 import ManifestLoader from './ManifestLoader';
-import LiveEdgeFinder from './utils/LiveEdgeFinder';
 import ErrorHandler from './utils/ErrorHandler';
 import Capabilities from './utils/Capabilities';
 import TextTracks from './text/TextTracks';
@@ -44,10 +43,7 @@ import ManifestModel from './models/ManifestModel';
 import MediaPlayerModel from './models/MediaPlayerModel';
 import MetricsModel from './models/MetricsModel';
 import AbrController from './controllers/AbrController';
-import TimeSyncController from './controllers/TimeSyncController';
 import VideoModel from './models/VideoModel';
-import MediaSourceController from './controllers/MediaSourceController';
-import BaseURLController from './controllers/BaseURLController';
 import Debug from './../core/Debug';
 import EventBus from './../core/EventBus';
 import Events from './../core/events/Events';
@@ -2016,10 +2012,6 @@ function MediaPlayer() {
         // creates or get objects instances
         let manifestLoader = createManifestLoader();
         let manifestModel = ManifestModel(context).getInstance();
-        let liveEdgeFinder = LiveEdgeFinder(context).getInstance();
-        let mediaSourceController = MediaSourceController(context).getInstance();
-        let timeSyncController = TimeSyncController(context).getInstance();
-        let baseURLController = BaseURLController(context).getInstance();
         let timelineConverter = TimelineConverter(context).getInstance();
         streamController = StreamController(context).getInstance();
 
@@ -2037,10 +2029,6 @@ function MediaPlayer() {
             adapter: adapter,
             metricsModel: metricsModel,
             dashMetrics: dashMetrics,
-            liveEdgeFinder: liveEdgeFinder,
-            mediaSourceController: mediaSourceController,
-            timeSyncController: timeSyncController,
-            baseURLController: baseURLController,
             errHandler: errHandler,
             timelineConverter: timelineConverter,
             videoModel: videoModel,

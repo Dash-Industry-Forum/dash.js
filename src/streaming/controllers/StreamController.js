@@ -42,6 +42,10 @@ import {
 import Debug from '../../core/Debug';
 import InitCache from '../utils/InitCache';
 import MediaPlayerEvents from '../MediaPlayerEvents';
+import TimeSyncController from './TimeSyncController';
+import LiveEdgeFinder from '../utils/LiveEdgeFinder';
+import BaseURLController from './BaseURLController';
+import MediaSourceController from './MediaSourceController';
 
 function StreamController() {
 
@@ -88,6 +92,10 @@ function StreamController() {
         protectionController = null;
         streams = [];
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
+        timeSyncController = TimeSyncController(context).getInstance();
+        liveEdgeFinder = LiveEdgeFinder(context).getInstance();
+        baseURLController = BaseURLController(context).getInstance();
+        mediaSourceController = MediaSourceController(context).getInstance();
         autoPlay = true;
         isStreamSwitchingInProgress = false;
         isPaused = false;
@@ -629,18 +637,6 @@ function StreamController() {
         }
         if (config.dashMetrics) {
             dashMetrics = config.dashMetrics;
-        }
-        if (config.liveEdgeFinder) {
-            liveEdgeFinder = config.liveEdgeFinder;
-        }
-        if (config.mediaSourceController) {
-            mediaSourceController = config.mediaSourceController;
-        }
-        if (config.timeSyncController) {
-            timeSyncController = config.timeSyncController;
-        }
-        if (config.baseURLController) {
-            baseURLController = config.baseURLController;
         }
         if (config.errHandler) {
             errHandler = config.errHandler;
