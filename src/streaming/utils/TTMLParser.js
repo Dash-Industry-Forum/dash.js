@@ -55,17 +55,19 @@ function TTMLParser() {
      * Parse the raw data and process it to return the HTML element representing the cue.
      * Return the region to be processed and controlled (hide/show) by the caption controller.
      * @param {string} data - raw data received from the TextSourceBuffer
-     * @param {integer} startTime - startTime for the current segment
-     * @param {integer} endTime - endTime for the current segment
+     * @param {integer} startTimeSegment - startTime for the current segment
+     * @param {integer} endTimeSegment - endTime for the current segment
      * @param {Array} images - images array referenced by subs MP4 box
      */
 
-    function parse(data, startTime, endTime, images) {
+    function parse(data, startTimeSegment, endTimeSegment, images) {
         let i,
             j;
 
         var errorMsg = '';
         var captionArray = [];
+        var startTime,
+            endTime;
 
         var imsc1doc = fromXML(data, function (msg) {
             errorMsg = msg;
@@ -78,9 +80,14 @@ function TTMLParser() {
             });
             for (j = 0; j < isd.contents.length; j++) {
                 if (isd.contents[j].contents.length >= 1) {
+
+                    //be sure that mediaTimeEvents values are in the mp4 segment time ranges.
+                    startTime = mediaTimeEvents[i] < startTimeSegment ? startTimeSegment : mediaTimeEvents[i];
+                    endTime = mediaTimeEvents[i + 1] > endTimeSegment ? endTimeSegment : mediaTimeEvents[i + 1];
+
                     captionArray.push({
-                        start: mediaTimeEvents[i],
-                        end: mediaTimeEvents[i + 1],
+                        start: startTime,
+                        end: endTime,
                         type: 'html',
                         cueID: getCueID(),
                         isd: isd,
