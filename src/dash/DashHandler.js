@@ -206,15 +206,14 @@ function DashHandler(config) {
 
         if (segments && segments.length > 0) {
             earliestTime = isNaN(earliestTime) ? segments[0].presentationStartTime : Math.min(segments[0].presentationStartTime,  earliestTime);
-        }
-
-        if (isDynamic && isNaN(timelineConverter.getExpectedLiveEdge())) {
-            const lastSegment = segments[segments.length - 1];
-            const liveEdge = lastSegment.presentationStartTime;
-            const metrics = metricsModel.getMetricsFor('stream');
-            // the last segment is the Expected, not calculated, live edge.
-            timelineConverter.setExpectedLiveEdge(liveEdge);
-            metricsModel.updateManifestUpdateInfo(dashMetrics.getCurrentManifestUpdate(metrics), {presentationStartTime: liveEdge});
+            if (isDynamic && isNaN(timelineConverter.getExpectedLiveEdge())) {
+                const lastSegment = segments[segments.length - 1];
+                const liveEdge = lastSegment.presentationStartTime;
+                const metrics = metricsModel.getMetricsFor('stream');
+                // the last segment is the Expected, not calculated, live edge.
+                timelineConverter.setExpectedLiveEdge(liveEdge);
+                metricsModel.updateManifestUpdateInfo(dashMetrics.getCurrentManifestUpdate(metrics), {presentationStartTime: liveEdge});
+            }
         }
     }
 
