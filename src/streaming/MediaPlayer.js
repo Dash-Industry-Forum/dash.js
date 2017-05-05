@@ -2123,7 +2123,8 @@ function MediaPlayer() {
             mssHandler = MssHandler(context).create({
                 eventBus: eventBus,
                 mediaPlayerModel: mediaPlayerModel,
-                metricsModel: metricsModel
+                metricsModel: metricsModel,
+                playbackController: playbackController
             });
         }
     }

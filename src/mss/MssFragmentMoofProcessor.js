@@ -39,6 +39,7 @@ function MssFragmentMoofProcessor(config) {
     let instance,
         log;
     let metricsModel = config.metricsModel;
+    let playbackController = config.playbackController;
 
     function setup() {
         log = Debug(context).getInstance().log;
@@ -140,7 +141,7 @@ function MssFragmentMoofProcessor(config) {
             var dvrInfos = metricsModel.getMetricsFor(request.mediaType).DVRInfo;
             if (dvrInfos) {
                 if (dvrInfos.length === 0 || (dvrInfos.length > 0 && range.end > dvrInfos[dvrInfos.length - 1].range.end)) {
-                    metricsModel.addDVRInfo(request.mediaType, new Date(), streamProcessor.getStreamInfo().manifestInfo, range);
+                    metricsModel.addDVRInfo(request.mediaType, playbackController.getTime(), streamProcessor.getStreamInfo().manifestInfo, range);
                 }
             }
         }

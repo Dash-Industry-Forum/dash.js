@@ -44,8 +44,10 @@ function MssHandler(config) {
     let context = this.context;
     let eventBus = config.eventBus;
     let metricsModel = config.metricsModel;
+    let playbackController = config.playbackController;
     let mssFragmentProcessor = MssFragmentProcessor(context).create({
-        metricsModel: metricsModel
+        metricsModel: metricsModel,
+        playbackController: playbackController
     });
     let mssParser;
 

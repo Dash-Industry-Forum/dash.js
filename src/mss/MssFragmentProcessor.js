@@ -128,6 +128,7 @@ function MssFragmentProcessor(config) {
 
     let context = this.context;
     let metricsModel = config.metricsModel;
+    let playbackController = config.playbackController;
     let instance;
 
     function setup() {}
@@ -139,7 +140,8 @@ function MssFragmentProcessor(config) {
 
     function processMoof(e, sp) {
         let mssFragmentMoofProcessor = MSSFragmentMoofProcessor(context).create({
-            metricsModel: metricsModel
+            metricsModel: metricsModel,
+            playbackController: playbackController
         });
         mssFragmentMoofProcessor.processMoof(e, sp);
     }
