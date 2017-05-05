@@ -471,6 +471,10 @@ function ScheduleController(config) {
         return bufferLevelRule.getBufferTarget(streamProcessor, type, streamController.isVideoTrackPresent());
     }
 
+    function getType() {
+        return type;
+    }
+
     function setPlayList(playList) {
         playListMetrics = playList;
     }
@@ -536,6 +540,7 @@ function ScheduleController(config) {
 
     instance = {
         initialize: initialize,
+        getType: getType,
         getStreamProcessor: getStreamProcessor,
         getSeekTarget: getSeekTarget,
         setSeekTarget: setSeekTarget,
