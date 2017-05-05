@@ -49,7 +49,6 @@ const STALL_THRESHOLD = 0.5;
 function BufferController(config) {
 
     const context = this.context;
-    const log = Debug(context).getInstance().log;
     const eventBus = EventBus(context).getInstance();
     const metricsModel = config.metricsModel;
     const manifestModel = config.manifestModel;
@@ -60,8 +59,8 @@ function BufferController(config) {
     const adapter = config.adapter;
     const textController = config.textController;
 
-
     let instance,
+        log,
         requiredQuality,
         isBufferingCompleted,
         bufferLevel,
@@ -86,6 +85,7 @@ function BufferController(config) {
         initCache;
 
     function setup() {
+        log = Debug(context).getInstance().log.bind(instance);
         requiredQuality = AbrController.QUALITY_DEFAULT;
         isBufferingCompleted = false;
         bufferLevel = 0;
