@@ -98,7 +98,7 @@
         }
     </style>
     </head>
-    <body onload="init()">
+    <body>
         <div>
         This sample allows you to explore the various external events that are accessible from MediaPlayer. Events can be dynamically added and removed. <br/>
         Choose the events you would like to monitor before starting playback:
@@ -142,5 +142,10 @@
             <p/>
             <span id="eventHolder">Events actively being listened to are shown below. Remove the listener by clicking on the event button.<br/></span>
         </div>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                init();
+            });
+        </script>
     </body>
 </html>

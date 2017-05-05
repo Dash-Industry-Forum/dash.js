@@ -48,7 +48,7 @@
         }
     </style>
     </head>
-    <body onload="init()">
+    <body>
         <div>
             <video id="video1" autoplay controls="true">
                 <source src="http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd" type="application/dash+xml"/>
@@ -62,5 +62,10 @@
             <video id="video4" autoplay controls="true">
             </video>
         </div>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                init();
+            });
+        </script>
     </body>
 </html>

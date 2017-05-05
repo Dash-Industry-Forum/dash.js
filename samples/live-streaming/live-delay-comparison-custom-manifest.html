@@ -89,7 +89,7 @@
         }
     </style>
     </head>
-<body onload="init()">
+<body>
 
 This sample allows you to explore the two MediaPlayer APIS which control live delay - setLiveDelay and setLiveDelayFragmentCount.<br/>
 The first takes the desired delay in seconds. The second takes the delay in terms of fragment count.
@@ -127,5 +127,10 @@ Enter the URL to a live (dynamic) stream manifest :
         </div>
     </div>
 </div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        init();
+    });
+</script>
 </body>
 </html>
