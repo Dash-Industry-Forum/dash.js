@@ -138,8 +138,10 @@ function MssFragmentMoofProcessor(config) {
             };
 
             var dvrInfos = metricsModel.getMetricsFor(request.mediaType).DVRInfo;
-            if (dvrInfos && dvrInfos.length > 0 && range.end > dvrInfos[dvrInfos.length - 1].range.end) {
-                metricsModel.addDVRInfo(adaptation.type, new Date(), streamProcessor.getStreamInfo().manifestInfo, range);
+            if (dvrInfos) {
+                if (dvrInfos.length === 0 || (dvrInfos.length > 0 && range.end > dvrInfos[dvrInfos.length - 1].range.end)) {
+                    metricsModel.addDVRInfo(request.mediaType, new Date(), streamProcessor.getStreamInfo().manifestInfo, range);
+                }
             }
         }
         return segmentsUpdated;

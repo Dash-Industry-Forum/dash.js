@@ -325,7 +325,10 @@ function RepresentationController() {
 
     function onBufferLevelUpdated(e) {
         if (e.sender.getStreamProcessor() !== streamProcessor) return;
-        addDVRMetric();
+        let manifest = manifestModel.getValue();
+        if (!manifest.doNotUpdateDVRWindowOnBufferUpdated) {
+            addDVRMetric();
+        }
     }
 
     function onQualityChanged(e) {

@@ -155,7 +155,7 @@ function StreamProcessor(config) {
     }
 
     function isUpdating() {
-        return representationController.isUpdating();
+        return representationController ? representationController.isUpdating() : false;
     }
 
     function getType() {
@@ -256,6 +256,10 @@ function StreamProcessor(config) {
         return dynamic;
     }
 
+    function switchTrackAsked() {
+        scheduleController.switchTrackAsked();
+    }
+
     function createBufferControllerForType(type) {
         let controller = null;
 
@@ -269,7 +273,7 @@ function StreamProcessor(config) {
                 adapter: adapter,
                 textController: TextController(context).getInstance()
             });
-        }else {
+        } else {
             controller = TextBufferController(context).create({
                 type: type,
                 metricsModel: MetricsModel(context).getInstance(),
@@ -303,6 +307,7 @@ function StreamProcessor(config) {
         createBuffer: createBuffer,
         getStreamInfo: getStreamInfo,
         updateMediaInfo: updateMediaInfo,
+        switchTrackAsked: switchTrackAsked,
         getMediaInfoArr: getMediaInfoArr,
         getMediaInfo: getMediaInfo,
         getMediaSource: getMediaSource,

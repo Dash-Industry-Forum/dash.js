@@ -72,11 +72,18 @@ function NextFragmentRequestRule(config) {
 
         let request;
         if (requestToReplace) {
+            // log('requestToReplace :' + requestToReplace.url);
             time = requestToReplace.startTime + (requestToReplace.duration / 2);
-            request = adapter.getFragmentRequestForTime(streamProcessor, representationInfo, time, {timeThreshold: 0, ignoreIsFinished: true});
+            request = adapter.getFragmentRequestForTime(streamProcessor, representationInfo, time, {
+                timeThreshold: 0,
+                ignoreIsFinished: true
+            });
         } else {
-            request = adapter.getFragmentRequestForTime(streamProcessor, representationInfo, time, {keepIdx: !hasSeekTarget});
+            request = adapter.getFragmentRequestForTime(streamProcessor, representationInfo, time, {
+                keepIdx: !hasSeekTarget
+            });
             if (request && streamProcessor.getFragmentModel().isFragmentLoaded(request)) {
+                // log('Fragment is loaded for request :' + request.url + ' - Get Next fragment');
                 request = adapter.getNextFragmentRequest(streamProcessor, representationInfo);
             }
             if (request) {
@@ -85,6 +92,13 @@ function NextFragmentRequestRule(config) {
                 scheduleController.setTimeToLoadDelay(0);
             }
         }
+
+        /*
+        if (request) {
+            log('Return request :' + request.url);
+        } else {
+            log('no request');
+        }*/
 
         return request;
     }

@@ -73,7 +73,8 @@ function Stream(config) {
         fragmentController,
         eventController,
         abrController,
-        textController;
+        textController,
+        trackChangedEvent;
 
 
     function setup() {
@@ -276,16 +277,29 @@ function Stream(config) {
         if (!processor) return;
 
         let currentTime = playbackController.getTime();
+        log('Stream -  Process track changed at current time ' + currentTime);
         let buffer = processor.getBuffer();
         let mediaInfo = e.newMediaInfo;
+        let manifest = manifestModel.getValue();
         let idx = streamProcessors.indexOf(processor);
         let mediaSource = processor.getMediaSource();
 
+        log('Stream -  Update stream controller');
         if (mediaInfo.type !== 'fragmentedText') {
-            processor.reset(true);
-            createStreamProcessor(mediaInfo, mediaSource, {buffer: buffer, replaceIdx: idx, currentTime: currentTime});
-            playbackController.seek(playbackController.getTime());
-        }else {
+            if (manifest.refreshManifestOnSwitchTrack) {
+                log('Stream -  Refreshing manifest for switch track');
+                trackChangedEvent = e;
+                manifestUpdater.refreshManifest();
+            } else {
+                processor.reset(true);
+                createStreamProcessor(mediaInfo, mediaSource, {
+                    buffer: buffer,
+                    replaceIdx: idx,
+                    currentTime: currentTime
+                });
+                playbackController.seek(playbackController.getTime());
+            }
+        } else {
             processor.updateMediaInfo(mediaInfo);
         }
     }
@@ -310,18 +324,22 @@ function Stream(config) {
             streamProcessors.push(streamProcessor);
         }
 
+        if (optionalSettings && optionalSettings.ignoreMediaInfo) {
+            return;
+        }
+
         if ((mediaInfo.type === 'text' || mediaInfo.type === 'fragmentedText')) {
             let idx;
             for (let i = 0; i < allMediaForType.length; i++) {
                 if (allMediaForType[i].index === mediaInfo.index) {
                     idx = i;
                 }
-                streamProcessor.updateMediaInfo(allMediaForType[i]);//creates text tracks for all adaptations in one stream processor
+                streamProcessor.updateMediaInfo(allMediaForType[i]); //creates text tracks for all adaptations in one stream processor
             }
             if (mediaInfo.type === 'fragmentedText') {
-                streamProcessor.updateMediaInfo(allMediaForType[idx]);//sets the initial media info
+                streamProcessor.updateMediaInfo(allMediaForType[idx]); //sets the initial media info
             }
-        }else {
+        } else {
             streamProcessor.updateMediaInfo(mediaInfo);
         }
     }
@@ -416,7 +434,10 @@ function Stream(config) {
         if (protectionController) {
             protectionController.initialize(manifestModel.getValue(), getMediaInfo('audio'), getMediaInfo('video'));
         }
-        eventBus.trigger(Events.STREAM_INITIALIZED, {streamInfo: streamInfo, error: error});
+        eventBus.trigger(Events.STREAM_INITIALIZED, {
+            streamInfo: streamInfo,
+            error: error
+        });
     }
 
     function getMediaInfo(type) {
@@ -449,7 +470,9 @@ function Stream(config) {
             if (!processors[i].isBufferingCompleted()) return;
         }
 
-        eventBus.trigger(Events.STREAM_BUFFERING_COMPLETED, {streamInfo: streamInfo});
+        eventBus.trigger(Events.STREAM_BUFFERING_COMPLETED, {
+            streamInfo: streamInfo
+        });
     }
 
     function onDataUpdateCompleted(e) {
@@ -509,6 +532,12 @@ function Stream(config) {
             let mediaInfo = adapter.getMediaInfoForType(streamInfo, streamProcessor.getType());
             abrController.updateTopQualityIndex(mediaInfo);
             streamProcessor.updateMediaInfo(mediaInfo);
+        }
+
+        if (trackChangedEvent) {
+            let processor = getProcessorForMediaInfo(trackChangedEvent.oldMediaInfo);
+            if (!processor) return;
+            processor.switchTrackAsked();
         }
 
         isUpdating = false;
