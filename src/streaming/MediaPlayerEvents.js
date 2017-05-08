@@ -247,6 +247,11 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#PLAYBACK_TIME_UPDATED
          */
         this.PLAYBACK_TIME_UPDATED = 'playbackTimeUpdated';
+        /**
+         * Manifest validity changed - As a result of an MPD validity expiration event.
+         * @event MediaPlayerEvents#MANIFEST_VALIDITY_CHANGED
+         */
+        this.MANIFEST_VALIDITY_CHANGED = 'manifestValidityChanged';
     }
 }
 
