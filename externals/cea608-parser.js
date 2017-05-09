@@ -836,6 +836,14 @@
             for (var i = 0 ; i < byteList.length ; i+=2) {
                 a = byteList[i] & 0x7f;
                 b = byteList[i+1] & 0x7f;
+
+                if (a >= 0x10 && a <= 0x1f && a === this.lastCmdA && b === this.lastCmdB) {
+                    this.lastCmdA = null;
+                    this.lastCmdB = null;
+                    logger.log("DEBUG", "Repeated command (" + numArrayToHexArray([a, b]) + ") is dropped");
+                    continue; // Repeated commands are dropped (once)
+                }
+
                 if (a === 0 && b === 0) {
                     this.dataCounters.padding += 2;
                     continue;
@@ -882,28 +890,21 @@
         parseCmd: function(a, b) {
             var chNr = null;
 
-            var cond1 = (a === 0x14 || a === 0x1C) && (0x20 <= b && b <= 0x2F);
+            var cond1 = (a === 0x14 || a === 0x15 || a === 0x1C || a === 0x1D) && (0x20 <= b && b <= 0x2F);
             var cond2 = (a === 0x17 || a === 0x1F) && (0x21 <= b && b <= 0x23);
             if (!(cond1 || cond2)) {
                 return false;
             }
                  
-            if (a === this.lastCmdA && b === this.lastCmdB) {
-                this.lastCmdA = null;
-                this.lastCmdB = null; // Repeated commands are dropped (once)
-                logger.log("DEBUG", "Repeated command (" + numArrayToHexArray([a, b]) + ") is dropped");
-                return true;
-            }
-
-            if (a === 0x14 || a === 0x17) {
+            if (a === 0x14 || a === 0x15 || a === 0x17) {
                 chNr = 1;
             } else {
-                chNr = 2; // (a === 0x1C || a=== 0x1f)
+                chNr = 2; // (a === 0x1C || a === 0x1D || a=== 0x1f)
             }
 
             var channel = this.channels[chNr - 1];
 
-            if (a === 0x14 || a === 0x1C) {
+            if (a === 0x14 || a === 0x15 || a === 0x1C || a === 0x1D) {
                 if (b === 0x20) {
                     channel.cc_RCL();
                 } else if (b === 0x21) {
@@ -964,8 +965,12 @@
                     return false;
                 }
                 var channel = this.channels[chNr-1];
+                // cea608 spec says midrow codes should inject a space
+                channel.insertChars([0x20]);
                 channel.cc_MIDROW(b);
                 logger.log("DEBUG", "MIDROW (" + numArrayToHexArray([a, b]) + ")");
+                this.lastCmdA = a;
+                this.lastCmdB = b;
                 return true;
             }
             return false;
@@ -983,12 +988,6 @@
             var case2 = (a === 0x10 || a === 0x18) && (0x40 <= b && b <= 0x5F);
             if (! (case1 || case2)) {
                 return false;
-            }
-
-            if (a === this.lastCmdA && b === this.lastCmdB) {
-                this.lastCmdA = null;
-                this.lastCmdB = null;
-                return true; // Repeated commands are dropped (once)
             }
 
             chNr = (a <= 0x17) ? 1 : 2;
@@ -1062,14 +1061,16 @@
                 }
                 logger.log("INFO", "Special char '" + getCharForByte(oneCode) + "' in channel " + channelNr);
                 charCodes = [oneCode];
+                this.lastCmdA = a;
+                this.lastCmdB = b;
             } else if (0x20 <= a && a <= 0x7f) {
                 charCodes = (b === 0) ? [a] : [a, b];
+                this.lastCmdA = null;
+                this.lastCmdB = null;
             }
             if (charCodes) {
                 var hexCodes = numArrayToHexArray(charCodes);
                 logger.log("DEBUG", "Char codes =  " + hexCodes.join(","));
-                this.lastCmdA = null;
-                this.lastCmdB = null;
             }
             return charCodes;
         },
@@ -1107,8 +1108,8 @@
             chNr = (a < 0x18) ? 1 : 2;
             channel = this.channels[chNr-1];
             channel.setBkgData(bkgData);
-            this.lastCmdA = null;
-            this.lastCmdB = null;
+            this.lastCmdA = a;
+            this.lastCmdB = b;
             return true;
         },
 
