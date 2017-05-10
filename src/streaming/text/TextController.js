@@ -138,13 +138,13 @@ function TextController() {
                     textTracks.setCurrentTrackIdx(i);
                     textTracks.addCaptions(i, 0, null); // Make sure that previously queued captions are added as cues
 
-                    // specific to fragmented texe
+                    // specific to fragmented text
                     if (isFragmented && i < nrNonEmbeddedTracks) {
                         var currentFragTrack = mediaController.getCurrentTrackFor('fragmentedText', streamController.getActiveStreamInfo());
                         var newFragTrack = fragmentedTracks[i];
                         if (newFragTrack !== currentFragTrack) {
                             fragmentModel.abortRequests();
-                            textTracks.deleteTrackCues(currentFragTrack);
+                            textTracks.deleteCuesFromTrackIdx(oldTrackIdx);
                             mediaController.setTrack(newFragTrack);
                             textSourceBuffer.setCurrentFragmentedTrackIdx(i);
                         }

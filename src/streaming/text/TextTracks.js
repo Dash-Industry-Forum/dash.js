@@ -550,6 +550,14 @@ function TextTracks() {
         }
     }
 
+    function deleteCuesFromTrackIdx(trackIdx) {
+        var track = getTextTrack(trackIdx);
+        if (track) {
+            track.nonAddedCues = [];
+            deleteTrackCues(track);
+        }
+    }
+
     function deleteAllTextTracks() {
         var ln = trackElementArr.length;
         for (var i = 0; i < ln; i++) {
@@ -637,7 +645,7 @@ function TextTracks() {
         getCurrentTrackIdx: getCurrentTrackIdx,
         setCurrentTrackIdx: setCurrentTrackIdx,
         getTrackIdxForId: getTrackIdxForId,
-        deleteTrackCues: deleteTrackCues,
+        deleteCuesFromTrackIdx: deleteCuesFromTrackIdx,
         deleteAllTextTracks: deleteAllTextTracks,
         deleteTextTrack: deleteTextTrack,
         setConfig: setConfig
