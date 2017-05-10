@@ -58,9 +58,10 @@ function TTMLParser() {
      * @param {integer} startTimeSegment - startTime for the current segment
      * @param {integer} endTimeSegment - endTime for the current segment
      * @param {Array} images - images array referenced by subs MP4 box
+     * @param {number} offsetTime - offset time to apply to cue time
      */
 
-    function parse(data, startTimeSegment, endTimeSegment, images) {
+    function parse(data, startTimeSegment, endTimeSegment, images, offsetTime) {
         let i,
             j;
 
@@ -80,10 +81,9 @@ function TTMLParser() {
             });
             for (j = 0; j < isd.contents.length; j++) {
                 if (isd.contents[j].contents.length >= 1) {
-
                     //be sure that mediaTimeEvents values are in the mp4 segment time ranges.
-                    startTime = mediaTimeEvents[i] < startTimeSegment ? startTimeSegment : mediaTimeEvents[i];
-                    endTime = mediaTimeEvents[i + 1] > endTimeSegment ? endTimeSegment : mediaTimeEvents[i + 1];
+                    startTime = (mediaTimeEvents[i] + offsetTime) < startTimeSegment ? startTimeSegment : (mediaTimeEvents[i] + offsetTime);
+                    endTime = (mediaTimeEvents[i + 1] + offsetTime) > endTimeSegment ? endTimeSegment : (mediaTimeEvents[i + 1] + offsetTime);
 
                     captionArray.push({
                         start: startTime,
