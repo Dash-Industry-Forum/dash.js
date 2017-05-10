@@ -470,6 +470,7 @@ function MssParser(config) {
         manifest.timeShiftBufferDepth = parseFloat(smoothStreamingMedia.getAttribute('DVRWindowLength')) / TIME_SCALE_100_NANOSECOND_UNIT;
         manifest.mediaPresentationDuration = (parseFloat(smoothStreamingMedia.getAttribute('Duration')) === 0) ? Infinity : parseFloat(smoothStreamingMedia.getAttribute('Duration')) / TIME_SCALE_100_NANOSECOND_UNIT;
         manifest.minBufferTime = mediaPlayerModel.getStableBufferTime();
+        manifest.ttmlTimeIsRelative = true;
 
         // In case of live streams, set availabilityStartTime property according to DVRWindowLength
         if (manifest.type === 'dynamic') {

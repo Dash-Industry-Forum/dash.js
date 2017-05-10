@@ -171,9 +171,11 @@ function TTMLParser() {
      * If intervalStart and intervalEnd defined, use them to clip the interval.
      * Return null if no overlap with interval
      */
-    function getClippedInterval(entity, intervalStart, intervalEnd) {
+    function getClippedInterval(entity, intervalStart, intervalEnd, offsetTime) {
         let startTime = parseTimings(entity.begin);
         let endTime = parseTimings(entity.end);
+        startTime += offsetTime;
+        endTime += offsetTime;
         startTime = clipStartTime(startTime, intervalStart);
         endTime = clipEndTime(endTime, intervalEnd);
         if (typeof intervalStart !== 'undefined' && typeof intervalEnd !== 'undefined') {
@@ -207,9 +209,9 @@ function TTMLParser() {
      * @param {number} intervalStart
      * @param {number} intervalEnd
      * @param {array} imageArray - images represented as binary strings
+     * @param {number} offsetTime - offset time to apply to cue time
      */
-
-    function parse(data, intervalStart, intervalEnd, imageArray) {
+    function parse(data, intervalStart, intervalEnd, imageArray, offsetTime) {
         let tt, // Top element
             head, // head in tt
             body, // body in tt
@@ -364,7 +366,7 @@ function TTMLParser() {
                 // The timing may either be on paragraph or span level.
                 if (paragraph.hasOwnProperty('begin') && paragraph.hasOwnProperty('end')) {
                     // Timing on paragraph level
-                    let clippedInterval = getClippedInterval(paragraph, intervalStart, intervalEnd);
+                    let clippedInterval = getClippedInterval(paragraph, intervalStart, intervalEnd, offsetTime);
                     if (clippedInterval !== null) {
                         cueIntervals.push(clippedInterval);
                     }
