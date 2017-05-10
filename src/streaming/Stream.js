@@ -285,12 +285,13 @@ function Stream(config) {
         let mediaSource = processor.getMediaSource();
 
         log('Stream -  Update stream controller');
-        if (mediaInfo.type !== 'fragmentedText') {
-            if (manifest.refreshManifestOnSwitchTrack) {
-                log('Stream -  Refreshing manifest for switch track');
-                trackChangedEvent = e;
-                manifestUpdater.refreshManifest();
-            } else {
+        if (manifest.refreshManifestOnSwitchTrack) {
+            log('Stream -  Refreshing manifest for switch track');
+            trackChangedEvent = e;
+            manifestUpdater.refreshManifest();
+        } else {
+            if (mediaInfo.type !== 'fragmentedText') {
+
                 processor.reset(true);
                 createStreamProcessor(mediaInfo, mediaSource, {
                     buffer: buffer,
@@ -298,9 +299,9 @@ function Stream(config) {
                     currentTime: currentTime
                 });
                 playbackController.seek(playbackController.getTime());
+            } else {
+                processor.updateMediaInfo( mediaInfo);
             }
-        } else {
-            processor.updateMediaInfo(mediaInfo);
         }
     }
 
@@ -535,9 +536,12 @@ function Stream(config) {
         }
 
         if (trackChangedEvent) {
-            let processor = getProcessorForMediaInfo(trackChangedEvent.oldMediaInfo);
-            if (!processor) return;
-            processor.switchTrackAsked();
+            let mediaInfo = trackChangedEvent.newMediaInfo;
+            if (mediaInfo.type !== 'fragmentedText') {
+                let processor = getProcessorForMediaInfo(trackChangedEvent.oldMediaInfo);
+                if (!processor) return;
+                processor.switchTrackAsked();
+            }
         }
 
         isUpdating = false;
