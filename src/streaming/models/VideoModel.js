@@ -30,6 +30,9 @@
  */
 
 import FactoryMaker from '../../core/FactoryMaker';
+import EventBus from '../../core/EventBus';
+import Events from '../../core/events/Events';
+import Debug from '../../core/Debug';
 
 function VideoModel() {
 
@@ -39,6 +42,10 @@ function VideoModel() {
         videoContainer,
         stalledStreams,
         previousPlaybackRate;
+
+    let context = this.context;
+    let log = Debug(context).getInstance().log;
+    let eventBus = EventBus(context).getInstance();
 
     function initialize() {
         stalledStreams = [];
@@ -204,9 +211,79 @@ function VideoModel() {
         return result;
     }
 
+    function play() {
+        if (element) {
+            element.autoplay = true;
+            const p = element.play();
+            if (p && (typeof Promise !== 'undefined') && (p instanceof Promise)) {
+                p.catch((e) => {
+                    if (e.name === 'NotAllowedError') {
+                        eventBus.trigger(Events.PLAYBACK_NOT_ALLOWED);
+                    }
+                    log(`Caught pending play exception - continuing (${e})`);
+                });
+            }
+        }
+    }
+
+    function isPaused() {
+        return element ? element.paused : null;
+    }
+
+    function pause() {
+        if (element) {
+            element.pause();
+            element.autoplay = false;
+        }
+    }
+
+    function isSeeking() {
+        return element ? element.seeking : null;
+    }
+
+    function getTime() {
+        return element ? element.currentTime : null;
+    }
+
+    function getPlaybackRate() {
+        return element ? element.playbackRate : null;
+    }
+
+    function getPlayedRanges() {
+        return element ? element.played : null;
+    }
+
+    function getEnded() {
+        return element ? element.ended : null;
+    }
+
+    function addEventListener(eventName, eventCallBack) {
+        if (element) {
+            element.addEventListener(eventName, eventCallBack);
+        }
+    }
+
+    function removeEventListener(eventName, eventCallBack) {
+        if (element) {
+            element.removeEventListener(eventName, eventCallBack);
+        }
+    }
+
+    function getReadyState() {
+        return element ? element.readyState : NaN;
+    }
+
     instance = {
         initialize: initialize,
         setCurrentTime: setCurrentTime,
+        play: play,
+        isPaused: isPaused,
+        pause: pause,
+        isSeeking: isSeeking,
+        getTime: getTime,
+        getPlaybackRate: getPlaybackRate,
+        getPlayedRanges: getPlayedRanges,
+        getEnded: getEnded,
         setStallState: setStallState,
         getElement: getElement,
         setElement: setElement,
@@ -216,7 +293,10 @@ function VideoModel() {
         setVideoContainer: setVideoContainer,
         getTTMLRenderingDiv: getTTMLRenderingDiv,
         setTTMLRenderingDiv: setTTMLRenderingDiv,
-        getPlaybackQuality: getPlaybackQuality
+        getPlaybackQuality: getPlaybackQuality,
+        addEventListener: addEventListener,
+        removeEventListener: removeEventListener,
+        getReadyState: getReadyState
     };
 
     return instance;
