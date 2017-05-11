@@ -518,13 +518,10 @@ function AbrController() {
     }
 
     function setElementSize() {
-        var element = videoModel.getElement();
-        if (element !== undefined) {
-            var hasPixelRatio = usePixelRatioInLimitBitrateByPortal && window.hasOwnProperty('devicePixelRatio');
-            var pixelRatio = hasPixelRatio ? window.devicePixelRatio : 1;
-            elementWidth = element.clientWidth * pixelRatio;
-            elementHeight = element.clientHeight * pixelRatio;
-        }
+        var hasPixelRatio = usePixelRatioInLimitBitrateByPortal && window.hasOwnProperty('devicePixelRatio');
+        var pixelRatio = hasPixelRatio ? window.devicePixelRatio : 1;
+        elementWidth = videoModel.getClientWidth() * pixelRatio;
+        elementHeight = videoModel.getClientHeight() * pixelRatio;
     }
 
     function checkPortalSize(idx, type) {

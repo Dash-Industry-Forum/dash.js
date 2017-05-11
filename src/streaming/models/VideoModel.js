@@ -277,6 +277,14 @@ function VideoModel() {
         return element ? element.buffered : null;
     }
 
+    function getClientWidth() {
+        return element ? element.clientWidth : NaN;
+    }
+
+    function getClientHeight() {
+        return element ? element.clientHeight : NaN;
+    }
+
     instance = {
         initialize: initialize,
         setCurrentTime: setCurrentTime,
@@ -301,7 +309,9 @@ function VideoModel() {
         addEventListener: addEventListener,
         removeEventListener: removeEventListener,
         getReadyState: getReadyState,
-        getBufferRange: getBufferRange
+        getBufferRange: getBufferRange,
+        getClientWidth: getClientWidth,
+        getClientHeight: getClientHeight
     };
 
     return instance;
