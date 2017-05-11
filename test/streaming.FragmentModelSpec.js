@@ -54,8 +54,7 @@ describe("FragmentModel", function () {
             let clock;
 
             beforeEach(function () {
-                fragmentModel = FragmentModel(context).create({metricsModel: metricsModel});
-                fragmentModel.setLoader(loader);
+                fragmentModel = FragmentModel(context).create({metricsModel: metricsModel, fragmentLoader: loader});
                 clock = sinon.useFakeTimers();
 
                 setTimeout(function(){

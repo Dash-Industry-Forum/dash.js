@@ -37,8 +37,6 @@ import TextBufferController from './text/TextBufferController';
 import ScheduleController from './controllers/ScheduleController';
 import MediaPlayerModel from './models/MediaPlayerModel';
 import MetricsModel from './models/MetricsModel';
-import FragmentLoader from './FragmentLoader';
-import RequestModifier from './utils/RequestModifier';
 import SourceBufferController from './controllers/SourceBufferController';
 import TextController from './text/TextController';
 import DashManifestModel from '../dash/models/DashManifestModel';
@@ -68,7 +66,6 @@ function StreamProcessor(config) {
         scheduleController,
         representationController,
         fragmentController,
-        fragmentLoader,
         fragmentModel;
 
 
@@ -103,14 +100,7 @@ function StreamProcessor(config) {
         bufferController.initialize(type, mediaSource, this);
         scheduleController.initialize(type, this);
 
-        fragmentLoader = FragmentLoader(context).create({
-            metricsModel: MetricsModel(context).getInstance(),
-            errHandler: ErrorHandler(context).getInstance(),
-            requestModifier: RequestModifier(context).getInstance()
-        });
-
         fragmentModel = scheduleController.getFragmentModel();
-        fragmentModel.setLoader(fragmentLoader);
 
         representationController = RepresentationController(context).create();
         representationController.initialize(this);
@@ -136,7 +126,6 @@ function StreamProcessor(config) {
         }
 
         fragmentController = null;
-        fragmentLoader = null;
 
         eventController = null;
         stream = null;
@@ -160,10 +149,6 @@ function StreamProcessor(config) {
 
     function getRepresentationController() {
         return representationController;
-    }
-
-    function getFragmentLoader() {
-        return fragmentLoader;
     }
 
     function getIndexHandler() {
@@ -224,14 +209,6 @@ function StreamProcessor(config) {
         return eventController;
     }
 
-    function start() {
-        scheduleController.start();
-    }
-
-    function stop() {
-        scheduleController.stop();
-    }
-
     function getCurrentRepresentationInfo() {
         return adapter.getCurrentRepresentationInfo(manifestModel.getValue(), representationController);
     }
@@ -241,7 +218,21 @@ function StreamProcessor(config) {
     }
 
     function isBufferingCompleted() {
-        return bufferController.getIsBufferingCompleted();
+        if (bufferController) {
+            return bufferController.getIsBufferingCompleted();
+        }
+
+        return false;
+    }
+
+    function getBufferLevel() {
+        return bufferController.getBufferLevel();
+    }
+
+    function switchInitData(representationId) {
+        if (bufferController) {
+            bufferController.switchInitData(getStreamInfo().id, representationId);
+        }
     }
 
     function createBuffer() {
@@ -289,7 +280,6 @@ function StreamProcessor(config) {
         getType: getType,
         getBufferController: getBufferController,
         getABRController: getABRController,
-        getFragmentLoader: getFragmentLoader,
         getFragmentModel: getFragmentModel,
         getScheduleController: getScheduleController,
         getEventController: getEventController,
@@ -298,6 +288,8 @@ function StreamProcessor(config) {
         getIndexHandler: getIndexHandler,
         getCurrentRepresentationInfo: getCurrentRepresentationInfo,
         getRepresentationInfoForQuality: getRepresentationInfoForQuality,
+        getBufferLevel: getBufferLevel,
+        switchInitData: switchInitData,
         isBufferingCompleted: isBufferingCompleted,
         createBuffer: createBuffer,
         getStreamInfo: getStreamInfo,
@@ -307,8 +299,6 @@ function StreamProcessor(config) {
         getMediaSource: getMediaSource,
         getBuffer: getBuffer,
         setBuffer: setBuffer,
-        start: start,
-        stop: stop,
         isDynamic: isDynamic,
         reset: reset
     };

@@ -41,8 +41,7 @@ function SourceBufferController() {
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
 
-    let instance,
-        dashManifestModel;
+    let instance;
 
     function createSourceBuffer(mediaSource, mediaInfo) {
 
@@ -345,14 +344,6 @@ function SourceBufferController() {
         } catch (ex) {}
     }
 
-    function setConfig(config) {
-        if (!config) return;
-
-        if (config.dashManifestModel) {
-            dashManifestModel = config.dashManifestModel;
-        }
-    }
-
     function waitForUpdateEnd(buffer, callback) {
         var intervalId;
         var CHECK_INTERVAL = 50;
@@ -401,8 +392,7 @@ function SourceBufferController() {
         getAllRanges: getAllRanges,
         getTotalBufferedTime: getTotalBufferedTime,
         getBufferLength: getBufferLength,
-        getRangeDifference: getRangeDifference,
-        setConfig: setConfig
+        getRangeDifference: getRangeDifference
     };
 
     return instance;

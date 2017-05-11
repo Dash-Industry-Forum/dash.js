@@ -49,21 +49,16 @@ function FragmentModel(config) {
     const metricsModel = config.metricsModel;
 
     let instance,
-        scheduleController,
         executedRequests,
         loadingRequests,
         fragmentLoader;
 
     function setup() {
-        scheduleController = null;
-        fragmentLoader = null;
         executedRequests = [];
         loadingRequests = [];
         eventBus.on(Events.LOADING_COMPLETED, onLoadingCompleted, instance);
-    }
 
-    function setLoader(value) {
-        fragmentLoader = value;
+        fragmentLoader = config.fragmentLoader;
     }
 
     function isFragmentLoaded(request) {
@@ -246,7 +241,6 @@ function FragmentModel(config) {
     }
 
     instance = {
-        setLoader: setLoader,
         getRequests: getRequests,
         isFragmentLoaded: isFragmentLoaded,
         removeExecutedRequestsBeforeTime: removeExecutedRequestsBeforeTime,
