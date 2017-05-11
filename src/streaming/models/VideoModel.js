@@ -285,6 +285,10 @@ function VideoModel() {
         return element ? element.clientHeight : NaN;
     }
 
+    function getTextTracks() {
+        return element ? element.textTracks : [];
+    }
+
     instance = {
         initialize: initialize,
         setCurrentTime: setCurrentTime,
@@ -311,7 +315,8 @@ function VideoModel() {
         getReadyState: getReadyState,
         getBufferRange: getBufferRange,
         getClientWidth: getClientWidth,
-        getClientHeight: getClientHeight
+        getClientHeight: getClientHeight,
+        getTextTracks: getTextTracks
     };
 
     return instance;
