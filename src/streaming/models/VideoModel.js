@@ -273,6 +273,10 @@ function VideoModel() {
         return element ? element.readyState : NaN;
     }
 
+    function getBufferRange() {
+        return element ? element.buffered : null;
+    }
+
     instance = {
         initialize: initialize,
         setCurrentTime: setCurrentTime,
@@ -296,7 +300,8 @@ function VideoModel() {
         getPlaybackQuality: getPlaybackQuality,
         addEventListener: addEventListener,
         removeEventListener: removeEventListener,
-        getReadyState: getReadyState
+        getReadyState: getReadyState,
+        getBufferRange: getBufferRange
     };
 
     return instance;
