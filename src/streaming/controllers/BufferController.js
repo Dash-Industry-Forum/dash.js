@@ -83,7 +83,8 @@ function BufferController(config) {
         abrController,
         scheduleController,
         mediaPlayerModel,
-        initCache;
+        initCache,
+        seekStartTime;
 
     function setup() {
         requiredQuality = AbrController.QUALITY_DEFAULT;
@@ -223,7 +224,7 @@ function BufferController(config) {
             const ranges = sourceBufferController.getAllRanges(buffer);
             if (ranges && ranges.length > 0) {
                 for (let i = 0, len = ranges.length; i < len; i++) {
-                    log('Buffered Range for type:', type , ':' ,ranges.start(i) ,  ' - ' ,  ranges.end(i));
+                    log('Buffered Range for type:', type, ':', ranges.start(i), ' - ', ranges.end(i));
                 }
             }
 
@@ -254,7 +255,22 @@ function BufferController(config) {
     function onPlaybackSeeking() {
         lastIndex = Number.POSITIVE_INFINITY;
         isBufferingCompleted = false;
+        seekStartTime = undefined;
         onPlaybackProgression();
+    }
+
+    function getWorkingTime() {
+        // This function returns current working time for buffer (either start time or current time if playback has started)
+        let ret = playbackController.getTime();
+
+        if (seekStartTime) {
+            // if there is a seek start time, the first buffer data will be available on maximum value between first buffer range value and seek start time.
+            let ranges = sourceBufferController.getAllRanges(buffer);
+            if (ranges && ranges.length) {
+                ret = Math.max(ranges.start(0), seekStartTime);
+            }
+        }
+        return ret;
     }
 
     function onPlaybackProgression() {
@@ -264,7 +280,7 @@ function BufferController(config) {
 
     function updateBufferLevel() {
         if (playbackController) {
-            bufferLevel = sourceBufferController.getBufferLength(buffer, playbackController.getTime());
+            bufferLevel = sourceBufferController.getBufferLength(buffer, getWorkingTime());
             eventBus.trigger(Events.BUFFER_LEVEL_UPDATED, {sender: instance, bufferLevel: bufferLevel});
             checkIfSufficientBuffer();
         }
@@ -345,11 +361,11 @@ function BufferController(config) {
 
         while (i < length) {
 
-            let identifier = String.fromCharCode(data[i + 4],data[i + 5],data[i + 6],data[i + 7]);
+            let identifier = String.fromCharCode(data[i + 4], data[i + 5], data[i + 6], data[i + 7]);
             let size = data[i] * expThree + data[i + 1] * expTwo + data[i + 2] * 256 + data[i + 3] * 1;
 
-            if (identifier != 'emsg' ) {
-                for (let l = i ; l < i + size; l++) {
+            if (identifier != 'emsg') {
+                for (let l = i; l < i + size; l++) {
                     modData[j] = data[l];
                     j++;
                 }
@@ -390,10 +406,13 @@ function BufferController(config) {
 
         let removeEnd = (req && !isNaN(req.startTime)) ? req.startTime : Math.floor(currentTime);
         if ((range === null) && (buffer.buffered.length > 0)) {
-            removeEnd = buffer.buffered.end(buffer.buffered.length - 1 );
+            removeEnd = buffer.buffered.end(buffer.buffered.length - 1);
         }
 
-        return {start: buffer.buffered.start(0), end: removeEnd};
+        return {
+            start: buffer.buffered.start(0),
+            end: removeEnd
+        };
     }
 
     function clearBuffer(range) {
@@ -462,6 +481,10 @@ function BufferController(config) {
 
     function setStreamProcessor(value) {
         streamProcessor = value;
+    }
+
+    function setSeekStartTime(value) {
+        seekStartTime = value;
     }
 
     function getBuffer() {
@@ -537,6 +560,7 @@ function BufferController(config) {
         getType: getType,
         getStreamProcessor: getStreamProcessor,
         setStreamProcessor: setStreamProcessor,
+        setSeekStartTime: setSeekStartTime,
         getBuffer: getBuffer,
         setBuffer: setBuffer,
         getBufferLevel: getBufferLevel,
