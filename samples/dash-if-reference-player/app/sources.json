@@ -54,8 +54,12 @@
           "name": "Multiperiod SegmentTemplate. New period every minute (livesim)"
         },
         {
-          "url": "http://irtdashreference-i.akamaihd.net/dash/live/901161/bfs/manifestARD.mpd",
-          "name": "IRT reference with EBU-TT-D subtitles"
+            "url": "http://irtdashreference-i.akamaihd.net/dash/live/901161/bfs/manifestARD.mpd",
+            "name": "IRT reference with EBU-TT-D subtitles"
+        },
+        {
+            "url": "http://irtdashreference-i.akamaihd.net/dash/live/901161/keepixo1/manifestBR2.mpd",
+            "name": "IRT CMAF reference with subtitles"
         },
         {
           "url": " http://vm2.dashif.org/livesim-dev/ato_10/testpic_2s/Manifest.mpd",
