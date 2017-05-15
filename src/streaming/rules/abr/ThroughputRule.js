@@ -44,7 +44,6 @@ function ThroughputRule(config) {
     const AVERAGE_LATENCY_SAMPLES = AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD;
     const CACHE_LOAD_THRESHOLD_VIDEO = 50;
     const CACHE_LOAD_THRESHOLD_AUDIO = 5;
-    const CACHE_LOAD_THRESHOLD_LATENCY = 50;
     const THROUGHPUT_DECREASE_SCALE = 1.3;
     const THROUGHPUT_INCREASE_SCALE = 1.3;
 
@@ -120,24 +119,16 @@ function ThroughputRule(config) {
 
     function isCachedResponse(latency, downloadTime, mediaType) {
         let ret = false;
-
-        if (latency < CACHE_LOAD_THRESHOLD_LATENCY) {
-            ret = true;
+        switch (mediaType) {
+            case 'video':
+                ret = downloadTime < CACHE_LOAD_THRESHOLD_VIDEO;
+                break;
+            case 'audio':
+                ret = downloadTime < CACHE_LOAD_THRESHOLD_AUDIO;
+                break;
+            default:
+                break;
         }
-
-        if (!ret) {
-            switch (mediaType) {
-                case 'video':
-                    ret = downloadTime < CACHE_LOAD_THRESHOLD_VIDEO;
-                    break;
-                case 'audio':
-                    ret = downloadTime < CACHE_LOAD_THRESHOLD_AUDIO;
-                    break;
-                default:
-                    break;
-            }
-        }
-
         return ret;
     }
 
