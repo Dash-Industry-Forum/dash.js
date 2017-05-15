@@ -451,6 +451,7 @@ function TextTracks() {
                 cue.cueHTMLElement = currentItem.cueHTMLElement;
                 cue.isd = currentItem.isd;
                 cue.images = currentItem.images;
+                cue.embeddedImages = currentItem.embeddedImages;
                 cue.cueID = currentItem.cueID;
                 cue.scaleCue = scaleCue.bind(self);
                 captionContainer.style.left = actualVideoLeft + 'px';
@@ -465,14 +466,20 @@ function TextTracks() {
                         captionContainer.appendChild(finalCue);
                         if (this.isd) {
                             renderHTML(this.isd, finalCue,  function (uri) {
-                                let urnTester = /^(urn:)(mpeg:[a-z0-9][a-z0-9-]{0,31}:)(subs:)([0-9])$/ ;
-                                if (urnTester.test(uri)) {
-                                    let match = urnTester.exec(uri);
+                                let imsc1ImgUrnTester = /^(urn:)(mpeg:[a-z0-9][a-z0-9-]{0,31}:)(subs:)([0-9])$/;
+                                let smpteImgUrnTester = /^#(.*)$/;
+                                if (imsc1ImgUrnTester.test(uri)) {
+                                    let match = imsc1ImgUrnTester.exec(uri);
                                     let imageId = parseInt(match[4],10) - 1;
                                     let imageData = btoa(cue.images[imageId]);
                                     let dataUrl = 'data:image/png;base64,' + imageData;
                                     return dataUrl;
-                                }else {
+                                } else if (smpteImgUrnTester.test(uri)) {
+                                    let match = smpteImgUrnTester.exec(uri);
+                                    let imageId = match[1];
+                                    let dataUrl = 'data:image/png;base64,' + cue.embeddedImages[imageId];
+                                    return dataUrl;
+                                } else {
                                     return null;
                                 }
                             }, captionContainer.clientHeight, captionContainer.clientWidth);
