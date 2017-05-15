@@ -70,9 +70,40 @@ function TTMLParser() {
         var startTime,
             endTime;
 
+        var embeddedImages = {};
+        var currentImageId = '';
+        var accumulated_image_data = '';
+        var metadataHandler = {
+
+            onOpenTag: function (ns, name, attrs) {
+                if (name === 'image' && ns === 'http://www.smpte-ra.org/schemas/2052-1/2010/smpte-tt') {
+                    if (!attrs[' imagetype'] || attrs[' imagetype'].value !== 'PNG') {
+                        log('Warning: smpte-tt imagetype != PNG. Discarded');
+                        return;
+                    }
+                    currentImageId = attrs['http://www.w3.org/XML/1998/namespace id'].value;
+                }
+            },
+
+            onCloseTag: function () {
+                if (currentImageId) {
+                    embeddedImages[currentImageId] = accumulated_image_data.trim();
+                }
+                accumulated_image_data = '';
+                currentImageId = '';
+            },
+
+            onText: function (contents) {
+                if (currentImageId) {
+                    accumulated_image_data = accumulated_image_data + contents;
+                }
+            }
+        };
+
         var imsc1doc = fromXML(data, function (msg) {
             errorMsg = msg;
-        });
+        },
+            metadataHandler);
         var mediaTimeEvents = imsc1doc.getMediaTimeEvents();
 
         for (i = 0; i < mediaTimeEvents.length; i++) {
@@ -91,7 +122,8 @@ function TTMLParser() {
                         type: 'html',
                         cueID: getCueID(),
                         isd: isd,
-                        images: images
+                        images: images,
+                        embeddedImages: embeddedImages
                     });
                 }
             }
