@@ -35,7 +35,10 @@ import EventBus from '../core/EventBus';
 import FactoryMaker from '../core/FactoryMaker';
 import DataChunk from '../streaming/vo/DataChunk';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
-import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
+import {
+    HTTPRequest
+} from '../streaming/vo/metrics/HTTPRequest';
+import MssFragmentInfoController from './MssFragmentInfoController';
 import MssFragmentProcessor from './MssFragmentProcessor';
 import MssParser from './parser/MssParser';
 
@@ -53,8 +56,7 @@ function MssHandler(config) {
 
     let instance;
 
-    function setup() {
-    }
+    function setup() {}
 
     function onInitializationRequested(e) {
         let streamProcessor = e.sender.getStreamProcessor();
@@ -81,7 +83,10 @@ function MssHandler(config) {
         // Generate initialization segment (moov)
         chunk.bytes = mssFragmentProcessor.generateMoov(representation);
 
-        eventBus.trigger(Events.INIT_FRAGMENT_LOADED, {chunk: chunk, fragmentModel: streamProcessor.getFragmentModel()});
+        eventBus.trigger(Events.INIT_FRAGMENT_LOADED, {
+            chunk: chunk,
+            fragmentModel: streamProcessor.getFragmentModel()
+        });
 
         // Change the sender value to stop event to be propagated
         e.sender = null;
@@ -109,13 +114,38 @@ function MssHandler(config) {
         mssFragmentProcessor.processMoof(e, streamProcessor);
     }
 
+    function onPlaybackSeekAsked() {
+        if (playbackController.getIsDynamic() && playbackController.getTime() !== 0) {
+
+            //create fragment info controllers for each stream processors of active stream (only for audio, video or fragmentedText)
+            let streamController = playbackController.getStreamController();
+            if (streamController) {
+                let processors = streamController.getActiveStreamProcessors();
+                processors.forEach(function (processor) {
+                    if (processor.getType() === 'video' ||
+                        processor.getType() === 'audio' ||
+                        processor.getType() === 'fragmentedText') {
+
+                        let fragmentInfoController = MssFragmentInfoController(context).create({
+                            streamProcessor: processor
+                        });
+                        fragmentInfoController.initialize();
+                        fragmentInfoController.start();
+                    }
+                });
+            }
+        }
+    }
+
     function registerEvents() {
         eventBus.on(Events.INIT_REQUESTED, onInitializationRequested, instance, EventBus.EVENT_PRIORITY_HIGH);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_SEEK_ASKED, onPlaybackSeekAsked, instance, EventBus.EVENT_PRIORITY_HIGH);
         eventBus.on(MediaPlayerEvents.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, instance, EventBus.EVENT_PRIORITY_HIGH);
     }
 
     function reset() {
         eventBus.off(Events.INIT_REQUESTED, onInitializationRequested, this);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_SEEK_ASKED, onPlaybackSeekAsked, this);
         eventBus.off(MediaPlayerEvents.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, this);
     }
 

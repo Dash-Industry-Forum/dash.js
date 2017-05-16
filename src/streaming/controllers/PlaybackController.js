@@ -125,6 +125,7 @@ function PlaybackController() {
 
     function seek(time) {
         if (videoModel) {
+            eventBus.trigger(Events.PLAYBACK_SEEK_ASKED);
             log('Requesting seek to time: ' + time);
             videoModel.setCurrentTime(time);
         }
@@ -148,6 +149,10 @@ function PlaybackController() {
 
     function getIsDynamic() {
         return isDynamic;
+    }
+
+    function getStreamController() {
+        return streamController;
     }
 
     function setLiveStartTime(value) {
@@ -481,6 +486,7 @@ function PlaybackController() {
         getPlayedRanges: getPlayedRanges,
         getEnded: getEnded,
         getIsDynamic: getIsDynamic,
+        getStreamController: getStreamController,
         setLiveStartTime: setLiveStartTime,
         getLiveStartTime: getLiveStartTime,
         computeLiveDelay: computeLiveDelay,

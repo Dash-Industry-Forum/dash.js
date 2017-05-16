@@ -70,11 +70,13 @@ function StreamProcessor(config) {
         representationController,
         fragmentController,
         fragmentLoader,
-        fragmentModel;
+        fragmentModel,
+        spExternalControllers;
 
 
     function setup() {
         mediaInfoArr = [];
+        spExternalControllers = [];
     }
 
     function initialize(Type, FragmentController, mediaSource, Stream, EventController) {
@@ -124,6 +126,22 @@ function StreamProcessor(config) {
         representationController.initialize(this);
     }
 
+    function registerExternalController(controller) {
+        spExternalControllers.push(controller);
+    }
+
+    function unregisterExternalController(controller) {
+        var index = spExternalControllers.indexOf(controller);
+
+        if (index !== -1) {
+            spExternalControllers.splice(index, 1);
+        }
+    }
+
+    function unregisterAllExternalController() {
+        spExternalControllers = [];
+    }
+
     function reset(errored) {
 
         indexHandler.reset();
@@ -142,6 +160,11 @@ function StreamProcessor(config) {
             representationController.reset();
             representationController = null;
         }
+
+        spExternalControllers.forEach(function (controller) {
+            controller.reset();
+        });
+        unregisterAllExternalController();
 
         fragmentController = null;
         fragmentLoader = null;
@@ -313,6 +336,9 @@ function StreamProcessor(config) {
         getMediaSource: getMediaSource,
         getBuffer: getBuffer,
         setBuffer: setBuffer,
+        registerExternalController: registerExternalController,
+        unregisterExternalController: unregisterExternalController,
+        unregisterAllExternalController: unregisterAllExternalController,
         start: start,
         stop: stop,
         isDynamic: isDynamic,
