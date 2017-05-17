@@ -50,7 +50,8 @@ function MssHandler(config) {
     let playbackController = config.playbackController;
     let mssFragmentProcessor = MssFragmentProcessor(context).create({
         metricsModel: metricsModel,
-        playbackController: playbackController
+        playbackController: playbackController,
+        eventBus: eventBus
     });
     let mssParser;
 
@@ -111,7 +112,7 @@ function MssHandler(config) {
     function onSegmentMediaLoaded(e) {
         // Process moof to transcode it from MSS to DASH
         let streamProcessor = e.sender.getStreamProcessor();
-        mssFragmentProcessor.processMoof(e, streamProcessor);
+        mssFragmentProcessor.processFragment(e, streamProcessor);
     }
 
     function onPlaybackSeekAsked() {
@@ -127,7 +128,10 @@ function MssHandler(config) {
                         processor.getType() === 'fragmentedText') {
 
                         let fragmentInfoController = MssFragmentInfoController(context).create({
-                            streamProcessor: processor
+                            streamProcessor: processor,
+                            eventBus: eventBus,
+                            metricsModel: metricsModel,
+                            playbackController: playbackController
                         });
                         fragmentInfoController.initialize();
                         fragmentInfoController.start();

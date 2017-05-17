@@ -148,7 +148,7 @@ function MssFragmentMoofProcessor(config) {
         return segmentsUpdated;
     }
 
-    function processMoof(e, rep) {
+    function convertFragment(e, sp) {
 
         let i;
 
@@ -183,7 +183,7 @@ function MssFragmentMoofProcessor(config) {
         }
         let tfrf = isoFile.fetch('tfrf');
         if (tfrf) {
-            processTfrf(e.request, tfrf, tfdt, rep);
+            processTfrf(e.request, tfrf, tfdt, sp);
             tfrf._parent.boxes.splice(tfrf._parent.boxes.indexOf(tfrf), 1);
             tfrf = null;
         }
@@ -239,8 +239,41 @@ function MssFragmentMoofProcessor(config) {
         e.response = isoFile.write();
     }
 
+    function updateSegmentList(e, sp) {
+
+        // e.request contains request description object
+        // e.response contains fragment bytes
+        if (!e.response) {
+            return;
+        }
+
+        let isoFile = ISOBoxer.parseBuffer(e.response);
+        // Update track_Id in tfhd box
+        let tfhd = isoFile.fetch('tfhd');
+        tfhd.track_ID = e.request.mediaInfo.index + 1;
+
+        // Add tfdt box
+        let tfdt = isoFile.fetch('tfdt');
+        let traf = isoFile.fetch('traf');
+        if (tfdt === null) {
+            tfdt = ISOBoxer.createFullBox('tfdt', traf, tfhd);
+            tfdt.version = 1;
+            tfdt.flags = 0;
+            tfdt.baseMediaDecodeTime = Math.floor(e.request.startTime * e.request.timescale);
+        }
+
+        let tfrf = isoFile.fetch('tfrf');
+        if (tfrf) {
+            processTfrf(e.request, tfrf, tfdt, sp);
+            tfrf._parent.boxes.splice(tfrf._parent.boxes.indexOf(tfrf), 1);
+            tfrf = null;
+        }
+
+    }
+
     instance = {
-        processMoof: processMoof
+        convertFragment: convertFragment,
+        updateSegmentList: updateSegmentList
     };
 
     setup();

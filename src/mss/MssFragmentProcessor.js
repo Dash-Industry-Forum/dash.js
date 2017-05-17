@@ -33,6 +33,8 @@ import FactoryMaker from '../core/FactoryMaker';
 import ISOBoxer from 'codem-isoboxer';
 import MSSFragmentMoofProcessor from './MssFragmentMoofProcessor';
 import MSSFragmentMoovProcessor from './MSSFragmentMoovProcessor';
+import MssEvents from './MssEvents';
+
 
 // Add specific box processors not provided by codem-isoboxer library
 
@@ -129,6 +131,7 @@ function MssFragmentProcessor(config) {
     let context = this.context;
     let metricsModel = config.metricsModel;
     let playbackController = config.playbackController;
+    let eventBus = config.eventBus;
     let instance;
 
     function setup() {}
@@ -138,17 +141,38 @@ function MssFragmentProcessor(config) {
         return mssFragmentMoovProcessor.generateMoov(rep);
     }
 
-    function processMoof(e, sp) {
-        let mssFragmentMoofProcessor = MSSFragmentMoofProcessor(context).create({
-            metricsModel: metricsModel,
-            playbackController: playbackController
-        });
-        mssFragmentMoofProcessor.processMoof(e, sp);
+    function processFragment(e, sp) {
+
+        let request = e.request;
+        if (!request) {
+            return;
+        }
+
+        if (request.type === 'MediaSegment') {
+
+            // it's a MediaSegment, let's convert fragment
+            let mssFragmentMoofProcessor = MSSFragmentMoofProcessor(context).create({
+                metricsModel: metricsModel,
+                playbackController: playbackController
+            });
+            mssFragmentMoofProcessor.convertFragment(e, sp);
+
+        } else if (request.type === 'FragmentInfoSegment') {
+
+            // it's a FragmentInfo, ask relative fragment info controller to handle it
+            eventBus.trigger(MssEvents.FRAGMENT_INFO_LOADING_COMPLETED, {
+                fragmentInfo: e,
+                streamProcessor: sp
+            });
+
+            // Change the sender value to stop event to be propagated (fragment info must not be added to buffer)
+            e.sender = null;
+        }
     }
 
     instance = {
         generateMoov: generateMoov,
-        processMoof: processMoof
+        processFragment: processFragment
     };
 
     setup();
