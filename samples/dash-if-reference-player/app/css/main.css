@@ -141,6 +141,10 @@ a:hover {
     width: 35%;
 }
 
+.videoContainer {
+    position: relative;
+}
+
 .video-controller {
     margin-top: -5px !important;
 }
