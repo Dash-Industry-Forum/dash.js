@@ -85,7 +85,7 @@ function EventBus() {
         payload.type = type;
 
         handlers[type] = handlers[type].filter((item) => item);
-        handlers[type].forEach( handler => handler.callback.call(handler.scope, payload) );
+        handlers[type].forEach( handler => handler && handler.callback.call(handler.scope, payload) );
     }
 
     function getHandlerIdx(type, listener, scope) {
