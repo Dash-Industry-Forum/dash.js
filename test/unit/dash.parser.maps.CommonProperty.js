@@ -1,4 +1,4 @@
-import CommonProperty from '../src/dash/parser/maps/CommonProperty';
+import CommonProperty from '../../src/dash/parser/maps/CommonProperty';
 
 const expect = require('chai').expect;
 

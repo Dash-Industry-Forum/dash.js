@@ -1,7 +1,7 @@
-import EventBus from '../src/core/EventBus';
+import EventBus from '../../src/core/EventBus';
 import VoHelper from './helpers/VOHelper';
-import TimeLineConverter from '../src/dash/utils/TimelineConverter';
-import Events from '../src/core/events/Events';
+import TimeLineConverter from '../../src/dash/utils/TimelineConverter';
+import Events from '../../src/core/events/Events';
 import SpecHelper from './helpers/SpecHelper';
 
 const expect = require('chai').expect;

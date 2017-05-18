@@ -1,10 +1,10 @@
-import StreamInfo from '../../src/streaming/vo/StreamInfo';
-import MediaInfo from '../../src/streaming/vo/MediaInfo';
+import StreamInfo from '../../../src/streaming/vo/StreamInfo';
+import MediaInfo from '../../../src/streaming/vo/MediaInfo';
 import MpdHelper from './MPDHelper';
 import SpecHelper from './SpecHelper';
-import Representation from '../../src/dash/vo/Representation';
-import FragmentRequest from '../../src/streaming/vo/FragmentRequest';
-import {HTTPRequest} from '../../src/streaming/vo/metrics/HTTPRequest';
+import Representation from '../../../src/dash/vo/Representation';
+import FragmentRequest from '../../../src/streaming/vo/FragmentRequest';
+import {HTTPRequest} from '../../../src/streaming/vo/metrics/HTTPRequest';
 
 class VoHelper {
     constructor() {

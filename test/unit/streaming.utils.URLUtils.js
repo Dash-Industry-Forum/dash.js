@@ -1,4 +1,4 @@
-import URLUtils from '../src/streaming/utils/URLUtils';
+import URLUtils from '../../src/streaming/utils/URLUtils';
 
 const expect = require('chai').expect;
 

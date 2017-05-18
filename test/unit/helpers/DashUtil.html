@@ -17,8 +17,8 @@
     <title>Dash Player</title>
     <meta name="description" content="" />
 
-	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script> 
-	
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+
 	<style type="text/css">
         @import url("style.css");
     </style>
@@ -31,15 +31,15 @@
 
     <script src="MPDList.js"></script>
     <script src="DashUtil.js"></script>
-	<script src="FileSaver.js"></script>		
-	<script src="MPDfiles.js"></script>     
-	
+	<script src="FileSaver.js"></script>
+	<script src="MPDfiles.js"></script>
+
 </head>
 <body background="blueGradientBackground.jpg" width="100%" height="100%" style="background-repeat:no-repeat;background-size:100% 100%">
     <center>
         <div style="width: 95%; background-color: #FFFFFF;margin-top:0px" height="100%">
             <center>
-                <div id="divHeader" >DASH PLAYER TEST APP                    			
+                <div id="divHeader" >DASH PLAYER TEST APP
 					<img src = "MSOpenTech.png" alt = "MSOpenTech" width="150px" style="margin-top:10px"/>
 					</div>
                     </br>
@@ -48,14 +48,14 @@
                 <center>
                 <div id="divBody">
                     This is an Application to test Dash Player against various MPDS
-                    </br> 
-                    </br> 
+                    </br>
+                    </br>
                     Usage:</br>
                     <ul>
                     <li> Click on Reset before running a  new test</li>
                     <li> You can add/edit MPD list in dash.js-pr\test\js\utils\MPDList.js</li>
-                    <li> MPD url should be added corresponding to appropriate array index</li>                              
-					<li> Enable ActiveX options to run on IE</li>  					
+                    <li> MPD url should be added corresponding to appropriate array index</li>
+					<li> Enable ActiveX options to run on IE</li>
                     </ul>
                 </div>
                 </center>
@@ -70,14 +70,14 @@
        <div>
        </br>
                 <div width="500px" height="100px" style="overflow-y: 50px">
-                    <div cellpadding="5px">										
-						<input type="button" class="AddMPD" value="Add MPD" style="width:80px;" onclick="addMPD()" />		
+                    <div cellpadding="5px">
+						<input type="button" class="AddMPD" value="Add MPD" style="width:80px;" onclick="addMPD()" />
 						<input type="button" class="Reset" value="Reset" style="width:80px;" onclick="window.location.reload()">
 						<input type="button" class="StopTests" value="Stop" style="width:80px;" onclick="stopTest()" id="btnStopTest" />
 						<input type="button" class="ResumeTests" value="Resume" style="width:80px;" onclick="resumeTest()" id="btnResumeTest" />
 						<input type="button" class="ExportLog" value="Export Log" style="width:80px;" onclick="logging()" id="btnExportLog" />
-						<input type="button" class="ExportToJSON" value="Export to JSON" style="width: 110px;" onclick="exportToJSON()" id="btnExportToJSON" />						
-						<input type="file" id="files" name="files[]"  /><div id="fileContents" value="" style="visibility:hidden">	</div>																	
+						<input type="button" class="ExportToJSON" value="Export to JSON" style="width: 110px;" onclick="exportToJSON()" id="btnExportToJSON" />
+						<input type="file" id="files" name="files[]"  /><div id="fileContents" value="" style="visibility:hidden">	</div>
                     </div>
 
                     <div id = "popup_box" >
@@ -89,9 +89,9 @@
 					 </br>
 					 <div id="successMsg" ></div>
                    	 </div>
-                   	 <div id = "container" > 
+                   	 <div id = "container" >
 					 </div >
-                    
+
                 </div>
                 <div id="MPDUrl"></div>
                 </br>
@@ -119,7 +119,7 @@
                                             MPD template
                                         </td>
                                         <td id="VideoPlayer0" height="100%" style="border: 1px solid black; margin:2; padding:2" width="250px">
-											
+
 											<div id="Video0" class="ClassVideo0" style="display: block; width:250px; height:200px; margin:5px;padding:5px;visibility:visible;">
 												<!-- <video style="width: 90%"  controls></video> -->
 											</div>
@@ -127,11 +127,11 @@
 											<div style="margin:2px; padding:2px">
 											<div id="play0" ></div><div id="pause0" ></div><div id="seek0" ></div><div id="stall0" ></div><div id="error0"></div>
 											</div>
-											
+
 										</td>
 										<td style="border: 1px solid black;">
 										<div>
-											<input type="button" class="btn-large" value="Run Test" style="width: 70px;" id="RunTest0" onclick="runTest(this.id)"/>																			
+											<input type="button" class="btn-large" value="Run Test" style="width: 70px;" id="RunTest0" onclick="runTest(this.id)"/>
 										</div>
 										</br>
 										<div>
@@ -144,7 +144,7 @@
                     </br> </br>
                 </div>
             </center>
-        </div>		
+        </div>
     </center>
 </body>
 </html>

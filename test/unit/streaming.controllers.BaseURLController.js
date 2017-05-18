@@ -1,7 +1,7 @@
-import BaseURLController from '../src/streaming/controllers/BaseURLController';
-import BasicSelector from '../src/streaming/utils/baseUrlResolution/BasicSelector';
-import BaseURLSelector from '../src/streaming/utils/BaseURLSelector';
-import BaseURL from '../src/dash/vo/BaseURL';
+import BaseURLController from '../../src/streaming/controllers/BaseURLController';
+import BasicSelector from '../../src/streaming/utils/baseUrlResolution/BasicSelector';
+import BaseURLSelector from '../../src/streaming/utils/BaseURLSelector';
+import BaseURL from '../../src/dash/vo/BaseURL';
 
 const chai = require('chai');
 const expect = chai.expect;

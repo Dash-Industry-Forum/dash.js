@@ -1,13 +1,13 @@
 import ObjectsHelper from './helpers/ObjectsHelper';
 import VoHelper from './helpers/VOHelper';
 import MpdHelper from './helpers/MPDHelper';
-import EventBus from '../src/core/EventBus';
-import RepresentationController from '../src/dash/controllers/RepresentationController';
-import ManifestModel from '../src/streaming/models/ManifestModel';
-import Events from '../src/core/events/Events';
-import MediaPlayerEvents from '../src/streaming/MediaPlayerEvents';
+import EventBus from '../../src/core/EventBus';
+import RepresentationController from '../../src/dash/controllers/RepresentationController';
+import ManifestModel from '../../src/streaming/models/ManifestModel';
+import Events from '../../src/core/events/Events';
+import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
 import SpecHelper from './helpers/SpecHelper';
-import AbrController from '../src/streaming/controllers/AbrController';
+import AbrController from '../../src/streaming/controllers/AbrController';
 
 const chai = require('chai'),
       spies = require('chai-spies');

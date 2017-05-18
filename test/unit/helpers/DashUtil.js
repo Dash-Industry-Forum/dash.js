@@ -96,7 +96,7 @@ function createRow(i) {
 function teardown() {
 	if (!!player) {
 		$('#MPDUrl' + counter).text($('#MPDUrl' + counter).text() +  "Duration: " + (element).duration);
-		
+
 		if (stalled === true) {
 			$('#stall' + counter).html('Video was stalled');
 		} else {
@@ -189,7 +189,7 @@ function initialisation(rowID) {
 		var mpdID = '#MPDUrl' + rowID,
 			onError = function (e) {
 				var message = "null";
-				if (e) {	
+				if (e) {
 					message = "source=" + e.error;
 					if (e.event.hasOwnProperty("id")) {
 						message += ", id=" + e.event.id;
@@ -451,7 +451,7 @@ function importToTable(contents) {
 	else {
 		contentXML = (new DOMParser()).parseFromString(contents, "text/xml");
 	}
-	populateTable(contentXML);	
+	populateTable(contentXML);
 }
 
 function handleFileSelect(evt) {
@@ -462,7 +462,7 @@ function handleFileSelect(evt) {
 	var reader = new FileReader();
 	reader.onload = (function (theFile) {
 		return function (e) {
-			importToTable(e.target.result); 
+			importToTable(e.target.result);
 		};
 	})(files[0]);
 	reader.readAsText(files[0]);
@@ -476,18 +476,18 @@ function populateTable(contentXML) {
 		mpdTable.deleteRow(i);
 	}
 	mpd = new Array()
-	
+
 	var contentTag = contentXML.getElementsByTagName("content");
-	for (var rowId = 0; rowId < contentTag.length; rowId++) {		
+	for (var rowId = 0; rowId < contentTag.length; rowId++) {
 		if (!!window.MSStream)
 			mpd[rowId] = contentTag[rowId].childNodes[1].text;
 		else
 			mpd[rowId] = contentTag[rowId].children[1].textContent;
-		
+
 		createRow(rowId + 1);
 if (!!window.MSStream)
 		$('#MPDUrl' + rowId).html(contentTag[rowId].childNodes[1].text);
-	else		
+	else
 		$('#MPDUrl' + rowId).html(contentTag[rowId].children[1].textContent);
 		$('#play' + rowId).html("");
 		$('#pause' + rowId).html("");

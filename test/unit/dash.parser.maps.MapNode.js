@@ -1,5 +1,5 @@
-import MapNode from '../src/dash/parser/maps/MapNode';
-import CommonProperty from '../src/dash/parser/maps/CommonProperty';
+import MapNode from '../../src/dash/parser/maps/MapNode';
+import CommonProperty from '../../src/dash/parser/maps/CommonProperty';
 
 const expect = require('chai').expect;
 

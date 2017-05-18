@@ -1,6 +1,6 @@
 import SpecHelper from './helpers/SpecHelper';
 import VoHelper from './helpers/VOHelper';
-import AbrController from '../src/streaming/controllers/AbrController';
+import AbrController from '../../src/streaming/controllers/AbrController';
 
 const expect = require('chai').expect;
 
@@ -34,13 +34,13 @@ describe("AbrController", function () {
     it("should throw an exception when attempting to set not a number value for a quality", function () {
         let testQuality = 'a';
         expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testType, dummyMediaInfo.streamInfo, testQuality)).to.throw("argument is not an integer");
-        
+
         testQuality = null;
         expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testType, dummyMediaInfo.streamInfo, testQuality)).to.throw("argument is not an integer");
-        
+
         testQuality = 2.5;
         expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testType, dummyMediaInfo.streamInfo, testQuality)).to.throw("argument is not an integer");
-        
+
         testQuality = {};
         expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testType, dummyMediaInfo.streamInfo, testQuality)).to.throw("argument is not an integer");
     });

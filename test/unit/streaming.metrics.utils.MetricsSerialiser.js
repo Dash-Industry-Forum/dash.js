@@ -1,4 +1,4 @@
-import MetricSerialiser from '../src/streaming/metrics/utils/MetricSerialiser.js';
+import MetricSerialiser from '../../src/streaming/metrics/utils/MetricSerialiser.js';
 
 const expect = require('chai').expect;
 

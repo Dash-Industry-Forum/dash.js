@@ -1,5 +1,5 @@
-import DashManifestModel from '../src/dash/models/DashManifestModel';
-import BaseURL from '../src/dash/vo/BaseURL';
+import DashManifestModel from '../../src/dash/models/DashManifestModel';
+import BaseURL from '../../src/dash/vo/BaseURL';
 
 const expect = require('chai').expect;
 

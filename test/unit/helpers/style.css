@@ -14,7 +14,7 @@
 
 body
 {
-	
+
 
 }
 #divHeader
@@ -85,7 +85,7 @@ body
 #tbMPD
 {
 	font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;
-	font-size: 12px;	
+	font-size: 12px;
 	width: 350px;
 	text-align: left;
 	border:1px solid grey;
@@ -104,33 +104,33 @@ body
     font-size: 12px;
     font-weight: bold;
 	color: black;
-    
+
 }
 #tbMPD .odd
 {
-	background: #C7C7C7; 
+	background: #C7C7C7;
 }
 
-#popup_box { 
+#popup_box {
     display:none; /* Hide the DIV */
-    position:fixed;  
-    _position:absolute; /* hack for internet explorer 6 */  
-    height:200px;  
-    width:600px;  
-    background:#ffffff;  
+    position:fixed;
+    _position:absolute; /* hack for internet explorer 6 */
+    height:200px;
+    width:600px;
+    background:#ffffff;
     left: 375px;
     top: 200px;
-    z-index:50; 
-    margin-left: 15px;  
-    
+    z-index:50;
+    margin-left: 15px;
+
     /* additional features, can be omitted */
-    border:2px solid #C7C7C7;      
-    padding:15px;  
-    font-size:15px;  
+    border:2px solid #C7C7C7;
+    padding:15px;
+    font-size:15px;
     -moz-box-shadow: 0 0 5px #C7C7C7;
     -webkit-box-shadow: 0 0 5px #C7C7C7;
     box-shadow: 0 0 5px #C7C7C7;
-    
+
 }
 
 #container {
@@ -139,18 +139,18 @@ body
     height:100%;
 }
 
-a{  
-cursor: pointer;  
-text-decoration:none;  
-} 
+a{
+cursor: pointer;
+text-decoration:none;
+}
 
 /* This is for the positioning of the Close Link */
 #popupBoxClose {
-    font-size:20px;  
-    line-height:15px;  
-    right:5px;  
-    top:5px;  
-    position:absolute;  
-    color:#ff0000;  
-    font-weight:500;      
+    font-size:20px;
+    line-height:15px;
+    right:5px;
+    top:5px;
+    position:absolute;
+    color:#ff0000;
+    font-weight:500;
 }
