@@ -41,6 +41,9 @@ import Representation from './vo/Representation';
 import {replaceTokenForTemplate, getTimeBasedSegment, getSegmentByIndex} from './utils/SegmentsUtils';
 import SegmentsGetter from './utils/SegmentsGetter';
 
+import SegmentBaseLoader from './SegmentBaseLoader';
+import WebmSegmentBaseLoader from './WebmSegmentBaseLoader';
+
 const SEGMENTS_UNAVAILABLE_ERROR_CODE = 1;
 
 function DashHandler(config) {
@@ -50,7 +53,7 @@ function DashHandler(config) {
     let eventBus = EventBus(context).getInstance();
     const urlUtils = URLUtils(context).getInstance();
 
-    let segmentBaseLoader = config.segmentBaseLoader;
+    let segmentBaseLoader;
     let timelineConverter = config.timelineConverter;
     let dashMetrics = config.dashMetrics;
     let metricsModel = config.metricsModel;
@@ -70,14 +73,29 @@ function DashHandler(config) {
         index = -1;
         currentTime = 0;
         earliestTime = NaN;
+
+        segmentBaseLoader = isWebM(config.mimeType) ? WebmSegmentBaseLoader(context).getInstance() : SegmentBaseLoader(context).getInstance();
+        segmentBaseLoader.setConfig({
+            baseURLController: baseURLController,
+            metricsModel: metricsModel
+        });
+
         eventBus.on(Events.INITIALIZATION_LOADED, onInitializationLoaded, instance);
         eventBus.on(Events.SEGMENTS_LOADED, onSegmentsLoaded, instance);
+    }
+
+    function isWebM (mimeType) {
+        let type = mimeType.split('/')[1];
+
+        return 'webm' === type.toLowerCase();
     }
 
     function initialize(StreamProcessor) {
         streamProcessor = StreamProcessor;
         type = streamProcessor.getType();
         isDynamic = streamProcessor.isDynamic();
+
+        segmentBaseLoader.initialize();
 
         segmentsGetter = SegmentsGetter(context).create(config, isDynamic);
     }
