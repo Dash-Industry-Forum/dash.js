@@ -304,10 +304,12 @@ function Stream(config) {
 
     function createStreamProcessor(mediaInfo, mediaSource, optionalSettings) {
         let streamProcessor = StreamProcessor(context).create({
+            type: getMimeTypeOrType(mediaInfo),
             mimeType: mediaInfo.mimeType,
             timelineConverter: timelineConverter,
             adapter: adapter,
-            baseURLController: baseURLController
+            manifestModel: manifestModel,
+            baseURLController: baseURLController,
             stream: instance,
             abrController: abrController
         });

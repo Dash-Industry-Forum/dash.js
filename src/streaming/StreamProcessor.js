@@ -52,6 +52,7 @@ function StreamProcessor(config) {
 
     let indexHandler;
     let type = config.type;
+    let mimeType = config.mimeType;
     let timelineConverter = config.timelineConverter;
     let adapter = config.adapter;
     let eventController = config.eventController;
@@ -78,7 +79,7 @@ function StreamProcessor(config) {
         dynamic = stream.getStreamInfo().manifestInfo.isDynamic;
 
         indexHandler = DashHandler(context).create({
-            mimeType: config.mimeType,
+            mimeType: mimeType,
             timelineConverter: timelineConverter,
             dashMetrics: DashMetrics(context).getInstance(),
             metricsModel: MetricsModel(context).getInstance(),

@@ -48,6 +48,7 @@ function NotFragmentedTextBufferController(config) {
         initialized,
         mediaSource,
         buffer,
+        seekStartTime,
         representationController,
         initCache;
 
