@@ -2,23 +2,16 @@ define(function () {
 
     var CHROME_CONFIG = {
         browserName: 'chrome',
-        version: '2.11',  platform: 'WINDOWS',
-        os: 'WINDOWS',
-        os_version: '10'
-    };
-    //     "chromeOptions":{
-    //            "args": ["user-data-dir"],
-    //            "excludeSwitches":["disable-component-update"]
-    //     }
-    // };
-
-    var IE11_CONFIG = {
-        browserName: 'internet explorer',
-        version: '11',
         platform: 'WINDOWS',
         os: 'WINDOWS',
         os_version: '10'
     };
+
+ var IE11_CONFIG = {
+        browserName: 'internet explorer',
+        platform: 'WINDOWS'
+    };
+
     var EDGE_CONFIG = {
         browserName: 'MicrosoftEdge',
         platform: 'WINDOWS'
@@ -27,7 +20,7 @@ define(function () {
         browserName: 'firefox',
         platform: 'WINDOWS',
         os: 'WINDOWS',
-        os_version: '7'
+        os_version: '10'
     };
 
     return {
