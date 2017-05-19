@@ -89,7 +89,7 @@ function PlaybackController() {
     }
 
     function onPeriodSwitchStarted(e) {
-        if (!isDynamic && e.fromStreamInfo && commonEarliestTime[e.fromStreamInfo.id]) {
+        if (!isDynamic && e.fromStreamInfo && commonEarliestTime[e.fromStreamInfo.id] !== undefined) {
             delete commonEarliestTime[e.fromStreamInfo.id];
         }
     }
@@ -330,14 +330,6 @@ function PlaybackController() {
         wallclockTimeIntervalId = null;
     }
 
-    function seekToStartTimeOffset() {
-        let initialSeekTime = getStreamStartTime(false);
-        if (initialSeekTime > 0) {
-            seek(initialSeekTime);
-            log('Starting playback at offset: ' + initialSeekTime);
-        }
-    }
-
     function updateCurrentTime() {
         if (isPaused() || !isDynamic || element.readyState === 0) return;
         var currentTime = getTime();
@@ -414,9 +406,6 @@ function PlaybackController() {
 
     function onPlaybackMetaDataLoaded() {
         log('Native video element event: loadedmetadata');
-        if ((!isDynamic && streamInfo.isFirst) || timelineConverter.isTimeSyncCompleted()) {
-            seekToStartTimeOffset();
-        }
         eventBus.trigger(Events.PLAYBACK_METADATA_LOADED);
         startUpdatingWallclockTime();
     }
@@ -440,13 +429,25 @@ function PlaybackController() {
     function onBytesAppended(e) {
         let ranges = e.bufferedRanges;
         if (!ranges || !ranges.length) return;
-        let bufferedStart = Math.max(ranges.start(0), streamInfo.start);
-        let earliestTime = commonEarliestTime[streamInfo.id] === undefined ? bufferedStart : Math.max(commonEarliestTime[streamInfo.id], bufferedStart);
-        if (earliestTime === commonEarliestTime[streamInfo.id]) return;
-        if (!isDynamic && getStreamStartTime(true) < earliestTime && getTime() < earliestTime) {
-            seek(earliestTime);
+        if (commonEarliestTime[streamInfo.id] === false) {
+            //stream has already been started.
+            return;
         }
-        commonEarliestTime[streamInfo.id] = earliestTime;
+
+        let type = e.sender.getType();
+
+        if (commonEarliestTime[streamInfo.id] === undefined) {
+            commonEarliestTime[streamInfo.id] = [];
+        }
+
+        if (commonEarliestTime[streamInfo.id][type] === undefined) {
+            commonEarliestTime[streamInfo.id][type] = Math.max(ranges.start(0), streamInfo.start);
+        }
+
+        if (commonEarliestTime[streamInfo.id].audio && commonEarliestTime[streamInfo.id].video) {
+            seek(commonEarliestTime[streamInfo.id].audio < commonEarliestTime[streamInfo.id].video ? commonEarliestTime[streamInfo.id].video : commonEarliestTime[streamInfo.id].audio);
+            commonEarliestTime[streamInfo.id] = false;
+        }
     }
 
     function onBufferLevelStateChanged(e) {
