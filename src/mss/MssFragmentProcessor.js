@@ -32,7 +32,7 @@
 import FactoryMaker from '../core/FactoryMaker';
 import ISOBoxer from 'codem-isoboxer';
 import MSSFragmentMoofProcessor from './MssFragmentMoofProcessor';
-import MSSFragmentMoovProcessor from './MSSFragmentMoovProcessor';
+import MSSFragmentMoovProcessor from './MssFragmentMoovProcessor';
 import MssEvents from './MssEvents';
 
 
