@@ -432,7 +432,7 @@ function TextSourceBuffer() {
 
 
                 samplesInfo = fragmentedTextBoxParser.getSamplesInfo(bytes);
-                var sequenceNumber = samplesInfo.sequenceNumber;
+                var sequenceNumber = samplesInfo.lastSequenceNumber;
 
                 if (!embeddedCea608FieldParsers[0] && !embeddedCea608FieldParsers[1]) {
                     // Time to setup the CEA-608 parsing
@@ -457,14 +457,14 @@ function TextSourceBuffer() {
                 }
 
                 if (embeddedTimescale && embeddedSequenceNumbers.indexOf(sequenceNumber) == -1) {
-                    if (embeddedLastSequenceNumber !== null && sequenceNumber !== embeddedLastSequenceNumber + 1) {
+                    if (embeddedLastSequenceNumber !== null && sequenceNumber !== embeddedLastSequenceNumber + samplesInfo.numSequences) {
                         for (i = 0; i < embeddedCea608FieldParsers.length; i++) {
                             if (embeddedCea608FieldParsers[i]) {
                                 embeddedCea608FieldParsers[i].reset();
                             }
                         }
                     }
-                    var allCcData = extractCea608Data(bytes);
+                    var allCcData = extractCea608Data(bytes, samplesInfo.sampleList);
 
                     for (var fieldNr = 0; fieldNr < embeddedCea608FieldParsers.length; fieldNr++) {
                         var ccData = allCcData.fields[fieldNr];
@@ -475,9 +475,6 @@ function TextSourceBuffer() {
                             }*/
                             for (i = 0; i < ccData.length; i++) {
                                 fieldParser.addData(ccData[i][0] / embeddedTimescale, ccData[i][1]);
-                            }
-                            if (allCcData.endTime) {
-                                fieldParser.cueSplitAtTime(allCcData.endTime / embeddedTimescale);
                             }
                         }
                     }
@@ -490,71 +487,39 @@ function TextSourceBuffer() {
     /**
      * Extract CEA-608 data from a buffer of data.
      * @param {ArrayBuffer} data
+     * @param {Array} samples cue information
      * @returns {Object|null} ccData corresponding to one segment.
      */
-    function extractCea608Data(data) {
+    function extractCea608Data(data, samples) {
 
-        var isoFile = boxParser.parse(data);
-        var moof = isoFile.getBox('moof');
-        var tfdt = isoFile.getBox('tfdt');
-        var tfhd = isoFile.getBox('tfhd'); //Can have a base_data_offset and other default values
-        //log("tfhd: " + tfhd);
-        //var saio = isoFile.getBox('saio'); // Offset possibly
-        //var saiz = isoFile.getBox('saiz'); // Possible sizes
-        var truns = isoFile.getBoxes('trun'); //
-        var trun = null;
-
-        if (truns.length === 0) {
+        if (samples.length === 0) {
             return null;
         }
-        trun = truns[0];
-        if (truns.length > 1) {
-            log('Warning: Too many truns');
-        }
-        var baseOffset = moof.offset + trun.data_offset;
-        //Doublecheck that trun.offset == moof.size + 8
-        var sampleCount = trun.sample_count;
-        var startPos = baseOffset;
-        var baseSampleTime = tfdt.baseMediaDecodeTime;
-        var raw = new DataView(data);
+
         var allCcData = {
-            'startTime': null,
-            'endTime': null,
+            splits: [],
             fields: [[], []]
         };
-        var accDuration = 0;
-        for (var i = 0; i < sampleCount; i++) {
-            var sample = trun.samples[i];
-            if (sample.sample_duration === undefined) {
-                sample.sample_duration = tfhd.default_sample_duration;
-            }
-            if (sample.sample_size === undefined) {
-                sample.sample_size = tfhd.default_sample_size;
-            }
-            if (sample.sample_composition_time_offset === undefined) {
-                sample.sample_composition_time_offset = 0;
-            }
-            var sampleTime = baseSampleTime + accDuration + sample.sample_composition_time_offset;
-            var cea608Ranges = cea608parser.findCea608Nalus(raw, startPos, sample.sample_size);
+        var raw = new DataView(data);
+        for (var i = 0; i < samples.length; i++) {
+            var sample = samples[i];
+            var cea608Ranges = cea608parser.findCea608Nalus(raw, sample.offset, sample.size);
             var lastSampleTime = null;
             var idx = 0;
             for (var j = 0; j < cea608Ranges.length; j++) {
                 var ccData = cea608parser.extractCea608DataFromRange(raw, cea608Ranges[j]);
                 for (var k = 0; k < 2; k++) {
                     if (ccData[k].length > 0) {
-                        if (sampleTime !== lastSampleTime) {
+                        if (sample.cts !== lastSampleTime) {
                             idx = 0;
                         } else {
                             idx += 1;
                         }
-                        allCcData.fields[k].push([sampleTime, ccData[k], idx]);
-                        lastSampleTime = sampleTime;
+                        allCcData.fields[k].push([sample.cts, ccData[k], idx]);
+                        lastSampleTime = sample.cts;
                     }
                 }
             }
-
-            accDuration += sample.sample_duration;
-            startPos += sample.sample_size;
         }
 
         // Sort by sampleTime ascending order
@@ -569,9 +534,6 @@ function TextSourceBuffer() {
             });
         });
 
-        var endSampleTime = baseSampleTime + accDuration;
-        allCcData.startTime = baseSampleTime;
-        allCcData.endTime = endSampleTime;
         return allCcData;
     }
 
