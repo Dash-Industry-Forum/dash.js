@@ -7,7 +7,7 @@ define(function () {
         os_version: '10'
     };
 
- var IE11_CONFIG = {
+    var IE11_CONFIG = {
         browserName: 'internet explorer',
         platform: 'WINDOWS'
     };

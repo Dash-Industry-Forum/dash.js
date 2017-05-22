@@ -22,7 +22,7 @@ define(function (require) {
                 },
 
                 pause: {
-                    pauseCount: 5
+                    pauseCount: 2
                 }
             }
         };

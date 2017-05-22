@@ -10,8 +10,7 @@
         "url": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-events.mpd",
         "name": "SegmentTemplate/Number, live profile",
         "type": "VOD",
-        "protocol": "DASH",
-        "seek": true
+        "protocol": "DASH"
     },
 
     "DASH_LIVE_1": {

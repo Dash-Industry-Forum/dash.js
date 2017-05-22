@@ -1,7 +1,3 @@
 define({
-
-    DashIF: {
-        local:'http://localhost:7888/github/Orange-OpenSource/dash.js_PR/test/functional/tests.html'
-    }
-
+	local:'http://localhost/DEV/Orange-OpenSource/dash.js/test/functional/tests.html'
 });
