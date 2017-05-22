@@ -347,25 +347,27 @@ function TextTracks() {
                             elements = document.getElementsByClassName('paragraph');
                         }
 
-                    for (let j = 0; j < elements.length; j++) {
-                        elements[j].style.cssText = elements[j].style.cssText.replace(/(font-size\s*:\s*)[\d.,]+(?=\s*px)/gi, '$1' + replaceValue);
+                        for (let j = 0; j < elements.length; j++) {
+                            elements[j].style.cssText = elements[j].style.cssText.replace(/(font-size\s*:\s*)[\d.,]+(?=\s*px)/gi, '$1' + replaceValue);
+                        }
                     }
                 }
-            }
 
-            if (activeCue.lineHeight) {
-                for (key in activeCue.lineHeight) {
-                    if (activeCue.lineHeight.hasOwnProperty(key)) {
-                        if (activeCue.lineHeight[key][0] === '%') {
-                            valueLineHeight = activeCue.lineHeight[key][1] / 100;
-                        } else if (activeCue.fontSize[key][0] === 'c') {
-                            valueLineHeight = activeCue.lineHeight[key][1];
+                if (activeCue.lineHeight) {
+                    for (key in activeCue.lineHeight) {
+                        if (activeCue.lineHeight.hasOwnProperty(key)) {
+                            if (activeCue.lineHeight[key][0] === '%') {
+                                valueLineHeight = activeCue.lineHeight[key][1] / 100;
+                            } else if (activeCue.fontSize[key][0] === 'c') {
+                                valueLineHeight = activeCue.lineHeight[key][1];
+                            }
+
+                            replaceValue = (valueLineHeight * cellUnit[1]).toString();
+                            elements = document.getElementsByClassName(key);
+                            for (let k = 0; k < elements.length; k++) {
+                                elements[k].style.cssText = elements[k].style.cssText.replace(/(line-height\s*:\s*)[\d.,]+(?=\s*px)/gi, '$1' + replaceValue);
+                            }
                         }
-
-                    replaceValue = (valueLineHeight * cellUnit[1]).toString();
-                    elements = document.getElementsByClassName(key);
-                    for (let k = 0; k < elements.length; k++) {
-                        elements[k].style.cssText = elements[k].style.cssText.replace(/(line-height\s*:\s*)[\d.,]+(?=\s*px)/gi, '$1' + replaceValue);
                     }
                 }
             }
@@ -376,7 +378,7 @@ function TextTracks() {
      * Add captions to track, store for later adding, or add captions added before
      */
     function addCaptions(trackIdx, timeOffset, captionData) {
-        let track = trackIdx >= 0 ?  video.textTracks[trackIdx] : null;
+        let track = trackIdx >= 0 ? video.textTracks[trackIdx] : null;
         let self = this;
 
         if (!track) {
@@ -469,12 +471,12 @@ function TextTracks() {
                             var finalCue = document.createElement('div');
                             log('Cue enter id:' + this.cueID);
                             captionContainer.appendChild(finalCue);
-                            renderHTML(this.isd, finalCue,  function (uri) {
+                            renderHTML(this.isd, finalCue, function (uri) {
                                 let imsc1ImgUrnTester = /^(urn:)(mpeg:[a-z0-9][a-z0-9-]{0,31}:)(subs:)([0-9])$/;
                                 let smpteImgUrnTester = /^#(.*)$/;
                                 if (imsc1ImgUrnTester.test(uri)) {
                                     let match = imsc1ImgUrnTester.exec(uri);
-                                    let imageId = parseInt(match[4],10) - 1;
+                                    let imageId = parseInt(match[4], 10) - 1;
                                     let imageData = btoa(cue.images[imageId]);
                                     let dataUrl = 'data:image/png;base64,' + imageData;
                                     return dataUrl;
