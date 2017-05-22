@@ -26,7 +26,7 @@ define([
     // Test configuration (see config/testConfig.js)
     var testConfig = config.tests.seek,
         streams = tests.getTestStreams(config.tests.seek, function(stream) {
-            return (stream.seek === true)
+            return (stream.type === 'VOD');
         });
 
     // Test constants
@@ -62,16 +62,19 @@ define([
             },
 
             play: function() {
+                // Load the stream
                 tests.logLoadStream(NAME, stream);
                 return command.execute(player.loadStream, [stream])
                 .then(function() {
                     tests.log(NAME, 'Check if playing after ' + PROGRESS_DELAY + 's.');
                     return tests.executeAsync(command, video.isPlaying, [PROGRESS_DELAY], ASYNC_TIMEOUT);
                 })
+                // Check if it's playing
                 .then(function(playing) {
                     assert.isTrue(playing);
                     return command.execute(player.getDuration);
                 })
+                // Get the stream duration
                 .then(function(duration) {
                     streamDuration = duration;
                     tests.log(NAME, 'Duration: ' + duration);
@@ -80,29 +83,19 @@ define([
         });
     };
 
-    var testSeek = function(seekMode, checkPlaying) {
+    var testSeek = function(checkPlaying) {
         registerSuite({
             name: NAME,
 
             seek: function() {
-                switch (seekMode) {
-                    case 'RANDOM':
-                        seekPos = generateSeekPos();
-                        break;
-                    case 'MID-POINT':
-                        seekPos = streamDuration / 2;
-                        break;
-                    case 'BEGIN':
-                        seekPos = 10;
-                        break;
-                    default:
-                        seekPos = generateSeekPos();
-                        break;
-                }
+                // Generate randomly a seek position
+                seekPos = generateSeekPos();
                 tests.log(NAME, 'Seek: ' + seekPos);
+                // Seek the player
                 return  tests.executeAsync(command, player.seek, [seekPos], config.asyncTimeout)
                 .then(function() {
                     if (checkPlaying) {
+                        // Check if playing
                         command.execute(video.getCurrentTime)
                         .then(function(time) {
                             tests.log(NAME, 'Check current time ' + time);
@@ -144,27 +137,20 @@ define([
 
     for (i = 0; i < streams.length; i++) {
 
-        // setup: load test page and stream
+        // Setup: load test page and stream
         testSetup(streams[i]);
 
-        // Performs seeks and wait for playing
+        // Perform seeks and wait for playing
         for (j = 0; j < testConfig.seekCount; j++) {
-            testSeek("RANDOM", true);
-            testPlaying(PROGRESS_DELAY);
+            testSeek(true);
+            // testPlaying(PROGRESS_DELAY);
         }
 
-        // Performs (fast) seeks, do not wait for playing before each seek
+        // Performs (fast) seeks, do not wait for playing before each seek, check if playing after last seek
         for (j = 0; j < testConfig.seekCount; j++) {
-            testSeek("RANDOM", j < (testConfig.seekCount - 1) ? false : true);
+            testSeek(j < (testConfig.seekCount - 1) ? false : true);
         }
-        testPlaying(PROGRESS_DELAY);
-
-        // Seeks, let playing for 1 minute, and then seek back
-        // => then check if still playing, and that no QuatoExceededError is raised as it was done on Firefox
-        testSeek('MID-POINT', true);
-        testPlaying(50);
-        testSeek('BEGIN', true);
-        testPlaying(PROGRESS_DELAY);
+        // testPlaying(PROGRESS_DELAY);
     }
 
 });
