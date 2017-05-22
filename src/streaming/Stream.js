@@ -187,10 +187,6 @@ function Stream(config) {
         return streamInfo;
     }
 
-    function hasMedia(type) {
-        return (getMediaInfo(type) !== null);
-    }
-
     /**
      * @param {string} type
      * @returns {Array}
@@ -506,7 +502,6 @@ function Stream(config) {
         getStartTime: getStartTime,
         getId: getId,
         getStreamInfo: getStreamInfo,
-        hasMedia: hasMedia,
         getBitrateListFor: getBitrateListFor,
         startEventController: startEventController,
         updateData: updateData,
