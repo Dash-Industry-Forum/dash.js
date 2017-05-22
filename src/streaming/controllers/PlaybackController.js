@@ -97,10 +97,6 @@ function PlaybackController() {
         return getTime() > 0;
     }
 
-    function getStreamId() {
-        return streamInfo.id;
-    }
-
     function play() {
         if (videoModel && videoModel.getElement()) {
             videoModel.play();
@@ -475,7 +471,6 @@ function PlaybackController() {
         getStreamStartTime: getStreamStartTime,
         getTimeToStreamEnd: getTimeToStreamEnd,
         isPlaybackStarted: isPlaybackStarted,
-        getStreamId: getStreamId,
         getTime: getTime,
         getPlaybackRate: getPlaybackRate,
         getPlayedRanges: getPlayedRanges,
