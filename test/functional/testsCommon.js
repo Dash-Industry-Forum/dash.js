@@ -4,6 +4,7 @@ define(function(require) {
 
     var osConfig = require('./config/os');
     var seleniumConfigs = require('./config/selenium');
+    var applications = require('./config/applications');
     var testsConfig = require('./config/testsConfig');
     var testsSuites = require('./config/testsSuites');
 
@@ -45,19 +46,18 @@ define(function(require) {
     }
 
     if (intern.args.browsers) {
-        browsers = intern.args.browsers.split('&');
+        browsers = intern.args.browsers.split(',');
     }
 
     conf.environments = [];
     browsers.forEach(function(browser) {
-        if(osConfig[os] && osConfig[os][browser]) {
+        if (osConfig[os] && osConfig[os][browser]) {
             conf.environments = conf.environments.concat(osConfig[os][browser]);
         }
     });
 
-    if(intern.args.tests) {
-        var tests = intern.args.tests.split('&');
-
+    if (intern.args.tests) {
+        var tests = intern.args.tests.split(',');
         conf.functionalSuites = [];
         tests.forEach(function(test) {
             conf.functionalSuites = conf.functionalSuites.concat(testsSuites[test]);
@@ -67,14 +67,21 @@ define(function(require) {
     conf = Object.assign(conf, seleniumConfig);
     // console.log("Selenium configuration:\n", conf);
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////////
     // Tests configuration parameters
 
     // Tests configuration from command line
 
-    // url=url of application
-    testsConfig.testPage = intern.args.url;
+    // application
+    testsConfig.testPage = applications.local;
+
+    if (intern.args.app) {
+        testsConfig.testPage = applications[intern.args.app];
+    }
+
+    if (intern.args.appurl) {
+        testsConfig.testPage = intern.args.appurl;
+    }
 
     return conf;
 });
