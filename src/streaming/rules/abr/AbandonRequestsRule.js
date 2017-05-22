@@ -29,13 +29,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import SwitchRequest from '../SwitchRequest';
-import MediaPlayerModel from '../../models/MediaPlayerModel';
-import DashMetrics from '../../../dash/DashMetrics';
-import MetricsModel from '../../models/MetricsModel';
 import FactoryMaker from '../../../core/FactoryMaker';
 import Debug from '../../../core/Debug';
 
-function AbandonRequestsRule() {
+function AbandonRequestsRule(config) {
 
     const ABANDON_MULTIPLIER = 1.8;
     const GRACE_TIME_THRESHOLD = 500;
@@ -44,20 +41,18 @@ function AbandonRequestsRule() {
     const context = this.context;
     const log = Debug(context).getInstance().log;
 
+    let mediaPlayerModel = config.mediaPlayerModel;
+    let dashMetrics = config.dashMetrics;
+    let metricsModel = config.metricsModel;
+
     let fragmentDict,
         abandonDict,
-        throughputArray,
-        mediaPlayerModel,
-        dashMetrics,
-        metricsModel;
+        throughputArray;
 
     function setup() {
         fragmentDict = {};
         abandonDict = {};
         throughputArray = [];
-        mediaPlayerModel = MediaPlayerModel(context).getInstance();
-        dashMetrics = DashMetrics(context).getInstance();
-        metricsModel = MetricsModel(context).getInstance();
     }
 
     function setFragmentRequestDict(type, id) {

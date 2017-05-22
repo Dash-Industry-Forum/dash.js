@@ -62,9 +62,11 @@ function ABRRulesCollection(config) {
                 qualitySwitchRules.push(
                     BolaRule(context).create({
                         metricsModel: metricsModel,
-                        dashMetrics: dashMetrics
+                        dashMetrics: dashMetrics,
+                        mediaPlayerModel: mediaPlayerModel
                     })
                 );
+
                 abandonFragmentRules.push(
                     BolaAbandonRule(context).create({
                         metricsModel: metricsModel,
@@ -75,16 +77,29 @@ function ABRRulesCollection(config) {
                 qualitySwitchRules.push(
                     ThroughputRule(context).create({
                         metricsModel: metricsModel,
-                        dashMetrics: dashMetrics
+                        dashMetrics: dashMetrics,
+                        mediaPlayerModel: mediaPlayerModel
                     })
                 );
+                qualitySwitchRules.push(
+                    InsufficientBufferRule(context).create({
+                        metricsModel: metricsModel
+                    })
+                );
+                qualitySwitchRules.push(
+                    SwitchHistoryRule(context).create()
+                );
+                qualitySwitchRules.push(
+                    DroppedFramesRule(context).create()
+                );
 
-                qualitySwitchRules.push(InsufficientBufferRule(context).create({
-                    metricsModel: metricsModel
-                }));
-                qualitySwitchRules.push(SwitchHistoryRule(context).create());
-                qualitySwitchRules.push(DroppedFramesRule(context).create());
-                abandonFragmentRules.push(AbandonRequestsRule(context).create());
+                abandonFragmentRules.push(
+                    AbandonRequestsRule(context).create({
+                        metricsModel: metricsModel,
+                        dashMetrics: dashMetrics,
+                        mediaPlayerModel: mediaPlayerModel
+                    })
+                );
             }
         }
 
@@ -101,7 +116,7 @@ function ABRRulesCollection(config) {
         });
     }
 
-    function getRules (type) {
+    function getRules(type) {
         switch (type) {
             case QUALITY_SWITCH_RULES:
                 return qualitySwitchRules;
@@ -197,7 +212,7 @@ function ABRRulesCollection(config) {
 }
 
 ABRRulesCollection.__dashjs_factory_name = 'ABRRulesCollection';
-let factory =  FactoryMaker.getClassFactory(ABRRulesCollection);
+let factory = FactoryMaker.getClassFactory(ABRRulesCollection);
 factory.QUALITY_SWITCH_RULES = QUALITY_SWITCH_RULES;
 factory.ABANDON_FRAGMENT_RULES = ABANDON_FRAGMENT_RULES;
 FactoryMaker.updateSingletonFactory(ABRRulesCollection.__dashjs_factory_name, factory);
