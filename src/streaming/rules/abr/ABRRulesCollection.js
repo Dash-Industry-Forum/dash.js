@@ -35,16 +35,13 @@ import DroppedFramesRule from './DroppedFramesRule.js';
 import SwitchHistoryRule from './SwitchHistoryRule.js';
 import BolaRule from './BolaRule';
 import BolaAbandonRule from './BolaAbandonRule';
-import MediaPlayerModel from '../../models/MediaPlayerModel';
-import MetricsModel from '../../models/MetricsModel';
-import DashMetrics from '../../../dash/DashMetrics';
 import FactoryMaker from '../../../core/FactoryMaker';
 import SwitchRequest from '../SwitchRequest.js';
 
 const QUALITY_SWITCH_RULES = 'qualitySwitchRules';
 const ABANDON_FRAGMENT_RULES = 'abandonFragmentRules';
 
-function ABRRulesCollection() {
+function ABRRulesCollection(config) {
 
     let context = this.context;
 
@@ -52,13 +49,13 @@ function ABRRulesCollection() {
         qualitySwitchRules,
         abandonFragmentRules;
 
+    let metricsModel = config.metricsModel;
+    let dashMetrics = config.dashMetrics;
+    let mediaPlayerModel = config.mediaPlayerModel;
+
     function initialize() {
         qualitySwitchRules = [];
         abandonFragmentRules = [];
-
-        let metricsModel = MetricsModel(context).getInstance();
-        let dashMetrics = DashMetrics(context).getInstance();
-        let mediaPlayerModel = MediaPlayerModel(context).getInstance();
 
         if (mediaPlayerModel.getUseDefaultABRRules()) {
             if (mediaPlayerModel.getBufferOccupancyABREnabled()) {
@@ -104,7 +101,7 @@ function ABRRulesCollection() {
         });
     }
 
-    function getRules(type) {
+    function getRules (type) {
         switch (type) {
             case QUALITY_SWITCH_RULES:
                 return qualitySwitchRules;
@@ -184,21 +181,23 @@ function ABRRulesCollection() {
                 rules.forEach(rule => rule.reset && rule.reset());
             }
         });
+        qualitySwitchRules = [];
+        abandonFragmentRules = [];
     }
 
     instance = {
         initialize: initialize,
+        reset: reset,
         getRules: getRules,
         getMaxQuality: getMaxQuality,
-        shouldAbandonFragment: shouldAbandonFragment,
-        reset: reset
+        shouldAbandonFragment: shouldAbandonFragment
     };
 
     return instance;
 }
 
 ABRRulesCollection.__dashjs_factory_name = 'ABRRulesCollection';
-let factory = FactoryMaker.getSingletonFactory(ABRRulesCollection);
+let factory =  FactoryMaker.getClassFactory(ABRRulesCollection);
 factory.QUALITY_SWITCH_RULES = QUALITY_SWITCH_RULES;
 factory.ABANDON_FRAGMENT_RULES = ABANDON_FRAGMENT_RULES;
 FactoryMaker.updateSingletonFactory(ABRRulesCollection.__dashjs_factory_name, factory);
