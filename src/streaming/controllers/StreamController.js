@@ -72,7 +72,6 @@ function StreamController() {
         protectionData,
         autoPlay,
         isStreamSwitchingInProgress,
-        isUpdating,
         hasMediaError,
         hasInitialisationError,
         mediaSource,
@@ -90,7 +89,6 @@ function StreamController() {
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
         autoPlay = true;
         isStreamSwitchingInProgress = false;
-        isUpdating = false;
         isPaused = false;
         initialPlayback = true;
         playListMetrics = null;
@@ -698,7 +696,6 @@ function StreamController() {
         liveEdgeFinder.reset();
         initCache.reset();
         isStreamSwitchingInProgress = false;
-        isUpdating = false;
         activeStream = null;
         hasMediaError = false;
         hasInitialisationError = false;
