@@ -24,7 +24,7 @@ define([], function () {
 
         seek: function (pos, done) {
             var onSeeked = function () {
-                player.off('seeked', onSeeked);
+                player.off('playbackSeeked', onSeeked);
                 done(true);
             };
 
