@@ -179,10 +179,6 @@ function Stream(config) {
         return streamInfo.start;
     }
 
-    function getStreamIndex() {
-        return streamInfo.index;
-    }
-
     function getId() {
         return streamInfo.id;
     }
@@ -508,7 +504,6 @@ function Stream(config) {
         deactivate: deactivate,
         getDuration: getDuration,
         getStartTime: getStartTime,
-        getStreamIndex: getStreamIndex,
         getId: getId,
         getStreamInfo: getStreamInfo,
         hasMedia: hasMedia,
