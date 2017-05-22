@@ -40,7 +40,6 @@ class StreamInfo {
         this.duration = NaN;
         this.manifestInfo = null;
         this.isLast = true;
-        this.isFirst = true;
     }
 }
 

@@ -167,7 +167,6 @@ function DashAdapter() {
         streamInfo.duration = period.duration;
         streamInfo.manifestInfo = convertMpdToManifestInfo(period.mpd);
         streamInfo.isLast = period.mpd.manifest.Period_asArray.length === 1 || Math.abs((streamInfo.start + streamInfo.duration) - streamInfo.manifestInfo.duration) < THRESHOLD;
-        streamInfo.isFirst = period.mpd.manifest.Period_asArray.length === 1 || dashManifestModel.getRegularPeriods(dashManifestModel.getMpd(period.mpd.manifest))[0].id === period.id;
 
         return streamInfo;
     }
