@@ -335,7 +335,7 @@ function TextSourceBuffer() {
                             // Only used for Miscrosoft Smooth Streaming support - caption time is relative to sample time. In this case, we apply an offset.
                             let manifest = manifestModel.getValue();
                             let offsetTime = manifest.ttmlTimeIsRelative ? sampleStart / timescale : 0;
-                            result = parser.parse(ccContent, sampleStart / timescale, (sampleStart + sample.duration) / timescale, images, offsetTime);
+                            result = parser.parse(ccContent, offsetTime, sampleStart / timescale, (sampleStart + sample.duration) / timescale, images);
                             textTracks.addCaptions(currFragmentedTrackIdx, firstSubtitleStart / timescale, result);
                         } catch (e) {
                             log('TTML parser error: ' + e.message);
@@ -390,7 +390,7 @@ function TextSourceBuffer() {
             ccContent = ISOBoxer.Utils.dataViewToString(dataView, 'utf-8');
 
             try {
-                result = getParser(codecType).parse(ccContent);
+                result = getParser(codecType).parse(ccContent, 0);
                 createTextTrackFromMediaInfo(result, mediaInfo);
             } catch (e) {
                 errHandler.timedTextError(e, 'parse', ccContent);
@@ -598,9 +598,6 @@ function TextSourceBuffer() {
             parser = vttParser;
         } else if (codecType.search('ttml') >= 0 || codecType.search('stpp') >= 0) {
             parser = ttmlParser;
-            parser.setConfig({
-                videoModel: videoModel
-            });
         }
         return parser;
     }
