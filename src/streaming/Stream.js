@@ -59,6 +59,7 @@ function Stream(config) {
     let timelineConverter = config.timelineConverter;
     let baseURLController = config.baseURLController;
     let domStorage = config.domStorage;
+    let metricsModel = config.metricsModel;
 
     let instance,
         streamProcessors,
@@ -91,7 +92,8 @@ function Stream(config) {
         abrController = AbrController(context).getInstance();
         mediaController = MediaController(context).getInstance();
         fragmentController = FragmentController(context).create({
-            mediaPlayerModel: mediaPlayerModel
+            mediaPlayerModel: mediaPlayerModel,
+            metricsModel: metricsModel
         });
         textController = TextController(context).getInstance();
 
@@ -314,6 +316,7 @@ function Stream(config) {
             adapter: adapter,
             manifestModel: manifestModel,
             mediaPlayerModel: mediaPlayerModel,
+            metricsModel: metricsModel,
             baseURLController: baseURLController,
             stream: instance,
             abrController: abrController,

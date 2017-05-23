@@ -33,7 +33,6 @@ import {
 } from '../vo/metrics/HTTPRequest';
 import DataChunk from '../vo/DataChunk';
 import FragmentModel from '../models/FragmentModel';
-import MetricsModel from '../models/MetricsModel';
 import FragmentLoader from '../FragmentLoader';
 import RequestModifier from '../utils/RequestModifier';
 import ErrorHandler from '../utils/ErrorHandler';
@@ -49,6 +48,7 @@ function FragmentController( config ) {
     const eventBus = EventBus(context).getInstance();
 
     const mediaPlayerModel = config.mediaPlayerModel;
+    const metricsModel = config.metricsModel;
 
     let instance,
         fragmentModels;
@@ -61,13 +61,15 @@ function FragmentController( config ) {
     function getModel(type) {
         let model = fragmentModels[type];
         if (!model) {
-            model = FragmentModel(context).create({metricsModel: MetricsModel(context).getInstance(),
-                                                   fragmentLoader: FragmentLoader(context).create({
-                                                    metricsModel: MetricsModel(context).getInstance(),
-                                                    mediaPlayerModel: mediaPlayerModel,
-                                                    errHandler: ErrorHandler(context).getInstance(),
-                                                    requestModifier: RequestModifier(context).getInstance()})
-                                                  });
+            model = FragmentModel(context).create({
+                metricsModel: metricsModel,
+                fragmentLoader: FragmentLoader(context).create({
+                    metricsModel: metricsModel,
+                    mediaPlayerModel: mediaPlayerModel,
+                    errHandler: ErrorHandler(context).getInstance(),
+                    requestModifier: RequestModifier(context).getInstance()
+                })
+            });
 
             fragmentModels[type] = model;
         }

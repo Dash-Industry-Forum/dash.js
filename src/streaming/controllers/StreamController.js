@@ -400,6 +400,7 @@ function StreamController() {
                     stream = Stream(context).create({
                         manifestModel: manifestModel,
                         mediaPlayerModel: mediaPlayerModel,
+                        metricsModel: metricsModel,
                         manifestUpdater: manifestUpdater,
                         adapter: adapter,
                         timelineConverter: timelineConverter,

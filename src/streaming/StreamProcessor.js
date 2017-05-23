@@ -34,7 +34,6 @@ import StreamController from './controllers/StreamController';
 import MediaController from './controllers/MediaController';
 import TextBufferController from './text/TextBufferController';
 import ScheduleController from './controllers/ScheduleController';
-import MetricsModel from './models/MetricsModel';
 import SourceBufferController from './controllers/SourceBufferController';
 import TextController from './text/TextController';
 import DashManifestModel from '../dash/models/DashManifestModel';
@@ -59,6 +58,7 @@ function StreamProcessor(config) {
     let stream = config.stream;
     let abrController = config.abrController;
     let domStorage = config.domStorage;
+    let metricsModel = config.metricsModel;
 
     let instance,
         dynamic,
@@ -83,7 +83,7 @@ function StreamProcessor(config) {
             mimeType: mimeType,
             timelineConverter: timelineConverter,
             dashMetrics: DashMetrics(context).getInstance(),
-            metricsModel: MetricsModel(context).getInstance(),
+            metricsModel: metricsModel,
             mediaPlayerModel: mediaPlayerModel,
             baseURLController: config.baseURLController
         });
@@ -97,7 +97,7 @@ function StreamProcessor(config) {
         bufferController = createBufferControllerForType(type);
         scheduleController = ScheduleController(context).create({
             type: type,
-            metricsModel: MetricsModel(context).getInstance(),
+            metricsModel: metricsModel,
             adapter: adapter,
             dashMetrics: DashMetrics(context).getInstance(),
             dashManifestModel: DashManifestModel(context).getInstance(),
@@ -111,7 +111,8 @@ function StreamProcessor(config) {
         });
         representationController.setConfig({
             abrController: abrController,
-            domStorage: domStorage
+            domStorage: domStorage,
+            metricsModel: metricsModel
         });
         bufferController.initialize(mediaSource);
         scheduleController.initialize();
@@ -280,7 +281,7 @@ function StreamProcessor(config) {
         if (type === 'video' || type === 'audio') {
             controller = BufferController(context).create({
                 type: type,
-                metricsModel: MetricsModel(context).getInstance(),
+                metricsModel: metricsModel,
                 mediaPlayerModel: mediaPlayerModel,
                 manifestModel: manifestModel,
                 sourceBufferController: SourceBufferController(context).getInstance(),
@@ -294,7 +295,7 @@ function StreamProcessor(config) {
         } else {
             controller = TextBufferController(context).create({
                 type: type,
-                metricsModel: MetricsModel(context).getInstance(),
+                metricsModel: metricsModel,
                 mediaPlayerModel: mediaPlayerModel,
                 manifestModel: manifestModel,
                 sourceBufferController: SourceBufferController(context).getInstance(),

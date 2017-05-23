@@ -44,7 +44,6 @@ import SwitchRequest from '../rules/SwitchRequest.js';
 import SwitchRequestHistory from '../rules/SwitchRequestHistory.js';
 import DroppedFramesHistory from '../rules/DroppedFramesHistory.js';
 import ThroughputHistory from '../rules/ThroughputHistory.js';
-import MetricsModel from '../models/MetricsModel.js';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import DashMetrics from '../../dash/DashMetrics.js';
 import Debug from '../../core/Debug';
@@ -109,7 +108,6 @@ function AbrController() {
         manifestModel = ManifestModel(context).getInstance();
         dashManifestModel = DashManifestModel(context).getInstance();
         videoModel = VideoModel(context).getInstance();
-        metricsModel = MetricsModel(context).getInstance();
         dashMetrics = DashMetrics(context).getInstance();
         reset();
     }
@@ -183,6 +181,9 @@ function AbrController() {
         }
         if (config.mediaPlayerModel) {
             mediaPlayerModel = config.mediaPlayerModel;
+        }
+        if (config.metricsModel) {
+            metricsModel = config.metricsModel;
         }
     }
 

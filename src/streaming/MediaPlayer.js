@@ -2059,7 +2059,8 @@ function MediaPlayer() {
         abrController.setConfig({
             streamController: streamController,
             domStorage: domStorage,
-            mediaPlayerModel: mediaPlayerModel
+            mediaPlayerModel: mediaPlayerModel,
+            metricsModel: metricsModel
         });
 
         textController.setConfig({
