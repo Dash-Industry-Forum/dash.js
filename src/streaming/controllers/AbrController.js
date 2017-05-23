@@ -305,7 +305,6 @@ function AbrController() {
                 abrController: instance,
                 streamProcessor: streamProcessorDict[type],
                 currentValue: oldQuality,
-                playbackIndex: playbackIndex,
                 switchHistory: switchHistoryDict[type],
                 droppedFramesHistory: droppedFramesHistory,
                 hasRichBuffer: hasRichBuffer(type)
@@ -590,7 +589,6 @@ function AbrController() {
                 abrController: instance,
                 streamProcessor: streamProcessorDict[type],
                 currentRequest: e.request,
-                currentValue: getQualityFor(type, streamController.getActiveStreamInfo()),
                 hasRichBuffer: hasRichBuffer(type)
             });
             let switchRequest = abrRulesCollection.shouldAbandonFragment(rulesContext);
