@@ -643,7 +643,6 @@ function AbrController() {
         setUsePixelRatioInLimitBitrateByPortal: setUsePixelRatioInLimitBitrateByPortal,
         getQualityFor: getQualityFor,
         getAbandonmentStateFor: getAbandonmentStateFor,
-        setAbandonmentStateFor: setAbandonmentStateFor,
         setPlaybackQuality: setPlaybackQuality,
         checkPlaybackQuality: checkPlaybackQuality,
         setAverageThroughput: setAverageThroughput,
