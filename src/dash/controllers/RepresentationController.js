@@ -35,7 +35,6 @@ import AbrController from '../../streaming/controllers/AbrController';
 import PlaybackController from '../../streaming/controllers/PlaybackController';
 import ManifestModel from '../../streaming/models/ManifestModel';
 import MetricsModel from '../../streaming/models/MetricsModel';
-import DOMStorage from '../../streaming/utils/DOMStorage';
 import Error from '../../streaming/vo/Error';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
@@ -76,7 +75,6 @@ function RepresentationController(config) {
         abrController = AbrController(context).getInstance();
         playbackController = PlaybackController(context).getInstance();
         metricsModel = MetricsModel(context).getInstance();
-        domStorage = DOMStorage(context).getInstance();
         timelineConverter = TimelineConverter(context).getInstance();
         dashManifestModel = DashManifestModel(context).getInstance();
         dashMetrics = DashMetrics(context).getInstance();
@@ -92,6 +90,9 @@ function RepresentationController(config) {
         // allow the abrController created in setup to be overidden
         if (config.abrController) {
             abrController = config.abrController;
+        }
+        if (config.domStorage) {
+            domStorage = config.domStorage;
         }
     }
 

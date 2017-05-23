@@ -45,13 +45,14 @@ function ABRRulesCollection(config) {
 
     let context = this.context;
 
+    const mediaPlayerModel = config.mediaPlayerModel;
+
     let instance,
         qualitySwitchRules,
         abandonFragmentRules;
 
     let metricsModel = config.metricsModel;
     let dashMetrics = config.dashMetrics;
-    let mediaPlayerModel = config.mediaPlayerModel;
 
     function initialize() {
         qualitySwitchRules = [];

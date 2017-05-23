@@ -51,12 +51,14 @@ function Stream(config) {
     let eventBus = EventBus(context).getInstance();
 
     let manifestModel = config.manifestModel;
+    let mediaPlayerModel = config.mediaPlayerModel;
     let manifestUpdater = config.manifestUpdater;
     let adapter = config.adapter;
     let capabilities = config.capabilities;
     let errHandler = config.errHandler;
     let timelineConverter = config.timelineConverter;
     let baseURLController = config.baseURLController;
+    let domStorage = config.domStorage;
 
     let instance,
         streamProcessors,
@@ -88,7 +90,9 @@ function Stream(config) {
         playbackController = PlaybackController(context).getInstance();
         abrController = AbrController(context).getInstance();
         mediaController = MediaController(context).getInstance();
-        fragmentController = FragmentController(context).create();
+        fragmentController = FragmentController(context).create({
+            mediaPlayerModel: mediaPlayerModel
+        });
         textController = TextController(context).getInstance();
 
         eventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
@@ -309,9 +313,11 @@ function Stream(config) {
             timelineConverter: timelineConverter,
             adapter: adapter,
             manifestModel: manifestModel,
+            mediaPlayerModel: mediaPlayerModel,
             baseURLController: baseURLController,
             stream: instance,
-            abrController: abrController
+            abrController: abrController,
+            domStorage: domStorage
         });
 
         let allMediaForType = adapter.getAllMediaInfoForType(streamInfo, mediaInfo.type);

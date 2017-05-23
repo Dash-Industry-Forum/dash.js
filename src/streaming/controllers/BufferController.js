@@ -30,7 +30,6 @@
  */
 
 import FragmentModel from '../models/FragmentModel';
-import MediaPlayerModel from '../models/MediaPlayerModel';
 import SourceBufferController from './SourceBufferController';
 import AbrController from './AbrController';
 import PlaybackController from './PlaybackController';
@@ -51,6 +50,7 @@ function BufferController(config) {
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
     const metricsModel = config.metricsModel;
+    const mediaPlayerModel = config.mediaPlayerModel;
     const sourceBufferController = config.sourceBufferController;
     const errHandler = config.errHandler;
     const streamController = config.streamController;
@@ -78,7 +78,6 @@ function BufferController(config) {
         isPruningInProgress,
         playbackController,
         abrController,
-        mediaPlayerModel,
         initCache,
         seekStartTime;
 
@@ -100,7 +99,6 @@ function BufferController(config) {
 
     function initialize(Source) {
         setMediaSource(Source);
-        mediaPlayerModel = MediaPlayerModel(context).getInstance();
         playbackController = PlaybackController(context).getInstance();
         abrController = AbrController(context).getInstance();
         initCache = InitCache(context).getInstance();

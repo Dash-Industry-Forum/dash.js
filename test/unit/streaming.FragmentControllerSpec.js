@@ -1,6 +1,7 @@
 import VoHelper from './helpers/VOHelper';
 import Events from '../../src/core/events/Events';
 import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
+import MediaPlayerModel from '../../src/streaming/models/MediaPlayerModel'
 import FragmentController from '../../src/streaming/controllers/FragmentController';
 
 const expect = require('chai').expect;
@@ -8,8 +9,11 @@ const expect = require('chai').expect;
 describe("FragmentController", function () {
     const context = {};
     const voHelper = new VoHelper();
-    const fragmentController = FragmentController(context).create();
-
+    const mediaPlayerModel = MediaPlayerModel(context).getInstance();
+    const fragmentController = FragmentController(context).create({
+        mediaPlayerModel: mediaPlayerModel
+    });
+    
     Events.extend(MediaPlayerEvents);
 
     it("should create or return model for a given media type", function () {

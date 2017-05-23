@@ -30,7 +30,6 @@
  */
 import BufferController from './BufferController';
 import URIQueryAndFragmentModel from '../models/URIQueryAndFragmentModel';
-import MediaPlayerModel from '../../streaming/models/MediaPlayerModel';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
@@ -61,7 +60,6 @@ function PlaybackController() {
         playOnceInitialized;
 
     function setup() {
-        mediaPlayerModel = MediaPlayerModel(context).getInstance();
         reset();
     }
 
@@ -224,6 +222,9 @@ function PlaybackController() {
         }
         if (config.dashManifestModel) {
             dashManifestModel = config.dashManifestModel;
+        }
+        if (config.mediaPlayerModel) {
+            mediaPlayerModel = config.mediaPlayerModel;
         }
         if (config.adapter) {
             adapter = config.adapter;

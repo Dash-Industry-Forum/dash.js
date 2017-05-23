@@ -65,12 +65,14 @@ function ManifestLoader(config) {
         xhrLoader = XHRLoader(context).create({
             errHandler: errHandler,
             metricsModel: config.metricsModel,
+            mediaPlayerModel: config.mediaPlayerModel,
             requestModifier: config.requestModifier
         });
 
         xlinkController = XlinkController(context).create({
             errHandler: errHandler,
             metricsModel: config.metricsModel,
+            mediaPlayerModel: config.mediaPlayerModel,
             requestModifier: config.requestModifier
         });
 

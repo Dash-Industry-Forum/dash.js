@@ -30,7 +30,6 @@
  */
 import {HTTPRequest} from './vo/metrics/HTTPRequest';
 import FactoryMaker from '../core/FactoryMaker';
-import MediaPlayerModel from './models/MediaPlayerModel';
 import ErrorHandler from './utils/ErrorHandler.js';
 
 /**
@@ -39,13 +38,11 @@ import ErrorHandler from './utils/ErrorHandler.js';
  * @param {Object} cfg - dependancies from parent
  */
 function XHRLoader(cfg) {
-    const context = this.context;
-
+    //const context = this.context;
     //const log = Debug(context).getInstance().log;
-    const mediaPlayerModel = MediaPlayerModel(context).getInstance();
-
     const errHandler = cfg.errHandler;
     const metricsModel = cfg.metricsModel;
+    const mediaPlayerModel = cfg.mediaPlayerModel;
     const requestModifier = cfg.requestModifier;
 
     let instance;

@@ -49,6 +49,8 @@ function TextBufferController(config) {
             _BufferControllerImpl = BufferController(context).create({
                 type: config.type,
                 metricsModel: config.metricsModel,
+                mediaPlayerModel: config.mediaPlayerModel,
+                manifestModel: config.manifestModel,
                 sourceBufferController: config.sourceBufferController,
                 errHandler: config.errHandler,
                 streamController: config.streamController,

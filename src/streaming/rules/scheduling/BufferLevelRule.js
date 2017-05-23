@@ -28,21 +28,17 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import MediaPlayerModel from '../../models/MediaPlayerModel';
 import FactoryMaker from '../../../core/FactoryMaker';
 
 function BufferLevelRule(config) {
 
-    const context = this.context;
     const dashMetrics = config.dashMetrics;
     const metricsModel = config.metricsModel;
+    const mediaPlayerModel = config.mediaPlayerModel;
     const textController = config.textController;
     const abrController = config.abrController;
 
-    let mediaPlayerModel;
-
     function setup() {
-        mediaPlayerModel = MediaPlayerModel(context).getInstance();
     }
 
     function execute(streamProcessor, type, videoTrackPresent) {

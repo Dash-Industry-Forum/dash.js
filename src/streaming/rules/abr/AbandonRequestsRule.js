@@ -29,6 +29,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import SwitchRequest from '../SwitchRequest';
+<<<<<<< HEAD
+=======
+import DashMetrics from '../../../dash/DashMetrics';
+import MetricsModel from '../../models/MetricsModel';
+>>>>>>> MediaPlayerModel  - uniformise the way it is given to controllers.
 import FactoryMaker from '../../../core/FactoryMaker';
 import Debug from '../../../core/Debug';
 

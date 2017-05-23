@@ -56,6 +56,7 @@ function DashHandler(config) {
     let timelineConverter = config.timelineConverter;
     let dashMetrics = config.dashMetrics;
     let metricsModel = config.metricsModel;
+    let mediaPlayerModel = config.mediaPlayerModel;
     const baseURLController = config.baseURLController;
 
     let instance,
@@ -78,7 +79,8 @@ function DashHandler(config) {
         segmentBaseLoader = isWebM(config.mimeType) ? WebmSegmentBaseLoader(context).getInstance() : SegmentBaseLoader(context).getInstance();
         segmentBaseLoader.setConfig({
             baseURLController: baseURLController,
-            metricsModel: metricsModel
+            metricsModel: metricsModel,
+            mediaPlayerModel: mediaPlayerModel
         });
 
         eventBus.on(Events.INITIALIZATION_LOADED, onInitializationLoaded, instance);

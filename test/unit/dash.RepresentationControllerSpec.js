@@ -4,10 +4,12 @@ import MpdHelper from './helpers/MPDHelper';
 import EventBus from '../../src/core/EventBus';
 import RepresentationController from '../../src/dash/controllers/RepresentationController';
 import ManifestModel from '../../src/streaming/models/ManifestModel';
+import MediaPlayerModel from '../../src/streaming/models/MediaPlayerModel';
 import Events from '../../src/core/events/Events';
 import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
 import SpecHelper from './helpers/SpecHelper';
 import AbrController from '../../src/streaming/controllers/AbrController';
+import DOMStorage from '../../src/streaming/utils/DOMStorage';
 
 const chai = require('chai'),
       spies = require('chai-spies');
@@ -30,17 +32,29 @@ describe("RepresentationController", function () {
     const streamProcessor = objectsHelper.getDummyStreamProcessor(testType);
     const eventBus = EventBus(context).getInstance();
     const manifestModel = ManifestModel(context).getInstance();
+    const mediaPlayerModel = MediaPlayerModel(context).getInstance();
 
     Events.extend(MediaPlayerEvents);
 
     manifestModel.setValue(mpd);
 
     const abrController = AbrController(context).getInstance();
+    const domStorage = DOMStorage(context).getInstance({
+        mediaPlayerModel: mediaPlayerModel
+    });
+
+    abrController.setConfig({
+        domStorage: domStorage,
+        mediaPlayerModel: mediaPlayerModel
+    })
     abrController.registerStreamType(testType, streamProcessor);
 
     const representationController = RepresentationController(context).create({streamProcessor : streamProcessor});
     representationController.initialize();
-    representationController.setConfig({abrController: abrController});
+    representationController.setConfig({
+        abrController: abrController,
+        domStorage: domStorage
+    });
 
     it("should not contain data before it is set", function () {
         // Act

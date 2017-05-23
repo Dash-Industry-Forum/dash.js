@@ -34,7 +34,6 @@ import StreamController from './controllers/StreamController';
 import MediaController from './controllers/MediaController';
 import TextBufferController from './text/TextBufferController';
 import ScheduleController from './controllers/ScheduleController';
-import MediaPlayerModel from './models/MediaPlayerModel';
 import MetricsModel from './models/MetricsModel';
 import SourceBufferController from './controllers/SourceBufferController';
 import TextController from './text/TextController';
@@ -55,9 +54,11 @@ function StreamProcessor(config) {
     let mimeType = config.mimeType;
     let timelineConverter = config.timelineConverter;
     let adapter = config.adapter;
-    let eventController = config.eventController;
+    let manifestModel = config.manifestModel;
+    let mediaPlayerModel = config.mediaPlayerModel;
     let stream = config.stream;
     let abrController = config.abrController;
+    let domStorage = config.domStorage;
 
     let instance,
         dynamic,
@@ -83,6 +84,7 @@ function StreamProcessor(config) {
             timelineConverter: timelineConverter,
             dashMetrics: DashMetrics(context).getInstance(),
             metricsModel: MetricsModel(context).getInstance(),
+            mediaPlayerModel: mediaPlayerModel,
             baseURLController: config.baseURLController
         });
 
@@ -100,14 +102,17 @@ function StreamProcessor(config) {
             dashMetrics: DashMetrics(context).getInstance(),
             dashManifestModel: DashManifestModel(context).getInstance(),
             timelineConverter: timelineConverter,
-            mediaPlayerModel: MediaPlayerModel(context).getInstance(),
+            mediaPlayerModel: mediaPlayerModel,
             streamProcessor: this
         });
 
         representationController = RepresentationController(context).create({
             streamProcessor: this
         });
-
+        representationController.setConfig({
+            abrController: abrController,
+            domStorage: domStorage
+        });
         bufferController.initialize(mediaSource);
         scheduleController.initialize();
         representationController.initialize();
@@ -276,6 +281,8 @@ function StreamProcessor(config) {
             controller = BufferController(context).create({
                 type: type,
                 metricsModel: MetricsModel(context).getInstance(),
+                mediaPlayerModel: mediaPlayerModel,
+                manifestModel: manifestModel,
                 sourceBufferController: SourceBufferController(context).getInstance(),
                 errHandler: ErrorHandler(context).getInstance(),
                 streamController: StreamController(context).getInstance(),
@@ -288,6 +295,8 @@ function StreamProcessor(config) {
             controller = TextBufferController(context).create({
                 type: type,
                 metricsModel: MetricsModel(context).getInstance(),
+                mediaPlayerModel: mediaPlayerModel,
+                manifestModel: manifestModel,
                 sourceBufferController: SourceBufferController(context).getInstance(),
                 errHandler: ErrorHandler(context).getInstance(),
                 streamController: StreamController(context).getInstance(),

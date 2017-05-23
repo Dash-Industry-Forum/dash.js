@@ -31,8 +31,6 @@
 
 import ABRRulesCollection from '../rules/abr/ABRRulesCollection';
 import BitrateInfo from '../vo/BitrateInfo';
-import DOMStorage from '../utils/DOMStorage';
-import MediaPlayerModel from '../models/MediaPlayerModel';
 import FragmentModel from '../models/FragmentModel';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
@@ -93,8 +91,21 @@ function AbrController() {
         dashMetrics;
 
     function setup() {
-        domStorage = DOMStorage(context).getInstance();
-        mediaPlayerModel = MediaPlayerModel(context).getInstance();
+        log = debug.log.bind(instance);
+        autoSwitchBitrate = {video: true, audio: true};
+        topQualities = {};
+        qualityDict = {};
+        bitrateDict = {};
+        ratioDict = {};
+        averageThroughputDict = {};
+        abandonmentStateDict = {};
+        streamProcessorDict = {};
+        switchHistoryDict = {};
+        limitBitrateByPortal = false;
+        usePixelRatioInLimitBitrateByPortal = false;
+        if (windowResizeEventCalled === undefined) {
+            windowResizeEventCalled = false;
+        }
         manifestModel = ManifestModel(context).getInstance();
         dashManifestModel = DashManifestModel(context).getInstance();
         videoModel = VideoModel(context).getInstance();
@@ -166,6 +177,12 @@ function AbrController() {
         }
         if (config.streamController) {
             streamController = config.streamController;
+        }
+        if (config.domStorage) {
+            domStorage = config.domStorage;
+        }
+        if (config.mediaPlayerModel) {
+            mediaPlayerModel = config.mediaPlayerModel;
         }
     }
 

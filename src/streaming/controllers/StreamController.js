@@ -68,6 +68,7 @@ function StreamController() {
         mediaSourceController,
         timeSyncController,
         baseURLController,
+        domStorage,
         initCache,
         errHandler,
         timelineConverter,
@@ -91,7 +92,6 @@ function StreamController() {
     function setup() {
         protectionController = null;
         streams = [];
-        mediaPlayerModel = MediaPlayerModel(context).getInstance();
         timeSyncController = TimeSyncController(context).getInstance();
         liveEdgeFinder = LiveEdgeFinder(context).getInstance();
         baseURLController = BaseURLController(context).getInstance();
@@ -114,7 +114,8 @@ function StreamController() {
         manifestUpdater = ManifestUpdater(context).create();
         manifestUpdater.setConfig({
             manifestModel: manifestModel,
-            dashManifestModel: dashManifestModel
+            dashManifestModel: dashManifestModel,
+            mediaPlayerModel: mediaPlayerModel
         });
         manifestUpdater.initialize(manifestLoader);
 
@@ -398,12 +399,14 @@ function StreamController() {
 
                     stream = Stream(context).create({
                         manifestModel: manifestModel,
+                        mediaPlayerModel: mediaPlayerModel,
                         manifestUpdater: manifestUpdater,
                         adapter: adapter,
                         timelineConverter: timelineConverter,
                         capabilities: capabilities,
                         errHandler: errHandler,
-                        baseURLController: baseURLController
+                        baseURLController: baseURLController,
+                        domStorage: domStorage
                     });
                     streams.push(stream);
                     stream.initialize(streamInfo, protectionController);
@@ -626,6 +629,9 @@ function StreamController() {
         if (config.dashManifestModel) {
             dashManifestModel = config.dashManifestModel;
         }
+        if (config.mediaPlayerModel) {
+            mediaPlayerModel = config.mediaPlayerModel;
+        }
         if (config.protectionController) {
             protectionController = config.protectionController;
         }
@@ -651,6 +657,10 @@ function StreamController() {
 
         if (config.playbackController) {
             playbackController = config.playbackController;
+        }
+
+        if (config.domStorage) {
+            domStorage = config.domStorage;
         }
     }
 

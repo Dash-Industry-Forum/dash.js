@@ -44,6 +44,7 @@ import MediaPlayerModel from './models/MediaPlayerModel';
 import MetricsModel from './models/MetricsModel';
 import AbrController from './controllers/AbrController';
 import VideoModel from './models/VideoModel';
+import DOMStorage from './utils/DOMStorage';
 import Debug from './../core/Debug';
 import EventBus from './../core/EventBus';
 import Events from './../core/events/Events';
@@ -99,7 +100,8 @@ function MediaPlayer() {
         dashMetrics,
         dashManifestModel,
         videoModel,
-        textController;
+        textController,
+        domStorage;
 
     function setup() {
         mediaPlayerInitialized = false;
@@ -159,6 +161,9 @@ function MediaPlayer() {
 
         textController = TextController(context).getInstance();
         playbackController = PlaybackController(context).getInstance();
+        domStorage = DOMStorage(context).getInstance({
+            mediaPlayerModel: mediaPlayerModel
+        });
 
         restoreDefaultUTCTimingSources();
         setAutoPlay(AutoPlay !== undefined ? AutoPlay : true);
@@ -2017,7 +2022,8 @@ function MediaPlayer() {
 
         // configure controllers
         mediaController.setConfig({
-            errHandler: errHandler
+            errHandler: errHandler,
+            domStorage: domStorage
         });
 
         streamController.setConfig({
@@ -2025,6 +2031,7 @@ function MediaPlayer() {
             manifestLoader: manifestLoader,
             manifestModel: manifestModel,
             dashManifestModel: dashManifestModel,
+            mediaPlayerModel: mediaPlayerModel,
             protectionController: protectionController,
             adapter: adapter,
             metricsModel: metricsModel,
@@ -2032,7 +2039,8 @@ function MediaPlayer() {
             errHandler: errHandler,
             timelineConverter: timelineConverter,
             videoModel: videoModel,
-            playbackController: playbackController
+            playbackController: playbackController,
+            domStorage: domStorage
         });
 
         playbackController.setConfig({
@@ -2041,6 +2049,7 @@ function MediaPlayer() {
             metricsModel: metricsModel,
             dashMetrics: dashMetrics,
             manifestModel: manifestModel,
+            mediaPlayerModel: mediaPlayerModel,
             dashManifestModel: dashManifestModel,
             adapter: adapter,
             videoModel: videoModel
@@ -2048,7 +2057,9 @@ function MediaPlayer() {
 
         abrController.createAbrRulesCollection();
         abrController.setConfig({
-            streamController: streamController
+            streamController: streamController,
+            domStorage: domStorage,
+            mediaPlayerModel: mediaPlayerModel
         });
 
         textController.setConfig({
@@ -2068,6 +2079,7 @@ function MediaPlayer() {
         return ManifestLoader(context).create({
             errHandler: errHandler,
             metricsModel: metricsModel,
+            mediaPlayerModel: mediaPlayerModel,
             requestModifier: RequestModifier(context).getInstance(),
             mssHandler: mssHandler
         });

@@ -21,6 +21,7 @@ function WebmSegmentBaseLoader() {
         errHandler,
         requestModifier,
         metricsModel,
+        mediaPlayerModel,
         xhrLoader,
         baseURLController;
 
@@ -99,17 +100,19 @@ function WebmSegmentBaseLoader() {
         xhrLoader = XHRLoader(context).create({
             errHandler: errHandler,
             metricsModel: metricsModel,
+            mediaPlayerModel: mediaPlayerModel,
             requestModifier: requestModifier
         });
     }
 
     function setConfig(config) {
-        if (!config.baseURLController || !config.metricsModel) {
+        if (!config.baseURLController || !config.metricsModel || !config.mediaPlayerModel) {
             throw new Error('Missing config parameter(s)');
         }
 
         baseURLController = config.baseURLController;
         metricsModel = config.metricsModel;
+        mediaPlayerModel = config.mediaPlayerModel;
     }
 
     function parseCues(ab) {

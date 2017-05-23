@@ -117,6 +117,7 @@ function ScheduleController(config) {
             abrController: abrController,
             dashMetrics: dashMetrics,
             metricsModel: metricsModel,
+            mediaPlayerModel: mediaPlayerModel,
             textController: TextController(context).getInstance()
         });
 

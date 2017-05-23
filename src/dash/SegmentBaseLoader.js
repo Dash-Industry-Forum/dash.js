@@ -52,6 +52,7 @@ function SegmentBaseLoader() {
         boxParser,
         requestModifier,
         metricsModel,
+        mediaPlayerModel,
         xhrLoader,
         baseURLController;
 
@@ -62,6 +63,7 @@ function SegmentBaseLoader() {
         xhrLoader = XHRLoader(context).create({
             errHandler: errHandler,
             metricsModel: metricsModel,
+            mediaPlayerModel: mediaPlayerModel,
             requestModifier: requestModifier
         });
     }
@@ -73,6 +75,10 @@ function SegmentBaseLoader() {
 
         if (config.metricsModel) {
             metricsModel = config.metricsModel;
+        }
+
+        if (config.mediaPlayerModel) {
+            mediaPlayerModel = config.mediaPlayerModel;
         }
     }
 

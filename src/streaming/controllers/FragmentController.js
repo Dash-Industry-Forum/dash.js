@@ -42,11 +42,13 @@ import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 
-function FragmentController( /*config*/ ) {
+function FragmentController( config ) {
 
     const context = this.context;
     const log = Debug(context).getInstance().log;
     const eventBus = EventBus(context).getInstance();
+
+    const mediaPlayerModel = config.mediaPlayerModel;
 
     let instance,
         fragmentModels;
@@ -62,6 +64,7 @@ function FragmentController( /*config*/ ) {
             model = FragmentModel(context).create({metricsModel: MetricsModel(context).getInstance(),
                                                    fragmentLoader: FragmentLoader(context).create({
                                                     metricsModel: MetricsModel(context).getInstance(),
+                                                    mediaPlayerModel: mediaPlayerModel,
                                                     errHandler: ErrorHandler(context).getInstance(),
                                                     requestModifier: RequestModifier(context).getInstance()})
                                                   });
