@@ -3,6 +3,7 @@ import VoHelper from './helpers/VOHelper';
 import ObjectsHelper from './helpers/ObjectsHelper';
 import AbrController from '../../src/streaming/controllers/AbrController';
 import MetricsModel from '../../src/streaming/models/MetricsModel';
+import DashMetrics from '../../src/dash/DashMetrics';
 
 const expect = require('chai').expect;
 
@@ -13,6 +14,7 @@ describe("AbrController", function () {
     const objectsHelper = new ObjectsHelper();
     const defaultQuality = AbrController.QUALITY_DEFAULT;
     const metricsModel = MetricsModel(context).getInstance();
+    const dashMetrics = DashMetrics(context).getInstance();
     const abrCtrl = AbrController(context).getInstance();
     const dummyMediaInfo = voHelper.getDummyMediaInfo(testType);
     const representationCount = dummyMediaInfo.representationCount;
@@ -21,7 +23,8 @@ describe("AbrController", function () {
     abrCtrl.registerStreamType('video', streamProcessor);
 
     abrCtrl.setConfig({
-        metricsModel: metricsModel
+        metricsModel: metricsModel,
+        dashMetrics: dashMetrics
     });
 
     it("should update top quality index", function () {

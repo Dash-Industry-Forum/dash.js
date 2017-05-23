@@ -401,6 +401,7 @@ function StreamController() {
                         manifestModel: manifestModel,
                         mediaPlayerModel: mediaPlayerModel,
                         metricsModel: metricsModel,
+                        dashMetrics: dashMetrics,
                         manifestUpdater: manifestUpdater,
                         adapter: adapter,
                         timelineConverter: timelineConverter,

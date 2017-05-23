@@ -2060,7 +2060,8 @@ function MediaPlayer() {
             streamController: streamController,
             domStorage: domStorage,
             mediaPlayerModel: mediaPlayerModel,
-            metricsModel: metricsModel
+            metricsModel: metricsModel,
+            dashMetrics: dashMetrics
         });
 
         textController.setConfig({

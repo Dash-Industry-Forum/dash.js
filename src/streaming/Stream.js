@@ -60,6 +60,7 @@ function Stream(config) {
     let baseURLController = config.baseURLController;
     let domStorage = config.domStorage;
     let metricsModel = config.metricsModel;
+    let dashMetrics = config.dashMetrics;
 
     let instance,
         streamProcessors,
@@ -194,8 +195,6 @@ function Stream(config) {
         return streamInfo;
     }
 
-<<<<<<< HEAD
-=======
     function getEventController() {
         return eventController;
     }
@@ -208,7 +207,6 @@ function Stream(config) {
         return (getMediaInfo(type) !== null);
     }
 
->>>>>>> StreamProcessor :
     /**
      * @param {string} type
      * @returns {Array}
@@ -317,6 +315,7 @@ function Stream(config) {
             manifestModel: manifestModel,
             mediaPlayerModel: mediaPlayerModel,
             metricsModel: metricsModel,
+            dashMetrics: dashMetrics,
             baseURLController: baseURLController,
             stream: instance,
             abrController: abrController,

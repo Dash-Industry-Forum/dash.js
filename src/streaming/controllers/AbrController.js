@@ -45,7 +45,6 @@ import SwitchRequestHistory from '../rules/SwitchRequestHistory.js';
 import DroppedFramesHistory from '../rules/DroppedFramesHistory.js';
 import ThroughputHistory from '../rules/ThroughputHistory.js';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
-import DashMetrics from '../../dash/DashMetrics.js';
 import Debug from '../../core/Debug';
 
 const ABANDON_LOAD = 'abandonload';
@@ -108,7 +107,6 @@ function AbrController() {
         manifestModel = ManifestModel(context).getInstance();
         dashManifestModel = DashManifestModel(context).getInstance();
         videoModel = VideoModel(context).getInstance();
-        dashMetrics = DashMetrics(context).getInstance();
         reset();
     }
 
@@ -184,6 +182,9 @@ function AbrController() {
         }
         if (config.metricsModel) {
             metricsModel = config.metricsModel;
+        }
+        if (config.dashMetrics) {
+            dashMetrics = config.dashMetrics;
         }
     }
 

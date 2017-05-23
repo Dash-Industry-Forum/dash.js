@@ -29,14 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import SwitchRequest from '../SwitchRequest';
-<<<<<<< HEAD
-=======
-import DashMetrics from '../../../dash/DashMetrics';
-<<<<<<< HEAD
-import MetricsModel from '../../models/MetricsModel';
->>>>>>> MediaPlayerModel  - uniformise the way it is given to controllers.
-=======
->>>>>>> MetricsModel - Uniformize the way it is given to controllers
 import FactoryMaker from '../../../core/FactoryMaker';
 import Debug from '../../../core/Debug';
 
@@ -49,9 +41,9 @@ function AbandonRequestsRule(config) {
     const context = this.context;
     const log = Debug(context).getInstance().log;
 
-    let mediaPlayerModel = config.mediaPlayerModel;
-    let dashMetrics = config.dashMetrics;
-    let metricsModel = config.metricsModel;
+    const mediaPlayerModel = config.mediaPlayerModel;
+    const metricsModel = config.metricsModel;
+    const dashMetrics = config.dashMetrics;
 
     let fragmentDict,
         abandonDict,

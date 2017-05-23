@@ -37,7 +37,6 @@ import ScheduleController from './controllers/ScheduleController';
 import SourceBufferController from './controllers/SourceBufferController';
 import TextController from './text/TextController';
 import DashManifestModel from '../dash/models/DashManifestModel';
-import DashMetrics from '../dash/DashMetrics';
 import RepresentationController from '../dash/controllers/RepresentationController';
 import ErrorHandler from './utils/ErrorHandler';
 import FactoryMaker from '../core/FactoryMaker';
@@ -59,6 +58,7 @@ function StreamProcessor(config) {
     let abrController = config.abrController;
     let domStorage = config.domStorage;
     let metricsModel = config.metricsModel;
+    let dashMetrics = config.dashMetrics;
 
     let instance,
         dynamic,
@@ -82,7 +82,7 @@ function StreamProcessor(config) {
         indexHandler = DashHandler(context).create({
             mimeType: mimeType,
             timelineConverter: timelineConverter,
-            dashMetrics: DashMetrics(context).getInstance(),
+            dashMetrics: dashMetrics,
             metricsModel: metricsModel,
             mediaPlayerModel: mediaPlayerModel,
             baseURLController: config.baseURLController
@@ -99,7 +99,7 @@ function StreamProcessor(config) {
             type: type,
             metricsModel: metricsModel,
             adapter: adapter,
-            dashMetrics: DashMetrics(context).getInstance(),
+            dashMetrics: dashMetrics,
             dashManifestModel: DashManifestModel(context).getInstance(),
             timelineConverter: timelineConverter,
             mediaPlayerModel: mediaPlayerModel,
@@ -112,7 +112,8 @@ function StreamProcessor(config) {
         representationController.setConfig({
             abrController: abrController,
             domStorage: domStorage,
-            metricsModel: metricsModel
+            metricsModel: metricsModel,
+            dashMetrics: dashMetrics
         });
         bufferController.initialize(mediaSource);
         scheduleController.initialize();

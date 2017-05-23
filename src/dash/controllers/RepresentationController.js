@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import DashManifestModel from '../models/DashManifestModel';
-import DashMetrics from '../DashMetrics';
 import TimelineConverter from '../utils/TimelineConverter';
 import AbrController from '../../streaming/controllers/AbrController';
 import PlaybackController from '../../streaming/controllers/PlaybackController';
@@ -75,7 +74,6 @@ function RepresentationController(config) {
         playbackController = PlaybackController(context).getInstance();
         timelineConverter = TimelineConverter(context).getInstance();
         dashManifestModel = DashManifestModel(context).getInstance();
-        dashMetrics = DashMetrics(context).getInstance();
         manifestModel = ManifestModel(context).getInstance();
 
         eventBus.on(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
@@ -94,6 +92,9 @@ function RepresentationController(config) {
         }
         if (config.metricsModel) {
             metricsModel = config.metricsModel;
+        }
+        if (config.dashMetrics) {
+            dashMetrics = config.dashMetrics;
         }
     }
 
