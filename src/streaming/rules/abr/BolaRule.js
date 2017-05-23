@@ -118,12 +118,11 @@ function BolaRule(config) {
 
         const mediaInfo = rulesContext.getMediaInfo();
         const mediaType = rulesContext.getMediaType();
-        const streamProcessor = rulesContext.getStreamProcessor();
         const streamInfo = rulesContext.getStreamInfo();
         const trackInfo = rulesContext.getTrackInfo();
 
-        const isDynamic = streamProcessor.isDynamic();
-        const duration = streamInfo.manifestInfo.duration;
+        const isDynamic = streamInfo && streamInfo.manifestInfo ? streamInfo.manifestInfo.isDynamic : null;
+        const duration = streamInfo && streamInfo.manifestInfo ? streamInfo.manifestInfo.duration : NaN;
         const fragmentDuration = trackInfo.fragmentDuration;
 
         const bitrates = mediaInfo.bitrateList.map(b => b.bandwidth);

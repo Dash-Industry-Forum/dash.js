@@ -54,7 +54,9 @@ function ThroughputRule(config) {
         const streamProcessor = rulesContext.getStreamProcessor();
         const abrController = rulesContext.getAbrController();
         const throughputHistory = abrController.getThroughputHistory();
-        const isDynamic = streamProcessor.isDynamic();
+        const streamInfo = rulesContext.getStreamInfo();
+        const isDynamic = streamInfo && streamInfo.manifestInfo ? streamInfo.manifestInfo.isDynamic : null;
+        const lastRequest = dashMetrics.getCurrentHttpRequest(metrics);
         const bufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
         const hasRichBuffer = rulesContext.hasRichBuffer();
         const switchRequest = SwitchRequest(context).create();
