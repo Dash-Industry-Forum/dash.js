@@ -62,7 +62,6 @@ function StreamProcessor(config) {
     let dashManifestModel = config.dashManifestModel;
 
     let instance,
-        dynamic,
         mediaInfo,
         mediaInfoArr,
         bufferController,
@@ -77,8 +76,6 @@ function StreamProcessor(config) {
     }
 
     function initialize(mediaSource) {
-
-        dynamic = stream.getStreamInfo().manifestInfo.isDynamic;
 
         indexHandler = DashHandler(context).create({
             mimeType: mimeType,
@@ -173,7 +170,6 @@ function StreamProcessor(config) {
         unregisterAllExternalController();
 
         stream = null;
-        dynamic = null;
         mediaInfo = null;
         mediaInfoArr = [];
         type = null;
@@ -279,10 +275,6 @@ function StreamProcessor(config) {
         return (bufferController.getBuffer() || bufferController.createBuffer(mediaInfo));
     }
 
-    function isDynamic() {
-        return dynamic;
-    }
-
     function switchTrackAsked() {
         scheduleController.switchTrackAsked();
     }
@@ -355,7 +347,6 @@ function StreamProcessor(config) {
         registerExternalController: registerExternalController,
         unregisterExternalController: unregisterExternalController,
         unregisterAllExternalController: unregisterAllExternalController,
-        isDynamic: isDynamic,
         reset: reset
     };
 
