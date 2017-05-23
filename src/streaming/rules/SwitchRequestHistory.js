@@ -10,7 +10,7 @@ function SwitchRequestHistory() {
 
     function push(switchRequest) {
         if (switchRequest.newValue === SwitchRequest.NO_CHANGE) {
-              switchRequest.newValue = switchRequest.oldValue;
+            switchRequest.newValue = switchRequest.oldValue;
         }
         if (!switchRequests[switchRequest.oldValue]) {
             switchRequests[switchRequest.oldValue] = {noDrops: 0, drops: 0, dropSize: 0};
