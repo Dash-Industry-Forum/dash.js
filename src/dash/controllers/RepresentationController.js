@@ -30,7 +30,6 @@
  */
 import DashManifestModel from '../models/DashManifestModel';
 import TimelineConverter from '../utils/TimelineConverter';
-import AbrController from '../../streaming/controllers/AbrController';
 import PlaybackController from '../../streaming/controllers/PlaybackController';
 import ManifestModel from '../../streaming/models/ManifestModel';
 import Error from '../../streaming/vo/Error';
@@ -70,7 +69,6 @@ function RepresentationController(config) {
         updating = true;
         voAvailableRepresentations = [];
 
-        abrController = AbrController(context).getInstance();
         playbackController = PlaybackController(context).getInstance();
         timelineConverter = TimelineConverter(context).getInstance();
         dashManifestModel = DashManifestModel(context).getInstance();

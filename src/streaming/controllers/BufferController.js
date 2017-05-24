@@ -57,6 +57,7 @@ function BufferController(config) {
     const mediaController = config.mediaController;
     const adapter = config.adapter;
     const textController = config.textController;
+    const abrController = config.abrController;
     const type = config.type;
     let streamProcessor = config.streamProcessor;
 
@@ -77,7 +78,6 @@ function BufferController(config) {
         isAppendingInProgress,
         isPruningInProgress,
         playbackController,
-        abrController,
         initCache,
         seekStartTime;
 
@@ -100,7 +100,6 @@ function BufferController(config) {
     function initialize(Source) {
         setMediaSource(Source);
         playbackController = PlaybackController(context).getInstance();
-        abrController = AbrController(context).getInstance();
         initCache = InitCache(context).getInstance();
         requiredQuality = abrController.getQualityFor(type, streamProcessor.getStreamInfo());
 
@@ -495,7 +494,6 @@ function BufferController(config) {
         isAppendingInProgress = false;
         isPruningInProgress = false;
         playbackController = null;
-        abrController = null;
 
         if (!errored) {
             sourceBufferController.abort(mediaSource, buffer);

@@ -58,6 +58,7 @@ function ScheduleController(config) {
     const dashManifestModel = config.dashManifestModel;
     const timelineConverter = config.timelineConverter;
     const mediaPlayerModel = config.mediaPlayerModel;
+    const abrController = config.abrController;
     const type = config.type;
     let streamProcessor = config.streamProcessor;
 
@@ -77,7 +78,6 @@ function ScheduleController(config) {
         seekTarget,
         playbackController,
         mediaController,
-        abrController,
         streamController,
         bufferLevelRule,
         nextFragmentRequestRule,
@@ -107,7 +107,6 @@ function ScheduleController(config) {
     function initialize() {
         playbackController = PlaybackController(context).getInstance();
         mediaController = MediaController(context).getInstance();
-        abrController = AbrController(context).getInstance();
         streamController = StreamController(context).getInstance();
         fragmentModel = streamProcessor.getFragmentModel();
         isDynamic = streamProcessor.isDynamic();

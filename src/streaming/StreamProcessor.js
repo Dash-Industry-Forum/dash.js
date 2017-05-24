@@ -103,6 +103,7 @@ function StreamProcessor(config) {
             dashManifestModel: DashManifestModel(context).getInstance(),
             timelineConverter: timelineConverter,
             mediaPlayerModel: mediaPlayerModel,
+            abrController: abrController,
             streamProcessor: this
         });
 
@@ -291,6 +292,7 @@ function StreamProcessor(config) {
                 mediaController: MediaController(context).getInstance(),
                 adapter: adapter,
                 textController: TextController(context).getInstance(),
+                abrController: abrController,
                 streamProcessor: instance
             });
         } else {
@@ -305,6 +307,7 @@ function StreamProcessor(config) {
                 mediaController: MediaController(context).getInstance(),
                 adapter: adapter,
                 textController: TextController(context).getInstance(),
+                abrController: abrController,
                 streamProcessor: instance
             });
         }

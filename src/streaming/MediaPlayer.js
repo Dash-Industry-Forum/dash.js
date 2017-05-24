@@ -2040,7 +2040,8 @@ function MediaPlayer() {
             timelineConverter: timelineConverter,
             videoModel: videoModel,
             playbackController: playbackController,
-            domStorage: domStorage
+            domStorage: domStorage,
+            abrController: abrController
         });
 
         playbackController.setConfig({

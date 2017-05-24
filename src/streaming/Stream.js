@@ -33,7 +33,6 @@ import StreamProcessor from './StreamProcessor';
 import MediaController from './controllers/MediaController';
 import EventController from './controllers/EventController';
 import FragmentController from './controllers/FragmentController';
-import AbrController from './controllers/AbrController';
 import VideoModel from './models/VideoModel';
 import PlaybackController from './controllers/PlaybackController';
 import EventBus from '../core/EventBus';
@@ -61,6 +60,7 @@ function Stream(config) {
     let domStorage = config.domStorage;
     let metricsModel = config.metricsModel;
     let dashMetrics = config.dashMetrics;
+    let abrController = config.abrController;
 
     let instance,
         streamProcessors,
@@ -75,10 +75,8 @@ function Stream(config) {
         mediaController,
         fragmentController,
         eventController,
-        abrController,
         textController,
         trackChangedEvent;
-
 
     function setup() {
         streamProcessors = [];
@@ -90,7 +88,6 @@ function Stream(config) {
 
         liveEdgeFinder = LiveEdgeFinder(context).getInstance();
         playbackController = PlaybackController(context).getInstance();
-        abrController = AbrController(context).getInstance();
         mediaController = MediaController(context).getInstance();
         fragmentController = FragmentController(context).create({
             mediaPlayerModel: mediaPlayerModel,

@@ -69,6 +69,7 @@ function StreamController() {
         timeSyncController,
         baseURLController,
         domStorage,
+        abrController,
         initCache,
         errHandler,
         timelineConverter,
@@ -408,7 +409,8 @@ function StreamController() {
                         capabilities: capabilities,
                         errHandler: errHandler,
                         baseURLController: baseURLController,
-                        domStorage: domStorage
+                        domStorage: domStorage,
+                        abrController: abrController
                     });
                     streams.push(stream);
                     stream.initialize(streamInfo, protectionController);
@@ -663,6 +665,10 @@ function StreamController() {
 
         if (config.domStorage) {
             domStorage = config.domStorage;
+        }
+
+        if (config.abrController) {
+            abrController = config.abrController;
         }
     }
 
