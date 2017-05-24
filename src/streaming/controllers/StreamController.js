@@ -120,6 +120,9 @@ function StreamController() {
         });
         manifestUpdater.initialize(manifestLoader);
 
+        baseURLController.setConfig({
+            dashManifestModel: dashManifestModel
+        });
 
         eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, this);
         eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
@@ -400,6 +403,7 @@ function StreamController() {
 
                     stream = Stream(context).create({
                         manifestModel: manifestModel,
+                        dashManifestModel: dashManifestModel,
                         mediaPlayerModel: mediaPlayerModel,
                         metricsModel: metricsModel,
                         dashMetrics: dashMetrics,

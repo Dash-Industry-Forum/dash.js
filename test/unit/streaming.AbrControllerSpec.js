@@ -4,6 +4,7 @@ import ObjectsHelper from './helpers/ObjectsHelper';
 import AbrController from '../../src/streaming/controllers/AbrController';
 import MetricsModel from '../../src/streaming/models/MetricsModel';
 import DashMetrics from '../../src/dash/DashMetrics';
+import DashManifestModel from '../../src/dash/models/DashManifestModel';
 
 const expect = require('chai').expect;
 
@@ -14,7 +15,10 @@ describe("AbrController", function () {
     const objectsHelper = new ObjectsHelper();
     const defaultQuality = AbrController.QUALITY_DEFAULT;
     const metricsModel = MetricsModel(context).getInstance();
-    const dashMetrics = DashMetrics(context).getInstance();
+    const dashManifestModel = DashManifestModel(context).getInstance();
+    const dashMetrics = DashMetrics(context).getInstance({
+        dashManifestModel: dashManifestModel
+    });
     const abrCtrl = AbrController(context).getInstance();
     const dummyMediaInfo = voHelper.getDummyMediaInfo(testType);
     const representationCount = dummyMediaInfo.representationCount;

@@ -153,7 +153,9 @@ function MediaPlayer() {
         });
 
         dashManifestModel = DashManifestModel(context).getInstance();
-        dashMetrics = DashMetrics(context).getInstance();
+        dashMetrics = DashMetrics(context).getInstance({
+            dashManifestModel: dashManifestModel
+        });
         metricsModel = MetricsModel(context).getInstance();
         metricsModel.setConfig({
             adapter: createAdaptor()
@@ -2062,7 +2064,8 @@ function MediaPlayer() {
             domStorage: domStorage,
             mediaPlayerModel: mediaPlayerModel,
             metricsModel: metricsModel,
-            dashMetrics: dashMetrics
+            dashMetrics: dashMetrics,
+            dashManifestModel: dashManifestModel
         });
 
         textController.setConfig({

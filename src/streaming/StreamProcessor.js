@@ -36,7 +36,6 @@ import TextBufferController from './text/TextBufferController';
 import ScheduleController from './controllers/ScheduleController';
 import SourceBufferController from './controllers/SourceBufferController';
 import TextController from './text/TextController';
-import DashManifestModel from '../dash/models/DashManifestModel';
 import RepresentationController from '../dash/controllers/RepresentationController';
 import ErrorHandler from './utils/ErrorHandler';
 import FactoryMaker from '../core/FactoryMaker';
@@ -59,6 +58,7 @@ function StreamProcessor(config) {
     let domStorage = config.domStorage;
     let metricsModel = config.metricsModel;
     let dashMetrics = config.dashMetrics;
+    let dashManifestModel = config.dashManifestModel;
 
     let instance,
         dynamic,
@@ -100,7 +100,7 @@ function StreamProcessor(config) {
             metricsModel: metricsModel,
             adapter: adapter,
             dashMetrics: dashMetrics,
-            dashManifestModel: DashManifestModel(context).getInstance(),
+            dashManifestModel: dashManifestModel,
             timelineConverter: timelineConverter,
             mediaPlayerModel: mediaPlayerModel,
             abrController: abrController,
@@ -114,7 +114,8 @@ function StreamProcessor(config) {
             abrController: abrController,
             domStorage: domStorage,
             metricsModel: metricsModel,
-            dashMetrics: dashMetrics
+            dashMetrics: dashMetrics,
+            dashManifestModel: dashManifestModel
         });
         bufferController.initialize(mediaSource);
         scheduleController.initialize();

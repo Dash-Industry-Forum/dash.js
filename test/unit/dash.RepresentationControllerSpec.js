@@ -7,6 +7,7 @@ import ManifestModel from '../../src/streaming/models/ManifestModel';
 import MediaPlayerModel from '../../src/streaming/models/MediaPlayerModel';
 import Events from '../../src/core/events/Events';
 import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
+import DashManifestModel from '../../src/dash/models/DashManifestModel';
 import SpecHelper from './helpers/SpecHelper';
 import AbrController from '../../src/streaming/controllers/AbrController';
 import DOMStorage from '../../src/streaming/utils/DOMStorage';
@@ -33,6 +34,7 @@ describe("RepresentationController", function () {
     const eventBus = EventBus(context).getInstance();
     const manifestModel = ManifestModel(context).getInstance();
     const mediaPlayerModel = MediaPlayerModel(context).getInstance();
+    const dashManifestModel = DashManifestModel(context).getInstance();
 
     Events.extend(MediaPlayerEvents);
 
@@ -46,14 +48,15 @@ describe("RepresentationController", function () {
     abrController.setConfig({
         domStorage: domStorage,
         mediaPlayerModel: mediaPlayerModel
-    })
+    });
     abrController.registerStreamType(testType, streamProcessor);
 
     const representationController = RepresentationController(context).create({streamProcessor : streamProcessor});
     representationController.initialize();
     representationController.setConfig({
         abrController: abrController,
-        domStorage: domStorage
+        domStorage: domStorage,
+        dashManifestModel: dashManifestModel
     });
 
     it("should not contain data before it is set", function () {

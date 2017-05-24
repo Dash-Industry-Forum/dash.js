@@ -50,6 +50,7 @@ function Stream(config) {
     let eventBus = EventBus(context).getInstance();
 
     let manifestModel = config.manifestModel;
+    let dashManifestModel = config.dashManifestModel;
     let mediaPlayerModel = config.mediaPlayerModel;
     let manifestUpdater = config.manifestUpdater;
     let adapter = config.adapter;
@@ -310,6 +311,7 @@ function Stream(config) {
             timelineConverter: timelineConverter,
             adapter: adapter,
             manifestModel: manifestModel,
+            dashManifestModel: dashManifestModel,
             mediaPlayerModel: mediaPlayerModel,
             metricsModel: metricsModel,
             dashMetrics: dashMetrics,

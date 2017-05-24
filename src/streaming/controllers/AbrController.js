@@ -37,7 +37,6 @@ import Events from '../../core/events/Events';
 import MediaPlayerEvents from '../MediaPlayerEvents.js';
 import FactoryMaker from '../../core/FactoryMaker';
 import ManifestModel from '../models/ManifestModel';
-import DashManifestModel from '../../dash/models/DashManifestModel';
 import VideoModel from '../models/VideoModel';
 import RulesContext from '../rules/RulesContext.js';
 import SwitchRequest from '../rules/SwitchRequest.js';
@@ -105,7 +104,6 @@ function AbrController() {
             windowResizeEventCalled = false;
         }
         manifestModel = ManifestModel(context).getInstance();
-        dashManifestModel = DashManifestModel(context).getInstance();
         videoModel = VideoModel(context).getInstance();
         reset();
     }
@@ -185,6 +183,9 @@ function AbrController() {
         }
         if (config.dashMetrics) {
             dashMetrics = config.dashMetrics;
+        }
+        if (config.dashManifestModel) {
+            dashManifestModel = config.dashManifestModel;
         }
     }
 

@@ -28,7 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import DashManifestModel from '../models/DashManifestModel';
 import TimelineConverter from '../utils/TimelineConverter';
 import PlaybackController from '../../streaming/controllers/PlaybackController';
 import ManifestModel from '../../streaming/models/ManifestModel';
@@ -71,7 +70,6 @@ function RepresentationController(config) {
 
         playbackController = PlaybackController(context).getInstance();
         timelineConverter = TimelineConverter(context).getInstance();
-        dashManifestModel = DashManifestModel(context).getInstance();
         manifestModel = ManifestModel(context).getInstance();
 
         eventBus.on(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
@@ -93,6 +91,9 @@ function RepresentationController(config) {
         }
         if (config.dashMetrics) {
             dashMetrics = config.dashMetrics;
+        }
+        if (config.dashManifestModel) {
+            dashManifestModel = config.dashManifestModel;
         }
     }
 
