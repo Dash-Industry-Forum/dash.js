@@ -28,7 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import TimelineConverter from '../utils/TimelineConverter';
 import ManifestModel from '../../streaming/models/ManifestModel';
 import Error from '../../streaming/vo/Error';
 import EventBus from '../../core/EventBus';
@@ -66,8 +65,6 @@ function RepresentationController(config) {
         realAdaptationIndex = -1;
         updating = true;
         voAvailableRepresentations = [];
-
-        timelineConverter = TimelineConverter(context).getInstance();
         manifestModel = ManifestModel(context).getInstance();
 
         eventBus.on(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
@@ -95,6 +92,9 @@ function RepresentationController(config) {
         }
         if (config.playbackController) {
             playbackController = config.playbackController;
+        }
+        if (config.timelineConverter) {
+            timelineConverter = config.timelineConverter;
         }
     }
 

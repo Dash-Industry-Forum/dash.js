@@ -86,6 +86,7 @@ function MediaPlayer() {
         playbackInitialized,
         autoPlay,
         abrController,
+        timelineConverter,
         mediaController,
         protectionController,
         metricsReportingController,
@@ -145,11 +146,13 @@ function MediaPlayer() {
         mediaPlayerInitialized = true;
 
         // init some controllers
+        timelineConverter = TimelineConverter(context).getInstance();
         abrController = AbrController(context).getInstance();
         mediaController = MediaController(context).getInstance();
         mediaController.initialize();
         dashManifestModel = DashManifestModel(context).getInstance({
-            mediaController: mediaController
+            mediaController: mediaController,
+            timelineConverter: timelineConverter
         });
         dashMetrics = DashMetrics(context).getInstance({
             dashManifestModel: dashManifestModel
@@ -2017,7 +2020,6 @@ function MediaPlayer() {
         // creates or get objects instances
         let manifestLoader = createManifestLoader();
         let manifestModel = ManifestModel(context).getInstance();
-        let timelineConverter = TimelineConverter(context).getInstance();
         streamController = StreamController(context).getInstance();
 
         // configure controllers

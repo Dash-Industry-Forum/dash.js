@@ -6,6 +6,7 @@ import MediaController from '../../src/streaming/controllers/MediaController';
 import MetricsModel from '../../src/streaming/models/MetricsModel';
 import DashMetrics from '../../src/dash/DashMetrics';
 import DashManifestModel from '../../src/dash/models/DashManifestModel';
+import TimelineConverter from '../../src/dash/utils/TimelineConverter';
 
 const expect = require('chai').expect;
 
@@ -18,9 +19,12 @@ describe("AbrController", function () {
     const metricsModel = MetricsModel(context).getInstance();
     const mediaController = MediaController(context).getInstance();
     mediaController.initialize();
+    const timelineConverter = TimelineConverter(context).getInstance();
     const dashManifestModel = DashManifestModel(context).getInstance({
-        mediaController: mediaController
+        mediaController: mediaController,
+        timelineConverter: timelineConverter
     });
+
     const dashMetrics = DashMetrics(context).getInstance({
         dashManifestModel: dashManifestModel
     });

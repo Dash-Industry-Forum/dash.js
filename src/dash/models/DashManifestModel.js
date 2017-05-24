@@ -34,7 +34,6 @@ import AdaptationSet from '../vo/AdaptationSet';
 import Period from '../vo/Period';
 import Mpd from '../vo/Mpd';
 import UTCTiming from '../vo/UTCTiming';
-import TimelineConverter from '../utils/TimelineConverter';
 import DashAdapter from '../DashAdapter';
 import Event from '../vo/Event';
 import BaseURL from '../vo/BaseURL';
@@ -47,11 +46,11 @@ function DashManifestModel(config) {
 
     let instance;
     let context = this.context;
-    let timelineConverter = TimelineConverter(context).getInstance();//TODO Need to pass this in not bake in
     let adaptor = DashAdapter(context).getInstance();
 
     const urlUtils = URLUtils(context).getInstance();
     const mediaController = config.mediaController;
+    const timelineConverter = config.timelineConverter;
 
     function getIsTypeOf(adaptation, type) {
 

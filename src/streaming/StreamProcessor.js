@@ -120,7 +120,8 @@ function StreamProcessor(config) {
             metricsModel: metricsModel,
             dashMetrics: dashMetrics,
             dashManifestModel: dashManifestModel,
-            playbackController: playbackController
+            playbackController: playbackController,
+            timelineConverter: timelineConverter
         });
         bufferController.initialize(mediaSource);
         scheduleController.initialize();
