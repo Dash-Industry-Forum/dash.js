@@ -210,12 +210,13 @@ function ProtectionController(config) {
      *
      * @param {ArrayBuffer} serverCertificate a CDM-specific license server
      * certificate
+     * @returns {Promise|undefined}
      * @memberof module:ProtectionController
      * @instance
      * @fires ProtectionController#ServerCertificateUpdated
      */
     function setServerCertificate(serverCertificate) {
-        protectionModel.setServerCertificate(serverCertificate);
+        return protectionModel.setServerCertificate(serverCertificate);
     }
 
     /**

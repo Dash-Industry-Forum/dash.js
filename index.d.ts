@@ -10,6 +10,7 @@ declare namespace dashjs {
 
     class ProtectionController {
         setRobustnessLevel(levels: string | string[]);
+        setServerCertificate(serverCertificate: ArrayBuffer): Promise<boolean> | undefined;
     }
 
     export interface Bitrate {
