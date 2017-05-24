@@ -284,43 +284,41 @@ function AbrController() {
         usePixelRatioInLimitBitrateByPortal = value;
     }
 
+    function checkPlaybackQuality(type) {
+        if (type  && streamProcessorDict && streamProcessorDict[type]) {
+            const streamId = streamProcessorDict[type].id;
+            const oldQuality = getQualityFor(type);
+            const rulesContext = RulesContext(context).create({
+                streamProcessor: streamProcessorDict[type],
+                currentValue: oldQuality,
+                playbackIndex: playbackIndex,
+                switchHistory: switchHistoryDict[type],
+                droppedFramesHistory: droppedFramesHistory,
+                hasRichBuffer: hasRichBuffer(type)
+            });
 
-    function checkPlaybackQuality(streamProcessor) {
-        const type = streamProcessor.getType();
-        const streamInfo = streamProcessor.getStreamInfo();
-        const streamId = streamInfo.id;
-        const oldQuality = getQualityFor(type, streamInfo);
-        const rulesContext = RulesContext(context).create({
-            abrController: instance,
-            streamProcessor: streamProcessor,
-            currentValue: oldQuality,
-            playbackIndex: playbackIndex,
-            switchHistory: switchHistoryDict[type],
-            droppedFramesHistory: droppedFramesHistory,
-            hasRichBuffer: hasRichBuffer(type)
-        });
-
-        if (droppedFramesHistory) {
-            droppedFramesHistory.push(playbackIndex, videoModel.getPlaybackQuality());
-        }
-
-        //log("ABR enabled? (" + autoSwitchBitrate + ")");
-        if (getAutoSwitchBitrateFor(type)) {
-            const topQualityIdx = getTopQualityIndexFor(type, streamId);
-            const switchRequest = abrRulesCollection.getMaxQuality(rulesContext);
-            let newQuality = switchRequest.quality;
-            if (newQuality > topQualityIdx) {
-                newQuality = topQualityIdx;
+            if (droppedFramesHistory) {
+                droppedFramesHistory.push(playbackIndex, videoModel.getPlaybackQuality());
             }
-            switchHistoryDict[type].push({oldValue: oldQuality, newValue: newQuality});
 
-            if (newQuality > SwitchRequest.NO_CHANGE && newQuality != oldQuality) {
-                if (abandonmentStateDict[type].state === ALLOW_LOAD || newQuality > oldQuality) {
-                    changeQuality(type, streamInfo, oldQuality, newQuality, topQualityIdx, switchRequest.reason);
+            //log("ABR enabled? (" + autoSwitchBitrate + ")");
+            if (getAutoSwitchBitrateFor(type)) {
+                const topQualityIdx = getTopQualityIndexFor(type, streamId);
+                const switchRequest = abrRulesCollection.getMaxQuality(rulesContext);
+                let newQuality = switchRequest.value;
+                if (newQuality > topQualityIdx) {
+                    newQuality = topQualityIdx;
                 }
-            } else if (debug.getLogToBrowserConsole()) {
-                const bufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor(type));
-                log('AbrController (' + type + ') stay on ' + oldQuality + '/' + topQualityIdx + ' (buffer: ' + bufferLevel + ')');
+                switchHistoryDict[type].push({oldValue: oldQuality, newValue: newQuality});
+
+                if (newQuality > SwitchRequest.NO_CHANGE && newQuality != oldQuality) {
+                    if (abandonmentStateDict[type].state === ALLOW_LOAD || newQuality > oldQuality) {
+                        changeQuality(type, oldQuality, newQuality, topQualityIdx, switchRequest.reason);
+                    }
+                } else if (debug.getLogToBrowserConsole()) {
+                    const bufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor(type));
+                    log('AbrController (' + type + ') stay on ' + oldQuality + '/' + topQualityIdx + ' (buffer: ' + bufferLevel + ')');
+                }
             }
         }
     }
