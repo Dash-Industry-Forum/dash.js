@@ -34,7 +34,6 @@ import MediaController from './controllers/MediaController';
 import EventController from './controllers/EventController';
 import FragmentController from './controllers/FragmentController';
 import VideoModel from './models/VideoModel';
-import PlaybackController from './controllers/PlaybackController';
 import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import Debug from '../core/Debug';
@@ -62,6 +61,7 @@ function Stream(config) {
     let metricsModel = config.metricsModel;
     let dashMetrics = config.dashMetrics;
     let abrController = config.abrController;
+    let playbackController = config.playbackController;
 
     let instance,
         streamProcessors,
@@ -72,7 +72,6 @@ function Stream(config) {
         isUpdating,
         protectionController,
         liveEdgeFinder,
-        playbackController,
         mediaController,
         fragmentController,
         eventController,
@@ -88,7 +87,6 @@ function Stream(config) {
         isUpdating = false;
 
         liveEdgeFinder = LiveEdgeFinder(context).getInstance();
-        playbackController = PlaybackController(context).getInstance();
         mediaController = MediaController(context).getInstance();
         fragmentController = FragmentController(context).create({
             mediaPlayerModel: mediaPlayerModel,
@@ -318,7 +316,8 @@ function Stream(config) {
             baseURLController: baseURLController,
             stream: instance,
             abrController: abrController,
-            domStorage: domStorage
+            domStorage: domStorage,
+            playbackController: playbackController
         });
 
         let allMediaForType = adapter.getAllMediaInfoForType(streamInfo, mediaInfo.type);
@@ -399,7 +398,8 @@ function Stream(config) {
         eventController.initialize();
         eventController.setConfig({
             manifestModel: manifestModel,
-            manifestUpdater: manifestUpdater
+            manifestUpdater: manifestUpdater,
+            playbackController: playbackController
         });
         events = adapter.getEventsFor(streamInfo);
         eventController.addInlineEvents(events);

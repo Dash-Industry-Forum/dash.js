@@ -32,7 +32,6 @@
 import FragmentModel from '../models/FragmentModel';
 import SourceBufferController from './SourceBufferController';
 import AbrController from './AbrController';
-import PlaybackController from './PlaybackController';
 import MediaController from './MediaController';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
@@ -58,6 +57,7 @@ function BufferController(config) {
     const adapter = config.adapter;
     const textController = config.textController;
     const abrController = config.abrController;
+    const playbackController = config.playbackController;
     const type = config.type;
     let streamProcessor = config.streamProcessor;
 
@@ -77,7 +77,6 @@ function BufferController(config) {
         appendingMediaChunk,
         isAppendingInProgress,
         isPruningInProgress,
-        playbackController,
         initCache,
         seekStartTime;
 
@@ -99,7 +98,7 @@ function BufferController(config) {
 
     function initialize(Source) {
         setMediaSource(Source);
-        playbackController = PlaybackController(context).getInstance();
+
         initCache = InitCache(context).getInstance();
         requiredQuality = abrController.getQualityFor(type, streamProcessor.getStreamInfo());
 
@@ -493,7 +492,6 @@ function BufferController(config) {
         isBufferingCompleted = false;
         isAppendingInProgress = false;
         isPruningInProgress = false;
-        playbackController = null;
 
         if (!errored) {
             sourceBufferController.abort(mediaSource, buffer);

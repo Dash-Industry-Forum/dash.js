@@ -55,6 +55,7 @@ function StreamProcessor(config) {
     let mediaPlayerModel = config.mediaPlayerModel;
     let stream = config.stream;
     let abrController = config.abrController;
+    let playbackController = config.playbackController;
     let domStorage = config.domStorage;
     let metricsModel = config.metricsModel;
     let dashMetrics = config.dashMetrics;
@@ -104,6 +105,7 @@ function StreamProcessor(config) {
             timelineConverter: timelineConverter,
             mediaPlayerModel: mediaPlayerModel,
             abrController: abrController,
+            playbackController: playbackController,
             streamProcessor: this
         });
 
@@ -115,7 +117,8 @@ function StreamProcessor(config) {
             domStorage: domStorage,
             metricsModel: metricsModel,
             dashMetrics: dashMetrics,
-            dashManifestModel: dashManifestModel
+            dashManifestModel: dashManifestModel,
+            playbackController: playbackController
         });
         bufferController.initialize(mediaSource);
         scheduleController.initialize();
@@ -294,6 +297,7 @@ function StreamProcessor(config) {
                 adapter: adapter,
                 textController: TextController(context).getInstance(),
                 abrController: abrController,
+                playbackController: playbackController,
                 streamProcessor: instance
             });
         } else {
@@ -309,6 +313,7 @@ function StreamProcessor(config) {
                 adapter: adapter,
                 textController: TextController(context).getInstance(),
                 abrController: abrController,
+                playbackController: playbackController,
                 streamProcessor: instance
             });
         }

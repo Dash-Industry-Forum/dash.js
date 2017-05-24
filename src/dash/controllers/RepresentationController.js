@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import TimelineConverter from '../utils/TimelineConverter';
-import PlaybackController from '../../streaming/controllers/PlaybackController';
 import ManifestModel from '../../streaming/models/ManifestModel';
 import Error from '../../streaming/vo/Error';
 import EventBus from '../../core/EventBus';
@@ -68,7 +67,6 @@ function RepresentationController(config) {
         updating = true;
         voAvailableRepresentations = [];
 
-        playbackController = PlaybackController(context).getInstance();
         timelineConverter = TimelineConverter(context).getInstance();
         manifestModel = ManifestModel(context).getInstance();
 
@@ -94,6 +92,9 @@ function RepresentationController(config) {
         }
         if (config.dashManifestModel) {
             dashManifestModel = config.dashManifestModel;
+        }
+        if (config.playbackController) {
+            playbackController = config.playbackController;
         }
     }
 

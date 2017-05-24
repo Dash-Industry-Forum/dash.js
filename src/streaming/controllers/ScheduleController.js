@@ -32,7 +32,6 @@
 import {
     PlayListTrace
 } from '../vo/metrics/PlayList';
-import PlaybackController from './PlaybackController';
 import AbrController from './AbrController';
 import BufferController from './BufferController';
 import MediaController from './MediaController';
@@ -59,6 +58,7 @@ function ScheduleController(config) {
     const timelineConverter = config.timelineConverter;
     const mediaPlayerModel = config.mediaPlayerModel;
     const abrController = config.abrController;
+    const playbackController = config.playbackController;
     const type = config.type;
     let streamProcessor = config.streamProcessor;
 
@@ -76,7 +76,6 @@ function ScheduleController(config) {
         timeToLoadDelay,
         scheduleTimeout,
         seekTarget,
-        playbackController,
         mediaController,
         streamController,
         bufferLevelRule,
@@ -105,7 +104,6 @@ function ScheduleController(config) {
     }
 
     function initialize() {
-        playbackController = PlaybackController(context).getInstance();
         mediaController = MediaController(context).getInstance();
         streamController = StreamController(context).getInstance();
         fragmentModel = streamProcessor.getFragmentModel();
@@ -616,7 +614,6 @@ function ScheduleController(config) {
         isFragmentProcessingInProgress = false;
         timeToLoadDelay = 0;
         seekTarget = NaN;
-        playbackController = null;
         playListMetrics = null;
     }
 

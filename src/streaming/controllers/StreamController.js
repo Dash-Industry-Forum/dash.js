@@ -414,7 +414,8 @@ function StreamController() {
                         errHandler: errHandler,
                         baseURLController: baseURLController,
                         domStorage: domStorage,
-                        abrController: abrController
+                        abrController: abrController,
+                        playbackController: playbackController
                     });
                     streams.push(stream);
                     stream.initialize(streamInfo, protectionController);
