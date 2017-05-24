@@ -225,7 +225,7 @@ function ScheduleController(config) {
             if (isReplacement) {
                 getNextFragment();
             } else {
-                abrController.getPlaybackQuality(streamProcessor);
+                abrController.checkPlaybackQuality(streamProcessor);
                 getNextFragment();
             }
 
