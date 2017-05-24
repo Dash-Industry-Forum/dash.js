@@ -1,10 +1,15 @@
 import DashManifestModel from '../../src/dash/models/DashManifestModel';
+import MediaController from '../../src/streaming/controllers/MediaController';
 import BaseURL from '../../src/dash/vo/BaseURL';
 
 const expect = require('chai').expect;
 
 const context = {};
-const dashManifestModel = DashManifestModel(context).getInstance();
+const mediaController = MediaController(context).getInstance();
+mediaController.initialize();
+const dashManifestModel = DashManifestModel(context).getInstance({
+    mediaController: mediaController
+});
 
 const TEST_URL = 'http://www.example.com/';
 const RELATIVE_TEST_URL = './';

@@ -147,12 +147,10 @@ function MediaPlayer() {
         // init some controllers
         abrController = AbrController(context).getInstance();
         mediaController = MediaController(context).getInstance();
-
-        mediaController.setConfig({
-            errHandler: errHandler
+        mediaController.initialize();
+        dashManifestModel = DashManifestModel(context).getInstance({
+            mediaController: mediaController
         });
-
-        dashManifestModel = DashManifestModel(context).getInstance();
         dashMetrics = DashMetrics(context).getInstance({
             dashManifestModel: dashManifestModel
         });
@@ -2043,7 +2041,8 @@ function MediaPlayer() {
             videoModel: videoModel,
             playbackController: playbackController,
             domStorage: domStorage,
-            abrController: abrController
+            abrController: abrController,
+            mediaController: mediaController
         });
 
         playbackController.setConfig({

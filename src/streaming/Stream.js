@@ -30,7 +30,6 @@
  */
 import LiveEdgeFinder from './utils/LiveEdgeFinder';
 import StreamProcessor from './StreamProcessor';
-import MediaController from './controllers/MediaController';
 import EventController from './controllers/EventController';
 import FragmentController from './controllers/FragmentController';
 import VideoModel from './models/VideoModel';
@@ -62,6 +61,7 @@ function Stream(config) {
     let dashMetrics = config.dashMetrics;
     let abrController = config.abrController;
     let playbackController = config.playbackController;
+    let mediaController = config.mediaController;
 
     let instance,
         streamProcessors,
@@ -72,7 +72,6 @@ function Stream(config) {
         isUpdating,
         protectionController,
         liveEdgeFinder,
-        mediaController,
         fragmentController,
         eventController,
         textController,
@@ -87,7 +86,6 @@ function Stream(config) {
         isUpdating = false;
 
         liveEdgeFinder = LiveEdgeFinder(context).getInstance();
-        mediaController = MediaController(context).getInstance();
         fragmentController = FragmentController(context).create({
             mediaPlayerModel: mediaPlayerModel,
             metricsModel: metricsModel
@@ -317,7 +315,8 @@ function Stream(config) {
             stream: instance,
             abrController: abrController,
             domStorage: domStorage,
-            playbackController: playbackController
+            playbackController: playbackController,
+            mediaController: mediaController
         });
 
         let allMediaForType = adapter.getAllMediaInfoForType(streamInfo, mediaInfo.type);

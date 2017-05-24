@@ -31,7 +31,6 @@
 
 import BufferController from './controllers/BufferController';
 import StreamController from './controllers/StreamController';
-import MediaController from './controllers/MediaController';
 import TextBufferController from './text/TextBufferController';
 import ScheduleController from './controllers/ScheduleController';
 import SourceBufferController from './controllers/SourceBufferController';
@@ -56,6 +55,7 @@ function StreamProcessor(config) {
     let stream = config.stream;
     let abrController = config.abrController;
     let playbackController = config.playbackController;
+    let mediaController = config.mediaController;
     let domStorage = config.domStorage;
     let metricsModel = config.metricsModel;
     let dashMetrics = config.dashMetrics;
@@ -106,6 +106,7 @@ function StreamProcessor(config) {
             mediaPlayerModel: mediaPlayerModel,
             abrController: abrController,
             playbackController: playbackController,
+            mediaController: mediaController,
             streamProcessor: this
         });
 
@@ -293,7 +294,7 @@ function StreamProcessor(config) {
                 sourceBufferController: SourceBufferController(context).getInstance(),
                 errHandler: ErrorHandler(context).getInstance(),
                 streamController: StreamController(context).getInstance(),
-                mediaController: MediaController(context).getInstance(),
+                mediaController: mediaController,
                 adapter: adapter,
                 textController: TextController(context).getInstance(),
                 abrController: abrController,
@@ -309,7 +310,7 @@ function StreamProcessor(config) {
                 sourceBufferController: SourceBufferController(context).getInstance(),
                 errHandler: ErrorHandler(context).getInstance(),
                 streamController: StreamController(context).getInstance(),
-                mediaController: MediaController(context).getInstance(),
+                mediaController: mediaController,
                 adapter: adapter,
                 textController: TextController(context).getInstance(),
                 abrController: abrController,

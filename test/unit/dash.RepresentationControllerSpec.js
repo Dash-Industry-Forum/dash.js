@@ -3,6 +3,7 @@ import VoHelper from './helpers/VOHelper';
 import MpdHelper from './helpers/MPDHelper';
 import EventBus from '../../src/core/EventBus';
 import RepresentationController from '../../src/dash/controllers/RepresentationController';
+import MediaController from '../../src/streaming/controllers/MediaController';
 import ManifestModel from '../../src/streaming/models/ManifestModel';
 import MediaPlayerModel from '../../src/streaming/models/MediaPlayerModel';
 import Events from '../../src/core/events/Events';
@@ -34,7 +35,11 @@ describe("RepresentationController", function () {
     const eventBus = EventBus(context).getInstance();
     const manifestModel = ManifestModel(context).getInstance();
     const mediaPlayerModel = MediaPlayerModel(context).getInstance();
-    const dashManifestModel = DashManifestModel(context).getInstance();
+    const mediaController = MediaController(context).getInstance();
+    mediaController.initialize();
+    const dashManifestModel = DashManifestModel(context).getInstance({
+        mediaController: mediaController
+    });
 
     Events.extend(MediaPlayerEvents);
 

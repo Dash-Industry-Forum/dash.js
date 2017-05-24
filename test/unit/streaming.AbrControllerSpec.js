@@ -2,6 +2,7 @@ import SpecHelper from './helpers/SpecHelper';
 import VoHelper from './helpers/VOHelper';
 import ObjectsHelper from './helpers/ObjectsHelper';
 import AbrController from '../../src/streaming/controllers/AbrController';
+import MediaController from '../../src/streaming/controllers/MediaController';
 import MetricsModel from '../../src/streaming/models/MetricsModel';
 import DashMetrics from '../../src/dash/DashMetrics';
 import DashManifestModel from '../../src/dash/models/DashManifestModel';
@@ -15,7 +16,11 @@ describe("AbrController", function () {
     const objectsHelper = new ObjectsHelper();
     const defaultQuality = AbrController.QUALITY_DEFAULT;
     const metricsModel = MetricsModel(context).getInstance();
-    const dashManifestModel = DashManifestModel(context).getInstance();
+    const mediaController = MediaController(context).getInstance();
+    mediaController.initialize();
+    const dashManifestModel = DashManifestModel(context).getInstance({
+        mediaController: mediaController
+    });
     const dashMetrics = DashMetrics(context).getInstance({
         dashManifestModel: dashManifestModel
     });

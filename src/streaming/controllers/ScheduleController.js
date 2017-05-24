@@ -34,7 +34,6 @@ import {
 } from '../vo/metrics/PlayList';
 import AbrController from './AbrController';
 import BufferController from './BufferController';
-import MediaController from './MediaController';
 import BufferLevelRule from '../rules/scheduling/BufferLevelRule';
 import NextFragmentRequestRule from '../rules/scheduling/NextFragmentRequestRule';
 import TextController from '../text/TextController';
@@ -59,6 +58,7 @@ function ScheduleController(config) {
     const mediaPlayerModel = config.mediaPlayerModel;
     const abrController = config.abrController;
     const playbackController = config.playbackController;
+    const mediaController = config.mediaController;
     const type = config.type;
     let streamProcessor = config.streamProcessor;
 
@@ -76,7 +76,6 @@ function ScheduleController(config) {
         timeToLoadDelay,
         scheduleTimeout,
         seekTarget,
-        mediaController,
         streamController,
         bufferLevelRule,
         nextFragmentRequestRule,
@@ -104,7 +103,6 @@ function ScheduleController(config) {
     }
 
     function initialize() {
-        mediaController = MediaController(context).getInstance();
         streamController = StreamController(context).getInstance();
         fragmentModel = streamProcessor.getFragmentModel();
         isDynamic = streamProcessor.isDynamic();

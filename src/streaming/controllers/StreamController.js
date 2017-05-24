@@ -70,6 +70,7 @@ function StreamController() {
         baseURLController,
         domStorage,
         abrController,
+        mediaController,
         initCache,
         errHandler,
         timelineConverter,
@@ -415,7 +416,8 @@ function StreamController() {
                         baseURLController: baseURLController,
                         domStorage: domStorage,
                         abrController: abrController,
-                        playbackController: playbackController
+                        playbackController: playbackController,
+                        mediaController: mediaController
                     });
                     streams.push(stream);
                     stream.initialize(streamInfo, protectionController);
@@ -659,21 +661,20 @@ function StreamController() {
         if (config.timelineConverter) {
             timelineConverter = config.timelineConverter;
         }
-
         if (config.videoModel) {
             videoModel = config.videoModel;
         }
-
         if (config.playbackController) {
             playbackController = config.playbackController;
         }
-
         if (config.domStorage) {
             domStorage = config.domStorage;
         }
-
         if (config.abrController) {
             abrController = config.abrController;
+        }
+        if (config.mediaController) {
+            mediaController = config.mediaController;
         }
     }
 
