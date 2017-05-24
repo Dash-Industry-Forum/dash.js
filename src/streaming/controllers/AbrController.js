@@ -325,7 +325,7 @@ function AbrController() {
 
     function setPlaybackQuality(type, streamInfo, newQuality, reason) {
         const id = streamInfo.id;
-        const oldQuality = getQualityFor(type, streamInfo);
+        const oldQuality = getQualityFor(type);
         const isInt = newQuality !== null && !isNaN(newQuality) && (newQuality % 1 === 0);
 
         if (!isInt) throw new Error('argument is not an integer');
@@ -451,8 +451,8 @@ function AbrController() {
     function isPlayingAtTopQuality(streamInfo) {
         var isAtTop;
         var streamId = streamInfo.id;
-        var audioQuality = getQualityFor('audio', streamInfo);
-        var videoQuality = getQualityFor('video', streamInfo);
+        var audioQuality = getQualityFor('audio');
+        var videoQuality = getQualityFor('video');
 
         isAtTop = (audioQuality === getTopQualityIndexFor('audio', streamId)) &&
             (videoQuality === getTopQualityIndexFor('video', streamId));
@@ -460,8 +460,13 @@ function AbrController() {
         return isAtTop;
     }
 
-    function getQualityFor(type, streamInfo) {
-        var id = streamInfo.id;
+    function getQualityFor(type) {
+
+        if (!type || !streamProcessorDict[type]) {
+            return QUALITY_DEFAULT;
+        }
+
+        var id = streamProcessorDict[type].id;
         var quality;
 
         qualityDict[id] = qualityDict[id] || {};
