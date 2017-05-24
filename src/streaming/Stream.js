@@ -62,6 +62,7 @@ function Stream(config) {
     let abrController = config.abrController;
     let playbackController = config.playbackController;
     let mediaController = config.mediaController;
+    let streamController = config.streamController;
 
     let instance,
         streamProcessors,
@@ -316,7 +317,8 @@ function Stream(config) {
             abrController: abrController,
             domStorage: domStorage,
             playbackController: playbackController,
-            mediaController: mediaController
+            mediaController: mediaController,
+            streamController: streamController
         });
 
         let allMediaForType = adapter.getAllMediaInfoForType(streamInfo, mediaInfo.type);

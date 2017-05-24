@@ -417,7 +417,8 @@ function StreamController() {
                         domStorage: domStorage,
                         abrController: abrController,
                         playbackController: playbackController,
-                        mediaController: mediaController
+                        mediaController: mediaController,
+                        streamController: instance
                     });
                     streams.push(stream);
                     stream.initialize(streamInfo, protectionController);

@@ -30,7 +30,6 @@
  */
 
 import BufferController from './controllers/BufferController';
-import StreamController from './controllers/StreamController';
 import TextBufferController from './text/TextBufferController';
 import ScheduleController from './controllers/ScheduleController';
 import SourceBufferController from './controllers/SourceBufferController';
@@ -55,6 +54,7 @@ function StreamProcessor(config) {
     let stream = config.stream;
     let abrController = config.abrController;
     let playbackController = config.playbackController;
+    let streamController = config.streamController;
     let mediaController = config.mediaController;
     let domStorage = config.domStorage;
     let metricsModel = config.metricsModel;
@@ -107,6 +107,7 @@ function StreamProcessor(config) {
             abrController: abrController,
             playbackController: playbackController,
             mediaController: mediaController,
+            streamController: streamController,
             streamProcessor: this
         });
 
@@ -293,7 +294,7 @@ function StreamProcessor(config) {
                 manifestModel: manifestModel,
                 sourceBufferController: SourceBufferController(context).getInstance(),
                 errHandler: ErrorHandler(context).getInstance(),
-                streamController: StreamController(context).getInstance(),
+                streamController: streamController,
                 mediaController: mediaController,
                 adapter: adapter,
                 textController: TextController(context).getInstance(),
@@ -309,7 +310,7 @@ function StreamProcessor(config) {
                 manifestModel: manifestModel,
                 sourceBufferController: SourceBufferController(context).getInstance(),
                 errHandler: ErrorHandler(context).getInstance(),
-                streamController: StreamController(context).getInstance(),
+                streamController: streamController,
                 mediaController: mediaController,
                 adapter: adapter,
                 textController: TextController(context).getInstance(),

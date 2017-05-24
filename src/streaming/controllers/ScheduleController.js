@@ -43,7 +43,6 @@ import LiveEdgeFinder from '../utils/LiveEdgeFinder';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
-import StreamController from '../controllers/StreamController';
 import Debug from '../../core/Debug';
 
 function ScheduleController(config) {
@@ -59,6 +58,7 @@ function ScheduleController(config) {
     const abrController = config.abrController;
     const playbackController = config.playbackController;
     const mediaController = config.mediaController;
+    const streamController = config.streamController;
     const type = config.type;
     let streamProcessor = config.streamProcessor;
 
@@ -76,7 +76,6 @@ function ScheduleController(config) {
         timeToLoadDelay,
         scheduleTimeout,
         seekTarget,
-        streamController,
         bufferLevelRule,
         nextFragmentRequestRule,
         scheduleWhilePaused,
@@ -103,7 +102,6 @@ function ScheduleController(config) {
     }
 
     function initialize() {
-        streamController = StreamController(context).getInstance();
         fragmentModel = streamProcessor.getFragmentModel();
         isDynamic = streamProcessor.isDynamic();
         scheduleWhilePaused = mediaPlayerModel.getScheduleWhilePaused();
