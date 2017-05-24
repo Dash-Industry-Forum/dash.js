@@ -286,7 +286,8 @@ function AbrController() {
 
     function checkPlaybackQuality(type) {
         if (type  && streamProcessorDict && streamProcessorDict[type]) {
-            const streamId = streamProcessorDict[type].id;
+            const streamInfo = streamProcessorDict[type].getStreamInfo();
+            const streamId = streamInfo ? streamInfo.id : null;
             const oldQuality = getQualityFor(type);
             const rulesContext = RulesContext(context).create({
                 streamProcessor: streamProcessorDict[type],
@@ -338,8 +339,8 @@ function AbrController() {
 
     function changeQuality(type, oldQuality, newQuality, topQualityIdx, reason) {
         if (type  && streamProcessorDict[type]) {
-            var id = streamProcessorDict[type].id;
             var streamInfo = streamProcessorDict[type].getStreamInfo();
+            var id = streamInfo ? streamInfo.id : null;
             if (debug.getLogToBrowserConsole()) {
                 const bufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor(type));
                 log('AbrController (' + type + ') switch from ' + oldQuality + ' to ' + newQuality + '/' + topQualityIdx + ' (buffer: ' + bufferLevel + ')\n' + JSON.stringify(reason));
@@ -465,22 +466,23 @@ function AbrController() {
     }
 
     function getQualityFor(type) {
+        if (type && streamProcessorDict[type]) {
+            var streamInfo = streamProcessorDict[type].getStreamInfo();
+            var id = streamInfo ? streamInfo.id : null;
+            var quality;
 
-        if (!type || !streamProcessorDict[type]) {
-            return QUALITY_DEFAULT;
+            if (id) {
+                qualityDict[id] = qualityDict[id] || {};
+
+                if (!qualityDict[id].hasOwnProperty(type)) {
+                    qualityDict[id][type] = QUALITY_DEFAULT;
+                }
+
+                quality = qualityDict[id][type];
+                return quality;
+            }
         }
-
-        var id = streamProcessorDict[type].id;
-        var quality;
-
-        qualityDict[id] = qualityDict[id] || {};
-
-        if (!qualityDict[id].hasOwnProperty(type)) {
-            qualityDict[id][type] = QUALITY_DEFAULT;
-        }
-
-        quality = qualityDict[id][type];
-        return quality;
+        return QUALITY_DEFAULT;
     }
 
     function setQualityFor(type, id, value) {
