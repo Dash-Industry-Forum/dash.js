@@ -243,12 +243,20 @@ function MediaPlayerModel() {
         retryAttempts[HTTPRequest.MEDIA_SEGMENT_TYPE] = value;
     }
 
+    function setManifestRetryAttempts(value) {
+        retryAttempts[HTTPRequest.MPD_TYPE] = value;
+    }
+
     function setRetryAttemptsForType(type, value) {
         retryAttempts[type] = value;
     }
 
     function getFragmentRetryAttempts() {
         return retryAttempts[HTTPRequest.MEDIA_SEGMENT_TYPE];
+    }
+
+    function getManifestRetryAttempts() {
+        return retryAttempts[HTTPRequest.MPD_TYPE];
     }
 
     function getRetryAttemptsForType(type) {
@@ -259,12 +267,20 @@ function MediaPlayerModel() {
         retryIntervals[HTTPRequest.MEDIA_SEGMENT_TYPE] = value;
     }
 
+    function setManifestRetryInterval(value) {
+        retryIntervals[HTTPRequest.MPD_TYPE] = value;
+    }
+
     function setRetryIntervalForType(type, value) {
         retryIntervals[type] = value;
     }
 
     function getFragmentRetryInterval() {
         return retryIntervals[HTTPRequest.MEDIA_SEGMENT_TYPE];
+    }
+
+    function getManifestRetryInterval() {
+        return retryIntervals[HTTPRequest.MPD_TYPE];
     }
 
     function getRetryIntervalForType(type) {
@@ -388,10 +404,14 @@ function MediaPlayerModel() {
         getBufferPruningInterval: getBufferPruningInterval,
         setFragmentRetryAttempts: setFragmentRetryAttempts,
         getFragmentRetryAttempts: getFragmentRetryAttempts,
+        setManifestRetryAttempts: setManifestRetryAttempts,
+        getManifestRetryAttempts: getManifestRetryAttempts,
         setRetryAttemptsForType: setRetryAttemptsForType,
         getRetryAttemptsForType: getRetryAttemptsForType,
         setFragmentRetryInterval: setFragmentRetryInterval,
         getFragmentRetryInterval: getFragmentRetryInterval,
+        setManifestRetryInterval: setManifestRetryInterval,
+        getManifestRetryInterval: getManifestRetryInterval,
         setRetryIntervalForType: setRetryIntervalForType,
         getRetryIntervalForType: getRetryIntervalForType,
         setWallclockTimeUpdateInterval: setWallclockTimeUpdateInterval,

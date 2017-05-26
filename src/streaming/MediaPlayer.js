@@ -1639,6 +1639,30 @@ function MediaPlayer() {
     }
 
     /**
+     * Total number of retry attempts that will occur on a manifest load before it fails.
+     *
+     * @default 4
+     * @param {int} value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setManifestLoaderRetryAttempts(value) {
+        mediaPlayerModel.setManifestRetryAttempts(value);
+    }
+
+    /**
+     * Time in milliseconds of which to reload a failed manifest load attempt.
+     *
+     * @default 1000 milliseconds
+     * @param {int} value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setManifestLoaderRetryInterval(value) {
+        mediaPlayerModel.setManifestRetryInterval(value);
+    }
+
+    /**
      * Sets whether withCredentials on all XHR requests is true or false
      *
      * @default false
@@ -2157,6 +2181,8 @@ function MediaPlayer() {
         setBufferTimeAtTopQuality: setBufferTimeAtTopQuality,
         setFragmentLoaderRetryAttempts: setFragmentLoaderRetryAttempts,
         setFragmentLoaderRetryInterval: setFragmentLoaderRetryInterval,
+        setManifestLoaderRetryAttempts: setManifestLoaderRetryAttempts,
+        setManifestLoaderRetryInterval: setManifestLoaderRetryInterval,
         setXHRWithCredentials: setXHRWithCredentials,
         setXHRWithCredentialsForType: setXHRWithCredentialsForType,
         getXHRWithCredentialsForType: getXHRWithCredentialsForType,
