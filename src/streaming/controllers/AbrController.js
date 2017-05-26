@@ -283,7 +283,8 @@ function AbrController() {
         usePixelRatioInLimitBitrateByPortal = value;
     }
 
-    function getPlaybackQuality(streamProcessor) {
+
+    function checkPlaybackQuality(streamProcessor) {
         const type = streamProcessor.getType();
         const streamInfo = streamProcessor.getStreamInfo();
         const streamId = streamInfo.id;
@@ -623,7 +624,7 @@ function AbrController() {
         getAbandonmentStateFor: getAbandonmentStateFor,
         setAbandonmentStateFor: setAbandonmentStateFor,
         setPlaybackQuality: setPlaybackQuality,
-        getPlaybackQuality: getPlaybackQuality,
+        checkPlaybackQuality: checkPlaybackQuality,
         setAverageThroughput: setAverageThroughput,
         getTopQualityIndexFor: getTopQualityIndexFor,
         setElementSize: setElementSize,
