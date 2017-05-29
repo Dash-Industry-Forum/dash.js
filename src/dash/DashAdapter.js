@@ -47,6 +47,11 @@ function DashAdapter() {
         voPeriods,
         voAdaptations;
 
+    function setup() {
+        periods = [];
+        adaptations = {};
+    }
+
     function setConfig(config) {
         if (!config) return;
 
@@ -119,7 +124,8 @@ function DashAdapter() {
             }
             return accessibilityData;
         });
-        mediaInfo.audioChannelConfiguration =  dashManifestModel.getAudioChannelConfigurationForAdaptation(realAdaptation).map(function (audioChannelConfiguration) {
+
+        mediaInfo.audioChannelConfiguration = dashManifestModel.getAudioChannelConfigurationForAdaptation(realAdaptation).map(function (audioChannelConfiguration) {
             return audioChannelConfiguration.value;
         });
         mediaInfo.roles = dashManifestModel.getRolesForAdaptation(realAdaptation).map(function (role) {
@@ -433,6 +439,7 @@ function DashAdapter() {
         metricsList: METRIC_LIST
     };
 
+    setup();
     return instance;
 }
 

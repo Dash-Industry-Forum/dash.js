@@ -48,6 +48,7 @@ function ABRRulesCollection(config) {
     const mediaPlayerModel = config.mediaPlayerModel;
     const metricsModel = config.metricsModel;
     const dashMetrics = config.dashMetrics;
+    const adapter = config.adapter;
 
     let instance,
         qualitySwitchRules,
@@ -63,7 +64,8 @@ function ABRRulesCollection(config) {
                     BolaRule(context).create({
                         metricsModel: metricsModel,
                         dashMetrics: dashMetrics,
-                        mediaPlayerModel: mediaPlayerModel
+                        mediaPlayerModel: mediaPlayerModel,
+                        adapter: adapter
                     })
                 );
 

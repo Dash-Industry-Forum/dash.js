@@ -34,7 +34,6 @@ import AdaptationSet from '../vo/AdaptationSet';
 import Period from '../vo/Period';
 import Mpd from '../vo/Mpd';
 import UTCTiming from '../vo/UTCTiming';
-import DashAdapter from '../DashAdapter';
 import Event from '../vo/Event';
 import BaseURL from '../vo/BaseURL';
 import EventStream from '../vo/EventStream';
@@ -46,11 +45,11 @@ function DashManifestModel(config) {
 
     let instance;
     let context = this.context;
-    let adaptor = DashAdapter(context).getInstance();
 
     const urlUtils = URLUtils(context).getInstance();
     const mediaController = config.mediaController;
     const timelineConverter = config.timelineConverter;
+    const adapter = config.adapter;
 
     function getIsTypeOf(adaptation, type) {
 
@@ -234,7 +233,11 @@ function DashManifestModel(config) {
 
         if (adaptations.length > 1 && streamInfo) {
             let currentTrack = mediaController.getCurrentTrackFor(type, streamInfo);
+<<<<<<< HEAD
             let allMediaInfoForType = adaptor.getAllMediaInfoForType(streamInfo, type);
+=======
+            let allMediaInfoForType = adapter.getAllMediaInfoForType(manifest, streamInfo, type);
+>>>>>>> DashAdapter - Uniformize the way it is given to controllers
             for (let i = 0, ln = adaptations.length; i < ln; i++) {
                 if (currentTrack && mediaController.isTracksEqual(currentTrack, allMediaInfoForType[i])) {
                     return adaptations[i];

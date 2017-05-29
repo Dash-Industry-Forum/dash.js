@@ -145,28 +145,35 @@ function MediaPlayer() {
         if (mediaPlayerInitialized) return;
         mediaPlayerInitialized = true;
 
-        // init some controllers
+        // init some controllers and models
         timelineConverter = TimelineConverter(context).getInstance();
         abrController = AbrController(context).getInstance();
         mediaController = MediaController(context).getInstance();
-        mediaController.initialize();
+        adapter = DashAdapter(context).getInstance();
         dashManifestModel = DashManifestModel(context).getInstance({
             mediaController: mediaController,
-            timelineConverter: timelineConverter
+            timelineConverter: timelineConverter,
+            adapter: adapter
         });
         dashMetrics = DashMetrics(context).getInstance({
             dashManifestModel: dashManifestModel
         });
         metricsModel = MetricsModel(context).getInstance();
-        metricsModel.setConfig({
-            adapter: createAdaptor()
-        });
 
         textController = TextController(context).getInstance();
         playbackController = PlaybackController(context).getInstance();
         domStorage = DOMStorage(context).getInstance({
             mediaPlayerModel: mediaPlayerModel
         });
+
+        adapter.setConfig({
+            dashManifestModel: dashManifestModel
+        });
+        metricsModel.setConfig({
+            adapter: adapter
+        });
+
+        mediaController.initialize();
 
         restoreDefaultUTCTimingSources();
         setAutoPlay(AutoPlay !== undefined ? AutoPlay : true);
@@ -2066,7 +2073,8 @@ function MediaPlayer() {
             mediaPlayerModel: mediaPlayerModel,
             metricsModel: metricsModel,
             dashMetrics: dashMetrics,
-            dashManifestModel: dashManifestModel
+            dashManifestModel: dashManifestModel,
+            adapter: adapter
         });
 
         textController.setConfig({
@@ -2090,16 +2098,6 @@ function MediaPlayer() {
             requestModifier: RequestModifier(context).getInstance(),
             mssHandler: mssHandler
         });
-    }
-
-    function createAdaptor() {
-        //TODO-Refactor Need to be able to switch this create out so will need API to set which adapter to use? Handler is created is inside streamProcessor so need to figure that out as well
-        adapter = DashAdapter(context).getInstance();
-        adapter.reset();
-        adapter.setConfig({
-            dashManifestModel: dashManifestModel
-        });
-        return adapter;
     }
 
     function detectProtection() {

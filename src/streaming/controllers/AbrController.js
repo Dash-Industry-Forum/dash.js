@@ -77,6 +77,7 @@ function AbrController() {
         elementHeight,
         manifestModel,
         dashManifestModel,
+        adapter,
         videoModel,
         mediaPlayerModel,
         domStorage,
@@ -129,7 +130,8 @@ function AbrController() {
         abrRulesCollection = ABRRulesCollection(context).create({
             metricsModel: metricsModel,
             dashMetrics: dashMetrics,
-            mediaPlayerModel: mediaPlayerModel
+            mediaPlayerModel: mediaPlayerModel,
+            adapter: adapter
         });
 
         abrRulesCollection.initialize();
@@ -166,9 +168,6 @@ function AbrController() {
     function setConfig(config) {
         if (!config) return;
 
-        if (config.abrRulesCollection) {
-            abrRulesCollection = config.abrRulesCollection;
-        }
         if (config.streamController) {
             streamController = config.streamController;
         }
@@ -186,6 +185,9 @@ function AbrController() {
         }
         if (config.dashManifestModel) {
             dashManifestModel = config.dashManifestModel;
+        }
+        if (config.adapter) {
+            adapter = config.adapter;
         }
     }
 
