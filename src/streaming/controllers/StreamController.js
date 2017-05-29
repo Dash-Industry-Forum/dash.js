@@ -71,6 +71,8 @@ function StreamController() {
         domStorage,
         abrController,
         mediaController,
+        textController,
+        sourceBufferController,
         initCache,
         errHandler,
         timelineConverter,
@@ -418,6 +420,8 @@ function StreamController() {
                         abrController: abrController,
                         playbackController: playbackController,
                         mediaController: mediaController,
+                        textController: textController,
+                        sourceBufferController: sourceBufferController,
                         streamController: instance
                     });
                     streams.push(stream);
@@ -676,6 +680,12 @@ function StreamController() {
         }
         if (config.mediaController) {
             mediaController = config.mediaController;
+        }
+        if (config.textController) {
+            textController = config.textController;
+        }
+        if (config.sourceBufferController) {
+            sourceBufferController = config.sourceBufferController;
         }
     }
 

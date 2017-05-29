@@ -37,7 +37,6 @@ import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import Debug from '../core/Debug';
 import FactoryMaker from '../core/FactoryMaker';
-import TextController from './text/TextController';
 
 function Stream(config) {
 
@@ -62,6 +61,8 @@ function Stream(config) {
     let abrController = config.abrController;
     let playbackController = config.playbackController;
     let mediaController = config.mediaController;
+    let textController = config.textController;
+    let sourceBufferController = config.sourceBufferController;
     let streamController = config.streamController;
 
     let instance,
@@ -74,9 +75,14 @@ function Stream(config) {
         protectionController,
         liveEdgeFinder,
         fragmentController,
+<<<<<<< HEAD
         eventController,
         textController,
         trackChangedEvent;
+=======
+        eventController;
+
+>>>>>>> TextController and SourceBufferController - Uniformize the way they are given to others controllers
 
     function setup() {
         streamProcessors = [];
@@ -91,7 +97,6 @@ function Stream(config) {
             mediaPlayerModel: mediaPlayerModel,
             metricsModel: metricsModel
         });
-        textController = TextController(context).getInstance();
 
         eventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
@@ -318,7 +323,9 @@ function Stream(config) {
             domStorage: domStorage,
             playbackController: playbackController,
             mediaController: mediaController,
-            streamController: streamController
+            streamController: streamController,
+            textController: textController,
+            sourceBufferController: sourceBufferController
         });
 
         let allMediaForType = adapter.getAllMediaInfoForType(streamInfo, mediaInfo.type);

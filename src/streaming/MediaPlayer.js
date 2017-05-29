@@ -43,6 +43,7 @@ import ManifestModel from './models/ManifestModel';
 import MediaPlayerModel from './models/MediaPlayerModel';
 import MetricsModel from './models/MetricsModel';
 import AbrController from './controllers/AbrController';
+import SourceBufferController from './controllers/SourceBufferController';
 import VideoModel from './models/VideoModel';
 import DOMStorage from './utils/DOMStorage';
 import Debug from './../core/Debug';
@@ -2029,6 +2030,11 @@ function MediaPlayer() {
 
         // creates or get objects instances
         let manifestLoader = createManifestLoader();
+
+        let sourceBufferController = SourceBufferController(context).getInstance({
+            textController: textController
+        });
+
         streamController = StreamController(context).getInstance();
 
         // configure controllers
@@ -2053,7 +2059,9 @@ function MediaPlayer() {
             playbackController: playbackController,
             domStorage: domStorage,
             abrController: abrController,
-            mediaController: mediaController
+            mediaController: mediaController,
+            textController: textController,
+            sourceBufferController: sourceBufferController
         });
 
         playbackController.setConfig({
@@ -2076,11 +2084,8 @@ function MediaPlayer() {
             metricsModel: metricsModel,
             dashMetrics: dashMetrics,
             dashManifestModel: dashManifestModel,
-<<<<<<< HEAD
+            manifestModel: manifestModel,
             adapter: adapter
-=======
-            manifestModel: manifestModel
->>>>>>> ManifestModel - Uniformize the way it is given to controllers
         });
 
         textController.setConfig({

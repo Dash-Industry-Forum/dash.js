@@ -32,8 +32,6 @@
 import BufferController from './controllers/BufferController';
 import TextBufferController from './text/TextBufferController';
 import ScheduleController from './controllers/ScheduleController';
-import SourceBufferController from './controllers/SourceBufferController';
-import TextController from './text/TextController';
 import RepresentationController from '../dash/controllers/RepresentationController';
 import ErrorHandler from './utils/ErrorHandler';
 import FactoryMaker from '../core/FactoryMaker';
@@ -56,6 +54,8 @@ function StreamProcessor(config) {
     let playbackController = config.playbackController;
     let streamController = config.streamController;
     let mediaController = config.mediaController;
+    let textController = config.textController;
+    let sourceBufferController = config.sourceBufferController;
     let domStorage = config.domStorage;
     let metricsModel = config.metricsModel;
     let dashMetrics = config.dashMetrics;
@@ -108,6 +108,8 @@ function StreamProcessor(config) {
             playbackController: playbackController,
             mediaController: mediaController,
             streamController: streamController,
+            textController: textController,
+            sourceBufferController: sourceBufferController,
             streamProcessor: this
         });
 
@@ -294,12 +296,12 @@ function StreamProcessor(config) {
                 metricsModel: metricsModel,
                 mediaPlayerModel: mediaPlayerModel,
                 manifestModel: manifestModel,
-                sourceBufferController: SourceBufferController(context).getInstance(),
+                sourceBufferController: sourceBufferController,
                 errHandler: ErrorHandler(context).getInstance(),
                 streamController: streamController,
                 mediaController: mediaController,
                 adapter: adapter,
-                textController: TextController(context).getInstance(),
+                textController: textController,
                 abrController: abrController,
                 playbackController: playbackController,
                 streamProcessor: instance
@@ -310,12 +312,12 @@ function StreamProcessor(config) {
                 metricsModel: metricsModel,
                 mediaPlayerModel: mediaPlayerModel,
                 manifestModel: manifestModel,
-                sourceBufferController: SourceBufferController(context).getInstance(),
+                sourceBufferController: sourceBufferController,
                 errHandler: ErrorHandler(context).getInstance(),
                 streamController: streamController,
                 mediaController: mediaController,
                 adapter: adapter,
-                textController: TextController(context).getInstance(),
+                textController: textController,
                 abrController: abrController,
                 playbackController: playbackController,
                 streamProcessor: instance

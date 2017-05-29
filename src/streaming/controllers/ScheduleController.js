@@ -36,9 +36,7 @@ import AbrController from './AbrController';
 import BufferController from './BufferController';
 import BufferLevelRule from '../rules/scheduling/BufferLevelRule';
 import NextFragmentRequestRule from '../rules/scheduling/NextFragmentRequestRule';
-import TextController from '../text/TextController';
 import FragmentModel from '../models/FragmentModel';
-import SourceBufferController from '../controllers/SourceBufferController';
 import LiveEdgeFinder from '../utils/LiveEdgeFinder';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
@@ -59,6 +57,8 @@ function ScheduleController(config) {
     const playbackController = config.playbackController;
     const mediaController = config.mediaController;
     const streamController = config.streamController;
+    const textController = config.textController;
+    const sourceBufferController = config.sourceBufferController;
     const type = config.type;
     let streamProcessor = config.streamProcessor;
 
@@ -111,13 +111,13 @@ function ScheduleController(config) {
             dashMetrics: dashMetrics,
             metricsModel: metricsModel,
             mediaPlayerModel: mediaPlayerModel,
-            textController: TextController(context).getInstance()
+            textController: textController
         });
 
         nextFragmentRequestRule = NextFragmentRequestRule(context).create({
             adapter: adapter,
-            sourceBufferController: SourceBufferController(context).getInstance(),
-            textController: TextController(context).getInstance()
+            sourceBufferController: sourceBufferController,
+            textController: textController
         });
 
         if (dashManifestModel.getIsTextTrack(type)) {
