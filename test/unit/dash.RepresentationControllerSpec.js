@@ -65,7 +65,8 @@ describe("RepresentationController", function () {
     representationController.setConfig({
         abrController: abrController,
         domStorage: domStorage,
-        dashManifestModel: dashManifestModel
+        dashManifestModel: dashManifestModel,
+        manifestModel: manifestModel
     });
 
     it("should not contain data before it is set", function () {

@@ -100,6 +100,7 @@ function MediaPlayer() {
         playbackController,
         dashMetrics,
         dashManifestModel,
+        manifestModel,
         videoModel,
         textController,
         domStorage;
@@ -155,7 +156,9 @@ function MediaPlayer() {
             timelineConverter: timelineConverter,
             adapter: adapter
         });
+        manifestModel = ManifestModel(context).getInstance();
         dashMetrics = DashMetrics(context).getInstance({
+            manifestModel: manifestModel,
             dashManifestModel: dashManifestModel
         });
         metricsModel = MetricsModel(context).getInstance();
@@ -2026,7 +2029,6 @@ function MediaPlayer() {
 
         // creates or get objects instances
         let manifestLoader = createManifestLoader();
-        let manifestModel = ManifestModel(context).getInstance();
         streamController = StreamController(context).getInstance();
 
         // configure controllers
@@ -2074,12 +2076,16 @@ function MediaPlayer() {
             metricsModel: metricsModel,
             dashMetrics: dashMetrics,
             dashManifestModel: dashManifestModel,
+<<<<<<< HEAD
             adapter: adapter
+=======
+            manifestModel: manifestModel
+>>>>>>> ManifestModel - Uniformize the way it is given to controllers
         });
 
         textController.setConfig({
             errHandler: errHandler,
-            manifestModel: ManifestModel(context).getInstance(),
+            manifestModel: manifestModel,
             dashManifestModel: dashManifestModel,
             mediaController: mediaController,
             streamController: streamController,

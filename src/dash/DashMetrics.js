@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
-import ManifestModel from '../streaming/models/ManifestModel';
 import FactoryMaker from '../core/FactoryMaker';
 import * as MetricsList from './constants/DashMetricsList';
 import { round10 } from 'round10';
@@ -41,9 +40,8 @@ import { round10 } from 'round10';
 function DashMetrics(config) {
 
     let instance;
-    let context = this.context;
     let dashManifestModel = config.dashManifestModel;
-    let manifestModel = ManifestModel(context).getInstance();//TODO Need to pass this in not bake in
+    let manifestModel = config.manifestModel;
 
     function getBandwidthForRepresentation(representationId, periodId) {
         let representation;

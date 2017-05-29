@@ -36,7 +36,6 @@ import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import MediaPlayerEvents from '../MediaPlayerEvents.js';
 import FactoryMaker from '../../core/FactoryMaker';
-import ManifestModel from '../models/ManifestModel';
 import VideoModel from '../models/VideoModel';
 import RulesContext from '../rules/RulesContext.js';
 import SwitchRequest from '../rules/SwitchRequest.js';
@@ -104,7 +103,6 @@ function AbrController() {
         if (windowResizeEventCalled === undefined) {
             windowResizeEventCalled = false;
         }
-        manifestModel = ManifestModel(context).getInstance();
         videoModel = VideoModel(context).getInstance();
         reset();
     }
@@ -188,6 +186,9 @@ function AbrController() {
         }
         if (config.adapter) {
             adapter = config.adapter;
+        }
+        if (config.manifestModel) {
+            manifestModel = config.manifestModel;
         }
     }
 
