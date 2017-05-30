@@ -177,6 +177,7 @@ function BufferController(config) {
         const manifest = manifestModel.getValue();
         const eventStreamMedia = adapter.getEventsFor(manifest, currentRepresentation.mediaInfo, streamProcessor);
         const eventStreamTrack = adapter.getEventsFor(manifest, currentRepresentation, streamProcessor);
+        const isoFile = BoxParser(context).getInstance().parse(bytes);
 
         if (eventStreamMedia && eventStreamMedia.length > 0 || eventStreamTrack && eventStreamTrack.length > 0) {
             const request = streamProcessor.getFragmentModel().getRequests({
@@ -184,11 +185,12 @@ function BufferController(config) {
                 quality: quality,
                 index: chunk.index
             })[0];
-            const events = handleInbandEvents(bytes, request, eventStreamMedia, eventStreamTrack);
+
+            const events = handleInbandEvents(isoFile, request, eventStreamMedia, eventStreamTrack);
             streamProcessor.getEventController().addInbandEvents(events);
         }
 
-        chunk.bytes = deleteInbandEvents(bytes);
+        chunk.bytes = deleteInbandEvents(isoFile);
         appendToBuffer(chunk);
     }
 
@@ -318,24 +320,25 @@ function BufferController(config) {
     }
 
 
-    function handleInbandEvents(data, request, mediaInbandEvents, trackInbandEvents) {
+    function handleInbandEvents(isoFile, request, mediaInbandEvents, trackInbandEvents) {
 
         const fragmentStartTime = Math.max(isNaN(request.startTime) ? 0 : request.startTime, 0);
         const eventStreams = [];
         const events = [];
 
-        inbandEventFound = false; //TODO Discuss why this is hear!
+        inbandEventFound = false;
         /* Extract the possible schemeIdUri : If a DASH client detects an event message box with a scheme that is not defined in MPD, the client is expected to ignore it */
         const inbandEvents = mediaInbandEvents.concat(trackInbandEvents);
         for (let i = 0, ln = inbandEvents.length; i < ln; i++) {
             eventStreams[inbandEvents[i].schemeIdUri] = inbandEvents[i];
         }
 
-        const isoFile = BoxParser(context).getInstance().parse(data);
         const eventBoxes = isoFile.getBoxes('emsg');
 
         for (let i = 0, ln = eventBoxes.length; i < ln; i++) {
             const event = adapter.getEvent(eventBoxes[i], eventStreams, fragmentStartTime);
+
+            inbandEventFound = true;
 
             if (event) {
                 events.push(event);
@@ -345,36 +348,13 @@ function BufferController(config) {
         return events;
     }
 
-    function deleteInbandEvents(data) {
+    function deleteInbandEvents(isoFile) {
 
-        if (!inbandEventFound) { //TODO Discuss why this is here. inbandEventFound is never set to true!!
-            return data;
+        if (inbandEventFound) {
+            isoFile.removeBox('emsg');
         }
 
-        const length = data.length;
-        const expTwo = Math.pow(256, 2);
-        const expThree = Math.pow(256, 3);
-        const modData = new Uint8Array(data.length);
-
-        let i = 0;
-        let j = 0;
-
-        while (i < length) {
-
-            let identifier = String.fromCharCode(data[i + 4], data[i + 5], data[i + 6], data[i + 7]);
-            let size = data[i] * expThree + data[i + 1] * expTwo + data[i + 2] * 256 + data[i + 3] * 1;
-
-            if (identifier != 'emsg') {
-                for (let l = i; l < i + size; l++) {
-                    modData[j] = data[l];
-                    j++;
-                }
-            }
-            i += size;
-
-        }
-
-        return modData.subarray(0, j);
+        return isoFile.write();
     }
 
     function hasEnoughSpaceToAppend() {
