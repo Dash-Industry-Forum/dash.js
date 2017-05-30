@@ -90,12 +90,83 @@ function IsoFile() {
         return boxes[boxes.length - 1];
     }
 
-    /**
-    * @returns {number}
-    * @memberof IsoFile#
-    */
-    function getOffset() {
-        return parsedIsoFile._cursor.offset;
+    function setup() {
+        commonProps = {
+            offset: '_offset',
+            size: 'size',
+            type: 'type'
+        };
+
+        sidxProps = {
+            references: 'references',
+            timescale: 'timescale',
+            earliest_presentation_time: 'earliest_presentation_time',
+            first_offset: 'first_offset'
+        };
+
+        sidxRefProps = {
+            reference_type: 'reference_type',
+            referenced_size: 'referenced_size',
+            subsegment_duration: 'subsegment_duration'
+        };
+
+        emsgProps = {
+            id: 'id',
+            value: 'value',
+            timescale: 'timescale',
+            scheme_id_uri: 'scheme_id_uri',
+            presentation_time_delta: 'presentation_time_delta',
+            event_duration: 'event_duration',
+            message_data: 'message_data'
+        };
+
+        mdhdProps = {
+            timescale: 'timescale'
+        };
+
+        mfhdProps = {
+            sequence_number: 'sequence_number'
+        };
+
+        subsProps = {
+            entry_count: 'entry_count',
+            entries: 'entries'
+        };
+
+        tfhdProps = {
+            base_data_offset: 'base_data_offset',
+            sample_description_index: 'sample_description_index',
+            default_sample_duration: 'default_sample_duration',
+            default_sample_size: 'default_sample_size',
+            default_sample_flags: 'default_sample_flags',
+            flags: 'flags'
+        };
+
+        tfdtProps = {
+            version: 'version',
+            baseMediaDecodeTime: 'baseMediaDecodeTime',
+            flags: 'flags'
+        };
+
+        trunProps = {
+            sample_count: 'sample_count',
+            first_sample_flags: 'first_sample_flags',
+            data_offset: 'data_offset',
+            flags: 'flags',
+            samples: 'samples'
+        };
+
+        trunSampleProps = {
+            sample_size: 'sample_size',
+            sample_duration: 'sample_duration',
+            sample_composition_time_offset: 'sample_composition_time_offset'
+        };
+    }
+
+    function copyProps(from, to, props) {
+        for (var prop in props) {
+            to[prop] = from[props[prop]];
+        }
     }
 
     function convertToDashIsoBox(boxData) {
@@ -114,8 +185,7 @@ function IsoFile() {
         getBox: getBox,
         getBoxes: getBoxes,
         setData: setData,
-        getLastBox: getLastBox,
-        getOffset: getOffset
+        getLastBox: getLastBox
     };
 
     return instance;
