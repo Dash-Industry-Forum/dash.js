@@ -76,7 +76,6 @@ function BufferController(config) {
         appendingMediaChunk,
         isAppendingInProgress,
         isPruningInProgress,
-        inbandEventFound,
         playbackController,
         streamProcessor,
         abrController,
@@ -99,7 +98,6 @@ function BufferController(config) {
         appendingMediaChunk = false;
         isAppendingInProgress = false;
         isPruningInProgress = false;
-        inbandEventFound = false;
     }
 
     function initialize(Type, Source, StreamProcessor) {
@@ -177,7 +175,6 @@ function BufferController(config) {
         const manifest = manifestModel.getValue();
         const eventStreamMedia = adapter.getEventsFor(manifest, currentRepresentation.mediaInfo, streamProcessor);
         const eventStreamTrack = adapter.getEventsFor(manifest, currentRepresentation, streamProcessor);
-        const isoFile = BoxParser(context).getInstance().parse(bytes);
 
         if (eventStreamMedia && eventStreamMedia.length > 0 || eventStreamTrack && eventStreamTrack.length > 0) {
             const request = streamProcessor.getFragmentModel().getRequests({
@@ -186,11 +183,10 @@ function BufferController(config) {
                 index: chunk.index
             })[0];
 
-            const events = handleInbandEvents(isoFile, request, eventStreamMedia, eventStreamTrack);
+            const events = handleInbandEvents(bytes, request, eventStreamMedia, eventStreamTrack);
             streamProcessor.getEventController().addInbandEvents(events);
         }
 
-        chunk.bytes = deleteInbandEvents(isoFile);
         appendToBuffer(chunk);
     }
 
@@ -320,25 +316,23 @@ function BufferController(config) {
     }
 
 
-    function handleInbandEvents(isoFile, request, mediaInbandEvents, trackInbandEvents) {
+    function handleInbandEvents(data, request, mediaInbandEvents, trackInbandEvents) {
 
         const fragmentStartTime = Math.max(isNaN(request.startTime) ? 0 : request.startTime, 0);
         const eventStreams = [];
         const events = [];
 
-        inbandEventFound = false;
         /* Extract the possible schemeIdUri : If a DASH client detects an event message box with a scheme that is not defined in MPD, the client is expected to ignore it */
         const inbandEvents = mediaInbandEvents.concat(trackInbandEvents);
         for (let i = 0, ln = inbandEvents.length; i < ln; i++) {
             eventStreams[inbandEvents[i].schemeIdUri] = inbandEvents[i];
         }
 
+        const isoFile = BoxParser(context).getInstance().parse(data);
         const eventBoxes = isoFile.getBoxes('emsg');
 
         for (let i = 0, ln = eventBoxes.length; i < ln; i++) {
             const event = adapter.getEvent(eventBoxes[i], eventStreams, fragmentStartTime);
-
-            inbandEventFound = true;
 
             if (event) {
                 events.push(event);
@@ -346,15 +340,6 @@ function BufferController(config) {
         }
 
         return events;
-    }
-
-    function deleteInbandEvents(isoFile) {
-
-        if (inbandEventFound) {
-            isoFile.removeBox('emsg');
-        }
-
-        return isoFile.write();
     }
 
     function hasEnoughSpaceToAppend() {

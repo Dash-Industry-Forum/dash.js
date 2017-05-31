@@ -69,17 +69,6 @@ function IsoFile() {
         return boxes;
     }
 
-    function removeBox(type) {
-        var boxData = parsedIsoFile.fetchAll(type);
-        for (var i = 0; i < boxData.length; i++) {
-            parsedIsoFile.boxes.splice(parsedIsoFile.boxes.indexOf(boxData[i]), 1);
-        }
-    }
-
-    function write() {
-        return parsedIsoFile.write();
-    }
-
     /**
     * @param {string} value
     * @memberof IsoFile#
@@ -126,9 +115,7 @@ function IsoFile() {
         getBoxes: getBoxes,
         setData: setData,
         getLastBox: getLastBox,
-        getOffset: getOffset,
-        removeBox: removeBox,
-        write: write
+        getOffset: getOffset
     };
 
     return instance;
