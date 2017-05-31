@@ -98,10 +98,6 @@ function TextBufferController(config) {
         _BufferControllerImpl.setMediaSource(value);
     }
 
-    function setStreamProcessor(streamProcessor) {
-        _BufferControllerImpl.setStreamProcessor(streamProcessor);
-    }
-
     function getStreamProcessor() {
         _BufferControllerImpl.getStreamProcessor();
     }
@@ -135,7 +131,6 @@ function TextBufferController(config) {
         createBuffer: createBuffer,
         getType: getType,
         getStreamProcessor: getStreamProcessor,
-        setStreamProcessor: setStreamProcessor,
         setSeekStartTime: setSeekStartTime,
         getBuffer: getBuffer,
         setBuffer: setBuffer,

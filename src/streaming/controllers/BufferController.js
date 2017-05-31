@@ -442,10 +442,6 @@ function BufferController(config) {
         return streamProcessor;
     }
 
-    function setStreamProcessor(value) {
-        streamProcessor = value;
-    }
-
     function setSeekStartTime(value) {
         seekStartTime = value;
     }
@@ -522,7 +518,6 @@ function BufferController(config) {
         createBuffer: createBuffer,
         getType: getType,
         getStreamProcessor: getStreamProcessor,
-        setStreamProcessor: setStreamProcessor,
         setSeekStartTime: setSeekStartTime,
         getBuffer: getBuffer,
         setBuffer: setBuffer,

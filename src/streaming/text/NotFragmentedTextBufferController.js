@@ -116,10 +116,6 @@ function NotFragmentedTextBufferController(config) {
         return mediaSource;
     }
 
-    function setStreamProcessor(value) {
-        streamProcessor = value;
-    }
-
     function getStreamProcessor() {
         return streamProcessor;
     }
@@ -186,7 +182,6 @@ function NotFragmentedTextBufferController(config) {
         createBuffer: createBuffer,
         getType: getType,
         getStreamProcessor: getStreamProcessor,
-        setStreamProcessor: setStreamProcessor,
         setSeekStartTime: setSeekStartTime,
         getBuffer: getBuffer,
         setBuffer: setBuffer,
