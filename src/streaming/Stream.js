@@ -32,7 +32,6 @@ import LiveEdgeFinder from './utils/LiveEdgeFinder';
 import StreamProcessor from './StreamProcessor';
 import EventController from './controllers/EventController';
 import FragmentController from './controllers/FragmentController';
-import VideoModel from './models/VideoModel';
 import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import Debug from '../core/Debug';
@@ -58,6 +57,7 @@ function Stream(config) {
     let domStorage = config.domStorage;
     let metricsModel = config.metricsModel;
     let dashMetrics = config.dashMetrics;
+    let videoModel = config.videoModel;
     let abrController = config.abrController;
     let playbackController = config.playbackController;
     let mediaController = config.mediaController;
@@ -261,7 +261,7 @@ function Stream(config) {
 
         if (!!mediaInfo.contentProtection && !capabilities.supportsEncryptedMedia()) {
             errHandler.capabilityError('encryptedmedia');
-        } else if (!capabilities.supportsCodec(VideoModel(context).getInstance().getElement(), codec)) {
+        } else if (!capabilities.supportsCodec(videoModel.getElement(), codec)) {
             msg = type + 'Codec (' + codec + ') is not supported.';
             errHandler.manifestError(msg, 'codec', manifestModel.getValue());
             log(msg);

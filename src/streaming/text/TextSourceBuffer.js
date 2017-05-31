@@ -34,7 +34,6 @@ import BoxParser from '../utils/BoxParser';
 import CustomTimeRanges from '../utils/CustomTimeRanges';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
-import VideoModel from '../models/VideoModel';
 import TextTracks from './TextTracks';
 import EmbeddedTextHtmlRender from './EmbeddedTextHtmlRender';
 import ISOBoxer from 'codem-isoboxer';
@@ -145,7 +144,7 @@ function TextSourceBuffer() {
     function initEmbedded() {
         embeddedTracks = [];
         mediaInfos = [];
-        videoModel = VideoModel(context).getInstance();
+        // videoModel = VideoModel(context).getInstance();
         textTracks = TextTracks(context).getInstance();
         textTracks.setConfig({
             videoModel: videoModel

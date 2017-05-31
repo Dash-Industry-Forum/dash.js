@@ -422,6 +422,7 @@ function StreamController() {
                         mediaController: mediaController,
                         textController: textController,
                         sourceBufferController: sourceBufferController,
+                        videoModel: videoModel,
                         streamController: instance
                     });
                     streams.push(stream);

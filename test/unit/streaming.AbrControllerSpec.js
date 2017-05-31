@@ -7,6 +7,7 @@ import MetricsModel from '../../src/streaming/models/MetricsModel';
 import DashMetrics from '../../src/dash/DashMetrics';
 import DashManifestModel from '../../src/dash/models/DashManifestModel';
 import TimelineConverter from '../../src/dash/utils/TimelineConverter';
+import VideoModel from '../../src/streaming/models/VideoModel';
 
 const expect = require('chai').expect;
 
@@ -28,6 +29,7 @@ describe("AbrController", function () {
     const dashMetrics = DashMetrics(context).getInstance({
         dashManifestModel: dashManifestModel
     });
+    const videoModel = VideoModel(context).getInstance();
     const abrCtrl = AbrController(context).getInstance();
     const dummyMediaInfo = voHelper.getDummyMediaInfo(testType);
     const representationCount = dummyMediaInfo.representationCount;
@@ -37,7 +39,8 @@ describe("AbrController", function () {
 
     abrCtrl.setConfig({
         metricsModel: metricsModel,
-        dashMetrics: dashMetrics
+        dashMetrics: dashMetrics,
+        videoModel: videoModel
     });
 
     it("should update top quality index", function () {

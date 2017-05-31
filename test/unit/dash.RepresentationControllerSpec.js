@@ -9,6 +9,7 @@ import MediaPlayerModel from '../../src/streaming/models/MediaPlayerModel';
 import Events from '../../src/core/events/Events';
 import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
 import DashManifestModel from '../../src/dash/models/DashManifestModel';
+import VideoModel from '../../src/streaming/models/VideoModel';
 import TimelineConverter from '../../src/dash/utils/TimelineConverter';
 import SpecHelper from './helpers/SpecHelper';
 import AbrController from '../../src/streaming/controllers/AbrController';
@@ -43,6 +44,7 @@ describe("RepresentationController", function () {
         mediaController: mediaController,
         timelineConverter: timelineConverter
     });
+    const videoModel = VideoModel(context).getInstance();
 
 
     Events.extend(MediaPlayerEvents);
@@ -56,7 +58,8 @@ describe("RepresentationController", function () {
 
     abrController.setConfig({
         domStorage: domStorage,
-        mediaPlayerModel: mediaPlayerModel
+        mediaPlayerModel: mediaPlayerModel,
+        videoModel: videoModel
     });
     abrController.registerStreamType(testType, streamProcessor);
 
