@@ -2126,6 +2126,7 @@ function MediaPlayer() {
             });
             protectionController = protection.createProtectionSystem({
                 log: log,
+                errHandler: errHandler,
                 videoModel: videoModel,
                 capabilities: capabilities,
                 eventBus: eventBus,
@@ -2167,7 +2168,8 @@ function MediaPlayer() {
                 eventBus: eventBus,
                 mediaPlayerModel: mediaPlayerModel,
                 metricsModel: metricsModel,
-                playbackController: playbackController
+                playbackController: playbackController,
+                errHandler: errHandler
             });
         }
     }

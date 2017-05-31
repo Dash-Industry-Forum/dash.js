@@ -33,7 +33,6 @@ import BufferController from './controllers/BufferController';
 import TextBufferController from './text/TextBufferController';
 import ScheduleController from './controllers/ScheduleController';
 import RepresentationController from '../dash/controllers/RepresentationController';
-import ErrorHandler from './utils/ErrorHandler';
 import FactoryMaker from '../core/FactoryMaker';
 
 import DashHandler from '../dash/DashHandler';
@@ -44,6 +43,7 @@ function StreamProcessor(config) {
 
     let indexHandler;
     let type = config.type;
+    let errHandler = config.errHandler;
     let mimeType = config.mimeType;
     let timelineConverter = config.timelineConverter;
     let adapter = config.adapter;
@@ -86,7 +86,8 @@ function StreamProcessor(config) {
             dashMetrics: dashMetrics,
             metricsModel: metricsModel,
             mediaPlayerModel: mediaPlayerModel,
-            baseURLController: config.baseURLController
+            baseURLController: config.baseURLController,
+            errHandler: errHandler
         });
 
         // initialize controllers
@@ -297,7 +298,7 @@ function StreamProcessor(config) {
                 mediaPlayerModel: mediaPlayerModel,
                 manifestModel: manifestModel,
                 sourceBufferController: sourceBufferController,
-                errHandler: ErrorHandler(context).getInstance(),
+                errHandler: errHandler,
                 streamController: streamController,
                 mediaController: mediaController,
                 adapter: adapter,
@@ -313,7 +314,7 @@ function StreamProcessor(config) {
                 mediaPlayerModel: mediaPlayerModel,
                 manifestModel: manifestModel,
                 sourceBufferController: sourceBufferController,
-                errHandler: ErrorHandler(context).getInstance(),
+                errHandler: errHandler,
                 streamController: streamController,
                 mediaController: mediaController,
                 adapter: adapter,

@@ -100,7 +100,9 @@ function ManifestLoader(config) {
             }
             return parser;
         } else if (data.indexOf('MPD') > -1) {
-            return DashParser(context).create();
+            return DashParser(context).create({
+                errorHandler: errHandler
+            });
         } else {
             return parser;
         }

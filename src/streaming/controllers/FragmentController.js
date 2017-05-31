@@ -35,7 +35,6 @@ import DataChunk from '../vo/DataChunk';
 import FragmentModel from '../models/FragmentModel';
 import FragmentLoader from '../FragmentLoader';
 import RequestModifier from '../utils/RequestModifier';
-import ErrorHandler from '../utils/ErrorHandler';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
@@ -47,6 +46,7 @@ function FragmentController( config ) {
     const log = Debug(context).getInstance().log;
     const eventBus = EventBus(context).getInstance();
 
+    const errHandler = config.errHandler;
     const mediaPlayerModel = config.mediaPlayerModel;
     const metricsModel = config.metricsModel;
 
@@ -66,7 +66,7 @@ function FragmentController( config ) {
                 fragmentLoader: FragmentLoader(context).create({
                     metricsModel: metricsModel,
                     mediaPlayerModel: mediaPlayerModel,
-                    errHandler: ErrorHandler(context).getInstance(),
+                    errHandler: errHandler,
                     requestModifier: RequestModifier(context).getInstance()
                 })
             });
