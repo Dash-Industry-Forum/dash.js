@@ -414,6 +414,7 @@ function ScheduleController(config) {
     function onQuotaExceeded(e) {
         if (e.sender.getStreamProcessor() !== streamProcessor) return;
         stop();
+        isFragmentProcessingInProgress = false;
     }
 
     function onURLResolutionFailed() {
