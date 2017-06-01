@@ -31,7 +31,7 @@
 
 import FactoryMaker from '../../core/FactoryMaker';
 
-import {getTimeBasedSegment, decideSegmentListRangeForTimeline} from './SegmentsUtils';
+import {getTimeBasedSegment} from './SegmentsUtils';
 
 function TimelineSegmentsGetter(config, isDynamic) {
 
