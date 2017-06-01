@@ -30,6 +30,7 @@
  */
 
 import FactoryMaker from '../../core/FactoryMaker';
+import equal from 'deep-equal';
 
 /**
  * @module ObjectUtils
@@ -49,7 +50,7 @@ function ObjectUtils() {
      * @instance
      */
     function areSimpleEquivalent(obj1, obj2) {
-        return JSON.stringify(obj1) === JSON.stringify(obj2);
+        return equal(obj1, obj2);
     }
 
     instance = {
