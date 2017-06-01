@@ -266,44 +266,6 @@ function TextTracks() {
         }
     }
 
-    function convertToPixels(percentage, pixelMeasure) {
-        let percentString = Math.round(0.01 * percentage * pixelMeasure).toString() + 'px';
-        return percentString;
-    }
-
-    function scaleImageCue(activeCue) {
-        let videoWidth = actualVideoWidth;
-        let videoHeight = actualVideoHeight;
-
-        if (videoWidth * videoHeight === 0) {
-            return; //At least one of the measures is still zero
-        }
-
-        if (activeCue.layout) {
-            let layout = activeCue.layout;
-            let left = convertToPixels(layout.left, videoWidth);
-            let top = convertToPixels(layout.top, videoHeight);
-            let width = convertToPixels(layout.width, videoWidth);
-            let height = convertToPixels(layout.height, videoHeight);
-            captionContainer.style.left = left;
-            captionContainer.style.top = top;
-            captionContainer.style.width = width;
-            captionContainer.style.height = height;
-            let image = captionContainer.firstChild;
-            if (image && image.style) {
-                image.style.left = '0px';
-                image.style.top = '0px';
-                image.style.width = width;
-                image.style.height = height;
-                if ((fullscreenAttribute && document[fullscreenAttribute]) || displayCCOnTop) {
-                    image.style.zIndex = topZIndex;
-                } else {
-                    image.style.zIndex = null;
-                }
-            }
-        }
-    }
-
     function scaleCue(activeCue) {
         const videoWidth = actualVideoWidth;
         const videoHeight = actualVideoHeight;
@@ -411,42 +373,7 @@ function TextTracks() {
                 videoSizeCheckInterval = setInterval(checkVideoSize.bind(this), 500);
             }
 
-            //image subtitle extracted from TTML
-            if (currentItem.type === 'image') {
-                cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, '');
-                cue.image = currentItem.data;
-                cue.id = currentItem.id;
-                cue.size = 0; //discard the native display for this subtitles
-                cue.type = 'image'; // active image overlay
-                cue.layout = currentItem.layout;
-                cue.scaleCue = scaleImageCue.bind(self);
-                cue.onenter = function () {
-                    if (!captionContainer) { // Does not support image captions without a container
-                        return;
-                    }
-                    if (track.mode === 'showing') {
-                        let img = new Image();
-                        img.id = 'ttmlImage_' + this.id;
-                        img.src = this.image;
-                        //img.className = 'cue-image';
-                        img.style.cssText = 'pointer-events: none; display: block; visibility: visible !important; position: relative !important;';
-                        captionContainer.appendChild(img);
-                        scaleImageCue.call(self, this);
-                    }
-                };
-
-                cue.onexit = function () {
-                    if (!captionContainer) {
-                        return;
-                    }
-                    let imgs = captionContainer.childNodes;
-                    for (let i = 0; i < imgs.length; i++) {
-                        if (imgs[i].id === 'ttmlImage_' + this.id) {
-                            captionContainer.removeChild(imgs[i]);
-                        }
-                    }
-                };
-            } else if (currentItem.type === 'html') {
+            if (currentItem.type === 'html') {
                 cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, '');
                 cue.cueHTMLElement = currentItem.cueHTMLElement;
                 cue.isd = currentItem.isd;
