@@ -34,6 +34,7 @@ import MediaCapability from '../vo/MediaCapability';
 import KeySystemConfiguration from '../vo/KeySystemConfiguration';
 import FactoryMaker from '../../../core/FactoryMaker';
 import Protection from '../Protection';
+import BASE64 from '../../../../externals/base64';
 
 /**
  * @module ProtectionController
@@ -391,6 +392,11 @@ function ProtectionController(config) {
                 if (!event.error) {
                     keySystem = protectionModel.getKeySystem();
                     eventBus.trigger(Events.KEY_SYSTEM_SELECTED, {data: keySystemAccess});
+                    // Set server certificate from protData
+                    var protData = getProtData(keySystem);
+                    if (protData && protData.serverCertificate && protData.serverCertificate.length > 0) {
+                        protectionModel.setServerCertificate(BASE64.decodeArray(protData.serverCertificate).buffer);
+                    }
                     for (var i = 0; i < pendingNeedKeyData.length; i++) {
                         for (ksIdx = 0; ksIdx < pendingNeedKeyData[i].length; ksIdx++) {
                             if (keySystem === pendingNeedKeyData[i][ksIdx].ks) {
