@@ -40,6 +40,7 @@ import DashAdapter from '../DashAdapter';
 import Event from '../vo/Event';
 import BaseURL from '../vo/BaseURL';
 import EventStream from '../vo/EventStream';
+import ObjectUtils from '../../streaming/utils/ObjectUtils';
 import URLUtils from '../../streaming/utils/URLUtils';
 import FactoryMaker from '../../core/FactoryMaker';
 
@@ -201,7 +202,8 @@ function DashManifestModel() {
 
         if (realAdaptation) {
             for (let i = 0; i < len; i++) {
-                if (JSON.stringify(realAdaptations[i]) === JSON.stringify(realAdaptation)) {
+                let objectUtils = ObjectUtils(context).getInstance();
+                if (objectUtils.areSimpleEquivalent(realAdaptations[i], realAdaptation)) {
                     return i;
                 }
             }
