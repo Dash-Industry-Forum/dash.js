@@ -110,10 +110,6 @@ function TextBufferController(config) {
         return _BufferControllerImpl.getBufferLevel();
     }
 
-    function getCriticalBufferLevel() {
-        return _BufferControllerImpl.getCriticalBufferLevel();
-    }
-
     function reset(errored) {
         _BufferControllerImpl.reset(errored);
     }
@@ -135,7 +131,6 @@ function TextBufferController(config) {
         getBuffer: getBuffer,
         setBuffer: setBuffer,
         getBufferLevel: getBufferLevel,
-        getCriticalBufferLevel: getCriticalBufferLevel,
         setMediaSource: setMediaSource,
         getMediaSource: getMediaSource,
         getIsBufferingCompleted: getIsBufferingCompleted,

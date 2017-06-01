@@ -458,10 +458,6 @@ function BufferController(config) {
         return bufferLevel;
     }
 
-    function getCriticalBufferLevel() {
-        return criticalBufferLevel;
-    }
-
     function setMediaSource(value) {
         mediaSource = value;
     }
@@ -522,7 +518,6 @@ function BufferController(config) {
         getBuffer: getBuffer,
         setBuffer: setBuffer,
         getBufferLevel: getBufferLevel,
-        getCriticalBufferLevel: getCriticalBufferLevel,
         setMediaSource: setMediaSource,
         getMediaSource: getMediaSource,
         getIsBufferingCompleted: getIsBufferingCompleted,

@@ -128,10 +128,6 @@ function NotFragmentedTextBufferController(config) {
         return 0;
     }
 
-    function getCriticalBufferLevel() {
-        return 0;
-    }
-
     function reset(errored) {
 
         eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
@@ -186,7 +182,6 @@ function NotFragmentedTextBufferController(config) {
         getBuffer: getBuffer,
         setBuffer: setBuffer,
         getBufferLevel: getBufferLevel,
-        getCriticalBufferLevel: getCriticalBufferLevel,
         setMediaSource: setMediaSource,
         getMediaSource: getMediaSource,
         getIsBufferingCompleted: getIsBufferingCompleted,
