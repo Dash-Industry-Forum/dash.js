@@ -454,6 +454,12 @@ function TextTracks() {
                 cue.embeddedImages = currentItem.embeddedImages;
                 cue.cueID = currentItem.cueID;
                 cue.scaleCue = scaleCue.bind(self);
+                //useful parameters for cea608 subtitles, not for TTML one.
+                cue.cellResolution = currentItem.cellResolution;
+                cue.lineHeight = currentItem.lineHeight;
+                cue.linePadding = currentItem.linePadding;
+                cue.fontSize = currentItem.fontSize;
+
                 captionContainer.style.left = actualVideoLeft + 'px';
                 captionContainer.style.top = actualVideoTop + 'px';
                 captionContainer.style.width = actualVideoWidth + 'px';
