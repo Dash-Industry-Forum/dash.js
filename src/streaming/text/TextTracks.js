@@ -467,10 +467,10 @@ function TextTracks() {
 
                 cue.onenter = function () {
                     if (track.mode === 'showing') {
-                        var finalCue = document.createElement('div');
-                        log('Cue enter id:' + this.cueID);
-                        captionContainer.appendChild(finalCue);
                         if (this.isd) {
+                            var finalCue = document.createElement('div');
+                            log('Cue enter id:' + this.cueID);
+                            captionContainer.appendChild(finalCue);
                             renderHTML(this.isd, finalCue,  function (uri) {
                                 let imsc1ImgUrnTester = /^(urn:)(mpeg:[a-z0-9][a-z0-9-]{0,31}:)(subs:)([0-9])$/;
                                 let smpteImgUrnTester = /^#(.*)$/;
