@@ -1,6 +1,6 @@
 {
     "DASH_VOD_1": {
-        "url": "http://dash.edgesuite.net/akamai/bbb_30fps/bbb_30fps.mpd",
+        "url": "//dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd",
         "name": "SegmentTemplate/Number, live profile, 250kbps up to 15Mbps@4K.",
         "type": "VOD",
         "protocol": "DASH"
@@ -14,14 +14,14 @@
     },
 
     "DASH_LIVE_1": {
-        "url": "http://vm2.dashif.org/livesim/testpic_2s/Manifest.mpd",
+        "url": "//vm2.dashif.org/livesim/testpic_2s/Manifest.mpd",
         "name": "SegmentTemplate without manifest updates (livesim)",
         "type": "Live",
         "protocol": "DASH"
     },
 
     "DASH_LIVE_2": {
-        "url": "http://vm2.dashif.org/livesim/mup_30/testpic_2s/Manifest.mpd",
+        "url": "//vm2.dashif.org/livesim/mup_30/testpic_2s/Manifest.mpd",
         "name": "SegmentTemplate with manifest updates every 30s (livesim)",
         "type": "Live",
         "protocol": "DASH"
