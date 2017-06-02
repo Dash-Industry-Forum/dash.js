@@ -69,6 +69,13 @@ function MediaSourceController() {
         return source.duration;
     }
 
+    function setSeekable(source, start, end) {
+        if (typeof source.setLiveSeekableRange === 'function' && typeof source.clearLiveSeekableRange === 'function') {
+            source.clearLiveSeekableRange();
+            source.setLiveSeekableRange(start, end);
+        }
+    }
+
     function signalEndOfStream(source) {
 
         var buffers = source.sourceBuffers;
@@ -90,6 +97,7 @@ function MediaSourceController() {
         attachMediaSource: attachMediaSource,
         detachMediaSource: detachMediaSource,
         setDuration: setDuration,
+        setSeekable: setSeekable,
         signalEndOfStream: signalEndOfStream
     };
 
