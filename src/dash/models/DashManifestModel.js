@@ -59,16 +59,26 @@ function DashManifestModel() {
         let i,
             len,
             representation;
+            col,
+            mimeTypeRegEx,
+            codecs;
         let result = false;
         let found = false;
 
-        let col = adaptation.ContentComponent_asArray;
-        let mimeTypeRegEx = (type !== 'text') ? new RegExp(type) : new RegExp('(vtt|ttml)');
+        if (!adaptation) {
+            return result;
+        }
+
+        if (adaptation.hasOwnProperty('ContentComponent_asArray')) {
+            col = adaptation.ContentComponent_asArray;
+        }
+
+        mimeTypeRegEx = (type && type !== 'text') ? new RegExp(type) : new RegExp('(vtt|ttml)');
 
         if ((adaptation.Representation_asArray.length > 0) &&
             (adaptation.Representation_asArray[0].hasOwnProperty('codecs'))) {
             // Just check the start of the codecs string
-            let codecs = adaptation.Representation_asArray[0].codecs;
+            codecs = adaptation.Representation_asArray[0].codecs;
             if (codecs.search('stpp') === 0 || codecs.search('wvtt') === 0) {
                 return type === 'fragmentedText';
             }

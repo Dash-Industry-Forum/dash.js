@@ -1,5 +1,6 @@
 import DashManifestModel from '../../src/dash/models/DashManifestModel';
 import BaseURL from '../../src/dash/vo/BaseURL';
+import MpdHelper from './helpers/MPDHelper';
 
 const expect = require('chai').expect;
 
@@ -12,6 +13,21 @@ const SERVICE_LOCATION = 'testServiceLocation';
 const EMPTY_STRING = '';
 
 describe('DashManifestModel', function () {
+    
+    const mpdHelper = new MpdHelper();
+
+    it('should return false when getIsTypeOf is called and type is undefined', () => {
+        var adaptation = mpdHelper.composeAdaptation('video');
+        const isTypeOf = dashManifestModel.getIsTypeOf(adaptation);
+
+        expect(isTypeOf).to.be.false;  // jshint ignore:line
+    });
+
+    it('should return false when getIsTypeOf is called and adaptation is undefined', () => {
+        const isTypeOf = dashManifestModel.getIsTypeOf();
+
+        expect(isTypeOf).to.be.false;  // jshint ignore:line
+    });
 
     it('should return empty string when getLanguageForAdaptation is called and adaptation is undefined', () => {
         const language = dashManifestModel.getLanguageForAdaptation();
