@@ -1286,7 +1286,7 @@ function MediaPlayer() {
      * at the end of the current buffer range it is requested and appended closer to the current time
      * When enabled, The maximum time to render a higher quality is current time + (1.5 * fragment duration).
      *
-     * Note, WHen ABR down-switch is detected, we appended the lower quality at the end of the buffer range to preserve the
+     * Note, When ABR down-switch is detected, we appended the lower quality at the end of the buffer range to preserve the
      * higher quality media for as long as possible.
      *
      * If enabled, it should be noted there are a few cases when the client will not replace inside buffer range but rather
@@ -1294,8 +1294,8 @@ function MediaPlayer() {
      * is in an Abandonment State due to recent fragment abandonment event.
      *
      * Known issues:
-     * 1. In IE11 with auto switching off, if a user switches to a quality they can not downloaded in time the
-     * fragment may be appended in the same range as the playhead or even in past, in IE11 it may cause a stutter
+     * 1. In IE11 with auto switching off, if a user switches to a quality they can not download in time the
+     * fragment may be appended in the same range as the playhead or even in the past, in IE11 it may cause a stutter
      * or stall in playback.
      *
      *
