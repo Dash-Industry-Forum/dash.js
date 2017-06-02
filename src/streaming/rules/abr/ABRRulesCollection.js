@@ -178,11 +178,20 @@ function ABRRulesCollection() {
         return shouldAbandon || SwitchRequest(context).create();
     }
 
+    function reset() {
+        [qualitySwitchRules, abandonFragmentRules].forEach(rules => {
+            if (rules && rules.length) {
+                rules.forEach(rule => rule.reset && rule.reset());
+            }
+        });
+    }
+
     instance = {
         initialize: initialize,
         getRules: getRules,
         getMaxQuality: getMaxQuality,
-        shouldAbandonFragment: shouldAbandonFragment
+        shouldAbandonFragment: shouldAbandonFragment,
+        reset: reset
     };
 
     return instance;
