@@ -27,11 +27,16 @@
             height: 360px;
         }
     </style>
-
-    <body onload="init()">
+    </head>
+    <body>
         <div>
             <video controls="true">
             </video>
         </div>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                init();
+            });
+        </script>
     </body>
 </html>
