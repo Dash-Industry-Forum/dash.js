@@ -71,7 +71,7 @@ function InsufficientBufferRule(config) {
         // After the sessions first buffer loaded event , if we ever have a buffer empty event we want to switch all the way down.
         if (lastBufferStateVO.state === BufferController.BUFFER_EMPTY && bufferStateDict[mediaType].firstBufferLoadedEvent !== undefined) {
             log('Switch to index 0; buffer is empty.');
-            switchRequest.value = 0;
+            switchRequest.quality = 0;
             switchRequest.reason = 'InsufficientBufferRule: Buffer is empty';
         }
 

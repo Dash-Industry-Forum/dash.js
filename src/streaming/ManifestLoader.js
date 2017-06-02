@@ -228,4 +228,5 @@ ManifestLoader.__dashjs_factory_name = 'ManifestLoader';
 const factory = FactoryMaker.getClassFactory(ManifestLoader);
 factory.MANIFEST_LOADER_ERROR_PARSING_FAILURE = MANIFEST_LOADER_ERROR_PARSING_FAILURE;
 factory.MANIFEST_LOADER_ERROR_LOADING_FAILURE = MANIFEST_LOADER_ERROR_LOADING_FAILURE;
+FactoryMaker.updateClassFactory(ManifestLoader.__dashjs_factory_name, factory);
 export default factory;

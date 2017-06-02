@@ -29,27 +29,35 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import MediaPlayer from './src/streaming/MediaPlayer';
-import FactoryMaker from './src/core/FactoryMaker';
-import Protection from './src/streaming/protection/Protection';
-import MetricsReporting from './src/streaming/metrics/MetricsReporting';
-import MediaPlayerFactory from './src/streaming/MediaPlayerFactory';
-import {getVersionString} from './src/core/Version';
+var CustomThroughputRule;
 
-// Shove both of these into the global scope
-var context = (typeof window !== 'undefined' && window) || global;
+function CustomThroughputRuleClass() {
 
-var dashjs = context.dashjs;
-if (!dashjs) {
-    dashjs = context.dashjs = {};
+    let factory = dashjs.FactoryMaker;
+    let SwitchRequest = factory.getClassFactoryByName('SwitchRequest');
+    let MetricsModel = factory.getSingletonFactoryByName('MetricsModel');
+
+    let context = this.context;
+
+    function getMaxIndex(rulesContext) {
+
+        // here you can get some informations aboit metrics for example, to implement the rule
+        let metricsModel = MetricsModel(context).getInstance();
+        var mediaType = rulesContext.getMediaInfo().type;
+        var metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
+
+        // this sample only display metrics in console
+        console.log(metrics);
+
+        return SwitchRequest(context).create();
+    }
+
+    const instance = {
+        getMaxIndex: getMaxIndex
+    };
+    return instance;
 }
 
-dashjs.MediaPlayer = MediaPlayer;
-dashjs.FactoryMaker = FactoryMaker;
-dashjs.Protection = Protection;
-dashjs.MetricsReporting = MetricsReporting;
-dashjs.MediaPlayerFactory = MediaPlayerFactory;
-dashjs.Version = getVersionString();
+CustomThroughputRuleClass.__dashjs_factory_name = 'CustomThroughputRule';
+CustomThroughputRule = dashjs.FactoryMaker.getClassFactory(CustomThroughputRuleClass);
 
-export default dashjs;
-export { MediaPlayer, Protection, MetricsReporting, MediaPlayerFactory};

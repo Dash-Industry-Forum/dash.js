@@ -1319,7 +1319,6 @@ function MediaPlayer() {
         return mediaPlayerModel.getFastSwitchEnabled();
     }
 
-
     /**
      * Enabling buffer-occupancy ABR will switch to the *experimental* implementation of BOLA,
      * replacing the throughput-based ABR rule set (ThroughputRule, BufferOccupancyRule,
@@ -1335,6 +1334,51 @@ function MediaPlayer() {
      */
     function enableBufferOccupancyABR(value) {
         mediaPlayerModel.setBufferOccupancyABREnabled(value);
+    }
+
+    /**
+     * Enable/disable builtin dashjs ABR rules
+     * @param {boolean} value
+     * @default true
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function useDefaultABRRules(value) {
+        mediaPlayerModel.setUseDefaultABRRules(value);
+    }
+
+    /**
+     * Add a custom ABR Rule
+     * Rule will be apply on next stream if a stream is being played
+     *
+     * @param {string} type - rule type (one of ['qualitySwitchRules','abandonFragmentRules'])
+     * @param {string} rulename - name of rule (used to identify custom rule). If one rule of same name has been added, then existing rule will be updated
+     * @param {object} rule - the rule object instance
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function addABRCustomRule(type, rulename, rule) {
+        mediaPlayerModel.addABRCustomRule(type, rulename, rule);
+    }
+
+    /**
+     * Remove a custom ABR Rule
+     *
+     * @param {string} rulename - name of the rule to be removed
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function removeABRCustomRule(rulename) {
+        mediaPlayerModel.removeABRCustomRule(rulename);
+    }
+
+    /**
+     * Remove all custom rules
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function removeAllABRCustomRule() {
+        mediaPlayerModel.removeAllABRCustomRule();
     }
 
     /**
@@ -1901,7 +1945,9 @@ function MediaPlayer() {
         abrRulesCollection.initialize();
 
         let sourceBufferController = SourceBufferController(context).getInstance();
-        sourceBufferController.setConfig({dashManifestModel: dashManifestModel});
+        sourceBufferController.setConfig({
+            dashManifestModel: dashManifestModel
+        });
 
         mediaController.initialize();
         mediaController.setConfig({
@@ -2143,6 +2189,10 @@ function MediaPlayer() {
         getAutoSwitchQualityFor: getAutoSwitchQualityFor,
         setAutoSwitchQualityFor: setAutoSwitchQualityFor,
         enableBufferOccupancyABR: enableBufferOccupancyABR,
+        useDefaultABRRules: useDefaultABRRules,
+        addABRCustomRule: addABRCustomRule,
+        removeABRCustomRule: removeABRCustomRule,
+        removeAllABRCustomRule: removeAllABRCustomRule,
         setBandwidthSafetyFactor: setBandwidthSafetyFactor,
         getBandwidthSafetyFactor: getBandwidthSafetyFactor,
         setAbandonLoadTimeout: setAbandonLoadTimeout,
@@ -2182,4 +2232,6 @@ function MediaPlayer() {
 MediaPlayer.__dashjs_factory_name = 'MediaPlayer';
 let factory = FactoryMaker.getClassFactory(MediaPlayer);
 factory.events = MediaPlayerEvents;
+FactoryMaker.updateClassFactory(MediaPlayer.__dashjs_factory_name, factory);
+
 export default factory;

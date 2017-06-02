@@ -580,4 +580,5 @@ BufferController.__dashjs_factory_name = 'BufferController';
 const factory = FactoryMaker.getClassFactory(BufferController);
 factory.BUFFER_LOADED = BUFFER_LOADED;
 factory.BUFFER_EMPTY = BUFFER_EMPTY;
+FactoryMaker.updateClassFactory(BufferController.__dashjs_factory_name, factory);
 export default factory;

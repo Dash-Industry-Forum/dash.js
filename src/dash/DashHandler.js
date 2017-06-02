@@ -530,4 +530,5 @@ function DashHandler(config) {
 DashHandler.__dashjs_factory_name = 'DashHandler';
 let factory = FactoryMaker.getClassFactory(DashHandler);
 factory.SEGMENTS_UNAVAILABLE_ERROR_CODE = SEGMENTS_UNAVAILABLE_ERROR_CODE;
+FactoryMaker.updateClassFactory(DashHandler.__dashjs_factory_name, factory);
 export default factory;
