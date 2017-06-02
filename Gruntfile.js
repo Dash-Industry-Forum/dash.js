@@ -201,21 +201,6 @@ module.exports = function (grunt) {
                     transform: ['babelify']
                 }
             },
-            mss: {
-                files: {
-                    'build/temp/dash.mss.debug.js': ['src/mss/MssHandler.js']
-                },
-                options: {
-                    browserifyOptions: {
-                        debug: true,
-                        standalone: 'dashjs.MssHandler'
-                    },
-                    plugin: [
-                        'browserify-derequire', 'bundle-collapser/plugin'
-                    ],
-                    transform: ['babelify']
-                }
-            },
             all: {
                 files: {
                     'build/temp/dash.all.debug.js': ['index.js']
@@ -230,10 +215,25 @@ module.exports = function (grunt) {
                     transform: ['babelify']
                 }
             },
+            mss: {
+                files: {
+                    'build/temp/dash.mss.debug.js': ['src/mss/index.js']
+                },
+                options: {
+                    browserifyOptions: {
+                        debug: true
+                    },
+                    plugin: [
+                        'browserify-derequire', 'bundle-collapser/plugin'
+                    ],
+                    transform: ['babelify']
+                }
+            },
 
             watch: {
                 files: {
-                    'build/temp/dash.all.debug.js': ['index.js']
+                    'build/temp/dash.all.debug.js': ['index.js'],
+                    'build/temp/dash.mss.debug.js': ['src/mss/index.js']
                 },
                 options: {
                     watch: true,
