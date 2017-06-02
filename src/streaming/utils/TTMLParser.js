@@ -60,7 +60,6 @@ function TTMLParser() {
      * @param {integer} endTimeSegment - endTime for the current segment
      * @param {Array} images - images array referenced by subs MP4 box
      */
-
     function parse(data, offsetTime, startTimeSegment, endTimeSegment, images) {
         let i,
             j;

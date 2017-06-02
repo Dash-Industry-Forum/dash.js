@@ -382,7 +382,7 @@ function StreamController() {
             const manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metricsModel.getMetricsFor('stream'));
             metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {
                 currentTime: playbackController.getTime(),
-                buffered: videoModel.getElement().buffered,
+                buffered: videoModel.getBufferRange(),
                 presentationStartTime: streamsInfo[0].start,
                 clientTimeOffset: timelineConverter.getClientTimeOffset()
             });
