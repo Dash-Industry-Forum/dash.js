@@ -82,7 +82,7 @@ function MetricsCollectionController(config) {
         );
     }
 
-    function reset() {
+    function resetMetricsControllers() {
         Object.keys(metricsControllers).forEach(key => {
             metricsControllers[key].reset();
         });
@@ -91,16 +91,20 @@ function MetricsCollectionController(config) {
     }
 
     function setup() {
-
-
         eventBus.on(Events.MANIFEST_UPDATED, update);
-        eventBus.on(Events.STREAM_TEARDOWN_COMPLETE, reset);
+        eventBus.on(Events.STREAM_TEARDOWN_COMPLETE, resetMetricsControllers);
+    }
+
+    function reset() {
+        eventBus.off(Events.MANIFEST_UPDATED, update);
+        eventBus.off(Events.STREAM_TEARDOWN_COMPLETE, resetMetricsControllers);
     }
 
     setup();
 
-    // don't export any actual methods
-    return {};
+    return {
+        reset: reset
+    };
 }
 
 MetricsCollectionController.__dashjs_factory_name = 'MetricsCollectionController';

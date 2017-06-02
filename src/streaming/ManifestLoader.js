@@ -39,6 +39,7 @@ import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import FactoryMaker from '../core/FactoryMaker';
 import DashParser from '../dash/parser/DashParser';
+import Debug from '../core/Debug';
 
 const MANIFEST_LOADER_ERROR_PARSING_FAILURE = 1;
 const MANIFEST_LOADER_ERROR_LOADING_FAILURE = 2;
@@ -50,6 +51,9 @@ function ManifestLoader(config) {
     const eventBus = EventBus(context).getInstance();
     const urlUtils = URLUtils(context).getInstance();
     const errorHandler = ErrorHandler(context).getInstance();
+    const debug = Debug(context).getInstance();
+    const log = debug.log;
+
 
     let instance,
         xhrLoader,
@@ -118,7 +122,7 @@ function ManifestLoader(config) {
                     actualUrl = xhr.responseURL;
                 } else {
                     // usually this case will be caught and resolved by
-                    // xhr.responseURL above but it is not available for IE11
+                    // xhr.responseURL above but it is not available for IE11 and Edge/12 and Edge/13
                     // baseUri must be absolute for BaseURL resolution later
                     if (urlUtils.isRelative(url)) {
                         url = urlUtils.resolve(url, window.location.href);
@@ -153,6 +157,13 @@ function ManifestLoader(config) {
                     // URL from which the MPD was originally retrieved (MPD updates will not change this value)
                     if (!manifest.originalUrl) {
                         manifest.originalUrl = manifest.url;
+                    }
+
+                    // In the following, we only use the first Location entry even if many are available
+                    // Compare with ManifestUpdater/DashManifestModel
+                    if (manifest.hasOwnProperty('Location')) {
+                        baseUri = urlUtils.parseBaseUrl(manifest.manifest.Location_asArray[0]);
+                        log('BaseURI set by Location to: ' + baseUri);
                     }
 
                     manifest.baseUri = baseUri;
@@ -217,4 +228,5 @@ ManifestLoader.__dashjs_factory_name = 'ManifestLoader';
 const factory = FactoryMaker.getClassFactory(ManifestLoader);
 factory.MANIFEST_LOADER_ERROR_PARSING_FAILURE = MANIFEST_LOADER_ERROR_PARSING_FAILURE;
 factory.MANIFEST_LOADER_ERROR_LOADING_FAILURE = MANIFEST_LOADER_ERROR_LOADING_FAILURE;
+FactoryMaker.updateClassFactory(ManifestLoader.__dashjs_factory_name, factory);
 export default factory;

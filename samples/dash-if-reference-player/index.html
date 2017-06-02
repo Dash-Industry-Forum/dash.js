@@ -30,6 +30,8 @@
     <script src="../../dist/dash.all.debug.js"></script>
     <script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
     <script src="app/main.js"></script>
+    <script src="app/rules/DownloadRatioRule.js"></script>
+    <script src="app/rules/ThroughputRule.js"></script>
 
 </head>
 <body ng-controller="DashController" >
@@ -146,6 +148,11 @@
                         <input type="checkbox" id="bolaCB" ng-model="bolaSelected" ng-change="toggleBufferOccupancyABR()" ng-checked="bolaSelected">
                         Buffer Occupancy ABR
                     </label>
+                    <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                           title="ABR - Use custom abr rules">
+                        <input type="checkbox" id="customABRRules" ng-model="customABRRulesSelected" ng-change="toggleUseCustomABRRules()" ng-checked="customABRRulesSelected">
+                        ABR - Use custom abr rules
+                    </label>
                 </div>
             </div>
 
@@ -195,7 +202,7 @@
         <!--VIDEO PLAYER / CONTROLS -->
         <div class="row">
             <div class="dash-video-player col-md-9">
-                <div id="videoContainer">
+                <div id="videoContainer" class="videoContainer">
                     <video></video>
                     <div id="video-caption"></div>
                     <div id="videoController" class="video-controller unselectable" ng-cloak>

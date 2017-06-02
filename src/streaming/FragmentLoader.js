@@ -155,4 +155,5 @@ FragmentLoader.__dashjs_factory_name = 'FragmentLoader';
 const factory = FactoryMaker.getClassFactory(FragmentLoader);
 factory.FRAGMENT_LOADER_ERROR_LOADING_FAILURE = FRAGMENT_LOADER_ERROR_LOADING_FAILURE;
 factory.FRAGMENT_LOADER_ERROR_NULL_REQUEST = FRAGMENT_LOADER_ERROR_NULL_REQUEST;
+FactoryMaker.updateClassFactory(FragmentLoader.__dashjs_factory_name, factory);
 export default factory;

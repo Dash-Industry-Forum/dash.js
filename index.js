@@ -30,6 +30,7 @@
  */
 
 import MediaPlayer from './src/streaming/MediaPlayer';
+import FactoryMaker from './src/core/FactoryMaker';
 import Protection from './src/streaming/protection/Protection';
 import MetricsReporting from './src/streaming/metrics/MetricsReporting';
 import MediaPlayerFactory from './src/streaming/MediaPlayerFactory';
@@ -44,6 +45,7 @@ if (!dashjs) {
 }
 
 dashjs.MediaPlayer = MediaPlayer;
+dashjs.FactoryMaker = FactoryMaker;
 dashjs.Protection = Protection;
 dashjs.MetricsReporting = MetricsReporting;
 dashjs.MediaPlayerFactory = MediaPlayerFactory;

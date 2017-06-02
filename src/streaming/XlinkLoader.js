@@ -106,4 +106,5 @@ XlinkLoader.__dashjs_factory_name = 'XlinkLoader';
 
 const factory = FactoryMaker.getClassFactory(XlinkLoader);
 factory.XLINK_LOADER_ERROR_LOADING_FAILURE = XLINK_LOADER_ERROR_LOADING_FAILURE;
+FactoryMaker.updateClassFactory(XlinkLoader.__dashjs_factory_name, factory);
 export default factory;

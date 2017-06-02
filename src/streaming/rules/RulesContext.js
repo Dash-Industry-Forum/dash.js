@@ -34,14 +34,19 @@ import FactoryMaker from '../../core/FactoryMaker';
 function RulesContext(config) {
 
     let instance;
-    let representationInfo = config.streamProcessor.getCurrentRepresentationInfo();
+    let abrController = config.abrController;
     let sp = config.streamProcessor;
+    let representationInfo = config.streamProcessor.getCurrentRepresentationInfo();
     let currentValue = config.currentValue;
     let playbackIndex = config.playbackIndex;
     let switchHistory = config.switchHistory;
     let droppedFramesHistory = config.droppedFramesHistory;
     let currentRequest = config.currentRequest;
     let richBuffer = config.hasRichBuffer;
+
+    function getMediaType() {
+        return representationInfo.mediaInfo.type;
+    }
 
     function getStreamInfo() {
         return representationInfo.mediaInfo.streamInfo;
@@ -67,6 +72,10 @@ function RulesContext(config) {
         return sp;
     }
 
+    function getAbrController() {
+        return abrController;
+    }
+
     function getPlaybackIndex() {
         return playbackIndex;
     }
@@ -88,6 +97,7 @@ function RulesContext(config) {
     }
 
     instance = {
+        getMediaType: getMediaType,
         getCurrentValue: getCurrentValue,
         getManifestInfo: getManifestInfo,
         getMediaInfo: getMediaInfo,
@@ -97,6 +107,7 @@ function RulesContext(config) {
         getSwitchHistory: getSwitchHistory,
         getStreamInfo: getStreamInfo,
         getStreamProcessor: getStreamProcessor,
+        getAbrController: getAbrController,
         getTrackInfo: getTrackInfo,
         hasRichBuffer: hasRichBuffer
     };

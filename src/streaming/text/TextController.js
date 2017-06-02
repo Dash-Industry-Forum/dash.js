@@ -43,6 +43,7 @@ function TextController() {
     let allTracksAreDisabled,
         errHandler,
         dashManifestModel,
+        manifestModel,
         mediaController,
         videoModel,
         streamController,
@@ -71,6 +72,9 @@ function TextController() {
         if (config.dashManifestModel) {
             dashManifestModel = config.dashManifestModel;
         }
+        if (config.manifestModel) {
+            manifestModel = config.manifestModel;
+        }
         if (config.mediaController) {
             mediaController = config.mediaController;
         }
@@ -94,6 +98,7 @@ function TextController() {
         textSourceBuffer.setConfig({
             errHandler: errHandler,
             dashManifestModel: dashManifestModel,
+            manifestModel: manifestModel,
             mediaController: mediaController,
             videoModel: videoModel,
             streamController: streamController,
@@ -124,8 +129,7 @@ function TextController() {
         var fragmentedTracks = config.fragmentedTracks;
         var allTracksAreDisabled = config.allTracksAreDisabled;
 
-        var el = videoModel.getElement();
-        var tracks = el.textTracks;
+        var tracks = videoModel.getTextTracks();
         var ln = tracks.length;
         var nrNonEmbeddedTracks = ln - embeddedTracks.length;
         var oldTrackIdx = textTracks.getCurrentTrackIdx();
@@ -138,13 +142,13 @@ function TextController() {
                     textTracks.setCurrentTrackIdx(i);
                     textTracks.addCaptions(i, 0, null); // Make sure that previously queued captions are added as cues
 
-                    // specific to fragmented texe
+                    // specific to fragmented text
                     if (isFragmented && i < nrNonEmbeddedTracks) {
                         var currentFragTrack = mediaController.getCurrentTrackFor('fragmentedText', streamController.getActiveStreamInfo());
                         var newFragTrack = fragmentedTracks[i];
                         if (newFragTrack !== currentFragTrack) {
                             fragmentModel.abortRequests();
-                            textTracks.deleteTrackCues(currentFragTrack);
+                            textTracks.deleteCuesFromTrackIdx(oldTrackIdx);
                             mediaController.setTrack(newFragTrack);
                             textSourceBuffer.setCurrentFragmentedTrackIdx(i);
                         }

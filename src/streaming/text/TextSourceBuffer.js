@@ -53,6 +53,7 @@ function TextSourceBuffer() {
         boxParser,
         errHandler,
         dashManifestModel,
+        manifestModel,
         mediaController,
         parser,
         vttParser,
@@ -135,7 +136,9 @@ function TextSourceBuffer() {
     }
 
 
-    function onVideoChunkReceived(chunk) {
+    function onVideoChunkReceived(e) {
+        const chunk = e.chunk;
+
         if (chunk.mediaInfo.embeddedCaptions) {
             append(chunk.bytes, chunk);
         }
@@ -200,6 +203,9 @@ function TextSourceBuffer() {
         }
         if (config.dashManifestModel) {
             dashManifestModel = config.dashManifestModel;
+        }
+        if (config.manifestModel) {
+            manifestModel = config.manifestModel;
         }
         if (config.mediaController) {
             mediaController = config.mediaController;
@@ -326,7 +332,10 @@ function TextSourceBuffer() {
                             subOffset += sample.subSizes[j];
                         }
                         try {
-                            result = parser.parse(ccContent, sampleStart / timescale, (sampleStart + sample.duration) / timescale, images);
+                            // Only used for Miscrosoft Smooth Streaming support - caption time is relative to sample time. In this case, we apply an offset.
+                            let manifest = manifestModel.getValue();
+                            let offsetTime = manifest.ttmlTimeIsRelative ? sampleStart / timescale : 0;
+                            result = parser.parse(ccContent, offsetTime, sampleStart / timescale, (sampleStart + sample.duration) / timescale, images);
                             textTracks.addCaptions(currFragmentedTrackIdx, firstSubtitleStart / timescale, result);
                         } catch (e) {
                             log('TTML parser error: ' + e.message);
@@ -381,7 +390,7 @@ function TextSourceBuffer() {
             ccContent = ISOBoxer.Utils.dataViewToString(dataView, 'utf-8');
 
             try {
-                result = getParser(codecType).parse(ccContent);
+                result = getParser(codecType).parse(ccContent, 0);
                 createTextTrackFromMediaInfo(result, mediaInfo);
             } catch (e) {
                 errHandler.timedTextError(e, 'parse', ccContent);
@@ -527,11 +536,19 @@ function TextSourceBuffer() {
             }
             var sampleTime = baseSampleTime + accDuration + sample.sample_composition_time_offset;
             var cea608Ranges = cea608parser.findCea608Nalus(raw, startPos, sample.sample_size);
+            var lastSampleTime = null;
+            var idx = 0;
             for (var j = 0; j < cea608Ranges.length; j++) {
                 var ccData = cea608parser.extractCea608DataFromRange(raw, cea608Ranges[j]);
                 for (var k = 0; k < 2; k++) {
                     if (ccData[k].length > 0) {
-                        allCcData.fields[k].push([sampleTime, ccData[k]]);
+                        if (sampleTime !== lastSampleTime) {
+                            idx = 0;
+                        } else {
+                            idx += 1;
+                        }
+                        allCcData.fields[k].push([sampleTime, ccData[k], idx]);
+                        lastSampleTime = sampleTime;
                     }
                 }
             }
@@ -541,11 +558,15 @@ function TextSourceBuffer() {
         }
 
         // Sort by sampleTime ascending order
-        allCcData.fields[0].sort(function (a, b) {
-            return a[0] - b[0];
-        });
-        allCcData.fields[1].sort(function (a, b) {
-            return a[0] - b[0];
+        // If two packets have the same sampleTime, use them in the order
+        // they were received
+        allCcData.fields.forEach(function sortField(field) {
+            field.sort(function (a, b) {
+                if (a[0] === b[0]) {
+                    return a[2] - b[2];
+                }
+                return a[0] - b[0];
+            });
         });
 
         var endSampleTime = baseSampleTime + accDuration;
@@ -577,9 +598,6 @@ function TextSourceBuffer() {
             parser = vttParser;
         } else if (codecType.search('ttml') >= 0 || codecType.search('stpp') >= 0) {
             parser = ttmlParser;
-            parser.setConfig({
-                videoModel: videoModel
-            });
         }
         return parser;
     }

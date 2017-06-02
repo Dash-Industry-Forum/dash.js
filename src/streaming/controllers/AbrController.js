@@ -58,10 +58,10 @@ function AbrController() {
 
     let context = this.context;
     let debug = Debug(context).getInstance();
-    const log = debug.log;
     let eventBus = EventBus(context).getInstance();
 
     let instance,
+        log,
         abrRulesCollection,
         streamController,
         autoSwitchBitrate,
@@ -91,6 +91,7 @@ function AbrController() {
         lastSwitchTime;
 
     function setup() {
+        log = debug.log.bind(instance);
         autoSwitchBitrate = {video: true, audio: true};
         topQualities = {};
         qualityDict = {};
@@ -283,12 +284,14 @@ function AbrController() {
         usePixelRatioInLimitBitrateByPortal = value;
     }
 
-    function getPlaybackQuality(streamProcessor) {
+
+    function checkPlaybackQuality(streamProcessor) {
         const type = streamProcessor.getType();
         const streamInfo = streamProcessor.getStreamInfo();
         const streamId = streamInfo.id;
         const oldQuality = getQualityFor(type, streamInfo);
         const rulesContext = RulesContext(context).create({
+            abrController: instance,
             streamProcessor: streamProcessor,
             currentValue: oldQuality,
             playbackIndex: playbackIndex,
@@ -305,7 +308,7 @@ function AbrController() {
         if (getAutoSwitchBitrateFor(type)) {
             const topQualityIdx = getTopQualityIndexFor(type, streamId);
             const switchRequest = abrRulesCollection.getMaxQuality(rulesContext);
-            let newQuality = switchRequest.value;
+            let newQuality = switchRequest.quality;
             if (newQuality > topQualityIdx) {
                 newQuality = topQualityIdx;
             }
@@ -518,13 +521,10 @@ function AbrController() {
     }
 
     function setElementSize() {
-        var element = videoModel.getElement();
-        if (element !== undefined) {
-            var hasPixelRatio = usePixelRatioInLimitBitrateByPortal && window.hasOwnProperty('devicePixelRatio');
-            var pixelRatio = hasPixelRatio ? window.devicePixelRatio : 1;
-            elementWidth = element.clientWidth * pixelRatio;
-            elementHeight = element.clientHeight * pixelRatio;
-        }
+        var hasPixelRatio = usePixelRatioInLimitBitrateByPortal && window.hasOwnProperty('devicePixelRatio');
+        var pixelRatio = hasPixelRatio ? window.devicePixelRatio : 1;
+        elementWidth = videoModel.getClientWidth() * pixelRatio;
+        elementHeight = videoModel.getClientHeight() * pixelRatio;
     }
 
     function checkPortalSize(idx, type) {
@@ -565,6 +565,7 @@ function AbrController() {
             if (!scheduleController) return;// There may be a fragment load in progress when we switch periods and recreated some controllers.
 
             let rulesContext = RulesContext(context).create({
+                abrController: instance,
                 streamProcessor: streamProcessorDict[type],
                 currentRequest: e.request,
                 currentValue: getQualityFor(type, streamController.getActiveStreamInfo()),
@@ -576,7 +577,7 @@ function AbrController() {
             //        return newValue;
             //    });
 
-            if (switchRequest.value > SwitchRequest.NO_CHANGE) {
+            if (switchRequest.quality > SwitchRequest.NO_CHANGE) {
                 const fragmentModel = scheduleController.getFragmentModel();
                 const request = fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_LOADING, index: e.request.index})[0];
                 if (request) {
@@ -584,8 +585,8 @@ function AbrController() {
                     fragmentModel.abortRequests();
                     setAbandonmentStateFor(type, ABANDON_LOAD);
                     switchHistoryDict[type].reset();
-                    switchHistoryDict[type].push({oldValue: getQualityFor(type, streamController.getActiveStreamInfo()), newValue: switchRequest.value, confidence: 1, reason: switchRequest.reason});
-                    setPlaybackQuality(type, streamController.getActiveStreamInfo(), switchRequest.value, switchRequest.reason);
+                    switchHistoryDict[type].push({oldValue: getQualityFor(type, streamController.getActiveStreamInfo()), newValue: switchRequest.quality, confidence: 1, reason: switchRequest.reason});
+                    setPlaybackQuality(type, streamController.getActiveStreamInfo(), switchRequest.quality, switchRequest.reason);
                     eventBus.trigger(Events.FRAGMENT_LOADING_ABANDONED, {streamProcessor: streamProcessorDict[type], request: request, mediaType: type});
 
                     clearTimeout(abandonmentTimeout);
@@ -624,7 +625,7 @@ function AbrController() {
         getAbandonmentStateFor: getAbandonmentStateFor,
         setAbandonmentStateFor: setAbandonmentStateFor,
         setPlaybackQuality: setPlaybackQuality,
-        getPlaybackQuality: getPlaybackQuality,
+        checkPlaybackQuality: checkPlaybackQuality,
         setAverageThroughput: setAverageThroughput,
         getTopQualityIndexFor: getTopQualityIndexFor,
         setElementSize: setElementSize,
@@ -643,4 +644,5 @@ AbrController.__dashjs_factory_name = 'AbrController';
 let factory = FactoryMaker.getSingletonFactory(AbrController);
 factory.ABANDON_LOAD = ABANDON_LOAD;
 factory.QUALITY_DEFAULT = QUALITY_DEFAULT;
+FactoryMaker.updateSingletonFactory(AbrController.__dashjs_factory_name, factory);
 export default factory;
