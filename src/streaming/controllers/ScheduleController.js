@@ -49,7 +49,6 @@ import Debug from '../../core/Debug';
 function ScheduleController(config) {
 
     const context = this.context;
-    const log = Debug(context).getInstance().log;
     const eventBus = EventBus(context).getInstance();
     const metricsModel = config.metricsModel;
     const manifestModel = config.manifestModel;
@@ -60,6 +59,7 @@ function ScheduleController(config) {
     const mediaPlayerModel = config.mediaPlayerModel;
 
     let instance,
+        log,
         type,
         fragmentModel,
         isDynamic,
@@ -89,6 +89,7 @@ function ScheduleController(config) {
         replaceRequestArray;
 
     function setup() {
+        log = Debug(context).getInstance().log.bind(instance);
         initialRequest = true;
         lastInitQuality = NaN;
         lastQualityIndex = NaN;
@@ -117,6 +118,7 @@ function ScheduleController(config) {
         scheduleWhilePaused = mediaPlayerModel.getScheduleWhilePaused();
 
         bufferLevelRule = BufferLevelRule(context).create({
+            abrController: abrController,
             dashMetrics: dashMetrics,
             metricsModel: metricsModel,
             textController: TextController(context).getInstance()
@@ -225,7 +227,7 @@ function ScheduleController(config) {
             if (isReplacement) {
                 getNextFragment();
             } else {
-                abrController.getPlaybackQuality(streamProcessor);
+                abrController.checkPlaybackQuality(streamProcessor);
                 getNextFragment();
             }
 
@@ -310,9 +312,14 @@ function ScheduleController(config) {
         if (e.error || streamProcessor.getStreamInfo().id !== e.streamInfo.id) return;
         currentRepresentationInfo = streamProcessor.getCurrentRepresentationInfo();
 
-        if (isDynamic && initialRequest) {
-            timelineConverter.setTimeSyncCompleted(true);
-            setLiveEdgeSeekTarget();
+        if (initialRequest) {
+            if (isDynamic) {
+                timelineConverter.setTimeSyncCompleted(true);
+                setLiveEdgeSeekTarget();
+            } else {
+                seekTarget = playbackController.getStreamStartTime(false);
+                streamProcessor.getBufferController().setSeekStartTime(seekTarget);
+            }
         }
 
         if (isStopped) {
@@ -327,6 +334,11 @@ function ScheduleController(config) {
         const request = adapter.getFragmentRequestForTime(streamProcessor, currentRepresentationInfo, startTime, {ignoreIsFinished: true});
         seekTarget = playbackController.getLiveStartTime();
         if (isNaN(seekTarget) || request.startTime > seekTarget) {
+            //special use case for multi period stream. If the startTime is out of the current period, send a seek command.
+            //in onPlaybackSeeking callback (StreamController), the detection of switch stream is done.
+            if (request.startTime > (currentRepresentationInfo.mediaInfo.streamInfo.start + currentRepresentationInfo.mediaInfo.streamInfo.duration)) {
+                playbackController.seek(request.startTime);
+            }
             playbackController.setLiveStartTime(request.startTime);
             seekTarget = request.startTime;
         }
@@ -434,6 +446,11 @@ function ScheduleController(config) {
         const manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metricsModel.getMetricsFor('stream'));
         const latency = currentRepresentationInfo.DVRWindow ? currentRepresentationInfo.DVRWindow.end - playbackController.getTime() : NaN;
         metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: latency});
+
+        //if, during the seek command, the scheduleController is waiting : stop waiting, request chunk as soon as possible
+        if (!isFragmentProcessingInProgress) {
+            startScheduleTimer(0);
+        }
     }
 
     function onPlaybackRateChanged(e) {
@@ -468,6 +485,10 @@ function ScheduleController(config) {
 
     function getBufferTarget() {
         return bufferLevelRule.getBufferTarget(streamProcessor, type, streamController.isVideoTrackPresent());
+    }
+
+    function getType() {
+        return type;
     }
 
     function setPlayList(playList) {
@@ -535,6 +556,7 @@ function ScheduleController(config) {
 
     instance = {
         initialize: initialize,
+        getType: getType,
         getStreamProcessor: getStreamProcessor,
         getSeekTarget: getSeekTarget,
         setSeekTarget: setSeekTarget,

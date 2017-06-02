@@ -131,5 +131,4 @@ function MssHandler(config) {
 }
 
 MssHandler.__dashjs_factory_name = 'MssHandler';
-let factory = FactoryMaker.getClassFactory(MssHandler);
-export default factory;
+export default FactoryMaker.getClassFactory(MssHandler);

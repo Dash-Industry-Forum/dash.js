@@ -48,6 +48,7 @@ function NotFragmentedTextBufferController(config) {
         buffer,
         type,
         streamProcessor,
+        seekStartTime,
         representationController,
         initCache;
 
@@ -123,6 +124,10 @@ function NotFragmentedTextBufferController(config) {
         return streamProcessor;
     }
 
+    function setSeekStartTime(value) {
+        seekStartTime = value;
+    }
+
     function getBufferLevel() {
         return 0;
     }
@@ -182,6 +187,7 @@ function NotFragmentedTextBufferController(config) {
         getType: getType,
         getStreamProcessor: getStreamProcessor,
         setStreamProcessor: setStreamProcessor,
+        setSeekStartTime: setSeekStartTime,
         getBuffer: getBuffer,
         setBuffer: setBuffer,
         getBufferLevel: getBufferLevel,

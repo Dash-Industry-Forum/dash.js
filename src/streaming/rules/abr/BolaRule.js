@@ -121,7 +121,7 @@ function BolaRule(config) {
         let initialState = {};
 
         const mediaInfo = rulesContext.getMediaInfo();
-
+        const mediaType = rulesContext.getMediaType();
         const streamProcessor = rulesContext.getStreamProcessor();
         const streamInfo = rulesContext.getStreamInfo();
         const trackInfo = rulesContext.getTrackInfo();
@@ -170,7 +170,7 @@ function BolaRule(config) {
                 let z = params.Vp * (u + params.gp);
                 info += '\n' + i + ':' + (0.000001 * bitrates[i]).toFixed(3) + 'Mbps ' + th.toFixed(3) + '/' + z.toFixed(3);
             }
-            log('BolaDebug ' + mediaInfo.type + ' bitrates' + info);
+            log('BolaDebug ' + mediaType + ' bitrates' + info);
         }
 
         return initialState;
@@ -341,8 +341,7 @@ function BolaRule(config) {
         streamProcessor.getScheduleController().setTimeToLoadDelay(0);
 
         const switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, {name: BolaRule.__dashjs_factory_name});
-        const mediaInfo = rulesContext.getMediaInfo();
-        const mediaType = mediaInfo.type;
+        const mediaType = rulesContext.getMediaType();
         const metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
 
         if (metrics.BolaState.length === 0) {
@@ -370,7 +369,7 @@ function BolaRule(config) {
                 }
                 q = getQualityFromThroughput(initState, initThroughput * initState.bandwidthSafetyFactor);
                 initState.lastQuality = q;
-                switchRequest.value = q;
+                switchRequest.quality = q;
                 switchRequest.reason.state = initState.state;
                 switchRequest.reason.throughput = initThroughput;
             }
@@ -444,7 +443,7 @@ function BolaRule(config) {
             if (BOLA_DEBUG) log('BolaDebug ' + mediaType + ' BolaRule quality ' + q + ' for STARTUP');
             bolaState.lastQuality = q;
             metricsModel.updateBolaState(mediaType, bolaState);
-            switchRequest.value = q;
+            switchRequest.quality = q;
             switchRequest.reason.state = BOLA_STATE_STARTUP;
             switchRequest.reason.throughput = recentThroughput;
             return switchRequest;
@@ -509,7 +508,7 @@ function BolaRule(config) {
         bolaState.lastQuality = bolaQuality;
         metricsModel.updateBolaState(mediaType, bolaState);
 
-        switchRequest.value = bolaQuality;
+        switchRequest.quality = bolaQuality;
         switchRequest.reason.state = bolaState.state;
         switchRequest.reason.throughput = recentThroughput;
         switchRequest.reason.bufferLevel = bufferLevel;
@@ -541,4 +540,5 @@ factory.BOLA_STATE_ONE_BITRATE    = BOLA_STATE_ONE_BITRATE;
 factory.BOLA_STATE_STARTUP        = BOLA_STATE_STARTUP;
 factory.BOLA_STATE_STEADY         = BOLA_STATE_STEADY;
 factory.BOLA_DEBUG = BOLA_DEBUG; // TODO: remove
+FactoryMaker.updateClassFactory(BolaRule.__dashjs_factory_name, factory);
 export default factory;

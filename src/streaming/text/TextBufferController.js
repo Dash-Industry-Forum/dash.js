@@ -107,6 +107,10 @@ function TextBufferController(config) {
         _BufferControllerImpl.getStreamProcessor();
     }
 
+    function setSeekStartTime(value) {
+        _BufferControllerImpl.setSeekStartTime(value);
+    }
+
     function getBufferLevel() {
         return _BufferControllerImpl.getBufferLevel();
     }
@@ -133,6 +137,7 @@ function TextBufferController(config) {
         getType: getType,
         getStreamProcessor: getStreamProcessor,
         setStreamProcessor: setStreamProcessor,
+        setSeekStartTime: setSeekStartTime,
         getBuffer: getBuffer,
         setBuffer: setBuffer,
         getBufferLevel: getBufferLevel,
@@ -150,5 +155,4 @@ function TextBufferController(config) {
 }
 
 TextBufferController.__dashjs_factory_name = 'TextBufferController';
-export default FactoryMaker.getClassFactory(TextBufferController);
 export default FactoryMaker.getClassFactory(TextBufferController);

@@ -41,22 +41,25 @@ import Representation from './vo/Representation';
 import {replaceTokenForTemplate, getTimeBasedSegment, getSegmentByIndex} from './utils/SegmentsUtils';
 import SegmentsGetter from './utils/SegmentsGetter';
 
+import SegmentBaseLoader from './SegmentBaseLoader';
+import WebmSegmentBaseLoader from './WebmSegmentBaseLoader';
+
 const SEGMENTS_UNAVAILABLE_ERROR_CODE = 1;
 
 function DashHandler(config) {
 
     let context = this.context;
-    let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
     const urlUtils = URLUtils(context).getInstance();
 
-    let segmentBaseLoader = config.segmentBaseLoader;
+    let segmentBaseLoader;
     let timelineConverter = config.timelineConverter;
     let dashMetrics = config.dashMetrics;
     let metricsModel = config.metricsModel;
     const baseURLController = config.baseURLController;
 
     let instance,
+        log,
         index,
         requestedTime,
         isDynamic,
@@ -67,17 +70,33 @@ function DashHandler(config) {
         segmentsGetter;
 
     function setup() {
+        log = Debug(context).getInstance().log.bind(instance);
         index = -1;
         currentTime = 0;
         earliestTime = NaN;
+
+        segmentBaseLoader = isWebM(config.mimeType) ? WebmSegmentBaseLoader(context).getInstance() : SegmentBaseLoader(context).getInstance();
+        segmentBaseLoader.setConfig({
+            baseURLController: baseURLController,
+            metricsModel: metricsModel
+        });
+
         eventBus.on(Events.INITIALIZATION_LOADED, onInitializationLoaded, instance);
         eventBus.on(Events.SEGMENTS_LOADED, onSegmentsLoaded, instance);
+    }
+
+    function isWebM (mimeType) {
+        let type = mimeType.split('/')[1];
+
+        return 'webm' === type.toLowerCase();
     }
 
     function initialize(StreamProcessor) {
         streamProcessor = StreamProcessor;
         type = streamProcessor.getType();
         isDynamic = streamProcessor.isDynamic();
+
+        segmentBaseLoader.initialize();
 
         segmentsGetter = SegmentsGetter(context).create(config, isDynamic);
     }
@@ -100,6 +119,10 @@ function DashHandler(config) {
 
     function getEarliestTime() {
         return earliestTime;
+    }
+
+    function getType() {
+        return type;
     }
 
     function reset() {
@@ -206,15 +229,14 @@ function DashHandler(config) {
 
         if (segments && segments.length > 0) {
             earliestTime = isNaN(earliestTime) ? segments[0].presentationStartTime : Math.min(segments[0].presentationStartTime,  earliestTime);
-        }
-
-        if (isDynamic && isNaN(timelineConverter.getExpectedLiveEdge())) {
-            const lastSegment = segments[segments.length - 1];
-            const liveEdge = lastSegment.presentationStartTime;
-            const metrics = metricsModel.getMetricsFor('stream');
-            // the last segment is the Expected, not calculated, live edge.
-            timelineConverter.setExpectedLiveEdge(liveEdge);
-            metricsModel.updateManifestUpdateInfo(dashMetrics.getCurrentManifestUpdate(metrics), {presentationStartTime: liveEdge});
+            if (isDynamic && isNaN(timelineConverter.getExpectedLiveEdge())) {
+                const lastSegment = segments[segments.length - 1];
+                const liveEdge = lastSegment.presentationStartTime;
+                const metrics = metricsModel.getMetricsFor('stream');
+                // the last segment is the Expected, not calculated, live edge.
+                timelineConverter.setExpectedLiveEdge(liveEdge);
+                metricsModel.updateManifestUpdateInfo(dashMetrics.getCurrentManifestUpdate(metrics), {presentationStartTime: liveEdge});
+            }
         }
     }
 
@@ -489,6 +511,7 @@ function DashHandler(config) {
         getInitRequest: getInitRequest,
         getSegmentRequestForTime: getSegmentRequestForTime,
         getNextSegmentRequest: getNextSegmentRequest,
+        getType: getType,
         generateSegmentRequestForTime: generateSegmentRequestForTime,
         updateRepresentation: updateRepresentation,
         setCurrentTime: setCurrentTime,
@@ -506,4 +529,5 @@ function DashHandler(config) {
 DashHandler.__dashjs_factory_name = 'DashHandler';
 let factory = FactoryMaker.getClassFactory(DashHandler);
 factory.SEGMENTS_UNAVAILABLE_ERROR_CODE = SEGMENTS_UNAVAILABLE_ERROR_CODE;
+FactoryMaker.updateClassFactory(DashHandler.__dashjs_factory_name, factory);
 export default factory;

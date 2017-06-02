@@ -35,12 +35,7 @@ import EventController from './controllers/EventController';
 import FragmentController from './controllers/FragmentController';
 import AbrController from './controllers/AbrController';
 import VideoModel from './models/VideoModel';
-import MetricsModel from './models/MetricsModel';
 import PlaybackController from './controllers/PlaybackController';
-import DashHandler from '../dash/DashHandler';
-import SegmentBaseLoader from '../dash/SegmentBaseLoader';
-import WebmSegmentBaseLoader from '../dash/WebmSegmentBaseLoader';
-import DashMetrics from '../dash/DashMetrics';
 import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import Debug from '../core/Debug';
@@ -296,38 +291,13 @@ function Stream(config) {
         }
     }
 
-    function isWebM (mimeType) {
-        let type = mimeType.split('/')[1];
-
-        return 'webm' === type.toLowerCase();
-    }
-
-    function createIndexHandler(mediaInfo) {
-
-        let segmentBaseLoader = isWebM(mediaInfo.mimeType) ? WebmSegmentBaseLoader(context).getInstance() : SegmentBaseLoader(context).getInstance();
-        segmentBaseLoader.setConfig({
-            baseURLController: baseURLController,
-            metricsModel: MetricsModel(context).getInstance()
-        });
-        segmentBaseLoader.initialize();
-
-        let handler = DashHandler(context).create({
-            segmentBaseLoader: segmentBaseLoader,
-            timelineConverter: timelineConverter,
-            dashMetrics: DashMetrics(context).getInstance(),
-            metricsModel: MetricsModel(context).getInstance(),
-            baseURLController: baseURLController
-        });
-
-        return handler;
-    }
-
     function createStreamProcessor(mediaInfo, manifest, mediaSource, optionalSettings) {
         var streamProcessor = StreamProcessor(context).create({
-            indexHandler: createIndexHandler(mediaInfo),
+            mimeType: mediaInfo.mimeType,
             timelineConverter: timelineConverter,
             adapter: adapter,
-            manifestModel: manifestModel
+            manifestModel: manifestModel,
+            baseURLController: baseURLController
         });
 
         var allMediaForType = adapter.getAllMediaInfoForType(manifest, streamInfo, mediaInfo.type);

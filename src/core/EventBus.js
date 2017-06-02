@@ -57,7 +57,7 @@ function EventBus() {
         };
 
         const inserted = handlers[type].some((item , idx) => {
-            if (priority > item.priority ) {
+            if (item && priority > item.priority ) {
                 handlers[type].splice(idx, 0, handler);
                 return true;
             }
@@ -72,8 +72,7 @@ function EventBus() {
         if (!type || !listener || !handlers[type]) return;
         const idx = getHandlerIdx(type, listener, scope);
         if (idx < 0) return;
-        handlers[type] = handlers[type].slice(0);
-        handlers[type].splice(idx, 1);
+        handlers[type][idx] = null;
     }
 
     function trigger(type, payload) {
@@ -85,7 +84,8 @@ function EventBus() {
 
         payload.type = type;
 
-        handlers[type].forEach( handler => handler.callback.call(handler.scope, payload) );
+        handlers[type] = handlers[type].filter((item) => item);
+        handlers[type].forEach( handler => handler && handler.callback.call(handler.scope, payload) );
     }
 
     function getHandlerIdx(type, listener, scope) {
@@ -95,7 +95,7 @@ function EventBus() {
         if (!handlers[type]) return idx;
 
         handlers[type].some( (item, index) => {
-            if (item.callback === listener && (!scope || scope === item.scope)) {
+            if (item && item.callback === listener && (!scope || scope === item.scope)) {
                 idx = index;
                 return true;
             }
@@ -121,4 +121,5 @@ EventBus.__dashjs_factory_name = 'EventBus';
 const factory = FactoryMaker.getSingletonFactory(EventBus);
 factory.EVENT_PRIORITY_LOW = EVENT_PRIORITY_LOW;
 factory.EVENT_PRIORITY_HIGH = EVENT_PRIORITY_HIGH;
+FactoryMaker.updateSingletonFactory(EventBus.__dashjs_factory_name, factory);
 export default factory;

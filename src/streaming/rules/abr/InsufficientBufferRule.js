@@ -57,7 +57,7 @@ function InsufficientBufferRule(config) {
 
     function getMaxIndex (rulesContext) {
         var now = new Date().getTime();
-        var mediaType = rulesContext.getMediaInfo().type;
+        var mediaType = rulesContext.getMediaType();
         var metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
         var lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
         let switchRequest = SwitchRequest(context).create();
@@ -71,7 +71,7 @@ function InsufficientBufferRule(config) {
         // After the sessions first buffer loaded event , if we ever have a buffer empty event we want to switch all the way down.
         if (lastBufferStateVO.state === BufferController.BUFFER_EMPTY && bufferStateDict[mediaType].firstBufferLoadedEvent !== undefined) {
             log('Switch to index 0; buffer is empty.');
-            switchRequest.value = 0;
+            switchRequest.quality = 0;
             switchRequest.reason = 'InsufficientBufferRule: Buffer is empty';
         }
 

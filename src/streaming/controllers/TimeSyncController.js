@@ -359,4 +359,5 @@ TimeSyncController.__dashjs_factory_name = 'TimeSyncController';
 let factory = FactoryMaker.getSingletonFactory(TimeSyncController);
 factory.TIME_SYNC_FAILED_ERROR_CODE = TIME_SYNC_FAILED_ERROR_CODE;
 factory.HTTP_TIMEOUT_MS = HTTP_TIMEOUT_MS;
+FactoryMaker.updateSingletonFactory(TimeSyncController.__dashjs_factory_name, factory);
 export default factory;

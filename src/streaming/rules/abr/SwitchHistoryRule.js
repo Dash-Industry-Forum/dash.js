@@ -30,9 +30,9 @@ function SwitchHistoryRule() {
                 dropSize += switchRequests[i].dropSize;
 
                 if (drops + noDrops >= SAMPLE_SIZE && (drops / noDrops > MAX_SWITCH)) {
-                    switchRequest.value = i > 0 ? i - 1 : 0;
-                    switchRequest.reason = {index: switchRequest.value, drops: drops, noDrops: noDrops, dropSize: dropSize};
-                    log('Switch history rule index: ' + switchRequest.value + ' samples: ' + (drops + noDrops) + ' drops: ' + drops);
+                    switchRequest.quality = i > 0 ? i - 1 : 0;
+                    switchRequest.reason = {index: switchRequest.quality, drops: drops, noDrops: noDrops, dropSize: dropSize};
+                    log('Switch history rule index: ' + switchRequest.quality + ' samples: ' + (drops + noDrops) + ' drops: ' + drops);
                     break;
                 }
             }
@@ -47,7 +47,7 @@ function SwitchHistoryRule() {
 }
 
 
-SwitchHistoryRule.__dashjs_factory_name = 'SwitchRequest';
+SwitchHistoryRule.__dashjs_factory_name = 'SwitchHistoryRule';
 let factory = FactoryMaker.getClassFactory(SwitchHistoryRule);
 
 export default factory;

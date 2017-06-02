@@ -34,6 +34,7 @@
     "grunt-jsdoc": "^0.6.0",
     "grunt-mocha-istanbul": "^3.0.1",
     "ink-docstrap": "^1.1.1",
+    "intern": "^3.2.3",
     "iron-mocha": "^1.0.3",
     "iron-node": "^3.0.15",
     "istanbul": "^0.4.1",
@@ -45,7 +46,8 @@
     "uglify-js": "^2.4.21"
   },
   "dependencies": {
-    "codem-isoboxer": "^0.3.2",
+    "codem-isoboxer": "^0.3.3",
+    "imsc": "^1.0.0-beta.3",
     "round10": "^1.0.3"
   },
   "repository": {

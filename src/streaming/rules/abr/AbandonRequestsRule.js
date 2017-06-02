@@ -73,7 +73,7 @@ function AbandonRequestsRule() {
     function shouldAbandon(rulesContext) {
 
         const mediaInfo = rulesContext.getMediaInfo();
-        const mediaType = mediaInfo.type;
+        const mediaType = rulesContext.getMediaType();
         const req = rulesContext.getCurrentRequest();
         const switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, {name: AbandonRequestsRule.__dashjs_factory_name});
 
@@ -120,14 +120,14 @@ function AbandonRequestsRule() {
                     return switchRequest;
                 } else if (!abandonDict.hasOwnProperty(fragmentInfo.id)) {
 
-                    const abrController = rulesContext.getStreamProcessor().getABRController();
+                    const abrController = rulesContext.getAbrController();
                     const bytesRemaining = fragmentInfo.bytesTotal - fragmentInfo.bytesLoaded;
                     const bitrateList = abrController.getBitrateList(mediaInfo);
                     const newQuality = abrController.getQualityForBitrate(mediaInfo, fragmentInfo.measuredBandwidthInKbps * mediaPlayerModel.getBandwidthSafetyFactor());
                     const estimateOtherBytesTotal = fragmentInfo.bytesTotal * bitrateList[newQuality].bitrate / bitrateList[abrController.getQualityFor(mediaType, mediaInfo.streamInfo)].bitrate;
 
                     if (bytesRemaining > estimateOtherBytesTotal) {
-                        switchRequest.value = newQuality;
+                        switchRequest.quality = newQuality;
                         switchRequest.reason.throughput = fragmentInfo.measuredBandwidthInKbps;
                         switchRequest.reason.fragmentID = fragmentInfo.id;
                         abandonDict[fragmentInfo.id] = fragmentInfo;

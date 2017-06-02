@@ -411,4 +411,5 @@ function SourceBufferController() {
 SourceBufferController.__dashjs_factory_name = 'SourceBufferController';
 let factory = FactoryMaker.getSingletonFactory(SourceBufferController);
 factory.QUOTA_EXCEEDED_ERROR_CODE = QUOTA_EXCEEDED_ERROR_CODE;
+FactoryMaker.updateSingletonFactory(SourceBufferController.__dashjs_factory_name, factory);
 export default factory;

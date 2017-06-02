@@ -1286,7 +1286,7 @@ function MediaPlayer() {
      * at the end of the current buffer range it is requested and appended closer to the current time
      * When enabled, The maximum time to render a higher quality is current time + (1.5 * fragment duration).
      *
-     * Note, WHen ABR down-switch is detected, we appended the lower quality at the end of the buffer range to preserve the
+     * Note, When ABR down-switch is detected, we appended the lower quality at the end of the buffer range to preserve the
      * higher quality media for as long as possible.
      *
      * If enabled, it should be noted there are a few cases when the client will not replace inside buffer range but rather
@@ -1294,8 +1294,8 @@ function MediaPlayer() {
      * is in an Abandonment State due to recent fragment abandonment event.
      *
      * Known issues:
-     * 1. In IE11 with auto switching off, if a user switches to a quality they can not downloaded in time the
-     * fragment may be appended in the same range as the playhead or even in past, in IE11 it may cause a stutter
+     * 1. In IE11 with auto switching off, if a user switches to a quality they can not download in time the
+     * fragment may be appended in the same range as the playhead or even in the past, in IE11 it may cause a stutter
      * or stall in playback.
      *
      *
@@ -1319,7 +1319,6 @@ function MediaPlayer() {
         return mediaPlayerModel.getFastSwitchEnabled();
     }
 
-
     /**
      * Enabling buffer-occupancy ABR will switch to the *experimental* implementation of BOLA,
      * replacing the throughput-based ABR rule set (ThroughputRule, BufferOccupancyRule,
@@ -1335,6 +1334,51 @@ function MediaPlayer() {
      */
     function enableBufferOccupancyABR(value) {
         mediaPlayerModel.setBufferOccupancyABREnabled(value);
+    }
+
+    /**
+     * Enable/disable builtin dashjs ABR rules
+     * @param {boolean} value
+     * @default true
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function useDefaultABRRules(value) {
+        mediaPlayerModel.setUseDefaultABRRules(value);
+    }
+
+    /**
+     * Add a custom ABR Rule
+     * Rule will be apply on next stream if a stream is being played
+     *
+     * @param {string} type - rule type (one of ['qualitySwitchRules','abandonFragmentRules'])
+     * @param {string} rulename - name of rule (used to identify custom rule). If one rule of same name has been added, then existing rule will be updated
+     * @param {object} rule - the rule object instance
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function addABRCustomRule(type, rulename, rule) {
+        mediaPlayerModel.addABRCustomRule(type, rulename, rule);
+    }
+
+    /**
+     * Remove a custom ABR Rule
+     *
+     * @param {string} rulename - name of the rule to be removed
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function removeABRCustomRule(rulename) {
+        mediaPlayerModel.removeABRCustomRule(rulename);
+    }
+
+    /**
+     * Remove all custom rules
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function removeAllABRCustomRule() {
+        mediaPlayerModel.removeAllABRCustomRule();
     }
 
     /**
@@ -1862,7 +1906,15 @@ function MediaPlayer() {
         attachSource(null);
         attachView(null);
         protectionData = null;
-        protectionController = null;
+        if (protectionController) {
+            protectionController.reset();
+            protectionController = null;
+        }
+        if (metricsReportingController) {
+            metricsReportingController.reset();
+            metricsReportingController = null;
+        }
+        mediaPlayerInitialized = false;
     }
 
     //***********************************
@@ -1879,7 +1931,6 @@ function MediaPlayer() {
             mediaController.reset();
             textController.reset();
             streamController = null;
-            metricsReportingController = null;
             if (isReady()) {
                 initializePlayback();
             }
@@ -1891,10 +1942,13 @@ function MediaPlayer() {
     function createControllers() {
 
         let abrRulesCollection = ABRRulesCollection(context).getInstance();
+        abrRulesCollection.reset();
         abrRulesCollection.initialize();
 
         let sourceBufferController = SourceBufferController(context).getInstance();
-        sourceBufferController.setConfig({dashManifestModel: dashManifestModel});
+        sourceBufferController.setConfig({
+            dashManifestModel: dashManifestModel
+        });
 
         mediaController.initialize();
         mediaController.setConfig({
@@ -1928,6 +1982,7 @@ function MediaPlayer() {
         textController = TextController(context).getInstance();
         textController.setConfig({
             errHandler: errHandler,
+            manifestModel: ManifestModel(context).getInstance(),
             dashManifestModel: dashManifestModel,
             mediaController: mediaController,
             streamController: streamController,
@@ -1981,7 +2036,7 @@ function MediaPlayer() {
 
     function detectMetricsReporting() {
         if (metricsReportingController) {
-            return metricsReportingController;
+            return;
         }
         // do not require MetricsReporting as dependencies as this is optional and intended to be loaded separately
         let MetricsReporting = dashjs.MetricsReporting; /* jshint ignore:line */
@@ -1995,16 +2050,12 @@ function MediaPlayer() {
                 dashManifestModel: dashManifestModel,
                 metricsModel: metricsModel
             });
-
-            return metricsReportingController;
         }
-
-        return null;
     }
 
     function detectMss() {
         if (mssHandler) {
-            return mssHandler;
+            return;
         }
         // do not require MssHandler as dependencies as this is optional and intended to be loaded separately
         let MssHandler = dashjs.MssHandler; /* jshint ignore:line */
@@ -2013,10 +2064,7 @@ function MediaPlayer() {
                 eventBus: eventBus,
                 mediaPlayerModel: mediaPlayerModel
             });
-            return mssHandler;
         }
-
-        return null;
     }
 
     function getDVRInfoMetric() {
@@ -2142,6 +2190,10 @@ function MediaPlayer() {
         getAutoSwitchQualityFor: getAutoSwitchQualityFor,
         setAutoSwitchQualityFor: setAutoSwitchQualityFor,
         enableBufferOccupancyABR: enableBufferOccupancyABR,
+        useDefaultABRRules: useDefaultABRRules,
+        addABRCustomRule: addABRCustomRule,
+        removeABRCustomRule: removeABRCustomRule,
+        removeAllABRCustomRule: removeAllABRCustomRule,
         setBandwidthSafetyFactor: setBandwidthSafetyFactor,
         getBandwidthSafetyFactor: getBandwidthSafetyFactor,
         setAbandonLoadTimeout: setAbandonLoadTimeout,
@@ -2181,4 +2233,6 @@ function MediaPlayer() {
 MediaPlayer.__dashjs_factory_name = 'MediaPlayer';
 let factory = FactoryMaker.getClassFactory(MediaPlayer);
 factory.events = MediaPlayerEvents;
+FactoryMaker.updateClassFactory(MediaPlayer.__dashjs_factory_name, factory);
+
 export default factory;

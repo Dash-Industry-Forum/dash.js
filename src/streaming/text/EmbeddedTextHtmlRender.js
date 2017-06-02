@@ -256,24 +256,26 @@ function EmbeddedTextHtmlRender() {
                         let spanElement = document.createElement('span');
                         spanElement.className = 'spanPadding ' + span.name + ' customSpanColor';
                         spanElement.style.cssText = getStyle(videoElement, spanStyle);
+                        /* If this is not the first span, and it's on the same
+                         * row as the last one */
                         if ((s !== 0) && sameRow) {
+                            /* and it's the last span on this row */
                             if (s === ptag.spans.length - 1) {
+                                /* trim only the right side */
                                 spanElement.textContent = rtrim(span.line);
                             } else {
+                                /* don't trim at all */
                                 spanElement.textContent = span.line;
                             }
                         } else {
-                            if (s === 0) {
-                                if (ptag.spans.length > 1) {
-                                    /* Check if next text is on same row */
-                                    if (span.row === ptag.spans[1].row) {
-                                        /* Next element on same row, trim start */
-                                        spanElement.textContent = ltrim(span.line);
-                                    } else {
-                                        /* Different rows, trim */
-                                        spanElement.textContent = span.line.trim();
-                                    }
+                            /* if there is more than 1 span and this isn't the last span */
+                            if (ptag.spans.length > 1 && s < (ptag.spans.length - 1)) {
+                                /* Check if next text is on same row */
+                                if (span.row === ptag.spans[s + 1].row) {
+                                    /* Next element on same row, trim start */
+                                    spanElement.textContent = ltrim(span.line);
                                 } else {
+                                    /* Different rows, trim both */
                                     spanElement.textContent = span.line.trim();
                                 }
                             } else {

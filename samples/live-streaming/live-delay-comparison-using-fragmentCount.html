@@ -79,7 +79,7 @@ Debug files are not compressed or obfuscated making the file size much larger co
         </style>
     </head>
 
-    <body onload="init()">
+    <body>
     This sample illustrates the combined effects of segment duration and the "<strong>setLiveDelayFragmentCount</strong>" MediaPlayer method on the latency of live stream playback.
         The upper layer of videos are all playing a live stream with 2s segment duration. The lower layer use 6s segment duration. For each stream, the playback position
         behind live is varied between 0, 2 and 4 segments. Note that the default value for dash.js is 4 segments, which is a trade off between stability and latency.
@@ -129,6 +129,11 @@ Debug files are not compressed or obfuscated making the file size much larger co
                 Buffer length: <span id="video6buffer"></span>
                 </td></tr>
         </table>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                init();
+            });
+        </script>
     </body>
 </html>
 
