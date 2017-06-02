@@ -81,6 +81,40 @@ describe('DashManifestModel', function () {
         expect(adaptation).to.be.undefined;    // jshint ignore:line
     });
 
+    it('should return null when getAdaptationForId is called and id, manifest and periodIndex are undefined', () => {
+        const adaptation = dashManifestModel.getAdaptationForId(undefined, undefined, undefined);
+
+        expect(adaptation).to.be.null;    // jshint ignore:line
+    });
+
+    it('should return null when getAdaptationForId is called and id and periodIndex are undefined', () => {
+        const manifest = { Period_asArray: [] };
+        const adaptation = dashManifestModel.getAdaptationForId(undefined, manifest, undefined);
+
+        expect(adaptation).to.be.null;    // jshint ignore:line
+    });
+
+    it('should return null when getAdaptationForId is called and id is undefined', () => {
+        const manifest = { Period_asArray: [] };
+        const adaptation = dashManifestModel.getAdaptationForId(undefined, manifest, 2);
+
+        expect(adaptation).to.be.null;    // jshint ignore:line
+    });
+
+    it('should return null when getAdaptationForId is called and id is undefined and periodIndex = 0', () => {
+        const manifest = { Period_asArray: [ { AdaptationSet_asArray: [ { id: 0 } ] }] };
+        const adaptation = dashManifestModel.getAdaptationForId(undefined, manifest, 0);
+
+        expect(adaptation).to.be.null;    // jshint ignore:line
+    });
+
+    it('should return valid value when getAdaptationForId is called and id is 0 and periodIndex = 0', () => {
+        const manifest = { Period_asArray: [ { AdaptationSet_asArray: [ { id: 0 } ] }] };
+        const adaptation = dashManifestModel.getAdaptationForId(0, manifest, 0);
+
+        expect(adaptation.id).to.equal(0); // jshint ignore:line
+    });
+    
     it('should return true when getIsDVB is called and manifest contains a valid DVB profile', () => {
         const manifest = {
             profiles: 'urn:dvb:dash:profile:dvb-dash:2014,urn:dvb:dash:profile:dvb-dash:isoff-ext-live:2014'
