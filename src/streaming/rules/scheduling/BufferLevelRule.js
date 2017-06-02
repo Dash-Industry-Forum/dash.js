@@ -37,6 +37,7 @@ function BufferLevelRule(config) {
     const dashMetrics = config.dashMetrics;
     const metricsModel = config.metricsModel;
     const textController = config.textController;
+    const abrController = config.abrController;
 
     let mediaPlayerModel;
 
@@ -59,7 +60,6 @@ function BufferLevelRule(config) {
             bufferTarget = Math.floor(Math.max(videoBufferLevel, representationInfo.fragmentDuration));
         } else {
             const streamInfo = representationInfo.mediaInfo.streamInfo;
-            const abrController = streamProcessor.getABRController();
             if (abrController.isPlayingAtTopQuality(streamInfo)) {
                 const isLongFormContent = streamInfo.manifestInfo.duration >= mediaPlayerModel.getLongFormContentDurationThreshold();
                 bufferTarget = isLongFormContent ? mediaPlayerModel.getBufferTimeAtTopQualityLongForm() : mediaPlayerModel.getBufferTimeAtTopQuality();

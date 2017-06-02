@@ -143,10 +143,10 @@ function ThroughputRule(config) {
 
     function getMaxIndex(rulesContext) {
         const mediaInfo = rulesContext.getMediaInfo();
-        const mediaType = mediaInfo.type;
+        const mediaType = rulesContext.getMediaType();
         const metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
         const streamProcessor = rulesContext.getStreamProcessor();
-        const abrController = streamProcessor.getABRController();
+        const abrController = rulesContext.getAbrController();
         const isDynamic = streamProcessor.isDynamic();
         const lastRequest = dashMetrics.getCurrentHttpRequest(metrics);
         const bufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;

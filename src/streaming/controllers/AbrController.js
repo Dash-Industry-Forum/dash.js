@@ -291,6 +291,7 @@ function AbrController() {
         const streamId = streamInfo.id;
         const oldQuality = getQualityFor(type, streamInfo);
         const rulesContext = RulesContext(context).create({
+            abrController: instance,
             streamProcessor: streamProcessor,
             currentValue: oldQuality,
             playbackIndex: playbackIndex,
@@ -566,6 +567,7 @@ function AbrController() {
             if (!scheduleController) return;// There may be a fragment load in progress when we switch periods and recreated some controllers.
 
             let rulesContext = RulesContext(context).create({
+                abrController: instance,
                 streamProcessor: streamProcessorDict[type],
                 currentRequest: e.request,
                 currentValue: getQualityFor(type, streamController.getActiveStreamInfo()),

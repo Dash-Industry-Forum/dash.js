@@ -118,6 +118,7 @@ function ScheduleController(config) {
         scheduleWhilePaused = mediaPlayerModel.getScheduleWhilePaused();
 
         bufferLevelRule = BufferLevelRule(context).create({
+            abrController: abrController,
             dashMetrics: dashMetrics,
             metricsModel: metricsModel,
             textController: TextController(context).getInstance()
