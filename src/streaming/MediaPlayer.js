@@ -1862,7 +1862,15 @@ function MediaPlayer() {
         attachSource(null);
         attachView(null);
         protectionData = null;
-        protectionController = null;
+        if (protectionController) {
+            protectionController.reset();
+            protectionController = null;
+        }
+        if (metricsReportingController) {
+            metricsReportingController.reset();
+            metricsReportingController = null;
+        }
+        mediaPlayerInitialized = false;
     }
 
     //***********************************
@@ -1879,7 +1887,6 @@ function MediaPlayer() {
             mediaController.reset();
             textController.reset();
             streamController = null;
-            metricsReportingController = null;
             if (isReady()) {
                 initializePlayback();
             }
@@ -1982,7 +1989,7 @@ function MediaPlayer() {
 
     function detectMetricsReporting() {
         if (metricsReportingController) {
-            return metricsReportingController;
+            return;
         }
         // do not require MetricsReporting as dependencies as this is optional and intended to be loaded separately
         let MetricsReporting = dashjs.MetricsReporting; /* jshint ignore:line */
@@ -1996,16 +2003,12 @@ function MediaPlayer() {
                 dashManifestModel: dashManifestModel,
                 metricsModel: metricsModel
             });
-
-            return metricsReportingController;
         }
-
-        return null;
     }
 
     function detectMss() {
         if (mssHandler) {
-            return mssHandler;
+            return;
         }
         // do not require MssHandler as dependencies as this is optional and intended to be loaded separately
         let MssHandler = dashjs.MssHandler; /* jshint ignore:line */
@@ -2014,10 +2017,7 @@ function MediaPlayer() {
                 eventBus: eventBus,
                 mediaPlayerModel: mediaPlayerModel
             });
-            return mssHandler;
         }
-
-        return null;
     }
 
     function getDVRInfoMetric() {
