@@ -179,7 +179,7 @@ function DashManifestModel() {
     }
 
     function processAdaptation(realAdaptation) {
-        if (realAdaptation.Representation_asArray !== undefined && realAdaptation.Representation_asArray !== null) {
+        if (realAdaptation && realAdaptation.Representation_asArray !== undefined && realAdaptation.Representation_asArray !== null) {
             realAdaptation.Representation_asArray.sort(getRepresentationSortFunction());
         }
 

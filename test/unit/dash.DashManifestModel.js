@@ -75,6 +75,12 @@ describe('DashManifestModel', function () {
         expect(rolesArray).to.be.empty;                // jshint ignore:line
     });
 
+    it('should return undefined when processAdaptation is called and adaptation is undefined', () => {
+        const adaptation = dashManifestModel.processAdaptation();
+
+        expect(adaptation).to.be.undefined;    // jshint ignore:line
+    });
+
     it('should return true when getIsDVB is called and manifest contains a valid DVB profile', () => {
         const manifest = {
             profiles: 'urn:dvb:dash:profile:dvb-dash:2014,urn:dvb:dash:profile:dvb-dash:isoff-ext-live:2014'
