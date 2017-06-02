@@ -258,7 +258,7 @@ module.exports = function (grunt) {
         },
         mocha_istanbul: {
             test: {
-                src: './test',
+                src: './test/unit',
                 options: {
                     mask: '*.js',
                     coverageFolder: './reports',

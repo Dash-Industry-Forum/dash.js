@@ -1,0 +1,156 @@
+/* The copyright in this software is being made available under the BSD License, included below. This software may be subject to other third party and contributor rights, including patent rights, and no such rights are granted under this license.
+//
+// Copyright (c) 2013, Microsoft Open Technologies, Inc.
+//
+// All rights reserved.
+// Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+//     -             Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+//     -             Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+//     -             Neither the name of the Microsoft Open Technologies, Inc. nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+
+body
+{
+
+
+}
+#divHeader
+{
+   font-family: "CAMBRIA";
+	font-size: 35px;
+	background: #fff;
+	text-align: center;
+	margin-left: 100px;
+}
+
+#divBody
+{
+   font-family: "Verdana";
+	font-size: 12px;
+	background: #fff;
+    margin-top:10px;
+    margin-left:5px;
+	text-align: left;
+}
+
+#divCenter
+{
+    -moz-box-shadow: 0 0 5px #C7C7C7;
+    -webkit-box-shadow: 0 0 5px #C7C7C7;
+}
+#txtfileUploader
+{
+   font-family: "Verdana";
+	font-size: 12px;
+	background: #fff;
+    margin-top:10px;
+    margin-left:5px;
+	text-align: left;
+	color: #D3D3D3
+}
+
+#MPDUrl
+{
+   font-family: "Verdana";
+	font-size: 12px;
+	background: #fff;
+}
+#lbTestMode
+{
+    font-family: "Verdana";
+	font-size: 14px;
+	background: #fff;
+    margin-top:40px;
+	text-align: left;
+}
+
+#addMPDURL
+{
+    font-family: "Verdana";
+	font-size: 14px;
+	background: #fff;
+    margin-top:40px;
+	text-align: left;
+}
+
+#divtable
+{
+	overflow-y:scroll;
+	height:500px;
+}
+
+#tbMPD
+{
+	font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;
+	font-size: 12px;
+	width: 350px;
+	text-align: left;
+	border:1px solid grey;
+}
+#tbMPD th
+{
+	font-size: 14px;
+	font-weight: bold;
+	padding: 10px 8px;
+	color: white;
+    background: #5D8AA8;
+}
+#tbMPD td
+{
+	padding: 10px;
+    font-size: 12px;
+    font-weight: bold;
+	color: black;
+
+}
+#tbMPD .odd
+{
+	background: #C7C7C7;
+}
+
+#popup_box {
+    display:none; /* Hide the DIV */
+    position:fixed;
+    _position:absolute; /* hack for internet explorer 6 */
+    height:200px;
+    width:600px;
+    background:#ffffff;
+    left: 375px;
+    top: 200px;
+    z-index:50;
+    margin-left: 15px;
+
+    /* additional features, can be omitted */
+    border:2px solid #C7C7C7;
+    padding:15px;
+    font-size:15px;
+    -moz-box-shadow: 0 0 5px #C7C7C7;
+    -webkit-box-shadow: 0 0 5px #C7C7C7;
+    box-shadow: 0 0 5px #C7C7C7;
+
+}
+
+#container {
+    background: #d2d2d2; /*Sample*/
+    width:100%;
+    height:100%;
+}
+
+a{
+cursor: pointer;
+text-decoration:none;
+}
+
+/* This is for the positioning of the Close Link */
+#popupBoxClose {
+    font-size:20px;
+    line-height:15px;
+    right:5px;
+    top:5px;
+    position:absolute;
+    color:#ff0000;
+    font-weight:500;
+}
