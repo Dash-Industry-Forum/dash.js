@@ -114,6 +114,40 @@ describe('DashManifestModel', function () {
 
         expect(adaptation.id).to.equal(0); // jshint ignore:line
     });
+
+    it('should return null when getAdaptationForIndex is called and index, manifest and periodIndex are undefined', () => {
+        const adaptation = dashManifestModel.getAdaptationForIndex(undefined, undefined, undefined);
+
+        expect(adaptation).to.be.null;    // jshint ignore:line
+    });
+
+    it('should return null when getAdaptationForIndex is called and id and periodIndex are undefined', () => {
+        const manifest = { Period_asArray: [] };
+        const adaptation = dashManifestModel.getAdaptationForIndex(undefined, manifest, undefined);
+
+        expect(adaptation).to.be.null;    // jshint ignore:line
+    });
+
+    it('should return null when getAdaptationForIndex is called and id is undefined', () => {
+        const manifest = { Period_asArray: [] };
+        const adaptation = dashManifestModel.getAdaptationForIndex(undefined, manifest, 2);
+
+        expect(adaptation).to.be.null;    // jshint ignore:line
+    });
+
+    it('should return null when getAdaptationForIndex is called and id is undefined and periodIndex = 0', () => {
+        const manifest = { Period_asArray: [ { AdaptationSet_asArray: [ { id: 0 } ] }] };
+        const adaptation = dashManifestModel.getAdaptationForIndex(undefined, manifest, 0);
+
+        expect(adaptation).to.be.null;    // jshint ignore:line
+    });
+
+    it('should return valid value when getAdaptationForIndex is called and id is 0 and periodIndex = 0', () => {
+        const manifest = { Period_asArray: [ { AdaptationSet_asArray: [ { id: 0 } ] }] };
+        const adaptation = dashManifestModel.getAdaptationForIndex(0, manifest, 0);
+
+        expect(adaptation.id).to.equal(0); // jshint ignore:line
+    });
     
     it('should return true when getIsDVB is called and manifest contains a valid DVB profile', () => {
         const manifest = {
