@@ -409,6 +409,7 @@ function AbrController() {
             bitrateInfo.bitrate = bitrateList[i].bandwidth;
             bitrateInfo.width = bitrateList[i].width;
             bitrateInfo.height = bitrateList[i].height;
+            bitrateInfo.scanType = bitrateList[i].scanType;
             infoList.push(bitrateInfo);
         }
 

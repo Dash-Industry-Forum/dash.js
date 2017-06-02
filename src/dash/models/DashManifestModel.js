@@ -349,7 +349,8 @@ function DashManifestModel() {
             bitrateList.push({
                 bandwidth: reps[i].bandwidth,
                 width: reps[i].width || 0,
-                height: reps[i].height || 0
+                height: reps[i].height || 0,
+                scanType: reps[i].scanType || null
             });
         }
 
@@ -394,6 +395,9 @@ function DashManifestModel() {
             }
             if (r.hasOwnProperty('height')) {
                 representation.height = r.height;
+            }
+            if (r.hasOwnProperty('scanType')) {
+                representation.scanType = r.scanType;
             }
             if (r.hasOwnProperty('maxPlayoutRate')) {
                 representation.maxPlayoutRate = r.maxPlayoutRate;
