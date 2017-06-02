@@ -149,6 +149,27 @@ describe('DashManifestModel', function () {
         expect(adaptation.id).to.equal(0); // jshint ignore:line
     });
     
+    it('should return -1 when getIndexForAdaptation is called and adaptation, manifest and periodIndex are undefined', () => {
+        const index = dashManifestModel.getIndexForAdaptation(undefined, undefined, undefined);
+
+        expect(index).to.equal(-1); // jshint ignore:line
+    });
+
+    it('should return -1 when getIndexForAdaptation is called and manifest and periodIndex are undefined', () => {
+        const manifest = { Period_asArray: [] };
+        var adaptation = mpdHelper.composeAdaptation('video');
+        const index = dashManifestModel.getIndexForAdaptation(adaptation, manifest, undefined);
+
+        expect(index).to.equal(-1); // jshint ignore:line
+    });
+
+    it('should return -1 when getIndexForAdaptation is called and periodIndex are undefined', () => {
+        var adaptation = mpdHelper.composeAdaptation('video');
+        const index = dashManifestModel.getIndexForAdaptation(adaptation, undefined, undefined);
+
+        expect(index).to.equal(-1); // jshint ignore:line
+    });
+    
     it('should return true when getIsDVB is called and manifest contains a valid DVB profile', () => {
         const manifest = {
             profiles: 'urn:dvb:dash:profile:dvb-dash:2014,urn:dvb:dash:profile:dvb-dash:isoff-ext-live:2014'
