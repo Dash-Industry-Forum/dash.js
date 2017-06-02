@@ -113,8 +113,8 @@ module.exports = function (grunt) {
                 cwd: '.',
                 src: 'index.d.ts',
                 dest: 'dist/',
-                rename: function(dest) {
-                  return dest + 'dash.d.ts';
+                rename: function (dest) {
+                    return dest + 'dash.d.ts';
                 }
             }, {
                 expand: true,
