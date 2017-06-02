@@ -49,7 +49,6 @@ const SEGMENTS_UNAVAILABLE_ERROR_CODE = 1;
 function DashHandler(config) {
 
     let context = this.context;
-    let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
     const urlUtils = URLUtils(context).getInstance();
 
@@ -60,6 +59,7 @@ function DashHandler(config) {
     const baseURLController = config.baseURLController;
 
     let instance,
+        log,
         index,
         requestedTime,
         isDynamic,
@@ -70,6 +70,7 @@ function DashHandler(config) {
         segmentsGetter;
 
     function setup() {
+        log = Debug(context).getInstance().log.bind(instance);
         index = -1;
         currentTime = 0;
         earliestTime = NaN;
@@ -118,6 +119,10 @@ function DashHandler(config) {
 
     function getEarliestTime() {
         return earliestTime;
+    }
+
+    function getType() {
+        return type;
     }
 
     function reset() {
@@ -507,6 +512,7 @@ function DashHandler(config) {
         getInitRequest: getInitRequest,
         getSegmentRequestForTime: getSegmentRequestForTime,
         getNextSegmentRequest: getNextSegmentRequest,
+        getType: getType,
         generateSegmentRequestForTime: generateSegmentRequestForTime,
         updateRepresentation: updateRepresentation,
         setCurrentTime: setCurrentTime,

@@ -123,6 +123,9 @@ let FactoryMaker = (function () {
     }
 
     function merge(name, classConstructor, context, args) {
+        // Add getClassName function to class instance prototype (used by Debug)
+        classConstructor.getClassName = function () {return name;};
+
         let extensionContext = getExtensionContext(context);
         let extensionObject = extensionContext[name];
         if (extensionObject) {

@@ -49,7 +49,6 @@ import Debug from '../../core/Debug';
 function ScheduleController(config) {
 
     const context = this.context;
-    const log = Debug(context).getInstance().log;
     const eventBus = EventBus(context).getInstance();
     const metricsModel = config.metricsModel;
     const manifestModel = config.manifestModel;
@@ -60,6 +59,7 @@ function ScheduleController(config) {
     const mediaPlayerModel = config.mediaPlayerModel;
 
     let instance,
+        log,
         type,
         fragmentModel,
         isDynamic,
@@ -89,6 +89,7 @@ function ScheduleController(config) {
         replaceRequestArray;
 
     function setup() {
+        log = Debug(context).getInstance().log.bind(instance);
         initialRequest = true;
         lastInitQuality = NaN;
         lastQualityIndex = NaN;
@@ -485,6 +486,10 @@ function ScheduleController(config) {
         return bufferLevelRule.getBufferTarget(streamProcessor, type, streamController.isVideoTrackPresent());
     }
 
+    function getType() {
+        return type;
+    }
+
     function setPlayList(playList) {
         playListMetrics = playList;
     }
@@ -550,6 +555,7 @@ function ScheduleController(config) {
 
     instance = {
         initialize: initialize,
+        getType: getType,
         getStreamProcessor: getStreamProcessor,
         getSeekTarget: getSeekTarget,
         setSeekTarget: setSeekTarget,

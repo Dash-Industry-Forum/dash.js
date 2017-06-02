@@ -58,10 +58,10 @@ function AbrController() {
 
     let context = this.context;
     let debug = Debug(context).getInstance();
-    const log = debug.log;
     let eventBus = EventBus(context).getInstance();
 
     let instance,
+        log,
         abrRulesCollection,
         streamController,
         autoSwitchBitrate,
@@ -91,6 +91,7 @@ function AbrController() {
         lastSwitchTime;
 
     function setup() {
+        log = debug.log.bind(instance);
         autoSwitchBitrate = {video: true, audio: true};
         topQualities = {};
         qualityDict = {};
