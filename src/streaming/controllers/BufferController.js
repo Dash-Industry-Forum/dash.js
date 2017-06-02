@@ -205,7 +205,7 @@ function BufferController(config) {
 
     function onAppended(e) {
         if (buffer === e.buffer) {
-            if (e.error || !hasEnoughSpaceToAppend()) {
+            if (e.error) {
                 if (e.error.code === SourceBufferController.QUOTA_EXCEEDED_ERROR_CODE) {
                     criticalBufferLevel = sourceBufferController.getTotalBufferedTime(buffer) * 0.8;
                 }
