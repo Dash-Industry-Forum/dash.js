@@ -9,8 +9,42 @@ const dashManifestModel = DashManifestModel(context).getInstance();
 const TEST_URL = 'http://www.example.com/';
 const RELATIVE_TEST_URL = './';
 const SERVICE_LOCATION = 'testServiceLocation';
+const EMPTY_STRING = '';
 
 describe('DashManifestModel', function () {
+
+    it('should return empty string when getLanguageForAdaptation is called and adaptation is undefined', () => {
+        const language = dashManifestModel.getLanguageForAdaptation();
+
+        expect(language).to.equal(EMPTY_STRING);  // jshint ignore:line
+    });
+
+    it('should return null when getViewpointForAdaptation is called and adaptation is undefined', () => {
+        const viewPoint = dashManifestModel.getViewpointForAdaptation();
+
+        expect(viewPoint).to.be.null;     // jshint ignore:line
+    });
+
+    it('should return an empty array when getAudioChannelConfigurationForAdaptation is called and adaptation is undefined', () => {
+        const AudioChannelConfigurationArray = dashManifestModel.getAudioChannelConfigurationForAdaptation();
+
+        expect(AudioChannelConfigurationArray).to.be.instanceOf(Array);    // jshint ignore:line
+        expect(AudioChannelConfigurationArray).to.be.empty;                // jshint ignore:line
+    });
+
+    it('should return an empty array when getAccessibilityForAdaptation is called and adaptation is undefined', () => {
+        const accessibilityArray = dashManifestModel.getAccessibilityForAdaptation();
+
+        expect(accessibilityArray).to.be.instanceOf(Array);    // jshint ignore:line
+        expect(accessibilityArray).to.be.empty;                // jshint ignore:line
+    });
+
+    it('should return an empty array when getRolesForAdaptation is called and adaptation is undefined', () => {
+        const rolesArray = dashManifestModel.getRolesForAdaptation();
+
+        expect(rolesArray).to.be.instanceOf(Array);    // jshint ignore:line
+        expect(rolesArray).to.be.empty;                // jshint ignore:line
+    });
 
     it('should return true when getIsDVB is called and manifest contains a valid DVB profile', () => {
         const manifest = {

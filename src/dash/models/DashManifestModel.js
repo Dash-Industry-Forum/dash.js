@@ -134,7 +134,7 @@ function DashManifestModel() {
     function getLanguageForAdaptation(adaptation) {
         let lang = '';
 
-        if (adaptation.hasOwnProperty('lang')) {
+        if (adaptation && adaptation.hasOwnProperty('lang')) {
             //Filter out any other characters not allowed according to RFC5646
             lang = adaptation.lang.replace(/[^A-Za-z0-9-]/g,'');
         }
@@ -143,19 +143,19 @@ function DashManifestModel() {
     }
 
     function getViewpointForAdaptation(adaptation) {
-        return adaptation.hasOwnProperty('Viewpoint') ? adaptation.Viewpoint : null;
+        return adaptation && adaptation.hasOwnProperty('Viewpoint') ? adaptation.Viewpoint : null;
     }
 
     function getRolesForAdaptation(adaptation) {
-        return adaptation.hasOwnProperty('Role_asArray') ? adaptation.Role_asArray : [];
+        return adaptation && adaptation.hasOwnProperty('Role_asArray') ? adaptation.Role_asArray : [];
     }
 
     function getAccessibilityForAdaptation(adaptation) {
-        return adaptation.hasOwnProperty('Accessibility_asArray') ? adaptation.Accessibility_asArray : [];
+        return adaptation && adaptation.hasOwnProperty('Accessibility_asArray') ? adaptation.Accessibility_asArray : [];
     }
 
     function getAudioChannelConfigurationForAdaptation(adaptation) {
-        return adaptation.hasOwnProperty('AudioChannelConfiguration_asArray') ? adaptation.AudioChannelConfiguration_asArray : [];
+        return adaptation && adaptation.hasOwnProperty('AudioChannelConfiguration_asArray') ? adaptation.AudioChannelConfiguration_asArray : [];
     }
 
     function getIsMain(adaptation) {
