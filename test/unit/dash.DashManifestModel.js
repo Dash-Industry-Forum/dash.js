@@ -16,6 +16,12 @@ describe('DashManifestModel', function () {
     
     const mpdHelper = new MpdHelper();
 
+    it('should return false when getIsTypeOf is called and adaptation is undefined', () => {
+        const isTypeOf = dashManifestModel.getIsTypeOf();
+
+        expect(isTypeOf).to.be.false;  // jshint ignore:line
+    });
+
     it('should return false when getIsTypeOf is called and type is undefined', () => {
         var adaptation = mpdHelper.composeAdaptation('video');
         const isTypeOf = dashManifestModel.getIsTypeOf(adaptation);
@@ -23,12 +29,19 @@ describe('DashManifestModel', function () {
         expect(isTypeOf).to.be.false;  // jshint ignore:line
     });
 
-    it('should return false when getIsTypeOf is called and adaptation is undefined', () => {
-        const isTypeOf = dashManifestModel.getIsTypeOf();
+    it('should return false when getIsTypeOf is called and type is empty string', () => {
+        var adaptation = mpdHelper.composeAdaptation('video');
+        const isTypeOf = dashManifestModel.getIsTypeOf(adaptation, EMPTY_STRING);
 
         expect(isTypeOf).to.be.false;  // jshint ignore:line
     });
 
+    it('should return false when getIsTextTrack is called and type is undefined', () => {
+        const isTextTrack = dashManifestModel.getIsTextTrack();
+
+        expect(isTextTrack).to.be.false;  // jshint ignore:line
+    });
+    
     it('should return empty string when getLanguageForAdaptation is called and adaptation is undefined', () => {
         const language = dashManifestModel.getLanguageForAdaptation();
 
