@@ -454,6 +454,12 @@ function TextTracks() {
                 cue.embeddedImages = currentItem.embeddedImages;
                 cue.cueID = currentItem.cueID;
                 cue.scaleCue = scaleCue.bind(self);
+                //useful parameters for cea608 subtitles, not for TTML one.
+                cue.cellResolution = currentItem.cellResolution;
+                cue.lineHeight = currentItem.lineHeight;
+                cue.linePadding = currentItem.linePadding;
+                cue.fontSize = currentItem.fontSize;
+
                 captionContainer.style.left = actualVideoLeft + 'px';
                 captionContainer.style.top = actualVideoTop + 'px';
                 captionContainer.style.width = actualVideoWidth + 'px';
@@ -461,10 +467,10 @@ function TextTracks() {
 
                 cue.onenter = function () {
                     if (track.mode === 'showing') {
-                        var finalCue = document.createElement('div');
-                        log('Cue enter id:' + this.cueID);
-                        captionContainer.appendChild(finalCue);
                         if (this.isd) {
+                            var finalCue = document.createElement('div');
+                            log('Cue enter id:' + this.cueID);
+                            captionContainer.appendChild(finalCue);
                             renderHTML(this.isd, finalCue,  function (uri) {
                                 let imsc1ImgUrnTester = /^(urn:)(mpeg:[a-z0-9][a-z0-9-]{0,31}:)(subs:)([0-9])$/;
                                 let smpteImgUrnTester = /^#(.*)$/;
