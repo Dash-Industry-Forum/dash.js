@@ -48,7 +48,13 @@ function TimelineSegmentsGetter(config, isDynamic) {
         var list = base.SegmentURL_asArray;
         var isAvailableSegmentNumberCalculated = representation.availableSegmentsNumber > 0;
 
-        var maxSegmentsAhead = 10;
+        let maxSegmentsAhead;
+        if (availabilityUpperLimit) {
+            maxSegmentsAhead = availabilityUpperLimit
+        } else {
+            maxSegmentsAhead = (index > -1 || requestedTime !== null) ? 10 : Infinity;
+        }
+
         var time = 0;
         var scaledTime = 0;
         var availabilityIdx = -1;
@@ -96,7 +102,6 @@ function TimelineSegmentsGetter(config, isDynamic) {
         fragments = timeline.S_asArray;
 
         startIdx = index;
-        endIdx = index + availabilityUpperLimit;
 
         if (requestedTime !== null) {
             requiredMediaTime = timelineConverter.calcMediaTimeFromPresentationTime(requestedTime, representation);
@@ -142,14 +147,23 @@ function TimelineSegmentsGetter(config, isDynamic) {
             for (j = 0; j <= repeat; j++) {
                 availabilityIdx++;
 
-                if (availabilityIdx > endIdx) {
+                if (segments.length > maxSegmentsAhead) {
                     hasEnoughSegments = true;
                     if (isAvailableSegmentNumberCalculated) break;
                     continue;
                 }
 
-                if (availabilityIdx >= startIdx) {
-                    segments.push(createSegment(frag, availabilityIdx));
+                if (requiredMediaTime !== null) {
+                    // In some cases when requiredMediaTime = actual end time of the last segment
+                    // it is possible that this time a bit exceeds the declared end time of the last segment.
+                    // in this case we still need to include the last segment in the segment list. to do this we
+                    // use a correction factor = 1.5. This number is used because the largest possible deviation is
+                    // is 50% of segment duration.
+                    if (scaledTime >= (requiredMediaTime - (frag.d / fTimescale) * 1.5)) {
+                        segments.push(createSegment(frag, availabilityIdx));
+                    }
+                } else if (availabilityIdx >= startIdx) {
+                        segments.push(createSegment(frag, availabilityIdx));
                 }
 
                 /*
