@@ -39,7 +39,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
 
     let instance;
 
-    function getSegmentsFromTimeline(representation, requestedTime, index, availabilityUpperLimit = Infinity) {
+    function getSegmentsFromTimeline(representation, requestedTime = null, index, availabilityUpperLimit) {
         var base = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
             AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate ||
             representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
@@ -65,7 +65,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
             nextFrag,
             calculatedRange,
             hasEnoughSegments,
-            requiredMediaTime,
+            requiredMediaTime = null,
             startIdx,
             endIdx,
             fTimescale;
@@ -98,7 +98,9 @@ function TimelineSegmentsGetter(config, isDynamic) {
         startIdx = index;
         endIdx = index + availabilityUpperLimit;
 
-        requiredMediaTime = timelineConverter.calcMediaTimeFromPresentationTime(requestedTime || 0, representation);
+        if (requestedTime !== null) {
+            requiredMediaTime = timelineConverter.calcMediaTimeFromPresentationTime(requestedTime, representation);
+        }
 
         for (i = 0, len = fragments.length; i < len; i++) {
             frag = fragments[i];
