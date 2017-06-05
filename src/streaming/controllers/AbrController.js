@@ -152,7 +152,7 @@ function AbrController() {
 
     function onQualityChangeRendered(e) {
         if (e.mediaType === 'video') {
-            playbackIndex = e.newQuality;
+            playbackIndex = e.oldQuality;
             droppedFramesHistory.push(playbackIndex, videoModel.getPlaybackQuality());
         }
     }
