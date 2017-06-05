@@ -166,23 +166,6 @@ function TimelineSegmentsGetter(config, isDynamic) {
                         segments.push(createSegment(frag, availabilityIdx));
                 }
 
-                /*
-
-                TODO: what do we do with that?
-
-                // In some cases when requiredMediaTime = actual end time of the last segment
-                // it is possible that this time a bit exceeds the declared end time of the last segment.
-                // in this case we still need to include the last segment in the segment list. to do this we
-                // use a correction factor = 1.5. This number is used because the largest possible deviation is
-                // is 50% of segment duration.
-                if (isStartSegmentForRequestedTimeFound) {
-                    segments.push(createSegment(frag, availabilityIdx));
-                }  else if (scaledTime >= (requiredMediaTime - (frag.d / fTimescale) * 1.5)) {
-                    isStartSegmentForRequestedTimeFound = true;
-                    segments.push(createSegment(frag, availabilityIdx));
-                }
-                */
-
                 time += frag.d;
                 scaledTime = time / fTimescale;
             }
