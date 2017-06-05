@@ -152,13 +152,14 @@ function ThroughputRule(config) {
         let latencyTimeInMilliseconds;
 
         if (lastRequest.trace && lastRequest.trace.length) {
-
+            const useLatency = abrController.getUseLatency();
             latencyTimeInMilliseconds = (lastRequest.tresponse.getTime() - lastRequest.trequest.getTime()) || 1;
             downloadTimeInMilliseconds = (lastRequest._tfinish.getTime() - lastRequest.tresponse.getTime()) || 1; //Make sure never 0 we divide by this value. Avoid infinity!
 
             const bytes = lastRequest.trace.reduce((a, b) => a + b.b[0], 0);
 
-            const lastRequestThroughput = Math.round((bytes * 8) / (downloadTimeInMilliseconds / 1000));
+            const throughputMeasureTime = useLatency ? downloadTimeInMilliseconds : latencyTimeInMilliseconds + downloadTimeInMilliseconds;
+            const lastRequestThroughput = Math.round((bytes * 8) / (throughputMeasureTime / 1000));
 
             let throughput;
             let latency;
@@ -183,7 +184,11 @@ function ThroughputRule(config) {
             if (abrController.getAbandonmentStateFor(mediaType) !== AbrController.ABANDON_LOAD) {
 
                 if (bufferStateVO.state === BufferController.BUFFER_LOADED || isDynamic) {
-                    switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, throughput, latency);
+                    if (useLatency) {
+                        switchRequest.value = abrController.getQualityForBitrate(mediaInfo, throughput, latency);
+                    } else {
+                        switchRequest.value = abrController.getQualityForBitrate(mediaInfo, throughput);
+                    }
                     streamProcessor.getScheduleController().setTimeToLoadDelay(0);
                     log('ThroughputRule requesting switch to index: ', switchRequest.quality, 'type: ',mediaType, 'Average throughput', Math.round(throughput), 'kbps');
                     switchRequest.reason = {throughput: throughput, latency: latency};
