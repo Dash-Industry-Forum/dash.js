@@ -300,7 +300,7 @@ function DashManifestModel() {
     function hasProfile(manifest, profile) {
         var has = false;
 
-        if (manifest.profiles && manifest.profiles.length > 0) {
+        if (manifest && manifest.profiles && manifest.profiles.length > 0) {
             has = (manifest.profiles.indexOf(profile) !== -1);
         }
 

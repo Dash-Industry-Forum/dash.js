@@ -253,7 +253,13 @@ describe('DashManifestModel', function () {
 
         expect(isDynamic).to.be.false;    // jshint ignore:line
     });
-        
+
+    it('should return false when getIsDVB is called and manifest is undefined', () => {
+        const IsDVB = dashManifestModel.getIsDVB();
+
+        expect(IsDVB).to.be.false;    // jshint ignore:line
+    });
+            
     it('should return true when getIsDVB is called and manifest contains a valid DVB profile', () => {
         const manifest = {
             profiles: 'urn:dvb:dash:profile:dvb-dash:2014,urn:dvb:dash:profile:dvb-dash:isoff-ext-live:2014'
