@@ -123,10 +123,6 @@ function DashHandler(config) {
         return earliestTime;
     }
 
-    function getType() {
-        return type;
-    }
-
     function reset() {
         segmentsGetter = null;
         currentTime = 0;
@@ -549,7 +545,6 @@ function DashHandler(config) {
         getInitRequest: getInitRequest,
         getSegmentRequestForTime: getSegmentRequestForTime,
         getNextSegmentRequest: getNextSegmentRequest,
-        getType: getType,
         generateSegmentRequestForTime: generateSegmentRequestForTime,
         updateRepresentation: updateRepresentation,
         setCurrentTime: setCurrentTime,
