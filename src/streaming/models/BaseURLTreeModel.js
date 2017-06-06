@@ -64,7 +64,7 @@ function BaseURLTreeModel() {
         if (!node[index]) {
             node[index] = new Node(baseUrls);
         } else {
-            if (!objectUtils.areSimpleEquivalent(baseUrls, node[index].data.baseUrls)) {
+            if (!objectUtils.areEqual(baseUrls, node[index].data.baseUrls)) {
                 node[index].data.baseUrls = baseUrls;
                 node[index].data.selectedIdx = DEFAULT_INDEX;
             }
@@ -74,7 +74,7 @@ function BaseURLTreeModel() {
     function getBaseURLCollectionsFromManifest(manifest) {
         let baseUrls = dashManifestModel.getBaseURLsFromElement(manifest);
 
-        if (!objectUtils.areSimpleEquivalent(baseUrls, root.data.baseUrls)) {
+        if (!objectUtils.areEqual(baseUrls, root.data.baseUrls)) {
             root.data.baseUrls = baseUrls;
             root.data.selectedIdx = DEFAULT_INDEX;
         }
