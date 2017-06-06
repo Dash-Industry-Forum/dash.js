@@ -46,12 +46,10 @@ function FragmentedTextBoxParser() {
 
     function getSamplesInfo(ab) {
         let isoFile = boxParser.parse(ab);
-        let tfhdBox = isoFile.getBox('tfhd');
-        let tfdtBox = isoFile.getBox('tfdt');
-        let trunBox = isoFile.getBox('trun');
-        let moofBox = isoFile.getBox('moof');
-        let mfhdBox = isoFile.getBox('mfhd');
-        let subsBox = isoFile.getBox('subs');
+        // zero or more moofs
+        let moofBoxes = isoFile.getBoxes('moof');
+        // exactly one mfhd per moof
+        let mfhdBoxes = isoFile.getBoxes('mfhd');
 
         let sampleDuration,
             sampleCompositionTimeOffset,
@@ -74,22 +72,22 @@ function FragmentedTextBoxParser() {
         let subsIndex = -1;
         let nextSubsSample = -1;
         for (l = 0; l < moofBoxes.length; l++) {
-            var moofBox = moofBoxes[l];
+            let moofBox = moofBoxes[l];
             // zero or more trafs per moof
-            var trafBoxes = moofBox.getChildBoxes('traf');
+            let trafBoxes = moofBox.getChildBoxes('traf');
             for (j = 0; j < trafBoxes.length; j++) {
-                var trafBox = trafBoxes[j];
+                let trafBox = trafBoxes[j];
                 // exactly one tfhd per traf
-                var tfhdBox = trafBox.getChildBox('tfhd');
+                let tfhdBox = trafBox.getChildBox('tfhd');
                 // zero or one tfdt per traf
-                var tfdtBox = trafBox.getChildBox('tfdt');
+                let tfdtBox = trafBox.getChildBox('tfdt');
                 sampleDts = tfdtBox.baseMediaDecodeTime;
                 // zero or more truns per traf
-                var trunBoxes = trafBox.getChildBoxes('trun');
+                let trunBoxes = trafBox.getChildBoxes('trun');
                 // zero or more subs per traf
-                var subsBoxes = trafBox.getChildBoxes('subs');
+                let subsBoxes = trafBox.getChildBoxes('subs');
                 for (k = 0; k < trunBoxes.length; k++) {
-                    var trunBox = trunBoxes[k];
+                    let trunBox = trunBoxes[k];
                     sampleCount = trunBox.sample_count;
                     dataOffset = (tfhdBox.base_data_offset || 0) + (trunBox.data_offset || 0);
 
@@ -108,7 +106,7 @@ function FragmentedTextBoxParser() {
                         };
                         if (subsBoxes) {
                             for (m = 0; m < subsBoxes.length; m++) {
-                                var subsBox = subsBoxes[m];
+                                let subsBox = subsBoxes[m];
                                 if (subsIndex < subsBox.entry_count && i > nextSubsSample) {
                                     subsIndex++;
                                     nextSubsSample += subsBox.entries[subsIndex].sample_delta;

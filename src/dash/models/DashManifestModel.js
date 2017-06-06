@@ -401,10 +401,10 @@ function DashManifestModel() {
                 voRepresentation.height = realRepresentation.height;
             }
             if (realRepresentation.hasOwnProperty('scanType')) {
-                representation.scanType = realRepresentation.scanType;
+                voRepresentation.scanType = realRepresentation.scanType;
             }
             if (realRepresentation.hasOwnProperty('maxPlayoutRate')) {
-                representation.maxPlayoutRate = realRepresentation.maxPlayoutRate;
+                voRepresentation.maxPlayoutRate = realRepresentation.maxPlayoutRate;
             }
             if (realRepresentation.hasOwnProperty('SegmentBase')) {
                 segmentInfo = realRepresentation.SegmentBase;

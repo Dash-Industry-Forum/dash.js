@@ -56,7 +56,6 @@ function InsufficientBufferRule(config) {
     }
 
     function getMaxIndex (rulesContext) {
-<<<<<<< HEAD
         let now = new Date().getTime();
         let mediaType = rulesContext.getMediaType();
         let metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
