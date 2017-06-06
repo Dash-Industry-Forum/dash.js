@@ -39,7 +39,12 @@ function TimelineSegmentsGetter(config, isDynamic) {
 
     let instance;
 
-    function getSegmentsFromTimeline(representation, requestedTime = null, index, availabilityUpperLimit) {
+    function getSegmentsFromTimeline(representation, requestedTime, index, availabilityUpperLimit) {
+
+        if (requestedTime === undefined) {
+            requestedTime = null;
+        }
+
         var base = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
             AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate ||
             representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
