@@ -203,7 +203,7 @@ function DashManifestModel() {
         if (realAdaptation) {
             for (let i = 0; i < len; i++) {
                 let objectUtils = ObjectUtils(context).getInstance();
-                if (objectUtils.areSimpleEquivalent(realAdaptations[i], realAdaptation)) {
+                if (objectUtils.areEqual(realAdaptations[i], realAdaptation)) {
                     return i;
                 }
             }
