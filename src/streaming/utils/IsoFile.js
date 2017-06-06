@@ -35,7 +35,18 @@ import FactoryMaker from '../../core/FactoryMaker';
 function IsoFile() {
 
     let instance,
-        parsedIsoFile;
+        parsedIsoFile,
+        commonProps,
+        sidxProps,
+        sidxRefProps,
+        emsgProps,
+        mdhdProps,
+        mfhdProps,
+        subsProps,
+        tfhdProps,
+        tfdtProps,
+        trunProps,
+        trunSampleProps;
 
     /**
     * @param {string} type
@@ -172,10 +183,51 @@ function IsoFile() {
     function convertToDashIsoBox(boxData) {
         if (!boxData) return null;
 
-        var box = new IsoBox(boxData);
+        let box = new IsoBox();
+        let i,
+            ln;
+
+        copyProps(boxData, box, commonProps);
 
         if (boxData.hasOwnProperty('_incomplete')) {
             box.isComplete = !boxData._incomplete;
+        }
+
+        switch (box.type) {
+            case 'sidx':
+                copyProps(boxData, box, sidxProps);
+                if (box.references) {
+                    for (i = 0, ln = box.references.length; i < ln; i++) {
+                        copyProps(boxData.references[i], box.references[i], sidxRefProps);
+                    }
+                }
+                break;
+            case 'emsg':
+                copyProps(boxData, box, emsgProps);
+                break;
+            case 'mdhd':
+                copyProps(boxData, box, mdhdProps);
+                break;
+            case 'mfhd':
+                copyProps(boxData, box, mfhdProps);
+                break;
+            case 'subs':
+                copyProps(boxData, box, subsProps);
+                break;
+            case 'tfhd':
+                copyProps(boxData, box, tfhdProps);
+                break;
+            case 'tfdt':
+                copyProps(boxData, box, tfdtProps);
+                break;
+            case 'trun':
+                copyProps(boxData, box, trunProps);
+                if (box.samples) {
+                    for (i = 0, ln = box.samples.length; i < ln; i++) {
+                        copyProps(boxData.samples[i], box.samples[i], trunSampleProps);
+                    }
+                }
+                break;
         }
 
         return box;
@@ -187,6 +239,8 @@ function IsoFile() {
         setData: setData,
         getLastBox: getLastBox
     };
+
+    setup();
 
     return instance;
 }
