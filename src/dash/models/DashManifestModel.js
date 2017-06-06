@@ -281,17 +281,6 @@ function DashManifestModel() {
         return isDynamic;
     }
 
-    function getIsDVR(manifest) {
-        let isDynamic = getIsDynamic(manifest);
-        let containsDVR,
-            isDVR;
-
-        containsDVR = !isNaN(manifest.timeShiftBufferDepth);
-        isDVR = (isDynamic && containsDVR);
-
-        return isDVR;
-    }
-
     function hasProfile(manifest, profile) {
         let has = false;
 
@@ -913,7 +902,6 @@ function DashManifestModel() {
         getKID: getKID,
         getContentProtectionData: getContentProtectionData,
         getIsDynamic: getIsDynamic,
-        getIsDVR: getIsDVR,
         getIsOnDemand: getIsOnDemand,
         getIsDVB: getIsDVB,
         getDuration: getDuration,
