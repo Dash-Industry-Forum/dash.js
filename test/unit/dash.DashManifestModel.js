@@ -235,7 +235,25 @@ describe('DashManifestModel', function () {
 
         expect(mimeType).to.be.null;    // jshint ignore:line
     });
-           
+
+    it('should return null when getKID is called and adaptation is undefined', () => {
+        const kid = dashManifestModel.getKID();
+
+        expect(kid).to.be.null;    // jshint ignore:line
+    });
+
+    it('should return null when getContentProtectionData is called and adaptation is undefined', () => {
+        const contentProtection = dashManifestModel.getContentProtectionData();
+
+        expect(contentProtection).to.be.null;    // jshint ignore:line
+    });
+
+    it('should return false when getIsDynamic is called and manifest is undefined', () => {
+        const isDynamic = dashManifestModel.getIsDynamic();
+
+        expect(isDynamic).to.be.false;    // jshint ignore:line
+    });
+        
     it('should return true when getIsDVB is called and manifest contains a valid DVB profile', () => {
         const manifest = {
             profiles: 'urn:dvb:dash:profile:dvb-dash:2014,urn:dvb:dash:profile:dvb-dash:isoff-ext-live:2014'

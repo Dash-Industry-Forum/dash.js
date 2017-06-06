@@ -291,7 +291,7 @@ function DashManifestModel() {
 
     function getIsDynamic(manifest) {
         let isDynamic = false;
-        if (manifest.hasOwnProperty('type')) {
+        if (manifest && manifest.hasOwnProperty('type')) {
             isDynamic = (manifest.type === 'dynamic');
         }
         return isDynamic;
