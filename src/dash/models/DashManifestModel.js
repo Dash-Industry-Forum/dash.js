@@ -75,7 +75,7 @@ function DashManifestModel() {
 
         mimeTypeRegEx = (type && type !== 'text') ? new RegExp(type) : new RegExp('(vtt|ttml)');
 
-        if ((adaptation.Representation_asArray.length > 0) &&
+        if ((adaptation.Representation_asArray && adaptation.Representation_asArray.length && adaptation.Representation_asArray.length > 0) &&
             (adaptation.Representation_asArray[0].hasOwnProperty('codecs'))) {
             // Just check the start of the codecs string
             codecs = adaptation.Representation_asArray[0].codecs;
@@ -101,7 +101,7 @@ function DashManifestModel() {
         // couldn't find on adaptationset, so check a representation
         if (!found) {
             i = 0;
-            len = adaptation.Representation_asArray.length;
+            len = adaptation.Representation_asArray && adaptation.Representation_asArray.length ? adaptation.Representation_asArray.length : 0;
             while (!found && i < len) {
                 representation = adaptation.Representation_asArray[i];
 
@@ -226,8 +226,7 @@ function DashManifestModel() {
     }
 
     function getAdaptationsForType(manifest, periodIndex, type) {
-
-        let realAdaptationSet = manifest.Period_asArray[periodIndex].AdaptationSet_asArray;
+        let realAdaptationSet = manifest && manifest.Period_asArray && Number.isInteger(periodIndex) ? manifest.Period_asArray[periodIndex] ? manifest.Period_asArray[periodIndex].AdaptationSet_asArray : [] : [];
         let i,
             len;
         let adaptations = [];

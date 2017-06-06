@@ -169,7 +169,30 @@ describe('DashManifestModel', function () {
 
         expect(index).to.equal(-1); // jshint ignore:line
     });
-    
+
+    it('should return an empty array when getAdaptationsForType is called and manifest, periodIndex and type are undefined', () => {
+        const adaptationsArray = dashManifestModel.getAdaptationsForType();
+
+        expect(adaptationsArray).to.be.instanceOf(Array);    // jshint ignore:line
+        expect(adaptationsArray).to.be.empty;                // jshint ignore:line
+    });
+
+    it('should return an empty array when getAdaptationsForType is called and periodIndex and type are undefined', () => {
+        const manifest = { Period_asArray: [] };
+        const adaptationsArray = dashManifestModel.getAdaptationsForType(manifest, undefined, undefined);
+
+        expect(adaptationsArray).to.be.instanceOf(Array);    // jshint ignore:line
+        expect(adaptationsArray).to.be.empty;                // jshint ignore:line
+    });
+
+    it('should return an empty array when getAdaptationsForType is called and type is undefined', () => {
+        const manifest = { Period_asArray: [ { AdaptationSet_asArray: [ { id: 0 } ] }] };
+        const adaptationsArray = dashManifestModel.getAdaptationsForType(manifest, 0, undefined);
+
+        expect(adaptationsArray).to.be.instanceOf(Array);    // jshint ignore:line
+        expect(adaptationsArray).to.be.empty;                // jshint ignore:line
+    });
+        
     it('should return true when getIsDVB is called and manifest contains a valid DVB profile', () => {
         const manifest = {
             profiles: 'urn:dvb:dash:profile:dvb-dash:2014,urn:dvb:dash:profile:dvb-dash:isoff-ext-live:2014'
