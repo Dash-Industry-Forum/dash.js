@@ -272,7 +272,7 @@ function DashManifestModel() {
     }
 
     function getMimeType(adaptation) {
-        return adaptation.Representation_asArray[0].mimeType;
+        return adaptation && adaptation.Representation_asArray && adaptation.Representation_asArray.length > 0 ? adaptation.Representation_asArray[0].mimeType : null;
     }
 
     function getKID(adaptation) {
