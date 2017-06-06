@@ -192,7 +192,32 @@ describe('DashManifestModel', function () {
         expect(adaptationsArray).to.be.instanceOf(Array);    // jshint ignore:line
         expect(adaptationsArray).to.be.empty;                // jshint ignore:line
     });
-        
+
+    it('should return an empty array when getAdaptationForType is called and streamInfo is undefined', () => {
+        const manifest = { Period_asArray: [ { AdaptationSet_asArray: [ { id: 0, mimeType: 'video' } ] }] };
+        const adaptation = dashManifestModel.getAdaptationForType(manifest, 0, 'video', undefined);
+
+        expect(adaptation.id).to.equal(0); // jshint ignore:line
+    });
+
+    it('should return null when getCodec is called and adaptation is undefined', () => {
+        const codec = dashManifestModel.getCodec();
+
+        expect(codec).to.be.null;    // jshint ignore:line
+    });
+
+    it('should return null when getCodec is called and adaptation.Representation_asArray is undefined', () => {
+        const codec = dashManifestModel.getCodec({});
+
+        expect(codec).to.be.null;    // jshint ignore:line
+    });
+
+    it('should return null when getCodec is called and adaptation.Representation_asArray.length is -1', () => {
+        const codec = dashManifestModel.getCodec({Representation_asArray: {length: -1}});
+
+        expect(codec).to.be.null;    // jshint ignore:line
+    });
+       
     it('should return true when getIsDVB is called and manifest contains a valid DVB profile', () => {
         const manifest = {
             profiles: 'urn:dvb:dash:profile:dvb-dash:2014,urn:dvb:dash:profile:dvb-dash:isoff-ext-live:2014'

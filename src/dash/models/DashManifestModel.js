@@ -263,8 +263,12 @@ function DashManifestModel() {
     }
 
     function getCodec(adaptation) {
-        let representation = adaptation.Representation_asArray[0];
-        return (representation.mimeType + ';codecs="' + representation.codecs + '"');
+        if (adaptation && adaptation.Representation_asArray && adaptation.Representation_asArray.length > 0) {
+            let representation = adaptation.Representation_asArray[0];
+            return (representation.mimeType + ';codecs="' + representation.codecs + '"');
+        }
+
+        return null;
     }
 
     function getMimeType(adaptation) {
