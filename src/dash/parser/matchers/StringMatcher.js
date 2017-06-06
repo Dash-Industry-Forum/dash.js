@@ -32,40 +32,41 @@
  * @classdesc Matches and converts xs:string to string, but only for specific attributes on specific nodes
  */
 import BaseMatcher from './BaseMatcher';
+import DashConstants from '../../constants/DashConstants';
 
 class StringMatcher extends BaseMatcher {
     constructor() {
         super(
             (attr, nodeName) => {
                 const stringAttrsInElements = {
-                    'MPD':                        [ 'id', 'profiles' ],
-                    'Period':                     [ 'id' ],
-                    'BaseURL':                    [ 'serviceLocation', 'byteRange' ],
-                    'SegmentBase':                [ 'indexRange' ],
-                    'Initialization':             [ 'range' ],
-                    'RepresentationIndex':        [ 'range' ],
-                    'SegmentList':                [ 'indexRange' ],
-                    'BitstreamSwitching':         [ 'range' ],
-                    'SegmentURL':                 [ 'mediaRange', 'indexRange' ],
-                    'SegmentTemplate':            [ 'indexRange', 'media', 'index', 'initialization', 'bitstreamSwitching' ],
-                    'AssetIdentifier':            [ 'value', 'id' ],
-                    'EventStream':                [ 'value' ],
-                    'AdaptationSet':              [ 'profiles', 'mimeType', 'segmentProfiles', 'codecs', 'contentType' ],
-                    'FramePacking':               [ 'value', 'id' ],
-                    'AudioChannelConfiguration':  [ 'value', 'id' ],
-                    'ContentProtection':          [ 'value', 'id' ],
-                    'EssentialProperty':          [ 'value', 'id' ],
-                    'SupplementalProperty':       [ 'value', 'id' ],
-                    'InbandEventStream':          [ 'value', 'id' ],
-                    'Accessibility':              [ 'value', 'id' ],
-                    'Role':                       [ 'value', 'id' ],
-                    'Rating':                     [ 'value', 'id' ],
-                    'Viewpoint':                  [ 'value', 'id' ],
-                    'ContentComponent':           [ 'contentType' ],
-                    'Representation':             [ 'id', 'dependencyId', 'mediaStreamStructureId' ],
-                    'Subset':                     [ 'id' ],
-                    'Metrics':                    [ 'metrics' ],
-                    'Reporting':                  [ 'value', 'id' ]
+                    'MPD':                        [ DashConstants.ID, DashConstants.PROFILES ],
+                    'Period':                     [ DashConstants.ID ],
+                    'BaseURL':                    [ DashConstants.SERVICE_LOCATION, DashConstants.BYTE_RANGE ],
+                    'SegmentBase':                [ DashConstants.INDEX_RANGE ],
+                    'Initialization':             [ DashConstants.RANGE ],
+                    'RepresentationIndex':        [ DashConstants.RANGE ],
+                    'SegmentList':                [ DashConstants.INDEX_RANGE ],
+                    'BitstreamSwitching':         [ DashConstants.RANGE ],
+                    'SegmentURL':                 [ DashConstants.MEDIA_RANGE, DashConstants.INDEX_RANGE ],
+                    'SegmentTemplate':            [ DashConstants.INDEX_RANGE, DashConstants.MEDIA, DashConstants.INDEX, DashConstants.INITIALIZATION_MINUS, DashConstants.BITSTREAM_SWITCHING ],
+                    'AssetIdentifier':            [ DashConstants.VALUE, DashConstants.ID ],
+                    'EventStream':                [ DashConstants.VALUE ],
+                    'AdaptationSet':              [ DashConstants.PROFILES, DashConstants.MIME_TYPE, DashConstants.SEGMENT_PROFILES, DashConstants.CODECS, DashConstants.CONTENT_TYPE ],
+                    'FramePacking':               [ DashConstants.VALUE, DashConstants.ID ],
+                    'AudioChannelConfiguration':  [ DashConstants.VALUE, DashConstants.ID ],
+                    'ContentProtection':          [ DashConstants.VALUE, DashConstants.ID ],
+                    'EssentialProperty':          [ DashConstants.VALUE, DashConstants.ID ],
+                    'SupplementalProperty':       [ DashConstants.VALUE, DashConstants.ID ],
+                    'InbandEventStream':          [ DashConstants.VALUE, DashConstants.ID ],
+                    'Accessibility':              [ DashConstants.VALUE, DashConstants.ID ],
+                    'Role':                       [ DashConstants.VALUE, DashConstants.ID ],
+                    'Rating':                     [ DashConstants.VALUE, DashConstants.ID ],
+                    'Viewpoint':                  [ DashConstants.VALUE, DashConstants.ID ],
+                    'ContentComponent':           [ DashConstants.CONTENT_TYPE ],
+                    'Representation':             [ DashConstants.ID, DashConstants.DEPENDENCY_ID, DashConstants.MEDIA_STREAM_STRUCTURE_ID ],
+                    'Subset':                     [ DashConstants.ID ],
+                    'Metrics':                    [ DashConstants.METRICS ],
+                    'Reporting':                  [ DashConstants.VALUE, DashConstants.ID ]
                 };
                 if (stringAttrsInElements.hasOwnProperty(nodeName)) {
                     let attrNames = stringAttrsInElements[nodeName];

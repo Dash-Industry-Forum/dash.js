@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import DashConstants from '../constants/DashConstants';
 import DashJSError from '../../streaming/vo/DashJSError';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
@@ -208,7 +209,7 @@ function RepresentationController(config) {
         for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
             let segmentInfoType = voAvailableRepresentations[i].segmentInfoType;
             if (voAvailableRepresentations[i].segmentAvailabilityRange === null || !Representation.hasInitialization(voAvailableRepresentations[i]) ||
-                    ((segmentInfoType === 'SegmentBase' || segmentInfoType === 'BaseURL') && !voAvailableRepresentations[i].segments)
+                ((segmentInfoType === DashConstants.SEGMENT_BASE || segmentInfoType === DashConstants.BASE_URL) && !voAvailableRepresentations[i].segments)
             ) {
                 return false;
             }
@@ -276,7 +277,7 @@ function RepresentationController(config) {
             err,
             repSwitch;
 
-        if (r.adaptation.period.mpd.manifest.type === 'dynamic')
+        if (r.adaptation.period.mpd.manifest.type === DashConstants.DYNAMIC)
         {
             let segmentAvailabilityTimePeriod = r.segmentAvailabilityRange.end - r.segmentAvailabilityRange.start;
             // We must put things to sleep unless till e.g. the startTime calculation in ScheduleController.onLiveEdgeSearchCompleted fall after the segmentAvailabilityRange.start
