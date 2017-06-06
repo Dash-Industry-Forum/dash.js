@@ -7,7 +7,7 @@ const objectUtils = ObjectUtils(context).getInstance();
 
 describe('ObjectUtils', function () {
 
-    describe('areSimpleEquivalent', () => {
+    describe('equal', () => {
         it('should return true if object are equals - declared parameters in same order', () => {
             const obj1 = {
                 param1: 'param1',
@@ -19,7 +19,7 @@ describe('ObjectUtils', function () {
                 param2: 'param2'
             };
 
-            const result = objectUtils.areSimpleEquivalent(obj1,obj2);
+            const result = objectUtils.areEqual(obj1,obj2);
 
             expect(result).to.be.true; // jshint ignore:line
         });
@@ -35,7 +35,7 @@ describe('ObjectUtils', function () {
                 param1: 'param1'
             };
 
-            const result = objectUtils.areSimpleEquivalent(obj1,obj2);
+            const result = objectUtils.areEqual(obj1,obj2);
 
             expect(result).to.be.true; // jshint ignore:line
         });
@@ -51,7 +51,7 @@ describe('ObjectUtils', function () {
                 param2: 'param1'
             };
 
-            const result = objectUtils.areSimpleEquivalent(obj1,obj2);
+            const result = objectUtils.areEqual(obj1,obj2);
 
             expect(result).to.be.false; // jshint ignore:line
         });
