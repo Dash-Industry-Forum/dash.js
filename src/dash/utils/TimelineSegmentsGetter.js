@@ -64,6 +64,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
         var scaledTime = 0;
         var availabilityIdx = -1;
         var segments = [];
+        var requiredMediaTime = null;
 
         var fragments,
             frag,
@@ -74,7 +75,6 @@ function TimelineSegmentsGetter(config, isDynamic) {
             repeatEndTime,
             nextFrag,
             hasEnoughSegments,
-            requiredMediaTime = null,
             startIdx,
             fTimescale;
 
@@ -165,7 +165,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
                         segments.push(createSegment(frag, availabilityIdx));
                     }
                 } else if (availabilityIdx >= startIdx) {
-                        segments.push(createSegment(frag, availabilityIdx));
+                    segments.push(createSegment(frag, availabilityIdx));
                 }
 
                 time += frag.d;
