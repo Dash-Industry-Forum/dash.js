@@ -1937,7 +1937,7 @@ function MediaPlayer() {
      * regarded as static. If false, the reciprocal of the whole transfer time will be used.
      * Defaults to true.
      *
-     * @param {boolean=} useLatency - True or false flag.
+     * @param {boolean=} useDeadTimeLatency - True or false flag.
      *
      * @memberof module:MediaPlayer
      * @instance
