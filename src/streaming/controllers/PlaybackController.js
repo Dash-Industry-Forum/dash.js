@@ -195,7 +195,7 @@ function PlaybackController() {
         wallclockTimeIntervalId = null;
         playOnceInitialized = false;
         commonEarliestTime = {};
-        if (videoModel && element) {
+        if (videoModel) {
             eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
             eventBus.off(Events.BYTES_APPENDED, onBytesAppended, this);
