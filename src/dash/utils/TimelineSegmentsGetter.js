@@ -55,7 +55,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
 
         let maxSegmentsAhead;
         if (availabilityUpperLimit) {
-            maxSegmentsAhead = availabilityUpperLimit
+            maxSegmentsAhead = availabilityUpperLimit;
         } else {
             maxSegmentsAhead = (index > -1 || requestedTime !== null) ? 10 : Infinity;
         }
@@ -64,7 +64,6 @@ function TimelineSegmentsGetter(config, isDynamic) {
         var scaledTime = 0;
         var availabilityIdx = -1;
         var segments = [];
-        var isStartSegmentForRequestedTimeFound = false;
 
         var fragments,
             frag,
@@ -74,11 +73,9 @@ function TimelineSegmentsGetter(config, isDynamic) {
             repeat,
             repeatEndTime,
             nextFrag,
-            calculatedRange,
             hasEnoughSegments,
             requiredMediaTime = null,
             startIdx,
-            endIdx,
             fTimescale;
 
         var createSegment = function (s, i) {
