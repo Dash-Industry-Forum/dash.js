@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+import Constants from '../streaming/constants/Constants';
 import FactoryMaker from '../core/FactoryMaker';
 import ISOBoxer from 'codem-isoboxer';
 import BASE64 from '../../externals/base64';
@@ -88,7 +89,7 @@ function MssFragmentMoovProcessor() {
                 // moov/trak/mdia/minf/vmhd
                 createVmhdBox(minf);
                 break;
-            case 'audio':
+            case Constants.AUDIO:
                 // moov/trak/mdia/minf/smhd
                 createSmhdBox(minf);
                 break;
@@ -218,7 +219,7 @@ function MssFragmentMoovProcessor() {
             case 'video':
                 hdlr.handler_type = 'vide';
                 break;
-            case 'audio':
+            case Constants.Audio:
                 hdlr.handler_type = 'soun';
                 break;
             default:
@@ -278,7 +279,7 @@ function MssFragmentMoovProcessor() {
         stsd.entries = [];
         switch (adaptationSet.type) {
             case 'video':
-            case 'audio':
+            case Constants.AUDIO:
                 stsd.entries.push(createSampleEntry(stsd));
                 break;
             default:

@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import Constants from '../../streaming/constants/Constants';
 import DashConstants from '../constants/DashConstants';
 import Representation from '../vo/Representation';
 import AdaptationSet from '../vo/AdaptationSet';
@@ -83,7 +84,7 @@ function DashManifestModel(config) {
             // Just check the start of the codecs string
             codecs = adaptation.Representation_asArray[0].codecs;
             if (codecs.search('stpp') === 0 || codecs.search('wvtt') === 0) {
-                return type === 'fragmentedText';
+                return type === Constants.FRAGMENTED_TEXT;
             }
         }
 
@@ -121,7 +122,7 @@ function DashManifestModel(config) {
     }
 
     function getIsAudio(adaptation) {
-        return getIsTypeOf(adaptation, 'audio');
+        return getIsTypeOf(adaptation, Constants.AUDIO);
     }
 
     function getIsVideo(adaptation) {
@@ -129,7 +130,7 @@ function DashManifestModel(config) {
     }
 
     function getIsFragmentedText(adaptation) {
-        return getIsTypeOf(adaptation, 'fragmentedText');
+        return getIsTypeOf(adaptation, Constants.FRAGMENTED_TEXT);
     }
 
     function getIsText(adaptation) {
@@ -524,11 +525,11 @@ function DashManifestModel(config) {
                 if (getIsMuxed(realAdaptationSet)) {
                     voAdaptationSet.type = 'muxed';
                 } else if (getIsAudio(realAdaptationSet)) {
-                    voAdaptationSet.type = 'audio';
+                    voAdaptationSet.type = Constants.AUDIO;
                 }else if (getIsVideo(realAdaptationSet)) {
                     voAdaptationSet.type = 'video';
                 }else if (getIsFragmentedText(realAdaptationSet)) {
-                    voAdaptationSet.type = 'fragmentedText';
+                    voAdaptationSet.type = Constants.FRAGMENTED_TEXT;
                 }else {
                     voAdaptationSet.type = 'text';
                 }

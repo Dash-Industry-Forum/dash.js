@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import Constants from './constants/Constants';
 import LiveEdgeFinder from './utils/LiveEdgeFinder';
 import StreamProcessor from './StreamProcessor';
 import EventController from './controllers/EventController';
@@ -250,7 +251,7 @@ function Stream(config) {
             return false;
         }
 
-        if ((type === 'text') || (type === 'fragmentedText') || (type === 'embeddedText')) {
+        if ((type === 'text') || (type === Constants.FRAGMENTED_TEXT) || (type === 'embeddedText')) {
             return true;
         }
         codec = mediaInfo.codec;
@@ -288,7 +289,7 @@ function Stream(config) {
             trackChangedEvent = e;
             manifestUpdater.refreshManifest();
         } else {
-            if (mediaInfo.type !== 'fragmentedText') {
+            if (mediaInfo.type !== Constants.FRAGMENTED_TEXT) {
 
                 processor.reset(true);
                 createStreamProcessor(mediaInfo, mediaSource, {
@@ -342,7 +343,7 @@ function Stream(config) {
             return;
         }
 
-        if ((mediaInfo.type === 'text' || mediaInfo.type === 'fragmentedText')) {
+        if ((mediaInfo.type === 'text' || mediaInfo.type === Constants.FRAGMENTED_TEXT)) {
             let idx;
             for (let i = 0; i < allMediaForType.length; i++) {
                 if (allMediaForType[i].index === mediaInfo.index) {
@@ -350,7 +351,7 @@ function Stream(config) {
                 }
                 streamProcessor.updateMediaInfo(allMediaForType[i]); //creates text tracks for all adaptations in one stream processor
             }
-            if (mediaInfo.type === 'fragmentedText') {
+            if (mediaInfo.type === Constants.FRAGMENTED_TEXT) {
                 streamProcessor.updateMediaInfo(allMediaForType[idx]); //sets the initial media info
             }
         } else {
@@ -413,9 +414,9 @@ function Stream(config) {
 
         isUpdating = true;
         initializeMediaForType('video', mediaSource);
-        initializeMediaForType('audio', mediaSource);
+        initializeMediaForType(Constants.AUDIO, mediaSource);
         initializeMediaForType('text', mediaSource);
-        initializeMediaForType('fragmentedText', mediaSource);
+        initializeMediaForType(Constants.FRAGMENTED_TEXT, mediaSource);
         initializeMediaForType('embeddedText', mediaSource);
         initializeMediaForType('muxed', mediaSource);
 
@@ -452,7 +453,7 @@ function Stream(config) {
             return;
         }
         if (protectionController) {
-            protectionController.initialize(manifestModel.getValue(), getMediaInfo('audio'), getMediaInfo('video'));
+            protectionController.initialize(manifestModel.getValue(), getMediaInfo(Constants.AUDIO), getMediaInfo('video'));
         }
         eventBus.trigger(Events.STREAM_INITIALIZED, {
             streamInfo: streamInfo,
@@ -535,7 +536,7 @@ function Stream(config) {
             controller = streamProcessors[i];
             type = controller.getType();
 
-            if (type === 'audio' || type === 'video' || type === 'fragmentedText') {
+            if (type === Constants.AUDIO || type === 'video' || type === Constants.FRAGMENTED_TEXT) {
                 arr.push(controller);
             }
         }

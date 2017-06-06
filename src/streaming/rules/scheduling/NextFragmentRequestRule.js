@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import Constants from '../../constants/Constants';
 import Debug from '../../../core/Debug';
 import FactoryMaker from '../../../core/FactoryMaker';
 
@@ -51,7 +52,7 @@ function NextFragmentRequestRule(config) {
 
         let time = hasSeekTarget ? seekTarget : adapter.getIndexHandlerTime(streamProcessor);
 
-        if (isNaN(time) || (mediaType === 'fragmentedText' && textController.getAllTracksAreDisabled())) {
+        if (isNaN(time) || (mediaType === Constants.FRAGMENTED_TEXT && textController.getAllTracksAreDisabled())) {
             return null;
         }
 

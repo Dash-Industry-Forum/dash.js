@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import Constants from './constants/Constants';
 import UTCTiming from '../dash/vo/UTCTiming';
 import PlaybackController from './controllers/PlaybackController';
 import StreamController from './controllers/StreamController';
@@ -486,7 +487,7 @@ function MediaPlayer() {
      * @instance
      */
     function getBufferLength(type) {
-        const types = ['video', 'audio', 'fragmentedText'];
+        const types = ['video', Constants.AUDIO, Constants.FRAGMENTED_TEXT];
         if (!type) {
             return types.map(
                 t => getTracksFor(t).length > 0 ? getDashMetrics().getCurrentBufferLevel(getMetricsFor(t)) : Number.MAX_VALUE
@@ -2123,7 +2124,7 @@ function MediaPlayer() {
      * @instance
      */
     function getAutoSwitchQuality() {
-        return abrController.getAutoSwitchBitrateFor('video') || abrController.getAutoSwitchBitrateFor('audio');
+        return abrController.getAutoSwitchBitrateFor('video') || abrController.getAutoSwitchBitrateFor(Constants.AUDIO);
     }
 
     /**
@@ -2137,7 +2138,7 @@ function MediaPlayer() {
      */
     function setAutoSwitchQuality(value) {
         abrController.setAutoSwitchBitrateFor('video', value);
-        abrController.setAutoSwitchBitrateFor('audio', value);
+        abrController.setAutoSwitchBitrateFor(Constants.AUDIO, value);
     }
 
     /**
@@ -2323,7 +2324,7 @@ function MediaPlayer() {
     }
 
     function getDVRInfoMetric() {
-        let metric = metricsModel.getReadOnlyMetricsFor('video') || metricsModel.getReadOnlyMetricsFor('audio');
+        let metric = metricsModel.getReadOnlyMetricsFor('video') || metricsModel.getReadOnlyMetricsFor(Constants.AUDIO);
         return dashMetrics.getCurrentDVRInfo(metric);
     }
 

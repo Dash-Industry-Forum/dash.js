@@ -30,6 +30,7 @@
  */
 
 import ABRRulesCollection from '../rules/abr/ABRRulesCollection';
+import Constants from '../constants/Constants';
 import BitrateInfo from '../vo/BitrateInfo';
 import FragmentModel from '../models/FragmentModel';
 import EventBus from '../../core/EventBus';
@@ -510,10 +511,10 @@ function AbrController() {
     function isPlayingAtTopQuality(streamInfo) {
         let isAtTop;
         let streamId = streamInfo.id;
-        const audioQuality = getQualityFor('audio');
+        const audioQuality = getQualityFor(Constants.AUDIO);
         const videoQuality = getQualityFor('video');
 
-        isAtTop = (audioQuality === getTopQualityIndexFor('audio', streamId)) &&
+        isAtTop = (audioQuality === getTopQualityIndexFor(Constants.AUDIO, streamId)) &&
             (videoQuality === getTopQualityIndexFor('video', streamId));
 
         return isAtTop;

@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
+import Constants from '../constants/Constants';
 import FragmentModel from '../models/FragmentModel';
 import SourceBufferController from './SourceBufferController';
 import AbrController from './AbrController';
@@ -301,7 +301,7 @@ function BufferController(config) {
     }
 
     function notifyBufferStateChanged(state) {
-        if (bufferState === state || (type === 'fragmentedText' && textController.getAllTracksAreDisabled())) return;
+        if (bufferState === state || (type === Constants.FRAGMENTED_TEXT && textController.getAllTracksAreDisabled())) return;
         bufferState = state;
         addBufferMetrics();
         eventBus.trigger(Events.BUFFER_LEVEL_STATE_CHANGED, {sender: instance, state: state, mediaType: type, streamInfo: streamProcessor.getStreamInfo()});
@@ -344,7 +344,7 @@ function BufferController(config) {
     /* prune buffer on our own in background to avoid browsers pruning buffer silently */
     function pruneBuffer() {
         if (!buffer) return;
-        if (type === 'fragmentedText') return;
+        if (type === Constants.FRAGMENTED_TEXT) return;
         const start = buffer.buffered.length ? buffer.buffered.start(0) : 0;
         const bufferToPrune = playbackController.getTime() - start - mediaPlayerModel.getBufferToKeep();
         if (bufferToPrune > 0) {

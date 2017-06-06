@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import Constants from '../../constants/Constants';
 import FactoryMaker from '../../../core/FactoryMaker';
 
 function BufferLevelRule(config) {
@@ -49,9 +50,9 @@ function BufferLevelRule(config) {
     function getBufferTarget(streamProcessor, type, videoTrackPresent) {
         let bufferTarget = NaN;
         const representationInfo = streamProcessor.getCurrentRepresentationInfo();
-        if (type === 'fragmentedText') {
+        if (type === Constants.FRAGMENTED_TEXT) {
             bufferTarget = textController.getAllTracksAreDisabled() ? 0 : representationInfo.fragmentDuration;
-        } else if (type === 'audio' && videoTrackPresent) {
+        } else if (type === Constants.AUDIO && videoTrackPresent) {
             const videoBufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor('video'));
             bufferTarget = Math.floor(Math.max(videoBufferLevel, representationInfo.fragmentDuration));
         } else {

@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import Constants from '../constants/Constants';
 import FactoryMaker from '../../core/FactoryMaker';
 import TextSourceBuffer from './TextSourceBuffer';
 import TextTracks from './TextTracks';
@@ -143,7 +144,7 @@ function TextController() {
 
                     // specific to fragmented text
                     if (isFragmented && i < nrNonEmbeddedTracks) {
-                        let currentFragTrack = mediaController.getCurrentTrackFor('fragmentedText', streamController.getActiveStreamInfo());
+                        let currentFragTrack = mediaController.getCurrentTrackFor(Constants.FRAGMENTED_TEXT, streamController.getActiveStreamInfo());
                         let newFragTrack = fragmentedTracks[i];
                         if (newFragTrack !== currentFragTrack) {
                             fragmentModel.abortRequests();

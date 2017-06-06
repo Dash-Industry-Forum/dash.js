@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import Constants from '../constants/Constants';
 import Stream from '../Stream';
 import ManifestUpdater from '../ManifestUpdater';
 import EventBus from '../../core/EventBus';
@@ -473,10 +474,10 @@ function StreamController() {
             //is SegmentTimeline to avoid using time source
             let manifest = e.manifest;
             adapter.updatePeriods(manifest);
-            let streamInfo = adapter.getStreamsInfo()[0];
+            let streamInfo = adapter.getStreamsInfo(manifest)[0];
             let mediaInfo = (
                 adapter.getMediaInfoForType(streamInfo, 'video') ||
-                adapter.getMediaInfoForType(streamInfo, 'audio')
+                adapter.getMediaInfoForType(streamInfo, Constants.AUDIO)
             );
 
             let voAdaptation,
@@ -765,7 +766,7 @@ function StreamController() {
         if (e.metric === 'DVRInfo') {
             //Match media type? How can DVR window be different for media types?
             //Should we normalize and union the two?
-            if (e.mediaType === 'audio') {
+            if (e.mediaType === Constants.AUDIO) {
                 mediaSourceController.setSeekable(mediaSource, e.value.range.start, e.value.range.end);
             }
         }

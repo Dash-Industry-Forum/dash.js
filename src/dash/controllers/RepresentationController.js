@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import Constants from '../../streaming/constants/Constants';
 import DashConstants from '../constants/DashConstants';
 import DashJSError from '../../streaming/vo/DashJSError';
 import EventBus from '../../core/EventBus';
@@ -158,7 +159,7 @@ function RepresentationController(config) {
 
         voAvailableRepresentations = updateRepresentations(voAdaptation);
 
-        if (realAdaptation === null && type !== 'fragmentedText') {
+        if (realAdaptation === null && type !== Constants.FRAGMENTED_TEXT) {
             averageThroughput = abrController.getThroughputHistory().getAverageThroughput(type);
             bitrate = averageThroughput || abrController.getInitialBitrateFor(type, streamInfo);
             quality = abrController.getQualityForBitrate(streamProcessor.getMediaInfo(), bitrate);
@@ -173,7 +174,7 @@ function RepresentationController(config) {
         currentVoRepresentation = getRepresentationForQuality(quality);
         realAdaptation = newRealAdaptation;
 
-        if (type !== 'video' && type !== 'audio' && type !== 'fragmentedText') {
+        if (type !== 'video' && type !== Constants.AUDIO && type !== Constants.FRAGMENTED_TEXT) {
             updating = false;
             eventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: this, data: realAdaptation, currentRepresentation: currentVoRepresentation});
             return;

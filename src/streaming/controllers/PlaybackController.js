@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import Constants from '../constants/Constants';
 import BufferController from './BufferController';
 import URIQueryAndFragmentModel from '../models/URIQueryAndFragmentModel';
 import EventBus from '../../core/EventBus';
@@ -278,7 +279,7 @@ function PlaybackController() {
     }
 
     function getActualPresentationTime(currentTime) {
-        let metrics = metricsModel.getReadOnlyMetricsFor('video') || metricsModel.getReadOnlyMetricsFor('audio');
+        let metrics = metricsModel.getReadOnlyMetricsFor('video') || metricsModel.getReadOnlyMetricsFor(Constants.AUDIO);
         let DVRMetrics = dashMetrics.getCurrentDVRInfo(metrics);
         let DVRWindow = DVRMetrics ? DVRMetrics.range : null;
         let actualTime;

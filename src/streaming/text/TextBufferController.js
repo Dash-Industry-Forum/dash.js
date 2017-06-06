@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import Constants from '../constants/Constants';
 import FactoryMaker from '../../core/FactoryMaker';
 import BufferController from './../controllers/BufferController';
 import NotFragmentedTextBufferController from './NotFragmentedTextBufferController';
@@ -43,7 +44,7 @@ function TextBufferController(config) {
     function setup(config) {
 
         // according to text type, we create corresponding buffer controller
-        if (config.type === 'fragmentedText') {
+        if (config.type === Constants.FRAGMENTED_TEXT) {
 
             // in this case, internal buffer ocntroller is a classical BufferController object
             _BufferControllerImpl = BufferController(context).create({

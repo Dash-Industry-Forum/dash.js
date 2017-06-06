@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import Constants from '../constants/Constants';
 import TextTrackInfo from '../vo/TextTrackInfo';
 import FragmentedTextBoxParser from '../../dash/utils/FragmentedTextBoxParser';
 import BoxParser from '../utils/BoxParser';
@@ -104,9 +105,9 @@ function TextSourceBuffer() {
         if (isFragmented) {
             fragmentModel = streamProcessor.getFragmentModel();
             this.buffered = CustomTimeRanges(context).create();
-            fragmentedTracks = mediaController.getTracksFor('fragmentedText', streamController.getActiveStreamInfo());
-            const currFragTrack = mediaController.getCurrentTrackFor('fragmentedText', streamController.getActiveStreamInfo());
-            for (let i = 0 ; i < fragmentedTracks.length; i++) {
+            fragmentedTracks = mediaController.getTracksFor(Constants.FRAGMENTED_TEXT, streamController.getActiveStreamInfo());
+            const currFragTrack = mediaController.getCurrentTrackFor(Constants.FRAGMENTED_TEXT, streamController.getActiveStreamInfo());
+            for (let i = 0; i < fragmentedTracks.length; i++) {
                 if (fragmentedTracks[i] === currFragTrack) {
                     currFragmentedTrackIdx = i;
                     break;
@@ -295,7 +296,7 @@ function TextSourceBuffer() {
             textTracks.addTextTrack(textTrackInfo, totalNrTracks);
         }
 
-        if (mediaType === 'fragmentedText') {
+        if (mediaType === Constants.FRAGMENTED_TEXT) {
             if (!initializationSegmentReceived) {
                 initializationSegmentReceived = true;
                 for (i = 0; i < mediaInfos.length; i++) {
