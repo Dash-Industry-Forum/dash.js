@@ -1920,6 +1920,33 @@ function MediaPlayer() {
     }
 
     /**
+     * Get the value of useDeadTimeLatency in AbrController. @see setUseDeadTimeLatencyForAbr
+     *
+     * @returns {boolean=}
+     *
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getUseDeadTimeLatencyForAbr() {
+        return abrController.getUseDeadTimeLatency();
+    }
+
+    /**
+     * Set the value of useDeadTimeLatency in AbrController. If true, only the download
+     * portion will be considered part of the download bitrate and latency will be
+     * regarded as static. If false, the reciprocal of the whole transfer time will be used.
+     * Defaults to true.
+     *
+     * @param {boolean=} useLatency - True or false flag.
+     *
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setUseDeadTimeLatencyForAbr(useDeadTimeLatency) {
+        abrController.setUseDeadTimeLatency(useDeadTimeLatency);
+    }
+
+    /**
      * Sets the MPD source and the video element to null. You can also reset the MediaPlayer by
      * calling attachSource with a new source file.
      *
@@ -2248,6 +2275,8 @@ function MediaPlayer() {
         attachVideoContainer: attachVideoContainer,
         attachTTMLRenderingDiv: attachTTMLRenderingDiv,
         getCurrentTextTrackIndex: getCurrentTextTrackIndex,
+        getUseDeadTimeLatencyForAbr: getUseDeadTimeLatencyForAbr,
+        setUseDeadTimeLatencyForAbr: setUseDeadTimeLatencyForAbr,
         reset: reset
     };
 

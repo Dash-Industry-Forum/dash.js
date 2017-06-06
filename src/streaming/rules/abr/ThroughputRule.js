@@ -152,13 +152,13 @@ function ThroughputRule(config) {
         let latencyTimeInMilliseconds;
 
         if (lastRequest.trace && lastRequest.trace.length) {
-            const useLatency = abrController.getUseLatency();
+            const useDeadTimeLatency = abrController.getUseDeadTimeLatency();
             latencyTimeInMilliseconds = (lastRequest.tresponse.getTime() - lastRequest.trequest.getTime()) || 1;
             downloadTimeInMilliseconds = (lastRequest._tfinish.getTime() - lastRequest.tresponse.getTime()) || 1; //Make sure never 0 we divide by this value. Avoid infinity!
 
             const bytes = lastRequest.trace.reduce((a, b) => a + b.b[0], 0);
 
-            const throughputMeasureTime = useLatency ? downloadTimeInMilliseconds : latencyTimeInMilliseconds + downloadTimeInMilliseconds;
+            const throughputMeasureTime = useDeadTimeLatency ? downloadTimeInMilliseconds : latencyTimeInMilliseconds + downloadTimeInMilliseconds;
             const lastRequestThroughput = Math.round((bytes * 8) / (throughputMeasureTime / 1000));
 
             let throughput;
@@ -184,7 +184,7 @@ function ThroughputRule(config) {
             if (abrController.getAbandonmentStateFor(mediaType) !== AbrController.ABANDON_LOAD) {
 
                 if (bufferStateVO.state === BufferController.BUFFER_LOADED || isDynamic) {
-                    if (useLatency) {
+                    if (useDeadTimeLatency) {
                         switchRequest.value = abrController.getQualityForBitrate(mediaInfo, throughput, latency);
                     } else {
                         switchRequest.value = abrController.getQualityForBitrate(mediaInfo, throughput);
