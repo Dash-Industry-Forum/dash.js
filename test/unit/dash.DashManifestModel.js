@@ -318,6 +318,20 @@ describe('DashManifestModel', function () {
         expect(utcSourceArray).to.be.empty;                // jshint ignore:line
     });
 
+    it('should return an empty Array when getEventStreamForRepresentation is called and manifest and representation are undefined', () => {
+        const eventsStream = dashManifestModel.getEventStreamForRepresentation();
+
+        expect(eventsStream).to.be.instanceOf(Array);    // jshint ignore:line
+        expect(eventsStream).to.be.empty;                // jshint ignore:line
+    });
+
+    it('should return an empty Array when getEventStreamForAdaptationSet is called and manifest and adaptation are undefined', () => {
+        const eventsStream = dashManifestModel.getEventStreamForAdaptationSet();
+
+        expect(eventsStream).to.be.instanceOf(Array);    // jshint ignore:line
+        expect(eventsStream).to.be.empty;                // jshint ignore:line
+    });
+    
     it('should return false when getIsDVB is called and manifest is undefined', () => {
         const IsDVB = dashManifestModel.getIsDVB();
 

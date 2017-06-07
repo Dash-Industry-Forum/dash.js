@@ -754,16 +754,41 @@ function DashManifestModel() {
     }
 
     function getEventStreamForAdaptationSet(manifest, adaptation) {
-        if (!adaptation || !manifest) return [];
-        let inbandStreams = manifest.Period_asArray[adaptation.period.index].
-            AdaptationSet_asArray[adaptation.index].InbandEventStream_asArray;
+        let inbandStreams,
+            periodArray,
+            adaptationArray;
+
+        if (manifest && manifest.Period_asArray && adaptation && adaptation.period && Number.isInteger(adaptation.period.index)) {
+            periodArray = manifest.Period_asArray[adaptation.period.index];
+            if (periodArray && periodArray.AdaptationSet_asArray && Number.isInteger(adaptation.index)) {
+                adaptationArray = periodArray.AdaptationSet_asArray[adaptation.index];
+                if (adaptationArray) {
+                    inbandStreams = adaptationArray.InbandEventStream_asArray;
+                }
+            }
+        }
 
         return getEventStreams(inbandStreams, null);
     }
 
     function getEventStreamForRepresentation(manifest, representation) {
-        let inbandStreams = manifest.Period_asArray[representation.adaptation.period.index].
-            AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].InbandEventStream_asArray;
+        let inbandStreams,
+            periodArray,
+            adaptationArray,
+            representationArray;
+
+        if (manifest && manifest.Period_asArray && representation && representation.adaptation && representation.adaptation.period && Number.isInteger(representation.adaptation.period.index)) {
+            periodArray = manifest.Period_asArray[representation.adaptation.period.index];
+            if (periodArray && periodArray.AdaptationSet_asArray && Number.isInteger(representation.adaptation.index)) {
+                adaptationArray = periodArray.AdaptationSet_asArray[representation.adaptation.index];
+                if (adaptationArray && adaptationArray.Representation_asArray && Number.isInteger(representation.index)) {
+                    representationArray =  adaptationArray.Representation_asArray[representation.index];
+                    if (representationArray) {
+                        inbandStreams = representationArray.InbandEventStream_asArray;
+                    }
+                }
+            }
+        }
 
         return getEventStreams(inbandStreams, representation);
     }
