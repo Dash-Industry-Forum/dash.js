@@ -769,10 +769,9 @@ function DashManifestModel() {
     }
 
     function getUTCTimingSources(manifest) {
-
         let isDynamic = getIsDynamic(manifest);
-        let hasAST = manifest.hasOwnProperty('availabilityStartTime');
-        let utcTimingsArray = manifest.UTCTiming_asArray;
+        let hasAST = manifest ? manifest.hasOwnProperty('availabilityStartTime') : false;
+        let utcTimingsArray = manifest ? manifest.UTCTiming_asArray : null;
         let utcTimingEntries = [];
 
         // do not bother synchronizing the clock unless MPD is live,

@@ -310,7 +310,14 @@ describe('DashManifestModel', function () {
 
         expect(location).to.be.undefined; // jshint ignore:line
     });
-    
+
+    it('should return an empty Array when getUTCTimingSources is called and manifest is undefined', () => {
+        const utcSourceArray = dashManifestModel.getUTCTimingSources();
+
+        expect(utcSourceArray).to.be.instanceOf(Array);    // jshint ignore:line
+        expect(utcSourceArray).to.be.empty;                // jshint ignore:line
+    });
+
     it('should return false when getIsDVB is called and manifest is undefined', () => {
         const IsDVB = dashManifestModel.getIsDVB();
 
