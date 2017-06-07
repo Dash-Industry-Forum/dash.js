@@ -260,6 +260,12 @@ describe('DashManifestModel', function () {
         expect(duration).to.equal(Number.MAX_VALUE); // jshint ignore:line
     });
 
+    it('should return 0 when getRepresentationCount is called and adaptation is undefined', () => {
+        const representationCount = dashManifestModel.getRepresentationCount();
+
+        expect(representationCount).to.equal(0); // jshint ignore:line
+    });
+    
     it('should return NaN when getBandwidth is called and manifest is undefined', () => {
         const bdtw = dashManifestModel.getBandwidth();
 

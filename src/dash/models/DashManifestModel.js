@@ -337,7 +337,7 @@ function DashManifestModel() {
     }
 
     function getRepresentationCount(adaptation) {
-        return adaptation.Representation_asArray.length;
+        return adaptation && adaptation.Representation_asArray && adaptation.Representation_asArray.length ? adaptation.Representation_asArray.length : 0;
     }
 
     function getBitrateListForAdaptation(realAdaptation) {
