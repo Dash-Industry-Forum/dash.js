@@ -30,7 +30,7 @@
  */
 import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
 import FactoryMaker from '../core/FactoryMaker';
-import * as MetricsList from './constants/DashMetricsList';
+import MetricsConstants from '../streaming/constants/MetricsConstants';
 import { round10 } from 'round10';
 
 /**
@@ -98,7 +98,7 @@ function DashMetrics(config) {
      * @instance
      */
     function getCurrentRepresentationSwitch(metrics) {
-        return getCurrent(metrics, MetricsList.TRACK_SWITCH);
+        return getCurrent(metrics, MetricsConstants.TRACK_SWITCH);
     }
 
     /**
@@ -108,7 +108,7 @@ function DashMetrics(config) {
      * @instance
      */
     function getLatestBufferLevelVO(metrics) {
-        return getCurrent(metrics, MetricsList.BUFFER_LEVEL);
+        return getCurrent(metrics, MetricsConstants.BUFFER_LEVEL);
     }
 
     /**
@@ -219,7 +219,7 @@ function DashMetrics(config) {
      * @instance
      */
     function getCurrentDroppedFrames(metrics) {
-        return getCurrent(metrics, MetricsList.DROPPED_FRAMES);
+        return getCurrent(metrics, MetricsConstants.DROPPED_FRAMES);
     }
 
     /**
@@ -229,7 +229,7 @@ function DashMetrics(config) {
      * @instance
      */
     function getCurrentSchedulingInfo(metrics) {
-        return getCurrent(metrics, MetricsList.SCHEDULING_INFO);
+        return getCurrent(metrics, MetricsConstants.SCHEDULING_INFO);
     }
 
     /**
@@ -239,7 +239,7 @@ function DashMetrics(config) {
      * @instance
      */
     function getCurrentManifestUpdate(metrics) {
-        return getCurrent(metrics, MetricsList.MANIFEST_UPDATE);
+        return getCurrent(metrics, MetricsConstants.MANIFEST_UPDATE);
     }
 
     /**
@@ -249,7 +249,7 @@ function DashMetrics(config) {
      * @instance
      */
     function getCurrentDVRInfo(metrics) {
-        return getCurrent(metrics, MetricsList.DVR_INFO);
+        return getCurrent(metrics, MetricsConstants.DVR_INFO);
     }
 
     /**

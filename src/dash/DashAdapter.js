@@ -36,7 +36,6 @@ import ManifestInfo from '../streaming/vo/ManifestInfo';
 import Event from './vo/Event';
 import FactoryMaker from '../core/FactoryMaker';
 import cea608parser from '../../externals/cea608-parser';
-import * as METRIC_LIST from './constants/DashMetricsList';
 
 function DashAdapter() {
 
@@ -528,8 +527,7 @@ function DashAdapter() {
         getEvent: getEvent,
         setConfig: setConfig,
         updatePeriods: updatePeriods,
-        reset: reset,
-        metricsList: METRIC_LIST
+        reset: reset
     };
 
     setup();
