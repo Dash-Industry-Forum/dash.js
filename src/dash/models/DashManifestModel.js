@@ -734,7 +734,7 @@ function DashManifestModel() {
         for (i = 0; i < inbandStreams.length ; i++ ) {
             let eventStream = new EventStream();
             eventStream.timescale = 1;
-            eventStream.representation =  representation;
+            eventStream.representation = representation;
 
             if (inbandStreams[i].hasOwnProperty('schemeIdUri')) {
                 eventStream.schemeIdUri = inbandStreams[i].schemeIdUri;
@@ -952,7 +952,6 @@ function DashManifestModel() {
         getRegularPeriods: getRegularPeriods,
         getMpd: getMpd,
         getEventsForPeriod: getEventsForPeriod,
-        getEventStreams: getEventStreams,
         getEventStreamForAdaptationSet: getEventStreamForAdaptationSet,
         getEventStreamForRepresentation: getEventStreamForRepresentation,
         getUTCTimingSources: getUTCTimingSources,
