@@ -330,7 +330,7 @@ function DashManifestModel() {
 
     function getManifestUpdatePeriod(manifest, latencyOfLastUpdate = 0) {
         let delay = NaN;
-        if (manifest.hasOwnProperty('minimumUpdatePeriod')) {
+        if (manifest && manifest.hasOwnProperty('minimumUpdatePeriod')) {
             delay = manifest.minimumUpdatePeriod;
         }
         return isNaN(delay) ? delay : Math.max(delay - latencyOfLastUpdate, 1);

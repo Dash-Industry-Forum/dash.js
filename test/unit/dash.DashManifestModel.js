@@ -292,6 +292,11 @@ describe('DashManifestModel', function () {
         expect(isDVB).to.be.false; // jshint ignore:line
     });   
 
+    it('should return NaN when getManifestUpdatePeriod is called and manifest is undefined', () => {
+        const updatePeriod = dashManifestModel.getManifestUpdatePeriod();
+        expect(updatePeriod).to.be.NaN; // jshint ignore:line
+    });    
+
     it('should return NaN when minimumUpdatePeriod is not present in manifest', () => {
         const manifest = {};
         const updatePeriod = dashManifestModel.getManifestUpdatePeriod(manifest);
