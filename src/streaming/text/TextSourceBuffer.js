@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from '../constants/Constants';
+import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import TextTrackInfo from '../vo/TextTrackInfo';
 import FragmentedTextBoxParser from '../../dash/utils/FragmentedTextBoxParser';
 import BoxParser from '../utils/BoxParser';
@@ -391,7 +392,7 @@ function TextSourceBuffer() {
                 errHandler.timedTextError(e, 'parse', ccContent);
             }
         } else if (mediaType === Constants.VIDEO) { //embedded text
-            if (chunk.segmentType === 'InitializationSegment') {
+            if (chunk.segmentType === HTTPRequest.INIT_SEGMENT_TYPE) {
                 if (embeddedTimescale === 0) {
                     embeddedTimescale = fragmentedTextBoxParser.getMediaTimescaleFromMoov(bytes);
                     for (i = 0; i < embeddedTracks.length; i++) {
