@@ -278,6 +278,33 @@ describe('DashManifestModel', function () {
         expect(bitrateList).to.be.null; // jshint ignore:line
     });
 
+    it('should return null when getRepresentationFor is called and index and adaptation are undefined', () => {
+        const representation = dashManifestModel.getRepresentationFor();
+
+        expect(representation).to.be.null; // jshint ignore:line
+    });
+
+    it('should return null when getRepresentationFor is called and index and andadaptation.Representation_asArray are undefined', () => {
+        const adaptation = {};
+        const representation = dashManifestModel.getRepresentationFor(undefined, adaptation);
+
+        expect(representation).to.be.null; // jshint ignore:line
+    });
+
+    it('should return null when getRepresentationFor is called and index is undefined', () => {
+        var adaptation = mpdHelper.composeAdaptation('video');
+        const representation = dashManifestModel.getRepresentationFor(undefined, adaptation);
+
+        expect(representation).to.be.null; // jshint ignore:line
+    });
+
+    it('should return representation.id = video25 when getRepresentationFor is called', () => {
+        var adaptation = mpdHelper.composeAdaptation('video');
+        const representation = dashManifestModel.getRepresentationFor(0, adaptation);
+
+        expect(representation.id).equal('video25'); // jshint ignore:line
+    });
+    
     it('should return false when getIsDVB is called and manifest is undefined', () => {
         const IsDVB = dashManifestModel.getIsDVB();
 

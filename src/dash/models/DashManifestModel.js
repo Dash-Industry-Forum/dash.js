@@ -362,7 +362,7 @@ function DashManifestModel() {
     }
 
     function getRepresentationFor(index, adaptation) {
-        return adaptation.Representation_asArray[index];
+        return adaptation && adaptation.Representation_asArray && adaptation.Representation_asArray.length > 0 && Number.isInteger(index) ? adaptation.Representation_asArray[index] : null;
     }
 
     function getRepresentationsForAdaptation(voAdaptation) {
