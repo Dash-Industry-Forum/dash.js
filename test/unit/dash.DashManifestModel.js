@@ -304,6 +304,12 @@ describe('DashManifestModel', function () {
 
         expect(representation.id).equal('video25'); // jshint ignore:line
     });
+
+    it('should return undefined when getLocation is called and manifest is undefined', () => {
+        const location = dashManifestModel.getLocation();
+
+        expect(location).to.be.undefined; // jshint ignore:line
+    });
     
     it('should return false when getIsDVB is called and manifest is undefined', () => {
         const IsDVB = dashManifestModel.getIsDVB();

@@ -879,14 +879,16 @@ function DashManifestModel() {
     }
 
     function getLocation(manifest) {
-        if (manifest.hasOwnProperty('Location')) {
+        if (manifest && manifest.hasOwnProperty('Location')) {
             // for now, do not support multiple Locations -
             // just set Location to the first Location.
             manifest.Location = manifest.Location_asArray[0];
+
+            return manifest.Location;
         }
 
         // may well be undefined
-        return manifest.Location;
+        return undefined;
     }
 
     instance = {
