@@ -538,6 +538,7 @@ function DashManifestModel() {
         let len,
             i;
 
+
         for (i = 0, len = mpd.manifest.Period_asArray.length; i < len; i++) {
             realPeriod = mpd.manifest.Period_asArray[i];
 

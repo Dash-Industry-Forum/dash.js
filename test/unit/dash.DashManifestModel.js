@@ -344,6 +344,13 @@ describe('DashManifestModel', function () {
 
         expect(mpd.manifest).to.be.null;                // jshint ignore:line
     });
+
+    it('should return an empty array when getRegularPeriods is called and manifest and mpd are undefined', () => {
+        const periodsArray = dashManifestModel.getRegularPeriods();
+
+        expect(periodsArray).to.be.instanceOf(Array);    // jshint ignore:line
+        expect(periodsArray).to.be.empty;                // jshint ignore:line
+    });
             
     it('should return false when getIsDVB is called and manifest is undefined', () => {
         const IsDVB = dashManifestModel.getIsDVB();
