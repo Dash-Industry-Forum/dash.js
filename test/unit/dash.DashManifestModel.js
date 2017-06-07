@@ -12,6 +12,36 @@ const SERVICE_LOCATION = 'testServiceLocation';
 
 describe('DashManifestModel', function () {
 
+    it('should return true when getIsDVB is called and manifest contains a valid DVB profile', () => {
+        const manifest = {
+            profiles: 'urn:dvb:dash:profile:dvb-dash:2014,urn:dvb:dash:profile:dvb-dash:isoff-ext-live:2014'
+        };
+
+        const isDVB = dashManifestModel.getIsDVB(manifest);
+
+        expect(isDVB).to.be.true; // jshint ignore:line
+    });
+
+    it('should return false when getIsDVB is called and manifest does not contain a valid DVB profile', () => {
+        const manifest = {
+            profiles: 'urn:mpeg:dash:profile:isoff-on-demand:2011, http://dashif.org/guildelines/dash264'
+        };
+
+        const isDVB = dashManifestModel.getIsDVB(manifest);
+
+        expect(isDVB).to.be.false; // jshint ignore:line
+    });
+
+    it('should return true when getIsOnDemand is called and manifest contains the on-demand profile', () => {
+        const manifest = {
+            profiles: 'urn:dvb:dash:profile:dvb-dash:2014,urn:mpeg:dash:profile:isoff-on-demand:2011'
+        };
+
+        const isOnDemand = dashManifestModel.getIsOnDemand(manifest);
+
+        expect(isOnDemand).to.be.true; // jshint ignore:line
+    });
+
     it('should return NaN when minimumUpdatePeriod is not present in manifest', () => {
         const manifest = {};
         const updatePeriod = dashManifestModel.getManifestUpdatePeriod(manifest);

@@ -281,6 +281,24 @@ function DashManifestModel() {
         return isDynamic;
     }
 
+    function hasProfile(manifest, profile) {
+        var has = false;
+
+        if (manifest.profiles && manifest.profiles.length > 0) {
+            has = (manifest.profiles.indexOf(profile) !== -1);
+        }
+
+        return has;
+    }
+
+    function getIsOnDemand(manifest) {
+        return hasProfile(manifest, 'urn:mpeg:dash:profile:isoff-on-demand:2011');
+    }
+
+    function getIsDVB(manifest) {
+        return hasProfile(manifest, 'urn:dvb:dash:profile:dvb-dash:2014');
+    }
+
     function getDuration(manifest) {
         let mpdDuration;
         //@mediaPresentationDuration specifies the duration of the entire Media Presentation.
@@ -884,6 +902,8 @@ function DashManifestModel() {
         getKID: getKID,
         getContentProtectionData: getContentProtectionData,
         getIsDynamic: getIsDynamic,
+        getIsOnDemand: getIsOnDemand,
+        getIsDVB: getIsDVB,
         getDuration: getDuration,
         getBandwidth: getBandwidth,
         getManifestUpdatePeriod: getManifestUpdatePeriod,
