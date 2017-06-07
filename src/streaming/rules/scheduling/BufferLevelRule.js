@@ -53,7 +53,7 @@ function BufferLevelRule(config) {
         if (type === Constants.FRAGMENTED_TEXT) {
             bufferTarget = textController.getAllTracksAreDisabled() ? 0 : representationInfo.fragmentDuration;
         } else if (type === Constants.AUDIO && videoTrackPresent) {
-            const videoBufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor('video'));
+            const videoBufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor(Constants.VIDEO));
             bufferTarget = Math.floor(Math.max(videoBufferLevel, representationInfo.fragmentDuration));
         } else {
             const streamInfo = representationInfo.mediaInfo.streamInfo;

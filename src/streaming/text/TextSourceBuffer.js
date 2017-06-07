@@ -185,7 +185,7 @@ function TextSourceBuffer() {
         if (!embeddedInitialized) {
             initEmbedded();
         }
-        if (mediaInfo.id === 'CC1' || mediaInfo.id === 'CC3') {
+        if (mediaInfo.id === Constants.CC1 || mediaInfo.id === Constants.CC3) {
             embeddedTracks.push(mediaInfo);
         } else {
             log('Warning: Embedded track ' + mediaInfo.id + ' not supported!');
@@ -272,10 +272,10 @@ function TextSourceBuffer() {
 
             const checkTTML = function () {
                 let ttml = false;
-                if (mediaInfo.codec && mediaInfo.codec.search('stpp') >= 0) {
+                if (mediaInfo.codec && mediaInfo.codec.search(Constants.STPP) >= 0) {
                     ttml = true;
                 }
-                if (mediaInfo.mimeType && mediaInfo.mimeType.search('ttml') >= 0) {
+                if (mediaInfo.mimeType && mediaInfo.mimeType.search(Constants.TTML) >= 0) {
                     ttml = true;
                 }
                 return ttml;
@@ -309,7 +309,7 @@ function TextSourceBuffer() {
                 if (!firstSubtitleStart && sampleList.length > 0) {
                     firstSubtitleStart = sampleList[0].cts - chunk.start * timescale;
                 }
-                if (codecType.search('stpp') >= 0) {
+                if (codecType.search(Constants.STPP) >= 0) {
                     parser = parser !== null ? parser : getParser(codecType);
                     for (i = 0; i < sampleList.length; i++) {
                         let sample = sampleList[i];
@@ -317,7 +317,7 @@ function TextSourceBuffer() {
                         let sampleRelStart = sampleStart - firstSubtitleStart;
                         this.buffered.add(sampleRelStart / timescale, (sampleRelStart + sample.duration) / timescale);
                         let dataView = new DataView(bytes, sample.offset, sample.subSizes[0]);
-                        ccContent = ISOBoxer.Utils.dataViewToString(dataView, 'utf-8');
+                        ccContent = ISOBoxer.Utils.dataViewToString(dataView, Constants.UTF8);
                         let images = [];
                         let subOffset = sample.offset + sample.subSizes[0];
                         for (j = 1; j < sample.subSizes.length; j++) {
@@ -380,9 +380,9 @@ function TextSourceBuffer() {
                     }
                 }
             }
-        } else if (mediaType === 'text') {
+        } else if (mediaType === Constants.TEXT) {
             let dataView = new DataView(bytes, 0, bytes.byteLength);
-            ccContent = ISOBoxer.Utils.dataViewToString(dataView, 'utf-8');
+            ccContent = ISOBoxer.Utils.dataViewToString(dataView, Constants.UTF8);
 
             try {
                 result = getParser(codecType).parse(ccContent, 0);
@@ -390,7 +390,7 @@ function TextSourceBuffer() {
             } catch (e) {
                 errHandler.timedTextError(e, 'parse', ccContent);
             }
-        } else if (mediaType === 'video') { //embedded text
+        } else if (mediaType === Constants.VIDEO) { //embedded text
             if (chunk.segmentType === 'InitializationSegment') {
                 if (embeddedTimescale === 0) {
                     embeddedTimescale = fragmentedTextBoxParser.getMediaTimescaleFromMoov(bytes);
@@ -434,12 +434,12 @@ function TextSourceBuffer() {
                     // Time to setup the CEA-608 parsing
                     let field, handler, trackIdx;
                     for (i = 0; i < embeddedTracks.length; i++) {
-                        if (embeddedTracks[i].id === 'CC1') {
+                        if (embeddedTracks[i].id === Constants.CC1) {
                             field = 0;
-                            trackIdx = textTracks.getTrackIdxForId('CC1');
-                        } else if (embeddedTracks[i].id === 'CC3') {
+                            trackIdx = textTracks.getTrackIdxForId(Constants.CC1);
+                        } else if (embeddedTracks[i].id === Constants.CC3) {
                             field = 1;
-                            trackIdx = textTracks.getTrackIdxForId('CC3');
+                            trackIdx = textTracks.getTrackIdxForId(Constants.CC3);
                         }
                         if (trackIdx === -1) {
                             log('CEA-608: data before track is ready.');
@@ -540,7 +540,7 @@ function TextSourceBuffer() {
         // Eg subtitles etc. You can have multiple role tags per adaptation Not defined in the spec yet.
         let isDefault = false;
         if (embeddedTracks.length > 1 && mediaInfo.isEmbedded) {
-            isDefault = (mediaInfo.id && mediaInfo.id === 'CC1'); // CC1 if both CC1 and CC3 exist
+            isDefault = (mediaInfo.id && mediaInfo.id === Constants.CC1); // CC1 if both CC1 and CC3 exist
         } else if (embeddedTracks.length === 1) {
             if (mediaInfo.id && mediaInfo.id.substring(0, 2) === 'CC') { // Either CC1 or CC3
                 isDefault = true;
@@ -553,9 +553,9 @@ function TextSourceBuffer() {
 
     function getParser(codecType) {
         let parser;
-        if (codecType.search('vtt') >= 0) {
+        if (codecType.search(Constants.VTT) >= 0) {
             parser = vttParser;
-        } else if (codecType.search('ttml') >= 0 || codecType.search('stpp') >= 0) {
+        } else if (codecType.search(Constants.TTML) >= 0 || codecType.search(Constants.STPP) >= 0) {
             parser = ttmlParser;
         }
         return parser;

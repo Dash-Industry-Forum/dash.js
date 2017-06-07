@@ -28,10 +28,8 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
-import {
-    PlayListTrace
-} from '../vo/metrics/PlayList';
+import Constants from '../constants/Constants';
+import {PlayListTrace} from '../vo/metrics/PlayList';
 import AbrController from './AbrController';
 import BufferController from './BufferController';
 import BufferLevelRule from '../rules/scheduling/BufferLevelRule';
@@ -385,7 +383,7 @@ function ScheduleController(config) {
             seekTarget = request.startTime;
         }
 
-        const manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metricsModel.getMetricsFor('stream'));
+        const manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metricsModel.getMetricsFor(Constants.STREAM));
         metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {
             currentTime: seekTarget,
             presentationStartTime: liveEdge,
@@ -509,7 +507,7 @@ function ScheduleController(config) {
             start();
         }
 
-        const manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metricsModel.getMetricsFor('stream'));
+        const manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metricsModel.getMetricsFor(Constants.STREAM));
         const latency = currentRepresentationInfo.DVRWindow && playbackController ? currentRepresentationInfo.DVRWindow.end - playbackController.getTime() : NaN;
         metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {
             latency: latency

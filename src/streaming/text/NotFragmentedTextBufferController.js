@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import Constants from '../constants/Constants';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
@@ -80,7 +81,7 @@ function NotFragmentedTextBufferController(config) {
             buffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
 
             if (!initialized) {
-                if (buffer.hasOwnProperty('initialize')) {
+                if (buffer.hasOwnProperty(Constants.INITIALIZE)) {
                     buffer.initialize(type, streamProcessor);
                 }
                 initialized = true;

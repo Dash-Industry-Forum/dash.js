@@ -1,3 +1,4 @@
+import Constants from '../../../streaming/constants/Constants';
 import Metrics from '../vo/Metrics';
 import Range from '../vo/Range';
 import Reporting from '../vo/Reporting';
@@ -35,7 +36,7 @@ function ManifestParsing (config) {
         // consumption.
         reportingStartTime = presentationStartTime;
 
-        if (range && range.hasOwnProperty('starttime')) {
+        if (range && range.hasOwnProperty(Constants.START_TIME)) {
             reportingStartTime += range.starttime;
         }
 
@@ -82,7 +83,7 @@ function ManifestParsing (config) {
                     metric.Reporting_asArray.forEach(reporting => {
                         var reportingEntry = new Reporting();
 
-                        if (reporting.hasOwnProperty('schemeIdUri')) {
+                        if (reporting.hasOwnProperty(Constants.SCHEME_ID_URI)) {
                             reportingEntry.schemeIdUri = reporting.schemeIdUri;
                         } else {
                             // Invalid Reporting. schemeIdUri must be set. Ignore.

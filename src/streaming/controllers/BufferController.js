@@ -125,7 +125,7 @@ function BufferController(config) {
         try {
             sourceBuffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
 
-            if (sourceBuffer && sourceBuffer.hasOwnProperty('initialize')) {
+            if (sourceBuffer && sourceBuffer.hasOwnProperty(Constants.INITIALIZE)) {
                 sourceBuffer.initialize(type, streamProcessor);
             }
         } catch (e) {
@@ -186,7 +186,7 @@ function BufferController(config) {
         appendedBytesInfo = chunk;
         sourceBufferController.append(buffer, chunk);
 
-        if (chunk.mediaInfo.type === 'video') {
+        if (chunk.mediaInfo.type === Constants.VIDEO) {
             eventBus.trigger(Events.VIDEO_CHUNK_RECEIVED, {chunk: chunk});
         }
     }

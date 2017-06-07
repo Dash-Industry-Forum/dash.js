@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import Constants from '../constants/Constants';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
@@ -163,7 +164,7 @@ function TextTracks() {
             setCurrentTrackIdx.call(this, defaultIndex);
             if (defaultIndex >= 0) {
                 for (let idx = 0; idx < video.textTracks.length; idx++) {
-                    video.textTracks[idx].mode = (idx === defaultIndex) ? 'showing' : 'hidden';
+                    video.textTracks[idx].mode = (idx === defaultIndex) ? Constants.TEXT_SHOWING : Constants.TEXT_HIDDEN;
                 }
                 this.addCaptions(defaultIndex, 0, null);
             }
@@ -346,7 +347,7 @@ function TextTracks() {
         if (!track) {
             return;
         }
-        if (track.mode !== 'showing') {
+        if (track.mode !== Constants.TEXT_SHOWING) {
             if (captionData && captionData.length > 0) {
                 track.nonAddedCues = track.nonAddedCues.concat(captionData);
             }
@@ -393,7 +394,7 @@ function TextTracks() {
                 captionContainer.style.height = actualVideoHeight + 'px';
 
                 cue.onenter = function () {
-                    if (track.mode === 'showing') {
+                    if (track.mode === Constants.TEXT_SHOWING) {
                         if (this.isd) {
                             var finalCue = document.createElement('div');
                             log('Cue enter id:' + this.cueID);

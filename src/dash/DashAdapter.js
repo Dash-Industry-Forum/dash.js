@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
+import Constants from '../streaming/constants/Constants';
 import TrackInfo from '../streaming/vo/TrackInfo';
 import MediaInfo from '../streaming/vo/MediaInfo';
 import StreamInfo from '../streaming/vo/StreamInfo';
@@ -150,7 +150,7 @@ function DashAdapter() {
     function convertVideoInfoToEmbeddedTextInfo(mediaInfo, channel, lang) {
         mediaInfo.id = channel; // CC1, CC2, CC3, or CC4
         mediaInfo.index = 100 + parseInt(channel.substring(2, 3));
-        mediaInfo.type = 'embeddedText';
+        mediaInfo.type = Constants.EMBEDDED_TEXT;
         mediaInfo.codec = 'cea-608-in-SEI';
         mediaInfo.isText = true;
         mediaInfo.isEmbedded = true;
@@ -232,7 +232,7 @@ function DashAdapter() {
 
         const selectedVoPeriod = getPeriodForStreamInfo(streamInfo, voLocalPeriods);
         const periodId = selectedVoPeriod.id;
-        const adaptationsForType = dashManifestModel.getAdaptationsForType(manifest, streamInfo.index, type !== 'embeddedText' ? type : 'video');
+        const adaptationsForType = dashManifestModel.getAdaptationsForType(manifest, streamInfo.index, type !== Constants.EMBEDDED_TEXT ? type : Constants.VIDEO);
 
         if (!adaptationsForType) return mediaArr;
 
@@ -243,7 +243,7 @@ function DashAdapter() {
             idx = dashManifestModel.getIndexForAdaptation(data, manifest, streamInfo.index);
             media = convertAdaptationToMediaInfo(voAdaptations[periodId][idx]);
 
-            if (type === 'embeddedText') {
+            if (type === Constants.EMBEDDED_TEXT) {
                 let accessibilityLength = media.accessibility.length;
                 for (j = 0; j < accessibilityLength; j++) {
                     if (!media) {
@@ -273,13 +273,13 @@ function DashAdapter() {
                             }
                         }
                     } else if (accessibility.indexOf('cea-608') === 0) { // Nothing known. We interpret it as CC1=eng
-                        convertVideoInfoToEmbeddedTextInfo(media, 'CC1', 'eng');
+                        convertVideoInfoToEmbeddedTextInfo(media, Constants.CC1, 'eng');
                         mediaArr.push(media);
                         media = null;
                     }
                 }
             }
-            if (media && type !== 'embeddedText') {
+            if (media && type !== Constants.EMBEDDED_TEXT) {
                 mediaArr.push(media);
             }
         }

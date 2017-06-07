@@ -112,7 +112,7 @@ function AbrController() {
         abandonmentStateDict[type] = abandonmentStateDict[type] || {};
         abandonmentStateDict[type].state = ALLOW_LOAD;
         eventBus.on(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
-        if (type == 'video') {
+        if (type == Constants.VIDEO) {
             eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_RENDERED, onQualityChangeRendered, this);
             droppedFramesHistory = DroppedFramesHistory(context).create();
             setElementSize();
@@ -196,7 +196,7 @@ function AbrController() {
     }
 
     function onQualityChangeRendered(e) {
-        if (e.mediaType === 'video') {
+        if (e.mediaType === Constants.VIDEO) {
             playbackIndex = e.oldQuality;
             droppedFramesHistory.push(playbackIndex, videoModel.getPlaybackQuality());
         }
@@ -245,7 +245,7 @@ function AbrController() {
             } else if (!isNaN(savedBitrate)) {
                 bitrateDict[type] = savedBitrate;
             } else {
-                bitrateDict[type] = (type === 'video') ? DEFAULT_VIDEO_BITRATE : DEFAULT_AUDIO_BITRATE;
+                bitrateDict[type] = (type === Constants.VIDEO) ? DEFAULT_VIDEO_BITRATE : DEFAULT_AUDIO_BITRATE;
             }
         }
 
@@ -512,10 +512,10 @@ function AbrController() {
         let isAtTop;
         let streamId = streamInfo.id;
         const audioQuality = getQualityFor(Constants.AUDIO);
-        const videoQuality = getQualityFor('video');
+        const videoQuality = getQualityFor(Constants.VIDEO);
 
         isAtTop = (audioQuality === getTopQualityIndexFor(Constants.AUDIO, streamId)) &&
-            (videoQuality === getTopQualityIndexFor('video', streamId));
+            (videoQuality === getTopQualityIndexFor(Constants.VIDEO, streamId));
 
         return isAtTop;
     }
@@ -592,7 +592,7 @@ function AbrController() {
     }
 
     function checkPortalSize(idx, type) {
-        if (type !== 'video' || !limitBitrateByPortal || !streamProcessorDict[type]) {
+        if (type !== Constants.VIDEO || !limitBitrateByPortal || !streamProcessorDict[type]) {
             return idx;
         }
 

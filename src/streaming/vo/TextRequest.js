@@ -32,6 +32,7 @@
  * @class
  * @ignore
  */
+import Constants from '../constants/Constants';
 import FragmentRequest from './FragmentRequest';
 
 class TextRequest extends FragmentRequest {
@@ -39,8 +40,8 @@ class TextRequest extends FragmentRequest {
         super();
         this.url = url || null;
         this.type = type || null;
-        this.mediaType = 'stream';
-        this.responseType = 'text';
+        this.mediaType = Constants.STREAM;
+        this.responseType = Constants.TEXT;
     }
 }
 

@@ -290,7 +290,7 @@ function StreamProcessor(config) {
     function createBufferControllerForType(type) {
         let controller = null;
 
-        if (type === 'video' || type === Constants.AUDIO) {
+        if (type === Constants.VIDEO || type === Constants.AUDIO) {
             controller = BufferController(context).create({
                 type: type,
                 metricsModel: metricsModel,

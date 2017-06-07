@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import Constants from '../constants/Constants';
 import MetricsList from '../vo/MetricsList';
 import TCPConnection from '../vo/metrics/TCPConnection';
 import {HTTPRequest, HTTPRequestTrace} from '../vo/metrics/HTTPRequest';
@@ -332,7 +333,7 @@ function MetricsModel() {
         vo.buffered = buffered; // actual element.ranges
         vo.latency = latency; // (static is fixed value of zero. dynamic should be ((Now-@availabilityStartTime) - currentTime)
 
-        pushMetrics('stream', 'ManifestUpdate', vo);
+        pushMetrics(Constants.STREAM, 'ManifestUpdate', vo);
         metricAdded(mediaType, adapter.metricsList.MANIFEST_UPDATE, vo);
 
         return vo;
@@ -386,7 +387,7 @@ function MetricsModel() {
     }
 
     function addPlayList(vo) {
-        let type = 'stream';
+        let type = Constants.STREAM;
 
         if (vo.trace && Array.isArray(vo.trace)) {
             vo.trace.forEach(trace => {
@@ -404,7 +405,7 @@ function MetricsModel() {
     }
 
     function addDVBErrors(vo) {
-        let type = 'stream';
+        let type = Constants.STREAM;
 
         pushAndNotify(type, adapter.metricsList.DVB_ERRORS, vo);
 

@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
+import Constants from '../../streaming/constants/Constants';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import BASE64 from '../../../externals/base64';
@@ -197,7 +197,7 @@ function MssParser(config) {
             representation.audioSamplingRate = parseInt(qualityLevel.getAttribute('SamplingRate'), 10);
             representation.audioChannels = parseInt(qualityLevel.getAttribute('Channels'), 10);
         } else if (fourCCValue.indexOf('TTML') || fourCCValue.indexOf('DFXP')) {
-            representation.codecs = 'stpp';
+            representation.codecs = Constants.STPP;
         }
 
         representation.codecPrivateData = '' + qualityLevel.getAttribute('CodecPrivateData');
@@ -510,7 +510,7 @@ function MssParser(config) {
         for (i = 0; i < adaptations.length; i += 1) {
             // In case of VOD streams, check if start time is greater than 0.
             // Therefore, set period start time to the higher adaptation start time
-            if (manifest.type === 'static' && adaptations[i].contentType !== 'text') {
+            if (manifest.type === 'static' && adaptations[i].contentType !== Constants.TEXT) {
                 firstSegment = adaptations[i].SegmentTemplate.SegmentTimeline.S_asArray[0];
                 lastSegment = adaptations[i].SegmentTemplate.SegmentTimeline.S_asArray[adaptations[i].SegmentTemplate.SegmentTimeline.S_asArray.length - 1];
                 adaptations[i].SegmentTemplate.initialization = '$Bandwidth$';

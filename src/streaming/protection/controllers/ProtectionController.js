@@ -112,7 +112,7 @@ function ProtectionController(config) {
             }
 
             audioInfo = aInfo || (streamInfo ? adapter.getMediaInfoForType(streamInfo, Constants.AUDIO) : null);
-            videoInfo = vInfo || (streamInfo ? adapter.getMediaInfoForType(streamInfo, 'video') : null);
+            videoInfo = vInfo || (streamInfo ? adapter.getMediaInfoForType(streamInfo, Constants.VIDEO) : null);
             let mediaInfo = (videoInfo) ? videoInfo : audioInfo; // We could have audio or video only
 
             // ContentProtection elements are specified at the AdaptationSet level, so the CP for audio

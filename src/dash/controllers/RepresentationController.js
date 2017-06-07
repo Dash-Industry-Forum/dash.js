@@ -174,7 +174,7 @@ function RepresentationController(config) {
         currentVoRepresentation = getRepresentationForQuality(quality);
         realAdaptation = newRealAdaptation;
 
-        if (type !== 'video' && type !== Constants.AUDIO && type !== Constants.FRAGMENTED_TEXT) {
+        if (type !== Constants.VIDEO && type !== Constants.AUDIO && type !== Constants.FRAGMENTED_TEXT) {
             updating = false;
             eventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: this, data: realAdaptation, currentRepresentation: currentVoRepresentation});
             return;
@@ -269,8 +269,8 @@ function RepresentationController(config) {
         if (e.sender.getStreamProcessor() !== streamProcessor || !isUpdating()) return;
 
         let r = e.representation;
-        let streamMetrics = metricsModel.getMetricsFor('stream');
-        let metrics = metricsModel.getMetricsFor(getCurrentRepresentation().adaptation.type);
+        let streamMetrics = metricsModel.getMetricsFor(Constants.STREAM);
+        var metrics = metricsModel.getMetricsFor(getCurrentRepresentation().adaptation.type);
         let manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(streamMetrics);
         let alreadyAdded = false;
         let postponeTimePeriod = 0;

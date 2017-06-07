@@ -286,7 +286,7 @@ function MediaController() {
      * @memberof MediaController#
      */
     function isMultiTrackSupportedByType(type) {
-        return (type === Constants.AUDIO || type === 'video' || type === 'text' || type === Constants.FRAGMENTED_TEXT);
+        return (type === Constants.AUDIO || type === Constants.VIDEO || type === Constants.TEXT || type === Constants.FRAGMENTED_TEXT);
     }
 
     /**

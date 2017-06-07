@@ -105,13 +105,9 @@ class DashConstants {
         this.MIN_BUFFER_TIME = 'minBufferTime';
         this.MAX_SUBSEGMENT_DURATION = 'maxSubsegmentDuration';
         this.START = 'start';
-
-        this.SUGGESTED_PRESENTATION_DELAY = 'suggestedPresentationDelay';
         this.CENC_DEFAULT_KID = 'cenc:default_KID';
-        this.SCHEME_ID_URI = 'schemeIdUri';
         this.DVB_PRIORITY = 'dvb:priority';
         this.DVB_WEIGHT = 'dvb:weight';
-        this.START_TIME = 'starttime';
     }
 }
 

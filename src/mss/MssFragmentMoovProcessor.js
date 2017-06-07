@@ -85,7 +85,7 @@ function MssFragmentMoovProcessor() {
         let minf = ISOBoxer.createBox('minf', mdia);
 
         switch (adaptationSet.type) {
-            case 'video':
+            case Constants.VIDEO:
                 // moov/trak/mdia/minf/vmhd
                 createVmhdBox(minf);
                 break;
@@ -216,10 +216,10 @@ function MssFragmentMoovProcessor() {
 
         hdlr.pre_defined = 0;
         switch (adaptationSet.type) {
-            case 'video':
+            case Constants.VIDEO:
                 hdlr.handler_type = 'vide';
                 break;
-            case Constants.Audio:
+            case Constants.AUDIO:
                 hdlr.handler_type = 'soun';
                 break;
             default:
@@ -278,7 +278,7 @@ function MssFragmentMoovProcessor() {
 
         stsd.entries = [];
         switch (adaptationSet.type) {
-            case 'video':
+            case Constants.VIDEO:
             case Constants.AUDIO:
                 stsd.entries.push(createSampleEntry(stsd));
                 break;

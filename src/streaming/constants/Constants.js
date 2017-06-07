@@ -36,8 +36,27 @@
  */
 class Constants {
     constructor () {
+        this.STREAM = 'stream';
+        this.VIDEO = 'video';
         this.AUDIO = 'audio';
+        this.TEXT = 'text';
         this.FRAGMENTED_TEXT = 'fragmentedText';
+        this.EMBEDDED_TEXT = 'embeddedText';
+        this.MUXED = 'muxed';
+        this.LOCATION = 'Location';
+        this.INITIALIZE = 'initialize';
+        this.TEXT_SHOWING = 'showing';
+        this.TEXT_HIDDEN = 'hidden';
+        this.CC1 = 'CC1';
+        this.CC3 = 'CC3';
+        this.STPP = 'stpp';
+        this.TTML = 'ttml';
+        this.VTT = 'vtt';
+        this.WVTT = 'wvtt';
+        this.UTF8 = 'utf-8';
+        this.SUGGESTED_PRESENTATION_DELAY = 'suggestedPresentationDelay';
+        this.SCHEME_ID_URI = 'schemeIdUri';
+        this.START_TIME = 'starttime';
     }
 }
 

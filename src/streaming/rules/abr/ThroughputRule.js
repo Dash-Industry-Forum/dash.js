@@ -28,7 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from '../../constants/Constants';
 import BufferController from '../../controllers/BufferController';
 import AbrController from '../../controllers/AbrController';
 import FactoryMaker from '../../../core/FactoryMaker';

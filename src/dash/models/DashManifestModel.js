@@ -77,20 +77,20 @@ function DashManifestModel(config) {
             col = adaptation.ContentComponent_asArray;
         }
 
-        mimeTypeRegEx = (type !== 'text') ? new RegExp(type) : new RegExp('(vtt|ttml)');
+        mimeTypeRegEx = (type !== Constants.TEXT) ? new RegExp(type) : new RegExp('(vtt|ttml)');
 
         if ((adaptation.Representation_asArray && adaptation.Representation_asArray.length && adaptation.Representation_asArray.length > 0) &&
             (adaptation.Representation_asArray[0].hasOwnProperty(DashConstants.CODECS))) {
             // Just check the start of the codecs string
             codecs = adaptation.Representation_asArray[0].codecs;
-            if (codecs.search('stpp') === 0 || codecs.search('wvtt') === 0) {
+            if (codecs.search(Constants.STPP) === 0 || codecs.search(Constants.WVTT) === 0) {
                 return type === Constants.FRAGMENTED_TEXT;
             }
         }
 
         if (col) {
             if (col.length > 1) {
-                return (type === 'muxed');
+                return (type === Constants.MUXED);
             } else if (col[0] && col[0].contentType === type) {
                 result = true;
                 found = true;
@@ -126,7 +126,7 @@ function DashManifestModel(config) {
     }
 
     function getIsVideo(adaptation) {
-        return getIsTypeOf(adaptation, 'video');
+        return getIsTypeOf(adaptation, Constants.VIDEO);
     }
 
     function getIsFragmentedText(adaptation) {
@@ -134,11 +134,11 @@ function DashManifestModel(config) {
     }
 
     function getIsText(adaptation) {
-        return getIsTypeOf(adaptation, 'text');
+        return getIsTypeOf(adaptation, Constants.TEXT);
     }
 
     function getIsMuxed(adaptation) {
-        return getIsTypeOf(adaptation, 'muxed');
+        return getIsTypeOf(adaptation, Constants.MUXED);
     }
 
     function getIsTextTrack(type) {
@@ -518,20 +518,19 @@ function DashManifestModel(config) {
                 if (realAdaptationSet.hasOwnProperty(DashConstants.ID)) {
                     voAdaptationSet.id = realAdaptationSet.id;
                 }
-
                 voAdaptationSet.index = i;
                 voAdaptationSet.period = voPeriod;
 
                 if (getIsMuxed(realAdaptationSet)) {
-                    voAdaptationSet.type = 'muxed';
+                    voAdaptationSet.type = Constants.MUXED;
                 } else if (getIsAudio(realAdaptationSet)) {
                     voAdaptationSet.type = Constants.AUDIO;
                 }else if (getIsVideo(realAdaptationSet)) {
-                    voAdaptationSet.type = 'video';
+                    voAdaptationSet.type = Constants.VIDEO;
                 }else if (getIsFragmentedText(realAdaptationSet)) {
                     voAdaptationSet.type = Constants.FRAGMENTED_TEXT;
                 }else {
-                    voAdaptationSet.type = 'text';
+                    voAdaptationSet.type = Constants.TEXT;
                 }
                 voAdaptations.push(voAdaptationSet);
             }
@@ -659,7 +658,7 @@ function DashManifestModel(config) {
                 mpd.mediaPresentationDuration = manifest.mediaPresentationDuration;
             }
 
-            if (manifest.hasOwnProperty(DashConstants.SUGGESTED_PRESENTATION_DELAY)) {
+            if (manifest.hasOwnProperty(Constants.SUGGESTED_PRESENTATION_DELAY)) {
                 mpd.suggestedPresentationDelay = manifest.suggestedPresentationDelay;
             }
 
@@ -707,7 +706,7 @@ function DashManifestModel(config) {
                 eventStream.period = period;
                 eventStream.timescale = 1;
 
-                if (eventStreams[i].hasOwnProperty(DashConstants.SCHEME_ID_URI)) {
+                if (eventStreams[i].hasOwnProperty(Constants.SCHEME_ID_URI)) {
                     eventStream.schemeIdUri = eventStreams[i].schemeIdUri;
                 } else {
                     throw new Error('Invalid EventStream. SchemeIdUri has to be set');
@@ -751,7 +750,7 @@ function DashManifestModel(config) {
             eventStream.timescale = 1;
             eventStream.representation = representation;
 
-            if (inbandStreams[i].hasOwnProperty(DashConstants.SCHEME_ID_URI)) {
+            if (inbandStreams[i].hasOwnProperty(Constants.SCHEME_ID_URI)) {
                 eventStream.schemeIdUri = inbandStreams[i].schemeIdUri;
             } else {
                 throw new Error('Invalid EventStream. SchemeIdUri has to be set');
@@ -824,7 +823,7 @@ function DashManifestModel(config) {
                 utcTimingsArray.forEach(function (utcTiming) {
                     let entry = new UTCTiming();
 
-                    if (utcTiming.hasOwnProperty(DashConstants.SCHEME_ID_URI)) {
+                    if (utcTiming.hasOwnProperty(Constants.SCHEME_ID_URI)) {
                         entry.schemeIdUri = utcTiming.schemeIdUri;
                     } else {
                         // entries of type DescriptorType with no schemeIdUri
@@ -918,7 +917,7 @@ function DashManifestModel(config) {
     }
 
     function getLocation(manifest) {
-        if (manifest && manifest.hasOwnProperty('Location')) {
+        if (manifest && manifest.hasOwnProperty(Constants.LOCATION)) {
             // for now, do not support multiple Locations -
             // just set Location to the first Location.
             manifest.Location = manifest.Location_asArray[0];

@@ -149,7 +149,7 @@ function StreamController() {
         if (isVideoTrackPresent()) {
             const playbackQuality = videoModel.getPlaybackQuality();
             if (playbackQuality) {
-                metricsModel.addDroppedFrames('video', playbackQuality);
+                metricsModel.addDroppedFrames(Constants.VIDEO, playbackQuality);
             }
         }
 
@@ -388,7 +388,7 @@ function StreamController() {
                 throw new Error('There are no streams');
             }
 
-            const manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metricsModel.getMetricsFor('stream'));
+            const manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metricsModel.getMetricsFor(Constants.STREAM));
             metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {
                 currentTime: playbackController.getTime(),
                 buffered: videoModel.getBufferRange(),
@@ -476,7 +476,7 @@ function StreamController() {
             adapter.updatePeriods(manifest);
             let streamInfo = adapter.getStreamsInfo(manifest)[0];
             let mediaInfo = (
-                adapter.getMediaInfoForType(streamInfo, 'video') ||
+                adapter.getMediaInfoForType(manifest, streamInfo, Constants.VIDEO) ||
                 adapter.getMediaInfoForType(streamInfo, Constants.AUDIO)
             );
 
@@ -528,7 +528,7 @@ function StreamController() {
     function checkVideoPresence() {
         let isVideoDetected = false;
         activeStream.getProcessors().forEach(p => {
-            if (p.getMediaInfo().type === 'video') {
+            if (p.getMediaInfo().type === Constants.VIDEO) {
                 isVideoDetected = true;
             }
         });
