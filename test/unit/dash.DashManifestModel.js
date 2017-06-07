@@ -338,7 +338,13 @@ describe('DashManifestModel', function () {
         expect(eventsStream).to.be.instanceOf(Array);    // jshint ignore:line
         expect(eventsStream).to.be.empty;                // jshint ignore:line
     });
-        
+
+    it('should return mpd.manifest = null when getMpd is called and manifest is undefined', () => {
+        const mpd = dashManifestModel.getMpd();
+
+        expect(mpd.manifest).to.be.null;                // jshint ignore:line
+    });
+            
     it('should return false when getIsDVB is called and manifest is undefined', () => {
         const IsDVB = dashManifestModel.getIsDVB();
 

@@ -625,36 +625,38 @@ function DashManifestModel() {
     function getMpd(manifest) {
         let mpd = new Mpd();
 
-        mpd.manifest = manifest;
+        if (manifest) {
+            mpd.manifest = manifest;
 
-        if (manifest.hasOwnProperty('availabilityStartTime')) {
-            mpd.availabilityStartTime = new Date(manifest.availabilityStartTime.getTime());
-        } else {
-            mpd.availabilityStartTime = new Date(manifest.loadedTime.getTime());
-        }
+            if (manifest.hasOwnProperty('availabilityStartTime')) {
+                mpd.availabilityStartTime = new Date(manifest.availabilityStartTime.getTime());
+            } else {
+                mpd.availabilityStartTime = new Date(manifest.loadedTime.getTime());
+            }
 
-        if (manifest.hasOwnProperty('availabilityEndTime')) {
-            mpd.availabilityEndTime = new Date(manifest.availabilityEndTime.getTime());
-        }
+            if (manifest.hasOwnProperty('availabilityEndTime')) {
+                mpd.availabilityEndTime = new Date(manifest.availabilityEndTime.getTime());
+            }
 
-        if (manifest.hasOwnProperty('minimumUpdatePeriod')) {
-            mpd.minimumUpdatePeriod = manifest.minimumUpdatePeriod;
-        }
+            if (manifest.hasOwnProperty('minimumUpdatePeriod')) {
+                mpd.minimumUpdatePeriod = manifest.minimumUpdatePeriod;
+            }
 
-        if (manifest.hasOwnProperty('mediaPresentationDuration')) {
-            mpd.mediaPresentationDuration = manifest.mediaPresentationDuration;
-        }
+            if (manifest.hasOwnProperty('mediaPresentationDuration')) {
+                mpd.mediaPresentationDuration = manifest.mediaPresentationDuration;
+            }
 
-        if (manifest.hasOwnProperty('suggestedPresentationDelay')) {
-            mpd.suggestedPresentationDelay = manifest.suggestedPresentationDelay;
-        }
+            if (manifest.hasOwnProperty('suggestedPresentationDelay')) {
+                mpd.suggestedPresentationDelay = manifest.suggestedPresentationDelay;
+            }
 
-        if (manifest.hasOwnProperty('timeShiftBufferDepth')) {
-            mpd.timeShiftBufferDepth = manifest.timeShiftBufferDepth;
-        }
+            if (manifest.hasOwnProperty('timeShiftBufferDepth')) {
+                mpd.timeShiftBufferDepth = manifest.timeShiftBufferDepth;
+            }
 
-        if (manifest.hasOwnProperty('maxSegmentDuration')) {
-            mpd.maxSegmentDuration = manifest.maxSegmentDuration;
+            if (manifest.hasOwnProperty('maxSegmentDuration')) {
+                mpd.maxSegmentDuration = manifest.maxSegmentDuration;
+            }
         }
 
         return mpd;
