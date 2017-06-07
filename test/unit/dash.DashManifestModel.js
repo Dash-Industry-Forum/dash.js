@@ -272,6 +272,12 @@ describe('DashManifestModel', function () {
         expect(bdtw).to.be.NaN; // jshint ignore:line
     });
 
+    it('should return null when getBitrateListForAdaptation is called and adaptation is undefined', () => {
+        const bitrateList = dashManifestModel.getBitrateListForAdaptation();
+
+        expect(bitrateList).to.be.null; // jshint ignore:line
+    });
+
     it('should return false when getIsDVB is called and manifest is undefined', () => {
         const IsDVB = dashManifestModel.getIsDVB();
 
