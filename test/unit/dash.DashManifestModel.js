@@ -75,12 +75,6 @@ describe('DashManifestModel', function () {
         expect(rolesArray).to.be.empty;                // jshint ignore:line
     });
 
-    it('should return undefined when processAdaptation is called and adaptation is undefined', () => {
-        const adaptation = dashManifestModel.processAdaptation();
-
-        expect(adaptation).to.be.undefined;    // jshint ignore:line
-    });
-
     it('should return null when getAdaptationForId is called and id, manifest and periodIndex are undefined', () => {
         const adaptation = dashManifestModel.getAdaptationForId(undefined, undefined, undefined);
 
