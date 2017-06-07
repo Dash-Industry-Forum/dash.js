@@ -350,6 +350,8 @@ function ScheduleController(config) {
             latency: liveEdge - seekTarget,
             clientTimeOffset: timelineConverter.getClientTimeOffset()
         });
+
+        timelineConverter.setTimeSyncCompleted(true);
     }
 
     function onStreamCompleted(e) {
