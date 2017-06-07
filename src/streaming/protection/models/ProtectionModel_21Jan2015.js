@@ -128,9 +128,10 @@ function ProtectionModel_21Jan2015(config) {
             keySystem = keySystemAccess.keySystem;
             mediaKeys = mkeys;
             if (videoElement) {
-                videoElement.setMediaKeys(mediaKeys);
+                videoElement.setMediaKeys(mediaKeys).then(function () {
+                    eventBus.trigger(Events.INTERNAL_KEY_SYSTEM_SELECTED);
+                });
             }
-            eventBus.trigger(Events.INTERNAL_KEY_SYSTEM_SELECTED);
 
         }).catch(function () {
             eventBus.trigger(Events.INTERNAL_KEY_SYSTEM_SELECTED, {error: 'Error selecting keys system (' + keySystemAccess.keySystem.systemString + ')! Could not create MediaKeys -- TODO'});

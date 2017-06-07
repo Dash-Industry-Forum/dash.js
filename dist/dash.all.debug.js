@@ -1946,7 +1946,8 @@ function X2JS(matchers, attrPrefix, ignoreRoot) {
 	this.parseXmlString = function (xmlDocStr) {
 		var xmlDoc, parser, ns;
 
-		if (window.DOMParser) {
+		// detect IE11
+		if (window.DOMParser && !(window.MSInputMethodContext && !!document.documentMode)) {
 			parser = new window.DOMParser();
 
 			try {
@@ -26483,6 +26484,10 @@ var _Protection = _dereq_(106);
 
 var _Protection2 = _interopRequireDefault(_Protection);
 
+var _externalsBase64 = _dereq_(1);
+
+var _externalsBase642 = _interopRequireDefault(_externalsBase64);
+
 /**
  * @module ProtectionController
  * @description Provides access to media protection information and functionality.  Each
@@ -26839,6 +26844,10 @@ function ProtectionController(config) {
                 if (!event.error) {
                     keySystem = protectionModel.getKeySystem();
                     eventBus.trigger(_coreEventsEvents2['default'].KEY_SYSTEM_SELECTED, { data: keySystemAccess });
+                    var protData = getProtData(keySystem);
+                    if (protData && protData.serverCertificate && protData.serverCertificate.length > 0) {
+                        protectionModel.setServerCertificate(_externalsBase642['default'].decodeArray(protData.serverCertificate).buffer);
+                    }
                     for (var i = 0; i < pendingNeedKeyData.length; i++) {
                         for (ksIdx = 0; ksIdx < pendingNeedKeyData[i].length; ksIdx++) {
                             if (keySystem === pendingNeedKeyData[i][ksIdx].ks) {
@@ -27025,7 +27034,7 @@ ProtectionController.__dashjs_factory_name = 'ProtectionController';
 exports['default'] = _coreFactoryMaker2['default'].getClassFactory(ProtectionController);
 module.exports = exports['default'];
 
-},{"10":10,"105":105,"106":106,"125":125,"126":126,"13":13}],109:[function(_dereq_,module,exports){
+},{"1":1,"10":10,"105":105,"106":106,"125":125,"126":126,"13":13}],109:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -28443,9 +28452,10 @@ function ProtectionModel_21Jan2015(config) {
             keySystem = keySystemAccess.keySystem;
             mediaKeys = mkeys;
             if (videoElement) {
-                videoElement.setMediaKeys(mediaKeys);
+                videoElement.setMediaKeys(mediaKeys).then(function () {
+                    eventBus.trigger(_coreEventsEvents2['default'].INTERNAL_KEY_SYSTEM_SELECTED);
+                });
             }
-            eventBus.trigger(_coreEventsEvents2['default'].INTERNAL_KEY_SYSTEM_SELECTED);
         })['catch'](function () {
             eventBus.trigger(_coreEventsEvents2['default'].INTERNAL_KEY_SYSTEM_SELECTED, { error: 'Error selecting keys system (' + keySystemAccess.keySystem.systemString + ')! Could not create MediaKeys -- TODO' });
         });

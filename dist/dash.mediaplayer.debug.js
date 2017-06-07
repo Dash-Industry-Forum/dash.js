@@ -1782,7 +1782,8 @@ function X2JS(matchers, attrPrefix, ignoreRoot) {
 	this.parseXmlString = function (xmlDocStr) {
 		var xmlDoc, parser, ns;
 
-		if (window.DOMParser) {
+		// detect IE11
+		if (window.DOMParser && !(window.MSInputMethodContext && !!document.documentMode)) {
 			parser = new window.DOMParser();
 
 			try {
