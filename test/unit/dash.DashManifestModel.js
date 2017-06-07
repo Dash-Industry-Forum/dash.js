@@ -260,6 +260,12 @@ describe('DashManifestModel', function () {
         expect(duration).to.equal(Number.MAX_VALUE); // jshint ignore:line
     });
 
+    it('should return NaN when getBandwidth is called and manifest is undefined', () => {
+        const bdtw = dashManifestModel.getBandwidth();
+
+        expect(bdtw).to.be.NaN; // jshint ignore:line
+    });
+
     it('should return false when getIsDVB is called and manifest is undefined', () => {
         const IsDVB = dashManifestModel.getIsDVB();
 

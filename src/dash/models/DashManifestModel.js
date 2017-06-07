@@ -325,7 +325,7 @@ function DashManifestModel() {
     }
 
     function getBandwidth(representation) {
-        return representation.bandwidth;
+        return representation && representation.bandwidth ? representation.bandwidth : NaN;
     }
 
     function getManifestUpdatePeriod(manifest, latencyOfLastUpdate = 0) {
