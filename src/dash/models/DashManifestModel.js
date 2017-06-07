@@ -291,10 +291,6 @@ function DashManifestModel() {
         return has;
     }
 
-    function getIsOnDemand(manifest) {
-        return hasProfile(manifest, 'urn:mpeg:dash:profile:isoff-on-demand:2011');
-    }
-
     function getIsDVB(manifest) {
         return hasProfile(manifest, 'urn:dvb:dash:profile:dvb-dash:2014');
     }
@@ -902,7 +898,6 @@ function DashManifestModel() {
         getKID: getKID,
         getContentProtectionData: getContentProtectionData,
         getIsDynamic: getIsDynamic,
-        getIsOnDemand: getIsOnDemand,
         getIsDVB: getIsDVB,
         getDuration: getDuration,
         getBandwidth: getBandwidth,
