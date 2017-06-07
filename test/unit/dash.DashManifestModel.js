@@ -351,7 +351,21 @@ describe('DashManifestModel', function () {
         expect(periodsArray).to.be.instanceOf(Array);    // jshint ignore:line
         expect(periodsArray).to.be.empty;                // jshint ignore:line
     });
-            
+
+    it('should return an empty array when getAdaptationsForPeriod is called and manifest and period are undefined', () => {
+        const adaptationArray = dashManifestModel.getAdaptationsForPeriod();
+
+        expect(adaptationArray).to.be.instanceOf(Array);    // jshint ignore:line
+        expect(adaptationArray).to.be.empty;                // jshint ignore:line
+    });
+
+    it('should return an empty array when getRepresentationsForAdaptation is called and manifest and adaptation are undefined', () => {
+        const representationArray = dashManifestModel.getRepresentationsForAdaptation();
+
+        expect(representationArray).to.be.instanceOf(Array);    // jshint ignore:line
+        expect(representationArray).to.be.empty;                // jshint ignore:line
+    });
+                    
     it('should return false when getIsDVB is called and manifest is undefined', () => {
         const IsDVB = dashManifestModel.getIsDVB();
 

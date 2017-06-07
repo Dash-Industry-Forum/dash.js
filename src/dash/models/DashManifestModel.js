@@ -366,16 +366,23 @@ function DashManifestModel() {
     }
 
     function getRepresentationsForAdaptation(voAdaptation) {
-        let processedRealAdaptation = processAdaptation(voAdaptation.period.mpd.manifest.Period_asArray[voAdaptation.period.index].AdaptationSet_asArray[voAdaptation.index]);
         let voRepresentations = [];
         let voRepresentation,
             initialization,
             segmentInfo,
+            processedRealAdaptation,
             realRepresentation,
             i,
             s;
 
-        for (i = 0; i < processedRealAdaptation.Representation_asArray.length; i++) {
+        if (voAdaptation && voAdaptation.period && Number.isInteger(voAdaptation.period.index)) {
+            var periodArray = voAdaptation.period.mpd.manifest.Period_asArray[voAdaptation.period.index];
+            if (periodArray && periodArray.AdaptationSet_asArray && Number.isInteger(voAdaptation.index)) {
+                processedRealAdaptation = processAdaptation(periodArray.AdaptationSet_asArray[voAdaptation.index]);
+            }
+        }
+
+        for (i = 0; processedRealAdaptation && i < processedRealAdaptation.Representation_asArray.length; i++) {
             realRepresentation = processedRealAdaptation.Representation_asArray[i];
             voRepresentation = new Representation();
             voRepresentation.index = i;
@@ -493,36 +500,37 @@ function DashManifestModel() {
     }
 
     function getAdaptationsForPeriod(voPeriod) {
-        let realPeriod = voPeriod.mpd.manifest.Period_asArray[voPeriod.index];
+        let realPeriod = voPeriod && Number.isInteger(voPeriod.index) ? voPeriod.mpd.manifest.Period_asArray[voPeriod.index] : null;
         let voAdaptations = [];
         let voAdaptationSet,
             realAdaptationSet,
             i;
 
-        for (i = 0; i < realPeriod.AdaptationSet_asArray.length; i++) {
-            realAdaptationSet = realPeriod.AdaptationSet_asArray[i];
-            voAdaptationSet = new AdaptationSet();
+        if (realPeriod && realPeriod.AdaptationSet_asArray) {
+            for (i = 0; i < realPeriod.AdaptationSet_asArray.length; i++) {
+                realAdaptationSet = realPeriod.AdaptationSet_asArray[i];
+                voAdaptationSet = new AdaptationSet();
 
-            if (realAdaptationSet.hasOwnProperty('id')) {
-                voAdaptationSet.id = realAdaptationSet.id;
+                if (realAdaptationSet.hasOwnProperty('id')) {
+                    voAdaptationSet.id = realAdaptationSet.id;
+                }
+
+                voAdaptationSet.index = i;
+                voAdaptationSet.period = period;
+
+                if (getIsMuxed(realAdaptationSet)) {
+                    voAdaptationSet.type = 'muxed';
+                } else if (getIsAudio(realAdaptationSet)) {
+                    voAdaptationSet.type = 'audio';
+                }else if (getIsVideo(realAdaptationSet)) {
+                    voAdaptationSet.type = 'video';
+                }else if (getIsFragmentedText(realAdaptationSet)) {
+                    voAdaptationSet.type = 'fragmentedText';
+                }else {
+                    voAdaptationSet.type = 'text';
+                }
+                voAdaptations.push(voAdaptationSet);
             }
-
-            voAdaptationSet.index = i;
-            voAdaptationSet.period = voPeriod;
-
-            if (getIsMuxed(realAdaptationSet)) {
-                voAdaptationSet.type = 'muxed';
-            } else if (getIsAudio(realAdaptationSet)) {
-                voAdaptationSet.type = 'audio';
-            }else if (getIsVideo(realAdaptationSet)) {
-                voAdaptationSet.type = 'video';
-            }else if (getIsFragmentedText(realAdaptationSet)) {
-                voAdaptationSet.type = 'fragmentedText';
-            }else {
-                voAdaptationSet.type = 'text';
-            }
-
-            voAdaptations.push(voAdaptationSet);
         }
 
         return voAdaptations;
