@@ -254,6 +254,12 @@ describe('DashManifestModel', function () {
         expect(isDynamic).to.be.false;    // jshint ignore:line
     });
 
+    it('should return Number.MAX_VALUE when getDuration is called and manifest is undefined', () => {
+        const duration = dashManifestModel.getDuration();
+
+        expect(duration).to.equal(Number.MAX_VALUE); // jshint ignore:line
+    });
+
     it('should return false when getIsDVB is called and manifest is undefined', () => {
         const IsDVB = dashManifestModel.getIsDVB();
 

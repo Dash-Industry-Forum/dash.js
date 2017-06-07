@@ -315,7 +315,7 @@ function DashManifestModel() {
         let mpdDuration;
         //@mediaPresentationDuration specifies the duration of the entire Media Presentation.
         //If the attribute is not present, the duration of the Media Presentation is unknown.
-        if (manifest.hasOwnProperty('mediaPresentationDuration')) {
+        if (manifest && manifest.hasOwnProperty('mediaPresentationDuration')) {
             mpdDuration = manifest.mediaPresentationDuration;
         } else {
             mpdDuration = Number.MAX_VALUE;
