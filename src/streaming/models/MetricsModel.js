@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from '../constants/Constants';
+import MetricsConstants from '../constants/MetricsConstants';
 import MetricsList from '../vo/MetricsList';
 import TCPConnection from '../vo/metrics/TCPConnection';
 import {HTTPRequest, HTTPRequestTrace} from '../vo/metrics/HTTPRequest';
@@ -135,7 +136,7 @@ function MetricsModel() {
         vo.tclose = tclose;
         vo.tconnect = tconnect;
 
-        pushAndNotify(mediaType, adapter.metricsList.TCP_CONNECTION, vo);
+        pushAndNotify(mediaType, MetricsConstants.TCP_CONNECTION, vo);
 
         return vo;
     }
@@ -215,7 +216,7 @@ function MetricsModel() {
             delete vo.trace;
         }
 
-        pushAndNotify(mediaType, adapter.metricsList.HTTP_REQUEST, vo);
+        pushAndNotify(mediaType, MetricsConstants.HTTP_REQUEST, vo);
 
         return vo;
     }
@@ -233,7 +234,7 @@ function MetricsModel() {
             delete vo.lto;
         }
 
-        pushAndNotify(mediaType, adapter.metricsList.TRACK_SWITCH, vo);
+        pushAndNotify(mediaType, MetricsConstants.TRACK_SWITCH, vo);
 
         return vo;
     }
@@ -248,7 +249,7 @@ function MetricsModel() {
         vo.t = t;
         vo.level = level;
 
-        pushAndNotify(mediaType, adapter.metricsList.BUFFER_LEVEL, vo);
+        pushAndNotify(mediaType, MetricsConstants.BUFFER_LEVEL, vo);
 
         return vo;
     }
@@ -258,7 +259,7 @@ function MetricsModel() {
         vo.target = target;
         vo.state = state;
 
-        pushAndNotify(mediaType, adapter.metricsList.BUFFER_STATE, vo);
+        pushAndNotify(mediaType, MetricsConstants.BUFFER_STATE, vo);
 
         return vo;
     }
@@ -269,7 +270,7 @@ function MetricsModel() {
         vo.range = range;
         vo.manifestInfo = mpd;
 
-        pushAndNotify(mediaType, adapter.metricsList.DVR_INFO, vo);
+        pushAndNotify(mediaType, MetricsConstants.DVR_INFO, vo);
 
         return vo;
     }
@@ -285,7 +286,7 @@ function MetricsModel() {
             return list[list.length - 1];
         }
 
-        pushAndNotify(mediaType, adapter.metricsList.DROPPED_FRAMES, vo);
+        pushAndNotify(mediaType, MetricsConstants.DROPPED_FRAMES, vo);
 
         return vo;
     }
@@ -305,7 +306,7 @@ function MetricsModel() {
 
         vo.state = state;
 
-        pushAndNotify(mediaType, adapter.metricsList.SCHEDULING_INFO, vo);
+        pushAndNotify(mediaType, MetricsConstants.SCHEDULING_INFO, vo);
 
         return vo;
     }
@@ -316,7 +317,7 @@ function MetricsModel() {
         vo.executedRequests = executedRequests;
 
         getMetricsFor(mediaType).RequestsQueue = vo;
-        metricAdded(mediaType, adapter.metricsList.REQUESTS_QUEUE, vo);
+        metricAdded(mediaType, MetricsConstants.REQUESTS_QUEUE, vo);
     }
 
     function addManifestUpdate(mediaType, type, requestTime, fetchTime, availabilityStartTime, presentationStartTime, clientTimeOffset, currentTime, buffered, latency) {
@@ -333,8 +334,8 @@ function MetricsModel() {
         vo.buffered = buffered; // actual element.ranges
         vo.latency = latency; // (static is fixed value of zero. dynamic should be ((Now-@availabilityStartTime) - currentTime)
 
-        pushMetrics(Constants.STREAM, 'ManifestUpdate', vo);
-        metricAdded(mediaType, adapter.metricsList.MANIFEST_UPDATE, vo);
+        pushMetrics(Constants.STREAM, MetricsConstants.MANIFEST_UPDATE, vo);
+        metricAdded(mediaType, MetricsConstants.MANIFEST_UPDATE, vo);
 
         return vo;
     }
@@ -345,7 +346,7 @@ function MetricsModel() {
                 manifestUpdate[field] = updatedFields[field];
             }
 
-            metricUpdated(manifestUpdate.mediaType, adapter.metricsList.MANIFEST_UPDATE, manifestUpdate);
+            metricUpdated(manifestUpdate.mediaType, MetricsConstants.MANIFEST_UPDATE, manifestUpdate);
         }
     }
 
@@ -359,7 +360,7 @@ function MetricsModel() {
             vo.duration = duration;
 
             manifestUpdate.streamInfo.push(vo);
-            metricUpdated(manifestUpdate.mediaType, adapter.metricsList.MANIFEST_UPDATE_STREAM_INFO, manifestUpdate);
+            metricUpdated(manifestUpdate.mediaType, MetricsConstants.MANIFEST_UPDATE_STREAM_INFO, manifestUpdate);
 
             return vo;
         }
@@ -379,7 +380,7 @@ function MetricsModel() {
             vo.presentationTimeOffset = presentationTimeOffset;
 
             manifestUpdate.trackInfo.push(vo);
-            metricUpdated(manifestUpdate.mediaType, adapter.metricsList.MANIFEST_UPDATE_TRACK_INFO, manifestUpdate);
+            metricUpdated(manifestUpdate.mediaType, MetricsConstants.MANIFEST_UPDATE_TRACK_INFO, manifestUpdate);
 
             return vo;
         }
@@ -399,7 +400,7 @@ function MetricsModel() {
             delete vo.trace;
         }
 
-        pushAndNotify(type, adapter.metricsList.PLAY_LIST, vo);
+        pushAndNotify(type, MetricsConstants.PLAY_LIST, vo);
 
         return vo;
     }
@@ -407,7 +408,7 @@ function MetricsModel() {
     function addDVBErrors(vo) {
         let type = Constants.STREAM;
 
-        pushAndNotify(type, adapter.metricsList.DVB_ERRORS, vo);
+        pushAndNotify(type, MetricsConstants.DVB_ERRORS, vo);
 
         return vo;
     }

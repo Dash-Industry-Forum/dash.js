@@ -28,18 +28,19 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import MetricsConstants from '../../streaming/constants/MetricsConstants';
 
-export const TCP_CONNECTION = 'TcpList';
-export const HTTP_REQUEST = 'HttpList';
-export const TRACK_SWITCH = 'RepSwitchList';
-export const BUFFER_LEVEL = 'BufferLevel';
-export const BUFFER_STATE = 'BufferState';
-export const DVR_INFO = 'DVRInfo';
-export const DROPPED_FRAMES = 'DroppedFrames';
-export const SCHEDULING_INFO = 'SchedulingInfo';
-export const REQUESTS_QUEUE = 'RequestsQueue';
-export const MANIFEST_UPDATE = 'ManifestUpdate';
-export const MANIFEST_UPDATE_STREAM_INFO = 'ManifestUpdatePeriodInfo';
-export const MANIFEST_UPDATE_TRACK_INFO = 'ManifestUpdateRepresentationInfo';
-export const PLAY_LIST = 'PlayList';
-export const DVB_ERRORS = 'DVBErrors';
+export const TCP_CONNECTION = MetricsConstants.TCP_CONNECTION;
+export const HTTP_REQUEST = MetricsConstants.HTTP_REQUEST;
+export const TRACK_SWITCH = MetricsConstants.TRACK_SWITCH;
+export const BUFFER_LEVEL = MetricsConstants.BUFFER_LEVEL;
+export const BUFFER_STATE = MetricsConstants.BUFFER_STATE;
+export const DVR_INFO = MetricsConstants.DVR_INFO;
+export const DROPPED_FRAMES = MetricsConstants.DROPPED_FRAMES;
+export const SCHEDULING_INFO = MetricsConstants.SCHEDULING_INFO;
+export const REQUESTS_QUEUE = MetricsConstants.REQUESTS_QUEUE;
+export const MANIFEST_UPDATE = MetricsConstants.MANIFEST_UPDATE;
+export const MANIFEST_UPDATE_STREAM_INFO = MetricsConstants.MANIFEST_UPDATE_STREAM_INFO;
+export const MANIFEST_UPDATE_TRACK_INFO = MetricsConstants.MANIFEST_UPDATE_TRACK_INFO;
+export const PLAY_LIST = MetricsConstants.PLAY_LIST;
+export const DVB_ERRORS = MetricsConstants.DVB_ERRORS;

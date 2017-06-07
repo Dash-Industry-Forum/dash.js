@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from '../constants/Constants';
+import MetricsConstants from '../constants/MetricsConstants';
 import Stream from '../Stream';
 import ManifestUpdater from '../ManifestUpdater';
 import EventBus from '../../core/EventBus';
@@ -763,7 +764,7 @@ function StreamController() {
     }
 
     function onMetricAdded(e) {
-        if (e.metric === 'DVRInfo') {
+        if (e.metric === MetricsConstants.DVR_INFO) {
             //Match media type? How can DVR window be different for media types?
             //Should we normalize and union the two?
             if (e.mediaType === Constants.AUDIO) {

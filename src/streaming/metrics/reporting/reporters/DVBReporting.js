@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import MetricsConstants from '../../../constants/MetricsConstants';
 import FactoryMaker from '../../../../core/FactoryMaker';
 import MetricSerialiser from '../../utils/MetricSerialiser';
 import RNG from '../../utils/RNG';
@@ -98,7 +99,7 @@ function DVBReporting() {
                 let url = metricSerialiser.serialise(vo);
 
                 // this has been proposed for errata
-                if (USE_DRAFT_DVB_SPEC && (type !== 'DVBErrors')) {
+                if (USE_DRAFT_DVB_SPEC && (type !== MetricsConstants.DVB_ERRORS)) {
                     url = `metricname=${type}&${url}`;
                 }
 

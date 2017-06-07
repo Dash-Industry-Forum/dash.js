@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+import MetricsConstants from '../../constants/MetricsConstants';
 import DVBErrors from '../vo/DVBErrors';
 import Events from '../../../core/events/Events';
 import MediaPlayerEvents from '../../MediaPlayerEvents';
@@ -103,7 +104,7 @@ function DVBErrorsTranslator(config) {
 
     function onMetricEvent(e) {
         switch (e.metric) {
-        case 'HttpList':
+        case MetricsConstants.HTTP_REQUEST:
             handleHttpMetric(e.value);
             break;
         default:
