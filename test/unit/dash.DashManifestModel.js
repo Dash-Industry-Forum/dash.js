@@ -331,7 +331,14 @@ describe('DashManifestModel', function () {
         expect(eventsStream).to.be.instanceOf(Array);    // jshint ignore:line
         expect(eventsStream).to.be.empty;                // jshint ignore:line
     });
-    
+
+    it('should return an empty Array when getEventsForPeriod is called and manifest and period are undefined', () => {
+        const eventsStream = dashManifestModel.getEventsForPeriod();
+
+        expect(eventsStream).to.be.instanceOf(Array);    // jshint ignore:line
+        expect(eventsStream).to.be.empty;                // jshint ignore:line
+    });
+        
     it('should return false when getIsDVB is called and manifest is undefined', () => {
         const IsDVB = dashManifestModel.getIsDVB();
 

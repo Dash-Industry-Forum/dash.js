@@ -680,8 +680,8 @@ function DashManifestModel() {
 
     function getEventsForPeriod(period) {
         let manifest = period.mpd.manifest;
-        let periodArray = manifest.Period_asArray;
-        let eventStreams = periodArray[period.index].EventStream_asArray;
+        let periodArray = manifest ? manifest.Period_asArray : null;
+        let eventStreams = periodArray && period && Number.isInteger(period.index) ? periodArray[period.index].EventStream_asArray : null;
         let events = [];
         let i,
             j;
