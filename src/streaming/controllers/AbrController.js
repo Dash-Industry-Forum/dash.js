@@ -467,8 +467,7 @@ function AbrController() {
                 isDynamic = streamProcessorDict[mediaType].isDynamic();
             }
         }
-        let sampleSize = throughputHistory.getSampleSize(mediaType, isDynamic);
-        return throughputHistory.getAverageThroughput(mediaType, sampleSize);
+        return throughputHistory.getAverageThroughput(mediaType, isDynamic);
     }
 
     function getAverageLatency(mediaType) {

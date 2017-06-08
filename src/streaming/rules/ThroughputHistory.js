@@ -59,14 +59,14 @@ function ThroughputHistory() {
         // else return undefined;
     }
 
-    function push(mediaType, lastHttpRequest) {
-        if (!lastHttpRequest.trace || !lastHttpRequest.trace.length) {
+    function push(mediaType, httpRequest) {
+        if (!httpRequest.trace || !httpRequest.trace.length) {
             return;
         }
 
-        const latencyTimeInMilliseconds = (lastHttpRequest.tresponse.getTime() - lastHttpRequest.trequest.getTime()) || 1;
-        const downloadTimeInMilliseconds = (lastHttpRequest._tfinish.getTime() - lastHttpRequest.tresponse.getTime()) || 1; //Make sure never 0 we divide by this value. Avoid infinity!
-        const downloadBytes = lastHttpRequest.trace.reduce((a, b) => a + b.b[0], 0);
+        const latencyTimeInMilliseconds = (httpRequest.tresponse.getTime() - httpRequest.trequest.getTime()) || 1;
+        const downloadTimeInMilliseconds = (httpRequest._tfinish.getTime() - httpRequest.tresponse.getTime()) || 1; //Make sure never 0 we divide by this value. Avoid infinity!
+        const downloadBytes = httpRequest.trace.reduce((a, b) => a + b.b[0], 0);
         const lastRequestThroughput = Math.round((downloadBytes * 8) / (downloadTimeInMilliseconds / 1000)); // bits per second
         let throughput = lastRequestThroughput;
 
@@ -97,67 +97,61 @@ function ThroughputHistory() {
         }
     }
 
-    function getSampleSize(mediaType, isLive) {
-        if (mediaType === 'audio') {
-            let latencyArray = latencyDict[mediaType];
-            if (!latencyArray) {
-                return 0;
-            }
+    function getSampleSize(isThroughput, mediaType, isLive) {
+        let arr;
+        let sampleSize;
 
-            let sampleSize = AVERAGE_LATENCY_SAMPLE_AMOUNT;
-            if (sampleSize >= latencyArray.length) {
-                return latencyArray.length;
-            }
-
-            return sampleSize;
+        if (isThroughput) {
+            arr = throughputDict[mediaType];
+            sampleSize = isLive ? AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE : AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD;
+        } else {
+            arr = latencyDict[mediaType];
+            sampleSize = AVERAGE_LATENCY_SAMPLE_AMOUNT;
         }
 
-        if (mediaType === 'video') {
-            let throughputArray = throughputDict[mediaType];
-            if (!throughputArray) {
-                return 0;
-            }
+        if (!arr) {
+            return 0;
+        }
+        if (sampleSize >= arr.length) {
+            return arr.length;
+        }
 
-            let sampleSize = isLive ? AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE : AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD;
-            if (sampleSize >= throughputArray.length) {
-                return throughputArray.length;
-            }
-
+        if (isThroughput) {
             // if throughput samples vary a lot, average over a wider sample
             for (let i = 1; i < sampleSize; ++i) {
-                let ratio = throughputArray[-i] / throughputArray[-i - 1];
+                let ratio = arr[-i] / arr[-i - 1];
                 if (ratio >= THROUGHPUT_INCREASE_SCALE || ratio <= 1 / THROUGHPUT_DECREASE_SCALE) {
                     sampleSize += 1;
-                    if (sampleSize >= throughputArray.length) {
-                        return throughputArray.length;
+                    if (sampleSize >= arr.length) {
+                        return arr.length;
                     }
                 }
             }
-
-            return sampleSize;
         }
+
+        return sampleSize;
     }
 
-    function getAverage(dict, mediaType, sampleSize) {
+    function getAverage(isThroughput, mediaType, isDynamic) {
+        let sampleSize = getSampleSize(isThroughput, mediaType, isDynamic);
+        let dict = isThroughput ? throughputDict : latencyDict;
         let arr = dict[mediaType];
-        if (isNaN(sampleSize)) {
-            sampleSize = getSampleSize(mediaType);
-        }
 
-        if (!arr || arr.length === 0 || sampleSize === 0) {
+        if (sampleSize === 0 || !arr || arr.length === 0) {
             return NaN;
         }
 
         arr = arr.slice(-sampleSize); // still works if sampleSize too large
-        return arr.reduce((av, elem, i) => av + (elem / av) / (i + 1));
+        // arr.length >= 1
+        return arr.reduce((av, elem, i) => av + (elem - av) / (i + 1));
     }
 
-    function getAverageThroughput(mediaType, sampleSize) {
-        return getAverage(throughputDict, mediaType, sampleSize);
+    function getAverageThroughput(mediaType, isDynamic) {
+        return getAverage(true, mediaType, isDynamic);
     }
 
-    function getAverageLatency(mediaType, sampleSize) {
-        return getAverage(latencyDict, mediaType, sampleSize);
+    function getAverageLatency(mediaType) {
+        return getAverage(false, mediaType);
     }
 
     function reset() {
@@ -166,7 +160,6 @@ function ThroughputHistory() {
 
     const instance = {
         push: push,
-        getSampleSize: getSampleSize,
         getAverageThroughput: getAverageThroughput,
         getAverageLatency: getAverageLatency,
         reset: reset
