@@ -43,11 +43,15 @@ function ThroughputHistory() {
     const THROUGHPUT_INCREASE_SCALE = 1.3;
 
     let throughputDict,
-        latencyDict;
+        latencyDict,
+        haveNoEntries,
+        haveCachedEntries;
 
     function setup() {
         throughputDict = {};
         latencyDict = {};
+        haveNoEntries = true;
+        haveCachedEntries = false;
     }
 
     function isCachedResponse(mediaType, latencyMs, downloadTimeMs) {
@@ -67,30 +71,34 @@ function ThroughputHistory() {
         const latencyTimeInMilliseconds = (httpRequest.tresponse.getTime() - httpRequest.trequest.getTime()) || 1;
         const downloadTimeInMilliseconds = (httpRequest._tfinish.getTime() - httpRequest.tresponse.getTime()) || 1; //Make sure never 0 we divide by this value. Avoid infinity!
         const downloadBytes = httpRequest.trace.reduce((a, b) => a + b.b[0], 0);
-        const lastRequestThroughput = Math.round((downloadBytes * 8) / (downloadTimeInMilliseconds / 1000)); // bits per second
-        let throughput = lastRequestThroughput;
+        let throughput = Math.round((downloadBytes * 8) / (downloadTimeInMilliseconds / 1000)); // bits per second
 
         if (isCachedResponse(mediaType, latencyTimeInMilliseconds, downloadTimeInMilliseconds)) {
-            if (!(throughputDict[mediaType] && latencyDict[mediaType])) {
+            if (!haveNoEntries && !haveCachedEntries) {
+                // already have some entries which are not cached entries
                 // prevent cached fragment loads from skewing the average values
                 return;
-            } else {
-                // allow first even if cached to set allowance for ABR rules
+            } else { // haveNoEntries || haveCachedEntries
+                // no uncached entries yet, rely on cached entries, set allowance for ABR rules
                 throughput /= 1000;
+                haveCachedEntries = true;
             }
+        } else if (haveCachedEntries) {
+            // if we are here then we have some entries already, but they are cached, and now we have a new uncached entry
+            haveNoEntries = true; // old entries are all cached entries - we want to discard them
         }
 
-        if (!throughputDict[mediaType]) {
+        if (haveNoEntries) {
             throughputDict[mediaType] = [];
+            latencyDict[mediaType] = [];
+            haveNoEntries = false;
         }
+
         throughputDict[mediaType].push(throughput);
         if (throughputDict[mediaType].length > MAX_MEASUREMENTS_TO_KEEP) {
             throughputDict[mediaType].shift();
         }
 
-        if (!latencyDict[mediaType]) {
-            latencyDict[mediaType] = [];
-        }
         latencyDict[mediaType].push(latencyTimeInMilliseconds);
         if (latencyDict[mediaType].length > MAX_MEASUREMENTS_TO_KEEP) {
             latencyDict[mediaType].shift();
