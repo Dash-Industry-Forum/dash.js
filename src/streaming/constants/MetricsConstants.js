@@ -35,7 +35,8 @@
  * @ignore
  */
 class MetricsConstants {
-    constructor() {
+
+    init () {
         this.TCP_CONNECTION = 'TcpList';
         this.HTTP_REQUEST = 'HttpList';
         this.TRACK_SWITCH = 'RepSwitchList';
@@ -50,6 +51,10 @@ class MetricsConstants {
         this.MANIFEST_UPDATE_TRACK_INFO = 'ManifestUpdateRepresentationInfo';
         this.PLAY_LIST = 'PlayList';
         this.DVB_ERRORS = 'DVBErrors';
+    }
+
+    constructor() {
+        this.init();
     }
 }
 

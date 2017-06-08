@@ -35,7 +35,8 @@
  * @ignore
  */
 class DashConstants {
-    constructor () {
+
+    init() {
         this.BASE_URL = 'BaseURL';
         this.SEGMENT_BASE = 'SegmentBase';
         this.SEGMENT_TEMPLATE = 'SegmentTemplate';
@@ -122,6 +123,10 @@ class DashConstants {
         this.CENC_DEFAULT_KID = 'cenc:default_KID';
         this.DVB_PRIORITY = 'dvb:priority';
         this.DVB_WEIGHT = 'dvb:weight';
+    }
+
+    constructor () {
+        this.init();
     }
 }
 

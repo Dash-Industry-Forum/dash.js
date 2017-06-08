@@ -35,7 +35,8 @@
  * @ignore
  */
 class Constants {
-    constructor () {
+
+    init () {
         this.STREAM = 'stream';
         this.VIDEO = 'video';
         this.AUDIO = 'audio';
@@ -57,6 +58,10 @@ class Constants {
         this.SUGGESTED_PRESENTATION_DELAY = 'suggestedPresentationDelay';
         this.SCHEME_ID_URI = 'schemeIdUri';
         this.START_TIME = 'starttime';
+    }
+
+    constructor () {
+        this.init();
     }
 }
 
