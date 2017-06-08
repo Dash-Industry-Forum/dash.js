@@ -16,24 +16,13 @@ describe('DashManifestModel', function () {
     
     const mpdHelper = new MpdHelper();
 
-    it('should return false when getIsTypeOf is called and adaptation is undefined', () => {
-        const isTypeOf = dashManifestModel.getIsTypeOf();
+    it("should throw an exception when attempting to call getIsTypeOf with undefined parameters", function () {
+        expect(dashManifestModel.getIsTypeOf.bind(dashManifestModel)).to.throw("adaptation is not defined");
 
-        expect(isTypeOf).to.be.false;  // jshint ignore:line
-    });
-
-    it('should return false when getIsTypeOf is called and type is undefined', () => {
         var adaptation = mpdHelper.composeAdaptation('video');
-        const isTypeOf = dashManifestModel.getIsTypeOf(adaptation);
+        expect(dashManifestModel.getIsTypeOf.bind(dashManifestModel, adaptation)).to.throw("type is not defined");
 
-        expect(isTypeOf).to.be.false;  // jshint ignore:line
-    });
-
-    it('should return false when getIsTypeOf is called and type is empty string', () => {
-        var adaptation = mpdHelper.composeAdaptation('video');
-        const isTypeOf = dashManifestModel.getIsTypeOf(adaptation, EMPTY_STRING);
-
-        expect(isTypeOf).to.be.false;  // jshint ignore:line
+        expect(dashManifestModel.getIsTypeOf.bind(dashManifestModel, adaptation, EMPTY_STRING)).to.throw("type is not defined");
     });
 
     it('should return false when getIsTextTrack is called and type is undefined', () => {
@@ -181,10 +170,8 @@ describe('DashManifestModel', function () {
 
     it('should return an empty array when getAdaptationsForType is called and type is undefined', () => {
         const manifest = { Period_asArray: [ { AdaptationSet_asArray: [ { id: 0 } ] }] };
-        const adaptationsArray = dashManifestModel.getAdaptationsForType(manifest, 0, undefined);
 
-        expect(adaptationsArray).to.be.instanceOf(Array);    // jshint ignore:line
-        expect(adaptationsArray).to.be.empty;                // jshint ignore:line
+        expect(dashManifestModel.getAdaptationsForType.bind(dashManifestModel, manifest, 0, undefined)).to.throw("type is not defined");
     });
 
     it('should return an empty array when getAdaptationForType is called and streamInfo is undefined', () => {
@@ -296,7 +283,7 @@ describe('DashManifestModel', function () {
         var adaptation = mpdHelper.composeAdaptation('video');
         const representation = dashManifestModel.getRepresentationFor(0, adaptation);
 
-        expect(representation.id).equal('video25'); // jshint ignore:line
+        expect(representation.id).equal('video20'); // jshint ignore:line
     });
 
     it('should return undefined when getLocation is called and manifest is undefined', () => {

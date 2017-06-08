@@ -66,14 +66,18 @@ function DashManifestModel() {
         let found = false;
 
         if (!adaptation) {
-            return result;
+            throw new Error('adaptation is not defined');
+        }
+
+        if (!type) {
+            throw new Error('type is not defined');
         }
 
         if (adaptation.hasOwnProperty('ContentComponent_asArray')) {
             col = adaptation.ContentComponent_asArray;
         }
 
-        mimeTypeRegEx = (type && type !== 'text') ? new RegExp(type) : new RegExp('(vtt|ttml)');
+        mimeTypeRegEx = (type !== 'text') ? new RegExp(type) : new RegExp('(vtt|ttml)');
 
         if ((adaptation.Representation_asArray && adaptation.Representation_asArray.length && adaptation.Representation_asArray.length > 0) &&
             (adaptation.Representation_asArray[0].hasOwnProperty('codecs'))) {
