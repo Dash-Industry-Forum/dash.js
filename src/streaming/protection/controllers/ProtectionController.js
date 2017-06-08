@@ -66,7 +66,7 @@ function ProtectionController(config) {
         protDataSet,
         initialized,
         sessionType,
-        robustnessLevel,
+        robustnessLevels,
         keySystem;
 
     function setup() {
@@ -74,7 +74,7 @@ function ProtectionController(config) {
         pendingNeedKeyData = [];
         initialized = false;
         sessionType = 'temporary';
-        robustnessLevel = '';
+        robustnessLevels = [''];
 
         Events.extend(Protection.events);
     }
@@ -255,14 +255,15 @@ function ProtectionController(config) {
 
     /**
      * Sets the robustness level for video and audio capabilities. Optional to remove Chrome warnings.
-     * Possible values are SW_SECURE_CRYPTO, SW_SECURE_DECODE, HW_SECURE_CRYPTO, HW_SECURE_CRYPTO, HW_SECURE_DECODE, HW_SECURE_ALL.
+     * Possible values are SW_SECURE_CRYPTO, SW_SECURE_DECODE, HW_SECURE_CRYPTO, HW_SECURE_CRYPTO, HW_SECURE_DECODE, HW_SECURE_ALL
+     * or array of these values
      *
-     * @param {string} level the robustness level
+     * @param {Array.<string>|string} levels the robustness level
      * @memberof module:ProtectionController
      * @instance
      */
-    function setRobustnessLevel(level) {
-        robustnessLevel = level;
+    function setRobustnessLevel(levels) {
+        robustnessLevels = Array.isArray(levels) ? levels : [levels];
     }
 
     /**
@@ -321,10 +322,14 @@ function ProtectionController(config) {
         var videoCapabilities = [];
 
         if (videoInfo) {
-            videoCapabilities.push(new MediaCapability(videoInfo.codec, robustnessLevel));
+            robustnessLevels.forEach((robustnessLevel) => {
+                videoCapabilities.push(new MediaCapability(videoInfo.codec, robustnessLevel));
+            });
         }
         if (audioInfo) {
-            audioCapabilities.push(new MediaCapability(audioInfo.codec, robustnessLevel));
+            robustnessLevels.forEach((robustnessLevel) => {
+                audioCapabilities.push(new MediaCapability(audioInfo.codec, robustnessLevel));
+            });
         }
         var ksConfig = new KeySystemConfiguration(
                 audioCapabilities, videoCapabilities, 'optional',
