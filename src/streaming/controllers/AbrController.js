@@ -290,6 +290,7 @@ function AbrController() {
             const streamId = streamInfo ? streamInfo.id : null;
             const oldQuality = getQualityFor(type);
             const rulesContext = RulesContext(context).create({
+                abrController: instance,
                 streamProcessor: streamProcessorDict[type],
                 currentValue: oldQuality,
                 playbackIndex: playbackIndex,
@@ -306,7 +307,7 @@ function AbrController() {
             if (getAutoSwitchBitrateFor(type)) {
                 const topQualityIdx = getTopQualityIndexFor(type, streamId);
                 const switchRequest = abrRulesCollection.getMaxQuality(rulesContext);
-                let newQuality = switchRequest.value;
+                let newQuality = switchRequest.quality;
                 if (newQuality > topQualityIdx) {
                     newQuality = topQualityIdx;
                 }
