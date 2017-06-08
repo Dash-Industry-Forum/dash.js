@@ -142,7 +142,6 @@ function MssFragmentProcessor(config) {
     }
 
     function processFragment(e, sp) {
-
         let request = e.request;
         if (!request) {
             return;
