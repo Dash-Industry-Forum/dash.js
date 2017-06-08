@@ -159,16 +159,25 @@ function ProtectionModel_21Jan2015(config) {
         }
     }
 
+    /**
+     * @param {ArrayBuffer} serverCertificate
+     * @returns {Promise}
+     */
     function setServerCertificate(serverCertificate) {
         if (!keySystem || !mediaKeys) {
             throw new Error('Can not set server certificate until you have selected a key system');
         }
-        mediaKeys.setServerCertificate(serverCertificate).then(function () {
+
+        const promise = mediaKeys.setServerCertificate(serverCertificate);
+
+        promise.then(function () {
             log('DRM: License server certificate successfully updated.');
             eventBus.trigger(Events.SERVER_CERTIFICATE_UPDATED);
         }).catch(function (error) {
             eventBus.trigger(Events.SERVER_CERTIFICATE_UPDATED, {error: 'Error updating server certificate -- ' + error.name});
         });
+
+        return promise;
     }
 
     function createKeySession(initData, sessionType) {
