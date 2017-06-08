@@ -180,7 +180,7 @@ function initialisation(rowID) {
 
 	video = system.getObject('videoModel');
 	video.setElement($(element)[0]);
-	stream = system.getObject(Constants.STREAM);
+	stream = system.getObject('stream');
 
 	try {
 
