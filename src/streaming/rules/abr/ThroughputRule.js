@@ -30,7 +30,6 @@
  */
 import BufferController from '../../controllers/BufferController';
 import AbrController from '../../controllers/AbrController';
-import MediaPlayerModel from '../../models/MediaPlayerModel';
 import {HTTPRequest} from '../../vo/metrics/HTTPRequest';
 import FactoryMaker from '../../../core/FactoryMaker';
 import Debug from '../../../core/Debug';
@@ -51,15 +50,14 @@ function ThroughputRule(config) {
     const log = Debug(context).getInstance().log;
     const dashMetrics = config.dashMetrics;
     const metricsModel = config.metricsModel;
+    const mediaPlayerModel = config.mediaPlayerModel;
 
     let throughputArray,
-        latencyArray,
-        mediaPlayerModel;
+        latencyArray;
 
     function setup() {
         throughputArray = [];
         latencyArray = [];
-        mediaPlayerModel = MediaPlayerModel(context).getInstance();
     }
 
     function storeLastRequestThroughputByType(type, throughput) {

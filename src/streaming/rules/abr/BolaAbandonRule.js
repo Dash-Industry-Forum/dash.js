@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import SwitchRequest from '../SwitchRequest';
-import MediaPlayerModel from '../../models/MediaPlayerModel';
 import FactoryMaker from '../../../core/FactoryMaker';
 import Debug from '../../../core/Debug';
 import BolaRule from './BolaRule';
@@ -46,12 +45,10 @@ function BolaAbandonRule(config) {
     let metricsModel = config.metricsModel;
 
     let instance,
-        abandonDict,
-        mediaPlayerModel;
+        abandonDict;
 
     function setup() {
         abandonDict = {};
-        mediaPlayerModel = MediaPlayerModel(context).getInstance();
     }
 
     function rememberAbandon(mediaType, index, quality) {

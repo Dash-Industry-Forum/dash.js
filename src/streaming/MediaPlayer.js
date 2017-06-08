@@ -46,7 +46,6 @@ import MediaPlayerModel from './models/MediaPlayerModel';
 import MetricsModel from './models/MetricsModel';
 import AbrController from './controllers/AbrController';
 import TimeSyncController from './controllers/TimeSyncController';
-import ABRRulesCollection from './rules/abr/ABRRulesCollection';
 import VideoModel from './models/VideoModel';
 import MediaSourceController from './controllers/MediaSourceController';
 import BaseURLController from './controllers/BaseURLController';
@@ -1965,10 +1964,6 @@ function MediaPlayer() {
 
     function createControllers() {
 
-        let abrRulesCollection = ABRRulesCollection(context).getInstance();
-        abrRulesCollection.reset();
-        abrRulesCollection.initialize();
-
         let sourceBufferController = SourceBufferController(context).getInstance();
         sourceBufferController.setConfig({
             dashManifestModel: dashManifestModel
@@ -1998,8 +1993,8 @@ function MediaPlayer() {
         });
         streamController.initialize(autoPlay, protectionData);
 
+        abrController.createAbrRulesCollection();
         abrController.setConfig({
-            abrRulesCollection: abrRulesCollection,
             streamController: streamController
         });
 

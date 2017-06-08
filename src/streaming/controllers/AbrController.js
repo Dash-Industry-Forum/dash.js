@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+import ABRRulesCollection from '../rules/abr/ABRRulesCollection';
 import BitrateInfo from '../vo/BitrateInfo';
 import DOMStorage from '../utils/DOMStorage';
 import MediaPlayerModel from '../models/MediaPlayerModel';
@@ -129,6 +130,16 @@ function AbrController() {
         }
     }
 
+    function createAbrRulesCollection() {
+        abrRulesCollection = ABRRulesCollection(context).create({
+            metricsModel: metricsModel,
+            dashMetrics: dashMetrics,
+            mediaPlayerModel: mediaPlayerModel
+        });
+
+        abrRulesCollection.initialize();
+    }
+
     function reset() {
         eventBus.off(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
         eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_RENDERED, onQualityChangeRendered, this);
@@ -136,6 +147,9 @@ function AbrController() {
         droppedFramesHistory = undefined;
         clearTimeout(abandonmentTimeout);
         abandonmentTimeout = null;
+        if (abrRulesCollection) {
+            abrRulesCollection.reset();
+        }
         setup();
     }
 
@@ -631,6 +645,7 @@ function AbrController() {
         setElementSize: setElementSize,
         setWindowResizeEventCalled: setWindowResizeEventCalled,
         initialize: initialize,
+        createAbrRulesCollection: createAbrRulesCollection,
         setConfig: setConfig,
         reset: reset
     };
