@@ -30,6 +30,7 @@
  */
 import Constants from '../constants/Constants';
 import DashJSError from './../vo/DashJSError';
+import {HTTPRequest} from './../vo/metrics/HTTPRequest';
 import EventBus from './../../core/EventBus';
 import Events from './../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
@@ -207,7 +208,7 @@ function TimeSyncController() {
         let complete = false;
         let req = new XMLHttpRequest();
 
-        let verb = isHeadRequest ? 'HEAD' : 'GET';
+        let verb = isHeadRequest ? HTTPRequest.HEAD : HTTPRequest.GET;
         let urls = url.match(/\S+/g);
 
         // according to ISO 23009-1, url could be a white-space
