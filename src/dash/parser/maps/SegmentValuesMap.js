@@ -40,7 +40,7 @@ class SegmentValuesMap extends MapNode {
             DashConstants.SEGMENT_BASE, DashConstants.SEGMENT_TEMPLATE, DashConstants.SEGMENT_LIST
         ];
 
-        super('Period', commonProperties, [
+        super(DashConstants.PERIOD, commonProperties, [
             new MapNode(DashConstants.ADAPTATION_SET, commonProperties, [
                 new MapNode(DashConstants.REPRESENTATION, commonProperties)
             ])
