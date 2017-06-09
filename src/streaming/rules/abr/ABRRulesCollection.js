@@ -77,8 +77,7 @@ function ABRRulesCollection(config) {
                 qualitySwitchRules.push(
                     ThroughputRule(context).create({
                         metricsModel: metricsModel,
-                        dashMetrics: dashMetrics,
-                        mediaPlayerModel: mediaPlayerModel
+                        dashMetrics: dashMetrics
                     })
                 );
                 qualitySwitchRules.push(

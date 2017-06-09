@@ -130,7 +130,9 @@ function AbrController() {
             setElementSize();
         }
         eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
-        throughputHistory = ThroughputHistory().create();
+        throughputHistory = ThroughputHistory().create({
+            mediaPlayerModel: mediaPlayerModel
+        });
     }
 
     function createAbrRulesCollection() {
@@ -461,17 +463,8 @@ function AbrController() {
         return isBufferRich;
     }
 
-    function getAverageThroughput(mediaType, isDynamic) {
-        if (isDynamic === undefined) {
-            if (streamProcessorDict[mediaType]) {
-                isDynamic = streamProcessorDict[mediaType].isDynamic();
-            }
-        }
-        return throughputHistory.getAverageThroughput(mediaType, isDynamic);
-    }
-
-    function getAverageLatency(mediaType) {
-        return throughputHistory.getAverageLatency(mediaType);
+    function getThroughputHistory() {
+        return throughputHistory;
     }
 
     function updateTopQualityIndex(mediaInfo) {
@@ -642,8 +635,7 @@ function AbrController() {
     instance = {
         isPlayingAtTopQuality: isPlayingAtTopQuality,
         updateTopQualityIndex: updateTopQualityIndex,
-        getAverageThroughput: getAverageThroughput,
-        getAverageLatency: getAverageLatency,
+        getThroughputHistory: getThroughputHistory,
         getBitrateList: getBitrateList,
         getQualityForBitrate: getQualityForBitrate,
         getMaxAllowedBitrateFor: getMaxAllowedBitrateFor,

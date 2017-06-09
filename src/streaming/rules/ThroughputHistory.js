@@ -34,7 +34,7 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 // throughput generally stored in kbit/s
 // latency generally stored in ms
 
-function ThroughputHistory() {
+function ThroughputHistory(config) {
 
     const MAX_MEASUREMENTS_TO_KEEP = 20;
     const AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE = 3;
@@ -44,6 +44,8 @@ function ThroughputHistory() {
     const CACHE_LOAD_THRESHOLD_AUDIO = 5;
     const THROUGHPUT_DECREASE_SCALE = 1.3;
     const THROUGHPUT_INCREASE_SCALE = 1.3;
+
+    const mediaPlayerModel = config.mediaPlayerModel;
 
     let throughputDict,
         latencyDict;
@@ -59,7 +61,6 @@ function ThroughputHistory() {
         } else if (mediaType === 'audio') {
             return downloadTimeMs < CACHE_LOAD_THRESHOLD_AUDIO;
         }
-        // else return undefined;
     }
 
     function push(mediaType, httpRequest) {
@@ -72,31 +73,23 @@ function ThroughputHistory() {
         const downloadBytes = httpRequest.trace.reduce((a, b) => a + b.b[0], 0);
         let throughput = Math.round((8 * downloadBytes) / downloadTimeInMilliseconds); // bits/ms = kbits/s
 
-        // note that !throughputDict[mediaType] === !latencyDict[mediaType] always
+        throughputDict[mediaType] = throughputDict[mediaType] || [];
+        latencyDict[mediaType] = latencyDict[mediaType] || [];
 
-        const isCached = isCachedResponse(mediaType, latencyTimeInMilliseconds, downloadTimeInMilliseconds);
-        if (isCached) {
-            if (throughputDict[mediaType] && !throughputDict[mediaType].hasCachedEntries) {
+        if (isCachedResponse(mediaType, latencyTimeInMilliseconds, downloadTimeInMilliseconds)) {
+            if (throughputDict[mediaType].length > 0 && !throughputDict[mediaType].hasCachedEntries) {
                 // already have some entries which are not cached entries
                 // prevent cached fragment loads from skewing the average values
                 return;
             } else { // have no entries || have cached entries
                 // no uncached entries yet, rely on cached entries, set allowance for ABR rules
                 throughput /= 1000;
+                throughputDict[mediaType].hasCachedEntries = true;
             }
         } else if (throughputDict[mediaType] && throughputDict[mediaType].hasCachedEntries) {
             // if we are here then we have some entries already, but they are cached, and now we have a new uncached entry
             throughputDict[mediaType] = [];
             latencyDict[mediaType] = [];
-        }
-
-        if (!throughputDict[mediaType]) {
-            throughputDict[mediaType] = [];
-            latencyDict[mediaType] = [];
-            if (isCached) {
-                throughputDict[mediaType].hasCachedEntries = true;
-                latencyDict[mediaType].hasCachedEntries = true;
-            }
         }
 
         throughputDict[mediaType].push(throughput);
@@ -123,13 +116,10 @@ function ThroughputHistory() {
         }
 
         if (!arr) {
-            return 0;
-        }
-        if (sampleSize >= arr.length) {
-            return arr.length;
-        }
-
-        if (isThroughput) {
+            sampleSize = 0;
+        } else if (sampleSize >= arr.length) {
+            sampleSize = arr.length;
+        } else if (isThroughput) {
             // if throughput samples vary a lot, average over a wider sample
             for (let i = 1; i < sampleSize; ++i) {
                 let ratio = arr[-i] / arr[-i - 1];
@@ -163,6 +153,14 @@ function ThroughputHistory() {
         return getAverage(true, mediaType, isDynamic);
     }
 
+    function getSafeAverageThroughput(mediaType, isDynamic) {
+        let average = getAverageThroughput(mediaType, isDynamic);
+        if (!isNaN(average)) {
+            average *= mediaPlayerModel.getBandwidthSafetyFactor();
+        }
+        return average;
+    }
+
     function getAverageLatency(mediaType) {
         return getAverage(false, mediaType);
     }
@@ -174,6 +172,7 @@ function ThroughputHistory() {
     const instance = {
         push: push,
         getAverageThroughput: getAverageThroughput,
+        getSafeAverageThroughput: getSafeAverageThroughput,
         getAverageLatency: getAverageLatency,
         reset: reset
     };
