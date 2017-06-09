@@ -80,7 +80,7 @@ function FragmentModel(config) {
 
     function isFragmentLoaded(request) {
         const isEqualComplete = function (req1, req2) {
-            return (!req1 && (req1.action === FragmentRequest.ACTION_COMPLETE) && (req1.action === req2.action));
+            return ((req1.action === FragmentRequest.ACTION_COMPLETE) && (req1.action === req2.action));
         };
 
         const isEqualMedia = function (req1, req2) {
@@ -88,7 +88,7 @@ function FragmentModel(config) {
         };
 
         const isEqualInit = function (req1, req2) {
-            return !req1 && isNaN(req1.index) && isNaN(req2.index) && (req1.quality === req2.quality);
+            return isNaN(req1.index) && isNaN(req2.index) && (req1.quality === req2.quality);
         };
 
         const check = function (requests) {
