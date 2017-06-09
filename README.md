@@ -22,7 +22,7 @@ Full [API Documentation](http://cdn.dashjs.org/latest/jsdoc/module-MediaPlayer.h
 For help, join our [Slack channel](https://dashif-slack.azurewebsites.net), our [email list](https://groups.google.com/d/forum/dashjs) and read our [wiki](https://github.com/Dash-Industry-Forum/dash.js/wiki).
 
 ## Reference players
-The released [pre-built reference players](http://dashif.org/reference/players/javascript/index.html) are publicly accessible if you want direct access without writing any Javascript. 
+The released [pre-built reference players](http://reference.dashif.org/dash.js/) are publicly accessible if you want direct access without writing any Javascript. 
 
 The [nightly build of the /dev branch reference player](http://mediapm.edgesuite.net/dash/public/nightly/samples/dash-if-reference-player/index.html), is pre-release but contains the latest fixes. It is a good place to start if you are debugging playback problems. 
 
