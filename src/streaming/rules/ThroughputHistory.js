@@ -31,6 +31,9 @@
 
 import FactoryMaker from '../../core/FactoryMaker.js';
 
+// throughput generally stored in kbit/s
+// latency generally stored in ms
+
 function ThroughputHistory() {
 
     const MAX_MEASUREMENTS_TO_KEEP = 20;
@@ -43,15 +46,11 @@ function ThroughputHistory() {
     const THROUGHPUT_INCREASE_SCALE = 1.3;
 
     let throughputDict,
-        latencyDict,
-        haveNoEntries,
-        haveCachedEntries;
+        latencyDict;
 
     function setup() {
         throughputDict = {};
         latencyDict = {};
-        haveNoEntries = true;
-        haveCachedEntries = false;
     }
 
     function isCachedResponse(mediaType, latencyMs, downloadTimeMs) {
@@ -71,27 +70,33 @@ function ThroughputHistory() {
         const latencyTimeInMilliseconds = (httpRequest.tresponse.getTime() - httpRequest.trequest.getTime()) || 1;
         const downloadTimeInMilliseconds = (httpRequest._tfinish.getTime() - httpRequest.tresponse.getTime()) || 1; //Make sure never 0 we divide by this value. Avoid infinity!
         const downloadBytes = httpRequest.trace.reduce((a, b) => a + b.b[0], 0);
-        let throughput = Math.round((downloadBytes * 8) / (downloadTimeInMilliseconds / 1000)); // bits per second
+        let throughput = Math.round((8 * downloadBytes) / downloadTimeInMilliseconds); // bits/ms = kbits/s
 
-        if (isCachedResponse(mediaType, latencyTimeInMilliseconds, downloadTimeInMilliseconds)) {
-            if (!haveNoEntries && !haveCachedEntries) {
+        // note that !throughputDict[mediaType] === !latencyDict[mediaType] always
+
+        const isCached = isCachedResponse(mediaType, latencyTimeInMilliseconds, downloadTimeInMilliseconds);
+        if (isCached) {
+            if (throughputDict[mediaType] && !throughputDict[mediaType].hasCachedEntries) {
                 // already have some entries which are not cached entries
                 // prevent cached fragment loads from skewing the average values
                 return;
-            } else { // haveNoEntries || haveCachedEntries
+            } else { // have no entries || have cached entries
                 // no uncached entries yet, rely on cached entries, set allowance for ABR rules
                 throughput /= 1000;
-                haveCachedEntries = true;
             }
-        } else if (haveCachedEntries) {
+        } else if (throughputDict[mediaType] && throughputDict[mediaType].hasCachedEntries) {
             // if we are here then we have some entries already, but they are cached, and now we have a new uncached entry
-            haveNoEntries = true; // old entries are all cached entries - we want to discard them
-        }
-
-        if (haveNoEntries) {
             throughputDict[mediaType] = [];
             latencyDict[mediaType] = [];
-            haveNoEntries = false;
+        }
+
+        if (!throughputDict[mediaType]) {
+            throughputDict[mediaType] = [];
+            latencyDict[mediaType] = [];
+            if (isCached) {
+                throughputDict[mediaType].hasCachedEntries = true;
+                latencyDict[mediaType].hasCachedEntries = true;
+            }
         }
 
         throughputDict[mediaType].push(throughput);
