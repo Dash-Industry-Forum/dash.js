@@ -149,7 +149,6 @@ function AbrController() {
         if (abrRulesCollection) {
             abrRulesCollection.reset();
         }
-        setup();
     }
 
     function setConfig(config) {
