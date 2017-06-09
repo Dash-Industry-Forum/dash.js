@@ -14,10 +14,17 @@
             var video,
                 player,
                 url = "//dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd";
-
-            video = document.querySelector("video");
+            
             player = dashjs.MediaPlayer().create();
-            player.initialize(video, url, true);
+            video = document.querySelector("video");
+            player.initialize(); // initialize the MediaPlayer instance
+            player.getDebug().setLogToBrowserConsole(false); // turns off console logging
+            player.setScheduleWhilePaused(false); // stops the player from loading segments while paused
+            player.setFastSwitchEnabled(true); // enables buffer replacement when switching bitrates for faster switching
+            player.setAutoPlay(false); // remove this line if you want the player to start automatically on load
+            player.attachView(video); // tell the player which videoElement it should use
+            player.attachSource(url); // provide the manifest source
+            
         }
     </script>
 
@@ -25,6 +32,7 @@
         video {
             width: 640px;
             height: 360px;
+            background-color: #666666;
         }
     </style>
     </head>

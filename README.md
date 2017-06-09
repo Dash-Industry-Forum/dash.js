@@ -44,7 +44,7 @@ Put the following code in your web page
 ...
 <body>
    <div>
-       <video data-dashjs-player autoplay src="http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd" controls></video>
+       <video data-dashjs-player autoplay src="//dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd" controls></video>
    </div>
 </body>
 ```
@@ -96,7 +96,7 @@ Add dash.all.min.js to the end of the body.
 Now comes the good stuff. We need to create a MediaPlayer and initialize it.  
 ``` js
 
-var url = "http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd";
+var url = "//dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd";
 var player = dashjs.MediaPlayer().create();
 player.initialize(document.querySelector("#videoPlayer"), url, true);
 
@@ -122,7 +122,7 @@ When it is all done, it should look similar to this:
         <script src="yourPathToDash/dash.all.min.js"></script>
         <script>
             (function(){
-                var url = "http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd";
+                var url = "//dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd";
                 var player = dashjs.MediaPlayer().create();
                 player.initialize(document.querySelector("#videoPlayer"), url, true);
             })();
@@ -142,7 +142,7 @@ An alternative way to build a Dash.js player in your web page is to use the Medi
 
 Create a video element somewhere in your html and provide the path to your `mpd` file as src. Also ensure that your video element has the `data-dashjs-player` attribute on it.
 ```html
-<video data-dashjs-player autoplay src="http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd" controls>
+<video data-dashjs-player autoplay src="//dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd" controls>
 </video>
 
 ```
@@ -170,7 +170,7 @@ When it is all done, it should look similar to this:
     </head>
     <body>
         <div>
-            <video data-dashjs-player autoplay src="http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd" controls>
+            <video data-dashjs-player autoplay src="//dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd" controls>
             </video>
         </div>
         <script src="yourPathToDash/dash.all.min.js"></script>

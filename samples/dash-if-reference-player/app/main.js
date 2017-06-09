@@ -29,7 +29,7 @@ app.controller('DashController', function ($scope, sources, contributors) {
 
 
     $scope.selectedItem = {
-        url: "http://dash.edgesuite.net/akamai/bbb_30fps/bbb_30fps.mpd"
+        url: "//dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd"
     };
 
     sources.query(function (data) {
