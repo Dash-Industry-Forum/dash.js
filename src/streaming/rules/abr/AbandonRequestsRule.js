@@ -50,9 +50,6 @@ function AbandonRequestsRule(config) {
         throughputArray;
 
     function setup() {
-        mediaPlayerModel = MediaPlayerModel(context).getInstance();
-        dashMetrics = DashMetrics(context).getInstance();
-        metricsModel = MetricsModel(context).getInstance();
         reset();
     }
 

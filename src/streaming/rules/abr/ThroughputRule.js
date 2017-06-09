@@ -56,7 +56,6 @@ function ThroughputRule(config) {
         latencyArray;
 
     function setup() {
-        mediaPlayerModel = MediaPlayerModel(context).getInstance();
         reset();
     }
 
