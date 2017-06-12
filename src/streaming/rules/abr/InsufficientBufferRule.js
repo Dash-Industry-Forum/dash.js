@@ -55,7 +55,14 @@ function InsufficientBufferRule(config) {
     }
 
     /*
+     * InsufficientBufferRule does not kick in before the first BUFFER_LOADED event happens. This is reset at every seek.
      *
+     * If a BUFFER_EMPTY event happens, then InsufficientBufferRule returns switchRequest.quality=0 until BUFFER_LOADED happens.
+     *
+     * Otherwise InsufficientBufferRule gives a maximum bitrate depending on throughput and bufferLevel such that
+     * a whole fragment can be downloaded before the buffer runs out, subject to a conservative safety factor of 0.5.
+     * If the bufferLevel is low, then InsufficientBufferRule avoids rebuffering risk.
+     * If the bufferLevel is high, then InsufficientBufferRule give a high MaxIndex allowing other rules to take over.
      */
     function getMaxIndex (rulesContext) {
         const mediaType = rulesContext.getMediaType();
