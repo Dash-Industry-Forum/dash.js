@@ -288,8 +288,11 @@ function DashMetrics() {
      * @instance
      */
     function getLatestFragmentRequestHeaderValueByID(metrics, id) {
+        let headers = {};
         let httpRequest = getCurrentHttpRequest(metrics);
-        let headers = parseResponseHeaders(httpRequest._responseHeaders);
+        if (httpRequest) {
+            headers = parseResponseHeaders(httpRequest._responseHeaders);
+        }
         return headers[id] === undefined ? null :  headers[id];
     }
 

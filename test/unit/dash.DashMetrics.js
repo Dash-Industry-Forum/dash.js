@@ -55,33 +55,37 @@ describe('DashMetrics', function () {
 
         expect(requestsQueue).to.be.null;  // jshint ignore:line
     });
+    
+    describe('getCurrentHttpRequest', () => {
+        it('should return null when getCurrentHttpRequest is called and metrics is undefined', () => {
+            const currentHttpRequest = dashMetrics.getCurrentHttpRequest();
 
-    it('should return null when getCurrentHttpRequest is called and metrics is undefined', () => {
-        const currentHttpRequest = dashMetrics.getCurrentHttpRequest();
+            expect(currentHttpRequest).to.be.null;  // jshint ignore:line
+        });
 
-        expect(currentHttpRequest).to.be.null;  // jshint ignore:line
+        it('should return null when getCurrentHttpRequest is called and metrics.httpList is undefined', () => {
+            const metrics = {};
+            const currentHttpRequest = dashMetrics.getCurrentHttpRequest(metrics);
+
+            expect(currentHttpRequest).to.be.null;  // jshint ignore:line
+        });
     });
 
-    it('should return null when getCurrentHttpRequest is called and metrics.httpList is undefined', () => {
-        const metrics = {};
-        const currentHttpRequest = dashMetrics.getCurrentHttpRequest(metrics);
+    describe('getHttpRequests', () => {
+        it('should return an empty array when getHttpRequests is called and metrics is undefined', () => {
+            const httpRequestArray = dashMetrics.getHttpRequests();
 
-        expect(currentHttpRequest).to.be.null;  // jshint ignore:line
-    });
+            expect(httpRequestArray).to.be.instanceOf(Array);    // jshint ignore:line
+            expect(httpRequestArray).to.be.empty;                // jshint ignore:line
+        });
 
-    it('should return an empty array when getHttpRequests is called and metrics is undefined', () => {
-        const httpRequestArray = dashMetrics.getHttpRequests();
+        it('should return an empty array when getHttpRequests is called and metrics.httpList is undefined', () => {
+            const metrics = {};
+            const httpRequestArray = dashMetrics.getHttpRequests(metrics);
 
-        expect(httpRequestArray).to.be.instanceOf(Array);    // jshint ignore:line
-        expect(httpRequestArray).to.be.empty;                // jshint ignore:line
-    });
-
-    it('should return an empty array when getHttpRequests is called and metrics.httpList is undefined', () => {
-        const metrics = {};
-        const httpRequestArray = dashMetrics.getHttpRequests(metrics);
-
-        expect(httpRequestArray).to.be.instanceOf(Array);    // jshint ignore:line
-        expect(httpRequestArray).to.be.empty;                // jshint ignore:line
+            expect(httpRequestArray).to.be.instanceOf(Array);    // jshint ignore:line
+            expect(httpRequestArray).to.be.empty;                // jshint ignore:line
+        });
     });
 
     it('should return null when getCurrentDroppedFrames is called and metrics[MetricsList.DROPPED_FRAMES] is undefined', () => {
@@ -91,30 +95,34 @@ describe('DashMetrics', function () {
         expect(httpRequestArray).to.be.null;  // jshint ignore:line
     });
 
-    it('should return null when getLatestMPDRequestHeaderValueByID is called and metrics and id are undefined', () => {
-        const lastMpdRequestHeader = dashMetrics.getLatestMPDRequestHeaderValueByID();
+    describe('getLatestMPDRequestHeaderValueByID', () => {
+        it('should return null when getLatestMPDRequestHeaderValueByID is called and metrics and id are undefined', () => {
+            const lastMpdRequestHeader = dashMetrics.getLatestMPDRequestHeaderValueByID();
 
-        expect(lastMpdRequestHeader).to.be.null;  // jshint ignore:line
+            expect(lastMpdRequestHeader).to.be.null;  // jshint ignore:line
+        });
+
+        it('should return null when getLatestMPDRequestHeaderValueByID is called and id is undefined', () => {
+            const metrics = { HttpList : [{type: 'MPD', _responseHeaders: ''}, {type: 'MPD', _responseHeaders: ''}]};
+
+            const lastMpdRequestHeader = dashMetrics.getLatestMPDRequestHeaderValueByID(metrics);
+
+            expect(lastMpdRequestHeader).to.be.null;  // jshint ignore:line
+        });
     });
+    
+    describe('getLatestFragmentRequestHeaderValueByID', () => {
+        it('should return null when getLatestFragmentRequestHeaderValueByID is called and metrics and id are undefined', () => {
+            const lastFragmentRequestHeader = dashMetrics.getLatestFragmentRequestHeaderValueByID();
 
-    it('should return null when getLatestMPDRequestHeaderValueByID is called and id is undefined', () => {
-        const metrics = { HttpList : [{type: 'MPD', _responseHeaders: ''}, {type: 'MPD', _responseHeaders: ''}]};
+            expect(lastFragmentRequestHeader).to.be.null;  // jshint ignore:line
+        });
 
-        const lastMpdRequestHeader = dashMetrics.getLatestMPDRequestHeaderValueByID(metrics);
+        it('should return null when getLatestFragmentRequestHeaderValueByID is called and httpRequest._responseHeaders and id are undefined', () => {
+            const metrics = { HttpList : [{responsecode: 200}, {responsecode: 200}]};
+            const lastFragmentRequestHeader = dashMetrics.getLatestFragmentRequestHeaderValueByID(metrics);
 
-        expect(lastMpdRequestHeader).to.be.null;  // jshint ignore:line
-    });
-
-    it('should return null when getLatestFragmentRequestHeaderValueByID is called and metrics and id are undefined', () => {
-        const lastFragmentRequestHeader = dashMetrics.getLatestFragmentRequestHeaderValueByID();
-
-        expect(lastFragmentRequestHeader).to.be.null;  // jshint ignore:line
-    });
-
-    it('should return null when getLatestFragmentRequestHeaderValueByID is called and httpRequest._responseHeaders and id are undefined', () => {
-        const metrics = { HttpList : [{responsecode: 200}, {responsecode: 200}]};
-        const lastFragmentRequestHeader = dashMetrics.getLatestFragmentRequestHeaderValueByID(metrics);
-
-        expect(lastFragmentRequestHeader).to.be.null;  // jshint ignore:line
+            expect(lastFragmentRequestHeader).to.be.null;  // jshint ignore:line
+        });
     });
 });
