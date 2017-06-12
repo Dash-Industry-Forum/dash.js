@@ -50,10 +50,14 @@ function IsoFile() {
 
     /**
     * @param {string} type
-    * @returns {Array} array of {@link IsoBox}
+    * @returns {Array|null} array of {@link IsoBox}
     * @memberof IsoFile#
     */
     function getBoxes(type) {
+        if (!parsedIsoFile) {
+            return null;
+        }
+
         let boxData = parsedIsoFile.fetchAll(type);
         let boxes = [];
         let box;
