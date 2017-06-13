@@ -115,7 +115,7 @@ function FragmentedTextBoxParser() {
                                     sampleData.subSizes = [];
                                     let entry = subsBox.entries[subsIndex];
                                     for (n = 0; n < entry.subsample_count; n++) {
-                                        sampleData.subSizes.push(entry.subsamples[j].subsample_size);
+                                        sampleData.subSizes.push(entry.subsamples[n].subsample_size);
                                     }
                                 }
                             }
