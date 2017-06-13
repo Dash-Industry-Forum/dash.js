@@ -44,8 +44,7 @@ function ThroughputRule(config) {
         latencyArray;
 
     function setup() {
-        throughputArray = [];
-        latencyArray = [];
+        reset();
     }
 
     function getMaxIndex(rulesContext) {
@@ -80,7 +79,8 @@ function ThroughputRule(config) {
     }
 
     function reset() {
-        setup();
+        throughputArray = [];
+        latencyArray = [];
     }
 
     const instance = {

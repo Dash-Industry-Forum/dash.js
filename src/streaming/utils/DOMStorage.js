@@ -60,9 +60,9 @@ function DOMStorage() {
 
         supported = false;
 
-        var testKey = '1';
-        var testValue = '1';
-        var storage;
+        let testKey = '1';
+        let testValue = '1';
+        let storage;
 
         try {
             if (typeof window !== 'undefined') {
@@ -131,10 +131,10 @@ function DOMStorage() {
         //Checks local storage to see if there is valid, non-expired media settings
         if (!canStore(STORAGE_TYPE_LOCAL, 'LastMediaSettings')) return null;
 
-        var key = LOCAL_STORAGE_SETTINGS_KEY_TEMPLATE.replace(/\?/, type);
-        var obj = JSON.parse(localStorage.getItem(key)) || {};
-        var isExpired = (new Date().getTime() - parseInt(obj.timestamp, 10)) >= mediaPlayerModel.getLastMediaSettingsCachingInfo().ttl || false;
-        var settings = obj.settings;
+        let key = LOCAL_STORAGE_SETTINGS_KEY_TEMPLATE.replace(/\?/, type);
+        let obj = JSON.parse(localStorage.getItem(key)) || {};
+        let isExpired = (new Date().getTime() - parseInt(obj.timestamp, 10)) >= mediaPlayerModel.getLastMediaSettingsCachingInfo().ttl || false;
+        let settings = obj.settings;
 
         if (isExpired) {
             localStorage.removeItem(key);
@@ -149,10 +149,10 @@ function DOMStorage() {
         //Checks local storage to see if there is valid, non-expired bit rate
         //hinting from the last play session to use as a starting bit rate.
         if (canStore(STORAGE_TYPE_LOCAL, 'LastBitrate')) {
-            var key = LOCAL_STORAGE_BITRATE_KEY_TEMPLATE.replace(/\?/, type);
-            var obj = JSON.parse(localStorage.getItem(key)) || {};
-            var isExpired = (new Date().getTime() - parseInt(obj.timestamp, 10)) >= mediaPlayerModel.getLastBitrateCachingInfo().ttl || false;
-            var bitrate = parseInt(obj.bitrate, 10);
+            let key = LOCAL_STORAGE_BITRATE_KEY_TEMPLATE.replace(/\?/, type);
+            let obj = JSON.parse(localStorage.getItem(key)) || {};
+            let isExpired = (new Date().getTime() - parseInt(obj.timestamp, 10)) >= mediaPlayerModel.getLastBitrateCachingInfo().ttl || false;
+            let bitrate = parseInt(obj.bitrate, 10);
 
             if (!isNaN(bitrate) && !isExpired) {
                 savedBitrate = bitrate;

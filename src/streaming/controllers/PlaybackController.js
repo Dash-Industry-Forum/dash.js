@@ -61,13 +61,8 @@ function PlaybackController() {
         playOnceInitialized;
 
     function setup() {
-        currentTime = 0;
-        liveStartTime = NaN;
-        wallclockTimeIntervalId = null;
-        isDynamic = null;
-        playOnceInitialized = false;
-        commonEarliestTime = {};
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
+        reset();
     }
 
     function initialize(StreamInfo) {
@@ -171,7 +166,7 @@ function PlaybackController() {
      * @memberof PlaybackController#
      */
     function computeLiveDelay(fragmentDuration, dvrWindowSize) {
-        var mpd = dashManifestModel.getMpd(manifestModel.getValue());
+        let mpd = dashManifestModel.getMpd(manifestModel.getValue());
 
         let delay;
         const END_OF_PLAYLIST_PADDING = 10;
@@ -195,6 +190,11 @@ function PlaybackController() {
     }
 
     function reset() {
+        currentTime = 0;
+        liveStartTime = NaN;
+        wallclockTimeIntervalId = null;
+        playOnceInitialized = false;
+        commonEarliestTime = {};
         if (videoModel) {
             eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
@@ -205,7 +205,6 @@ function PlaybackController() {
         videoModel = null;
         streamInfo = null;
         isDynamic = null;
-        setup();
     }
 
     function setConfig(config) {
@@ -281,10 +280,10 @@ function PlaybackController() {
     }
 
     function getActualPresentationTime(currentTime) {
-        var metrics = metricsModel.getReadOnlyMetricsFor('video') || metricsModel.getReadOnlyMetricsFor('audio');
-        var DVRMetrics = dashMetrics.getCurrentDVRInfo(metrics);
-        var DVRWindow = DVRMetrics ? DVRMetrics.range : null;
-        var actualTime;
+        let metrics = metricsModel.getReadOnlyMetricsFor('video') || metricsModel.getReadOnlyMetricsFor('audio');
+        let DVRMetrics = dashMetrics.getCurrentDVRInfo(metrics);
+        let DVRWindow = DVRMetrics ? DVRMetrics.range : null;
+        let actualTime;
 
         if (!DVRWindow) return NaN;
         if (currentTime > DVRWindow.end) {
@@ -301,7 +300,7 @@ function PlaybackController() {
     function startUpdatingWallclockTime() {
         if (wallclockTimeIntervalId !== null) return;
 
-        var tick = function () {
+        const tick = function () {
             onWallclockTime();
         };
 
@@ -314,10 +313,11 @@ function PlaybackController() {
     }
 
     function updateCurrentTime() {
+
         if (isPaused() || !isDynamic || videoModel.getReadyState() === 0) return;
-        var currentTime = getTime();
-        var actualTime = getActualPresentationTime(currentTime);
-        var timeChanged = (!isNaN(actualTime) && actualTime !== currentTime);
+        let currentTime = getTime();
+        let actualTime = getActualPresentationTime(currentTime);
+        let timeChanged = (!isNaN(actualTime) && actualTime !== currentTime);
         if (timeChanged) {
             seek(actualTime);
         }
@@ -326,7 +326,7 @@ function PlaybackController() {
     function onDataUpdateCompleted(e) {
         if (e.error) return;
 
-        let representationInfo = adapter.convertDataToTrack(manifestModel.getValue(), e.currentRepresentation);
+        let representationInfo = adapter.convertDataToTrack(e.currentRepresentation);
         let info = representationInfo.mediaInfo.streamInfo;
 
         if (streamInfo.id !== info.id) return;
@@ -370,7 +370,7 @@ function PlaybackController() {
 
     function onPlaybackTimeUpdated() {
         //log("Native video element event: timeupdate");
-        var time = getTime();
+        let time = getTime();
         if (time === currentTime) return;
         currentTime = time;
         eventBus.trigger(Events.PLAYBACK_TIME_UPDATED, {timeToEnd: getTimeToStreamEnd(), time: time});
@@ -382,7 +382,7 @@ function PlaybackController() {
     }
 
     function onPlaybackRateChanged() {
-        var rate = getPlaybackRate();
+        let rate = getPlaybackRate();
         log('Native video element event: ratechange: ', rate);
         eventBus.trigger(Events.PLAYBACK_RATE_CHANGED, { playbackRate: rate });
     }

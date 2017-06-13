@@ -170,8 +170,8 @@ function Protection() {
 
     function getAPI(videoElement, apis) {
 
-        for (var i = 0; i < apis.length; i++) {
-            var api = apis[i];
+        for (let i = 0; i < apis.length; i++) {
+            let api = apis[i];
             // detect if api is supported by browser
             // check only first function in api -> should be fine
             if (typeof videoElement[api[Object.keys(api)[0]]] !== 'function') {

@@ -55,12 +55,12 @@ class ClearKeyKeySet {
      * @return {ArrayBuffer} JWK object UTF-8 encoded as ArrayBuffer
      */
     toJWK() {
-        var i;
-        var numKeys = this.keyPairs.length;
-        var jwk = {keys: []};
+        let i;
+        let numKeys = this.keyPairs.length;
+        let jwk = {keys: []};
 
         for (i = 0; i < numKeys; i++) {
-            var key = {
+            let key = {
                 kty: 'oct',
                 alg: 'A128KW',
                 kid: this.keyPairs[i].keyID,
@@ -71,12 +71,12 @@ class ClearKeyKeySet {
         if (this.type) {
             jwk.type = this.type;
         }
-        var jwkString = JSON.stringify(jwk);
-        var len = jwkString.length;
+        let jwkString = JSON.stringify(jwk);
+        const len = jwkString.length;
 
         // Convert JSON string to ArrayBuffer
-        var buf = new ArrayBuffer(len);
-        var bView = new Uint8Array(buf);
+        let buf = new ArrayBuffer(len);
+        let bView = new Uint8Array(buf);
         for (i = 0; i < len; i++)
             bView[i] = jwkString.charCodeAt(i);
         return buf;

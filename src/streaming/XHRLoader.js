@@ -72,14 +72,14 @@ function XHRLoader(cfg) {
 
     function internalLoad(config, remainingAttempts) {
 
-        var request = config.request;
-        var xhr = new XMLHttpRequest();
-        var traces = [];
-        var firstProgress = true;
-        var needFailureReport = true;
+        let request = config.request;
+        let xhr = new XMLHttpRequest();
+        let traces = [];
+        let firstProgress = true;
+        let needFailureReport = true;
         const requestStartTime = new Date();
-        var lastTraceTime = requestStartTime;
-        var lastTraceReceivedCount = 0;
+        let lastTraceTime = requestStartTime;
+        let lastTraceReceivedCount = 0;
 
         const handleLoaded = function (success) {
             needFailureReport = false;
@@ -144,7 +144,7 @@ function XHRLoader(cfg) {
         };
 
         const progress = function (event) {
-            var currentTime = new Date();
+            let currentTime = new Date();
 
             if (firstProgress) {
                 firstProgress = false;

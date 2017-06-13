@@ -65,9 +65,9 @@ function InsufficientBufferRule(config) {
      * If the bufferLevel is high, then InsufficientBufferRule give a high MaxIndex allowing other rules to take over.
      */
     function getMaxIndex (rulesContext) {
-        const mediaType = rulesContext.getMediaType();
-        const metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
-        const lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
+        let mediaType = rulesContext.getMediaType();
+        let metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
+        let lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
         let switchRequest = SwitchRequest(context).create();
 
         if (!lastBufferStateVO || !wasFirstBufferLoadedEventTriggered(mediaType, lastBufferStateVO)) {

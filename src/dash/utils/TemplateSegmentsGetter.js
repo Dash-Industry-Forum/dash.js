@@ -40,16 +40,16 @@ function TemplateSegmentsGetter(config, isDynamic) {
     let instance;
 
     function getSegmentsFromTemplate(representation, requestedTime, index, availabilityUpperLimit) {
-        var template = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
+        const template = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
             AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate;
-        var duration = representation.segmentDuration;
-        var availabilityWindow = representation.segmentAvailabilityRange;
+        const duration = representation.segmentDuration;
+        const availabilityWindow = representation.segmentAvailabilityRange;
 
-        var segments = [];
-        var url = null;
-        var seg = null;
+        let segments = [];
+        let url = null;
+        let seg = null;
 
-        var segmentRange,
+        let segmentRange,
             periodSegIdx,
             startIdx,
             endIdx,

@@ -56,7 +56,6 @@ function StreamProcessor(config) {
     let indexHandler;
     let timelineConverter = config.timelineConverter;
     let adapter = config.adapter;
-    let manifestModel = config.manifestModel;
 
     let instance,
         dynamic,
@@ -102,7 +101,6 @@ function StreamProcessor(config) {
         bufferController = createBufferControllerForType(Type);
         scheduleController = ScheduleController(context).create({
             metricsModel: MetricsModel(context).getInstance(),
-            manifestModel: manifestModel,
             adapter: adapter,
             dashMetrics: DashMetrics(context).getInstance(),
             dashManifestModel: DashManifestModel(context).getInstance(),
@@ -200,14 +198,14 @@ function StreamProcessor(config) {
         return stream ? stream.getStreamInfo() : null;
     }
 
-    function updateMediaInfo(manifest, newMediaInfo) {
+    function updateMediaInfo(newMediaInfo) {
         if (newMediaInfo !== mediaInfo && (!newMediaInfo || !mediaInfo || (newMediaInfo.type === mediaInfo.type))) {
             mediaInfo = newMediaInfo;
         }
         if (mediaInfoArr.indexOf(newMediaInfo) === -1) {
             mediaInfoArr.push(newMediaInfo);
         }
-        adapter.updateData(manifest, this);
+        adapter.updateData(this);
     }
 
     function getMediaInfoArr() {
@@ -239,11 +237,11 @@ function StreamProcessor(config) {
     }
 
     function getCurrentRepresentationInfo() {
-        return adapter.getCurrentRepresentationInfo(manifestModel.getValue(), representationController);
+        return adapter.getCurrentRepresentationInfo(representationController);
     }
 
     function getRepresentationInfoForQuality(quality) {
-        return adapter.getRepresentationInfoForQuality(manifestModel.getValue(), representationController, quality);
+        return adapter.getRepresentationInfoForQuality(representationController, quality);
     }
 
     function isBufferingCompleted() {
@@ -259,12 +257,11 @@ function StreamProcessor(config) {
     }
 
     function createBufferControllerForType(type) {
-        var controller = null;
+        let controller = null;
 
         if (type === 'video' || type === 'audio') {
             controller = BufferController(context).create({
                 metricsModel: MetricsModel(context).getInstance(),
-                manifestModel: manifestModel,
                 sourceBufferController: SourceBufferController(context).getInstance(),
                 errHandler: ErrorHandler(context).getInstance(),
                 streamController: StreamController(context).getInstance(),
@@ -276,7 +273,6 @@ function StreamProcessor(config) {
             controller = TextBufferController(context).create({
                 type: type,
                 metricsModel: MetricsModel(context).getInstance(),
-                manifestModel: manifestModel,
                 sourceBufferController: SourceBufferController(context).getInstance(),
                 errHandler: ErrorHandler(context).getInstance(),
                 streamController: StreamController(context).getInstance(),

@@ -50,9 +50,7 @@ function AbandonRequestsRule(config) {
         throughputArray;
 
     function setup() {
-        fragmentDict = {};
-        abandonDict = {};
-        throughputArray = [];
+        reset();
     }
 
     function setFragmentRequestDict(type, id) {
@@ -139,7 +137,9 @@ function AbandonRequestsRule(config) {
     }
 
     function reset() {
-        setup();
+        fragmentDict = {};
+        abandonDict = {};
+        throughputArray = [];
     }
 
     const instance = {

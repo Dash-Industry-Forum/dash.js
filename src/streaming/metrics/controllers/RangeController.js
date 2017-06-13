@@ -44,8 +44,8 @@ function RangeController(config) {
     function initialize(rs) {
         if (rs && rs.length) {
             rs.forEach(r => {
-                var start = r.starttime;
-                var end = start + r.duration;
+                let start = r.starttime;
+                let end = start + r.duration;
 
                 ranges.add(start, end);
             });
@@ -63,8 +63,8 @@ function RangeController(config) {
     }
 
     function isEnabled() {
-        var numRanges = ranges.length;
-        var time;
+        let numRanges = ranges.length;
+        let time;
 
         if (!numRanges) {
             return true;
@@ -76,7 +76,7 @@ function RangeController(config) {
                 (new Date().getTime() / 1000) :
                 mediaElement.currentTime;
 
-        for (var i = 0; i < numRanges; i += 1) {
+        for (let i = 0; i < numRanges; i += 1) {
             let start = ranges.start(i);
             let end = ranges.end(i);
 
