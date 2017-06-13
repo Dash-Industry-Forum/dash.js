@@ -173,7 +173,7 @@ function TextSourceBuffer() {
 
     function resetEmbedded() {
         eventBus.off(Events.VIDEO_CHUNK_RECEIVED, onVideoChunkReceived, this);
-        if (textTracks !== null) {
+        if (textTracks) {
             textTracks.deleteAllTextTracks();
         }
         embeddedInitialized = false;

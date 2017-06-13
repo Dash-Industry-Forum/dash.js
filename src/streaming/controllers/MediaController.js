@@ -66,10 +66,8 @@ function MediaController() {
         TRACK_SELECTION_MODE_WIDEST_RANGE
     ];
 
-    function initialize() {
-        tracks = {};
-        resetInitialSettings();
-        resetSwitchMode();
+    function setup() {
+        reset();
     }
 
     /**
@@ -116,7 +114,6 @@ function MediaController() {
 
     /**
      * @param {MediaInfo} track
-     * @returns {boolean}
      * @memberof MediaController#
      */
     function addTrack(track) {
@@ -124,19 +121,17 @@ function MediaController() {
         let streamId = track ? track.streamInfo.id : null;
         let initSettings = getInitialSettings(mediaType);
 
-        if (!track || (!isMultiTrackSupportedByType(mediaType))) return false;
+        if (!track || (!isMultiTrackSupportedByType(mediaType))) return;
 
         tracks[streamId] = tracks[streamId] || createTrackInfo();
 
-        if (tracks[streamId][mediaType].list.indexOf(track) >= 0) return false;
+        if (tracks[streamId][mediaType].list.indexOf(track) >= 0) return;
 
         tracks[streamId][mediaType].list.push(track);
 
         if (initSettings && (matchSettings(initSettings, track)) && !getCurrentTrackFor(mediaType, track.streamInfo)) {
             setTrack(track);
         }
-
-        return true;
     }
 
     /**
@@ -325,7 +320,9 @@ function MediaController() {
      * @memberof MediaController#
      */
     function reset() {
-        initialize();
+        tracks = {};
+        resetInitialSettings();
+        resetSwitchMode();
         textController.reset();
     }
 
@@ -462,7 +459,6 @@ function MediaController() {
     }
 
     instance = {
-        initialize: initialize,
         checkInitialMediaSettingsForType: checkInitialMediaSettingsForType,
         addTrack: addTrack,
         getTracksFor: getTracksFor,
@@ -480,6 +476,8 @@ function MediaController() {
         setConfig: setConfig,
         reset: reset
     };
+
+    setup();
 
     return instance;
 }

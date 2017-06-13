@@ -61,13 +61,8 @@ function PlaybackController() {
         playOnceInitialized;
 
     function setup() {
-        currentTime = 0;
-        liveStartTime = NaN;
-        wallclockTimeIntervalId = null;
-        isDynamic = null;
-        playOnceInitialized = false;
-        commonEarliestTime = {};
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
+        reset();
     }
 
     function initialize(StreamInfo) {
@@ -195,6 +190,11 @@ function PlaybackController() {
     }
 
     function reset() {
+        currentTime = 0;
+        liveStartTime = NaN;
+        wallclockTimeIntervalId = null;
+        playOnceInitialized = false;
+        commonEarliestTime = {};
         if (videoModel) {
             eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
@@ -205,7 +205,6 @@ function PlaybackController() {
         videoModel = null;
         streamInfo = null;
         isDynamic = null;
-        setup();
     }
 
     function setConfig(config) {

@@ -151,7 +151,11 @@ function MediaPlayer() {
 
         playbackController = PlaybackController(context).getInstance();
         mediaController = MediaController(context).getInstance();
-        mediaController.initialize();
+
+        mediaController.setConfig({
+            errHandler: errHandler
+        });
+
         dashManifestModel = DashManifestModel(context).getInstance();
         dashMetrics = DashMetrics(context).getInstance();
         metricsModel = MetricsModel(context).getInstance();
@@ -1967,11 +1971,6 @@ function MediaPlayer() {
         let sourceBufferController = SourceBufferController(context).getInstance();
         sourceBufferController.setConfig({
             dashManifestModel: dashManifestModel
-        });
-
-        mediaController.initialize();
-        mediaController.setConfig({
-            errHandler: errHandler
         });
 
         streamController = StreamController(context).getInstance();
