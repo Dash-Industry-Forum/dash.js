@@ -56,10 +56,10 @@ function InsufficientBufferRule(config) {
     }
 
     function getMaxIndex (rulesContext) {
-        var now = new Date().getTime();
-        var mediaType = rulesContext.getMediaType();
-        var metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
-        var lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
+        let now = new Date().getTime();
+        let mediaType = rulesContext.getMediaType();
+        let metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
+        let lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
         let switchRequest = SwitchRequest(context).create();
 
         if (now - lastSwitchTime < waitToSwitchTime ||

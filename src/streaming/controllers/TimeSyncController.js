@@ -131,15 +131,15 @@ function TimeSyncController() {
     // which is natively understood by javascript Date parser
     function alternateXsdatetimeDecoder(xsdatetimeStr) {
         // taken from DashParser - should probably refactor both uses
-        var SECONDS_IN_MIN = 60;
-        var MINUTES_IN_HOUR = 60;
-        var MILLISECONDS_IN_SECONDS = 1000;
-        var datetimeRegex = /^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2})(?::([0-9]*)(\.[0-9]*)?)?(?:([+\-])([0-9]{2})([0-9]{2}))?/;
+        const SECONDS_IN_MIN = 60;
+        const MINUTES_IN_HOUR = 60;
+        const MILLISECONDS_IN_SECONDS = 1000;
+        let datetimeRegex = /^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2})(?::([0-9]*)(\.[0-9]*)?)?(?:([+\-])([0-9]{2})([0-9]{2}))?/;
 
-        var utcDate,
+        let utcDate,
             timezoneOffset;
 
-        var match = datetimeRegex.exec(xsdatetimeStr);
+        let match = datetimeRegex.exec(xsdatetimeStr);
 
         // If the string does not contain a timezone offset different browsers can interpret it either
         // as UTC or as a local time so we have to parse the string manually to normalize the given date value for
@@ -166,7 +166,7 @@ function TimeSyncController() {
     // which is supported natively by Date.parse. if that fails, try a
     // regex-based version used elsewhere in this application.
     function xsdatetimeDecoder(xsdatetimeStr) {
-        var parsedDate = Date.parse(xsdatetimeStr);
+        let parsedDate = Date.parse(xsdatetimeStr);
 
         if (isNaN(parsedDate)) {
             parsedDate = alternateXsdatetimeDecoder(xsdatetimeStr);
@@ -191,7 +191,7 @@ function TimeSyncController() {
     }
 
     function directHandler(xsdatetimeStr, onSuccessCB, onFailureCB) {
-        var time = xsdatetimeDecoder(xsdatetimeStr);
+        let time = xsdatetimeDecoder(xsdatetimeStr);
 
         if (!isNaN(time)) {
             onSuccessCB(time);
@@ -202,13 +202,13 @@ function TimeSyncController() {
     }
 
     function httpHandler(decoder, url, onSuccessCB, onFailureCB, isHeadRequest) {
-        var oncomplete,
+        let oncomplete,
             onload;
-        var complete = false;
-        var req = new XMLHttpRequest();
+        let complete = false;
+        let req = new XMLHttpRequest();
 
-        var verb = isHeadRequest ? 'HEAD' : 'GET';
-        var urls = url.match(/\S+/g);
+        let verb = isHeadRequest ? 'HEAD' : 'GET';
+        let urls = url.match(/\S+/g);
 
         // according to ISO 23009-1, url could be a white-space
         // separated list of URLs. just handle one at a time.
@@ -232,7 +232,7 @@ function TimeSyncController() {
         };
 
         onload = function () {
-            var time,
+            let time,
                 result;
 
             if (req.status === 200) {
@@ -262,9 +262,9 @@ function TimeSyncController() {
     }
 
     function checkForDateHeader() {
-        var metrics = metricsModel.getReadOnlyMetricsFor('stream');
-        var dateHeaderValue = dashMetrics.getLatestMPDRequestHeaderValueByID(metrics, 'Date');
-        var dateHeaderTime = dateHeaderValue !== null ? new Date(dateHeaderValue).getTime() : Number.NaN;
+        let metrics = metricsModel.getReadOnlyMetricsFor('stream');
+        let dateHeaderValue = dashMetrics.getLatestMPDRequestHeaderValueByID(metrics, 'Date');
+        let dateHeaderTime = dateHeaderValue !== null ? new Date(dateHeaderValue).getTime() : Number.NaN;
 
         if (!isNaN(dateHeaderTime)) {
             setOffsetMs(dateHeaderTime - new Date().getTime());
@@ -282,16 +282,16 @@ function TimeSyncController() {
     function attemptSync(sources, sourceIndex) {
 
         // if called with no sourceIndex, use zero (highest priority)
-        var  index = sourceIndex || 0;
+        let  index = sourceIndex || 0;
 
         // the sources should be ordered in priority from the manifest.
         // try each in turn, from the top, until either something
         // sensible happens, or we run out of sources to try.
-        var source = sources[index];
+        let source = sources[index];
 
         // callback to emit event to listeners
-        var onComplete = function (time, offset) {
-            var failed = !time || !offset;
+        const onComplete = function (time, offset) {
+            let failed = !time || !offset;
             if (failed && useManifestDateHeaderTimeSource) {
                 //Before falling back to binary search , check if date header exists on MPD. if so, use for a time source.
                 checkForDateHeader();
@@ -310,8 +310,8 @@ function TimeSyncController() {
                     source.value,
                     function (serverTime) {
                         // the timing source returned something useful
-                        var deviceTime = new Date().getTime();
-                        var offset = serverTime - deviceTime;
+                        let deviceTime = new Date().getTime();
+                        let offset = serverTime - deviceTime;
 
                         setOffsetMs(offset);
 

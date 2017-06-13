@@ -51,7 +51,6 @@ function BufferController(config) {
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
     const metricsModel = config.metricsModel;
-    const manifestModel = config.manifestModel;
     const sourceBufferController = config.sourceBufferController;
     const errHandler = config.errHandler;
     const streamController = config.streamController;
@@ -174,9 +173,8 @@ function BufferController(config) {
         const bytes = chunk.bytes;
         const quality = chunk.quality;
         const currentRepresentation = streamProcessor.getRepresentationInfoForQuality(quality);
-        const manifest = manifestModel.getValue();
-        const eventStreamMedia = adapter.getEventsFor(manifest, currentRepresentation.mediaInfo, streamProcessor);
-        const eventStreamTrack = adapter.getEventsFor(manifest, currentRepresentation, streamProcessor);
+        const eventStreamMedia = adapter.getEventsFor(currentRepresentation.mediaInfo, streamProcessor);
+        const eventStreamTrack = adapter.getEventsFor(currentRepresentation, streamProcessor);
 
         if (eventStreamMedia && eventStreamMedia.length > 0 || eventStreamTrack && eventStreamTrack.length > 0) {
             const request = streamProcessor.getFragmentModel().getRequests({
@@ -378,7 +376,7 @@ function BufferController(config) {
     }
 
     function hasEnoughSpaceToAppend() {
-        var totalBufferedTime = sourceBufferController.getTotalBufferedTime(buffer);
+        const totalBufferedTime = sourceBufferController.getTotalBufferedTime(buffer);
         return (totalBufferedTime < criticalBufferLevel);
     }
 

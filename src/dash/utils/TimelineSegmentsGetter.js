@@ -40,22 +40,22 @@ function TimelineSegmentsGetter(config, isDynamic) {
     let instance;
 
     function getSegmentsFromTimeline(representation, requestedTime, index, availabilityUpperLimit) {
-        var base = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
+        const base = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
             AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate ||
             representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
             AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList;
-        var timeline = base.SegmentTimeline;
-        var list = base.SegmentURL_asArray;
-        var isAvailableSegmentNumberCalculated = representation.availableSegmentsNumber > 0;
+        const timeline = base.SegmentTimeline;
+        const list = base.SegmentURL_asArray;
+        const isAvailableSegmentNumberCalculated = representation.availableSegmentsNumber > 0;
 
-        var maxSegmentsAhead = 10;
-        var time = 0;
-        var scaledTime = 0;
-        var availabilityIdx = -1;
-        var segments = [];
-        var isStartSegmentForRequestedTimeFound = false;
+        const maxSegmentsAhead = 10;
+        let time = 0;
+        let scaledTime = 0;
+        let availabilityIdx = -1;
+        let segments = [];
+        let isStartSegmentForRequestedTimeFound = false;
 
-        var fragments,
+        let fragments,
             frag,
             i,
             len,
@@ -70,9 +70,9 @@ function TimelineSegmentsGetter(config, isDynamic) {
             endIdx,
             fTimescale;
 
-        var createSegment = function (s, i) {
-            var media = base.media;
-            var mediaRange = s.mediaRange;
+        let createSegment = function (s, i) {
+            let media = base.media;
+            let mediaRange = s.mediaRange;
 
             if (list) {
                 media = list[i].media || '';
@@ -127,7 +127,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
                 if (nextFrag && nextFrag.hasOwnProperty('t')) {
                     repeatEndTime = nextFrag.t / fTimescale;
                 } else {
-                    var availabilityEnd = representation.segmentAvailabilityRange ? representation.segmentAvailabilityRange.end : (timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic).end);
+                    const availabilityEnd = representation.segmentAvailabilityRange ? representation.segmentAvailabilityRange.end : (timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic).end);
                     repeatEndTime = timelineConverter.calcMediaTimeFromPresentationTime(availabilityEnd, representation);
                     representation.segmentDuration = frag.d / fTimescale;
                 }

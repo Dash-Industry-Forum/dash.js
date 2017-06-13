@@ -61,7 +61,7 @@ function BufferLevelHandler() {
     }
 
     function intervalCallback() {
-        var vo = getLowestBufferLevelVO();
+        let vo = getLowestBufferLevelVO();
 
         if (vo) {
             if (lastReportedTime !== vo.t) {

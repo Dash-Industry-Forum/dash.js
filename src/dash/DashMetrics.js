@@ -45,9 +45,9 @@ function DashMetrics() {
     let manifestModel = ManifestModel(context).getInstance();//TODO Need to pass this in not bake in
 
     function getBandwidthForRepresentation(representationId, periodId) {
-        var representation;
-        var manifest = manifestModel.getValue();
-        var period = manifest.Period_asArray[periodId];
+        let representation;
+        const manifest = manifestModel.getValue();
+        let period = manifest.Period_asArray[periodId];
 
         representation = findRepresentation(period, representationId);
 
@@ -66,9 +66,9 @@ function DashMetrics() {
      * @returns {*}
      */
     function getIndexForRepresentation(representationId, periodIdx) {
-        var representationIndex;
-        var manifest = manifestModel.getValue();
-        var period = manifest.Period_asArray[periodIdx];
+        let representationIndex;
+        const manifest = manifestModel.getValue();
+        let period = manifest.Period_asArray[periodIdx];
 
         representationIndex = findRepresentationIndex(period, representationId);
         return representationIndex;
@@ -84,9 +84,9 @@ function DashMetrics() {
      * @instance
      */
     function getMaxIndexForBufferType(bufferType, periodIdx) {
-        var maxIndex;
-        var manifest = manifestModel.getValue();
-        var period = manifest.Period_asArray[periodIdx];
+        let maxIndex;
+        const manifest = manifestModel.getValue();
+        let period = manifest.Period_asArray[periodIdx];
 
         maxIndex = findMaxBufferIndex(period, bufferType);
         return maxIndex;
@@ -149,10 +149,10 @@ function DashMetrics() {
             return null;
         }
 
-        var httpList = metrics.HttpList;
-        var currentHttpList = null;
+        const httpList = metrics.HttpList;
+        let currentHttpList = null;
 
-        var httpListLength,
+        let httpListLength,
             httpListLastIndex;
 
         if (httpList === null || httpList.length <= 0) {
@@ -261,8 +261,8 @@ function DashMetrics() {
      * @instance
      */
     function getLatestMPDRequestHeaderValueByID(metrics, id) {
-        var headers = {};
-        var httpRequestList,
+        let headers = {};
+        let httpRequestList,
             httpRequest,
             i;
 
@@ -295,8 +295,8 @@ function DashMetrics() {
 
         if (metrics === null) return null;
 
-        var httpRequest = getCurrentHttpRequest(metrics);
-        var headers;
+        let httpRequest = getCurrentHttpRequest(metrics);
+        let headers;
 
         if (httpRequest === null || httpRequest._responseHeaders === null) return null;
 
@@ -305,17 +305,17 @@ function DashMetrics() {
     }
 
     function parseResponseHeaders(headerStr) {
-        var headers = {};
+        let headers = {};
         if (!headerStr) {
             return headers;
         }
 
         // Trim headerStr to fix a MS Edge bug with xhr.getAllResponseHeaders method
         // which send a string starting with a "\n" character
-        var headerPairs = headerStr.trim().split('\u000d\u000a');
-        for (var i = 0, ilen = headerPairs.length; i < ilen; i++) {
-            var headerPair = headerPairs[i];
-            var index = headerPair.indexOf('\u003a\u0020');
+        let headerPairs = headerStr.trim().split('\u000d\u000a');
+        for (let i = 0, ilen = headerPairs.length; i < ilen; i++) {
+            let headerPair = headerPairs[i];
+            let index = headerPair.indexOf('\u003a\u0020');
             if (index > 0) {
                 headers[headerPair.substring(0, index)] = headerPair.substring(index + 2);
             }
@@ -334,7 +334,7 @@ function DashMetrics() {
     }
 
     function findRepresentation(period, representationId, returnIndex) {
-        var adaptationSet,
+        let adaptationSet,
             adaptationSetArray,
             representation,
             representationArray,
@@ -367,7 +367,7 @@ function DashMetrics() {
     }
 
     function findMaxBufferIndex(period, bufferType) {
-        var adaptationSet,
+        let adaptationSet,
             adaptationSetArray,
             representationArray,
             adaptationSetArrayIndex;

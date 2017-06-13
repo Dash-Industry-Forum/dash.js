@@ -9,7 +9,7 @@ function ManifestParsing (config) {
 
     function getMetricsRangeStartTime(manifest, dynamic, range) {
         var mpd = dashManifestModel.getMpd(manifest);
-        var periods;
+        var voPeriods;
         var presentationStartTime = 0;
         var reportingStartTime;
 
@@ -23,10 +23,10 @@ function ManifestParsing (config) {
             // For services with MPD@type='static', the start time is indicated
             // in Media Presentation time and is relative to the PeriodStart
             // time of the first Period in this MPD.
-            periods = this.getRegularPeriods(manifest, mpd);
+            voPeriods = this.getRegularPeriods(mpd);
 
-            if (periods.length) {
-                presentationStartTime = periods[0].start;
+            if (voPeriods.length) {
+                presentationStartTime = voPeriods[0].start;
             }
         }
 

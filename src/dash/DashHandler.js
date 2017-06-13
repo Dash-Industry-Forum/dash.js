@@ -144,14 +144,14 @@ function DashHandler(config) {
 
     function replaceIDForTemplate(url, value) {
         if (value === null || url === null || url.indexOf('$RepresentationID$') === -1) { return url; }
-        var v = value.toString();
+        let v = value.toString();
         return url.split('$RepresentationID$').join(v);
     }
 
     function setRequestUrl(request, destination, representation) {
-        var baseURL = baseURLController.resolve(representation.path);
-        var url;
-        var serviceLocation;
+        const baseURL = baseURLController.resolve(representation.path);
+        let url,
+            serviceLocation;
 
         if (!baseURL || (destination === baseURL.url) || (!urlUtils.isRelative(destination))) {
             url = destination;
@@ -219,13 +219,13 @@ function DashHandler(config) {
         return isFinished;
     }
 
-    function updateSegments(representation) {
-        return segmentsGetter.getSegments(representation, requestedTime, index, onSegmentListUpdated);
+    function updateSegments(voRepresentation) {
+        segmentsGetter.getSegments(voRepresentation, requestedTime, index, onSegmentListUpdated);
     }
 
-    function onSegmentListUpdated(representation, segments) {
+    function onSegmentListUpdated(voRepresentation, segments) {
 
-        representation.segments = segments;
+        voRepresentation.segments = segments;
 
         if (segments && segments.length > 0) {
             earliestTime = isNaN(earliestTime) ? segments[0].presentationStartTime : Math.min(segments[0].presentationStartTime,  earliestTime);
@@ -240,62 +240,60 @@ function DashHandler(config) {
         }
     }
 
-    function updateSegmentList(representation) {
+    function updateSegmentList(voRepresentation) {
 
-        if (!representation) {
+        if (!voRepresentation) {
             throw new Error('no representation');
         }
 
-        representation.segments = null;
+        voRepresentation.segments = null;
 
-        updateSegments(representation);
-
-        return representation;
+        updateSegments(voRepresentation);
     }
 
-    function updateRepresentation(representation, keepIdx) {
-        var hasInitialization = Representation.hasInitialization(representation);
-        var hasSegments = Representation.hasSegments(representation);
-        var error;
+    function updateRepresentation(voRepresentation, keepIdx) {
+        const hasInitialization = Representation.hasInitialization(voRepresentation);
+        const hasSegments = Representation.hasSegments(voRepresentation);
+        let error;
 
-        if (!representation.segmentDuration && !representation.segments) {
-            updateSegmentList(representation);
+        if (!voRepresentation.segmentDuration && !voRepresentation.segments) {
+            updateSegmentList(voRepresentation);
         }
 
-        representation.segmentAvailabilityRange = null;
-        representation.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
+        voRepresentation.segmentAvailabilityRange = null;
+        voRepresentation.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(voRepresentation, isDynamic);
 
-        if ((representation.segmentAvailabilityRange.end < representation.segmentAvailabilityRange.start) && !representation.useCalculatedLiveEdgeTime) {
-            error = new Error(SEGMENTS_UNAVAILABLE_ERROR_CODE, 'no segments are available yet', {availabilityDelay: representation.segmentAvailabilityRange.start - representation.segmentAvailabilityRange.end});
-            eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: representation, error: error});
+        if ((voRepresentation.segmentAvailabilityRange.end < voRepresentation.segmentAvailabilityRange.start) && !voRepresentation.useCalculatedLiveEdgeTime) {
+            error = new Error(SEGMENTS_UNAVAILABLE_ERROR_CODE, 'no segments are available yet', {availabilityDelay: voRepresentation.segmentAvailabilityRange.start - voRepresentation.segmentAvailabilityRange.end});
+            eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: voRepresentation, error: error});
             return;
         }
 
         if (!keepIdx) index = -1;
 
-        if (representation.segmentDuration) {
-            updateSegmentList(representation);
+        if (voRepresentation.segmentDuration) {
+            updateSegmentList(voRepresentation);
         }
 
         if (!hasInitialization) {
-            segmentBaseLoader.loadInitialization(representation);
+            segmentBaseLoader.loadInitialization(voRepresentation);
         }
 
         if (!hasSegments) {
-            segmentBaseLoader.loadSegments(representation, type, representation.indexRange);
+            segmentBaseLoader.loadSegments(voRepresentation, type, voRepresentation.indexRange);
         }
 
         if (hasInitialization && hasSegments) {
-            eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: representation});
+            eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: voRepresentation});
         }
     }
 
     function getIndexForSegments(time, representation, timeThreshold) {
-        var segments = representation.segments;
-        var ln = segments ? segments.length : null;
+        const segments = representation.segments;
+        const ln = segments ? segments.length : null;
 
-        var idx = -1;
-        var epsilon,
+        let idx = -1;
+        let epsilon,
             frag,
             ft,
             fd,
@@ -323,11 +321,11 @@ function DashHandler(config) {
             return null;
         }
 
-        var request = new FragmentRequest();
-        var representation = segment.representation;
-        var bandwidth = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
+        let request = new FragmentRequest();
+        let representation = segment.representation;
+        let bandwidth = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
             AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].bandwidth;
-        var url = segment.media;
+        let url = segment.media;
 
         url = replaceTokenForTemplate(url, 'Number', segment.replacementNumber);
         url = replaceTokenForTemplate(url, 'Time', segment.replacementTime);
@@ -355,15 +353,15 @@ function DashHandler(config) {
     }
 
     function getSegmentRequestForTime(representation, time, options) {
-        var request,
+        let request,
             segment,
             finished;
 
-        var idx = index;
+        let idx = index;
 
-        var keepIdx = options ? options.keepIdx : false;
-        var timeThreshold = options ? options.timeThreshold : null;
-        var ignoreIsFinished = (options && options.ignoreIsFinished) ? true : false;
+        let keepIdx = options ? options.keepIdx : false;
+        let timeThreshold = options ? options.timeThreshold : null;
+        let ignoreIsFinished = (options && options.ignoreIsFinished) ? true : false;
 
         if (!representation) {
             return null;
@@ -408,7 +406,7 @@ function DashHandler(config) {
     }
 
     function generateSegmentRequestForTime(representation, time) {
-        var step = (representation.segmentAvailabilityRange.end - representation.segmentAvailabilityRange.start) / 2;
+        const step = (representation.segmentAvailabilityRange.end - representation.segmentAvailabilityRange.start) / 2;
 
         representation.segments = null;
         representation.segmentAvailabilityRange = {start: time - step, end: time + step};
@@ -416,7 +414,7 @@ function DashHandler(config) {
     }
 
     function getNextSegmentRequest(representation) {
-        var request,
+        let request,
             segment,
             finished;
 
@@ -456,7 +454,7 @@ function DashHandler(config) {
     }
 
     function onInitializationLoaded(e) {
-        var representation = e.representation;
+        let representation = e.representation;
         //log("Got an initialization.");
         if (!representation.segments) return;
 
@@ -466,12 +464,12 @@ function DashHandler(config) {
     function onSegmentsLoaded(e) {
         if (e.error || (type !== e.mediaType)) return;
 
-        var fragments = e.segments;
-        var representation = e.representation;
-        var segments = [];
-        var count = 0;
+        const fragments = e.segments;
+        let representation = e.representation;
+        let segments = [];
+        let count = 0;
 
-        var i,
+        let i,
             len,
             s,
             seg;

@@ -105,7 +105,7 @@ function MetricsModel() {
     }
 
     function getMetricsFor(type) {
-        var metrics;
+        let metrics;
 
         if (streamMetrics.hasOwnProperty(type)) {
             metrics = streamMetrics[type];
@@ -118,7 +118,7 @@ function MetricsModel() {
     }
 
     function pushMetrics(type, list, value) {
-        var metrics = getMetricsFor(type);
+        let metrics = getMetricsFor(type);
         metrics[list].push(value);
         if ( metrics[list].length > MAXIMUM_LIST_DEPTH ) {
             metrics[list].shift();
@@ -126,7 +126,7 @@ function MetricsModel() {
     }
 
     function addTcpConnection(mediaType, tcpid, dest, topen, tclose, tconnect) {
-        var vo = new TCPConnection();
+        let vo = new TCPConnection();
 
         vo.tcpid = tcpid;
         vo.dest = dest;
@@ -140,7 +140,7 @@ function MetricsModel() {
     }
 
     function appendHttpTrace(httpRequest, s, d, b) {
-        var vo = new HTTPRequestTrace();
+        let vo = new HTTPRequestTrace();
 
         vo.s = s;
         vo.d = d;
@@ -158,7 +158,7 @@ function MetricsModel() {
     }
 
     function addHttpRequest(mediaType, tcpid, type, url, actualurl, serviceLocation, range, trequest, tresponse, tfinish, responsecode, mediaduration, responseHeaders, traces) {
-        var vo = new HTTPRequest();
+        let vo = new HTTPRequest();
 
         // ISO 23009-1 D.4.3 NOTE 2:
         // All entries for a given object will have the same URL and range
@@ -220,7 +220,7 @@ function MetricsModel() {
     }
 
     function addRepresentationSwitch(mediaType, t, mt, to, lto) {
-        var vo = new TrackSwitch();
+        let vo = new TrackSwitch();
 
         vo.t = t;
         vo.mt = mt;
@@ -243,7 +243,7 @@ function MetricsModel() {
     }
 
     function addBufferLevel(mediaType, t, level) {
-        var vo = new BufferLevel();
+        let vo = new BufferLevel();
         vo.t = t;
         vo.level = level;
 
@@ -253,7 +253,7 @@ function MetricsModel() {
     }
 
     function addBufferState(mediaType, state, target) {
-        var vo = new BufferState();
+        let vo = new BufferState();
         vo.target = target;
         vo.state = state;
 
@@ -263,7 +263,7 @@ function MetricsModel() {
     }
 
     function addDVRInfo(mediaType, currentTime, mpd, range) {
-        var vo = new DVRInfo();
+        let vo = new DVRInfo();
         vo.time = currentTime ;
         vo.range = range;
         vo.manifestInfo = mpd;
@@ -274,8 +274,8 @@ function MetricsModel() {
     }
 
     function addDroppedFrames(mediaType, quality) {
-        var vo = new DroppedFrames();
-        var list = getMetricsFor(mediaType).DroppedFrames;
+        let vo = new DroppedFrames();
+        let list = getMetricsFor(mediaType).DroppedFrames;
 
         vo.time = quality.creationTime;
         vo.droppedFrames = quality.droppedVideoFrames;
@@ -290,7 +290,7 @@ function MetricsModel() {
     }
 
     function addSchedulingInfo(mediaType, t, type, startTime, availabilityStartTime, duration, quality, range, state) {
-        var vo = new SchedulingInfo();
+        let vo = new SchedulingInfo();
 
         vo.mediaType = mediaType;
         vo.t = t;
@@ -310,7 +310,7 @@ function MetricsModel() {
     }
 
     function addRequestsQueue(mediaType, loadingRequests, executedRequests) {
-        var vo = new RequestsQueue();
+        let vo = new RequestsQueue();
         vo.loadingRequests = loadingRequests;
         vo.executedRequests = executedRequests;
 
@@ -319,7 +319,7 @@ function MetricsModel() {
     }
 
     function addManifestUpdate(mediaType, type, requestTime, fetchTime, availabilityStartTime, presentationStartTime, clientTimeOffset, currentTime, buffered, latency) {
-        var vo = new ManifestUpdate();
+        let vo = new ManifestUpdate();
 
         vo.mediaType = mediaType;
         vo.type = type;
@@ -340,7 +340,7 @@ function MetricsModel() {
 
     function updateManifestUpdateInfo(manifestUpdate, updatedFields) {
         if (manifestUpdate) {
-            for (var field in updatedFields) {
+            for (let field in updatedFields) {
                 manifestUpdate[field] = updatedFields[field];
             }
 
@@ -350,7 +350,7 @@ function MetricsModel() {
 
     function addManifestUpdateStreamInfo(manifestUpdate, id, index, start, duration) {
         if (manifestUpdate) {
-            var vo = new ManifestUpdateStreamInfo();
+            let vo = new ManifestUpdateStreamInfo();
 
             vo.id = id;
             vo.index = index;
@@ -367,7 +367,7 @@ function MetricsModel() {
 
     function addManifestUpdateRepresentationInfo(manifestUpdate, id, index, streamIndex, mediaType, presentationTimeOffset, startNumber, fragmentInfoType) {
         if (manifestUpdate) {
-            var vo = new ManifestUpdateTrackInfo();
+            let vo = new ManifestUpdateTrackInfo();
 
             vo.id = id;
             vo.index = index;
@@ -386,7 +386,7 @@ function MetricsModel() {
     }
 
     function addPlayList(vo) {
-        var type = 'stream';
+        let type = 'stream';
 
         if (vo.trace && Array.isArray(vo.trace)) {
             vo.trace.forEach(trace => {
@@ -404,7 +404,7 @@ function MetricsModel() {
     }
 
     function addDVBErrors(vo) {
-        var type = 'stream';
+        let type = 'stream';
 
         pushAndNotify(type, adapter.metricsList.DVB_ERRORS, vo);
 
@@ -412,7 +412,7 @@ function MetricsModel() {
     }
 
     function updateBolaState(mediaType, _s) {
-        var vo = new BolaState();
+        let vo = new BolaState();
         vo._s = _s;
         getMetricsFor(mediaType).BolaState = [vo];
 
