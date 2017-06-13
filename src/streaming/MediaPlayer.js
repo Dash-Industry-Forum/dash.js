@@ -141,6 +141,12 @@ function MediaPlayer() {
         if (config.streamController) {
             streamController = config.streamController;
         }
+        if (config.playbackController) {
+            playbackController = config.playbackController;
+        }
+        if (config.mediaPlayerModel) {
+            mediaPlayerModel = config.mediaPlayerModel;
+        }
     }
 
     /**
@@ -178,6 +184,11 @@ function MediaPlayer() {
         // init some controllers and models
         timelineConverter = TimelineConverter(context).getInstance();
         abrController = AbrController(context).getInstance();
+
+        if (!playbackController) {
+            playbackController = PlaybackController(context).getInstance();
+        }
+
         mediaController = MediaController(context).getInstance();
         adapter = DashAdapter(context).getInstance();
         dashManifestModel = DashManifestModel(context).getInstance({
@@ -193,7 +204,6 @@ function MediaPlayer() {
         metricsModel = MetricsModel(context).getInstance();
 
         textController = TextController(context).getInstance();
-        playbackController = PlaybackController(context).getInstance();
         domStorage = DOMStorage(context).getInstance({
             mediaPlayerModel: mediaPlayerModel
         });
