@@ -93,10 +93,6 @@ function PlaybackController() {
         return startTime + (streamInfo.duration - offset) - getTime();
     }
 
-    function isPlaybackStarted() {
-        return getTime() > 0;
-    }
-
     function play() {
         if (videoModel && videoModel.getElement()) {
             videoModel.play();
@@ -470,7 +466,6 @@ function PlaybackController() {
         setConfig: setConfig,
         getStreamStartTime: getStreamStartTime,
         getTimeToStreamEnd: getTimeToStreamEnd,
-        isPlaybackStarted: isPlaybackStarted,
         getTime: getTime,
         getPlaybackRate: getPlaybackRate,
         getPlayedRanges: getPlayedRanges,
