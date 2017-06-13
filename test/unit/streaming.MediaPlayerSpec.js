@@ -5,6 +5,7 @@ import VideoElementMock from './mocks/VideoElementMock';
 import StreamControllerMock from './mocks/StreamControllerMock';
 import CapabilitiesMock from './mocks/CapabilitiesMock';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
+import AbrControllerMock from './mocks/AbrControllerMock';
 import MediaPlayer from './../../src/streaming/MediaPlayer';
 import MediaPlayerModelMock from './mocks//MediaPlayerModelMock';
 
@@ -27,6 +28,7 @@ describe.only("MediaPlayer", function () {
     let videoElementMock = new VideoElementMock;
     let capaMock = CapabilitiesMock().getInstance();
     let streamControllerMock = StreamControllerMock().getInstance();
+    let abrControllerMock = AbrControllerMock().getInstance();
     let playbackControllerMock = PlaybackControllerMock().getInstance();
     let mediaPlayerModel = MediaPlayerModelMock().getInstance();
     let player;
@@ -43,7 +45,8 @@ describe.only("MediaPlayer", function () {
             streamController: streamControllerMock,
             capabilities: capaMock,
             playbackController: playbackControllerMock,
-            mediaPlayerModel: mediaPlayerModel
+            mediaPlayerModel: mediaPlayerModel,
+            abrController: abrControllerMock
         });
     });
 
@@ -316,6 +319,57 @@ describe.only("MediaPlayer", function () {
     });
 
     describe("AutoBitrate Functions", function () {
+        afterEach(function() {
+            abrControllerMock.reset();
+        })
+        it("should configure MaxAllowedBitrateFor", function () {
+            let MaxAllowedBitrateFor = abrControllerMock.getMaxAllowedBitrateFor('audio');
+            expect(isNaN(MaxAllowedBitrateFor)).to.be.true;
+
+            MaxAllowedBitrateFor = player.getMaxAllowedBitrateFor('audio');
+            expect(isNaN(MaxAllowedBitrateFor)).to.be.true;
+
+            player.setMaxAllowedBitrateFor('audio', 5);
+
+            MaxAllowedBitrateFor = abrControllerMock.getMaxAllowedBitrateFor('audio');
+            expect(MaxAllowedBitrateFor).to.equal(5);
+
+            MaxAllowedBitrateFor = player.getMaxAllowedBitrateFor('audio');
+            expect(MaxAllowedBitrateFor).to.equal(5);
+        });
+
+        it("should configure MinAllowedBitrateFor", function () {
+            let MinAllowedBitrateFor = abrControllerMock.getMinAllowedBitrateFor('audio');
+            expect(isNaN(MinAllowedBitrateFor)).to.be.true;
+
+            MinAllowedBitrateFor = player.getMinAllowedBitrateFor('audio');
+            expect(isNaN(MinAllowedBitrateFor)).to.be.true;
+
+            player.setMinAllowedBitrateFor('audio', 5);
+
+            MinAllowedBitrateFor = abrControllerMock.getMinAllowedBitrateFor('audio');
+            expect(MinAllowedBitrateFor).to.equal(5);
+
+            MinAllowedBitrateFor = player.getMinAllowedBitrateFor('audio');
+            expect(MinAllowedBitrateFor).to.equal(5);
+        });
+
+        it("should configure MaxAllowedRepresentationRatioFor", function () {
+            let MaxAllowedRepresentationRatioFor = abrControllerMock.getMaxAllowedRepresentationRatioFor('audio');
+            expect(MaxAllowedRepresentationRatioFor).to.equal(1);
+
+            MaxAllowedRepresentationRatioFor = player.getMaxAllowedRepresentationRatioFor('audio');
+            expect(MaxAllowedRepresentationRatioFor).to.equal(1);
+
+            player.setMaxAllowedRepresentationRatioFor('audio', 5);
+
+            MaxAllowedRepresentationRatioFor = abrControllerMock.getMaxAllowedRepresentationRatioFor('audio');
+            expect(MaxAllowedRepresentationRatioFor).to.equal(5);
+
+            MaxAllowedRepresentationRatioFor = player.getMaxAllowedRepresentationRatioFor('audio');
+            expect(MaxAllowedRepresentationRatioFor).to.equal(5);
+        });
+
         describe("When it is not initialized", function () {
             it("Method getQualityFor should throw an exception", function () {
                 expect(player.getQualityFor).to.throw(PLAYBACK_NOT_INITIALIZED_ERROR);

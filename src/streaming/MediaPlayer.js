@@ -147,6 +147,9 @@ function MediaPlayer() {
         if (config.mediaPlayerModel) {
             mediaPlayerModel = config.mediaPlayerModel;
         }
+        if (config.abrController) {
+            abrController = config.abrController;
+        }
     }
 
     /**
@@ -183,7 +186,9 @@ function MediaPlayer() {
 
         // init some controllers and models
         timelineConverter = TimelineConverter(context).getInstance();
-        abrController = AbrController(context).getInstance();
+        if (!abrController) {
+            abrController = AbrController(context).getInstance();
+        }
 
         if (!playbackController) {
             playbackController = PlaybackController(context).getInstance();
