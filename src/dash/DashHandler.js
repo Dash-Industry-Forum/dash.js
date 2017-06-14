@@ -251,19 +251,12 @@ function DashHandler(config) {
         updateSegments(voRepresentation);
     }
 
-<<<<<<< HEAD
     function updateRepresentation(voRepresentation, keepIdx) {
         const hasInitialization = Representation.hasInitialization(voRepresentation);
         const hasSegments = Representation.hasSegments(voRepresentation);
-        let error;
-=======
-    function updateRepresentation(representation, keepIdx) {
-        var hasInitialization = Representation.hasInitialization(representation);
-        var hasSegments = Representation.hasSegments(representation);
         const type = streamProcessor ? streamProcessor.getType() : null;
         const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
-        var error;
->>>>>>> isDynamic and type are not attributes of DashHandler : use streamProcessor accessors to have those informations each time it is necessary.
+        let error;
 
         if (!voRepresentation.segmentDuration && !voRepresentation.segments) {
             updateSegmentList(voRepresentation);
@@ -334,12 +327,8 @@ function DashHandler(config) {
         let representation = segment.representation;
         let bandwidth = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
             AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].bandwidth;
-<<<<<<< HEAD
         let url = segment.media;
-=======
-        var url = segment.media;
         const type = streamProcessor ? streamProcessor.getType() : null;
->>>>>>> isDynamic and type are not attributes of DashHandler : use streamProcessor accessors to have those informations each time it is necessary.
 
         url = replaceTokenForTemplate(url, 'Number', segment.replacementNumber);
         url = replaceTokenForTemplate(url, 'Time', segment.replacementTime);
@@ -371,14 +360,9 @@ function DashHandler(config) {
             segment,
             finished;
 
-<<<<<<< HEAD
-        let idx = index;
-=======
         const type = streamProcessor ? streamProcessor.getType() : null;
         const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
-        var idx = index;
->>>>>>> isDynamic and type are not attributes of DashHandler : use streamProcessor accessors to have those informations each time it is necessary.
-
+        let idx = index;
         let keepIdx = options ? options.keepIdx : false;
         let timeThreshold = options ? options.timeThreshold : null;
         let ignoreIsFinished = (options && options.ignoreIsFinished) ? true : false;
