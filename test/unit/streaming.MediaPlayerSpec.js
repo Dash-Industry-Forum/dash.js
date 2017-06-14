@@ -25,12 +25,12 @@ describe("MediaPlayer", function () {
     let dummyUrl = specHelper.getDummyUrl();
 
     // init mock
-    let videoElementMock = new VideoElementMock;
-    let capaMock = CapabilitiesMock().getInstance();
-    let streamControllerMock = StreamControllerMock().getInstance();
-    let abrControllerMock = AbrControllerMock().getInstance();
-    let playbackControllerMock = PlaybackControllerMock().getInstance();
-    let mediaPlayerModel = MediaPlayerModelMock().getInstance();
+    let videoElementMock = new VideoElementMock();
+    let capaMock = new CapabilitiesMock();
+    let streamControllerMock = new StreamControllerMock();
+    let abrControllerMock = new AbrControllerMock();
+    let playbackControllerMock = new PlaybackControllerMock();
+    let mediaPlayerModel = new MediaPlayerModelMock();
     let player;
 
     beforeEach(function () {
@@ -227,7 +227,7 @@ describe("MediaPlayer", function () {
                 let isDynamic = player.isDynamic();
                 expect(isDynamic).to.be.false;
 
-                playbackControllerMock.setisDynamic(true);
+                playbackControllerMock.setIsDynamic(true);
                 isDynamic = player.isDynamic();
                 expect(isDynamic).to.be.true;
 

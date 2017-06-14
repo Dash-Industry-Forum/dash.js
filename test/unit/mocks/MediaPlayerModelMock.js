@@ -28,7 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../../../src/core/FactoryMaker';
 import {
     HTTPRequest
 }
@@ -69,441 +68,429 @@ const WALLCLOCK_TIME_UPDATE_INTERVAL = 50;
 
 const DEFAULT_XHR_WITH_CREDENTIALS = false;
 
-function MediaPlayerModelMock() {
+class MediaPlayerModelMock {
 
-    let instance,
-        useManifestDateHeaderTimeSource,
-        useSuggestedPresentationDelay,
-        UTCTimingSources,
-        liveDelayFragmentCount,
-        liveDelay,
-        scheduleWhilePaused,
-        bufferToKeep,
-        bufferPruningInterval,
-        lastBitrateCachingInfo,
-        lastMediaSettingsCachingInfo,
-        stableBufferTime,
-        bufferTimeAtTopQuality,
-        bufferTimeAtTopQualityLongForm,
-        longFormContentDurationThreshold,
-        richBufferThreshold,
-        bandwidthSafetyFactor,
-        abandonLoadTimeout,
-        retryAttempts,
-        retryIntervals,
-        wallclockTimeUpdateInterval,
-        bufferOccupancyABREnabled,
-        useDefaultABRRules,
-        xhrWithCredentials,
-        fastSwitchEnabled,
-        customABRRule;
+    // Constants
+    static get DEFAULT_UTC_TIMING_SOURCE() {
+        return DEFAULT_UTC_TIMING_SOURCE;
+    }
 
-    function setup() {
-        UTCTimingSources = [];
-        useSuggestedPresentationDelay = false;
-        useManifestDateHeaderTimeSource = true;
-        scheduleWhilePaused = true;
-        bufferOccupancyABREnabled = false;
-        useDefaultABRRules = true;
-        fastSwitchEnabled = false;
-        lastBitrateCachingInfo = {
+    static get LIVE_DELAY_FRAGMENT_COUNT() {
+        return LIVE_DELAY_FRAGMENT_COUNT;
+    }
+
+    static get DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION() {
+        return DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION;
+    }
+
+    static get DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION() {
+        return DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION;
+    }
+
+    static get BANDWIDTH_SAFETY_FACTOR() {
+        return BANDWIDTH_SAFETY_FACTOR;
+    }
+
+    static get BUFFER_TO_KEEP() {
+        return BUFFER_TO_KEEP;
+    }
+
+    static get BUFFER_PRUNING_INTERVAL() {
+        return BUFFER_PRUNING_INTERVAL;
+    }
+
+    static get DEFAULT_MIN_BUFFER_TIME() {
+        return DEFAULT_MIN_BUFFER_TIME;
+    }
+
+    static get DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH() {
+        return DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH;
+    }
+
+    static get BUFFER_TIME_AT_TOP_QUALITY() {
+        return BUFFER_TIME_AT_TOP_QUALITY;
+    }
+
+    static get BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM() {
+        return BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM;
+    }
+
+    static get LONG_FORM_CONTENT_DURATION_THRESHOLD() {
+        return LONG_FORM_CONTENT_DURATION_THRESHOLD;
+    }
+
+    static get RICH_BUFFER_THRESHOLD() {
+        return RICH_BUFFER_THRESHOLD;
+    }
+
+    static get FRAGMENT_RETRY_ATTEMPTS() {
+        return FRAGMENT_RETRY_ATTEMPTS;
+    }
+
+    static get FRAGMENT_RETRY_INTERVAL() {
+        return FRAGMENT_RETRY_INTERVAL;
+    }
+
+    static get MANIFEST_RETRY_ATTEMPTS() {
+        return MANIFEST_RETRY_ATTEMPTS;
+    }
+
+    static get MANIFEST_RETRY_INTERVAL() {
+        return MANIFEST_RETRY_INTERVAL;
+    }
+
+    static get XLINK_RETRY_ATTEMPTS() {
+        return XLINK_RETRY_ATTEMPTS;
+    }
+
+    static get XLINK_RETRY_INTERVAL() {
+        return XLINK_RETRY_INTERVAL;
+    }
+
+    static get WALLCLOCK_TIME_UPDATE_INTERVAL() {
+        return WALLCLOCK_TIME_UPDATE_INTERVAL;
+    }
+    static get DEFAULT_XHR_WITH_CREDENTIALS() {
+        return DEFAULT_XHR_WITH_CREDENTIALS;
+    }
+
+    constructor() {
+        this.setup();
+    }
+
+    setup() {
+        this.UTCTimingSources = [];
+        this.useSuggestedPresentationDelay = false;
+        this.useManifestDateHeaderTimeSource = true;
+        this.scheduleWhilePaused = true;
+        this.bufferOccupancyABREnabled = false;
+        this.useDefaultABRRules = true;
+        this.fastSwitchEnabled = false;
+        this.lastBitrateCachingInfo = {
             enabled: true,
             ttl: DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION
         };
-        lastMediaSettingsCachingInfo = {
+        this.lastMediaSettingsCachingInfo = {
             enabled: true,
             ttl: DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION
         };
-        liveDelayFragmentCount = LIVE_DELAY_FRAGMENT_COUNT;
-        liveDelay = undefined; // Explicitly state that default is undefined
-        bufferToKeep = BUFFER_TO_KEEP;
-        bufferPruningInterval = BUFFER_PRUNING_INTERVAL;
-        stableBufferTime = NaN;
-        bufferTimeAtTopQuality = BUFFER_TIME_AT_TOP_QUALITY;
-        bufferTimeAtTopQualityLongForm = BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM;
-        longFormContentDurationThreshold = LONG_FORM_CONTENT_DURATION_THRESHOLD;
-        richBufferThreshold = RICH_BUFFER_THRESHOLD;
-        bandwidthSafetyFactor = BANDWIDTH_SAFETY_FACTOR;
-        abandonLoadTimeout = ABANDON_LOAD_TIMEOUT;
-        wallclockTimeUpdateInterval = WALLCLOCK_TIME_UPDATE_INTERVAL;
-        xhrWithCredentials = {
+        this.liveDelayFragmentCount = LIVE_DELAY_FRAGMENT_COUNT;
+        this.liveDelay = undefined; // Explicitly state that default is undefined
+        this.bufferToKeep = BUFFER_TO_KEEP;
+        this.bufferPruningInterval = BUFFER_PRUNING_INTERVAL;
+        this.stableBufferTime = NaN;
+        this.bufferTimeAtTopQuality = BUFFER_TIME_AT_TOP_QUALITY;
+        this.bufferTimeAtTopQualityLongForm = BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM;
+        this.longFormContentDurationThreshold = LONG_FORM_CONTENT_DURATION_THRESHOLD;
+        this.richBufferThreshold = RICH_BUFFER_THRESHOLD;
+        this.bandwidthSafetyFactor = BANDWIDTH_SAFETY_FACTOR;
+        this.abandonLoadTimeout = ABANDON_LOAD_TIMEOUT;
+        this.wallclockTimeUpdateInterval = WALLCLOCK_TIME_UPDATE_INTERVAL;
+        this.xhrWithCredentials = {
             default: DEFAULT_XHR_WITH_CREDENTIALS
         };
-        customABRRule = [];
+        this.customABRRule = [];
 
-        retryAttempts = {
+        this.retryAttempts = {
             [HTTPRequest.MPD_TYPE]: MANIFEST_RETRY_ATTEMPTS, [HTTPRequest.XLINK_EXPANSION_TYPE]: XLINK_RETRY_ATTEMPTS, [HTTPRequest.MEDIA_SEGMENT_TYPE]: FRAGMENT_RETRY_ATTEMPTS, [HTTPRequest.INIT_SEGMENT_TYPE]: FRAGMENT_RETRY_ATTEMPTS, [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: FRAGMENT_RETRY_ATTEMPTS, [HTTPRequest.INDEX_SEGMENT_TYPE]: FRAGMENT_RETRY_ATTEMPTS, [HTTPRequest.OTHER_TYPE]: FRAGMENT_RETRY_ATTEMPTS
         };
 
-        retryIntervals = {
+        this.retryIntervals = {
             [HTTPRequest.MPD_TYPE]: MANIFEST_RETRY_INTERVAL, [HTTPRequest.XLINK_EXPANSION_TYPE]: XLINK_RETRY_INTERVAL, [HTTPRequest.MEDIA_SEGMENT_TYPE]: FRAGMENT_RETRY_INTERVAL, [HTTPRequest.INIT_SEGMENT_TYPE]: FRAGMENT_RETRY_INTERVAL, [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: FRAGMENT_RETRY_INTERVAL, [HTTPRequest.INDEX_SEGMENT_TYPE]: FRAGMENT_RETRY_INTERVAL, [HTTPRequest.OTHER_TYPE]: FRAGMENT_RETRY_INTERVAL
         };
     }
 
     //TODO Should we use Object.define to have setters/getters? makes more readable code on other side.
-    function setBufferOccupancyABREnabled(value) {
-        bufferOccupancyABREnabled = value;
+    setBufferOccupancyABREnabled(value) {
+        this.bufferOccupancyABREnabled = value;
     }
 
-    function getBufferOccupancyABREnabled() {
-        return bufferOccupancyABREnabled;
+    getBufferOccupancyABREnabled() {
+        return this.bufferOccupancyABREnabled;
     }
 
-    function setUseDefaultABRRules(value) {
-        useDefaultABRRules = value;
+    setUseDefaultABRRules(value) {
+        this.useDefaultABRRules = value;
     }
 
-    function getUseDefaultABRRules() {
-        return useDefaultABRRules;
+    getUseDefaultABRRules() {
+        return this.useDefaultABRRules;
     }
 
-    function findABRCustomRule(rulename) {
+    findABRCustomRule(rulename) {
         let i;
-        for (i = 0; i < customABRRule.length; i++) {
-            if (customABRRule[i].rulename === rulename) {
+        for (i = 0; i < this.customABRRule.length; i++) {
+            if (this.customABRRule[i].rulename === rulename) {
                 return i;
             }
         }
         return -1;
     }
 
-    function getABRCustomRules() {
-        return customABRRule;
+    getABRCustomRules() {
+        return this.customABRRule;
     }
 
-    function addABRCustomRule(type, rulename, rule) {
+    addABRCustomRule(type, rulename, rule) {
 
-        let index = findABRCustomRule(rulename);
+        let index = this.findABRCustomRule(rulename);
         if (index === -1) {
             // add rule
-            customABRRule.push({
+            this.customABRRule.push({
                 type: type,
                 rulename: rulename,
                 rule: rule
             });
         } else {
             // update rule
-            customABRRule[index].type = type;
-            customABRRule[index].rule = rule;
+            this.customABRRule[index].type = type;
+            this.customABRRule[index].rule = rule;
         }
     }
 
-    function removeABRCustomRule(rulename) {
-        let index = findABRCustomRule(rulename);
+    removeABRCustomRule(rulename) {
+        let index = this.findABRCustomRule(rulename);
         if (index !== -1) {
             // remove rule
-            customABRRule.splice(index, 1);
+            this.customABRRule.splice(index, 1);
         }
     }
 
-    function removeAllABRCustomRule() {
-        customABRRule = [];
+    removeAllABRCustomRule() {
+        this.customABRRule = [];
     }
 
-    function setBandwidthSafetyFactor(value) {
-        bandwidthSafetyFactor = value;
+    setBandwidthSafetyFactor(value) {
+        this.bandwidthSafetyFactor = value;
     }
 
-    function getBandwidthSafetyFactor() {
-        return bandwidthSafetyFactor;
+    getBandwidthSafetyFactor() {
+        return this.bandwidthSafetyFactor;
     }
 
-    function setAbandonLoadTimeout(value) {
-        abandonLoadTimeout = value;
+    setAbandonLoadTimeout(value) {
+        this.abandonLoadTimeout = value;
     }
 
-    function getAbandonLoadTimeout() {
-        return abandonLoadTimeout;
+    getAbandonLoadTimeout() {
+        return this.abandonLoadTimeout;
     }
 
-    function setStableBufferTime(value) {
-        stableBufferTime = value;
+    setStableBufferTime(value) {
+        this.stableBufferTime = value;
     }
 
-    function getStableBufferTime() {
-        return !isNaN(stableBufferTime) ? stableBufferTime : fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
+    getStableBufferTime() {
+        return !isNaN(this.stableBufferTime) ? this.stableBufferTime : this.fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
     }
 
-    function setBufferTimeAtTopQuality(value) {
-        bufferTimeAtTopQuality = value;
+    setBufferTimeAtTopQuality(value) {
+        this.bufferTimeAtTopQuality = value;
     }
 
-    function getBufferTimeAtTopQuality() {
-        return bufferTimeAtTopQuality;
+    getBufferTimeAtTopQuality() {
+        return this.bufferTimeAtTopQuality;
     }
 
-    function setBufferTimeAtTopQualityLongForm(value) {
-        bufferTimeAtTopQualityLongForm = value;
+    setBufferTimeAtTopQualityLongForm(value) {
+        this.bufferTimeAtTopQualityLongForm = value;
     }
 
-    function getBufferTimeAtTopQualityLongForm() {
-        return bufferTimeAtTopQualityLongForm;
+    getBufferTimeAtTopQualityLongForm() {
+        return this.bufferTimeAtTopQualityLongForm;
     }
 
-    function setLongFormContentDurationThreshold(value) {
-        longFormContentDurationThreshold = value;
+    setLongFormContentDurationThreshold(value) {
+        this.longFormContentDurationThreshold = value;
     }
 
-    function getLongFormContentDurationThreshold() {
-        return longFormContentDurationThreshold;
+    getLongFormContentDurationThreshold() {
+        return this.longFormContentDurationThreshold;
     }
 
-    function setRichBufferThreshold(value) {
-        richBufferThreshold = value;
+    setRichBufferThreshold(value) {
+        this.richBufferThreshold = value;
     }
 
-    function getRichBufferThreshold() {
-        return richBufferThreshold;
+    getRichBufferThreshold() {
+        return this.richBufferThreshold;
     }
 
 
-    function setBufferToKeep(value) {
-        bufferToKeep = value;
+    setBufferToKeep(value) {
+        this.bufferToKeep = value;
     }
 
-    function getBufferToKeep() {
-        return bufferToKeep;
+    getBufferToKeep() {
+        return this.bufferToKeep;
     }
 
-    function setLastBitrateCachingInfo(enable, ttl) {
-        lastBitrateCachingInfo.enabled = enable;
+    setLastBitrateCachingInfo(enable, ttl) {
+        this.lastBitrateCachingInfo.enabled = enable;
         if (ttl !== undefined && !isNaN(ttl) && typeof (ttl) === 'number') {
-            lastBitrateCachingInfo.ttl = ttl;
+            this.lastBitrateCachingInfo.ttl = ttl;
         }
     }
 
-    function getLastBitrateCachingInfo() {
-        return lastBitrateCachingInfo;
+    getLastBitrateCachingInfo() {
+        return this.lastBitrateCachingInfo;
     }
 
-    function setLastMediaSettingsCachingInfo(enable, ttl) {
-        lastMediaSettingsCachingInfo.enabled = enable;
+    setLastMediaSettingsCachingInfo(enable, ttl) {
+        this.lastMediaSettingsCachingInfo.enabled = enable;
         if (ttl !== undefined && !isNaN(ttl) && typeof (ttl) === 'number') {
-            lastMediaSettingsCachingInfo.ttl = ttl;
+            this.lastMediaSettingsCachingInfo.ttl = ttl;
         }
     }
 
-    function getLastMediaSettingsCachingInfo() {
-        return lastMediaSettingsCachingInfo;
+    getLastMediaSettingsCachingInfo() {
+        return this.lastMediaSettingsCachingInfo;
     }
 
-    function setBufferPruningInterval(value) {
-        bufferPruningInterval = value;
+    setBufferPruningInterval(value) {
+        this.bufferPruningInterval = value;
     }
 
-    function getBufferPruningInterval() {
-        return bufferPruningInterval;
+    getBufferPruningInterval() {
+        return this.bufferPruningInterval;
     }
 
-    function setFragmentRetryAttempts(value) {
-        retryAttempts[HTTPRequest.MEDIA_SEGMENT_TYPE] = value;
+    setFragmentRetryAttempts(value) {
+        this.retryAttempts[HTTPRequest.MEDIA_SEGMENT_TYPE] = value;
     }
 
-    function setManifestRetryAttempts(value) {
-        retryAttempts[HTTPRequest.MPD_TYPE] = value;
+    setManifestRetryAttempts(value) {
+        this.retryAttempts[HTTPRequest.MPD_TYPE] = value;
     }
 
-    function setRetryAttemptsForType(type, value) {
-        retryAttempts[type] = value;
+    setRetryAttemptsForType(type, value) {
+        this.retryAttempts[type] = value;
     }
 
-    function getFragmentRetryAttempts() {
-        return retryAttempts[HTTPRequest.MEDIA_SEGMENT_TYPE];
+    getFragmentRetryAttempts() {
+        return this.retryAttempts[HTTPRequest.MEDIA_SEGMENT_TYPE];
     }
 
-    function getManifestRetryAttempts() {
-        return retryAttempts[HTTPRequest.MPD_TYPE];
+    getManifestRetryAttempts() {
+        return this.retryAttempts[HTTPRequest.MPD_TYPE];
     }
 
-    function getRetryAttemptsForType(type) {
-        return retryAttempts[type];
+    getRetryAttemptsForType(type) {
+        return this.retryAttempts[type];
     }
 
-    function setFragmentRetryInterval(value) {
-        retryIntervals[HTTPRequest.MEDIA_SEGMENT_TYPE] = value;
+    setFragmentRetryInterval(value) {
+        this.retryIntervals[HTTPRequest.MEDIA_SEGMENT_TYPE] = value;
     }
 
-    function setManifestRetryInterval(value) {
-        retryIntervals[HTTPRequest.MPD_TYPE] = value;
+    setManifestRetryInterval(value) {
+        this.retryIntervals[HTTPRequest.MPD_TYPE] = value;
     }
 
-    function setRetryIntervalForType(type, value) {
-        retryIntervals[type] = value;
+    setRetryIntervalForType(type, value) {
+        this.retryIntervals[type] = value;
     }
 
-    function getFragmentRetryInterval() {
-        return retryIntervals[HTTPRequest.MEDIA_SEGMENT_TYPE];
+    getFragmentRetryInterval() {
+        return this.retryIntervals[HTTPRequest.MEDIA_SEGMENT_TYPE];
     }
 
-    function getManifestRetryInterval() {
-        return retryIntervals[HTTPRequest.MPD_TYPE];
+    getManifestRetryInterval() {
+        return this.retryIntervals[HTTPRequest.MPD_TYPE];
     }
 
-    function getRetryIntervalForType(type) {
-        return retryIntervals[type];
+    getRetryIntervalForType(type) {
+        return this.retryIntervals[type];
     }
 
-    function setWallclockTimeUpdateInterval(value) {
-        wallclockTimeUpdateInterval = value;
+    setWallclockTimeUpdateInterval(value) {
+        this.wallclockTimeUpdateInterval = value;
     }
 
-    function getWallclockTimeUpdateInterval() {
-        return wallclockTimeUpdateInterval;
+    getWallclockTimeUpdateInterval() {
+        return this.wallclockTimeUpdateInterval;
     }
 
-    function setScheduleWhilePaused(value) {
-        scheduleWhilePaused = value;
+    setScheduleWhilePaused(value) {
+        this.scheduleWhilePaused = value;
     }
 
-    function getScheduleWhilePaused() {
-        return scheduleWhilePaused;
+    getScheduleWhilePaused() {
+        return this.scheduleWhilePaused;
     }
 
-    function setLiveDelayFragmentCount(value) {
-        liveDelayFragmentCount = value;
+    setLiveDelayFragmentCount(value) {
+        this.liveDelayFragmentCount = value;
     }
 
-    function setLiveDelay(value) {
-        liveDelay = value;
+    setLiveDelay(value) {
+        this.liveDelay = value;
     }
 
-    function getLiveDelayFragmentCount() {
-        return liveDelayFragmentCount;
+    getLiveDelayFragmentCount() {
+        return this.liveDelayFragmentCount;
     }
 
-    function getLiveDelay() {
-        return liveDelay;
+    getLiveDelay() {
+        return this.liveDelay;
     }
 
-    function setUseManifestDateHeaderTimeSource(value) {
-        useManifestDateHeaderTimeSource = value;
+    setUseManifestDateHeaderTimeSource(value) {
+        this.useManifestDateHeaderTimeSource = value;
     }
 
-    function getUseManifestDateHeaderTimeSource() {
-        return useManifestDateHeaderTimeSource;
+    getUseManifestDateHeaderTimeSource() {
+        return this.useManifestDateHeaderTimeSource;
     }
 
-    function setUseSuggestedPresentationDelay(value) {
-        useSuggestedPresentationDelay = value;
+    setUseSuggestedPresentationDelay(value) {
+        this.useSuggestedPresentationDelay = value;
     }
 
-    function getUseSuggestedPresentationDelay() {
-        return useSuggestedPresentationDelay;
+    getUseSuggestedPresentationDelay() {
+        return this.useSuggestedPresentationDelay;
     }
 
-    function setUTCTimingSources(value) {
-        UTCTimingSources = value;
+    setUTCTimingSources(value) {
+        this.UTCTimingSources = value;
     }
 
-    function getUTCTimingSources() {
-        return UTCTimingSources;
+    getUTCTimingSources() {
+        return this.UTCTimingSources;
     }
 
-    function setXHRWithCredentialsForType(type, value) {
+    setXHRWithCredentialsForType(type, value) {
         if (!type) {
-            Object.keys(xhrWithCredentials).forEach(key => {
-                setXHRWithCredentialsForType(key, value);
+            Object.keys(this.xhrWithCredentials).forEach(key => {
+                this.setXHRWithCredentialsForType(key, value);
             });
         } else {
-            xhrWithCredentials[type] = !!value;
+            this.xhrWithCredentials[type] = !!value;
         }
     }
 
-    function getXHRWithCredentialsForType(type) {
-        const useCreds = xhrWithCredentials[type];
+    getXHRWithCredentialsForType(type) {
+        const useCreds = this.xhrWithCredentials[type];
 
         if (useCreds === undefined) {
-            return xhrWithCredentials.default;
+            return this.xhrWithCredentials.default;
         }
 
         return useCreds;
     }
 
 
-    function getFastSwitchEnabled() {
-        return fastSwitchEnabled;
+    getFastSwitchEnabled() {
+        return this.fastSwitchEnabled;
     }
 
-    function setFastSwitchEnabled(value) {
-        fastSwitchEnabled = value;
+    setFastSwitchEnabled(value) {
+        this.fastSwitchEnabled = value;
     }
 
-    function reset() {
-        setup();
+    reset() {
+        this.setup();
     }
-
-    instance = {
-        setBufferOccupancyABREnabled: setBufferOccupancyABREnabled,
-        getBufferOccupancyABREnabled: getBufferOccupancyABREnabled,
-        setUseDefaultABRRules: setUseDefaultABRRules,
-        getUseDefaultABRRules: getUseDefaultABRRules,
-        getABRCustomRules: getABRCustomRules,
-        addABRCustomRule: addABRCustomRule,
-        removeABRCustomRule: removeABRCustomRule,
-        removeAllABRCustomRule: removeAllABRCustomRule,
-        setBandwidthSafetyFactor: setBandwidthSafetyFactor,
-        getBandwidthSafetyFactor: getBandwidthSafetyFactor,
-        setAbandonLoadTimeout: setAbandonLoadTimeout,
-        getAbandonLoadTimeout: getAbandonLoadTimeout,
-        setLastBitrateCachingInfo: setLastBitrateCachingInfo,
-        getLastBitrateCachingInfo: getLastBitrateCachingInfo,
-        setLastMediaSettingsCachingInfo: setLastMediaSettingsCachingInfo,
-        getLastMediaSettingsCachingInfo: getLastMediaSettingsCachingInfo,
-        setStableBufferTime: setStableBufferTime,
-        getStableBufferTime: getStableBufferTime,
-        setBufferTimeAtTopQuality: setBufferTimeAtTopQuality,
-        getBufferTimeAtTopQuality: getBufferTimeAtTopQuality,
-        setBufferTimeAtTopQualityLongForm: setBufferTimeAtTopQualityLongForm,
-        getBufferTimeAtTopQualityLongForm: getBufferTimeAtTopQualityLongForm,
-        setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,
-        getLongFormContentDurationThreshold: getLongFormContentDurationThreshold,
-        setRichBufferThreshold: setRichBufferThreshold,
-        getRichBufferThreshold: getRichBufferThreshold,
-        setBufferToKeep: setBufferToKeep,
-        getBufferToKeep: getBufferToKeep,
-        setBufferPruningInterval: setBufferPruningInterval,
-        getBufferPruningInterval: getBufferPruningInterval,
-        setFragmentRetryAttempts: setFragmentRetryAttempts,
-        getFragmentRetryAttempts: getFragmentRetryAttempts,
-        setManifestRetryAttempts: setManifestRetryAttempts,
-        getManifestRetryAttempts: getManifestRetryAttempts,
-        setRetryAttemptsForType: setRetryAttemptsForType,
-        getRetryAttemptsForType: getRetryAttemptsForType,
-        setFragmentRetryInterval: setFragmentRetryInterval,
-        getFragmentRetryInterval: getFragmentRetryInterval,
-        setManifestRetryInterval: setManifestRetryInterval,
-        getManifestRetryInterval: getManifestRetryInterval,
-        setRetryIntervalForType: setRetryIntervalForType,
-        getRetryIntervalForType: getRetryIntervalForType,
-        setWallclockTimeUpdateInterval: setWallclockTimeUpdateInterval,
-        getWallclockTimeUpdateInterval: getWallclockTimeUpdateInterval,
-        setScheduleWhilePaused: setScheduleWhilePaused,
-        getScheduleWhilePaused: getScheduleWhilePaused,
-        getUseSuggestedPresentationDelay: getUseSuggestedPresentationDelay,
-        setUseSuggestedPresentationDelay: setUseSuggestedPresentationDelay,
-        setLiveDelayFragmentCount: setLiveDelayFragmentCount,
-        getLiveDelayFragmentCount: getLiveDelayFragmentCount,
-        getLiveDelay: getLiveDelay,
-        setLiveDelay: setLiveDelay,
-        setUseManifestDateHeaderTimeSource: setUseManifestDateHeaderTimeSource,
-        getUseManifestDateHeaderTimeSource: getUseManifestDateHeaderTimeSource,
-        setUTCTimingSources: setUTCTimingSources,
-        getUTCTimingSources: getUTCTimingSources,
-        setXHRWithCredentialsForType: setXHRWithCredentialsForType,
-        getXHRWithCredentialsForType: getXHRWithCredentialsForType,
-        setFastSwitchEnabled: setFastSwitchEnabled,
-        getFastSwitchEnabled: getFastSwitchEnabled,
-        reset: reset
-    };
-
-    setup();
-
-    return instance;
 }
 
-//TODO see if you can move this and not export and just getter to get default value.
-MediaPlayerModelMock.__dashjs_factory_name = 'MediaPlayerModelMock';
-let factory = FactoryMaker.getSingletonFactory(MediaPlayerModelMock);
-factory.DEFAULT_UTC_TIMING_SOURCE = DEFAULT_UTC_TIMING_SOURCE;
-FactoryMaker.updateSingletonFactory(MediaPlayerModelMock.__dashjs_factory_name, factory);
-export default factory;
+export default MediaPlayerModelMock;
