@@ -187,6 +187,10 @@ function XHRLoader(cfg) {
             }
         };
 
+        if (!requestModifier || !metricsModel || !errHandler) {
+            throw new Error('config object is not correct or missing');
+        }
+
         try {
             const modifiedUrl = requestModifier.modifyRequestURL(request.url);
             const verb = request.checkExistenceOnly ? 'HEAD' : 'GET';

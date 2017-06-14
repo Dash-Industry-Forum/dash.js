@@ -247,7 +247,7 @@ describe('DashManifestModel', function () {
         expect(representationCount).to.equal(0); // jshint ignore:line
     });
     
-    it('should return NaN when getBandwidth is called and manifest is undefined', () => {
+    it('should return NaN when getBandwidth is called and representation is undefined', () => {
         const bdtw = dashManifestModel.getBandwidth();
 
         expect(bdtw).to.be.NaN; // jshint ignore:line
@@ -326,21 +326,21 @@ describe('DashManifestModel', function () {
         expect(mpd.manifest).to.be.null;                // jshint ignore:line
     });
 
-    it('should return an empty array when getRegularPeriods is called and manifest and mpd are undefined', () => {
+    it('should return an empty array when getRegularPeriods is called and mpd is undefined', () => {
         const periodsArray = dashManifestModel.getRegularPeriods();
 
         expect(periodsArray).to.be.instanceOf(Array);    // jshint ignore:line
         expect(periodsArray).to.be.empty;                // jshint ignore:line
     });
 
-    it('should return an empty array when getAdaptationsForPeriod is called and manifest and period are undefined', () => {
+    it('should return an empty array when getAdaptationsForPeriod is called and period is undefined', () => {
         const adaptationArray = dashManifestModel.getAdaptationsForPeriod();
 
         expect(adaptationArray).to.be.instanceOf(Array);    // jshint ignore:line
         expect(adaptationArray).to.be.empty;                // jshint ignore:line
     });
 
-    it('should return an empty array when getRepresentationsForAdaptation is called and manifest and adaptation are undefined', () => {
+    it('should return an empty array when getRepresentationsForAdaptation is called and adaptation is undefined', () => {
         const representationArray = dashManifestModel.getRepresentationsForAdaptation();
 
         expect(representationArray).to.be.instanceOf(Array);    // jshint ignore:line

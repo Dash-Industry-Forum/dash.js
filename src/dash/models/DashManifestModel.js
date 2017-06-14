@@ -541,7 +541,7 @@ function DashManifestModel() {
     }
 
     function getRegularPeriods(mpd) {
-        let isDynamic = getIsDynamic(mpd.manifest);
+        let isDynamic = mpd ? getIsDynamic(mpd.manifest) : false;
         let voPeriods = [];
         let realPeriod1 = null;
         let realPeriod = null;
@@ -551,7 +551,7 @@ function DashManifestModel() {
             i;
 
 
-        for (i = 0, len = mpd.manifest.Period_asArray.length; i < len; i++) {
+        for (i = 0, len = mpd && mpd.manifest && mpd.manifest.Period_asArray ? mpd.manifest.Period_asArray.length : 0; i < len; i++) {
             realPeriod = mpd.manifest.Period_asArray[i];
 
             // If the attribute @start is present in the Period, then the
@@ -694,7 +694,7 @@ function DashManifestModel() {
     }
 
     function getEventsForPeriod(period) {
-        let manifest = period.mpd.manifest;
+        let manifest = period && period.mpd && period.mpd.manifest ? period.mpd.manifest : null;
         let periodArray = manifest ? manifest.Period_asArray : null;
         let eventStreams = periodArray && period && Number.isInteger(period.index) ? periodArray[period.index].EventStream_asArray : null;
         let events = [];
