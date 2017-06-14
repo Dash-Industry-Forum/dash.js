@@ -37,21 +37,32 @@ function AbrControllerMock() {
 
     let instance,
         bitrateDict,
-        ratioDict;
+        ratioDict,
+        qualityDict,
+        elementWidth,
+        elementHeight,
+        windowResizeEventCalled,
+        limitBitrateByPortal,
+        usePixelRatioInLimitBitrateByPortal,
+        autoSwitchBitrate;
 
     function setup() {
         bitrateDict = {};
         ratioDict = {};
+        qualityDict = {};
+        elementWidth = undefined;
+        elementHeight = undefined;
+        windowResizeEventCalled = false;
+        limitBitrateByPortal = false;
+        usePixelRatioInLimitBitrateByPortal = false;
+        autoSwitchBitrate = {video: true, audio: true};
     }
 
-    function initialize() {
-    }
+    function initialize() {}
 
-    function reset() {
-    }
+    function reset() {}
 
-    function setConfig() {
-    }
+    function setConfig() {}
 
     function getTopQualityIndexFor(type, id) {
 
@@ -60,23 +71,35 @@ function AbrControllerMock() {
     /**
      * @param {string} type
      * @returns {number} A value of the initial bitrate, kbps
-     * @memberof AbrControllerMock#
+     * @memberof AbrController#
      */
     function getInitialBitrateFor(type) {
+        if (!bitrateDict.hasOwnProperty(type)) {
+            return null;
+        }
+
+        return bitrateDict[type];
     }
 
     /**
      * @param {string} type
      * @param {number} value A value of the initial bitrate, kbps
-     * @memberof AbrControllerMock#
+     * @memberof AbrController#
      */
     function setInitialBitrateFor(type, value) {
+        bitrateDict[type] = value;
     }
 
     function getInitialRepresentationRatioFor(type) {
+        if (!ratioDict.hasOwnProperty(type)) {
+            return null;
+        }
+
+        return ratioDict[type];
     }
 
     function setInitialRepresentationRatioFor(type, value) {
+        ratioDict[type] = value;
     }
 
     function getMaxAllowedBitrateFor(type) {
@@ -118,37 +141,41 @@ function AbrControllerMock() {
     }
 
     function getAutoSwitchBitrateFor(type) {
+        return autoSwitchBitrate[type];
     }
 
     function setAutoSwitchBitrateFor(type, value) {
+        autoSwitchBitrate[type] = value;
     }
 
     function getLimitBitrateByPortal() {
-     }
+        return limitBitrateByPortal;
+    }
 
     function setLimitBitrateByPortal(value) {
+        limitBitrateByPortal = value;
     }
 
     function getUsePixelRatioInLimitBitrateByPortal() {
+        return usePixelRatioInLimitBitrateByPortal;
     }
 
     function setUsePixelRatioInLimitBitrateByPortal(value) {
+        usePixelRatioInLimitBitrateByPortal = value;
     }
 
 
-    function checkPlaybackQuality(streamProcessor) {
+    function checkPlaybackQuality() {
 
     }
 
-    function setPlaybackQuality(type, streamInfo, newQuality, reason) {
-
+    function setPlaybackQuality(type, streamInfo, newQuality) {
+        setQualityFor(type,streamInfo.id,newQuality);
     }
 
-    function setAbandonmentStateFor(type, state) {
-    }
+    function setAbandonmentStateFor() {}
 
-    function getAbandonmentStateFor(type) {
-    }
+    function getAbandonmentStateFor() {}
 
     /**
      * @param {MediaInfo} mediaInfo
@@ -157,7 +184,7 @@ function AbrControllerMock() {
      * @returns {number} A quality index <= for the given bitrate
      * @memberof AbrControllerMock#
      */
-    function getQualityForBitrate(mediaInfo, bitrate, latency) {
+    function getQualityForBitrate() {
 
     }
 
@@ -166,31 +193,61 @@ function AbrControllerMock() {
      * @returns {Array|null} A list of {@link BitrateInfo} objects
      * @memberof AbrControllerMock#
      */
-    function getBitrateList(mediaInfo) {
+    function getBitrateList() {
 
     }
 
-    function setAverageThroughput(type, value) {
-    }
+    function setAverageThroughput() {}
 
-    function getAverageThroughput(type) {
-    }
+    function getAverageThroughput() {}
 
-    function updateTopQualityIndex(mediaInfo) {
-    }
+    function updateTopQualityIndex() {}
 
-    function isPlayingAtTopQuality(streamInfo) {
-      }
+    function isPlayingAtTopQuality() {}
 
     function getQualityFor(type, streamInfo) {
+
+        var id = streamInfo.id;
+        var quality;
+
+        if (!qualityDict.hasOwnProperty(id)) {
+            return QUALITY_DEFAULT;
+        }
+
+        if (!qualityDict[id].hasOwnProperty(type)) {
+            return QUALITY_DEFAULT;
+        }
+
+        quality = qualityDict[id][type];
+        return quality;
     }
 
+    function setQualityFor(type, id, value) {
+        qualityDict[id] = qualityDict[id] || {};
+        qualityDict[id][type] = value;
+    }
+
+
     function setWindowResizeEventCalled(value) {
+        windowResizeEventCalled = value;
+    }
+
+    function getWindowResizeEventCalled() {
+        return windowResizeEventCalled;
     }
 
     function setElementSize() {
+        elementWidth = 10;
+        elementHeight = 10;
     }
 
+    function getElementWidth() {
+        return elementWidth;
+    }
+
+    function getElementHeight() {
+        return elementWidth;
+    }
 
     instance = {
         isPlayingAtTopQuality: isPlayingAtTopQuality,
@@ -222,7 +279,10 @@ function AbrControllerMock() {
         setAverageThroughput: setAverageThroughput,
         getTopQualityIndexFor: getTopQualityIndexFor,
         setElementSize: setElementSize,
+        getElementWidth: getElementWidth,
+        getElementHeight: getElementHeight,
         setWindowResizeEventCalled: setWindowResizeEventCalled,
+        getWindowResizeEventCalled: getWindowResizeEventCalled,
         initialize: initialize,
         setConfig: setConfig,
         reset: reset

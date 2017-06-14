@@ -11,7 +11,7 @@ import MediaPlayerModelMock from './mocks//MediaPlayerModelMock';
 
 const expect = require('chai').expect;
 
-describe.only("MediaPlayer", function () {
+describe("MediaPlayer", function () {
 
     before(function () {
         global.dashjs = {};
@@ -319,7 +319,7 @@ describe.only("MediaPlayer", function () {
     });
 
     describe("AutoBitrate Functions", function () {
-        afterEach(function() {
+        afterEach(function () {
             abrControllerMock.reset();
         })
         it("should configure MaxAllowedBitrateFor", function () {
@@ -370,6 +370,84 @@ describe.only("MediaPlayer", function () {
             expect(MaxAllowedRepresentationRatioFor).to.equal(5);
         });
 
+        it("should update portal size", function () {
+            let elementHeight = abrControllerMock.getElementHeight();
+            let elementWidth = abrControllerMock.getElementWidth();
+            let windowResizeEventCalled = abrControllerMock.getWindowResizeEventCalled();
+
+            expect(elementHeight).to.be.undefined;
+            expect(elementWidth).to.be.undefined;
+            expect(windowResizeEventCalled).to.be.false;
+
+            player.updatePortalSize();
+
+            elementHeight = abrControllerMock.getElementHeight();
+            elementWidth = abrControllerMock.getElementWidth();
+            windowResizeEventCalled = abrControllerMock.getWindowResizeEventCalled();
+
+            expect(elementHeight).to.equal(10);
+            expect(elementWidth).to.equal(10);
+            expect(windowResizeEventCalled).to.be.true;
+        });
+
+        it("should configure bitrate according to playback area size", function () {
+            let limitBitrateByPortal = abrControllerMock.getLimitBitrateByPortal();
+            expect(limitBitrateByPortal).to.be.false;
+
+            limitBitrateByPortal = player.getLimitBitrateByPortal();
+            expect(limitBitrateByPortal).to.be.false;
+
+            player.setLimitBitrateByPortal(true);
+
+            limitBitrateByPortal = abrControllerMock.getLimitBitrateByPortal();
+            expect(limitBitrateByPortal).to.be.true;
+
+            limitBitrateByPortal = player.getLimitBitrateByPortal();
+            expect(limitBitrateByPortal).to.be.true;
+        });
+
+        it("should configure usePixelRatioInLimitBitrateByPortal", function () {
+            let UsePixelRatioInLimitBitrateByPortal = abrControllerMock.getUsePixelRatioInLimitBitrateByPortal();
+            expect(UsePixelRatioInLimitBitrateByPortal).to.be.false;
+
+            UsePixelRatioInLimitBitrateByPortal = player.getUsePixelRatioInLimitBitrateByPortal();
+            expect(UsePixelRatioInLimitBitrateByPortal).to.be.false;
+
+            player.setUsePixelRatioInLimitBitrateByPortal(true);
+
+            UsePixelRatioInLimitBitrateByPortal = abrControllerMock.getUsePixelRatioInLimitBitrateByPortal();
+            expect(UsePixelRatioInLimitBitrateByPortal).to.be.true;
+
+            UsePixelRatioInLimitBitrateByPortal = player.getUsePixelRatioInLimitBitrateByPortal();
+            expect(UsePixelRatioInLimitBitrateByPortal).to.be.true;
+        });
+
+        it("should configure initialRepresentationRatioFor", function () {
+            let initialRepresentationRatioFor = abrControllerMock.getInitialRepresentationRatioFor('video');
+            expect(initialRepresentationRatioFor).to.be.null;
+
+            initialRepresentationRatioFor = player.getInitialRepresentationRatioFor('video');
+            expect(initialRepresentationRatioFor).to.be.null;
+
+            player.setInitialRepresentationRatioFor('video', 10);
+
+            initialRepresentationRatioFor = abrControllerMock.getInitialRepresentationRatioFor('video');
+            expect(initialRepresentationRatioFor).to.equal(10);
+
+            initialRepresentationRatioFor = player.getInitialRepresentationRatioFor('video');
+            expect(initialRepresentationRatioFor).to.equal(10);
+        });
+
+        it("should configure AutoSwitchBitrateForType", function () {
+            let AutoSwitchBitrateFor = abrControllerMock.getAutoSwitchBitrateFor('video');
+            expect(AutoSwitchBitrateFor).to.be.true;
+
+            player.setAutoSwitchQualityFor('video', false);
+
+            AutoSwitchBitrateFor = abrControllerMock.getAutoSwitchBitrateFor('video');
+            expect(AutoSwitchBitrateFor).to.be.false;
+        });
+
         describe("When it is not initialized", function () {
             it("Method getQualityFor should throw an exception", function () {
                 expect(player.getQualityFor).to.throw(PLAYBACK_NOT_INITIALIZED_ERROR);
@@ -383,10 +461,49 @@ describe.only("MediaPlayer", function () {
                 expect(player.getInitialBitrateFor).to.throw(PLAYBACK_NOT_INITIALIZED_ERROR);
             });
         });
+
+        describe("When it is initialized", function () {
+
+            beforeEach(function () {
+                player.initialize(videoElementMock, dummyUrl, false);
+            });
+
+            it("should configure quality for type", function () {
+              let qualityFor = abrControllerMock.getQualityFor('video', {id : 'dummyId'});
+                expect(qualityFor).to.equal(AbrControllerMock.QUALITY_DEFAULT);
+
+                qualityFor = player.getQualityFor('video');
+                expect(qualityFor).to.equal(AbrControllerMock.QUALITY_DEFAULT);
+
+                player.setQualityFor('video', 10);
+
+                qualityFor = abrControllerMock.getQualityFor('video', {id : 'dummyId'});
+                expect(qualityFor).to.equal(10);
+
+                qualityFor = player.getQualityFor('video');
+                expect(qualityFor).to.equal(10);
+            });
+
+            it("should configure initial bitrate for type", function () {
+                let initialBitrateFor = abrControllerMock.getInitialBitrateFor('video');
+                expect(initialBitrateFor).to.be.null;
+
+                initialBitrateFor = player.getInitialBitrateFor('video');
+                expect(initialBitrateFor).to.be.null;
+
+                player.setInitialBitrateFor('video', 10);
+
+                initialBitrateFor = abrControllerMock.getInitialBitrateFor('video');
+                expect(initialBitrateFor).to.equal(10);
+
+                initialBitrateFor = player.getInitialBitrateFor('video');
+                expect(initialBitrateFor).to.equal(10);
+            });
+        });
     });
 
     describe("Media Player Configuration Functions", function () {
-        afterEach(function() {
+        afterEach(function () {
             mediaPlayerModel.reset();
         })
 

@@ -49,7 +49,7 @@ function StreamControllerMock() {
     }
 
     function getActiveStreamInfo() {
-        return null;
+        return {id : 'dummyId'};
     }
 
     function isStreamActive() {
