@@ -8,10 +8,11 @@ import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 import AbrControllerMock from './mocks/AbrControllerMock';
 import MediaPlayer from './../../src/streaming/MediaPlayer';
 import MediaPlayerModelMock from './mocks//MediaPlayerModelMock';
+import ObjectUtils from './../../src/streaming/utils/ObjectUtils';
 
 const expect = require('chai').expect;
 
-describe("MediaPlayer", function () {
+describe.only("MediaPlayer", function () {
 
     before(function () {
         global.dashjs = {};
@@ -31,6 +32,7 @@ describe("MediaPlayer", function () {
     let abrControllerMock = new AbrControllerMock();
     let playbackControllerMock = new PlaybackControllerMock();
     let mediaPlayerModel = new MediaPlayerModelMock();
+    let objectUtils = ObjectUtils(context).getInstance();
     let player;
 
     beforeEach(function () {
@@ -469,7 +471,9 @@ describe("MediaPlayer", function () {
             });
 
             it("should configure quality for type", function () {
-              let qualityFor = abrControllerMock.getQualityFor('video', {id : 'dummyId'});
+                let qualityFor = abrControllerMock.getQualityFor('video', {
+                    id: 'dummyId'
+                });
                 expect(qualityFor).to.equal(AbrControllerMock.QUALITY_DEFAULT);
 
                 qualityFor = player.getQualityFor('video');
@@ -477,7 +481,9 @@ describe("MediaPlayer", function () {
 
                 player.setQualityFor('video', 10);
 
-                qualityFor = abrControllerMock.getQualityFor('video', {id : 'dummyId'});
+                qualityFor = abrControllerMock.getQualityFor('video', {
+                    id: 'dummyId'
+                });
                 expect(qualityFor).to.equal(10);
 
                 qualityFor = player.getQualityFor('video');
@@ -841,7 +847,14 @@ describe("MediaPlayer", function () {
         });
     });
 
-    describe("Text Management Functions", function () {});
+    describe("Text Management Functions", function () {
+
+        describe("When it is not initialized", function () {
+            it("Method setTextTrack should throw an exception", function () {
+                expect(player.setTextTrack).to.throw(PLAYBACK_NOT_INITIALIZED_ERROR);
+            });
+        });
+    });
 
     describe("Video Element Management Functions", function () {
         describe("When it is not initialized", function () {
@@ -852,10 +865,106 @@ describe("MediaPlayer", function () {
             it("Method getVideoElement should throw an exception", function () {
                 expect(player.getVideoElement).to.throw(ELEMENT_NOT_ATTACHED_ERROR);
             });
+
+            it("Method attachVideoContainer should throw an exception", function () {
+                expect(player.getVideoElement).to.throw(ELEMENT_NOT_ATTACHED_ERROR);
+            });
+
+            it("Method attachTTMLRenderingDiv should throw an exception", function () {
+                expect(player.getVideoElement).to.throw(ELEMENT_NOT_ATTACHED_ERROR);
+            });
+        });
+        describe("When it is initialized", function () {
+            beforeEach(function () {
+                player.initialize(videoElementMock, dummyUrl, false);
+            });
+
+            it("Method getVideoElement should return video element", function () {
+
+                let element = player.getVideoElement();
+                let areEquals = objectUtils.areEqual(element, videoElementMock);
+                expect(areEquals).to.be.true;
+            });
+
+            it("should be able to attach video container", function () {
+
+                let videoContainer = player.getVideoContainer();
+                expect(videoContainer).to.be.undefined;
+
+                let myVideoContainer = {
+                    videoContainer: 'videoContainer'
+                };
+                player.attachVideoContainer(myVideoContainer);
+
+                videoContainer = player.getVideoContainer();
+                let areEquals = objectUtils.areEqual(myVideoContainer, videoContainer);
+                expect(areEquals).to.be.true;
+            });
+
+            it("should be able to attach view", function () {
+
+                let element = player.getVideoElement();
+                let objectUtils = ObjectUtils(context).getInstance();
+                let areEquals = objectUtils.areEqual(element, videoElementMock);
+                expect(areEquals).to.be.true;
+
+                let myNewView = {
+                    view: 'view'
+                };
+
+                player.attachView(myNewView);
+
+                element = player.getVideoElement();
+
+                areEquals = objectUtils.areEqual(element, myNewView);
+                expect(areEquals).to.be.true;
+            });
+
+            it("should be able to attach TTML renderer div", function () {
+
+                let ttmlRenderer = player.getTTMLRenderingDiv();
+                expect(ttmlRenderer).to.be.undefined;
+
+                let myTTMLRenderer = {
+                    style: {}
+                };
+
+                player.attachTTMLRenderingDiv(myTTMLRenderer);
+
+                ttmlRenderer = player.getTTMLRenderingDiv();
+                let areEquals = objectUtils.areEqual(ttmlRenderer, myTTMLRenderer);
+                expect(areEquals).to.be.true;
+            });
         });
     });
 
-    describe("Stream and Track Management Functions", function () {});
+    describe("Stream and Track Management Functions", function () {
+        describe("When it is not initialized", function () {
+            it("Method getBitrateInfoListFor should throw an exception", function () {
+                expect(player.getBitrateInfoListFor).to.throw(PLAYBACK_NOT_INITIALIZED_ERROR);
+            });
+
+            it("Method getStreamsFromManifest should throw an exception", function () {
+                expect(player.getStreamsFromManifest).to.throw(PLAYBACK_NOT_INITIALIZED_ERROR);
+            });
+
+            it("Method getTracksFor should throw an exception", function () {
+                expect(player.getTracksFor).to.throw(PLAYBACK_NOT_INITIALIZED_ERROR);
+            });
+
+            it("Method getTracksForTypeFromManifest should throw an exception", function () {
+                expect(player.getTracksForTypeFromManifest).to.throw(PLAYBACK_NOT_INITIALIZED_ERROR);
+            });
+
+            it("Method getCurrentTrackFor should throw an exception", function () {
+                expect(player.getCurrentTrackFor).to.throw(PLAYBACK_NOT_INITIALIZED_ERROR);
+            });
+
+            it("Method setCurrentTrack should throw an exception", function () {
+                expect(player.setCurrentTrack).to.throw(PLAYBACK_NOT_INITIALIZED_ERROR);
+            });
+        });
+    });
 
     describe("Protection Management Functions", function () {});
 
@@ -866,12 +975,6 @@ describe("MediaPlayer", function () {
             });
         });
     });
-
-
-
-    describe("Playback Functions", function () {});
-
-    describe("AutoBitrate Functions", function () {});
 
     describe("Metrics Functions", function () {
 
@@ -894,15 +997,5 @@ describe("MediaPlayer", function () {
             });
         });
     });
-
-    describe("Text Management Functions", function () {});
-
-    describe("Video Element Management Functions", function () {});
-
-    describe("Stream and Track Management Functions", function () {});
-
-    describe("Protection Management Functions", function () {});
-
-    describe("Tools Functions", function () {});
 
 });

@@ -515,7 +515,7 @@ function TextTracks() {
     }
 
     function deleteAllTextTracks() {
-        const ln = trackElementArr.length;
+        const ln = trackElementArr ? trackElementArr.length : 0;
         for (let i = 0; i < ln; i++) {
             if (isChrome) {
                 video.removeChild(trackElementArr[i]);
