@@ -520,7 +520,7 @@ function DashManifestModel() {
                 }
 
                 voAdaptationSet.index = i;
-                voAdaptationSet.period = realPeriod;
+                voAdaptationSet.period = voPeriod;
 
                 if (getIsMuxed(realAdaptationSet)) {
                     voAdaptationSet.type = 'muxed';
