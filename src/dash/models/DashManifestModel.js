@@ -58,7 +58,7 @@ function DashManifestModel() {
 
         let i,
             len,
-            representation;
+            representation,
             col,
             mimeTypeRegEx,
             codecs;
@@ -520,7 +520,7 @@ function DashManifestModel() {
                 }
 
                 voAdaptationSet.index = i;
-                voAdaptationSet.period = period;
+                voAdaptationSet.period = realPeriod;
 
                 if (getIsMuxed(realAdaptationSet)) {
                     voAdaptationSet.type = 'muxed';
