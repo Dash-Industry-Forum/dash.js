@@ -1761,7 +1761,7 @@ function MediaPlayer() {
      * @param {string} type
      * @param {Object} manifest
      * @param {Object} streamInfo
-     * @returns {Array} list of {@link MediaInfo}
+     * @returns {Array}  list of {@link MediaInfo}
      * @memberof module:MediaPlayer
      * @instance
      */

@@ -60,6 +60,9 @@ function AbrControllerMock() {
 
     function initialize() {}
 
+    function createAbrRulesCollection() {
+    }
+
     function reset() {}
 
     function setConfig() {}
@@ -284,6 +287,7 @@ function AbrControllerMock() {
         setWindowResizeEventCalled: setWindowResizeEventCalled,
         getWindowResizeEventCalled: getWindowResizeEventCalled,
         initialize: initialize,
+        createAbrRulesCollection: createAbrRulesCollection,
         setConfig: setConfig,
         reset: reset
     };
