@@ -61,11 +61,13 @@ function DashAdapter() {
     }
 
     function getRepresentationForTrackInfo(trackInfo, representationController) {
-        return representationController.getRepresentationForQuality(trackInfo.quality);
+        return representationController && trackInfo ? representationController.getRepresentationForQuality(trackInfo.quality) : null;
     }
 
     function getAdaptationForMediaInfo(mediaInfo) {
-        if (!voAdaptations || !mediaInfo || !voAdaptations[mediaInfo.streamInfo.id]) return null;
+        checkResetCall();
+
+        if (!mediaInfo || !voAdaptations[mediaInfo.streamInfo.id]) return null;
         return voAdaptations[mediaInfo.streamInfo.id][mediaInfo.index];
     }
 
@@ -186,8 +188,9 @@ function DashAdapter() {
     }
 
     function getMediaInfoForType(streamInfo, type) {
+        checkResetCall();
 
-        if (!voPeriods || voPeriods.length === 0) {
+        if (voPeriods.length === 0) {
             return null;
         }
 
@@ -310,35 +313,115 @@ function DashAdapter() {
         return streams;
     }
 
+    function checkStreamProcessor(streamProcessor) {
+        if (!streamProcessor || !streamProcessor.hasOwnProperty('getRepresentationController') || !streamProcessor.hasOwnProperty('getIndexHandler') ||
+            !streamProcessor.hasOwnProperty('getMediaInfo') || !streamProcessor.hasOwnProperty('getType') || !streamProcessor.hasOwnProperty('getStreamInfo')) {
+            throw new Error('streamProcessor parameter is missing or malformed!');
+        }
+    }
+
+    function checkResetCall() {
+        if (!voPeriods && !voAdaptations) {
+            throw new Error('reset has not been called!');
+        }
+    }
+
+    function checkRepresentationController(representationController) {
+        if (!representationController || !representationController.hasOwnProperty('getRepresentationForQuality') || !representationController.hasOwnProperty('getCurrentRepresentation')) {
+            throw new Error('representationController parameter is missing or malformed!');
+        }
+    }
+
+    function checkQuality(quality) {
+        const isInt = quality !== null && !isNaN(quality) && (quality % 1 === 0);
+
+        if (!isInt) {
+            throw new Error('quality argument is not an integer');
+        }
+    }
+
     function getInitRequest(streamProcessor, quality) {
-        const representation = streamProcessor.getRepresentationController().getRepresentationForQuality(quality);
-        return streamProcessor.getIndexHandler().getInitRequest(representation);
+        let representationController,
+            representation,
+            indexHandler;
+
+        checkStreamProcessor(streamProcessor);
+        checkQuality(quality);
+
+        representationController = streamProcessor.getRepresentationController();
+        indexHandler = streamProcessor.getIndexHandler();
+
+        representation = representationController ? representationController.getRepresentationForQuality(quality) : null;
+
+        return indexHandler ? indexHandler.getInitRequest(representation) : null;
     }
 
     function getNextFragmentRequest(streamProcessor, trackInfo) {
-        const representation = getRepresentationForTrackInfo(trackInfo, streamProcessor.getRepresentationController());
-        return streamProcessor.getIndexHandler().getNextSegmentRequest(representation);
+        let representationController,
+            representation,
+            indexHandler;
+
+        checkStreamProcessor(streamProcessor);
+
+        representationController = streamProcessor.getRepresentationController();
+        representation = getRepresentationForTrackInfo(trackInfo, representationController);
+        indexHandler = streamProcessor.getIndexHandler();
+
+        return indexHandler ? indexHandler.getNextSegmentRequest(representation) : null;
     }
 
     function getFragmentRequestForTime(streamProcessor, trackInfo, time, options) {
-        const representation = getRepresentationForTrackInfo(trackInfo, streamProcessor.getRepresentationController());
-        return streamProcessor.getIndexHandler().getSegmentRequestForTime(representation, time, options);
+        let representationController,
+            representation,
+            indexHandler;
+
+        checkStreamProcessor(streamProcessor);
+
+        representationController = streamProcessor.getRepresentationController();
+        representation = getRepresentationForTrackInfo(trackInfo, representationController);
+        indexHandler = streamProcessor.getIndexHandler();
+
+        return indexHandler ? indexHandler.getSegmentRequestForTime(representation, time, options) : null;
     }
 
     function generateFragmentRequestForTime(streamProcessor, trackInfo, time) {
-        const representation = getRepresentationForTrackInfo(trackInfo, streamProcessor.getRepresentationController());
-        return streamProcessor.getIndexHandler().generateSegmentRequestForTime(representation, time);
+        let representationController,
+            representation,
+            indexHandler;
+
+        checkStreamProcessor(streamProcessor);
+
+        representationController = streamProcessor.getRepresentationController();
+        representation = getRepresentationForTrackInfo(trackInfo, representationController);
+        indexHandler = streamProcessor.getIndexHandler();
+
+        return indexHandler ? indexHandler.generateSegmentRequestForTime(representation, time) : null;
     }
 
     function getIndexHandlerTime(streamProcessor) {
-        return streamProcessor.getIndexHandler().getCurrentTime();
+        checkStreamProcessor(streamProcessor);
+
+        const indexHandler = streamProcessor.getIndexHandler();
+
+        if (indexHandler) {
+            return indexHandler.getCurrentTime();
+        }
+        return NaN;
     }
 
     function setIndexHandlerTime(streamProcessor, value) {
-        return streamProcessor.getIndexHandler().setCurrentTime(value);
+        checkStreamProcessor(streamProcessor);
+
+        const indexHandler = streamProcessor.getIndexHandler();
+        if (indexHandler) {
+            indexHandler.setCurrentTime(value);
+        }
     }
 
     function updateData(streamProcessor) {
+        checkResetCall();
+        checkStreamProcessor(streamProcessor);
+
         const selectedVoPeriod = getPeriodForStreamInfo(streamProcessor.getStreamInfo(), voPeriods);
         const mediaInfo = streamProcessor.getMediaInfo();
         const voAdaptation = getAdaptationForMediaInfo(mediaInfo);
@@ -347,7 +430,7 @@ function DashAdapter() {
         let id,
             realAdaptation;
 
-        id = mediaInfo.id;
+        id = mediaInfo ? mediaInfo.id : null;
         if (voPeriods.length > 0) {
             realAdaptation = id ? dashManifestModel.getAdaptationForId(id, voPeriods[0].mpd.manifest, selectedVoPeriod.index) : dashManifestModel.getAdaptationForIndex(mediaInfo.index, voPeriods[0].mpd.manifest, selectedVoPeriod.index);
             streamProcessor.getRepresentationController().updateData(realAdaptation, voAdaptation, type);
@@ -355,11 +438,15 @@ function DashAdapter() {
     }
 
     function getRepresentationInfoForQuality(representationController, quality) {
+        checkRepresentationController(representationController);
+        checkQuality(quality);
+
         let voRepresentation = representationController.getRepresentationForQuality(quality);
         return voRepresentation ? convertRepresentationToTrackInfo(voRepresentation) : null;
     }
 
     function getCurrentRepresentationInfo(representationController) {
+        checkRepresentationController(representationController);
         let voRepresentation = representationController.getCurrentRepresentation();
         return voRepresentation ? convertRepresentationToTrackInfo(voRepresentation) : null;
     }
@@ -390,6 +477,8 @@ function DashAdapter() {
     }
 
     function getEventsFor(info, streamProcessor) {
+        checkResetCall();
+
         let events = [];
 
         if (voPeriods.length === 0) {
