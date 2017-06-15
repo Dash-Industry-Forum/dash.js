@@ -33,6 +33,7 @@ import DashMetrics from '../DashMetrics';
 import TimelineConverter from '../utils/TimelineConverter';
 import AbrController from '../../streaming/controllers/AbrController';
 import PlaybackController from '../../streaming/controllers/PlaybackController';
+import ManifestModel from '../../streaming/models/ManifestModel';
 import MetricsModel from '../../streaming/models/MetricsModel';
 import DOMStorage from '../../streaming/utils/DOMStorage';
 import Error from '../../streaming/vo/Error';
@@ -63,7 +64,8 @@ function RepresentationController() {
         domStorage,
         timelineConverter,
         dashManifestModel,
-        dashMetrics;
+        dashMetrics,
+        manifestModel;
 
     function setup() {
         realAdaptation = null;
@@ -78,6 +80,7 @@ function RepresentationController() {
         timelineConverter = TimelineConverter(context).getInstance();
         dashManifestModel = DashManifestModel(context).getInstance();
         dashMetrics = DashMetrics(context).getInstance();
+        manifestModel = ManifestModel(context).getInstance();
 
         eventBus.on(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
         eventBus.on(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
