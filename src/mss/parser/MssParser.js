@@ -106,7 +106,7 @@ function MssParser(config) {
             range,
             i;
 
-        adaptationSet.id = streamIndex.getAttribute('Name') ? streamIndex.getAttribute('Name') : streamIndex.getAttribute('Type');
+        adaptationSet.id = streamIndex.getAttribute('Name');
         adaptationSet.contentType = streamIndex.getAttribute('Type');
         adaptationSet.lang = streamIndex.getAttribute('Language') || 'und';
         adaptationSet.mimeType = mimeTypeMap[adaptationSet.contentType];
