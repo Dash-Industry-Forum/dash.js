@@ -125,8 +125,8 @@ function ThroughputHistory(config) {
                 let ratio = arr[-i] / arr[-i - 1];
                 if (ratio >= THROUGHPUT_INCREASE_SCALE || ratio <= 1 / THROUGHPUT_DECREASE_SCALE) {
                     sampleSize += 1;
-                    if (sampleSize >= arr.length) {
-                        return arr.length;
+                    if (sampleSize === arr.length) { // cannot increase sampleSize beyond arr.length
+                        break;
                     }
                 }
             }
@@ -146,7 +146,7 @@ function ThroughputHistory(config) {
 
         arr = arr.slice(-sampleSize); // still works if sampleSize too large
         // arr.length >= 1
-        return arr.reduce((av, elem, i) => av + (elem - av) / (i + 1));
+        return arr.reduce((total, elem) => total + elem) / arr.length;
     }
 
     function getAverageThroughput(mediaType, isDynamic) {
