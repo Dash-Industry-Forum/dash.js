@@ -1922,6 +1922,8 @@ function MediaPlayer() {
      * Sets the MPD source and the video element to null. You can also reset the MediaPlayer by
      * calling attachSource with a new source file.
      *
+     * Calling this method is all that is necessary to destroy a MediaPlayer instance.
+     *
      * @memberof module:MediaPlayer
      * @instance
      */

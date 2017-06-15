@@ -26,7 +26,7 @@ The project was started over three years ago when the MSE/EME API was new.  It h
 ## MediaPlayer Creation
 *Example of how you create a MediaPlayer in v2.0.*
 ```
-var url = "//dash.akamaized.net/envivio/Envivio-dash2/manifest.mpd";
+var url = "https://dash.akamaized.net/envivio/Envivio-dash2/manifest.mpd";
 var element = document.querySelector("#selector")
 var player = dashjs.MediaPlayer().create();
 player.initialize(element, url, true);
