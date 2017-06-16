@@ -78,6 +78,36 @@ describe('DashAdapter', function () {
 
         expect(adaptation).to.be.null;                // jshint ignore:line
     });
+
+    it("should return null when getDataForMedia is called and voPeriods is an empty array, mediaInfo parameter is an empty object", function () {
+        const adaptation = dashAdapter.getDataForMedia({});
+
+        expect(adaptation).to.be.null;                // jshint ignore:line
+    });
+
+    it("should return null when getEvent is called and no parameter is set", function () {
+        const event = dashAdapter.getEvent();
+
+        expect(event).to.be.null;                // jshint ignore:line
+    });
+
+    it("should return null when getEvent is called and an empty eventBox parameter is set and eventStreams is undefined", function () {
+        const event = dashAdapter.getEvent({});
+
+        expect(event).to.be.null;                // jshint ignore:line
+    });
+
+    it("should return null when getEvent is called and an empty eventBox and eventStreams parameters are set", function () {
+        const event = dashAdapter.getEvent({}, []);
+
+        expect(event).to.be.null;                // jshint ignore:line
+    });
+
+    it("should return an empty event object when getEvent is called and eventBox and eventStreams parameters are set", function () {
+        const event = dashAdapter.getEvent({scheme_id_uri: 0}, [{schemeIdUri: {}}]);
+
+        expect(event).to.be.an('object');
+    });
     
     describe('streamProcessor parameter is missing or malformed', () => {
         it("should throw an error when getInitRequest is called and streamProcessor parameter is undefined", function () {

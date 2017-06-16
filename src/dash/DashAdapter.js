@@ -67,7 +67,7 @@ function DashAdapter() {
     function getAdaptationForMediaInfo(mediaInfo) {
         checkResetCall();
 
-        if (!mediaInfo || !voAdaptations[mediaInfo.streamInfo.id]) return null;
+        if (!mediaInfo || !mediaInfo.streamInfo || !mediaInfo.streamInfo.id || !voAdaptations[mediaInfo.streamInfo.id]) return null;
         return voAdaptations[mediaInfo.streamInfo.id][mediaInfo.index];
     }
 
@@ -467,6 +467,9 @@ function DashAdapter() {
     }
 
     function getEvent(eventBox, eventStreams, startTime) {
+        if (!eventBox || !eventStreams) {
+            return null;
+        }
         let event = new Event();
         const schemeIdUri = eventBox.scheme_id_uri;
         const value = eventBox.value;
