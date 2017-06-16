@@ -43,7 +43,8 @@
     "mocha": "^2.3.4",
     "sinon": "^1.17.2",
     "time-grunt": "^1.2.0",
-    "uglify-js": "^2.4.21"
+    "uglify-js": "^2.4.21",
+    "xmldom": "^0.1.16"
   },
   "dependencies": {
     "codem-isoboxer": "^0.3.3",
