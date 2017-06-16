@@ -26,12 +26,45 @@ describe('DashAdapter', function () {
         expect(dashAdapter.getDataForMedia.bind(dashAdapter)).to.throw("reset has not been called!");
     });
 
+    it("should throw an exception when attempting to call getStreamsInfo While the reset function was not called, and externalManifest parameter is not defined", function () {
+        expect(dashAdapter.getStreamsInfo.bind(dashAdapter)).to.throw("reset has not been called!");
+    });
+
+    it("should throw an exception when attempting to call getStreamsInfo While the setConfig function was not called, and externalManifest parameter is defined", function () {
+        expect(dashAdapter.getStreamsInfo.bind(dashAdapter,{})).to.throw('setConfig function has to be called previously');
+    });
+
+    it("should throw an exception when attempting to call getAllMediaInfoForType While the reset function was not called, and externalManifest parameter is not defined", function () {
+        expect(dashAdapter.getAllMediaInfoForType.bind(dashAdapter)).to.throw("reset has not been called!");
+    });
+
+    it("should throw an exception when attempting to call getAllMediaInfoForType While the setConfig function was not called, and externalManifest parameter is defined", function () {
+        expect(dashAdapter.getAllMediaInfoForType.bind(dashAdapter, null, null, {})).to.throw('setConfig function has to be called previously');
+    });
+
     it("should return an empty array when getEventsFor is called and voPeriods is an empty array", function () {
         dashAdapter.reset();
         const eventsArray = dashAdapter.getEventsFor();
 
         expect(eventsArray).to.be.instanceOf(Array);    // jshint ignore:line
         expect(eventsArray).to.be.empty;                // jshint ignore:line
+    });
+
+    it("should return an empty array when getAllMediaInfoForType is called and voPeriods is an empty array", function () {
+        const mediaInfoArray = dashAdapter.getAllMediaInfoForType();
+
+        expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
+        expect(mediaInfoArray).to.be.empty;                // jshint ignore:line
+    });
+
+    it("should return null when updatePeriods is called and newManifest is undefined", function () {
+        const returnValue = dashAdapter.updatePeriods();
+
+        expect(returnValue).to.be.null;                // jshint ignore:line
+    });
+
+    it("should throw an error when updatePeriods is called and newManifest parameter is defined, while setConfig has not been called", function () {
+        expect(dashAdapter.updatePeriods.bind(dashAdapter,{})).to.be.throw('setConfig function has to be called previously');
     });
 
     it("should return null when getMediaInfoForType is called and voPeriods is an empty array", function () {

@@ -219,14 +219,18 @@ function DashAdapter() {
             ln;
 
         if (manifest) {
+            checkSetConfigCall();
             const mpd = dashManifestModel.getMpd(manifest);
 
             voLocalPeriods = dashManifestModel.getRegularPeriods(mpd);
 
-        }else if (voPeriods.length > 0) {
-            manifest = voPeriods[0].mpd.manifest;
-        } else {
-            return mediaArr;
+        }else {
+            checkResetCall();
+            if (voPeriods.length > 0) {
+                manifest = voPeriods[0].mpd.manifest;
+            } else {
+                return mediaArr;
+            }
         }
 
         const selectedVoPeriod = getPeriodForStreamInfo(streamInfo, voLocalPeriods);
@@ -286,8 +290,16 @@ function DashAdapter() {
         return mediaArr;
     }
 
+    function checkSetConfigCall() {
+        if (!dashManifestModel || !dashManifestModel.hasOwnProperty('getMpd') || !dashManifestModel.hasOwnProperty('getRegularPeriods')) {
+            throw new Error('setConfig function has to be called previously');
+        }
+    }
+
     function updatePeriods(newManifest) {
         if (!newManifest) return null;
+
+        checkSetConfigCall();
 
         const mpd = dashManifestModel.getMpd(newManifest);
 
@@ -301,9 +313,12 @@ function DashAdapter() {
 
         //if manifest is defined, getStreamsInfo is for an outside manifest, not the current one
         if (externalManifest) {
+            checkSetConfigCall();
             const mpd = dashManifestModel.getMpd(externalManifest);
 
             voLocalPeriods = dashManifestModel.getRegularPeriods(mpd);
+        } else {
+            checkResetCall();
         }
 
         for (let i = 0; i < voLocalPeriods.length; i++) {
