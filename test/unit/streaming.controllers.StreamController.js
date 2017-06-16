@@ -16,10 +16,10 @@ describe('StreamController', function () {
             expect(time).to.be.null; // jshint ignore:line*/
         });
 
-        it('should return null if getStreamById is called without parameters', () => {
+        it('should return undefined if getStreamById is called without parameters', () => {
             const streamId = streamController.getStreamById();
 
-            expect(streamId).to.be.null; // jshint ignore:line*/
+            expect(streamId).to.be.undefined; // jshint ignore:line*/
         });
 
         it('should return null if getActiveStreamInfo is called without parameters, activeStream is undefined', () => {
