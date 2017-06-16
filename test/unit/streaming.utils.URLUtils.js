@@ -293,24 +293,31 @@ describe('URLUtils', function () {
 
     describe('resolve (native path)', () => {
 
-        if (typeof window === 'undefined') {
-            global.window = {
-                URL: (a, b) => {
-                    if (!a || !b) {
-                        throw new Error();
-                    }
-
-                    return {
-                        toString: () => {
-                            return b + a;
+        let instance;
+        before(function(){
+            if (typeof window === 'undefined') {
+                global.window = {
+                    URL: (a, b) => {
+                        if (!a || !b) {
+                            throw new Error();
                         }
-                    };
-                }
-            };
-        }
 
-        // new instance on new context to pick up window.URL
-        const instance = URLUtils({}).getInstance();
+                        return {
+                            toString: () => {
+                                return b + a;
+                            }
+                        };
+                    }
+                };
+            }
+
+            // new instance on new context to pick up window.URL
+            instance = URLUtils({}).getInstance();
+        });
+
+        after(function(){
+            delete global.window;
+        });
 
         it('should return url when baseurl is invalid', () => {
             const url = 'test/index.html';
