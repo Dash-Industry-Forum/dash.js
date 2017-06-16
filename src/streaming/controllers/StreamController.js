@@ -588,10 +588,6 @@ function StreamController() {
         reset();
     }
 
-    function getAutoPlay() {
-        return autoPlay;
-    }
-
     function getActiveStreamInfo() {
         return activeStream ? activeStream.getStreamInfo() : null;
     }
@@ -728,7 +724,6 @@ function StreamController() {
 
     instance = {
         initialize: initialize,
-        getAutoPlay: getAutoPlay,
         getActiveStreamInfo: getActiveStreamInfo,
         isVideoTrackPresent: isVideoTrackPresent,
         getStreamById: getStreamById,
