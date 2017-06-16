@@ -602,11 +602,20 @@ function StreamController() {
         })[0];
     }
 
+    function checkSetConfigCall() {
+        if (!manifestLoader || !manifestLoader.hasOwnProperty('load') || ! manifestUpdater || !manifestUpdater.hasOwnProperty('setManifest') ||
+            !timeSyncController || !timeSyncController.hasOwnProperty('reset')) {
+            throw new Error('setConfig function has to be called previously');
+        }
+    }
+
     function load(url) {
+        checkSetConfigCall();
         manifestLoader.load(url);
     }
 
     function loadWithManifest(manifest) {
+        checkSetConfigCall();
         manifestUpdater.setManifest(manifest);
     }
 
@@ -658,6 +667,7 @@ function StreamController() {
     }
 
     function reset() {
+        checkSetConfigCall();
         timeSyncController.reset();
 
         flushPlaylistMetrics(
