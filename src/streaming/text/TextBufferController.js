@@ -98,10 +98,6 @@ function TextBufferController(config) {
         _BufferControllerImpl.setMediaSource(value);
     }
 
-    function setStreamProcessor(streamProcessor) {
-        _BufferControllerImpl.setStreamProcessor(streamProcessor);
-    }
-
     function getStreamProcessor() {
         _BufferControllerImpl.getStreamProcessor();
     }
@@ -112,10 +108,6 @@ function TextBufferController(config) {
 
     function getBufferLevel() {
         return _BufferControllerImpl.getBufferLevel();
-    }
-
-    function getCriticalBufferLevel() {
-        return _BufferControllerImpl.getCriticalBufferLevel();
     }
 
     function reset(errored) {
@@ -135,12 +127,10 @@ function TextBufferController(config) {
         createBuffer: createBuffer,
         getType: getType,
         getStreamProcessor: getStreamProcessor,
-        setStreamProcessor: setStreamProcessor,
         setSeekStartTime: setSeekStartTime,
         getBuffer: getBuffer,
         setBuffer: setBuffer,
         getBufferLevel: getBufferLevel,
-        getCriticalBufferLevel: getCriticalBufferLevel,
         setMediaSource: setMediaSource,
         getMediaSource: getMediaSource,
         getIsBufferingCompleted: getIsBufferingCompleted,

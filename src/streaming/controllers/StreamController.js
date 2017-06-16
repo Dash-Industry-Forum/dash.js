@@ -72,7 +72,6 @@ function StreamController() {
         protectionData,
         autoPlay,
         isStreamSwitchingInProgress,
-        isUpdating,
         hasMediaError,
         hasInitialisationError,
         mediaSource,
@@ -90,7 +89,6 @@ function StreamController() {
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
         autoPlay = true;
         isStreamSwitchingInProgress = false;
-        isUpdating = false;
         isPaused = false;
         initialPlayback = true;
         playListMetrics = null;
@@ -594,16 +592,8 @@ function StreamController() {
         reset();
     }
 
-    function getAutoPlay() {
-        return autoPlay;
-    }
-
     function getActiveStreamInfo() {
         return activeStream ? activeStream.getStreamInfo() : null;
-    }
-
-    function isStreamActive(streamInfo) {
-        return (activeStream.getId() === streamInfo.id);
     }
 
     function getStreamById(id) {
@@ -702,7 +692,6 @@ function StreamController() {
         liveEdgeFinder.reset();
         initCache.reset();
         isStreamSwitchingInProgress = false;
-        isUpdating = false;
         activeStream = null;
         hasMediaError = false;
         hasInitialisationError = false;
@@ -739,9 +728,7 @@ function StreamController() {
 
     instance = {
         initialize: initialize,
-        getAutoPlay: getAutoPlay,
         getActiveStreamInfo: getActiveStreamInfo,
-        isStreamActive: isStreamActive,
         isVideoTrackPresent: isVideoTrackPresent,
         getStreamById: getStreamById,
         getTimeRelativeToStreamId: getTimeRelativeToStreamId,

@@ -517,10 +517,6 @@ function ScheduleController(config) {
         return timeToLoadDelay;
     }
 
-    function getStreamProcessor() {
-        return streamProcessor;
-    }
-
     function getBufferTarget() {
         return bufferLevelRule.getBufferTarget(streamProcessor, type, streamController.isVideoTrackPresent());
     }
@@ -595,7 +591,6 @@ function ScheduleController(config) {
     instance = {
         initialize: initialize,
         getType: getType,
-        getStreamProcessor: getStreamProcessor,
         getSeekTarget: getSeekTarget,
         setSeekTarget: setSeekTarget,
         getFragmentModel: getFragmentModel,

@@ -116,17 +116,6 @@ function ABRRulesCollection(config) {
         });
     }
 
-    function getRules(type) {
-        switch (type) {
-            case QUALITY_SWITCH_RULES:
-                return qualitySwitchRules;
-            case ABANDON_FRAGMENT_RULES:
-                return abandonFragmentRules;
-            default:
-                return null;
-        }
-    }
-
     function getActiveRules(srArray) {
         return srArray.filter(sr => sr.quality > SwitchRequest.NO_CHANGE);
     }
@@ -203,7 +192,6 @@ function ABRRulesCollection(config) {
     instance = {
         initialize: initialize,
         reset: reset,
-        getRules: getRules,
         getMaxQuality: getMaxQuality,
         shouldAbandonFragment: shouldAbandonFragment
     };

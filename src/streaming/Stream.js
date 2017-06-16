@@ -65,7 +65,6 @@ function Stream(config) {
         streamInfo,
         updateError,
         isUpdating,
-        initialized,
         protectionController,
         liveEdgeFinder,
         playbackController,
@@ -84,7 +83,6 @@ function Stream(config) {
         streamInfo = null;
         updateError = {};
         isUpdating = false;
-        initialized = false;
 
         liveEdgeFinder = LiveEdgeFinder(context).getInstance();
         playbackController = PlaybackController(context).getInstance();
@@ -163,7 +161,6 @@ function Stream(config) {
         log = null;
         errHandler = null;
         isUpdating = false;
-        initialized = false;
         updateError = {};
 
         eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
@@ -183,20 +180,12 @@ function Stream(config) {
         return streamInfo.start;
     }
 
-    function getStreamIndex() {
-        return streamInfo.index;
-    }
-
     function getId() {
         return streamInfo.id;
     }
 
     function getStreamInfo() {
         return streamInfo;
-    }
-
-    function hasMedia(type) {
-        return (getMediaInfo(type) !== null);
     }
 
     /**
@@ -219,14 +208,6 @@ function Stream(config) {
         if (eventController) {
             eventController.clear();
         }
-    }
-
-    function isActivated() {
-        return isStreamActivated;
-    }
-
-    function isInitialized() {
-        return initialized;
     }
 
     function onProtectionError(event) {
@@ -430,7 +411,6 @@ function Stream(config) {
             if (streamProcessors[i].isUpdating() || isUpdating) return;
         }
 
-        initialized = true;
         if (!isMediaInitialized) return;
         if (protectionController) {
             protectionController.initialize(manifestModel.getValue(), getMediaInfo('audio'), getMediaInfo('video'));
@@ -520,7 +500,6 @@ function Stream(config) {
 
         isStreamActivated = false;
         isUpdating = true;
-        initialized = false;
         streamInfo = updatedStreamInfo;
 
         if (eventController) {
@@ -554,14 +533,10 @@ function Stream(config) {
         deactivate: deactivate,
         getDuration: getDuration,
         getStartTime: getStartTime,
-        getStreamIndex: getStreamIndex,
         getId: getId,
         getStreamInfo: getStreamInfo,
-        hasMedia: hasMedia,
         getBitrateListFor: getBitrateListFor,
         startEventController: startEventController,
-        isActivated: isActivated,
-        isInitialized: isInitialized,
         updateData: updateData,
         reset: reset,
         getProcessors: getProcessors

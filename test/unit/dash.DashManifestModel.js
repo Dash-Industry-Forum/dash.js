@@ -30,17 +30,7 @@ describe('DashManifestModel', function () {
         const isDVB = dashManifestModel.getIsDVB(manifest);
 
         expect(isDVB).to.be.false; // jshint ignore:line
-    });
-
-    it('should return true when getIsOnDemand is called and manifest contains the on-demand profile', () => {
-        const manifest = {
-            profiles: 'urn:dvb:dash:profile:dvb-dash:2014,urn:mpeg:dash:profile:isoff-on-demand:2011'
-        };
-
-        const isOnDemand = dashManifestModel.getIsOnDemand(manifest);
-
-        expect(isOnDemand).to.be.true; // jshint ignore:line
-    });
+    });   
 
     it('should return NaN when minimumUpdatePeriod is not present in manifest', () => {
         const manifest = {};

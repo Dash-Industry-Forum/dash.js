@@ -281,29 +281,14 @@ function DashManifestModel() {
         return isDynamic;
     }
 
-    function getIsDVR(manifest) {
-        let isDynamic = getIsDynamic(manifest);
-        let containsDVR,
-            isDVR;
-
-        containsDVR = !isNaN(manifest.timeShiftBufferDepth);
-        isDVR = (isDynamic && containsDVR);
-
-        return isDVR;
-    }
-
     function hasProfile(manifest, profile) {
-        let has = false;
+        var has = false;
 
         if (manifest.profiles && manifest.profiles.length > 0) {
             has = (manifest.profiles.indexOf(profile) !== -1);
         }
 
         return has;
-    }
-
-    function getIsOnDemand(manifest) {
-        return hasProfile(manifest, 'urn:mpeg:dash:profile:isoff-on-demand:2011');
     }
 
     function getIsDVB(manifest) {
@@ -913,8 +898,6 @@ function DashManifestModel() {
         getKID: getKID,
         getContentProtectionData: getContentProtectionData,
         getIsDynamic: getIsDynamic,
-        getIsDVR: getIsDVR,
-        getIsOnDemand: getIsOnDemand,
         getIsDVB: getIsDVB,
         getDuration: getDuration,
         getBandwidth: getBandwidth,
