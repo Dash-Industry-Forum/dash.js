@@ -17,14 +17,23 @@ class StreamControllerMock {
     }
 
     getActiveStreamInfo() {
-        return {id : 'dummyId'};
+        return {
+            id: 'dummyId'
+        };
     }
 
     isStreamActive() {
         return true;
     }
 
-    getStreamById() {}
+    getStreamById() {
+        return {
+            id: 'dummyId',
+            getBitrateListFor: function () {
+                return [1, 2]
+            }
+        };
+    }
 
     load() {}
 

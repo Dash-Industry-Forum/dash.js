@@ -8,14 +8,18 @@ import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 import AbrControllerMock from './mocks/AbrControllerMock';
 import MediaPlayer from './../../src/streaming/MediaPlayer';
 import MediaPlayerModelMock from './mocks//MediaPlayerModelMock';
+import MediaControllerMock from './mocks/MediaControllerMock';
 import ObjectUtils from './../../src/streaming/utils/ObjectUtils';
 
 const expect = require('chai').expect;
 
-describe.only("MediaPlayer", function () {
+describe("MediaPlayer", function () {
 
     before(function () {
         global.dashjs = {};
+    });
+    after(function () {
+        delete global.dashjs;
     });
 
     let NOT_INITIALIZED_ERROR_MSG = "MediaPlayer not initialized!";
@@ -32,6 +36,7 @@ describe.only("MediaPlayer", function () {
     let abrControllerMock = new AbrControllerMock();
     let playbackControllerMock = new PlaybackControllerMock();
     let mediaPlayerModel = new MediaPlayerModelMock();
+    let mediaControllerMock = new MediaControllerMock();
     let objectUtils = ObjectUtils(context).getInstance();
     let player;
 
@@ -48,7 +53,8 @@ describe.only("MediaPlayer", function () {
             capabilities: capaMock,
             playbackController: playbackControllerMock,
             mediaPlayerModel: mediaPlayerModel,
-            abrController: abrControllerMock
+            abrController: abrControllerMock,
+            mediaController: mediaControllerMock
         });
     });
 
@@ -962,6 +968,67 @@ describe.only("MediaPlayer", function () {
 
             it("Method setCurrentTrack should throw an exception", function () {
                 expect(player.setCurrentTrack).to.throw(PLAYBACK_NOT_INITIALIZED_ERROR);
+            });
+        });
+
+        describe("When it is initialized", function () {
+            beforeEach(function () {
+                player.initialize(videoElementMock, dummyUrl, false);
+            });
+
+            it("Method getBitrateInfoListFor should return bitrate info list", function () {
+                let bitrateList = player.getBitrateInfoListFor();
+                expect(bitrateList.length).to.equal(2);
+            });
+
+            it("Method getTracksFor should return tracks", function () {
+                let tracks = player.getTracksFor();
+                expect(tracks.length).to.equal(2);
+            });
+
+            it("Method getCurrentTrackFor should return current track", function () {
+                let track = player.getCurrentTrackFor();
+                expect(track).to.equal('track');
+            });
+
+            it("should configure initial media settings", function () {
+                let initialSettings = player.getInitialMediaSettingsFor('audio');
+                expect(initialSettings).to.not.exist;
+
+                player.setInitialMediaSettingsFor('audio', 'settings');
+
+                initialSettings = player.getInitialMediaSettingsFor('audio');
+                expect(initialSettings).to.equal('settings');
+            });
+
+            it("should set current track", function () {
+                let currentTrack = mediaControllerMock.isCurrentTrack('audio');
+                expect(currentTrack).to.be.false;
+
+                player.setCurrentTrack('audio');
+
+                currentTrack = mediaControllerMock.isCurrentTrack('audio');
+                expect(currentTrack).to.be.true;
+            });
+
+            it("should configure track switch mode", function () {
+                let trackSwitchMode = player.getTrackSwitchModeFor('audio');
+                expect(trackSwitchMode).to.not.exist;
+
+                player.setTrackSwitchModeFor('audio', 'switch');
+
+                trackSwitchMode = player.getTrackSwitchModeFor('audio');
+                expect(trackSwitchMode).to.equal('switch');
+            });
+
+            it("should configure selection mode for initial track", function () {
+                let selectionMode = player.getSelectionModeForInitialTrack();
+                expect(selectionMode).to.not.exist;
+
+                player.setSelectionModeForInitialTrack('mode');
+
+                selectionMode = player.getSelectionModeForInitialTrack();
+                expect(selectionMode).to.equal('mode');
             });
         });
     });

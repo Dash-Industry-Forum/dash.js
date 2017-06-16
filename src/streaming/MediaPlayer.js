@@ -150,6 +150,9 @@ function MediaPlayer() {
         if (config.abrController) {
             abrController = config.abrController;
         }
+        if (config.mediaController) {
+            mediaController = config.mediaController;
+        }
     }
 
     /**
@@ -194,7 +197,10 @@ function MediaPlayer() {
             playbackController = PlaybackController(context).getInstance();
         }
 
-        mediaController = MediaController(context).getInstance();
+        if (!mediaController) {
+            mediaController = MediaController(context).getInstance();
+        }
+
         adapter = DashAdapter(context).getInstance();
         dashManifestModel = DashManifestModel(context).getInstance({
             mediaController: mediaController,
