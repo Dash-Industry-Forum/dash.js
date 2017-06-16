@@ -596,10 +596,6 @@ function StreamController() {
         return activeStream ? activeStream.getStreamInfo() : null;
     }
 
-    function isStreamActive(streamInfo) {
-        return (activeStream.getId() === streamInfo.id);
-    }
-
     function getStreamById(id) {
         return streams.filter(function (item) {
             return item.getId() === id;
@@ -734,7 +730,6 @@ function StreamController() {
         initialize: initialize,
         getAutoPlay: getAutoPlay,
         getActiveStreamInfo: getActiveStreamInfo,
-        isStreamActive: isStreamActive,
         isVideoTrackPresent: isVideoTrackPresent,
         getStreamById: getStreamById,
         getTimeRelativeToStreamId: getTimeRelativeToStreamId,
