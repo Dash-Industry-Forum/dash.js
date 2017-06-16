@@ -213,6 +213,8 @@ function DashHandler(config) {
                 const duration = representation.adaptation.period.duration;
                 log(representation.segmentInfoType + ': ' + time + ' / ' + duration);
                 isFinished = representation.segmentInfoType === 'SegmentTimeline' && isDynamic ? false : time >= duration;
+            } else {
+                log('isMediaFinished - no segment found');
             }
         }
 
@@ -396,6 +398,7 @@ function DashHandler(config) {
         } else {
             segment = getSegmentByIndex(index, representation);
             request = getRequestForSegment(segment);
+            // log('[getSegmentRequestForTime]request is ' + JSON.stringify(request));
         }
 
         if (keepIdx && idx >= 0) {
@@ -427,6 +430,15 @@ function DashHandler(config) {
 
         log('Getting the next request at index: ' + index);
 
+        // check that there is a segment in this index. If none, update segments and wait for next time loop is called
+        let seg = getSegmentByIndex(index, representation);
+        if (!seg && isDynamic) {
+            log('No segment found at index: ' + index + '. Wait for next loop');
+            updateSegments(representation);
+            index--;
+            return null;
+        }
+
         finished = isMediaFinished(representation);
         if (finished) {
             request = new FragmentRequest();
@@ -439,6 +451,7 @@ function DashHandler(config) {
             updateSegments(representation);
             segment = getSegmentByIndex(index, representation);
             request = getRequestForSegment(segment);
+            // log('[getSegmentRequestForTime]request is ' + JSON.stringify(request));
             if (!segment && isDynamic) {
                 /*
                  Sometimes when playing dynamic streams with 0 fragment delay at live edge we ask for

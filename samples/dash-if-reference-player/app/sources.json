@@ -1408,6 +1408,26 @@
           "name": "Prince Of Persia"
         },
         {
+          "url": "http://2is7server2.rd.francetelecom.com/hasplayer/LIVE_1.isml/manifest",
+          "name": "Prince Of Persia - Live",
+          "bufferConfig" : {
+            "liveDelay": 16,
+            "stableBufferTime": 16,
+            "bufferTimeAtTopQuality": 16,
+            "bufferTimeAtTopQualityLongForm": 16
+          }
+        },
+        {
+          "url": "http://2is7server1.rd.francetelecom.com/C4/C4-50_TVApp2.isml/Manifest",
+          "name": "Arte (subtitles)",
+          "bufferConfig" : {
+            "liveDelay": 16,
+            "stableBufferTime": 16,
+            "bufferTimeAtTopQuality": 16,
+            "bufferTimeAtTopQualityLongForm": 16
+          }
+        },
+        {
           "url": "http://2is7server1.rd.francetelecom.com/VOD/BBB-SD/big_buck_bunny_1080p_stereo.ism/Manifest",
           "name": "Big Buck Bunny"
         },

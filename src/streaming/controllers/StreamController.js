@@ -258,6 +258,10 @@ function StreamController() {
         return null;
     }
 
+    function getActiveStreamProcessors() {
+        return activeStream.getProcessors();
+    }
+
     function getActiveStreamCommonEarliestTime() {
         let commonEarliestTime = [];
         activeStream.getProcessors().forEach(p => {
@@ -743,6 +747,7 @@ function StreamController() {
         getTimeRelativeToStreamId: getTimeRelativeToStreamId,
         load: load,
         loadWithManifest: loadWithManifest,
+        getActiveStreamProcessors: getActiveStreamProcessors,
         getActiveStreamCommonEarliestTime: getActiveStreamCommonEarliestTime,
         setConfig: setConfig,
         reset: reset

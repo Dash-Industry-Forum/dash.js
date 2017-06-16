@@ -475,6 +475,8 @@ function MssParser(config) {
         // In case of live streams, set availabilityStartTime property according to DVRWindowLength
         if (manifest.type === 'dynamic') {
             manifest.availabilityStartTime = new Date(manifestLoadedTime.getTime() - (manifest.timeShiftBufferDepth * 1000));
+            manifest.refreshManifestOnSwitchTrack = true;
+            manifest.doNotUpdateDVRWindowOnBufferUpdated = true; // done by Mss fragment processor
         }
 
         // Map period node to manifest root node

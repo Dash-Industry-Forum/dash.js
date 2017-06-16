@@ -70,11 +70,13 @@ function StreamProcessor(config) {
         representationController,
         fragmentController,
         fragmentLoader,
-        fragmentModel;
+        fragmentModel,
+        spExternalControllers;
 
 
     function setup() {
         mediaInfoArr = [];
+        spExternalControllers = [];
     }
 
     function initialize(Type, FragmentController, mediaSource, Stream, EventController) {
@@ -124,6 +126,22 @@ function StreamProcessor(config) {
         representationController.initialize(this);
     }
 
+    function registerExternalController(controller) {
+        spExternalControllers.push(controller);
+    }
+
+    function unregisterExternalController(controller) {
+        var index = spExternalControllers.indexOf(controller);
+
+        if (index !== -1) {
+            spExternalControllers.splice(index, 1);
+        }
+    }
+
+    function unregisterAllExternalController() {
+        spExternalControllers = [];
+    }
+
     function reset(errored) {
 
         indexHandler.reset();
@@ -143,6 +161,11 @@ function StreamProcessor(config) {
             representationController = null;
         }
 
+        spExternalControllers.forEach(function (controller) {
+            controller.reset();
+        });
+        unregisterAllExternalController();
+
         fragmentController = null;
         fragmentLoader = null;
 
@@ -155,7 +178,7 @@ function StreamProcessor(config) {
     }
 
     function isUpdating() {
-        return representationController.isUpdating();
+        return representationController ? representationController.isUpdating() : false;
     }
 
     function getType() {
@@ -256,6 +279,10 @@ function StreamProcessor(config) {
         return dynamic;
     }
 
+    function switchTrackAsked() {
+        scheduleController.switchTrackAsked();
+    }
+
     function createBufferControllerForType(type) {
         let controller = null;
 
@@ -269,7 +296,7 @@ function StreamProcessor(config) {
                 adapter: adapter,
                 textController: TextController(context).getInstance()
             });
-        }else {
+        } else {
             controller = TextBufferController(context).create({
                 type: type,
                 metricsModel: MetricsModel(context).getInstance(),
@@ -303,11 +330,15 @@ function StreamProcessor(config) {
         createBuffer: createBuffer,
         getStreamInfo: getStreamInfo,
         updateMediaInfo: updateMediaInfo,
+        switchTrackAsked: switchTrackAsked,
         getMediaInfoArr: getMediaInfoArr,
         getMediaInfo: getMediaInfo,
         getMediaSource: getMediaSource,
         getBuffer: getBuffer,
         setBuffer: setBuffer,
+        registerExternalController: registerExternalController,
+        unregisterExternalController: unregisterExternalController,
+        unregisterAllExternalController: unregisterAllExternalController,
         start: start,
         stop: stop,
         isDynamic: isDynamic,
