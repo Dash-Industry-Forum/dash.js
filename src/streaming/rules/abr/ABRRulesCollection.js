@@ -77,13 +77,13 @@ function ABRRulesCollection(config) {
                 qualitySwitchRules.push(
                     ThroughputRule(context).create({
                         metricsModel: metricsModel,
-                        dashMetrics: dashMetrics,
-                        mediaPlayerModel: mediaPlayerModel
+                        dashMetrics: dashMetrics
                     })
                 );
                 qualitySwitchRules.push(
                     InsufficientBufferRule(context).create({
-                        metricsModel: metricsModel
+                        metricsModel: metricsModel,
+                        dashMetrics: dashMetrics
                     })
                 );
                 qualitySwitchRules.push(

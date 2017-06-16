@@ -155,7 +155,7 @@ function RepresentationController() {
         voAvailableRepresentations = updateRepresentations(voAdaptation);
 
         if (realAdaptation === null && type !== 'fragmentedText') {
-            averageThroughput = abrController.getAverageThroughput(type);
+            averageThroughput = abrController.getThroughputHistory().getAverageThroughput(type);
             bitrate = averageThroughput || abrController.getInitialBitrateFor(type, streamInfo);
             quality = abrController.getQualityForBitrate(streamProcessor.getMediaInfo(), bitrate);
         } else {
