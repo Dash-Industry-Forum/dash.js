@@ -81,7 +81,7 @@ describe("MediaPlayer", function () {
                 capaMock.setMediaSourceSupported(true);
             });
 
-            it("Method initialize should not initialize if MSE is not supported", function () {
+            it("Method initialize should send an error if MSE is not supported", function (done) {
                 capaMock.setMediaSourceSupported(false);
                 let playerError = function (e) {
                     player.off('error', playerError);
@@ -91,6 +91,7 @@ describe("MediaPlayer", function () {
 
                     // reinit mock
                     capaMock.setMediaSourceSupported(true);
+                    done();
                 }
 
                 player.on('error', playerError, this);
