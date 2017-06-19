@@ -299,7 +299,7 @@ function BufferController(config) {
     function checkIfSufficientBuffer() {
 
         // No need to check buffer if type is not audio or video (for example if several errors occur during text parsing, so that the buffer cannot be filled, no error must occur on video playback)
-        if (type !== 'audio' || type !== 'video') return;
+        if (type !== 'audio' && type !== 'video') return;
 
         if (bufferLevel < STALL_THRESHOLD && !isBufferingCompleted) {
             notifyBufferStateChanged(BUFFER_EMPTY);
