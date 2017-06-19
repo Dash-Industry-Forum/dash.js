@@ -137,15 +137,17 @@ function MssFragmentProcessor(config) {
     function setup() {}
 
     function generateMoov(rep) {
-        if (!rep) {
-            return;
-        }
         let mssFragmentMoovProcessor = MSSFragmentMoovProcessor(context).create();
         return mssFragmentMoovProcessor.generateMoov(rep);
     }
 
     function processFragment(e, sp) {
+        if (!e) {
+            return;
+        }
+
         let request = e.request;
+
         if (!request) {
             return;
         }
