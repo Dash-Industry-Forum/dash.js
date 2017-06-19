@@ -85,6 +85,10 @@ function FragmentModel(config) {
             return isLoaded;
         };
 
+        if (!request) {
+            return false;
+        }
+
         return check(executedRequests);
     }
 
@@ -124,7 +128,7 @@ function FragmentModel(config) {
      */
     function getRequests(filter) {
 
-        const states = filter.state instanceof Array ? filter.state : [filter.state];
+        const states = filter ? filter.state instanceof Array ? filter.state : [filter.state] : [];
 
         let filteredRequests = [];
         states.forEach(state => {

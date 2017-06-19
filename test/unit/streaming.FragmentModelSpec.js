@@ -28,10 +28,25 @@ describe("FragmentModel", function () {
     it("should not have any loading, executed, canceled or failed requests", function () {
         const expectedValue = 0;
 
+        expect(fragmentModel.getRequests().length).to.be.equal(expectedValue);
         expect(fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_LOADING}).length).to.be.equal(expectedValue);
         expect(fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED}).length).to.be.equal(expectedValue);
         expect(fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_CANCELED}).length).to.be.equal(expectedValue);
         expect(fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_FAILED}).length).to.be.equal(expectedValue);
+    });
+
+    it('should return false when isFragmentLoaded is called and request is undefined', () => {
+        const isFragmentLoaded = fragmentModel.isFragmentLoaded();
+
+        expect(isFragmentLoaded).to.be.false;  // jshint ignore:line
+    });
+
+    it('should return false when isFragmentLoaded is called and request is undefined but executedRequests is not empty', () => {
+        fragmentModel.executeRequest(completeRequest);
+        const isFragmentLoaded = fragmentModel.isFragmentLoaded();
+
+        expect(isFragmentLoaded).to.be.false;  // jshint ignore:line
+        fragmentModel.reset();
     });
 
     describe("when a request has been added", function () {

@@ -134,7 +134,7 @@ function DashMetrics(config) {
      * @instance
      */
     function getRequestsQueue(metrics) {
-        return metrics.RequestsQueue;
+        return metrics ? metrics.RequestsQueue : null;
     }
 
     /**
@@ -144,7 +144,7 @@ function DashMetrics(config) {
      * @instance
      */
     function getCurrentHttpRequest(metrics) {
-        if (metrics === null) {
+        if (!metrics) {
             return null;
         }
 
@@ -154,7 +154,7 @@ function DashMetrics(config) {
         let httpListLength,
             httpListLastIndex;
 
-        if (httpList === null || httpList.length <= 0) {
+        if (!httpList || httpList.length <= 0) {
             return null;
         }
 
@@ -178,7 +178,7 @@ function DashMetrics(config) {
      * @instance
      */
     function getHttpRequests(metrics) {
-        if (metrics === null) {
+        if (!metrics) {
             return [];
         }
 
@@ -193,13 +193,13 @@ function DashMetrics(config) {
      * @instance
      */
     function getCurrent(metrics, metricName) {
-        if (metrics === null) {
+        if (!metrics) {
             return null;
         }
 
         const list = metrics[metricName];
 
-        if (list === null) {
+        if (!list) {
             return null;
         }
 
@@ -265,10 +265,6 @@ function DashMetrics(config) {
             httpRequest,
             i;
 
-        if (metrics === null) {
-            return null;
-        }
-
         httpRequestList = getHttpRequests(metrics);
 
         for (i = httpRequestList.length - 1; i >= 0; i--) {
@@ -291,15 +287,11 @@ function DashMetrics(config) {
      * @instance
      */
     function getLatestFragmentRequestHeaderValueByID(metrics, id) {
-
-        if (metrics === null) return null;
-
+        let headers = {};
         let httpRequest = getCurrentHttpRequest(metrics);
-        let headers;
-
-        if (httpRequest === null || httpRequest._responseHeaders === null) return null;
-
-        headers = parseResponseHeaders(httpRequest._responseHeaders);
+        if (httpRequest) {
+            headers = parseResponseHeaders(httpRequest._responseHeaders);
+        }
         return headers[id] === undefined ? null :  headers[id];
     }
 

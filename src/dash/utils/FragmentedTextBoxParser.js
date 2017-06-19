@@ -45,6 +45,13 @@ function FragmentedTextBoxParser() {
     }
 
     function getSamplesInfo(ab) {
+        if (!boxParser) {
+            throw new Error('boxParser is undefined');
+        }
+
+        if (!ab) {
+            return {sampleList: [], lastSequenceNumber: NaN, totalDuration: NaN, numSequences: NaN};
+        }
         let isoFile = boxParser.parse(ab);
         // zero or more moofs
         let moofBoxes = isoFile.getBoxes('moof');
@@ -132,8 +139,12 @@ function FragmentedTextBoxParser() {
     }
 
     function getMediaTimescaleFromMoov(ab) {
+        if (!boxParser) {
+            throw new Error('boxParser is undefined');
+        }
+
         let isoFile = boxParser.parse(ab);
-        let mdhdBox = isoFile.getBox('mdhd');
+        let mdhdBox = isoFile ? isoFile.getBox('mdhd') : undefined;
 
         return mdhdBox ? mdhdBox.timescale : NaN;
     }

@@ -278,7 +278,8 @@ module.exports = function (grunt) {
                     mask: '*.js',
                     coverageFolder: './reports',
                     mochaOptions: ['--compilers', 'js:babel/register'],
-                    print: 'summary',
+                    print: 'both',
+                    reportFormats: ['lcov'],
                     root: './src'
                 }
             }

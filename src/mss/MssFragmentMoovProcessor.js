@@ -609,6 +609,9 @@ function MssFragmentMoovProcessor() {
     }
 
     function generateMoov(rep) {
+        if (!rep || !representation.adaptation) {
+            return;
+        }
 
         let isoFile,
             arrayBuffer;

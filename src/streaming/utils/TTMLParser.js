@@ -99,6 +99,11 @@ function TTMLParser() {
             }
         };
 
+        if (!data) {
+            errorMsg = 'no ttml data to parse';
+            throw new Error(errorMsg);
+        }
+
         let imsc1doc = fromXML(data, function (msg) {
             errorMsg = msg;
         },
