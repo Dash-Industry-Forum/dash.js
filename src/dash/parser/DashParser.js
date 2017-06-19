@@ -28,7 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import ErrorHandler from '../../streaming/utils/ErrorHandler';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import ObjectIron from '../../../externals/objectiron';
@@ -40,11 +39,11 @@ import NumericMatcher from './matchers/NumericMatcher';
 import RepresentationBaseValuesMap from './maps/RepresentationBaseValuesMap';
 import SegmentValuesMap from './maps/SegmentValuesMap';
 
-function DashParser(/*config*/) {
+function DashParser(config) {
 
     const context = this.context;
     const log = Debug(context).getInstance().log;
-    const errorHandler = ErrorHandler(context).getInstance();
+    const errorHandler = config.errorHandler;
 
     let instance,
         matchers,

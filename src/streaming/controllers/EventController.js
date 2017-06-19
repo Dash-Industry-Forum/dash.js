@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import PlaybackController from '../controllers/PlaybackController';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import EventBus from '../../core/EventBus';
@@ -63,7 +62,6 @@ function EventController() {
         eventInterval = null;
         refreshDelay = 100;
         presentationTimeThreshold = refreshDelay / 1000;
-        playbackController = PlaybackController(context).getInstance();
     }
 
     function clear() {
@@ -195,6 +193,10 @@ function EventController() {
         if (config.manifestUpdater) {
             manifestUpdater = config.manifestUpdater;
         }
+
+        if (config.playbackController) {
+            playbackController = config.playbackController;
+        }
     }
 
     function reset() {
@@ -219,4 +221,4 @@ function EventController() {
 }
 
 EventController.__dashjs_factory_name = 'EventController';
-export default FactoryMaker.getSingletonFactory(EventController);
+export default FactoryMaker.getClassFactory(EventController);

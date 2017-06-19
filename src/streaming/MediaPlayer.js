@@ -33,11 +33,9 @@ import PlaybackController from './controllers/PlaybackController';
 import StreamController from './controllers/StreamController';
 import MediaController from './controllers/MediaController';
 import ManifestLoader from './ManifestLoader';
-import LiveEdgeFinder from './utils/LiveEdgeFinder';
 import ErrorHandler from './utils/ErrorHandler';
 import Capabilities from './utils/Capabilities';
 import TextTracks from './text/TextTracks';
-import SourceBufferController from './controllers/SourceBufferController';
 import RequestModifier from './utils/RequestModifier';
 import TextController from './text/TextController';
 import URIQueryAndFragmentModel from './models/URIQueryAndFragmentModel';
@@ -45,10 +43,9 @@ import ManifestModel from './models/ManifestModel';
 import MediaPlayerModel from './models/MediaPlayerModel';
 import MetricsModel from './models/MetricsModel';
 import AbrController from './controllers/AbrController';
-import TimeSyncController from './controllers/TimeSyncController';
+import SourceBufferController from './controllers/SourceBufferController';
 import VideoModel from './models/VideoModel';
-import MediaSourceController from './controllers/MediaSourceController';
-import BaseURLController from './controllers/BaseURLController';
+import DOMStorage from './utils/DOMStorage';
 import Debug from './../core/Debug';
 import EventBus from './../core/EventBus';
 import Events from './../core/events/Events';
@@ -90,6 +87,7 @@ function MediaPlayer() {
         playbackInitialized,
         autoPlay,
         abrController,
+        timelineConverter,
         mediaController,
         protectionController,
         metricsReportingController,
@@ -103,8 +101,10 @@ function MediaPlayer() {
         playbackController,
         dashMetrics,
         dashManifestModel,
+        manifestModel,
         videoModel,
-        textController;
+        textController,
+        domStorage;
 
     function setup() {
         mediaPlayerInitialized = false;
@@ -147,20 +147,34 @@ function MediaPlayer() {
         if (mediaPlayerInitialized) return;
         mediaPlayerInitialized = true;
 
+        // init some controllers and models
+        timelineConverter = TimelineConverter(context).getInstance();
         abrController = AbrController(context).getInstance();
-
-        playbackController = PlaybackController(context).getInstance();
         mediaController = MediaController(context).getInstance();
+        adapter = DashAdapter(context).getInstance();
+        dashManifestModel = DashManifestModel(context).getInstance({
+            mediaController: mediaController,
+            timelineConverter: timelineConverter,
+            adapter: adapter
+        });
+        manifestModel = ManifestModel(context).getInstance();
+        dashMetrics = DashMetrics(context).getInstance({
+            manifestModel: manifestModel,
+            dashManifestModel: dashManifestModel
+        });
+        metricsModel = MetricsModel(context).getInstance();
 
-        mediaController.setConfig({
-            errHandler: errHandler
+        textController = TextController(context).getInstance();
+        playbackController = PlaybackController(context).getInstance();
+        domStorage = DOMStorage(context).getInstance({
+            mediaPlayerModel: mediaPlayerModel
         });
 
-        dashManifestModel = DashManifestModel(context).getInstance();
-        dashMetrics = DashMetrics(context).getInstance();
-        metricsModel = MetricsModel(context).getInstance();
+        adapter.setConfig({
+            dashManifestModel: dashManifestModel
+        });
         metricsModel.setConfig({
-            adapter: createAdaptor()
+            adapter: adapter
         });
 
         restoreDefaultUTCTimingSources();
@@ -2010,65 +2024,89 @@ function MediaPlayer() {
         }
     }
 
-    function createControllers() {
+    function createPlaybackControllers() {
 
-        let sourceBufferController = SourceBufferController(context).getInstance();
-        sourceBufferController.setConfig({
-            dashManifestModel: dashManifestModel
+        // creates or get objects instances
+        let manifestLoader = createManifestLoader();
+
+        let sourceBufferController = SourceBufferController(context).getInstance({
+            textController: textController
         });
 
         streamController = StreamController(context).getInstance();
+
+        // configure controllers
+        mediaController.setConfig({
+            errHandler: errHandler,
+            domStorage: domStorage
+        });
+
         streamController.setConfig({
             capabilities: capabilities,
-            manifestLoader: createManifestLoader(),
-            manifestModel: ManifestModel(context).getInstance(),
+            manifestLoader: manifestLoader,
+            manifestModel: manifestModel,
             dashManifestModel: dashManifestModel,
+            mediaPlayerModel: mediaPlayerModel,
             protectionController: protectionController,
             adapter: adapter,
             metricsModel: metricsModel,
             dashMetrics: dashMetrics,
-            liveEdgeFinder: LiveEdgeFinder(context).getInstance(),
-            mediaSourceController: MediaSourceController(context).getInstance(),
-            timeSyncController: TimeSyncController(context).getInstance(),
-            baseURLController: BaseURLController(context).getInstance(),
             errHandler: errHandler,
-            timelineConverter: TimelineConverter(context).getInstance()
+            timelineConverter: timelineConverter,
+            videoModel: videoModel,
+            playbackController: playbackController,
+            domStorage: domStorage,
+            abrController: abrController,
+            mediaController: mediaController,
+            textController: textController,
+            sourceBufferController: sourceBufferController
         });
-        streamController.initialize(autoPlay, protectionData);
 
-        abrController.createAbrRulesCollection();
+        playbackController.setConfig({
+            streamController: streamController,
+            timelineConverter: timelineConverter,
+            metricsModel: metricsModel,
+            dashMetrics: dashMetrics,
+            manifestModel: manifestModel,
+            mediaPlayerModel: mediaPlayerModel,
+            dashManifestModel: dashManifestModel,
+            adapter: adapter,
+            videoModel: videoModel
+        });
+
         abrController.setConfig({
-            streamController: streamController
+            streamController: streamController,
+            domStorage: domStorage,
+            mediaPlayerModel: mediaPlayerModel,
+            metricsModel: metricsModel,
+            dashMetrics: dashMetrics,
+            dashManifestModel: dashManifestModel,
+            manifestModel: manifestModel,
+            videoModel: videoModel,
+            adapter: adapter
         });
+        abrController.createAbrRulesCollection();
 
-        textController = TextController(context).getInstance();
         textController.setConfig({
             errHandler: errHandler,
-            manifestModel: ManifestModel(context).getInstance(),
+            manifestModel: manifestModel,
             dashManifestModel: dashManifestModel,
             mediaController: mediaController,
             streamController: streamController,
             videoModel: videoModel
         });
+        // initialises controller
+        streamController.initialize(autoPlay, protectionData);
     }
 
     function createManifestLoader() {
         return ManifestLoader(context).create({
             errHandler: errHandler,
             metricsModel: metricsModel,
+            mediaPlayerModel: mediaPlayerModel,
             requestModifier: RequestModifier(context).getInstance(),
             mssHandler: mssHandler
         });
-    }
-
-    function createAdaptor() {
-        //TODO-Refactor Need to be able to switch this create out so will need API to set which adapter to use? Handler is created is inside streamProcessor so need to figure that out as well
-        adapter = DashAdapter(context).getInstance();
-        adapter.initialize();
-        adapter.setConfig({
-            dashManifestModel: dashManifestModel
-        });
-        return adapter;
     }
 
     function detectProtection() {
@@ -2085,6 +2123,7 @@ function MediaPlayer() {
             });
             protectionController = protection.createProtectionSystem({
                 log: log,
+                errHandler: errHandler,
                 videoModel: videoModel,
                 capabilities: capabilities,
                 eventBus: eventBus,
@@ -2126,7 +2165,8 @@ function MediaPlayer() {
                 eventBus: eventBus,
                 mediaPlayerModel: mediaPlayerModel,
                 metricsModel: metricsModel,
-                playbackController: playbackController
+                playbackController: playbackController,
+                errHandler: errHandler
             });
         }
     }
@@ -2159,9 +2199,11 @@ function MediaPlayer() {
 
     function initializePlayback() {
         if (!playbackInitialized) {
+            createPlaybackControllers();
+
             playbackInitialized = true;
             log('Playback Initialized');
-            createControllers();
+
             if (typeof source === 'string') {
                 streamController.load(source);
             } else {

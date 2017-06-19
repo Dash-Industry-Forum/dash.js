@@ -47,17 +47,17 @@ function DashAdapter() {
         voPeriods,
         voAdaptations;
 
+    function setup() {
+        voPeriods = [];
+        voAdaptations = {};
+    }
+
     function setConfig(config) {
         if (!config) return;
 
         if (config.dashManifestModel) {
             dashManifestModel = config.dashManifestModel;
         }
-    }
-
-    function initialize() {
-        voPeriods = [];
-        voAdaptations = {};
     }
 
     function getRepresentationForTrackInfo(trackInfo, representationController) {
@@ -124,7 +124,8 @@ function DashAdapter() {
             }
             return accessibilityData;
         });
-        mediaInfo.audioChannelConfiguration =  dashManifestModel.getAudioChannelConfigurationForAdaptation(realAdaptation).map(function (audioChannelConfiguration) {
+
+        mediaInfo.audioChannelConfiguration = dashManifestModel.getAudioChannelConfigurationForAdaptation(realAdaptation).map(function (audioChannelConfiguration) {
             return audioChannelConfiguration.value;
         });
         mediaInfo.roles = dashManifestModel.getRolesForAdaptation(realAdaptation).map(function (role) {
@@ -415,7 +416,6 @@ function DashAdapter() {
     }
 
     instance = {
-        initialize: initialize,
         convertDataToTrack: convertRepresentationToTrackInfo,
         getDataForTrack: getRepresentationForTrackInfo,
         getDataForMedia: getAdaptationForMediaInfo,
@@ -439,6 +439,7 @@ function DashAdapter() {
         metricsList: METRIC_LIST
     };
 
+    setup();
     return instance;
 }
 

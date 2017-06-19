@@ -31,24 +31,17 @@
 
 import ABRRulesCollection from '../rules/abr/ABRRulesCollection';
 import BitrateInfo from '../vo/BitrateInfo';
-import DOMStorage from '../utils/DOMStorage';
-import MediaPlayerModel from '../models/MediaPlayerModel';
 import FragmentModel from '../models/FragmentModel';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import MediaPlayerEvents from '../MediaPlayerEvents.js';
 import FactoryMaker from '../../core/FactoryMaker';
-import ManifestModel from '../models/ManifestModel';
-import DashManifestModel from '../../dash/models/DashManifestModel';
-import VideoModel from '../models/VideoModel';
 import RulesContext from '../rules/RulesContext.js';
 import SwitchRequest from '../rules/SwitchRequest.js';
 import SwitchRequestHistory from '../rules/SwitchRequestHistory.js';
 import DroppedFramesHistory from '../rules/DroppedFramesHistory.js';
 import ThroughputHistory from '../rules/ThroughputHistory.js';
-import MetricsModel from '../models/MetricsModel.js';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
-import DashMetrics from '../../dash/DashMetrics.js';
 import Debug from '../../core/Debug';
 
 const ABANDON_LOAD = 'abandonload';
@@ -82,6 +75,7 @@ function AbrController() {
         elementHeight,
         manifestModel,
         dashManifestModel,
+        adapter,
         videoModel,
         mediaPlayerModel,
         domStorage,
@@ -93,17 +87,24 @@ function AbrController() {
         dashMetrics;
 
     function setup() {
-        domStorage = DOMStorage(context).getInstance();
-        mediaPlayerModel = MediaPlayerModel(context).getInstance();
-        manifestModel = ManifestModel(context).getInstance();
-        dashManifestModel = DashManifestModel(context).getInstance();
-        videoModel = VideoModel(context).getInstance();
-        metricsModel = MetricsModel(context).getInstance();
-        dashMetrics = DashMetrics(context).getInstance();
+        log = debug.log.bind(instance);
+        autoSwitchBitrate = {video: true, audio: true};
+        topQualities = {};
+        qualityDict = {};
+        bitrateDict = {};
+        ratioDict = {};
+        abandonmentStateDict = {};
+        streamProcessorDict = {};
+        switchHistoryDict = {};
+        limitBitrateByPortal = false;
+        usePixelRatioInLimitBitrateByPortal = false;
+        if (windowResizeEventCalled === undefined) {
+            windowResizeEventCalled = false;
+        }
         reset();
     }
 
-    function initialize(type, streamProcessor) {
+    function registerStreamType(type, streamProcessor) {
         switchHistoryDict[type] = SwitchRequestHistory(context).create();
         streamProcessorDict[type] = streamProcessor;
         abandonmentStateDict[type] = abandonmentStateDict[type] || {};
@@ -124,7 +125,8 @@ function AbrController() {
         abrRulesCollection = ABRRulesCollection(context).create({
             metricsModel: metricsModel,
             dashMetrics: dashMetrics,
-            mediaPlayerModel: mediaPlayerModel
+            mediaPlayerModel: mediaPlayerModel,
+            adapter: adapter
         });
 
         abrRulesCollection.initialize();
@@ -161,11 +163,32 @@ function AbrController() {
     function setConfig(config) {
         if (!config) return;
 
-        if (config.abrRulesCollection) {
-            abrRulesCollection = config.abrRulesCollection;
-        }
         if (config.streamController) {
             streamController = config.streamController;
+        }
+        if (config.domStorage) {
+            domStorage = config.domStorage;
+        }
+        if (config.mediaPlayerModel) {
+            mediaPlayerModel = config.mediaPlayerModel;
+        }
+        if (config.metricsModel) {
+            metricsModel = config.metricsModel;
+        }
+        if (config.dashMetrics) {
+            dashMetrics = config.dashMetrics;
+        }
+        if (config.dashManifestModel) {
+            dashManifestModel = config.dashManifestModel;
+        }
+        if (config.adapter) {
+            adapter = config.adapter;
+        }
+        if (config.manifestModel) {
+            manifestModel = config.manifestModel;
+        }
+        if (config.videoModel) {
+            videoModel = config.videoModel;
         }
     }
 
@@ -591,12 +614,12 @@ function AbrController() {
     function onFragmentLoadProgress(e) {
         const type = e.request.mediaType;
         if (getAutoSwitchBitrateFor(type)) {
-            const scheduleController = streamProcessorDict[type].getScheduleController();
-            if (!scheduleController) return;// There may be a fragment load in progress when we switch periods and recreated some controllers.
+            const streamProcessor = streamProcessorDict[type];
+            if (!streamProcessor) return;// There may be a fragment load in progress when we switch periods and recreated some controllers.
 
             let rulesContext = RulesContext(context).create({
                 abrController: instance,
-                streamProcessor: streamProcessorDict[type],
+                streamProcessor: streamProcessor,
                 currentRequest: e.request,
                 hasRichBuffer: hasRichBuffer(type)
             });
@@ -606,8 +629,8 @@ function AbrController() {
             //        return newValue;
             //    });
 
-            if (switchRequest.quality > SwitchRequest.NO_CHANGE) {
-                const fragmentModel = scheduleController.getFragmentModel();
+            if (switchRequest.value > SwitchRequest.NO_CHANGE) {
+                const fragmentModel = streamProcessor.getFragmentModel();
                 const request = fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_LOADING, index: e.request.index})[0];
                 if (request) {
                     //TODO Check if we should abort or if better to finish download. check bytesLoaded/Total
@@ -657,8 +680,8 @@ function AbrController() {
         getTopQualityIndexFor: getTopQualityIndexFor,
         setElementSize: setElementSize,
         setWindowResizeEventCalled: setWindowResizeEventCalled,
-        initialize: initialize,
         createAbrRulesCollection: createAbrRulesCollection,
+        registerStreamType: registerStreamType,
         setConfig: setConfig,
         reset: reset
     };

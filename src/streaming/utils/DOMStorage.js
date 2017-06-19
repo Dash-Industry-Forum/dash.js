@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import FactoryMaker from '../../core/FactoryMaker';
-import MediaPlayerModel from '../models/MediaPlayerModel';
 import Debug from '../../core/Debug';
 
 const legacyKeysAndReplacements = [
@@ -45,14 +44,14 @@ const LOCAL_STORAGE_SETTINGS_KEY_TEMPLATE = 'dashjs_?_settings';
 const STORAGE_TYPE_LOCAL = 'localStorage';
 const STORAGE_TYPE_SESSION = 'sessionStorage';
 
-function DOMStorage() {
+function DOMStorage(config) {
 
     let context = this.context;
     let log = Debug(context).getInstance().log;
+    let mediaPlayerModel = config.mediaPlayerModel;
 
     let instance,
-        supported,
-        mediaPlayerModel;
+        supported;
 
     //type can be local, session
     function isSupported(type) {
@@ -112,8 +111,6 @@ function DOMStorage() {
     }
 
     function setup() {
-        mediaPlayerModel = MediaPlayerModel(context).getInstance();
-
         translateLegacyKeys();
     }
 

@@ -31,7 +31,6 @@
 import RequestModifier from '../streaming/utils/RequestModifier';
 import Segment from './vo/Segment';
 import Error from '../streaming/vo/Error';
-import ErrorHandler from '../streaming/utils/ErrorHandler';
 import Events from '../core/events/Events';
 import EventBus from '../core/EventBus';
 import BoxParser from '../streaming/utils/BoxParser';
@@ -52,16 +51,17 @@ function SegmentBaseLoader() {
         boxParser,
         requestModifier,
         metricsModel,
+        mediaPlayerModel,
         xhrLoader,
         baseURLController;
 
     function initialize() {
-        errHandler = ErrorHandler(context).getInstance();
         boxParser = BoxParser(context).getInstance();
         requestModifier = RequestModifier(context).getInstance();
         xhrLoader = XHRLoader(context).create({
             errHandler: errHandler,
             metricsModel: metricsModel,
+            mediaPlayerModel: mediaPlayerModel,
             requestModifier: requestModifier
         });
     }
@@ -73,6 +73,14 @@ function SegmentBaseLoader() {
 
         if (config.metricsModel) {
             metricsModel = config.metricsModel;
+        }
+
+        if (config.mediaPlayerModel) {
+            mediaPlayerModel = config.mediaPlayerModel;
+        }
+
+        if (config.errHandler) {
+            errHandler = config.errHandler;
         }
     }
 

@@ -44,7 +44,6 @@ import KeyMessage from '../vo/KeyMessage';
 import KeySystemConfiguration from '../vo/KeySystemConfiguration';
 import KeySystemAccess from '../vo/KeySystemAccess';
 import Events from '../../../core/events/Events';
-import ErrorHandler from '../../utils/ErrorHandler';
 import FactoryMaker from '../../../core/FactoryMaker';
 
 function ProtectionModel_01b(config) {
@@ -53,12 +52,12 @@ function ProtectionModel_01b(config) {
     let eventBus = config.eventBus;//Need to pass in here so we can use same instance since this is optional module
     let log = config.log;
     let api = config.api;
+    let errHandler = config.errHandler;
 
     let instance,
         videoElement,
         keySystem,
         protectionKeyController,
-        errHandler,
 
         // With this version of the EME APIs, sessionIDs are not assigned to
         // sessions until the first key message is received.  We are assuming
@@ -89,7 +88,6 @@ function ProtectionModel_01b(config) {
         pendingSessions = [];
         sessions = [];
         protectionKeyController = ProtectionKeyController(context).getInstance();
-        errHandler = ErrorHandler(context).getInstance();
         eventHandler = createEventHandler();
     }
 

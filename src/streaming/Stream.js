@@ -30,17 +30,13 @@
  */
 import LiveEdgeFinder from './utils/LiveEdgeFinder';
 import StreamProcessor from './StreamProcessor';
-import MediaController from './controllers/MediaController';
 import EventController from './controllers/EventController';
 import FragmentController from './controllers/FragmentController';
-import AbrController from './controllers/AbrController';
 import VideoModel from './models/VideoModel';
-import PlaybackController from './controllers/PlaybackController';
 import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import Debug from '../core/Debug';
 import FactoryMaker from '../core/FactoryMaker';
-import TextController from './text/TextController';
 
 function Stream(config) {
 
@@ -51,12 +47,23 @@ function Stream(config) {
     let eventBus = EventBus(context).getInstance();
 
     let manifestModel = config.manifestModel;
+    let dashManifestModel = config.dashManifestModel;
+    let mediaPlayerModel = config.mediaPlayerModel;
     let manifestUpdater = config.manifestUpdater;
     let adapter = config.adapter;
     let capabilities = config.capabilities;
     let errHandler = config.errHandler;
     let timelineConverter = config.timelineConverter;
     let baseURLController = config.baseURLController;
+    let domStorage = config.domStorage;
+    let metricsModel = config.metricsModel;
+    let dashMetrics = config.dashMetrics;
+    let abrController = config.abrController;
+    let playbackController = config.playbackController;
+    let mediaController = config.mediaController;
+    let textController = config.textController;
+    let sourceBufferController = config.sourceBufferController;
+    let streamController = config.streamController;
 
     let instance,
         streamProcessors,
@@ -67,14 +74,9 @@ function Stream(config) {
         isUpdating,
         protectionController,
         liveEdgeFinder,
-        playbackController,
-        mediaController,
         fragmentController,
         eventController,
-        abrController,
-        textController,
         trackChangedEvent;
-
 
     function setup() {
         streamProcessors = [];
@@ -85,11 +87,10 @@ function Stream(config) {
         isUpdating = false;
 
         liveEdgeFinder = LiveEdgeFinder(context).getInstance();
-        playbackController = PlaybackController(context).getInstance();
-        abrController = AbrController(context).getInstance();
-        mediaController = MediaController(context).getInstance();
-        fragmentController = FragmentController(context).create();
-        textController = TextController(context).getInstance();
+        fragmentController = FragmentController(context).create({
+            mediaPlayerModel: mediaPlayerModel,
+            metricsModel: metricsModel
+        });
 
         eventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
@@ -188,6 +189,18 @@ function Stream(config) {
         return streamInfo;
     }
 
+    function getEventController() {
+        return eventController;
+    }
+
+    function getFragmentController() {
+        return fragmentController;
+    }
+
+    function hasMedia(type) {
+        return (getMediaInfo(type) !== null);
+    }
+
     /**
      * @param {string} type
      * @returns {Array}
@@ -234,8 +247,9 @@ function Stream(config) {
             return false;
         }
 
-        if ((type === 'text') || (type === 'fragmentedText') || (type === 'embeddedText')) return true;
-
+        if ((type === 'text') || (type === 'fragmentedText') || (type === 'embeddedText')) {
+            return true;
+        }
         codec = mediaInfo.codec;
         log(type + ' codec: ' + codec);
 
@@ -288,14 +302,28 @@ function Stream(config) {
 
     function createStreamProcessor(mediaInfo, mediaSource, optionalSettings) {
         let streamProcessor = StreamProcessor(context).create({
+            type: getMimeTypeOrType(mediaInfo),
             mimeType: mediaInfo.mimeType,
             timelineConverter: timelineConverter,
             adapter: adapter,
-            baseURLController: baseURLController
+            manifestModel: manifestModel,
+            dashManifestModel: dashManifestModel,
+            mediaPlayerModel: mediaPlayerModel,
+            metricsModel: metricsModel,
+            dashMetrics: dashMetrics,
+            baseURLController: baseURLController,
+            stream: instance,
+            abrController: abrController,
+            domStorage: domStorage,
+            playbackController: playbackController,
+            mediaController: mediaController,
+            streamController: streamController,
+            textController: textController,
+            sourceBufferController: sourceBufferController
         });
 
         let allMediaForType = adapter.getAllMediaInfoForType(streamInfo, mediaInfo.type);
-        streamProcessor.initialize(getMimeTypeOrType(mediaInfo), fragmentController, mediaSource, instance, eventController);
+        streamProcessor.initialize(mediaSource);
         abrController.updateTopQualityIndex(mediaInfo);
 
         if (optionalSettings) {
@@ -343,8 +371,9 @@ function Stream(config) {
             if (type === 'embeddedText') {
                 textController.addEmbeddedTrack(mediaInfo);
             } else {
-                if (!isMediaSupported(mediaInfo)) continue;
-
+                if (!isMediaSupported(mediaInfo)) {
+                    continue;
+                }
                 if (mediaController.isMultiTrackSupportedByType(mediaInfo.type)) {
                     mediaController.addTrack(mediaInfo, streamInfo);
                 }
@@ -367,11 +396,12 @@ function Stream(config) {
     function initializeMedia(mediaSource) {
         let events;
 
-        eventController = EventController(context).getInstance();
+        eventController = EventController(context).create();
         eventController.initialize();
         eventController.setConfig({
             manifestModel: manifestModel,
-            manifestUpdater: manifestUpdater
+            manifestUpdater: manifestUpdater,
+            playbackController: playbackController
         });
         events = adapter.getEventsFor(streamInfo);
         eventController.addInlineEvents(events);
@@ -408,10 +438,14 @@ function Stream(config) {
         let error = hasError ? new Error(DATA_UPDATE_FAILED_ERROR_CODE, 'Data update failed', null) : null;
 
         for (let i = 0; i < ln; i++) {
-            if (streamProcessors[i].isUpdating() || isUpdating) return;
+            if (streamProcessors[i].isUpdating() || isUpdating) {
+                return;
+            }
         }
 
-        if (!isMediaInitialized) return;
+        if (!isMediaInitialized) {
+            return;
+        }
         if (protectionController) {
             protectionController.initialize(manifestModel.getValue(), getMediaInfo('audio'), getMediaInfo('video'));
         }
@@ -428,7 +462,9 @@ function Stream(config) {
         for (let i = 0; i < ln; i++) {
             mediaCtrl = streamProcessors[i];
 
-            if (mediaCtrl.getType() === type) return mediaCtrl.getMediaInfo();
+            if (mediaCtrl.getType() === type) {
+                return mediaCtrl.getMediaInfo();
+            }
         }
 
         return null;
@@ -441,14 +477,18 @@ function Stream(config) {
     }
 
     function onBufferingCompleted(e) {
-        if (e.streamInfo !== streamInfo) return;
+        if (e.streamInfo !== streamInfo) {
+            return;
+        }
 
         let processors = getProcessors();
         const ln = processors.length;
 
         // if there is at least one buffer controller that has not completed buffering yet do nothing
         for (let i = 0; i < ln; i++) {
-            if (!processors[i].isBufferingCompleted()) return;
+            if (!processors[i].isBufferingCompleted()) {
+                return;
+            }
         }
 
         eventBus.trigger(Events.STREAM_BUFFERING_COMPLETED, {
@@ -459,14 +499,18 @@ function Stream(config) {
     function onDataUpdateCompleted(e) {
         let sp = e.sender.getStreamProcessor();
 
-        if (sp.getStreamInfo() !== streamInfo) return;
+        if (sp.getStreamInfo() !== streamInfo) {
+            return;
+        }
 
         updateError[sp.getType()] = e.error;
         checkIfInitializationCompleted();
     }
 
     function getProcessorForMediaInfo(mediaInfo) {
-        if (!mediaInfo) return false;
+        if (!mediaInfo) {
+            return false;
+        }
 
         let processors = getProcessors();
 
@@ -535,6 +579,9 @@ function Stream(config) {
         getStartTime: getStartTime,
         getId: getId,
         getStreamInfo: getStreamInfo,
+        getFragmentController: getFragmentController,
+        getEventController: getEventController,
+        hasMedia: hasMedia,
         getBitrateListFor: getBitrateListFor,
         startEventController: startEventController,
         updateData: updateData,

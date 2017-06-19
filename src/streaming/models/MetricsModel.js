@@ -421,10 +421,6 @@ function MetricsModel() {
     }
 
     instance = {
-        metricsChanged: metricsChanged,
-        metricChanged: metricChanged,
-        metricUpdated: metricUpdated,
-        metricAdded: metricAdded,
         clearCurrentMetricsForType: clearCurrentMetricsForType,
         clearAllCurrentMetrics: clearAllCurrentMetrics,
         getReadOnlyMetricsFor: getReadOnlyMetricsFor,

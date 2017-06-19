@@ -1,10 +1,17 @@
 import DashManifestModel from '../../src/dash/models/DashManifestModel';
+import MediaController from '../../src/streaming/controllers/MediaController';
+import TimelineConverter from '../../src/dash/utils/TimelineConverter';
 import BaseURL from '../../src/dash/vo/BaseURL';
 
 const expect = require('chai').expect;
 
 const context = {};
-const dashManifestModel = DashManifestModel(context).getInstance();
+const mediaController = MediaController(context).getInstance();
+const timelineConverter = TimelineConverter(context).getInstance();
+const dashManifestModel = DashManifestModel(context).getInstance({
+    mediaController: mediaController,
+    timelineConverter: timelineConverter
+});
 
 const TEST_URL = 'http://www.example.com/';
 const RELATIVE_TEST_URL = './';

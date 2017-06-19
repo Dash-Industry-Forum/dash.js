@@ -28,7 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import TextController from '../text/TextController';
 import Error from '../vo/Error';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
@@ -36,13 +35,13 @@ import FactoryMaker from '../../core/FactoryMaker';
 
 const QUOTA_EXCEEDED_ERROR_CODE = 22;
 
-function SourceBufferController() {
+function SourceBufferController(config) {
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
+    let textController = config.textController;
 
-    let instance,
-        dashManifestModel;
+    let instance;
 
     function createSourceBuffer(mediaSource, mediaInfo) {
 
@@ -63,7 +62,6 @@ function SourceBufferController() {
         } catch (ex) {
             // Note that in the following, the quotes are open to allow for extra text after stpp and wvtt
             if ((mediaInfo.isText) || (codec.indexOf('codecs="stpp') !== -1) || (codec.indexOf('codecs="wvtt') !== -1)) {
-                var textController = TextController(context).getInstance();
                 buffer = textController.getTextSourceBuffer();
             } else {
                 throw ex;
@@ -345,14 +343,6 @@ function SourceBufferController() {
         } catch (ex) {}
     }
 
-    function setConfig(config) {
-        if (!config) return;
-
-        if (config.dashManifestModel) {
-            dashManifestModel = config.dashManifestModel;
-        }
-    }
-
     function waitForUpdateEnd(buffer, callback) {
         let intervalId;
         const CHECK_INTERVAL = 50;
@@ -401,8 +391,7 @@ function SourceBufferController() {
         getAllRanges: getAllRanges,
         getTotalBufferedTime: getTotalBufferedTime,
         getBufferLength: getBufferLength,
-        getRangeDifference: getRangeDifference,
-        setConfig: setConfig
+        getRangeDifference: getRangeDifference
     };
 
     return instance;

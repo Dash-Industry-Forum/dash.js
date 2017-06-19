@@ -2,6 +2,12 @@ import SpecHelper from './helpers/SpecHelper';
 import VoHelper from './helpers/VOHelper';
 import ObjectsHelper from './helpers/ObjectsHelper';
 import AbrController from '../../src/streaming/controllers/AbrController';
+import MediaController from '../../src/streaming/controllers/MediaController';
+import MetricsModel from '../../src/streaming/models/MetricsModel';
+import DashMetrics from '../../src/dash/DashMetrics';
+import DashManifestModel from '../../src/dash/models/DashManifestModel';
+import TimelineConverter from '../../src/dash/utils/TimelineConverter';
+import VideoModel from '../../src/streaming/models/VideoModel';
 
 const expect = require('chai').expect;
 
@@ -11,12 +17,29 @@ describe("AbrController", function () {
     const voHelper = new VoHelper();
     const objectsHelper = new ObjectsHelper();
     const defaultQuality = AbrController.QUALITY_DEFAULT;
+    const metricsModel = MetricsModel(context).getInstance();
+    const mediaController = MediaController(context).getInstance();
+    const timelineConverter = TimelineConverter(context).getInstance();
+    const dashManifestModel = DashManifestModel(context).getInstance({
+        mediaController: mediaController,
+        timelineConverter: timelineConverter
+    });
+
+    const dashMetrics = DashMetrics(context).getInstance({
+        dashManifestModel: dashManifestModel
+    });
+    const videoModel = VideoModel(context).getInstance();
     const abrCtrl = AbrController(context).getInstance();
     const dummyMediaInfo = voHelper.getDummyMediaInfo(testType);
     const representationCount = dummyMediaInfo.representationCount;
     const streamProcessor = objectsHelper.getDummyStreamProcessor(testType);
 
-    abrCtrl.initialize('video', streamProcessor);
+    abrCtrl.setConfig({
+        metricsModel: metricsModel,
+        dashMetrics: dashMetrics,
+        videoModel: videoModel
+    });
+    abrCtrl.registerStreamType('video', streamProcessor);
 
     it("should update top quality index", function () {
         const expectedTopQuality = representationCount - 1;

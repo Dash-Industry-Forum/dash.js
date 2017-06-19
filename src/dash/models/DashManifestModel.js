@@ -34,9 +34,6 @@ import AdaptationSet from '../vo/AdaptationSet';
 import Period from '../vo/Period';
 import Mpd from '../vo/Mpd';
 import UTCTiming from '../vo/UTCTiming';
-import TimelineConverter from '../utils/TimelineConverter';
-import MediaController from '../../streaming/controllers/MediaController';
-import DashAdapter from '../DashAdapter';
 import Event from '../vo/Event';
 import BaseURL from '../vo/BaseURL';
 import EventStream from '../vo/EventStream';
@@ -44,15 +41,15 @@ import ObjectUtils from '../../streaming/utils/ObjectUtils';
 import URLUtils from '../../streaming/utils/URLUtils';
 import FactoryMaker from '../../core/FactoryMaker';
 
-function DashManifestModel() {
+function DashManifestModel(config) {
 
     let instance;
     let context = this.context;
-    let timelineConverter = TimelineConverter(context).getInstance();//TODO Need to pass this in not bake in
-    let mediaController = MediaController(context).getInstance();
-    let adaptor = DashAdapter(context).getInstance();
 
     const urlUtils = URLUtils(context).getInstance();
+    const mediaController = config.mediaController;
+    const timelineConverter = config.timelineConverter;
+    const adapter = config.adapter;
 
     function getIsTypeOf(adaptation, type) {
 
@@ -236,7 +233,7 @@ function DashManifestModel() {
 
         if (adaptations.length > 1 && streamInfo) {
             let currentTrack = mediaController.getCurrentTrackFor(type, streamInfo);
-            let allMediaInfoForType = adaptor.getAllMediaInfoForType(streamInfo, type);
+            let allMediaInfoForType = adapter.getAllMediaInfoForType(streamInfo, type);
             for (let i = 0, ln = adaptations.length; i < ln; i++) {
                 if (currentTrack && mediaController.isTracksEqual(currentTrack, allMediaInfoForType[i])) {
                     return adaptations[i];

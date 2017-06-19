@@ -28,14 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import DashManifestModel from '../models/DashManifestModel';
-import DashMetrics from '../DashMetrics';
-import TimelineConverter from '../utils/TimelineConverter';
-import AbrController from '../../streaming/controllers/AbrController';
-import PlaybackController from '../../streaming/controllers/PlaybackController';
-import ManifestModel from '../../streaming/models/ManifestModel';
-import MetricsModel from '../../streaming/models/MetricsModel';
-import DOMStorage from '../../streaming/utils/DOMStorage';
 import Error from '../../streaming/vo/Error';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
@@ -43,12 +35,13 @@ import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
 import FactoryMaker from '../../core/FactoryMaker';
 import Representation from '../vo/Representation';
 
-function RepresentationController() {
+function RepresentationController(config) {
 
     const SEGMENTS_UPDATE_FAILED_ERROR_CODE = 1;
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
+    let streamProcessor = config.streamProcessor;
 
     let instance,
         realAdaptation,
@@ -56,7 +49,6 @@ function RepresentationController() {
         updating,
         voAvailableRepresentations,
         currentVoRepresentation,
-        streamProcessor,
         abrController,
         indexHandler,
         playbackController,
@@ -73,15 +65,6 @@ function RepresentationController() {
         updating = true;
         voAvailableRepresentations = [];
 
-        abrController = AbrController(context).getInstance();
-        playbackController = PlaybackController(context).getInstance();
-        metricsModel = MetricsModel(context).getInstance();
-        domStorage = DOMStorage(context).getInstance();
-        timelineConverter = TimelineConverter(context).getInstance();
-        dashManifestModel = DashManifestModel(context).getInstance();
-        dashMetrics = DashMetrics(context).getInstance();
-        manifestModel = ManifestModel(context).getInstance();
-
         eventBus.on(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
         eventBus.on(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
@@ -93,10 +76,30 @@ function RepresentationController() {
         if (config.abrController) {
             abrController = config.abrController;
         }
+        if (config.domStorage) {
+            domStorage = config.domStorage;
+        }
+        if (config.metricsModel) {
+            metricsModel = config.metricsModel;
+        }
+        if (config.dashMetrics) {
+            dashMetrics = config.dashMetrics;
+        }
+        if (config.dashManifestModel) {
+            dashManifestModel = config.dashManifestModel;
+        }
+        if (config.playbackController) {
+            playbackController = config.playbackController;
+        }
+        if (config.timelineConverter) {
+            timelineConverter = config.timelineConverter;
+        }
+        if (config.manifestModel) {
+            manifestModel = config.manifestModel;
+        }
     }
 
-    function initialize(StreamProcessor) {
-        streamProcessor = StreamProcessor;
+    function initialize() {
         indexHandler = streamProcessor.getIndexHandler();
     }
 

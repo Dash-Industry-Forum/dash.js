@@ -31,14 +31,13 @@
 
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
-import ErrorHandler from '../../streaming/utils/ErrorHandler';
 import BASE64 from '../../../externals/base64';
 
 function MssParser(config) {
 
     const context = this.context;
     const log = Debug(context).getInstance().log;
-    const errorHandler = ErrorHandler(context).getInstance();
+    const errorHandler = config.errHandler;
 
     const TIME_SCALE_100_NANOSECOND_UNIT = 10000000.0;
     const SUPPORTED_CODECS = ['AAC', 'AACL', 'AVC1', 'H264', 'TTML', 'DFXP'];

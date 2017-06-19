@@ -48,6 +48,7 @@ function XlinkLoader(config) {
     let xhrLoader = XHRLoader(context).create({
         errHandler: config.errHandler,
         metricsModel: config.metricsModel,
+        mediaPlayerModel: config.mediaPlayerModel,
         requestModifier: config.requestModifier
     });
 

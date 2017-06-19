@@ -41,9 +41,9 @@ function AbandonRequestsRule(config) {
     const context = this.context;
     const log = Debug(context).getInstance().log;
 
-    let mediaPlayerModel = config.mediaPlayerModel;
-    let dashMetrics = config.dashMetrics;
-    let metricsModel = config.metricsModel;
+    const mediaPlayerModel = config.mediaPlayerModel;
+    const metricsModel = config.metricsModel;
+    const dashMetrics = config.dashMetrics;
 
     let fragmentDict,
         abandonDict,
