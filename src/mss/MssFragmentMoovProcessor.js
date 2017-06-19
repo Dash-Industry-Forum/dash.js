@@ -609,7 +609,7 @@ function MssFragmentMoovProcessor() {
     }
 
     function generateMoov(rep) {
-        if (!rep || !representation.adaptation) {
+        if (!rep || !rep.adaptation) {
             return;
         }
 

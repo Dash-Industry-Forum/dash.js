@@ -47,18 +47,27 @@ function FragmentModel(config) {
     const log = Debug(context).getInstance().log;
     const eventBus = EventBus(context).getInstance();
     const metricsModel = config.metricsModel;
+    const fragmentLoader = config.fragmentLoader;
 
     let instance,
+        streamProcessor,
         executedRequests,
-        loadingRequests,
-        fragmentLoader;
+        loadingRequests;
 
     function setup() {
+        streamProcessor = null;
         executedRequests = [];
         loadingRequests = [];
         eventBus.on(Events.LOADING_COMPLETED, onLoadingCompleted, instance);
 
-        fragmentLoader = config.fragmentLoader;
+    }
+
+    function setStreamProcessor(value) {
+        streamProcessor = value;
+    }
+
+    function getStreamProcessor() {
+        return streamProcessor;
     }
 
     function isFragmentLoaded(request) {
@@ -264,7 +273,6 @@ function FragmentModel(config) {
 
         if (fragmentLoader) {
             fragmentLoader.reset();
-            fragmentLoader = null;
         }
 
         executedRequests = [];
@@ -272,6 +280,8 @@ function FragmentModel(config) {
     }
 
     instance = {
+        setStreamProcessor: setStreamProcessor,
+        getStreamProcessor: getStreamProcessor,
         getRequests: getRequests,
         isFragmentLoaded: isFragmentLoaded,
         isFragmentLoadedOrPending: isFragmentLoadedOrPending,
