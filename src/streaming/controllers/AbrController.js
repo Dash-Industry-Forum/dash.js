@@ -84,7 +84,8 @@ function AbrController() {
         droppedFramesHistory,
         throughputHistory,
         metricsModel,
-        dashMetrics;
+        dashMetrics,
+        useDeadTimeLatency;
 
     function setup() {
         log = debug.log.bind(instance);
@@ -143,6 +144,7 @@ function AbrController() {
         streamProcessorDict = {};
         switchHistoryDict = {};
         limitBitrateByPortal = false;
+        useDeadTimeLatency = true;
         usePixelRatioInLimitBitrateByPortal = false;
         if (windowResizeEventCalled === undefined) {
             windowResizeEventCalled = false;
@@ -201,7 +203,7 @@ function AbrController() {
 
     function onMetricAdded(e) {
         if (e.metric === 'HttpList' && e.value && e.value.type === HTTPRequest.MEDIA_SEGMENT_TYPE && (e.mediaType === 'audio' || e.mediaType === 'video')) {
-            throughputHistory.push(e.mediaType, e.value);
+            throughputHistory.push(e.mediaType, e.value, useDeadTimeLatency);
         }
     }
 
@@ -332,6 +334,14 @@ function AbrController() {
         usePixelRatioInLimitBitrateByPortal = value;
     }
 
+    function getUseDeadTimeLatency() {
+        return useDeadTimeLatency;
+    }
+
+    function setUseDeadTimeLatency(value) {
+        useDeadTimeLatency = value;
+    }
+
     function checkPlaybackQuality(type) {
         if (type  && streamProcessorDict && streamProcessorDict[type]) {
             const streamInfo = streamProcessorDict[type].getStreamInfo();
@@ -414,7 +424,7 @@ function AbrController() {
      * @memberof AbrController#
      */
     function getQualityForBitrate(mediaInfo, bitrate, latency) {
-        if (latency && streamProcessorDict[mediaInfo.type].getCurrentRepresentationInfo() && streamProcessorDict[mediaInfo.type].getCurrentRepresentationInfo().fragmentDuration) {
+        if (useDeadTimeLatency && latency && streamProcessorDict[mediaInfo.type].getCurrentRepresentationInfo() && streamProcessorDict[mediaInfo.type].getCurrentRepresentationInfo().fragmentDuration) {
             latency = latency / 1000;
             let fragmentDuration = streamProcessorDict[mediaInfo.type].getCurrentRepresentationInfo().fragmentDuration;
             if (latency > fragmentDuration) {
@@ -669,6 +679,8 @@ function AbrController() {
         setInitialRepresentationRatioFor: setInitialRepresentationRatioFor,
         setAutoSwitchBitrateFor: setAutoSwitchBitrateFor,
         getAutoSwitchBitrateFor: getAutoSwitchBitrateFor,
+        getUseDeadTimeLatency: getUseDeadTimeLatency,
+        setUseDeadTimeLatency: setUseDeadTimeLatency,
         setLimitBitrateByPortal: setLimitBitrateByPortal,
         getLimitBitrateByPortal: getLimitBitrateByPortal,
         getUsePixelRatioInLimitBitrateByPortal: getUsePixelRatioInLimitBitrateByPortal,

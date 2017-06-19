@@ -63,7 +63,7 @@ function ThroughputHistory(config) {
         }
     }
 
-    function push(mediaType, httpRequest) {
+    function push(mediaType, httpRequest, useDeadTimeLatency) {
         if (!httpRequest.trace || !httpRequest.trace.length) {
             return;
         }
@@ -71,7 +71,8 @@ function ThroughputHistory(config) {
         const latencyTimeInMilliseconds = (httpRequest.tresponse.getTime() - httpRequest.trequest.getTime()) || 1;
         const downloadTimeInMilliseconds = (httpRequest._tfinish.getTime() - httpRequest.tresponse.getTime()) || 1; //Make sure never 0 we divide by this value. Avoid infinity!
         const downloadBytes = httpRequest.trace.reduce((a, b) => a + b.b[0], 0);
-        let throughput = Math.round((8 * downloadBytes) / downloadTimeInMilliseconds); // bits/ms = kbits/s
+        const throughputMeasureTime = useDeadTimeLatency ? downloadTimeInMilliseconds : latencyTimeInMilliseconds + downloadTimeInMilliseconds;
+        let throughput = Math.round((8 * downloadBytes) / throughputMeasureTime); // bits/ms = kbits/s
 
         throughputDict[mediaType] = throughputDict[mediaType] || [];
         latencyDict[mediaType] = latencyDict[mediaType] || [];
