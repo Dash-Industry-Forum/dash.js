@@ -4,7 +4,7 @@ class MpdHelper {
     constructor() {
         this.SEGMENT_TEMPLATE = 0;
         this.idCounter = -1;
-        this.baseUrl = "http://dash.edgesuite.net/envivio/dashpr/clear/Manifest.mpd";
+        this.baseUrl = "https://dash.akamaized.net/envivio/dashpr/clear/Manifest.mpd";
         this.specHelper = new SpecHelper();
     }
 

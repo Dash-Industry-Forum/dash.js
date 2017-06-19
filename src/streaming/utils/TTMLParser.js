@@ -64,15 +64,15 @@ function TTMLParser() {
         let i,
             j;
 
-        var errorMsg = '';
-        var captionArray = [];
-        var startTime,
+        let errorMsg = '';
+        let captionArray = [];
+        let startTime,
             endTime;
 
-        var embeddedImages = {};
-        var currentImageId = '';
-        var accumulated_image_data = '';
-        var metadataHandler = {
+        let embeddedImages = {};
+        let currentImageId = '';
+        let accumulated_image_data = '';
+        let metadataHandler = {
 
             onOpenTag: function (ns, name, attrs) {
                 if (name === 'image' && ns === 'http://www.smpte-ra.org/schemas/2052-1/2010/smpte-tt') {
@@ -99,14 +99,14 @@ function TTMLParser() {
             }
         };
 
-        var imsc1doc = fromXML(data, function (msg) {
+        let imsc1doc = fromXML(data, function (msg) {
             errorMsg = msg;
         },
             metadataHandler);
-        var mediaTimeEvents = imsc1doc.getMediaTimeEvents();
+        let mediaTimeEvents = imsc1doc.getMediaTimeEvents();
 
         for (i = 0; i < mediaTimeEvents.length; i++) {
-            var isd = generateISD(imsc1doc, mediaTimeEvents[i], function (error) {
+            let isd = generateISD(imsc1doc, mediaTimeEvents[i], function (error) {
                 errorMsg = error;
             });
             for (j = 0; j < isd.contents.length; j++) {

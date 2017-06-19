@@ -105,7 +105,7 @@ function BaseURLTreeModel() {
     }
 
     function walk(callback, node) {
-        var target = node || root;
+        let target = node || root;
 
         callback(target.data);
 
@@ -133,8 +133,8 @@ function BaseURLTreeModel() {
     }
 
     function getForPath(path) {
-        var target = root;
-        var nodes = [target.data];
+        let target = root;
+        let nodes = [target.data];
 
         path.forEach(p => {
             target = target.children[p];

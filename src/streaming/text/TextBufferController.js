@@ -48,7 +48,6 @@ function TextBufferController(config) {
             // in this case, internal buffer ocntroller is a classical BufferController object
             _BufferControllerImpl = BufferController(context).create({
                 metricsModel: config.metricsModel,
-                manifestModel: config.manifestModel,
                 sourceBufferController: config.sourceBufferController,
                 errHandler: config.errHandler,
                 streamController: config.streamController,
@@ -99,10 +98,6 @@ function TextBufferController(config) {
         _BufferControllerImpl.setMediaSource(value);
     }
 
-    function setStreamProcessor(streamProcessor) {
-        _BufferControllerImpl.setStreamProcessor(streamProcessor);
-    }
-
     function getStreamProcessor() {
         _BufferControllerImpl.getStreamProcessor();
     }
@@ -113,10 +108,6 @@ function TextBufferController(config) {
 
     function getBufferLevel() {
         return _BufferControllerImpl.getBufferLevel();
-    }
-
-    function getCriticalBufferLevel() {
-        return _BufferControllerImpl.getCriticalBufferLevel();
     }
 
     function reset(errored) {
@@ -136,12 +127,10 @@ function TextBufferController(config) {
         createBuffer: createBuffer,
         getType: getType,
         getStreamProcessor: getStreamProcessor,
-        setStreamProcessor: setStreamProcessor,
         setSeekStartTime: setSeekStartTime,
         getBuffer: getBuffer,
         setBuffer: setBuffer,
         getBufferLevel: getBufferLevel,
-        getCriticalBufferLevel: getCriticalBufferLevel,
         setMediaSource: setMediaSource,
         getMediaSource: getMediaSource,
         getIsBufferingCompleted: getIsBufferingCompleted,

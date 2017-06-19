@@ -45,13 +45,13 @@ function FragmentedTextBoxParser() {
     }
 
     function getSamplesInfo(ab) {
-        var isoFile = boxParser.parse(ab);
+        let isoFile = boxParser.parse(ab);
         // zero or more moofs
-        var moofBoxes = isoFile.getBoxes('moof');
+        let moofBoxes = isoFile.getBoxes('moof');
         // exactly one mfhd per moof
-        var mfhdBoxes = isoFile.getBoxes('mfhd');
+        let mfhdBoxes = isoFile.getBoxes('mfhd');
 
-        var sampleDuration,
+        let sampleDuration,
             sampleCompositionTimeOffset,
             sampleCount,
             sampleSize,
@@ -72,22 +72,22 @@ function FragmentedTextBoxParser() {
         let subsIndex = -1;
         let nextSubsSample = -1;
         for (l = 0; l < moofBoxes.length; l++) {
-            var moofBox = moofBoxes[l];
+            let moofBox = moofBoxes[l];
             // zero or more trafs per moof
-            var trafBoxes = moofBox.getChildBoxes('traf');
+            let trafBoxes = moofBox.getChildBoxes('traf');
             for (j = 0; j < trafBoxes.length; j++) {
-                var trafBox = trafBoxes[j];
+                let trafBox = trafBoxes[j];
                 // exactly one tfhd per traf
-                var tfhdBox = trafBox.getChildBox('tfhd');
+                let tfhdBox = trafBox.getChildBox('tfhd');
                 // zero or one tfdt per traf
-                var tfdtBox = trafBox.getChildBox('tfdt');
+                let tfdtBox = trafBox.getChildBox('tfdt');
                 sampleDts = tfdtBox.baseMediaDecodeTime;
                 // zero or more truns per traf
-                var trunBoxes = trafBox.getChildBoxes('trun');
+                let trunBoxes = trafBox.getChildBoxes('trun');
                 // zero or more subs per traf
-                var subsBoxes = trafBox.getChildBoxes('subs');
+                let subsBoxes = trafBox.getChildBoxes('subs');
                 for (k = 0; k < trunBoxes.length; k++) {
-                    var trunBox = trunBoxes[k];
+                    let trunBox = trunBoxes[k];
                     sampleCount = trunBox.sample_count;
                     dataOffset = (tfhdBox.base_data_offset || 0) + (trunBox.data_offset || 0);
 
@@ -106,7 +106,7 @@ function FragmentedTextBoxParser() {
                         };
                         if (subsBoxes) {
                             for (m = 0; m < subsBoxes.length; m++) {
-                                var subsBox = subsBoxes[m];
+                                let subsBox = subsBoxes[m];
                                 if (subsIndex < subsBox.entry_count && i > nextSubsSample) {
                                     subsIndex++;
                                     nextSubsSample += subsBox.entries[subsIndex].sample_delta;
@@ -115,7 +115,7 @@ function FragmentedTextBoxParser() {
                                     sampleData.subSizes = [];
                                     let entry = subsBox.entries[subsIndex];
                                     for (n = 0; n < entry.subsample_count; n++) {
-                                        sampleData.subSizes.push(entry.subsamples[j].subsample_size);
+                                        sampleData.subSizes.push(entry.subsamples[n].subsample_size);
                                     }
                                 }
                             }
@@ -132,8 +132,8 @@ function FragmentedTextBoxParser() {
     }
 
     function getMediaTimescaleFromMoov(ab) {
-        var isoFile = boxParser.parse(ab);
-        var mdhdBox = isoFile.getBox('mdhd');
+        let isoFile = boxParser.parse(ab);
+        let mdhdBox = isoFile.getBox('mdhd');
 
         return mdhdBox ? mdhdBox.timescale : NaN;
     }

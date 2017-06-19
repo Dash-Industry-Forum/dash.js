@@ -59,7 +59,7 @@ function MetricsCollectionController(config) {
 
             if (!metricsControllers.hasOwnProperty(key)) {
                 try {
-                    var controller = MetricsController(context).create(config);
+                    let controller = MetricsController(context).create(config);
                     controller.initialize(m);
                     metricsControllers[key] = controller;
                 } catch (e) {

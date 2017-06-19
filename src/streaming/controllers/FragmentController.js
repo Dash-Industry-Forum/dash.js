@@ -37,7 +37,7 @@ import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 
-function FragmentController(/*config*/) {
+function FragmentController() {
 
     const context = this.context;
     const log = Debug(context).getInstance().log;
@@ -97,6 +97,13 @@ function FragmentController(/*config*/) {
         const bytes = e.response;
         const isInit = isInitializationRequest(request);
         const streamInfo = request.mediaInfo.streamInfo;
+
+        if (e.error ) {
+            if (e.request.mediaType === 'audio' || e.request.mediaType === 'video') {
+                // add service location to blacklist controller - only for audio or video. text should not set errors
+                eventBus.trigger(Events.SERVICE_LOCATION_BLACKLIST_ADD, {entry: e.request.serviceLocation});
+            }
+        }
 
         if (!bytes || !streamInfo) {
             log('No ' + request.mediaType + ' bytes to push or stream is inactive.');

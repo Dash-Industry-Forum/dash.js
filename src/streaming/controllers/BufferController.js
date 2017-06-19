@@ -51,7 +51,6 @@ function BufferController(config) {
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
     const metricsModel = config.metricsModel;
-    const manifestModel = config.manifestModel;
     const sourceBufferController = config.sourceBufferController;
     const errHandler = config.errHandler;
     const streamController = config.streamController;
@@ -76,7 +75,6 @@ function BufferController(config) {
         appendingMediaChunk,
         isAppendingInProgress,
         isPruningInProgress,
-        inbandEventFound,
         playbackController,
         streamProcessor,
         abrController,
@@ -99,7 +97,6 @@ function BufferController(config) {
         appendingMediaChunk = false;
         isAppendingInProgress = false;
         isPruningInProgress = false;
-        inbandEventFound = false;
     }
 
     function initialize(Type, Source, StreamProcessor) {
@@ -174,9 +171,8 @@ function BufferController(config) {
         const bytes = chunk.bytes;
         const quality = chunk.quality;
         const currentRepresentation = streamProcessor.getRepresentationInfoForQuality(quality);
-        const manifest = manifestModel.getValue();
-        const eventStreamMedia = adapter.getEventsFor(manifest, currentRepresentation.mediaInfo, streamProcessor);
-        const eventStreamTrack = adapter.getEventsFor(manifest, currentRepresentation, streamProcessor);
+        const eventStreamMedia = adapter.getEventsFor(currentRepresentation.mediaInfo, streamProcessor);
+        const eventStreamTrack = adapter.getEventsFor(currentRepresentation, streamProcessor);
 
         if (eventStreamMedia && eventStreamMedia.length > 0 || eventStreamTrack && eventStreamTrack.length > 0) {
             const request = streamProcessor.getFragmentModel().getRequests({
@@ -184,11 +180,11 @@ function BufferController(config) {
                 quality: quality,
                 index: chunk.index
             })[0];
+
             const events = handleInbandEvents(bytes, request, eventStreamMedia, eventStreamTrack);
             streamProcessor.getEventController().addInbandEvents(events);
         }
 
-        chunk.bytes = deleteInbandEvents(bytes);
         appendToBuffer(chunk);
     }
 
@@ -301,6 +297,10 @@ function BufferController(config) {
     }
 
     function checkIfSufficientBuffer() {
+
+        // No need to check buffer if type is not audio or video (for example if several errors occur during text parsing, so that the buffer cannot be filled, no error must occur on video playback)
+        if (type !== 'audio' || type !== 'video') return;
+
         if (bufferLevel < STALL_THRESHOLD && !isBufferingCompleted) {
             notifyBufferStateChanged(BUFFER_EMPTY);
         } else {
@@ -324,7 +324,6 @@ function BufferController(config) {
         const eventStreams = [];
         const events = [];
 
-        inbandEventFound = false; //TODO Discuss why this is hear!
         /* Extract the possible schemeIdUri : If a DASH client detects an event message box with a scheme that is not defined in MPD, the client is expected to ignore it */
         const inbandEvents = mediaInbandEvents.concat(trackInbandEvents);
         for (let i = 0, ln = inbandEvents.length; i < ln; i++) {
@@ -345,40 +344,8 @@ function BufferController(config) {
         return events;
     }
 
-    function deleteInbandEvents(data) {
-
-        if (!inbandEventFound) { //TODO Discuss why this is here. inbandEventFound is never set to true!!
-            return data;
-        }
-
-        const length = data.length;
-        const expTwo = Math.pow(256, 2);
-        const expThree = Math.pow(256, 3);
-        const modData = new Uint8Array(data.length);
-
-        let i = 0;
-        let j = 0;
-
-        while (i < length) {
-
-            let identifier = String.fromCharCode(data[i + 4], data[i + 5], data[i + 6], data[i + 7]);
-            let size = data[i] * expThree + data[i + 1] * expTwo + data[i + 2] * 256 + data[i + 3] * 1;
-
-            if (identifier != 'emsg') {
-                for (let l = i; l < i + size; l++) {
-                    modData[j] = data[l];
-                    j++;
-                }
-            }
-            i += size;
-
-        }
-
-        return modData.subarray(0, j);
-    }
-
     function hasEnoughSpaceToAppend() {
-        var totalBufferedTime = sourceBufferController.getTotalBufferedTime(buffer);
+        const totalBufferedTime = sourceBufferController.getTotalBufferedTime(buffer);
         return (totalBufferedTime < criticalBufferLevel);
     }
 
@@ -479,10 +446,6 @@ function BufferController(config) {
         return streamProcessor;
     }
 
-    function setStreamProcessor(value) {
-        streamProcessor = value;
-    }
-
     function setSeekStartTime(value) {
         seekStartTime = value;
     }
@@ -497,10 +460,6 @@ function BufferController(config) {
 
     function getBufferLevel() {
         return bufferLevel;
-    }
-
-    function getCriticalBufferLevel() {
-        return criticalBufferLevel;
     }
 
     function setMediaSource(value) {
@@ -559,12 +518,10 @@ function BufferController(config) {
         createBuffer: createBuffer,
         getType: getType,
         getStreamProcessor: getStreamProcessor,
-        setStreamProcessor: setStreamProcessor,
         setSeekStartTime: setSeekStartTime,
         getBuffer: getBuffer,
         setBuffer: setBuffer,
         getBufferLevel: getBufferLevel,
-        getCriticalBufferLevel: getCriticalBufferLevel,
         setMediaSource: setMediaSource,
         getMediaSource: getMediaSource,
         getIsBufferingCompleted: getIsBufferingCompleted,

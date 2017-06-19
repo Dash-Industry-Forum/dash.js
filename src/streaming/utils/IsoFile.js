@@ -54,11 +54,11 @@ function IsoFile() {
     * @memberof IsoFile#
     */
     function getBoxes(type) {
-        var boxData = parsedIsoFile.fetchAll(type);
-        var boxes = [];
-        var box;
+        let boxData = parsedIsoFile.fetchAll(type);
+        let boxes = [];
+        let box;
 
-        for (var i = 0, ln = boxData.length; i < ln; i++) {
+        for (let i = 0, ln = boxData.length; i < ln; i++) {
             box = convertToDashIsoBox(boxData[i]);
 
             if (box) {
@@ -84,24 +84,16 @@ function IsoFile() {
     function getLastBox() {
         if (!parsedIsoFile || !parsedIsoFile.boxes || !parsedIsoFile.boxes.length) return null;
 
-        var type = parsedIsoFile.boxes[parsedIsoFile.boxes.length - 1].type;
-        var boxes = getBoxes(type);
+        let type = parsedIsoFile.boxes[parsedIsoFile.boxes.length - 1].type;
+        let boxes = getBoxes(type);
 
         return boxes[boxes.length - 1];
-    }
-
-    /**
-    * @returns {number}
-    * @memberof IsoFile#
-    */
-    function getOffset() {
-        return parsedIsoFile._cursor.offset;
     }
 
     function convertToDashIsoBox(boxData) {
         if (!boxData) return null;
 
-        var box = new IsoBox(boxData);
+        let box = new IsoBox(boxData);
 
         if (boxData.hasOwnProperty('_incomplete')) {
             box.isComplete = !boxData._incomplete;
@@ -114,8 +106,7 @@ function IsoFile() {
         getBox: getBox,
         getBoxes: getBoxes,
         setData: setData,
-        getLastBox: getLastBox,
-        getOffset: getOffset
+        getLastBox: getLastBox
     };
 
     return instance;

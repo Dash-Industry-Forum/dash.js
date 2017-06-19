@@ -37,15 +37,15 @@ function EmbeddedTextHtmlRender() {
 
     /* HTML Rendering functions */
     function checkIndent(chars) {
-        var line = '';
+        let line = '';
 
-        for (var c = 0; c < chars.length; ++c) {
-            var uc = chars[c];
+        for (let c = 0; c < chars.length; ++c) {
+            let uc = chars[c];
             line += uc.uchar;
         }
 
-        var l = line.length;
-        var ll = line.replace(/^\s+/,'').length;
+        let l = line.length;
+        let ll = line.replace(/^\s+/,'').length;
         return l - ll;
     }
 
@@ -75,7 +75,7 @@ function EmbeddedTextHtmlRender() {
     }
 
     function getStyle(videoElement, style) {
-        var fontSize = videoElement.videoHeight / 15.0;
+        const fontSize = videoElement.videoHeight / 15.0;
         if (style) {
             return 'font-size: ' + fontSize + 'px; font-family: Menlo, Consolas, \'Cutive Mono\', monospace; color: ' + ((style.foreground) ? createRGB(style.foreground) : 'rgb(255, 255, 255)') + '; font-style: ' + (style.italics ? 'italic' : 'normal') + '; text-decoration: ' + (style.underline ? 'underline' : 'none') + '; white-space: pre; background-color: ' + ((style.background) ? createRGB(style.background) : 'transparent') + ';';
         } else {
@@ -84,11 +84,11 @@ function EmbeddedTextHtmlRender() {
     }
 
     function ltrim(s) {
-        var trimmed = s.replace(/^\s+/g, '');
+        let trimmed = s.replace(/^\s+/g, '');
         return trimmed;
     }
     function rtrim(s) {
-        var trimmed = s.replace(/\s+$/g, '');
+        let trimmed = s.replace(/\s+$/g, '');
         return trimmed;
     }
 

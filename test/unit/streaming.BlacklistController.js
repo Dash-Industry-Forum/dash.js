@@ -67,15 +67,12 @@ describe('BlacklistController', function () {
     it('should add an entry to the blacklist on receiving load failed event', () => {
         const config = {
             updateEventName: '',
-            loadFailedEventName: EVENT_NAME
+            addBlacklistEventName: EVENT_NAME
         };
         const blacklistController = BlacklistController(context).create(config);
 
         eventBus.trigger(EVENT_NAME, {
-            error: new Error(''),
-            request: {
-                serviceLocation: SERVICE_LOCATION
-            }
+            entry: SERVICE_LOCATION
         });
 
         const contains = blacklistController.contains(SERVICE_LOCATION);

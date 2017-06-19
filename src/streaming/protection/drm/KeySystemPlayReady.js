@@ -51,18 +51,18 @@ function KeySystemPlayReady() {
     let messageFormat = 'utf16';
 
     function getRequestHeadersFromMessage(message) {
-        var msg,
+        let msg,
             xmlDoc;
-        var headers = {};
-        var parser = new DOMParser();
-        var dataview = (messageFormat === 'utf16') ? new Uint16Array(message) : new Uint8Array(message);
+        let headers = {};
+        let parser = new DOMParser();
+        let dataview = (messageFormat === 'utf16') ? new Uint16Array(message) : new Uint8Array(message);
 
         msg = String.fromCharCode.apply(null, dataview);
         xmlDoc = parser.parseFromString(msg, 'application/xml');
 
-        var headerNameList = xmlDoc.getElementsByTagName('name');
-        var headerValueList = xmlDoc.getElementsByTagName('value');
-        for (var i = 0; i < headerNameList.length; i++) {
+        let headerNameList = xmlDoc.getElementsByTagName('name');
+        let headerValueList = xmlDoc.getElementsByTagName('value');
+        for (let i = 0; i < headerNameList.length; i++) {
             headers[headerNameList[i].childNodes[0].nodeValue] = headerValueList[i].childNodes[0].nodeValue;
         }
         // some versions of the PlayReady CDM return 'Content' instead of 'Content-Type'.
@@ -76,17 +76,17 @@ function KeySystemPlayReady() {
     }
 
     function getLicenseRequestFromMessage(message) {
-        var msg,
+        let msg,
             xmlDoc;
-        var licenseRequest = null;
-        var parser = new DOMParser();
-        var dataview = (messageFormat === 'utf16') ? new Uint16Array(message) : new Uint8Array(message);
+        let licenseRequest = null;
+        let parser = new DOMParser();
+        let dataview = (messageFormat === 'utf16') ? new Uint16Array(message) : new Uint8Array(message);
 
         msg = String.fromCharCode.apply(null, dataview);
         xmlDoc = parser.parseFromString(msg, 'application/xml');
 
         if (xmlDoc.getElementsByTagName('Challenge')[0]) {
-            var Challenge = xmlDoc.getElementsByTagName('Challenge')[0].childNodes[0].nodeValue;
+            let Challenge = xmlDoc.getElementsByTagName('Challenge')[0].childNodes[0].nodeValue;
             if (Challenge) {
                 licenseRequest = BASE64.decode(Challenge);
             }
@@ -96,29 +96,29 @@ function KeySystemPlayReady() {
 
     function getLicenseServerURLFromInitData(initData) {
         if (initData) {
-            var data = new DataView(initData);
-            var numRecords = data.getUint16(4, true);
-            var offset = 6;
-            var parser = new DOMParser();
+            let data = new DataView(initData);
+            let numRecords = data.getUint16(4, true);
+            let offset = 6;
+            let parser = new DOMParser();
 
-            for (var i = 0; i < numRecords; i++) {
+            for (let i = 0; i < numRecords; i++) {
                 // Parse the PlayReady Record header
-                var recordType = data.getUint16(offset, true);
+                let recordType = data.getUint16(offset, true);
                 offset += 2;
-                var recordLength = data.getUint16(offset, true);
+                let recordLength = data.getUint16(offset, true);
                 offset += 2;
                 if (recordType !== 0x0001) {
                     offset += recordLength;
                     continue;
                 }
 
-                var recordData = initData.slice(offset, offset + recordLength);
-                var record = String.fromCharCode.apply(null, new Uint16Array(recordData));
-                var xmlDoc = parser.parseFromString(record, 'application/xml');
+                let recordData = initData.slice(offset, offset + recordLength);
+                let record = String.fromCharCode.apply(null, new Uint16Array(recordData));
+                let xmlDoc = parser.parseFromString(record, 'application/xml');
 
                 // First try <LA_URL>
                 if (xmlDoc.getElementsByTagName('LA_URL')[0]) {
-                    var laurl = xmlDoc.getElementsByTagName('LA_URL')[0].childNodes[0].nodeValue;
+                    let laurl = xmlDoc.getElementsByTagName('LA_URL')[0].childNodes[0].nodeValue;
                     if (laurl) {
                         return laurl;
                     }
@@ -126,7 +126,7 @@ function KeySystemPlayReady() {
 
                 // Optionally, try <LUI_URL>
                 if (xmlDoc.getElementsByTagName('LUI_URL')[0]) {
-                    var luiurl = xmlDoc.getElementsByTagName('LUI_URL')[0].childNodes[0].nodeValue;
+                    let luiurl = xmlDoc.getElementsByTagName('LUI_URL')[0].childNodes[0].nodeValue;
                     if (luiurl) {
                         return luiurl;
                     }
@@ -146,13 +146,13 @@ function KeySystemPlayReady() {
         // *   Protection SystemID (16)
         // *   protection system data size (4) - length of decoded PROHeader
         // *   decoded PROHeader data from MPD file
-        var PSSHBoxType = new Uint8Array([0x70, 0x73, 0x73, 0x68, 0x00, 0x00, 0x00, 0x00]); //'PSSH' 8 bytes
-        var playreadySystemID = new Uint8Array([0x9a, 0x04, 0xf0, 0x79, 0x98, 0x40, 0x42, 0x86, 0xab, 0x92, 0xe6, 0x5b, 0xe0, 0x88, 0x5f, 0x95]);
+        let PSSHBoxType = new Uint8Array([0x70, 0x73, 0x73, 0x68, 0x00, 0x00, 0x00, 0x00]); //'PSSH' 8 bytes
+        let playreadySystemID = new Uint8Array([0x9a, 0x04, 0xf0, 0x79, 0x98, 0x40, 0x42, 0x86, 0xab, 0x92, 0xe6, 0x5b, 0xe0, 0x88, 0x5f, 0x95]);
 
-        var byteCursor = 0;
-        var uint8arraydecodedPROHeader = null;
+        let byteCursor = 0;
+        let uint8arraydecodedPROHeader = null;
 
-        var PROSize,
+        let PROSize,
             PSSHSize,
             PSSHBoxBuffer,
             PSSHBox,

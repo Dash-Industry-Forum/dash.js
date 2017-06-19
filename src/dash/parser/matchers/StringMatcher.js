@@ -68,7 +68,7 @@ class StringMatcher extends BaseMatcher {
                     'Reporting':                  [ 'value', 'id' ]
                 };
                 if (stringAttrsInElements.hasOwnProperty(nodeName)) {
-                    var attrNames = stringAttrsInElements[nodeName];
+                    let attrNames = stringAttrsInElements[nodeName];
                     if (attrNames !== undefined) {
                         return attrNames.indexOf(attr.name) >= 0;
                     } else {
