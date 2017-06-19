@@ -38,7 +38,6 @@ describe("RepresentationController", function () {
     const manifestModel = ManifestModel(context).getInstance();
     const mediaPlayerModel = MediaPlayerModel(context).getInstance();
     const mediaController = MediaController(context).getInstance();
-    mediaController.initialize();
     const timelineConverter = TimelineConverter(context).getInstance();
     const dashManifestModel = DashManifestModel(context).getInstance({
         mediaController: mediaController,

@@ -48,8 +48,8 @@ function DashAdapter() {
         voAdaptations;
 
     function setup() {
-        periods = [];
-        adaptations = {};
+        voPeriods = [];
+        voAdaptations = {};
     }
 
     function setConfig(config) {

@@ -32,6 +32,7 @@ import LiveEdgeFinder from './utils/LiveEdgeFinder';
 import StreamProcessor from './StreamProcessor';
 import EventController from './controllers/EventController';
 import FragmentController from './controllers/FragmentController';
+import VideoModel from './models/VideoModel';
 import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import Debug from '../core/Debug';
@@ -57,7 +58,6 @@ function Stream(config) {
     let domStorage = config.domStorage;
     let metricsModel = config.metricsModel;
     let dashMetrics = config.dashMetrics;
-    let videoModel = config.videoModel;
     let abrController = config.abrController;
     let playbackController = config.playbackController;
     let mediaController = config.mediaController;
@@ -75,14 +75,8 @@ function Stream(config) {
         protectionController,
         liveEdgeFinder,
         fragmentController,
-<<<<<<< HEAD
         eventController,
-        textController,
         trackChangedEvent;
-=======
-        eventController;
-
->>>>>>> TextController and SourceBufferController - Uniformize the way they are given to others controllers
 
     function setup() {
         streamProcessors = [];
@@ -95,8 +89,7 @@ function Stream(config) {
         liveEdgeFinder = LiveEdgeFinder(context).getInstance();
         fragmentController = FragmentController(context).create({
             mediaPlayerModel: mediaPlayerModel,
-            metricsModel: metricsModel,
-            errHandler: errHandler
+            metricsModel: metricsModel
         });
 
         eventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
@@ -262,7 +255,7 @@ function Stream(config) {
 
         if (!!mediaInfo.contentProtection && !capabilities.supportsEncryptedMedia()) {
             errHandler.capabilityError('encryptedmedia');
-        } else if (!capabilities.supportsCodec(videoModel.getElement(), codec)) {
+        } else if (!capabilities.supportsCodec(VideoModel(context).getInstance().getElement(), codec)) {
             msg = type + 'Codec (' + codec + ') is not supported.';
             errHandler.manifestError(msg, 'codec', manifestModel.getValue());
             log(msg);
@@ -310,7 +303,6 @@ function Stream(config) {
     function createStreamProcessor(mediaInfo, mediaSource, optionalSettings) {
         let streamProcessor = StreamProcessor(context).create({
             type: getMimeTypeOrType(mediaInfo),
-            errHandler: errHandler,
             mimeType: mediaInfo.mimeType,
             timelineConverter: timelineConverter,
             adapter: adapter,

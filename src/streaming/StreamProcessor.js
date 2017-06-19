@@ -172,7 +172,6 @@ function StreamProcessor(config) {
         });
         unregisterAllExternalController();
 
-        eventController = null;
         stream = null;
         dynamic = null;
         mediaInfo = null;

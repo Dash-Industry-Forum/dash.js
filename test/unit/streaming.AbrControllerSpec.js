@@ -19,7 +19,6 @@ describe("AbrController", function () {
     const defaultQuality = AbrController.QUALITY_DEFAULT;
     const metricsModel = MetricsModel(context).getInstance();
     const mediaController = MediaController(context).getInstance();
-    mediaController.initialize();
     const timelineConverter = TimelineConverter(context).getInstance();
     const dashManifestModel = DashManifestModel(context).getInstance({
         mediaController: mediaController,
@@ -35,13 +34,12 @@ describe("AbrController", function () {
     const representationCount = dummyMediaInfo.representationCount;
     const streamProcessor = objectsHelper.getDummyStreamProcessor(testType);
 
-    abrCtrl.registerStreamType('video', streamProcessor);
-
     abrCtrl.setConfig({
         metricsModel: metricsModel,
         dashMetrics: dashMetrics,
         videoModel: videoModel
     });
+    abrCtrl.registerStreamType('video', streamProcessor);
 
     it("should update top quality index", function () {
         const expectedTopQuality = representationCount - 1;

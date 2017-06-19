@@ -96,9 +96,6 @@ function RepresentationController(config) {
         if (config.timelineConverter) {
             timelineConverter = config.timelineConverter;
         }
-        if (config.manifestModel) {
-            manifestModel = config.manifestModel;
-        }
     }
 
     function initialize() {

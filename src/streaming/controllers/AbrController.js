@@ -93,7 +93,6 @@ function AbrController() {
         qualityDict = {};
         bitrateDict = {};
         ratioDict = {};
-        averageThroughputDict = {};
         abandonmentStateDict = {};
         streamProcessorDict = {};
         switchHistoryDict = {};

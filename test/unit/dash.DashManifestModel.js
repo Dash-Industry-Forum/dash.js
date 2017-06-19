@@ -7,7 +7,6 @@ const expect = require('chai').expect;
 
 const context = {};
 const mediaController = MediaController(context).getInstance();
-mediaController.initialize();
 const timelineConverter = TimelineConverter(context).getInstance();
 const dashManifestModel = DashManifestModel(context).getInstance({
     mediaController: mediaController,

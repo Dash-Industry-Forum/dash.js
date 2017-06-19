@@ -177,8 +177,6 @@ function MediaPlayer() {
             adapter: adapter
         });
 
-        mediaController.initialize();
-
         restoreDefaultUTCTimingSources();
         setAutoPlay(AutoPlay !== undefined ? AutoPlay : true);
 
@@ -2076,7 +2074,6 @@ function MediaPlayer() {
             videoModel: videoModel
         });
 
-        abrController.createAbrRulesCollection();
         abrController.setConfig({
             streamController: streamController,
             domStorage: domStorage,
@@ -2088,6 +2085,7 @@ function MediaPlayer() {
             videoModel: videoModel,
             adapter: adapter
         });
+        abrController.createAbrRulesCollection();
 
         textController.setConfig({
             errHandler: errHandler,
@@ -2098,7 +2096,6 @@ function MediaPlayer() {
             videoModel: videoModel
         });
         // initialises controller
-        mediaController.initialize();
         streamController.initialize(autoPlay, protectionData);
     }
 
