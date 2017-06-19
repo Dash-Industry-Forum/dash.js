@@ -477,7 +477,7 @@ function StreamController() {
             adapter.updatePeriods(manifest);
             let streamInfo = adapter.getStreamsInfo(manifest)[0];
             let mediaInfo = (
-                adapter.getMediaInfoForType(manifest, streamInfo, Constants.VIDEO) ||
+                adapter.getMediaInfoForType(streamInfo, Constants.VIDEO) ||
                 adapter.getMediaInfoForType(streamInfo, Constants.AUDIO)
             );
 

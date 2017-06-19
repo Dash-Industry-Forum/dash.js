@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
+import Constants from '../streaming/constants/Constants';
 import Events from '../core/events/Events';
 import MediaPlayerEvents from '../streaming/MediaPlayerEvents';
 import EventBus from '../core/EventBus';
@@ -123,9 +123,9 @@ function MssHandler(config) {
             if (streamController) {
                 let processors = streamController.getActiveStreamProcessors();
                 processors.forEach(function (processor) {
-                    if (processor.getType() === 'video' ||
-                        processor.getType() === 'audio' ||
-                        processor.getType() === 'fragmentedText') {
+                    if (processor.getType() === Constants.VIDEO ||
+                        processor.getType() === Constants.AUDIO ||
+                        processor.getType() === Constants.FRAGMENTED_TEXT) {
 
                         let fragmentInfoController = MssFragmentInfoController(context).create({
                             streamProcessor: processor,

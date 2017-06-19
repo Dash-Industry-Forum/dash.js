@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+import Constants from '../constants/Constants';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 // throughput generally stored in kbit/s
@@ -56,9 +57,9 @@ function ThroughputHistory(config) {
     }
 
     function isCachedResponse(mediaType, latencyMs, downloadTimeMs) {
-        if (mediaType === 'video') {
+        if (mediaType === Constants.VIDEO) {
             return downloadTimeMs < CACHE_LOAD_THRESHOLD_VIDEO;
-        } else if (mediaType === 'audio') {
+        } else if (mediaType === Constants.AUDIO) {
             return downloadTimeMs < CACHE_LOAD_THRESHOLD_AUDIO;
         }
     }

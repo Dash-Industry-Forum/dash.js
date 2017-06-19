@@ -203,7 +203,7 @@ function AbrController() {
     }
 
     function onMetricAdded(e) {
-        if (e.metric === 'HttpList' && e.value && e.value.type === HTTPRequest.MEDIA_SEGMENT_TYPE && (e.mediaType === 'audio' || e.mediaType === 'video')) {
+        if (e.metric === 'HttpList' && e.value && e.value.type === HTTPRequest.MEDIA_SEGMENT_TYPE && (e.mediaType === Constants.AUDIO || e.mediaType === Constants.VIDEO)) {
             throughputHistory.push(e.mediaType, e.value, useDeadTimeLatency);
         }
     }

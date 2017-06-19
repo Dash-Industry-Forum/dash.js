@@ -28,9 +28,8 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import {
-    HTTPRequest
-} from '../vo/metrics/HTTPRequest';
+import Constants from '../constants/Constants';
+import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import DataChunk from '../vo/DataChunk';
 import FragmentModel from '../models/FragmentModel';
 import FragmentLoader from '../FragmentLoader';
@@ -117,7 +116,7 @@ function FragmentController( config ) {
         const streamInfo = request.mediaInfo.streamInfo;
 
         if (e.error ) {
-            if (e.request.mediaType === 'audio' || e.request.mediaType === 'video') {
+            if (e.request.mediaType === Constants.AUDIO || e.request.mediaType === Constants.VIDEO) {
                 // add service location to blacklist controller - only for audio or video. text should not set errors
                 eventBus.trigger(Events.SERVICE_LOCATION_BLACKLIST_ADD, {entry: e.request.serviceLocation});
             }
