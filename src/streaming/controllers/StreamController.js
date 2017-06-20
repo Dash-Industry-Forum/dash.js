@@ -95,18 +95,11 @@ function StreamController() {
         audioTrackDetected;
 
     function setup() {
-        protectionController = null;
-        streams = [];
         timeSyncController = TimeSyncController(context).getInstance();
         baseURLController = BaseURLController(context).getInstance();
         mediaSourceController = MediaSourceController(context).getInstance();
-        autoPlay = true;
-        isStreamSwitchingInProgress = false;
-        isPaused = false;
-        initialPlayback = true;
-        playListMetrics = null;
-        hasMediaError = false;
-        hasInitialisationError = false;
+
+        resetInitialSettings();
     }
 
     function initialize(autoPl, protData) {
@@ -706,8 +699,23 @@ function StreamController() {
         }
     }
 
+    function resetInitialSettings() {
+        streams = [];
+        protectionController = null;
+        isStreamSwitchingInProgress = false;
+        activeStream = null;
+        hasMediaError = false;
+        hasInitialisationError = false;
+        videoTrackDetected = undefined;
+        initialPlayback = true;
+        isPaused = false;
+        autoPlay = true;
+        playListMetrics = null;
+    }
+
     function reset() {
         checkSetConfigCall();
+
         timeSyncController.reset();
 
         flushPlaylistMetrics(
@@ -716,12 +724,10 @@ function StreamController() {
             PlayListTrace.USER_REQUEST_STOP_REASON
         );
 
-        for (let i = 0, ln = streams.length; i < ln; i++) {
+        for (let i = 0, ln = streams ? streams.length : 0; i < ln; i++) {
             let stream = streams[i];
             stream.reset(hasMediaError);
         }
-
-        streams = [];
 
         eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
         eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
@@ -740,13 +746,6 @@ function StreamController() {
         manifestLoader.reset();
         timelineConverter.reset();
         initCache.reset();
-        isStreamSwitchingInProgress = false;
-        activeStream = null;
-        hasMediaError = false;
-        hasInitialisationError = false;
-        videoTrackDetected = undefined;
-        initialPlayback = true;
-        isPaused = false;
 
         if (mediaSource) {
             mediaSourceController.detachMediaSource(videoModel);
@@ -765,6 +764,7 @@ function StreamController() {
         }
 
         eventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
+        resetInitialSettings();
     }
 
     function onMetricAdded(e) {
