@@ -10,32 +10,9 @@ const context = {};
 const dashAdapter = DashAdapter(context).getInstance();
 
 describe('DashAdapter', function () {
-    it("should throw an exception when attempting to call getEventsFor While the reset function was not called", function () {
-        expect(dashAdapter.getEventsFor.bind(dashAdapter)).to.throw("reset has not been called!");
-    });
-
-    it("should throw an exception when attempting to call updateData While the reset function was not called", function () {
-        expect(dashAdapter.updateData.bind(dashAdapter)).to.throw("reset has not been called!");
-    });
-
-    it("should throw an exception when attempting to call getMediaInfoForType While the reset function was not called", function () {
-        expect(dashAdapter.getMediaInfoForType.bind(dashAdapter)).to.throw("reset has not been called!");
-    });
-
-    it("should throw an exception when attempting to call getDataForMedia While the reset function was not called", function () {
-        expect(dashAdapter.getDataForMedia.bind(dashAdapter)).to.throw("reset has not been called!");
-    });
-
-    it("should throw an exception when attempting to call getStreamsInfo While the reset function was not called, and externalManifest parameter is not defined", function () {
-        expect(dashAdapter.getStreamsInfo.bind(dashAdapter)).to.throw("reset has not been called!");
-    });
 
     it("should throw an exception when attempting to call getStreamsInfo While the setConfig function was not called, and externalManifest parameter is defined", function () {
         expect(dashAdapter.getStreamsInfo.bind(dashAdapter,{})).to.throw('setConfig function has to be called previously');
-    });
-
-    it("should throw an exception when attempting to call getAllMediaInfoForType While the reset function was not called, and externalManifest parameter is not defined", function () {
-        expect(dashAdapter.getAllMediaInfoForType.bind(dashAdapter)).to.throw("reset has not been called!");
     });
 
     it("should throw an exception when attempting to call getAllMediaInfoForType While the setConfig function was not called, and externalManifest parameter is defined", function () {
@@ -72,7 +49,7 @@ describe('DashAdapter', function () {
 
         expect(mediaInfo).to.be.null;                // jshint ignore:line
     });
-    
+
     it("should return null when getDataForMedia is called and voPeriods is an empty array, mediaInfo parameter is undefined", function () {
         const adaptation = dashAdapter.getDataForMedia();
 
@@ -108,7 +85,7 @@ describe('DashAdapter', function () {
 
         expect(event).to.be.an('object');
     });
-    
+
     describe('streamProcessor parameter is missing or malformed', () => {
         it("should throw an error when getInitRequest is called and streamProcessor parameter is undefined", function () {
             expect(dashAdapter.getInitRequest.bind(dashAdapter)).to.be.throw('streamProcessor parameter is missing or malformed!');
@@ -129,7 +106,7 @@ describe('DashAdapter', function () {
         it("should throw an error when getIndexHandlerTime is called and streamProcessor parameter is undefined", function () {
             expect(dashAdapter.getIndexHandlerTime.bind(dashAdapter)).to.be.throw('streamProcessor parameter is missing or malformed!');
         });
-        
+
         it("should throw an error when setIndexHandlerTime is called and streamProcessor parameter is undefined", function () {
             expect(dashAdapter.setIndexHandlerTime.bind(dashAdapter)).to.be.throw('streamProcessor parameter is missing or malformed!');
         });
@@ -157,7 +134,7 @@ describe('DashAdapter', function () {
         it("should throw an error when getIndexHandlerTime is called and streamProcessor is an empty object", function () {
             expect(dashAdapter.getIndexHandlerTime.bind(dashAdapter, {})).to.be.throw('streamProcessor parameter is missing or malformed!');
         });
-        
+
         it("should throw an error when setIndexHandlerTime is called and streamProcessor is an empty object", function () {
             expect(dashAdapter.setIndexHandlerTime.bind(dashAdapter, {})).to.be.throw('streamProcessor parameter is missing or malformed!');
         });
@@ -166,14 +143,14 @@ describe('DashAdapter', function () {
             expect(dashAdapter.updateData.bind(dashAdapter, {})).to.be.throw('streamProcessor parameter is missing or malformed!');
         });
     });
-    
+
     describe('streamProcessor parameter is properly defined, without its attributes', () => {
         const streamProcessor = StreamProcessor(context).create({
-                        mimeType: 'video/mp4',
-                        timelineConverter: {},
-                        adapter: dashAdapter,
-                        baseURLController: {}
-                    });
+            mimeType: 'video/mp4',
+            timelineConverter: {},
+            adapter: dashAdapter,
+            baseURLController: {}
+        });
 
         it("should return null when getInitRequest is called and streamProcessor is defined, without its attributes", function () {
             const initRequest = dashAdapter.getInitRequest(streamProcessor, 0);
@@ -204,7 +181,7 @@ describe('DashAdapter', function () {
 
             expect(time).to.be.NaN;                // jshint ignore:line  
         });
-        
+
         it("should not throw an error when setIndexHandlerTime is called and streamProcessor is defined, without its attributes", function () {
             expect(dashAdapter.setIndexHandlerTime.bind(dashAdapter, streamProcessor)).to.not.throw();
         });
@@ -227,10 +204,10 @@ describe('DashAdapter', function () {
             expect(dashAdapter.getCurrentRepresentationInfo.bind(dashAdapter)).to.be.throw('representationController parameter is missing or malformed!');
         });
     });
-    
+
     describe('representationController parameter is properly defined, without its attributes', () => {
         Events.extend(MediaPlayerEvents);
-        const representationController = RepresentationController(context).create();
+        const representationController = RepresentationController(context).create({streamProcessor:{}});
 
         it("should throw an error when getRepresentationInfoForQuality is called and representationController parameter is defined, but quality is not a number", function () {
             expect(dashAdapter.getRepresentationInfoForQuality.bind(dashAdapter, representationController, {})).to.be.throw('quality argument is not an integer');
