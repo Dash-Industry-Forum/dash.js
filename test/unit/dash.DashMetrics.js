@@ -5,10 +5,10 @@ import ManifestModel from '../../src/streaming/models/ManifestModel';
 const expect = require('chai').expect;
 
 const context = {};
-const dashMetrics = DashMetrics(context).getInstance();
 const mpdHelper = new MpdHelper();
 const mpd = mpdHelper.getMpd('static');
 const manifestModel = ManifestModel(context).getInstance();
+const dashMetrics = DashMetrics(context).getInstance({dashManifestModel : {}, manifestModel:manifestModel });
 
 manifestModel.setValue(mpd);
 
@@ -55,7 +55,7 @@ describe('DashMetrics', function () {
 
         expect(requestsQueue).to.be.null;  // jshint ignore:line
     });
-    
+
     describe('getCurrentHttpRequest', () => {
         it('should return null when getCurrentHttpRequest is called and metrics is undefined', () => {
             const currentHttpRequest = dashMetrics.getCurrentHttpRequest();
@@ -110,7 +110,7 @@ describe('DashMetrics', function () {
             expect(lastMpdRequestHeader).to.be.null;  // jshint ignore:line
         });
     });
-    
+
     describe('getLatestFragmentRequestHeaderValueByID', () => {
         it('should return null when getLatestFragmentRequestHeaderValueByID is called and metrics and id are undefined', () => {
             const lastFragmentRequestHeader = dashMetrics.getLatestFragmentRequestHeaderValueByID();

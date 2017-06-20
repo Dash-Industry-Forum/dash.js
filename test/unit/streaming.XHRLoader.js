@@ -7,9 +7,34 @@ const expect = require('chai').expect;
 const sinon = require('sinon');
 
 const context = {};
-let xhrLoader = XHRLoader(context).create({});
+class xhrMediaPlayerModelMock {
+    getRetryAttemptsForType() {
+        return 0;
+    }
+
+    getXHRWithCredentialsForType() {
+        return false;
+    }
+
+    getRetryIntervalForType() {
+        return 1000;
+    }
+};
+
+let errHandler;
+let metricsModel;
+let requestModifier;
+let mediaPlayerModelMock;
+let xhrLoader;
 
 describe('XHRLoader', function () {
+
+    beforeEach(function() {
+        mediaPlayerModelMock = new xhrMediaPlayerModelMock();
+        errHandler = ErrorHandler(context).getInstance();
+        metricsModel = MetricsModel(context).getInstance();
+        requestModifier = RequestModifier(context).getInstance();
+    })
     beforeEach(function() {
 
         global.XMLHttpRequest = sinon.useFakeXMLHttpRequest();
@@ -24,19 +49,29 @@ describe('XHRLoader', function () {
         global.XMLHttpRequest.restore();
     });
     
+    afterEach(function() {
+        mediaPlayerModelMock = null;
+    });
+
     it('should throw an exception when attempting to call load and config parameter has not been set properly', () => {   
+        xhrLoader = XHRLoader(context).create({mediaPlayerModel: mediaPlayerModelMock});
         expect(xhrLoader.load.bind(xhrLoader, {request : {}})).to.throw('config object is not correct or missing');
     });
 
     it('should call success and complete callback when load is called successfully', () => {
         let self = this.ctx;
-        const errHandler = ErrorHandler(context).getInstance();
-        const metricsModel = MetricsModel(context).getInstance();
-        const requestModifier = RequestModifier(context).getInstance();
         const callbackSucceeded = sinon.spy();
         const callbackCompleted = sinon.spy();
-        xhrLoader = XHRLoader(context).create({errHandler : errHandler, metricsModel : metricsModel, requestModifier : requestModifier});
-        xhrLoader.load({request : {checkExistenceOnly : true}, success : callbackSucceeded, complete : callbackCompleted});
+        const callbackError = sinon.spy();
+
+        xhrLoader = XHRLoader(context).create({
+            errHandler : errHandler,
+            metricsModel : metricsModel,
+            requestModifier : requestModifier,
+            mediaPlayerModel: mediaPlayerModelMock
+        });
+
+        xhrLoader.load({request : {checkExistenceOnly : true}, success : callbackSucceeded, complete : callbackCompleted, error : callbackError});
         expect(self.requests.length).to.equal(1);
         self.requests[0].respond(200);
         sinon.assert.calledOnce(callbackSucceeded);
@@ -49,6 +84,12 @@ describe('XHRLoader', function () {
         const callbackSucceeded = sinon.spy();
         const callbackCompleted = sinon.spy();
         const callbackError = sinon.spy();
+        xhrLoader = XHRLoader(context).create({
+            errHandler : errHandler,
+            metricsModel : metricsModel,
+            requestModifier : requestModifier,
+            mediaPlayerModel: mediaPlayerModelMock
+        });
         xhrLoader.load({request : {checkExistenceOnly : true}, success : callbackSucceeded, complete : callbackCompleted, error : callbackError});
         expect(self.requests.length).to.equal(1);
         self.requests[0].respond(404);

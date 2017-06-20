@@ -48,8 +48,7 @@ function DashAdapter() {
         voAdaptations;
 
     function setup() {
-        voPeriods = [];
-        voAdaptations = {};
+        reset();
     }
 
     function setConfig(config) {
@@ -65,7 +64,6 @@ function DashAdapter() {
     }
 
     function getAdaptationForMediaInfo(mediaInfo) {
-        checkResetCall();
 
         if (!mediaInfo || !mediaInfo.streamInfo || !mediaInfo.streamInfo.id || !voAdaptations[mediaInfo.streamInfo.id]) return null;
         return voAdaptations[mediaInfo.streamInfo.id][mediaInfo.index];
@@ -189,7 +187,6 @@ function DashAdapter() {
     }
 
     function getMediaInfoForType(streamInfo, type) {
-        checkResetCall();
 
         if (voPeriods.length === 0) {
             return null;
@@ -226,7 +223,6 @@ function DashAdapter() {
             voLocalPeriods = dashManifestModel.getRegularPeriods(mpd);
 
         }else {
-            checkResetCall();
             if (voPeriods.length > 0) {
                 manifest = voPeriods[0].mpd.manifest;
             } else {
@@ -318,8 +314,6 @@ function DashAdapter() {
             const mpd = dashManifestModel.getMpd(externalManifest);
 
             voLocalPeriods = dashManifestModel.getRegularPeriods(mpd);
-        } else {
-            checkResetCall();
         }
 
         for (let i = 0; i < voLocalPeriods.length; i++) {
@@ -333,12 +327,6 @@ function DashAdapter() {
         if (!streamProcessor || !streamProcessor.hasOwnProperty('getRepresentationController') || !streamProcessor.hasOwnProperty('getIndexHandler') ||
             !streamProcessor.hasOwnProperty('getMediaInfo') || !streamProcessor.hasOwnProperty('getType') || !streamProcessor.hasOwnProperty('getStreamInfo')) {
             throw new Error('streamProcessor parameter is missing or malformed!');
-        }
-    }
-
-    function checkResetCall() {
-        if (!voPeriods && !voAdaptations) {
-            throw new Error('reset has not been called!');
         }
     }
 
@@ -435,7 +423,6 @@ function DashAdapter() {
     }
 
     function updateData(streamProcessor) {
-        checkResetCall();
         checkStreamProcessor(streamProcessor);
 
         const selectedVoPeriod = getPeriodForStreamInfo(streamProcessor.getStreamInfo(), voPeriods);
@@ -496,7 +483,6 @@ function DashAdapter() {
     }
 
     function getEventsFor(info, streamProcessor) {
-        checkResetCall();
 
         let events = [];
 

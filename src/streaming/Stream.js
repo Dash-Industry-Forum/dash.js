@@ -89,7 +89,8 @@ function Stream(config) {
         liveEdgeFinder = LiveEdgeFinder(context).getInstance();
         fragmentController = FragmentController(context).create({
             mediaPlayerModel: mediaPlayerModel,
-            metricsModel: metricsModel
+            metricsModel: metricsModel,
+            errHandler: errHandler
         });
 
         eventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
@@ -319,7 +320,8 @@ function Stream(config) {
             mediaController: mediaController,
             streamController: streamController,
             textController: textController,
-            sourceBufferController: sourceBufferController
+            sourceBufferController: sourceBufferController,
+            errHandler: errHandler
         });
 
         let allMediaForType = adapter.getAllMediaInfoForType(streamInfo, mediaInfo.type);
