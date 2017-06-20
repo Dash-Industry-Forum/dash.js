@@ -24,9 +24,11 @@ For help, join our [Slack channel](https://dashif-slack.azurewebsites.net), our 
 ## Reference players
 The released [pre-built reference players](http://reference.dashif.org/dash.js/) are publicly accessible if you want direct access without writing any Javascript. 
 
-The [nightly build of the /dev branch reference player](http://mediapm.edgesuite.net/dash/public/nightly/samples/dash-if-reference-player/index.html), is pre-release but contains the latest fixes. It is a good place to start if you are debugging playback problems. 
+The [nightly build of the /dev branch reference player](http://reference.dashif.org/dash.js/nightly/samples/dash-if-reference-player/index.html), is pre-release but contains the latest fixes. It is a good place to start if you are debugging playback problems. 
 
-A nightly build of the latest minified files are also available: [dash.all.min.js](http://mediapm.edgesuite.net/dash/public/nightly/dist/dash.all.min.js) and its debug version  [dash.all.debug.js](http://mediapm.edgesuite.net/dash/public/nightly/dist/dash.all.debug.js).
+A nightly build of the latest minified files are also available: [dash.all.min.js](http://reference.dashif.org/dash.js/nightly/dist/dash.all.min.js) and its debug version  [dash.all.debug.js](http://reference.dashif.org/dash.js/nightly/dist/dash.all.debug.js).
+
+All these reference builds and mninfied files are available under both http and https.
 
 ## Quick Start for Users
 If you just want a DASH player to use and don't need to see the code or commit to this project, then follow the instructions below. If you are a developer and want to work with this code base, then skip down to the "Quick Start for Developers" section.
@@ -50,7 +52,7 @@ Put the following code in your web page
 ```
 Then place your page under a web server (do not try to run from the file system) and load it via http in a MSE-enabled browser. The video will start automatically. Switch out the manifest URL to your own manifest once you have everything working. If you prefer to use the latest code from this project (versus the last tagged release) then see the "Quick Start for Developers" section below.
 
-View the /samples folder for many other examples of embedding and using the player.
+View the /samples folder for many other examples of embedding and using the player. If you are interested in captioning support, which requires some additional UI elements, then please view the [captioning examples](https://github.com/Dash-Industry-Forum/dash.js/tree/development/samples/captioning).
 
 ## Quick Start for Developers
 
