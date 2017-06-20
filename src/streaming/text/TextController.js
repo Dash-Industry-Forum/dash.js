@@ -60,7 +60,8 @@ function TextController() {
         textSourceBuffer = TextSourceBuffer(context).getInstance();
 
         textTracks.initialize();
-        allTracksAreDisabled = false;
+
+        reset();
     }
 
     function setConfig(config) {
