@@ -36,7 +36,6 @@
  * @implements KeySystem
  */
 import CommonEncryption from '../CommonEncryption';
-import Error from '../../vo/Error';
 
 import FactoryMaker from '../../../core/FactoryMaker';
 import BASE64 from '../../../../externals/base64';

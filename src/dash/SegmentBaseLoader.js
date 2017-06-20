@@ -30,7 +30,7 @@
  */
 import RequestModifier from '../streaming/utils/RequestModifier';
 import Segment from './vo/Segment';
-import Error from '../streaming/vo/Error';
+import DashJSError from '../streaming/vo/DashJSError';
 import Events from '../core/events/Events';
 import EventBus from '../core/EventBus';
 import BoxParser from '../streaming/utils/BoxParser';
@@ -314,7 +314,7 @@ function SegmentBaseLoader() {
         if (segments) {
             eventBus.trigger(Events.SEGMENTS_LOADED, {segments: segments, representation: representation, mediaType: type});
         } else {
-            eventBus.trigger(Events.SEGMENTS_LOADED, {segments: null, representation: representation, mediaType: type, error: new Error(null, 'error loading segments', null)});
+            eventBus.trigger(Events.SEGMENTS_LOADED, {segments: null, representation: representation, mediaType: type, error: new DashJSError(null, 'error loading segments', null)});
         }
     }
 
