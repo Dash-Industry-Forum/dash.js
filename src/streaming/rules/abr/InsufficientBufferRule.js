@@ -94,7 +94,7 @@ function InsufficientBufferRule(config) {
             const mediaInfo = rulesContext.getMediaInfo();
             const abrController = rulesContext.getAbrController();
             const throughputHistory = abrController.getThroughputHistory();
-            const trackInfo = rulesContext.getTrackInfo();
+            const trackInfo = rulesContext.getRepresentationInfo();
             const fragmentDuration = trackInfo.fragmentDuration;
 
             let bufferLevel = dashMetrics.getCurrentBufferLevel(metrics);
