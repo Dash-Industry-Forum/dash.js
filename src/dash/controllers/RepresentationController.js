@@ -62,10 +62,7 @@ function RepresentationController() {
         manifestModel;
 
     function setup() {
-        realAdaptation = null;
-        realAdaptationIndex = -1;
-        updating = true;
-        voAvailableRepresentations = [];
+        resetInitialSettings();
 
         eventBus.on(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
         eventBus.on(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
@@ -128,14 +125,7 @@ function RepresentationController() {
         return currentVoRepresentation;
     }
 
-    function reset() {
-
-        eventBus.off(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
-        eventBus.off(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
-        eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
-        eventBus.off(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
-
-
+    function resetInitialSettings() {
         realAdaptation = null;
         realAdaptationIndex = -1;
         updating = true;
@@ -147,6 +137,16 @@ function RepresentationController() {
         timelineConverter = null;
         dashManifestModel = null;
         dashMetrics = null;
+    }
+
+    function reset() {
+
+        eventBus.off(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
+        eventBus.off(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
+        eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
+        eventBus.off(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
+
+        resetInitialSettings();
     }
 
     function updateData(newRealAdaptation, voAdaptation, type) {
