@@ -32,7 +32,7 @@
  * @class
  * @ignore
  */
-class Error {
+class DashJSError {
     constructor(code, message, data) {
         this.code = code || null;
         this.message = message || null;
@@ -40,4 +40,4 @@ class Error {
     }
 }
 
-export default Error;
+export default DashJSError;

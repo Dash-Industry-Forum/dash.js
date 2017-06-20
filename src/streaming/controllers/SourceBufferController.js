@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Error from '../vo/Error';
+import DashJSError from '../vo/DashJSError';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
@@ -300,7 +300,7 @@ function SourceBufferController(config) {
                 eventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {
                     buffer: buffer,
                     bytes: bytes,
-                    error: new Error(err.code, err.message, null)
+                    error: new DashJSError(err.code, err.message, null)
                 });
             }
         });
@@ -327,7 +327,7 @@ function SourceBufferController(config) {
                     buffer: buffer,
                     from: start,
                     to: end,
-                    error: new Error(err.code, err.message, null)
+                    error: new DashJSError(err.code, err.message, null)
                 });
             }
         });

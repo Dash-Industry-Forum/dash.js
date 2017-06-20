@@ -1,5 +1,4 @@
 import FactoryMaker from '../../core/FactoryMaker';
-import Error from '../vo/Error';
 
 /**
  * Creates an instance of an EBMLParser class which implements a large subset

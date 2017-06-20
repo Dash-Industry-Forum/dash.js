@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import Error from './../vo/Error';
+import DashJSError from './../vo/DashJSError';
 import EventBus from './../../core/EventBus';
 import Events from './../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
@@ -276,7 +276,7 @@ function TimeSyncController() {
 
     function completeTimeSyncSequence(failed, time, offset) {
         setIsSynchronizing(false);
-        eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED, { time: time, offset: offset, error: failed ? new Error(TIME_SYNC_FAILED_ERROR_CODE) : null });
+        eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED, { time: time, offset: offset, error: failed ? new DashJSError(TIME_SYNC_FAILED_ERROR_CODE) : null });
     }
 
     function attemptSync(sources, sourceIndex) {

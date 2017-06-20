@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Error from './vo/Error';
+import DashJSError from './vo/DashJSError';
 import XHRLoader from './XHRLoader';
 import {HTTPRequest} from './vo/metrics/HTTPRequest';
 import TextRequest from './vo/TextRequest';
@@ -64,7 +64,7 @@ function XlinkLoader(config) {
                 resolveObject: resolveObject,
                 error: content || resolveToZero ?
                     null :
-                    new Error(
+                    new DashJSError(
                         XLINK_LOADER_ERROR_LOADING_FAILURE,
                         'Failed loading Xlink element: ' + url
                     )

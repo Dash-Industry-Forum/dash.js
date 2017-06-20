@@ -32,7 +32,7 @@ import XlinkController from './controllers/XlinkController';
 import XHRLoader from './XHRLoader';
 import URLUtils from './utils/URLUtils';
 import TextRequest from './vo/TextRequest';
-import Error from './vo/Error';
+import DashJSError from './vo/DashJSError';
 import {HTTPRequest} from './vo/metrics/HTTPRequest';
 import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
@@ -142,7 +142,7 @@ function ManifestLoader(config) {
                     eventBus.trigger(
                         Events.INTERNAL_MANIFEST_LOADED, {
                             manifest: null,
-                            error: new Error(
+                            error: new DashJSError(
                                 MANIFEST_LOADER_ERROR_PARSING_FAILURE,
                                 `Failed detecting manifest type: ${url}`
                             )
@@ -175,7 +175,7 @@ function ManifestLoader(config) {
                     eventBus.trigger(
                         Events.INTERNAL_MANIFEST_LOADED, {
                             manifest: null,
-                            error: new Error(
+                            error: new DashJSError(
                                 MANIFEST_LOADER_ERROR_PARSING_FAILURE,
                                 MANIFEST_LOADER_MESSAGE_PARSING_FAILURE
                             )
@@ -187,7 +187,7 @@ function ManifestLoader(config) {
                 eventBus.trigger(
                     Events.INTERNAL_MANIFEST_LOADED, {
                         manifest: null,
-                        error: new Error(
+                        error: new DashJSError(
                             MANIFEST_LOADER_ERROR_LOADING_FAILURE,
                             `Failed loading manifest: ${url}, ${errorText}`
                         )
