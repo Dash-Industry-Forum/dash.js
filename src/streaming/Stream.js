@@ -54,16 +54,11 @@ function Stream(config) {
     let capabilities = config.capabilities;
     let errHandler = config.errHandler;
     let timelineConverter = config.timelineConverter;
-    let baseURLController = config.baseURLController;
-    let domStorage = config.domStorage;
     let metricsModel = config.metricsModel;
-    let dashMetrics = config.dashMetrics;
     let abrController = config.abrController;
     let playbackController = config.playbackController;
     let mediaController = config.mediaController;
     let textController = config.textController;
-    let sourceBufferController = config.sourceBufferController;
-    let streamController = config.streamController;
 
     let instance,
         streamProcessors,
@@ -175,15 +170,15 @@ function Stream(config) {
     }
 
     function getDuration() {
-        return streamInfo.duration;
+        return streamInfo ? streamInfo.duration : NaN;
     }
 
     function getStartTime() {
-        return streamInfo.start;
+        return streamInfo ? streamInfo.start : NaN;
     }
 
     function getId() {
-        return streamInfo.id;
+        return streamInfo ? streamInfo.id : NaN;
     }
 
     function getStreamInfo() {
@@ -202,12 +197,19 @@ function Stream(config) {
         return (getMediaInfo(type) !== null);
     }
 
+    function checkConfig() {
+        if (!abrController || !abrController.hasOwnProperty('getBitrateList') || !adapter || !adapter.hasOwnProperty('getAllMediaInfoForType') || !adapter.hasOwnProperty('getEventsFor')) {
+            throw new Error('Missing config parameter(s)');
+        }
+    }
+
     /**
      * @param {string} type
      * @returns {Array}
      * @memberof Stream#
      */
     function getBitrateListFor(type) {
+        checkConfig();
         let mediaInfo = getMediaInfo(type);
         return abrController.getBitrateList(mediaInfo);
     }
@@ -311,16 +313,16 @@ function Stream(config) {
             dashManifestModel: dashManifestModel,
             mediaPlayerModel: mediaPlayerModel,
             metricsModel: metricsModel,
-            dashMetrics: dashMetrics,
-            baseURLController: baseURLController,
+            dashMetrics: config.dashMetrics,
+            baseURLController: config.baseURLController,
             stream: instance,
             abrController: abrController,
-            domStorage: domStorage,
+            domStorage: config.domStorage,
             playbackController: playbackController,
             mediaController: mediaController,
-            streamController: streamController,
+            streamController: config.streamController,
             textController: textController,
-            sourceBufferController: sourceBufferController,
+            sourceBufferController: config.sourceBufferController,
             errHandler: errHandler
         });
 
@@ -396,6 +398,7 @@ function Stream(config) {
     }
 
     function initializeMedia(mediaSource) {
+        checkConfig();
         let events;
 
         eventController = EventController(context).create();
