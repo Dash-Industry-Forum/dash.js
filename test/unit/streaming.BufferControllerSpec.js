@@ -10,6 +10,7 @@ import AbrController from '../../src/streaming/controllers/AbrController';
 import EventBus from '../../src/core/EventBus';
 import Events from '../../src/core/events/Events';
 import InitCache from '../../src/streaming/utils/InitCache';
+import Debug from '../../src/core/Debug';
 
 const chai = require('chai');
 const expect = chai.expect;
@@ -39,6 +40,10 @@ class SourceBufferControllerMock {
         this.buffer = chunk.bytes;
     }
 
+    getBufferLength() {
+        return this.bufferLength;
+    }
+
     removeSourceBuffer() {
         this.sourceBufferRemoved = true;
     }
@@ -48,6 +53,15 @@ class SourceBufferControllerMock {
         this.aborted = false;
         this.sourceBufferRemoved = false;
         this.buffer = undefined;
+        this.bufferLength = 20;
+    }
+}
+
+class StreamControllerMock {
+    getActiveStreamInfo() {
+        return {
+            id: 'some_id'
+        };
     }
 }
 
@@ -82,14 +96,18 @@ class StreamProcessorMock {
     }
 
     getScheduleController() {
-        return {};
+        return {
+            getBufferTarget() {
+                return 20;
+            }
+        };
     }
 
     getFragmentModel() {
         return 'fragmentModel';
     }
     isDynamic() {
-        return true
+        return true;
     }
 
     getRepresentationInfoForQuality(quality) {
@@ -103,30 +121,71 @@ class StreamProcessorMock {
 }
 
 class AdapterMock {
+    constructor() {
+        this.metricsList = {
+            BUFFER_STATE: 'BUFFER_STATE'
+        };
+    }
     getEventsFor() {
         return null;
     }
 }
-describe.only("BufferController", function () {
 
+class MetricsModelMock {
+    constructor() {
+        this.bufferState = 0;
+        this.bufferLevel = 0;
+    }
+    addBufferState(type, bufferState, bufferTarget) {
+        this.bufferState = bufferState;
+    }
+
+    addBufferLevel(type, date, bufferLevel ) {
+        this.bufferState = bufferLevel;
+    }
+}
+
+class PlaybackControllerMock {
+    constructor() {
+        this.time = 10;
+    }
+
+    getTime() {
+        return this.time;
+    }
+
+
+}
+
+describe("BufferController", function () {
+
+    // disbale log
+
+    let debug = Debug(context).getInstance();
+    debug.setLogToBrowserConsole(false);
     let streamProcessor = new StreamProcessorMock();
     let sourceBufferMock = new SourceBufferControllerMock();
+    let streamControllerMock = new StreamControllerMock();
     let adapterMock = new AdapterMock();
+    let metricsModelMock = new MetricsModelMock();
+    let playbackControllerMock = new PlaybackControllerMock();
 
-    let bufferController
+    let bufferController;
+
     beforeEach(function () {
 
         bufferController = BufferController(context).create({
-            metricsModel: MetricsModel(context).getInstance(),
+            metricsModel: metricsModelMock,
             sourceBufferController: sourceBufferMock,
             errHandler: ErrorHandler(context).getInstance(),
-            streamController: StreamController(context).getInstance(),
+            streamController: streamControllerMock,
             mediaController: MediaController(context).getInstance(),
             adapter: adapterMock,
             textController: TextController(context).getInstance(),
             abrController: AbrController(context).getInstance(),
             streamProcessor: streamProcessor,
-            type: testType
+            type: testType,
+            playbackController: playbackControllerMock
         });
     });
 
@@ -503,6 +562,63 @@ describe.only("BufferController", function () {
 
             // send event
             eventBus.trigger(Events.QUALITY_CHANGE_REQUESTED, event)
+        });
+    });
+
+    describe('Event PLAYBACK_SEEKING handler', function () {
+        it('should trigger BUFFER_LEVEL_UPDATED event', function (done) {
+
+            // init test
+            bufferController.initialize({});
+            let buffer = bufferController.createBuffer('mediaInfos');
+            expect(buffer).to.exist;
+
+            let onBufferLevelUpdated = function (e) {
+                eventBus.off(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, this);
+                expect(e.bufferLevel).to.equal(sourceBufferMock.getBufferLength());
+
+                done();
+            }
+            eventBus.on(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, this);
+
+            // send event
+            eventBus.trigger(Events.PLAYBACK_SEEKING)
+        });
+
+        it('should trigger BUFFER_LEVEL_STATE_CHANGED event', function (done) {
+
+            // init test
+            bufferController.initialize({});
+            let buffer = bufferController.createBuffer('mediaInfos');
+            expect(buffer).to.exist;
+
+            let onBufferStateChanged = function (e) {
+                eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferStateChanged, this);
+                expect(e.state).to.equal('bufferLoaded');
+
+                done();
+            }
+            eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferStateChanged, this);
+
+            // send event
+            eventBus.trigger(Events.PLAYBACK_SEEKING)
+        });
+
+        it('should trigger BUFFER_LOADED event if enough buffer', function (done) {
+
+            // init test
+            bufferController.initialize({});
+            let buffer = bufferController.createBuffer('mediaInfos');
+            expect(buffer).to.exist;
+
+            let onBufferLoaded = function (e) {
+                eventBus.off(Events.BUFFER_LOADED, onBufferLoaded, this);
+                done();
+            }
+            eventBus.on(Events.BUFFER_LOADED, onBufferLoaded, this);
+
+            // send event
+            eventBus.trigger(Events.PLAYBACK_SEEKING)
         });
     });
 
