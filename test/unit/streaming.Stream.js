@@ -39,4 +39,8 @@ describe("Stream", function () {
      it('should throw an error when getBitrateListFor is called and config object has not been set properly', function () {
         expect(stream.getBitrateListFor.bind(stream)).to.be.throw('Missing config parameter(s)');
     });
+
+    it('should throw an error when activate is called and config object has not been set properly', function () {
+        expect(stream.activate.bind(stream)).to.be.throw('Missing config parameter(s)');
+    });
 });

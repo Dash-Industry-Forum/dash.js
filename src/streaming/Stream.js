@@ -198,7 +198,7 @@ function Stream(config) {
     }
 
     function checkConfig() {
-        if (!abrController || !abrController.hasOwnProperty('getBitrateList')) {
+        if (!abrController || !abrController.hasOwnProperty('getBitrateList') || !adapter || !adapter.hasOwnProperty('getAllMediaInfoForType') || !adapter.hasOwnProperty('getEventsFor')) {
             throw new Error('Missing config parameter(s)');
         }
     }
@@ -398,6 +398,7 @@ function Stream(config) {
     }
 
     function initializeMedia(mediaSource) {
+        checkConfig();
         let events;
 
         eventController = EventController(context).create();
