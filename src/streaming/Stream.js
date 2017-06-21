@@ -55,13 +55,10 @@ function Stream(config) {
     let errHandler = config.errHandler;
     let timelineConverter = config.timelineConverter;
     let metricsModel = config.metricsModel;
-    let dashMetrics = config.dashMetrics;
     let abrController = config.abrController;
     let playbackController = config.playbackController;
     let mediaController = config.mediaController;
     let textController = config.textController;
-    let sourceBufferController = config.sourceBufferController;
-    let streamController = config.streamController;
 
     let instance,
         streamProcessors,
@@ -200,12 +197,19 @@ function Stream(config) {
         return (getMediaInfo(type) !== null);
     }
 
+    function checkConfig() {
+        if (!abrController || !abrController.hasOwnProperty('getBitrateList')) {
+            throw new Error('Missing config parameter(s)');
+        }
+    }
+
     /**
      * @param {string} type
      * @returns {Array}
      * @memberof Stream#
      */
     function getBitrateListFor(type) {
+        checkConfig();
         let mediaInfo = getMediaInfo(type);
         return abrController.getBitrateList(mediaInfo);
     }
@@ -309,16 +313,16 @@ function Stream(config) {
             dashManifestModel: dashManifestModel,
             mediaPlayerModel: mediaPlayerModel,
             metricsModel: metricsModel,
-            dashMetrics: dashMetrics,
+            dashMetrics: config.dashMetrics,
             baseURLController: config.baseURLController,
             stream: instance,
             abrController: abrController,
             domStorage: config.domStorage,
             playbackController: playbackController,
             mediaController: mediaController,
-            streamController: streamController,
+            streamController: config.streamController,
             textController: textController,
-            sourceBufferController: sourceBufferController,
+            sourceBufferController: config.sourceBufferController,
             errHandler: errHandler
         });
 

@@ -35,4 +35,8 @@ describe("Stream", function () {
 
         expect(duration).to.be.NaN;                // jshint ignore:line
     });
+
+     it('should throw an error when getBitrateListFor is called and config object has not been set properly', function () {
+        expect(stream.getBitrateListFor.bind(stream)).to.be.throw('Missing config parameter(s)');
+    });
 });
