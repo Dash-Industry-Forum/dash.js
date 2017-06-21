@@ -54,8 +54,6 @@ function Stream(config) {
     let capabilities = config.capabilities;
     let errHandler = config.errHandler;
     let timelineConverter = config.timelineConverter;
-    let baseURLController = config.baseURLController;
-    let domStorage = config.domStorage;
     let metricsModel = config.metricsModel;
     let dashMetrics = config.dashMetrics;
     let abrController = config.abrController;
@@ -175,15 +173,15 @@ function Stream(config) {
     }
 
     function getDuration() {
-        return streamInfo.duration;
+        return streamInfo ? streamInfo.duration : NaN;
     }
 
     function getStartTime() {
-        return streamInfo.start;
+        return streamInfo ? streamInfo.start : NaN;
     }
 
     function getId() {
-        return streamInfo.id;
+        return streamInfo ? streamInfo.id : NaN;
     }
 
     function getStreamInfo() {
@@ -312,10 +310,10 @@ function Stream(config) {
             mediaPlayerModel: mediaPlayerModel,
             metricsModel: metricsModel,
             dashMetrics: dashMetrics,
-            baseURLController: baseURLController,
+            baseURLController: config.baseURLController,
             stream: instance,
             abrController: abrController,
-            domStorage: domStorage,
+            domStorage: config.domStorage,
             playbackController: playbackController,
             mediaController: mediaController,
             streamController: streamController,
