@@ -1,40 +1,43 @@
-(function(global){
-    var specHelper,
-        objectsHelper,
-        voHelper,
-        mpdHelper;
+class Helpers {
 
-    global.Helpers =  {
-        setSpecHelper: function(value) {
-            specHelper = value;
-        },
+    constructor() {
+        this.specHelper = undefined;
+        this.objectsHelper = undefined;
+        this.voHelper = undefined;
+        this.mpdHelper = undefined;
+    }
 
-        getSpecHelper: function() {
-            return specHelper;
-        },
+    setSpecHelper(value) {
+        this.specHelper = value;
+    }
 
-        setMpdHelper: function(value) {
-            mpdHelper = value;
-        },
+    getSpecHelper() {
+        return this.specHelper;
+    }
 
-        getMpdHelper: function() {
-            return mpdHelper;
-        },
+    setMpdHelper(value) {
+        this.mpdHelper = value;
+    }
 
-        setObjectsHelper: function(value) {
-            objectsHelper = value;
-        },
+    getMpdHelper() {
+        return this.mpdHelper;
+    }
 
-        getObjectsHelper: function() {
-            return objectsHelper;
-        },
+    setObjectsHelper(value) {
+        this.objectsHelper = value;
+    }
 
-        setVOHelper: function(value) {
-            voHelper = value;
-        },
+    getObjectsHelper() {
+        return this.objectsHelper;
+    }
 
-        getVOHelper: function() {
-            return voHelper;
-        }
-    };
-}(window));
+    setVOHelper(value) {
+        this.voHelper = value;
+    }
+
+    getVOHelper() {
+        return this.voHelper;
+    }
+}
+
+export default Helpers;
