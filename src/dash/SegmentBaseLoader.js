@@ -84,7 +84,14 @@ function SegmentBaseLoader() {
         }
     }
 
+    function checkSetConfigCall() {
+        if (!baseURLController || !baseURLController.hasOwnProperty('resolve')) {
+            throw new Error('setConfig function has to be called previously');
+        }
+    }
+
     function loadInitialization(representation, loadingInfo) {
+        checkSetConfigCall();
         let initRange = null;
         let isoFile = null;
         let baseUrl = baseURLController.resolve(representation.path);
@@ -132,6 +139,7 @@ function SegmentBaseLoader() {
     }
 
     function loadSegments(representation, type, range, loadingInfo, callback) {
+        checkSetConfigCall();
         if (range && (range.start === undefined || range.end === undefined)) {
             let parts = range ? range.toString().split('-') : null;
             range = parts ? {start: parseFloat(parts[0]), end: parseFloat(parts[1])} : null;
