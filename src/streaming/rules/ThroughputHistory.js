@@ -52,8 +52,7 @@ function ThroughputHistory(config) {
         latencyDict;
 
     function setup() {
-        throughputDict = {};
-        latencyDict = {};
+        reset();
     }
 
     function isCachedResponse(mediaType, latencyMs, downloadTimeMs) {
@@ -167,7 +166,8 @@ function ThroughputHistory(config) {
     }
 
     function reset() {
-        setup();
+        throughputDict = {};
+        latencyDict = {};
     }
 
     const instance = {

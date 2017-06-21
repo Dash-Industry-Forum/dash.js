@@ -54,7 +54,7 @@ function BaseURLTreeModel() {
     const objectUtils = ObjectUtils(context).getInstance();
 
     function setup() {
-        root = new Node();
+        reset();
     }
 
     function setConfig(config) {
