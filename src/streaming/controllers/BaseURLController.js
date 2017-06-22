@@ -40,6 +40,7 @@ import Events from '../../core/events/Events';
 function BaseURLController() {
 
     let instance;
+    let dashManifestModel;
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
@@ -66,6 +67,10 @@ function BaseURLController() {
 
         if (config.baseURLSelector) {
             baseURLSelector = config.baseURLSelector;
+        }
+
+        if (config.dashManifestModel) {
+            dashManifestModel = config.dashManifestModel;
         }
     }
 
@@ -105,6 +110,15 @@ function BaseURLController() {
     }
 
     function initialize(data) {
+
+        // report config to baseURLTreeModel and baseURLSelector
+        baseURLTreeModel.setConfig({
+            dashManifestModel: dashManifestModel
+        });
+        baseURLSelector.setConfig({
+            dashManifestModel: dashManifestModel
+        });
+
         update(data);
     }
 

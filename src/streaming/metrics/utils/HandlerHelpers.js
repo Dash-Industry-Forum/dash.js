@@ -34,7 +34,7 @@ import FactoryMaker from '../../../core/FactoryMaker';
 function HandlerHelpers() {
     return {
         reconstructFullMetricName: function (key, n, type) {
-            var mn = key;
+            let mn = key;
 
             if (n) {
                 mn += '(' + n;

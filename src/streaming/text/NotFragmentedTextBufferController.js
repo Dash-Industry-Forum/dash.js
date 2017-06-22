@@ -40,14 +40,14 @@ function NotFragmentedTextBufferController(config) {
 
     let sourceBufferController = config.sourceBufferController;
     let errHandler = config.errHandler;
+    let type = config.type;
+    let streamProcessor = config.streamProcessor;
 
     let instance,
         isBufferingCompleted,
         initialized,
         mediaSource,
         buffer,
-        type,
-        streamProcessor,
         seekStartTime,
         representationController,
         initCache;
@@ -57,8 +57,6 @@ function NotFragmentedTextBufferController(config) {
         initialized = false;
         mediaSource = null;
         buffer = null;
-        type = null;
-        streamProcessor = null;
         representationController = null;
         isBufferingCompleted = false;
 
@@ -66,10 +64,8 @@ function NotFragmentedTextBufferController(config) {
         eventBus.on(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
     }
 
-    function initialize(Type, source, StreamProcessor) {
-        type = Type;
+    function initialize(source) {
         setMediaSource(source);
-        streamProcessor = StreamProcessor;
         representationController = streamProcessor.getRepresentationController();
         initCache = InitCache(context).getInstance();
     }
@@ -85,7 +81,7 @@ function NotFragmentedTextBufferController(config) {
 
             if (!initialized) {
                 if (buffer.hasOwnProperty('initialize')) {
-                    buffer.initialize(type, this);
+                    buffer.initialize(type, streamProcessor);
                 }
                 initialized = true;
             }
@@ -116,10 +112,6 @@ function NotFragmentedTextBufferController(config) {
         return mediaSource;
     }
 
-    function setStreamProcessor(value) {
-        streamProcessor = value;
-    }
-
     function getStreamProcessor() {
         return streamProcessor;
     }
@@ -129,10 +121,6 @@ function NotFragmentedTextBufferController(config) {
     }
 
     function getBufferLevel() {
-        return 0;
-    }
-
-    function getCriticalBufferLevel() {
         return 0;
     }
 
@@ -186,12 +174,10 @@ function NotFragmentedTextBufferController(config) {
         createBuffer: createBuffer,
         getType: getType,
         getStreamProcessor: getStreamProcessor,
-        setStreamProcessor: setStreamProcessor,
         setSeekStartTime: setSeekStartTime,
         getBuffer: getBuffer,
         setBuffer: setBuffer,
         getBufferLevel: getBufferLevel,
-        getCriticalBufferLevel: getCriticalBufferLevel,
         setMediaSource: setMediaSource,
         getMediaSource: getMediaSource,
         getIsBufferingCompleted: getIsBufferingCompleted,

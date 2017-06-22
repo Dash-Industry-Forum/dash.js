@@ -3,11 +3,17 @@ import VoHelper from './helpers/VOHelper';
 import MpdHelper from './helpers/MPDHelper';
 import EventBus from '../../src/core/EventBus';
 import RepresentationController from '../../src/dash/controllers/RepresentationController';
+import MediaController from '../../src/streaming/controllers/MediaController';
 import ManifestModel from '../../src/streaming/models/ManifestModel';
+import MediaPlayerModel from '../../src/streaming/models/MediaPlayerModel';
 import Events from '../../src/core/events/Events';
 import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
+import DashManifestModel from '../../src/dash/models/DashManifestModel';
+import VideoModel from '../../src/streaming/models/VideoModel';
+import TimelineConverter from '../../src/dash/utils/TimelineConverter';
 import SpecHelper from './helpers/SpecHelper';
 import AbrController from '../../src/streaming/controllers/AbrController';
+import DOMStorage from '../../src/streaming/utils/DOMStorage';
 
 const chai = require('chai'),
       spies = require('chai-spies');
@@ -30,17 +36,40 @@ describe("RepresentationController", function () {
     const streamProcessor = objectsHelper.getDummyStreamProcessor(testType);
     const eventBus = EventBus(context).getInstance();
     const manifestModel = ManifestModel(context).getInstance();
+    const mediaPlayerModel = MediaPlayerModel(context).getInstance();
+    const mediaController = MediaController(context).getInstance();
+    const timelineConverter = TimelineConverter(context).getInstance();
+    const dashManifestModel = DashManifestModel(context).getInstance({
+        mediaController: mediaController,
+        timelineConverter: timelineConverter
+    });
+    const videoModel = VideoModel(context).getInstance();
+
 
     Events.extend(MediaPlayerEvents);
 
     manifestModel.setValue(mpd);
 
     const abrController = AbrController(context).getInstance();
-    abrController.initialize(testType, streamProcessor);
+    const domStorage = DOMStorage(context).getInstance({
+        mediaPlayerModel: mediaPlayerModel
+    });
 
-    const representationController = RepresentationController(context).create();
-    representationController.initialize(streamProcessor);
-    representationController.setConfig({abrController: abrController});
+    abrController.setConfig({
+        domStorage: domStorage,
+        mediaPlayerModel: mediaPlayerModel,
+        videoModel: videoModel
+    });
+    abrController.registerStreamType(testType, streamProcessor);
+
+    const representationController = RepresentationController(context).create({streamProcessor : streamProcessor});
+    representationController.initialize();
+    representationController.setConfig({
+        abrController: abrController,
+        domStorage: domStorage,
+        dashManifestModel: dashManifestModel,
+        manifestModel: manifestModel
+    });
 
     it("should not contain data before it is set", function () {
         // Act

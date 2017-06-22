@@ -30,10 +30,8 @@
  */
 
 import FragmentModel from '../models/FragmentModel';
-import MediaPlayerModel from '../models/MediaPlayerModel';
 import SourceBufferController from './SourceBufferController';
 import AbrController from './AbrController';
-import PlaybackController from './PlaybackController';
 import MediaController from './MediaController';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
@@ -51,13 +49,17 @@ function BufferController(config) {
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
     const metricsModel = config.metricsModel;
-    const manifestModel = config.manifestModel;
+    const mediaPlayerModel = config.mediaPlayerModel;
     const sourceBufferController = config.sourceBufferController;
     const errHandler = config.errHandler;
     const streamController = config.streamController;
     const mediaController = config.mediaController;
     const adapter = config.adapter;
     const textController = config.textController;
+    const abrController = config.abrController;
+    const playbackController = config.playbackController;
+    const type = config.type;
+    let streamProcessor = config.streamProcessor;
 
     let instance,
         log,
@@ -68,7 +70,6 @@ function BufferController(config) {
         mediaSource,
         maxAppendedIndex,
         lastIndex,
-        type,
         buffer,
         bufferState,
         appendedBytesInfo,
@@ -76,12 +77,6 @@ function BufferController(config) {
         appendingMediaChunk,
         isAppendingInProgress,
         isPruningInProgress,
-        inbandEventFound,
-        playbackController,
-        streamProcessor,
-        abrController,
-        scheduleController,
-        mediaPlayerModel,
         initCache,
         seekStartTime;
 
@@ -99,18 +94,12 @@ function BufferController(config) {
         appendingMediaChunk = false;
         isAppendingInProgress = false;
         isPruningInProgress = false;
-        inbandEventFound = false;
     }
 
-    function initialize(Type, Source, StreamProcessor) {
-        type = Type;
+    function initialize(Source) {
         setMediaSource(Source);
-        streamProcessor = StreamProcessor;
-        mediaPlayerModel = MediaPlayerModel(context).getInstance();
-        playbackController = PlaybackController(context).getInstance();
-        abrController = AbrController(context).getInstance();
+
         initCache = InitCache(context).getInstance();
-        scheduleController = streamProcessor.getScheduleController();
         requiredQuality = abrController.getQualityFor(type, streamProcessor.getStreamInfo());
 
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
@@ -137,7 +126,7 @@ function BufferController(config) {
             sourceBuffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
 
             if (sourceBuffer && sourceBuffer.hasOwnProperty('initialize')) {
-                sourceBuffer.initialize(type, this);
+                sourceBuffer.initialize(type, streamProcessor);
             }
         } catch (e) {
             errHandler.mediaSourceError('Error creating ' + type + ' source buffer.');
@@ -174,9 +163,8 @@ function BufferController(config) {
         const bytes = chunk.bytes;
         const quality = chunk.quality;
         const currentRepresentation = streamProcessor.getRepresentationInfoForQuality(quality);
-        const manifest = manifestModel.getValue();
-        const eventStreamMedia = adapter.getEventsFor(manifest, currentRepresentation.mediaInfo, streamProcessor);
-        const eventStreamTrack = adapter.getEventsFor(manifest, currentRepresentation, streamProcessor);
+        const eventStreamMedia = adapter.getEventsFor(currentRepresentation.mediaInfo, streamProcessor);
+        const eventStreamTrack = adapter.getEventsFor(currentRepresentation, streamProcessor);
 
         if (eventStreamMedia && eventStreamMedia.length > 0 || eventStreamTrack && eventStreamTrack.length > 0) {
             const request = streamProcessor.getFragmentModel().getRequests({
@@ -184,11 +172,11 @@ function BufferController(config) {
                 quality: quality,
                 index: chunk.index
             })[0];
+
             const events = handleInbandEvents(bytes, request, eventStreamMedia, eventStreamTrack);
             streamProcessor.getEventController().addInbandEvents(events);
         }
 
-        chunk.bytes = deleteInbandEvents(bytes);
         appendToBuffer(chunk);
     }
 
@@ -288,7 +276,7 @@ function BufferController(config) {
 
     function addBufferMetrics() {
         if (!isActive()) return;
-        metricsModel.addBufferState(type, bufferState, scheduleController.getBufferTarget());
+        metricsModel.addBufferState(type, bufferState, streamProcessor.getScheduleController().getBufferTarget());
         metricsModel.addBufferLevel(type, new Date(), bufferLevel * 1000);
     }
 
@@ -301,6 +289,10 @@ function BufferController(config) {
     }
 
     function checkIfSufficientBuffer() {
+
+        // No need to check buffer if type is not audio or video (for example if several errors occur during text parsing, so that the buffer cannot be filled, no error must occur on video playback)
+        if (type !== 'audio' && type !== 'video') return;
+
         if (bufferLevel < STALL_THRESHOLD && !isBufferingCompleted) {
             notifyBufferStateChanged(BUFFER_EMPTY);
         } else {
@@ -324,7 +316,6 @@ function BufferController(config) {
         const eventStreams = [];
         const events = [];
 
-        inbandEventFound = false; //TODO Discuss why this is hear!
         /* Extract the possible schemeIdUri : If a DASH client detects an event message box with a scheme that is not defined in MPD, the client is expected to ignore it */
         const inbandEvents = mediaInbandEvents.concat(trackInbandEvents);
         for (let i = 0, ln = inbandEvents.length; i < ln; i++) {
@@ -345,40 +336,8 @@ function BufferController(config) {
         return events;
     }
 
-    function deleteInbandEvents(data) {
-
-        if (!inbandEventFound) { //TODO Discuss why this is here. inbandEventFound is never set to true!!
-            return data;
-        }
-
-        const length = data.length;
-        const expTwo = Math.pow(256, 2);
-        const expThree = Math.pow(256, 3);
-        const modData = new Uint8Array(data.length);
-
-        let i = 0;
-        let j = 0;
-
-        while (i < length) {
-
-            let identifier = String.fromCharCode(data[i + 4], data[i + 5], data[i + 6], data[i + 7]);
-            let size = data[i] * expThree + data[i + 1] * expTwo + data[i + 2] * 256 + data[i + 3] * 1;
-
-            if (identifier != 'emsg') {
-                for (let l = i; l < i + size; l++) {
-                    modData[j] = data[l];
-                    j++;
-                }
-            }
-            i += size;
-
-        }
-
-        return modData.subarray(0, j);
-    }
-
     function hasEnoughSpaceToAppend() {
-        var totalBufferedTime = sourceBufferController.getTotalBufferedTime(buffer);
+        const totalBufferedTime = sourceBufferController.getTotalBufferedTime(buffer);
         return (totalBufferedTime < criticalBufferLevel);
     }
 
@@ -479,10 +438,6 @@ function BufferController(config) {
         return streamProcessor;
     }
 
-    function setStreamProcessor(value) {
-        streamProcessor = value;
-    }
-
     function setSeekStartTime(value) {
         seekStartTime = value;
     }
@@ -497,10 +452,6 @@ function BufferController(config) {
 
     function getBufferLevel() {
         return bufferLevel;
-    }
-
-    function getCriticalBufferLevel() {
-        return criticalBufferLevel;
     }
 
     function setMediaSource(value) {
@@ -541,10 +492,6 @@ function BufferController(config) {
         isBufferingCompleted = false;
         isAppendingInProgress = false;
         isPruningInProgress = false;
-        playbackController = null;
-        streamProcessor = null;
-        abrController = null;
-        scheduleController = null;
 
         if (!errored) {
             sourceBufferController.abort(mediaSource, buffer);
@@ -559,12 +506,10 @@ function BufferController(config) {
         createBuffer: createBuffer,
         getType: getType,
         getStreamProcessor: getStreamProcessor,
-        setStreamProcessor: setStreamProcessor,
         setSeekStartTime: setSeekStartTime,
         getBuffer: getBuffer,
         setBuffer: setBuffer,
         getBufferLevel: getBufferLevel,
-        getCriticalBufferLevel: getCriticalBufferLevel,
         setMediaSource: setMediaSource,
         getMediaSource: getMediaSource,
         getIsBufferingCompleted: getIsBufferingCompleted,

@@ -28,16 +28,16 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-/**
- * @class
- * @ignore
- */
-class Error {
-    constructor(code, message, data) {
-        this.code = code || null;
-        this.message = message || null;
-        this.data = data || null;
+import EventsBase from '../core/events/EventsBase';
+
+class MssEvents extends EventsBase {
+
+    constructor() {
+        super();
+
+        this.FRAGMENT_INFO_LOADING_COMPLETED = 'fragmentInfoLoadingCompleted';
     }
 }
 
-export default Error;
+let mssEvents = new MssEvents();
+export default mssEvents;

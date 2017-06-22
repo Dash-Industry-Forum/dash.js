@@ -47,27 +47,34 @@ function TextBufferController(config) {
 
             // in this case, internal buffer ocntroller is a classical BufferController object
             _BufferControllerImpl = BufferController(context).create({
+                type: config.type,
                 metricsModel: config.metricsModel,
+                mediaPlayerModel: config.mediaPlayerModel,
                 manifestModel: config.manifestModel,
                 sourceBufferController: config.sourceBufferController,
                 errHandler: config.errHandler,
                 streamController: config.streamController,
                 mediaController: config.mediaController,
                 adapter: config.adapter,
-                textController: config.textController
+                textController: config.textController,
+                abrController: config.abrController,
+                playbackController: config.playbackController,
+                streamProcessor: config.streamProcessor
             });
         } else {
 
             // in this case, internal buffer controller is a not fragmented text controller  object
             _BufferControllerImpl = NotFragmentedTextBufferController(context).create({
+                type: config.type,
                 errHandler: config.errHandler,
-                sourceBufferController: config.sourceBufferController
+                sourceBufferController: config.sourceBufferController,
+                streamProcessor: config.streamProcessor
             });
         }
     }
 
-    function initialize(Type, source, StreamProcessor) {
-        return _BufferControllerImpl.initialize(Type, source, StreamProcessor);
+    function initialize(source, StreamProcessor) {
+        return _BufferControllerImpl.initialize(source, StreamProcessor);
     }
 
     /**
@@ -99,10 +106,6 @@ function TextBufferController(config) {
         _BufferControllerImpl.setMediaSource(value);
     }
 
-    function setStreamProcessor(streamProcessor) {
-        _BufferControllerImpl.setStreamProcessor(streamProcessor);
-    }
-
     function getStreamProcessor() {
         _BufferControllerImpl.getStreamProcessor();
     }
@@ -113,10 +116,6 @@ function TextBufferController(config) {
 
     function getBufferLevel() {
         return _BufferControllerImpl.getBufferLevel();
-    }
-
-    function getCriticalBufferLevel() {
-        return _BufferControllerImpl.getCriticalBufferLevel();
     }
 
     function reset(errored) {
@@ -136,12 +135,10 @@ function TextBufferController(config) {
         createBuffer: createBuffer,
         getType: getType,
         getStreamProcessor: getStreamProcessor,
-        setStreamProcessor: setStreamProcessor,
         setSeekStartTime: setSeekStartTime,
         getBuffer: getBuffer,
         setBuffer: setBuffer,
         getBufferLevel: getBufferLevel,
-        getCriticalBufferLevel: getCriticalBufferLevel,
         setMediaSource: setMediaSource,
         getMediaSource: getMediaSource,
         getIsBufferingCompleted: getIsBufferingCompleted,

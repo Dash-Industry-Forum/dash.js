@@ -49,21 +49,16 @@ function FragmentModel(config) {
     const metricsModel = config.metricsModel;
 
     let instance,
-        scheduleController,
         executedRequests,
         loadingRequests,
         fragmentLoader;
 
     function setup() {
-        scheduleController = null;
-        fragmentLoader = null;
         executedRequests = [];
         loadingRequests = [];
         eventBus.on(Events.LOADING_COMPLETED, onLoadingCompleted, instance);
-    }
 
-    function setLoader(value) {
-        fragmentLoader = value;
+        fragmentLoader = config.fragmentLoader;
     }
 
     function isFragmentLoaded(request) {
@@ -81,7 +76,7 @@ function FragmentModel(config) {
 
         const check = function (requests) {
             let isLoaded = false;
-            requests.some( req => {
+            requests.some(req => {
                 if (isEqualMedia(request, req) || isEqualInit(request, req) || isEqualComplete(request, req)) {
                     isLoaded = true;
                     return isLoaded;
@@ -90,7 +85,32 @@ function FragmentModel(config) {
             return isLoaded;
         };
 
+        if (!request) {
+            return false;
+        }
+
         return check(executedRequests);
+    }
+
+    function isFragmentLoadedOrPending(request) {
+        let isLoaded = false;
+        let i = 0;
+        let req;
+
+        // First, check if the fragment has already been loaded
+        isLoaded = isFragmentLoaded(request);
+
+        // Then, check if the fragment is about to be loeaded
+        if (!isLoaded) {
+            for (i = 0; i < loadingRequests.length; i++) {
+                req = loadingRequests[i];
+                if ((request.url === req.url) && (request.startTime === req.startTime)) {
+                    isLoaded = true;
+                }
+            }
+        }
+
+        return isLoaded;
     }
 
     /**
@@ -108,10 +128,10 @@ function FragmentModel(config) {
      */
     function getRequests(filter) {
 
-        const states = filter.state instanceof Array ? filter.state : [filter.state];
+        const states = filter ? filter.state instanceof Array ? filter.state : [filter.state] : [];
 
         let filteredRequests = [];
-        states.forEach( state => {
+        states.forEach(state => {
             const requests = getRequestsForState(state);
             filteredRequests = filteredRequests.concat(filterRequests(requests, filter));
         });
@@ -120,7 +140,7 @@ function FragmentModel(config) {
     }
 
     function removeExecutedRequestsBeforeTime(time) {
-        executedRequests = executedRequests.filter( req => isNaN(req.startTime) || req.startTime >= time );
+        executedRequests = executedRequests.filter(req => isNaN(req.startTime) || req.startTime >= time);
     }
 
     function abortRequests() {
@@ -134,7 +154,10 @@ function FragmentModel(config) {
             case FragmentRequest.ACTION_COMPLETE:
                 executedRequests.push(request);
                 addSchedulingInfoMetrics(request, FRAGMENT_MODEL_EXECUTED);
-                eventBus.trigger(Events.STREAM_COMPLETED, {request: request, fragmentModel: this});
+                eventBus.trigger(Events.STREAM_COMPLETED, {
+                    request: request,
+                    fragmentModel: this
+                });
                 break;
             case FragmentRequest.ACTION_DOWNLOAD:
                 addSchedulingInfoMetrics(request, FRAGMENT_MODEL_LOADING);
@@ -147,7 +170,10 @@ function FragmentModel(config) {
     }
 
     function loadCurrentFragment(request) {
-        eventBus.trigger(Events.FRAGMENT_LOADING_STARTED, {sender: instance, request: request});
+        eventBus.trigger(Events.FRAGMENT_LOADING_STARTED, {
+            sender: instance,
+            request: request
+        });
         fragmentLoader.load(request);
     }
 
@@ -246,9 +272,9 @@ function FragmentModel(config) {
     }
 
     instance = {
-        setLoader: setLoader,
         getRequests: getRequests,
         isFragmentLoaded: isFragmentLoaded,
+        isFragmentLoadedOrPending: isFragmentLoadedOrPending,
         removeExecutedRequestsBeforeTime: removeExecutedRequestsBeforeTime,
         abortRequests: abortRequests,
         executeRequest: executeRequest,

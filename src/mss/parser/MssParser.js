@@ -31,14 +31,13 @@
 
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
-import ErrorHandler from '../../streaming/utils/ErrorHandler';
 import BASE64 from '../../../externals/base64';
 
 function MssParser(config) {
 
     const context = this.context;
     const log = Debug(context).getInstance().log;
-    const errorHandler = ErrorHandler(context).getInstance();
+    const errorHandler = config.errHandler;
 
     const TIME_SCALE_100_NANOSECOND_UNIT = 10000000.0;
     const SUPPORTED_CODECS = ['AAC', 'AACL', 'AVC1', 'H264', 'TTML', 'DFXP'];
@@ -106,7 +105,7 @@ function MssParser(config) {
             range,
             i;
 
-        adaptationSet.id = streamIndex.getAttribute('Name');
+        adaptationSet.id = streamIndex.getAttribute('Name') ? streamIndex.getAttribute('Name') : streamIndex.getAttribute('Type');
         adaptationSet.contentType = streamIndex.getAttribute('Type');
         adaptationSet.lang = streamIndex.getAttribute('Language') || 'und';
         adaptationSet.mimeType = mimeTypeMap[adaptationSet.contentType];
@@ -475,6 +474,8 @@ function MssParser(config) {
         // In case of live streams, set availabilityStartTime property according to DVRWindowLength
         if (manifest.type === 'dynamic') {
             manifest.availabilityStartTime = new Date(manifestLoadedTime.getTime() - (manifest.timeShiftBufferDepth * 1000));
+            manifest.refreshManifestOnSwitchTrack = true;
+            manifest.doNotUpdateDVRWindowOnBufferUpdated = true; // done by Mss fragment processor
         }
 
         // Map period node to manifest root node

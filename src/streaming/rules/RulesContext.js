@@ -37,8 +37,6 @@ function RulesContext(config) {
     let abrController = config.abrController;
     let sp = config.streamProcessor;
     let representationInfo = config.streamProcessor.getCurrentRepresentationInfo();
-    let currentValue = config.currentValue;
-    let playbackIndex = config.playbackIndex;
     let switchHistory = config.switchHistory;
     let droppedFramesHistory = config.droppedFramesHistory;
     let currentRequest = config.currentRequest;
@@ -60,24 +58,12 @@ function RulesContext(config) {
         return representationInfo;
     }
 
-    function getCurrentValue() {
-        return currentValue;
-    }
-
-    function getManifestInfo() {
-        return representationInfo.mediaInfo.streamInfo.manifestInfo;
-    }
-
     function getStreamProcessor() {
         return sp;
     }
 
     function getAbrController() {
         return abrController;
-    }
-
-    function getPlaybackIndex() {
-        return playbackIndex;
     }
 
     function getSwitchHistory() {
@@ -98,10 +84,7 @@ function RulesContext(config) {
 
     instance = {
         getMediaType: getMediaType,
-        getCurrentValue: getCurrentValue,
-        getManifestInfo: getManifestInfo,
         getMediaInfo: getMediaInfo,
-        getPlaybackIndex: getPlaybackIndex,
         getDroppedFramesHistory: getDroppedFramesHistory,
         getCurrentRequest: getCurrentRequest,
         getSwitchHistory: getSwitchHistory,

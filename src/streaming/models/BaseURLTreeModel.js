@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import DashManifestModel from '../../dash/models/DashManifestModel';
 import ObjectUtils from '../utils/ObjectUtils';
 import FactoryMaker from '../../core/FactoryMaker';
 
@@ -49,13 +48,19 @@ function BaseURLTreeModel() {
 
     let instance;
     let root;
+    let dashManifestModel;
 
     const context = this.context;
-    const dashManifestModel = DashManifestModel(context).getInstance();
     const objectUtils = ObjectUtils(context).getInstance();
 
     function setup() {
         root = new Node();
+    }
+
+    function setConfig(config) {
+        if (config.dashManifestModel) {
+            dashManifestModel = config.dashManifestModel;
+        }
     }
 
     function updateChildData(node, index, element) {
@@ -105,7 +110,7 @@ function BaseURLTreeModel() {
     }
 
     function walk(callback, node) {
-        var target = node || root;
+        let target = node || root;
 
         callback(target.data);
 
@@ -133,8 +138,8 @@ function BaseURLTreeModel() {
     }
 
     function getForPath(path) {
-        var target = root;
-        var nodes = [target.data];
+        let target = root;
+        let nodes = [target.data];
 
         path.forEach(p => {
             target = target.children[p];
@@ -151,7 +156,8 @@ function BaseURLTreeModel() {
         reset: reset,
         update: update,
         getForPath: getForPath,
-        invalidateSelectedIndexes: invalidateSelectedIndexes
+        invalidateSelectedIndexes: invalidateSelectedIndexes,
+        setConfig: setConfig
     };
 
     setup();

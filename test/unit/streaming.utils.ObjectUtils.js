@@ -1,4 +1,4 @@
-import ObjectUtils from '../src/streaming/utils/ObjectUtils';
+import ObjectUtils from '../../src/streaming/utils/ObjectUtils';
 
 const expect = require('chai').expect;
 

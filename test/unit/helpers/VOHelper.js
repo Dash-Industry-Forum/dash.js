@@ -62,7 +62,7 @@ class VoHelper {
         rep.index = 0;
         rep.adaptation = this.createAdaptation(type);
         rep.fragmentInfoType = null;
-        rep.initialization = 'http://dash.edgesuite.net/envivio/dashpr/clear/video4/Header.m4s';
+        rep.initialization = 'https://dash.akamaized.net/envivio/dashpr/clear/video4/Header.m4s';
         rep.segmentDuration = 1;
         rep.timescale = 1;
         rep.startNumber = 1;
@@ -83,12 +83,12 @@ class VoHelper {
         req.quality = 0;
         req.mediaType = 'video';
         req.type = type;
-        req.url = 'http://dash.edgesuite.net/envivio/dashpr/clear/video4/Header.m4s';
+        req.url = 'https://dash.akamaized.net/envivio/dashpr/clear/video4/Header.m4s';
         req.startTime = NaN;
         req.duration = NaN;
 
         if (type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
-            req.url = 'http://dash.edgesuite.net/envivio/dashpr/clear/video4/0.m4s';
+            req.url = 'https://dash.akamaized.net/envivio/dashpr/clear/video4/0.m4s';
             req.startTime = 0;
             req.duration = 4;
             req.index = 0;

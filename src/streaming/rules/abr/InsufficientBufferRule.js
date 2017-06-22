@@ -37,54 +37,79 @@ import SwitchRequest from '../SwitchRequest.js';
 
 function InsufficientBufferRule(config) {
 
+    const INSUFFICIENT_BUFFER_SAFETY_FACTOR = 0.5;
+
     let context = this.context;
     let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
 
     let metricsModel = config.metricsModel;
+    let dashMetrics = config.dashMetrics;
 
     let instance,
-        bufferStateDict,
-        lastSwitchTime,
-        waitToSwitchTime;
+        bufferStateDict;
 
     function setup() {
         bufferStateDict = {};
-        lastSwitchTime = 0;
-        waitToSwitchTime = 1000;
         eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
     }
 
+    /*
+     * InsufficientBufferRule does not kick in before the first BUFFER_LOADED event happens. This is reset at every seek.
+     *
+     * If a BUFFER_EMPTY event happens, then InsufficientBufferRule returns switchRequest.quality=0 until BUFFER_LOADED happens.
+     *
+     * Otherwise InsufficientBufferRule gives a maximum bitrate depending on throughput and bufferLevel such that
+     * a whole fragment can be downloaded before the buffer runs out, subject to a conservative safety factor of 0.5.
+     * If the bufferLevel is low, then InsufficientBufferRule avoids rebuffering risk.
+     * If the bufferLevel is high, then InsufficientBufferRule give a high MaxIndex allowing other rules to take over.
+     */
     function getMaxIndex (rulesContext) {
-        var now = new Date().getTime();
-        var mediaType = rulesContext.getMediaType();
-        var metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
-        var lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
+        let mediaType = rulesContext.getMediaType();
+        let metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
+        let lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
         let switchRequest = SwitchRequest(context).create();
 
-        if (now - lastSwitchTime < waitToSwitchTime ||
-            lastBufferStateVO === null) {
+        if (!lastBufferStateVO || !wasFirstBufferLoadedEventTriggered(mediaType, lastBufferStateVO)) {
             return switchRequest;
         }
 
-        setBufferInfo(mediaType, lastBufferStateVO.state);
-        // After the sessions first buffer loaded event , if we ever have a buffer empty event we want to switch all the way down.
-        if (lastBufferStateVO.state === BufferController.BUFFER_EMPTY && bufferStateDict[mediaType].firstBufferLoadedEvent !== undefined) {
+        if (lastBufferStateVO.state === BufferController.BUFFER_EMPTY) {
             log('Switch to index 0; buffer is empty.');
             switchRequest.quality = 0;
             switchRequest.reason = 'InsufficientBufferRule: Buffer is empty';
+        } else {
+            const mediaInfo = rulesContext.getMediaInfo();
+            const abrController = rulesContext.getAbrController();
+            const throughputHistory = abrController.getThroughputHistory();
+            const trackInfo = rulesContext.getTrackInfo();
+            const fragmentDuration = trackInfo.fragmentDuration;
+
+            let bufferLevel = dashMetrics.getCurrentBufferLevel(metrics);
+
+            let throughput = throughputHistory.getAverageThroughput(mediaType);
+            let latency = throughputHistory.getAverageLatency(mediaType);
+
+            let bitrate = throughput * (bufferLevel / fragmentDuration) * INSUFFICIENT_BUFFER_SAFETY_FACTOR;
+
+            switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, bitrate, latency);
+            switchRequest.reason = 'InsufficientBufferRule: being conservative to avoid immediate rebuffering';
         }
 
-        lastSwitchTime = now;
         return switchRequest;
     }
 
-    function setBufferInfo(type, state) {
-        bufferStateDict[type] = bufferStateDict[type] || {};
-        bufferStateDict[type].state = state;
-        if (state === BufferController.BUFFER_LOADED && !bufferStateDict[type].firstBufferLoadedEvent) {
-            bufferStateDict[type].firstBufferLoadedEvent = true;
+    function wasFirstBufferLoadedEventTriggered(mediaType, currentBufferState) {
+        bufferStateDict[mediaType] = bufferStateDict[mediaType] || {};
+
+        let wasTriggered = false;
+        if (bufferStateDict[mediaType].firstBufferLoadedEvent) {
+            wasTriggered = true;
+        } else if (currentBufferState && currentBufferState.state === BufferController.BUFFER_LOADED) {
+            bufferStateDict[mediaType].firstBufferLoadedEvent = true;
+            wasTriggered = true;
         }
+        return wasTriggered;
     }
 
     function onPlaybackSeeking() {
@@ -94,7 +119,6 @@ function InsufficientBufferRule(config) {
     function reset() {
         eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
         bufferStateDict = {};
-        lastSwitchTime = 0;
     }
 
     instance = {

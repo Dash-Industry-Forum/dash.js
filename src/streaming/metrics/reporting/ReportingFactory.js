@@ -43,7 +43,7 @@ function ReportingFactory(config) {
     let instance;
 
     function create(entry, rangeController) {
-        var reporting;
+        let reporting;
 
         try {
             reporting = knownReportingSchemeIdUris[entry.schemeIdUri](context).create();

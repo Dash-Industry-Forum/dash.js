@@ -140,6 +140,7 @@ function Protection() {
 
         let log = config.log;
         let eventBus = config.eventBus;
+        let errHandler = config.errHandler;
         let videoElement = config.videoModel.getElement();
 
         if (videoElement.onencrypted !== undefined &&
@@ -158,7 +159,7 @@ function Protection() {
         } else if (getAPI(videoElement, APIS_ProtectionModel_01b)) {
 
             log('EME detected on this user agent! (ProtectionModel_01b)');
-            return ProtectionModel_01b(context).create({log: log, eventBus: eventBus, api: getAPI(videoElement, APIS_ProtectionModel_01b)});
+            return ProtectionModel_01b(context).create({log: log, eventBus: eventBus, errHandler: errHandler, api: getAPI(videoElement, APIS_ProtectionModel_01b)});
 
         } else {
 
@@ -170,8 +171,8 @@ function Protection() {
 
     function getAPI(videoElement, apis) {
 
-        for (var i = 0; i < apis.length; i++) {
-            var api = apis[i];
+        for (let i = 0; i < apis.length; i++) {
+            let api = apis[i];
             // detect if api is supported by browser
             // check only first function in api -> should be fine
             if (typeof videoElement[api[Object.keys(api)[0]]] !== 'function') {

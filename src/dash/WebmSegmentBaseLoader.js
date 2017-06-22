@@ -3,10 +3,11 @@ import EventBus from '../core/EventBus';
 import EBMLParser from '../streaming/utils/EBMLParser';
 import FactoryMaker from '../core/FactoryMaker';
 import Debug from '../core/Debug';
-import ErrorHandler from '../streaming/utils/ErrorHandler';
 import RequestModifier from '../streaming/utils/RequestModifier';
 import Segment from './vo/Segment';
-import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
+import {
+    HTTPRequest
+} from '../streaming/vo/metrics/HTTPRequest';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
 import XHRLoader from '../streaming/XHRLoader';
 
@@ -21,6 +22,7 @@ function WebmSegmentBaseLoader() {
         errHandler,
         requestModifier,
         metricsModel,
+        mediaPlayerModel,
         xhrLoader,
         baseURLController;
 
@@ -94,22 +96,23 @@ function WebmSegmentBaseLoader() {
     }
 
     function initialize() {
-        errHandler = ErrorHandler(context).getInstance();
         requestModifier = RequestModifier(context).getInstance();
         xhrLoader = XHRLoader(context).create({
             errHandler: errHandler,
             metricsModel: metricsModel,
+            mediaPlayerModel: mediaPlayerModel,
             requestModifier: requestModifier
         });
     }
 
     function setConfig(config) {
-        if (!config.baseURLController || !config.metricsModel) {
+        if (!config.baseURLController || !config.metricsModel || !config.mediaPlayerModel || !config.errHandler) {
             throw new Error('Missing config parameter(s)');
         }
-
         baseURLController = config.baseURLController;
         metricsModel = config.metricsModel;
+        mediaPlayerModel = config.mediaPlayerModel;
+        errHandler = config.errHandler;
     }
 
     function parseCues(ab) {
@@ -117,21 +120,23 @@ function WebmSegmentBaseLoader() {
         let cue;
         let cueSize;
         let cueTrack;
-        let ebmlParser = EBMLParser(context).create({data: ab});
+        let ebmlParser = EBMLParser(context).create({
+            data: ab
+        });
         let numSize;
 
         ebmlParser.consumeTag(WebM.Segment.Cues);
         cueSize = ebmlParser.getMatroskaCodedNum();
 
         while (ebmlParser.moreData() &&
-                ebmlParser.consumeTagAndSize(WebM.Segment.Cues.CuePoint, true)) {
+            ebmlParser.consumeTagAndSize(WebM.Segment.Cues.CuePoint, true)) {
             cue = {};
 
             cue.CueTime = ebmlParser.parseTag(WebM.Segment.Cues.CuePoint.CueTime);
 
             cue.CueTracks = [];
             while (ebmlParser.moreData() &&
-                    ebmlParser.consumeTagAndSize(WebM.Segment.Cues.CuePoint.CueTrackPositions, true)) {
+                ebmlParser.consumeTagAndSize(WebM.Segment.Cues.CuePoint.CueTrackPositions, true)) {
                 cueTrack = {};
 
                 cueTrack.Track = ebmlParser.parseTag(WebM.Segment.Cues.CuePoint.CueTrackPositions.CueTrack);
@@ -146,7 +151,7 @@ function WebmSegmentBaseLoader() {
                 // we also have to make sure we don't go beyond the end
                 // of the cues
                 if (ebmlParser.getPos() + 4 > cueSize ||
-                        !ebmlParser.consumeTag(WebM.Segment.Cues.CuePoint.CueTrackPositions.CueBlockNumber, true)) {
+                    !ebmlParser.consumeTag(WebM.Segment.Cues.CuePoint.CueTrackPositions.CueBlockNumber, true)) {
                     cue.CueTracks.push(cueTrack);
                 } else {
                     // since we have already consumed the tag, get the size of
@@ -220,19 +225,21 @@ function WebmSegmentBaseLoader() {
     }
 
     function parseEbmlHeader(data, media, theRange, callback) {
-        let ebmlParser = EBMLParser(context).create({data: data});
+        let ebmlParser = EBMLParser(context).create({
+            data: data
+        });
         let duration;
         let segments;
         let parts = theRange.split('-');
         let request = null;
         let info = {
-                url: media,
-                range: {
-                    start: parseFloat(parts[0]),
-                    end: parseFloat(parts[1])
-                },
-                request: request
-            };
+            url: media,
+            range: {
+                start: parseFloat(parts[0]),
+                end: parseFloat(parts[1])
+            },
+            request: request
+        };
         let segmentEnd;
         let segmentStart;
 
@@ -251,9 +258,9 @@ function WebmSegmentBaseLoader() {
         while (ebmlParser.moreData() &&
             !ebmlParser.consumeTagAndSize(WebM.Segment.Info, true)) {
             if (!(ebmlParser.skipOverElement(WebM.Segment.SeekHead, true) ||
-                ebmlParser.skipOverElement(WebM.Segment.Tracks, true) ||
-                ebmlParser.skipOverElement(WebM.Segment.Cues, true) ||
-                ebmlParser.skipOverElement(WebM.Void, true))) {
+                    ebmlParser.skipOverElement(WebM.Segment.Tracks, true) ||
+                    ebmlParser.skipOverElement(WebM.Segment.Cues, true) ||
+                    ebmlParser.skipOverElement(WebM.Void, true))) {
                 throw new Error('no valid top level element found');
             }
         }
@@ -264,12 +271,12 @@ function WebmSegmentBaseLoader() {
             let infoElementSize = ebmlParser.getMatroskaCodedNum();
 
             switch (infoTag) {
-            case WebM.Segment.Info.Duration.tag:
-                duration = ebmlParser[WebM.Segment.Info.Duration.parse](infoElementSize);
-                break;
-            default:
-                ebmlParser.setPos(ebmlParser.getPos() + infoElementSize);
-                break;
+                case WebM.Segment.Info.Duration.tag:
+                    duration = ebmlParser[WebM.Segment.Info.Duration.parse](infoElementSize);
+                    break;
+                default:
+                    ebmlParser.setPos(ebmlParser.getPos() + infoElementSize);
+                    break;
             }
         }
 
@@ -288,25 +295,36 @@ function WebmSegmentBaseLoader() {
             callback(null);
         };
 
-        xhrLoader.load({request: request, success: onload, error: onloadend});
+        xhrLoader.load({
+            request: request,
+            success: onload,
+            error: onloadend
+        });
 
         log('Perform cues load: ' + info.url + ' bytes=' + info.range.start + '-' + info.range.end);
     }
 
+    function checkSetConfigCall() {
+        if (!baseURLController || !baseURLController.hasOwnProperty('resolve')) {
+            throw new Error('setConfig function has to be called previously');
+        }
+    }
+
     function loadInitialization(representation, loadingInfo) {
+        checkSetConfigCall();
         let request = null;
         let baseUrl = baseURLController.resolve(representation.path);
         let media = baseUrl ? baseUrl.url : undefined;
         let initRange = representation.range.split('-');
         let info = loadingInfo || {
-                range: {
-                    start: parseFloat(initRange[0]),
-                    end: parseFloat(initRange[1])
-                },
-                request: request,
-                url: media,
-                init: true
-            };
+            range: {
+                start: parseFloat(initRange[0]),
+                end: parseFloat(initRange[1])
+            },
+            request: request,
+            url: media,
+            init: true
+        };
 
         log('Start loading initialization.');
 
@@ -315,34 +333,43 @@ function WebmSegmentBaseLoader() {
         const onload = function () {
             // note that we don't explicitly set rep.initialization as this
             // will be computed when all BaseURLs are resolved later
-            eventBus.trigger(Events.INITIALIZATION_LOADED, {representation: representation});
+            eventBus.trigger(Events.INITIALIZATION_LOADED, {
+                representation: representation
+            });
         };
 
         const onloadend = function () {
-            eventBus.trigger(Events.INITIALIZATION_LOADED, {representation: representation});
+            eventBus.trigger(Events.INITIALIZATION_LOADED, {
+                representation: representation
+            });
         };
 
-        xhrLoader.load({request: request, success: onload, error: onloadend});
+        xhrLoader.load({
+            request: request,
+            success: onload,
+            error: onloadend
+        });
 
         log('Perform init load: ' + info.url);
     }
 
     function loadSegments(representation, type, theRange, callback) {
+        checkSetConfigCall();
         let request = null;
         let baseUrl = baseURLController.resolve(representation.path);
         let media = baseUrl ? baseUrl.url : undefined;
         let bytesToLoad = 8192;
         let info = {
-                bytesLoaded: 0,
-                bytesToLoad: bytesToLoad,
-                range: {
-                    start: 0,
-                    end: bytesToLoad
-                },
-                request: request,
-                url: media,
-                init: false
-            };
+            bytesLoaded: 0,
+            bytesToLoad: bytesToLoad,
+            range: {
+                start: 0,
+                end: bytesToLoad
+            },
+            request: request,
+            url: media,
+            init: false
+        };
 
         callback = !callback ? onLoaded : callback;
         request = getFragmentRequest(info);
@@ -362,14 +389,27 @@ function WebmSegmentBaseLoader() {
             callback(null, representation, type);
         };
 
-        xhrLoader.load({request: request, success: onload, error: onloadend});
+        xhrLoader.load({
+            request: request,
+            success: onload,
+            error: onloadend
+        });
     }
 
     function onLoaded(segments, representation, type) {
         if (segments) {
-            eventBus.trigger(Events.SEGMENTS_LOADED, {segments: segments, representation: representation, mediaType: type});
+            eventBus.trigger(Events.SEGMENTS_LOADED, {
+                segments: segments,
+                representation: representation,
+                mediaType: type
+            });
         } else {
-            eventBus.trigger(Events.SEGMENTS_LOADED, {segments: null, representation: representation, mediaType: type, error: new Error(null, 'error loading segments', null)});
+            eventBus.trigger(Events.SEGMENTS_LOADED, {
+                segments: null,
+                representation: representation,
+                mediaType: type,
+                error: new Error(null, 'error loading segments', null)
+            });
         }
     }
 

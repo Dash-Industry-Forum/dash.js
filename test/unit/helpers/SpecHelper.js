@@ -16,7 +16,7 @@ class SpecHelper {
     }
 
     getDummyUrl() {
-        return dummyUrl;
+        return this.dummyUrl;
     }
 
     getExecutionDelay() {

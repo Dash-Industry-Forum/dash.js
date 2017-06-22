@@ -31,7 +31,6 @@
 
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
-import DashManifestModel from '../../dash/models/DashManifestModel';
 import BlacklistController from '../controllers/BlacklistController';
 import DVBSelector from './baseUrlResolution/DVBSelector';
 import BasicSelector from './baseUrlResolution/BasicSelector';
@@ -44,7 +43,7 @@ function BaseURLSelector() {
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
-    const dashManifestModel = DashManifestModel(context).getInstance();
+    let dashManifestModel;
 
     let instance,
         serviceLocationBlacklistController,
@@ -55,7 +54,7 @@ function BaseURLSelector() {
     function setup() {
         serviceLocationBlacklistController = BlacklistController(context).create({
             updateEventName:        Events.SERVICE_LOCATION_BLACKLIST_CHANGED,
-            loadFailedEventName:    Events.FRAGMENT_LOADING_COMPLETED
+            addBlacklistEventName:    Events.SERVICE_LOCATION_BLACKLIST_ADD
         });
 
         basicSelector = BasicSelector(context).create({
@@ -72,6 +71,9 @@ function BaseURLSelector() {
     function setConfig(config) {
         if (config.selector) {
             selector = config.selector;
+        }
+        if (config.dashManifestModel) {
+            dashManifestModel = config.dashManifestModel;
         }
     }
 
@@ -98,8 +100,7 @@ function BaseURLSelector() {
 
         if (!selectedBaseUrl) {
             eventBus.trigger(
-                Events.URL_RESOLUTION_FAILED,
-                {
+                Events.URL_RESOLUTION_FAILED, {
                     error: new Error(
                         URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE,
                         URL_RESOLUTION_FAILED_GENERIC_ERROR_MESSAGE

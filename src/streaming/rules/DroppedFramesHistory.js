@@ -15,11 +15,13 @@ function DroppedFramesHistory() {
         let intervalTotalFrames = playbackQuality.totalVideoFrames - lastTotalFrames;
         lastTotalFrames = playbackQuality.totalVideoFrames;
 
-        if (!values[index]) {
-            values[index] = {droppedVideoFrames: intervalDroppedFrames, totalVideoFrames: intervalTotalFrames};
-        } else {
-            values[index].droppedVideoFrames += intervalDroppedFrames;
-            values[index].totalVideoFrames += intervalTotalFrames;
+        if (!isNaN(index)) {
+            if (!values[index]) {
+                values[index] = {droppedVideoFrames: intervalDroppedFrames, totalVideoFrames: intervalTotalFrames};
+            } else {
+                values[index].droppedVideoFrames += intervalDroppedFrames;
+                values[index].totalVideoFrames += intervalTotalFrames;
+            }
         }
     }
 

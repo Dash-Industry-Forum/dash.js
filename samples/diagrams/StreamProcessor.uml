@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Diagram>
+  <ID>JavaScript-modules-diagram</ID>
+  <OriginalElement>/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js</OriginalElement>
+  <nodes>
+    <node x="460.0" y="408.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/controllers/BufferController.js</node>
+    <node x="222.0" y="439.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/dash/DashHandler.js</node>
+    <node x="441.0" y="0.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/core/FactoryMaker.js</node>
+    <node x="56.0" y="2.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/dash/controllers/RepresentationController.js</node>
+    <node x="539.0" y="71.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/controllers/ScheduleController.js</node>
+    <node x="297.0" y="151.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#BufferController#1842;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#DashHandler#2171;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#FactoryMaker#2121;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#RepresentationController#2036;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#ScheduleController#1969;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#TextBufferController#1905;</node>
+    <node x="0.0" y="249.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/text/TextBufferController.js</node>
+  </nodes>
+  <notes />
+  <edges>
+    <edge source="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#BufferController#1842;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#DashHandler#2171;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#FactoryMaker#2121;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#RepresentationController#2036;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#ScheduleController#1969;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#TextBufferController#1905;" target="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/controllers/ScheduleController.js">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#BufferController#1842;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#DashHandler#2171;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#FactoryMaker#2121;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#RepresentationController#2036;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#ScheduleController#1969;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#TextBufferController#1905;" target="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/dash/DashHandler.js">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#BufferController#1842;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#DashHandler#2171;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#FactoryMaker#2121;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#RepresentationController#2036;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#ScheduleController#1969;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#TextBufferController#1905;" target="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/controllers/BufferController.js">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#BufferController#1842;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#DashHandler#2171;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#FactoryMaker#2121;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#RepresentationController#2036;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#ScheduleController#1969;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#TextBufferController#1905;" target="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/dash/controllers/RepresentationController.js">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#BufferController#1842;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#DashHandler#2171;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#FactoryMaker#2121;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#RepresentationController#2036;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#ScheduleController#1969;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#TextBufferController#1905;" target="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/core/FactoryMaker.js">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#BufferController#1842;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#DashHandler#2171;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#FactoryMaker#2121;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#RepresentationController#2036;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#ScheduleController#1969;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js#TextBufferController#1905;" target="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/text/TextBufferController.js">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+  </edges>
+  <settings layout="Hierarchic Group" zoom="1.0" x="417.5" y="234.5" />
+  <SelectedNodes>
+    <node>/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/text/TextBufferController.js</node>
+  </SelectedNodes>
+  <Categories>
+    <Category>All</Category>
+  </Categories>
+  <VISIBILITY>Details</VISIBILITY>
+</Diagram>
+

@@ -35,18 +35,20 @@ import DroppedFramesRule from './DroppedFramesRule.js';
 import SwitchHistoryRule from './SwitchHistoryRule.js';
 import BolaRule from './BolaRule';
 import BolaAbandonRule from './BolaAbandonRule';
-import MediaPlayerModel from '../../models/MediaPlayerModel';
-import MetricsModel from '../../models/MetricsModel';
-import DashMetrics from '../../../dash/DashMetrics';
 import FactoryMaker from '../../../core/FactoryMaker';
 import SwitchRequest from '../SwitchRequest.js';
 
 const QUALITY_SWITCH_RULES = 'qualitySwitchRules';
 const ABANDON_FRAGMENT_RULES = 'abandonFragmentRules';
 
-function ABRRulesCollection() {
+function ABRRulesCollection(config) {
 
     let context = this.context;
+
+    const mediaPlayerModel = config.mediaPlayerModel;
+    const metricsModel = config.metricsModel;
+    const dashMetrics = config.dashMetrics;
+    const adapter = config.adapter;
 
     let instance,
         qualitySwitchRules,
@@ -56,18 +58,17 @@ function ABRRulesCollection() {
         qualitySwitchRules = [];
         abandonFragmentRules = [];
 
-        let metricsModel = MetricsModel(context).getInstance();
-        let dashMetrics = DashMetrics(context).getInstance();
-        let mediaPlayerModel = MediaPlayerModel(context).getInstance();
-
         if (mediaPlayerModel.getUseDefaultABRRules()) {
             if (mediaPlayerModel.getBufferOccupancyABREnabled()) {
                 qualitySwitchRules.push(
                     BolaRule(context).create({
                         metricsModel: metricsModel,
-                        dashMetrics: dashMetrics
+                        dashMetrics: dashMetrics,
+                        mediaPlayerModel: mediaPlayerModel,
+                        adapter: adapter
                     })
                 );
+
                 abandonFragmentRules.push(
                     BolaAbandonRule(context).create({
                         metricsModel: metricsModel,
@@ -81,13 +82,26 @@ function ABRRulesCollection() {
                         dashMetrics: dashMetrics
                     })
                 );
+                qualitySwitchRules.push(
+                    InsufficientBufferRule(context).create({
+                        metricsModel: metricsModel,
+                        dashMetrics: dashMetrics
+                    })
+                );
+                qualitySwitchRules.push(
+                    SwitchHistoryRule(context).create()
+                );
+                qualitySwitchRules.push(
+                    DroppedFramesRule(context).create()
+                );
 
-                qualitySwitchRules.push(InsufficientBufferRule(context).create({
-                    metricsModel: metricsModel
-                }));
-                qualitySwitchRules.push(SwitchHistoryRule(context).create());
-                qualitySwitchRules.push(DroppedFramesRule(context).create());
-                abandonFragmentRules.push(AbandonRequestsRule(context).create());
+                abandonFragmentRules.push(
+                    AbandonRequestsRule(context).create({
+                        metricsModel: metricsModel,
+                        dashMetrics: dashMetrics,
+                        mediaPlayerModel: mediaPlayerModel
+                    })
+                );
             }
         }
 
@@ -102,17 +116,6 @@ function ABRRulesCollection() {
                 abandonFragmentRules.push(rule.rule(context).create());
             }
         });
-    }
-
-    function getRules(type) {
-        switch (type) {
-            case QUALITY_SWITCH_RULES:
-                return qualitySwitchRules;
-            case ABANDON_FRAGMENT_RULES:
-                return abandonFragmentRules;
-            default:
-                return null;
-        }
     }
 
     function getActiveRules(srArray) {
@@ -184,21 +187,22 @@ function ABRRulesCollection() {
                 rules.forEach(rule => rule.reset && rule.reset());
             }
         });
+        qualitySwitchRules = [];
+        abandonFragmentRules = [];
     }
 
     instance = {
         initialize: initialize,
-        getRules: getRules,
+        reset: reset,
         getMaxQuality: getMaxQuality,
-        shouldAbandonFragment: shouldAbandonFragment,
-        reset: reset
+        shouldAbandonFragment: shouldAbandonFragment
     };
 
     return instance;
 }
 
 ABRRulesCollection.__dashjs_factory_name = 'ABRRulesCollection';
-let factory = FactoryMaker.getSingletonFactory(ABRRulesCollection);
+let factory = FactoryMaker.getClassFactory(ABRRulesCollection);
 factory.QUALITY_SWITCH_RULES = QUALITY_SWITCH_RULES;
 factory.ABANDON_FRAGMENT_RULES = ABANDON_FRAGMENT_RULES;
 FactoryMaker.updateSingletonFactory(ABRRulesCollection.__dashjs_factory_name, factory);

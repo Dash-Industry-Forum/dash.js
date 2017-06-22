@@ -34,7 +34,6 @@ import BoxParser from '../utils/BoxParser';
 import CustomTimeRanges from '../utils/CustomTimeRanges';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
-import VideoModel from '../models/VideoModel';
 import TextTracks from './TextTracks';
 import EmbeddedTextHtmlRender from './EmbeddedTextHtmlRender';
 import ISOBoxer from 'codem-isoboxer';
@@ -78,7 +77,7 @@ function TextSourceBuffer() {
         embeddedCea608FieldParsers,
         embeddedTextHtmlRender;
 
-    function initialize(type, bufferController) {
+    function initialize(type, streamProcessor) {
         parser = null;
         fragmentModel = null;
         initializationSegmentReceived = false;
@@ -89,8 +88,6 @@ function TextSourceBuffer() {
         if (!embeddedInitialized) {
             initEmbedded();
         }
-
-        let streamProcessor = bufferController.getStreamProcessor();
 
         mediaInfos = streamProcessor.getMediaInfoArr();
         textTracks.setConfig({
@@ -108,8 +105,8 @@ function TextSourceBuffer() {
             fragmentModel = streamProcessor.getFragmentModel();
             this.buffered = CustomTimeRanges(context).create();
             fragmentedTracks = mediaController.getTracksFor('fragmentedText', streamController.getActiveStreamInfo());
-            var currFragTrack = mediaController.getCurrentTrackFor('fragmentedText', streamController.getActiveStreamInfo());
-            for (var i = 0; i < fragmentedTracks.length; i++) {
+            const currFragTrack = mediaController.getCurrentTrackFor('fragmentedText', streamController.getActiveStreamInfo());
+            for (let i = 0 ; i < fragmentedTracks.length; i++) {
                 if (fragmentedTracks[i] === currFragTrack) {
                     currFragmentedTrackIdx = i;
                     break;
@@ -147,7 +144,7 @@ function TextSourceBuffer() {
     function initEmbedded() {
         embeddedTracks = [];
         mediaInfos = [];
-        videoModel = VideoModel(context).getInstance();
+        // videoModel = VideoModel(context).getInstance();
         textTracks = TextTracks(context).getInstance();
         textTracks.setConfig({
             videoModel: videoModel
@@ -173,7 +170,7 @@ function TextSourceBuffer() {
 
     function resetEmbedded() {
         eventBus.off(Events.VIDEO_CHUNK_RECEIVED, onVideoChunkReceived, this);
-        if (textTracks !== null) {
+        if (textTracks) {
             textTracks.deleteAllTextTracks();
         }
         embeddedInitialized = false;
@@ -228,7 +225,7 @@ function TextSourceBuffer() {
     }
 
     function getConfig() {
-        var config = {
+        let config = {
             errHandler: errHandler,
             dashManifestModel: dashManifestModel,
             mediaController: mediaController,
@@ -249,34 +246,31 @@ function TextSourceBuffer() {
     }
 
     function append(bytes, chunk) {
-        var result,
+        let result,
             sampleList,
             i, j, k,
             samplesInfo,
             ccContent;
-        var mediaInfo = chunk.mediaInfo;
-        var mediaType = mediaInfo.type;
-        var mimeType = mediaInfo.mimeType;
-        var codecType = mediaInfo.codec || mimeType;
+        let mediaInfo = chunk.mediaInfo;
+        let mediaType = mediaInfo.type;
+        let mimeType = mediaInfo.mimeType;
+        let codecType = mediaInfo.codec || mimeType;
         if (!codecType) {
             log('No text type defined');
             return;
         }
 
         function createTextTrackFromMediaInfo(captionData, mediaInfo) {
-            var textTrackInfo = new TextTrackInfo();
-            var trackKindMap = {
-                subtitle: 'subtitles',
-                caption: 'captions'
-            }; //Dash Spec has no "s" on end of KIND but HTML needs plural.
-            var getKind = function () {
-                var kind = (mediaInfo.roles.length > 0) ? trackKindMap[mediaInfo.roles[0]] : trackKindMap.caption;
+            let textTrackInfo = new TextTrackInfo();
+            let trackKindMap = { subtitle: 'subtitles', caption: 'captions' }; //Dash Spec has no "s" on end of KIND but HTML needs plural.
+            const getKind = function () {
+                let kind = (mediaInfo.roles.length > 0) ? trackKindMap[mediaInfo.roles[0]] : trackKindMap.caption;
                 kind = (kind === trackKindMap.caption || kind === trackKindMap.subtitle) ? kind : trackKindMap.caption;
                 return kind;
             };
 
-            var checkTTML = function () {
-                var ttml = false;
+            const checkTTML = function () {
+                let ttml = false;
                 if (mediaInfo.codec && mediaInfo.codec.search('stpp') >= 0) {
                     ttml = true;
                 }
@@ -297,7 +291,7 @@ function TextSourceBuffer() {
             textTrackInfo.isEmbedded = mediaInfo.isEmbedded ? true : false;
             textTrackInfo.kind = getKind();
             textTrackInfo.roles = mediaInfo.roles;
-            var totalNrTracks = (mediaInfos ? mediaInfos.length : 0) + embeddedTracks.length;
+            let totalNrTracks = (mediaInfos ? mediaInfos.length : 0) + embeddedTracks.length;
             textTracks.addTextTrack(textTrackInfo, totalNrTracks);
         }
 
@@ -343,31 +337,31 @@ function TextSourceBuffer() {
                     }
                 } else {
                     // WebVTT case
-                    var captionArray = [];
-                    for (i = 0; i < sampleList.length; i++) {
-                        var sample = sampleList[i];
+                    let captionArray = [];
+                    for (i = 0 ; i < sampleList.length; i++) {
+                        let sample = sampleList[i];
                         sample.cts -= firstSubtitleStart;
                         this.buffered.add(sample.cts / timescale, (sample.cts + sample.duration) / timescale);
-                        var sampleData = bytes.slice(sample.offset, sample.offset + sample.size);
+                        let sampleData = bytes.slice(sample.offset, sample.offset + sample.size);
                         // There are boxes inside the sampleData, so we need a ISOBoxer to get at it.
-                        var sampleBoxes = ISOBoxer.parseBuffer(sampleData);
+                        let sampleBoxes = ISOBoxer.parseBuffer(sampleData);
 
-                        for (j = 0; j < sampleBoxes.boxes.length; j++) {
-                            var box1 = sampleBoxes.boxes[j];
+                        for (j = 0 ; j < sampleBoxes.boxes.length; j++) {
+                            let box1 = sampleBoxes.boxes[j];
                             log('VTT box1: ' + box1.type);
                             if (box1.type === 'vtte') {
                                 continue; //Empty box
                             }
                             if (box1.type === 'vttc') {
                                 log('VTT vttc boxes.length = ' + box1.boxes.length);
-                                for (k = 0; k < box1.boxes.length; k++) {
-                                    var box2 = box1.boxes[k];
+                                for (k = 0 ; k < box1.boxes.length; k++) {
+                                    let box2 = box1.boxes[k];
                                     log('VTT box2: ' + box2.type);
                                     if (box2.type === 'payl') {
-                                        var cue_text = box2.cue_text;
+                                        let cue_text = box2.cue_text;
                                         log('VTT cue_text = ' + cue_text);
-                                        var start_time = sample.cts / timescale;
-                                        var end_time = (sample.cts + sample.duration) / timescale;
+                                        let start_time = sample.cts / timescale;
+                                        let end_time = (sample.cts + sample.duration) / timescale;
                                         captionArray.push({
                                             start: start_time,
                                             end: end_time,
@@ -408,13 +402,13 @@ function TextSourceBuffer() {
                     log('CEA-608: No timescale for embeddedTextTrack yet');
                     return;
                 }
-                var makeCueAdderForIndex = function (self, trackIndex) {
+                const makeCueAdderForIndex = function (self, trackIndex) {
                     function newCue(startTime, endTime, captionScreen) {
-                        var captionsArray = null;
+                        let captionsArray = null;
                         if (videoModel.getTTMLRenderingDiv()) {
                             captionsArray = embeddedTextHtmlRender.createHTMLCaptionsFromScreen(videoModel.getElement(), startTime, endTime, captionScreen);
                         } else {
-                            var text = captionScreen.getDisplayText();
+                            let text = captionScreen.getDisplayText();
                             //log("CEA text: " + startTime + "-" + endTime + "  '" + text + "'");
                             captionsArray = [{
                                 start: startTime,
@@ -432,7 +426,8 @@ function TextSourceBuffer() {
 
 
                 samplesInfo = fragmentedTextBoxParser.getSamplesInfo(bytes);
-                var sequenceNumber = samplesInfo.lastSequenceNumber;
+
+                let sequenceNumber = samplesInfo.lastSequenceNumber;
 
                 if (!embeddedCea608FieldParsers[0] && !embeddedCea608FieldParsers[1]) {
                     // Time to setup the CEA-608 parsing
@@ -464,11 +459,12 @@ function TextSourceBuffer() {
                             }
                         }
                     }
-                    var allCcData = extractCea608Data(bytes, samplesInfo.sampleList);
 
-                    for (var fieldNr = 0; fieldNr < embeddedCea608FieldParsers.length; fieldNr++) {
-                        var ccData = allCcData.fields[fieldNr];
-                        var fieldParser = embeddedCea608FieldParsers[fieldNr];
+                    let allCcData = extractCea608Data(bytes, samplesInfo.sampleList);
+
+                    for (let fieldNr = 0; fieldNr < embeddedCea608FieldParsers.length; fieldNr++) {
+                        let ccData = allCcData.fields[fieldNr];
+                        let fieldParser = embeddedCea608FieldParsers[fieldNr];
                         if (fieldParser) {
                             /*if (ccData.length > 0 ) {
                                 log("CEA-608 adding Data to field " + fieldNr + " " + ccData.length + "bytes");
@@ -496,19 +492,19 @@ function TextSourceBuffer() {
             return null;
         }
 
-        var allCcData = {
+        let allCcData = {
             splits: [],
             fields: [[], []]
         };
-        var raw = new DataView(data);
-        for (var i = 0; i < samples.length; i++) {
-            var sample = samples[i];
-            var cea608Ranges = cea608parser.findCea608Nalus(raw, sample.offset, sample.size);
-            var lastSampleTime = null;
-            var idx = 0;
-            for (var j = 0; j < cea608Ranges.length; j++) {
-                var ccData = cea608parser.extractCea608DataFromRange(raw, cea608Ranges[j]);
-                for (var k = 0; k < 2; k++) {
+        let raw = new DataView(data);
+        for (let i = 0; i < samples.length; i++) {
+            let sample = samples[i];
+            let cea608Ranges = cea608parser.findCea608Nalus(raw, sample.offset, sample.size);
+            let lastSampleTime = null;
+            let idx = 0;
+            for (let j = 0; j < cea608Ranges.length; j++) {
+                let ccData = cea608parser.extractCea608DataFromRange(raw, cea608Ranges[j]);
+                for (let k = 0; k < 2; k++) {
                     if (ccData[k].length > 0) {
                         if (sample.cts !== lastSampleTime) {
                             idx = 0;
@@ -541,7 +537,7 @@ function TextSourceBuffer() {
         //TODO How to tag default. currently same order as listed in manifest.
         // Is there a way to mark a text adaptation set as the default one? DASHIF meeting talk about using role which is being used for track KIND
         // Eg subtitles etc. You can have multiple role tags per adaptation Not defined in the spec yet.
-        var isDefault = false;
+        let isDefault = false;
         if (embeddedTracks.length > 1 && mediaInfo.isEmbedded) {
             isDefault = (mediaInfo.id && mediaInfo.id === 'CC1'); // CC1 if both CC1 and CC3 exist
         } else if (embeddedTracks.length === 1) {
@@ -555,7 +551,7 @@ function TextSourceBuffer() {
     }
 
     function getParser(codecType) {
-        var parser;
+        let parser;
         if (codecType.search('vtt') >= 0) {
             parser = vttParser;
         } else if (codecType.search('ttml') >= 0 || codecType.search('stpp') >= 0) {

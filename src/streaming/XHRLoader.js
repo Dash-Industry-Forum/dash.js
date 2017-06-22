@@ -30,7 +30,6 @@
  */
 import {HTTPRequest} from './vo/metrics/HTTPRequest';
 import FactoryMaker from '../core/FactoryMaker';
-import MediaPlayerModel from './models/MediaPlayerModel';
 import ErrorHandler from './utils/ErrorHandler.js';
 
 /**
@@ -39,13 +38,11 @@ import ErrorHandler from './utils/ErrorHandler.js';
  * @param {Object} cfg - dependancies from parent
  */
 function XHRLoader(cfg) {
-    const context = this.context;
-
+    //const context = this.context;
     //const log = Debug(context).getInstance().log;
-    const mediaPlayerModel = MediaPlayerModel(context).getInstance();
-
     const errHandler = cfg.errHandler;
     const metricsModel = cfg.metricsModel;
+    const mediaPlayerModel = cfg.mediaPlayerModel;
     const requestModifier = cfg.requestModifier;
 
     let instance;
@@ -72,14 +69,14 @@ function XHRLoader(cfg) {
 
     function internalLoad(config, remainingAttempts) {
 
-        var request = config.request;
-        var xhr = new XMLHttpRequest();
-        var traces = [];
-        var firstProgress = true;
-        var needFailureReport = true;
+        let request = config.request;
+        let xhr = new XMLHttpRequest();
+        let traces = [];
+        let firstProgress = true;
+        let needFailureReport = true;
         const requestStartTime = new Date();
-        var lastTraceTime = requestStartTime;
-        var lastTraceReceivedCount = 0;
+        let lastTraceTime = requestStartTime;
+        let lastTraceReceivedCount = 0;
 
         const handleLoaded = function (success) {
             needFailureReport = false;
@@ -144,7 +141,7 @@ function XHRLoader(cfg) {
         };
 
         const progress = function (event) {
-            var currentTime = new Date();
+            let currentTime = new Date();
 
             if (firstProgress) {
                 firstProgress = false;
@@ -186,6 +183,10 @@ function XHRLoader(cfg) {
                 }
             }
         };
+
+        if (!requestModifier || !metricsModel || !errHandler) {
+            throw new Error('config object is not correct or missing');
+        }
 
         try {
             const modifiedUrl = requestModifier.modifyRequestURL(request.url);
