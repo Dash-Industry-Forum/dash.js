@@ -145,6 +145,13 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#STREAM_INITIALIZED
          */
         this.STREAM_INITIALIZED = 'streamInitialized';
+
+        /**
+         * Triggered when the player has been reset.
+         * @event MediaPlayerEvents#STREAM_TEARDOWN_COMPLETE
+         */
+        this.STREAM_TEARDOWN_COMPLETE = 'streamTeardownComplete';
+
         /**
          * Triggered once all text tracks detected in the MPD are added to the video element.
          * @event MediaPlayerEvents#TEXT_TRACKS_ADDED
