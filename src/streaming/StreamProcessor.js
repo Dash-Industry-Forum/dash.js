@@ -92,6 +92,7 @@ function StreamProcessor(config) {
         abrController.registerStreamType(type, this);
 
         fragmentModel = stream.getFragmentController().getModel(type);
+        fragmentModel.setStreamProcessor(instance);
 
         bufferController = createBufferControllerForType(type);
         scheduleController = ScheduleController(context).create({
@@ -114,6 +115,7 @@ function StreamProcessor(config) {
         representationController = RepresentationController(context).create({
             streamProcessor: this
         });
+
         representationController.setConfig({
             abrController: abrController,
             domStorage: domStorage,
