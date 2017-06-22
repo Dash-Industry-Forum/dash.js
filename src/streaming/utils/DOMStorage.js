@@ -43,6 +43,8 @@ const LOCAL_STORAGE_SETTINGS_KEY_TEMPLATE = 'dashjs_?_settings';
 
 const STORAGE_TYPE_LOCAL = 'localStorage';
 const STORAGE_TYPE_SESSION = 'sessionStorage';
+const LAST_BITRATE = 'LastBitrate';
+const LAST_MEDIA_SETTINGS = 'LastMediaSettings';
 
 function DOMStorage(config) {
 
@@ -126,7 +128,7 @@ function DOMStorage(config) {
 
     function getSavedMediaSettings(type) {
         //Checks local storage to see if there is valid, non-expired media settings
-        if (!canStore(STORAGE_TYPE_LOCAL, 'LastMediaSettings')) return null;
+        if (!canStore(STORAGE_TYPE_LOCAL, LAST_MEDIA_SETTINGS)) return null;
 
         let key = LOCAL_STORAGE_SETTINGS_KEY_TEMPLATE.replace(/\?/, type);
         let obj = JSON.parse(localStorage.getItem(key)) || {};
@@ -145,7 +147,7 @@ function DOMStorage(config) {
         let savedBitrate = NaN;
         //Checks local storage to see if there is valid, non-expired bit rate
         //hinting from the last play session to use as a starting bit rate.
-        if (canStore(STORAGE_TYPE_LOCAL, 'LastBitrate')) {
+        if (canStore(STORAGE_TYPE_LOCAL, LAST_BITRATE)) {
             let key = LOCAL_STORAGE_BITRATE_KEY_TEMPLATE.replace(/\?/, type);
             let obj = JSON.parse(localStorage.getItem(key)) || {};
             let isExpired = (new Date().getTime() - parseInt(obj.timestamp, 10)) >= mediaPlayerModel.getLastBitrateCachingInfo().ttl || false;
@@ -162,7 +164,7 @@ function DOMStorage(config) {
     }
 
     function setSavedMediaSettings(type, value) {
-        if (canStore(STORAGE_TYPE_LOCAL, 'LastMediaSettings')) {
+        if (canStore(STORAGE_TYPE_LOCAL, LAST_MEDIA_SETTINGS)) {
             let key = LOCAL_STORAGE_SETTINGS_KEY_TEMPLATE.replace(/\?/, type);
             try {
                 localStorage.setItem(key, JSON.stringify({settings: value, timestamp: getTimestamp()}));
@@ -173,7 +175,7 @@ function DOMStorage(config) {
     }
 
     function setSavedBitrateSettings(type, bitrate) {
-        if (canStore(STORAGE_TYPE_LOCAL, 'LastBitrate') && bitrate) {
+        if (canStore(STORAGE_TYPE_LOCAL, LAST_BITRATE) && bitrate) {
             let key = LOCAL_STORAGE_BITRATE_KEY_TEMPLATE.replace(/\?/, type);
             try {
                 localStorage.setItem(key, JSON.stringify({bitrate: bitrate / 1000, timestamp: getTimestamp()}));

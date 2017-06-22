@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import Constants from './constants/Constants';
 import UTCTiming from '../dash/vo/UTCTiming';
 import PlaybackController from './controllers/PlaybackController';
 import StreamController from './controllers/StreamController';
@@ -486,7 +487,7 @@ function MediaPlayer() {
      * @instance
      */
     function getBufferLength(type) {
-        const types = ['video', 'audio', 'fragmentedText'];
+        const types = [Constants.VIDEO, Constants.AUDIO, Constants.FRAGMENTED_TEXT];
         if (!type) {
             return types.map(
                 t => getTracksFor(t).length > 0 ? getDashMetrics().getCurrentBufferLevel(getMetricsFor(t)) : Number.MAX_VALUE
@@ -1585,7 +1586,7 @@ function MediaPlayer() {
 
         for (let i = 0; i < ln; i++) {
             let track = tracks[i];
-            let mode = idx === i ? 'showing' : 'hidden';
+            let mode = idx === i ? Constants.TEXT_SHOWING : Constants.TEXT_HIDDEN;
 
             if (track.mode !== mode) { //checking that mode is not already set by 3rd Party player frameworks that set mode to prevent event retrigger.
                 track.mode = mode;
@@ -2123,7 +2124,7 @@ function MediaPlayer() {
      * @instance
      */
     function getAutoSwitchQuality() {
-        return abrController.getAutoSwitchBitrateFor('video') || abrController.getAutoSwitchBitrateFor('audio');
+        return abrController.getAutoSwitchBitrateFor(Constants.VIDEO) || abrController.getAutoSwitchBitrateFor(Constants.AUDIO);
     }
 
     /**
@@ -2136,8 +2137,8 @@ function MediaPlayer() {
      * @instance
      */
     function setAutoSwitchQuality(value) {
-        abrController.setAutoSwitchBitrateFor('video', value);
-        abrController.setAutoSwitchBitrateFor('audio', value);
+        abrController.setAutoSwitchBitrateFor(Constants.VIDEO, value);
+        abrController.setAutoSwitchBitrateFor(Constants.AUDIO, value);
     }
 
     /**
@@ -2323,7 +2324,7 @@ function MediaPlayer() {
     }
 
     function getDVRInfoMetric() {
-        let metric = metricsModel.getReadOnlyMetricsFor('video') || metricsModel.getReadOnlyMetricsFor('audio');
+        let metric = metricsModel.getReadOnlyMetricsFor(Constants.VIDEO) || metricsModel.getReadOnlyMetricsFor(Constants.AUDIO);
         return dashMetrics.getCurrentDVRInfo(metric);
     }
 

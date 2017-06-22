@@ -28,6 +28,8 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import Constants from '../streaming/constants/Constants';
+import DashConstants from './constants/DashConstants';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
 import DashJSError from '../streaming/vo/DashJSError';
 import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
@@ -211,7 +213,7 @@ function DashHandler(config) {
                 const time = seg.presentationStartTime - representation.adaptation.period.start;
                 const duration = representation.adaptation.period.duration;
                 log(representation.segmentInfoType + ': ' + time + ' / ' + duration);
-                isFinished = representation.segmentInfoType === 'SegmentTimeline' && isDynamic ? false : time >= duration;
+                isFinished = representation.segmentInfoType === DashConstants.SEGMENT_TIMELINE && isDynamic ? false : time >= duration;
             } else {
                 log('isMediaFinished - no segment found');
             }
@@ -232,7 +234,7 @@ function DashHandler(config) {
             if (isDynamic && isNaN(timelineConverter.getExpectedLiveEdge())) {
                 const lastSegment = segments[segments.length - 1];
                 const liveEdge = lastSegment.presentationStartTime;
-                const metrics = metricsModel.getMetricsFor('stream');
+                const metrics = metricsModel.getMetricsFor(Constants.STREAM);
                 // the last segment is the Expected, not calculated, live edge.
                 timelineConverter.setExpectedLiveEdge(liveEdge);
                 metricsModel.updateManifestUpdateInfo(dashMetrics.getCurrentManifestUpdate(metrics), {presentationStartTime: liveEdge});
@@ -404,7 +406,7 @@ function DashHandler(config) {
         }
 
         if (keepIdx && idx >= 0) {
-            index = representation.segmentInfoType === 'SegmentTimeline' && isDynamic ? index : idx;
+            index = representation.segmentInfoType === DashConstants.SEGMENT_TIMELINE && isDynamic ? index : idx;
         }
 
         return request;

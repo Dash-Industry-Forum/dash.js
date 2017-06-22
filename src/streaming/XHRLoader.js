@@ -190,7 +190,7 @@ function XHRLoader(cfg) {
 
         try {
             const modifiedUrl = requestModifier.modifyRequestURL(request.url);
-            const verb = request.checkExistenceOnly ? 'HEAD' : 'GET';
+            const verb = request.checkExistenceOnly ? HTTPRequest.HEAD : HTTPRequest.GET;
 
             xhr.open(verb, modifiedUrl, true);
 

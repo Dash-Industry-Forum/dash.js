@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import Constants from './constants/Constants';
 import XlinkController from './controllers/XlinkController';
 import XHRLoader from './XHRLoader';
 import URLUtils from './utils/URLUtils';
@@ -163,7 +164,7 @@ function ManifestLoader(config) {
 
                     // In the following, we only use the first Location entry even if many are available
                     // Compare with ManifestUpdater/DashManifestModel
-                    if (manifest.hasOwnProperty('Location')) {
+                    if (manifest.hasOwnProperty(Constants.LOCATION)) {
                         baseUri = urlUtils.parseBaseUrl(manifest.manifest.Location_asArray[0]);
                         log('BaseURI set by Location to: ' + baseUri);
                     }

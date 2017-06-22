@@ -31,6 +31,8 @@
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 
+const WEBVTT = 'WEBVTT';
+
 function VTTParser() {
     let context = this.context;
     let log = Debug(context).getInstance().log;
@@ -61,7 +63,7 @@ function VTTParser() {
         {
             let item = data[i];
 
-            if (item.length > 0 && item !== 'WEBVTT')
+            if (item.length > 0 && item !== WEBVTT)
             {
                 if (item.match(regExToken))
                 {

@@ -28,64 +28,42 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import MetricsConstants from '../../../constants/MetricsConstants';
-import FactoryMaker from '../../../../core/FactoryMaker';
-import MetricsReportingEvents from '../../MetricsReportingEvents';
 
-function DVBErrorsHandler(config) {
+/**
+ * Constants declaration
+ * @class
+ * @ignore
+ */
+class Constants {
 
-    let instance,
-        reportingController;
-
-    let eventBus = config.eventBus;
-
-    function onInitialisationComplete() {
-        // we only want to report this once per call to initialize
-        eventBus.off(
-            MetricsReportingEvents.METRICS_INITIALISATION_COMPLETE,
-            onInitialisationComplete,
-            this
-        );
-
-        // Note: A Player becoming a reporting Player is itself
-        // something which is recorded by the DVBErrors metric.
-        eventBus.trigger(
-            MetricsReportingEvents.BECAME_REPORTING_PLAYER
-        );
+    init () {
+        this.STREAM = 'stream';
+        this.VIDEO = 'video';
+        this.AUDIO = 'audio';
+        this.TEXT = 'text';
+        this.FRAGMENTED_TEXT = 'fragmentedText';
+        this.EMBEDDED_TEXT = 'embeddedText';
+        this.MUXED = 'muxed';
+        this.LOCATION = 'Location';
+        this.INITIALIZE = 'initialize';
+        this.TEXT_SHOWING = 'showing';
+        this.TEXT_HIDDEN = 'hidden';
+        this.CC1 = 'CC1';
+        this.CC3 = 'CC3';
+        this.STPP = 'stpp';
+        this.TTML = 'ttml';
+        this.VTT = 'vtt';
+        this.WVTT = 'wvtt';
+        this.UTF8 = 'utf-8';
+        this.SUGGESTED_PRESENTATION_DELAY = 'suggestedPresentationDelay';
+        this.SCHEME_ID_URI = 'schemeIdUri';
+        this.START_TIME = 'starttime';
     }
 
-    function initialize(unused, rc) {
-        if (rc) {
-            reportingController = rc;
-
-            eventBus.on(
-                MetricsReportingEvents.METRICS_INITIALISATION_COMPLETE,
-                onInitialisationComplete,
-                this
-            );
-        }
+    constructor () {
+        this.init();
     }
-
-    function reset() {
-        reportingController = null;
-    }
-
-    function handleNewMetric(metric, vo) {
-        // simply pass metric straight through
-        if (metric === MetricsConstants.DVB_ERRORS) {
-            if (reportingController) {
-                reportingController.report(metric, vo);
-            }
-        }
-    }
-
-    instance = {
-        initialize:         initialize,
-        reset:              reset,
-        handleNewMetric:    handleNewMetric
-    };
-
-    return instance;
 }
 
-export default FactoryMaker.getClassFactory(DVBErrorsHandler);
+let constants = new Constants();
+export default constants;

@@ -28,6 +28,8 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import Constants from '../../streaming/constants/Constants';
+import DashConstants from '../constants/DashConstants';
 import DashJSError from '../../streaming/vo/DashJSError';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
@@ -157,7 +159,7 @@ function RepresentationController(config) {
 
         voAvailableRepresentations = updateRepresentations(voAdaptation);
 
-        if (realAdaptation === null && type !== 'fragmentedText') {
+        if (realAdaptation === null && type !== Constants.FRAGMENTED_TEXT) {
             averageThroughput = abrController.getThroughputHistory().getAverageThroughput(type);
             bitrate = averageThroughput || abrController.getInitialBitrateFor(type, streamInfo);
             quality = abrController.getQualityForBitrate(streamProcessor.getMediaInfo(), bitrate);
@@ -172,7 +174,7 @@ function RepresentationController(config) {
         currentVoRepresentation = getRepresentationForQuality(quality);
         realAdaptation = newRealAdaptation;
 
-        if (type !== 'video' && type !== 'audio' && type !== 'fragmentedText') {
+        if (type !== Constants.VIDEO && type !== Constants.AUDIO && type !== Constants.FRAGMENTED_TEXT) {
             updating = false;
             eventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: this, data: realAdaptation, currentRepresentation: currentVoRepresentation});
             return;
@@ -211,7 +213,7 @@ function RepresentationController(config) {
         for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
             let segmentInfoType = voAvailableRepresentations[i].segmentInfoType;
             if (voAvailableRepresentations[i].segmentAvailabilityRange === null || !Representation.hasInitialization(voAvailableRepresentations[i]) ||
-                    ((segmentInfoType === 'SegmentBase' || segmentInfoType === 'BaseURL') && !voAvailableRepresentations[i].segments)
+                ((segmentInfoType === DashConstants.SEGMENT_BASE || segmentInfoType === DashConstants.BASE_URL) && !voAvailableRepresentations[i].segments)
             ) {
                 return false;
             }
@@ -270,8 +272,8 @@ function RepresentationController(config) {
         if (e.sender.getStreamProcessor() !== streamProcessor || !isUpdating()) return;
 
         let r = e.representation;
-        let streamMetrics = metricsModel.getMetricsFor('stream');
-        let metrics = metricsModel.getMetricsFor(getCurrentRepresentation().adaptation.type);
+        let streamMetrics = metricsModel.getMetricsFor(Constants.STREAM);
+        var metrics = metricsModel.getMetricsFor(getCurrentRepresentation().adaptation.type);
         let manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(streamMetrics);
         let alreadyAdded = false;
         let postponeTimePeriod = 0;
@@ -279,7 +281,7 @@ function RepresentationController(config) {
             err,
             repSwitch;
 
-        if (r.adaptation.period.mpd.manifest.type === 'dynamic')
+        if (r.adaptation.period.mpd.manifest.type === DashConstants.DYNAMIC)
         {
             let segmentAvailabilityTimePeriod = r.segmentAvailabilityRange.end - r.segmentAvailabilityRange.start;
             // We must put things to sleep unless till e.g. the startTime calculation in ScheduleController.onLiveEdgeSearchCompleted fall after the segmentAvailabilityRange.start

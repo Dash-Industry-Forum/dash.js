@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
+import Constants from './constants/Constants';
 import BufferController from './controllers/BufferController';
 import TextBufferController from './text/TextBufferController';
 import ScheduleController from './controllers/ScheduleController';
@@ -282,7 +282,7 @@ function StreamProcessor(config) {
     function createBufferControllerForType(type) {
         let controller = null;
 
-        if (type === 'video' || type === 'audio') {
+        if (type === Constants.VIDEO || type === Constants.AUDIO) {
             controller = BufferController(context).create({
                 type: type,
                 metricsModel: metricsModel,

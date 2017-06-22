@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
+import Constants from '../constants/Constants';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import EventBus from '../../core/EventBus';
@@ -146,7 +146,7 @@ function EventController() {
         var manifest = manifestModel.getValue();
         var url = manifest.url;
 
-        if (manifest.hasOwnProperty('Location')) {
+        if (manifest.hasOwnProperty(Constants.LOCATION)) {
             url = manifest.Location;
         }
         log('Refresh manifest @ ' + url);

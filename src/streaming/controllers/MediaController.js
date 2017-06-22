@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import Constants from '../constants/Constants';
 import Events from '../../core/events/Events';
 import EventBus from '../../core/EventBus';
 import FactoryMaker from '../../core/FactoryMaker';
@@ -77,7 +78,7 @@ function MediaController() {
         let tracksForType = getTracksFor(type, streamInfo);
         let tracks = [];
 
-        if (type === 'fragmentedText') {
+        if (type === Constants.FRAGMENTED_TEXT) {
             // Choose the first track
             setTrack(tracksForType[0]);
             return;
@@ -285,7 +286,7 @@ function MediaController() {
      * @memberof MediaController#
      */
     function isMultiTrackSupportedByType(type) {
-        return (type === 'audio' || type === 'video' || type === 'text' || type === 'fragmentedText');
+        return (type === Constants.AUDIO || type === Constants.VIDEO || type === Constants.TEXT || type === Constants.FRAGMENTED_TEXT);
     }
 
     /**

@@ -28,8 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
+import Constants from '../constants/Constants';
 import DashJSError from './../vo/DashJSError';
+import {HTTPRequest} from './../vo/metrics/HTTPRequest';
 import EventBus from './../../core/EventBus';
 import Events from './../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
@@ -207,7 +208,7 @@ function TimeSyncController() {
         let complete = false;
         let req = new XMLHttpRequest();
 
-        let verb = isHeadRequest ? 'HEAD' : 'GET';
+        let verb = isHeadRequest ? HTTPRequest.HEAD : HTTPRequest.GET;
         let urls = url.match(/\S+/g);
 
         // according to ISO 23009-1, url could be a white-space
@@ -262,7 +263,7 @@ function TimeSyncController() {
     }
 
     function checkForDateHeader() {
-        let metrics = metricsModel.getReadOnlyMetricsFor('stream');
+        let metrics = metricsModel.getReadOnlyMetricsFor(Constants.STREAM);
         let dateHeaderValue = dashMetrics.getLatestMPDRequestHeaderValueByID(metrics, 'Date');
         let dateHeaderTime = dateHeaderValue !== null ? new Date(dateHeaderValue).getTime() : Number.NaN;
 

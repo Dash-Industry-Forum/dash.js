@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import Constants from '../constants/Constants';
 import FactoryMaker from '../../core/FactoryMaker';
 import TextSourceBuffer from './TextSourceBuffer';
 import TextTracks from './TextTracks';
@@ -121,6 +122,7 @@ function TextController() {
     }
 
     function setTextTrack() {
+
         let config = textSourceBuffer.getConfig();
         let fragmentModel = config.fragmentModel;
         let embeddedTracks = config.embeddedTracks;
@@ -135,15 +137,15 @@ function TextController() {
 
         for (let i = 0; i < ln; i++) {
             let track = tracks[i];
-            allTracksAreDisabled = track.mode !== 'showing';
-            if (track.mode === 'showing') {
+            allTracksAreDisabled = track.mode !== Constants.TEXT_SHOWING;
+            if (track.mode === Constants.TEXT_SHOWING) {
                 if (oldTrackIdx !== i) { // do not reset track if already the current track.  This happens when all captions get turned off via UI and then turned on again and with videojs.
                     textTracks.setCurrentTrackIdx(i);
                     textTracks.addCaptions(i, 0, null); // Make sure that previously queued captions are added as cues
 
                     // specific to fragmented text
                     if (isFragmented && i < nrNonEmbeddedTracks) {
-                        let currentFragTrack = mediaController.getCurrentTrackFor('fragmentedText', streamController.getActiveStreamInfo());
+                        let currentFragTrack = mediaController.getCurrentTrackFor(Constants.FRAGMENTED_TEXT, streamController.getActiveStreamInfo());
                         let newFragTrack = fragmentedTracks[i];
                         if (newFragTrack !== currentFragTrack) {
                             fragmentModel.abortRequests();
