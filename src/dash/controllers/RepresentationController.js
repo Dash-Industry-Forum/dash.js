@@ -192,8 +192,11 @@ function RepresentationController(config) {
     }
 
     function addDVRMetric() {
-        let range = timelineConverter.calcSegmentAvailabilityRange(currentVoRepresentation, streamProcessor.isDynamic());
-        metricsModel.addDVRInfo(streamProcessor.getType(), playbackController.getTime(), streamProcessor.getStreamInfo().manifestInfo, range);
+        let streamInfo = streamProcessor.getStreamInfo();
+        let manifestInfo = streamInfo ? streamInfo.manifestInfo : null;
+        let isDynamic = manifestInfo ? manifestInfo.isDynamic : null;
+        let range = timelineConverter.calcSegmentAvailabilityRange(currentVoRepresentation, isDynamic);
+        metricsModel.addDVRInfo(streamProcessor.getType(), playbackController.getTime(), manifestInfo, range);
     }
 
     function getRepresentationForQuality(quality) {

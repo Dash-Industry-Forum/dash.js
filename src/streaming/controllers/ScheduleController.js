@@ -65,7 +65,6 @@ function ScheduleController(config) {
     let instance,
         log,
         fragmentModel,
-        isDynamic,
         currentRepresentationInfo,
         initialRequest,
         isStopped,
@@ -101,9 +100,9 @@ function ScheduleController(config) {
         seekTarget = NaN;
     }
 
+
     function initialize() {
         fragmentModel = streamProcessor.getFragmentModel();
-        isDynamic = streamProcessor.isDynamic();
         scheduleWhilePaused = mediaPlayerModel.getScheduleWhilePaused();
 
         bufferLevelRule = BufferLevelRule(context).create({
@@ -353,7 +352,7 @@ function ScheduleController(config) {
         currentRepresentationInfo = streamProcessor.getCurrentRepresentationInfo();
 
         if (initialRequest) {
-            if (isDynamic) {
+            if (playbackController.getIsDynamic()) {
                 timelineConverter.setTimeSyncCompleted(true);
                 setLiveEdgeSeekTarget();
             } else {

@@ -64,8 +64,6 @@ function DashHandler(config) {
         log,
         index,
         requestedTime,
-        isDynamic,
-        type,
         currentTime,
         earliestTime,
         streamProcessor,
@@ -97,8 +95,8 @@ function DashHandler(config) {
 
     function initialize(StreamProcessor) {
         streamProcessor = StreamProcessor;
-        type = streamProcessor.getType();
-        isDynamic = streamProcessor.isDynamic();
+
+        let isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
 
         segmentBaseLoader.initialize();
 
@@ -125,18 +123,12 @@ function DashHandler(config) {
         return earliestTime;
     }
 
-    function getType() {
-        return type;
-    }
-
     function reset() {
         segmentsGetter = null;
         currentTime = 0;
         earliestTime = NaN;
         requestedTime = NaN;
         index = -1;
-        isDynamic = null;
-        type = null;
         streamProcessor = null;
         eventBus.off(Events.INITIALIZATION_LOADED, onInitializationLoaded, instance);
         eventBus.off(Events.SEGMENTS_LOADED, onSegmentsLoaded, instance);
@@ -183,6 +175,7 @@ function DashHandler(config) {
         const request = new FragmentRequest();
         const period = representation.adaptation.period;
         const presentationStartTime = period.start;
+        const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
 
         request.mediaType = mediaType;
         request.type = HTTPRequest.INIT_SEGMENT_TYPE;
@@ -190,7 +183,7 @@ function DashHandler(config) {
         request.availabilityStartTime = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationStartTime, period.mpd, isDynamic);
         request.availabilityEndTime = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationStartTime + period.duration, period.mpd, isDynamic);
         request.quality = representation.index;
-        request.mediaInfo = streamProcessor.getMediaInfo();
+        request.mediaInfo = streamProcessor ? streamProcessor.getMediaInfo() : null;
         request.representationId = representation.id;
 
         if (setRequestUrl(request, representation.initialization, representation)) {
@@ -199,6 +192,7 @@ function DashHandler(config) {
     }
 
     function getInitRequest(representation) {
+        const type = streamProcessor ? streamProcessor.getType() : null;
         if (!representation) return null;
         const request = generateInitRequest(representation, type);
         return request;
@@ -207,6 +201,7 @@ function DashHandler(config) {
     function isMediaFinished(representation) {
 
         let isFinished = false;
+        const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
 
         if (!isDynamic && index === representation.availableSegmentsNumber) {
             isFinished = true;
@@ -230,9 +225,8 @@ function DashHandler(config) {
     }
 
     function onSegmentListUpdated(voRepresentation, segments) {
-
+        const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
         voRepresentation.segments = segments;
-
         if (segments && segments.length > 0) {
             earliestTime = isNaN(earliestTime) ? segments[0].presentationStartTime : Math.min(segments[0].presentationStartTime,  earliestTime);
             if (isDynamic && isNaN(timelineConverter.getExpectedLiveEdge())) {
@@ -260,6 +254,8 @@ function DashHandler(config) {
     function updateRepresentation(voRepresentation, keepIdx) {
         const hasInitialization = Representation.hasInitialization(voRepresentation);
         const hasSegments = Representation.hasSegments(voRepresentation);
+        const type = streamProcessor ? streamProcessor.getType() : null;
+        const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
         let error;
 
         if (!voRepresentation.segmentDuration && !voRepresentation.segments) {
@@ -332,6 +328,7 @@ function DashHandler(config) {
         let bandwidth = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
             AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].bandwidth;
         let url = segment.media;
+        const type = streamProcessor ? streamProcessor.getType() : null;
 
         url = replaceTokenForTemplate(url, 'Number', segment.replacementNumber);
         url = replaceTokenForTemplate(url, 'Time', segment.replacementTime);
@@ -363,8 +360,9 @@ function DashHandler(config) {
             segment,
             finished;
 
+        const type = streamProcessor ? streamProcessor.getType() : null;
+        const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
         let idx = index;
-
         let keepIdx = options ? options.keepIdx : false;
         let timeThreshold = options ? options.timeThreshold : null;
         let ignoreIsFinished = (options && options.ignoreIsFinished) ? true : false;
@@ -425,6 +423,9 @@ function DashHandler(config) {
             segment,
             finished;
 
+        const type = streamProcessor ? streamProcessor.getType() : null;
+        const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
+
         if (!representation || index === -1) {
             return null;
         }
@@ -479,6 +480,8 @@ function DashHandler(config) {
     }
 
     function onSegmentsLoaded(e) {
+        const type = streamProcessor ? streamProcessor.getType() : null;
+        const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
         if (e.error || (type !== e.mediaType)) return;
 
         const fragments = e.segments;
@@ -526,7 +529,6 @@ function DashHandler(config) {
         getInitRequest: getInitRequest,
         getSegmentRequestForTime: getSegmentRequestForTime,
         getNextSegmentRequest: getNextSegmentRequest,
-        getType: getType,
         generateSegmentRequestForTime: generateSegmentRequestForTime,
         updateRepresentation: updateRepresentation,
         setCurrentTime: setCurrentTime,
