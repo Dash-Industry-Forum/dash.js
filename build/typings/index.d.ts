@@ -9,7 +9,7 @@ declare namespace dashjs {
     class VideoModel { }
 
     class ProtectionController {
-        setRobustnessLevel(level: string);
+        setRobustnessLevel(level: string): void;
     }
 
     export interface Bitrate {
