@@ -103,7 +103,7 @@ describe("MediaPlayer", function () {
             beforeEach(function () {
                 player.initialize(videoElementMock, dummyUrl, false);
             });
-            it("Method isReady should return false", function () {
+            it("Method isReady should return true", function () {
                 let isReady = player.isReady();
                 expect(isReady).to.be.true;
             });
