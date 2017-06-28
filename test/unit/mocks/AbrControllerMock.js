@@ -162,10 +162,6 @@ class AbrControllerMock{
 
     }
 
-    setAverageThroughput() {}
-
-    getAverageThroughput() {}
-
     updateTopQualityIndex() {}
 
     isPlayingAtTopQuality() {}
