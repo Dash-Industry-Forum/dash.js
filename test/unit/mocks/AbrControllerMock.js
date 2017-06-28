@@ -32,7 +32,9 @@ class AbrControllerMock{
 
     createAbrRulesCollection() {}
 
-    reset() {}
+    reset() {
+        this.setup();
+    }
 
     setConfig() {}
 
