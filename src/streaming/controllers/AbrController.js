@@ -44,6 +44,7 @@ import DroppedFramesHistory from '../rules/DroppedFramesHistory.js';
 import ThroughputHistory from '../rules/ThroughputHistory.js';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import Debug from '../../core/Debug';
+import PlayerConfig from '../../core/Config';
 
 const ABANDON_LOAD = 'abandonload';
 const ALLOW_LOAD = 'allowload';
@@ -56,21 +57,17 @@ function AbrController() {
     let context = this.context;
     let debug = Debug(context).getInstance();
     let eventBus = EventBus(context).getInstance();
+    let playerConfig = PlayerConfig(context).getInstance();
 
     let instance,
         log,
         abrRulesCollection,
         streamController,
-        autoSwitchBitrate,
         topQualities,
         qualityDict,
-        bitrateDict,
-        ratioDict,
         streamProcessorDict,
         abandonmentStateDict,
         abandonmentTimeout,
-        limitBitrateByPortal,
-        usePixelRatioInLimitBitrateByPortal,
         windowResizeEventCalled,
         elementWidth,
         elementHeight,
@@ -90,16 +87,11 @@ function AbrController() {
 
     function setup() {
         log = debug.log.bind(instance);
-        autoSwitchBitrate = {video: true, audio: true};
         topQualities = {};
         qualityDict = {};
-        bitrateDict = {};
-        ratioDict = {};
         abandonmentStateDict = {};
         streamProcessorDict = {};
         switchHistoryDict = {};
-        limitBitrateByPortal = false;
-        usePixelRatioInLimitBitrateByPortal = false;
         if (windowResizeEventCalled === undefined) {
             windowResizeEventCalled = false;
         }
@@ -136,17 +128,12 @@ function AbrController() {
 
     function reset() {
         log = debug.log.bind(instance);
-        autoSwitchBitrate = {video: true, audio: true};
         topQualities = {};
         qualityDict = {};
-        bitrateDict = {};
-        ratioDict = {};
         abandonmentStateDict = {};
         streamProcessorDict = {};
         switchHistoryDict = {};
-        limitBitrateByPortal = false;
         useDeadTimeLatency = true;
-        usePixelRatioInLimitBitrateByPortal = false;
         if (windowResizeEventCalled === undefined) {
             windowResizeEventCalled = false;
         }
@@ -228,119 +215,45 @@ function AbrController() {
      * @memberof AbrController#
      */
     function getInitialBitrateFor(type) {
-
         let savedBitrate = domStorage.getSavedBitrateSettings(type);
+        let configBitrate = playerConfig.get().streaming.abr.initialBitrate[type];
+        let configRatio = playerConfig.get().streaming.abr.initialRepresentationRatio[type];
 
-        if (!bitrateDict.hasOwnProperty(type)) {
-            if (ratioDict.hasOwnProperty(type)) {
+        if (!configBitrate) {
+            if (configRatio) {
                 let manifest = manifestModel.getValue();
                 let representation = dashManifestModel.getAdaptationForType(manifest, 0, type).Representation;
 
                 if (Array.isArray(representation)) {
-                    let repIdx = Math.max(Math.round(representation.length * ratioDict[type]) - 1, 0);
-                    bitrateDict[type] = representation[repIdx].bandwidth;
+                    let repIdx = Math.max(Math.round(representation.length * configRatio) - 1, 0);
+                    return representation[repIdx].bandwidth;
                 } else {
-                    bitrateDict[type] = 0;
+                    return 0;
                 }
             } else if (!isNaN(savedBitrate)) {
-                bitrateDict[type] = savedBitrate;
+                return savedBitrate;
             } else {
-                bitrateDict[type] = (type === Constants.VIDEO) ? DEFAULT_VIDEO_BITRATE : DEFAULT_AUDIO_BITRATE;
+                return (type === Constants.VIDEO) ? DEFAULT_VIDEO_BITRATE : DEFAULT_AUDIO_BITRATE;
             }
         }
 
-        return bitrateDict[type];
-    }
-
-    /**
-     * @param {string} type
-     * @param {number} value A value of the initial bitrate, kbps
-     * @memberof AbrController#
-     */
-    function setInitialBitrateFor(type, value) {
-        bitrateDict[type] = value;
-    }
-
-    function getInitialRepresentationRatioFor(type) {
-        if (!ratioDict.hasOwnProperty(type)) {
-            return null;
-        }
-
-        return ratioDict[type];
-    }
-
-    function setInitialRepresentationRatioFor(type, value) {
-        ratioDict[type] = value;
+        return configBitrate;
     }
 
     function getMaxAllowedBitrateFor(type) {
-        if (bitrateDict.hasOwnProperty('max') && bitrateDict.max.hasOwnProperty(type)) {
-            return bitrateDict.max[type];
-        }
-        return NaN;
+        return +playerConfig.get().streaming.abr.maxBitrate[type];
     }
 
     function getMinAllowedBitrateFor(type) {
-        if (bitrateDict.hasOwnProperty('min') && bitrateDict.min.hasOwnProperty(type)) {
-            return bitrateDict.min[type];
-        }
-        return NaN;
-    }
-
-    //TODO  change bitrateDict structure to hold one object for video and audio with initial and max values internal.
-    // This means you need to update all the logic around initial bitrate DOMStorage, RebController etc...
-    function setMaxAllowedBitrateFor(type, value) {
-        bitrateDict.max = bitrateDict.max || {};
-        bitrateDict.max[type] = value;
-    }
-
-    function setMinAllowedBitrateFor(type, value) {
-        bitrateDict.min = bitrateDict.min || {};
-        bitrateDict.min[type] = value;
+        return +playerConfig.get().streaming.abr.minBitrate[type];
     }
 
     function getMaxAllowedRepresentationRatioFor(type) {
-        if (ratioDict.hasOwnProperty('max') && ratioDict.max.hasOwnProperty(type)) {
-            return ratioDict.max[type];
-        }
-        return 1;
-    }
-
-    function setMaxAllowedRepresentationRatioFor(type, value) {
-        ratioDict.max = ratioDict.max || {};
-        ratioDict.max[type] = value;
+        return +playerConfig.get().streaming.abr.maxRepresentationRatio[type];
     }
 
     function getAutoSwitchBitrateFor(type) {
-        return autoSwitchBitrate[type];
-    }
-
-    function setAutoSwitchBitrateFor(type, value) {
-        autoSwitchBitrate[type] = value;
-    }
-
-    function getLimitBitrateByPortal() {
-        return limitBitrateByPortal;
-    }
-
-    function setLimitBitrateByPortal(value) {
-        limitBitrateByPortal = value;
-    }
-
-    function getUsePixelRatioInLimitBitrateByPortal() {
-        return usePixelRatioInLimitBitrateByPortal;
-    }
-
-    function setUsePixelRatioInLimitBitrateByPortal(value) {
-        usePixelRatioInLimitBitrateByPortal = value;
-    }
-
-    function getUseDeadTimeLatency() {
-        return useDeadTimeLatency;
-    }
-
-    function setUseDeadTimeLatency(value) {
-        useDeadTimeLatency = value;
+        return !!playerConfig.get().streaming.abr.autoSwitchBitrate[type];
     }
 
     function checkPlaybackQuality(type) {
@@ -585,14 +498,14 @@ function AbrController() {
     }
 
     function setElementSize() {
-        let hasPixelRatio = usePixelRatioInLimitBitrateByPortal && window.hasOwnProperty('devicePixelRatio');
+        let hasPixelRatio = playerConfig.get().streaming.abr.usePixelRatioInLimitBitrateByPortal && window.hasOwnProperty('devicePixelRatio');
         let pixelRatio = hasPixelRatio ? window.devicePixelRatio : 1;
         elementWidth = videoModel.getClientWidth() * pixelRatio;
         elementHeight = videoModel.getClientHeight() * pixelRatio;
     }
 
     function checkPortalSize(idx, type) {
-        if (type !== Constants.VIDEO || !limitBitrateByPortal || !streamProcessorDict[type]) {
+        if (type !== Constants.VIDEO || !playerConfig.get().streaming.abr.limitBitrateByPortal || !streamProcessorDict[type]) {
             return idx;
         }
 
@@ -667,25 +580,8 @@ function AbrController() {
         updateTopQualityIndex: updateTopQualityIndex,
         getThroughputHistory: getThroughputHistory,
         getBitrateList: getBitrateList,
-        getQualityForBitrate: getQualityForBitrate,
-        getMaxAllowedBitrateFor: getMaxAllowedBitrateFor,
-        getMinAllowedBitrateFor: getMinAllowedBitrateFor,
-        setMaxAllowedBitrateFor: setMaxAllowedBitrateFor,
-        setMinAllowedBitrateFor: setMinAllowedBitrateFor,
-        getMaxAllowedRepresentationRatioFor: getMaxAllowedRepresentationRatioFor,
-        setMaxAllowedRepresentationRatioFor: setMaxAllowedRepresentationRatioFor,
         getInitialBitrateFor: getInitialBitrateFor,
-        setInitialBitrateFor: setInitialBitrateFor,
-        getInitialRepresentationRatioFor: getInitialRepresentationRatioFor,
-        setInitialRepresentationRatioFor: setInitialRepresentationRatioFor,
-        setAutoSwitchBitrateFor: setAutoSwitchBitrateFor,
-        getAutoSwitchBitrateFor: getAutoSwitchBitrateFor,
-        getUseDeadTimeLatency: getUseDeadTimeLatency,
-        setUseDeadTimeLatency: setUseDeadTimeLatency,
-        setLimitBitrateByPortal: setLimitBitrateByPortal,
-        getLimitBitrateByPortal: getLimitBitrateByPortal,
-        getUsePixelRatioInLimitBitrateByPortal: getUsePixelRatioInLimitBitrateByPortal,
-        setUsePixelRatioInLimitBitrateByPortal: setUsePixelRatioInLimitBitrateByPortal,
+        getQualityForBitrate: getQualityForBitrate,
         getQualityFor: getQualityFor,
         getAbandonmentStateFor: getAbandonmentStateFor,
         setPlaybackQuality: setPlaybackQuality,
