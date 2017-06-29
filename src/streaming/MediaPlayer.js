@@ -733,7 +733,7 @@ function MediaPlayer() {
      * @instance
      */
     function getMaxAllowedRepresentationRatioFor(type) {
-        return playerConfig.streaming.abr.maxRepresentationRatio[type];
+        return playerConfig().streaming.abr.maxRepresentationRatio[type];
     }
 
     /**
