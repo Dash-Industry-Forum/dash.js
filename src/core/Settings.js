@@ -30,9 +30,12 @@
  */
 import FactoryMaker from './FactoryMaker';
 import Utils from './Utils.js';
+import Debug from './../core/Debug';
 
-function PlayerConfig() {
-    const defaultConfig = {
+function Settings() {
+    let log = Debug(this.context).getInstance().log;
+
+    const defaultSettings = {
         streaming: {
             abr: {
                 useDeadTimeLatency: true,
@@ -48,46 +51,48 @@ function PlayerConfig() {
         }
     };
 
-    let config = Utils.clone(defaultConfig);
+    let settings = Utils.clone(defaultSettings);
 
-    //Merge in the config. If something exists in the new config that doesn't match the schema of the default config,
+    //Merge in the settings. If something exists in the new config that doesn't match the schema of the default config,
     //regard it as an error and log it.
-    function mixinConfig(source, dest, path) {
+    function mixinSettings(source, dest, path) {
         for (let n in source) {
             if (source.hasOwnProperty(n)) {
                 if (dest.hasOwnProperty(n)) {
                     if (typeof source[n] === 'object') {
-                        mixinConfig(source[n], dest[n], path.slice() + n + '.');
+                        mixinSettings(source[n], dest[n], path.slice() + n + '.');
                     } else {
                         dest[n] = Utils.clone(source[n]);
                     }
                 } else {
-                    console.log('Warning: the config option \'' + path + n + '\' wasn\'t found and will be ignored.');
-                    //TODO Warn config option doesn't match against default schema
+                    log('Warning: the settings option \'' + path + n + '\' wasn\'t found and will be ignored.');
+                    //If you're getting this warning, then the passed in partial object doesn't match whats expected.
+                    //Check it against the defaultSettings object.
                 }
             }
         }
     }
 
     function get() {
-        return config;
+        return settings;
     }
 
-    //Set something on the config object.
-    //If a json object is passed in, mix it in. Anything unspecified remains the same.
-    function set(conf) {
+    // Set something on the settings object.
+    // If a json object is passed in, update everything that matches the paths. Anything that does not match the schema
+    // of the default is ignored(and a warning is given).
+    function update(conf) {
         if (typeof conf === 'object') {
-            mixinConfig(conf, config, '');
+            mixinSettings(conf, settings, '');
         }
     }
 
     function reset() {
-        config = Utils.clone(defaultConfig);
+        settings = Utils.clone(defaultSettings);
     }
 
     const instance = {
         get: get,
-        set: set,
+        update: update,
         reset: reset
     };
 
@@ -95,6 +100,6 @@ function PlayerConfig() {
 }
 
 
-PlayerConfig.__dashjs_factory_name = 'PlayerConfig';
-let factory = FactoryMaker.getSingletonFactory(PlayerConfig);
+Settings.__dashjs_factory_name = 'Settings';
+let factory = FactoryMaker.getSingletonFactory(Settings);
 export default factory;

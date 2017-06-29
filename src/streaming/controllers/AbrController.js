@@ -44,7 +44,7 @@ import DroppedFramesHistory from '../rules/DroppedFramesHistory.js';
 import ThroughputHistory from '../rules/ThroughputHistory.js';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import Debug from '../../core/Debug';
-import PlayerConfig from '../../core/Config';
+import Settings from '../../core/Settings';
 
 const ABANDON_LOAD = 'abandonload';
 const ALLOW_LOAD = 'allowload';
@@ -57,7 +57,7 @@ function AbrController() {
     let context = this.context;
     let debug = Debug(context).getInstance();
     let eventBus = EventBus(context).getInstance();
-    let playerConfig = PlayerConfig(context).getInstance();
+    let settings = Settings(context).getInstance();
 
     let instance,
         log,
@@ -216,8 +216,8 @@ function AbrController() {
      */
     function getInitialBitrateFor(type) {
         let savedBitrate = domStorage.getSavedBitrateSettings(type);
-        let configBitrate = playerConfig.get().streaming.abr.initialBitrate[type];
-        let configRatio = playerConfig.get().streaming.abr.initialRepresentationRatio[type];
+        let configBitrate = settings.get().streaming.abr.initialBitrate[type];
+        let configRatio = settings.get().streaming.abr.initialRepresentationRatio[type];
 
         if (!configBitrate) {
             if (configRatio) {
@@ -241,19 +241,19 @@ function AbrController() {
     }
 
     function getMaxAllowedBitrateFor(type) {
-        return +playerConfig.get().streaming.abr.maxBitrate[type];
+        return +settings.get().streaming.abr.maxBitrate[type];
     }
 
     function getMinAllowedBitrateFor(type) {
-        return +playerConfig.get().streaming.abr.minBitrate[type];
+        return +settings.get().streaming.abr.minBitrate[type];
     }
 
     function getMaxAllowedRepresentationRatioFor(type) {
-        return +playerConfig.get().streaming.abr.maxRepresentationRatio[type];
+        return +settings.get().streaming.abr.maxRepresentationRatio[type];
     }
 
     function getAutoSwitchBitrateFor(type) {
-        return !!playerConfig.get().streaming.abr.autoSwitchBitrate[type];
+        return !!settings.get().streaming.abr.autoSwitchBitrate[type];
     }
 
     function checkPlaybackQuality(type) {
@@ -498,14 +498,14 @@ function AbrController() {
     }
 
     function setElementSize() {
-        let hasPixelRatio = playerConfig.get().streaming.abr.usePixelRatioInLimitBitrateByPortal && window.hasOwnProperty('devicePixelRatio');
+        let hasPixelRatio = settings.get().streaming.abr.usePixelRatioInLimitBitrateByPortal && window.hasOwnProperty('devicePixelRatio');
         let pixelRatio = hasPixelRatio ? window.devicePixelRatio : 1;
         elementWidth = videoModel.getClientWidth() * pixelRatio;
         elementHeight = videoModel.getClientHeight() * pixelRatio;
     }
 
     function checkPortalSize(idx, type) {
-        if (type !== Constants.VIDEO || !playerConfig.get().streaming.abr.limitBitrateByPortal || !streamProcessorDict[type]) {
+        if (type !== Constants.VIDEO || !settings.get().streaming.abr.limitBitrateByPortal || !streamProcessorDict[type]) {
             return idx;
         }
 

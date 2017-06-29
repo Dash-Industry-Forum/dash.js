@@ -52,7 +52,7 @@ import EventBus from './../core/EventBus';
 import Events from './../core/events/Events';
 import MediaPlayerEvents from './MediaPlayerEvents';
 import FactoryMaker from '../core/FactoryMaker';
-import PlayerConfig from '../core/Config';
+import Settings from '../core/Settings';
 import {
     getVersionString
 }
@@ -79,7 +79,7 @@ function MediaPlayer() {
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
-    let playerConfig = PlayerConfig(context).getInstance();
+    let settings = Settings(context).getInstance();
     let debug = Debug(context).getInstance();
     let log = debug.log;
 
@@ -257,7 +257,7 @@ function MediaPlayer() {
             metricsReportingController.reset();
             metricsReportingController = null;
         }
-        playerConfig.reset();
+        settings.reset();
     }
 
     /**
@@ -655,9 +655,9 @@ function MediaPlayer() {
      * @instance
      */
     function setMaxAllowedBitrateFor(type, value) {
-        const c = { streaming: { abr: { maxBitrate: {}}}};
-        c.streaming.abr.maxBitrate[type] = value;
-        playerConfig.set(c);
+        const s = { streaming: { abr: { maxBitrate: {}}}};
+        s.streaming.abr.maxBitrate[type] = value;
+        settings.update(s);
     }
 
     /**
@@ -677,9 +677,9 @@ function MediaPlayer() {
      * @instance
      */
     function setMinAllowedBitrateFor(type, value) {
-        const c = { streaming: { abr: { minBitrate: {}}}};
-        c.streaming.abr.minBitrate[type] = value;
-        playerConfig.set(c);
+        const s = { streaming: { abr: { minBitrate: {}}}};
+        s.streaming.abr.minBitrate[type] = value;
+        settings.update(s);
     }
 
     /**
@@ -689,7 +689,7 @@ function MediaPlayer() {
      * @instance
      */
     function getMaxAllowedBitrateFor(type) {
-        return playerConfig.get().streaming.abr.maxBitrate[type];
+        return settings.get().streaming.abr.maxBitrate[type];
     }
 
     /**
@@ -699,7 +699,7 @@ function MediaPlayer() {
      * @instance
      */
     function getMinAllowedBitrateFor(type) {
-        return playerConfig.get().streaming.abr.minBitrate[type];
+        return settings.get().streaming.abr.minBitrate[type];
     }
 
     /**
@@ -720,9 +720,9 @@ function MediaPlayer() {
      * @instance
      */
     function setMaxAllowedRepresentationRatioFor(type, value) {
-        const c = { streaming: { abr: { maxRepresentationRatio: {}}}};
-        c.streaming.abr.maxRepresentationRatio[type] = value;
-        playerConfig.set(c);
+        const s = { streaming: { abr: { maxRepresentationRatio: {}}}};
+        s.streaming.abr.maxRepresentationRatio[type] = value;
+        settings.update(s);
     }
 
     /**
@@ -733,7 +733,7 @@ function MediaPlayer() {
      * @instance
      */
     function getMaxAllowedRepresentationRatioFor(type) {
-        return playerConfig().streaming.abr.maxRepresentationRatio[type];
+        return settings().streaming.abr.maxRepresentationRatio[type];
     }
 
     /**
@@ -783,7 +783,7 @@ function MediaPlayer() {
      * @instance
      */
     function getLimitBitrateByPortal() {
-        return playerConfig.get().streaming.abr.limitBitrateByPortal;
+        return settings.get().streaming.abr.limitBitrateByPortal;
     }
 
     /**
@@ -794,8 +794,8 @@ function MediaPlayer() {
      * @instance
      */
     function setLimitBitrateByPortal(value) {
-        const c = { streaming: { abr: { limitBitrateByPortal: value }}};
-        playerConfig.set(c);
+        const s = { streaming: { abr: { limitBitrateByPortal: value }}};
+        settings.update(s);
     }
 
     /**
@@ -803,7 +803,7 @@ function MediaPlayer() {
      * @instance
      */
     function getUsePixelRatioInLimitBitrateByPortal() {
-        return playerConfig.streaming.abr.usePixelRatioInLimitBitrateByPortal;
+        return settings.streaming.abr.usePixelRatioInLimitBitrateByPortal;
     }
 
     /**
@@ -816,8 +816,8 @@ function MediaPlayer() {
      * @default {boolean} false
      */
     function setUsePixelRatioInLimitBitrateByPortal(value) {
-        const c = { streaming: { abr: { usePixelRatioInLimitBitrateByPortal: value } } };
-        playerConfig.set(c);
+        const s = { streaming: { abr: { usePixelRatioInLimitBitrateByPortal: value } } };
+        settings.update(s);
     }
 
     /**
@@ -829,9 +829,9 @@ function MediaPlayer() {
      * @instance
      */
     function setInitialBitrateFor(type, value) {
-        const c = { streaming: { abr: { initialBitrate: {}}}};
-        c.streaming.abr.initialBitrate[type] = value;
-        playerConfig.set(c);
+        const s = { streaming: { abr: { initialBitrate: {}}}};
+        s.streaming.abr.initialBitrate[type] = value;
+        settings.update(s);
     }
 
     /**
@@ -854,9 +854,9 @@ function MediaPlayer() {
      * @instance
      */
     function setInitialRepresentationRatioFor(type, value) {
-        const c = { streaming: { abr: { initialRepresentationRatio: {}}}};
-        c.streaming.abr.initialRepresentationRatio[type] = value;
-        playerConfig.set(c);
+        const s = { streaming: { abr: { initialRepresentationRatio: {}}}};
+        s.streaming.abr.initialRepresentationRatio[type] = value;
+        settings.update(s);
     }
 
     /**
@@ -866,7 +866,7 @@ function MediaPlayer() {
      * @instance
      */
     function getInitialRepresentationRatioFor(type) {
-        return playerConfig.get().streaming.abr.initialRepresentationRatio[type];
+        return settings.get().streaming.abr.initialRepresentationRatio[type];
     }
 
     /**
@@ -876,7 +876,7 @@ function MediaPlayer() {
      * @instance
      */
     function getAutoSwitchQualityFor(type) {
-        return playerConfig.get().streaming.abr.autoSwitchBitrate[type];
+        return settings.get().streaming.abr.autoSwitchBitrate[type];
     }
 
     /**
@@ -889,9 +889,9 @@ function MediaPlayer() {
      * @instance
      */
     function setAutoSwitchQualityFor(type, value) {
-        const c = { streaming: { abr: { autoSwitchBitrate: {}}}};
-        c.streaming.abr.autoSwitchBitrate[type] = value;
-        playerConfig.set(c);
+        const s = { streaming: { abr: { autoSwitchBitrate: {}}}};
+        s.streaming.abr.autoSwitchBitrate[type] = value;
+        settings.update(s);
     }
 
     /**
@@ -903,7 +903,7 @@ function MediaPlayer() {
      * @instance
      */
     function getUseDeadTimeLatencyForAbr() {
-        return playerConfig.get().streaming.abr.useDeadTimeLatency;
+        return settings.get().streaming.abr.useDeadTimeLatency;
     }
 
     /**
@@ -918,8 +918,8 @@ function MediaPlayer() {
      * @instance
      */
     function setUseDeadTimeLatencyForAbr(useDeadTimeLatency) {
-        const c = { streaming: { abr: { useDeadTimeLatency: useDeadTimeLatency }}};
-        playerConfig.set(c);
+        const s = { streaming: { abr: { useDeadTimeLatency: useDeadTimeLatency }}};
+        settings.update(s);
     }
 
     /*
@@ -2034,18 +2034,18 @@ function MediaPlayer() {
         resetAndInitializePlayback();
     }
 
-    function getPlayerConfig() {
-        return playerConfig.get();
+    function getSettings() {
+        return settings.get();
     }
 
-    function setPlayerConfig(config) {
-        if (typeof config === 'object') {
-            playerConfig.set(config);
-        } else if (typeof config === 'undefined') {
-            playerConfig.default();
+    function updateSettings(settingsObj) {
+        if (typeof settingsObj === 'object') {
+            settings.update(settingsObj);
+        } else if (typeof settingsObj === 'undefined') {
+            settings.default();
         }
 
-        console.dir(getPlayerConfig());
+        console.dir(getSettings());
     }
 
     /**
@@ -2512,8 +2512,8 @@ function MediaPlayer() {
         getCurrentTextTrackIndex: getCurrentTextTrackIndex,
         getUseDeadTimeLatencyForAbr: getUseDeadTimeLatencyForAbr,
         setUseDeadTimeLatencyForAbr: setUseDeadTimeLatencyForAbr,
-        getPlayerConfig: getPlayerConfig,
-        setPlayerConfig: setPlayerConfig,
+        getSettings: getSettings,
+        updateSettings: updateSettings,
         reset: reset
     };
 
