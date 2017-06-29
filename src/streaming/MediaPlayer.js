@@ -655,7 +655,7 @@ function MediaPlayer() {
      * @instance
      */
     function setMaxAllowedBitrateFor(type, value) {
-        let c = { streaming: { abr: { maxBitrate: {}}}};
+        const c = { streaming: { abr: { maxBitrate: {}}}};
         c.streaming.abr.maxBitrate[type] = value;
         playerConfig.set(c);
     }
@@ -677,7 +677,7 @@ function MediaPlayer() {
      * @instance
      */
     function setMinAllowedBitrateFor(type, value) {
-        let c = { streaming: { abr: { minBitrate: {}}}};
+        const c = { streaming: { abr: { minBitrate: {}}}};
         c.streaming.abr.minBitrate[type] = value;
         playerConfig.set(c);
     }
@@ -720,7 +720,7 @@ function MediaPlayer() {
      * @instance
      */
     function setMaxAllowedRepresentationRatioFor(type, value) {
-        let c = { streaming: { abr: { maxRepresentationRatio: {}}}};
+        const c = { streaming: { abr: { maxRepresentationRatio: {}}}};
         c.streaming.abr.maxRepresentationRatio[type] = value;
         playerConfig.set(c);
     }
