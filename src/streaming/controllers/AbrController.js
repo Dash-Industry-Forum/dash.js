@@ -399,7 +399,7 @@ function AbrController() {
         // If there is enough buffer why not try to stay at high level
         if (bufferState && bufferLevel > bufferState.target) {
             // Are we currently over the buffer target by at least RICH_BUFFER_THRESHOLD?
-            isBufferRich = bufferLevel > ( bufferState.target + mediaPlayerModel.getRichBufferThreshold() );
+            isBufferRich = bufferLevel > ( bufferState.target + settings.get().streaming.richBufferThreshold );
         }
 
         return isBufferRich;

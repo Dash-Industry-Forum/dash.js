@@ -288,7 +288,6 @@ function StreamProcessor(config) {
             controller = BufferController(context).create({
                 type: type,
                 metricsModel: metricsModel,
-                mediaPlayerModel: mediaPlayerModel,
                 manifestModel: manifestModel,
                 sourceBufferController: sourceBufferController,
                 errHandler: errHandler,

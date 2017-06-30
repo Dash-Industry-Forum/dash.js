@@ -252,7 +252,7 @@ function ScheduleController(config) {
 
         if (request && replaceRequestArray.indexOf(request) === -1 && !dashManifestModel.getIsTextTrack(type)) {
             const isCurrentTrack = mediaController.isCurrentTrack(request.mediaInfo);
-            const fastSwitchModeEnabled = mediaPlayerModel.getFastSwitchEnabled();
+            const fastSwitchModeEnabled = settings.get().streaming.fastSwitchEnabled;
             const bufferLevel = streamProcessor.getBufferLevel();
             const abandonmentState = abrController.getAbandonmentStateFor(type);
 

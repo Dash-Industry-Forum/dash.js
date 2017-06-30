@@ -733,7 +733,7 @@ function MediaPlayer() {
      * @instance
      */
     function getMaxAllowedRepresentationRatioFor(type) {
-        return settings().streaming.abr.maxRepresentationRatio[type];
+        return settings.get().streaming.abr.maxRepresentationRatio[type];
     }
 
     /**
@@ -1092,7 +1092,8 @@ function MediaPlayer() {
      * @instance
      */
     function setFastSwitchEnabled(value) { //TODO we need to look at track switches for adaptation sets.  If always replace it works much like this but clears buffer. Maybe too many ways to do same thing.
-        mediaPlayerModel.setFastSwitchEnabled(value);
+        const s = { streaming: { fastSwitchEnabled: value } };
+        settings.update(s);
     }
 
     /**
@@ -1103,7 +1104,7 @@ function MediaPlayer() {
      * @instance
      */
     function getFastSwitchEnabled() {
-        return mediaPlayerModel.getFastSwitchEnabled();
+        return settings.get().fastSwitchEnabled;
     }
 
     /**
@@ -1282,7 +1283,8 @@ function MediaPlayer() {
      * @instance
      */
     function setBufferToKeep(value) {
-        mediaPlayerModel.setBufferToKeep(value);
+        const s = { streaming: { bufferToKeep: value } };
+        settings.update(s);
     }
 
     /**
@@ -1295,7 +1297,8 @@ function MediaPlayer() {
      * @instance
      */
     function setBufferPruningInterval(value) {
-        mediaPlayerModel.setBufferPruningInterval(value);
+        const s = { streaming: { bufferPruningInterval: value } };
+        settings.update(s);
     }
 
     /**
@@ -1311,7 +1314,8 @@ function MediaPlayer() {
      * @instance
      */
     function setStableBufferTime(value) {
-        mediaPlayerModel.setStableBufferTime(value);
+        const s = { streaming: { stableBufferTime: value } };
+        settings.update(s);
     }
 
     /**
@@ -1320,6 +1324,9 @@ function MediaPlayer() {
      * When the time is set higher than the default you will have to wait longer
      * to see automatic bitrate switches but will have a larger buffer which
      * will increase stability.
+     *
+     * If stableBufferTime is unset (or isNaN), this will return depending on whether fast switch
+     * is enabled: DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH or DEFAULT_MIN_BUFFER_TIME.
      *
      * @default 12 seconds.
      * @memberof module:MediaPlayer
@@ -1349,7 +1356,8 @@ function MediaPlayer() {
      * @instance
      */
     function setBufferTimeAtTopQuality(value) {
-        mediaPlayerModel.setBufferTimeAtTopQuality(value);
+        const s = { streaming: { bufferTimeAtTopQuality: value } };
+        settings.update(s);
     }
 
     /**
@@ -1363,7 +1371,7 @@ function MediaPlayer() {
      * @instance
      */
     function getBufferTimeAtTopQuality() {
-        return mediaPlayerModel.getBufferTimeAtTopQuality();
+        return settings.get().streaming.bufferTimeAtTopQuality;
     }
 
     /**
@@ -1377,7 +1385,8 @@ function MediaPlayer() {
      * @instance
      */
     function setBufferTimeAtTopQualityLongForm(value) {
-        mediaPlayerModel.setBufferTimeAtTopQualityLongForm(value);
+        const s = { streaming: { bufferTimeAtTopQualityLongForm: value } };
+        settings.update(s);
     }
 
     /**
@@ -1390,7 +1399,7 @@ function MediaPlayer() {
      * @instance
      */
     function getBufferTimeAtTopQualityLongForm() {
-        return mediaPlayerModel.getBufferTimeAtTopQualityLongForm();
+        return settings.get().streaming.bufferTimeAtTopQualityLongForm;
     }
 
     /**
@@ -1404,7 +1413,8 @@ function MediaPlayer() {
      * @instance
      */
     function setLongFormContentDurationThreshold(value) {
-        mediaPlayerModel.setLongFormContentDurationThreshold(value);
+        const s = { streaming: { longFormContentDurationThreshold: value } };
+        settings.update(s);
     }
 
     /**
@@ -1419,7 +1429,8 @@ function MediaPlayer() {
      * @instance
      */
     function setRichBufferThreshold(value) {
-        mediaPlayerModel.setRichBufferThreshold(value);
+        const s = { streaming: { richBufferThreshold: value } };
+        settings.update(s);
     }
 
     /**
@@ -1433,7 +1444,8 @@ function MediaPlayer() {
      * @instance
      */
     function setBandwidthSafetyFactor(value) {
-        mediaPlayerModel.setBandwidthSafetyFactor(value);
+        const s = { streaming: { abr: {bandwidthSafetyFactor: value } } };
+        settings.update(s);
     }
 
     /**
@@ -1445,7 +1457,7 @@ function MediaPlayer() {
      * @instance
      */
     function getBandwidthSafetyFactor() {
-        return mediaPlayerModel.getBandwidthSafetyFactor();
+        return settings.get().bandwidthSafetyFactor;
     }
 
     /**

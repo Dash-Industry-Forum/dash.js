@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import FactoryMaker from '../../core/FactoryMaker';
+import Settings from '../../core/Settings';
 import {
     HTTPRequest
 }
@@ -42,16 +43,8 @@ const DEFAULT_UTC_TIMING_SOURCE = {
 const DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION = 360000;
 const DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION = 360000;
 
-const BANDWIDTH_SAFETY_FACTOR = 0.9;
-
-const BUFFER_TO_KEEP = 30;
-const BUFFER_PRUNING_INTERVAL = 30;
 const DEFAULT_MIN_BUFFER_TIME = 12;
 const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
-const BUFFER_TIME_AT_TOP_QUALITY = 30;
-const BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 60;
-const LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;
-const RICH_BUFFER_THRESHOLD = 20;
 
 const FRAGMENT_RETRY_ATTEMPTS = 3;
 const FRAGMENT_RETRY_INTERVAL = 1000;
@@ -62,34 +55,23 @@ const MANIFEST_RETRY_INTERVAL = 500;
 const XLINK_RETRY_ATTEMPTS = 1;
 const XLINK_RETRY_INTERVAL = 500;
 
-//This value influences the startup time for live (in ms).
-const WALLCLOCK_TIME_UPDATE_INTERVAL = 50;
-
 const DEFAULT_XHR_WITH_CREDENTIALS = false;
 
 function MediaPlayerModel() {
+
+    const settings = Settings(this.context).getInstance();
 
     let instance,
         useManifestDateHeaderTimeSource,
         useSuggestedPresentationDelay,
         UTCTimingSources,
-        bufferToKeep,
-        bufferPruningInterval,
         lastBitrateCachingInfo,
         lastMediaSettingsCachingInfo,
-        stableBufferTime,
-        bufferTimeAtTopQuality,
-        bufferTimeAtTopQualityLongForm,
-        longFormContentDurationThreshold,
-        richBufferThreshold,
-        bandwidthSafetyFactor,
         retryAttempts,
         retryIntervals,
-        wallclockTimeUpdateInterval,
         bufferOccupancyABREnabled,
         useDefaultABRRules,
         xhrWithCredentials,
-        fastSwitchEnabled,
         customABRRule;
 
     function setup() {
@@ -98,7 +80,6 @@ function MediaPlayerModel() {
         useManifestDateHeaderTimeSource = true;
         bufferOccupancyABREnabled = false;
         useDefaultABRRules = true;
-        fastSwitchEnabled = false;
         lastBitrateCachingInfo = {
             enabled: true,
             ttl: DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION
@@ -107,15 +88,6 @@ function MediaPlayerModel() {
             enabled: true,
             ttl: DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION
         };
-        bufferToKeep = BUFFER_TO_KEEP;
-        bufferPruningInterval = BUFFER_PRUNING_INTERVAL;
-        stableBufferTime = NaN;
-        bufferTimeAtTopQuality = BUFFER_TIME_AT_TOP_QUALITY;
-        bufferTimeAtTopQualityLongForm = BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM;
-        longFormContentDurationThreshold = LONG_FORM_CONTENT_DURATION_THRESHOLD;
-        richBufferThreshold = RICH_BUFFER_THRESHOLD;
-        bandwidthSafetyFactor = BANDWIDTH_SAFETY_FACTOR;
-        wallclockTimeUpdateInterval = WALLCLOCK_TIME_UPDATE_INTERVAL;
         xhrWithCredentials = {
             default: DEFAULT_XHR_WITH_CREDENTIALS
         };
@@ -202,61 +174,8 @@ function MediaPlayerModel() {
         customABRRule = [];
     }
 
-    function setBandwidthSafetyFactor(value) {
-        bandwidthSafetyFactor = value;
-    }
-
-    function getBandwidthSafetyFactor() {
-        return bandwidthSafetyFactor;
-    }
-
-    function setStableBufferTime(value) {
-        stableBufferTime = value;
-    }
-
     function getStableBufferTime() {
-        return !isNaN(stableBufferTime) ? stableBufferTime : fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
-    }
-
-    function setBufferTimeAtTopQuality(value) {
-        bufferTimeAtTopQuality = value;
-    }
-
-    function getBufferTimeAtTopQuality() {
-        return bufferTimeAtTopQuality;
-    }
-
-    function setBufferTimeAtTopQualityLongForm(value) {
-        bufferTimeAtTopQualityLongForm = value;
-    }
-
-    function getBufferTimeAtTopQualityLongForm() {
-        return bufferTimeAtTopQualityLongForm;
-    }
-
-    function setLongFormContentDurationThreshold(value) {
-        longFormContentDurationThreshold = value;
-    }
-
-    function getLongFormContentDurationThreshold() {
-        return longFormContentDurationThreshold;
-    }
-
-    function setRichBufferThreshold(value) {
-        richBufferThreshold = value;
-    }
-
-    function getRichBufferThreshold() {
-        return richBufferThreshold;
-    }
-
-
-    function setBufferToKeep(value) {
-        bufferToKeep = value;
-    }
-
-    function getBufferToKeep() {
-        return bufferToKeep;
+        return !isNaN(settings.get().streaming.stableBufferTime) ? settings.get().streaming.stableBufferTime : settings.get().streaming.fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
     }
 
     function setLastBitrateCachingInfo(enable, ttl) {
@@ -279,14 +198,6 @@ function MediaPlayerModel() {
 
     function getLastMediaSettingsCachingInfo() {
         return lastMediaSettingsCachingInfo;
-    }
-
-    function setBufferPruningInterval(value) {
-        bufferPruningInterval = value;
-    }
-
-    function getBufferPruningInterval() {
-        return bufferPruningInterval;
     }
 
     function setFragmentRetryAttempts(value) {
@@ -337,14 +248,6 @@ function MediaPlayerModel() {
         return retryIntervals[type];
     }
 
-    function setWallclockTimeUpdateInterval(value) {
-        wallclockTimeUpdateInterval = value;
-    }
-
-    function getWallclockTimeUpdateInterval() {
-        return wallclockTimeUpdateInterval;
-    }
-
     function setUseManifestDateHeaderTimeSource(value) {
         useManifestDateHeaderTimeSource = value;
     }
@@ -390,14 +293,6 @@ function MediaPlayerModel() {
     }
 
 
-    function getFastSwitchEnabled() {
-        return fastSwitchEnabled;
-    }
-
-    function setFastSwitchEnabled(value) {
-        fastSwitchEnabled = value;
-    }
-
     function reset() {
         //TODO need to figure out what props to persist across sessions and which to reset if any.
         //setup();
@@ -412,26 +307,11 @@ function MediaPlayerModel() {
         addABRCustomRule: addABRCustomRule,
         removeABRCustomRule: removeABRCustomRule,
         removeAllABRCustomRule: removeAllABRCustomRule,
-        setBandwidthSafetyFactor: setBandwidthSafetyFactor,
-        getBandwidthSafetyFactor: getBandwidthSafetyFactor,
+        getStableBufferTime: getStableBufferTime,
         setLastBitrateCachingInfo: setLastBitrateCachingInfo,
         getLastBitrateCachingInfo: getLastBitrateCachingInfo,
         setLastMediaSettingsCachingInfo: setLastMediaSettingsCachingInfo,
         getLastMediaSettingsCachingInfo: getLastMediaSettingsCachingInfo,
-        setStableBufferTime: setStableBufferTime,
-        getStableBufferTime: getStableBufferTime,
-        setBufferTimeAtTopQuality: setBufferTimeAtTopQuality,
-        getBufferTimeAtTopQuality: getBufferTimeAtTopQuality,
-        setBufferTimeAtTopQualityLongForm: setBufferTimeAtTopQualityLongForm,
-        getBufferTimeAtTopQualityLongForm: getBufferTimeAtTopQualityLongForm,
-        setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,
-        getLongFormContentDurationThreshold: getLongFormContentDurationThreshold,
-        setRichBufferThreshold: setRichBufferThreshold,
-        getRichBufferThreshold: getRichBufferThreshold,
-        setBufferToKeep: setBufferToKeep,
-        getBufferToKeep: getBufferToKeep,
-        setBufferPruningInterval: setBufferPruningInterval,
-        getBufferPruningInterval: getBufferPruningInterval,
         setFragmentRetryAttempts: setFragmentRetryAttempts,
         getFragmentRetryAttempts: getFragmentRetryAttempts,
         setManifestRetryAttempts: setManifestRetryAttempts,
@@ -444,8 +324,6 @@ function MediaPlayerModel() {
         getManifestRetryInterval: getManifestRetryInterval,
         setRetryIntervalForType: setRetryIntervalForType,
         getRetryIntervalForType: getRetryIntervalForType,
-        setWallclockTimeUpdateInterval: setWallclockTimeUpdateInterval,
-        getWallclockTimeUpdateInterval: getWallclockTimeUpdateInterval,
         getUseSuggestedPresentationDelay: getUseSuggestedPresentationDelay,
         setUseSuggestedPresentationDelay: setUseSuggestedPresentationDelay,
         setUseManifestDateHeaderTimeSource: setUseManifestDateHeaderTimeSource,
@@ -454,8 +332,6 @@ function MediaPlayerModel() {
         getUTCTimingSources: getUTCTimingSources,
         setXHRWithCredentialsForType: setXHRWithCredentialsForType,
         getXHRWithCredentialsForType: getXHRWithCredentialsForType,
-        setFastSwitchEnabled: setFastSwitchEnabled,
-        getFastSwitchEnabled: getFastSwitchEnabled,
         reset: reset
     };
 

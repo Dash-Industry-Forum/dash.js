@@ -38,6 +38,7 @@ import Events from '../../core/events/Events';
 import BoxParser from '../utils/BoxParser';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
+import Settings from '../../core/Settings';
 import InitCache from '../utils/InitCache';
 
 const BUFFER_LOADED = 'bufferLoaded';
@@ -48,8 +49,8 @@ function BufferController(config) {
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
+    const settings = Settings(context).getInstance();
     const metricsModel = config.metricsModel;
-    const mediaPlayerModel = config.mediaPlayerModel;
     const sourceBufferController = config.sourceBufferController;
     const errHandler = config.errHandler;
     const streamController = config.streamController;
@@ -346,7 +347,7 @@ function BufferController(config) {
         if (!buffer) return;
         if (type === Constants.FRAGMENTED_TEXT) return;
         const start = buffer.buffered.length ? buffer.buffered.start(0) : 0;
-        const bufferToPrune = playbackController.getTime() - start - mediaPlayerModel.getBufferToKeep();
+        const bufferToPrune = playbackController.getTime() - start - settings.get().streaming.bufferToKeep;
         if (bufferToPrune > 0) {
             log('pruning buffer: ' + bufferToPrune + ' seconds.');
             isPruningInProgress = true;
@@ -419,8 +420,8 @@ function BufferController(config) {
 
     function onWallclockTimeUpdated() {
         wallclockTicked++;
-        const secondsElapsed = (wallclockTicked * (mediaPlayerModel.getWallclockTimeUpdateInterval() / 1000));
-        if ((secondsElapsed >= mediaPlayerModel.getBufferPruningInterval()) && !isAppendingInProgress) {
+        const secondsElapsed = (wallclockTicked * (settings.get().streaming.wallclockTimeUpdateInterval / 1000));
+        if ((secondsElapsed >= settings.get().streaming.bufferPruningInterval) && !isAppendingInProgress) {
             wallclockTicked = 0;
             pruneBuffer();
         }

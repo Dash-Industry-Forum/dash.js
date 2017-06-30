@@ -30,9 +30,10 @@
  */
 import Constants from '../../constants/Constants';
 import FactoryMaker from '../../../core/FactoryMaker';
+import Settings from '../../../core/Settings';
 
 function BufferLevelRule(config) {
-
+    const settings = Settings().getInstance();
     const dashMetrics = config.dashMetrics;
     const metricsModel = config.metricsModel;
     const mediaPlayerModel = config.mediaPlayerModel;
@@ -58,8 +59,8 @@ function BufferLevelRule(config) {
         } else {
             const streamInfo = representationInfo.mediaInfo.streamInfo;
             if (abrController.isPlayingAtTopQuality(streamInfo)) {
-                const isLongFormContent = streamInfo.manifestInfo.duration >= mediaPlayerModel.getLongFormContentDurationThreshold();
-                bufferTarget = isLongFormContent ? mediaPlayerModel.getBufferTimeAtTopQualityLongForm() : mediaPlayerModel.getBufferTimeAtTopQuality();
+                const isLongFormContent = streamInfo.manifestInfo.duration >= settings.get().streaming.longFormContentDurationThreshold;
+                bufferTarget = isLongFormContent ? settings.get().streaming.bufferTimeAtTopQualityLongForm : settings.get().bufferTimeAtTopQuality;
             }else {
                 bufferTarget = mediaPlayerModel.getStableBufferTime();
             }
