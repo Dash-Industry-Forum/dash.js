@@ -35,12 +35,14 @@ import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
+import Settings from '../../core/Settings';
 
 function PlaybackController() {
 
     let context = this.context;
     let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
+    let settings = Settings(context).getInstance();
 
     let instance,
         streamController,
@@ -57,7 +59,6 @@ function PlaybackController() {
         commonEarliestTime,
         streamInfo,
         isDynamic,
-        mediaPlayerModel,
         playOnceInitialized;
 
     function setup() {
@@ -167,12 +168,12 @@ function PlaybackController() {
         let delay;
         const END_OF_PLAYLIST_PADDING = 10;
 
-        if (mediaPlayerModel.getUseSuggestedPresentationDelay() && mpd.hasOwnProperty(Constants.SUGGESTED_PRESENTATION_DELAY)) {
+        if (settings.get().streaming.useSuggestedPresentationDelay && mpd.hasOwnProperty(Constants.SUGGESTED_PRESENTATION_DELAY)) {
             delay = mpd.suggestedPresentationDelay;
-        } else if (mediaPlayerModel.getLiveDelay()) {
-            delay = mediaPlayerModel.getLiveDelay(); // If set by user, this value takes precedence
+        } else if (settings.get().streaming.liveDelay) {
+            delay = settings.get().streaming.liveDelay; // If set by user, this value takes precedence
         } else if (!isNaN(fragmentDuration)) {
-            delay = fragmentDuration * mediaPlayerModel.getLiveDelayFragmentCount();
+            delay = fragmentDuration * settings.get().streaming.liveDelayFragmentCount;
         } else {
             delay = streamInfo.manifestInfo.minBufferTime * 2;
         }
@@ -223,9 +224,6 @@ function PlaybackController() {
         }
         if (config.dashManifestModel) {
             dashManifestModel = config.dashManifestModel;
-        }
-        if (config.mediaPlayerModel) {
-            mediaPlayerModel = config.mediaPlayerModel;
         }
         if (config.adapter) {
             adapter = config.adapter;
@@ -303,7 +301,7 @@ function PlaybackController() {
             onWallclockTime();
         };
 
-        wallclockTimeIntervalId = setInterval(tick, mediaPlayerModel.getWallclockTimeUpdateInterval());
+        wallclockTimeIntervalId = setInterval(tick, settings.get().streaming.wallclockTimeUpdateInterval);
     }
 
     function stopUpdatingWallclockTime() {

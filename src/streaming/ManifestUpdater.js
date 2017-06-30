@@ -32,12 +32,14 @@ import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import FactoryMaker from '../core/FactoryMaker';
 import Debug from '../core/Debug';
+import Settings from '../core/Settings';
 
 function ManifestUpdater() {
 
     const context = this.context;
     const log = Debug(context).getInstance().log;
     const eventBus = EventBus(context).getInstance();
+    const settings = Settings(context).getInstance();
 
     let instance,
         refreshDelay,
@@ -46,8 +48,7 @@ function ManifestUpdater() {
         isUpdating,
         manifestLoader,
         manifestModel,
-        dashManifestModel,
-        mediaPlayerModel;
+        dashManifestModel;
 
     function setConfig(config) {
         if (!config) return;
@@ -57,9 +58,6 @@ function ManifestUpdater() {
         }
         if (config.dashManifestModel) {
             dashManifestModel = config.dashManifestModel;
-        }
-        if (config.mediaPlayerModel) {
-            mediaPlayerModel = config.mediaPlayerModel;
         }
     }
 
@@ -94,7 +92,6 @@ function ManifestUpdater() {
         isPaused = true;
         isUpdating = false;
         refreshDelay = NaN;
-        mediaPlayerModel = null;
     }
 
     function stopManifestRefreshTimer() {
@@ -140,7 +137,7 @@ function ManifestUpdater() {
     }
 
     function onRefreshTimer() {
-        if (isPaused && !mediaPlayerModel.getScheduleWhilePaused() || isUpdating) return;
+        if (isPaused && !settings.get().streaming.scheduleWhilePaused || isUpdating) return;
         refreshManifest();
     }
 

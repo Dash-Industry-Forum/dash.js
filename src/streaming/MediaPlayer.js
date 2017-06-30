@@ -964,7 +964,8 @@ function MediaPlayer() {
      * @instance
      */
     function setLiveDelayFragmentCount(value) {
-        mediaPlayerModel.setLiveDelayFragmentCount(value);
+        const s = { streaming: { liveDelayFragmentCount: value }};
+        settings.update(s);
     }
 
     /**
@@ -980,7 +981,8 @@ function MediaPlayer() {
      * @instance
      */
     function setLiveDelay(value) {
-        mediaPlayerModel.setLiveDelay(value);
+        const s = { streaming: { liveDelay: value }};
+        settings.update(s);
     }
 
     /**
@@ -1051,7 +1053,8 @@ function MediaPlayer() {
      * @instance
      */
     function setScheduleWhilePaused(value) {
-        mediaPlayerModel.setScheduleWhilePaused(value);
+        const s = { streaming: {setScheduleWhilePaused: value }};
+        settings.update(s);
     }
 
     /**
@@ -1062,7 +1065,7 @@ function MediaPlayer() {
      * @instance
      */
     function getScheduleWhilePaused() {
-        return mediaPlayerModel.getScheduleWhilePaused();
+        return settings.get().scheduleWhilePaused;
     }
 
     /**
@@ -1455,7 +1458,8 @@ function MediaPlayer() {
      * @instance
      */
     function setAbandonLoadTimeout(value) {
-        mediaPlayerModel.setAbandonLoadTimeout(value);
+        const s = { streaming: { abandonLoadTimeout: value } };
+        settings.update(s);
     }
 
     /**

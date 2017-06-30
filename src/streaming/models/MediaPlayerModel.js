@@ -38,13 +38,11 @@ const DEFAULT_UTC_TIMING_SOURCE = {
     scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
     value: 'http://time.akamai.com/?iso'
 };
-const LIVE_DELAY_FRAGMENT_COUNT = 4;
 
 const DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION = 360000;
 const DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION = 360000;
 
 const BANDWIDTH_SAFETY_FACTOR = 0.9;
-const ABANDON_LOAD_TIMEOUT = 10000;
 
 const BUFFER_TO_KEEP = 30;
 const BUFFER_PRUNING_INTERVAL = 30;
@@ -75,9 +73,6 @@ function MediaPlayerModel() {
         useManifestDateHeaderTimeSource,
         useSuggestedPresentationDelay,
         UTCTimingSources,
-        liveDelayFragmentCount,
-        liveDelay,
-        scheduleWhilePaused,
         bufferToKeep,
         bufferPruningInterval,
         lastBitrateCachingInfo,
@@ -88,7 +83,6 @@ function MediaPlayerModel() {
         longFormContentDurationThreshold,
         richBufferThreshold,
         bandwidthSafetyFactor,
-        abandonLoadTimeout,
         retryAttempts,
         retryIntervals,
         wallclockTimeUpdateInterval,
@@ -102,7 +96,6 @@ function MediaPlayerModel() {
         UTCTimingSources = [];
         useSuggestedPresentationDelay = false;
         useManifestDateHeaderTimeSource = true;
-        scheduleWhilePaused = true;
         bufferOccupancyABREnabled = false;
         useDefaultABRRules = true;
         fastSwitchEnabled = false;
@@ -114,8 +107,6 @@ function MediaPlayerModel() {
             enabled: true,
             ttl: DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION
         };
-        liveDelayFragmentCount = LIVE_DELAY_FRAGMENT_COUNT;
-        liveDelay = undefined; // Explicitly state that default is undefined
         bufferToKeep = BUFFER_TO_KEEP;
         bufferPruningInterval = BUFFER_PRUNING_INTERVAL;
         stableBufferTime = NaN;
@@ -124,7 +115,6 @@ function MediaPlayerModel() {
         longFormContentDurationThreshold = LONG_FORM_CONTENT_DURATION_THRESHOLD;
         richBufferThreshold = RICH_BUFFER_THRESHOLD;
         bandwidthSafetyFactor = BANDWIDTH_SAFETY_FACTOR;
-        abandonLoadTimeout = ABANDON_LOAD_TIMEOUT;
         wallclockTimeUpdateInterval = WALLCLOCK_TIME_UPDATE_INTERVAL;
         xhrWithCredentials = {
             default: DEFAULT_XHR_WITH_CREDENTIALS
@@ -218,14 +208,6 @@ function MediaPlayerModel() {
 
     function getBandwidthSafetyFactor() {
         return bandwidthSafetyFactor;
-    }
-
-    function setAbandonLoadTimeout(value) {
-        abandonLoadTimeout = value;
-    }
-
-    function getAbandonLoadTimeout() {
-        return abandonLoadTimeout;
     }
 
     function setStableBufferTime(value) {
@@ -363,30 +345,6 @@ function MediaPlayerModel() {
         return wallclockTimeUpdateInterval;
     }
 
-    function setScheduleWhilePaused(value) {
-        scheduleWhilePaused = value;
-    }
-
-    function getScheduleWhilePaused() {
-        return scheduleWhilePaused;
-    }
-
-    function setLiveDelayFragmentCount(value) {
-        liveDelayFragmentCount = value;
-    }
-
-    function setLiveDelay(value) {
-        liveDelay = value;
-    }
-
-    function getLiveDelayFragmentCount() {
-        return liveDelayFragmentCount;
-    }
-
-    function getLiveDelay() {
-        return liveDelay;
-    }
-
     function setUseManifestDateHeaderTimeSource(value) {
         useManifestDateHeaderTimeSource = value;
     }
@@ -456,8 +414,6 @@ function MediaPlayerModel() {
         removeAllABRCustomRule: removeAllABRCustomRule,
         setBandwidthSafetyFactor: setBandwidthSafetyFactor,
         getBandwidthSafetyFactor: getBandwidthSafetyFactor,
-        setAbandonLoadTimeout: setAbandonLoadTimeout,
-        getAbandonLoadTimeout: getAbandonLoadTimeout,
         setLastBitrateCachingInfo: setLastBitrateCachingInfo,
         getLastBitrateCachingInfo: getLastBitrateCachingInfo,
         setLastMediaSettingsCachingInfo: setLastMediaSettingsCachingInfo,
@@ -490,14 +446,8 @@ function MediaPlayerModel() {
         getRetryIntervalForType: getRetryIntervalForType,
         setWallclockTimeUpdateInterval: setWallclockTimeUpdateInterval,
         getWallclockTimeUpdateInterval: getWallclockTimeUpdateInterval,
-        setScheduleWhilePaused: setScheduleWhilePaused,
-        getScheduleWhilePaused: getScheduleWhilePaused,
         getUseSuggestedPresentationDelay: getUseSuggestedPresentationDelay,
         setUseSuggestedPresentationDelay: setUseSuggestedPresentationDelay,
-        setLiveDelayFragmentCount: setLiveDelayFragmentCount,
-        getLiveDelayFragmentCount: getLiveDelayFragmentCount,
-        getLiveDelay: getLiveDelay,
-        setLiveDelay: setLiveDelay,
         setUseManifestDateHeaderTimeSource: setUseManifestDateHeaderTimeSource,
         getUseManifestDateHeaderTimeSource: getUseManifestDateHeaderTimeSource,
         setUTCTimingSources: setUTCTimingSources,

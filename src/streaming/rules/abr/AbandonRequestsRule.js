@@ -31,6 +31,7 @@
 import SwitchRequest from '../SwitchRequest';
 import FactoryMaker from '../../../core/FactoryMaker';
 import Debug from '../../../core/Debug';
+import Settings from '../../../core/Settings';
 
 function AbandonRequestsRule(config) {
 
@@ -40,6 +41,7 @@ function AbandonRequestsRule(config) {
 
     const context = this.context;
     const log = Debug(context).getInstance().log;
+    const settings = Settings(context).getInstance();
 
     const mediaPlayerModel = config.mediaPlayerModel;
     const metricsModel = config.metricsModel;
@@ -116,7 +118,7 @@ function AbandonRequestsRule(config) {
                     const abrController = rulesContext.getAbrController();
                     const bytesRemaining = fragmentInfo.bytesTotal - fragmentInfo.bytesLoaded;
                     const bitrateList = abrController.getBitrateList(mediaInfo);
-                    const newQuality = abrController.getQualityForBitrate(mediaInfo, fragmentInfo.measuredBandwidthInKbps * mediaPlayerModel.getBandwidthSafetyFactor());
+                    const newQuality = abrController.getQualityForBitrate(mediaInfo, fragmentInfo.measuredBandwidthInKbps * settings.get().streaming.abr.bandwidthSafetyFactor);
                     const estimateOtherBytesTotal = fragmentInfo.bytesTotal * bitrateList[newQuality].bitrate / bitrateList[abrController.getQualityFor(mediaType, mediaInfo.streamInfo)].bitrate;
 
                     if (bytesRemaining > estimateOtherBytesTotal) {

@@ -37,7 +37,23 @@ function Settings() {
 
     const defaultSettings = {
         streaming: {
+            abandonLoadTimeout: 10000,
+            liveDelayFragmentCount: 4,
+            liveDelay: NaN,
+            setScheduleWhilePaused: true,
+            setFastSwitchEnabled: false,
+            bufferToKeep: 30,
+            bufferPruningInterval: 30,
+            stableBufferTime: 12,
+            bufferTimeAtTopQuality: 30,
+            bufferTimeAtTopQualityLongForm: 60,
+            longFormContentDurationThreshold: 600,
+            richBufferThreshold: 20,
+            wallclockTimeUpdateInterval: 50,
             abr: {
+                bandwidthSafetyFactor: 0.9,
+                useDefaultAbrRules: true,
+                useBufferOccupancyAbr: false,
                 useDeadTimeLatency: true,
                 limitBitrateByPortal: false,
                 usePixelLimitInRatioByBitratePortal: false,
@@ -45,7 +61,7 @@ function Settings() {
                 minBitrate: { audio: NaN, video: NaN },
                 maxRepresentationRatio: { audio: NaN, video: NaN },
                 initialBitrate: { audio: NaN, video: NaN },
-                initialRepresentationRatio: { audio: NaN, video: NaN},
+                initialRepresentationRatio: { audio: NaN, video: NaN },
                 autoSwitchBitrate: { audio: false, video: false }
             }
         }
@@ -77,12 +93,12 @@ function Settings() {
         return settings;
     }
 
-    // Set something on the settings object.
-    // If a json object is passed in, update everything that matches the paths. Anything that does not match the schema
-    // of the default is ignored(and a warning is given).
-    function update(conf) {
-        if (typeof conf === 'object') {
-            mixinSettings(conf, settings, '');
+    // Set something on the settings - settingsObj should be a partial object.
+    // If a json object is passed in, update everything that matches the partial object. Anything that does not match the schema
+    // of the default object is ignored(and a warning is given).
+    function update(settingsObj) {
+        if (typeof settingsObj === 'object') {
+            mixinSettings(settingsObj, settings, '');
         }
     }
 

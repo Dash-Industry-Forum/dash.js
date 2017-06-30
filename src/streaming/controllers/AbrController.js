@@ -110,9 +110,7 @@ function AbrController() {
             setElementSize();
         }
         eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
-        throughputHistory = ThroughputHistory().create({
-            mediaPlayerModel: mediaPlayerModel
-        });
+        throughputHistory = ThroughputHistory().create();
     }
 
     function createAbrRulesCollection() {
@@ -568,7 +566,7 @@ function AbrController() {
                     clearTimeout(abandonmentTimeout);
                     abandonmentTimeout = setTimeout(
                         () => {setAbandonmentStateFor(type, ALLOW_LOAD); abandonmentTimeout = null;},
-                        mediaPlayerModel.getAbandonLoadTimeout()
+                        settings.get().streaming.abandonLoadTimeout
                     );
                 }
             }

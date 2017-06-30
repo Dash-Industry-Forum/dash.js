@@ -31,11 +31,13 @@
 
 import Constants from '../constants/Constants';
 import FactoryMaker from '../../core/FactoryMaker.js';
+import Settings from '../../core/Settings';
 
 // throughput generally stored in kbit/s
 // latency generally stored in ms
 
-function ThroughputHistory(config) {
+function ThroughputHistory() {
+    const settings = Settings(this.context).getInstance();
 
     const MAX_MEASUREMENTS_TO_KEEP = 20;
     const AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE = 3;
@@ -45,8 +47,6 @@ function ThroughputHistory(config) {
     const CACHE_LOAD_THRESHOLD_AUDIO = 5;
     const THROUGHPUT_DECREASE_SCALE = 1.3;
     const THROUGHPUT_INCREASE_SCALE = 1.3;
-
-    const mediaPlayerModel = config.mediaPlayerModel;
 
     let throughputDict,
         latencyDict;
@@ -158,7 +158,7 @@ function ThroughputHistory(config) {
     function getSafeAverageThroughput(mediaType, isDynamic) {
         let average = getAverageThroughput(mediaType, isDynamic);
         if (!isNaN(average)) {
-            average *= mediaPlayerModel.getBandwidthSafetyFactor();
+            average *= settings.get().streaming.abr.bandwidthSafetyFactor;
         }
         return average;
     }

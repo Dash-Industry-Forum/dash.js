@@ -40,11 +40,13 @@ import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
+import Settings from '../../core/Settings';
 
 function ScheduleController(config) {
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
+    const settings = Settings(context).getInstance();
     const metricsModel = config.metricsModel;
     const adapter = config.adapter;
     const dashMetrics = config.dashMetrics;
@@ -75,7 +77,6 @@ function ScheduleController(config) {
         seekTarget,
         bufferLevelRule,
         nextFragmentRequestRule,
-        scheduleWhilePaused,
         lastQualityIndex,
         topQualityIndex,
         lastInitQuality,
@@ -101,8 +102,6 @@ function ScheduleController(config) {
 
     function initialize() {
         fragmentModel = streamProcessor.getFragmentModel();
-        scheduleWhilePaused = mediaPlayerModel.getScheduleWhilePaused();
-
         bufferLevelRule = BufferLevelRule(context).create({
             abrController: abrController,
             dashMetrics: dashMetrics,
@@ -184,7 +183,7 @@ function ScheduleController(config) {
 
     function schedule() {
 
-        if (isStopped || isFragmentProcessingInProgress || !streamProcessor.getBufferController() || playbackController.isPaused() && !scheduleWhilePaused) {
+        if (isStopped || isFragmentProcessingInProgress || !streamProcessor.getBufferController() || playbackController.isPaused() && !settings.get().streaming.scheduleWhilePaused) {
             return;
         }
 
@@ -492,7 +491,7 @@ function ScheduleController(config) {
     }
 
     function onPlaybackStarted() {
-        if (isStopped || !scheduleWhilePaused) {
+        if (isStopped || !settings.get().streaming.scheduleWhilePaused) {
             start();
         }
     }

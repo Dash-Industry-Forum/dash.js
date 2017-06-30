@@ -37,6 +37,7 @@ import {HTTPRequest} from '../../vo/metrics/HTTPRequest';
 import EventBus from '../../../core/EventBus';
 import Events from '../../../core/events/Events';
 import Debug from '../../../core/Debug';
+import Settings from '../../../core/Settings';
 
 // BOLA_STATE_ONE_BITRATE   : If there is only one bitrate (or initialization failed), always return NO_CHANGE.
 // BOLA_STATE_STARTUP       : Set placeholder buffer such that we download fragments at most recently measured throughput.
@@ -58,6 +59,7 @@ function BolaRule(config) {
 
     const context = this.context;
     const log = Debug(context).getInstance().log;
+    const settings = Settings(context).getInstance();
     const dashMetrics = config.dashMetrics;
     const metricsModel = config.metricsModel;
     const mediaPlayerModel = config.mediaPlayerModel;
@@ -143,7 +145,7 @@ function BolaRule(config) {
         initialState.isDynamic             = isDynamic;
         initialState.movieDuration         = duration;
         initialState.fragmentDuration      = fragmentDuration;
-        initialState.bandwidthSafetyFactor = mediaPlayerModel.getBandwidthSafetyFactor();
+        initialState.bandwidthSafetyFactor = settings.get().streaming.abr.bandwidthSafetyFactor;
         initialState.rebufferSafetyFactor  = REBUFFER_SAFETY_FACTOR;
         initialState.bufferTarget          = mediaPlayerModel.getStableBufferTime();
 
