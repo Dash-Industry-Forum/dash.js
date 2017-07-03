@@ -24,7 +24,7 @@ describe('Settings', function(){
         const def = settings.get();
 
         expect(def.streaming.abandonLoadTimeout).to.equal(10000);
-        expect(def.streaming.setScheduleWhilePaused).to.be.true;
+        expect(def.streaming.scheduleWhilePaused).to.be.true;
         expect(Number.isNaN(def.streaming.liveDelay)).to.be.true;
         expect(def.streaming.abr.limitBitrateByPortal).to.be.false;
     });

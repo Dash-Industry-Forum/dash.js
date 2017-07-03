@@ -1,5 +1,6 @@
 // jshint ignore:start
 
+import FactoryMaker from '../../src/core/FactoryMaker';
 import SpecHelper from './helpers/SpecHelper';
 import VideoElementMock from './mocks/VideoElementMock';
 import StreamControllerMock from './mocks/StreamControllerMock';
@@ -9,6 +10,7 @@ import AbrControllerMock from './mocks/AbrControllerMock';
 import MediaPlayer from './../../src/streaming/MediaPlayer';
 import MediaPlayerModelMock from './mocks//MediaPlayerModelMock';
 import MediaControllerMock from './mocks/MediaControllerMock';
+import SettingsMock from './mocks/SettingsMock';
 import ObjectUtils from './../../src/streaming/utils/ObjectUtils';
 
 const expect = require('chai').expect;
@@ -37,11 +39,13 @@ describe("MediaPlayer", function () {
     let playbackControllerMock = new PlaybackControllerMock();
     let mediaPlayerModel = new MediaPlayerModelMock();
     let mediaControllerMock = new MediaControllerMock();
+    const settingsMock = new SettingsMock();
     let objectUtils = ObjectUtils(context).getInstance();
     let player;
 
     beforeEach(function () {
-        player = MediaPlayer().create();
+        FactoryMaker.setSingletonInstance(context, 'Settings', settingsMock);
+        player = MediaPlayer(context).create();
 
         // to avoid unwanted log
         let debug = player.getDebug();
@@ -332,15 +336,9 @@ describe("MediaPlayer", function () {
             abrControllerMock.reset();
         })
         it("should configure MaxAllowedBitrateFor", function () {
-            let MaxAllowedBitrateFor = abrControllerMock.getMaxAllowedBitrateFor('audio');
-            expect(isNaN(MaxAllowedBitrateFor)).to.be.true;
-
-            MaxAllowedBitrateFor = player.getMaxAllowedBitrateFor('audio');
-            expect(isNaN(MaxAllowedBitrateFor)).to.be.true;
-
             player.setMaxAllowedBitrateFor('audio', 5);
 
-            MaxAllowedBitrateFor = abrControllerMock.getMaxAllowedBitrateFor('audio');
+            let MaxAllowedBitrateFor = settingsMock.get().streaming.abr.maxBitrate.audio;
             expect(MaxAllowedBitrateFor).to.equal(5);
 
             MaxAllowedBitrateFor = player.getMaxAllowedBitrateFor('audio');
@@ -348,15 +346,9 @@ describe("MediaPlayer", function () {
         });
 
         it("should configure MinAllowedBitrateFor", function () {
-            let MinAllowedBitrateFor = abrControllerMock.getMinAllowedBitrateFor('audio');
-            expect(isNaN(MinAllowedBitrateFor)).to.be.true;
-
-            MinAllowedBitrateFor = player.getMinAllowedBitrateFor('audio');
-            expect(isNaN(MinAllowedBitrateFor)).to.be.true;
-
             player.setMinAllowedBitrateFor('audio', 5);
 
-            MinAllowedBitrateFor = abrControllerMock.getMinAllowedBitrateFor('audio');
+            let MinAllowedBitrateFor = settingsMock.get().streaming.abr.minBitrate.audio;
             expect(MinAllowedBitrateFor).to.equal(5);
 
             MinAllowedBitrateFor = player.getMinAllowedBitrateFor('audio');
@@ -364,15 +356,9 @@ describe("MediaPlayer", function () {
         });
 
         it("should configure MaxAllowedRepresentationRatioFor", function () {
-            let MaxAllowedRepresentationRatioFor = abrControllerMock.getMaxAllowedRepresentationRatioFor('audio');
-            expect(MaxAllowedRepresentationRatioFor).to.equal(1);
-
-            MaxAllowedRepresentationRatioFor = player.getMaxAllowedRepresentationRatioFor('audio');
-            expect(MaxAllowedRepresentationRatioFor).to.equal(1);
-
             player.setMaxAllowedRepresentationRatioFor('audio', 5);
 
-            MaxAllowedRepresentationRatioFor = abrControllerMock.getMaxAllowedRepresentationRatioFor('audio');
+            let MaxAllowedRepresentationRatioFor = settingsMock.get().streaming.abr.maxRepresentationRatio.audio;
             expect(MaxAllowedRepresentationRatioFor).to.equal(5);
 
             MaxAllowedRepresentationRatioFor = player.getMaxAllowedRepresentationRatioFor('audio');
@@ -400,15 +386,9 @@ describe("MediaPlayer", function () {
         });
 
         it("should configure bitrate according to playback area size", function () {
-            let limitBitrateByPortal = abrControllerMock.getLimitBitrateByPortal();
-            expect(limitBitrateByPortal).to.be.false;
-
-            limitBitrateByPortal = player.getLimitBitrateByPortal();
-            expect(limitBitrateByPortal).to.be.false;
-
             player.setLimitBitrateByPortal(true);
 
-            limitBitrateByPortal = abrControllerMock.getLimitBitrateByPortal();
+            let limitBitrateByPortal = settingsMock.get().streaming.abr.limitBitrateByPortal;
             expect(limitBitrateByPortal).to.be.true;
 
             limitBitrateByPortal = player.getLimitBitrateByPortal();
@@ -416,15 +396,9 @@ describe("MediaPlayer", function () {
         });
 
         it("should configure usePixelRatioInLimitBitrateByPortal", function () {
-            let UsePixelRatioInLimitBitrateByPortal = abrControllerMock.getUsePixelRatioInLimitBitrateByPortal();
-            expect(UsePixelRatioInLimitBitrateByPortal).to.be.false;
-
-            UsePixelRatioInLimitBitrateByPortal = player.getUsePixelRatioInLimitBitrateByPortal();
-            expect(UsePixelRatioInLimitBitrateByPortal).to.be.false;
-
             player.setUsePixelRatioInLimitBitrateByPortal(true);
 
-            UsePixelRatioInLimitBitrateByPortal = abrControllerMock.getUsePixelRatioInLimitBitrateByPortal();
+            let UsePixelRatioInLimitBitrateByPortal = settingsMock.get().streaming.abr.usePixelRatioInLimitBitrateByPortal;
             expect(UsePixelRatioInLimitBitrateByPortal).to.be.true;
 
             UsePixelRatioInLimitBitrateByPortal = player.getUsePixelRatioInLimitBitrateByPortal();
@@ -432,15 +406,9 @@ describe("MediaPlayer", function () {
         });
 
         it("should configure initialRepresentationRatioFor", function () {
-            let initialRepresentationRatioFor = abrControllerMock.getInitialRepresentationRatioFor('video');
-            expect(initialRepresentationRatioFor).to.be.null;
-
-            initialRepresentationRatioFor = player.getInitialRepresentationRatioFor('video');
-            expect(initialRepresentationRatioFor).to.be.null;
-
             player.setInitialRepresentationRatioFor('video', 10);
 
-            initialRepresentationRatioFor = abrControllerMock.getInitialRepresentationRatioFor('video');
+            let initialRepresentationRatioFor = settingsMock.get().streaming.abr.initialRepresentationRatio.video;
             expect(initialRepresentationRatioFor).to.equal(10);
 
             initialRepresentationRatioFor = player.getInitialRepresentationRatioFor('video');
@@ -448,13 +416,24 @@ describe("MediaPlayer", function () {
         });
 
         it("should configure AutoSwitchBitrateForType", function () {
-            let AutoSwitchBitrateFor = abrControllerMock.getAutoSwitchBitrateFor('video');
-            expect(AutoSwitchBitrateFor).to.be.true;
-
             player.setAutoSwitchQualityFor('video', false);
 
-            AutoSwitchBitrateFor = abrControllerMock.getAutoSwitchBitrateFor('video');
+            let AutoSwitchBitrateFor = settingsMock.get().streaming.abr.autoSwitchBitrate.video;
             expect(AutoSwitchBitrateFor).to.be.false;
+        });
+
+        it("should configure bufferOccupancyABR", function () {
+            player.enableBufferOccupancyABR(true);
+
+            let bufferOccupancyABR = settingsMock.get().streaming.abr.useBufferOccupancyABR;
+            expect(bufferOccupancyABR).to.be.true;
+        });
+
+        it("should configure useDefaultABRRules", function () {
+            player.useDefaultABRRules(false);
+
+            let useDefaultABRRules = settingsMock.get().streaming.abr.useDefaultABRRules;
+            expect(useDefaultABRRules).to.be.false;
         });
 
         describe("When it is not initialized", function () {
@@ -498,18 +477,9 @@ describe("MediaPlayer", function () {
             });
 
             it("should configure initial bitrate for type", function () {
-                let initialBitrateFor = abrControllerMock.getInitialBitrateFor('video');
-                expect(initialBitrateFor).to.be.null;
-
-                initialBitrateFor = player.getInitialBitrateFor('video');
-                expect(initialBitrateFor).to.be.null;
-
                 player.setInitialBitrateFor('video', 10);
 
-                initialBitrateFor = abrControllerMock.getInitialBitrateFor('video');
-                expect(initialBitrateFor).to.equal(10);
-
-                initialBitrateFor = player.getInitialBitrateFor('video');
+                let initialBitrateFor = settingsMock.get().streaming.abr.initialBitrate.video;
                 expect(initialBitrateFor).to.equal(10);
             });
         });
@@ -530,25 +500,16 @@ describe("MediaPlayer", function () {
         });
 
         it("should configure LiveDelayFragmentCount", function () {
-            let liveDelayFragmentCount = mediaPlayerModel.getLiveDelayFragmentCount();
-            expect(liveDelayFragmentCount).to.equal(4);
-
             player.setLiveDelayFragmentCount(5);
 
-            liveDelayFragmentCount = mediaPlayerModel.getLiveDelayFragmentCount();
+            let liveDelayFragmentCount = settingsMock.get().streaming.liveDelayFragmentCount;
             expect(liveDelayFragmentCount).to.equal(5);
         });
 
         it("should configure LiveDelay", function () {
-            let livedelay = mediaPlayerModel.getLiveDelay();
-            expect(livedelay).to.be.undefined
-
-            livedelay = player.getLiveDelay();
-            expect(livedelay).to.be.undefined
-
             player.setLiveDelay(5);
 
-            livedelay = mediaPlayerModel.getLiveDelay();
+            let livedelay = settingsMock.get().streaming.liveDelay;
             expect(livedelay).to.equal(5);
 
             livedelay = player.getLiveDelay();
@@ -564,7 +525,7 @@ describe("MediaPlayer", function () {
             useSuggestedPresentationDelay = mediaPlayerModel.getUseSuggestedPresentationDelay();
             expect(useSuggestedPresentationDelay).to.be.true
         });
-
+        
         it("should configure LastBitrateCachingInfo", function () {
             let lastBitrateCachingInfo = mediaPlayerModel.getLastBitrateCachingInfo();
             expect(lastBitrateCachingInfo.enabled).to.be.true;
@@ -590,15 +551,9 @@ describe("MediaPlayer", function () {
         });
 
         it("should configure scheduleWhilePaused", function () {
-            let scheduleWhilePaused = mediaPlayerModel.getScheduleWhilePaused();
-            expect(scheduleWhilePaused).to.be.true;
-
-            scheduleWhilePaused = player.getScheduleWhilePaused();
-            expect(scheduleWhilePaused).to.be.true;
-
             player.setScheduleWhilePaused(false);
 
-            scheduleWhilePaused = mediaPlayerModel.getScheduleWhilePaused();
+            let scheduleWhilePaused = settingsMock.get().streaming.scheduleWhilePaused;
             expect(scheduleWhilePaused).to.be.false;
 
             scheduleWhilePaused = player.getScheduleWhilePaused();
@@ -606,39 +561,13 @@ describe("MediaPlayer", function () {
         });
 
         it("should configure fastSwitchEnabled", function () {
-            let fastSwitchEnabled = mediaPlayerModel.getFastSwitchEnabled();
-            expect(fastSwitchEnabled).to.be.false;
-
-            fastSwitchEnabled = player.getFastSwitchEnabled();
-            expect(fastSwitchEnabled).to.be.false;
-
             player.setFastSwitchEnabled(true);
 
-            fastSwitchEnabled = mediaPlayerModel.getFastSwitchEnabled();
+            let fastSwitchEnabled = settingsMock.get().streaming.fastSwitchEnabled;
             expect(fastSwitchEnabled).to.be.true;
 
             fastSwitchEnabled = player.getFastSwitchEnabled();
             expect(fastSwitchEnabled).to.be.true;
-        });
-
-        it("should configure bufferOccupancyABR", function () {
-            let bufferOccupancyABR = mediaPlayerModel.getBufferOccupancyABREnabled();
-            expect(bufferOccupancyABR).to.be.false;
-
-            player.enableBufferOccupancyABR(true);
-
-            bufferOccupancyABR = mediaPlayerModel.getBufferOccupancyABREnabled();
-            expect(bufferOccupancyABR).to.be.true;
-        });
-
-        it("should configure useDefaultABRRules", function () {
-            let useDefaultABRRules = mediaPlayerModel.getUseDefaultABRRules();
-            expect(useDefaultABRRules).to.be.true;
-
-            player.useDefaultABRRules(false);
-
-            useDefaultABRRules = mediaPlayerModel.getUseDefaultABRRules();
-            expect(useDefaultABRRules).to.be.false;
         });
 
         it("should manage custom ABR rules", function () {
@@ -702,85 +631,58 @@ describe("MediaPlayer", function () {
         });
 
         it("should configure BufferToKeep", function () {
-            let BufferToKeep = mediaPlayerModel.getBufferToKeep();
-            expect(BufferToKeep).to.equal(30);
-
             player.setBufferToKeep(50);
 
-            BufferToKeep = mediaPlayerModel.getBufferToKeep();
+            let BufferToKeep = settingsMock.get().streaming.bufferToKeep;
             expect(BufferToKeep).to.equal(50);
         });
 
         it("should configure BufferPruningInterval", function () {
-            let BufferPruningInterval = mediaPlayerModel.getBufferPruningInterval();
-            expect(BufferPruningInterval).to.equal(30);
-
             player.setBufferPruningInterval(50);
 
-            BufferPruningInterval = mediaPlayerModel.getBufferPruningInterval();
+            let BufferPruningInterval = settingsMock.get().streaming.bufferPruningInterval;
             expect(BufferPruningInterval).to.equal(50);
         });
 
         it("should configure StableBufferTime", function () {
-            let StableBufferTime = mediaPlayerModel.getStableBufferTime();
-            expect(StableBufferTime).to.equal(12); // fast switch enabled
-
             player.setStableBufferTime(50);
 
-            StableBufferTime = mediaPlayerModel.getStableBufferTime();
+            let StableBufferTime = settingsMock.get().streaming.stableBufferTime;
             expect(StableBufferTime).to.equal(50);
         });
 
         it("should configure BufferTimeAtTopQuality", function () {
-            let BufferTimeAtTopQuality = mediaPlayerModel.getBufferTimeAtTopQuality();
-            expect(BufferTimeAtTopQuality).to.equal(30);
-
             player.setBufferTimeAtTopQuality(50);
 
-            BufferTimeAtTopQuality = mediaPlayerModel.getBufferTimeAtTopQuality();
+            let BufferTimeAtTopQuality = settingsMock.get().streaming.bufferTimeAtTopQuality;
             expect(BufferTimeAtTopQuality).to.equal(50);
         });
 
         it("should configure BufferTimeAtTopQualityLongForm", function () {
-            let BufferTimeAtTopQualityLongForm = mediaPlayerModel.getBufferTimeAtTopQualityLongForm();
-            expect(BufferTimeAtTopQualityLongForm).to.equal(60);
-
             player.setBufferTimeAtTopQualityLongForm(50);
 
-            BufferTimeAtTopQualityLongForm = mediaPlayerModel.getBufferTimeAtTopQualityLongForm();
+            let BufferTimeAtTopQualityLongForm = settingsMock.get().streaming.bufferTimeAtTopQualityLongForm;
             expect(BufferTimeAtTopQualityLongForm).to.equal(50);
         });
 
         it("should configure LongFormContentDurationThreshold", function () {
-            let LongFormContentDurationThreshold = mediaPlayerModel.getLongFormContentDurationThreshold();
-            expect(LongFormContentDurationThreshold).to.equal(600);
-
             player.setLongFormContentDurationThreshold(50);
 
-            LongFormContentDurationThreshold = mediaPlayerModel.getLongFormContentDurationThreshold();
+            let LongFormContentDurationThreshold = settingsMock.get().streaming.longFormContentDurationThreshold;
             expect(LongFormContentDurationThreshold).to.equal(50);
         });
 
         it("should configure RichBufferThreshold", function () {
-            let RichBufferThreshold = mediaPlayerModel.getRichBufferThreshold();
-            expect(RichBufferThreshold).to.equal(20);
-
             player.setRichBufferThreshold(50);
 
-            RichBufferThreshold = mediaPlayerModel.getRichBufferThreshold();
+            let RichBufferThreshold = settingsMock.get().streaming.richBufferThreshold;
             expect(RichBufferThreshold).to.equal(50);
         });
 
         it("should configure BandwidthSafetyFactor", function () {
-            let BandwidthSafetyFactor = mediaPlayerModel.getBandwidthSafetyFactor();
-            expect(BandwidthSafetyFactor).to.equal(0.9);
-
-            BandwidthSafetyFactor = player.getBandwidthSafetyFactor();
-            expect(BandwidthSafetyFactor).to.equal(0.9);
-
             player.setBandwidthSafetyFactor(0.1);
 
-            BandwidthSafetyFactor = mediaPlayerModel.getBandwidthSafetyFactor();
+            let BandwidthSafetyFactor = settingsMock.get().streaming.abr.bandwidthSafetyFactor;
             expect(BandwidthSafetyFactor).to.equal(0.1);
 
             BandwidthSafetyFactor = player.getBandwidthSafetyFactor();
@@ -788,12 +690,9 @@ describe("MediaPlayer", function () {
         });
 
         it("should configure AbandonLoadTimeout", function () {
-            let AbandonLoadTimeout = mediaPlayerModel.getAbandonLoadTimeout();
-            expect(AbandonLoadTimeout).to.equal(10000);
-
             player.setAbandonLoadTimeout(50);
 
-            AbandonLoadTimeout = mediaPlayerModel.getAbandonLoadTimeout();
+            let AbandonLoadTimeout = settingsMock.get().streaming.abandonLoadTimeout;
             expect(AbandonLoadTimeout).to.equal(50);
         });
 
