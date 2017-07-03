@@ -30,7 +30,7 @@
  */
 import FactoryMaker from './FactoryMaker';
 import Utils from './Utils.js';
-import Debug from './../core/Debug';
+import Debug from '../core/Debug';
 
 function Settings() {
     let log = Debug(this.context).getInstance().log;
@@ -40,8 +40,8 @@ function Settings() {
             abandonLoadTimeout: 10000,
             liveDelayFragmentCount: 4,
             liveDelay: NaN,
-            setScheduleWhilePaused: true,
-            setFastSwitchEnabled: false,
+            scheduleWhilePaused: true,
+            fastSwitchEnabled: false,
             bufferPruningInterval: 30,
             bufferToKeep: 30,
             stableBufferTime: 12,
@@ -52,11 +52,11 @@ function Settings() {
             wallclockTimeUpdateInterval: 50,
             abr: {
                 bandwidthSafetyFactor: 0.9,
-                useDefaultAbrRules: true,
-                useBufferOccupancyAbr: false,
+                useDefaultABRRules: true,
+                useBufferOccupancyABR: false,
                 useDeadTimeLatency: true,
                 limitBitrateByPortal: false,
-                usePixelLimitInRatioByBitratePortal: false,
+                usePixelRatioInLimitBitrateByPortal: false,
                 maxBitrate: { audio: NaN, video: NaN },
                 minBitrate: { audio: NaN, video: NaN },
                 maxRepresentationRatio: { audio: NaN, video: NaN },

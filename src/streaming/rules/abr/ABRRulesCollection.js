@@ -37,6 +37,7 @@ import BolaRule from './BolaRule';
 import BolaAbandonRule from './BolaAbandonRule';
 import FactoryMaker from '../../../core/FactoryMaker';
 import SwitchRequest from '../SwitchRequest.js';
+import Settings from '../../../core/Settings';
 
 const QUALITY_SWITCH_RULES = 'qualitySwitchRules';
 const ABANDON_FRAGMENT_RULES = 'abandonFragmentRules';
@@ -49,6 +50,7 @@ function ABRRulesCollection(config) {
     const metricsModel = config.metricsModel;
     const dashMetrics = config.dashMetrics;
     const adapter = config.adapter;
+    const settings = Settings(context).getInstance();
 
     let instance,
         qualitySwitchRules,
@@ -58,8 +60,8 @@ function ABRRulesCollection(config) {
         qualitySwitchRules = [];
         abandonFragmentRules = [];
 
-        if (mediaPlayerModel.getUseDefaultABRRules()) {
-            if (mediaPlayerModel.getBufferOccupancyABREnabled()) {
+        if (settings.get().streaming.abr.useDefaultABRRules) {
+            if (settings.get().streaming.abr.useBufferOccupancyABR) {
                 qualitySwitchRules.push(
                     BolaRule(context).create({
                         metricsModel: metricsModel,

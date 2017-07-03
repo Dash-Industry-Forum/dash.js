@@ -803,7 +803,7 @@ function MediaPlayer() {
      * @instance
      */
     function getUsePixelRatioInLimitBitrateByPortal() {
-        return settings.streaming.abr.usePixelRatioInLimitBitrateByPortal;
+        return settings.get().streaming.abr.usePixelRatioInLimitBitrateByPortal;
     }
 
     /**
@@ -992,7 +992,7 @@ function MediaPlayer() {
      * @returns {number|undefined} Current live stream delay in seconds when previously set, or `undefined`
      */
     function getLiveDelay() {
-        return mediaPlayerModel.getLiveDelay();
+        return settings.get().streaming.liveDelay;
     }
 
     /**
@@ -1053,7 +1053,7 @@ function MediaPlayer() {
      * @instance
      */
     function setScheduleWhilePaused(value) {
-        const s = { streaming: {setScheduleWhilePaused: value }};
+        const s = { streaming: { scheduleWhilePaused: value }};
         settings.update(s);
     }
 
@@ -1065,7 +1065,7 @@ function MediaPlayer() {
      * @instance
      */
     function getScheduleWhilePaused() {
-        return settings.get().scheduleWhilePaused;
+        return settings.get().streaming.scheduleWhilePaused;
     }
 
     /**
@@ -1104,7 +1104,7 @@ function MediaPlayer() {
      * @instance
      */
     function getFastSwitchEnabled() {
-        return settings.get().fastSwitchEnabled;
+        return settings.get().streaming.fastSwitchEnabled;
     }
 
     /**
@@ -1121,7 +1121,8 @@ function MediaPlayer() {
      * @instance
      */
     function enableBufferOccupancyABR(value) {
-        mediaPlayerModel.setBufferOccupancyABREnabled(value);
+        const s = { streaming: { abr: { useBufferOccupancyABR: value } } };
+        settings.update(s);
     }
 
     /**
@@ -1132,7 +1133,8 @@ function MediaPlayer() {
      * @instance
      */
     function useDefaultABRRules(value) {
-        mediaPlayerModel.setUseDefaultABRRules(value);
+        const s = { streaming: { abr: { useDefaultABRRules: value } } };
+        settings.update(s);
     }
 
     /**
@@ -1444,7 +1446,7 @@ function MediaPlayer() {
      * @instance
      */
     function setBandwidthSafetyFactor(value) {
-        const s = { streaming: { abr: {bandwidthSafetyFactor: value } } };
+        const s = { streaming: { abr: { bandwidthSafetyFactor: value } } };
         settings.update(s);
     }
 
@@ -1457,7 +1459,7 @@ function MediaPlayer() {
      * @instance
      */
     function getBandwidthSafetyFactor() {
-        return settings.get().bandwidthSafetyFactor;
+        return settings.get().streaming.abr.bandwidthSafetyFactor;
     }
 
     /**
