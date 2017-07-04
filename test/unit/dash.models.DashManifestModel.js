@@ -20,7 +20,7 @@ const SERVICE_LOCATION = 'testServiceLocation';
 const EMPTY_STRING = '';
 
 describe('DashManifestModel', function () {
-    
+
     const mpdHelper = new MpdHelper();
 
     it("should throw an exception when attempting to call getIsTypeOf with undefined parameters", function () {
@@ -37,7 +37,7 @@ describe('DashManifestModel', function () {
 
         expect(isTextTrack).to.be.false;  // jshint ignore:line
     });
-    
+
     it('should return empty string when getLanguageForAdaptation is called and adaptation is undefined', () => {
         const language = dashManifestModel.getLanguageForAdaptation();
 
@@ -138,7 +138,7 @@ describe('DashManifestModel', function () {
 
         expect(adaptation.id).to.equal(0); // jshint ignore:line
     });
-    
+
     it('should return -1 when getIndexForAdaptation is called and adaptation, manifest and periodIndex are undefined', () => {
         const index = dashManifestModel.getIndexForAdaptation(undefined, undefined, undefined);
 
@@ -253,7 +253,7 @@ describe('DashManifestModel', function () {
 
         expect(representationCount).to.equal(0); // jshint ignore:line
     });
-    
+
     it('should return NaN when getBandwidth is called and representation is undefined', () => {
         const bdtw = dashManifestModel.getBandwidth();
 
@@ -353,13 +353,13 @@ describe('DashManifestModel', function () {
         expect(representationArray).to.be.instanceOf(Array);    // jshint ignore:line
         expect(representationArray).to.be.empty;                // jshint ignore:line
     });
-                    
+
     it('should return false when getIsDVB is called and manifest is undefined', () => {
         const IsDVB = dashManifestModel.getIsDVB();
 
         expect(IsDVB).to.be.false;    // jshint ignore:line
     });
-            
+
     it('should return true when getIsDVB is called and manifest contains a valid DVB profile', () => {
         const manifest = {
             profiles: 'urn:dvb:dash:profile:dvb-dash:2014,urn:dvb:dash:profile:dvb-dash:isoff-ext-live:2014'
@@ -378,12 +378,12 @@ describe('DashManifestModel', function () {
         const isDVB = dashManifestModel.getIsDVB(manifest);
 
         expect(isDVB).to.be.false; // jshint ignore:line
-    });   
+    });
 
     it('should return NaN when getManifestUpdatePeriod is called and manifest is undefined', () => {
         const updatePeriod = dashManifestModel.getManifestUpdatePeriod();
         expect(updatePeriod).to.be.NaN; // jshint ignore:line
-    });    
+    });
 
     it('should return NaN when minimumUpdatePeriod is not present in manifest', () => {
         const manifest = {};
