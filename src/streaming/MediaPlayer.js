@@ -2052,20 +2052,49 @@ function MediaPlayer() {
         resetAndInitializePlayback();
     }
 
+    /**
+     * Get the current settings object being used on the player.
+     * @returns {Settings.Schema} The settings object being used.
+     *
+     * @memberof module:MediaPlayer
+     * @instance
+     */
     function getSettings() {
         return settings.get();
     }
 
+    /**
+     * @summary Update the current settings object being used on the player. Anything left unspecified is not modified.
+     * @param {module:Settings.Schema} settingsObj - An object corresponding to the settings definition.
+     * @description This function does not update the entire object, only properties in the passed in object are updated.
+     *
+     * This means that updateSettings({a: x}) and updateSettings({b: y}) are functionally equivalent to
+     * updateSettings({a: x, b: y}). If the default values are required again, @see{@link resetSettings}.
+     * @example
+     * player.updateSettings({
+     *      streaming: {
+     *          liveDelayFragmentCount: 8
+     *          abr: {
+     *              maxBitrate: { audio: 100, video: 1000 }
+     *          }
+     *      }
+     *  });
+     * @memberof module:MediaPlayer
+     * @instance
+     */
     function updateSettings(settingsObj) {
-        if (typeof settingsObj === 'object') {
-            settings.update(settingsObj);
-        } else if (typeof settingsObj === 'undefined') {
-            settings.default();
-        }
-
-        console.dir(getSettings());
+        settings.update(settingsObj);
     }
 
+    /**
+     * Resets the settings object back to the default.
+     *
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function resetSettings() {
+        settings.reset();
+    }
     /**
      * A utility methods which converts UTC timestamp value into a valid time and date string.
      *
@@ -2532,6 +2561,7 @@ function MediaPlayer() {
         setUseDeadTimeLatencyForAbr: setUseDeadTimeLatencyForAbr,
         getSettings: getSettings,
         updateSettings: updateSettings,
+        resetSettings: resetSettings,
         reset: reset
     };
 
