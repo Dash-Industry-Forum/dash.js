@@ -7,7 +7,7 @@ const eventBus = EventBus(context).getInstance();
 
 const sinon = require('sinon');
 
-describe.only('TimeSyncController', function () {
+describe('TimeSyncController', function () {
     let timeSyncController;
 
     beforeEach(function () {
