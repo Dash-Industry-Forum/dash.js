@@ -93,7 +93,8 @@ function StreamController() {
         isPaused,
         initialPlayback,
         playListMetrics,
-        videoTrackDetected;
+        videoTrackDetected,
+        audioTrackDetected;
 
     function setup() {
         protectionController = null;
@@ -352,7 +353,7 @@ function StreamController() {
                 playbackController.seek(startTime); //seek to period start time
             }
         } else {
-            videoTrackDetected = checkVideoPresence();
+            videoTrackDetected = checkTrackPresence(Constants.VIDEO);
         }
 
         activeStream.startEventController();
@@ -519,21 +520,28 @@ function StreamController() {
         }
     }
 
+    function isAudioTrackPresent() {
+        if (audioTrackDetected === undefined) {
+            audioTrackDetected = checkTrackPresence(Constants.AUDIO);
+        }
+        return audioTrackDetected;
+    }
+
     function isVideoTrackPresent() {
         if (videoTrackDetected === undefined) {
-            videoTrackDetected = checkVideoPresence();
+            videoTrackDetected = checkTrackPresence(Constants.VIDEO);
         }
         return videoTrackDetected;
     }
 
-    function checkVideoPresence() {
-        let isVideoDetected = false;
+    function checkTrackPresence(type) {
+        let isDetected = false;
         activeStream.getProcessors().forEach(p => {
-            if (p.getMediaInfo().type === Constants.VIDEO) {
-                isVideoDetected = true;
+            if (p.getMediaInfo().type === type) {
+                isDetected = true;
             }
         });
-        return isVideoDetected;
+        return isDetected;
     }
 
     function flushPlaylistMetrics(reason, time) {
@@ -777,6 +785,7 @@ function StreamController() {
         initialize: initialize,
         getActiveStreamInfo: getActiveStreamInfo,
         isVideoTrackPresent: isVideoTrackPresent,
+        isAudioTrackPresent: isAudioTrackPresent,
         getStreamById: getStreamById,
         getTimeRelativeToStreamId: getTimeRelativeToStreamId,
         load: load,

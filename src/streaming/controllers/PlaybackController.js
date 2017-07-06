@@ -426,9 +426,19 @@ function PlaybackController() {
             commonEarliestTime[streamInfo.id][type] = Math.max(ranges.start(0), streamInfo.start);
         }
 
-        if (commonEarliestTime[streamInfo.id].audio && commonEarliestTime[streamInfo.id].video) {
-            seek(commonEarliestTime[streamInfo.id].audio < commonEarliestTime[streamInfo.id].video ? commonEarliestTime[streamInfo.id].video : commonEarliestTime[streamInfo.id].audio);
-            commonEarliestTime[streamInfo.id] = false;
+        const hasVideoTrack = streamController.isVideoTrackPresent();
+        const hasAudioTrack = streamController.isAudioTrackPresent();
+
+        if (hasAudioTrack && hasVideoTrack) {
+            if (commonEarliestTime[streamInfo.id].audio && commonEarliestTime[streamInfo.id].video) {
+                seek(commonEarliestTime[streamInfo.id].audio < commonEarliestTime[streamInfo.id].video ? commonEarliestTime[streamInfo.id].video : commonEarliestTime[streamInfo.id].audio);
+                commonEarliestTime[streamInfo.id] = false;
+            }
+        } else {
+            if (commonEarliestTime[streamInfo.id][type]) {
+                seek(commonEarliestTime[streamInfo.id][type]);
+                commonEarliestTime[streamInfo.id] = false;
+            }
         }
     }
 
