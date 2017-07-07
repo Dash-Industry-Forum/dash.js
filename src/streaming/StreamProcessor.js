@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from './constants/Constants';
+import LiveEdgeFinder from './utils/LiveEdgeFinder';
 import BufferController from './controllers/BufferController';
 import TextBufferController from './text/TextBufferController';
 import ScheduleController from './controllers/ScheduleController';
@@ -66,6 +67,7 @@ function StreamProcessor(config) {
         mediaInfoArr,
         bufferController,
         scheduleController,
+        liveEdgeFinder,
         representationController,
         fragmentModel,
         spExternalControllers;
@@ -73,6 +75,11 @@ function StreamProcessor(config) {
     function setup() {
         mediaInfoArr = [];
         spExternalControllers = [];
+
+        liveEdgeFinder = LiveEdgeFinder(context).create({
+            timelineConverter: timelineConverter,
+            streamProcessor: instance
+        });
     }
 
     function initialize(mediaSource) {
@@ -175,6 +182,8 @@ function StreamProcessor(config) {
         mediaInfo = null;
         mediaInfoArr = [];
         type = null;
+
+        liveEdgeFinder.reset();
     }
 
     function isUpdating() {
@@ -211,6 +220,10 @@ function StreamProcessor(config) {
 
     function getFragmentModel() {
         return fragmentModel;
+    }
+
+    function getLiveEdgeFinder() {
+        return liveEdgeFinder;
     }
 
     function getStreamInfo() {
@@ -328,6 +341,7 @@ function StreamProcessor(config) {
         getBufferController: getBufferController,
         getFragmentModel: getFragmentModel,
         getScheduleController: getScheduleController,
+        getLiveEdgeFinder: getLiveEdgeFinder,
         getEventController: getEventController,
         getFragmentController: getFragmentController,
         getRepresentationController: getRepresentationController,
