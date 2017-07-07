@@ -120,17 +120,11 @@ function DashHandler(config) {
         return earliestTime;
     }
 
-    function getType() {
-        return type;
-    }
-
     function resetInitialSettings() {
         index = -1;
         currentTime = 0;
         earliestTime = NaN;
-        type = null;
         requestedTime = NaN;
-        isDynamic = null;
         streamProcessor = null;
         segmentsGetter = null;
     }

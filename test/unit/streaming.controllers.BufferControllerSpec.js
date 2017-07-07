@@ -288,8 +288,6 @@ describe("BufferController", function () {
             let buffer = 'testBuffer';
             bufferController.setBuffer(buffer);
             expect(bufferController.getBuffer()).to.equal(buffer);
-            expect(sourceBufferMock.aborted).to.be.false;
-            expect(sourceBufferMock.sourceBufferRemoved).to.be.false;
 
             bufferController.reset();
             expect(sourceBufferMock.aborted).to.be.true;

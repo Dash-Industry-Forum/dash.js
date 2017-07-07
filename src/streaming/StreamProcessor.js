@@ -153,7 +153,6 @@ function StreamProcessor(config) {
 
     function resetInitialSettings() {
         mediaInfoArr = [];
-        dynamic = null;
         mediaInfo = null;
         unregisterAllExternalController();
     }
