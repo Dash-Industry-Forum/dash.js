@@ -26,13 +26,16 @@ class AbrControllerMock{
         this.limitBitrateByPortal = false;
         this.usePixelRatioInLimitBitrateByPortal = false;
         this.autoSwitchBitrate = {video: true, audio: true};
+        this.throughputHistory = undefined;
     }
 
     initialize() {}
 
     createAbrRulesCollection() {}
 
-    reset() {}
+    reset() {
+        this.setup();
+    }
 
     setConfig() {}
 
@@ -162,9 +165,9 @@ class AbrControllerMock{
 
     }
 
-    setAverageThroughput() {}
-
-    getAverageThroughput() {}
+    getThroughputHistory() {
+        return this.throughputHistory;
+    }
 
     updateTopQualityIndex() {}
 
