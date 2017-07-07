@@ -126,7 +126,14 @@ function DOMStorage(config) {
         return isSupported(storageType) && mediaPlayerModel['get' + key + 'CachingInfo']().enabled;
     }
 
+    function checkConfig() {
+        if (!mediaPlayerModel || !mediaPlayerModel.hasOwnProperty('getLastMediaSettingsCachingInfo')) {
+            throw new Error('Missing config parameter(s)');
+        }
+    }
+
     function getSavedMediaSettings(type) {
+        checkConfig();
         //Checks local storage to see if there is valid, non-expired media settings
         if (!canStore(STORAGE_TYPE_LOCAL, LAST_MEDIA_SETTINGS)) return null;
 
@@ -145,6 +152,9 @@ function DOMStorage(config) {
 
     function getSavedBitrateSettings(type) {
         let savedBitrate = NaN;
+
+        checkConfig();
+
         //Checks local storage to see if there is valid, non-expired bit rate
         //hinting from the last play session to use as a starting bit rate.
         if (canStore(STORAGE_TYPE_LOCAL, LAST_BITRATE)) {
