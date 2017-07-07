@@ -67,11 +67,15 @@ function XlinkController(config) {
     }
 
     function setMatchers(value) {
-        matchers = value;
+        if (value) {
+            matchers = value;
+        }
     }
 
     function setIron(value) {
-        iron = value;
+        if (value) {
+            iron = value;
+        }
     }
 
     /**

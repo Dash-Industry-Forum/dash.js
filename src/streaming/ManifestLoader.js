@@ -152,7 +152,11 @@ function ManifestLoader(config) {
                     return;
                 }
 
-                const manifest = parser.parse(data, xlinkController);
+                // init xlinkcontroller with matchers and iron object from created parser
+                xlinkController.setMatchers(parser.getMatchers());
+                xlinkController.setIron(parser.getIron());
+
+                const manifest = parser.parse(data);
 
                 if (manifest) {
                     manifest.url = actualUrl || url;
