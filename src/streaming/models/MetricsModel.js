@@ -44,7 +44,6 @@ import EventBus from '../../core/EventBus';
 import RequestsQueue from '../vo/metrics/RequestsQueue';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
-import BolaState from '../vo/metrics/BolaState';
 
 function MetricsModel() {
 
@@ -413,15 +412,6 @@ function MetricsModel() {
         return vo;
     }
 
-    function updateBolaState(mediaType, _s) {
-        let vo = new BolaState();
-        vo._s = _s;
-        getMetricsFor(mediaType).BolaState = [vo];
-
-        metricAdded(mediaType, 'BolaState', vo);
-        return vo;
-    }
-
     instance = {
         clearCurrentMetricsForType: clearCurrentMetricsForType,
         clearAllCurrentMetrics: clearAllCurrentMetrics,
@@ -442,7 +432,6 @@ function MetricsModel() {
         addManifestUpdateRepresentationInfo: addManifestUpdateRepresentationInfo,
         addPlayList: addPlayList,
         addDVBErrors: addDVBErrors,
-        updateBolaState: updateBolaState,
         setConfig: setConfig
     };
 
