@@ -34,7 +34,6 @@ import AbandonRequestsRule from './AbandonRequestsRule';
 import DroppedFramesRule from './DroppedFramesRule.js';
 import SwitchHistoryRule from './SwitchHistoryRule.js';
 import BolaRule from './BolaRule';
-import BolaAbandonRule from './BolaAbandonRule';
 import FactoryMaker from '../../../core/FactoryMaker';
 import SwitchRequest from '../SwitchRequest.js';
 
@@ -48,7 +47,6 @@ function ABRRulesCollection(config) {
     const mediaPlayerModel = config.mediaPlayerModel;
     const metricsModel = config.metricsModel;
     const dashMetrics = config.dashMetrics;
-    const adapter = config.adapter;
 
     let instance,
         qualitySwitchRules,
@@ -59,20 +57,13 @@ function ABRRulesCollection(config) {
         abandonFragmentRules = [];
 
         if (mediaPlayerModel.getUseDefaultABRRules()) {
+
             if (mediaPlayerModel.getBufferOccupancyABREnabled()) {
                 qualitySwitchRules.push(
                     BolaRule(context).create({
                         metricsModel: metricsModel,
                         dashMetrics: dashMetrics,
-                        mediaPlayerModel: mediaPlayerModel,
-                        adapter: adapter
-                    })
-                );
-
-                abandonFragmentRules.push(
-                    BolaAbandonRule(context).create({
-                        metricsModel: metricsModel,
-                        dashMetrics: dashMetrics
+                        mediaPlayerModel: mediaPlayerModel
                     })
                 );
             } else {
@@ -82,27 +73,28 @@ function ABRRulesCollection(config) {
                         dashMetrics: dashMetrics
                     })
                 );
-                qualitySwitchRules.push(
-                    InsufficientBufferRule(context).create({
-                        metricsModel: metricsModel,
-                        dashMetrics: dashMetrics
-                    })
-                );
-                qualitySwitchRules.push(
-                    SwitchHistoryRule(context).create()
-                );
-                qualitySwitchRules.push(
-                    DroppedFramesRule(context).create()
-                );
-
-                abandonFragmentRules.push(
-                    AbandonRequestsRule(context).create({
-                        metricsModel: metricsModel,
-                        dashMetrics: dashMetrics,
-                        mediaPlayerModel: mediaPlayerModel
-                    })
-                );
             }
+
+            qualitySwitchRules.push(
+                InsufficientBufferRule(context).create({
+                    metricsModel: metricsModel,
+                    dashMetrics: dashMetrics
+                })
+            );
+            qualitySwitchRules.push(
+                SwitchHistoryRule(context).create()
+            );
+            qualitySwitchRules.push(
+                DroppedFramesRule(context).create()
+            );
+
+            abandonFragmentRules.push(
+                AbandonRequestsRule(context).create({
+                    metricsModel: metricsModel,
+                    dashMetrics: dashMetrics,
+                    mediaPlayerModel: mediaPlayerModel
+                })
+            );
         }
 
         // add custom ABR rules if any
