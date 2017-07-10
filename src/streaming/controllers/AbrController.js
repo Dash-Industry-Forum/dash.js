@@ -640,7 +640,7 @@ function AbrController() {
             //        return newValue;
             //    });
 
-            if (switchRequest.value > SwitchRequest.NO_CHANGE) {
+            if (switchRequest.quality > SwitchRequest.NO_CHANGE) {
                 const fragmentModel = streamProcessor.getFragmentModel();
                 const request = fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_LOADING, index: e.request.index})[0];
                 if (request) {
