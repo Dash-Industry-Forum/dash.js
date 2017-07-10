@@ -50,10 +50,15 @@ function InsufficientBufferRule(config) {
         bufferStateDict;
 
     function setup() {
-        bufferStateDict = {};
+        resetInitialSettings();
         eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
     }
 
+    function checkConfig() {
+        if (!metricsModel || !metricsModel.getReadOnlyMetricsFor('getBitrateList') || !dashMetrics || !dashMetrics.hasOwnProperty('getCurrentBufferLevel')) {
+            throw new Error('Missing config parameter(s)');
+        }
+    }
     /*
      * InsufficientBufferRule does not kick in before the first BUFFER_LOADED event happens. This is reset at every seek.
      *
@@ -65,10 +70,17 @@ function InsufficientBufferRule(config) {
      * If the bufferLevel is high, then InsufficientBufferRule give a high MaxIndex allowing other rules to take over.
      */
     function getMaxIndex (rulesContext) {
+        let switchRequest = SwitchRequest(context).create();
+
+        if (!rulesContext || !rulesContext.hasOwnProperty('getMediaType')) {
+            return switchRequest;
+        }
+
+        checkConfig();
+
         let mediaType = rulesContext.getMediaType();
         let metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
         let lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
-        let switchRequest = SwitchRequest(context).create();
 
         if (!lastBufferStateVO || !wasFirstBufferLoadedEventTriggered(mediaType, lastBufferStateVO)) {
             return switchRequest;
@@ -112,13 +124,17 @@ function InsufficientBufferRule(config) {
         return wasTriggered;
     }
 
-    function onPlaybackSeeking() {
+    function resetInitialSettings() {
         bufferStateDict = {};
+    }
+
+    function onPlaybackSeeking() {
+        resetInitialSettings();
     }
 
     function reset() {
         eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
-        bufferStateDict = {};
+        resetInitialSettings();
     }
 
     instance = {
