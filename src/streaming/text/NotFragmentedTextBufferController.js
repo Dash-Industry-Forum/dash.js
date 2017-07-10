@@ -34,6 +34,7 @@ import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import InitCache from '../utils/InitCache';
 
+const BUFFER_CONTROLLER_TYPE = 'NotFragmentedTextBufferController';
 function NotFragmentedTextBufferController(config) {
 
     let context = this.context;
@@ -63,6 +64,10 @@ function NotFragmentedTextBufferController(config) {
 
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         eventBus.on(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
+    }
+
+    function getBufferControllerType() {
+        return BUFFER_CONTROLLER_TYPE;
     }
 
     function initialize(source) {
@@ -175,6 +180,7 @@ function NotFragmentedTextBufferController(config) {
     }
 
     instance = {
+        getBufferControllerType: getBufferControllerType,
         initialize: initialize,
         createBuffer: createBuffer,
         getType: getType,
@@ -196,5 +202,5 @@ function NotFragmentedTextBufferController(config) {
     return instance;
 }
 
-NotFragmentedTextBufferController.__dashjs_factory_name = 'NotFragmentedTextBufferController';
+NotFragmentedTextBufferController.__dashjs_factory_name = BUFFER_CONTROLLER_TYPE;
 export default FactoryMaker.getClassFactory(NotFragmentedTextBufferController);
