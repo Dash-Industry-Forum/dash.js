@@ -47,7 +47,22 @@ function ThroughputRule(config) {
         reset();
     }
 
+    function checkConfig() {
+        if (!metricsModel || !metricsModel.hasOwnProperty('getReadOnlyMetricsFor')) {
+            throw new Error('Missing config parameter(s)');
+        }
+    }
+
     function getMaxIndex(rulesContext) {
+        const switchRequest = SwitchRequest(context).create();
+
+        if (!rulesContext || !rulesContext.hasOwnProperty('getMediaInfo') || !rulesContext.hasOwnProperty('getMediaType') || !rulesContext.hasOwnProperty('hasRichBuffer') ||
+            !rulesContext.hasOwnProperty('getAbrController') || !rulesContext.hasOwnProperty('getStreamProcessor')) {
+            return switchRequest;
+        }
+
+        checkConfig();
+
         const mediaInfo = rulesContext.getMediaInfo();
         const mediaType = rulesContext.getMediaType();
         const metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
@@ -58,7 +73,6 @@ function ThroughputRule(config) {
         const isDynamic = streamInfo && streamInfo.manifestInfo ? streamInfo.manifestInfo.isDynamic : null;
         const bufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
         const hasRichBuffer = rulesContext.hasRichBuffer();
-        const switchRequest = SwitchRequest(context).create();
 
         if (!metrics || !bufferStateVO || hasRichBuffer) {
             return switchRequest;
