@@ -37,7 +37,6 @@ import FactoryMaker from '../../../core/FactoryMaker';
 import {HTTPRequest} from '../../vo/metrics/HTTPRequest';
 import EventBus from '../../../core/EventBus';
 import Events from '../../../core/events/Events';
-import MediaPlayerEvents from '../../MediaPlayerEvents.js';
 import Debug from '../../../core/Debug';
 
 // BOLA_STATE_ONE_BITRATE   : If there is only one bitrate (or initialization failed), always return NO_CHANGE.
@@ -49,8 +48,10 @@ const BOLA_STATE_STARTUP        = 1;
 const BOLA_STATE_STEADY         = 2;
 
 const MINIMUM_BUFFER_S = 10; // BOLA should never add artificial delays if buffer is less than MINIMUM_BUFFER_S.
-const MINIMUM_BUFFER_PER_BITRATE_LEVEL_S = 2; // E.g. if there are 5 bitrates, BOLA switches to top bitrate at buffer = 10 + 5 * 2 = 20s.
+const MINIMUM_BUFFER_PER_BITRATE_LEVEL_S = 2;
+// E.g. if there are 5 bitrates, BOLA switches to top bitrate at buffer = 10 + 5 * 2 = 20s.
 // If Schedule Controller does not allow buffer to reach that level, it can be achieved through the placeholder buffer level.
+
 const PLACEHOLDER_BUFFER_DECAY = 0.99; // Make sure placeholder buffer does not stick around too long.
 
 function BolaRule(config) {
@@ -63,22 +64,17 @@ function BolaRule(config) {
     const eventBus = EventBus(context).getInstance();
 
     let instance,
-        bolaStateDict,
-        lastCallTimeDict,
-        lastFragmentLoadedDict,
-        lastFragmentWasSwitchDict;
+        bolaStateDict;
 
     function setup() {
-        bolaStateDict = {};
-        lastCallTimeDict = {};
-        lastFragmentLoadedDict = {};
-        lastFragmentWasSwitchDict = {};
+        resetInitialSettings();
+
         eventBus.on(Events.BUFFER_EMPTY, onBufferEmpty, instance);
         eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
         eventBus.on(Events.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, instance);
         eventBus.on(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, instance);
-        eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, instance);
-        eventBus.on(MediaPlayerEvents.FRAGMENT_LOADING_ABANDONED, onFragmentLoadingAbandoned, instance);
+        eventBus.on(Events.METRIC_ADDED, onMetricAdded, instance);
+        eventBus.on(Events.FRAGMENT_LOADING_ABANDONED, onFragmentLoadingAbandoned, instance);
     }
 
     function utilitiesFromBitrates(bitrates) {
@@ -262,7 +258,7 @@ function BolaRule(config) {
     function onBufferEmpty() {
         // if we rebuffer, we don't want the placeholder buffer to artificially raise BOLA quality
         for (let mediaType in bolaStateDict) {
-            if (bolaStateDict.hasOwnProperty(mediaType)) {
+            if (bolaStateDict.hasOwnProperty(mediaType) && bolaStateDict[mediaType].state === BOLA_STATE_STEADY) {
                 bolaStateDict[mediaType].placeholderBuffer = 0;
             }
         }
@@ -492,14 +488,19 @@ function BolaRule(config) {
         return switchRequest;
     }
 
+    function resetInitialSettings() {
+        bolaStateDict = {};
+    }
+
     function reset() {
+        resetInitialSettings();
+
         eventBus.off(Events.BUFFER_EMPTY, onBufferEmpty, instance);
         eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
         eventBus.off(Events.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, instance);
         eventBus.off(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, instance);
-        eventBus.off(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, instance);
-        eventBus.off(MediaPlayerEvents.FRAGMENT_LOADING_ABANDONED, onFragmentLoadingAbandoned, instance);
-        setup();
+        eventBus.off(Events.METRIC_ADDED, onMetricAdded, instance);
+        eventBus.off(Events.FRAGMENT_LOADING_ABANDONED, onFragmentLoadingAbandoned, instance);
     }
 
     instance = {
