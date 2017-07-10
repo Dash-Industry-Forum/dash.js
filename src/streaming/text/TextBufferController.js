@@ -74,6 +74,10 @@ function TextBufferController(config) {
         }
     }
 
+    function getBufferControllerType() {
+        return _BufferControllerImpl.getBufferControllerType();
+    }
+
     function initialize(source, StreamProcessor) {
         return _BufferControllerImpl.initialize(source, StreamProcessor);
     }
@@ -132,6 +136,7 @@ function TextBufferController(config) {
     }
 
     instance = {
+        getBufferControllerType: getBufferControllerType,
         initialize: initialize,
         createBuffer: createBuffer,
         getType: getType,

@@ -44,6 +44,8 @@ const BUFFER_LOADED = 'bufferLoaded';
 const BUFFER_EMPTY = 'bufferStalled';
 const STALL_THRESHOLD = 0.5;
 
+const BUFFER_CONTROLLER_TYPE = 'BufferController';
+
 function BufferController(config) {
 
     const context = this.context;
@@ -94,6 +96,10 @@ function BufferController(config) {
         appendingMediaChunk = false;
         isAppendingInProgress = false;
         isPruningInProgress = false;
+    }
+
+    function getBufferControllerType() {
+        return BUFFER_CONTROLLER_TYPE;
     }
 
     function initialize(Source) {
@@ -502,6 +508,7 @@ function BufferController(config) {
     }
 
     instance = {
+        getBufferControllerType: getBufferControllerType,
         initialize: initialize,
         createBuffer: createBuffer,
         getType: getType,
@@ -521,7 +528,7 @@ function BufferController(config) {
     return instance;
 }
 
-BufferController.__dashjs_factory_name = 'BufferController';
+BufferController.__dashjs_factory_name = BUFFER_CONTROLLER_TYPE;
 const factory = FactoryMaker.getClassFactory(BufferController);
 factory.BUFFER_LOADED = BUFFER_LOADED;
 factory.BUFFER_EMPTY = BUFFER_EMPTY;
