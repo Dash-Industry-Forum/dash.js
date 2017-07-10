@@ -55,7 +55,7 @@ function InsufficientBufferRule(config) {
     }
 
     function checkConfig() {
-        if (!metricsModel || !metricsModel.getReadOnlyMetricsFor('getBitrateList') || !dashMetrics || !dashMetrics.hasOwnProperty('getCurrentBufferLevel')) {
+        if (!metricsModel || !metricsModel.hasOwnProperty('getReadOnlyMetricsFor') || !dashMetrics || !dashMetrics.hasOwnProperty('getCurrentBufferLevel')) {
             throw new Error('Missing config parameter(s)');
         }
     }
