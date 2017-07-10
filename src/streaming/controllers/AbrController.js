@@ -31,11 +31,11 @@
 
 import ABRRulesCollection from '../rules/abr/ABRRulesCollection';
 import Constants from '../constants/Constants';
+import MetricsConstants from '../constants/MetricsConstants';
 import BitrateInfo from '../vo/BitrateInfo';
 import FragmentModel from '../models/FragmentModel';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
-import MediaPlayerEvents from '../MediaPlayerEvents.js';
 import FactoryMaker from '../../core/FactoryMaker';
 import RulesContext from '../rules/RulesContext.js';
 import SwitchRequest from '../rules/SwitchRequest.js';
@@ -84,6 +84,7 @@ function AbrController() {
         switchHistoryDict,
         droppedFramesHistory,
         throughputHistory,
+        isUsingBufferOccupancyABRDict,
         metricsModel,
         dashMetrics,
         useDeadTimeLatency;
@@ -111,13 +112,14 @@ function AbrController() {
         streamProcessorDict[type] = streamProcessor;
         abandonmentStateDict[type] = abandonmentStateDict[type] || {};
         abandonmentStateDict[type].state = ALLOW_LOAD;
+        isUsingBufferOccupancyABRDict[type] = false;
         eventBus.on(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
         if (type == Constants.VIDEO) {
-            eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_RENDERED, onQualityChangeRendered, this);
+            eventBus.on(Events.QUALITY_CHANGE_RENDERED, onQualityChangeRendered, this);
             droppedFramesHistory = DroppedFramesHistory(context).create();
             setElementSize();
         }
-        eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
+        eventBus.on(Events.METRIC_ADDED, onMetricAdded, this);
         throughputHistory = ThroughputHistory().create({
             mediaPlayerModel: mediaPlayerModel
         });
@@ -144,6 +146,7 @@ function AbrController() {
         abandonmentStateDict = {};
         streamProcessorDict = {};
         switchHistoryDict = {};
+        isUsingBufferOccupancyABRDict = {};
         limitBitrateByPortal = false;
         useDeadTimeLatency = true;
         usePixelRatioInLimitBitrateByPortal = false;
@@ -151,8 +154,8 @@ function AbrController() {
             windowResizeEventCalled = false;
         }
         eventBus.off(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
-        eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_RENDERED, onQualityChangeRendered, this);
-        eventBus.off(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
+        eventBus.off(Events.QUALITY_CHANGE_RENDERED, onQualityChangeRendered, this);
+        eventBus.off(Events.METRIC_ADDED, onMetricAdded, this);
         playbackIndex = undefined;
         droppedFramesHistory = undefined;
         throughputHistory = undefined;
@@ -203,8 +206,12 @@ function AbrController() {
     }
 
     function onMetricAdded(e) {
-        if (e.metric === 'HttpList' && e.value && e.value.type === HTTPRequest.MEDIA_SEGMENT_TYPE && (e.mediaType === Constants.AUDIO || e.mediaType === Constants.VIDEO)) {
+        if (e.metric === MetricsConstants.HTTP_REQUEST && e.value && e.value.type === HTTPRequest.MEDIA_SEGMENT_TYPE && (e.mediaType === Constants.AUDIO || e.mediaType === Constants.VIDEO)) {
             throughputHistory.push(e.mediaType, e.value, useDeadTimeLatency);
+        }
+
+        if (e.metric === MetricsConstants.BUFFER_LEVEL && (e.mediaType === Constants.AUDIO || e.mediaType === Constants.VIDEO)) {
+            updateIsUsingBufferOccupancyABR(e.mediaType, 0.001 * e.value.level);
         }
     }
 
@@ -354,7 +361,7 @@ function AbrController() {
                 currentValue: oldQuality,
                 switchHistory: switchHistoryDict[type],
                 droppedFramesHistory: droppedFramesHistory,
-                hasRichBuffer: hasRichBuffer(type)
+                useBufferOccupancyABR: useBufferOccupancyABR(type)
             });
 
             if (droppedFramesHistory) {
@@ -478,20 +485,18 @@ function AbrController() {
         return infoList;
     }
 
-    function hasRichBuffer(type) {
-        const metrics = metricsModel.getReadOnlyMetricsFor(type);
-        const bufferLevel = dashMetrics.getCurrentBufferLevel(metrics);
-        const bufferState = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
-        let isBufferRich = false;
+    function updateIsUsingBufferOccupancyABR(mediaType, bufferLevel) {
+        let stableBufferTime = mediaPlayerModel.getStableBufferTime();
+        let switchOnThreshold = stableBufferTime;
+        let switchOffThreshold = 0.5 * stableBufferTime;
 
-        // This will happen when another rule tries to switch down from highest quality index
-        // If there is enough buffer why not try to stay at high level
-        if (bufferState && bufferLevel > bufferState.target) {
-            // Are we currently over the buffer target by at least RICH_BUFFER_THRESHOLD?
-            isBufferRich = bufferLevel > ( bufferState.target + mediaPlayerModel.getRichBufferThreshold() );
-        }
+        let useBufferABR = isUsingBufferOccupancyABRDict[mediaType];
+        useBufferABR = bufferLevel > (useBufferABR ? switchOffThreshold : switchOnThreshold); // use hysteresis to avoid oscillating rules
+        isUsingBufferOccupancyABRDict[mediaType] = useBufferABR;
+    }
 
-        return isBufferRich;
+    function useBufferOccupancyABR(mediaType) {
+        return isUsingBufferOccupancyABRDict[mediaType];
     }
 
     function getThroughputHistory() {
@@ -632,7 +637,7 @@ function AbrController() {
                 abrController: instance,
                 streamProcessor: streamProcessor,
                 currentRequest: e.request,
-                hasRichBuffer: hasRichBuffer(type)
+                useBufferOccupancyABR: useBufferOccupancyABR(type)
             });
             let switchRequest = abrRulesCollection.shouldAbandonFragment(rulesContext);
             //Removed overrideFunc
@@ -650,7 +655,7 @@ function AbrController() {
                     switchHistoryDict[type].reset();
                     switchHistoryDict[type].push({oldValue: getQualityFor(type, streamController.getActiveStreamInfo()), newValue: switchRequest.quality, confidence: 1, reason: switchRequest.reason});
                     setPlaybackQuality(type, streamController.getActiveStreamInfo(), switchRequest.quality, switchRequest.reason);
-                    eventBus.trigger(Events.FRAGMENT_LOADING_ABANDONED, {streamProcessor: streamProcessorDict[type], request: request, mediaType: type});
+                    eventBus.trigger(Events.FRAGMENT_LOADING_ABANDONED, {streamProcessor: streamProcessorDict[type], request: request, mediaType: type, newQuality: switchRequest.quality});
 
                     clearTimeout(abandonmentTimeout);
                     abandonmentTimeout = setTimeout(
