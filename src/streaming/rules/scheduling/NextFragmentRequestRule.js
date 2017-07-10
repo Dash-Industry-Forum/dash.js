@@ -83,7 +83,8 @@ function NextFragmentRequestRule(config) {
             request = adapter.getFragmentRequestForTime(streamProcessor, representationInfo, time, {
                 keepIdx: !hasSeekTarget
             });
-            if (streamProcessor.getFragmentModel().isFragmentLoaded(request)) {
+            while ( streamProcessor.getFragmentModel().isFragmentLoaded(request)) {
+                // loop until we found not loaded fragment, or no fragment
                 request = adapter.getNextFragmentRequest(streamProcessor, representationInfo);
             }
             if (request) {

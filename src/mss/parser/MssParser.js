@@ -476,6 +476,7 @@ function MssParser(config) {
             manifest.availabilityStartTime = new Date(manifestLoadedTime.getTime() - (manifest.timeShiftBufferDepth * 1000));
             manifest.refreshManifestOnSwitchTrack = true;
             manifest.doNotUpdateDVRWindowOnBufferUpdated = true; // done by Mss fragment processor
+            manifest.ignorePostponeTimePeriod = true; // in Mss, manifest is never updated
         }
 
         // Map period node to manifest root node
@@ -526,6 +527,12 @@ function MssParser(config) {
                 }
             } else {
                 adaptations[i].SegmentTemplate.initialization = '$Bandwidth$';
+                // Match timeShiftBufferDepth to video segment timeline duration
+                if (manifest.timeShiftBufferDepth > 0 &&
+                    adaptations[i].contentType === 'video' &&
+                    manifest.timeShiftBufferDepth > adaptations[i].SegmentTemplate.SegmentTimeline.duration) {
+                    manifest.timeShiftBufferDepth = adaptations[i].SegmentTemplate.SegmentTimeline.duration;
+                }
             }
 
             // Propagate content protection information into each adaptation

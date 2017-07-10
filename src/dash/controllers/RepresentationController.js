@@ -281,7 +281,7 @@ function RepresentationController(config) {
             err,
             repSwitch;
 
-        if (r.adaptation.period.mpd.manifest.type === DashConstants.DYNAMIC)
+        if (r.adaptation.period.mpd.manifest.type === DashConstants.DYNAMIC && !r.adaptation.period.mpd.manifest.ignorePostponeTimePeriod)
         {
             let segmentAvailabilityTimePeriod = r.segmentAvailabilityRange.end - r.segmentAvailabilityRange.start;
             // We must put things to sleep unless till e.g. the startTime calculation in ScheduleController.onLiveEdgeSearchCompleted fall after the segmentAvailabilityRange.start

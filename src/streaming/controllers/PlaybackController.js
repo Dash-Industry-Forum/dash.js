@@ -177,12 +177,17 @@ function PlaybackController() {
             delay = streamInfo.manifestInfo.minBufferTime * 2;
         }
 
-        // cap target latency to:
-        // - dvrWindowSize / 2 for short playlists
-        // - dvrWindowSize - END_OF_PLAYLIST_PADDING for longer playlists
-        let targetDelayCapping = Math.max(dvrWindowSize - END_OF_PLAYLIST_PADDING, dvrWindowSize / 2);
+        if ( dvrWindowSize > 0 ) {
+            // cap target latency to:
+            // - dvrWindowSize / 2 for short playlists
+            // - dvrWindowSize - END_OF_PLAYLIST_PADDING for longer playlists
+            let targetDelayCapping = Math.max(dvrWindowSize - END_OF_PLAYLIST_PADDING, dvrWindowSize / 2);
 
-        return Math.min(delay, targetDelayCapping);
+            return Math.min(delay, targetDelayCapping);
+        }
+        else {
+            return delay;
+        }
     }
 
     function reset() {
