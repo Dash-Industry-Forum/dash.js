@@ -125,11 +125,31 @@ function CustomTimeRanges(/*config*/) {
         return false;
     }
 
+    function checkIndex(index) {
+        const isInt = index !== null && !isNaN(index) && (index % 1 === 0);
+
+        if (!isInt) {
+            throw new Error('index argument is not an integer');
+        }
+    }
+
     function start(index) {
+        checkIndex(index);
+
+        if (index >= this.customTimeRangeArray.length || index < 0) {
+            return NaN;
+        }
+
         return this.customTimeRangeArray[index].start;
     }
 
     function end(index) {
+        checkIndex(index);
+
+        if (index >= this.customTimeRangeArray.length || index < 0) {
+            return NaN;
+        }
+
         return this.customTimeRangeArray[index].end;
     }
 
