@@ -13,7 +13,7 @@ describe("FragmentController", function () {
     const fragmentController = FragmentController(context).create({
         mediaPlayerModel: mediaPlayerModel
     });
-    
+
     Events.extend(MediaPlayerEvents);
 
     it("should create or return model for a given media type", function () {

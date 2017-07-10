@@ -141,6 +141,10 @@ function ScheduleController(config) {
         eventBus.on(Events.FRAGMENT_LOADING_ABANDONED, onFragmentLoadingAbandoned, this);
     }
 
+    function isStarted() {
+        return (isStopped === false);
+    }
+
     function start() {
         if (!currentRepresentationInfo || streamProcessor.isBufferingCompleted()) {
             return;
@@ -619,6 +623,7 @@ function ScheduleController(config) {
         getTimeToLoadDelay: getTimeToLoadDelay,
         replaceRequest: replaceRequest,
         switchTrackAsked: switchTrackAsked,
+        isStarted: isStarted,
         start: start,
         stop: stop,
         reset: reset,
