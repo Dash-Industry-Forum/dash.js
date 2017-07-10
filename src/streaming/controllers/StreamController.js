@@ -45,7 +45,6 @@ import Debug from '../../core/Debug';
 import InitCache from '../utils/InitCache';
 import MediaPlayerEvents from '../MediaPlayerEvents';
 import TimeSyncController from './TimeSyncController';
-import LiveEdgeFinder from '../utils/LiveEdgeFinder';
 import BaseURLController from './BaseURLController';
 import MediaSourceController from './MediaSourceController';
 
@@ -66,7 +65,6 @@ function StreamController() {
         adapter,
         metricsModel,
         dashMetrics,
-        liveEdgeFinder,
         mediaSourceController,
         timeSyncController,
         baseURLController,
@@ -100,7 +98,6 @@ function StreamController() {
         protectionController = null;
         streams = [];
         timeSyncController = TimeSyncController(context).getInstance();
-        liveEdgeFinder = LiveEdgeFinder(context).getInstance();
         baseURLController = BaseURLController(context).getInstance();
         mediaSourceController = MediaSourceController(context).getInstance();
         autoPlay = true;
@@ -742,7 +739,6 @@ function StreamController() {
         manifestModel.setValue(null);
         manifestLoader.reset();
         timelineConverter.reset();
-        liveEdgeFinder.reset();
         initCache.reset();
         isStreamSwitchingInProgress = false;
         activeStream = null;
