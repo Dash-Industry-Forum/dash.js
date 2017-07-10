@@ -64,11 +64,16 @@ function AbandonRequestsRule(config) {
     }
 
     function shouldAbandon(rulesContext) {
+        const switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, {name: AbandonRequestsRule.__dashjs_factory_name});
+
+        if (!rulesContext || !rulesContext.hasOwnProperty('getMediaInfo') || !rulesContext.hasOwnProperty('getMediaType') || !rulesContext.hasOwnProperty('getCurrentRequest') ||
+            !rulesContext.hasOwnProperty('getTrackInfo') || !rulesContext.hasOwnProperty('getAbrController')) {
+            return switchRequest;
+        }
 
         const mediaInfo = rulesContext.getMediaInfo();
         const mediaType = rulesContext.getMediaType();
         const req = rulesContext.getCurrentRequest();
-        const switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, {name: AbandonRequestsRule.__dashjs_factory_name});
 
         if (!isNaN(req.index)) {
 
