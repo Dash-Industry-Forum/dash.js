@@ -127,8 +127,8 @@ function TextBufferController(config) {
         return _BufferControllerImpl.getIsBufferingCompleted();
     }
 
-    function switchInitData(streamId, quality) {
-        _BufferControllerImpl.switchInitData(streamId, quality);
+    function switchInitData(streamId, representationId) {
+        _BufferControllerImpl.switchInitData(streamId, representationId);
     }
 
     instance = {
