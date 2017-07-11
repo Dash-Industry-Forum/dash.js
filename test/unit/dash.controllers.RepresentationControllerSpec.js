@@ -62,14 +62,15 @@ describe("RepresentationController", function () {
     });
     abrController.registerStreamType(testType, streamProcessor);
 
-    const representationController = RepresentationController(context).create({streamProcessor : streamProcessor});
-    representationController.initialize();
+    const representationController = RepresentationController(context).create();
     representationController.setConfig({
         abrController: abrController,
         domStorage: domStorage,
         dashManifestModel: dashManifestModel,
-        manifestModel: manifestModel
+        manifestModel: manifestModel,
+        streamProcessor : streamProcessor
     });
+    representationController.initialize();
 
     it("should not contain data before it is set", function () {
         // Act
