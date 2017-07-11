@@ -12,14 +12,25 @@ const expect = chai.expect;
 const context = {};
 const eventBus = EventBus(context).getInstance();
 
+function ErrorHandlerMock() {
+    this.error = undefined;
+
+    this.manifestError = function(error) {
+        this.error = error;
+    };
+}
+
 describe('XLinkController', function () {
     let xLinkController;
+    let errorHandlerMock = new ErrorHandlerMock();
 
 
     function parseManifest(url, xml, xlinkController) {
         let urlUtils = URLUtils(context).getInstance();
         let baseUri = urlUtils.parseBaseUrl(url);
-        let parser = DashParser(context).create({});
+        let parser = DashParser(context).create({
+            errorHandler: errorHandlerMock
+        });
         const manifest = parser.parse(xml, xlinkController);
 
         if (manifest) {
