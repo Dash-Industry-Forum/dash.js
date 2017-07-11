@@ -126,4 +126,15 @@ describe("RepresentationController", function () {
             expect(representationController.getRepresentationForQuality(quality).index).to.equal(expectedValue);
         });
     });
+
+    describe("when a call to reset is done", function () {
+        it("should not contain data after a call to reset", function () {
+            representationController.reset();
+            // Act
+            const data = representationController.getData();
+
+            // Assert
+            expect(data).not.exist;
+        });
+    });
 });
