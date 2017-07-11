@@ -5,14 +5,28 @@ const expect = chai.expect;
 
 const context = {};
 
+class SourceBufferControllerMock {
+    constructor() {
+    }
+
+    abort() {
+    }
+
+    removeSourceBuffer() {
+    }
+}
+
 describe('TextBufferController', function () {
 
     let textBufferController;
 
     it('should create a buffer of type "BufferController" if type is "fragmentedText"', function () {
 
+        let sourceBufferMock = new SourceBufferControllerMock('fragmentedText');
+
         textBufferController = TextBufferController(context).create({
-            type: 'fragmentedText'
+            type: 'fragmentedText',
+            sourceBufferController: sourceBufferMock,
         });
 
         expect(textBufferController.getBufferControllerType()).to.equal('BufferController');
