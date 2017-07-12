@@ -2084,10 +2084,12 @@ function MediaPlayer() {
      *
      * Buffer-occupancy ABR is now switched on and off dynamically.
      *
+     * @param {boolean} value
      * @memberof module:MediaPlayer
      * @instance
      */
-    function enableBufferOccupancyABR() {
+    function enableBufferOccupancyABR(value) {
+        log('Warning: calling deprecated function - enabledBufferOccupancyABR(' + value + ') has no effect.');
     }
 
     /**
@@ -2096,10 +2098,12 @@ function MediaPlayer() {
      * ABR rules now switch from Throughput to Buffer Occupancy mode when there is sufficient buffer.
      * This renders the rich buffer mechanism redundant.
      *
+     * @param {number} value
      * @memberof module:MediaPlayer
      * @instance
      */
-    function setRichBufferThreshold() {
+    function setRichBufferThreshold(value) {
+        log('Warning: calling deprecated function - setRichBufferThreshold(' + value + ') has no effect.');
     }
 
     /**
