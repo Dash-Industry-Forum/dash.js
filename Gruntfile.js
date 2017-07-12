@@ -61,15 +61,6 @@ module.exports = function (grunt) {
                 }
             },
 
-            build_factorymaker: {
-                options: {
-                    sourceMapIn: 'build/temp/dash.factorymaker.debug.js.map'
-                },
-                files: {
-                    'build/temp/dash.factorymaker.min.js': 'build/temp/dash.factorymaker.debug.js'
-                }
-            },
-
             build_reporting: {
                 options: {
                     sourceMapIn: 'build/temp/dash.reporting.debug.js.map'
@@ -112,7 +103,6 @@ module.exports = function (grunt) {
                     'dash.mss.min.js', 'dash.mss.min.js.map',
                     'dash.mediaplayer.debug.js', 'dash.mediaplayer.debug.js.map',
                     'dash.protection.debug.js', 'dash.protection.debug.js.map',
-                    'dash.factorymaker.debug.js', 'dash.factorymaker.debug.js.map',
                     'dash.reporting.debug.js', 'dash.reporting.debug.js.map',
                     'dash.mss.debug.js', 'dash.mss.debug.js.map'
                 ],
@@ -159,12 +149,6 @@ module.exports = function (grunt) {
                     'build/temp/dash.reporting.debug.js.map': ['build/temp/dash.reporting.debug.js']
                 }
             },
-            factorymaker: {
-                options: {},
-                files: {
-                    'build/temp/dash.factorymaker.debug.js.map': ['build/temp/dash.factorymaker.debug.js']
-                }
-            },
             mss: {
                 options: {},
                 files: {
@@ -189,12 +173,11 @@ module.exports = function (grunt) {
         browserify: {
             mediaplayer: {
                 files: {
-                    'build/temp/dash.mediaplayer.debug.js': ['src/streaming/MediaPlayer.js']
+                    'build/temp/dash.mediaplayer.debug.js': ['index_mediaplayerOnly.js']
                 },
                 options: {
                     browserifyOptions: {
-                        debug: true,
-                        standalone: 'dashjs.MediaPlayer'
+                        debug: true
                     },
                     plugin: [
                         'browserify-derequire', 'bundle-collapser/plugin'
@@ -225,21 +208,6 @@ module.exports = function (grunt) {
                     browserifyOptions: {
                         debug: true,
                         standalone: 'dashjs.MetricsReporting'
-                    },
-                    plugin: [
-                        'browserify-derequire', 'bundle-collapser/plugin'
-                    ],
-                    transform: ['babelify']
-                }
-            },
-            factorymaker: {
-                files: {
-                    'build/temp/dash.factorymaker.debug.js': ['src/core/FactoryMaker.js']
-                },
-                options: {
-                    browserifyOptions: {
-                        debug: true,
-                        standalone: 'dashjs.FactoryMaker'
                     },
                     plugin: [
                         'browserify-derequire', 'bundle-collapser/plugin'
@@ -330,7 +298,7 @@ module.exports = function (grunt) {
 
     require('load-grunt-tasks')(grunt);
     grunt.registerTask('default', ['dist', 'test']);
-    grunt.registerTask('dist', ['clean', 'jshint', 'jscs', 'browserify:mediaplayer', 'browserify:factorymaker', 'browserify:protection', 'browserify:reporting', 'browserify:mss', 'browserify:all', 'babel:es5', 'minimize', 'copy:dist']);
+    grunt.registerTask('dist', ['clean', 'jshint', 'jscs', 'browserify:mediaplayer', 'browserify:protection', 'browserify:reporting', 'browserify:mss', 'browserify:all', 'babel:es5', 'minimize', 'copy:dist']);
     grunt.registerTask('minimize', ['exorcise', 'githash', 'uglify']);
     grunt.registerTask('test', ['mocha_istanbul:test']);
     grunt.registerTask('watch', ['browserify:watch']);
