@@ -128,7 +128,6 @@ function TextController() {
         let embeddedTracks = config.embeddedTracks;
         let isFragmented = config.isFragmented;
         let fragmentedTracks = config.fragmentedTracks;
-        let allTracksAreDisabled = config.allTracksAreDisabled;
 
         let tracks = videoModel.getTextTracks();
         const ln = tracks.length;
