@@ -52,7 +52,6 @@ const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
 const BUFFER_TIME_AT_TOP_QUALITY = 30;
 const BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 60;
 const LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;
-const RICH_BUFFER_THRESHOLD = 20;
 
 const FRAGMENT_RETRY_ATTEMPTS = 3;
 const FRAGMENT_RETRY_INTERVAL = 1000;
@@ -119,10 +118,6 @@ class MediaPlayerModelMock {
         return LONG_FORM_CONTENT_DURATION_THRESHOLD;
     }
 
-    static get RICH_BUFFER_THRESHOLD() {
-        return RICH_BUFFER_THRESHOLD;
-    }
-
     static get FRAGMENT_RETRY_ATTEMPTS() {
         return FRAGMENT_RETRY_ATTEMPTS;
     }
@@ -163,7 +158,6 @@ class MediaPlayerModelMock {
         this.useSuggestedPresentationDelay = false;
         this.useManifestDateHeaderTimeSource = true;
         this.scheduleWhilePaused = true;
-        this.bufferOccupancyABREnabled = false;
         this.useDefaultABRRules = true;
         this.fastSwitchEnabled = false;
         this.lastBitrateCachingInfo = {
@@ -182,7 +176,6 @@ class MediaPlayerModelMock {
         this.bufferTimeAtTopQuality = BUFFER_TIME_AT_TOP_QUALITY;
         this.bufferTimeAtTopQualityLongForm = BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM;
         this.longFormContentDurationThreshold = LONG_FORM_CONTENT_DURATION_THRESHOLD;
-        this.richBufferThreshold = RICH_BUFFER_THRESHOLD;
         this.bandwidthSafetyFactor = BANDWIDTH_SAFETY_FACTOR;
         this.abandonLoadTimeout = ABANDON_LOAD_TIMEOUT;
         this.wallclockTimeUpdateInterval = WALLCLOCK_TIME_UPDATE_INTERVAL;
@@ -201,13 +194,6 @@ class MediaPlayerModelMock {
     }
 
     //TODO Should we use Object.define to have setters/getters? makes more readable code on other side.
-    setBufferOccupancyABREnabled(value) {
-        this.bufferOccupancyABREnabled = value;
-    }
-
-    getBufferOccupancyABREnabled() {
-        return this.bufferOccupancyABREnabled;
-    }
 
     setUseDefaultABRRules(value) {
         this.useDefaultABRRules = value;
@@ -307,15 +293,6 @@ class MediaPlayerModelMock {
     getLongFormContentDurationThreshold() {
         return this.longFormContentDurationThreshold;
     }
-
-    setRichBufferThreshold(value) {
-        this.richBufferThreshold = value;
-    }
-
-    getRichBufferThreshold() {
-        return this.richBufferThreshold;
-    }
-
 
     setBufferToKeep(value) {
         this.bufferToKeep = value;

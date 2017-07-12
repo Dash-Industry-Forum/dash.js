@@ -1094,23 +1094,6 @@ function MediaPlayer() {
     }
 
     /**
-     * Enabling buffer-occupancy ABR will switch to the *experimental* implementation of BOLA,
-     * replacing the throughput-based ABR rule set (ThroughputRule, BufferOccupancyRule,
-     * InsufficientBufferRule and AbandonRequestsRule) with the buffer-occupancy-based
-     * BOLA rule set (BolaRule, BolaAbandonRule).
-     *
-     * @see {@link http://arxiv.org/abs/1601.06748 BOLA WhitePaper.}
-     * @see {@link https://github.com/Dash-Industry-Forum/dash.js/wiki/BOLA-status More details about the implementation status.}
-     * @param {boolean} value
-     * @default false
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function enableBufferOccupancyABR(value) {
-        mediaPlayerModel.setBufferOccupancyABREnabled(value);
-    }
-
-    /**
      * Enable/disable builtin dashjs ABR rules
      * @param {boolean} value
      * @default true
@@ -1392,21 +1375,6 @@ function MediaPlayer() {
      */
     function setLongFormContentDurationThreshold(value) {
         mediaPlayerModel.setLongFormContentDurationThreshold(value);
-    }
-
-    /**
-     * A threshold, in seconds, of when dashjs abr becomes less conservative since we have a
-     * larger "rich" buffer.
-     * The BufferOccupancyRule.js rule will override the ThroughputRule's decision when the
-     * buffer level surpasses this value and while it remains greater than this value.
-     *
-     * @default 20 seconds
-     * @param {number} value
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function setRichBufferThreshold(value) {
-        mediaPlayerModel.setRichBufferThreshold(value);
     }
 
     /**
@@ -2110,6 +2078,30 @@ function MediaPlayer() {
 
     ---------------------------------------------------------------------------
     */
+
+    /**
+     * @deprecated Since version 2.6.0.
+     *
+     * Buffer-occupancy ABR is now switched on and off dynamically.
+     *
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function enableBufferOccupancyABR() {
+    }
+
+    /**
+     * @deprecated Since version 2.6.0.
+     *
+     * ABR rules now switch from Throughput to Buffer Occupancy mode when there is sufficient buffer.
+     * This renders the rich buffer mechanism redundant.
+     *
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setRichBufferThreshold() {
+    }
+
     /**
      * @deprecated Since version 2.1.0.  <b>Instead use:</b>
      * <ul>
