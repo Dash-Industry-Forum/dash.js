@@ -43,11 +43,13 @@ function Debug() {
     let instance,
         logToBrowserConsole,
         showLogTimestamp,
+        showCalleeName,
         startTime;
 
     function setup() {
         logToBrowserConsole = true;
         showLogTimestamp = true;
+        showCalleeName = false;
         startTime = new Date().getTime();
     }
 
@@ -60,6 +62,16 @@ function Debug() {
      */
     function setLogTimestampVisible(value) {
         showLogTimestamp = value;
+    }
+    /**
+     * Prepends the callee object name, and media type if available, to each log message.
+     * @param {boolean} value Set to true if you want to see the callee object name and media type in each log message.
+     * @default false
+     * @memberof module:Debug
+     * @instance
+     */
+    function setCalleeNameVisible(value) {
+        showCalleeName = value;
     }
     /**
      * Toggles logging to the browser's javascript console.  If you set to false you will still receive a log event with the same message.
@@ -88,12 +100,19 @@ function Debug() {
      */
     function log() {
 
-        var message = '';
-        var logTime = null;
+        let message = '';
+        let logTime = null;
 
         if (showLogTimestamp) {
             logTime = new Date().getTime();
             message += '[' + (logTime - startTime) + ']';
+        }
+
+        if (showCalleeName && this && this.getClassName) {
+            message += '[' + this.getClassName() + ']';
+            if (this.getType) {
+                message += '[' + this.getType() + ']';
+            }
         }
 
         if (message.length > 0) {
@@ -114,8 +133,9 @@ function Debug() {
     instance = {
         log: log,
         setLogTimestampVisible: setLogTimestampVisible,
+        setCalleeNameVisible: setCalleeNameVisible,
         setLogToBrowserConsole: setLogToBrowserConsole,
-        getLogToBrowserConsole: getLogToBrowserConsole,
+        getLogToBrowserConsole: getLogToBrowserConsole
     };
 
     setup();

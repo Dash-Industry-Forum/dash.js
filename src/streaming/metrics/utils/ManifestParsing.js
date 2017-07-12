@@ -1,3 +1,4 @@
+import Constants from '../../../streaming/constants/Constants';
 import Metrics from '../vo/Metrics';
 import Range from '../vo/Range';
 import Reporting from '../vo/Reporting';
@@ -9,7 +10,7 @@ function ManifestParsing (config) {
 
     function getMetricsRangeStartTime(manifest, dynamic, range) {
         var mpd = dashManifestModel.getMpd(manifest);
-        var periods;
+        var voPeriods;
         var presentationStartTime = 0;
         var reportingStartTime;
 
@@ -23,10 +24,10 @@ function ManifestParsing (config) {
             // For services with MPD@type='static', the start time is indicated
             // in Media Presentation time and is relative to the PeriodStart
             // time of the first Period in this MPD.
-            periods = this.getRegularPeriods(manifest, mpd);
+            voPeriods = this.getRegularPeriods(mpd);
 
-            if (periods.length) {
-                presentationStartTime = periods[0].start;
+            if (voPeriods.length) {
+                presentationStartTime = voPeriods[0].start;
             }
         }
 
@@ -35,7 +36,7 @@ function ManifestParsing (config) {
         // consumption.
         reportingStartTime = presentationStartTime;
 
-        if (range && range.hasOwnProperty('starttime')) {
+        if (range && range.hasOwnProperty(Constants.START_TIME)) {
             reportingStartTime += range.starttime;
         }
 
@@ -82,7 +83,7 @@ function ManifestParsing (config) {
                     metric.Reporting_asArray.forEach(reporting => {
                         var reportingEntry = new Reporting();
 
-                        if (reporting.hasOwnProperty('schemeIdUri')) {
+                        if (reporting.hasOwnProperty(Constants.SCHEME_ID_URI)) {
                             reportingEntry.schemeIdUri = reporting.schemeIdUri;
                         } else {
                             // Invalid Reporting. schemeIdUri must be set. Ignore.

@@ -41,16 +41,18 @@ function InitCache() {
 
     function save (chunk) {
         const id = chunk.streamId;
-        const type = chunk.mediaInfo.type;
-        const quality = chunk.quality;
+        const representationId = chunk.representationId;
 
         data[id] = data[id] || {};
-        data[id][type] = data[id][type] || {};
-        data[id][type][quality] = chunk;
+        data[id][representationId] = chunk;
     }
 
-    function extract (streamId, mediaType, quality) {
-        return data[streamId][mediaType][quality];
+    function extract (streamId, representationId) {
+        if (data && data[streamId] && data[streamId][representationId]) {
+            return data[streamId][representationId];
+        } else {
+            return null;
+        }
     }
 
 

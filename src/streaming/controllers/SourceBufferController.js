@@ -28,35 +28,25 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import TextSourceBuffer from '../TextSourceBuffer';
-import MediaController from './MediaController';
-import DashAdapter from '../../dash/DashAdapter';
-import ErrorHandler from '../utils/ErrorHandler';
-import StreamController from './StreamController';
-import TextTracks from '../TextTracks';
-import VTTParser from '../utils/VTTParser';
-import TTMLParser from '../utils/TTMLParser';
-import VideoModel from '../models/VideoModel';
-import Error from '../vo/Error';
+import DashJSError from '../vo/DashJSError';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 
-
 const QUOTA_EXCEEDED_ERROR_CODE = 22;
 
-function SourceBufferController() {
+function SourceBufferController(config) {
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
+    let textController = config.textController;
 
-    let instance,
-        dashManifestModel;
+    let instance;
 
     function createSourceBuffer(mediaSource, mediaInfo) {
 
-        var codec = mediaInfo.codec;
-        var buffer = null;
+        let codec = mediaInfo.codec;
+        let buffer = null;
 
         try {
             // Safari claims to support anything starting 'application/mp4'.
@@ -71,20 +61,8 @@ function SourceBufferController() {
 
         } catch (ex) {
             // Note that in the following, the quotes are open to allow for extra text after stpp and wvtt
-            if ((mediaInfo.isText) || (codec.indexOf('codecs="stpp') !== -1) ||  (codec.indexOf('codecs="wvtt') !== -1) ) {
-                buffer = TextSourceBuffer(context).getInstance();
-                buffer.setConfig({
-                    errHandler: ErrorHandler(context).getInstance(),
-                    adapter: DashAdapter(context).getInstance(),
-                    dashManifestModel: dashManifestModel,
-                    mediaController: MediaController(context).getInstance(),
-                    videoModel: VideoModel(context).getInstance(),
-                    streamController: StreamController(context).getInstance(),
-                    textTracks: TextTracks(context).getInstance(),
-                    VTTParser: VTTParser(context).getInstance(),
-                    TTMLParser: TTMLParser(context).getInstance()
-
-                });
+            if ((mediaInfo.isText) || (codec.indexOf('codecs="stpp') !== -1) || (codec.indexOf('codecs="wvtt') !== -1)) {
+                buffer = textController.getTextSourceBuffer();
             } else {
                 throw ex;
             }
@@ -96,22 +74,21 @@ function SourceBufferController() {
     function removeSourceBuffer(mediaSource, buffer) {
         try {
             mediaSource.removeSourceBuffer(buffer);
-        } catch (ex) {
-        }
+        } catch (ex) {}
     }
 
     function getBufferRange(buffer, time, tolerance) {
-        var ranges = null;
-        var start = 0;
-        var end = 0;
-        var firstStart = null;
-        var lastEnd = null;
-        var gap = 0;
+        let ranges = null;
+        let start = 0;
+        let end = 0;
+        let firstStart = null;
+        let lastEnd = null;
+        let gap = 0;
 
-        var len,
+        let len,
             i;
 
-        var toler = (tolerance || 0.15);
+        let toler = (tolerance || 0.15);
 
         try {
             ranges = buffer.buffered;
@@ -146,7 +123,10 @@ function SourceBufferController() {
             }
 
             if (firstStart !== null) {
-                return {start: firstStart, end: lastEnd};
+                return {
+                    start: firstStart,
+                    end: lastEnd
+                };
             }
         }
 
@@ -154,7 +134,7 @@ function SourceBufferController() {
     }
 
     function getAllRanges(buffer) {
-        var ranges = null;
+        let ranges = null;
 
         try {
             ranges = buffer.buffered;
@@ -165,9 +145,9 @@ function SourceBufferController() {
     }
 
     function getTotalBufferedTime(buffer) {
-        var ranges = getAllRanges(buffer);
-        var totalBufferedTime = 0;
-        var ln,
+        let ranges = getAllRanges(buffer);
+        let totalBufferedTime = 0;
+        let ln,
             i;
 
         if (!ranges) return totalBufferedTime;
@@ -181,7 +161,7 @@ function SourceBufferController() {
 
     function getBufferLength(buffer, time, tolerance) {
 
-        var range,
+        let range,
             length;
 
         range = getBufferRange(buffer, time, tolerance);
@@ -201,8 +181,8 @@ function SourceBufferController() {
         //TODO we may need to look for a more elegant and robust method
         // The logic below checks that is the difference between currentRanges and actual SourceBuffer ranges
 
-        var newRanges = getAllRanges(buffer);
-        var newStart,
+        let newRanges = getAllRanges(buffer);
+        let newStart,
             newEnd,
             equalStart,
             equalEnd,
@@ -214,9 +194,12 @@ function SourceBufferController() {
 
         if (!newRanges) return null;
 
-        for (var i = 0, ln = newRanges.length; i < ln; i++) {
+        for (let i = 0, ln = newRanges.length; i < ln; i++) {
             hasRange = currentRanges.length > i;
-            currentRange = hasRange ? {start: currentRanges.start(i), end: currentRanges.end(i)} : null;
+            currentRange = hasRange ? {
+                start: currentRanges.start(i),
+                end: currentRanges.end(i)
+            } : null;
             newStart = newRanges.start(i);
             newEnd = newRanges.end(i);
 
@@ -229,7 +212,10 @@ function SourceBufferController() {
             // 0|---range1---|4| 8|--range2--|12  16|--range3--|20
 
             if (!currentRange) {
-                diff = {start: newStart, end: newEnd};
+                diff = {
+                    start: newStart,
+                    end: newEnd
+                };
                 return diff;
             }
 
@@ -241,12 +227,21 @@ function SourceBufferController() {
 
             // start or/and end of the range has been changed
             if (equalStart) {
-                diff = {start: currentRange.end, end: newEnd};
+                diff = {
+                    start: currentRange.end,
+                    end: newEnd
+                };
             } else if (equalEnd) {
-                diff = {start: newStart, end: currentRange.start};
+                diff = {
+                    start: newStart,
+                    end: currentRange.start
+                };
             } else {
                 // new range has been added before the current one
-                diff = {start: newStart, end: newEnd};
+                diff = {
+                    start: newStart,
+                    end: newEnd
+                };
                 return diff;
             }
 
@@ -257,8 +252,14 @@ function SourceBufferController() {
             // 0|---range1---|4  8|--range2--|12  16|---range3---|
             // new ranges
             // 0|-----------range1-----------|12  16|---range3--|
-            nextCurrentRange = currentRanges.length > (i + 1) ? {start: currentRanges.start(i + 1), end: currentRanges.end(i + 1)} : null;
-            nextNewRange = (i + 1) < ln ? {start: newRanges.start(i + 1), end: newRanges.end(i + 1)} : null;
+            nextCurrentRange = currentRanges.length > (i + 1) ? {
+                start: currentRanges.start(i + 1),
+                end: currentRanges.end(i + 1)
+            } : null;
+            nextNewRange = (i + 1) < ln ? {
+                start: newRanges.start(i + 1),
+                end: newRanges.end(i + 1)
+            } : null;
 
             if (nextCurrentRange && (!nextNewRange || (nextNewRange.start !== nextCurrentRange.start || nextNewRange.end !== nextCurrentRange.end))) {
                 diff.end = nextCurrentRange.start;
@@ -271,17 +272,17 @@ function SourceBufferController() {
     }
 
     function append(buffer, chunk) {
-        var bytes = chunk.bytes;
-        var appendMethod = ('append' in buffer) ? 'append' : (('appendBuffer' in buffer) ? 'appendBuffer' : null);
+        let bytes = chunk.bytes;
+        let appendMethod = ('append' in buffer) ? 'append' : (('appendBuffer' in buffer) ? 'appendBuffer' : null);
         // our user-defined sourcebuffer-like object has Object as its
         // prototype whereas built-in SourceBuffers will have something
         // more sensible. do not pass chunk to built-in append.
-        var acceptsChunk = Object.prototype.toString.call(buffer).slice(8, -1) === 'Object';
+        let acceptsChunk = Object.prototype.toString.call(buffer).slice(8, -1) === 'Object';
 
         if (!appendMethod) return;
 
-        try {
-            waitForUpdateEnd(buffer, function () {
+        waitForUpdateEnd(buffer, function () {
+            try {
                 if (acceptsChunk) {
                     // chunk.start is used in calculations by TextSourceBuffer
                     buffer[appendMethod](bytes, chunk);
@@ -290,30 +291,46 @@ function SourceBufferController() {
                 }
                 // updating is in progress, we should wait for it to complete before signaling that this operation is done
                 waitForUpdateEnd(buffer, function () {
-                    eventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes});
+                    eventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {
+                        buffer: buffer,
+                        bytes: bytes
+                    });
                 });
-            });
-        } catch (err) {
-            eventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes, error: new Error(err.code, err.message, null)});
-        }
+            } catch (err) {
+                eventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {
+                    buffer: buffer,
+                    bytes: bytes,
+                    error: new DashJSError(err.code, err.message, null)
+                });
+            }
+        });
     }
 
     function remove(buffer, start, end, mediaSource) {
 
-        try {
-            // make sure that the given time range is correct. Otherwise we will get InvalidAccessError
-            waitForUpdateEnd(buffer, function () {
+        // make sure that the given time range is correct. Otherwise we will get InvalidAccessError
+        waitForUpdateEnd(buffer, function () {
+            try {
                 if ((start >= 0) && (end > start) && (mediaSource.readyState !== 'ended')) {
                     buffer.remove(start, end);
                 }
                 // updating is in progress, we should wait for it to complete before signaling that this operation is done
                 waitForUpdateEnd(buffer, function () {
-                    eventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end});
+                    eventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {
+                        buffer: buffer,
+                        from: start,
+                        to: end
+                    });
                 });
-            });
-        } catch (err) {
-            eventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end, error: new Error(err.code, err.message, null)});
-        }
+            } catch (err) {
+                eventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {
+                    buffer: buffer,
+                    from: start,
+                    to: end,
+                    error: new DashJSError(err.code, err.message, null)
+                });
+            }
+        });
     }
 
     function abort(mediaSource, buffer) {
@@ -323,23 +340,14 @@ function SourceBufferController() {
             } else if (buffer.setTextTrack && mediaSource.readyState === 'ended') {
                 buffer.abort(); //The cues need to be removed from the TextSourceBuffer via a call to abort()
             }
-        } catch (ex) {
-        }
-    }
-
-    function setConfig(config) {
-        if (!config) return;
-
-        if (config.dashManifestModel) {
-            dashManifestModel = config.dashManifestModel;
-        }
+        } catch (ex) {}
     }
 
     function waitForUpdateEnd(buffer, callback) {
-        var intervalId;
-        var CHECK_INTERVAL = 50;
+        let intervalId;
+        const CHECK_INTERVAL = 50;
 
-        var checkIsUpdateEnded = function () {
+        const checkIsUpdateEnded = function () {
             // if updating is still in progress do nothing and wait for the next check again.
             if (buffer.updating) return;
             // updating is completed, now we can stop checking and resolve the promise
@@ -347,7 +355,7 @@ function SourceBufferController() {
             callback();
         };
 
-        var updateEndHandler = function () {
+        const updateEndHandler = function () {
             if (buffer.updating) return;
 
             buffer.removeEventListener('updateend', updateEndHandler, false);
@@ -383,8 +391,7 @@ function SourceBufferController() {
         getAllRanges: getAllRanges,
         getTotalBufferedTime: getTotalBufferedTime,
         getBufferLength: getBufferLength,
-        getRangeDifference: getRangeDifference,
-        setConfig: setConfig
+        getRangeDifference: getRangeDifference
     };
 
     return instance;
@@ -393,4 +400,5 @@ function SourceBufferController() {
 SourceBufferController.__dashjs_factory_name = 'SourceBufferController';
 let factory = FactoryMaker.getSingletonFactory(SourceBufferController);
 factory.QUOTA_EXCEEDED_ERROR_CODE = QUOTA_EXCEEDED_ERROR_CODE;
+FactoryMaker.updateSingletonFactory(SourceBufferController.__dashjs_factory_name, factory);
 export default factory;

@@ -61,7 +61,7 @@ function RNG() {
     }
 
     function rand(min, max) {
-        var r;
+        let r;
 
         if (!min) {
             min = 0;
@@ -86,7 +86,7 @@ function RNG() {
     }
 
     instance = {
-        random: rand,
+        random: rand
     };
 
     initialise();

@@ -34,9 +34,17 @@ import FactoryMaker from '../../core/FactoryMaker';
 function RulesContext(config) {
 
     let instance;
-    let representationInfo = config.streamProcessor.getCurrentRepresentationInfo();
+    let abrController = config.abrController;
     let sp = config.streamProcessor;
-    let currentValue = config.currentValue;
+    let representationInfo = config.streamProcessor.getCurrentRepresentationInfo();
+    let switchHistory = config.switchHistory;
+    let droppedFramesHistory = config.droppedFramesHistory;
+    let currentRequest = config.currentRequest;
+    let richBuffer = config.hasRichBuffer;
+
+    function getMediaType() {
+        return representationInfo.mediaInfo.type;
+    }
 
     function getStreamInfo() {
         return representationInfo.mediaInfo.streamInfo;
@@ -50,25 +58,41 @@ function RulesContext(config) {
         return representationInfo;
     }
 
-    function getCurrentValue() {
-        return currentValue;
-    }
-
-    function getManifestInfo() {
-        return representationInfo.mediaInfo.streamInfo.manifestInfo;
-    }
-
     function getStreamProcessor() {
         return sp;
     }
 
+    function getAbrController() {
+        return abrController;
+    }
+
+    function getSwitchHistory() {
+        return switchHistory;
+    }
+
+    function getDroppedFramesHistory() {
+        return droppedFramesHistory;
+    }
+
+    function getCurrentRequest() {
+        return currentRequest;
+    }
+
+    function hasRichBuffer() {
+        return richBuffer;
+    }
+
     instance = {
-        getStreamInfo: getStreamInfo,
+        getMediaType: getMediaType,
         getMediaInfo: getMediaInfo,
+        getDroppedFramesHistory: getDroppedFramesHistory,
+        getCurrentRequest: getCurrentRequest,
+        getSwitchHistory: getSwitchHistory,
+        getStreamInfo: getStreamInfo,
+        getStreamProcessor: getStreamProcessor,
+        getAbrController: getAbrController,
         getTrackInfo: getTrackInfo,
-        getCurrentValue: getCurrentValue,
-        getManifestInfo: getManifestInfo,
-        getStreamProcessor: getStreamProcessor
+        hasRichBuffer: hasRichBuffer
     };
 
     return instance;

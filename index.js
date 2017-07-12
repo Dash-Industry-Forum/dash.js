@@ -30,11 +30,11 @@
  */
 
 import MediaPlayer from './src/streaming/MediaPlayer';
+import FactoryMaker from './src/core/FactoryMaker';
 import Protection from './src/streaming/protection/Protection';
 import MetricsReporting from './src/streaming/metrics/MetricsReporting';
 import MediaPlayerFactory from './src/streaming/MediaPlayerFactory';
 import {getVersionString} from './src/core/Version';
-
 
 // Shove both of these into the global scope
 var context = (typeof window !== 'undefined' && window) || global;
@@ -45,11 +45,11 @@ if (!dashjs) {
 }
 
 dashjs.MediaPlayer = MediaPlayer;
+dashjs.FactoryMaker = FactoryMaker;
 dashjs.Protection = Protection;
 dashjs.MetricsReporting = MetricsReporting;
 dashjs.MediaPlayerFactory = MediaPlayerFactory;
 dashjs.Version = getVersionString();
-
 
 export default dashjs;
 export { MediaPlayer, Protection, MetricsReporting, MediaPlayerFactory};

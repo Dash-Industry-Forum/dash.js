@@ -61,7 +61,7 @@ function Capabilities() {
     }
 
     function supportsCodec(element, codec) {
-        var canPlay = element.canPlayType(codec);
+        let canPlay = element.canPlayType(codec);
         return (canPlay === 'probably' || canPlay === 'maybe');
     }
 

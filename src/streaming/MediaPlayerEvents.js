@@ -38,7 +38,7 @@ class MediaPlayerEvents extends EventsBase {
     /**
      * @description Public facing external events to be used when developing a player that implements dash.js.
      */
-    constructor () {
+    constructor() {
         super();
         /**
          * Triggered when playback will not start yet
@@ -66,25 +66,25 @@ class MediaPlayerEvents extends EventsBase {
         this.BUFFER_LEVEL_STATE_CHANGED = 'bufferStateChanged';
 
         /**
-        * Triggered when there is an error from the element or MSE source buffer.
-        * @event MediaPlayerEvents#ERROR
-        */
+         * Triggered when there is an error from the element or MSE source buffer.
+         * @event MediaPlayerEvents#ERROR
+         */
         this.ERROR = 'error';
 
         /**
-        * Triggered when a fragment download has completed.
-        * @event MediaPlayerEvents#FRAGMENT_LOADING_COMPLETED
-        */
+         * Triggered when a fragment download has completed.
+         * @event MediaPlayerEvents#FRAGMENT_LOADING_COMPLETED
+         */
         this.FRAGMENT_LOADING_COMPLETED = 'fragmentLoadingCompleted';
         /**
-        * Triggered when a fragment download has started.
-        * @event MediaPlayerEvents#FRAGMENT_LOADING_STARTED
-        */
+         * Triggered when a fragment download has started.
+         * @event MediaPlayerEvents#FRAGMENT_LOADING_STARTED
+         */
         this.FRAGMENT_LOADING_STARTED = 'fragmentLoadingStarted';
         /**
-        * Triggered when a fragment download is abandoned due to detection of slow download base on the ABR abandon rule..
-        * @event MediaPlayerEvents#FRAGMENT_LOADING_ABANDONED
-        */
+         * Triggered when a fragment download is abandoned due to detection of slow download base on the ABR abandon rule..
+         * @event MediaPlayerEvents#FRAGMENT_LOADING_ABANDONED
+         */
         this.FRAGMENT_LOADING_ABANDONED = 'fragmentLoadingAbandoned';
         /**
          * Triggered when {@link module:Debug} log method is called.
@@ -145,6 +145,13 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#STREAM_INITIALIZED
          */
         this.STREAM_INITIALIZED = 'streamInitialized';
+
+        /**
+         * Triggered when the player has been reset.
+         * @event MediaPlayerEvents#STREAM_TEARDOWN_COMPLETE
+         */
+        this.STREAM_TEARDOWN_COMPLETE = 'streamTeardownComplete';
+
         /**
          * Triggered once all text tracks detected in the MPD are added to the video element.
          * @event MediaPlayerEvents#TEXT_TRACKS_ADDED
@@ -221,6 +228,13 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#PLAYBACK_SEEKING
          */
         this.PLAYBACK_SEEKING = 'playbackSeeking';
+
+        /**
+         * Sent when a seek operation has been asked.
+         * @event MediaPlayerEvents#PLAYBACK_SEEK_ASKED
+         */
+        this.PLAYBACK_SEEK_ASKED = 'playbackSeekAsked';
+
         /**
          * Sent when playback of the media starts after having been paused;
          * that is, when playback is resumed after a prior pause event.

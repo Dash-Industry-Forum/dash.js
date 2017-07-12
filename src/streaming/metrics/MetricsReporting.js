@@ -51,7 +51,7 @@ function MetricsReporting() {
     function createMetricsReporting(config) {
         dvbErrorsTranslator = DVBErrorsTranslator(context).getInstance({
             eventBus: config.eventBus,
-            metricsModel: config.metricsModel,
+            metricsModel: config.metricsModel
         });
 
         return MetricsCollectionController(context).create(config);
@@ -85,4 +85,5 @@ function MetricsReporting() {
 MetricsReporting.__dashjs_factory_name = 'MetricsReporting';
 let factory = FactoryMaker.getClassFactory(MetricsReporting);
 factory.events = MetricsReportingEvents;
+FactoryMaker.updateClassFactory(MetricsReporting.__dashjs_factory_name, factory);
 export default factory;

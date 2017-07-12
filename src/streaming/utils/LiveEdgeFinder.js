@@ -31,24 +31,30 @@
 import FactoryMaker from '../../core/FactoryMaker';
 
 /**
- *
+ * @param {Object} config
  * @returns {{initialize: initialize, getLiveEdge: getLiveEdge, reset: reset}|*}
  * @constructor
  */
-function LiveEdgeFinder() {
+function LiveEdgeFinder(config) {
 
-    let instance,
-        timelineConverter,
-        streamProcessor;
+    let instance;
+    let timelineConverter = config.timelineConverter;
+    let streamProcessor = config.streamProcessor;
 
-    function initialize(TimelineConverter, StreamProcessor) {
-        timelineConverter = TimelineConverter;
-        streamProcessor = StreamProcessor;
+    function checkConfig() {
+        if (!timelineConverter || !timelineConverter.hasOwnProperty('getExpectedLiveEdge') || !streamProcessor || !streamProcessor.hasOwnProperty('getCurrentRepresentationInfo')) {
+            throw new Error('Missing config parameter(s)');
+        }
     }
 
     function getLiveEdge() {
+        checkConfig();
         const representationInfo = streamProcessor.getCurrentRepresentationInfo();
-        const liveEdge = representationInfo.useCalculatedLiveEdgeTime ? timelineConverter.getExpectedLiveEdge() : representationInfo.DVRWindow.end;
+        let liveEdge = representationInfo.DVRWindow.end;
+        if (representationInfo.useCalculatedLiveEdgeTime) {
+            liveEdge = timelineConverter.getExpectedLiveEdge();
+            timelineConverter.setClientTimeOffset(liveEdge - representationInfo.DVRWindow.end);
+        }
         return liveEdge;
     }
 
@@ -58,13 +64,12 @@ function LiveEdgeFinder() {
     }
 
     instance = {
-        initialize: initialize,
         getLiveEdge: getLiveEdge,
         reset: reset
     };
 
     return instance;
 }
+
 LiveEdgeFinder.__dashjs_factory_name = 'LiveEdgeFinder';
-let factory = FactoryMaker.getSingletonFactory(LiveEdgeFinder);
-export default factory;
+export default FactoryMaker.getClassFactory(LiveEdgeFinder);

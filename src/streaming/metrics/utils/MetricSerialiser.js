@@ -37,9 +37,9 @@ function MetricSerialiser() {
     // of the DVBErrors metric each entry corresponds to an "error event"
     // described in clause 10.8.4) the Player shall:
     function serialise(metric) {
-        var pairs = [];
-        var obj = [];
-        var key,
+        let pairs = [];
+        let obj = [];
+        let key,
             value;
 
         // Take each (key, value) pair from the metric entry and create a
@@ -67,7 +67,7 @@ function MetricSerialiser() {
                     obj = [];
 
                     value.forEach(function (v) {
-                        var isBuiltIn = Object.prototype.toString.call(v).slice(8, -1) !== 'Object';
+                        let isBuiltIn = Object.prototype.toString.call(v).slice(8, -1) !== 'Object';
 
                         obj.push(isBuiltIn ? v : serialise(v));
                     });

@@ -17,23 +17,25 @@ All new work should be in the development branch. Master is now reserved for tag
 ## Documentation
 Before you get started, please read the Dash.js v2.0 [Migration Document](https://github.com/Dash-Industry-Forum/dash.js/wiki/Migration-2.0).
 
-Full [API Documentation ](http://cdn.dashjs.org/latest/jsdoc/index.html) is available describing all public methods, interfaces, properties, and events.
+Full [API Documentation](http://cdn.dashjs.org/latest/jsdoc/module-MediaPlayer.html) is available describing all public methods, interfaces, properties, and events.
 
 For help, join our [Slack channel](https://dashif-slack.azurewebsites.net), our [email list](https://groups.google.com/d/forum/dashjs) and read our [wiki](https://github.com/Dash-Industry-Forum/dash.js/wiki).
 
 ## Reference players
-The released [pre-built reference players](http://dashif.org/reference/players/javascript/index.html) are publicly accessible if you want direct access without writing any Javascript. 
+The released [pre-built reference players](http://reference.dashif.org/dash.js/) are publicly accessible if you want direct access without writing any Javascript. 
 
-The [nightly build of the /dev branch reference player](http://mediapm.edgesuite.net/dash/public/nightly/samples/dash-if-reference-player/index.html), is pre-release but contains the latest fixes. It is a good place to start if you are debugging playback problems. 
+The [nightly build of the /dev branch reference player](http://reference.dashif.org/dash.js/nightly/samples/dash-if-reference-player/index.html), is pre-release but contains the latest fixes. It is a good place to start if you are debugging playback problems. 
 
-A nightly build of the latest minified files are also available: [dash.all.min.js](http://mediapm.edgesuite.net/dash/public/nightly/dist/dash.all.min.js) and its debug version  [dash.all.debug.js](http://mediapm.edgesuite.net/dash/public/nightly/dist/dash.all.debug.js).
+A nightly build of the latest minified files are also available: [dash.all.min.js](http://reference.dashif.org/dash.js/nightly/dist/dash.all.min.js) and its debug version  [dash.all.debug.js](http://reference.dashif.org/dash.js/nightly/dist/dash.all.debug.js).
+
+All these reference builds and mninfied files are available under both http and https.
 
 ## Quick Start for Users
 If you just want a DASH player to use and don't need to see the code or commit to this project, then follow the instructions below. If you are a developer and want to work with this code base, then skip down to the "Quick Start for Developers" section.
 
 Put the following code in your web page
 ```
-<script src="http://cdn.dashjs.org/latest/dash.all.min.js"></script>
+<script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
 ...
 <style>
     video {
@@ -44,13 +46,13 @@ Put the following code in your web page
 ...
 <body>
    <div>
-       <video data-dashjs-player autoplay src="http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd" controls></video>
+       <video data-dashjs-player autoplay src="https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd" controls></video>
    </div>
 </body>
 ```
 Then place your page under a web server (do not try to run from the file system) and load it via http in a MSE-enabled browser. The video will start automatically. Switch out the manifest URL to your own manifest once you have everything working. If you prefer to use the latest code from this project (versus the last tagged release) then see the "Quick Start for Developers" section below.
 
-View the /samples folder for many other examples of embedding and using the player.
+View the /samples folder for many other examples of embedding and using the player. If you are interested in captioning support, which requires some additional UI elements, then please view the [captioning examples](https://github.com/Dash-Industry-Forum/dash.js/tree/development/samples/captioning).
 
 ## Quick Start for Developers
 
@@ -96,7 +98,7 @@ Add dash.all.min.js to the end of the body.
 Now comes the good stuff. We need to create a MediaPlayer and initialize it.  
 ``` js
 
-var url = "http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd";
+var url = "https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd";
 var player = dashjs.MediaPlayer().create();
 player.initialize(document.querySelector("#videoPlayer"), url, true);
 
@@ -122,7 +124,7 @@ When it is all done, it should look similar to this:
         <script src="yourPathToDash/dash.all.min.js"></script>
         <script>
             (function(){
-                var url = "http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd";
+                var url = "https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd";
                 var player = dashjs.MediaPlayer().create();
                 player.initialize(document.querySelector("#videoPlayer"), url, true);
             })();
@@ -142,7 +144,7 @@ An alternative way to build a Dash.js player in your web page is to use the Medi
 
 Create a video element somewhere in your html and provide the path to your `mpd` file as src. Also ensure that your video element has the `data-dashjs-player` attribute on it.
 ```html
-<video data-dashjs-player autoplay src="http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd" controls>
+<video data-dashjs-player autoplay src="https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd" controls>
 </video>
 
 ```
@@ -170,7 +172,7 @@ When it is all done, it should look similar to this:
     </head>
     <body>
         <div>
-            <video data-dashjs-player autoplay src="http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd" controls>
+            <video data-dashjs-player autoplay src="https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd" controls>
             </video>
         </div>
         <script src="yourPathToDash/dash.all.min.js"></script>

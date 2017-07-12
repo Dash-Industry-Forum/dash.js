@@ -38,7 +38,7 @@ function BlackListController(config) {
 
     const eventBus = EventBus(this.context).getInstance();
     const updateEventName = config.updateEventName;
-    const loadFailedEventName = config.loadFailedEventName;
+    const addBlacklistEventName = config.addBlacklistEventName;
 
     function contains(query) {
         if (!blacklist.length || !query || !query.length) {
@@ -63,15 +63,13 @@ function BlackListController(config) {
         );
     }
 
-    function onLoadFailed(e) {
-        if (e.error) {
-            add(e.request.serviceLocation);
-        }
+    function onAddBlackList(e) {
+        add(e.entry);
     }
 
     function setup() {
-        if (loadFailedEventName) {
-            eventBus.on(loadFailedEventName, onLoadFailed, this);
+        if (addBlacklistEventName) {
+            eventBus.on(addBlacklistEventName, onAddBlackList, this);
         }
     }
 

@@ -28,14 +28,14 @@
             //Example adding video and source
             video = document.querySelector("#video3");
             source = document.createElement("source");
-            source.src = "http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd";
+            source.src = "https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd";
             source.type = "application/dash+xml";
             player = dashjs.MediaPlayerFactory.create(video, source);
 
             //Example adding video, source and context
             video = document.querySelector("#video4");
             source = document.createElement("source");
-            source.src = "http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd";
+            source.src = "https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd";
             source.type = "application/dash+xml";
             context = {}
             player = dashjs.MediaPlayerFactory.create(video, source, context);
@@ -47,14 +47,14 @@
             height: 180px;
         }
     </style>
-
-    <body onload="init()">
+    </head>
+    <body>
         <div>
             <video id="video1" autoplay controls="true">
-                <source src="http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd" type="application/dash+xml"/>
+                <source src="https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd" type="application/dash+xml"/>
             </video>
             <p/>
-            <video id="video2" autoplay src="http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd" controls="true"/>
+            <video id="video2" autoplay src="https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd" controls="true"/>
             <p/>
             <video id="video3" autoplay controls="true">
             </video>
@@ -62,5 +62,10 @@
             <video id="video4" autoplay controls="true">
             </video>
         </div>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                init();
+            });
+        </script>
     </body>
 </html>

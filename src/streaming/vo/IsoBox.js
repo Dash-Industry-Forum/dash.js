@@ -33,12 +33,108 @@
  * @ignore
  */
 class IsoBox {
-    constructor() {
-        this.offset = NaN;
-        this.type = null;
-        this.size = NaN;
+    constructor(boxData) {
+        this.offset = boxData._offset;
+        this.type = boxData.type;
+        this.size = boxData.size;
+        this.boxes = [];
+        if (boxData.boxes) {
+            for (let i = 0; i < boxData.boxes.length; i++) {
+                this.boxes.push(new IsoBox(boxData.boxes[i]));
+            }
+        }
         this.isComplete = true;
+
+        switch (boxData.type) {
+            case 'sidx':
+                this.timescale = boxData.timescale;
+                this.earliest_presentation_time = boxData.earliest_presentation_time;
+                this.first_offset = boxData.first_offset;
+                this.references = boxData.references;
+                if (boxData.references) {
+                    this.references = [];
+                    for (let i = 0; i < boxData.references.length; i++) {
+                        let reference = {
+                            reference_type: boxData.references[i].reference_type,
+                            referenced_size: boxData.references[i].referenced_size,
+                            subsegment_duration: boxData.references[i].subsegment_duration
+                        };
+                        this.references.push(reference);
+                    }
+                }
+                break;
+            case 'emsg':
+                this.id = boxData.id;
+                this.value = boxData.value;
+                this.timescale = boxData.timescale;
+                this.scheme_id_uri = boxData.scheme_id_uri;
+                this.presentation_time_delta = boxData.presentation_time_delta;
+                this.event_duration = boxData.event_duration;
+                this.message_data = boxData.message_data;
+                break;
+            case 'mdhd':
+                this.timescale = boxData.timescale;
+                break;
+            case 'mfhd':
+                this.sequence_number = boxData.sequence_number;
+                break;
+            case 'subs':
+                this.entry_count = boxData.entry_count;
+                this.entries = boxData.entries;
+                break;
+            case 'tfhd':
+                this.base_data_offset = boxData.base_data_offset;
+                this.sample_description_index = boxData.sample_description_index;
+                this.default_sample_duration = boxData.default_sample_duration;
+                this.default_sample_size = boxData.default_sample_size;
+                this.default_sample_flags = boxData.default_sample_flags;
+                this.flags = boxData.flags;
+                break;
+            case 'tfdt':
+                this.version = boxData.version;
+                this.baseMediaDecodeTime = boxData.baseMediaDecodeTime;
+                this.flags = boxData.flags;
+                break;
+            case 'trun':
+                this.sample_count = boxData.sample_count;
+                this.first_sample_flags = boxData.first_sample_flags;
+                this.data_offset = boxData.data_offset;
+                this.flags = boxData.flags;
+                this.samples = boxData.samples;
+                if (boxData.samples) {
+                    this.samples = [];
+                    for (let i = 0, ln = boxData.samples.length; i < ln; i++) {
+                        let sample = {
+                            sample_size: boxData.samples[i].sample_size,
+                            sample_duration: boxData.samples[i].sample_duration,
+                            sample_composition_time_offset: boxData.samples[i].sample_composition_time_offset
+                        };
+                        this.samples.push(sample);
+                    }
+                }
+                break;
+        }
+
     }
+
+    getChildBox(type) {
+        for (let i = 0; i < this.boxes.length; i++) {
+            if (this.boxes[i].type === type) {
+                return this.boxes[i];
+            }
+        }
+    }
+
+    getChildBoxes(type) {
+        let boxes = [];
+        for (let i = 0; i < this.boxes.length; i++) {
+            if (this.boxes[i].type === type) {
+                boxes.push(this.boxes[i]);
+            }
+        }
+        return boxes;
+    }
+
 }
 
 export default IsoBox;

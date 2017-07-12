@@ -80,7 +80,7 @@ function URLUtils() {
      * @private
      */
     const dumbURLResolver = (url, baseUrl) => {
-        var baseUrlParseFunc = parseBaseUrl;
+        let baseUrlParseFunc = parseBaseUrl;
 
         if (!baseUrl) {
             return url;
@@ -92,6 +92,10 @@ function URLUtils() {
 
         if (isPathAbsolute(url)) {
             baseUrlParseFunc = parseOrigin;
+        }
+
+        if (isSchemeRelative(url)) {
+            baseUrlParseFunc = parseScheme;
         }
 
         const base = baseUrlParseFunc(baseUrl);
@@ -160,6 +164,23 @@ function URLUtils() {
     }
 
     /**
+     * Returns a string that contains the scheme of a URL, if determinable.
+     * @param {string} url - full url
+     * @return {string}
+     * @memberof module:URLUtils
+     * @instance
+     */
+    function parseScheme(url) {
+        const matches = url.match(schemeRegex);
+
+        if (matches) {
+            return matches[0];
+        }
+
+        return '';
+    }
+
+    /**
      * Determines whether the url is relative.
      * @return {bool}
      * @param {string} url
@@ -170,7 +191,6 @@ function URLUtils() {
         return !schemeRegex.test(url);
     }
 
-
     /**
      * Determines whether the url is path-absolute.
      * @return {bool}
@@ -180,6 +200,17 @@ function URLUtils() {
      */
     function isPathAbsolute(url) {
         return isRelative(url) && url.charAt(0) === '/';
+    }
+
+    /**
+     * Determines whether the url is scheme-relative.
+     * @return {bool}
+     * @param {string} url
+     * @memberof module:URLUtils
+     * @instance
+     */
+    function isSchemeRelative(url) {
+        return url.indexOf('//') === 0;
     }
 
     /**
@@ -209,12 +240,14 @@ function URLUtils() {
     setup();
 
     const instance = {
-        parseBaseUrl:   parseBaseUrl,
-        parseOrigin:    parseOrigin,
-        isRelative:     isRelative,
-        isPathAbsolute: isPathAbsolute,
-        isHTTPURL:      isHTTPURL,
-        resolve:        resolve
+        parseBaseUrl:       parseBaseUrl,
+        parseOrigin:        parseOrigin,
+        parseScheme:        parseScheme,
+        isRelative:         isRelative,
+        isPathAbsolute:     isPathAbsolute,
+        isSchemeRelative:   isSchemeRelative,
+        isHTTPURL:          isHTTPURL,
+        resolve:            resolve
     };
 
     return instance;

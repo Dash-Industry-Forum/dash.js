@@ -31,6 +31,8 @@
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 
+const WEBVTT = 'WEBVTT';
+
 function VTTParser() {
     let context = this.context;
     let log = Debug(context).getInstance().log;
@@ -49,28 +51,32 @@ function VTTParser() {
     }
 
     function parse(data) {
-        var captionArray = [];
-        var len,
+        let captionArray = [];
+        let len,
             lastStartTime;
+
+        if (!data) {
+            return captionArray;
+        }
 
         data = data.split( regExNewLine );
         len = data.length;
         lastStartTime = -1;
 
-        for (var i = 0 ; i < len; i++)
+        for (let i = 0 ; i < len; i++)
         {
-            var item = data[i];
+            let item = data[i];
 
-            if (item.length > 0 && item !== 'WEBVTT')
+            if (item.length > 0 && item !== WEBVTT)
             {
                 if (item.match(regExToken))
                 {
-                    var attributes = parseItemAttributes(item);
-                    var cuePoints = attributes.cuePoints;
-                    var styles = attributes.styles;
-                    var text = getSublines(data, i + 1);
-                    var startTime = convertCuePointTimes(cuePoints[0].replace(regExWhiteSpace, ''));
-                    var endTime = convertCuePointTimes(cuePoints[1].replace(regExWhiteSpace, ''));
+                    let attributes = parseItemAttributes(item);
+                    let cuePoints = attributes.cuePoints;
+                    let styles = attributes.styles;
+                    let text = getSublines(data, i + 1);
+                    let startTime = convertCuePointTimes(cuePoints[0].replace(regExWhiteSpace, ''));
+                    let endTime = convertCuePointTimes(cuePoints[1].replace(regExWhiteSpace, ''));
 
                     if ((!isNaN(startTime) && !isNaN(endTime)) && startTime >= lastStartTime && endTime > startTime) {
                         if (text !== '') {
@@ -98,8 +104,8 @@ function VTTParser() {
     }
 
     function convertCuePointTimes(time) {
-        var timeArray = time.split(':');
-        var len = timeArray.length - 1;
+        let timeArray = time.split(':');
+        const len = timeArray.length - 1;
 
         time = parseInt( timeArray[len - 1], 10 ) * 60 + parseFloat( timeArray[len]);
 
@@ -111,8 +117,8 @@ function VTTParser() {
     }
 
     function parseItemAttributes(data) {
-        var vttCuePoints = data.split(regExToken);
-        var arr = vttCuePoints[1].split(regExWhiteSpaceWordBoundary);
+        let vttCuePoints = data.split(regExToken);
+        let arr = vttCuePoints[1].split(regExWhiteSpaceWordBoundary);
         arr.shift(); //remove first array index it is empty...
         vttCuePoints[1] = arr[0];
         arr.shift();
@@ -120,10 +126,10 @@ function VTTParser() {
     }
 
     function getCaptionStyles(arr) {
-        var styleObject = {};
+        let styleObject = {};
         arr.forEach(function (element) {
             if (element.split(/:/).length > 1) {
-                var val = element.split(/:/)[1];
+                let val = element.split(/:/)[1];
                 if (val && val.search(/%/) != -1) {
                     val = parseInt(val.replace(/%/, ''), 10);
                 }
@@ -149,11 +155,11 @@ function VTTParser() {
     * VTT can have multiple lines to display per cuepoint.
     */
     function getSublines(data, idx) {
-        var i = idx;
+        let i = idx;
 
-        var subline = '';
-        var lineData = '';
-        var lineCount;
+        let subline = '';
+        let lineData = '';
+        let lineCount;
 
         while (data[i] !== '' && i < data.length) {
             i++;
@@ -161,7 +167,7 @@ function VTTParser() {
 
         lineCount = i - idx;
         if (lineCount > 1) {
-            for (var j = 0; j < lineCount; j++) {
+            for (let j = 0; j < lineCount; j++) {
                 lineData = data[(idx + j)];
                 if (!lineData.match(regExToken)) {
                     subline += lineData;
@@ -180,7 +186,7 @@ function VTTParser() {
             if (!lineData.match(regExToken))
                 subline = lineData;
         }
-        return decodeURI(subline);
+        return subline;
     }
 
     instance = {
