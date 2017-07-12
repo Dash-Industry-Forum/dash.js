@@ -491,8 +491,16 @@ function AbrController() {
         let switchOffThreshold = 0.5 * stableBufferTime;
 
         let useBufferABR = isUsingBufferOccupancyABRDict[mediaType];
-        useBufferABR = bufferLevel > (useBufferABR ? switchOffThreshold : switchOnThreshold); // use hysteresis to avoid oscillating rules
-        isUsingBufferOccupancyABRDict[mediaType] = useBufferABR;
+        let newUseBufferABR = bufferLevel > (useBufferABR ? switchOffThreshold : switchOnThreshold); // use hysteresis to avoid oscillating rules
+        isUsingBufferOccupancyABRDict[mediaType] = newUseBufferABR;
+
+        if (newUseBufferABR !== useBufferABR) {
+            if (newUseBufferABR) {
+                log('AbrController (' + mediaType + ') switching from throughput to buffer occupancy ABR rule (buffer: ' + bufferLevel.toFixed(3) + ').');
+            } else {
+                log('AbrController (' + mediaType + ') switching from buffer occupancy to throughput ABR rule (buffer: ' + bufferLevel.toFixed(3) + ').');
+            }
+        }
     }
 
     function useBufferOccupancyABR(mediaType) {
