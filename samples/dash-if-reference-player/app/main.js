@@ -183,7 +183,6 @@ app.controller('DashController', function ($scope, sources, contributors) {
     $scope.scheduleWhilePausedSelected = true;
     $scope.localStorageSelected = true;
     $scope.fastSwitchSelected = true;
-    $scope.bolaSelected = false;
     ////////////////////////////////////////
     //
     // Player Setup
@@ -481,10 +480,6 @@ app.controller('DashController', function ($scope, sources, contributors) {
 
     $scope.toggleAutoPlay = function () {
         $scope.player.setAutoPlay($scope.autoPlaySelected);
-    };
-
-    $scope.toggleBufferOccupancyABR = function () {
-        $scope.player.enableBufferOccupancyABR($scope.bolaSelected);
     };
 
     $scope.toggleUseCustomABRRules = function () {
