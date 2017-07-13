@@ -48,6 +48,7 @@ function MssFragmentMoofProcessor(config) {
     function processTfrf(request, tfrf, tfdt, streamProcessor) {
         let representationController = streamProcessor.getRepresentationController();
         let representation = representationController.getCurrentRepresentation();
+        let indexHandler = streamProcessor.getIndexHandler();
 
         let manifest = representation.adaptation.period.mpd.manifest;
         let adaptation = manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index];
@@ -145,6 +146,10 @@ function MssFragmentMoofProcessor(config) {
                     metricsModel.addDVRInfo(request.mediaType, playbackController.getTime(), streamProcessor.getStreamInfo().manifestInfo, range);
                 }
             }
+        }
+
+        if (segmentsUpdated) {
+            indexHandler.updateSegmentList(representation);
         }
         return segmentsUpdated;
     }
