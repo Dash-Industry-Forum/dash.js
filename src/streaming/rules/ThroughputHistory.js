@@ -84,8 +84,7 @@ function ThroughputHistory(config) {
                 // prevent cached fragment loads from skewing the average values
                 return;
             } else { // have no entries || have cached entries
-                // no uncached entries yet, rely on cached entries, set allowance for ABR rules
-                throughput /= 1000;
+                // no uncached entries yet, rely on cached entries because ABR rules need something to go by
                 throughputDict[mediaType].hasCachedEntries = true;
             }
         } else if (throughputDict[mediaType] && throughputDict[mediaType].hasCachedEntries) {
