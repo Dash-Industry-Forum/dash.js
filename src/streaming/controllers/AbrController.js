@@ -118,7 +118,7 @@ function AbrController() {
             setElementSize();
         }
         eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
-        throughputHistory = ThroughputHistory().create({
+        throughputHistory = ThroughputHistory(context).create({
             mediaPlayerModel: mediaPlayerModel
         });
     }
