@@ -53,7 +53,6 @@ function TextTracks() {
         actualVideoHeight,
         captionContainer,
         videoSizeCheckInterval,
-        isChrome,
         fullscreenAttribute,
         displayCCOnTop,
         topZIndex;
@@ -82,7 +81,7 @@ function TextTracks() {
         // Same issue with Firefox.
         //isIE11orEdge = !!navigator.userAgent.match(/Trident.*rv[ :]*11\./) || navigator.userAgent.match(/Edge/);
         //isFirefox = !!navigator.userAgent.match(/Firefox/);
-        isChrome = !!navigator.userAgent.match(/Chrome/) && !navigator.userAgent.match(/Edge/);
+        //isChrome = !!navigator.userAgent.match(/Chrome/) && !navigator.userAgent.match(/Edge/);
         if (document.fullscreenElement !== undefined) {
             fullscreenAttribute = 'fullscreenElement'; // Standard and Edge
         } else if (document.webkitIsFullScreen !== undefined) {
@@ -95,17 +94,11 @@ function TextTracks() {
 
     }
 
-    function createTrackForUserAgent (i) {
+    function createTrackForUserAgent(i) {
         const kind = textTrackQueue[i].kind;
         const label = textTrackQueue[i].label !== undefined ? textTrackQueue[i].label : textTrackQueue[i].lang;
         const lang = textTrackQueue[i].lang;
-        const track = isChrome ? document.createElement('track') : videoModel.addTextTrack(kind, label, lang);
-
-        if (isChrome) {
-            track.kind = kind;
-            track.label = label;
-            track.srclang = lang;
-        }
+        const track = videoModel.addTextTrack(kind, label, lang);
 
         return track;
     }
@@ -132,7 +125,7 @@ function TextTracks() {
             });
             captionContainer = videoModel.getTTMLRenderingDiv();
             let defaultIndex = -1;
-            for (let i = 0 ; i < textTrackQueue.length; i++) {
+            for (let i = 0; i < textTrackQueue.length; i++) {
                 const track = createTrackForUserAgent.call(this, i);
                 trackElementArr.push(track); //used to remove tracks from video element when added manually
 
@@ -142,9 +135,6 @@ function TextTracks() {
                     /*jshint -W024 */
                     track.default = true;
                     defaultIndex = i;
-                }
-                if (isChrome) {
-                    videoModel.appendChild(track);
                 }
 
                 const textTrack = getTrackByIdx(i);
@@ -505,7 +495,7 @@ function TextTracks() {
             const cues = track.cues;
             const lastIdx = cues.length - 1;
 
-            for (let r = lastIdx; r >= 0 ; r--) {
+            for (let r = lastIdx; r >= 0; r--) {
                 track.removeCue(cues[r]);
             }
         }
@@ -521,14 +511,10 @@ function TextTracks() {
     function deleteAllTextTracks() {
         const ln = trackElementArr ? trackElementArr.length : 0;
         for (let i = 0; i < ln; i++) {
-            if (isChrome) {
-                videoModel.removeChild(trackElementArr[i]);
-            } else {
-                const track = getTrackByIdx(i);
-                if (track) {
-                    deleteTrackCues.call(this, track);
-                    track.mode = 'disabled';
-                }
+            const track = getTrackByIdx(i);
+            if (track) {
+                deleteTrackCues.call(this, track);
+                track.mode = 'disabled';
             }
         }
         trackElementArr = [];
@@ -548,9 +534,6 @@ function TextTracks() {
 
     /* Set native cue style to transparent background to avoid it being displayed. */
     function setNativeCueStyle() {
-        if (!isChrome) {
-            return;
-        }
         let styleElement = document.getElementById('native-cue-style');
         if (styleElement) {
             return; //Already set
@@ -574,9 +557,6 @@ function TextTracks() {
 
     /* Remove the extra cue style with transparent background for native cues. */
     function removeNativeCueStyle() {
-        if (!isChrome) {
-            return;
-        }
         const styleElement = document.getElementById('native-cue-style');
         if (styleElement) {
             document.head.removeChild(styleElement);
