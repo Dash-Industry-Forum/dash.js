@@ -69,8 +69,8 @@ function ThroughputHistory(config) {
     function setup() {
         resetInitialSettings();
         ewmaHalfLife = {
-            throughputHalfLife: { fast: EWMA_THROUGHPUT_FAST_HALF_LIFE_SECONDS, slow: EWMA_THROUGHPUT_SLOW_HALF_LIFE_SECONDS},
-            latencyHalfLife:    {fast: EWMA_LATENCY_FAST_HALF_LIFE_COUNT,       slow: EWMA_LATENCY_SLOW_HALF_LIFE_COUNT}
+            throughputHalfLife: { fast: EWMA_THROUGHPUT_FAST_HALF_LIFE_SECONDS, slow: EWMA_THROUGHPUT_SLOW_HALF_LIFE_SECONDS },
+            latencyHalfLife:    { fast: EWMA_LATENCY_FAST_HALF_LIFE_COUNT,      slow: EWMA_LATENCY_SLOW_HALF_LIFE_COUNT }
         };
     }
 
@@ -121,17 +121,17 @@ function ThroughputHistory(config) {
         }
 
         let weight = 0.001 * downloadTimeInMilliseconds;
-        let alpha = Math.pow(0.5, weight / ewmaHalfLife.throughput.fast);
+        let alpha = Math.pow(0.5, weight / ewmaHalfLife.throughputHalfLife.fast);
         ewmaThroughputDict[mediaType].fastEstimate = (1 - alpha) * throughput + alpha * ewmaThroughputDict[mediaType].fastEstimate;
-        alpha = Math.pow(0.5, weight / ewmaHalfLife.throughput.slow);
+        alpha = Math.pow(0.5, weight / ewmaHalfLife.throughputHalfLife.slow);
         ewmaThroughputDict[mediaType].slowEstimate = (1 - alpha) * throughput + alpha * ewmaThroughputDict[mediaType].slowEstimate;
         ewmaThroughputDict[mediaType].totalWeight += weight;
 
         weight = 1;
-        alpha = Math.pow(0.5, weight / ewmaHalfLife.latency.fast);
-        ewmaLatencyDict[mediaType].fastEstimate = (1 - alpha) * throughput + alpha * ewmaLatencyDict[mediaType].fastEstimate;
-        alpha = Math.pow(0.5, weight / ewmaHalfLife.latency.slow);
-        ewmaLatencyDict[mediaType].slowEstimate = (1 - alpha) * throughput + alpha * ewmaLatencyDict[mediaType].slowEstimate;
+        alpha = Math.pow(0.5, weight / ewmaHalfLife.latencyHalfLife.fast);
+        ewmaLatencyDict[mediaType].fastEstimate = (1 - alpha) * latencyTimeInMilliseconds + alpha * ewmaLatencyDict[mediaType].fastEstimate;
+        alpha = Math.pow(0.5, weight / ewmaHalfLife.latencyHalfLife.slow);
+        ewmaLatencyDict[mediaType].slowEstimate = (1 - alpha) * latencyTimeInMilliseconds + alpha * ewmaLatencyDict[mediaType].slowEstimate;
         ewmaLatencyDict[mediaType].totalWeight += weight;
     }
 
@@ -202,7 +202,7 @@ function ThroughputHistory(config) {
     }
 
     function getAverageEwma(isThroughput, mediaType) {
-        let halfLife = isThroughput ? ewmaHalfLife.throughput : ewmaHalfLife.latency;
+        let halfLife = isThroughput ? ewmaHalfLife.throughputHalfLife : ewmaHalfLife.latencyHalfLife;
         let dict = isThroughput ? ewmaThroughputDict : ewmaLatencyDict;
         let obj = dict[mediaType];
 
