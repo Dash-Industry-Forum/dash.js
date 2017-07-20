@@ -1094,6 +1094,18 @@ function MediaPlayer() {
     }
 
     /**
+     * Obsolete since version 2.6.0.
+     * Buffer-occupancy ABR is now switched on and off dynamically.
+     *
+     * @param {boolean} value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function enableBufferOccupancyABR(value) {
+        throw new Error('Calling obsolete function - enabledBufferOccupancyABR(' + value + ') has no effect.');
+    }
+
+    /**
      * Enable/disable builtin dashjs ABR rules
      * @param {boolean} value
      * @default true
@@ -1375,6 +1387,19 @@ function MediaPlayer() {
      */
     function setLongFormContentDurationThreshold(value) {
         mediaPlayerModel.setLongFormContentDurationThreshold(value);
+    }
+
+    /**
+     * Obsolete since version 2.6.0.
+     * ABR rules now switch from Throughput to Buffer Occupancy mode when there is sufficient buffer.
+     * This renders the rich buffer mechanism redundant.
+     *
+     * @param {number} value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setRichBufferThreshold(value) {
+        throw new Error('Calling obsolete function - setRichBufferThreshold(' + value + ') has no effect.');
     }
 
     /**
@@ -2078,34 +2103,6 @@ function MediaPlayer() {
 
     ---------------------------------------------------------------------------
     */
-
-    /**
-     * @deprecated Since version 2.6.0.
-     *
-     * Buffer-occupancy ABR is now switched on and off dynamically.
-     *
-     * @param {boolean} value
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function enableBufferOccupancyABR(value) {
-        log('Warning: calling deprecated function - enabledBufferOccupancyABR(' + value + ') has no effect.');
-    }
-
-    /**
-     * @deprecated Since version 2.6.0.
-     *
-     * ABR rules now switch from Throughput to Buffer Occupancy mode when there is sufficient buffer.
-     * This renders the rich buffer mechanism redundant.
-     *
-     * @param {number} value
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function setRichBufferThreshold(value) {
-        log('Warning: calling deprecated function - setRichBufferThreshold(' + value + ') has no effect.');
-    }
-
     /**
      * @deprecated Since version 2.1.0.  <b>Instead use:</b>
      * <ul>
