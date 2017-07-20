@@ -33,6 +33,7 @@ import {
     HTTPRequest
 }
 from '../vo/metrics/HTTPRequest';
+import Constants from '../constants/Constants';
 
 const DEFAULT_UTC_TIMING_SOURCE = {
     scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
@@ -96,7 +97,8 @@ function MediaPlayerModel() {
         useDefaultABRRules,
         xhrWithCredentials,
         fastSwitchEnabled,
-        customABRRule;
+        customABRRule,
+        movingAverageMethod;
 
     function setup() {
         UTCTimingSources = [];
@@ -130,6 +132,7 @@ function MediaPlayerModel() {
             default: DEFAULT_XHR_WITH_CREDENTIALS
         };
         customABRRule = [];
+        movingAverageMethod = Constants.MOVING_AVERAGE_SLIDING_WINDOW;
 
         retryAttempts = {
             [HTTPRequest.MPD_TYPE]:                         MANIFEST_RETRY_ATTEMPTS,
@@ -440,6 +443,14 @@ function MediaPlayerModel() {
         fastSwitchEnabled = value;
     }
 
+    function setMovingAverageMethod(value) {
+        movingAverageMethod = value;
+    }
+
+    function getMovingAverageMethod() {
+        return movingAverageMethod;
+    }
+
     function reset() {
         //TODO need to figure out what props to persist across sessions and which to reset if any.
         //setup();
@@ -506,6 +517,8 @@ function MediaPlayerModel() {
         getXHRWithCredentialsForType: getXHRWithCredentialsForType,
         setFastSwitchEnabled: setFastSwitchEnabled,
         getFastSwitchEnabled: getFastSwitchEnabled,
+        setMovingAverageMethod: setMovingAverageMethod,
+        getMovingAverageMethod: getMovingAverageMethod,
         reset: reset
     };
 

@@ -31,43 +31,43 @@
 
 import Constants from '../constants/Constants';
 import FactoryMaker from '../../core/FactoryMaker.js';
-import Debug from '../../core/Debug';
 
 // throughput generally stored in kbit/s
 // latency generally stored in ms
 
-const MOVING_AVERAGE_SLIDING_WINDOW = 'slidingWindow';
-const MOVING_AVERAGE_EWMA = 'ewma';
-
 function ThroughputHistory(config) {
 
+    // sliding window constants
     const MAX_MEASUREMENTS_TO_KEEP = 20;
     const AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE = 3;
     const AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD = 4;
     const AVERAGE_LATENCY_SAMPLE_AMOUNT = 4;
+    const THROUGHPUT_DECREASE_SCALE = 1.3;
+    const THROUGHPUT_INCREASE_SCALE = 1.3;
+
+    // EWMA constants
     const EWMA_THROUGHPUT_SLOW_HALF_LIFE_SECONDS = 8;
     const EWMA_THROUGHPUT_FAST_HALF_LIFE_SECONDS = 3;
     const EWMA_LATENCY_SLOW_HALF_LIFE_COUNT = 2;
     const EWMA_LATENCY_FAST_HALF_LIFE_COUNT = 1;
+
     const CACHE_LOAD_THRESHOLD_VIDEO = 50;
     const CACHE_LOAD_THRESHOLD_AUDIO = 5;
-    const THROUGHPUT_DECREASE_SCALE = 1.3;
-    const THROUGHPUT_INCREASE_SCALE = 1.3;
-
-    const MOVING_AVERAGE_DEFAULT = MOVING_AVERAGE_SLIDING_WINDOW;
 
     const mediaPlayerModel = config.mediaPlayerModel;
-    const log = Debug(this.context).getInstance().log;
 
     let throughputDict,
         latencyDict,
         ewmaThroughputDict,
         ewmaLatencyDict,
-        movingAverageMethod,
         ewmaHalfLife;
 
     function setup() {
-        resetInitialSettings();
+        throughputDict = {};
+        latencyDict = {};
+        ewmaThroughputDict = {};
+        ewmaLatencyDict = {};
+
         ewmaHalfLife = {
             throughputHalfLife: { fast: EWMA_THROUGHPUT_FAST_HALF_LIFE_SECONDS, slow: EWMA_THROUGHPUT_SLOW_HALF_LIFE_SECONDS },
             latencyHalfLife:    { fast: EWMA_LATENCY_FAST_HALF_LIFE_COUNT,      slow: EWMA_LATENCY_SLOW_HALF_LIFE_COUNT }
@@ -120,19 +120,18 @@ function ThroughputHistory(config) {
             latencyDict[mediaType].shift();
         }
 
-        let weight = 0.001 * downloadTimeInMilliseconds;
-        let alpha = Math.pow(0.5, weight / ewmaHalfLife.throughputHalfLife.fast);
-        ewmaThroughputDict[mediaType].fastEstimate = (1 - alpha) * throughput + alpha * ewmaThroughputDict[mediaType].fastEstimate;
-        alpha = Math.pow(0.5, weight / ewmaHalfLife.throughputHalfLife.slow);
-        ewmaThroughputDict[mediaType].slowEstimate = (1 - alpha) * throughput + alpha * ewmaThroughputDict[mediaType].slowEstimate;
-        ewmaThroughputDict[mediaType].totalWeight += weight;
+        updateEwmaEstimate(ewmaThroughputDict[mediaType], throughput, 0.001 * downloadTimeInMilliseconds, ewmaHalfLife.throughputHalfLife);
+        updateEwmaEstimate(ewmaLatencyDict[mediaType], latencyTimeInMilliseconds, 1, ewmaHalfLife.latencyHalfLife);
+    }
 
-        weight = 1;
-        alpha = Math.pow(0.5, weight / ewmaHalfLife.latencyHalfLife.fast);
-        ewmaLatencyDict[mediaType].fastEstimate = (1 - alpha) * latencyTimeInMilliseconds + alpha * ewmaLatencyDict[mediaType].fastEstimate;
-        alpha = Math.pow(0.5, weight / ewmaHalfLife.latencyHalfLife.slow);
-        ewmaLatencyDict[mediaType].slowEstimate = (1 - alpha) * latencyTimeInMilliseconds + alpha * ewmaLatencyDict[mediaType].slowEstimate;
-        ewmaLatencyDict[mediaType].totalWeight += weight;
+    function updateEwmaEstimate(ewmaObj, value, weight, halfLife) {
+        const fastAlpha = Math.pow(0.5, weight / halfLife.fast);
+        ewmaObj.fastEstimate = (1 - fastAlpha) * value + fastAlpha * ewmaObj.fastEstimate;
+
+        const slowAlpha = Math.pow(0.5, weight / halfLife.slow);
+        ewmaObj.slowEstimate = (1 - slowAlpha) * value + slowAlpha * ewmaObj.slowEstimate;
+
+        ewmaObj.totalWeight += weight;
     }
 
     function getSampleSize(isThroughput, mediaType, isLive) {
@@ -168,23 +167,9 @@ function ThroughputHistory(config) {
     }
 
     function getAverage(isThroughput, mediaType, isDynamic) {
-        let average;
-        switch (movingAverageMethod) {
-            case MOVING_AVERAGE_SLIDING_WINDOW:
-                average = getAverageSlidingWindow(isThroughput, mediaType, isDynamic);
-                break;
-            case MOVING_AVERAGE_EWMA:
-                average = getAverageEwma(isThroughput, mediaType);
-                break;
-            default:
-                // should not arrive here - we check argument to setMovingAverageMethod()
-                average = NaN;
-                log('ThroughputHistory has unknown moving average method - switching to default.');
-
-                // reset for next call
-                movingAverageMethod = MOVING_AVERAGE_DEFAULT;
-        }
-        return average;
+        // only two moving average methods defined at the moment
+        return mediaPlayerModel.getMovingAverageMethod() !== Constants.MOVING_AVERAGE_SLIDING_WINDOW ?
+            getAverageEwma(isThroughput, mediaType) : getAverageSlidingWindow(isThroughput, mediaType, isDynamic);
     }
 
     function getAverageSlidingWindow(isThroughput, mediaType, isDynamic) {
@@ -203,17 +188,15 @@ function ThroughputHistory(config) {
 
     function getAverageEwma(isThroughput, mediaType) {
         let halfLife = isThroughput ? ewmaHalfLife.throughputHalfLife : ewmaHalfLife.latencyHalfLife;
-        let dict = isThroughput ? ewmaThroughputDict : ewmaLatencyDict;
-        let obj = dict[mediaType];
+        let ewmaObj = isThroughput ? ewmaThroughputDict[mediaType] : ewmaLatencyDict[mediaType];
 
-        if (!obj || obj.totalWeight <= 0) {
+        if (!ewmaObj || ewmaObj.totalWeight <= 0) {
             return NaN;
         }
 
-        let zeroFactor = 1 - Math.pow(0.5, obj.totalWeight / halfLife.fast);
-        let fastEstimate = obj.fastEstimate / zeroFactor;
-        zeroFactor = 1 - Math.pow(0.5, obj.totalWeight / halfLife.slow);
-        let slowEstimate = obj.slowEstimate / zeroFactor;
+        // to correct for startup, divide by zero factor = 1 - Math.pow(0.5, ewmaObj.totalWeight / halfLife)
+        const fastEstimate = ewmaObj.fastEstimate / (1 - Math.pow(0.5, ewmaObj.totalWeight / halfLife.fast));
+        const slowEstimate = ewmaObj.slowEstimate / (1 - Math.pow(0.5, ewmaObj.totalWeight / halfLife.slow));
         return isThroughput ? Math.min(fastEstimate, slowEstimate) : Math.max(fastEstimate, slowEstimate);
     }
 
@@ -233,28 +216,14 @@ function ThroughputHistory(config) {
         return getAverage(false, mediaType);
     }
 
-    function checkSettingsForMediaType(mediaType)
-    {
+    function checkSettingsForMediaType(mediaType) {
         throughputDict[mediaType] = throughputDict[mediaType] || [];
         latencyDict[mediaType] = latencyDict[mediaType] || [];
         ewmaThroughputDict[mediaType] = ewmaThroughputDict[mediaType] || {fastEstimate: 0, slowEstimate: 0, totalWeight: 0};
         ewmaLatencyDict[mediaType] = ewmaLatencyDict[mediaType] || {fastEstimate: 0, slowEstimate: 0, totalWeight: 0};
     }
 
-    function setMovingAverageMethod(method) {
-        switch (method) {
-            case MOVING_AVERAGE_SLIDING_WINDOW:
-            case MOVING_AVERAGE_EWMA:
-                movingAverageMethod = method;
-                break;
-            default:
-                // do not change current method
-                log('ThroughputHistory cannot set unknown moving average method.');
-        }
-    }
-
-    function clearSettingsForMediaType(mediaType)
-    {
+    function clearSettingsForMediaType(mediaType) {
         delete throughputDict[mediaType];
         delete latencyDict[mediaType];
         delete ewmaThroughputDict[mediaType];
@@ -262,26 +231,13 @@ function ThroughputHistory(config) {
         checkSettingsForMediaType(mediaType);
     }
 
-    function resetInitialSettings()
-    {
-        throughputDict = {};
-        latencyDict = {};
-        ewmaThroughputDict = {};
-        ewmaLatencyDict = {};
-        movingAverageMethod = MOVING_AVERAGE_DEFAULT;
-    }
-
-    function reset() {
-        resetInitialSettings();
-    }
+    // There is no need to have reset() - ABRController simply discards the reference to throughputHistory when it is resetting.
 
     const instance = {
         push: push,
         getAverageThroughput: getAverageThroughput,
         getSafeAverageThroughput: getSafeAverageThroughput,
-        getAverageLatency: getAverageLatency,
-        setMovingAverageMethod: setMovingAverageMethod,
-        reset: reset
+        getAverageLatency: getAverageLatency
     };
 
     setup();
@@ -289,8 +245,4 @@ function ThroughputHistory(config) {
 }
 
 ThroughputHistory.__dashjs_factory_name = 'ThroughputHistory';
-const factory = FactoryMaker.getClassFactory(ThroughputHistory);
-factory.MOVING_AVERAGE_SLIDING_WINDOW = MOVING_AVERAGE_SLIDING_WINDOW;
-factory.MOVING_AVERAGE_EWMA = MOVING_AVERAGE_EWMA;
-FactoryMaker.updateClassFactory(ThroughputHistory.__dashjs_factory_name, factory);
-export default factory;
+export default FactoryMaker.getClassFactory(ThroughputHistory);
