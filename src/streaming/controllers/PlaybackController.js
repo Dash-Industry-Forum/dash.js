@@ -419,18 +419,6 @@ function PlaybackController() {
         eventBus.trigger(Events.PLAYBACK_ENDED);
     }
 
-    function onPlaybackStalled() {
-        log('Native video element event: stalled');
-        var toto = 0;
-        toto = toto + 1;
-    }
-
-    function onPlaybackWaiting() {
-        log('Native video element event: waiting');
-        var toto = 0;
-        toto = toto + 1;
-    }
-
     function onPlaybackError(event) {
         let target = event.target || event.srcElement;
         eventBus.trigger(Events.PLAYBACK_ERROR, {
@@ -530,8 +518,6 @@ function PlaybackController() {
         videoModel.addEventListener('ratechange', onPlaybackRateChanged);
         videoModel.addEventListener('loadedmetadata', onPlaybackMetaDataLoaded);
         videoModel.addEventListener('ended', onPlaybackEnded);
-        videoModel.addEventListener('stalled', onPlaybackStalled);
-        videoModel.addEventListener('waiting', onPlaybackWaiting);
     }
 
     function removeAllListeners() {
