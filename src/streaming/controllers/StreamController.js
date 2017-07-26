@@ -47,10 +47,16 @@ import MediaPlayerEvents from '../MediaPlayerEvents';
 import TimeSyncController from './TimeSyncController';
 import BaseURLController from './BaseURLController';
 import MediaSourceController from './MediaSourceController';
-
+import SourceBufferController from './SourceBufferController';
 function StreamController() {
 
     const STREAM_END_THRESHOLD = 0.1;
+    const LOSS_TOLERANCE_THRESHOLD = 2;
+
+    //Check whether there is framed dropping when stalling this times wallClockUpdate interval
+    //which is 50ms interval default due to the setting of mediaPlayerModel.
+    const STALL_THRESHOLD_TO_CHECK_DATALOSS = 20;
+
 
     let context = this.context;
     let log = Debug(context).getInstance().log;
@@ -92,7 +98,9 @@ function StreamController() {
         initialPlayback,
         playListMetrics,
         videoTrackDetected,
-        audioTrackDetected;
+        audioTrackDetected,
+        wallclockTicked,
+        lastPlaybackTime;
 
     function setup() {
         protectionController = null;
@@ -107,6 +115,7 @@ function StreamController() {
         playListMetrics = null;
         hasMediaError = false;
         hasInitialisationError = false;
+        wallclockTicked = 0;
     }
 
     function initialize(autoPl, protData) {
@@ -137,6 +146,66 @@ function StreamController() {
         eventBus.on(Events.MANIFEST_UPDATED, onManifestUpdated, this);
         eventBus.on(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
         eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
+        eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
+
+    }
+
+
+    function onWallclockTimeUpdated(e) {
+        wallclockTicked++;
+        if (wallclockTicked >= STALL_THRESHOLD_TO_CHECK_DATALOSS) {
+            wallclockTicked = 0;
+            let currentTime = playbackController.getTime();
+            if (lastPlaybackTime === currentTime) {
+                skipWhenDataLoss(currentTime, e.timeToEnd);
+            } else {
+                lastPlaybackTime = currentTime;
+            }
+        }
+
+    }
+
+    function skipWhenDataLoss(time, timeToStreamEnd) {
+        if (!activeStream) return;
+        let streamProcessors = activeStream.getProcessors();
+        let skipToPosition;
+        for (let i = 0; i < streamProcessors.length; i ++) {
+            let mediaBuffer = streamProcessors[i].getBuffer();
+            let sourceBufferController = SourceBufferController(context).getInstance();
+            let ranges = sourceBufferController.getAllRanges(mediaBuffer);
+            let currentRangeIndex;
+            if (!ranges) return;
+            for (let j = 0; j < ranges.length; j++) {
+                if (time >= ranges.start(j) && time <= ranges.end(j)) {
+                    currentRangeIndex = j;
+                    break;
+                }
+            }
+
+            let nextRangeStartTime;
+            if (currentRangeIndex < ranges.length - 1) {
+                nextRangeStartTime = ranges.end(currentRangeIndex + 1);
+            } else {
+                nextRangeStartTime = time + timeToStreamEnd;
+            }
+
+            let gap = nextRangeStartTime - ranges.end(currentRangeIndex);
+            if (gap > 0 && gap <= LOSS_TOLERANCE_THRESHOLD) {
+                if (nextRangeStartTime === time + timeToStreamEnd) {
+                    log('Warning: there is a skip due to media loss at time ' + time);
+                    onEnded();
+                } else if (skipToPosition === undefined) {
+                    skipToPosition = nextRangeStartTime;
+                } else if (nextRangeStartTime > skipToPosition) {
+                    skipToPosition = nextRangeStartTime;
+                }
+            }
+        }
+        if (skipToPosition !== undefined) {
+            log('Warning: there is a skip due to media loss at time ' + time);
+            playbackController.seek(skipToPosition);
+        }
+
     }
 
     /*

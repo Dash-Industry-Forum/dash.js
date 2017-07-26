@@ -410,7 +410,7 @@ function PlaybackController() {
     }
 
     function onWallclockTime() {
-        eventBus.trigger(Events.WALLCLOCK_TIME_UPDATED, {isDynamic: isDynamic, time: new Date()});
+        eventBus.trigger(Events.WALLCLOCK_TIME_UPDATED, {timeToEnd: getTimeToStreamEnd(), isDynamic: isDynamic, time: new Date()});
     }
 
     function onBytesAppended(e) {
