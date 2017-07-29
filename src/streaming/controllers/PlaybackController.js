@@ -248,12 +248,13 @@ function PlaybackController() {
     function getStreamStartTime(ignoreStartOffset) {
         let presentationStartTime;
         let fragData = URIQueryAndFragmentModel(context).getInstance().getURIFragmentData();
-        let fragS = parseInt(fragData.s, 10);
-        let fragT = parseInt(fragData.t, 10);
-        let startTimeOffset = NaN;
-
-        if (!ignoreStartOffset) {
+        var startTimeOffset = 0;
+        if(fragData) {
+          var fragS = parseInt(fragData.s, 10);
+          var fragT = parseInt(fragData.t, 10);
+          if (!ignoreStartOffset) {
             startTimeOffset = !isNaN(fragS) ? fragS : fragT;
+          }
         }
 
         if (isDynamic) {
