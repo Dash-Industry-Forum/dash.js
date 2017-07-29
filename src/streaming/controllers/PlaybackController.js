@@ -251,11 +251,11 @@ function PlaybackController() {
         let startTimeOffset = 0;
 
         if (fragData) {
-          let fragS = parseInt(fragData.s, 10);
-          let fragT = parseInt(fragData.t, 10);
-          if (!ignoreStartOffset) {
-            startTimeOffset = !isNaN(fragS) ? fragS : fragT;
-          }
+            let fragS = parseInt(fragData.s, 10);
+            let fragT = parseInt(fragData.t, 10);
+            if (!ignoreStartOffset) {
+                startTimeOffset = !isNaN(fragS) ? fragS : fragT;
+            }
         }
 
         if (isDynamic) {
