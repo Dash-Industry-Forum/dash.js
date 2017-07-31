@@ -42,16 +42,89 @@ import FactoryMaker from '../../../core/FactoryMaker';
 const uuid = 'edef8ba9-79d6-4ace-a3c8-27dcd51d21ed';
 const systemString = 'com.widevine.alpha';
 const schemeIdURI = 'urn:uuid:' + uuid;
+import BASE64 from '../../../../externals/base64';
 
 function KeySystemWidevine() {
 
     let instance;
+    let protData = null;
 
-    function getInitData(cp) {
-        return CommonEncryption.parseInitDataFromContentProtection(cp);
+    function init(protectionData) {
+        if (protectionData) {
+            protData = protectionData;
+            if (protData.sessionType) {
+                this.sessionType = protData.sessionType;
+            }
+        }
     }
 
-    function getRequestHeadersFromMessage(/*message*/) {
+    function replaceKID(pssh, KID) {
+        let pssh_array;
+        let replace = true;
+        let kidLen = 16;
+        let pos;
+        let i, j;
+
+        pssh_array = new Uint8Array(pssh);
+
+        for (i = 0; i <= pssh_array.length - (kidLen + 2); i++) {
+            if (pssh_array[i] === 0x12 && pssh_array[i + 1] === 0x10) {
+                pos = i + 2;
+                for (j = pos; j < (pos + kidLen); j++) {
+                    if (pssh_array[j] !== 0xFF) {
+                        replace = false;
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+
+        if (replace) {
+            pssh_array.set(KID, pos);
+        }
+
+        return pssh_array.buffer;
+    }
+
+    function getInitData(cp) {
+        var pssh = null;
+        // Get pssh from protectionData or from manifest
+        if (protData && protData.pssh) {
+            pssh = BASE64.decodeArray(protData.pssh).buffer;
+        } else {
+            pssh = CommonEncryption.parseInitDataFromContentProtection(cp);
+        }
+
+        // Check if KID within pssh is empty, in that case set KID value according to 'cenc:default_KID' value
+        if (pssh) {
+            pssh = replaceKID(pssh, cp['cenc:default_KID']);
+        }
+
+        return pssh;
+    }
+
+    function doGetKeySystemConfigurations(videoCodec, audioCodec, sessionType) {
+        var ksConfigurations = MediaPlayer.dependencies.protection.CommonEncryption.getKeySystemConfigurations(videoCodec, audioCodec, sessionType);
+        if (protData) {
+            if (protData.audioRobustness) {
+                ksConfigurations[0].audioCapabilities[0].robustness = protData.audioRobustness;
+            }
+            if (protData.videoRobustness) {
+                ksConfigurations[0].videoCapabilities[0].robustness = protData.videoRobustness;
+            }
+        }
+        return ksConfigurations;
+    }
+
+    function doGetServerCertificate() {
+        if (protData && protData.serverCertificate && protData.serverCertificate.length > 0) {
+            return BASE64.decodeArray(protData.serverCertificate).buffer;
+        }
+        return null;
+    }
+
+    function getRequestHeadersFromMessage( /*message*/ ) {
         return null;
     }
 
@@ -59,7 +132,7 @@ function KeySystemWidevine() {
         return new Uint8Array(message);
     }
 
-    function getLicenseServerURLFromInitData(/*initData*/) {
+    function getLicenseServerURLFromInitData( /*initData*/ ) {
         return null;
     }
 
@@ -67,7 +140,10 @@ function KeySystemWidevine() {
         uuid: uuid,
         schemeIdURI: schemeIdURI,
         systemString: systemString,
+        init: init,
         getInitData: getInitData,
+        getKeySystemConfigurations: doGetKeySystemConfigurations,
+        getServerCertificate: doGetServerCertificate,
         getRequestHeadersFromMessage: getRequestHeadersFromMessage,
         getLicenseRequestFromMessage: getLicenseRequestFromMessage,
         getLicenseServerURLFromInitData: getLicenseServerURLFromInitData

@@ -2179,6 +2179,11 @@ function MediaPlayer() {
             abrController.reset();
             mediaController.reset();
             textController.reset();
+            if (protectionController) {
+                protectionController.reset();
+                protectionController = null;
+                detectProtection();
+            }
             if (isReady()) {
                 initializePlayback();
             }

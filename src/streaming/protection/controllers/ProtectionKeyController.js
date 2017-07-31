@@ -288,8 +288,26 @@ function ProtectionKeyController() {
         }
     }
 
+    function setProtectionData(protectionDataSet) {
+        var getProtectionData = function (keySystemString) {
+            var protData = null;
+            if (protectionDataSet) {
+                protData = (keySystemString in protectionDataSet) ? protectionDataSet[keySystemString] : null;
+            }
+            return protData;
+        };
+
+        for (var i = 0; i < keySystems.length; i++) {
+            var keySystem = keySystems[i];
+            if (keySystem.hasOwnProperty('init')) {
+                keySystem.init(getProtectionData(keySystem.systemString));
+            }
+        }
+    }
+
     instance = {
         initialize: initialize,
+        setProtectionData: setProtectionData,
         isClearKey: isClearKey,
         initDataEquals: initDataEquals,
         getKeySystems: getKeySystems,
