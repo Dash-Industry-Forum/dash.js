@@ -728,7 +728,7 @@ function MediaPlayer() {
      * @param {string} type - 'video' or 'audio' are the type options.
      * @returns {number} The current representation ratio cap.
      * @memberof module:MediaPlayer
-     * @see {@link MediaPlayer#setMaxAllowedRepresentationRatioFor setMaxAllowedRepresentationRatioFor()}
+     * @see {@link module:MediaPlayer#setMaxAllowedRepresentationRatioFor setMaxAllowedRepresentationRatioFor()}
      * @instance
      */
     function getMaxAllowedRepresentationRatioFor(type) {
@@ -742,8 +742,8 @@ function MediaPlayer() {
      * @param {string} type - 'video' or 'audio'
      * @returns {number} the quality index, 0 corresponding to the lowest bitrate
      * @memberof module:MediaPlayer
-     * @see {@link MediaPlayer#setAutoSwitchQualityFor setAutoSwitchQualityFor()}
-     * @see {@link MediaPlayer#setQualityFor setQualityFor()}
+     * @see {@link module:MediaPlayer#setAutoSwitchQualityFor setAutoSwitchQualityFor()}
+     * @see {@link module:MediaPlayer#setQualityFor setQualityFor()}
      * @instance
      */
     function getQualityFor(type) {
@@ -760,8 +760,8 @@ function MediaPlayer() {
      * @param {string} type - 'video' or 'audio'
      * @param {number} value - the quality index, 0 corresponding to the lowest bitrate
      * @memberof module:MediaPlayer
-     * @see {@link MediaPlayer#setAutoSwitchQualityFor setAutoSwitchQualityFor()}
-     * @see {@link MediaPlayer#getQualityFor getQualityFor()}
+     * @see {@link module:MediaPlayer#setAutoSwitchQualityFor setAutoSwitchQualityFor()}
+     * @see {@link module:MediaPlayer#getQualityFor getQualityFor()}
      * @instance
      */
     function setQualityFor(type, value) {
