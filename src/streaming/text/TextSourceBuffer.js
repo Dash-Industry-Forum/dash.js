@@ -146,7 +146,6 @@ function TextSourceBuffer() {
     function initEmbedded() {
         embeddedTracks = [];
         mediaInfos = [];
-        // videoModel = VideoModel(context).getInstance();
         textTracks = TextTracks(context).getInstance();
         textTracks.setConfig({
             videoModel: videoModel
