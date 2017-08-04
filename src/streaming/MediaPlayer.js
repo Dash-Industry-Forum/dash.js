@@ -419,6 +419,32 @@ function MediaPlayer() {
         return playbackController.getIsDynamic();
     }
 
+     /**
+     * Use this method to set the native Video Element's playback rate.
+     * @param {number} value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setPlaybackRate(value) {
+        if (!videoModel) {
+            throw ELEMENT_NOT_ATTACHED_ERROR;
+        }
+        getVideoElement().playBackRate = value;
+    }
+
+    /**
+     * Returns the current playback rate.
+     * @returns {number}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getPlayBackRate() {
+        if (!videoModel) {
+            throw ELEMENT_NOT_ATTACHED_ERROR;
+        }
+        return getVideoElement().playBackRate;
+    }
+
     /**
      * Use this method to set the native Video Element's muted state. Takes a Boolean that determines whether audio is muted. true if the audio is muted and false otherwise.
      * @param {boolean} value
@@ -2392,6 +2418,8 @@ function MediaPlayer() {
         isSeeking: isSeeking,
         isDynamic: isDynamic,
         seek: seek,
+        setPlaybackRate: setPlaybackRate,
+        getPlayBackRate: getPlayBackRate,
         setMute: setMute,
         isMuted: isMuted,
         setVolume: setVolume,
