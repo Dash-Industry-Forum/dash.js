@@ -350,6 +350,7 @@ function MediaPlayer() {
         }
     }
 
+
     /**
      * This method will call pause on the native Video Element.
      *
@@ -419,7 +420,7 @@ function MediaPlayer() {
         return playbackController.getIsDynamic();
     }
 
-     /**
+    /**
      * Use this method to set the native Video Element's playback rate.
      * @param {number} value
      * @memberof module:MediaPlayer
@@ -429,7 +430,7 @@ function MediaPlayer() {
         if (!videoModel) {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
-        getVideoElement().playBackRate = value;
+        getVideoElement().playbackRate = value;
     }
 
     /**
@@ -438,11 +439,11 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
-    function getPlayBackRate() {
+    function getPlaybackRate() {
         if (!videoModel) {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
-        return getVideoElement().playBackRate;
+        return getVideoElement().playbackRate;
     }
 
     /**
@@ -2419,7 +2420,7 @@ function MediaPlayer() {
         isDynamic: isDynamic,
         seek: seek,
         setPlaybackRate: setPlaybackRate,
-        getPlayBackRate: getPlayBackRate,
+        getPlaybackRate: getPlaybackRate,
         setMute: setMute,
         isMuted: isMuted,
         setVolume: setVolume,
