@@ -1096,6 +1096,7 @@ function MediaPlayer() {
     /**
      * Obsolete since version 2.6.0.
      * Buffer-occupancy ABR is now switched on and off dynamically.
+     * @see {@link module:MediaPlayer#setABRStrategy setABRStrategy()}
      *
      * @param {boolean} value
      * @memberof module:MediaPlayer
@@ -1103,6 +1104,39 @@ function MediaPlayer() {
      */
     function enableBufferOccupancyABR(value) {
         throw new Error('Calling obsolete function - enabledBufferOccupancyABR(' + value + ') has no effect.');
+    }
+
+    /**
+     * Sets the ABR strategy. Valid strategies are "abrDynamic", "abrBola" and "abrThroughput".
+     * The ABR strategy can also be changed during a streaming session.
+     * The call has no effect if an invalid method is passed.
+     *
+     * The BOLA strategy chooses bitrate based on current buffer level, with higher bitrates for higher buffer levels.
+     * The Throughput strategy chooses bitrate based on the recent throughput history.
+     * The Dynamic strategy switches smoothly between BOLA and Throughput in real time, playing to the strengths of both.
+     *
+     * @param {string} value
+     * @default "abrDynamic"
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setABRStrategy(value) {
+        if (value === Constants.ABR_STRATEGY_DYNAMIC || value === Constants.ABR_STRATEGY_BOLA || value === Constants.ABR_STRATEGY_THROUGHPUT) {
+            mediaPlayerModel.setABRStrategy(value);
+        } else {
+            log('Warning: Ignoring setABRStrategy(' + value + ') - unknown value.');
+        }
+    }
+
+    /**
+     * Returns the current ABR strategy being used.
+     * @return {string} "abrDynamic", "abrBola" or "abrThroughput"
+     * @see {@link module:MediaPlayer#setABRStrategy setABRStrategy()}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getABRStrategy() {
+        return mediaPlayerModel.getABRStrategy();
     }
 
     /**
@@ -2455,6 +2489,8 @@ function MediaPlayer() {
         getAutoSwitchQualityFor: getAutoSwitchQualityFor,
         setAutoSwitchQualityFor: setAutoSwitchQualityFor,
         enableBufferOccupancyABR: enableBufferOccupancyABR,
+        setABRStrategy: setABRStrategy,
+        getABRStrategy: getABRStrategy,
         useDefaultABRRules: useDefaultABRRules,
         addABRCustomRule: addABRCustomRule,
         removeABRCustomRule: removeABRCustomRule,

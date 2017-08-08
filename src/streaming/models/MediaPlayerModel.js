@@ -33,6 +33,7 @@ import {
     HTTPRequest
 }
 from '../vo/metrics/HTTPRequest';
+import Constants from '../constants/Constants';
 
 const DEFAULT_UTC_TIMING_SOURCE = {
     scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
@@ -90,6 +91,7 @@ function MediaPlayerModel() {
         retryAttempts,
         retryIntervals,
         wallclockTimeUpdateInterval,
+        ABRStrategy,
         useDefaultABRRules,
         xhrWithCredentials,
         fastSwitchEnabled,
@@ -100,6 +102,7 @@ function MediaPlayerModel() {
         useSuggestedPresentationDelay = false;
         useManifestDateHeaderTimeSource = true;
         scheduleWhilePaused = true;
+        ABRStrategy = Constants.ABR_STRATEGY_DYNAMIC;
         useDefaultABRRules = true;
         fastSwitchEnabled = false;
         lastBitrateCachingInfo = {
@@ -148,6 +151,14 @@ function MediaPlayerModel() {
     }
 
     //TODO Should we use Object.define to have setters/getters? makes more readable code on other side.
+
+    function setABRStrategy(value) {
+        ABRStrategy = value;
+    }
+
+    function getABRStrategy() {
+        return ABRStrategy;
+    }
 
     function setUseDefaultABRRules(value) {
         useDefaultABRRules = value;
@@ -425,6 +436,8 @@ function MediaPlayerModel() {
     }
 
     instance = {
+        setABRStrategy: setABRStrategy,
+        getABRStrategy: getABRStrategy,
         setUseDefaultABRRules: setUseDefaultABRRules,
         getUseDefaultABRRules: getUseDefaultABRRules,
         getABRCustomRules: getABRCustomRules,

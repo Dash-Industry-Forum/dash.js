@@ -402,7 +402,6 @@ function AbrController() {
             changeQuality(type, oldQuality, newQuality, topQualityIdx, reason);
         }
     }
-
     function changeQuality(type, oldQuality, newQuality, topQualityIdx, reason) {
         if (type  && streamProcessorDict[type]) {
             var streamInfo = streamProcessorDict[type].getStreamInfo();
@@ -486,6 +485,17 @@ function AbrController() {
     }
 
     function updateIsUsingBufferOccupancyABR(mediaType, bufferLevel) {
+        const strategy = mediaPlayerModel.getABRStrategy();
+
+        if (strategy === Constants.ABR_STRATEGY_BOLA) {
+            isUsingBufferOccupancyABRDict[mediaType] = true;
+            return;
+        } else if (strategy === Constants.ABR_STRATEGY_THROUGHPUT) {
+            isUsingBufferOccupancyABRDict[mediaType] = false;
+            return;
+        }
+        // else ABR_STRATEGY_DYNAMIC
+
         let stableBufferTime = mediaPlayerModel.getStableBufferTime();
         let switchOnThreshold = stableBufferTime;
         let switchOffThreshold = 0.5 * stableBufferTime;
