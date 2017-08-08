@@ -24,7 +24,7 @@
  *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
  *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
  *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- *  WHETHER IN CONTRAC  T, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
@@ -36,7 +36,7 @@ function AbandonRequestsRule(config) {
 
     const ABANDON_MULTIPLIER = 1.8;
     const GRACE_TIME_THRESHOLD = 500;
-    const MIN_LENGTH_TO_AVERAGE = 5;
+    const MIN_PROGRESS_EVENTS = 5;
 
     const context = this.context;
     const log = Debug(context).getInstance().log;
@@ -45,22 +45,31 @@ function AbandonRequestsRule(config) {
     const metricsModel = config.metricsModel;
     const dashMetrics = config.dashMetrics;
 
-    let fragmentDict,
-        abandonDict,
-        throughputArray;
+    let fragmentDict;
 
     function setup() {
         reset();
     }
 
-    function checkFragmentDictHasFragmentInfo(type, id) {
-        fragmentDict[type] = fragmentDict[type] || {};
-        fragmentDict[type][id] = fragmentDict[type][id] || {};
+    function checkFragmentDictForType(mediaType, id, quality) {
+        if (!fragmentDict[mediaType] || fragmentDict[mediaType].id !== id || fragmentDict[mediaType].quality !== quality) {
+            fragmentDict[mediaType] = { id: id, quality: quality };
+        }
     }
 
-    function storeLastRequestThroughputByType(type, throughput) {
-        throughputArray[type] = throughputArray[type] || [];
-        throughputArray[type].push(throughput);
+    function isAlreadyAbandoned(mediaType, id, quality) {
+        const fragmentInfo = fragmentDict[mediaType];
+        return fragmentInfo && fragmentInfo.id === id && fragmentInfo.quality === quality && fragmentInfo.abandoned;
+    }
+
+    function updateThroughput(mediaType, bytes, elapsedTime) {
+        const fragmentInfo = fragmentDict[mediaType];
+        const halfLife = 0.5 * fragmentInfo.segmentDurationMs; // short half life because we want to react to a sharp bandwidth drop in time
+        if (elapsedTime > 0) {
+            const alpha = Math.pow(0.5, elapsedTime / halfLife);
+            const throughput = 8 * bytes / elapsedTime;
+            fragmentInfo.throughput = alpha * fragmentInfo.throughput + (1 - alpha) * throughput;
+        }
     }
 
     function shouldAbandon(rulesContext) {
@@ -81,79 +90,82 @@ function AbandonRequestsRule(config) {
         const abrController = rulesContext.getAbrController();
 
         const quality = abrController.getQualityFor(mediaType);
-        if (quality === 0 || isNaN(req.index) || !req.firstByteDate) {
-            // either we are already downloading at lowest bitrate,
-            // or we are not downloading a media segment,
-            // or we are still waiting for some progress (no bytes received yet)
-            return switchRequest;
-        }
-
-        if (req.bytesLoaded === req.bytesTotal) {
-            // segment fully downloaded
-            delete fragmentDict[mediaType][req.index];
-            return switchRequest;
-        }
-
-        const stableBufferTime = mediaPlayerModel.getStableBufferTime();
         const bufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor(mediaType));
-        if (bufferLevel > stableBufferTime) {
-            // we have plenty of buffer, no need for emergency measures (i.e. no need for segment abandonment)
+        const stableBufferTime = mediaPlayerModel.getStableBufferTime();
+
+        if (quality === 0 ||                         // we are already downloading at lowest bitrate
+            isNaN(req.index) ||                      // we are not downloading a media segment
+            !req.firstByteDate ||                    // we are still waiting for some progress (no bytes received yet)
+            req.bytesLoaded === req.bytesTotal ||    // segment is fully downloaded
+            bufferLevel > stableBufferTime ||        // we have plenty of buffer, no need for emergency measures (i.e. no need for segment abandonment)
+            isAlreadyAbandoned(mediaType, req.index, quality)) {
+
             return switchRequest;
         }
 
-        checkFragmentDictHasFragmentInfo(mediaType, req.index);
-        const fragmentInfo = fragmentDict[mediaType][req.index];
-        if (abandonDict.hasOwnProperty(fragmentInfo.id)) {
-            // already abandoned this segment - but shouldAbandon() might still be called a few times for this segment
-            return switchRequest;
-        }
+        checkFragmentDictForType(mediaType, req.index, quality);
+        const fragmentInfo = fragmentDict[mediaType];
 
-        //setup some init info based on first progress event
         if (!fragmentInfo.firstByteTime) {
-            throughputArray[mediaType] = [];
+            // first progress event for this segment - initialize fragmentInfo
+
             fragmentInfo.firstByteTime = req.firstByteDate.getTime();
-            fragmentInfo.segmentDuration = req.duration;
+            fragmentInfo.latency = fragmentInfo.firstByteTime - req.requestStartDate.getTime();
+            fragmentInfo.segmentDurationMs = 1000 * req.duration;
             fragmentInfo.bytesTotal = req.bytesTotal;
             fragmentInfo.id = req.index;
-        }
-        fragmentInfo.bytesLoaded = req.bytesLoaded;
-        fragmentInfo.elapsedTime = Date.now() - fragmentInfo.firstByteTime;
 
-        if (fragmentInfo.bytesLoaded > 0 && fragmentInfo.elapsedTime > 0) {
-            storeLastRequestThroughputByType(mediaType, Math.round(fragmentInfo.bytesLoaded * 8 / fragmentInfo.elapsedTime));
+            fragmentInfo.bytesLoaded = req.bytesLoaded;
+            fragmentInfo.elapsedTime = Date.now() - fragmentInfo.firstByteTime;
+
+            let historicThroughput = abrController.getThroughputHistory().getAverageThroughput(mediaType);
+            if (!isNaN(historicThroughput)) {
+                fragmentInfo.throughput = historicThroughput;
+                updateThroughput(mediaType, fragmentInfo.bytesLoaded, fragmentInfo.elapsedTime);
+            } else {
+                fragmentInfo.throughput = 8 * fragmentInfo.bytesLoaded / fragmentInfo.elapsedTime;
+            }
+
+            fragmentInfo.progressEventCount = 1;
+
+        } else {
+            // update fragmentInfo
+            const newBytesLoaded = req.bytesLoaded;
+            const newElapsedTime = Date.now() - fragmentInfo.firstByteTime;
+            updateThroughput(mediaType, newBytesLoaded - fragmentInfo.bytesLoaded, newElapsedTime - fragmentInfo.elapsedTime);
+            fragmentInfo.bytesLoaded = newBytesLoaded;
+            fragmentInfo.elapsedTime = newElapsedTime;
+            fragmentInfo.progressEventCount += 1;
         }
 
-        if (throughputArray[mediaType].length < MIN_LENGTH_TO_AVERAGE || fragmentInfo.elapsedTime < GRACE_TIME_THRESHOLD) {
-            // too soon to make abandonment decision - we need some minimum onProgress calls and some minimum time since first byte
+        if (fragmentInfo.progressEventCount < MIN_PROGRESS_EVENTS || fragmentInfo.elapsedTime < GRACE_TIME_THRESHOLD) {
+            // too soon to make abandonment decision
             return switchRequest;
         }
 
-        // Estimate throughput calculation below gives more weight to the early stages of the segment download.
-        // This may not be what we really want, but it does make AbandonRequestsRule less jumpy - it takes longer to make it decide to abandon.
-        // Maybe we should update the logic, but this needs to be done without making AbandonRequestsRule trigger too often.
-        fragmentInfo.measuredBandwidthInKbps = throughputArray[mediaType].reduce((a, b) => a + b) / throughputArray[mediaType].length;
-        fragmentInfo.estimatedTimeOfDownloadInSeconds = (fragmentInfo.bytesTotal * 8 / fragmentInfo.measuredBandwidthInKbps) / 1000;
+        const bytesRemaining = fragmentInfo.bytesTotal - fragmentInfo.bytesLoaded;
+        fragmentInfo.estimatedTimeOfDownload = fragmentInfo.elapsedTime + 8 * bytesRemaining / fragmentInfo.throughput;
 
-        if (fragmentInfo.estimatedTimeOfDownloadInSeconds < fragmentInfo.segmentDuration * ABANDON_MULTIPLIER) {
+        const bufferLevelMs = 1000 * bufferLevel;
+        if (fragmentInfo.estimatedTimeOfDownload < Math.min(fragmentInfo.segmentDurationMs * ABANDON_MULTIPLIER, bufferLevelMs)) {
             // download is expected to finish in a reasonable time
             return switchRequest;
         }
 
         // if we are here, download is expected to take too long to finish
 
-        const bytesRemaining = fragmentInfo.bytesTotal - fragmentInfo.bytesLoaded;
         const bitrateList = abrController.getBitrateList(mediaInfo);
-        const newQuality = abrController.getQualityForBitrate(mediaInfo, fragmentInfo.measuredBandwidthInKbps * mediaPlayerModel.getBandwidthSafetyFactor());
+        const safetyFactor = mediaPlayerModel.getBandwidthSafetyFactor() * Math.min(1, bufferLevelMs / fragmentInfo.segmentDurationMs);
+        const newQuality = abrController.getQualityForBitrate(mediaInfo, fragmentInfo.throughput * safetyFactor, fragmentInfo.latency);
         const estimateOtherBytesTotal = fragmentInfo.bytesTotal * bitrateList[newQuality].bitrate / bitrateList[quality].bitrate;
 
         if (bytesRemaining > estimateOtherBytesTotal) {
             // we only get here if new quality is lower than current download and it requires a smaller download than what is left in current download
             switchRequest.quality = newQuality;
-            switchRequest.reason.throughput = fragmentInfo.measuredBandwidthInKbps;
+            switchRequest.reason.throughput = fragmentInfo.throughput;
             switchRequest.reason.fragmentID = fragmentInfo.id;
-            abandonDict[fragmentInfo.id] = fragmentInfo;
-            log('AbandonRequestsRule ( ', mediaType, 'frag id', fragmentInfo.id, ') is asking to abandon and switch to quality to ', newQuality, ' measured bandwidth was', fragmentInfo.measuredBandwidthInKbps);
-            delete fragmentDict[mediaType][fragmentInfo.id];
+            fragmentInfo.abandoned = true;
+            log('AbandonRequestsRule (' + mediaType + ' frag id ' + fragmentInfo.id + ') is asking to abandon and switch from quality ' + quality + ' to ' + newQuality + ', measured throughput is ' + fragmentInfo.throughput.toFixed());
         }
 
         return switchRequest;
@@ -161,8 +173,6 @@ function AbandonRequestsRule(config) {
 
     function reset() {
         fragmentDict = {};
-        abandonDict = {};
-        throughputArray = [];
     }
 
     const instance = {
