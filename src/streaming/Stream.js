@@ -191,10 +191,6 @@ function Stream(config) {
         return fragmentController;
     }
 
-    function hasMedia(type) {
-        return (getMediaInfo(type) !== null);
-    }
-
     function checkConfig() {
         if (!abrController || !abrController.hasOwnProperty('getBitrateList') || !adapter || !adapter.hasOwnProperty('getAllMediaInfoForType') || !adapter.hasOwnProperty('getEventsFor')) {
             throw new Error('Missing config parameter(s)');
@@ -583,7 +579,6 @@ function Stream(config) {
         getStreamInfo: getStreamInfo,
         getFragmentController: getFragmentController,
         getEventController: getEventController,
-        hasMedia: hasMedia,
         getBitrateListFor: getBitrateListFor,
         startEventController: startEventController,
         updateData: updateData,

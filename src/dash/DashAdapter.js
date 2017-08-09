@@ -509,7 +509,6 @@ function DashAdapter() {
 
     instance = {
         convertDataToTrack: convertRepresentationToTrackInfo,
-        getDataForTrack: getRepresentationForTrackInfo,
         getDataForMedia: getAdaptationForMediaInfo,
         getStreamsInfo: getStreamsInfo,
         getMediaInfoForType: getMediaInfoForType,

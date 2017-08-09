@@ -117,10 +117,6 @@ function DashHandler(config) {
         return currentTime;
     }
 
-    function getCurrentIndex() {
-        return index;
-    }
-
     function getEarliestTime() {
         return earliestTime;
     }
@@ -535,7 +531,6 @@ function DashHandler(config) {
         updateRepresentation: updateRepresentation,
         setCurrentTime: setCurrentTime,
         getCurrentTime: getCurrentTime,
-        getCurrentIndex: getCurrentIndex,
         getEarliestTime: getEarliestTime,
         reset: reset
     };
