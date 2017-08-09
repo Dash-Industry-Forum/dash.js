@@ -285,8 +285,39 @@ function VideoModel() {
         return element ? element.clientHeight : NaN;
     }
 
+    function getVideoWidth() {
+        return element ? element.videoWidth : NaN;
+    }
+
+    function getVideoHeight() {
+        return element ? element.videoHeight : NaN;
+    }
+
     function getTextTracks() {
         return element ? element.textTracks : [];
+    }
+
+    function getTextTrack(idx) {
+        return element ? element.textTracks[idx] : null;
+    }
+
+    function addTextTrack(kind, label, lang) {
+        if (element) {
+            return element.addTextTrack(kind, label, lang);
+        }
+        return null;
+    }
+
+    function appendChild(childElement) {
+        if (element) {
+            element.appendChild(childElement);
+        }
+    }
+
+    function removeChild(childElement) {
+        if (element) {
+            element.removeChild(childElement);
+        }
     }
 
     instance = {
@@ -316,7 +347,13 @@ function VideoModel() {
         getBufferRange: getBufferRange,
         getClientWidth: getClientWidth,
         getClientHeight: getClientHeight,
-        getTextTracks: getTextTracks
+        getTextTracks: getTextTracks,
+        getTextTrack: getTextTrack,
+        addTextTrack: addTextTrack,
+        appendChild: appendChild,
+        removeChild: removeChild,
+        getVideoWidth: getVideoWidth,
+        getVideoHeight: getVideoHeight
     };
 
     return instance;

@@ -44,7 +44,6 @@ function TextTracks() {
     let instance,
         Cue,
         videoModel,
-        video,
         textTrackQueue,
         trackElementArr,
         currentTrackIdx,
@@ -100,7 +99,7 @@ function TextTracks() {
         let kind = textTrackQueue[i].kind;
         let label = textTrackQueue[i].label !== undefined ? textTrackQueue[i].label : textTrackQueue[i].lang;
         let lang = textTrackQueue[i].lang;
-        let track = isChrome ? document.createElement('track') : video.addTextTrack(kind, label, lang);
+        let track = isChrome ? document.createElement('track') : videoModel.addTextTrack(kind, label, lang);
 
         if (isChrome) {
             track.kind = kind;
@@ -127,9 +126,6 @@ function TextTracks() {
         }
 
         textTrackQueue.push(textTrackInfoVO);
-        if (video === undefined) {
-            video = textTrackInfoVO.video;
-        }
 
         if (textTrackQueue.length === totalTextTracks) {
             textTrackQueue.sort(function (a, b) { //Sort in same order as in manifest
@@ -149,9 +145,9 @@ function TextTracks() {
                     defaultIndex = i;
                 }
                 if (isChrome) {
-                    video.appendChild(track);
+                    videoModel.appendChild(track);
                 }
-                let textTrack = video.textTracks[i];
+                let textTrack = videoModel.getTextTrack(i);
                 textTrack.nonAddedCues = [];
                 if (captionContainer && (textTrackQueue[i].isTTML || textTrackQueue[i].isEmbedded)) {
                     textTrack.renderingType = 'html';
@@ -163,8 +159,9 @@ function TextTracks() {
             }
             setCurrentTrackIdx.call(this, defaultIndex);
             if (defaultIndex >= 0) {
-                for (let idx = 0; idx < video.textTracks.length; idx++) {
-                    video.textTracks[idx].mode = (idx === defaultIndex) ? Constants.TEXT_SHOWING : Constants.TEXT_HIDDEN;
+                let textTracks = videoModel.getTextTracks();
+                for (let idx = 0; idx < textTracks.length; idx++) {
+                    textTracks[idx].mode = (idx === defaultIndex) ? Constants.TEXT_SHOWING : Constants.TEXT_HIDDEN;
                 }
                 this.addCaptions(defaultIndex, 0, null);
             }
@@ -229,7 +226,11 @@ function TextTracks() {
     function checkVideoSize() {
         let track = this.getCurrentTextTrack();
         if (track && track.renderingType === 'html') {
-            let aspectRatio = video.clientWidth / video.clientHeight;
+            let clientWidth = videoModel.getClientWidth();
+            let clientHeight = videoModel.getClientHeight();
+            let videoWidth = videoModel.getVideoWidth();
+            let videoHeight = videoModel.getVideoHeight();
+            let aspectRatio =  clientWidth / clientHeight;
             let use80Percent = false;
             if (track.isFromCEA608) {
                 // If this is CEA608 then use predefined aspect ratio
@@ -237,7 +238,7 @@ function TextTracks() {
                 use80Percent = true;
             }
 
-            const realVideoSize = getVideoVisibleVideoSize.call(this, video.clientWidth, video.clientHeight, video.videoWidth, video.videoHeight, aspectRatio, use80Percent);
+            const realVideoSize = getVideoVisibleVideoSize.call(this, clientWidth, clientHeight, videoWidth, videoHeight, aspectRatio, use80Percent);
 
             const newVideoWidth = realVideoSize.w;
             const newVideoHeight = realVideoSize.h;
@@ -341,7 +342,7 @@ function TextTracks() {
      * Add captions to track, store for later adding, or add captions added before
      */
     function addCaptions(trackIdx, timeOffset, captionData) {
-        let track = trackIdx >= 0 ? video.textTracks[trackIdx] : null;
+        let track = trackIdx >= 0 ? videoModel.getTextTrack(trackIdx) : null;
         let self = this;
 
         if (!track) {
@@ -457,7 +458,7 @@ function TextTracks() {
     }
 
     function getCurrentTextTrack() {
-        return currentTrackIdx >= 0 ? video.textTracks[currentTrackIdx] : null;
+        return currentTrackIdx >= 0 ? videoModel.getTextTrack(currentTrackIdx) : null;
     }
 
     function getCurrentTrackIdx() {
@@ -466,8 +467,9 @@ function TextTracks() {
 
     function getTrackIdxForId(trackId) {
         let idx = -1;
-        for (let i = 0; i < video.textTracks.length; i++) {
-            if (video.textTracks[i].label === trackId) {
+        let textTracks = videoModel.getTextTracks();
+        for (let i = 0; i < textTracks.length; i++) {
+            if (textTracks[i].label === trackId) {
                 idx = i;
                 break;
             }
@@ -479,7 +481,7 @@ function TextTracks() {
         currentTrackIdx = idx;
         clearCaptionContainer.call(this);
         if (idx >= 0) {
-            let track = video.textTracks[idx];
+            let track = videoModel.getTextTrack(currentTrackIdx);
             if (track.renderingType === 'html') {
                 setNativeCueStyle.call(this);
             } else {
@@ -491,7 +493,7 @@ function TextTracks() {
     }
 
     function getTextTrack(idx) {
-        return video.textTracks[idx];
+        return videoModel.getTextTrack(idx);
     }
 
     function deleteTrackCues(track) {
@@ -519,7 +521,7 @@ function TextTracks() {
         const ln = trackElementArr ? trackElementArr.length : 0;
         for (let i = 0; i < ln; i++) {
             if (isChrome) {
-                video.removeChild(trackElementArr[i]);
+                videoModel.removeChild(trackElementArr[i]);
             }else {
                 let track = getTextTrack.call(this, i);
                 track.nonAddedCues = [];
@@ -537,7 +539,7 @@ function TextTracks() {
     }
 
     function deleteTextTrack(idx) {
-        video.removeChild(trackElementArr[idx]);
+        videoModel.removeChild(trackElementArr[idx]);
         trackElementArr.splice(idx, 1);
     }
 
@@ -556,12 +558,15 @@ function TextTracks() {
         styleElement.id = 'native-cue-style';
         document.head.appendChild(styleElement);
         let stylesheet = styleElement.sheet;
-        if (video.id) {
-            stylesheet.insertRule('#' + video.id + '::cue {background: transparent}', 0);
-        } else if (video.classList.length !== 0) {
-            stylesheet.insertRule('.' + video.className + '::cue {background: transparent}', 0);
-        } else {
-            stylesheet.insertRule('video::cue {background: transparent}', 0);
+        let video = videoModel.getElement();
+        if (video) {
+            if (video.id) {
+                stylesheet.insertRule('#' + video.id + '::cue {background: transparent}', 0);
+            } else if (video.classList.length !== 0) {
+                stylesheet.insertRule('.' + video.className + '::cue {background: transparent}', 0);
+            } else {
+                stylesheet.insertRule('video::cue {background: transparent}', 0);
+            }
         }
     }
 
