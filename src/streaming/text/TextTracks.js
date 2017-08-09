@@ -504,8 +504,6 @@ function TextTracks() {
             for (let r = lastIdx; r >= 0 ; r--) {
                 track.removeCue(cues[r]);
             }
-
-            track.mode = 'disabled';
         }
     }
 
@@ -526,6 +524,7 @@ function TextTracks() {
                 let track = getTextTrack.call(this, i);
                 track.nonAddedCues = [];
                 deleteTrackCues.call(this, track);
+                track.mode = 'disabled';
             }
 
         }
