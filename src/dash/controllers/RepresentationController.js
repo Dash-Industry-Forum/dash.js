@@ -37,13 +37,12 @@ import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
 import FactoryMaker from '../../core/FactoryMaker';
 import Representation from '../vo/Representation';
 
-function RepresentationController(config) {
+function RepresentationController() {
 
     const SEGMENTS_UPDATE_FAILED_ERROR_CODE = 1;
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
-    let streamProcessor = config.streamProcessor;
 
     let instance,
         realAdaptation,
@@ -59,6 +58,7 @@ function RepresentationController(config) {
         timelineConverter,
         dashManifestModel,
         dashMetrics,
+        streamProcessor,
         manifestModel;
 
     function setup() {
@@ -98,6 +98,9 @@ function RepresentationController(config) {
         }
         if (config.manifestModel) {
             manifestModel = config.manifestModel;
+        }
+        if (config.streamProcessor) {
+            streamProcessor = config.streamProcessor;
         }
     }
 

@@ -207,7 +207,7 @@ describe('DashAdapter', function () {
 
     describe('representationController parameter is properly defined, without its attributes', () => {
         Events.extend(MediaPlayerEvents);
-        const representationController = RepresentationController(context).create({streamProcessor:{}});
+        const representationController = RepresentationController(context).create();
 
         it("should throw an error when getRepresentationInfoForQuality is called and representationController parameter is defined, but quality is not a number", function () {
             expect(dashAdapter.getRepresentationInfoForQuality.bind(dashAdapter, representationController, {})).to.be.throw('quality argument is not an integer');
