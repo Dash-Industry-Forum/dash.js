@@ -69,7 +69,6 @@ function StreamController() {
         abrController,
         mediaController,
         textController,
-        sourceBufferController,
         initCache,
         urlUtils,
         errHandler,
@@ -335,12 +334,16 @@ function StreamController() {
         activeStream = newStream;
         playbackController.initialize(activeStream.getStreamInfo());
 
-        //TODO detect if we should close and repose or jump to activateStream.
-        openMediaSource(seekTime, oldStream);
+        preloadStream(seekTime);
+        //TODO detect if we should close jump to activateStream.
+        setTimeout(function () { openMediaSource(seekTime, oldStream); }, 10000);
+    }
+
+    function preloadStream(seekTime) {
+        activateStream(seekTime);
     }
 
     function openMediaSource(seekTime, oldStream) {
-
         let sourceUrl;
 
         function onMediaSourceOpen() {
@@ -349,10 +352,15 @@ function StreamController() {
             mediaSource.removeEventListener('sourceopen', onMediaSourceOpen);
             mediaSource.removeEventListener('webkitsourceopen', onMediaSourceOpen);
             setMediaDuration();
-            activateStream(seekTime);
-
+            
             if (!oldStream) {
                 eventBus.trigger(Events.SOURCE_INITIALIZED);
+            }
+
+            if (activeStream.isActivated()) {
+                activeStream.setMediaSource(mediaSource);
+            } else {
+                activateStream(seekTime);
             }
         }
 
@@ -369,7 +377,6 @@ function StreamController() {
     }
 
     function activateStream(seekTime) {
-
         activeStream.activate(mediaSource);
 
         audioTrackDetected = checkTrackPresence(Constants.AUDIO);
@@ -454,7 +461,6 @@ function StreamController() {
                         playbackController: playbackController,
                         mediaController: mediaController,
                         textController: textController,
-                        sourceBufferController: sourceBufferController,
                         videoModel: videoModel,
                         streamController: instance
                     });
@@ -747,9 +753,6 @@ function StreamController() {
         }
         if (config.textController) {
             textController = config.textController;
-        }
-        if (config.sourceBufferController) {
-            sourceBufferController = config.sourceBufferController;
         }
     }
 

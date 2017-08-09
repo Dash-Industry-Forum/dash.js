@@ -57,8 +57,10 @@ function VideoModel() {
     }
 
     function onPlaybackCanPlay() {
-        element.playbackRate = previousPlaybackRate || 1;
-        element.removeEventListener('canplay', onPlaybackCanPlay);
+        if (element) {
+            element.playbackRate = previousPlaybackRate || 1;
+            element.removeEventListener('canplay', onPlaybackCanPlay);
+        }
     }
 
     function setPlaybackRate(value) {
@@ -73,24 +75,26 @@ function VideoModel() {
 
     //TODO Move the DVR window calculations from MediaPlayer to Here.
     function setCurrentTime(currentTime) {
-        //_currentTime = currentTime;
+        if (element) {
+            //_currentTime = currentTime;
 
-        // We don't set the same currentTime because it can cause firing unexpected Pause event in IE11
-        // providing playbackRate property equals to zero.
-        if (element.currentTime == currentTime) return;
+            // We don't set the same currentTime because it can cause firing unexpected Pause event in IE11
+            // providing playbackRate property equals to zero.
+            if (element.currentTime == currentTime) return;
 
-        // TODO Despite the fact that MediaSource 'open' event has been fired IE11 cannot set videoElement.currentTime
-        // immediately (it throws InvalidStateError). It seems that this is related to videoElement.readyState property
-        // Initially it is 0, but soon after 'open' event it goes to 1 and setting currentTime is allowed. Chrome allows to
-        // set currentTime even if readyState = 0.
-        // setTimeout is used to workaround InvalidStateError in IE11
-        try {
-            element.currentTime = currentTime;
-        } catch (e) {
-            if (element.readyState === 0 && e.code === e.INVALID_STATE_ERR) {
-                setTimeout(function () {
-                    element.currentTime = currentTime;
-                }, 400);
+            // TODO Despite the fact that MediaSource 'open' event has been fired IE11 cannot set videoElement.currentTime
+            // immediately (it throws InvalidStateError). It seems that this is related to videoElement.readyState property
+            // Initially it is 0, but soon after 'open' event it goes to 1 and setting currentTime is allowed. Chrome allows to
+            // set currentTime even if readyState = 0.
+            // setTimeout is used to workaround InvalidStateError in IE11
+            try {
+                element.currentTime = currentTime;
+            } catch (e) {
+                if (element.readyState === 0 && e.code === e.INVALID_STATE_ERR) {
+                    setTimeout(function () {
+                        element.currentTime = currentTime;
+                    }, 400);
+                }
             }
         }
     }
@@ -106,16 +110,18 @@ function VideoModel() {
     }
 
     function setSource(source) {
-        if (source) {
-            element.src = source;
-        } else {
-            element.removeAttribute('src');
-            element.load();
+        if (element) {
+            if (source) {
+                element.src = source;
+            } else {
+                element.removeAttribute('src');
+                element.load();
+            }
         }
     }
 
     function getSource() {
-        return element.src;
+        return element ? element.src : null;
     }
 
     function getVideoContainer() {
@@ -207,6 +213,7 @@ function VideoModel() {
     }
 
     function getPlaybackQuality() {
+        if (!element) { return null; }
         let hasWebKit = ('webkitDroppedFrameCount' in element) && ('webkitDecodedFrameCount' in element);
         let hasQuality = ('getVideoPlaybackQuality' in element);
         let result = null;
