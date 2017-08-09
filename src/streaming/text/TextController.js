@@ -122,7 +122,20 @@ function TextController() {
         textSourceBuffer.addEmbeddedTrack(mediaInfo);
     }
 
-    function setTextTrack() {
+    function setTextTrack(idx) {
+        //For external time text file,  the only action needed to change a track is marking the track mode to showing.
+        // Fragmented text tracks need the additional step of calling TextController.setTextTrack();
+        let tracks = videoModel.getTextTracks();
+        const ln = tracks.length;
+
+        for (let i = 0; i < ln; i++) {
+            let track = tracks[i];
+            let mode = idx === i ? Constants.TEXT_SHOWING : Constants.TEXT_HIDDEN;
+
+            if (track.mode !== mode) { //checking that mode is not already set by 3rd Party player frameworks that set mode to prevent event retrigger.
+                track.mode = mode;
+            }
+        }
 
         let config = textSourceBuffer.getConfig();
         let fragmentModel = config.fragmentModel;
@@ -130,8 +143,6 @@ function TextController() {
         let isFragmented = config.isFragmented;
         let fragmentedTracks = config.fragmentedTracks;
 
-        let tracks = videoModel.getTextTracks();
-        const ln = tracks.length;
         let nrNonEmbeddedTracks = ln - embeddedTracks.length;
         let oldTrackIdx = textTracks.getCurrentTrackIdx();
 

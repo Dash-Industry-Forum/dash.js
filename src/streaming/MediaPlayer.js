@@ -1687,25 +1687,12 @@ function MediaPlayer() {
         if (!playbackInitialized) {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
-        //For external time text file,  the only action needed to change a track is marking the track mode to showing.
-        // Fragmented text tracks need the additional step of calling TextController.setTextTrack();
+
         if (textController === undefined) {
             textController = TextController(context).getInstance();
         }
 
-        let tracks = getVideoElement().textTracks;
-        const ln = tracks.length;
-
-        for (let i = 0; i < ln; i++) {
-            let track = tracks[i];
-            let mode = idx === i ? Constants.TEXT_SHOWING : Constants.TEXT_HIDDEN;
-
-            if (track.mode !== mode) { //checking that mode is not already set by 3rd Party player frameworks that set mode to prevent event retrigger.
-                track.mode = mode;
-            }
-        }
-
-        textController.setTextTrack();
+        textController.setTextTrack(idx);
     }
 
     function getCurrentTextTrackIndex() {
