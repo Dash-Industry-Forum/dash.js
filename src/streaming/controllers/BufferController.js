@@ -828,6 +828,7 @@ function BufferController(config) {
         setSeekStartTime: setSeekStartTime,
         getBuffer: getBuffer,
         getBufferLevel: getBufferLevel,
+        getRangeAt: getRangeAt,
         setMediaSource: setMediaSource,
         getMediaSource: getMediaSource,
         getIsBufferingCompleted: getIsBufferingCompleted,

@@ -33,6 +33,8 @@ import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import InitCache from '../utils/InitCache';
+import SourceBufferSink from '../SourceBufferSink';
+import TextController from '../../Streaming/Text/TextController';
 
 const BUFFER_CONTROLLER_TYPE = 'NotFragmentedTextBufferController';
 function NotFragmentedTextBufferController(config) {
@@ -40,8 +42,8 @@ function NotFragmentedTextBufferController(config) {
     config = config || {};
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
+    const textController = TextController(context).getInstance();
 
-    let sourceBufferController = config.sourceBufferController;
     let errHandler = config.errHandler;
     let type = config.type;
     let streamProcessor = config.streamProcessor;
@@ -79,24 +81,21 @@ function NotFragmentedTextBufferController(config) {
 
     /**
      * @param {MediaInfo }mediaInfo
-     * @returns {Object} SourceBuffer object
      * @memberof BufferController#
      */
     function createBuffer(mediaInfo) {
         try {
-            buffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
-
-            if (!initialized) {
-                if (buffer.hasOwnProperty(Constants.INITIALIZE)) {
-                    buffer.initialize(type, streamProcessor);
-                }
-                initialized = true;
-            }
+            buffer = SourceBufferSink(context).create(mediaSource, mediaInfo);
         } catch (e) {
-            errHandler.mediaSourceError('Error creating ' + type + ' source buffer.');
+            try {
+                if ((mediaInfo.isText) || (mediaInfo.codec.indexOf('codecs="stpp') !== -1) || (mediaInfo.codec.indexOf('codecs="wvtt') !== -1)) {
+                    buffer = textController.getTextSourceBuffer();
+                }
+            } catch (e) {
+                errHandler.mediaSourceError('Error creating ' + type + ' source buffer.');
+            }
         }
 
-        return buffer;
     }
 
     function getType() {
@@ -140,13 +139,12 @@ function NotFragmentedTextBufferController(config) {
     }
 
     function reset(errored) {
-
         eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         eventBus.off(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
 
         if (!errored) {
-            sourceBufferController.abort(mediaSource, buffer);
-            sourceBufferController.removeSourceBuffer(mediaSource, buffer);
+            buffer.abort(mediaSource, buffer);
+            buffer.reset();
         }
     }
 
@@ -166,13 +164,13 @@ function NotFragmentedTextBufferController(config) {
             return;
         }
         initCache.save(e.chunk);
-        sourceBufferController.append(buffer, e.chunk);
+        buffer.append(chunk);
     }
 
     function switchInitData(streamId, representationId) {
         const chunk = initCache.extract(streamId, representationId);
         if (chunk) {
-            sourceBufferController.append(buffer, chunk);
+            buffer.append(chunk);
         } else {
             eventBus.trigger(Events.INIT_REQUESTED, {
                 sender: instance
