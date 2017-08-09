@@ -109,6 +109,7 @@ describe("MediaSourceController", function () {
             class FakeSource {
                 constructor() {
                     this.clearLiveSeekableRange();
+                    this.readyState = 'open';
                 }
 
                 clearLiveSeekableRange() {
