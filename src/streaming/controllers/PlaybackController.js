@@ -177,12 +177,17 @@ function PlaybackController() {
             delay = streamInfo.manifestInfo.minBufferTime * 2;
         }
 
-        // cap target latency to:
-        // - dvrWindowSize / 2 for short playlists
-        // - dvrWindowSize - END_OF_PLAYLIST_PADDING for longer playlists
-        let targetDelayCapping = Math.max(dvrWindowSize - END_OF_PLAYLIST_PADDING, dvrWindowSize / 2);
+        if ( dvrWindowSize > 0 ) {
+            // cap target latency to:
+            // - dvrWindowSize / 2 for short playlists
+            // - dvrWindowSize - END_OF_PLAYLIST_PADDING for longer playlists
+            let targetDelayCapping = Math.max(dvrWindowSize - END_OF_PLAYLIST_PADDING, dvrWindowSize / 2);
 
-        return Math.min(delay, targetDelayCapping);
+            return Math.min(delay, targetDelayCapping);
+        }
+        else {
+            return delay;
+        }
     }
 
     function reset() {
@@ -426,9 +431,19 @@ function PlaybackController() {
             commonEarliestTime[streamInfo.id][type] = Math.max(ranges.start(0), streamInfo.start);
         }
 
-        if (commonEarliestTime[streamInfo.id].audio && commonEarliestTime[streamInfo.id].video) {
-            seek(commonEarliestTime[streamInfo.id].audio < commonEarliestTime[streamInfo.id].video ? commonEarliestTime[streamInfo.id].video : commonEarliestTime[streamInfo.id].audio);
-            commonEarliestTime[streamInfo.id] = false;
+        const hasVideoTrack = streamController.isVideoTrackPresent();
+        const hasAudioTrack = streamController.isAudioTrackPresent();
+
+        if (hasAudioTrack && hasVideoTrack) {
+            if (commonEarliestTime[streamInfo.id].audio && commonEarliestTime[streamInfo.id].video) {
+                seek(commonEarliestTime[streamInfo.id].audio < commonEarliestTime[streamInfo.id].video ? commonEarliestTime[streamInfo.id].video : commonEarliestTime[streamInfo.id].audio);
+                commonEarliestTime[streamInfo.id] = false;
+            }
+        } else {
+            if (commonEarliestTime[streamInfo.id][type]) {
+                seek(commonEarliestTime[streamInfo.id][type]);
+                commonEarliestTime[streamInfo.id] = false;
+            }
         }
     }
 

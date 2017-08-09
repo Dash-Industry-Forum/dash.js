@@ -64,6 +64,12 @@ function EventController() {
         presentationTimeThreshold = refreshDelay / 1000;
     }
 
+    function checkSetConfigCall() {
+        if (!manifestModel || !manifestUpdater || !playbackController) {
+            throw new Error('setConfig function has to be called previously');
+        }
+    }
+
     function clear() {
         if (eventInterval !== null && isStarted) {
             clearInterval(eventInterval);
@@ -73,6 +79,7 @@ function EventController() {
     }
 
     function start() {
+        checkSetConfigCall();
         log('Start Event Controller');
         if (!isStarted && !isNaN(refreshDelay)) {
             isStarted = true;
@@ -85,6 +92,8 @@ function EventController() {
      * @param {Array.<Object>} values
      */
     function addInlineEvents(values) {
+        checkSetConfigCall();
+
         inlineEvents = {};
 
         if (values) {
@@ -102,6 +111,8 @@ function EventController() {
      * @param {Array.<Object>} values
      */
     function addInbandEvents(values) {
+        checkSetConfigCall();
+
         for (var i = 0; i < values.length; i++) {
             var event = values[i];
             if (!(event.id in inbandEvents)) {

@@ -77,7 +77,14 @@ function BaseURLSelector() {
         }
     }
 
+    function checkConfig() {
+        if (!dashManifestModel || !dashManifestModel.hasOwnProperty('getIsDVB')) {
+            throw new Error('Missing config parameter(s)');
+        }
+    }
+
     function chooseSelectorFromManifest(manifest) {
+        checkConfig();
         if (dashManifestModel.getIsDVB(manifest)) {
             selector = dvbSelector;
         } else {

@@ -55,6 +55,10 @@ function VTTParser() {
         let len,
             lastStartTime;
 
+        if (!data) {
+            return captionArray;
+        }
+
         data = data.split( regExNewLine );
         len = data.length;
         lastStartTime = -1;

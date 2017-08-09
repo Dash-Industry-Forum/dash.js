@@ -45,7 +45,6 @@ import Debug from '../../core/Debug';
 import InitCache from '../utils/InitCache';
 import MediaPlayerEvents from '../MediaPlayerEvents';
 import TimeSyncController from './TimeSyncController';
-import LiveEdgeFinder from '../utils/LiveEdgeFinder';
 import BaseURLController from './BaseURLController';
 import MediaSourceController from './MediaSourceController';
 
@@ -66,7 +65,6 @@ function StreamController() {
         adapter,
         metricsModel,
         dashMetrics,
-        liveEdgeFinder,
         mediaSourceController,
         timeSyncController,
         baseURLController,
@@ -93,13 +91,13 @@ function StreamController() {
         isPaused,
         initialPlayback,
         playListMetrics,
-        videoTrackDetected;
+        videoTrackDetected,
+        audioTrackDetected;
 
     function setup() {
         protectionController = null;
         streams = [];
         timeSyncController = TimeSyncController(context).getInstance();
-        liveEdgeFinder = LiveEdgeFinder(context).getInstance();
         baseURLController = BaseURLController(context).getInstance();
         mediaSourceController = MediaSourceController(context).getInstance();
         autoPlay = true;
@@ -352,7 +350,7 @@ function StreamController() {
                 playbackController.seek(startTime); //seek to period start time
             }
         } else {
-            videoTrackDetected = checkVideoPresence();
+            videoTrackDetected = checkTrackPresence(Constants.VIDEO);
         }
 
         activeStream.startEventController();
@@ -519,21 +517,28 @@ function StreamController() {
         }
     }
 
+    function isAudioTrackPresent() {
+        if (audioTrackDetected === undefined) {
+            audioTrackDetected = checkTrackPresence(Constants.AUDIO);
+        }
+        return audioTrackDetected;
+    }
+
     function isVideoTrackPresent() {
         if (videoTrackDetected === undefined) {
-            videoTrackDetected = checkVideoPresence();
+            videoTrackDetected = checkTrackPresence(Constants.VIDEO);
         }
         return videoTrackDetected;
     }
 
-    function checkVideoPresence() {
-        let isVideoDetected = false;
+    function checkTrackPresence(type) {
+        let isDetected = false;
         activeStream.getProcessors().forEach(p => {
-            if (p.getMediaInfo().type === Constants.VIDEO) {
-                isVideoDetected = true;
+            if (p.getMediaInfo().type === type) {
+                isDetected = true;
             }
         });
-        return isVideoDetected;
+        return isDetected;
     }
 
     function flushPlaylistMetrics(reason, time) {
@@ -734,7 +739,6 @@ function StreamController() {
         manifestModel.setValue(null);
         manifestLoader.reset();
         timelineConverter.reset();
-        liveEdgeFinder.reset();
         initCache.reset();
         isStreamSwitchingInProgress = false;
         activeStream = null;
@@ -777,6 +781,7 @@ function StreamController() {
         initialize: initialize,
         getActiveStreamInfo: getActiveStreamInfo,
         isVideoTrackPresent: isVideoTrackPresent,
+        isAudioTrackPresent: isAudioTrackPresent,
         getStreamById: getStreamById,
         getTimeRelativeToStreamId: getTimeRelativeToStreamId,
         load: load,

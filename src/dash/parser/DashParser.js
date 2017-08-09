@@ -75,8 +75,16 @@ function DashParser(config) {
         ]);
     }
 
+    function checkConfig() {
+        if (!errorHandler || !errorHandler.hasOwnProperty('manifestError')) {
+            throw new Error('Missing config parameter(s)');
+        }
+    }
+
     function parse(data, xlinkController) {
         let manifest;
+
+        checkConfig();
 
         try {
             const startTime = window.performance.now();

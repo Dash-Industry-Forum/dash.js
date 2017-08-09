@@ -74,7 +74,7 @@ function XHRLoader(cfg) {
         let traces = [];
         let firstProgress = true;
         let needFailureReport = true;
-        const requestStartTime = new Date();
+        let requestStartTime = new Date();
         let lastTraceTime = requestStartTime;
         let lastTraceReceivedCount = 0;
 
@@ -233,6 +233,8 @@ function XHRLoader(cfg) {
                         delayedXhrs.splice(delayedXhrs.indexOf(delayedXhr), 1);
                     }
                     try {
+                        requestStartTime = new Date();
+                        lastTraceTime = requestStartTime;
                         xhrs.push(delayedXhr.xhr);
                         delayedXhr.xhr.send();
                     } catch (e) {

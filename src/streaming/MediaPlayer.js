@@ -1436,6 +1436,19 @@ function MediaPlayer() {
     }
 
     /**
+     * Returns the average throughput computed in the ABR logic
+     *
+     * @param {string} type
+     * @return {number} value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getAverageThroughput(type) {
+        const throughputHistory = abrController.getThroughputHistory();
+        return throughputHistory ? throughputHistory.getAverageThroughput(type) : 0;
+    }
+
+    /**
      * A timeout value in seconds, which during the ABRController will block switch-up events.
      * This will only take effect after an abandoned fragment event occurs.
      *
@@ -2455,6 +2468,7 @@ function MediaPlayer() {
         removeAllABRCustomRule: removeAllABRCustomRule,
         setBandwidthSafetyFactor: setBandwidthSafetyFactor,
         getBandwidthSafetyFactor: getBandwidthSafetyFactor,
+        getAverageThroughput: getAverageThroughput,
         setAbandonLoadTimeout: setAbandonLoadTimeout,
         retrieveManifest: retrieveManifest,
         addUTCTimingSource: addUTCTimingSource,

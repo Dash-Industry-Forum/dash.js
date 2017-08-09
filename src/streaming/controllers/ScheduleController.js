@@ -35,7 +35,6 @@ import BufferController from './BufferController';
 import BufferLevelRule from '../rules/scheduling/BufferLevelRule';
 import NextFragmentRequestRule from '../rules/scheduling/NextFragmentRequestRule';
 import FragmentModel from '../models/FragmentModel';
-import LiveEdgeFinder from '../utils/LiveEdgeFinder';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
@@ -139,6 +138,10 @@ function ScheduleController(config) {
         eventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
         eventBus.on(Events.URL_RESOLUTION_FAILED, onURLResolutionFailed, this);
         eventBus.on(Events.FRAGMENT_LOADING_ABANDONED, onFragmentLoadingAbandoned, this);
+    }
+
+    function isStarted() {
+        return (isStopped === false);
     }
 
     function start() {
@@ -365,30 +368,33 @@ function ScheduleController(config) {
     }
 
     function setLiveEdgeSeekTarget() {
-        const liveEdge = LiveEdgeFinder(context).getInstance().getLiveEdge();
-        const dvrWindowSize = currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo.DVRWindowSize / 2;
-        const startTime = liveEdge - playbackController.computeLiveDelay(currentRepresentationInfo.fragmentDuration, dvrWindowSize);
-        const request = adapter.getFragmentRequestForTime(streamProcessor, currentRepresentationInfo, startTime, {
-            ignoreIsFinished: true
-        });
-        seekTarget = playbackController.getLiveStartTime();
-        if (isNaN(seekTarget) || request.startTime > seekTarget) {
-            //special use case for multi period stream. If the startTime is out of the current period, send a seek command.
-            //in onPlaybackSeeking callback (StreamController), the detection of switch stream is done.
-            if (request.startTime > (currentRepresentationInfo.mediaInfo.streamInfo.start + currentRepresentationInfo.mediaInfo.streamInfo.duration)) {
-                playbackController.seek(request.startTime);
+        let liveEdgeFinder = streamProcessor.getLiveEdgeFinder();
+        if (liveEdgeFinder) {
+            const liveEdge = liveEdgeFinder.getLiveEdge();
+            const dvrWindowSize = currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo.DVRWindowSize / 2;
+            const startTime = liveEdge - playbackController.computeLiveDelay(currentRepresentationInfo.fragmentDuration, dvrWindowSize);
+            const request = adapter.getFragmentRequestForTime(streamProcessor, currentRepresentationInfo, startTime, {
+                ignoreIsFinished: true
+            });
+            seekTarget = playbackController.getLiveStartTime();
+            if (isNaN(seekTarget) || request.startTime > seekTarget) {
+                //special use case for multi period stream. If the startTime is out of the current period, send a seek command.
+                //in onPlaybackSeeking callback (StreamController), the detection of switch stream is done.
+                if (request.startTime > (currentRepresentationInfo.mediaInfo.streamInfo.start + currentRepresentationInfo.mediaInfo.streamInfo.duration)) {
+                    playbackController.seek(request.startTime);
+                }
+                playbackController.setLiveStartTime(request.startTime);
+                seekTarget = request.startTime;
             }
-            playbackController.setLiveStartTime(request.startTime);
-            seekTarget = request.startTime;
-        }
 
-        const manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metricsModel.getMetricsFor(Constants.STREAM));
-        metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {
-            currentTime: seekTarget,
-            presentationStartTime: liveEdge,
-            latency: liveEdge - seekTarget,
-            clientTimeOffset: timelineConverter.getClientTimeOffset()
-        });
+            const manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metricsModel.getMetricsFor(Constants.STREAM));
+            metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {
+                currentTime: seekTarget,
+                presentationStartTime: liveEdge,
+                latency: liveEdge - seekTarget,
+                clientTimeOffset: timelineConverter.getClientTimeOffset()
+            });
+        }
     }
 
     function onStreamCompleted(e) {
@@ -619,6 +625,7 @@ function ScheduleController(config) {
         getTimeToLoadDelay: getTimeToLoadDelay,
         replaceRequest: replaceRequest,
         switchTrackAsked: switchTrackAsked,
+        isStarted: isStarted,
         start: start,
         stop: stop,
         reset: reset,

@@ -35,7 +35,7 @@ If you just want a DASH player to use and don't need to see the code or commit t
 
 Put the following code in your web page
 ```
-<script src="http://cdn.dashjs.org/latest/dash.all.min.js"></script>
+<script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
 ...
 <style>
     video {

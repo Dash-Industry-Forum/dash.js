@@ -74,6 +74,10 @@ function TextBufferController(config) {
         }
     }
 
+    function getBufferControllerType() {
+        return _BufferControllerImpl.getBufferControllerType();
+    }
+
     function initialize(source, StreamProcessor) {
         return _BufferControllerImpl.initialize(source, StreamProcessor);
     }
@@ -127,11 +131,12 @@ function TextBufferController(config) {
         return _BufferControllerImpl.getIsBufferingCompleted();
     }
 
-    function switchInitData(streamId, quality) {
-        _BufferControllerImpl.switchInitData(streamId, quality);
+    function switchInitData(streamId, representationId) {
+        _BufferControllerImpl.switchInitData(streamId, representationId);
     }
 
     instance = {
+        getBufferControllerType: getBufferControllerType,
         initialize: initialize,
         createBuffer: createBuffer,
         getType: getType,

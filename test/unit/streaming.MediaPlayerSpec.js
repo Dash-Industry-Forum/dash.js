@@ -103,7 +103,7 @@ describe("MediaPlayer", function () {
             beforeEach(function () {
                 player.initialize(videoElementMock, dummyUrl, false);
             });
-            it("Method isReady should return false", function () {
+            it("Method isReady should return true", function () {
                 let isReady = player.isReady();
                 expect(isReady).to.be.true;
             });
@@ -327,7 +327,7 @@ describe("MediaPlayer", function () {
 
     });
 
-    describe("AutoBitrate Functions", function () {
+    describe("AbrController Functions", function () {
         afterEach(function () {
             abrControllerMock.reset();
         })
@@ -455,6 +455,22 @@ describe("MediaPlayer", function () {
 
             AutoSwitchBitrateFor = abrControllerMock.getAutoSwitchBitrateFor('video');
             expect(AutoSwitchBitrateFor).to.be.false;
+        });
+
+        it("Method getAverageThroughput should return 0 when throughputHistory is not set up", function() {
+            const averageThroughput = player.getAverageThroughput('video');
+            expect(averageThroughput).to.equal(0);
+        });
+
+        it("Method getAverageThroughput should value computed from ThroughputHistory", function() {
+            const AVERAGE_THROUGHPUT = 2000;
+            abrControllerMock.throughputHistory = {
+                getAverageThroughput: function() {
+                    return AVERAGE_THROUGHPUT;
+                }
+            };
+            const averageThroughput = player.getAverageThroughput('video');
+            expect(averageThroughput).to.equal(AVERAGE_THROUGHPUT);
         });
 
         describe("When it is not initialized", function () {

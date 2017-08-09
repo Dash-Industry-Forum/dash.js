@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from './constants/Constants';
-import LiveEdgeFinder from './utils/LiveEdgeFinder';
 import StreamProcessor from './StreamProcessor';
 import EventController from './controllers/EventController';
 import FragmentController from './controllers/FragmentController';
@@ -69,7 +68,6 @@ function Stream(config) {
         updateError,
         isUpdating,
         protectionController,
-        liveEdgeFinder,
         fragmentController,
         eventController,
         trackChangedEvent;
@@ -82,7 +80,6 @@ function Stream(config) {
         updateError = {};
         isUpdating = false;
 
-        liveEdgeFinder = LiveEdgeFinder(context).getInstance();
         fragmentController = FragmentController(context).create({
             mediaPlayerModel: mediaPlayerModel,
             metricsModel: metricsModel,
@@ -432,7 +429,6 @@ function Stream(config) {
             errHandler.manifestError(msg, 'nostreams', manifestModel.getValue());
             log(msg);
         } else {
-            liveEdgeFinder.initialize(timelineConverter, streamProcessors[0]);
             //log("Playback initialized!");
             checkIfInitializationCompleted();
         }

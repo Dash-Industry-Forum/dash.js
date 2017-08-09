@@ -34,6 +34,7 @@ import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import InitCache from '../utils/InitCache';
 
+const BUFFER_CONTROLLER_TYPE = 'NotFragmentedTextBufferController';
 function NotFragmentedTextBufferController(config) {
 
     let context = this.context;
@@ -63,6 +64,10 @@ function NotFragmentedTextBufferController(config) {
 
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         eventBus.on(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
+    }
+
+    function getBufferControllerType() {
+        return BUFFER_CONTROLLER_TYPE;
     }
 
     function initialize(source) {
@@ -121,8 +126,16 @@ function NotFragmentedTextBufferController(config) {
         seekStartTime = value;
     }
 
+    function getSeekStartTime() {
+        return seekStartTime;
+    }
+
     function getBufferLevel() {
         return 0;
+    }
+
+    function getIsBufferingCompleted() {
+        return isBufferingCompleted;
     }
 
     function reset(errored) {
@@ -151,18 +164,14 @@ function NotFragmentedTextBufferController(config) {
         if (e.fragmentModel !== streamProcessor.getFragmentModel() || (!e.chunk.bytes)) {
             return;
         }
-
+        initCache.save(e.chunk);
         sourceBufferController.append(buffer, e.chunk);
     }
 
-    function getIsBufferingCompleted() {
-        return isBufferingCompleted;
-    }
-
-    function switchInitData(streamId, quality) {
-        const chunk = initCache.extract(streamId, type, quality);
+    function switchInitData(streamId, representationId) {
+        const chunk = initCache.extract(streamId, representationId);
         if (chunk) {
-            sourceBufferController.append(chunk);
+            sourceBufferController.append(buffer, chunk);
         } else {
             eventBus.trigger(Events.INIT_REQUESTED, {
                 sender: instance
@@ -171,11 +180,13 @@ function NotFragmentedTextBufferController(config) {
     }
 
     instance = {
+        getBufferControllerType: getBufferControllerType,
         initialize: initialize,
         createBuffer: createBuffer,
         getType: getType,
         getStreamProcessor: getStreamProcessor,
         setSeekStartTime: setSeekStartTime,
+        getSeekStartTime: getSeekStartTime,
         getBuffer: getBuffer,
         setBuffer: setBuffer,
         getBufferLevel: getBufferLevel,
@@ -191,5 +202,5 @@ function NotFragmentedTextBufferController(config) {
     return instance;
 }
 
-NotFragmentedTextBufferController.__dashjs_factory_name = 'NotFragmentedTextBufferController';
+NotFragmentedTextBufferController.__dashjs_factory_name = BUFFER_CONTROLLER_TYPE;
 export default FactoryMaker.getClassFactory(NotFragmentedTextBufferController);
