@@ -556,6 +556,21 @@ describe('DashManifestModel', function () {
             expect(obj[0].url).to.equal(TEST_URL + RELATIVE_TEST_URL);          // jshint ignore:line
         });
 
+        it('returns an Array of BaseURLs with BaseURL[0] resolved to the document base uri when the base uri is the mpd and the input url is relative', () => {
+            const node = {
+                baseUri: TEST_URL + "example.mpd",
+                BaseURL_asArray: [{
+                    __text: RELATIVE_TEST_URL
+                }]
+            };
+
+            const obj = dashManifestModel.getBaseURLsFromElement(node);
+
+            expect(obj).to.be.instanceOf(Array);                                // jshint ignore:line
+            expect(obj).to.have.lengthOf(1);                                    // jshint ignore:line
+            expect(obj[0].url).to.equal(TEST_URL + RELATIVE_TEST_URL);          // jshint ignore:line
+        });
+
         it('returns an Array of BaseURLs with BaseURL[0] ignoring the document base uri when the base uri is specified and the input url is absolute', () => {
             const node = {
                 baseUri: TEST_URL,
