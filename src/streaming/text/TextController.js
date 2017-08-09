@@ -128,15 +128,6 @@ function TextController() {
         let tracks = videoModel.getTextTracks();
         const ln = tracks.length;
 
-        for (let i = 0; i < ln; i++) {
-            let track = tracks[i];
-            let mode = idx === i ? Constants.TEXT_SHOWING : Constants.TEXT_HIDDEN;
-
-            if (track.mode !== mode) { //checking that mode is not already set by 3rd Party player frameworks that set mode to prevent event retrigger.
-                track.mode = mode;
-            }
-        }
-
         let config = textSourceBuffer.getConfig();
         let fragmentModel = config.fragmentModel;
         let embeddedTracks = config.embeddedTracks;
@@ -148,6 +139,11 @@ function TextController() {
 
         for (let i = 0; i < ln; i++) {
             let track = tracks[i];
+            let mode = idx === i ? Constants.TEXT_SHOWING : Constants.TEXT_HIDDEN;
+
+            if (track.mode !== mode) { //checking that mode is not already set by 3rd Party player frameworks that set mode to prevent event retrigger.
+                track.mode = mode;
+            }
             allTracksAreDisabled = track.mode !== Constants.TEXT_SHOWING;
             if (track.mode === Constants.TEXT_SHOWING) {
                 if (oldTrackIdx !== i) { // do not reset track if already the current track.  This happens when all captions get turned off via UI and then turned on again and with videojs.
