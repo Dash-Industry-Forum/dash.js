@@ -146,7 +146,7 @@ function TextController() {
             }
             allTracksAreDisabled = track.mode !== Constants.TEXT_SHOWING;
             if (track.mode === Constants.TEXT_SHOWING) {
-                if (oldTrackIdx !== i) { // do not reset track if already the current track.  This happens when all captions get turned off via UI and then turned on again and with videojs.
+                if (oldTrackIdx !== i) { // do not reset track if already the current track. This happens when all captions get turned off via UI and then turned on again and with videojs.
                     textTracks.setCurrentTrackIdx(i);
                     textTracks.addCaptions(i, 0, null); // Make sure that previously queued captions are added as cues
 

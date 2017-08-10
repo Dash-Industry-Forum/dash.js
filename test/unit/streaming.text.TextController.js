@@ -75,7 +75,7 @@ describe('TextController', function () {
                 id: 'track2'
             }];
 
-            textController.setTextTrack();
+            textController.setTextTrack(-1);
             expect(textController.getAllTracksAreDisabled()).to.be.true;
 
         });
@@ -88,7 +88,7 @@ describe('TextController', function () {
                 id: 'track2'
             }];
 
-            textController.setTextTrack();
+            textController.setTextTrack(0);
             expect(textController.getAllTracksAreDisabled()).to.be.false;
 
         });
