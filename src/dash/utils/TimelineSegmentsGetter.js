@@ -96,7 +96,8 @@ function TimelineSegmentsGetter(config, isDynamic) {
                 fTimescale,
                 media,
                 mediaRange,
-                availabilityIdx);
+                availabilityIdx,
+                s.tManifest);
         };
 
         fTimescale = representation.timescale;
