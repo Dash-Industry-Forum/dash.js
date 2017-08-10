@@ -53,7 +53,7 @@ function FragmentController( config ) {
         fragmentModels;
 
     function setup() {
-        fragmentModels = {};
+        resetInitialSettings();
         eventBus.on(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, instance);
     }
 
@@ -80,12 +80,16 @@ function FragmentController( config ) {
         return (request && request.type && request.type === HTTPRequest.INIT_SEGMENT_TYPE);
     }
 
-    function reset() {
-        eventBus.off(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
+    function resetInitialSettings() {
         for (let model in fragmentModels) {
             fragmentModels[model].reset();
         }
         fragmentModels = {};
+    }
+
+    function reset() {
+        eventBus.off(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
+        resetInitialSettings();
     }
 
     function createDataChunk(bytes, request, streamId) {

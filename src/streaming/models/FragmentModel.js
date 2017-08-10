@@ -55,9 +55,7 @@ function FragmentModel(config) {
         loadingRequests;
 
     function setup() {
-        streamProcessor = null;
-        executedRequests = [];
-        loadingRequests = [];
+        resetInitialSettings();
         eventBus.on(Events.LOADING_COMPLETED, onLoadingCompleted, instance);
 
     }
@@ -268,15 +266,18 @@ function FragmentModel(config) {
         });
     }
 
+    function resetInitialSettings() {
+        executedRequests = [];
+        loadingRequests = [];
+    }
+
     function reset() {
         eventBus.off(Events.LOADING_COMPLETED, onLoadingCompleted, this);
 
         if (fragmentLoader) {
             fragmentLoader.reset();
         }
-
-        executedRequests = [];
-        loadingRequests = [];
+        resetInitialSettings();
     }
 
     instance = {

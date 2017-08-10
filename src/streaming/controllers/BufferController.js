@@ -84,18 +84,8 @@ function BufferController(config) {
 
     function setup() {
         log = Debug(context).getInstance().log.bind(instance);
-        requiredQuality = AbrController.QUALITY_DEFAULT;
-        isBufferingCompleted = false;
-        bufferLevel = 0;
-        criticalBufferLevel = Number.POSITIVE_INFINITY;
-        maxAppendedIndex = 0;
-        lastIndex = Number.POSITIVE_INFINITY;
-        buffer = null;
-        bufferState = BUFFER_EMPTY;
-        wallclockTicked = 0;
-        appendingMediaChunk = false;
-        isAppendingInProgress = false;
-        isPruningInProgress = false;
+
+        reset();
     }
 
     function getBufferControllerType() {
@@ -498,6 +488,8 @@ function BufferController(config) {
         isBufferingCompleted = false;
         isAppendingInProgress = false;
         isPruningInProgress = false;
+        bufferLevel = 0;
+        wallclockTicked = 0;
 
         if (!errored) {
             sourceBufferController.abort(mediaSource, buffer);

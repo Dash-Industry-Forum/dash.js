@@ -73,12 +73,7 @@ function Stream(config) {
         trackChangedEvent;
 
     function setup() {
-        streamProcessors = [];
-        isStreamActivated = false;
-        isMediaInitialized = false;
-        streamInfo = null;
-        updateError = {};
-        isUpdating = false;
+        resetInitialSettings();
 
         fragmentController = FragmentController(context).create({
             mediaPlayerModel: mediaPlayerModel,
@@ -123,7 +118,7 @@ function Stream(config) {
      * @memberof Stream#
      */
     function deactivate() {
-        let ln = streamProcessors.length;
+        let ln = streamProcessors ? streamProcessors.length : 0;
         for (let i = 0; i < ln; i++) {
             streamProcessors[i].reset();
         }
@@ -132,6 +127,13 @@ function Stream(config) {
         isMediaInitialized = false;
         clearEventController();
         eventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
+    }
+
+    function resetInitialSettings() {
+        deactivate();
+        streamInfo = null;
+        updateError = {};
+        isUpdating = false;
     }
 
     function reset() {
@@ -146,7 +148,7 @@ function Stream(config) {
             fragmentController = null;
         }
 
-        deactivate();
+        resetInitialSettings();
         mediaController = null;
         abrController = null;
         manifestUpdater = null;
@@ -155,8 +157,6 @@ function Stream(config) {
         capabilities = null;
         log = null;
         errHandler = null;
-        isUpdating = false;
-        updateError = {};
 
         eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
         eventBus.off(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
