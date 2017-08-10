@@ -90,19 +90,7 @@ function AbrController() {
 
     function setup() {
         log = debug.log.bind(instance);
-        autoSwitchBitrate = {video: true, audio: true};
-        topQualities = {};
-        qualityDict = {};
-        bitrateDict = {};
-        ratioDict = {};
-        abandonmentStateDict = {};
-        streamProcessorDict = {};
-        switchHistoryDict = {};
-        limitBitrateByPortal = false;
-        usePixelRatioInLimitBitrateByPortal = false;
-        if (windowResizeEventCalled === undefined) {
-            windowResizeEventCalled = false;
-        }
+
         reset();
     }
 
@@ -135,7 +123,6 @@ function AbrController() {
     }
 
     function reset() {
-        log = debug.log.bind(instance);
         autoSwitchBitrate = {video: true, audio: true};
         topQualities = {};
         qualityDict = {};

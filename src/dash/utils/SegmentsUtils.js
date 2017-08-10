@@ -158,7 +158,7 @@ export function getIndexBasedSegment(timelineConverter, isDynamic, representatio
     return seg;
 }
 
-export function getTimeBasedSegment(timelineConverter, isDynamic, representation, time, duration, fTimescale, url, range, index) {
+export function getTimeBasedSegment(timelineConverter, isDynamic, representation, time, duration, fTimescale, url, range, index, tManifest) {
     const scaledTime = time / fTimescale;
     const scaledDuration = Math.min(duration / fTimescale, representation.adaptation.period.mpd.maxSegmentDuration);
 
@@ -184,7 +184,7 @@ export function getTimeBasedSegment(timelineConverter, isDynamic, representation
     // at this wall clock time, the video element currentTime should be seg.presentationStartTime
     seg.wallStartTime = timelineConverter.calcWallTimeForSegment(seg, isDynamic);
 
-    seg.replacementTime = time;
+    seg.replacementTime = tManifest ? tManifest : time;
 
     seg.replacementNumber = getNumberForSegment(seg, index);
 

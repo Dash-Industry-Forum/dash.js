@@ -41,7 +41,7 @@ function TextBufferController(config) {
 
     let instance;
 
-    function setup(config) {
+    function setup() {
 
         // according to text type, we create corresponding buffer controller
         if (config.type === Constants.FRAGMENTED_TEXT) {
@@ -152,7 +152,7 @@ function TextBufferController(config) {
         reset: reset
     };
 
-    setup(config);
+    setup();
 
     return instance;
 }

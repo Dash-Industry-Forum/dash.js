@@ -63,15 +63,12 @@ function ThroughputHistory(config) {
         ewmaHalfLife;
 
     function setup() {
-        throughputDict = {};
-        latencyDict = {};
-        ewmaThroughputDict = {};
-        ewmaLatencyDict = {};
-
         ewmaHalfLife = {
             throughputHalfLife: { fast: EWMA_THROUGHPUT_FAST_HALF_LIFE_SECONDS, slow: EWMA_THROUGHPUT_SLOW_HALF_LIFE_SECONDS },
             latencyHalfLife:    { fast: EWMA_LATENCY_FAST_HALF_LIFE_COUNT,      slow: EWMA_LATENCY_SLOW_HALF_LIFE_COUNT }
         };
+
+        reset();
     }
 
     function isCachedResponse(mediaType, latencyMs, downloadTimeMs) {
@@ -101,8 +98,7 @@ function ThroughputHistory(config) {
                 // prevent cached fragment loads from skewing the average values
                 return;
             } else { // have no entries || have cached entries
-                // no uncached entries yet, rely on cached entries, set allowance for ABR rules
-                throughput /= 1000;
+                // no uncached entries yet, rely on cached entries because ABR rules need something to go by
                 throughputDict[mediaType].hasCachedEntries = true;
             }
         } else if (throughputDict[mediaType] && throughputDict[mediaType].hasCachedEntries) {
@@ -231,13 +227,19 @@ function ThroughputHistory(config) {
         checkSettingsForMediaType(mediaType);
     }
 
-    // There is no need to have reset() - ABRController simply discards the reference to throughputHistory when it is resetting.
+    function reset() {
+        throughputDict = {};
+        latencyDict = {};
+        ewmaThroughputDict = {};
+        ewmaLatencyDict = {};
+    }
 
     const instance = {
         push: push,
         getAverageThroughput: getAverageThroughput,
         getSafeAverageThroughput: getSafeAverageThroughput,
-        getAverageLatency: getAverageLatency
+        getAverageLatency: getAverageLatency,
+        reset: reset
     };
 
     setup();

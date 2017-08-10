@@ -133,8 +133,8 @@ function InsufficientBufferRule(config) {
     }
 
     function reset() {
-        eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
         resetInitialSettings();
+        eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
     }
 
     instance = {

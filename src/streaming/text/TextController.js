@@ -60,7 +60,8 @@ function TextController() {
         textSourceBuffer = TextSourceBuffer(context).getInstance();
 
         textTracks.initialize();
-        allTracksAreDisabled = false;
+
+        reset();
     }
 
     function setConfig(config) {
@@ -128,7 +129,6 @@ function TextController() {
         let embeddedTracks = config.embeddedTracks;
         let isFragmented = config.isFragmented;
         let fragmentedTracks = config.fragmentedTracks;
-        let allTracksAreDisabled = config.allTracksAreDisabled;
 
         let tracks = videoModel.getTextTracks();
         const ln = tracks.length;
