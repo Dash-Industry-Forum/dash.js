@@ -121,6 +121,11 @@ function ThroughputHistory(config) {
     }
 
     function updateEwmaEstimate(ewmaObj, value, weight, halfLife) {
+        // Note about startup:
+        // Estimates start at 0, so early values are underestimated.
+        // This effect is countered in getAverageEwma() by dividing the estimates by:
+        //     1 - Math.pow(0.5, ewmaObj.totalWeight / halfLife)
+
         const fastAlpha = Math.pow(0.5, weight / halfLife.fast);
         ewmaObj.fastEstimate = (1 - fastAlpha) * value + fastAlpha * ewmaObj.fastEstimate;
 
