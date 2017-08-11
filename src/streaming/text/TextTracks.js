@@ -147,24 +147,29 @@ function TextTracks() {
                 if (isChrome) {
                     videoModel.appendChild(track);
                 }
-                let textTrack = videoModel.getTextTrack(i);
-                textTrack.nonAddedCues = [];
-                if (captionContainer && (textTrackQueue[i].isTTML || textTrackQueue[i].isEmbedded)) {
-                    textTrack.renderingType = 'html';
-                } else {
-                    textTrack.renderingType = 'default';
+
+                let textTrack = videoModel.getTextTrack(textTrackQueue[i].kind, textTrackQueue[i].label, textTrackQueue[i].lang);
+                if (textTrack) {
+                    if (captionContainer && (textTrackQueue[i].isTTML || textTrackQueue[i].isEmbedded)) {
+                        textTrack.renderingType = 'html';
+                    } else {
+                        textTrack.renderingType = 'default';
+                    }
                 }
                 this.addCaptions(i, 0, textTrackQueue[i].captionData);
                 eventBus.trigger(Events.TEXT_TRACK_ADDED);
             }
+
+            //set current track index in textTrackQueue array
             setCurrentTrackIdx.call(this, defaultIndex);
+
             if (defaultIndex >= 0) {
-                let textTracks = videoModel.getTextTracks();
-                for (let idx = 0; idx < textTracks.length; idx++) {
-                    textTracks[idx].mode = (idx === defaultIndex) ? Constants.TEXT_SHOWING : Constants.TEXT_HIDDEN;
+                for (let idx = 0; idx < textTrackQueue.length; idx++) {
+                    let videoTextTrack = videoModel.getTextTrack(textTrackQueue[idx].kind, textTrackQueue[idx].label, textTrackQueue[idx].lang);
+                    videoTextTrack.mode = (idx === defaultIndex) ? Constants.TEXT_SHOWING : Constants.TEXT_HIDDEN;
                 }
-                this.addCaptions(defaultIndex, 0, null);
             }
+
             eventBus.trigger(Events.TEXT_TRACKS_ADDED, {
                 index: currentTrackIdx,
                 tracks: textTrackQueue
@@ -222,9 +227,8 @@ function TextTracks() {
         }
     }
 
-
     function checkVideoSize() {
-        let track = this.getCurrentTextTrack();
+        let track = currentTrackIdx >= 0 && textTrackQueue[currentTrackIdx] ? videoModel.getTextTrack(textTrackQueue[currentTrackIdx].kind, textTrackQueue[currentTrackIdx].label, textTrackQueue[currentTrackIdx].lang) : null;
         if (track && track.renderingType === 'html') {
             let clientWidth = videoModel.getClientWidth();
             let clientHeight = videoModel.getClientHeight();
@@ -342,22 +346,11 @@ function TextTracks() {
      * Add captions to track, store for later adding, or add captions added before
      */
     function addCaptions(trackIdx, timeOffset, captionData) {
-        let track = trackIdx >= 0 ? videoModel.getTextTrack(trackIdx) : null;
+        let track = trackIdx >= 0 && textTrackQueue[trackIdx] ? videoModel.getTextTrack(textTrackQueue[trackIdx].kind, textTrackQueue[trackIdx].label, textTrackQueue[trackIdx].lang) : null;
         let self = this;
 
         if (!track) {
             return;
-        }
-        if (track.mode !== Constants.TEXT_SHOWING) {
-            if (captionData && captionData.length > 0) {
-                track.nonAddedCues = track.nonAddedCues.concat(captionData);
-            }
-            return;
-        }
-
-        if (!captionData) {
-            captionData = track.nonAddedCues;
-            track.nonAddedCues = [];
         }
 
         if (!captionData || captionData.length === 0) {
@@ -457,31 +450,32 @@ function TextTracks() {
         }
     }
 
-    function getCurrentTextTrack() {
-        return currentTrackIdx >= 0 ? videoModel.getTextTrack(currentTrackIdx) : null;
-    }
-
     function getCurrentTrackIdx() {
         return currentTrackIdx;
     }
 
     function getTrackIdxForId(trackId) {
         let idx = -1;
-        let textTracks = videoModel.getTextTracks();
-        for (let i = 0; i < textTracks.length; i++) {
-            if (textTracks[i].label === trackId) {
+
+        for (let i = 0; i < textTrackQueue.length; i++) {
+            if (textTrackQueue[i].label === trackId) {
                 idx = i;
                 break;
             }
         }
+
         return idx;
     }
 
     function setCurrentTrackIdx(idx) {
         currentTrackIdx = idx;
+        let track = currentTrackIdx >= 0 && textTrackQueue[currentTrackIdx] ? videoModel.getTextTrack(textTrackQueue[currentTrackIdx].kind, textTrackQueue[currentTrackIdx].label, textTrackQueue[currentTrackIdx].lang) : null;
+        setCueStyleOnTrack.call(this, track);
+    }
+
+    function setCueStyleOnTrack(track) {
         clearCaptionContainer.call(this);
-        if (idx >= 0) {
-            let track = videoModel.getTextTrack(currentTrackIdx);
+        if (track) {
             if (track.renderingType === 'html') {
                 setNativeCueStyle.call(this);
             } else {
@@ -490,10 +484,6 @@ function TextTracks() {
         } else {
             removeNativeCueStyle.call(this);
         }
-    }
-
-    function getTextTrack(idx) {
-        return videoModel.getTextTrack(idx);
     }
 
     function deleteTrackCues(track) {
@@ -508,9 +498,8 @@ function TextTracks() {
     }
 
     function deleteCuesFromTrackIdx(trackIdx) {
-        var track = getTextTrack(trackIdx);
+        let track = trackIdx >= 0 && textTrackQueue[trackIdx] ? videoModel.getTextTrack(textTrackQueue[trackIdx].kind, textTrackQueue[trackIdx].label, textTrackQueue[trackIdx].lang) : null;
         if (track) {
-            track.nonAddedCues = [];
             deleteTrackCues(track);
         }
     }
@@ -521,12 +510,12 @@ function TextTracks() {
             if (isChrome) {
                 videoModel.removeChild(trackElementArr[i]);
             }else {
-                let track = getTextTrack.call(this, i);
-                track.nonAddedCues = [];
-                deleteTrackCues.call(this, track);
-                track.mode = 'disabled';
+                let track = textTrackQueue[i] ? videoModel.getTextTrack(textTrackQueue[i].kind, textTrackQueue[i].label, textTrackQueue[i].lang) : null;
+                if (track) {
+                    deleteTrackCues.call(this, track);
+                    track.mode = 'disabled';
+                }
             }
-
         }
         trackElementArr = [];
         textTrackQueue = [];
@@ -597,16 +586,27 @@ function TextTracks() {
         }
     }
 
+    function setModeForTrackIdx(idx, mode) {
+        let track = idx >= 0 && textTrackQueue[idx] ? videoModel.getTextTrack(textTrackQueue[idx].kind, textTrackQueue[idx].label, textTrackQueue[idx].lang) : null;
+        if (track && track.mode !== mode) {
+            track.mode = mode;
+        }
+    }
+
+    function getCurrentTrackInfo() {
+        return textTrackQueue[currentTrackIdx];
+    }
+
     instance = {
         initialize: initialize,
         displayCConTop: displayCConTop,
         addTextTrack: addTextTrack,
         addCaptions: addCaptions,
-        getTextTrack: getTextTrack,
-        getCurrentTextTrack: getCurrentTextTrack,
         getCurrentTrackIdx: getCurrentTrackIdx,
         setCurrentTrackIdx: setCurrentTrackIdx,
         getTrackIdxForId: getTrackIdxForId,
+        getCurrentTrackInfo: getCurrentTrackInfo,
+        setModeForTrackIdx: setModeForTrackIdx,
         deleteCuesFromTrackIdx: deleteCuesFromTrackIdx,
         deleteAllTextTracks: deleteAllTextTracks,
         deleteTextTrack: deleteTextTrack,
