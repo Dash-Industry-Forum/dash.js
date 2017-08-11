@@ -17,7 +17,6 @@ const objectUtils = ObjectUtils(context).getInstance();
 describe('TextController', function () {
 
     let videoModelMock = new VideoModelMock();
-    let videoMock;
     let textTracks;
     let textController;
 
@@ -47,14 +46,11 @@ describe('TextController', function () {
     describe('Method setTextTrack', function () {
 
         beforeEach( function() {
-            videoMock = new VideoElementMock();
-
             textTracks.addTextTrack({
                 index : 0,
                 kind : "subtitles",
                 label : 'eng',
                 defaultTrack : true,
-                video: videoMock,
                 isTTML : true
             }, 2);
 
@@ -63,7 +59,6 @@ describe('TextController', function () {
                 kind : "subtitles",
                 label : 'fr',
                 defaultTrack : false,
-                video: videoMock,
                 isTTML : true
             }, 2);
         });

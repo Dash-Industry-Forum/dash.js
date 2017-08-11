@@ -166,7 +166,9 @@ function TextTracks() {
             if (defaultIndex >= 0) {
                 for (let idx = 0; idx < textTrackQueue.length; idx++) {
                     let videoTextTrack = videoModel.getTextTrack(textTrackQueue[idx].kind, textTrackQueue[idx].label, textTrackQueue[idx].lang);
-                    videoTextTrack.mode = (idx === defaultIndex) ? Constants.TEXT_SHOWING : Constants.TEXT_HIDDEN;
+                    if (videoTextTrack) {
+                        videoTextTrack.mode = (idx === defaultIndex) ? Constants.TEXT_SHOWING : Constants.TEXT_HIDDEN;
+                    }
                 }
             }
 
