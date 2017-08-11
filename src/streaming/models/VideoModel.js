@@ -297,8 +297,19 @@ function VideoModel() {
         return element ? element.textTracks : [];
     }
 
-    function getTextTrack(idx) {
-        return element ? element.textTracks[idx] : null;
+    function getTextTrack(kind, label, lang) {
+        if (element) {
+            for (var i = 0; i < element.textTracks.length; i++) {
+                //label parameter could be a number (due to adaptationSet), but label, the attribute of textTrack, is a string => to modify...
+                //label could also be undefined (due to adaptationSet)
+                if (element.textTracks[i].kind === kind && (label ? element.textTracks[i].label == label : true) &&
+                   element.textTracks[i].language === lang) {
+                    return element.textTracks[i];
+                }
+            }
+        }
+
+        return null;
     }
 
     function addTextTrack(kind, label, lang) {
