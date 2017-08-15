@@ -51,7 +51,7 @@ import MediaSourceController from './MediaSourceController';
 function StreamController() {
 
     const STREAM_END_THRESHOLD = 0.5;
-    const STREAM_END_TIMEOUT_DELAY = 0.5;
+    const STREAM_END_TIMEOUT_DELAY = 0.1;
 
     let context = this.context;
     let log = Debug(context).getInstance().log;
