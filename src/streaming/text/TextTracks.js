@@ -150,6 +150,9 @@ function TextTracks() {
 
                 let textTrack = videoModel.getTextTrack(textTrackQueue[i].kind, textTrackQueue[i].label, textTrackQueue[i].lang);
                 if (textTrack) {
+                    //each time a track is created, its mode should be showing by default
+                    //sometime, it's not on Chrome
+                    textTrack.mode = Constants.TEXT_SHOWING;
                     if (captionContainer && (textTrackQueue[i].isTTML || textTrackQueue[i].isEmbedded)) {
                         textTrack.renderingType = 'html';
                     } else {
@@ -229,8 +232,7 @@ function TextTracks() {
         }
     }
 
-    function checkVideoSize() {
-        let track = currentTrackIdx >= 0 && textTrackQueue[currentTrackIdx] ? videoModel.getTextTrack(textTrackQueue[currentTrackIdx].kind, textTrackQueue[currentTrackIdx].label, textTrackQueue[currentTrackIdx].lang) : null;
+    function checkVideoSize(track) {
         if (track && track.renderingType === 'html') {
             let clientWidth = videoModel.getClientWidth();
             let clientHeight = videoModel.getClientHeight();
@@ -367,7 +369,7 @@ function TextTracks() {
             track.isFromCEA608 = currentItem.isFromCEA608;
 
             if (!videoSizeCheckInterval && (currentItem.type === 'html' || currentItem.type === 'image')) {
-                videoSizeCheckInterval = setInterval(checkVideoSize.bind(this), 500);
+                videoSizeCheckInterval = setInterval(checkVideoSize.bind(self, track), 500);
             }
 
             if (currentItem.type === 'html') {
