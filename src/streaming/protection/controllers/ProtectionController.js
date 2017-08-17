@@ -276,6 +276,7 @@ function ProtectionController(config) {
      */
     function setProtectionData(data) {
         protDataSet = data;
+        protectionKeyController.setProtectionData(data);
     }
 
     /**
