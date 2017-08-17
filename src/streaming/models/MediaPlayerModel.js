@@ -54,7 +54,6 @@ const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
 const BUFFER_TIME_AT_TOP_QUALITY = 30;
 const BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 60;
 const LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;
-const RICH_BUFFER_THRESHOLD = 20;
 
 const FRAGMENT_RETRY_ATTEMPTS = 3;
 const FRAGMENT_RETRY_INTERVAL = 1000;
@@ -87,13 +86,12 @@ function MediaPlayerModel() {
         bufferTimeAtTopQuality,
         bufferTimeAtTopQualityLongForm,
         longFormContentDurationThreshold,
-        richBufferThreshold,
         bandwidthSafetyFactor,
         abandonLoadTimeout,
         retryAttempts,
         retryIntervals,
         wallclockTimeUpdateInterval,
-        bufferOccupancyABREnabled,
+        ABRStrategy,
         useDefaultABRRules,
         xhrWithCredentials,
         fastSwitchEnabled,
@@ -105,7 +103,7 @@ function MediaPlayerModel() {
         useSuggestedPresentationDelay = false;
         useManifestDateHeaderTimeSource = true;
         scheduleWhilePaused = true;
-        bufferOccupancyABREnabled = false;
+        ABRStrategy = Constants.ABR_STRATEGY_DYNAMIC;
         useDefaultABRRules = true;
         fastSwitchEnabled = false;
         lastBitrateCachingInfo = {
@@ -124,7 +122,6 @@ function MediaPlayerModel() {
         bufferTimeAtTopQuality = BUFFER_TIME_AT_TOP_QUALITY;
         bufferTimeAtTopQualityLongForm = BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM;
         longFormContentDurationThreshold = LONG_FORM_CONTENT_DURATION_THRESHOLD;
-        richBufferThreshold = RICH_BUFFER_THRESHOLD;
         bandwidthSafetyFactor = BANDWIDTH_SAFETY_FACTOR;
         abandonLoadTimeout = ABANDON_LOAD_TIMEOUT;
         wallclockTimeUpdateInterval = WALLCLOCK_TIME_UPDATE_INTERVAL;
@@ -156,12 +153,13 @@ function MediaPlayerModel() {
     }
 
     //TODO Should we use Object.define to have setters/getters? makes more readable code on other side.
-    function setBufferOccupancyABREnabled(value) {
-        bufferOccupancyABREnabled = value;
+
+    function setABRStrategy(value) {
+        ABRStrategy = value;
     }
 
-    function getBufferOccupancyABREnabled() {
-        return bufferOccupancyABREnabled;
+    function getABRStrategy() {
+        return ABRStrategy;
     }
 
     function setUseDefaultABRRules(value) {
@@ -262,15 +260,6 @@ function MediaPlayerModel() {
     function getLongFormContentDurationThreshold() {
         return longFormContentDurationThreshold;
     }
-
-    function setRichBufferThreshold(value) {
-        richBufferThreshold = value;
-    }
-
-    function getRichBufferThreshold() {
-        return richBufferThreshold;
-    }
-
 
     function setBufferToKeep(value) {
         bufferToKeep = value;
@@ -457,8 +446,8 @@ function MediaPlayerModel() {
     }
 
     instance = {
-        setBufferOccupancyABREnabled: setBufferOccupancyABREnabled,
-        getBufferOccupancyABREnabled: getBufferOccupancyABREnabled,
+        setABRStrategy: setABRStrategy,
+        getABRStrategy: getABRStrategy,
         setUseDefaultABRRules: setUseDefaultABRRules,
         getUseDefaultABRRules: getUseDefaultABRRules,
         getABRCustomRules: getABRCustomRules,
@@ -481,8 +470,6 @@ function MediaPlayerModel() {
         getBufferTimeAtTopQualityLongForm: getBufferTimeAtTopQualityLongForm,
         setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,
         getLongFormContentDurationThreshold: getLongFormContentDurationThreshold,
-        setRichBufferThreshold: setRichBufferThreshold,
-        getRichBufferThreshold: getRichBufferThreshold,
         setBufferToKeep: setBufferToKeep,
         getBufferToKeep: getBufferToKeep,
         setBufferPruningInterval: setBufferPruningInterval,

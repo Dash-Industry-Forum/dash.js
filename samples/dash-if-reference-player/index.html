@@ -143,15 +143,25 @@
                         <input type="checkbox" id="fastSwitchCB" ng-model="fastSwitchSelected" ng-change="toggleFastSwitch()" ng-checked="fastSwitchSelected">
                         Fast Switching ABR
                     </label>
-                    <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
-                           title="BOLA is an ABR ruleset. When enabled, it will disable the default heuristics in Dash.js that depend strictly on average and real-time throughput measurements">
-                        <input type="checkbox" id="bolaCB" ng-model="bolaSelected" ng-change="toggleBufferOccupancyABR()" ng-checked="bolaSelected">
-                        Buffer Occupancy ABR
+                    <label data-toggle="tooltip" data-placement="right"
+                           title="Dynamically switch between BOLA and Throughput strategies.">
+                        <input  type="radio" id="abrDynamic" autocomplete="off" name="abrStrategy" checked="checked" ng-click="changeABRStrategy('abrDynamic')" >
+                        ABR Strategy: Dynamic
+                    </label>
+                    <label  data-toggle="tooltip" data-placement="right"
+                            title="Choose bitrate based on buffer level.">
+                        <input type="radio" id="abrBola" autocomplete="off" name="abrStrategy" ng-click="changeABRStrategy('abrBola')">
+                        ABR Strategy: BOLA
+                    </label>
+                    <label  data-toggle="tooltip" data-placement="right"
+                            title="Choose bitrate based on recent throughput.">
+                        <input type="radio" id="abrThroughput" autocomplete="off" name="abrStrategy" ng-click="changeABRStrategy('abrThroughput')">
+                        ABR Strategy: Throughput
                     </label>
                     <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
-                           title="ABR - Use custom abr rules">
+                           title="ABR - Use custom ABR rules">
                         <input type="checkbox" id="customABRRules" ng-model="customABRRulesSelected" ng-change="toggleUseCustomABRRules()" ng-checked="customABRRulesSelected">
-                        ABR - Use custom abr rules
+                        Use Custom ABR Rules
                     </label>
                 </div>
             </div>
