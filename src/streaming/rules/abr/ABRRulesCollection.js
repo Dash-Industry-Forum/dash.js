@@ -58,22 +58,21 @@ function ABRRulesCollection(config) {
 
         if (mediaPlayerModel.getUseDefaultABRRules()) {
 
-            if (mediaPlayerModel.getBufferOccupancyABREnabled()) {
-                qualitySwitchRules.push(
-                    BolaRule(context).create({
-                        metricsModel: metricsModel,
-                        dashMetrics: dashMetrics,
-                        mediaPlayerModel: mediaPlayerModel
-                    })
-                );
-            } else {
-                qualitySwitchRules.push(
-                    ThroughputRule(context).create({
-                        metricsModel: metricsModel,
-                        dashMetrics: dashMetrics
-                    })
-                );
-            }
+            // Only one of BolaRule and ThroughputRule will give a switchRequest.quality !== SwitchRequest.NO_CHANGE.
+            // This is controlled by useBufferOccupancyABR mechanism in AbrController.
+            qualitySwitchRules.push(
+                BolaRule(context).create({
+                    metricsModel: metricsModel,
+                    dashMetrics: dashMetrics,
+                    mediaPlayerModel: mediaPlayerModel
+                })
+            );
+            qualitySwitchRules.push(
+                ThroughputRule(context).create({
+                    metricsModel: metricsModel,
+                    dashMetrics: dashMetrics
+                })
+            );
 
             qualitySwitchRules.push(
                 InsufficientBufferRule(context).create({

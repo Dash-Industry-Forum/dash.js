@@ -49,7 +49,7 @@ function ThroughputRule(config) {
     function getMaxIndex(rulesContext) {
         const switchRequest = SwitchRequest(context).create();
 
-        if (!rulesContext || !rulesContext.hasOwnProperty('getMediaInfo') || !rulesContext.hasOwnProperty('getMediaType') || !rulesContext.hasOwnProperty('hasRichBuffer') ||
+        if (!rulesContext || !rulesContext.hasOwnProperty('getMediaInfo') || !rulesContext.hasOwnProperty('getMediaType') || !rulesContext.hasOwnProperty('useBufferOccupancyABR') ||
             !rulesContext.hasOwnProperty('getAbrController') || !rulesContext.hasOwnProperty('getStreamProcessor')) {
             return switchRequest;
         }
@@ -67,9 +67,9 @@ function ThroughputRule(config) {
         const throughput = throughputHistory.getSafeAverageThroughput(mediaType, isDynamic);
         const latency = throughputHistory.getAverageLatency(mediaType);
         const bufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
-        const hasRichBuffer = rulesContext.hasRichBuffer();
+        const useBufferOccupancyABR = rulesContext.useBufferOccupancyABR();
 
-        if (!metrics || isNaN(throughput) || !bufferStateVO || hasRichBuffer) {
+        if (!metrics || isNaN(throughput) || !bufferStateVO || useBufferOccupancyABR) {
             return switchRequest;
         }
 

@@ -637,16 +637,6 @@ describe("MediaPlayer", function () {
             expect(fastSwitchEnabled).to.be.true;
         });
 
-        it("should configure bufferOccupancyABR", function () {
-            let bufferOccupancyABR = mediaPlayerModel.getBufferOccupancyABREnabled();
-            expect(bufferOccupancyABR).to.be.false;
-
-            player.enableBufferOccupancyABR(true);
-
-            bufferOccupancyABR = mediaPlayerModel.getBufferOccupancyABREnabled();
-            expect(bufferOccupancyABR).to.be.true;
-        });
-
         it("should configure useDefaultABRRules", function () {
             let useDefaultABRRules = mediaPlayerModel.getUseDefaultABRRules();
             expect(useDefaultABRRules).to.be.true;
@@ -775,16 +765,6 @@ describe("MediaPlayer", function () {
 
             LongFormContentDurationThreshold = mediaPlayerModel.getLongFormContentDurationThreshold();
             expect(LongFormContentDurationThreshold).to.equal(50);
-        });
-
-        it("should configure RichBufferThreshold", function () {
-            let RichBufferThreshold = mediaPlayerModel.getRichBufferThreshold();
-            expect(RichBufferThreshold).to.equal(20);
-
-            player.setRichBufferThreshold(50);
-
-            RichBufferThreshold = mediaPlayerModel.getRichBufferThreshold();
-            expect(RichBufferThreshold).to.equal(50);
         });
 
         it("should configure BandwidthSafetyFactor", function () {

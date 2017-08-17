@@ -1102,20 +1102,49 @@ function MediaPlayer() {
     }
 
     /**
-     * Enabling buffer-occupancy ABR will switch to the *experimental* implementation of BOLA,
-     * replacing the throughput-based ABR rule set (ThroughputRule, BufferOccupancyRule,
-     * InsufficientBufferRule and AbandonRequestsRule) with the buffer-occupancy-based
-     * BOLA rule set (BolaRule, BolaAbandonRule).
+     * Obsolete since version 2.6.0.
+     * Buffer-occupancy ABR is now switched on and off dynamically.
+     * @see {@link module:MediaPlayer#setABRStrategy setABRStrategy()}
      *
-     * @see {@link http://arxiv.org/abs/1601.06748 BOLA WhitePaper.}
-     * @see {@link https://github.com/Dash-Industry-Forum/dash.js/wiki/BOLA-status More details about the implementation status.}
      * @param {boolean} value
-     * @default false
      * @memberof module:MediaPlayer
      * @instance
      */
     function enableBufferOccupancyABR(value) {
-        mediaPlayerModel.setBufferOccupancyABREnabled(value);
+        throw new Error('Calling obsolete function - enabledBufferOccupancyABR(' + value + ') has no effect.');
+    }
+
+    /**
+     * Sets the ABR strategy. Valid strategies are "abrDynamic", "abrBola" and "abrThroughput".
+     * The ABR strategy can also be changed during a streaming session.
+     * The call has no effect if an invalid method is passed.
+     *
+     * The BOLA strategy chooses bitrate based on current buffer level, with higher bitrates for higher buffer levels.
+     * The Throughput strategy chooses bitrate based on the recent throughput history.
+     * The Dynamic strategy switches smoothly between BOLA and Throughput in real time, playing to the strengths of both.
+     *
+     * @param {string} value
+     * @default "abrDynamic"
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setABRStrategy(value) {
+        if (value === Constants.ABR_STRATEGY_DYNAMIC || value === Constants.ABR_STRATEGY_BOLA || value === Constants.ABR_STRATEGY_THROUGHPUT) {
+            mediaPlayerModel.setABRStrategy(value);
+        } else {
+            log('Warning: Ignoring setABRStrategy(' + value + ') - unknown value.');
+        }
+    }
+
+    /**
+     * Returns the current ABR strategy being used.
+     * @return {string} "abrDynamic", "abrBola" or "abrThroughput"
+     * @see {@link module:MediaPlayer#setABRStrategy setABRStrategy()}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getABRStrategy() {
+        return mediaPlayerModel.getABRStrategy();
     }
 
     /**
@@ -1403,18 +1432,16 @@ function MediaPlayer() {
     }
 
     /**
-     * A threshold, in seconds, of when dashjs abr becomes less conservative since we have a
-     * larger "rich" buffer.
-     * The BufferOccupancyRule.js rule will override the ThroughputRule's decision when the
-     * buffer level surpasses this value and while it remains greater than this value.
+     * Obsolete since version 2.6.0.
+     * ABR rules now switch from Throughput to Buffer Occupancy mode when there is sufficient buffer.
+     * This renders the rich buffer mechanism redundant.
      *
-     * @default 20 seconds
      * @param {number} value
      * @memberof module:MediaPlayer
      * @instance
      */
     function setRichBufferThreshold(value) {
-        mediaPlayerModel.setRichBufferThreshold(value);
+        throw new Error('Calling obsolete function - setRichBufferThreshold(' + value + ') has no effect.');
     }
 
     /**
@@ -2470,6 +2497,8 @@ function MediaPlayer() {
         getAutoSwitchQualityFor: getAutoSwitchQualityFor,
         setAutoSwitchQualityFor: setAutoSwitchQualityFor,
         enableBufferOccupancyABR: enableBufferOccupancyABR,
+        setABRStrategy: setABRStrategy,
+        getABRStrategy: getABRStrategy,
         useDefaultABRRules: useDefaultABRRules,
         addABRCustomRule: addABRCustomRule,
         removeABRCustomRule: removeABRCustomRule,

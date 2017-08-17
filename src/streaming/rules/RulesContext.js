@@ -40,7 +40,7 @@ function RulesContext(config) {
     let switchHistory = config.switchHistory;
     let droppedFramesHistory = config.droppedFramesHistory;
     let currentRequest = config.currentRequest;
-    let richBuffer = config.hasRichBuffer;
+    let bufferOccupancyABR = config.useBufferOccupancyABR;
 
     function getMediaType() {
         return representationInfo.mediaInfo.type;
@@ -78,8 +78,8 @@ function RulesContext(config) {
         return currentRequest;
     }
 
-    function hasRichBuffer() {
-        return richBuffer;
+    function useBufferOccupancyABR() {
+        return bufferOccupancyABR;
     }
 
     instance = {
@@ -92,7 +92,7 @@ function RulesContext(config) {
         getStreamProcessor: getStreamProcessor,
         getAbrController: getAbrController,
         getTrackInfo: getTrackInfo,
-        hasRichBuffer: hasRichBuffer
+        useBufferOccupancyABR: useBufferOccupancyABR
     };
 
     return instance;
