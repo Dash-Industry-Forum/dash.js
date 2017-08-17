@@ -243,6 +243,16 @@ describe('URLUtils', function () {
             expect(result).to.equal(expected); // jshint ignore:line
         });
 
+        it('should resolve a baseurl and relative url (2)', () => {
+            const baseUrl = 'http://www.example.com/path/index.html';
+            const url = './MPDs/example.mpd';
+            const expected = 'http://www.example.com/path/./MPDs/example.mpd';
+
+            const result = urlUtils.resolve(url, baseUrl);
+
+            expect(result).to.equal(expected); // jshint ignore:line
+        });
+
         it('should resolve a baseurl and path absolute url', () => {
             const baseUrl = 'http://www.example.com/path/index.html';
             const url = '/MPDs/example.mpd';

@@ -73,9 +73,8 @@ function DashHandler(config) {
 
     function setup() {
         log = Debug(context).getInstance().log.bind(instance);
-        index = -1;
-        currentTime = 0;
-        earliestTime = NaN;
+
+        resetInitialSettings();
 
         segmentBaseLoader = isWebM(config.mimeType) ? WebmSegmentBaseLoader(context).getInstance() : SegmentBaseLoader(context).getInstance();
         segmentBaseLoader.setConfig({
@@ -117,21 +116,22 @@ function DashHandler(config) {
         return currentTime;
     }
 
-    function getCurrentIndex() {
-        return index;
-    }
-
     function getEarliestTime() {
         return earliestTime;
     }
 
-    function reset() {
-        segmentsGetter = null;
+    function resetInitialSettings() {
+        index = -1;
         currentTime = 0;
         earliestTime = NaN;
         requestedTime = NaN;
-        index = -1;
         streamProcessor = null;
+        segmentsGetter = null;
+    }
+
+    function reset() {
+        resetInitialSettings();
+
         eventBus.off(Events.INITIALIZATION_LOADED, onInitializationLoaded, instance);
         eventBus.off(Events.SEGMENTS_LOADED, onSegmentsLoaded, instance);
     }
@@ -533,9 +533,9 @@ function DashHandler(config) {
         getNextSegmentRequest: getNextSegmentRequest,
         generateSegmentRequestForTime: generateSegmentRequestForTime,
         updateRepresentation: updateRepresentation,
+        updateSegmentList: updateSegmentList,
         setCurrentTime: setCurrentTime,
         getCurrentTime: getCurrentTime,
-        getCurrentIndex: getCurrentIndex,
         getEarliestTime: getEarliestTime,
         reset: reset
     };

@@ -83,18 +83,8 @@ function ScheduleController(config) {
 
     function setup() {
         log = Debug(context).getInstance().log.bind(instance);
-        initialRequest = true;
-        lastInitQuality = NaN;
-        lastQualityIndex = NaN;
-        topQualityIndex = {};
-        replaceRequestArray = [];
-        isStopped = true;
-        playListMetrics = null;
-        playListTraceMetrics = null;
-        playListTraceMetricsClosed = true;
-        isFragmentProcessingInProgress = false;
-        timeToLoadDelay = 0;
-        seekTarget = NaN;
+
+        reset();
     }
 
 
@@ -318,7 +308,7 @@ function ScheduleController(config) {
     }
 
     function completeQualityChange(trigger) {
-        if (playbackController) {
+        if (playbackController && fragmentModel) {
             const item = fragmentModel.getRequests({
                 state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
                 time: playbackController.getTime(),
@@ -614,6 +604,14 @@ function ScheduleController(config) {
         timeToLoadDelay = 0;
         seekTarget = NaN;
         playListMetrics = null;
+        playListTraceMetrics = null;
+        playListTraceMetricsClosed = true;
+        initialRequest = true;
+        lastInitQuality = NaN;
+        lastQualityIndex = NaN;
+        topQualityIndex = {};
+        replaceRequestArray = [];
+        isStopped = true;
     }
 
     instance = {

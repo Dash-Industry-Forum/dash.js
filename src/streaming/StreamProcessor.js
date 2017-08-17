@@ -73,13 +73,11 @@ function StreamProcessor(config) {
         spExternalControllers;
 
     function setup() {
-        mediaInfoArr = [];
-        spExternalControllers = [];
-
         liveEdgeFinder = LiveEdgeFinder(context).create({
             timelineConverter: timelineConverter,
             streamProcessor: instance
         });
+        resetInitialSettings();
     }
 
     function initialize(mediaSource) {
@@ -119,9 +117,7 @@ function StreamProcessor(config) {
             streamProcessor: this
         });
 
-        representationController = RepresentationController(context).create({
-            streamProcessor: this
-        });
+        representationController = RepresentationController(context).create();
 
         representationController.setConfig({
             abrController: abrController,
@@ -131,7 +127,8 @@ function StreamProcessor(config) {
             dashManifestModel: dashManifestModel,
             manifestModel: manifestModel,
             playbackController: playbackController,
-            timelineConverter: timelineConverter
+            timelineConverter: timelineConverter,
+            streamProcessor: this
         });
         bufferController.initialize(mediaSource);
         scheduleController.initialize();
@@ -152,6 +149,12 @@ function StreamProcessor(config) {
 
     function unregisterAllExternalController() {
         spExternalControllers = [];
+    }
+
+    function resetInitialSettings() {
+        mediaInfoArr = [];
+        mediaInfo = null;
+        unregisterAllExternalController();
     }
 
     function reset(errored) {
@@ -176,13 +179,10 @@ function StreamProcessor(config) {
         spExternalControllers.forEach(function (controller) {
             controller.reset();
         });
-        unregisterAllExternalController();
 
-        stream = null;
-        mediaInfo = null;
-        mediaInfoArr = [];
+        resetInitialSettings();
         type = null;
-
+        stream = null;
         liveEdgeFinder.reset();
     }
 

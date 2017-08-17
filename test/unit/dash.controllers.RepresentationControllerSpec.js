@@ -62,14 +62,15 @@ describe("RepresentationController", function () {
     });
     abrController.registerStreamType(testType, streamProcessor);
 
-    const representationController = RepresentationController(context).create({streamProcessor : streamProcessor});
-    representationController.initialize();
+    const representationController = RepresentationController(context).create();
     representationController.setConfig({
         abrController: abrController,
         domStorage: domStorage,
         dashManifestModel: dashManifestModel,
-        manifestModel: manifestModel
+        manifestModel: manifestModel,
+        streamProcessor : streamProcessor
     });
+    representationController.initialize();
 
     it("should not contain data before it is set", function () {
         // Act
@@ -123,6 +124,17 @@ describe("RepresentationController", function () {
                 expectedValue = 0;
 
             expect(representationController.getRepresentationForQuality(quality).index).to.equal(expectedValue);
+        });
+    });
+
+    describe("when a call to reset is done", function () {
+        it("should not contain data after a call to reset", function () {
+            representationController.reset();
+            // Act
+            const data = representationController.getData();
+
+            // Assert
+            expect(data).not.exist;
         });
     });
 });

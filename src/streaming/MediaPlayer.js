@@ -728,7 +728,7 @@ function MediaPlayer() {
      * @param {string} type - 'video' or 'audio' are the type options.
      * @returns {number} The current representation ratio cap.
      * @memberof module:MediaPlayer
-     * @see {@link MediaPlayer#setMaxAllowedRepresentationRatioFor setMaxAllowedRepresentationRatioFor()}
+     * @see {@link module:MediaPlayer#setMaxAllowedRepresentationRatioFor setMaxAllowedRepresentationRatioFor()}
      * @instance
      */
     function getMaxAllowedRepresentationRatioFor(type) {
@@ -736,9 +736,14 @@ function MediaPlayer() {
     }
 
     /**
-     * @param {string} type
-     * @returns {Object}
+     * Gets the current download quality for media type. The ABR rules update this value before every new download
+     * unless setAutoSwitchQualityFor(type, false) is called.
+     *
+     * @param {string} type - 'video' or 'audio'
+     * @returns {number} the quality index, 0 corresponding to the lowest bitrate
      * @memberof module:MediaPlayer
+     * @see {@link module:MediaPlayer#setAutoSwitchQualityFor setAutoSwitchQualityFor()}
+     * @see {@link module:MediaPlayer#setQualityFor setQualityFor()}
      * @instance
      */
     function getQualityFor(type) {
@@ -749,11 +754,14 @@ function MediaPlayer() {
     }
 
     /**
-     * Sets the current quality for media type instead of letting the ABR Heuristics automatically selecting it..
+     * Sets the current quality for media type instead of letting the ABR Heuristics automatically selecting it.
+     * This value will be overwritten by the ABR rules unless setAutoSwitchQualityFor(type, false) is called.
      *
-     * @param {string} type
-     * @param {number} value
+     * @param {string} type - 'video' or 'audio'
+     * @param {number} value - the quality index, 0 corresponding to the lowest bitrate
      * @memberof module:MediaPlayer
+     * @see {@link module:MediaPlayer#setAutoSwitchQualityFor setAutoSwitchQualityFor()}
+     * @see {@link module:MediaPlayer#getQualityFor getQualityFor()}
      * @instance
      */
     function setQualityFor(type, value) {
@@ -877,7 +885,7 @@ function MediaPlayer() {
      *
      * @param {string} type - 'audio' | 'video'
      * @param {boolean} value
-     * @default {boolean} true
+     * @default true
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -888,7 +896,7 @@ function MediaPlayer() {
     /**
      * Get the value of useDeadTimeLatency in AbrController. @see setUseDeadTimeLatencyForAbr
      *
-     * @returns {boolean=}
+     * @returns {boolean}
      *
      * @memberof module:MediaPlayer
      * @instance
@@ -2145,7 +2153,7 @@ function MediaPlayer() {
      *
      * @deprecated since version 2.0 Instead use {@link module:MediaPlayer#setAutoSwitchQualityFor setAutoSwitchQualityFor()}.
      * @param {boolean} value
-     * @default {boolean} true
+     * @default true
      * @memberof module:MediaPlayer
      * @instance
      */

@@ -880,7 +880,7 @@ function DashManifestModel(config) {
                     // entries exist, that case is handled by the
                     // [node.baseUri] in the entries definition.
                     if (node.baseUri) {
-                        text = node.baseUri + text;
+                        text = urlUtils.resolve(text, node.baseUri);
                     }
                 }
 
