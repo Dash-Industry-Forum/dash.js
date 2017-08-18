@@ -52,9 +52,6 @@ function KeySystemWidevine() {
     function init(protectionData) {
         if (protectionData) {
             protData = protectionData;
-            if (protData.sessionType) {
-                this.sessionType = protData.sessionType;
-            }
         }
     }
 
