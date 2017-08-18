@@ -32,4 +32,4 @@ describe('AbandonRequestsRule', function () {
 
         expect(abandonRequest.quality).to.be.equal(-1);  // jshint ignore:line 
     });
-}); 
+});
