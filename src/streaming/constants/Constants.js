@@ -61,6 +61,8 @@ class Constants {
         this.ABR_STRATEGY_DYNAMIC = 'abrDynamic';
         this.ABR_STRATEGY_BOLA = 'abrBola';
         this.ABR_STRATEGY_THROUGHPUT = 'abrThroughput';
+        this.MOVING_AVERAGE_SLIDING_WINDOW = 'slidingWindow';
+        this.MOVING_AVERAGE_EWMA = 'ewma';
     }
 
     constructor () {

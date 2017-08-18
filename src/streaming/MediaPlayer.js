@@ -1191,6 +1191,44 @@ function MediaPlayer() {
     function removeAllABRCustomRule() {
         mediaPlayerModel.removeAllABRCustomRule();
     }
+
+    /**
+     * Sets the moving average method used for smoothing throughput estimates. Valid methods are
+     * "slidingWindow" and "ewma". The call has no effect if an invalid method is passed.
+     *
+     * The sliding window moving average method computes the average throughput using the last four segments downloaded.
+     * If the stream is live (as opposed to VOD), then only the last three segments are used.
+     * If wide variations in throughput are detected, the number of segments can be dynamically increased to avoid oscillations.
+     *
+     * The exponentially weighted moving average (EWMA) method computes the average using exponential smoothing.
+     * Two separate estimates are maintained, a fast one with a three-second half life and a slow one with an eight-second half life.
+     * The throughput estimate at any time is the minimum of the fast and slow estimates.
+     * This allows a fast reaction to a bandwidth drop and prevents oscillations on bandwidth spikes.
+     *
+     * @param {string} value
+     * @default {string} 'slidingWindow'
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setMovingAverageMethod(value) {
+        if (value === Constants.MOVING_AVERAGE_SLIDING_WINDOW || value === Constants.MOVING_AVERAGE_EWMA) {
+            mediaPlayerModel.setMovingAverageMethod(value);
+        } else {
+            log('Warning: Ignoring setMovingAverageMethod(' + value + ') - unknown value.');
+        }
+    }
+
+    /**
+     * Return the current moving average method used for smoothing throughput estimates.
+     * @return {string} Returns "slidingWindow" or "ewma".
+     * @see {@link module:MediaPlayer#setMovingAverageMethod setMovingAverageMethod()}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getMovingAverageMethod() {
+        return mediaPlayerModel.getMovingAverageMethod();
+    }
+
     /**
      * <p>Allows you to set a scheme and server source for UTC live edge detection for dynamic streams.
      * If UTCTiming is defined in the manifest, it will take precedence over any time source manually added.</p>
@@ -1227,7 +1265,6 @@ function MediaPlayer() {
         vo.value = value;
         mediaPlayerModel.getUTCTimingSources().push(vo);
     }
-
 
     /**
      * <p>Allows you to remove a UTC time source. Both schemeIdUri and value need to match the Dash.vo.UTCTiming properties in order for the
@@ -2499,6 +2536,8 @@ function MediaPlayer() {
         setAutoSwitchQuality: setAutoSwitchQuality,
         setFastSwitchEnabled: setFastSwitchEnabled,
         getFastSwitchEnabled: getFastSwitchEnabled,
+        setMovingAverageMethod: setMovingAverageMethod,
+        getMovingAverageMethod: getMovingAverageMethod,
         getAutoSwitchQualityFor: getAutoSwitchQualityFor,
         setAutoSwitchQualityFor: setAutoSwitchQualityFor,
         enableBufferOccupancyABR: enableBufferOccupancyABR,
