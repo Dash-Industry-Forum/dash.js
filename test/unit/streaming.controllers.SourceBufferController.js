@@ -2,6 +2,8 @@ import SourceBufferController from '../../src/streaming/controllers/SourceBuffer
 import Events from '../../src/core/events/Events';
 import EventBus from '../../src/core/EventBus';
 
+import TextBufferMock from './mocks/TextBufferMock';
+import TextControllerMock from './mocks/TextControllerMock';
 const expect = require('chai').expect;
 const context = {};
 
@@ -63,31 +65,6 @@ class MediaSourceBufferMock {
 
     abort() {
         this.aborted = true;
-    }
-}
-class TextBufferMock {
-    constructor() {
-        this.updating = false;
-        this.chunk = null;
-    }
-
-    appendBuffer(chunk) {
-        this.updating = true;
-        this.chunk = chunk;
-
-        let that = this;
-        setTimeout(function() {
-            that.updating = false;
-        }, 500);
-    }
-}
-
-class TextControllerMock {
-    constructor() {
-        this.buffers = [];
-    }
-    getTextSourceBuffer() {
-        return new TextBufferMock();
     }
 }
 
