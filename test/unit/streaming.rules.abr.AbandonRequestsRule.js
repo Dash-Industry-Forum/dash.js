@@ -1,30 +1,13 @@
 import AbandonRequestsRule from '../../src/streaming/rules/abr/AbandonRequestsRule';
-import FragmentRequest from '../../src/streaming/vo/FragmentRequest';
 
 import MetricsModelMock from './mocks/MetricsModelMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
 import DashMetricsMock from './mocks/DashMetricsMock';
+import RulesContextMock from './mocks/RulesContextMock';
 
 const expect = require('chai').expect;
 
 const context = {};
-
-function RulesContextMock () {
-    this.getMediaInfo = function() {
-
-    };
-    this.getMediaType = function() {
-        return 'video';
-    };
-    this.getCurrentRequest = function() {
-        let fragRequest =  new FragmentRequest();
-        fragRequest.index = 1;
-
-        return fragRequest;
-    };    
-    this.getTrackInfo = function() {};
-    this.getAbrController = function() {};
-}
           
 describe('AbandonRequestsRule', function () {
     it("should return an empty switchRequest when shouldAbandon function is called with an empty parameter", function () {
