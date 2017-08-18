@@ -1,6 +1,7 @@
 class VideoElementMock {
 
     setup() {
+		this.playbackRate = 0;
         this.muted = false;
         this.volume = 0;
         this.currentTime = 0;
