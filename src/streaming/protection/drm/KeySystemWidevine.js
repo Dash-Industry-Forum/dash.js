@@ -52,9 +52,6 @@ function KeySystemWidevine() {
     function init(protectionData) {
         if (protectionData) {
             protData = protectionData;
-            if (protData.sessionType) {
-                this.sessionType = protData.sessionType;
-            }
         }
     }
 
@@ -104,26 +101,6 @@ function KeySystemWidevine() {
         return pssh;
     }
 
-    function doGetKeySystemConfigurations(videoCodec, audioCodec, sessionType) {
-        var ksConfigurations = MediaPlayer.dependencies.protection.CommonEncryption.getKeySystemConfigurations(videoCodec, audioCodec, sessionType);
-        if (protData) {
-            if (protData.audioRobustness) {
-                ksConfigurations[0].audioCapabilities[0].robustness = protData.audioRobustness;
-            }
-            if (protData.videoRobustness) {
-                ksConfigurations[0].videoCapabilities[0].robustness = protData.videoRobustness;
-            }
-        }
-        return ksConfigurations;
-    }
-
-    function doGetServerCertificate() {
-        if (protData && protData.serverCertificate && protData.serverCertificate.length > 0) {
-            return BASE64.decodeArray(protData.serverCertificate).buffer;
-        }
-        return null;
-    }
-
     function getRequestHeadersFromMessage( /*message*/ ) {
         return null;
     }
@@ -142,8 +119,6 @@ function KeySystemWidevine() {
         systemString: systemString,
         init: init,
         getInitData: getInitData,
-        getKeySystemConfigurations: doGetKeySystemConfigurations,
-        getServerCertificate: doGetServerCertificate,
         getRequestHeadersFromMessage: getRequestHeadersFromMessage,
         getLicenseRequestFromMessage: getLicenseRequestFromMessage,
         getLicenseServerURLFromInitData: getLicenseServerURLFromInitData
