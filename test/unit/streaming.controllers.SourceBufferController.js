@@ -4,6 +4,9 @@ import EventBus from '../../src/core/EventBus';
 
 import TextBufferMock from './mocks/TextBufferMock';
 import TextControllerMock from './mocks/TextControllerMock';
+import MediaSourceBufferMock from './mocks/MediaSourceBufferMock';
+import MediaSourceMock from './mocks/MediaSourceMock';
+
 const expect = require('chai').expect;
 const context = {};
 
@@ -12,92 +15,6 @@ const eventBus = EventBus(context).getInstance();
 const streamInfo = {
     id: 'id'
 };
-
-class TimeRangesMock {
-    constructor() {
-        this.ranges = [];
-        this.length = this.ranges.length;
-    }
-
-    start(index) {
-        return this.ranges[index] ? this.ranges[index].start : null;
-    }
-    end(index) {
-        return this.ranges[index] ? this.ranges[index].end : null;
-    }
-
-    addRange(range) {
-        this.ranges.push(range);
-        this.length = this.ranges.length;
-    }
-}
-class MediaSourceBufferMock {
-    constructor() {
-        this.buffered = new TimeRangesMock();
-        this.updating = false;
-        this.chunk = null;
-        this.aborted = false;
-    }
-
-    addRange(range) {
-        this.buffered.addRange(range);
-    }
-
-    remove() {
-        this.updating = true;
-        this.chunk = null;
-
-        let that = this;
-        setTimeout(function() {
-            that.updating = false;
-        }, 500);
-    }
-
-    append(chunk) {
-        this.updating = true;
-        this.chunk = chunk;
-
-        let that = this;
-        setTimeout(function() {
-            that.updating = false;
-        }, 500);
-    }
-
-    abort() {
-        this.aborted = true;
-    }
-}
-
-class MediaSourceMock {
-    constructor() {
-        this.buffers = [];
-        this.readyState = 'open';
-    }
-
-    addSourceBuffer(codec) {
-        if (codec.match(/text/i)) {
-            throw new Error('not really supported');
-        }
-
-        if (codec.match(/unknown/i)) {
-            throw new Error('unknown');
-        }
-
-        let buffer = new MediaSourceBufferMock();
-        this.buffers.push(buffer);
-        return buffer;
-    }
-
-    removeSourceBuffer(buffer) {
-        let index = this.buffers.indexOf(buffer);
-
-        if (index === -1) {
-            return;
-        }
-
-        this.buffers.splice(index, 1);
-    }
-}
 
 describe('SourceBufferController', function () {
 
