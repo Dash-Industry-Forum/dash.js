@@ -2,20 +2,12 @@ import EventController from '../../src/streaming/controllers/EventController';
 import EventBus from '../../src/core/EventBus';
 
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
+import ManifestModelMock from './mocks/ManifestModelMock';
 
 const expect = require('chai').expect;
 const context = {};
 const eventBus = EventBus(context).getInstance();
 
-class ManifestModelMock {
-    constructor() {
-        this.manifestValue = 0;
-    }
-
-    getValue() {
-        return this.manifestValue;
-    }
-}
 
 class ManifestLoaderMock {
     constructor() {
