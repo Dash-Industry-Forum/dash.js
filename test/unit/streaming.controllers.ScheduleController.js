@@ -2,6 +2,11 @@ import ScheduleController from '../../src/streaming/controllers/ScheduleControll
 import Events from '../../src/core/events/Events';
 import EventBus from '../../src/core/EventBus';
 
+import PlaybackControllerMock from './mocks/PlaybackControllerMock';
+import StreamProcessorMock from './mocks/StreamProcessorMock';
+import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
+import DashManifestModelMock from './mocks/DashManifestModelMock';
+
 const expect = require('chai').expect;
 const context = {};
 
@@ -10,99 +15,7 @@ const eventBus = EventBus(context).getInstance();
 const streamInfo = {
     id: 'id'
 };
-
-const currentRepresentationInfo = {};
-
-class FragmentModelMock {
-    constructor() {
-        this.requests = [];
-    }
-
-    getRequests() {
-        return this.requests;
-    }
-}
-
-class BufferControllerMock {
-    constructor() {
-        this.seekStartTime = 0;
-    }
-
-    setSeekStartTime(time) {
-        this.seekStartTime = time
-    }
-
-    isBufferingCompleted() {
-        return false;
-    }
-}
-
-class StreamProcessorMock {
-    constructor() {
-        this.fragmentModel = new FragmentModelMock();
-        this.bufferController = new BufferControllerMock();
-    }
-
-    getFragmentModel() {
-        return this.fragmentModel;
-    }
-
-    getBufferController() {
-        return this.bufferController;
-    }
-
-    getStreamInfo() {
-        return streamInfo;
-    }
-
-    getCurrentRepresentationInfo() {
-        return currentRepresentationInfo;
-    }
-
-    isBufferingCompleted() {
-        return this.bufferController.isBufferingCompleted();
-    }
-
-}
-
-class PlaybackControllerMock {
-    constructor() {
-        this.isDynamic = false;
-        this.time = 0;
-        this.startTime = 0;
-    }
-
-    getIsDynamic() {
-        return this.isDynamic;
-    }
-
-    getTime() {
-        return this.time;
-    }
-
-    getStreamStartTime() {
-        return this.startTime;
-    }
-}
-class MediaPlayerModelMock {
-
-    constructor() {
-        this.scheduleWhilePaused = false;
-
-    }
-    getScheduleWhilePaused() {
-        return this.scheduleWhilePaused;
-    }
-}
-
-class DashManifestModelMock {
-
-    constructor() {}
-
-    getIsTextTrack() {
-        return false;
-    }
-}
+const testType = 'video';
 
 describe('ScheduleController', function () {
 
@@ -114,12 +27,12 @@ describe('ScheduleController', function () {
 
     beforeEach(function () {
         mediaPlayerModelMock = new MediaPlayerModelMock();
-        streamProcessorMock = new StreamProcessorMock();
+        streamProcessorMock = new StreamProcessorMock(testType, streamInfo);
         dashManifestModelMock = new DashManifestModelMock();
         playbackControllerMock = new PlaybackControllerMock();
 
         scheduleController = ScheduleController(context).create({
-            type: 'video',
+            type: testType,
             mediaPlayerModel: mediaPlayerModelMock,
             streamProcessor: streamProcessorMock,
             dashManifestModel: dashManifestModelMock,

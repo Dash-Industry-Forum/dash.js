@@ -39,7 +39,20 @@ function TimelineSegmentsGetter(config, isDynamic) {
 
     let instance;
 
+    function checkConfig() {
+        if (!timelineConverter || !timelineConverter.hasOwnProperty('calcMediaTimeFromPresentationTime') || !timelineConverter.hasOwnProperty('calcSegmentAvailabilityRange') ||
+            !timelineConverter.hasOwnProperty('calcMediaTimeFromPresentationTime')) {
+            throw new Error('Missing config parameter(s)');
+        }
+    }
+
     function getSegmentsFromTimeline(representation, requestedTime, index, availabilityUpperLimit) {
+
+        checkConfig();
+
+        if (!representation) {
+            throw new Error('no representation');
+        }
 
         if (requestedTime === undefined) {
             requestedTime = null;

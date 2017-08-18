@@ -5,7 +5,6 @@ const expect = require('chai').expect;
 const context = {};
 const initCache = InitCache(context).getInstance();
 
-
 describe('InitCache', function () {
 
 	describe('extract', () => {

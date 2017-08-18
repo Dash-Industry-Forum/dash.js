@@ -64,7 +64,7 @@ function TextBufferController(config) {
             });
         } else {
 
-            // in this case, internal buffer controller is a not fragmented text controller  object
+            // in this case, internal buffer controller is a not fragmented text controller object
             _BufferControllerImpl = NotFragmentedTextBufferController(context).create({
                 type: config.type,
                 errHandler: config.errHandler,

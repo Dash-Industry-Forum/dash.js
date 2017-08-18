@@ -1,20 +1,10 @@
 import TextBufferController from '../../src/streaming/text/TextBufferController';
+import SourceBufferControllerMock from './mocks/SourceBufferControllerMock';
 
 const chai = require('chai');
 const expect = chai.expect;
 
 const context = {};
-
-class SourceBufferControllerMock {
-    constructor() {
-    }
-
-    abort() {
-    }
-
-    removeSourceBuffer() {
-    }
-}
 
 describe('TextBufferController', function () {
 

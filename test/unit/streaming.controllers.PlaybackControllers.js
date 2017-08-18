@@ -2,136 +2,15 @@ import PlaybackController from '../../src/streaming/controllers/PlaybackControll
 import Events from '../../src/core/events/Events';
 import EventBus from '../../src/core/EventBus';
 
+import MetricsModelMock from './mocks/MetricsModelMock';
+import VideoModelMock from './mocks/VideoModelMock';
+import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
+import DashMetricsMock from './mocks/DashMetricsMock';
+
 const expect = require('chai').expect;
 const context = {};
 
 const eventBus = EventBus(context).getInstance();
-
-class MetricsModelMock {
-    constructor() {
-
-    }
-
-    getReadOnlyMetricsFor() {
-        return null;
-    }
-}
-
-class DashMetricsMock {
-    constructor() {
-
-    }
-
-    getCurrentDVRInfo() {
-        return null;
-    }
-}
-
-class MediaPlayerModelMock {
-
-    constructor() {
-        this.WALLCLOCK_TIME_UPDATE_INTERVAL = 50;
-
-    }
-    getWallclockTimeUpdateInterval() {
-        return this.WALLCLOCK_TIME_UPDATE_INTERVAL;
-    }
-}
-
-class VideoModelMock {
-    constructor() {
-        this.isplaying = false;
-        this.ispaused = false;
-        this.isseeking = false;
-        this.time = 0;
-        this.playbackRate = 1;
-        this.playedRange = 1;
-        this.ended = false;
-        this.State = 'ready';
-
-        this.events = {};
-    }
-
-    addEventListener(name, handler) {
-        if (this.events.hasOwnProperty(name)) {
-            this.events[name].push(handler);
-        } else {
-            this.events[name] = [handler];
-        }
-    }
-
-    removeEventListener(name, handler) {
-        if (!this.events.hasOwnProperty(name)) {
-            return;
-        }
-
-        let index = this.events[name].indexOf(handler);
-        if (index != -1) {
-            this.events[name].splice(index, 1);
-        }
-    }
-
-    fireEvent(name, args) {
-        if (!this.events.hasOwnProperty(name)) {
-            return;
-        }
-
-        if (!args || !args.length) {
-            args = [];
-        }
-
-        let evs = this.events[name];
-        let l = evs.length;
-        for (let i = 0; i < l; i++) {
-            evs[i].apply(null, args);
-        }
-    }
-
-    getElement() {
-        return 'element';
-    }
-
-    play() {
-        this.isplaying = true;
-        this.ispaused = false;
-    }
-
-    pause() {
-        this.ispaused = true;
-    }
-
-    isPaused() {
-        return this.ispaused;
-    }
-
-    isSeeking() {
-        return this.isseeking;
-    }
-
-    setCurrentTime(time) {
-        this.time = time;
-    }
-
-    getTime() {
-        return this.time;
-    }
-
-    getPlaybackRate() {
-        return this.playbackRate;
-    }
-
-    getPlayedRanges() {
-        return this.playedRange;
-    }
-
-    getEnded() {
-        return this.ended;
-    }
-
-    getReadyState() {
-        return this.state;
-    }
-}
 
 describe('PlaybackController', function () {
 
