@@ -12,6 +12,7 @@ import Events from '../../src/core/events/Events';
 import InitCache from '../../src/streaming/utils/InitCache';
 import Debug from '../../src/core/Debug';
 
+import MetricsModelMock from './mocks/MetricsModelMock';
 const chai = require('chai');
 const expect = chai.expect;
 
@@ -128,20 +129,6 @@ class AdapterMock {
     }
     getEventsFor() {
         return null;
-    }
-}
-
-class MetricsModelMock {
-    constructor() {
-        this.bufferState = 0;
-        this.bufferLevel = 0;
-    }
-    addBufferState(type, bufferState, bufferTarget) {
-        this.bufferState = bufferState;
-    }
-
-    addBufferLevel(type, date, bufferLevel ) {
-        this.bufferState = bufferLevel;
     }
 }
 

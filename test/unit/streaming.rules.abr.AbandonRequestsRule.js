@@ -1,6 +1,8 @@
 import AbandonRequestsRule from '../../src/streaming/rules/abr/AbandonRequestsRule';
 import FragmentRequest from '../../src/streaming/vo/FragmentRequest';
 
+import MetricsModelMock from './mocks/MetricsModelMock';
+
 const expect = require('chai').expect;
 
 const context = {};
@@ -20,15 +22,6 @@ function RulesContextMock () {
     };    
     this.getTrackInfo = function() {};
     this.getAbrController = function() {};
-}
-
-class MetricsModelMock {
-    constructor() {
-    }
-
-    getReadOnlyMetricsFor(type) {
-        return null;
-    }
 }
 
 class DashMetricsMock {

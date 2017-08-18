@@ -2,20 +2,12 @@ import PlaybackController from '../../src/streaming/controllers/PlaybackControll
 import Events from '../../src/core/events/Events';
 import EventBus from '../../src/core/EventBus';
 
+import MetricsModelMock from './mocks/MetricsModelMock';
+
 const expect = require('chai').expect;
 const context = {};
 
 const eventBus = EventBus(context).getInstance();
-
-class MetricsModelMock {
-    constructor() {
-
-    }
-
-    getReadOnlyMetricsFor() {
-        return null;
-    }
-}
 
 class DashMetricsMock {
     constructor() {
