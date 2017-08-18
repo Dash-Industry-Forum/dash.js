@@ -50,7 +50,8 @@ import MediaSourceController from './MediaSourceController';
 
 function StreamController() {
 
-    const STREAM_END_THRESHOLD = 0.1;
+    const STREAM_END_THRESHOLD = 0.5;
+    const STREAM_END_TIMEOUT_DELAY = 0.1;
 
     let context = this.context;
     let log = Debug(context).getInstance().log;
@@ -92,7 +93,8 @@ function StreamController() {
         initialPlayback,
         playListMetrics,
         videoTrackDetected,
-        audioTrackDetected;
+        audioTrackDetected,
+        endedTimeout;
 
     function setup() {
         timeSyncController = TimeSyncController(context).getInstance();
@@ -150,8 +152,17 @@ function StreamController() {
         if (playbackController.isSeeking()) return;
 
         if (e.timeToEnd <= STREAM_END_THRESHOLD) {
-            //only needed for multiple period content when the native event does not fire due to duration manipulation.
-            onEnded();
+            // In some cases the ended event is not triggered at the end of the stream, do it artificially here.
+            // This should only be a fallback, put an extra STREAM_END_TIMEOUT_DELAY to give the real ended event time to trigger.
+
+            if (endedTimeout) {
+                clearTimeout(endedTimeout);
+                endedTimeout = undefined;
+            }
+            endedTimeout = setTimeout(function () {
+                endedTimeout = undefined;
+                eventBus.trigger(Events.PLAYBACK_ENDED);
+            }, 1000 * (e.timeToEnd + STREAM_END_TIMEOUT_DELAY));
         }
     }
 
@@ -267,6 +278,11 @@ function StreamController() {
     }
 
     function onEnded() {
+        if (endedTimeout) {
+            clearTimeout(endedTimeout);
+            endedTimeout = undefined;
+        }
+
         const nextStream = getNextStream();
         if (nextStream) {
             switchStream(activeStream, nextStream, NaN);
@@ -761,6 +777,11 @@ function StreamController() {
                     data: manifestModel.getValue().url
                 });
             }
+        }
+
+        if (endedTimeout) {
+            clearTimeout(endedTimeout);
+            endedTimeout = undefined;
         }
 
         eventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
