@@ -2,6 +2,7 @@ import ScheduleController from '../../src/streaming/controllers/ScheduleControll
 import Events from '../../src/core/events/Events';
 import EventBus from '../../src/core/EventBus';
 
+import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 import StreamProcessorMock from './mocks/StreamProcessorMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
 
@@ -13,26 +14,6 @@ const eventBus = EventBus(context).getInstance();
 const streamInfo = {
     id: 'id'
 };
-
-class PlaybackControllerMock {
-    constructor() {
-        this.isDynamic = false;
-        this.time = 0;
-        this.startTime = 0;
-    }
-
-    getIsDynamic() {
-        return this.isDynamic;
-    }
-
-    getTime() {
-        return this.time;
-    }
-
-    getStreamStartTime() {
-        return this.startTime;
-    }
-}
 const testType = 'video';
 
 class DashManifestModelMock {

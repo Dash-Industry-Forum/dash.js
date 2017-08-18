@@ -1,19 +1,11 @@
 import EventController from '../../src/streaming/controllers/EventController';
 import EventBus from '../../src/core/EventBus';
 
+import PlaybackControllerMock from './mocks/PlaybackControllerMock';
+
 const expect = require('chai').expect;
 const context = {};
 const eventBus = EventBus(context).getInstance();
-
-class PlaybackControllerMock {
-    constructor() {
-        this.currentTime = 0;
-    }
-
-    getTime() {
-        return this.currentTime;
-    }
-}
 
 class ManifestModelMock {
     constructor() {

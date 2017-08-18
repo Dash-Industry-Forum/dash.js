@@ -13,6 +13,7 @@ import InitCache from '../../src/streaming/utils/InitCache';
 import Debug from '../../src/core/Debug';
 
 import SourceBufferControllerMock from './mocks/SourceBufferControllerMock';
+import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 import StreamProcessorMock from './mocks/StreamProcessorMock';
 import MetricsModelMock from './mocks/MetricsModelMock';
 const chai = require('chai');
@@ -44,21 +45,9 @@ class AdapterMock {
     }
 }
 
-class PlaybackControllerMock {
-    constructor() {
-        this.time = 10;
-    }
-
-    getTime() {
-        return this.time;
-    }
-
-
-}
-
 describe("BufferController", function () {
 
-    // disbale log
+    // disable log
 
     let debug = Debug(context).getInstance();
     debug.setLogToBrowserConsole(false);
