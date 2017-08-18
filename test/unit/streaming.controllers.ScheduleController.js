@@ -3,6 +3,8 @@ import Events from '../../src/core/events/Events';
 import EventBus from '../../src/core/EventBus';
 
 import StreamProcessorMock from './mocks/StreamProcessorMock';
+import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
+
 const expect = require('chai').expect;
 const context = {};
 
@@ -29,16 +31,6 @@ class PlaybackControllerMock {
 
     getStreamStartTime() {
         return this.startTime;
-    }
-}
-class MediaPlayerModelMock {
-
-    constructor() {
-        this.scheduleWhilePaused = false;
-
-    }
-    getScheduleWhilePaused() {
-        return this.scheduleWhilePaused;
     }
 }
 const testType = 'video';

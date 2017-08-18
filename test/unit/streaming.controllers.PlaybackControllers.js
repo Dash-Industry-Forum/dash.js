@@ -4,6 +4,7 @@ import EventBus from '../../src/core/EventBus';
 
 import MetricsModelMock from './mocks/MetricsModelMock';
 import VideoModelMock from './mocks/VideoModelMock';
+import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
 
 const expect = require('chai').expect;
 const context = {};
@@ -17,17 +18,6 @@ class DashMetricsMock {
 
     getCurrentDVRInfo() {
         return null;
-    }
-}
-
-class MediaPlayerModelMock {
-
-    constructor() {
-        this.WALLCLOCK_TIME_UPDATE_INTERVAL = 50;
-
-    }
-    getWallclockTimeUpdateInterval() {
-        return this.WALLCLOCK_TIME_UPDATE_INTERVAL;
     }
 }
 

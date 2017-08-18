@@ -2,6 +2,7 @@ import AbandonRequestsRule from '../../src/streaming/rules/abr/AbandonRequestsRu
 import FragmentRequest from '../../src/streaming/vo/FragmentRequest';
 
 import MetricsModelMock from './mocks/MetricsModelMock';
+import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
 
 const expect = require('chai').expect;
 
@@ -31,16 +32,6 @@ class DashMetricsMock {
     getCurrentBufferLevel() {
         return 15;
     }
-}
-
-class MediaPlayerModelMock {
-    constructor() {
-    }
-
-    getStableBufferTime() {
-        return 10;
-    }
-
 }
           
 describe('AbandonRequestsRule', function () {

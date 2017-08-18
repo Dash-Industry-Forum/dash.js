@@ -3,23 +3,12 @@ import RequestModifier from '../../src/streaming/utils/RequestModifier';
 import ErrorHandler from '../../src/streaming/utils/ErrorHandler';
 import MetricsModel from '../../src/streaming/models/MetricsModel';
 
+import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
+
 const expect = require('chai').expect;
 const sinon = require('sinon');
 
 const context = {};
-class xhrMediaPlayerModelMock {
-    getRetryAttemptsForType() {
-        return 0;
-    }
-
-    getXHRWithCredentialsForType() {
-        return false;
-    }
-
-    getRetryIntervalForType() {
-        return 1000;
-    }
-};
 
 let errHandler;
 let metricsModel;
@@ -30,7 +19,7 @@ let xhrLoader;
 describe('XHRLoader', function () {
 
     beforeEach(function() {
-        mediaPlayerModelMock = new xhrMediaPlayerModelMock();
+        mediaPlayerModelMock = new MediaPlayerModelMock();
         errHandler = ErrorHandler(context).getInstance();
         metricsModel = MetricsModel(context).getInstance();
         requestModifier = RequestModifier(context).getInstance();
