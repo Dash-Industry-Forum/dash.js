@@ -4,6 +4,7 @@ import EventBus from '../../src/core/EventBus';
 import Events from '../../src/core/events/Events';
 import InitCache from '../../src/streaming/utils/InitCache';
 
+import SourceBufferControllerMock from './mocks/SourceBufferControllerMock';
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 const chai = require('chai');
 const expect = chai.expect;
@@ -14,52 +15,6 @@ const eventBus = EventBus(context).getInstance();
 const objectUtils = ObjectUtils(context).getInstance();
 const initCache = InitCache(context).getInstance();
 
-function BufferMock() {
-    this.initialized = false;
-    this.bytes = undefined;
-    this.length = 20;
-
-    this.initialize = function () {
-        this.initialized = true;
-    };
-
-    this.append = function (chunk) {
-        this.bytes = chunk.bytes;
-    };
-}
-class SourceBufferControllerMock {
-    constructor() {
-        this.reset();
-    }
-
-    reset() {
-        this.defaultStreamType = testType;
-        this.aborted = false;
-        this.sourceBufferRemoved = false;
-        this.buffer = new BufferMock();
-        this.createError = false;
-    }
-
-    createSourceBuffer() {
-        if(!this.createError){
-            return this.buffer;
-        } else {
-            throw new Error('create error');
-        }
-    }
-
-    abort() {
-        this.aborted = true;
-    }
-
-    append(buffer, chunk) {
-        this.buffer.append(chunk);
-    }
-
-    removeSourceBuffer() {
-        this.sourceBufferRemoved = true;
-    }
-}
 
 class RepresentationControllerMock {
     constructor() {}
@@ -89,6 +44,7 @@ describe('NotFragmentedTextBufferController', function () {
 
     let streamProcessorMock = new StreamProcessorMock();
     let sourceBufferMock = new SourceBufferControllerMock();
+    let sourceBufferMock = new SourceBufferControllerMock(testType);
     let errorHandlerMock = new ErrorHandlerMock();
     let notFragmentedTextBufferController;
 
@@ -103,7 +59,7 @@ describe('NotFragmentedTextBufferController', function () {
 
     afterEach(function () {
         streamProcessorMock.reset();
-        sourceBufferMock.reset();
+        sourceBufferMock.reset(testType);
     });
 
     describe('when not initialized', function () {

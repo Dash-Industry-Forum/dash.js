@@ -12,6 +12,7 @@ import Events from '../../src/core/events/Events';
 import InitCache from '../../src/streaming/utils/InitCache';
 import Debug from '../../src/core/Debug';
 
+import SourceBufferControllerMock from './mocks/SourceBufferControllerMock';
 import MetricsModelMock from './mocks/MetricsModelMock';
 const chai = require('chai');
 const expect = chai.expect;
@@ -22,41 +23,6 @@ const eventBus = EventBus(context).getInstance();
 const objectUtils = ObjectUtils(context).getInstance();
 const initCache = InitCache(context).getInstance();
 
-class SourceBufferControllerMock {
-    constructor() {
-        this.reset();
-    }
-
-    createSourceBuffer() {
-        return {
-            initialize: () => {}
-        };
-    }
-
-    abort() {
-        this.aborted = true;
-    }
-
-    append(buffer, chunk) {
-        this.buffer = chunk.bytes;
-    }
-
-    getBufferLength() {
-        return this.bufferLength;
-    }
-
-    removeSourceBuffer() {
-        this.sourceBufferRemoved = true;
-    }
-
-    reset() {
-        this.defaultStreamType = testType;
-        this.aborted = false;
-        this.sourceBufferRemoved = false;
-        this.buffer = undefined;
-        this.bufferLength = 20;
-    }
-}
 
 class StreamControllerMock {
     getActiveStreamInfo() {
@@ -151,7 +117,7 @@ describe("BufferController", function () {
     let debug = Debug(context).getInstance();
     debug.setLogToBrowserConsole(false);
     let streamProcessor = new StreamProcessorMock();
-    let sourceBufferMock = new SourceBufferControllerMock();
+    let sourceBufferMock = new SourceBufferControllerMock(testType);
     let streamControllerMock = new StreamControllerMock();
     let adapterMock = new AdapterMock();
     let metricsModelMock = new MetricsModelMock();
@@ -179,7 +145,7 @@ describe("BufferController", function () {
     afterEach(function () {
         bufferController = null;
         streamProcessor.reset();
-        sourceBufferMock.reset();
+        sourceBufferMock.reset(testType);
     });
 
     describe('Method initialize', function () {
@@ -251,7 +217,7 @@ describe("BufferController", function () {
 
             bufferController.initialize({});
             bufferController.switchInitData('streamId', 'representationId');
-            expect(sourceBufferMock.buffer).to.equal(chunk.bytes);
+            expect(sourceBufferMock.buffer.bytes).to.equal(chunk.bytes);
         });
 
         it('should trigger INIT_REQUESTED if no init data is cached', function (done) {
@@ -300,12 +266,12 @@ describe("BufferController", function () {
             }
             let onInitDataLoaded = function () {
                 eventBus.off(Events.INIT_FRAGMENT_LOADED, onInitDataLoaded);
-                expect(sourceBufferMock.buffer).to.be.undefined;
+                expect(sourceBufferMock.buffer.bytes).to.be.undefined;
                 done();
             }
             eventBus.on(Events.INIT_FRAGMENT_LOADED, onInitDataLoaded, this);
 
-            expect(sourceBufferMock.buffer).to.be.undefined;
+            expect(sourceBufferMock.buffer.bytes).to.be.undefined;
             // send event
             eventBus.trigger(Events.INIT_FRAGMENT_LOADED, event)
         });
@@ -326,12 +292,12 @@ describe("BufferController", function () {
             }
             let onInitDataLoaded = function () {
                 eventBus.off(Events.INIT_FRAGMENT_LOADED, onInitDataLoaded);
-                expect(sourceBufferMock.buffer).to.equal(event.chunk.bytes);
+                expect(sourceBufferMock.buffer.bytes).to.equal(event.chunk.bytes);
                 done();
             }
             eventBus.on(Events.INIT_FRAGMENT_LOADED, onInitDataLoaded, this);
 
-            expect(sourceBufferMock.buffer).to.be.undefined
+            expect(sourceBufferMock.buffer.bytes).to.be.undefined;
             // send event
             eventBus.trigger(Events.INIT_FRAGMENT_LOADED, event)
         });
@@ -386,12 +352,12 @@ describe("BufferController", function () {
             }
             let onMediaFragmentLoaded = function () {
                 eventBus.off(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded);
-                expect(sourceBufferMock.buffer).to.be.undefined;
+                expect(sourceBufferMock.buffer.bytes).to.be.undefined;
                 done();
             }
             eventBus.on(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, this);
 
-            expect(sourceBufferMock.buffer).to.be.undefined;
+            expect(sourceBufferMock.buffer.bytes).to.be.undefined;
             // send event
             eventBus.trigger(Events.MEDIA_FRAGMENT_LOADED, event)
         });
@@ -408,12 +374,12 @@ describe("BufferController", function () {
             }
             let onMediaFragmentLoaded = function () {
                 eventBus.off(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded);
-                expect(sourceBufferMock.buffer).to.equal(event.chunk.bytes);
+                expect(sourceBufferMock.buffer.bytes).to.equal(event.chunk.bytes);
                 done();
             }
             eventBus.on(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, this);
 
-            expect(sourceBufferMock.buffer).to.be.undefined
+            expect(sourceBufferMock.buffer.bytes).to.be.undefined
             // send event
             eventBus.trigger(Events.MEDIA_FRAGMENT_LOADED, event)
         });
