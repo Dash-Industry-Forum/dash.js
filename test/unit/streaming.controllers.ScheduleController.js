@@ -5,6 +5,7 @@ import EventBus from '../../src/core/EventBus';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 import StreamProcessorMock from './mocks/StreamProcessorMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
+import DashManifestModelMock from './mocks/DashManifestModelMock';
 
 const expect = require('chai').expect;
 const context = {};
@@ -15,15 +16,6 @@ const streamInfo = {
     id: 'id'
 };
 const testType = 'video';
-
-class DashManifestModelMock {
-
-    constructor() {}
-
-    getIsTextTrack() {
-        return false;
-    }
-}
 
 describe('ScheduleController', function () {
 
