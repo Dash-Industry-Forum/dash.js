@@ -6,38 +6,13 @@ import Events from '../../src/core/events/Events';
 import EventBus from '../../src/core/EventBus';
 
 import VideoModelMock from './mocks/VideoModelMock';
+import VideoElementMock from './mocks/VideoElementMock';
+
 const expect = require('chai').expect;
 const context = {};
 
 const eventBus = EventBus(context).getInstance();
 const objectUtils = ObjectUtils(context).getInstance();
-
-class TextTrackMock {
-    constructor() {
-        this.kind = null;
-        this.label = null;
-    }
-}
-
-class VideoMock {
-
-    constructor() {
-        this.reset();
-    }
-
-    reset() {
-        this.textTracks = [];
-    }
-
-    addTextTrack(kind, label) {
-        let textTrack = new TextTrackMock();
-        textTrack.kind = kind;
-        textTrack.label = label;
-        this.textTracks.push(textTrack);
-
-        return textTrack;
-    }
-}
 
 describe('TextController', function () {
 
@@ -72,7 +47,7 @@ describe('TextController', function () {
     describe('Method setTextTrack', function () {
 
         beforeEach( function() {
-            videoMock = new VideoMock();
+            videoMock = new VideoElementMock();
 
             textTracks.addTextTrack({
                 index : 0,
