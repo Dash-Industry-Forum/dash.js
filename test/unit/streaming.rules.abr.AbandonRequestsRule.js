@@ -3,6 +3,7 @@ import FragmentRequest from '../../src/streaming/vo/FragmentRequest';
 
 import MetricsModelMock from './mocks/MetricsModelMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
+import DashMetricsMock from './mocks/DashMetricsMock';
 
 const expect = require('chai').expect;
 
@@ -23,15 +24,6 @@ function RulesContextMock () {
     };    
     this.getTrackInfo = function() {};
     this.getAbrController = function() {};
-}
-
-class DashMetricsMock {
-    constructor() {
-    }
-
-    getCurrentBufferLevel() {
-        return 15;
-    }
 }
           
 describe('AbandonRequestsRule', function () {

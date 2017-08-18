@@ -5,21 +5,12 @@ import EventBus from '../../src/core/EventBus';
 import MetricsModelMock from './mocks/MetricsModelMock';
 import VideoModelMock from './mocks/VideoModelMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
+import DashMetricsMock from './mocks/DashMetricsMock';
 
 const expect = require('chai').expect;
 const context = {};
 
 const eventBus = EventBus(context).getInstance();
-
-class DashMetricsMock {
-    constructor() {
-
-    }
-
-    getCurrentDVRInfo() {
-        return null;
-    }
-}
 
 describe('PlaybackController', function () {
 
