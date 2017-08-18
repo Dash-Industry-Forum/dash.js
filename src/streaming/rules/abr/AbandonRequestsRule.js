@@ -144,10 +144,11 @@ function AbandonRequestsRule(config) {
         }
 
         const bytesRemaining = fragmentInfo.bytesTotal - fragmentInfo.bytesLoaded;
-        fragmentInfo.estimatedTimeOfDownload = fragmentInfo.elapsedTime + 8 * bytesRemaining / fragmentInfo.throughput;
+        const estimatedTimeRemaining = 8 * bytesRemaining / fragmentInfo.throughput;
+        fragmentInfo.estimatedTimeOfDownload = fragmentInfo.elapsedTime + estimatedTimeRemaining;
 
         const bufferLevelMs = 1000 * bufferLevel;
-        if (fragmentInfo.estimatedTimeOfDownload < Math.min(fragmentInfo.segmentDurationMs * ABANDON_MULTIPLIER, bufferLevelMs)) {
+        if (fragmentInfo.estimatedTimeOfDownload < fragmentInfo.segmentDurationMs * ABANDON_MULTIPLIER  && estimatedTimeRemaining < bufferLevelMs) {
             // download is expected to finish in a reasonable time
             return switchRequest;
         }
