@@ -5,6 +5,7 @@ import ObjectUtils from '../../src/streaming/utils/ObjectUtils';
 import Events from '../../src/core/events/Events';
 import EventBus from '../../src/core/EventBus';
 
+import VideoModelMock from './mocks/VideoModelMock';
 const expect = require('chai').expect;
 const context = {};
 
@@ -38,19 +39,6 @@ class VideoMock {
     }
 }
 
-class VideoModelMock {
-    constructor() {
-        this.tracks = [];
-    }
-
-    getTextTracks() {
-        return this.tracks;
-    }
-
-    getTTMLRenderingDiv() {
-        return {};
-    }
-}
 describe('TextController', function () {
 
     let videoModelMock = new VideoModelMock();
