@@ -17,6 +17,7 @@ import SourceBufferControllerMock from './mocks/SourceBufferControllerMock';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 import StreamProcessorMock from './mocks/StreamProcessorMock';
 import MetricsModelMock from './mocks/MetricsModelMock';
+import AdapterMock from './mocks/AdapterMock';
 
 const chai = require('chai');
 const expect = chai.expect;
@@ -29,17 +30,6 @@ const streamInfo = {
 const eventBus = EventBus(context).getInstance();
 const objectUtils = ObjectUtils(context).getInstance();
 const initCache = InitCache(context).getInstance();
-
-class AdapterMock {
-    constructor() {
-        this.metricsList = {
-            BUFFER_STATE: 'BUFFER_STATE'
-        };
-    }
-    getEventsFor() {
-        return null;
-    }
-}
 
 describe("BufferController", function () {
 
