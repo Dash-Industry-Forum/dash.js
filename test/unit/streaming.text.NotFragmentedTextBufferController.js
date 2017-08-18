@@ -6,44 +6,23 @@ import InitCache from '../../src/streaming/utils/InitCache';
 
 import SourceBufferControllerMock from './mocks/SourceBufferControllerMock';
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
+import StreamProcessorMock from './mocks/StreamProcessorMock';
+
 const chai = require('chai');
 const expect = chai.expect;
 
 const context = {};
 const testType = 'text';
+const streamInfo = {
+    id: 'id'
+};
 const eventBus = EventBus(context).getInstance();
 const objectUtils = ObjectUtils(context).getInstance();
 const initCache = InitCache(context).getInstance();
 
-
-class RepresentationControllerMock {
-    constructor() {}
-}
-
-class StreamProcessorMock {
-    constructor() {
-        this.type = testType;
-        this.representationController = new RepresentationControllerMock();
-    }
-
-    getType() {
-        return this.type;
-    }
-
-    getRepresentationController() {
-        return this.representationController;
-    }
-
-    getFragmentModel() {
-        return 'fragmentModel';
-    }
-
-    reset() {}
-}
 describe('NotFragmentedTextBufferController', function () {
 
-    let streamProcessorMock = new StreamProcessorMock();
-    let sourceBufferMock = new SourceBufferControllerMock();
+    let streamProcessorMock = new StreamProcessorMock(testType, streamInfo);
     let sourceBufferMock = new SourceBufferControllerMock(testType);
     let errorHandlerMock = new ErrorHandlerMock();
     let notFragmentedTextBufferController;
@@ -254,7 +233,7 @@ describe('NotFragmentedTextBufferController', function () {
                 let buffer = notFragmentedTextBufferController.createBuffer('text');
 
                 let event = {
-                    fragmentModel : 'fragmentModel',
+                    fragmentModel : streamProcessorMock.getFragmentModel(),
                     chunk : {
                     }
                 };
@@ -274,7 +253,7 @@ describe('NotFragmentedTextBufferController', function () {
                 let buffer = notFragmentedTextBufferController.createBuffer('text');
 
                 let event = {
-                    fragmentModel : 'fragmentModel',
+                    fragmentModel : streamProcessorMock.getFragmentModel(),
                     chunk : {
                         bytes : 'data'
                     }

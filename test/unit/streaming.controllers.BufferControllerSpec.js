@@ -13,6 +13,7 @@ import InitCache from '../../src/streaming/utils/InitCache';
 import Debug from '../../src/core/Debug';
 
 import SourceBufferControllerMock from './mocks/SourceBufferControllerMock';
+import StreamProcessorMock from './mocks/StreamProcessorMock';
 import MetricsModelMock from './mocks/MetricsModelMock';
 const chai = require('chai');
 const expect = chai.expect;
@@ -30,61 +31,6 @@ class StreamControllerMock {
             id: 'some_id'
         };
     }
-}
-
-class StreamProcessorMock {
-    constructor() {
-        this.type = testType;
-    }
-
-    getType() {
-        return this.type;
-    }
-
-    getCurrentTrack() {}
-
-    getStreamInfo() {
-        return {
-            id: 'some_id'
-        };
-    }
-
-    getMediaInfo() {
-        return {
-            bitrateList: [],
-            mimeType: "video/mp4"
-        };
-    }
-
-    getIndexHandler() {
-        return {
-            updateRepresentation: () => {}
-        };
-    }
-
-    getScheduleController() {
-        return {
-            getBufferTarget() {
-                return 20;
-            }
-        };
-    }
-
-    getFragmentModel() {
-        return 'fragmentModel';
-    }
-    isDynamic() {
-        return true;
-    }
-
-    getRepresentationInfoForQuality(quality) {
-        let offest = quality ? 2 : 1;
-        return {
-            MSETimeOffset: offest
-        }
-    }
-
-    reset() {}
 }
 
 class AdapterMock {
@@ -116,7 +62,7 @@ describe("BufferController", function () {
 
     let debug = Debug(context).getInstance();
     debug.setLogToBrowserConsole(false);
-    let streamProcessor = new StreamProcessorMock();
+    let streamProcessor = new StreamProcessorMock(testType, streamInfo);
     let sourceBufferMock = new SourceBufferControllerMock(testType);
     let streamControllerMock = new StreamControllerMock();
     let adapterMock = new AdapterMock();
@@ -279,7 +225,7 @@ describe("BufferController", function () {
         it('should append data to source buffer ', function (done) {
 
             let event = {
-                fragmentModel: 'fragmentModel',
+                fragmentModel: streamProcessor.getFragmentModel(),
                 chunk: {
                     bytes: 'initData',
                     quality: 2,
@@ -314,7 +260,7 @@ describe("BufferController", function () {
                 representationId: 'representationId'
             }
             let event = {
-                fragmentModel: 'fragmentModel',
+                fragmentModel: streamProcessor.getFragmentModel(),
                 chunk: chunk
             }
 
@@ -365,7 +311,7 @@ describe("BufferController", function () {
         it('should append data to source buffer ', function (done) {
 
             let event = {
-                fragmentModel: 'fragmentModel',
+                fragmentModel: streamProcessor.getFragmentModel(),
                 chunk: {
                     bytes: 'data',
                     quality: 2,
@@ -387,7 +333,7 @@ describe("BufferController", function () {
         it('should trigger VIDEO_CHUNK_RECEIVED if event is video', function (done) {
 
             let event = {
-                fragmentModel: 'fragmentModel',
+                fragmentModel: streamProcessor.getFragmentModel(),
                 chunk: {
                     bytes: 'data',
                     quality: 2,

@@ -2,6 +2,7 @@ import ScheduleController from '../../src/streaming/controllers/ScheduleControll
 import Events from '../../src/core/events/Events';
 import EventBus from '../../src/core/EventBus';
 
+import StreamProcessorMock from './mocks/StreamProcessorMock';
 const expect = require('chai').expect;
 const context = {};
 
@@ -10,60 +11,6 @@ const eventBus = EventBus(context).getInstance();
 const streamInfo = {
     id: 'id'
 };
-
-const currentRepresentationInfo = {};
-
-class FragmentModelMock {
-    constructor() {
-        this.requests = [];
-    }
-
-    getRequests() {
-        return this.requests;
-    }
-}
-
-class BufferControllerMock {
-    constructor() {
-        this.seekStartTime = 0;
-    }
-
-    setSeekStartTime(time) {
-        this.seekStartTime = time
-    }
-
-    isBufferingCompleted() {
-        return false;
-    }
-}
-
-class StreamProcessorMock {
-    constructor() {
-        this.fragmentModel = new FragmentModelMock();
-        this.bufferController = new BufferControllerMock();
-    }
-
-    getFragmentModel() {
-        return this.fragmentModel;
-    }
-
-    getBufferController() {
-        return this.bufferController;
-    }
-
-    getStreamInfo() {
-        return streamInfo;
-    }
-
-    getCurrentRepresentationInfo() {
-        return currentRepresentationInfo;
-    }
-
-    isBufferingCompleted() {
-        return this.bufferController.isBufferingCompleted();
-    }
-
-}
 
 class PlaybackControllerMock {
     constructor() {
@@ -94,6 +41,7 @@ class MediaPlayerModelMock {
         return this.scheduleWhilePaused;
     }
 }
+const testType = 'video';
 
 class DashManifestModelMock {
 
@@ -114,12 +62,12 @@ describe('ScheduleController', function () {
 
     beforeEach(function () {
         mediaPlayerModelMock = new MediaPlayerModelMock();
-        streamProcessorMock = new StreamProcessorMock();
+        streamProcessorMock = new StreamProcessorMock(testType, streamInfo);
         dashManifestModelMock = new DashManifestModelMock();
         playbackControllerMock = new PlaybackControllerMock();
 
         scheduleController = ScheduleController(context).create({
-            type: 'video',
+            type: testType,
             mediaPlayerModel: mediaPlayerModelMock,
             streamProcessor: streamProcessorMock,
             dashManifestModel: dashManifestModelMock,
