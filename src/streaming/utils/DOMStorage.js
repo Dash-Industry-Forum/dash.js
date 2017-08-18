@@ -161,7 +161,7 @@ function DOMStorage(config) {
             let key = LOCAL_STORAGE_BITRATE_KEY_TEMPLATE.replace(/\?/, type);
             let obj = JSON.parse(localStorage.getItem(key)) || {};
             let isExpired = (new Date().getTime() - parseInt(obj.timestamp, 10)) >= mediaPlayerModel.getLastBitrateCachingInfo().ttl || false;
-            let bitrate = parseInt(obj.bitrate, 10);
+            let bitrate = parseFloat(obj.bitrate);
 
             if (!isNaN(bitrate) && !isExpired) {
                 savedBitrate = bitrate;
@@ -188,7 +188,7 @@ function DOMStorage(config) {
         if (canStore(STORAGE_TYPE_LOCAL, LAST_BITRATE) && bitrate) {
             let key = LOCAL_STORAGE_BITRATE_KEY_TEMPLATE.replace(/\?/, type);
             try {
-                localStorage.setItem(key, JSON.stringify({bitrate: bitrate / 1000, timestamp: getTimestamp()}));
+                localStorage.setItem(key, JSON.stringify({bitrate: bitrate.toFixed(3), timestamp: getTimestamp()}));
             } catch (e) {
                 log(e.message);
             }
