@@ -4,6 +4,7 @@ import EventBus from '../../src/core/EventBus';
 import Events from '../../src/core/events/Events';
 import InitCache from '../../src/streaming/utils/InitCache';
 
+import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 const chai = require('chai');
 const expect = chai.expect;
 
@@ -26,17 +27,6 @@ function BufferMock() {
         this.bytes = chunk.bytes;
     };
 }
-
-class ErrorHandlerMock {
-    constructor() {
-        this.error = '';
-    }
-
-    mediaSourceError(error) {
-        this.error = error;
-    }
-}
-
 class SourceBufferControllerMock {
     constructor() {
         this.reset();
