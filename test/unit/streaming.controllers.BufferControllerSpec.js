@@ -12,27 +12,23 @@ import Events from '../../src/core/events/Events';
 import InitCache from '../../src/streaming/utils/InitCache';
 import Debug from '../../src/core/Debug';
 
+import StreamControllerMock from './mocks/StreamControllerMock';
 import SourceBufferControllerMock from './mocks/SourceBufferControllerMock';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 import StreamProcessorMock from './mocks/StreamProcessorMock';
 import MetricsModelMock from './mocks/MetricsModelMock';
+
 const chai = require('chai');
 const expect = chai.expect;
 
 const context = {};
 const testType = 'video';
+const streamInfo = {
+    id: 'id'
+};
 const eventBus = EventBus(context).getInstance();
 const objectUtils = ObjectUtils(context).getInstance();
 const initCache = InitCache(context).getInstance();
-
-
-class StreamControllerMock {
-    getActiveStreamInfo() {
-        return {
-            id: 'some_id'
-        };
-    }
-}
 
 class AdapterMock {
     constructor() {
