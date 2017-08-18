@@ -432,7 +432,9 @@
               "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
               "httpRequestHeaders": {
                 "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNmU1YTFkMjYtMjc1Ny00N2Q3LTgwNDYtZWFhNWQxZDM0YjVhIn1dfX0.yF7PflOPv9qHnu3ZWJNZ12jgkqTabmwXbDWk_47tLNE"
-              }
+              },
+              "audioRobustness": "SW_SECURE_CRYPTO",
+              "videoRobustness": "SW_SECURE_DECODE"
             },
             "com.microsoft.playready": {
               "serverURL": "https://drm-playready-licensing.axtest.net/AcquireLicense",
