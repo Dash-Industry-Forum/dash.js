@@ -43,10 +43,7 @@ function TimelineConverter() {
         expectedLiveEdge;
 
     function initialize() {
-
-        clientServerTimeShift = 0;
-        isClientServerTimeSyncCompleted = false;
-        expectedLiveEdge = NaN;
+        resetInitialSettings();
         eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncComplete, this);
     }
 
@@ -195,11 +192,15 @@ function TimelineConverter() {
         return (periodStart - presentationOffset);
     }
 
-    function reset() {
-        eventBus.off(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncComplete, this);
+    function resetInitialSettings() {
         clientServerTimeShift = 0;
         isClientServerTimeSyncCompleted = false;
         expectedLiveEdge = NaN;
+    }
+
+    function reset() {
+        eventBus.off(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncComplete, this);
+        resetInitialSettings();
     }
 
     instance = {
