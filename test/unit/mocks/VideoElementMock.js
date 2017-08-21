@@ -2,6 +2,7 @@ class TextTrackMock {
     constructor() {
         this.kind = null;
         this.label = null;
+        this.lang = null;
     }
 }
 
@@ -20,10 +21,11 @@ class VideoElementMock {
         this.setup();
     }   
 
-    addTextTrack(kind, label) {
+    addTextTrack(kind, label, lang) {
         let textTrack = new TextTrackMock();
         textTrack.kind = kind;
         textTrack.label = label;
+        textTrack.lang = lang;
         this.textTracks.push(textTrack);
 
         return textTrack;

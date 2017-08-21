@@ -6,7 +6,6 @@ import Events from '../../src/core/events/Events';
 import EventBus from '../../src/core/EventBus';
 
 import VideoModelMock from './mocks/VideoModelMock';
-import VideoElementMock from './mocks/VideoElementMock';
 
 const expect = require('chai').expect;
 const context = {};
