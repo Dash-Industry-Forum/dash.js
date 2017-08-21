@@ -85,6 +85,7 @@ function BufferController(config) {
 
     function setup() {
         log = Debug(context).getInstance().log.bind(instance);
+        initCache = InitCache(context).getInstance();
 
         reset();
     }
@@ -96,7 +97,6 @@ function BufferController(config) {
     function initialize(Source) {
         setMediaSource(Source);
 
-        initCache = InitCache(context).getInstance();
         requiredQuality = abrController.getQualityFor(type, streamProcessor.getStreamInfo());
 
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
