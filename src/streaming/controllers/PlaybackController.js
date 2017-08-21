@@ -44,7 +44,6 @@ function PlaybackController() {
 
     let instance,
         streamController,
-        timelineConverter,
         metricsModel,
         dashMetrics,
         manifestModel,
@@ -215,9 +214,6 @@ function PlaybackController() {
 
         if (config.streamController) {
             streamController = config.streamController;
-        }
-        if (config.timelineConverter) {
-            timelineConverter = config.timelineConverter;
         }
         if (config.metricsModel) {
             metricsModel = config.metricsModel;
