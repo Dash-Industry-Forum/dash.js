@@ -32,6 +32,10 @@ describe('StreamController', function () {
             expect(streamController.load.bind(streamController)).to.throw('setConfig function has to be called previously');
         });
 
+        it("should throw an exception when attempting to call load while setConfig has not been called properly - empty manifestLoader object", function () {
+            streamController.setConfig({manifestLoader: {}});
+            expect(streamController.load.bind(streamController)).to.throw('setConfig function has to be called previously');
+        });
         it("should throw an exception when attempting to call loadWithManifest while setConfig has not been called", function () {
             expect(streamController.loadWithManifest.bind(streamController)).to.throw('setConfig function has to be called previously');
         });
