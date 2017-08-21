@@ -162,12 +162,6 @@ function TimelineConverter() {
         return mpdRelativeTime - periodStartTime;
     }
 
-    function calcMpdRelativeTimeFromPeriodRelativeTime(representation, periodRelativeTime) {
-        const periodStartTime = representation.adaptation.period.start;
-
-        return periodRelativeTime + periodStartTime;
-    }
-
     /*
     * We need to figure out if we want to timesync for segmentTimeine where useCalculatedLiveEdge = true
     * seems we figure out client offset based on logic in liveEdgeFinder getLiveEdge timelineConverter.setClientTimeOffset(liveEdge - representationInfo.DVRWindow.end);
@@ -216,7 +210,6 @@ function TimelineConverter() {
         calcPresentationTimeFromWallTime: calcPresentationTimeFromWallTime,
         calcPresentationTimeFromMediaTime: calcPresentationTimeFromMediaTime,
         calcPeriodRelativeTimeFromMpdRelativeTime: calcPeriodRelativeTimeFromMpdRelativeTime,
-        calcMpdRelativeTimeFromPeriodRelativeTime: calcMpdRelativeTimeFromPeriodRelativeTime,
         calcMediaTimeFromPresentationTime: calcMediaTimeFromPresentationTime,
         calcSegmentAvailabilityRange: calcSegmentAvailabilityRange,
         calcWallTimeForSegment: calcWallTimeForSegment,
