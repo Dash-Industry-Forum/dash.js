@@ -6,6 +6,10 @@ import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 import StreamProcessorMock from './mocks/StreamProcessorMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
 import DashManifestModelMock from './mocks/DashManifestModelMock';
+import AbrControllerMock from './mocks/AbrControllerMock';
+import StreamControllerMock from './mocks/StreamControllerMock';
+import DashMetricsMock from './mocks/DashMetricsMock';
+import MetricsModelMock from './mocks/MetricsModelMock';
 
 const expect = require('chai').expect;
 const context = {};
@@ -24,19 +28,31 @@ describe('ScheduleController', function () {
     let streamProcessorMock;
     let dashManifestModelMock;
     let playbackControllerMock;
+    let abrControllerMock;
+    let streamControllerMock;
+    let dashMetricsMock;
+    let metricsModelMock;
 
     beforeEach(function () {
         mediaPlayerModelMock = new MediaPlayerModelMock();
         streamProcessorMock = new StreamProcessorMock(testType, streamInfo);
         dashManifestModelMock = new DashManifestModelMock();
         playbackControllerMock = new PlaybackControllerMock();
+        abrControllerMock = new AbrControllerMock();
+        streamControllerMock = new StreamControllerMock();
+        dashMetricsMock = new DashMetricsMock();
+        metricsModelMock = new MetricsModelMock();
 
         scheduleController = ScheduleController(context).create({
             type: testType,
             mediaPlayerModel: mediaPlayerModelMock,
             streamProcessor: streamProcessorMock,
             dashManifestModel: dashManifestModelMock,
-            playbackController: playbackControllerMock
+            playbackController: playbackControllerMock,
+            abrController: abrControllerMock,
+            streamController: streamControllerMock,
+            dashMetrics: dashMetricsMock,
+            metricsModel: metricsModelMock
         });
 
         scheduleController.initialize();
