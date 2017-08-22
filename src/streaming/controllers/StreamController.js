@@ -116,9 +116,10 @@ function StreamController() {
         manifestUpdater.setConfig({
             manifestModel: manifestModel,
             dashManifestModel: dashManifestModel,
-            mediaPlayerModel: mediaPlayerModel
+            mediaPlayerModel: mediaPlayerModel,
+            manifestLoader: manifestLoader
         });
-        manifestUpdater.initialize(manifestLoader);
+        manifestUpdater.initialize();
 
         baseURLController.setConfig({
             dashManifestModel: dashManifestModel
