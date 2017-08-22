@@ -1,10 +1,9 @@
 import EventBus from '../../src/core/EventBus';
 
 const chai = require('chai');
-const spies = require('chai-spies');
+const sinon = require('sinon');
 const expect = chai.expect;
-
-chai.use(spies);
+const assert = chai.assert;
 
 const context = {};
 const eventBus = EventBus(context).getInstance();
@@ -20,11 +19,25 @@ describe('EventBus', function () {
     });
 
     it("should throw an exception when attempting to trigger a 'type' payload parameter", function () {
-        const spy = chai.spy();
+        const spy = sinon.spy();
 
         eventBus.on('EVENT_TEST', spy);
 
         expect(eventBus.trigger.bind(eventBus, 'EVENT_TEST', { type:{}})).to.throw('\'type\' is a reserved word for event dispatching');
+    });
+
+    it("should respect priority parameter in order to notify the different listeners", function () {
+        const spy = sinon.spy();
+        const spy2 = sinon.spy();
+
+        eventBus.on('EVENT_TEST', spy);
+        eventBus.on('EVENT_TEST', spy2, this, EventBus.EVENT_PRIORITY_HIGH);
+
+        eventBus.trigger('EVENT_TEST', {});
+        
+        assert.equal(spy.calledOnce, true);
+        assert.equal(spy2.calledOnce, true);
+        assert.equal(spy2.calledBefore(spy), true);
     });
     
 });
