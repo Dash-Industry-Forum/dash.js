@@ -80,8 +80,6 @@ function ManifestUpdater() {
         update(manifest);
     }
 
-    function getManifestLoader() {
-        return manifestLoader;
     }
 
     function reset() {
@@ -168,7 +166,6 @@ function ManifestUpdater() {
     instance = {
         initialize: initialize,
         setManifest: setManifest,
-        getManifestLoader: getManifestLoader,
         refreshManifest: refreshManifest,
         setConfig: setConfig,
         reset: reset
