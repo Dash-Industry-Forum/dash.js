@@ -87,7 +87,7 @@ function BufferController(config) {
         log = Debug(context).getInstance().log.bind(instance);
         initCache = InitCache(context).getInstance();
 
-        reset();
+        resetInitialSettings();
     }
 
     function getBufferControllerType() {
@@ -472,6 +472,22 @@ function BufferController(config) {
         return isBufferingCompleted;
     }
 
+    function resetInitialSettings() {
+        criticalBufferLevel = Number.POSITIVE_INFINITY;
+        bufferState = BUFFER_EMPTY;
+        requiredQuality = AbrController.QUALITY_DEFAULT;
+        lastIndex = Number.POSITIVE_INFINITY;
+        maxAppendedIndex = 0;
+        appendedBytesInfo = null;
+        appendingMediaChunk = false;
+        isBufferingCompleted = false;
+        isAppendingInProgress = false;
+        isPruningInProgress = false;
+        seekClearedBufferingCompleted = false;
+        bufferLevel = 0;
+        wallclockTicked = 0;
+    }
+
     function reset(errored) {
 
         eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
@@ -488,19 +504,7 @@ function BufferController(config) {
         eventBus.off(Events.SOURCEBUFFER_APPEND_COMPLETED, onAppended, this);
         eventBus.off(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
 
-        criticalBufferLevel = Number.POSITIVE_INFINITY;
-        bufferState = BUFFER_EMPTY;
-        requiredQuality = AbrController.QUALITY_DEFAULT;
-        lastIndex = Number.POSITIVE_INFINITY;
-        maxAppendedIndex = 0;
-        appendedBytesInfo = null;
-        appendingMediaChunk = false;
-        isBufferingCompleted = false;
-        isAppendingInProgress = false;
-        isPruningInProgress = false;
-        seekClearedBufferingCompleted = false;
-        bufferLevel = 0;
-        wallclockTicked = 0;
+        resetInitialSettings();
 
         if (!errored) {
             sourceBufferController.abort(mediaSource, buffer);

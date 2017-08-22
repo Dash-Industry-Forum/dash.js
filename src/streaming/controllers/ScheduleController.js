@@ -83,9 +83,8 @@ function ScheduleController(config) {
     function setup() {
         log = Debug(context).getInstance().log.bind(instance);
 
-        reset();
+        resetInitialSettings();
     }
-
 
     function initialize() {
         fragmentModel = streamProcessor.getFragmentModel();
@@ -572,6 +571,22 @@ function ScheduleController(config) {
         }
     }
 
+    function resetInitialSettings() {
+        isFragmentProcessingInProgress = false;
+        timeToLoadDelay = 0;
+        seekTarget = NaN;
+        playListMetrics = null;
+        playListTraceMetrics = null;
+        playListTraceMetricsClosed = true;
+        initialRequest = true;
+        lastInitQuality = NaN;
+        lastQualityIndex = NaN;
+        topQualityIndex = {};
+        replaceRequestArray = [];
+        isStopped = true;
+        switchTrack = true;
+    }
+
     function reset() {
         //eventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
         eventBus.off(Events.DATA_UPDATE_STARTED, onDataUpdateStarted, this);
@@ -597,19 +612,7 @@ function ScheduleController(config) {
 
         stop();
         completeQualityChange(false);
-        isFragmentProcessingInProgress = false;
-        timeToLoadDelay = 0;
-        seekTarget = NaN;
-        playListMetrics = null;
-        playListTraceMetrics = null;
-        playListTraceMetricsClosed = true;
-        initialRequest = true;
-        lastInitQuality = NaN;
-        lastQualityIndex = NaN;
-        topQualityIndex = {};
-        replaceRequestArray = [];
-        isStopped = true;
-        switchTrack = true;
+        resetInitialSettings();
     }
 
     instance = {
