@@ -18,7 +18,6 @@ describe("EventController", function () {
 
     beforeEach(function () {
         eventController = EventController(context).create();
-        eventController.initialize();
     });
 
     afterEach(function () {

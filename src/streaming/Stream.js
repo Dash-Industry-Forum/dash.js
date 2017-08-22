@@ -385,7 +385,7 @@ function Stream(config) {
         let events;
 
         eventController = EventController(context).create();
-        eventController.initialize();
+
         eventController.setConfig({
             manifestModel: manifestModel,
             manifestUpdater: manifestUpdater,

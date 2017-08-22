@@ -54,7 +54,11 @@ function EventController() {
         playbackController,
         isStarted;
 
-    function initialize() {
+    function setup() {
+        resetInitialSettings();
+    }
+
+    function resetInitialSettings() {
         isStarted = false;
         inlineEvents = {};
         inbandEvents = {};
@@ -212,14 +216,10 @@ function EventController() {
 
     function reset() {
         clear();
-        inlineEvents = null;
-        inbandEvents = null;
-        activeEvents = null;
-        playbackController = null;
+        resetInitialSettings();
     }
 
     instance = {
-        initialize: initialize,
         addInlineEvents: addInlineEvents,
         addInbandEvents: addInbandEvents,
         clear: clear,
@@ -227,6 +227,8 @@ function EventController() {
         setConfig: setConfig,
         reset: reset
     };
+
+    setup();
 
     return instance;
 }
