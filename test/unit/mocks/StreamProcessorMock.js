@@ -90,7 +90,7 @@ class StreamProcessorMock {
     }
 
     getCurrentRepresentationInfo() {
-        return {};
+        return {mediaInfo: {type : this.type}};
     }
 
     isBufferingCompleted() {
