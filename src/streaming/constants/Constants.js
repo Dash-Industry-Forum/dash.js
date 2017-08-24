@@ -58,6 +58,11 @@ class Constants {
         this.SUGGESTED_PRESENTATION_DELAY = 'suggestedPresentationDelay';
         this.SCHEME_ID_URI = 'schemeIdUri';
         this.START_TIME = 'starttime';
+        this.ABR_STRATEGY_DYNAMIC = 'abrDynamic';
+        this.ABR_STRATEGY_BOLA = 'abrBola';
+        this.ABR_STRATEGY_THROUGHPUT = 'abrThroughput';
+        this.MOVING_AVERAGE_SLIDING_WINDOW = 'slidingWindow';
+        this.MOVING_AVERAGE_EWMA = 'ewma';
     }
 
     constructor () {

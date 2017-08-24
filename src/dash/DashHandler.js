@@ -124,7 +124,7 @@ function DashHandler(config) {
         index = -1;
         currentTime = 0;
         earliestTime = NaN;
-        requestedTime = NaN;
+        requestedTime = null;
         streamProcessor = null;
         segmentsGetter = null;
     }

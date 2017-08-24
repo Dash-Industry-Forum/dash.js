@@ -4,6 +4,8 @@ import XLinkController from '../../src/streaming/controllers/XLinkController';
 import Events from '../../src/core/events/Events';
 import EventBus from '../../src/core/EventBus';
 
+import ErrorHandlerMock from './mocks/ErrorHandlerMock';
+
 const fs = require('fs');
 const domParser = require('xmldom').DOMParser;
 const chai = require('chai');
@@ -11,14 +13,6 @@ const expect = chai.expect;
 
 const context = {};
 const eventBus = EventBus(context).getInstance();
-
-function ErrorHandlerMock() {
-    this.error = undefined;
-
-    this.manifestError = function(error) {
-        this.error = error;
-    };
-}
 
 describe('XLinkController', function () {
     let xLinkController;

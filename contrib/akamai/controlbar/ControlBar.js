@@ -58,12 +58,14 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
         togglePlayPauseBtnState = function () {
             var span = document.getElementById('iconPlayPause');
-            if (player.isPaused()) {
-                span.classList.remove('icon-pause')
-                span.classList.add('icon-play');
-            } else {
-                span.classList.remove('icon-play');
-                span.classList.add('icon-pause');
+            if(span !== null) {
+                if (player.isPaused()) {
+                    span.classList.remove('icon-pause');
+                    span.classList.add('icon-play');
+                } else {
+                    span.classList.remove('icon-play');
+                    span.classList.add('icon-pause');
+                }
             }
         },
 
@@ -679,7 +681,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
         destroy: function () {
 
-            reset();
+            this.reset();
 
             playPauseBtn.removeEventListener("click", onPlayPauseClick);
             muteBtn.removeEventListener("click", onMuteClick);

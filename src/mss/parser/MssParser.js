@@ -32,10 +32,12 @@ import Constants from '../../streaming/constants/Constants';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import BASE64 from '../../../externals/base64';
+import KeySystemWidevine from '../../streaming/protection/drm/KeySystemWidevine.js';
 
 function MssParser(config) {
 
     const context = this.context;
+    const ksWidevine = KeySystemWidevine(context).getInstance();
     const log = Debug(context).getInstance().log;
     const errorHandler = config.errHandler;
 
@@ -468,6 +470,16 @@ function MssParser(config) {
         return contentProtection;
     }
 
+    function createWidevineContentProtection(/*protectionHeader*/) {
+
+        var contentProtection = {};
+
+        contentProtection.schemeIdUri = ksWidevine.schemeIdURI;
+        contentProtection.value = ksWidevine.systemString;
+
+        return contentProtection;
+    }
+
     function processManifest(xmlDoc, manifestLoadedTime) {
         let manifest = {};
         let contentProtections = [];
@@ -521,6 +533,11 @@ function MssParser(config) {
 
             // Create ContentProtection for PlayReady
             contentProtection = createPRContentProtection(protectionHeader);
+            contentProtection['cenc:default_KID'] = KID;
+            contentProtections.push(contentProtection);
+
+            // Create ContentProtection for Widevine (as a CENC protection)
+            contentProtection = createWidevineContentProtection.call(this, protectionHeader);
             contentProtection['cenc:default_KID'] = KID;
             contentProtections.push(contentProtection);
 

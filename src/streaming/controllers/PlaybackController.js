@@ -250,12 +250,17 @@ function PlaybackController() {
     function getStreamStartTime(ignoreStartOffset) {
         let presentationStartTime;
         let fragData = URIQueryAndFragmentModel(context).getInstance().getURIFragmentData();
-        let fragS = parseInt(fragData.s, 10);
-        let fragT = parseInt(fragData.t, 10);
         let startTimeOffset = NaN;
 
-        if (!ignoreStartOffset) {
-            startTimeOffset = !isNaN(fragS) ? fragS : fragT;
+        if (fragData) {
+            let fragS = parseInt(fragData.s, 10);
+            let fragT = parseInt(fragData.t, 10);
+            if (!ignoreStartOffset) {
+                startTimeOffset = !isNaN(fragS) ? fragS : fragT;
+            }
+        } else {
+            // handle case where no media fragments are parsed from the manifest URL
+            startTimeOffset = 0;
         }
 
         if (isDynamic) {

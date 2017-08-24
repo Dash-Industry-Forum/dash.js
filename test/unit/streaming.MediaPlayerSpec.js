@@ -136,6 +136,14 @@ describe("MediaPlayer", function () {
                 expect(player.isDynamic).to.throw(PLAYBACK_NOT_INITIALIZED_ERROR);
             });
 
+            it("Method setPlaybackRate should throw an exception", function () {
+                expect(player.setPlaybackRate).to.throw(ELEMENT_NOT_ATTACHED_ERROR);
+            });
+
+            it("Method getPlaybackRate should throw an exception", function () {
+                expect(player.getPlaybackRate).to.throw(ELEMENT_NOT_ATTACHED_ERROR);
+            });
+
             it("Method setMute should throw an exception", function () {
                 expect(player.setMute).to.throw(ELEMENT_NOT_ATTACHED_ERROR);
             });
@@ -240,6 +248,22 @@ describe("MediaPlayer", function () {
                 isDynamic = player.isDynamic();
                 expect(isDynamic).to.be.true;
 
+            });
+
+            it("Method setPlaybackRate should change playback value of video element", function () {
+                let playbackRate = videoElementMock.playbackRate;
+                expect(playbackRate).to.equal(0);
+
+                let newPlaybackRate = 5;
+                player.setPlaybackRate(newPlaybackRate);
+                playbackRate = videoElementMock.playbackRate;
+                expect(playbackRate).to.equal(newPlaybackRate);
+            });
+
+            it("Method setPlaybackRate should return video element playback rate", function () {
+                let elementPlayBackRate = videoElementMock.playbackRate;
+                let playerPlayBackRate = player.getPlaybackRate();
+                expect(playerPlayBackRate).to.equal(elementPlayBackRate);
             });
 
             it("Method setMute should change mute value of video element", function () {
@@ -637,16 +661,6 @@ describe("MediaPlayer", function () {
             expect(fastSwitchEnabled).to.be.true;
         });
 
-        it("should configure bufferOccupancyABR", function () {
-            let bufferOccupancyABR = mediaPlayerModel.getBufferOccupancyABREnabled();
-            expect(bufferOccupancyABR).to.be.false;
-
-            player.enableBufferOccupancyABR(true);
-
-            bufferOccupancyABR = mediaPlayerModel.getBufferOccupancyABREnabled();
-            expect(bufferOccupancyABR).to.be.true;
-        });
-
         it("should configure useDefaultABRRules", function () {
             let useDefaultABRRules = mediaPlayerModel.getUseDefaultABRRules();
             expect(useDefaultABRRules).to.be.true;
@@ -775,16 +789,6 @@ describe("MediaPlayer", function () {
 
             LongFormContentDurationThreshold = mediaPlayerModel.getLongFormContentDurationThreshold();
             expect(LongFormContentDurationThreshold).to.equal(50);
-        });
-
-        it("should configure RichBufferThreshold", function () {
-            let RichBufferThreshold = mediaPlayerModel.getRichBufferThreshold();
-            expect(RichBufferThreshold).to.equal(20);
-
-            player.setRichBufferThreshold(50);
-
-            RichBufferThreshold = mediaPlayerModel.getRichBufferThreshold();
-            expect(RichBufferThreshold).to.equal(50);
         });
 
         it("should configure BandwidthSafetyFactor", function () {
