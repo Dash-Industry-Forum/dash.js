@@ -1,21 +1,9 @@
 import MediaSourceController from '../../src/streaming/controllers/MediaSourceController';
 
+import VideoModelMock from './mocks/VideoModelMock';
+
 const expect = require('chai').expect;
 const context = {};
-
-class VideoModelMock {
-    constructor() {
-        this.source = null;
-    }
-
-    setSource(source) {
-        this.source = source;
-    }
-
-    getSource() {
-        return this.source;
-    }
-}
 
 describe("MediaSourceController", function () {
 

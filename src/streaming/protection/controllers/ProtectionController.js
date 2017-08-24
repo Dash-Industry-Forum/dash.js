@@ -276,6 +276,7 @@ function ProtectionController(config) {
      */
     function setProtectionData(data) {
         protDataSet = data;
+        protectionKeyController.setProtectionData(data);
     }
 
     /**
@@ -312,24 +313,29 @@ function ProtectionController(config) {
         return protData;
     }
 
+    function getKeySystemConfiguration(keySystem) {
+        let protData = getProtData(keySystem);
+        let audioCapabilities = [];
+        let videoCapabilities = [];
+        let audioRobustness = (protData && protData.audioRobustness && protData.audioRobustness.length > 0) ? protData.audioRobustness : robustnessLevel;
+        let videoRobustness = (protData && protData.videoRobustness && protData.videoRobustness.length > 0) ? protData.videoRobustness : robustnessLevel;
+
+        if (audioInfo) {
+            audioCapabilities.push(new MediaCapability(audioInfo.codec, audioRobustness));
+        }
+        if (videoInfo) {
+            videoCapabilities.push(new MediaCapability(videoInfo.codec, videoRobustness));
+        }
+
+        return new KeySystemConfiguration(
+            audioCapabilities, videoCapabilities, 'optional',
+            (sessionType === 'temporary') ? 'optional' : 'required',
+            [sessionType]);
+    }
+
     function selectKeySystem(supportedKS, fromManifest) {
 
         let self = this;
-
-        // Build our request object for requestKeySystemAccess
-        let audioCapabilities = [];
-        let videoCapabilities = [];
-
-        if (videoInfo) {
-            videoCapabilities.push(new MediaCapability(videoInfo.codec, robustnessLevel));
-        }
-        if (audioInfo) {
-            audioCapabilities.push(new MediaCapability(audioInfo.codec, robustnessLevel));
-        }
-        let ksConfig = new KeySystemConfiguration(
-                audioCapabilities, videoCapabilities, 'optional',
-                (sessionType === 'temporary') ? 'optional' : 'required',
-                [sessionType]);
         let requestedKeySystems = [];
 
         let ksIdx;
@@ -338,7 +344,7 @@ function ProtectionController(config) {
             for (ksIdx = 0; ksIdx < supportedKS.length; ksIdx++) {
                 if (keySystem === supportedKS[ksIdx].ks) {
 
-                    requestedKeySystems.push({ks: supportedKS[ksIdx].ks, configs: [ksConfig]});
+                    requestedKeySystems.push({ks: supportedKS[ksIdx].ks, configs: [getKeySystemConfiguration(keySystem)]});
 
                     // Ensure that we would be granted key system access using the key
                     // system and codec information
@@ -367,7 +373,7 @@ function ProtectionController(config) {
 
             // Add all key systems to our request list since we have yet to select a key system
             for (let i = 0; i < supportedKS.length; i++) {
-                requestedKeySystems.push({ks: supportedKS[i].ks, configs: [ksConfig]});
+                requestedKeySystems.push({ks: supportedKS[i].ks, configs: [getKeySystemConfiguration(supportedKS[i].ks)]});
             }
 
             let keySystemAccess;

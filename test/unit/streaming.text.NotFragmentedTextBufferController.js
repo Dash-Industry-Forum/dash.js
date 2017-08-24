@@ -4,101 +4,26 @@ import EventBus from '../../src/core/EventBus';
 import Events from '../../src/core/events/Events';
 import InitCache from '../../src/streaming/utils/InitCache';
 
+import SourceBufferControllerMock from './mocks/SourceBufferControllerMock';
+import ErrorHandlerMock from './mocks/ErrorHandlerMock';
+import StreamProcessorMock from './mocks/StreamProcessorMock';
+
 const chai = require('chai');
 const expect = chai.expect;
 
 const context = {};
 const testType = 'text';
+const streamInfo = {
+    id: 'id'
+};
 const eventBus = EventBus(context).getInstance();
 const objectUtils = ObjectUtils(context).getInstance();
 const initCache = InitCache(context).getInstance();
 
-function BufferMock() {
-    this.initialized = false;
-    this.bytes = undefined;
-    this.length = 20;
-
-    this.initialize = function () {
-        this.initialized = true;
-    };
-
-    this.append = function (chunk) {
-        this.bytes = chunk.bytes;
-    };
-}
-
-class ErrorHandlerMock {
-    constructor() {
-        this.error = '';
-    }
-
-    mediaSourceError(error) {
-        this.error = error;
-    }
-}
-
-class SourceBufferControllerMock {
-    constructor() {
-        this.reset();
-    }
-
-    reset() {
-        this.defaultStreamType = testType;
-        this.aborted = false;
-        this.sourceBufferRemoved = false;
-        this.buffer = new BufferMock();
-        this.createError = false;
-    }
-
-    createSourceBuffer() {
-        if(!this.createError){
-            return this.buffer;
-        } else {
-            throw new Error('create error');
-        }
-    }
-
-    abort() {
-        this.aborted = true;
-    }
-
-    append(buffer, chunk) {
-        this.buffer.append(chunk);
-    }
-
-    removeSourceBuffer() {
-        this.sourceBufferRemoved = true;
-    }
-}
-
-class RepresentationControllerMock {
-    constructor() {}
-}
-
-class StreamProcessorMock {
-    constructor() {
-        this.type = testType;
-        this.representationController = new RepresentationControllerMock();
-    }
-
-    getType() {
-        return this.type;
-    }
-
-    getRepresentationController() {
-        return this.representationController;
-    }
-
-    getFragmentModel() {
-        return 'fragmentModel';
-    }
-
-    reset() {}
-}
 describe('NotFragmentedTextBufferController', function () {
 
-    let streamProcessorMock = new StreamProcessorMock();
-    let sourceBufferMock = new SourceBufferControllerMock();
+    let streamProcessorMock = new StreamProcessorMock(testType, streamInfo);
+    let sourceBufferMock = new SourceBufferControllerMock(testType);
     let errorHandlerMock = new ErrorHandlerMock();
     let notFragmentedTextBufferController;
 
@@ -113,7 +38,7 @@ describe('NotFragmentedTextBufferController', function () {
 
     afterEach(function () {
         streamProcessorMock.reset();
-        sourceBufferMock.reset();
+        sourceBufferMock.reset(testType);
     });
 
     describe('when not initialized', function () {
@@ -308,7 +233,7 @@ describe('NotFragmentedTextBufferController', function () {
                 let buffer = notFragmentedTextBufferController.createBuffer('text');
 
                 let event = {
-                    fragmentModel : 'fragmentModel',
+                    fragmentModel : streamProcessorMock.getFragmentModel(),
                     chunk : {
                     }
                 };
@@ -328,7 +253,7 @@ describe('NotFragmentedTextBufferController', function () {
                 let buffer = notFragmentedTextBufferController.createBuffer('text');
 
                 let event = {
-                    fragmentModel : 'fragmentModel',
+                    fragmentModel : streamProcessorMock.getFragmentModel(),
                     chunk : {
                         bytes : 'data'
                     }

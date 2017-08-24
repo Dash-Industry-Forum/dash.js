@@ -105,7 +105,8 @@ function MediaPlayer() {
         manifestModel,
         videoModel,
         textController,
-        domStorage;
+        domStorage,
+        skipDataLoss;
 
     /*
     ---------------------------------------------------------------------------
@@ -118,6 +119,7 @@ function MediaPlayer() {
         mediaPlayerInitialized = false;
         playbackInitialized = false;
         autoPlay = true;
+        skipDataLoss = false;
         protectionController = null;
         protectionData = null;
         adapter = null;
@@ -167,13 +169,14 @@ function MediaPlayer() {
      * @param {HTML5MediaElement=} view - Optional arg to set the video element. {@link module:MediaPlayer#attachView attachView()}
      * @param {string=} source - Optional arg to set the media source. {@link module:MediaPlayer#attachSource attachSource()}
      * @param {boolean=} AutoPlay - Optional arg to set auto play. {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
+     * @param {boolean=} SkipDataLoss - Optional arg to set whether skip discontinuity in buffer when frames dropped. {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
      * @see {@link module:MediaPlayer#attachView attachView()}
      * @see {@link module:MediaPlayer#attachSource attachSource()}
      * @see {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
      * @memberof module:MediaPlayer
      * @instance
      */
-    function initialize(view, source, AutoPlay) {
+    function initialize(view, source, AutoPlay, SkipDataLoss) {
 
         if (!capabilities) {
             capabilities = Capabilities(context).getInstance();
@@ -229,6 +232,7 @@ function MediaPlayer() {
 
         restoreDefaultUTCTimingSources();
         setAutoPlay(AutoPlay !== undefined ? AutoPlay : true);
+        setSkipDataLoss(SkipDataLoss !== undefined ? SkipDataLoss : false);
 
         if (view) {
             attachView(view);
@@ -350,6 +354,7 @@ function MediaPlayer() {
         }
     }
 
+
     /**
      * This method will call pause on the native Video Element.
      *
@@ -417,6 +422,32 @@ function MediaPlayer() {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
         return playbackController.getIsDynamic();
+    }
+
+    /**
+     * Use this method to set the native Video Element's playback rate.
+     * @param {number} value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setPlaybackRate(value) {
+        if (!videoModel) {
+            throw ELEMENT_NOT_ATTACHED_ERROR;
+        }
+        getVideoElement().playbackRate = value;
+    }
+
+    /**
+     * Returns the current playback rate.
+     * @returns {number}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getPlaybackRate() {
+        if (!videoModel) {
+            throw ELEMENT_NOT_ATTACHED_ERROR;
+        }
+        return getVideoElement().playbackRate;
     }
 
     /**
@@ -951,6 +982,28 @@ function MediaPlayer() {
     }
 
     /**
+     * <p>Set to ture if want to skip small discontinuity in the buffer when there is video frames dropping</p>
+     *
+     * @param {boolean} value
+     * @default false
+     * @memberof module:MediaPlayer
+     * @instance
+     *
+     */
+    function setSkipDataLoss(value) {
+        skipDataLoss = value;
+    }
+
+    /**
+     * @returns {boolean} The current skipDataLoss state.
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getSkipDataLoss() {
+        return skipDataLoss;
+    }
+
+    /**
      * <p>Changing this value will lower or increase live stream latency.  The detected segment duration will be multiplied by this value
      * to define a time in seconds to delay a live stream from the live edge.</p>
      * <p>Lowering this value will lower latency but may decrease the player's ability to build a stable buffer.</p>
@@ -1102,20 +1155,49 @@ function MediaPlayer() {
     }
 
     /**
-     * Enabling buffer-occupancy ABR will switch to the *experimental* implementation of BOLA,
-     * replacing the throughput-based ABR rule set (ThroughputRule, BufferOccupancyRule,
-     * InsufficientBufferRule and AbandonRequestsRule) with the buffer-occupancy-based
-     * BOLA rule set (BolaRule, BolaAbandonRule).
+     * Obsolete since version 2.6.0.
+     * Buffer-occupancy ABR is now switched on and off dynamically.
+     * @see {@link module:MediaPlayer#setABRStrategy setABRStrategy()}
      *
-     * @see {@link http://arxiv.org/abs/1601.06748 BOLA WhitePaper.}
-     * @see {@link https://github.com/Dash-Industry-Forum/dash.js/wiki/BOLA-status More details about the implementation status.}
      * @param {boolean} value
-     * @default false
      * @memberof module:MediaPlayer
      * @instance
      */
     function enableBufferOccupancyABR(value) {
-        mediaPlayerModel.setBufferOccupancyABREnabled(value);
+        throw new Error('Calling obsolete function - enabledBufferOccupancyABR(' + value + ') has no effect.');
+    }
+
+    /**
+     * Sets the ABR strategy. Valid strategies are "abrDynamic", "abrBola" and "abrThroughput".
+     * The ABR strategy can also be changed during a streaming session.
+     * The call has no effect if an invalid method is passed.
+     *
+     * The BOLA strategy chooses bitrate based on current buffer level, with higher bitrates for higher buffer levels.
+     * The Throughput strategy chooses bitrate based on the recent throughput history.
+     * The Dynamic strategy switches smoothly between BOLA and Throughput in real time, playing to the strengths of both.
+     *
+     * @param {string} value
+     * @default "abrDynamic"
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setABRStrategy(value) {
+        if (value === Constants.ABR_STRATEGY_DYNAMIC || value === Constants.ABR_STRATEGY_BOLA || value === Constants.ABR_STRATEGY_THROUGHPUT) {
+            mediaPlayerModel.setABRStrategy(value);
+        } else {
+            log('Warning: Ignoring setABRStrategy(' + value + ') - unknown value.');
+        }
+    }
+
+    /**
+     * Returns the current ABR strategy being used.
+     * @return {string} "abrDynamic", "abrBola" or "abrThroughput"
+     * @see {@link module:MediaPlayer#setABRStrategy setABRStrategy()}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getABRStrategy() {
+        return mediaPlayerModel.getABRStrategy();
     }
 
     /**
@@ -1162,6 +1244,44 @@ function MediaPlayer() {
     function removeAllABRCustomRule() {
         mediaPlayerModel.removeAllABRCustomRule();
     }
+
+    /**
+     * Sets the moving average method used for smoothing throughput estimates. Valid methods are
+     * "slidingWindow" and "ewma". The call has no effect if an invalid method is passed.
+     *
+     * The sliding window moving average method computes the average throughput using the last four segments downloaded.
+     * If the stream is live (as opposed to VOD), then only the last three segments are used.
+     * If wide variations in throughput are detected, the number of segments can be dynamically increased to avoid oscillations.
+     *
+     * The exponentially weighted moving average (EWMA) method computes the average using exponential smoothing.
+     * Two separate estimates are maintained, a fast one with a three-second half life and a slow one with an eight-second half life.
+     * The throughput estimate at any time is the minimum of the fast and slow estimates.
+     * This allows a fast reaction to a bandwidth drop and prevents oscillations on bandwidth spikes.
+     *
+     * @param {string} value
+     * @default {string} 'slidingWindow'
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setMovingAverageMethod(value) {
+        if (value === Constants.MOVING_AVERAGE_SLIDING_WINDOW || value === Constants.MOVING_AVERAGE_EWMA) {
+            mediaPlayerModel.setMovingAverageMethod(value);
+        } else {
+            log('Warning: Ignoring setMovingAverageMethod(' + value + ') - unknown value.');
+        }
+    }
+
+    /**
+     * Return the current moving average method used for smoothing throughput estimates.
+     * @return {string} Returns "slidingWindow" or "ewma".
+     * @see {@link module:MediaPlayer#setMovingAverageMethod setMovingAverageMethod()}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getMovingAverageMethod() {
+        return mediaPlayerModel.getMovingAverageMethod();
+    }
+
     /**
      * <p>Allows you to set a scheme and server source for UTC live edge detection for dynamic streams.
      * If UTCTiming is defined in the manifest, it will take precedence over any time source manually added.</p>
@@ -1198,7 +1318,6 @@ function MediaPlayer() {
         vo.value = value;
         mediaPlayerModel.getUTCTimingSources().push(vo);
     }
-
 
     /**
      * <p>Allows you to remove a UTC time source. Both schemeIdUri and value need to match the Dash.vo.UTCTiming properties in order for the
@@ -1403,18 +1522,16 @@ function MediaPlayer() {
     }
 
     /**
-     * A threshold, in seconds, of when dashjs abr becomes less conservative since we have a
-     * larger "rich" buffer.
-     * The BufferOccupancyRule.js rule will override the ThroughputRule's decision when the
-     * buffer level surpasses this value and while it remains greater than this value.
+     * Obsolete since version 2.6.0.
+     * ABR rules now switch from Throughput to Buffer Occupancy mode when there is sufficient buffer.
+     * This renders the rich buffer mechanism redundant.
      *
-     * @default 20 seconds
      * @param {number} value
      * @memberof module:MediaPlayer
      * @instance
      */
     function setRichBufferThreshold(value) {
-        mediaPlayerModel.setRichBufferThreshold(value);
+        throw new Error('Calling obsolete function - setRichBufferThreshold(' + value + ') has no effect.');
     }
 
     /**
@@ -2187,6 +2304,11 @@ function MediaPlayer() {
             abrController.reset();
             mediaController.reset();
             textController.reset();
+            if (protectionController) {
+                protectionController.reset();
+                protectionController = null;
+                detectProtection();
+            }
             if (isReady()) {
                 initializePlayback();
             }
@@ -2269,7 +2391,7 @@ function MediaPlayer() {
             videoModel: videoModel
         });
         // initialises controller
-        streamController.initialize(autoPlay, protectionData);
+        streamController.initialize(autoPlay, protectionData, skipDataLoss);
     }
 
     function createManifestLoader() {
@@ -2400,6 +2522,8 @@ function MediaPlayer() {
         isSeeking: isSeeking,
         isDynamic: isDynamic,
         seek: seek,
+        setPlaybackRate: setPlaybackRate,
+        getPlaybackRate: getPlaybackRate,
         setMute: setMute,
         isMuted: isMuted,
         setVolume: setVolume,
@@ -2435,6 +2559,8 @@ function MediaPlayer() {
         getMaxAllowedRepresentationRatioFor: getMaxAllowedRepresentationRatioFor,
         setAutoPlay: setAutoPlay,
         getAutoPlay: getAutoPlay,
+        setSkipDataLoss: setSkipDataLoss,
+        getSkipDataLoss: getSkipDataLoss,
         setScheduleWhilePaused: setScheduleWhilePaused,
         getScheduleWhilePaused: getScheduleWhilePaused,
         getDashMetrics: getDashMetrics,
@@ -2467,9 +2593,13 @@ function MediaPlayer() {
         setAutoSwitchQuality: setAutoSwitchQuality,
         setFastSwitchEnabled: setFastSwitchEnabled,
         getFastSwitchEnabled: getFastSwitchEnabled,
+        setMovingAverageMethod: setMovingAverageMethod,
+        getMovingAverageMethod: getMovingAverageMethod,
         getAutoSwitchQualityFor: getAutoSwitchQualityFor,
         setAutoSwitchQualityFor: setAutoSwitchQualityFor,
         enableBufferOccupancyABR: enableBufferOccupancyABR,
+        setABRStrategy: setABRStrategy,
+        getABRStrategy: getABRStrategy,
         useDefaultABRRules: useDefaultABRRules,
         addABRCustomRule: addABRCustomRule,
         removeABRCustomRule: removeABRCustomRule,

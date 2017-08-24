@@ -6,7 +6,6 @@ const expect = require('chai').expect;
 const context = {};
 const isoFile = IsoFile(context).create();
 
-
 describe('IsoFile', function () {
 
 	describe('when no parsed file has been set', () => {

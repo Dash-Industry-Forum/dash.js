@@ -4,35 +4,12 @@ import EventBus from '../../src/core/EventBus';
 import Constants from '../../src/streaming/constants/Constants';
 import Events from '../../src/core/events/Events';
 
+import DomStorageMock from './mocks/DomStorageMock';
+
 const expect = require('chai').expect;
 const context = {};
 const eventBus = EventBus(context).getInstance();
 const objectUtils = ObjectUtils(context).getInstance();
-
-class DomStorageMock {
-    constructor() {
-        this.mediaSettings = {};
-    }
-
-    getSavedMediaSettings(type) {
-        if (this.mediaSettings[type]) {
-            return this.mediaSettings[type];
-        }
-        return null;
-    }
-
-    setSavedMediaSettings(type, settings) {
-
-        if (!settings) {
-            return;
-        }
-        if (!this.mediaSettings[type]) {
-            this.mediaSettings[type] = {};
-        }
-
-        this.mediaSettings[type] = settings;
-    }
-}
 
 describe("MediaController", function () {
     let mediaController;

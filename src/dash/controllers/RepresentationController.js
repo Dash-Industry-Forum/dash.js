@@ -350,7 +350,10 @@ function RepresentationController() {
 
         if (e.oldQuality !== e.newQuality) {
             currentVoRepresentation = getRepresentationForQuality(e.newQuality);
-            domStorage.setSavedBitrateSettings(e.mediaType, currentVoRepresentation.bandwidth);
+            const bitrate = abrController.getThroughputHistory().getAverageThroughput(e.mediaType);
+            if (!isNaN(bitrate)) {
+                domStorage.setSavedBitrateSettings(e.mediaType, bitrate);
+            }
             addRepresentationSwitch();
         }
     }

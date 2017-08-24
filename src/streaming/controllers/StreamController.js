@@ -50,13 +50,13 @@ import MediaSourceController from './MediaSourceController';
 import SourceBufferController from './SourceBufferController';
 function StreamController() {
 
-    const STREAM_END_THRESHOLD = 0.1;
+    const STREAM_END_THRESHOLD = 0.5;
+    const STREAM_END_TIMEOUT_DELAY = 0.1;
     const LOSS_TOLERANCE_THRESHOLD = 2;
 
     //Check whether there is framed dropping when stalling this times wallClockUpdate interval
     //which is 50ms interval default due to the setting of mediaPlayerModel.
     const STALL_THRESHOLD_TO_CHECK_DATALOSS = 20;
-
 
     let context = this.context;
     let log = Debug(context).getInstance().log;
@@ -99,8 +99,10 @@ function StreamController() {
         playListMetrics,
         videoTrackDetected,
         audioTrackDetected,
+        endedTimeout,
         wallclockTicked,
-        lastPlaybackTime;
+        lastPlaybackTime,
+        skipDataLoss;
 
     function setup() {
         timeSyncController = TimeSyncController(context).getInstance();
@@ -110,9 +112,10 @@ function StreamController() {
         resetInitialSettings();
     }
 
-    function initialize(autoPl, protData) {
+    function initialize(autoPl, protData, SkipDataLoss) {
         autoPlay = autoPl;
         protectionData = protData;
+        skipDataLoss = SkipDataLoss;
         timelineConverter.initialize();
         initCache = InitCache(context).getInstance();
 
@@ -138,7 +141,9 @@ function StreamController() {
         eventBus.on(Events.MANIFEST_UPDATED, onManifestUpdated, this);
         eventBus.on(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
         eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
-        eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
+        if (skipDataLoss === true) {
+            eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
+        }
 
     }
 
@@ -218,8 +223,17 @@ function StreamController() {
         if (playbackController.isSeeking()) return;
 
         if (e.timeToEnd <= STREAM_END_THRESHOLD) {
-            //only needed for multiple period content when the native event does not fire due to duration manipulation.
-            onEnded();
+            // In some cases the ended event is not triggered at the end of the stream, do it artificially here.
+            // This should only be a fallback, put an extra STREAM_END_TIMEOUT_DELAY to give the real ended event time to trigger.
+
+            if (endedTimeout) {
+                clearTimeout(endedTimeout);
+                endedTimeout = undefined;
+            }
+            endedTimeout = setTimeout(function () {
+                endedTimeout = undefined;
+                eventBus.trigger(Events.PLAYBACK_ENDED);
+            }, 1000 * (e.timeToEnd + STREAM_END_TIMEOUT_DELAY));
         }
     }
 
@@ -335,6 +349,11 @@ function StreamController() {
     }
 
     function onEnded() {
+        if (endedTimeout) {
+            clearTimeout(endedTimeout);
+            endedTimeout = undefined;
+        }
+
         const nextStream = getNextStream();
         if (nextStream) {
             switchStream(activeStream, nextStream, NaN);
@@ -779,6 +798,8 @@ function StreamController() {
         isPaused = false;
         autoPlay = true;
         playListMetrics = null;
+        skipDataLoss = false;
+
     }
 
     function reset() {
@@ -829,6 +850,11 @@ function StreamController() {
                     data: manifestModel.getValue().url
                 });
             }
+        }
+
+        if (endedTimeout) {
+            clearTimeout(endedTimeout);
+            endedTimeout = undefined;
         }
 
         eventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
