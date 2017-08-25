@@ -9,6 +9,7 @@ class MediaControllerMock {
         this.switchMode = {};
         this.selectionMode = undefined;
         this.track  = undefined;
+        this.tracks = [];
     }
 
     /**
@@ -22,7 +23,9 @@ class MediaControllerMock {
      * @param {MediaInfo} track
      * @memberof MediaController#
      */
-    addTrack(track) {}
+    addTrack(track) {
+        this.tracks.push(track);
+    }
 
     /**
      * @param {string} type
@@ -31,7 +34,7 @@ class MediaControllerMock {
      * @memberof MediaController#
      */
     getTracksFor() {
-        return ['track1', 'track2'];
+        return this.tracks;
     }
 
     /**
@@ -41,7 +44,7 @@ class MediaControllerMock {
      * @memberof MediaController#
      */
     getCurrentTrackFor() {
-        return 'track';
+        return this.track;
     }
 
     /**
@@ -118,8 +121,8 @@ class MediaControllerMock {
         return (type === 'audio' || type === 'video' || type === 'text' || type === 'fragmentedText');
     }
 
-    isTracksEqual() {
-        return false;
+    isTracksEqual(currentTrack, mediaInfoForType) {
+        return (mediaInfoForType.lang === 'deu');
     }
 
     setConfig() {}

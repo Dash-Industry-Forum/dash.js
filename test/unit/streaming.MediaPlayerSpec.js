@@ -994,7 +994,11 @@ describe("MediaPlayer", function () {
 
         describe("When it is initialized", function () {
             beforeEach(function () {
+                mediaControllerMock.reset();
                 player.initialize(videoElementMock, dummyUrl, false);
+                mediaControllerMock.addTrack('track1');
+                mediaControllerMock.addTrack('track2');
+                mediaControllerMock.setTrack('track1');
             });
 
             it("Method getBitrateInfoListFor should return bitrate info list", function () {
@@ -1009,7 +1013,7 @@ describe("MediaPlayer", function () {
 
             it("Method getCurrentTrackFor should return current track", function () {
                 let track = player.getCurrentTrackFor();
-                expect(track).to.equal('track');
+                expect(track).to.equal('track1');
             });
 
             it("should configure initial media settings", function () {
