@@ -227,7 +227,7 @@ export function decideSegmentListRangeForTemplate(timelineConverter, isDynamic, 
     const minBufferTime = representation.adaptation.period.mpd.manifest.minBufferTime;
     const availabilityWindow = representation.segmentAvailabilityRange;
     let periodRelativeRange = {
-        start: timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, availabilityWindow.start),
+        start: timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, availabilityWindow.start || 0),
         end: timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, availabilityWindow.end)
     };
     const currentSegmentList = representation.segments;
