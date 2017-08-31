@@ -29,7 +29,7 @@ describe('DashParser', function () {
     });
 
 	it('should throw an error when parse is called without data and config object has been set properly', function () {
-		let errorHandlerMock = new ErrorHandlerMock();
+		const errorHandlerMock = new ErrorHandlerMock();
 		dashParser = DashParser(context).create({errorHandler: errorHandlerMock});
 		dashParser.parse();
 		expect(errorHandlerMock.error).to.equal('parsing the manifest failed');
