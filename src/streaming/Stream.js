@@ -270,11 +270,8 @@ function Stream(config) {
 
         let currentTime = playbackController.getTime();
         log('Stream -  Process track changed at current time ' + currentTime);
-        let buffer = processor.getBuffer();
         let mediaInfo = e.newMediaInfo;
         let manifest = manifestModel.getValue();
-        let idx = streamProcessors.indexOf(processor);
-        let mediaSource = processor.getMediaSource();
 
         log('Stream -  Update stream controller');
         if (manifest.refreshManifestOnSwitchTrack) {
@@ -283,17 +280,9 @@ function Stream(config) {
             manifestUpdater.refreshManifest();
         } else {
             if (mediaInfo.type !== Constants.FRAGMENTED_TEXT) {
-
-                processor.reset(true);
-                createStreamProcessor(mediaInfo, mediaSource, {
-                    buffer: buffer,
-                    replaceIdx: idx,
-                    currentTime: currentTime
-                });
-                playbackController.seek(playbackController.getTime());
-            } else {
-                processor.updateMediaInfo( mediaInfo);
+                trackChangedEvent = e;
             }
+            processor.updateMediaInfo(mediaInfo);
         }
     }
 
@@ -562,6 +551,7 @@ function Stream(config) {
                 let processor = getProcessorForMediaInfo(trackChangedEvent.oldMediaInfo);
                 if (!processor) return;
                 processor.switchTrackAsked();
+                trackChangedEvent = undefined;
             }
         }
 
