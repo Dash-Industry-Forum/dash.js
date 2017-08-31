@@ -13,26 +13,26 @@ describe('StreamController', function () {
         it('should return null if getTimeRelativeToStreamId is called without parameters', () => {
             const time = streamController.getTimeRelativeToStreamId();
 
-            expect(time).to.be.null; // jshint ignore:line*/
+            expect(time).to.be.null; // jshint ignore:line
         });
 
         it('should return undefined if getStreamById is called without parameters', () => {
             const stream = streamController.getStreamById();
 
-            expect(stream).to.be.undefined; // jshint ignore:line*/
+            expect(stream).to.be.undefined; // jshint ignore:line
         });
 
         it('should return null if getActiveStreamInfo is called without parameters, activeStream is undefined', () => {
             const activeStream = streamController.getActiveStreamInfo();
 
-            expect(activeStream).to.be.null; // jshint ignore:line*/
+            expect(activeStream).to.be.null; // jshint ignore:line
         });
 
         it("should throw an exception when attempting to call initialize while setConfig has not been called", function () {
             expect(streamController.initialize.bind(streamController)).to.throw('setConfig function has to be called previously');
         });
 
-        it("should throw an exception when attempting to call load while setConfig has not been called", function () {
+        it('should throw an exception when attempting to call load while setConfig has not been called', function () {
             expect(streamController.load.bind(streamController)).to.throw('setConfig function has to be called previously');
         });
 
@@ -41,11 +41,11 @@ describe('StreamController', function () {
             expect(streamController.load.bind(streamController)).to.throw('setConfig function has to be called previously');
         });
         
-        it("should throw an exception when attempting to call loadWithManifest while initialize has not been called", function () {
+        it('should throw an exception when attempting to call loadWithManifest while initialize has not been called', function () {
             expect(streamController.loadWithManifest.bind(streamController)).to.throw('initialize function has to be called previously');
         });
 
-        it("should throw an exception when attempting to call reset while setConfig has not been called", function () {
+        it('should throw an exception when attempting to call reset while setConfig has not been called', function () {
             expect(streamController.reset.bind(streamController)).to.throw('setConfig function has to be called previously');
         });
 

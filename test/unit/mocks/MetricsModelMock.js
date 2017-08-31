@@ -3,7 +3,7 @@ class MetricsModelMock {
         this.bufferState = 0;
         this.bufferLevel = 0;
     }
-    addBufferState(type, bufferState, bufferTarget) {
+    addBufferState(type, bufferState/*, bufferTarget*/) {
         this.bufferState = bufferState;
     }
 

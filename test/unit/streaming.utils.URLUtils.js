@@ -304,7 +304,7 @@ describe('URLUtils', function () {
     describe('resolve (native path)', () => {
 
         let instance;
-        before(function(){
+        before(function () {
             if (typeof window === 'undefined') {
                 global.window = {
                     URL: (a, b) => {
@@ -325,7 +325,7 @@ describe('URLUtils', function () {
             instance = URLUtils({}).getInstance();
         });
 
-        after(function(){
+        after(function () {
             delete global.window;
         });
 

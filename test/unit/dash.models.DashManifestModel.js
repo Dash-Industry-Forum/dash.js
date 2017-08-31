@@ -28,13 +28,13 @@ describe('DashManifestModel', function () {
 
     const mpdHelper = new MpdHelper();
 
-    it("should throw an exception when attempting to call getIsTypeOf with undefined parameters", function () {
-        expect(dashManifestModel.getIsTypeOf.bind(dashManifestModel)).to.throw("adaptation is not defined");
+    it('should throw an exception when attempting to call getIsTypeOf with undefined parameters', function () {
+        expect(dashManifestModel.getIsTypeOf.bind(dashManifestModel)).to.throw('adaptation is not defined');
 
         var adaptation = mpdHelper.composeAdaptation('video');
-        expect(dashManifestModel.getIsTypeOf.bind(dashManifestModel, adaptation)).to.throw("type is not defined");
+        expect(dashManifestModel.getIsTypeOf.bind(dashManifestModel, adaptation)).to.throw('type is not defined');
 
-        expect(dashManifestModel.getIsTypeOf.bind(dashManifestModel, adaptation, EMPTY_STRING)).to.throw("type is not defined");
+        expect(dashManifestModel.getIsTypeOf.bind(dashManifestModel, adaptation, EMPTY_STRING)).to.throw('type is not defined');
     });
 
     it('should return false when getIsTextTrack is called and type is undefined', () => {
@@ -183,7 +183,7 @@ describe('DashManifestModel', function () {
     it('should return an empty array when getAdaptationsForType is called and type is undefined', () => {
         const manifest = { Period_asArray: [ { AdaptationSet_asArray: [ { id: 0 } ] }] };
 
-        expect(dashManifestModel.getAdaptationsForType.bind(dashManifestModel, manifest, 0, undefined)).to.throw("type is not defined");
+        expect(dashManifestModel.getAdaptationsForType.bind(dashManifestModel, manifest, 0, undefined)).to.throw('type is not defined');
     });
 
     it('should return an empty array when getAdaptationForType is called and streamInfo is undefined', () => {
@@ -420,7 +420,7 @@ describe('DashManifestModel', function () {
     it('should return valid value when minimumUpdatePeriod is present in manifest and latencyOfLastUpdate is defined', () => {
         const minimumUpdatePeriod = 30;
         const latencyOfLastUpdate = 0.5;
-        const manifest = { minimumUpdatePeriod:minimumUpdatePeriod };
+        const manifest = { minimumUpdatePeriod: minimumUpdatePeriod };
         const expectedResult = minimumUpdatePeriod - latencyOfLastUpdate;
         const updatePeriod = dashManifestModel.getManifestUpdatePeriod(manifest, latencyOfLastUpdate);
         expect(updatePeriod).to.equal(expectedResult); // jshint ignore:line
@@ -428,8 +428,8 @@ describe('DashManifestModel', function () {
 
     it('should return valid value when minimumUpdatePeriod is present in manifest and latencyOfLastUpdate is not defined', () => {
         const minimumUpdatePeriod = 30;
-        const manifest = { minimumUpdatePeriod:minimumUpdatePeriod };
-        const expectedResult = minimumUpdatePeriod
+        const manifest = { minimumUpdatePeriod: minimumUpdatePeriod };
+        const expectedResult = minimumUpdatePeriod;
         const updatePeriod = dashManifestModel.getManifestUpdatePeriod(manifest);
         expect(updatePeriod).to.equal(expectedResult); // jshint ignore:line
     });
@@ -584,7 +584,7 @@ describe('DashManifestModel', function () {
 
         it('returns an Array of BaseURLs with BaseURL[0] resolved to the document base uri when the base uri is the mpd and the input url is relative', () => {
             const node = {
-                baseUri: TEST_URL + "example.mpd",
+                baseUri: TEST_URL + 'example.mpd',
                 BaseURL_asArray: [{
                     __text: RELATIVE_TEST_URL
                 }]
