@@ -10,8 +10,8 @@ import MediaControllerMock from './mocks/MediaControllerMock';
 const expect = require('chai').expect;
 
 const context = {};
-let adapterMock = new AdapterMock();
-let mediaControllerMock = new MediaControllerMock();
+const adapterMock = new AdapterMock();
+const mediaControllerMock = new MediaControllerMock();
 const timelineConverter = TimelineConverter(context).getInstance();
 const dashManifestModel = DashManifestModel(context).getInstance({
     mediaController: mediaControllerMock,
@@ -196,12 +196,12 @@ describe('DashManifestModel', function () {
     it('should return the correct adaptation when getAdaptationForType is called', () => {
         const manifest = { Period_asArray: [ { AdaptationSet_asArray: [ { id: undefined, mimeType: 'audio', lang: 'eng', Role_asArray: [{value: 'main'}] }, { id: undefined, mimeType: 'audio', lang: 'deu', Role_asArray: [{value: 'main'}] }] }]};
         
-        let streamInfo = {
+        const streamInfo = {
             id: 'id'
         };
 
-        let track1 = {codec:'audio/mp4;codecs="mp4a.40.2"', id: undefined, index: 0, isText: false, lang: 'eng',mimeType: 'audio/mp4', roles: ['main'], streamInfo: streamInfo};
-        let track2 = {codec:'audio/mp4;codecs="mp4a.40.2"', id: undefined, index: 1, isText: false, lang: 'deu',mimeType: 'audio/mp4', roles: ['main'], streamInfo: streamInfo};
+        const track1 = {codec:'audio/mp4;codecs="mp4a.40.2"', id: undefined, index: 0, isText: false, lang: 'eng',mimeType: 'audio/mp4', roles: ['main'], streamInfo: streamInfo};
+        const track2 = {codec:'audio/mp4;codecs="mp4a.40.2"', id: undefined, index: 1, isText: false, lang: 'deu',mimeType: 'audio/mp4', roles: ['main'], streamInfo: streamInfo};
 
         mediaControllerMock.addTrack(track1);
         mediaControllerMock.addTrack(track2);
