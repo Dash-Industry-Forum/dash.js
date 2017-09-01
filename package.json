@@ -1,8 +1,9 @@
 {
   "name": "dashjs",
-  "version": "2.5.0",
+  "version": "2.6.0",
   "description": "A reference client implementation for the playback of MPEG DASH via Javascript and compliant browsers.",
   "main": "build/es5/index.js",
+  "types": "build/typings/index.d.ts",
   "scripts": {
     "debug-mocha": "iron-node node_modules/mocha/bin/_mocha --require mochahook",
     "test": "mocha --require mochahook",
@@ -34,6 +35,7 @@
     "grunt-jsdoc": "^0.6.0",
     "grunt-mocha-istanbul": "^3.0.1",
     "ink-docstrap": "^1.1.1",
+    "intern": "^3.2.3",
     "iron-mocha": "^1.0.3",
     "iron-node": "^3.0.15",
     "istanbul": "^0.4.1",
@@ -42,11 +44,14 @@
     "mocha": "^2.3.4",
     "sinon": "^1.17.2",
     "time-grunt": "^1.2.0",
-    "uglify-js": "^2.4.21"
+    "uglify-js": "^2.4.21",
+    "xmldom": "^0.1.16"
   },
   "dependencies": {
-    "codem-isoboxer": "^0.3.2",
-    "round10": "^1.0.3"
+    "codem-isoboxer": "^0.3.3",
+    "imsc": "^1.0.0-beta.3",
+    "round10": "^1.0.3",
+    "deep-equal": "^1.0.1"
   },
   "repository": {
     "type": "git",

@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import Constants from '../constants/Constants';
 import FactoryMaker from '../../core/FactoryMaker';
 import BufferController from './../controllers/BufferController';
 import NotFragmentedTextBufferController from './NotFragmentedTextBufferController';
@@ -40,34 +41,45 @@ function TextBufferController(config) {
 
     let instance;
 
-    function setup(config) {
+    function setup() {
 
         // according to text type, we create corresponding buffer controller
-        if (config.type === 'fragmentedText') {
+        if (config.type === Constants.FRAGMENTED_TEXT) {
 
             // in this case, internal buffer ocntroller is a classical BufferController object
             _BufferControllerImpl = BufferController(context).create({
+                type: config.type,
                 metricsModel: config.metricsModel,
+                mediaPlayerModel: config.mediaPlayerModel,
                 manifestModel: config.manifestModel,
                 sourceBufferController: config.sourceBufferController,
                 errHandler: config.errHandler,
                 streamController: config.streamController,
                 mediaController: config.mediaController,
                 adapter: config.adapter,
-                textController: config.textController
+                textController: config.textController,
+                abrController: config.abrController,
+                playbackController: config.playbackController,
+                streamProcessor: config.streamProcessor
             });
         } else {
 
-            // in this case, internal buffer controller is a not fragmented text controller  object
+            // in this case, internal buffer controller is a not fragmented text controller object
             _BufferControllerImpl = NotFragmentedTextBufferController(context).create({
+                type: config.type,
                 errHandler: config.errHandler,
-                sourceBufferController: config.sourceBufferController
+                sourceBufferController: config.sourceBufferController,
+                streamProcessor: config.streamProcessor
             });
         }
     }
 
-    function initialize(Type, source, StreamProcessor) {
-        return _BufferControllerImpl.initialize(Type, source, StreamProcessor);
+    function getBufferControllerType() {
+        return _BufferControllerImpl.getBufferControllerType();
+    }
+
+    function initialize(source, StreamProcessor) {
+        return _BufferControllerImpl.initialize(source, StreamProcessor);
     }
 
     /**
@@ -99,20 +111,16 @@ function TextBufferController(config) {
         _BufferControllerImpl.setMediaSource(value);
     }
 
-    function setStreamProcessor(streamProcessor) {
-        _BufferControllerImpl.setStreamProcessor(streamProcessor);
-    }
-
     function getStreamProcessor() {
         _BufferControllerImpl.getStreamProcessor();
     }
 
-    function getBufferLevel() {
-        return _BufferControllerImpl.getBufferLevel();
+    function setSeekStartTime(value) {
+        _BufferControllerImpl.setSeekStartTime(value);
     }
 
-    function getCriticalBufferLevel() {
-        return _BufferControllerImpl.getCriticalBufferLevel();
+    function getBufferLevel() {
+        return _BufferControllerImpl.getBufferLevel();
     }
 
     function reset(errored) {
@@ -123,20 +131,20 @@ function TextBufferController(config) {
         return _BufferControllerImpl.getIsBufferingCompleted();
     }
 
-    function switchInitData(streamId, quality) {
-        _BufferControllerImpl.switchInitData(streamId, quality);
+    function switchInitData(streamId, representationId) {
+        _BufferControllerImpl.switchInitData(streamId, representationId);
     }
 
     instance = {
+        getBufferControllerType: getBufferControllerType,
         initialize: initialize,
         createBuffer: createBuffer,
         getType: getType,
         getStreamProcessor: getStreamProcessor,
-        setStreamProcessor: setStreamProcessor,
+        setSeekStartTime: setSeekStartTime,
         getBuffer: getBuffer,
         setBuffer: setBuffer,
         getBufferLevel: getBufferLevel,
-        getCriticalBufferLevel: getCriticalBufferLevel,
         setMediaSource: setMediaSource,
         getMediaSource: getMediaSource,
         getIsBufferingCompleted: getIsBufferingCompleted,
@@ -144,11 +152,10 @@ function TextBufferController(config) {
         reset: reset
     };
 
-    setup(config);
+    setup();
 
     return instance;
 }
 
 TextBufferController.__dashjs_factory_name = 'TextBufferController';
-export default FactoryMaker.getClassFactory(TextBufferController);
 export default FactoryMaker.getClassFactory(TextBufferController);

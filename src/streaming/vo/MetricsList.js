@@ -46,7 +46,6 @@ class MetricsList {
         this.ManifestUpdate = [];
         this.RequestsQueue = null;
         this.DVBErrors = [];
-        this.BolaState = [];
     }
 }
 

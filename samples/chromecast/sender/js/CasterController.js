@@ -2,7 +2,7 @@ function CasterController($scope) {
     $scope.availableStreams = [
         {
             name: "4K",
-            url: "http://dash.edgesuite.net/akamai/test/tears1/tearsofsteel_4096x1714_14Mbps.mpd",
+            url: "https://dash.akamaized.net/akamai/test/tears1/tearsofsteel_4096x1714_14Mbps.mpd",
             isLive: false
         },
 
@@ -12,57 +12,57 @@ function CasterController($scope) {
 
         {
             name: "Fraunhofer - HEACC 2.0 - Dream",
-            url: "http://dash.edgesuite.net/digitalprimates/fraunhofer/480p_video/heaac_2_0_with_video/ElephantsDream/elephants_dream_480p_heaac2_0.mpd",
+            url: "https://dash.akamaized.net/digitalprimates/fraunhofer/480p_video/heaac_2_0_with_video/ElephantsDream/elephants_dream_480p_heaac2_0.mpd",
             isLive: false
         },
         {
             name: "Fraunhofer - HEACC 2.0 - Sintel",
-            url: "http://dash.edgesuite.net/digitalprimates/fraunhofer/480p_video/heaac_2_0_with_video/Sintel/sintel_480p_heaac2_0.mpd",
+            url: "https://dash.akamaized.net/digitalprimates/fraunhofer/480p_video/heaac_2_0_with_video/Sintel/sintel_480p_heaac2_0.mpd",
             isLive: false
         },
         {
             name: "Fraunhofer - HEACC 5.1 - 6 CH ID",
-             url: "http://dash.edgesuite.net/digitalprimates/fraunhofer/480p_video/heaac_5_1_with_video/6chId/6chId_480p_heaac5_1.mpd",
+             url: "https://dash.akamaized.net/digitalprimates/fraunhofer/480p_video/heaac_5_1_with_video/6chId/6chId_480p_heaac5_1.mpd",
             isLive: false
         },
         {
             name: "Fraunhofer - HEACC 5.1 - Dream",
-            url: "http://dash.edgesuite.net/digitalprimates/fraunhofer/480p_video/heaac_5_1_with_video/ElephantsDream/elephants_dream_480p_heaac5_1.mpd",
+            url: "https://dash.akamaized.net/digitalprimates/fraunhofer/480p_video/heaac_5_1_with_video/ElephantsDream/elephants_dream_480p_heaac5_1.mpd",
             isLive: false
         },
         {
             name: "Fraunhofer - HEACC 5.1 - Sintel",
-            url: "http://dash.edgesuite.net/digitalprimates/fraunhofer/480p_video/heaac_5_1_with_video/Sintel/sintel_480p_heaac5_1.mpd",
+            url: "https://dash.akamaized.net/digitalprimates/fraunhofer/480p_video/heaac_5_1_with_video/Sintel/sintel_480p_heaac5_1.mpd",
             isLive: false
         },
         /*{
             name: "Fraunhofer - HEACC 7.1 - 8 CH ID",
-            url: "http://dash.edgesuite.net/digitalprimates/fraunhofer/480p_video/heaac_7_1_with_video/8chId/8ch_id_480p_heaac7_1.mpd",
+            url: "https://dash.akamaized.net/digitalprimates/fraunhofer/480p_video/heaac_7_1_with_video/8chId/8ch_id_480p_heaac7_1.mpd",
             isLive: false
         },
         {
             name: "Fraunhofer - MPS 5.0 - 6 CH ID",
-            url: "http://dash.edgesuite.net/digitalprimates/fraunhofer/480p_video/mps_5_1_with_video/6chId/6chId_480p_mps5_1.mpd",
+            url: "https://dash.akamaized.net/digitalprimates/fraunhofer/480p_video/mps_5_1_with_video/6chId/6chId_480p_mps5_1.mpd",
             isLive: false
         },
         {
             name: "Fraunhofer - MPS 5.0 - Dream",
-            url: "http://dash.edgesuite.net/digitalprimates/fraunhofer/480p_video/mps_5_1_with_video/ElephantsDream/elephants_dream_480p_mps5_1.mpd",
+            url: "https://dash.akamaized.net/digitalprimates/fraunhofer/480p_video/mps_5_1_with_video/ElephantsDream/elephants_dream_480p_mps5_1.mpd",
             isLive: false
         },
         {
             name: "Fraunhofer - MPS 5.0 - Sintel",
-            url: "http://dash.edgesuite.net/digitalprimates/fraunhofer/480p_video/mps_5_1_with_video/Sintel/sintel_480p_mps5_1.mpd",
+            url: "https://dash.akamaized.net/digitalprimates/fraunhofer/480p_video/mps_5_1_with_video/Sintel/sintel_480p_mps5_1.mpd",
             isLive: false
         },*/
         {
             name: "Fraunhofer - Audio Only - Dream",
-            url: "http://dash.edgesuite.net/digitalprimates/fraunhofer/audio_only/heaac_2_0_without_video/ElephantsDream/elephants_dream_audio_only_heaac2_0.mpd",
+            url: "https://dash.akamaized.net/digitalprimates/fraunhofer/audio_only/heaac_2_0_without_video/ElephantsDream/elephants_dream_audio_only_heaac2_0.mpd",
             isLive: false
         },
         {
             name: "Fraunhofer - Audio Only - Sintel",
-            url: "http://dash.edgesuite.net/digitalprimates/fraunhofer/audio_only/heaac_2_0_without_video/Sintel/sintel_audio_only_heaac2_0.mpd",
+            url: "https://dash.akamaized.net/digitalprimates/fraunhofer/audio_only/heaac_2_0_without_video/Sintel/sintel_audio_only_heaac2_0.mpd",
             isLive: false
         },
 
@@ -102,7 +102,7 @@ function CasterController($scope) {
         },
         {
             name: "Media Excel Live 1",
-            url: "http://dash.edgesuite.net/mediaexcel/live/ch1/dash.mpd",
+            url: "https://dash.akamaized.net/mediaexcel/live/ch1/dash.mpd",
             isLive: true
         },
 
@@ -112,12 +112,12 @@ function CasterController($scope) {
 
         {
             name: "Live Archive",
-            url: "http://dash.edgesuite.net/dash264/TestCases/1b/thomson-networks/manifest.mpd",
+            url: "https://dash.akamaized.net/dash264/TestCases/1b/thomson-networks/manifest.mpd",
             isLive: false
         },
         {
             name: "Envivio",
-            url: "http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd",
+            url: "https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd",
             isLive: false
         },
         {
@@ -207,82 +207,82 @@ function CasterController($scope) {
 
         {
             name: "DASH-AVC/264 – test vector 1a - Netflix",
-            url: "http://dash.edgesuite.net/dash264/TestCases/1a/netflix/exMPD_BIP_TC1.mpd",
+            url: "https://dash.akamaized.net/dash264/TestCases/1a/netflix/exMPD_BIP_TC1.mpd",
             isLive: false
         },
         {
             name: "DASH-AVC/264 – test vector 1a - Sony",
-            url: "http://dash.edgesuite.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd",
+            url: "https://dash.akamaized.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd",
             isLive: false
         },
         {
             name: "DASH-AVC/264 – test vector 1b - Envivio",
-            url: "http://dash.edgesuite.net/dash264/TestCases/1b/envivio/manifest.mpd",
+            url: "https://dash.akamaized.net/dash264/TestCases/1b/envivio/manifest.mpd",
             isLive: false
         },
         {
             name: "DASH-AVC/264 – test vector 1b - Thomson",
-            url: "http://dash.edgesuite.net/dash264/TestCases/1b/thomson-networks/2/manifest.mpd",
+            url: "https://dash.akamaized.net/dash264/TestCases/1b/thomson-networks/2/manifest.mpd",
             isLive: false
         },
         {
             name: "DASH-AVC/264 – test vector 1c - Envivio",
-            url: "http://dash.edgesuite.net/dash264/TestCases/1c/envivio/manifest.mpd",
+            url: "https://dash.akamaized.net/dash264/TestCases/1c/envivio/manifest.mpd",
             isLive: false
         },
         {
             name: "DASH-AVC/264 – test vector 2a - Envivio",
-            url: "http://dash.edgesuite.net/dash264/TestCases/2a/envivio/manifest.mpd",
+            url: "https://dash.akamaized.net/dash264/TestCases/2a/envivio/manifest.mpd",
             isLive: false
         },
         {
             name: "DASH-AVC/264 – test vector 2a - Sony",
-            url: "http://dash.edgesuite.net/dash264/TestCases/2a/sony/SNE_DASH_CASE_2A_SD_REVISED.mpd",
+            url: "https://dash.akamaized.net/dash264/TestCases/2a/sony/SNE_DASH_CASE_2A_SD_REVISED.mpd",
             isLive: false
         },
         {
             name: "DASH-AVC/264 – test vector 2a - Thomson",
-            url: "http://dash.edgesuite.net/dash264/TestCases/2a/thomson-networks/2/manifest.mpd",
+            url: "https://dash.akamaized.net/dash264/TestCases/2a/thomson-networks/2/manifest.mpd",
             isLive: false
         },
         {
             name: "DASH-AVC/264 – test vector 3a - Fraunhofer",
-            url: "http://dash.edgesuite.net/dash264/TestCases/3a/fraunhofer/ed.mpd",
+            url: "https://dash.akamaized.net/dash264/TestCases/3a/fraunhofer/ed.mpd",
             isLive: false
         },
         {
             name: "DASH-AVC/264 – test vector 3b - Fraunhofer",
-            url: "http://dash.edgesuite.net/dash264/TestCases/3b/fraunhofer/elephants_dream_heaac2_0.mpd",
+            url: "https://dash.akamaized.net/dash264/TestCases/3b/fraunhofer/elephants_dream_heaac2_0.mpd",
             isLive: false
         },
         {
             name: "DASH-AVC/264 – test vector 3b - Sony",
-            url: "http://dash.edgesuite.net/dash264/TestCases/3b/sony/SNE_DASH_CASE3B_SD_REVISED.mpd",
+            url: "https://dash.akamaized.net/dash264/TestCases/3b/sony/SNE_DASH_CASE3B_SD_REVISED.mpd",
             isLive: false
         },
         {
             name: "DASH-AVC/264 – test vector 4b - Sony",
-            url: "http://dash.edgesuite.net/dash264/TestCases/4b/sony/SNE_DASH_CASE4B_SD_REVISED.mpd",
+            url: "https://dash.akamaized.net/dash264/TestCases/4b/sony/SNE_DASH_CASE4B_SD_REVISED.mpd",
             isLive: false
         },
         {
             name: "DASH-AVC/264 – test vector 5a - Thomson/Envivio",
-            url: "http://dash.edgesuite.net/dash264/TestCases/5a/1/manifest.mpd",
+            url: "https://dash.akamaized.net/dash264/TestCases/5a/1/manifest.mpd",
             isLive: false
         },
         {
             name: "DASH-AVC/264 – test vector 5b - Thomson/Envivio",
-            url: "http://dash.edgesuite.net/dash264/TestCases/5b/1/manifest.mpd",
+            url: "https://dash.akamaized.net/dash264/TestCases/5b/1/manifest.mpd",
             isLive: false
         },
         {
             name: "DASH-AVC/264 – test vector 6c - Envivio Manifest 1",
-            url: "http://dash.edgesuite.net/dash264/TestCases/6c/envivio/manifest.mpd",
+            url: "https://dash.akamaized.net/dash264/TestCases/6c/envivio/manifest.mpd",
             isLive: false
         },
         {
             name: "DASH-AVC/264 – test vector 6c - Envivio Manifest 2",
-            url: "http://dash.edgesuite.net/dash264/TestCases/6c/envivio/manifest2.mpd",
+            url: "https://dash.akamaized.net/dash264/TestCases/6c/envivio/manifest2.mpd",
             isLive: false
         }
     ];

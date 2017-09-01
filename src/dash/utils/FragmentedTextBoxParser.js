@@ -45,71 +45,106 @@ function FragmentedTextBoxParser() {
     }
 
     function getSamplesInfo(ab) {
-        var isoFile = boxParser.parse(ab);
-        var tfhdBox = isoFile.getBox('tfhd');
-        var tfdtBox = isoFile.getBox('tfdt');
-        var trunBox = isoFile.getBox('trun');
-        var moofBox = isoFile.getBox('moof');
-        var mfhdBox = isoFile.getBox('mfhd');
-        var subsBox = isoFile.getBox('subs');
+        if (!boxParser) {
+            throw new Error('boxParser is undefined');
+        }
 
-        var sampleDuration,
+        if (!ab) {
+            return {sampleList: [], lastSequenceNumber: NaN, totalDuration: NaN, numSequences: NaN};
+        }
+        let isoFile = boxParser.parse(ab);
+        // zero or more moofs
+        let moofBoxes = isoFile.getBoxes('moof');
+        // exactly one mfhd per moof
+        let mfhdBoxes = isoFile.getBoxes('mfhd');
+
+        let sampleDuration,
             sampleCompositionTimeOffset,
             sampleCount,
             sampleSize,
             sampleDts,
             sampleList,
             sample,
-            i, j,
+            i, j, k, l, m, n,
             dataOffset,
-            sequenceNumber,
+            lastSequenceNumber,
+            numSequences,
             totalDuration;
 
-        sequenceNumber = mfhdBox.sequence_number;
-        sampleCount = trunBox.sample_count;
-        sampleDts = tfdtBox.baseMediaDecodeTime;
-        dataOffset = (tfhdBox.base_data_offset || 0) + (trunBox.data_offset || 0);
+        numSequences = isoFile.getBoxes('moof').length;
+        lastSequenceNumber = mfhdBoxes[mfhdBoxes.length - 1].sequence_number;
+        sampleCount = 0;
 
         sampleList = [];
         let subsIndex = -1;
         let nextSubsSample = -1;
-        for (i = 0; i < sampleCount; i++) {
-            sample = trunBox.samples[i];
-            sampleDuration = (sample.sample_duration !== undefined) ? sample.sample_duration : tfhdBox.default_sample_duration;
-            sampleSize = (sample.sample_size !== undefined) ? sample.sample_size : tfhdBox.default_sample_size;
-            sampleCompositionTimeOffset = (sample.sample_composition_time_offset !== undefined) ? sample.sample_composition_time_offset : 0;
-            let sampleData = {
-                'dts': sampleDts,
-                'cts': (sampleDts + sampleCompositionTimeOffset),
-                'duration': sampleDuration,
-                'offset': moofBox.offset + dataOffset,
-                'size': sampleSize,
-                'subSizes': [sampleSize]
-            };
-            if (subsBox) {
-                if (subsIndex < subsBox.entry_count && i > nextSubsSample) {
-                    subsIndex++;
-                    nextSubsSample += subsBox.entries[subsIndex].sample_delta;
-                }
-                if (i == nextSubsSample) {
-                    sampleData.subSizes = [];
-                    let entry = subsBox.entries[subsIndex];
-                    for (j = 0; j < entry.subsample_count; j++) {
-                        sampleData.subSizes.push(entry.subsamples[j].subsample_size);
+        for (l = 0; l < moofBoxes.length; l++) {
+            let moofBox = moofBoxes[l];
+            // zero or more trafs per moof
+            let trafBoxes = moofBox.getChildBoxes('traf');
+            for (j = 0; j < trafBoxes.length; j++) {
+                let trafBox = trafBoxes[j];
+                // exactly one tfhd per traf
+                let tfhdBox = trafBox.getChildBox('tfhd');
+                // zero or one tfdt per traf
+                let tfdtBox = trafBox.getChildBox('tfdt');
+                sampleDts = tfdtBox.baseMediaDecodeTime;
+                // zero or more truns per traf
+                let trunBoxes = trafBox.getChildBoxes('trun');
+                // zero or more subs per traf
+                let subsBoxes = trafBox.getChildBoxes('subs');
+                for (k = 0; k < trunBoxes.length; k++) {
+                    let trunBox = trunBoxes[k];
+                    sampleCount = trunBox.sample_count;
+                    dataOffset = (tfhdBox.base_data_offset || 0) + (trunBox.data_offset || 0);
+
+                    for (i = 0; i < sampleCount; i++) {
+                        sample = trunBox.samples[i];
+                        sampleDuration = (sample.sample_duration !== undefined) ? sample.sample_duration : tfhdBox.default_sample_duration;
+                        sampleSize = (sample.sample_size !== undefined) ? sample.sample_size : tfhdBox.default_sample_size;
+                        sampleCompositionTimeOffset = (sample.sample_composition_time_offset !== undefined) ? sample.sample_composition_time_offset : 0;
+                        let sampleData = {
+                            'dts': sampleDts,
+                            'cts': (sampleDts + sampleCompositionTimeOffset),
+                            'duration': sampleDuration,
+                            'offset': moofBox.offset + dataOffset,
+                            'size': sampleSize,
+                            'subSizes': [sampleSize]
+                        };
+                        if (subsBoxes) {
+                            for (m = 0; m < subsBoxes.length; m++) {
+                                let subsBox = subsBoxes[m];
+                                if (subsIndex < subsBox.entry_count && i > nextSubsSample) {
+                                    subsIndex++;
+                                    nextSubsSample += subsBox.entries[subsIndex].sample_delta;
+                                }
+                                if (i == nextSubsSample) {
+                                    sampleData.subSizes = [];
+                                    let entry = subsBox.entries[subsIndex];
+                                    for (n = 0; n < entry.subsample_count; n++) {
+                                        sampleData.subSizes.push(entry.subsamples[n].subsample_size);
+                                    }
+                                }
+                            }
+                        }
+                        sampleList.push(sampleData);
+                        dataOffset += sampleSize;
+                        sampleDts += sampleDuration;
                     }
                 }
+                totalDuration = sampleDts - tfdtBox.baseMediaDecodeTime;
             }
-            sampleList.push(sampleData);
-            dataOffset += sampleSize;
-            sampleDts += sampleDuration;
         }
-        totalDuration = sampleDts - tfdtBox.baseMediaDecodeTime;
-        return {sampleList: sampleList, sequenceNumber: sequenceNumber, totalDuration: totalDuration};
+        return {sampleList: sampleList, lastSequenceNumber: lastSequenceNumber, totalDuration: totalDuration, numSequences: numSequences};
     }
 
     function getMediaTimescaleFromMoov(ab) {
-        var isoFile = boxParser.parse(ab);
-        var mdhdBox = isoFile.getBox('mdhd');
+        if (!boxParser) {
+            throw new Error('boxParser is undefined');
+        }
+
+        let isoFile = boxParser.parse(ab);
+        let mdhdBox = isoFile ? isoFile.getBox('mdhd') : undefined;
 
         return mdhdBox ? mdhdBox.timescale : NaN;
     }

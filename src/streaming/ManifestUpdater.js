@@ -31,7 +31,6 @@
 import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import FactoryMaker from '../core/FactoryMaker';
-import MediaPlayerModel from './models/MediaPlayerModel';
 import Debug from '../core/Debug';
 
 function ManifestUpdater() {
@@ -59,6 +58,9 @@ function ManifestUpdater() {
         if (config.dashManifestModel) {
             dashManifestModel = config.dashManifestModel;
         }
+        if (config.mediaPlayerModel) {
+            mediaPlayerModel = config.mediaPlayerModel;
+        }
     }
 
     function initialize(loader) {
@@ -67,7 +69,6 @@ function ManifestUpdater() {
         refreshTimer = null;
         isUpdating = false;
         isPaused = true;
-        mediaPlayerModel = MediaPlayerModel(context).getInstance();
 
         eventBus.on(Events.STREAMS_COMPOSED, onStreamsComposed, this);
         eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
@@ -176,4 +177,4 @@ function ManifestUpdater() {
     return instance;
 }
 ManifestUpdater.__dashjs_factory_name = 'ManifestUpdater';
-export default FactoryMaker.getSingletonFactory(ManifestUpdater);
+export default FactoryMaker.getClassFactory(ManifestUpdater);

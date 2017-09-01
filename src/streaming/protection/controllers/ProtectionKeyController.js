@@ -62,7 +62,7 @@ function ProtectionKeyController() {
     function initialize() {
         keySystems = [];
 
-        var keySystem;
+        let keySystem;
 
         // PlayReady
         keySystem = KeySystemPlayReady(context).getInstance();
@@ -104,7 +104,7 @@ function ProtectionKeyController() {
      * @instance
      */
     function getKeySystemBySystemString(systemString) {
-        for (var i = 0; i < keySystems.length; i++) {
+        for (let i = 0; i < keySystems.length; i++) {
             if (keySystems[i].systemString === systemString) {
                 return keySystems[i];
             }
@@ -142,10 +142,10 @@ function ProtectionKeyController() {
      */
     function initDataEquals(initData1, initData2) {
         if (initData1.byteLength === initData2.byteLength) {
-            var data1 = new Uint8Array(initData1);
-            var data2 = new Uint8Array(initData2);
+            let data1 = new Uint8Array(initData1);
+            let data2 = new Uint8Array(initData2);
 
-            for (var j = 0; j < data1.length; j++) {
+            for (let j = 0; j < data1.length; j++) {
                 if (data1[j] !== data2[j]) {
                     return false;
                 }
@@ -170,8 +170,8 @@ function ProtectionKeyController() {
      * @instance
      */
     function getSupportedKeySystemsFromContentProtection(cps) {
-        var cp, ks, ksIdx, cpIdx;
-        var supportedKS = [];
+        let cp, ks, ksIdx, cpIdx;
+        let supportedKS = [];
 
         if (cps) {
             for (ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
@@ -181,7 +181,7 @@ function ProtectionKeyController() {
                     if (cp.schemeIdUri.toLowerCase() === ks.schemeIdURI) {
 
                         // Look for DRM-specific ContentProtection
-                        var initData = ks.getInitData(cp);
+                        let initData = ks.getInitData(cp);
                         if (!!initData) {
                             supportedKS.push({
                                 ks: keySystems[ksIdx],
@@ -212,13 +212,12 @@ function ProtectionKeyController() {
      * @instance
      */
     function getSupportedKeySystems(initData, protDataSet) {
-        var ksIdx;
-        var supportedKS = [];
-        var pssh = CommonEncryption.parsePSSHList(initData);
+        let supportedKS = [];
+        let pssh = CommonEncryption.parsePSSHList(initData);
 
-        for (ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
-            var keySystemString = keySystems[ksIdx].systemString;
-            var shouldNotFilterOutKeySystem = (protDataSet) ? keySystemString in protDataSet : true;
+        for (let ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
+            let keySystemString = keySystems[ksIdx].systemString;
+            let shouldNotFilterOutKeySystem = (protDataSet) ? keySystemString in protDataSet : true;
 
             if (keySystems[ksIdx].uuid in pssh && shouldNotFilterOutKeySystem) {
                 supportedKS.push({
@@ -255,7 +254,7 @@ function ProtectionKeyController() {
             return null;
         }
 
-        var licenseServerData = null;
+        let licenseServerData = null;
         if (protData && protData.hasOwnProperty('drmtoday')) {
             licenseServerData = DRMToday(context).getInstance();
         } else if (keySystem.systemString === 'com.widevine.alpha') {
@@ -289,8 +288,26 @@ function ProtectionKeyController() {
         }
     }
 
+    function setProtectionData(protectionDataSet) {
+        var getProtectionData = function (keySystemString) {
+            var protData = null;
+            if (protectionDataSet) {
+                protData = (keySystemString in protectionDataSet) ? protectionDataSet[keySystemString] : null;
+            }
+            return protData;
+        };
+
+        for (var i = 0; i < keySystems.length; i++) {
+            var keySystem = keySystems[i];
+            if (keySystem.hasOwnProperty('init')) {
+                keySystem.init(getProtectionData(keySystem.systemString));
+            }
+        }
+    }
+
     instance = {
         initialize: initialize,
+        setProtectionData: setProtectionData,
         isClearKey: isClearKey,
         initDataEquals: initDataEquals,
         getKeySystems: getKeySystems,

@@ -52,15 +52,15 @@ function KeySystemClearKey() {
      * @memberof KeySystemClearKey
      */
     function getClearKeysFromProtectionData(protectionData, message) {
-        var clearkeySet = null;
+        let clearkeySet = null;
         if (protectionData) {
             // ClearKey is the only system that does not require a license server URL, so we
             // handle it here when keys are specified in protection data
-            var jsonMsg = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(message)));
-            var keyPairs = [];
-            for (var i = 0; i < jsonMsg.kids.length; i++) {
-                var clearkeyID = jsonMsg.kids[i];
-                var clearkey = (protectionData.clearkeys.hasOwnProperty(clearkeyID)) ? protectionData.clearkeys[clearkeyID] : null;
+            let jsonMsg = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(message)));
+            let keyPairs = [];
+            for (let i = 0; i < jsonMsg.kids.length; i++) {
+                let clearkeyID = jsonMsg.kids[i];
+                let clearkey = (protectionData.clearkeys.hasOwnProperty(clearkeyID)) ? protectionData.clearkeys[clearkeyID] : null;
                 if (!clearkey) {
                     throw new Error('DRM: ClearKey keyID (' + clearkeyID + ') is not known!');
                 }

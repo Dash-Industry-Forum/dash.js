@@ -36,8 +36,8 @@ function MediaSourceController() {
 
     function createMediaSource() {
 
-        var hasWebKit = ('WebKitMediaSource' in window);
-        var hasMediaSource = ('MediaSource' in window);
+        let hasWebKit = ('WebKitMediaSource' in window);
+        let hasMediaSource = ('MediaSource' in window);
 
         if (hasMediaSource) {
             return new MediaSource();
@@ -50,7 +50,7 @@ function MediaSourceController() {
 
     function attachMediaSource(source, videoModel) {
 
-        var objectURL = window.URL.createObjectURL(source);
+        let objectURL = window.URL.createObjectURL(source);
 
         videoModel.setSource(objectURL);
 
@@ -69,15 +69,22 @@ function MediaSourceController() {
         return source.duration;
     }
 
+    function setSeekable(source, start, end) {
+        if (typeof source.setLiveSeekableRange === 'function' && typeof source.clearLiveSeekableRange === 'function' &&
+                source.readyState === 'open' && start >= 0 && start < end) {
+            source.clearLiveSeekableRange();
+            source.setLiveSeekableRange(start, end);
+        }
+    }
+
     function signalEndOfStream(source) {
 
-        var buffers = source.sourceBuffers;
-        var ln = buffers.length;
-        var i = 0;
+        let buffers = source.sourceBuffers;
+        const ln = buffers.length;
 
         if (source.readyState !== 'open') return;
 
-        for (i; i < ln; i++) {
+        for (let i = 0; i < ln; i++) {
             if (buffers[i].updating) return;
             if (buffers[i].buffered.length === 0) return;
         }
@@ -90,6 +97,7 @@ function MediaSourceController() {
         attachMediaSource: attachMediaSource,
         detachMediaSource: detachMediaSource,
         setDuration: setDuration,
+        setSeekable: setSeekable,
         signalEndOfStream: signalEndOfStream
     };
 

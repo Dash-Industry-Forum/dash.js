@@ -151,6 +151,8 @@ class HTTPRequestTrace {
     }
 }
 
+HTTPRequest.GET = 'GET';
+HTTPRequest.HEAD = 'HEAD';
 HTTPRequest.MPD_TYPE = 'MPD';
 HTTPRequest.XLINK_EXPANSION_TYPE = 'XLinkExpansion';
 HTTPRequest.INIT_SEGMENT_TYPE = 'InitializationSegment';

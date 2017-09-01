@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import Constants from '../constants/Constants';
 import FactoryMaker from '../../core/FactoryMaker';
 import TextSourceBuffer from './TextSourceBuffer';
 import TextTracks from './TextTracks';
@@ -43,6 +44,7 @@ function TextController() {
     let allTracksAreDisabled,
         errHandler,
         dashManifestModel,
+        manifestModel,
         mediaController,
         videoModel,
         streamController,
@@ -58,7 +60,8 @@ function TextController() {
         textSourceBuffer = TextSourceBuffer(context).getInstance();
 
         textTracks.initialize();
-        allTracksAreDisabled = false;
+
+        reset();
     }
 
     function setConfig(config) {
@@ -70,6 +73,9 @@ function TextController() {
         }
         if (config.dashManifestModel) {
             dashManifestModel = config.dashManifestModel;
+        }
+        if (config.manifestModel) {
+            manifestModel = config.manifestModel;
         }
         if (config.mediaController) {
             mediaController = config.mediaController;
@@ -94,6 +100,7 @@ function TextController() {
         textSourceBuffer.setConfig({
             errHandler: errHandler,
             dashManifestModel: dashManifestModel,
+            manifestModel: manifestModel,
             mediaController: mediaController,
             videoModel: videoModel,
             streamController: streamController,
@@ -117,34 +124,32 @@ function TextController() {
 
     function setTextTrack() {
 
-        var config = textSourceBuffer.getConfig();
-        var fragmentModel = config.fragmentModel;
-        var embeddedTracks = config.embeddedTracks;
-        var isFragmented = config.isFragmented;
-        var fragmentedTracks = config.fragmentedTracks;
-        var allTracksAreDisabled = config.allTracksAreDisabled;
+        let config = textSourceBuffer.getConfig();
+        let fragmentModel = config.fragmentModel;
+        let embeddedTracks = config.embeddedTracks;
+        let isFragmented = config.isFragmented;
+        let fragmentedTracks = config.fragmentedTracks;
 
-        var el = videoModel.getElement();
-        var tracks = el.textTracks;
-        var ln = tracks.length;
-        var nrNonEmbeddedTracks = ln - embeddedTracks.length;
-        var oldTrackIdx = textTracks.getCurrentTrackIdx();
+        let tracks = videoModel.getTextTracks();
+        const ln = tracks.length;
+        let nrNonEmbeddedTracks = ln - embeddedTracks.length;
+        let oldTrackIdx = textTracks.getCurrentTrackIdx();
 
-        for (var i = 0; i < ln; i++) {
-            var track = tracks[i];
-            allTracksAreDisabled = track.mode !== 'showing';
-            if (track.mode === 'showing') {
+        for (let i = 0; i < ln; i++) {
+            let track = tracks[i];
+            allTracksAreDisabled = track.mode !== Constants.TEXT_SHOWING;
+            if (track.mode === Constants.TEXT_SHOWING) {
                 if (oldTrackIdx !== i) { // do not reset track if already the current track.  This happens when all captions get turned off via UI and then turned on again and with videojs.
                     textTracks.setCurrentTrackIdx(i);
                     textTracks.addCaptions(i, 0, null); // Make sure that previously queued captions are added as cues
 
-                    // specific to fragmented texe
+                    // specific to fragmented text
                     if (isFragmented && i < nrNonEmbeddedTracks) {
-                        var currentFragTrack = mediaController.getCurrentTrackFor('fragmentedText', streamController.getActiveStreamInfo());
-                        var newFragTrack = fragmentedTracks[i];
+                        let currentFragTrack = mediaController.getCurrentTrackFor(Constants.FRAGMENTED_TEXT, streamController.getActiveStreamInfo());
+                        let newFragTrack = fragmentedTracks[i];
                         if (newFragTrack !== currentFragTrack) {
                             fragmentModel.abortRequests();
-                            textTracks.deleteTrackCues(currentFragTrack);
+                            textTracks.deleteCuesFromTrackIdx(oldTrackIdx);
                             mediaController.setTrack(newFragTrack);
                             textSourceBuffer.setCurrentFragmentedTrackIdx(i);
                         }
@@ -160,7 +165,7 @@ function TextController() {
     }
 
     function getCurrentTrackIdx() {
-        var textTracks = textSourceBuffer.getConfig().textTracks;
+        let textTracks = textSourceBuffer.getConfig().textTracks;
         return textTracks.getCurrentTrackIdx();
     }
 

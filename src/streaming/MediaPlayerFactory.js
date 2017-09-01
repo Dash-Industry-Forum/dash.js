@@ -23,8 +23,8 @@ function MediaPlayerFactory() {
 
         if (video._dashjs_player) return video._dashjs_player;
 
-        var player;
-        var videoID = (video.id || video.name || 'video element');
+        let player;
+        let videoID = (video.id || video.name || 'video element');
 
         source = source || [].slice.call(video.querySelectorAll('source')).filter(function (s) {
                 return s.type == SUPPORTED_MIME_TYPE;

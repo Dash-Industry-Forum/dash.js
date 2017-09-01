@@ -61,6 +61,7 @@ function XlinkController(config) {
         xlinkLoader = XlinkLoader(context).create({
             errHandler: config.errHandler,
             metricsModel: config.metricsModel,
+            mediaPlayerModel: config.mediaPlayerModel,
             requestModifier: config.requestModifier
         });
     }
@@ -78,7 +79,7 @@ function XlinkController(config) {
      * @param {Object} mpd - the manifest
      */
     function resolveManifestOnLoad(mpd) {
-        var elements;
+        let elements;
         // First resolve all periods, so unnecessary requests inside onLoad Periods with Default content are avoided
         converter = new X2JS({
             escapeMode:         false,
@@ -106,10 +107,9 @@ function XlinkController(config) {
     }
 
     function resolve(elements, type, resolveType) {
-        var resolveObject = {};
-        var element,
-            url,
-            i;
+        let resolveObject = {};
+        let element,
+            url;
 
         resolveObject.elements = elements;
         resolveObject.type = type;
@@ -118,7 +118,7 @@ function XlinkController(config) {
         if (resolveObject.elements.length === 0) {
             onXlinkAllElementsLoaded(resolveObject);
         }
-        for (i = 0; i < resolveObject.elements.length; i++) {
+        for (let i = 0; i < resolveObject.elements.length; i++) {
             element = resolveObject.elements[i];
             if (urlUtils.isHTTPURL(element.url)) {
                 url = element.url;
@@ -130,20 +130,22 @@ function XlinkController(config) {
     }
 
     function onXlinkElementLoaded(event) {
-        var element,
-            resolveObject,
-            index;
+        let element,
+            resolveObject;
 
-        var openingTag = '<response>';
-        var closingTag = '</response>';
-        var mergedContent = '';
+        const openingTag = '<response>';
+        const closingTag = '</response>';
+        let mergedContent = '';
 
         element = event.element;
         resolveObject = event.resolveObject;
         // if the element resolved into content parse the content
         if (element.resolvedContent) {
+            let index = 0;
             // we add a parent elements so the converter is able to parse multiple elements of the same type which are not wrapped inside a container
-            index = element.resolvedContent.indexOf('>') + 1; //find the closing position of the xml tag
+            if (element.resolvedContent.indexOf('<?xml') === 0) {
+                index = element.resolvedContent.indexOf('?>') + 2; //find the closing position of the xml declaration, if it exists.
+            }
             mergedContent = element.resolvedContent.substr(0,index) + openingTag + element.resolvedContent.substr(index) + closingTag;
             element.resolvedContent = converter.xml_str2json(mergedContent);
         }
@@ -154,8 +156,8 @@ function XlinkController(config) {
 
     // We got to wait till all elements of the current queue are resolved before merging back
     function onXlinkAllElementsLoaded (resolveObject) {
-        var elements = [];
-        var i,
+        let elements = [];
+        let i,
             obj;
 
         mergeElementsBack(resolveObject);
@@ -187,8 +189,8 @@ function XlinkController(config) {
 
     // Returns the elements with the specific resolve Type
     function getElementsToResolve(elements, parentElement, type, resolveType) {
-        var toResolve = [];
-        var element,
+        let toResolve = [];
+        let element,
             i,
             xlinkObject;
         // first remove all the resolve-to-zero elements
@@ -210,8 +212,8 @@ function XlinkController(config) {
     }
 
     function mergeElementsBack(resolveObject) {
-        var resolvedElements = [];
-        var element,
+        let resolvedElements = [];
+        let element,
             type,
             obj,
             i,
@@ -263,7 +265,7 @@ function XlinkController(config) {
 
     // Check if all pending requests are finished
     function isResolvingFinished(elementsToResolve) {
-        var i,
+        let i,
             obj;
         for (i = 0; i < elementsToResolve.elements.length; i++) {
             obj = elementsToResolve.elements[i];

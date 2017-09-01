@@ -29,13 +29,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import SwitchRequest from '../SwitchRequest';
-import MediaPlayerModel from '../../models/MediaPlayerModel';
-import DashMetrics from '../../../dash/DashMetrics';
-import MetricsModel from '../../models/MetricsModel';
 import FactoryMaker from '../../../core/FactoryMaker';
 import Debug from '../../../core/Debug';
 
-function AbandonRequestsRule() {
+function AbandonRequestsRule(config) {
 
     const ABANDON_MULTIPLIER = 1.8;
     const GRACE_TIME_THRESHOLD = 500;
@@ -44,20 +41,16 @@ function AbandonRequestsRule() {
     const context = this.context;
     const log = Debug(context).getInstance().log;
 
+    const mediaPlayerModel = config.mediaPlayerModel;
+    const metricsModel = config.metricsModel;
+    const dashMetrics = config.dashMetrics;
+
     let fragmentDict,
         abandonDict,
-        throughputArray,
-        mediaPlayerModel,
-        dashMetrics,
-        metricsModel;
+        throughputArray;
 
     function setup() {
-        fragmentDict = {};
-        abandonDict = {};
-        throughputArray = [];
-        mediaPlayerModel = MediaPlayerModel(context).getInstance();
-        dashMetrics = DashMetrics(context).getInstance();
-        metricsModel = MetricsModel(context).getInstance();
+        reset();
     }
 
     function setFragmentRequestDict(type, id) {
@@ -71,11 +64,16 @@ function AbandonRequestsRule() {
     }
 
     function shouldAbandon(rulesContext) {
+        const switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, {name: AbandonRequestsRule.__dashjs_factory_name});
+
+        if (!rulesContext || !rulesContext.hasOwnProperty('getMediaInfo') || !rulesContext.hasOwnProperty('getMediaType') || !rulesContext.hasOwnProperty('getCurrentRequest') ||
+            !rulesContext.hasOwnProperty('getTrackInfo') || !rulesContext.hasOwnProperty('getAbrController')) {
+            return switchRequest;
+        }
 
         const mediaInfo = rulesContext.getMediaInfo();
-        const mediaType = mediaInfo.type;
+        const mediaType = rulesContext.getMediaType();
         const req = rulesContext.getCurrentRequest();
-        const switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, {name: AbandonRequestsRule.__dashjs_factory_name});
 
         if (!isNaN(req.index)) {
 
@@ -120,14 +118,14 @@ function AbandonRequestsRule() {
                     return switchRequest;
                 } else if (!abandonDict.hasOwnProperty(fragmentInfo.id)) {
 
-                    const abrController = rulesContext.getStreamProcessor().getABRController();
+                    const abrController = rulesContext.getAbrController();
                     const bytesRemaining = fragmentInfo.bytesTotal - fragmentInfo.bytesLoaded;
                     const bitrateList = abrController.getBitrateList(mediaInfo);
                     const newQuality = abrController.getQualityForBitrate(mediaInfo, fragmentInfo.measuredBandwidthInKbps * mediaPlayerModel.getBandwidthSafetyFactor());
                     const estimateOtherBytesTotal = fragmentInfo.bytesTotal * bitrateList[newQuality].bitrate / bitrateList[abrController.getQualityFor(mediaType, mediaInfo.streamInfo)].bitrate;
 
                     if (bytesRemaining > estimateOtherBytesTotal) {
-                        switchRequest.value = newQuality;
+                        switchRequest.quality = newQuality;
                         switchRequest.reason.throughput = fragmentInfo.measuredBandwidthInKbps;
                         switchRequest.reason.fragmentID = fragmentInfo.id;
                         abandonDict[fragmentInfo.id] = fragmentInfo;
@@ -144,7 +142,9 @@ function AbandonRequestsRule() {
     }
 
     function reset() {
-        setup();
+        fragmentDict = {};
+        abandonDict = {};
+        throughputArray = [];
     }
 
     const instance = {

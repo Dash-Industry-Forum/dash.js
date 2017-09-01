@@ -13,8 +13,8 @@ Debug files are not compressed or obfuscated making the file size much larger co
             function init()
             {
                 var player1,player2,player3,player4,player5,player6, video;
-                var MPD_2S_SEGMENTS = "http://vm2.dashif.org/livesim/testpic_2s/Manifest.mpd";
-                var MPD_6S_SEGMENTS = "http://vm2.dashif.org/livesim/testpic_6s/Manifest.mpd";
+                var MPD_2S_SEGMENTS = "https://vm2.dashif.org/livesim/testpic_2s/Manifest.mpd";
+                var MPD_6S_SEGMENTS = "https://vm2.dashif.org/livesim/testpic_6s/Manifest.mpd";
 
 
                 video = document.querySelector("#video1");
@@ -79,7 +79,7 @@ Debug files are not compressed or obfuscated making the file size much larger co
         </style>
     </head>
 
-    <body onload="init()">
+    <body>
     This sample illustrates the combined effects of segment duration and the "<strong>setLiveDelay</strong>" MediaPlayer method on the latency of live stream playback.
     The upper layer of videos are all playing a live stream with 2s segment duration, with setLiveDelay values of 2s, 4s, and 8s. The lower layer use 6s segment duration,
     with setLiveDelay values of 6s, 12s, and 24s. Lowest latency is achieved with shorter segments and with a lower live delay value. Higher stability/robustness is achieved with a higher live delay which allows a larger forward buffer.
@@ -128,6 +128,11 @@ Debug files are not compressed or obfuscated making the file size much larger co
                 Buffer length: <span id="video6buffer"></span>
                 </td></tr>
         </table>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                init();
+            });
+        </script>
     </body>
 </html>
 

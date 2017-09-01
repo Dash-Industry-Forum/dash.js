@@ -1,0 +1,36 @@
+{
+    "DASH_VOD_1": {
+        "url": "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd",
+        "name": "SegmentTemplate/Number, live profile, 250kbps up to 15Mbps@4K.",
+        "type": "VOD",
+        "protocol": "DASH"
+    },
+
+    "DASH_VOD_2": {
+        "url": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-events.mpd",
+        "name": "SegmentTemplate/Number, live profile",
+        "type": "VOD",
+        "protocol": "DASH"
+    },
+
+    "DASH_LIVE_1": {
+        "url": "https://vm2.dashif.org/livesim/testpic_2s/Manifest.mpd",
+        "name": "SegmentTemplate without manifest updates (livesim)",
+        "type": "Live",
+        "protocol": "DASH"
+    },
+
+    "DASH_LIVE_2": {
+        "url": "https://vm2.dashif.org/livesim/mup_30/testpic_2s/Manifest.mpd",
+        "name": "SegmentTemplate with manifest updates every 30s (livesim)",
+        "type": "Live",
+        "protocol": "DASH"
+    },
+
+    "MSS_VOD_1": {
+        "url": "http://2is7server2.rd.francetelecom.com/hasplayer/VOD_1/VOD_1.ism/manifest",
+        "name": "Prince Of Persia",
+        "type": "VOD",
+        "protocol": "MSS"
+    }
+}

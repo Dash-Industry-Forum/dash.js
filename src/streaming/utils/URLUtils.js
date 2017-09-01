@@ -80,7 +80,7 @@ function URLUtils() {
      * @private
      */
     const dumbURLResolver = (url, baseUrl) => {
-        var baseUrlParseFunc = parseBaseUrl;
+        let baseUrlParseFunc = parseBaseUrl;
 
         if (!baseUrl) {
             return url;

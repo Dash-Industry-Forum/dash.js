@@ -35,7 +35,7 @@ function CustomTimeRanges(/*config*/) {
     let length = 0;
 
     function add(start, end) {
-        var i = 0;
+        let i = 0;
 
         for (i = 0; (i < this.customTimeRangeArray.length) && (start > this.customTimeRangeArray[i].start); i++);
 
@@ -55,7 +55,7 @@ function CustomTimeRanges(/*config*/) {
     }
 
     function remove(start, end) {
-        for (var i = 0; i < this.customTimeRangeArray.length; i++) {
+        for (let i = 0; i < this.customTimeRangeArray.length; i++) {
             if (start <= this.customTimeRangeArray[i].start && end >= this.customTimeRangeArray[i].end) {
                 //      |--------------Range i-------|
                 //|---------------Range to remove ---------------|
@@ -95,8 +95,8 @@ function CustomTimeRanges(/*config*/) {
     }
 
     function mergeRanges(rangeIndex1, rangeIndex2) {
-        var range1 = this.customTimeRangeArray[rangeIndex1];
-        var range2 = this.customTimeRangeArray[rangeIndex2];
+        let range1 = this.customTimeRangeArray[rangeIndex1];
+        let range2 = this.customTimeRangeArray[rangeIndex2];
 
         if (range1.start <=  range2.start && range2.start <= range1.end && range1.end <= range2.end) {
             //|-----------Range1----------|
@@ -125,11 +125,31 @@ function CustomTimeRanges(/*config*/) {
         return false;
     }
 
+    function checkIndex(index) {
+        const isInt = index !== null && !isNaN(index) && (index % 1 === 0);
+
+        if (!isInt) {
+            throw new Error('index argument is not an integer');
+        }
+    }
+
     function start(index) {
+        checkIndex(index);
+
+        if (index >= this.customTimeRangeArray.length || index < 0) {
+            return NaN;
+        }
+
         return this.customTimeRangeArray[index].start;
     }
 
     function end(index) {
+        checkIndex(index);
+
+        if (index >= this.customTimeRangeArray.length || index < 0) {
+            return NaN;
+        }
+
         return this.customTimeRangeArray[index].end;
     }
 

@@ -91,6 +91,7 @@ module.exports = function (grunt) {
         },
         copy: {
             dist: {
+              files: [{
                 expand: true,
                 cwd: 'build/temp/',
                 src: [
@@ -107,7 +108,21 @@ module.exports = function (grunt) {
                 ],
                 dest: 'dist/',
                 filter: 'isFile'
-            }
+            }, {
+                expand: true,
+                cwd: '.',
+                src: 'index.d.ts',
+                dest: 'dist/',
+                rename: function (dest) {
+                    return dest + 'dash.d.ts';
+                }
+            }, {
+                expand: true,
+                cwd: '.',
+                src: 'index.d.ts',
+                dest: 'build/typings/'
+            }]
+          }
         },
         exorcise: {
             mediaplayer: {
@@ -158,12 +173,11 @@ module.exports = function (grunt) {
         browserify: {
             mediaplayer: {
                 files: {
-                    'build/temp/dash.mediaplayer.debug.js': ['src/streaming/MediaPlayer.js']
+                    'build/temp/dash.mediaplayer.debug.js': ['index_mediaplayerOnly.js']
                 },
                 options: {
                     browserifyOptions: {
-                        debug: true,
-                        standalone: 'dashjs.MediaPlayer'
+                        debug: true
                     },
                     plugin: [
                         'browserify-derequire', 'bundle-collapser/plugin'
@@ -201,21 +215,6 @@ module.exports = function (grunt) {
                     transform: ['babelify']
                 }
             },
-            mss: {
-                files: {
-                    'build/temp/dash.mss.debug.js': ['src/mss/MssHandler.js']
-                },
-                options: {
-                    browserifyOptions: {
-                        debug: true,
-                        standalone: 'dashjs.MssHandler'
-                    },
-                    plugin: [
-                        'browserify-derequire', 'bundle-collapser/plugin'
-                    ],
-                    transform: ['babelify']
-                }
-            },
             all: {
                 files: {
                     'build/temp/dash.all.debug.js': ['index.js']
@@ -230,10 +229,25 @@ module.exports = function (grunt) {
                     transform: ['babelify']
                 }
             },
+            mss: {
+                files: {
+                    'build/temp/dash.mss.debug.js': ['src/mss/index.js']
+                },
+                options: {
+                    browserifyOptions: {
+                        debug: true
+                    },
+                    plugin: [
+                        'browserify-derequire', 'bundle-collapser/plugin'
+                    ],
+                    transform: ['babelify']
+                }
+            },
 
             watch: {
                 files: {
-                    'build/temp/dash.all.debug.js': ['index.js']
+                    'build/temp/dash.all.debug.js': ['index.js'],
+                    'build/temp/dash.mss.debug.js': ['src/mss/index.js']
                 },
                 options: {
                     watch: true,
@@ -258,12 +272,13 @@ module.exports = function (grunt) {
         },
         mocha_istanbul: {
             test: {
-                src: './test',
+                src: './test/unit',
                 options: {
                     mask: '*.js',
                     coverageFolder: './reports',
                     mochaOptions: ['--compilers', 'js:babel/register'],
-                    print: 'summary',
+                    print: 'both',
+                    reportFormats: ['lcov'],
                     root: './src'
                 }
             }

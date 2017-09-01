@@ -32,6 +32,9 @@
  * @class
  * @ignore
  */
+
+import DashConstants from '../constants/DashConstants';
+
 class Representation {
     constructor() {
         this.id = null;
@@ -54,17 +57,18 @@ class Representation {
         this.bandwidth = NaN;
         this.width = NaN;
         this.height = NaN;
+        this.scanType = null;
         this.maxPlayoutRate = NaN;
     }
 
     static hasInitialization(r) {
         return (r.initialization !== null) ||
-            ((r.segmentInfoType !== 'BaseURL' || r.segmentInfoType !== 'SegmentBase') && (r.range !== null));
+            ((r.segmentInfoType !== DashConstants.BASE_URL || r.segmentInfoType !== DashConstants.SEGMENT_BASE ) && (r.range !== null));
     }
 
     static hasSegments(r) {
-        return r.segmentInfoType !== 'BaseURL' &&
-            r.segmentInfoType !== 'SegmentBase' &&
+        return r.segmentInfoType !== DashConstants.BASE_URL &&
+            r.segmentInfoType !== DashConstants.SEGMENT_BASE &&
             !r.indexRange;
     }
 }

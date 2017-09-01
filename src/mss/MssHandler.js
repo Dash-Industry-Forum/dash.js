@@ -28,14 +28,17 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
+import Constants from '../streaming/constants/Constants';
 import Events from '../core/events/Events';
 import MediaPlayerEvents from '../streaming/MediaPlayerEvents';
 import EventBus from '../core/EventBus';
 import FactoryMaker from '../core/FactoryMaker';
 import DataChunk from '../streaming/vo/DataChunk';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
-import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
+import {
+    HTTPRequest
+} from '../streaming/vo/metrics/HTTPRequest';
+import MssFragmentInfoController from './MssFragmentInfoController';
 import MssFragmentProcessor from './MssFragmentProcessor';
 import MssParser from './parser/MssParser';
 
@@ -43,13 +46,18 @@ function MssHandler(config) {
 
     let context = this.context;
     let eventBus = config.eventBus;
-    let mssFragmentProcessor = MssFragmentProcessor(context).create();
+    let metricsModel = config.metricsModel;
+    let playbackController = config.playbackController;
+    let mssFragmentProcessor = MssFragmentProcessor(context).create({
+        metricsModel: metricsModel,
+        playbackController: playbackController,
+        eventBus: eventBus
+    });
     let mssParser;
 
     let instance;
 
-    function setup() {
-    }
+    function setup() {}
 
     function onInitializationRequested(e) {
         let streamProcessor = e.sender.getStreamProcessor();
@@ -76,7 +84,10 @@ function MssHandler(config) {
         // Generate initialization segment (moov)
         chunk.bytes = mssFragmentProcessor.generateMoov(representation);
 
-        eventBus.trigger(Events.INIT_FRAGMENT_LOADED, {chunk: chunk, fragmentModel: streamProcessor.getFragmentModel()});
+        eventBus.trigger(Events.INIT_FRAGMENT_LOADED, {
+            chunk: chunk,
+            fragmentModel: streamProcessor.getFragmentModel()
+        });
 
         // Change the sender value to stop event to be propagated
         e.sender = null;
@@ -98,19 +109,47 @@ function MssHandler(config) {
         return chunk;
     }
 
-
     function onSegmentMediaLoaded(e) {
         // Process moof to transcode it from MSS to DASH
-        mssFragmentProcessor.processMoof(e);
+        let streamProcessor = e.sender.getStreamProcessor();
+        mssFragmentProcessor.processFragment(e, streamProcessor);
+    }
+
+    function onPlaybackSeekAsked() {
+        if (playbackController.getIsDynamic() && playbackController.getTime() !== 0) {
+
+            //create fragment info controllers for each stream processors of active stream (only for audio, video or fragmentedText)
+            let streamController = playbackController.getStreamController();
+            if (streamController) {
+                let processors = streamController.getActiveStreamProcessors();
+                processors.forEach(function (processor) {
+                    if (processor.getType() === Constants.VIDEO ||
+                        processor.getType() === Constants.AUDIO ||
+                        processor.getType() === Constants.FRAGMENTED_TEXT) {
+
+                        let fragmentInfoController = MssFragmentInfoController(context).create({
+                            streamProcessor: processor,
+                            eventBus: eventBus,
+                            metricsModel: metricsModel,
+                            playbackController: playbackController
+                        });
+                        fragmentInfoController.initialize();
+                        fragmentInfoController.start();
+                    }
+                });
+            }
+        }
     }
 
     function registerEvents() {
         eventBus.on(Events.INIT_REQUESTED, onInitializationRequested, instance, EventBus.EVENT_PRIORITY_HIGH);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_SEEK_ASKED, onPlaybackSeekAsked, instance, EventBus.EVENT_PRIORITY_HIGH);
         eventBus.on(MediaPlayerEvents.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, instance, EventBus.EVENT_PRIORITY_HIGH);
     }
 
     function reset() {
         eventBus.off(Events.INIT_REQUESTED, onInitializationRequested, this);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_SEEK_ASKED, onPlaybackSeekAsked, this);
         eventBus.off(MediaPlayerEvents.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, this);
     }
 
@@ -131,5 +170,4 @@ function MssHandler(config) {
 }
 
 MssHandler.__dashjs_factory_name = 'MssHandler';
-let factory = FactoryMaker.getClassFactory(MssHandler);
-export default factory;
+export default FactoryMaker.getClassFactory(MssHandler);

@@ -5,7 +5,7 @@
 - [ ] The stream has correct Access-Control-Allow-Origin headers (CORS)
 - [ ] There are no network errors such as 404s in the browser console when trying to play the stream
 - [ ] The issue observed is not mentioned on https://github.com/Dash-Industry-Forum/dash.js/wiki/FAQ
-- [ ] The issue occurs in the latest reference client on http://dashif.org/reference/players/javascript/ and not just on my page
+- [ ] The issue occurs in the latest reference client on http://reference.dashif.org/dash.js/ and not just on my page
 * Link to playable MPD file: 
 * Dash.js version: 
 * Browser name/version: 

@@ -29,9 +29,16 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import FactoryMaker from '../../core/FactoryMaker';
-import {HTTPRequest} from '../vo/metrics/HTTPRequest';
+import {
+    HTTPRequest
+}
+from '../vo/metrics/HTTPRequest';
+import Constants from '../constants/Constants';
 
-const DEFAULT_UTC_TIMING_SOURCE = { scheme: 'urn:mpeg:dash:utc:http-xsdate:2014', value: 'http://time.akamai.com/?iso' };
+const DEFAULT_UTC_TIMING_SOURCE = {
+    scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
+    value: 'http://time.akamai.com/?iso'
+};
 const LIVE_DELAY_FRAGMENT_COUNT = 4;
 
 const DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION = 360000;
@@ -47,7 +54,6 @@ const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
 const BUFFER_TIME_AT_TOP_QUALITY = 30;
 const BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 60;
 const LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;
-const RICH_BUFFER_THRESHOLD = 20;
 
 const FRAGMENT_RETRY_ATTEMPTS = 3;
 const FRAGMENT_RETRY_INTERVAL = 1000;
@@ -80,25 +86,34 @@ function MediaPlayerModel() {
         bufferTimeAtTopQuality,
         bufferTimeAtTopQualityLongForm,
         longFormContentDurationThreshold,
-        richBufferThreshold,
         bandwidthSafetyFactor,
         abandonLoadTimeout,
         retryAttempts,
         retryIntervals,
         wallclockTimeUpdateInterval,
-        bufferOccupancyABREnabled,
+        ABRStrategy,
+        useDefaultABRRules,
         xhrWithCredentials,
-        fastSwitchEnabled;
+        fastSwitchEnabled,
+        customABRRule,
+        movingAverageMethod;
 
     function setup() {
         UTCTimingSources = [];
         useSuggestedPresentationDelay = false;
         useManifestDateHeaderTimeSource = true;
         scheduleWhilePaused = true;
-        bufferOccupancyABREnabled = false;
+        ABRStrategy = Constants.ABR_STRATEGY_DYNAMIC;
+        useDefaultABRRules = true;
         fastSwitchEnabled = false;
-        lastBitrateCachingInfo = {enabled: true , ttl: DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION};
-        lastMediaSettingsCachingInfo = {enabled: true , ttl: DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION};
+        lastBitrateCachingInfo = {
+            enabled: true,
+            ttl: DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION
+        };
+        lastMediaSettingsCachingInfo = {
+            enabled: true,
+            ttl: DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION
+        };
         liveDelayFragmentCount = LIVE_DELAY_FRAGMENT_COUNT;
         liveDelay = undefined; // Explicitly state that default is undefined
         bufferToKeep = BUFFER_TO_KEEP;
@@ -107,12 +122,14 @@ function MediaPlayerModel() {
         bufferTimeAtTopQuality = BUFFER_TIME_AT_TOP_QUALITY;
         bufferTimeAtTopQualityLongForm = BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM;
         longFormContentDurationThreshold = LONG_FORM_CONTENT_DURATION_THRESHOLD;
-        richBufferThreshold = RICH_BUFFER_THRESHOLD;
         bandwidthSafetyFactor = BANDWIDTH_SAFETY_FACTOR;
         abandonLoadTimeout = ABANDON_LOAD_TIMEOUT;
         wallclockTimeUpdateInterval = WALLCLOCK_TIME_UPDATE_INTERVAL;
-        xhrWithCredentials = { default: DEFAULT_XHR_WITH_CREDENTIALS };
-
+        xhrWithCredentials = {
+            default: DEFAULT_XHR_WITH_CREDENTIALS
+        };
+        customABRRule = [];
+        movingAverageMethod = Constants.MOVING_AVERAGE_SLIDING_WINDOW;
 
         retryAttempts = {
             [HTTPRequest.MPD_TYPE]:                         MANIFEST_RETRY_ATTEMPTS,
@@ -136,12 +153,64 @@ function MediaPlayerModel() {
     }
 
     //TODO Should we use Object.define to have setters/getters? makes more readable code on other side.
-    function setBufferOccupancyABREnabled(value) {
-        bufferOccupancyABREnabled = value;
+
+    function setABRStrategy(value) {
+        ABRStrategy = value;
     }
 
-    function getBufferOccupancyABREnabled() {
-        return bufferOccupancyABREnabled;
+    function getABRStrategy() {
+        return ABRStrategy;
+    }
+
+    function setUseDefaultABRRules(value) {
+        useDefaultABRRules = value;
+    }
+
+    function getUseDefaultABRRules() {
+        return useDefaultABRRules;
+    }
+
+    function findABRCustomRule(rulename) {
+        let i;
+        for (i = 0; i < customABRRule.length; i++) {
+            if (customABRRule[i].rulename === rulename) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    function getABRCustomRules() {
+        return customABRRule;
+    }
+
+    function addABRCustomRule(type, rulename, rule) {
+
+        let index = findABRCustomRule(rulename);
+        if (index === -1) {
+            // add rule
+            customABRRule.push({
+                type: type,
+                rulename: rulename,
+                rule: rule
+            });
+        } else {
+            // update rule
+            customABRRule[index].type = type;
+            customABRRule[index].rule = rule;
+        }
+    }
+
+    function removeABRCustomRule(rulename) {
+        let index = findABRCustomRule(rulename);
+        if (index !== -1) {
+            // remove rule
+            customABRRule.splice(index, 1);
+        }
+    }
+
+    function removeAllABRCustomRule() {
+        customABRRule = [];
     }
 
     function setBandwidthSafetyFactor(value) {
@@ -160,7 +229,7 @@ function MediaPlayerModel() {
         return abandonLoadTimeout;
     }
 
-    function setStableBufferTime (value) {
+    function setStableBufferTime(value) {
         stableBufferTime = value;
     }
 
@@ -191,15 +260,6 @@ function MediaPlayerModel() {
     function getLongFormContentDurationThreshold() {
         return longFormContentDurationThreshold;
     }
-
-    function setRichBufferThreshold(value) {
-        richBufferThreshold = value;
-    }
-
-    function getRichBufferThreshold() {
-        return richBufferThreshold;
-    }
-
 
     function setBufferToKeep(value) {
         bufferToKeep = value;
@@ -243,12 +303,20 @@ function MediaPlayerModel() {
         retryAttempts[HTTPRequest.MEDIA_SEGMENT_TYPE] = value;
     }
 
+    function setManifestRetryAttempts(value) {
+        retryAttempts[HTTPRequest.MPD_TYPE] = value;
+    }
+
     function setRetryAttemptsForType(type, value) {
         retryAttempts[type] = value;
     }
 
     function getFragmentRetryAttempts() {
         return retryAttempts[HTTPRequest.MEDIA_SEGMENT_TYPE];
+    }
+
+    function getManifestRetryAttempts() {
+        return retryAttempts[HTTPRequest.MPD_TYPE];
     }
 
     function getRetryAttemptsForType(type) {
@@ -259,12 +327,20 @@ function MediaPlayerModel() {
         retryIntervals[HTTPRequest.MEDIA_SEGMENT_TYPE] = value;
     }
 
+    function setManifestRetryInterval(value) {
+        retryIntervals[HTTPRequest.MPD_TYPE] = value;
+    }
+
     function setRetryIntervalForType(type, value) {
         retryIntervals[type] = value;
     }
 
     function getFragmentRetryInterval() {
         return retryIntervals[HTTPRequest.MEDIA_SEGMENT_TYPE];
+    }
+
+    function getManifestRetryInterval() {
+        return retryIntervals[HTTPRequest.MPD_TYPE];
     }
 
     function getRetryIntervalForType(type) {
@@ -356,14 +432,28 @@ function MediaPlayerModel() {
         fastSwitchEnabled = value;
     }
 
+    function setMovingAverageMethod(value) {
+        movingAverageMethod = value;
+    }
+
+    function getMovingAverageMethod() {
+        return movingAverageMethod;
+    }
+
     function reset() {
         //TODO need to figure out what props to persist across sessions and which to reset if any.
         //setup();
     }
 
     instance = {
-        setBufferOccupancyABREnabled: setBufferOccupancyABREnabled,
-        getBufferOccupancyABREnabled: getBufferOccupancyABREnabled,
+        setABRStrategy: setABRStrategy,
+        getABRStrategy: getABRStrategy,
+        setUseDefaultABRRules: setUseDefaultABRRules,
+        getUseDefaultABRRules: getUseDefaultABRRules,
+        getABRCustomRules: getABRCustomRules,
+        addABRCustomRule: addABRCustomRule,
+        removeABRCustomRule: removeABRCustomRule,
+        removeAllABRCustomRule: removeAllABRCustomRule,
         setBandwidthSafetyFactor: setBandwidthSafetyFactor,
         getBandwidthSafetyFactor: getBandwidthSafetyFactor,
         setAbandonLoadTimeout: setAbandonLoadTimeout,
@@ -380,18 +470,20 @@ function MediaPlayerModel() {
         getBufferTimeAtTopQualityLongForm: getBufferTimeAtTopQualityLongForm,
         setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,
         getLongFormContentDurationThreshold: getLongFormContentDurationThreshold,
-        setRichBufferThreshold: setRichBufferThreshold,
-        getRichBufferThreshold: getRichBufferThreshold,
         setBufferToKeep: setBufferToKeep,
         getBufferToKeep: getBufferToKeep,
         setBufferPruningInterval: setBufferPruningInterval,
         getBufferPruningInterval: getBufferPruningInterval,
         setFragmentRetryAttempts: setFragmentRetryAttempts,
         getFragmentRetryAttempts: getFragmentRetryAttempts,
+        setManifestRetryAttempts: setManifestRetryAttempts,
+        getManifestRetryAttempts: getManifestRetryAttempts,
         setRetryAttemptsForType: setRetryAttemptsForType,
         getRetryAttemptsForType: getRetryAttemptsForType,
         setFragmentRetryInterval: setFragmentRetryInterval,
         getFragmentRetryInterval: getFragmentRetryInterval,
+        setManifestRetryInterval: setManifestRetryInterval,
+        getManifestRetryInterval: getManifestRetryInterval,
         setRetryIntervalForType: setRetryIntervalForType,
         getRetryIntervalForType: getRetryIntervalForType,
         setWallclockTimeUpdateInterval: setWallclockTimeUpdateInterval,
@@ -412,6 +504,8 @@ function MediaPlayerModel() {
         getXHRWithCredentialsForType: getXHRWithCredentialsForType,
         setFastSwitchEnabled: setFastSwitchEnabled,
         getFastSwitchEnabled: getFastSwitchEnabled,
+        setMovingAverageMethod: setMovingAverageMethod,
+        getMovingAverageMethod: getMovingAverageMethod,
         reset: reset
     };
 
@@ -424,4 +518,5 @@ function MediaPlayerModel() {
 MediaPlayerModel.__dashjs_factory_name = 'MediaPlayerModel';
 let factory = FactoryMaker.getSingletonFactory(MediaPlayerModel);
 factory.DEFAULT_UTC_TIMING_SOURCE = DEFAULT_UTC_TIMING_SOURCE;
+FactoryMaker.updateSingletonFactory(MediaPlayerModel.__dashjs_factory_name, factory);
 export default factory;

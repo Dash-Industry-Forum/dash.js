@@ -32,6 +32,8 @@
  * @classdesc matches and converts xs:duration to seconds
  */
 import BaseMatcher from './BaseMatcher';
+import Constants from '../../../streaming/constants/Constants';
+import DashConstants from '../../constants/DashConstants';
 
 const durationRegex = /^([-])?P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/;
 
@@ -46,10 +48,10 @@ class DurationMatcher extends BaseMatcher {
         super(
             attr => {
                 const attributeList = [
-                    'minBufferTime', 'mediaPresentationDuration',
-                    'minimumUpdatePeriod', 'timeShiftBufferDepth', 'maxSegmentDuration',
-                    'maxSubsegmentDuration', 'suggestedPresentationDelay', 'start',
-                    'starttime', 'duration'
+                    DashConstants.MIN_BUFFER_TIME, DashConstants.MEDIA_PRESENTATION_DURATION,
+                    DashConstants.MINIMUM_UPDATE_PERIOD, DashConstants.TIMESHIFT_BUFFER_DEPTH, DashConstants.MAX_SEGMENT_DURATION,
+                    DashConstants.MAX_SUBSEGMENT_DURATION, Constants.SUGGESTED_PRESENTATION_DELAY, DashConstants.START,
+                    Constants.START_TIME, DashConstants.DURATION
                 ];
                 const len = attributeList.length;
 

@@ -6,16 +6,17 @@ declare namespace dashjs {
         setLogToBrowserConsole(flag: boolean): void;
     }
 
-    class VideoModel {}
+    class VideoModel { }
 
     class ProtectionController {
-        setRobustnessLevel(levels: string | string[]);
+        setRobustnessLevel(level: string): void;
     }
 
     export interface Bitrate {
         width?: number;
         height?: number;
         bandwidth?: number;
+        scanType?: string;
     }
 
     export interface MediaInfo {
@@ -25,7 +26,7 @@ declare namespace dashjs {
         streamInfo: any | null;
         representationCount: number;
         lang: string | null;
-        viewpoint: any | null | undefined;
+        viewpoint: any | undefined | null;
         accessibility: any[] | null;
         audioChannelConfiguration: any[] | null;
         roles: any[] | null;
@@ -51,6 +52,8 @@ declare namespace dashjs {
         isSeeking(): boolean;
         isDynamic(): boolean;
         seek(value: number): void;
+        setPlaybackRate(value:number): void;
+        getPlaybackRate(): number;
         setMute(value: boolean): void;
         isMuted(): boolean;
         setVolume(value: number): void;
@@ -150,7 +153,59 @@ declare namespace dashjs {
         reset(): void;
     }
 
-    export function MediaPlayer(): {
-        create(): MediaPlayerClass;
-    };
+    export interface MediaPlayer {
+        (): {
+            create(): MediaPlayerClass;
+        };
+
+        events: MediaPlayerEvents;
+    }
+
+    interface MediaPlayerEvents {
+        AST_IN_FUTURE: string;
+        BUFFER_EMPTY: string;
+        BUFFER_LEVEL_STATE_CHANGED: string;
+        BUFFER_LOADED: string;
+        CAN_PLAY: string;
+        ERROR: string;
+        FRAGMENT_LOADING_ABANDONED: string;
+        FRAGMENT_LOADING_COMPLETED: string;
+        FRAGMENT_LOADING_STARTED: string;
+        KEY_ADDED: string;
+        KEY_ERROR: string;
+        KEY_MESSAGE: string;
+        KEY_SESSION_CLOSED: string;
+        KEY_SESSION_CREATED: string;
+        KEY_SESSION_REMOVED: string;
+        KEY_STATUSES_CHANGED: string;
+        KEY_SYSTEM_SELECTED: string;
+        LICENSE_REQUEST_COMPLETE: string;
+        LOG: string;
+        MANIFEST_LOADED: string;
+        METRICS_CHANGED: string;
+        METRIC_ADDED: string;
+        METRIC_CHANGED: string;
+        METRIC_UPDATED: string;
+        PERIOD_SWITCH_COMPLETED: string;
+        PERIOD_SWITCH_STARTED: string;
+        PLAYBACK_ENDED: string;
+        PLAYBACK_ERROR: string;
+        PLAYBACK_METADATA_LOADED: string;
+        PLAYBACK_NOT_ALLOWED: string;
+        PLAYBACK_PAUSED: string;
+        PLAYBACK_PLAYING: string;
+        PLAYBACK_PROGRESS: string;
+        PLAYBACK_RATE_CHANGED: string;
+        PLAYBACK_SEEKED: string;
+        PLAYBACK_SEEKING: string;
+        PLAYBACK_STARTED: string;
+        PLAYBACK_TIME_UPDATED: string;
+        PROTECTION_CREATED: string;
+        PROTECTION_DESTROYED: string;
+        QUALITY_CHANGE_RENDERED: string;
+        QUALITY_CHANGE_REQUESTED: string;
+        STREAM_INITIALIZED: string;
+        TEXT_TRACKS_ADDED: string;
+        TEXT_TRACK_ADDED: string;
+    }
 }

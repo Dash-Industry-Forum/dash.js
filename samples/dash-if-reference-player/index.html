@@ -30,6 +30,8 @@
     <script src="../../dist/dash.all.debug.js"></script>
     <script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
     <script src="app/main.js"></script>
+    <script src="app/rules/DownloadRatioRule.js"></script>
+    <script src="app/rules/ThroughputRule.js"></script>
 
 </head>
 <body ng-controller="DashController" >
@@ -68,11 +70,11 @@
             <!-- Using iframe to solve pre-flight request issue from GIT-->
             <div class="top-buttons">
                 <iframe id="star-button"
-                        src="http://ghbtns.com/github-btn.html?user=Dash-Industry-Forum&repo=dash.js&type=watch&count=true&size=large"
+                        src="//ghbtns.com/github-btn.html?user=Dash-Industry-Forum&repo=dash.js&type=watch&count=true&size=large"
                         height="30" width="150">
                 </iframe>
                 <iframe id="fork-button"
-                        src="http://ghbtns.com/github-btn.html?user=Dash-Industry-Forum&repo=dash.js&type=fork&count=true&size=large"
+                        src="//ghbtns.com/github-btn.html?user=Dash-Industry-Forum&repo=dash.js&type=fork&count=true&size=large"
                         height="30" width="150" >
                 </iframe>
             </div>
@@ -141,10 +143,25 @@
                         <input type="checkbox" id="fastSwitchCB" ng-model="fastSwitchSelected" ng-change="toggleFastSwitch()" ng-checked="fastSwitchSelected">
                         Fast Switching ABR
                     </label>
+                    <label data-toggle="tooltip" data-placement="right"
+                           title="Dynamically switch between BOLA and Throughput strategies.">
+                        <input  type="radio" id="abrDynamic" autocomplete="off" name="abrStrategy" checked="checked" ng-click="changeABRStrategy('abrDynamic')" >
+                        ABR Strategy: Dynamic
+                    </label>
+                    <label  data-toggle="tooltip" data-placement="right"
+                            title="Choose bitrate based on buffer level.">
+                        <input type="radio" id="abrBola" autocomplete="off" name="abrStrategy" ng-click="changeABRStrategy('abrBola')">
+                        ABR Strategy: BOLA
+                    </label>
+                    <label  data-toggle="tooltip" data-placement="right"
+                            title="Choose bitrate based on recent throughput.">
+                        <input type="radio" id="abrThroughput" autocomplete="off" name="abrStrategy" ng-click="changeABRStrategy('abrThroughput')">
+                        ABR Strategy: Throughput
+                    </label>
                     <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
-                           title="BOLA is an ABR ruleset. When enabled, it will disable the default heuristics in Dash.js that depend strictly on average and real-time throughput measurements">
-                        <input type="checkbox" id="bolaCB" ng-model="bolaSelected" ng-change="toggleBufferOccupancyABR()" ng-checked="bolaSelected">
-                        Buffer Occupancy ABR
+                           title="ABR - Use custom ABR rules">
+                        <input type="checkbox" id="customABRRules" ng-model="customABRRulesSelected" ng-change="toggleUseCustomABRRules()" ng-checked="customABRRulesSelected">
+                        Use Custom ABR Rules
                     </label>
                 </div>
             </div>
@@ -195,7 +212,7 @@
         <!--VIDEO PLAYER / CONTROLS -->
         <div class="row">
             <div class="dash-video-player col-md-9">
-                <div id="videoContainer">
+                <div id="videoContainer" class="videoContainer">
                     <video></video>
                     <div id="video-caption"></div>
                     <div id="videoController" class="video-controller unselectable" ng-cloak>

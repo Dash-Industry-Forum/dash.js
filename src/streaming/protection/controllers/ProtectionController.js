@@ -28,12 +28,14 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import Constants from '../../../streaming/constants/Constants';
 import CommonEncryption from '../CommonEncryption';
 import Events from '../../../core/events/Events';
 import MediaCapability from '../vo/MediaCapability';
 import KeySystemConfiguration from '../vo/KeySystemConfiguration';
 import FactoryMaker from '../../../core/FactoryMaker';
 import Protection from '../Protection';
+import BASE64 from '../../../../externals/base64';
 
 /**
  * @module ProtectionController
@@ -101,22 +103,21 @@ function ProtectionController(config) {
         // select key systems and acquire keys.
         if (!initialized) {
 
-            var streamInfo;
+            let streamInfo;
 
             if (!aInfo && !vInfo) {
                 // Look for ContentProtection elements.  InitData can be provided by either the
                 // dash264drm:Pssh ContentProtection format or a DRM-specific format.
-                streamInfo = adapter.getStreamsInfo(manifest)[0]; // TODO: Single period only for now. See TODO above
+                streamInfo = adapter.getStreamsInfo()[0]; // TODO: Single period only for now. See TODO above
             }
 
-            audioInfo = aInfo || (streamInfo ? adapter.getMediaInfoForType(manifest, streamInfo, 'audio') : null);
-            videoInfo = vInfo || (streamInfo ? adapter.getMediaInfoForType(manifest, streamInfo, 'video') : null);
-
-            var mediaInfo = (videoInfo) ? videoInfo : audioInfo; // We could have audio or video only
+            audioInfo = aInfo || (streamInfo ? adapter.getMediaInfoForType(streamInfo, Constants.AUDIO) : null);
+            videoInfo = vInfo || (streamInfo ? adapter.getMediaInfoForType(streamInfo, Constants.VIDEO) : null);
+            let mediaInfo = (videoInfo) ? videoInfo : audioInfo; // We could have audio or video only
 
             // ContentProtection elements are specified at the AdaptationSet level, so the CP for audio
             // and video will be the same.  Just use one valid MediaInfo object
-            var supportedKS = protectionKeyController.getSupportedKeySystemsFromContentProtection(mediaInfo.contentProtection);
+            let supportedKS = protectionKeyController.getSupportedKeySystemsFromContentProtection(mediaInfo.contentProtection);
             if (supportedKS && supportedKS.length > 0) {
                 selectKeySystem(supportedKS, true);
             }
@@ -139,12 +140,12 @@ function ProtectionController(config) {
      * to come up to speed with the latest EME standard
      */
     function createKeySession(initData) {
-        var initDataForKS = CommonEncryption.getPSSHForKeySystem(keySystem, initData);
+        let initDataForKS = CommonEncryption.getPSSHForKeySystem(keySystem, initData);
         if (initDataForKS) {
 
             // Check for duplicate initData
-            var currentInitData = protectionModel.getAllInitData();
-            for (var i = 0; i < currentInitData.length; i++) {
+            let currentInitData = protectionModel.getAllInitData();
+            for (let i = 0; i < currentInitData.length; i++) {
                 if (protectionKeyController.initDataEquals(initDataForKS, currentInitData[i])) {
                     log('DRM: Ignoring initData because we have already seen it!');
                     return;
@@ -275,6 +276,7 @@ function ProtectionController(config) {
      */
     function setProtectionData(data) {
         protDataSet = data;
+        protectionKeyController.setProtectionData(data);
     }
 
     /**
@@ -302,8 +304,8 @@ function ProtectionController(config) {
     ///////////////
 
     function getProtData(keySystem) {
-        var protData = null;
-        var keySystemString = keySystem.systemString;
+        let protData = null;
+        let keySystemString = keySystem.systemString;
 
         if (protDataSet) {
             protData = (keySystemString in protDataSet) ? protDataSet[keySystemString] : null;
@@ -311,33 +313,38 @@ function ProtectionController(config) {
         return protData;
     }
 
+    function getKeySystemConfiguration(keySystem) {
+        let protData = getProtData(keySystem);
+        let audioCapabilities = [];
+        let videoCapabilities = [];
+        let audioRobustness = (protData && protData.audioRobustness && protData.audioRobustness.length > 0) ? protData.audioRobustness : robustnessLevel;
+        let videoRobustness = (protData && protData.videoRobustness && protData.videoRobustness.length > 0) ? protData.videoRobustness : robustnessLevel;
+
+        if (audioInfo) {
+            audioCapabilities.push(new MediaCapability(audioInfo.codec, audioRobustness));
+        }
+        if (videoInfo) {
+            videoCapabilities.push(new MediaCapability(videoInfo.codec, videoRobustness));
+        }
+
+        return new KeySystemConfiguration(
+            audioCapabilities, videoCapabilities, 'optional',
+            (sessionType === 'temporary') ? 'optional' : 'required',
+            [sessionType]);
+    }
+
     function selectKeySystem(supportedKS, fromManifest) {
 
-        var self = this;
+        let self = this;
+        let requestedKeySystems = [];
 
-        // Build our request object for requestKeySystemAccess
-        var audioCapabilities = [];
-        var videoCapabilities = [];
-
-        if (videoInfo) {
-            videoCapabilities.push(new MediaCapability(videoInfo.codec, robustnessLevel));
-        }
-        if (audioInfo) {
-            audioCapabilities.push(new MediaCapability(audioInfo.codec, robustnessLevel));
-        }
-        var ksConfig = new KeySystemConfiguration(
-                audioCapabilities, videoCapabilities, 'optional',
-                (sessionType === 'temporary') ? 'optional' : 'required',
-                [sessionType]);
-        var requestedKeySystems = [];
-
-        var ksIdx;
+        let ksIdx;
         if (keySystem) {
             // We have a key system
             for (ksIdx = 0; ksIdx < supportedKS.length; ksIdx++) {
                 if (keySystem === supportedKS[ksIdx].ks) {
 
-                    requestedKeySystems.push({ks: supportedKS[ksIdx].ks, configs: [ksConfig]});
+                    requestedKeySystems.push({ks: supportedKS[ksIdx].ks, configs: [getKeySystemConfiguration(keySystem)]});
 
                     // Ensure that we would be granted key system access using the key
                     // system and codec information
@@ -365,12 +372,12 @@ function ProtectionController(config) {
             pendingNeedKeyData.push(supportedKS);
 
             // Add all key systems to our request list since we have yet to select a key system
-            for (var i = 0; i < supportedKS.length; i++) {
-                requestedKeySystems.push({ks: supportedKS[i].ks, configs: [ksConfig]});
+            for (let i = 0; i < supportedKS.length; i++) {
+                requestedKeySystems.push({ks: supportedKS[i].ks, configs: [getKeySystemConfiguration(supportedKS[i].ks)]});
             }
 
-            var keySystemAccess;
-            var onKeySystemAccessComplete = function (event) {
+            let keySystemAccess;
+            const onKeySystemAccessComplete = function (event) {
                 eventBus.off(Events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
                 if (event.error) {
                     keySystem = undefined;
@@ -391,7 +398,12 @@ function ProtectionController(config) {
                 if (!event.error) {
                     keySystem = protectionModel.getKeySystem();
                     eventBus.trigger(Events.KEY_SYSTEM_SELECTED, {data: keySystemAccess});
-                    for (var i = 0; i < pendingNeedKeyData.length; i++) {
+                    // Set server certificate from protData
+                    let protData = getProtData(keySystem);
+                    if (protData && protData.serverCertificate && protData.serverCertificate.length > 0) {
+                        protectionModel.setServerCertificate(BASE64.decodeArray(protData.serverCertificate).buffer);
+                    }
+                    for (let i = 0; i < pendingNeedKeyData.length; i++) {
                         for (ksIdx = 0; ksIdx < pendingNeedKeyData[i].length; ksIdx++) {
                             if (keySystem === pendingNeedKeyData[i][ksIdx].ks) {
                                 createKeySession(pendingNeedKeyData[i][ksIdx].initData);
@@ -427,15 +439,15 @@ function ProtectionController(config) {
         }
 
         // Dispatch event to applications indicating we received a key message
-        var keyMessage = e.data;
+        let keyMessage = e.data;
         eventBus.trigger(Events.KEY_MESSAGE, {data: keyMessage});
-        var messageType = (keyMessage.messageType) ? keyMessage.messageType : 'license-request';
-        var message = keyMessage.message;
-        var sessionToken = keyMessage.sessionToken;
-        var protData = getProtData(keySystem);
-        var keySystemString = keySystem.systemString;
-        var licenseServerData = protectionKeyController.getLicenseServer(keySystem, protData, messageType);
-        var eventData = { sessionToken: sessionToken, messageType: messageType };
+        let messageType = (keyMessage.messageType) ? keyMessage.messageType : 'license-request';
+        let message = keyMessage.message;
+        let sessionToken = keyMessage.sessionToken;
+        let protData = getProtData(keySystem);
+        let keySystemString = keySystem.systemString;
+        let licenseServerData = protectionKeyController.getLicenseServer(keySystem, protData, messageType);
+        let eventData = { sessionToken: sessionToken, messageType: messageType };
 
         // Message not destined for license server
         if (!licenseServerData) {
@@ -446,7 +458,7 @@ function ProtectionController(config) {
 
         // Perform any special handling for ClearKey
         if (protectionKeyController.isClearKey(keySystem)) {
-            var clearkeys = protectionKeyController.processClearKeyLicenseRequest(protData, message);
+            let clearkeys = protectionKeyController.processClearKeyLicenseRequest(protData, message);
             if (clearkeys)  {
                 log('DRM: ClearKey license request handled by application!');
                 sendLicenseRequestCompleteEvent(eventData);
@@ -456,12 +468,12 @@ function ProtectionController(config) {
         }
 
         // All remaining key system scenarios require a request to a remote license server
-        var xhr = new XMLHttpRequest();
+        let xhr = new XMLHttpRequest();
 
         // Determine license server URL
-        var url = null;
+        let url = null;
         if (protData && protData.serverURL) {
-            var serverURL = protData.serverURL;
+            let serverURL = protData.serverURL;
             if (typeof serverURL === 'string' && serverURL !== '') {
                 url = serverURL;
             } else if (typeof serverURL === 'object' && serverURL.hasOwnProperty(messageType)) {
@@ -507,8 +519,8 @@ function ProtectionController(config) {
         };
 
         // Set optional XMLHttpRequest headers from protection data and message
-        var updateHeaders = function (headers) {
-            var key;
+        const updateHeaders = function (headers) {
+            let key;
             if (headers) {
                 for (key in headers) {
                     if ('authorization' === key.toLowerCase()) {
@@ -541,14 +553,14 @@ function ProtectionController(config) {
 
         // Some browsers return initData as Uint8Array (IE), some as ArrayBuffer (Chrome).
         // Convert to ArrayBuffer
-        var abInitData = event.key.initData;
+        let abInitData = event.key.initData;
         if (ArrayBuffer.isView(abInitData)) {
             abInitData = abInitData.buffer;
         }
 
         log('DRM: initData:', String.fromCharCode.apply(null, new Uint8Array(abInitData)));
 
-        var supportedKS = protectionKeyController.getSupportedKeySystems(abInitData, protDataSet);
+        let supportedKS = protectionKeyController.getSupportedKeySystems(abInitData, protDataSet);
         if (supportedKS.length === 0) {
             log('DRM: Received needkey event with initData, but we don\'t support any of the key systems!');
             return;

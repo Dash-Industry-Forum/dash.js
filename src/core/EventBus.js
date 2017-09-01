@@ -85,7 +85,7 @@ function EventBus() {
         payload.type = type;
 
         handlers[type] = handlers[type].filter((item) => item);
-        handlers[type].forEach( handler => handler.callback.call(handler.scope, payload) );
+        handlers[type].forEach( handler => handler && handler.callback.call(handler.scope, payload) );
     }
 
     function getHandlerIdx(type, listener, scope) {
@@ -121,4 +121,5 @@ EventBus.__dashjs_factory_name = 'EventBus';
 const factory = FactoryMaker.getSingletonFactory(EventBus);
 factory.EVENT_PRIORITY_LOW = EVENT_PRIORITY_LOW;
 factory.EVENT_PRIORITY_HIGH = EVENT_PRIORITY_HIGH;
+FactoryMaker.updateSingletonFactory(EventBus.__dashjs_factory_name, factory);
 export default factory;
