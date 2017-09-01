@@ -29,8 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from '../streaming/constants/Constants';
-import Events from '../core/events/Events';
-import MediaPlayerEvents from '../streaming/MediaPlayerEvents';
 import EventBus from '../core/EventBus';
 import FactoryMaker from '../core/FactoryMaker';
 import DataChunk from '../streaming/vo/DataChunk';
@@ -46,6 +44,7 @@ function MssHandler(config) {
 
     let context = this.context;
     let eventBus = config.eventBus;
+    const events = config.events;
     let metricsModel = config.metricsModel;
     let playbackController = config.playbackController;
     let protectionController = config.protectionController;
@@ -86,7 +85,7 @@ function MssHandler(config) {
         // Generate initialization segment (moov)
         chunk.bytes = mssFragmentProcessor.generateMoov(representation);
 
-        eventBus.trigger(Events.INIT_FRAGMENT_LOADED, {
+        eventBus.trigger(events.INIT_FRAGMENT_LOADED, {
             chunk: chunk,
             fragmentModel: streamProcessor.getFragmentModel()
         });
@@ -144,15 +143,15 @@ function MssHandler(config) {
     }
 
     function registerEvents() {
-        eventBus.on(Events.INIT_REQUESTED, onInitializationRequested, instance, EventBus.EVENT_PRIORITY_HIGH);
-        eventBus.on(MediaPlayerEvents.PLAYBACK_SEEK_ASKED, onPlaybackSeekAsked, instance, EventBus.EVENT_PRIORITY_HIGH);
-        eventBus.on(MediaPlayerEvents.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, instance, EventBus.EVENT_PRIORITY_HIGH);
+        eventBus.on(events.INIT_REQUESTED, onInitializationRequested, instance, EventBus.EVENT_PRIORITY_HIGH);
+        eventBus.on(events.PLAYBACK_SEEK_ASKED, onPlaybackSeekAsked, instance, EventBus.EVENT_PRIORITY_HIGH);
+        eventBus.on(events.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, instance, EventBus.EVENT_PRIORITY_HIGH);
     }
 
     function reset() {
-        eventBus.off(Events.INIT_REQUESTED, onInitializationRequested, this);
-        eventBus.off(MediaPlayerEvents.PLAYBACK_SEEK_ASKED, onPlaybackSeekAsked, this);
-        eventBus.off(MediaPlayerEvents.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, this);
+        eventBus.off(events.INIT_REQUESTED, onInitializationRequested, this);
+        eventBus.off(events.PLAYBACK_SEEK_ASKED, onPlaybackSeekAsked, this);
+        eventBus.off(events.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, this);
     }
 
     function createMssParser() {
