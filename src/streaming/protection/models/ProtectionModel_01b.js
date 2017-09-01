@@ -43,13 +43,13 @@ import KeyError from '../vo/KeyError';
 import KeyMessage from '../vo/KeyMessage';
 import KeySystemConfiguration from '../vo/KeySystemConfiguration';
 import KeySystemAccess from '../vo/KeySystemAccess';
-import Events from '../../../core/events/Events';
 import FactoryMaker from '../../../core/FactoryMaker';
 
 function ProtectionModel_01b(config) {
 
     let context = this.context;
     let eventBus = config.eventBus;//Need to pass in here so we can use same instance since this is optional module
+    const events = config.events;
     let log = config.log;
     let api = config.api;
     let errHandler = config.errHandler;
@@ -98,7 +98,7 @@ function ProtectionModel_01b(config) {
         for (let i = 0; i < sessions.length; i++) {
             closeKeySession(sessions[i]);
         }
-        eventBus.trigger(Events.TEARDOWN_COMPLETE);
+        eventBus.trigger(events.TEARDOWN_COMPLETE);
     }
 
     function getKeySystem() {
@@ -158,18 +158,18 @@ function ProtectionModel_01b(config) {
                 found = true;
                 let ksConfig = new KeySystemConfiguration(supportedAudio, supportedVideo);
                 let ks = protectionKeyController.getKeySystemBySystemString(systemString);
-                eventBus.trigger(Events.KEY_SYSTEM_ACCESS_COMPLETE, { data: new KeySystemAccess(ks, ksConfig) });
+                eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { data: new KeySystemAccess(ks, ksConfig) });
                 break;
             }
         }
         if (!found) {
-            eventBus.trigger(Events.KEY_SYSTEM_ACCESS_COMPLETE, {error: 'Key system access denied! -- No valid audio/video content configurations detected!'});
+            eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {error: 'Key system access denied! -- No valid audio/video content configurations detected!'});
         }
     }
 
     function selectKeySystem(keySystemAccess) {
         keySystem = keySystemAccess.keySystem;
-        eventBus.trigger(Events.INTERNAL_KEY_SYSTEM_SELECTED);
+        eventBus.trigger(events.INTERNAL_KEY_SYSTEM_SELECTED);
     }
 
     function setMediaElement(mediaElement) {
@@ -190,7 +190,7 @@ function ProtectionModel_01b(config) {
             videoElement.addEventListener(api.needkey, eventHandler);
             videoElement.addEventListener(api.keymessage, eventHandler);
             videoElement.addEventListener(api.keyadded, eventHandler);
-            eventBus.trigger(Events.VIDEO_ELEMENT_SELECTED);
+            eventBus.trigger(events.VIDEO_ELEMENT_SELECTED);
         }
     }
 
@@ -263,7 +263,7 @@ function ProtectionModel_01b(config) {
 
                     case api.needkey:
                         let initData = ArrayBuffer.isView(event.initData) ? event.initData.buffer : event.initData;
-                        eventBus.trigger(Events.NEED_KEY, {key: new NeedKey(initData, 'cenc')});
+                        eventBus.trigger(events.NEED_KEY, {key: new NeedKey(initData, 'cenc')});
                         break;
 
                     case api.keyerror:
@@ -296,7 +296,7 @@ function ProtectionModel_01b(config) {
                             }
                             msg += '  System Code = ' + event.systemCode;
                             // TODO: Build error string based on key error
-                            eventBus.trigger(Events.KEY_ERROR, {data: new KeyError(sessionToken, msg)});
+                            eventBus.trigger(events.KEY_ERROR, {data: new KeyError(sessionToken, msg)});
                         } else {
                             log('No session token found for key error');
                         }
@@ -310,7 +310,7 @@ function ProtectionModel_01b(config) {
 
                         if (sessionToken) {
                             log('DRM: Key added.');
-                            eventBus.trigger(Events.KEY_ADDED, {data: sessionToken});//TODO not sure anything is using sessionToken? why there?
+                            eventBus.trigger(events.KEY_ADDED, {data: sessionToken});//TODO not sure anything is using sessionToken? why there?
                         } else {
                             log('No session token found for key added');
                         }
@@ -352,7 +352,7 @@ function ProtectionModel_01b(config) {
                             // addKey method, so we always save it to the token since there is no
                             // way to tell which key system is in use
                             sessionToken.keyMessage = message;
-                            eventBus.trigger(Events.INTERNAL_KEY_MESSAGE, {data: new KeyMessage(sessionToken, message, event.defaultURL)});
+                            eventBus.trigger(events.INTERNAL_KEY_MESSAGE, {data: new KeyMessage(sessionToken, message, event.defaultURL)});
 
                         } else {
                             log('No session token found for key message');

@@ -129,7 +129,8 @@ function Protection() {
                 protectionKeyController: protectionKeyController,
                 adapter: config.adapter,
                 eventBus: config.eventBus,
-                log: config.log
+                log: config.log,
+                events: config.events
             });
             config.capabilities.setEncryptedMediaSupported(true);
         }
@@ -149,17 +150,17 @@ function Protection() {
             typeof navigator.requestMediaKeySystemAccess === 'function') {
 
             log('EME detected on this user agent! (ProtectionModel_21Jan2015)');
-            return ProtectionModel_21Jan2015(context).create({log: log, eventBus: eventBus});
+            return ProtectionModel_21Jan2015(context).create({log: log, eventBus: eventBus, events: config.events});
 
         } else if (getAPI(videoElement, APIS_ProtectionModel_3Feb2014)) {
 
             log('EME detected on this user agent! (ProtectionModel_3Feb2014)');
-            return ProtectionModel_3Feb2014(context).create({log: log, eventBus: eventBus, api: getAPI(videoElement, APIS_ProtectionModel_3Feb2014)});
+            return ProtectionModel_3Feb2014(context).create({log: log, eventBus: eventBus, events: config.events, api: getAPI(videoElement, APIS_ProtectionModel_3Feb2014)});
 
         } else if (getAPI(videoElement, APIS_ProtectionModel_01b)) {
 
             log('EME detected on this user agent! (ProtectionModel_01b)');
-            return ProtectionModel_01b(context).create({log: log, eventBus: eventBus, errHandler: errHandler, api: getAPI(videoElement, APIS_ProtectionModel_01b)});
+            return ProtectionModel_01b(context).create({log: log, eventBus: eventBus, errHandler: errHandler, events: config.events, api: getAPI(videoElement, APIS_ProtectionModel_01b)});
 
         } else {
 
