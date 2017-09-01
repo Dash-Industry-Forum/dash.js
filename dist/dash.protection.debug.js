@@ -193,148 +193,6 @@ if (typeof exports !== 'undefined') {
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-'use strict';
-
-Object.defineProperty(exports, '__esModule', {
-    value: true
-});
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-var _FactoryMaker = _dereq_(3);
-
-var _FactoryMaker2 = _interopRequireDefault(_FactoryMaker);
-
-var EVENT_PRIORITY_LOW = 0;
-var EVENT_PRIORITY_HIGH = 5000;
-
-function EventBus() {
-
-    var handlers = {};
-
-    function on(type, listener, scope) {
-        var priority = arguments.length <= 3 || arguments[3] === undefined ? EVENT_PRIORITY_LOW : arguments[3];
-
-        if (!type) {
-            throw new Error('event type cannot be null or undefined');
-        }
-        if (!listener || typeof listener !== 'function') {
-            throw new Error('listener must be a function: ' + listener);
-        }
-
-        if (getHandlerIdx(type, listener, scope) >= 0) return;
-
-        handlers[type] = handlers[type] || [];
-
-        var handler = {
-            callback: listener,
-            scope: scope,
-            priority: priority
-        };
-
-        var inserted = handlers[type].some(function (item, idx) {
-            if (item && priority > item.priority) {
-                handlers[type].splice(idx, 0, handler);
-                return true;
-            }
-        });
-
-        if (!inserted) {
-            handlers[type].push(handler);
-        }
-    }
-
-    function off(type, listener, scope) {
-        if (!type || !listener || !handlers[type]) return;
-        var idx = getHandlerIdx(type, listener, scope);
-        if (idx < 0) return;
-        handlers[type][idx] = null;
-    }
-
-    function trigger(type, payload) {
-        if (!type || !handlers[type]) return;
-
-        payload = payload || {};
-
-        if (payload.hasOwnProperty('type')) throw new Error('\'type\' is a reserved word for event dispatching');
-
-        payload.type = type;
-
-        handlers[type] = handlers[type].filter(function (item) {
-            return item;
-        });
-        handlers[type].forEach(function (handler) {
-            return handler.callback.call(handler.scope, payload);
-        });
-    }
-
-    function getHandlerIdx(type, listener, scope) {
-
-        var idx = -1;
-
-        if (!handlers[type]) return idx;
-
-        handlers[type].some(function (item, index) {
-            if (item && item.callback === listener && (!scope || scope === item.scope)) {
-                idx = index;
-                return true;
-            }
-        });
-        return idx;
-    }
-
-    function reset() {
-        handlers = {};
-    }
-
-    var instance = {
-        on: on,
-        off: off,
-        trigger: trigger,
-        reset: reset
-    };
-
-    return instance;
-}
-
-EventBus.__dashjs_factory_name = 'EventBus';
-var factory = _FactoryMaker2['default'].getSingletonFactory(EventBus);
-factory.EVENT_PRIORITY_LOW = EVENT_PRIORITY_LOW;
-factory.EVENT_PRIORITY_HIGH = EVENT_PRIORITY_HIGH;
-exports['default'] = factory;
-module.exports = exports['default'];
-
-},{"3":3}],3:[function(_dereq_,module,exports){
-/**
- * The copyright in this software is being made available under the BSD License,
- * included below. This software may be subject to other third party and contributor
- * rights, including patent rights, and no such rights are granted under this license.
- *
- * Copyright (c) 2013, Dash Industry Forum.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
- *  * Redistributions of source code must retain the above copyright notice, this
- *  list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above copyright notice,
- *  this list of conditions and the following disclaimer in the documentation and/or
- *  other materials provided with the distribution.
- *  * Neither the name of Dash Industry Forum nor the names of its
- *  contributors may be used to endorse or promote products derived from this software
- *  without specific prior written permission.
- *
- *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
- *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- *  POSSIBILITY OF SUCH DAMAGE.
- */
 /**
  * @module FactoryMaker
  */
@@ -348,11 +206,16 @@ var FactoryMaker = (function () {
     var instance = undefined;
     var extensions = [];
     var singletonContexts = [];
+    var singletonFactories = [];
+    var classFactories = [];
 
     function extend(name, childInstance, override, context) {
         var extensionContext = getExtensionContext(context);
         if (!extensionContext[name] && childInstance) {
-            extensionContext[name] = { instance: childInstance, override: override };
+            extensionContext[name] = {
+                instance: childInstance,
+                override: override
+            };
         }
     }
 
@@ -395,53 +258,155 @@ var FactoryMaker = (function () {
                 return;
             }
         }
-        singletonContexts.push({ name: className, context: context, instance: instance });
+        singletonContexts.push({
+            name: className,
+            context: context,
+            instance: instance
+        });
+    }
+
+    /*------------------------------------------------------------------------------------------*/
+
+    // Factories storage Management
+
+    /*------------------------------------------------------------------------------------------*/
+
+    function registerFactory(name, factory, factoriesArray) {
+        for (var i in factoriesArray) {
+            var obj = factoriesArray[i];
+            if (obj.name === name) {
+                factoriesArray[i].factory = factory;
+                return;
+            }
+        }
+        factoriesArray.push({
+            name: name,
+            factory: factory
+        });
+    }
+
+    function getFactoryByName(name, factoriesArray) {
+        for (var i in factoriesArray) {
+            var obj = factoriesArray[i];
+            if (obj.name === name) {
+                return factoriesArray[i].factory;
+            }
+        }
+        return null;
+    }
+
+    function updateFactory(name, factory, factoriesArray) {
+        for (var i in factoriesArray) {
+            var obj = factoriesArray[i];
+            if (obj.name === name) {
+                factoriesArray[i].factory = factory;
+                return;
+            }
+        }
+    }
+
+    /*------------------------------------------------------------------------------------------*/
+
+    // Class Factories Management
+
+    /*------------------------------------------------------------------------------------------*/
+
+    function updateClassFactory(name, factory) {
+        updateFactory(name, factory, classFactories);
+    }
+
+    function getClassFactoryByName(name) {
+        return getFactoryByName(name, classFactories);
     }
 
     function getClassFactory(classConstructor) {
-        return function (context) {
-            if (context === undefined) {
-                context = {};
-            }
-            return {
-                create: function create() {
-                    return merge(classConstructor.__dashjs_factory_name, classConstructor.apply({ context: context }, arguments), context, arguments);
+        var factory = getFactoryByName(classConstructor.__dashjs_factory_name, classFactories);
+
+        if (!factory) {
+            factory = function (context) {
+                if (context === undefined) {
+                    context = {};
                 }
+                return {
+                    create: function create() {
+                        return merge(classConstructor.__dashjs_factory_name, classConstructor.apply({
+                            context: context
+                        }, arguments), context, arguments);
+                    }
+                };
             };
-        };
+
+            registerFactory(classConstructor.__dashjs_factory_name, factory, classFactories); // store factory
+        }
+        return factory;
+    }
+
+    /*------------------------------------------------------------------------------------------*/
+
+    // Singleton Factory MAangement
+
+    /*------------------------------------------------------------------------------------------*/
+
+    function updateSingletonFactory(name, factory) {
+        updateFactory(name, factory, singletonFactories);
+    }
+
+    function getSingletonFactoryByName(name) {
+        return getFactoryByName(name, singletonFactories);
     }
 
     function getSingletonFactory(classConstructor) {
-        return function (context) {
-            var instance = undefined;
-            if (context === undefined) {
-                context = {};
-            }
-            return {
-                getInstance: function getInstance() {
-                    // If we don't have an instance yet check for one on the context
-                    if (!instance) {
-                        instance = getSingletonInstance(context, classConstructor.__dashjs_factory_name);
-                    }
-                    // If there's no instance on the context then create one
-                    if (!instance) {
-                        instance = merge(classConstructor.__dashjs_factory_name, classConstructor.apply({ context: context }, arguments), context, arguments);
-                        singletonContexts.push({ name: classConstructor.__dashjs_factory_name, context: context, instance: instance });
-                    }
-                    return instance;
+        var factory = getFactoryByName(classConstructor.__dashjs_factory_name, singletonFactories);
+        if (!factory) {
+            factory = function (context) {
+                var instance = undefined;
+                if (context === undefined) {
+                    context = {};
                 }
+                return {
+                    getInstance: function getInstance() {
+                        // If we don't have an instance yet check for one on the context
+                        if (!instance) {
+                            instance = getSingletonInstance(context, classConstructor.__dashjs_factory_name);
+                        }
+                        // If there's no instance on the context then create one
+                        if (!instance) {
+                            instance = merge(classConstructor.__dashjs_factory_name, classConstructor.apply({
+                                context: context
+                            }, arguments), context, arguments);
+                            singletonContexts.push({
+                                name: classConstructor.__dashjs_factory_name,
+                                context: context,
+                                instance: instance
+                            });
+                        }
+                        return instance;
+                    }
+                };
             };
-        };
+            registerFactory(classConstructor.__dashjs_factory_name, factory, singletonFactories); // store factory
+        }
+
+        return factory;
     }
 
     function merge(name, classConstructor, context, args) {
+        // Add getClassName function to class instance prototype (used by Debug)
+        classConstructor.getClassName = function () {
+            return name;
+        };
+
         var extensionContext = getExtensionContext(context);
         var extensionObject = extensionContext[name];
         if (extensionObject) {
             var extension = extensionObject.instance;
             if (extensionObject.override) {
                 //Override public methods in parent but keep parent.
-                extension = extension.apply({ context: context, factory: instance, parent: classConstructor }, args);
+                extension = extension.apply({
+                    context: context,
+                    factory: instance,
+                    parent: classConstructor
+                }, args);
                 for (var prop in extension) {
                     if (classConstructor.hasOwnProperty(prop)) {
                         classConstructor[prop] = extension[prop];
@@ -449,7 +414,10 @@ var FactoryMaker = (function () {
                 }
             } else {
                 //replace parent object completely with new object. Same as dijon.
-                return extension.apply({ context: context, factory: instance }, args);
+                return extension.apply({
+                    context: context,
+                    factory: instance
+                }, args);
             }
         }
         return classConstructor;
@@ -473,7 +441,11 @@ var FactoryMaker = (function () {
         getSingletonInstance: getSingletonInstance,
         setSingletonInstance: setSingletonInstance,
         getSingletonFactory: getSingletonFactory,
-        getClassFactory: getClassFactory
+        getSingletonFactoryByName: getSingletonFactoryByName,
+        updateSingletonFactory: updateSingletonFactory,
+        getClassFactory: getClassFactory,
+        getClassFactoryByName: getClassFactoryByName,
+        updateClassFactory: updateClassFactory
     };
 
     return instance;
@@ -482,7 +454,7 @@ var FactoryMaker = (function () {
 exports["default"] = FactoryMaker;
 module.exports = exports["default"];
 
-},{}],4:[function(_dereq_,module,exports){
+},{}],3:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -527,7 +499,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var _EventsBase2 = _dereq_(6);
+var _EventsBase2 = _dereq_(5);
 
 var _EventsBase3 = _interopRequireDefault(_EventsBase2);
 
@@ -566,13 +538,13 @@ var CoreEvents = (function (_EventsBase) {
         this.QUOTA_EXCEEDED = 'quotaExceeded';
         this.REPRESENTATION_UPDATED = 'representationUpdated';
         this.SEGMENTS_LOADED = 'segmentsLoaded';
+        this.SERVICE_LOCATION_BLACKLIST_ADD = 'serviceLocationBlacklistAdd';
         this.SERVICE_LOCATION_BLACKLIST_CHANGED = 'serviceLocationBlacklistChanged';
         this.SOURCEBUFFER_APPEND_COMPLETED = 'sourceBufferAppendCompleted';
         this.SOURCEBUFFER_REMOVE_COMPLETED = 'sourceBufferRemoveCompleted';
         this.STREAMS_COMPOSED = 'streamsComposed';
         this.STREAM_BUFFERING_COMPLETED = 'streamBufferingCompleted';
         this.STREAM_COMPLETED = 'streamCompleted';
-        this.STREAM_TEARDOWN_COMPLETE = 'streamTeardownComplete';
         this.TIMED_TEXT_REQUESTED = 'timedTextRequested';
         this.TIME_SYNCHRONIZATION_COMPLETED = 'timeSynchronizationComplete';
         this.URL_RESOLUTION_FAILED = 'urlResolutionFailed';
@@ -588,7 +560,7 @@ var CoreEvents = (function (_EventsBase) {
 exports['default'] = CoreEvents;
 module.exports = exports['default'];
 
-},{"6":6}],5:[function(_dereq_,module,exports){
+},{"5":5}],4:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -637,7 +609,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var _CoreEvents2 = _dereq_(4);
+var _CoreEvents2 = _dereq_(3);
 
 var _CoreEvents3 = _interopRequireDefault(_CoreEvents2);
 
@@ -657,7 +629,7 @@ var events = new Events();
 exports['default'] = events;
 module.exports = exports['default'];
 
-},{"4":4}],6:[function(_dereq_,module,exports){
+},{"3":3}],5:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -727,6 +699,99 @@ var EventsBase = (function () {
 })();
 
 exports['default'] = EventsBase;
+module.exports = exports['default'];
+
+},{}],6:[function(_dereq_,module,exports){
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * Constants declaration
+ * @class
+ * @ignore
+ */
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+    value: true
+});
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+var Constants = (function () {
+    _createClass(Constants, [{
+        key: 'init',
+        value: function init() {
+            this.STREAM = 'stream';
+            this.VIDEO = 'video';
+            this.AUDIO = 'audio';
+            this.TEXT = 'text';
+            this.FRAGMENTED_TEXT = 'fragmentedText';
+            this.EMBEDDED_TEXT = 'embeddedText';
+            this.MUXED = 'muxed';
+            this.LOCATION = 'Location';
+            this.INITIALIZE = 'initialize';
+            this.TEXT_SHOWING = 'showing';
+            this.TEXT_HIDDEN = 'hidden';
+            this.CC1 = 'CC1';
+            this.CC3 = 'CC3';
+            this.STPP = 'stpp';
+            this.TTML = 'ttml';
+            this.VTT = 'vtt';
+            this.WVTT = 'wvtt';
+            this.UTF8 = 'utf-8';
+            this.SUGGESTED_PRESENTATION_DELAY = 'suggestedPresentationDelay';
+            this.SCHEME_ID_URI = 'schemeIdUri';
+            this.START_TIME = 'starttime';
+            this.ABR_STRATEGY_DYNAMIC = 'abrDynamic';
+            this.ABR_STRATEGY_BOLA = 'abrBola';
+            this.ABR_STRATEGY_THROUGHPUT = 'abrThroughput';
+            this.MOVING_AVERAGE_SLIDING_WINDOW = 'slidingWindow';
+            this.MOVING_AVERAGE_EWMA = 'ewma';
+        }
+    }]);
+
+    function Constants() {
+        _classCallCheck(this, Constants);
+
+        this.init();
+    }
+
+    return Constants;
+})();
+
+var constants = new Constants();
+exports['default'] = constants;
 module.exports = exports['default'];
 
 },{}],7:[function(_dereq_,module,exports){
@@ -886,7 +951,11 @@ var CommonEncryption = (function () {
             var byteCursor = 0;
             while (!done) {
 
-                var size, nextBox, version, systemID, psshDataSize;
+                var size = undefined,
+                    nextBox = undefined,
+                    version = undefined,
+                    systemID = undefined,
+                    psshDataSize = undefined;
                 var boxStart = byteCursor;
 
                 if (byteCursor >= dv.buffer.byteLength) break;
@@ -915,7 +984,8 @@ var CommonEncryption = (function () {
 
                 // 16-byte UUID/SystemID
                 systemID = '';
-                var i, val;
+                var i = undefined,
+                    val = undefined;
                 for (i = 0; i < 4; i++) {
                     val = dv.getUint8(byteCursor + i).toString(16);
                     systemID += val.length === 1 ? '0' + val : val;
@@ -1030,7 +1100,7 @@ var _modelsProtectionModel_01b = _dereq_(15);
 
 var _modelsProtectionModel_01b2 = _interopRequireDefault(_modelsProtectionModel_01b);
 
-var _coreFactoryMaker = _dereq_(3);
+var _coreFactoryMaker = _dereq_(2);
 
 var _coreFactoryMaker2 = _interopRequireDefault(_coreFactoryMaker);
 
@@ -1137,6 +1207,7 @@ function Protection() {
 
         var log = config.log;
         var eventBus = config.eventBus;
+        var errHandler = config.errHandler;
         var videoElement = config.videoModel.getElement();
 
         if (videoElement.onencrypted !== undefined && videoElement.mediaKeys !== undefined && navigator.requestMediaKeySystemAccess !== undefined && typeof navigator.requestMediaKeySystemAccess === 'function') {
@@ -1150,7 +1221,7 @@ function Protection() {
         } else if (getAPI(videoElement, APIS_ProtectionModel_01b)) {
 
             log('EME detected on this user agent! (ProtectionModel_01b)');
-            return (0, _modelsProtectionModel_01b2['default'])(context).create({ log: log, eventBus: eventBus, api: getAPI(videoElement, APIS_ProtectionModel_01b) });
+            return (0, _modelsProtectionModel_01b2['default'])(context).create({ log: log, eventBus: eventBus, errHandler: errHandler, api: getAPI(videoElement, APIS_ProtectionModel_01b) });
         } else {
 
             log('No supported version of EME detected on this user agent! - Attempts to play encrypted content will fail!');
@@ -1184,10 +1255,11 @@ function Protection() {
 Protection.__dashjs_factory_name = 'Protection';
 var factory = _coreFactoryMaker2['default'].getClassFactory(Protection);
 factory.events = _ProtectionEvents2['default'];
+_coreFactoryMaker2['default'].updateClassFactory(Protection.__dashjs_factory_name, factory);
 exports['default'] = factory;
 module.exports = exports['default'];
 
-},{"10":10,"11":11,"15":15,"16":16,"17":17,"3":3,"9":9}],9:[function(_dereq_,module,exports){
+},{"10":10,"11":11,"15":15,"16":16,"17":17,"2":2,"9":9}],9:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -1232,7 +1304,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var _coreEventsEventsBase = _dereq_(6);
+var _coreEventsEventsBase = _dereq_(5);
 
 var _coreEventsEventsBase2 = _interopRequireDefault(_coreEventsEventsBase);
 
@@ -1390,7 +1462,7 @@ var protectionEvents = new ProtectionEvents();
 exports['default'] = protectionEvents;
 module.exports = exports['default'];
 
-},{"6":6}],10:[function(_dereq_,module,exports){
+},{"5":5}],10:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -1429,11 +1501,15 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
+var _streamingConstantsConstants = _dereq_(6);
+
+var _streamingConstantsConstants2 = _interopRequireDefault(_streamingConstantsConstants);
+
 var _CommonEncryption = _dereq_(7);
 
 var _CommonEncryption2 = _interopRequireDefault(_CommonEncryption);
 
-var _coreEventsEvents = _dereq_(5);
+var _coreEventsEvents = _dereq_(4);
 
 var _coreEventsEvents2 = _interopRequireDefault(_coreEventsEvents);
 
@@ -1445,13 +1521,17 @@ var _voKeySystemConfiguration = _dereq_(27);
 
 var _voKeySystemConfiguration2 = _interopRequireDefault(_voKeySystemConfiguration);
 
-var _coreFactoryMaker = _dereq_(3);
+var _coreFactoryMaker = _dereq_(2);
 
 var _coreFactoryMaker2 = _interopRequireDefault(_coreFactoryMaker);
 
 var _Protection = _dereq_(8);
 
 var _Protection2 = _interopRequireDefault(_Protection);
+
+var _externalsBase64 = _dereq_(1);
+
+var _externalsBase642 = _interopRequireDefault(_externalsBase64);
 
 /**
  * @module ProtectionController
@@ -1519,17 +1599,16 @@ function ProtectionController(config) {
         // select key systems and acquire keys.
         if (!initialized) {
 
-            var streamInfo;
+            var streamInfo = undefined;
 
             if (!aInfo && !vInfo) {
                 // Look for ContentProtection elements.  InitData can be provided by either the
                 // dash264drm:Pssh ContentProtection format or a DRM-specific format.
-                streamInfo = adapter.getStreamsInfo(manifest)[0]; // TODO: Single period only for now. See TODO above
+                streamInfo = adapter.getStreamsInfo()[0]; // TODO: Single period only for now. See TODO above
             }
 
-            audioInfo = aInfo || (streamInfo ? adapter.getMediaInfoForType(manifest, streamInfo, 'audio') : null);
-            videoInfo = vInfo || (streamInfo ? adapter.getMediaInfoForType(manifest, streamInfo, 'video') : null);
-
+            audioInfo = aInfo || (streamInfo ? adapter.getMediaInfoForType(streamInfo, _streamingConstantsConstants2['default'].AUDIO) : null);
+            videoInfo = vInfo || (streamInfo ? adapter.getMediaInfoForType(streamInfo, _streamingConstantsConstants2['default'].VIDEO) : null);
             var mediaInfo = videoInfo ? videoInfo : audioInfo; // We could have audio or video only
 
             // ContentProtection elements are specified at the AdaptationSet level, so the CP for audio
@@ -1693,6 +1772,7 @@ function ProtectionController(config) {
      */
     function setProtectionData(data) {
         protDataSet = data;
+        protectionKeyController.setProtectionData(data);
     }
 
     /**
@@ -1729,31 +1809,36 @@ function ProtectionController(config) {
         return protData;
     }
 
+    function getKeySystemConfiguration(keySystem) {
+        var protData = getProtData(keySystem);
+        var audioCapabilities = [];
+        var videoCapabilities = [];
+        var audioRobustness = protData && protData.audioRobustness && protData.audioRobustness.length > 0 ? protData.audioRobustness : robustnessLevel;
+        var videoRobustness = protData && protData.videoRobustness && protData.videoRobustness.length > 0 ? protData.videoRobustness : robustnessLevel;
+
+        if (audioInfo) {
+            audioCapabilities.push(new _voMediaCapability2['default'](audioInfo.codec, audioRobustness));
+        }
+        if (videoInfo) {
+            videoCapabilities.push(new _voMediaCapability2['default'](videoInfo.codec, videoRobustness));
+        }
+
+        return new _voKeySystemConfiguration2['default'](audioCapabilities, videoCapabilities, 'optional', sessionType === 'temporary' ? 'optional' : 'required', [sessionType]);
+    }
+
     function selectKeySystem(supportedKS, fromManifest) {
 
         var self = this;
-
-        // Build our request object for requestKeySystemAccess
-        var audioCapabilities = [];
-        var videoCapabilities = [];
-
-        if (videoInfo) {
-            videoCapabilities.push(new _voMediaCapability2['default'](videoInfo.codec, robustnessLevel));
-        }
-        if (audioInfo) {
-            audioCapabilities.push(new _voMediaCapability2['default'](audioInfo.codec, robustnessLevel));
-        }
-        var ksConfig = new _voKeySystemConfiguration2['default'](audioCapabilities, videoCapabilities, 'optional', sessionType === 'temporary' ? 'optional' : 'required', [sessionType]);
         var requestedKeySystems = [];
 
-        var ksIdx;
+        var ksIdx = undefined;
         if (keySystem) {
             // We have a key system
             for (ksIdx = 0; ksIdx < supportedKS.length; ksIdx++) {
                 if (keySystem === supportedKS[ksIdx].ks) {
                     var _ret = (function () {
 
-                        requestedKeySystems.push({ ks: supportedKS[ksIdx].ks, configs: [ksConfig] });
+                        requestedKeySystems.push({ ks: supportedKS[ksIdx].ks, configs: [getKeySystemConfiguration(keySystem)] });
 
                         // Ensure that we would be granted key system access using the key
                         // system and codec information
@@ -1778,55 +1863,66 @@ function ProtectionController(config) {
                 }
             }
         } else if (keySystem === undefined) {
-            // First time through, so we need to select a key system
-            keySystem = null;
-            pendingNeedKeyData.push(supportedKS);
+            var onKeySystemSelected;
 
-            // Add all key systems to our request list since we have yet to select a key system
-            for (var i = 0; i < supportedKS.length; i++) {
-                requestedKeySystems.push({ ks: supportedKS[i].ks, configs: [ksConfig] });
-            }
+            (function () {
+                // First time through, so we need to select a key system
+                keySystem = null;
+                pendingNeedKeyData.push(supportedKS);
 
-            var keySystemAccess;
-            var onKeySystemAccessComplete = function onKeySystemAccessComplete(event) {
-                eventBus.off(_coreEventsEvents2['default'].KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
-                if (event.error) {
-                    keySystem = undefined;
-                    eventBus.off(_coreEventsEvents2['default'].INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
-
-                    if (!fromManifest) {
-                        eventBus.trigger(_coreEventsEvents2['default'].KEY_SYSTEM_SELECTED, { data: null, error: 'DRM: KeySystem Access Denied! -- ' + event.error });
-                    }
-                } else {
-                    keySystemAccess = event.data;
-                    log('DRM: KeySystem Access Granted (' + keySystemAccess.keySystem.systemString + ')!  Selecting key system...');
-                    protectionModel.selectKeySystem(keySystemAccess);
+                // Add all key systems to our request list since we have yet to select a key system
+                for (var i = 0; i < supportedKS.length; i++) {
+                    requestedKeySystems.push({ ks: supportedKS[i].ks, configs: [getKeySystemConfiguration(supportedKS[i].ks)] });
                 }
-            };
-            var onKeySystemSelected = function onKeySystemSelected(event) {
-                eventBus.off(_coreEventsEvents2['default'].INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
-                eventBus.off(_coreEventsEvents2['default'].KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
-                if (!event.error) {
-                    keySystem = protectionModel.getKeySystem();
-                    eventBus.trigger(_coreEventsEvents2['default'].KEY_SYSTEM_SELECTED, { data: keySystemAccess });
-                    for (var i = 0; i < pendingNeedKeyData.length; i++) {
-                        for (ksIdx = 0; ksIdx < pendingNeedKeyData[i].length; ksIdx++) {
-                            if (keySystem === pendingNeedKeyData[i][ksIdx].ks) {
-                                createKeySession(pendingNeedKeyData[i][ksIdx].initData);
-                                break;
+
+                var keySystemAccess = undefined;
+                var onKeySystemAccessComplete = function onKeySystemAccessComplete(event) {
+                    eventBus.off(_coreEventsEvents2['default'].KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
+                    if (event.error) {
+                        keySystem = undefined;
+                        eventBus.off(_coreEventsEvents2['default'].INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
+
+                        if (!fromManifest) {
+                            eventBus.trigger(_coreEventsEvents2['default'].KEY_SYSTEM_SELECTED, { data: null, error: 'DRM: KeySystem Access Denied! -- ' + event.error });
+                        }
+                    } else {
+                        keySystemAccess = event.data;
+                        log('DRM: KeySystem Access Granted (' + keySystemAccess.keySystem.systemString + ')!  Selecting key system...');
+                        protectionModel.selectKeySystem(keySystemAccess);
+                    }
+                };
+
+                onKeySystemSelected = function onKeySystemSelected(event) {
+                    eventBus.off(_coreEventsEvents2['default'].INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
+                    eventBus.off(_coreEventsEvents2['default'].KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
+                    if (!event.error) {
+                        keySystem = protectionModel.getKeySystem();
+                        eventBus.trigger(_coreEventsEvents2['default'].KEY_SYSTEM_SELECTED, { data: keySystemAccess });
+                        // Set server certificate from protData
+                        var protData = getProtData(keySystem);
+                        if (protData && protData.serverCertificate && protData.serverCertificate.length > 0) {
+                            protectionModel.setServerCertificate(_externalsBase642['default'].decodeArray(protData.serverCertificate).buffer);
+                        }
+                        for (var i = 0; i < pendingNeedKeyData.length; i++) {
+                            for (ksIdx = 0; ksIdx < pendingNeedKeyData[i].length; ksIdx++) {
+                                if (keySystem === pendingNeedKeyData[i][ksIdx].ks) {
+                                    createKeySession(pendingNeedKeyData[i][ksIdx].initData);
+                                    break;
+                                }
                             }
                         }
+                    } else {
+                        keySystem = undefined;
+                        if (!fromManifest) {
+                            eventBus.trigger(_coreEventsEvents2['default'].KEY_SYSTEM_SELECTED, { data: null, error: 'DRM: Error selecting key system! -- ' + event.error });
+                        }
                     }
-                } else {
-                    keySystem = undefined;
-                    if (!fromManifest) {
-                        eventBus.trigger(_coreEventsEvents2['default'].KEY_SYSTEM_SELECTED, { data: null, error: 'DRM: Error selecting key system! -- ' + event.error });
-                    }
-                }
-            };
-            eventBus.on(_coreEventsEvents2['default'].INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
-            eventBus.on(_coreEventsEvents2['default'].KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
-            protectionModel.requestKeySystemAccess(requestedKeySystems);
+                };
+
+                eventBus.on(_coreEventsEvents2['default'].INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
+                eventBus.on(_coreEventsEvents2['default'].KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
+                protectionModel.requestKeySystemAccess(requestedKeySystems);
+            })();
         } else {
             // We are in the process of selecting a key system, so just save the data
             pendingNeedKeyData.push(supportedKS);
@@ -1922,7 +2018,7 @@ function ProtectionController(config) {
 
         // Set optional XMLHttpRequest headers from protection data and message
         var updateHeaders = function updateHeaders(headers) {
-            var key;
+            var key = undefined;
             if (headers) {
                 for (key in headers) {
                     if ('authorization' === key.toLowerCase()) {
@@ -1993,7 +2089,7 @@ ProtectionController.__dashjs_factory_name = 'ProtectionController';
 exports['default'] = _coreFactoryMaker2['default'].getClassFactory(ProtectionController);
 module.exports = exports['default'];
 
-},{"27":27,"28":28,"3":3,"5":5,"7":7,"8":8}],11:[function(_dereq_,module,exports){
+},{"1":1,"2":2,"27":27,"28":28,"4":4,"6":6,"7":7,"8":8}],11:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -2064,7 +2160,7 @@ var _serversClearKey = _dereq_(18);
 
 var _serversClearKey2 = _interopRequireDefault(_serversClearKey);
 
-var _coreFactoryMaker = _dereq_(3);
+var _coreFactoryMaker = _dereq_(2);
 
 var _coreFactoryMaker2 = _interopRequireDefault(_coreFactoryMaker);
 
@@ -2092,7 +2188,7 @@ function ProtectionKeyController() {
     function initialize() {
         keySystems = [];
 
-        var keySystem;
+        var keySystem = undefined;
 
         // PlayReady
         keySystem = (0, _drmKeySystemPlayReady2['default'])(context).getInstance();
@@ -2200,7 +2296,10 @@ function ProtectionKeyController() {
      * @instance
      */
     function getSupportedKeySystemsFromContentProtection(cps) {
-        var cp, ks, ksIdx, cpIdx;
+        var cp = undefined,
+            ks = undefined,
+            ksIdx = undefined,
+            cpIdx = undefined;
         var supportedKS = [];
 
         if (cps) {
@@ -2242,11 +2341,10 @@ function ProtectionKeyController() {
      * @instance
      */
     function getSupportedKeySystems(initData, protDataSet) {
-        var ksIdx;
         var supportedKS = [];
         var pssh = _CommonEncryption2['default'].parsePSSHList(initData);
 
-        for (ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
+        for (var ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
             var keySystemString = keySystems[ksIdx].systemString;
             var shouldNotFilterOutKeySystem = protDataSet ? keySystemString in protDataSet : true;
 
@@ -2319,8 +2417,26 @@ function ProtectionKeyController() {
         }
     }
 
+    function setProtectionData(protectionDataSet) {
+        var getProtectionData = function getProtectionData(keySystemString) {
+            var protData = null;
+            if (protectionDataSet) {
+                protData = keySystemString in protectionDataSet ? protectionDataSet[keySystemString] : null;
+            }
+            return protData;
+        };
+
+        for (var i = 0; i < keySystems.length; i++) {
+            var keySystem = keySystems[i];
+            if (keySystem.hasOwnProperty('init')) {
+                keySystem.init(getProtectionData(keySystem.systemString));
+            }
+        }
+    }
+
     instance = {
         initialize: initialize,
+        setProtectionData: setProtectionData,
         isClearKey: isClearKey,
         initDataEquals: initDataEquals,
         getKeySystems: getKeySystems,
@@ -2339,7 +2455,7 @@ ProtectionKeyController.__dashjs_factory_name = 'ProtectionKeyController';
 exports['default'] = _coreFactoryMaker2['default'].getSingletonFactory(ProtectionKeyController);
 module.exports = exports['default'];
 
-},{"12":12,"13":13,"14":14,"18":18,"19":19,"20":20,"21":21,"3":3,"7":7}],12:[function(_dereq_,module,exports){
+},{"12":12,"13":13,"14":14,"18":18,"19":19,"2":2,"20":20,"21":21,"7":7}],12:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -2391,7 +2507,7 @@ var _CommonEncryption = _dereq_(7);
 
 var _CommonEncryption2 = _interopRequireDefault(_CommonEncryption);
 
-var _coreFactoryMaker = _dereq_(3);
+var _coreFactoryMaker = _dereq_(2);
 
 var _coreFactoryMaker2 = _interopRequireDefault(_coreFactoryMaker);
 
@@ -2467,7 +2583,7 @@ KeySystemClearKey.__dashjs_factory_name = 'KeySystemClearKey';
 exports['default'] = _coreFactoryMaker2['default'].getSingletonFactory(KeySystemClearKey);
 module.exports = exports['default'];
 
-},{"22":22,"25":25,"3":3,"7":7}],13:[function(_dereq_,module,exports){
+},{"2":2,"22":22,"25":25,"7":7}],13:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -2517,11 +2633,7 @@ var _CommonEncryption = _dereq_(7);
 
 var _CommonEncryption2 = _interopRequireDefault(_CommonEncryption);
 
-var _voError = _dereq_(31);
-
-var _voError2 = _interopRequireDefault(_voError);
-
-var _coreFactoryMaker = _dereq_(3);
+var _coreFactoryMaker = _dereq_(2);
 
 var _coreFactoryMaker2 = _interopRequireDefault(_coreFactoryMaker);
 
@@ -2539,7 +2651,8 @@ function KeySystemPlayReady() {
     var messageFormat = 'utf16';
 
     function getRequestHeadersFromMessage(message) {
-        var msg, xmlDoc;
+        var msg = undefined,
+            xmlDoc = undefined;
         var headers = {};
         var parser = new DOMParser();
         var dataview = messageFormat === 'utf16' ? new Uint16Array(message) : new Uint8Array(message);
@@ -2563,7 +2676,8 @@ function KeySystemPlayReady() {
     }
 
     function getLicenseRequestFromMessage(message) {
-        var msg, xmlDoc;
+        var msg = undefined,
+            xmlDoc = undefined;
         var licenseRequest = null;
         var parser = new DOMParser();
         var dataview = messageFormat === 'utf16' ? new Uint16Array(message) : new Uint8Array(message);
@@ -2638,7 +2752,11 @@ function KeySystemPlayReady() {
         var byteCursor = 0;
         var uint8arraydecodedPROHeader = null;
 
-        var PROSize, PSSHSize, PSSHBoxBuffer, PSSHBox, PSSHData;
+        var PROSize = undefined,
+            PSSHSize = undefined,
+            PSSHBoxBuffer = undefined,
+            PSSHBox = undefined,
+            PSSHData = undefined;
 
         // Handle common encryption PSSH
         if ('pssh' in cpData) {
@@ -2689,7 +2807,7 @@ function KeySystemPlayReady() {
      */
     function setPlayReadyMessageFormat(format) {
         if (format !== 'utf8' && format !== 'utf16') {
-            throw new _voError2['default']('Illegal PlayReady message format! -- ' + format);
+            throw new Error('Illegal PlayReady message format! -- ' + format);
         }
         messageFormat = format;
     }
@@ -2712,7 +2830,7 @@ KeySystemPlayReady.__dashjs_factory_name = 'KeySystemPlayReady';
 exports['default'] = _coreFactoryMaker2['default'].getSingletonFactory(KeySystemPlayReady);
 module.exports = exports['default'];
 
-},{"1":1,"3":3,"31":31,"7":7}],14:[function(_dereq_,module,exports){
+},{"1":1,"2":2,"7":7}],14:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -2763,9 +2881,13 @@ var _CommonEncryption = _dereq_(7);
 
 var _CommonEncryption2 = _interopRequireDefault(_CommonEncryption);
 
-var _coreFactoryMaker = _dereq_(3);
+var _coreFactoryMaker = _dereq_(2);
 
 var _coreFactoryMaker2 = _interopRequireDefault(_coreFactoryMaker);
+
+var _externalsBase64 = _dereq_(1);
+
+var _externalsBase642 = _interopRequireDefault(_externalsBase64);
 
 var uuid = 'edef8ba9-79d6-4ace-a3c8-27dcd51d21ed';
 var systemString = 'com.widevine.alpha';
@@ -2774,9 +2896,59 @@ var schemeIdURI = 'urn:uuid:' + uuid;
 function KeySystemWidevine() {
 
     var instance = undefined;
+    var protData = null;
+
+    function init(protectionData) {
+        if (protectionData) {
+            protData = protectionData;
+        }
+    }
+
+    function replaceKID(pssh, KID) {
+        var pssh_array = undefined;
+        var replace = true;
+        var kidLen = 16;
+        var pos = undefined;
+        var i = undefined,
+            j = undefined;
+
+        pssh_array = new Uint8Array(pssh);
+
+        for (i = 0; i <= pssh_array.length - (kidLen + 2); i++) {
+            if (pssh_array[i] === 0x12 && pssh_array[i + 1] === 0x10) {
+                pos = i + 2;
+                for (j = pos; j < pos + kidLen; j++) {
+                    if (pssh_array[j] !== 0xFF) {
+                        replace = false;
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+
+        if (replace) {
+            pssh_array.set(KID, pos);
+        }
+
+        return pssh_array.buffer;
+    }
 
     function getInitData(cp) {
-        return _CommonEncryption2['default'].parseInitDataFromContentProtection(cp);
+        var pssh = null;
+        // Get pssh from protectionData or from manifest
+        if (protData && protData.pssh) {
+            pssh = _externalsBase642['default'].decodeArray(protData.pssh).buffer;
+        } else {
+            pssh = _CommonEncryption2['default'].parseInitDataFromContentProtection(cp);
+        }
+
+        // Check if KID within pssh is empty, in that case set KID value according to 'cenc:default_KID' value
+        if (pssh) {
+            pssh = replaceKID(pssh, cp['cenc:default_KID']);
+        }
+
+        return pssh;
     }
 
     function getRequestHeadersFromMessage() /*message*/{
@@ -2795,6 +2967,7 @@ function KeySystemWidevine() {
         uuid: uuid,
         schemeIdURI: schemeIdURI,
         systemString: systemString,
+        init: init,
         getInitData: getInitData,
         getRequestHeadersFromMessage: getRequestHeadersFromMessage,
         getLicenseRequestFromMessage: getLicenseRequestFromMessage,
@@ -2808,7 +2981,7 @@ KeySystemWidevine.__dashjs_factory_name = 'KeySystemWidevine';
 exports['default'] = _coreFactoryMaker2['default'].getSingletonFactory(KeySystemWidevine);
 module.exports = exports['default'];
 
-},{"3":3,"7":7}],15:[function(_dereq_,module,exports){
+},{"1":1,"2":2,"7":7}],15:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -2880,15 +3053,11 @@ var _voKeySystemAccess = _dereq_(26);
 
 var _voKeySystemAccess2 = _interopRequireDefault(_voKeySystemAccess);
 
-var _coreEventsEvents = _dereq_(5);
+var _coreEventsEvents = _dereq_(4);
 
 var _coreEventsEvents2 = _interopRequireDefault(_coreEventsEvents);
 
-var _utilsErrorHandler = _dereq_(30);
-
-var _utilsErrorHandler2 = _interopRequireDefault(_utilsErrorHandler);
-
-var _coreFactoryMaker = _dereq_(3);
+var _coreFactoryMaker = _dereq_(2);
 
 var _coreFactoryMaker2 = _interopRequireDefault(_coreFactoryMaker);
 
@@ -2898,12 +3067,12 @@ function ProtectionModel_01b(config) {
     var eventBus = config.eventBus; //Need to pass in here so we can use same instance since this is optional module
     var log = config.log;
     var api = config.api;
+    var errHandler = config.errHandler;
 
     var instance = undefined,
         videoElement = undefined,
         keySystem = undefined,
         protectionKeyController = undefined,
-        errHandler = undefined,
 
     // With this version of the EME APIs, sessionIDs are not assigned to
     // sessions until the first key message is received.  We are assuming
@@ -2934,7 +3103,6 @@ function ProtectionModel_01b(config) {
         pendingSessions = [];
         sessions = [];
         protectionKeyController = (0, _controllersProtectionKeyController2['default'])(context).getInstance();
-        errHandler = (0, _utilsErrorHandler2['default'])(context).getInstance();
         eventHandler = createEventHandler();
     }
 
@@ -2982,7 +3150,7 @@ function ProtectionModel_01b(config) {
             // Try key system configs in order, first one with supported audio/video
             // is used
             for (var configIdx = 0; configIdx < configs.length; configIdx++) {
-                //var audios = configs[configIdx].audioCapabilities;
+                //let audios = configs[configIdx].audioCapabilities;
                 var videos = configs[configIdx].videoCapabilities;
                 // Look for supported video container/codecs
                 if (videos && videos.length !== 0) {
@@ -3259,7 +3427,7 @@ ProtectionModel_01b.__dashjs_factory_name = 'ProtectionModel_01b';
 exports['default'] = _coreFactoryMaker2['default'].getClassFactory(ProtectionModel_01b);
 module.exports = exports['default'];
 
-},{"11":11,"23":23,"24":24,"26":26,"27":27,"29":29,"3":3,"30":30,"5":5}],16:[function(_dereq_,module,exports){
+},{"11":11,"2":2,"23":23,"24":24,"26":26,"27":27,"29":29,"4":4}],16:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -3327,11 +3495,11 @@ var _voKeySystemAccess = _dereq_(26);
 
 var _voKeySystemAccess2 = _interopRequireDefault(_voKeySystemAccess);
 
-var _coreEventsEvents = _dereq_(5);
+var _coreEventsEvents = _dereq_(4);
 
 var _coreEventsEvents2 = _interopRequireDefault(_coreEventsEvents);
 
-var _coreFactoryMaker = _dereq_(3);
+var _coreFactoryMaker = _dereq_(2);
 
 var _coreFactoryMaker2 = _interopRequireDefault(_coreFactoryMaker);
 
@@ -3341,7 +3509,13 @@ function ProtectionModel_21Jan2015(config) {
     var eventBus = config.eventBus; //Need to pass in here so we can use same instance since this is optional module
     var log = config.log;
 
-    var instance, keySystem, videoElement, mediaKeys, sessions, eventHandler, protectionKeyController;
+    var instance = undefined,
+        keySystem = undefined,
+        videoElement = undefined,
+        mediaKeys = undefined,
+        sessions = undefined,
+        eventHandler = undefined,
+        protectionKeyController = undefined;
 
     function setup() {
         keySystem = null;
@@ -3354,37 +3528,39 @@ function ProtectionModel_21Jan2015(config) {
 
     function reset() {
         var numSessions = sessions.length;
-        var session;
+        var session = undefined;
 
         if (numSessions !== 0) {
-            // Called when we are done closing a session.  Success or fail
-            var done = function done(session) {
-                removeSession(session);
-                if (sessions.length === 0) {
-                    if (videoElement) {
-                        videoElement.removeEventListener('encrypted', eventHandler);
-                        videoElement.setMediaKeys(null).then(function () {
+            (function () {
+                // Called when we are done closing a session.  Success or fail
+                var done = function done(session) {
+                    removeSession(session);
+                    if (sessions.length === 0) {
+                        if (videoElement) {
+                            videoElement.removeEventListener('encrypted', eventHandler);
+                            videoElement.setMediaKeys(null).then(function () {
+                                eventBus.trigger(_coreEventsEvents2['default'].TEARDOWN_COMPLETE);
+                            });
+                        } else {
                             eventBus.trigger(_coreEventsEvents2['default'].TEARDOWN_COMPLETE);
-                        });
-                    } else {
-                        eventBus.trigger(_coreEventsEvents2['default'].TEARDOWN_COMPLETE);
+                        }
                     }
+                };
+                for (var i = 0; i < numSessions; i++) {
+                    session = sessions[i];
+                    (function (s) {
+                        // Override closed promise resolver
+                        session.session.closed.then(function () {
+                            done(s);
+                        });
+                        // Close the session and handle errors, otherwise promise
+                        // resolver above will be called
+                        closeKeySessionInternal(session)['catch'](function () {
+                            done(s);
+                        });
+                    })(session);
                 }
-            };
-            for (var i = 0; i < numSessions; i++) {
-                session = sessions[i];
-                (function (s) {
-                    // Override closed promise resolver
-                    session.session.closed.then(function () {
-                        done(s);
-                    });
-                    // Close the session and handle errors, otherwise promise
-                    // resolver above will be called
-                    closeKeySessionInternal(session)['catch'](function () {
-                        done(s);
-                    });
-                })(session);
-            }
+            })();
         } else {
             eventBus.trigger(_coreEventsEvents2['default'].TEARDOWN_COMPLETE);
         }
@@ -3411,9 +3587,10 @@ function ProtectionModel_21Jan2015(config) {
             keySystem = keySystemAccess.keySystem;
             mediaKeys = mkeys;
             if (videoElement) {
-                videoElement.setMediaKeys(mediaKeys);
+                videoElement.setMediaKeys(mediaKeys).then(function () {
+                    eventBus.trigger(_coreEventsEvents2['default'].INTERNAL_KEY_SYSTEM_SELECTED);
+                });
             }
-            eventBus.trigger(_coreEventsEvents2['default'].INTERNAL_KEY_SYSTEM_SELECTED);
         })['catch'](function () {
             eventBus.trigger(_coreEventsEvents2['default'].INTERNAL_KEY_SYSTEM_SELECTED, { error: 'Error selecting keys system (' + keySystemAccess.keySystem.systemString + ')! Could not create MediaKeys -- TODO' });
         });
@@ -3667,7 +3844,7 @@ ProtectionModel_21Jan2015.__dashjs_factory_name = 'ProtectionModel_21Jan2015';
 exports['default'] = _coreFactoryMaker2['default'].getClassFactory(ProtectionModel_21Jan2015);
 module.exports = exports['default'];
 
-},{"11":11,"23":23,"24":24,"26":26,"29":29,"3":3,"5":5}],17:[function(_dereq_,module,exports){
+},{"11":11,"2":2,"23":23,"24":24,"26":26,"29":29,"4":4}],17:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -3740,11 +3917,11 @@ var _voKeySystemAccess = _dereq_(26);
 
 var _voKeySystemAccess2 = _interopRequireDefault(_voKeySystemAccess);
 
-var _coreEventsEvents = _dereq_(5);
+var _coreEventsEvents = _dereq_(4);
 
 var _coreEventsEvents2 = _interopRequireDefault(_coreEventsEvents);
 
-var _coreFactoryMaker = _dereq_(3);
+var _coreFactoryMaker = _dereq_(2);
 
 var _coreFactoryMaker2 = _interopRequireDefault(_coreFactoryMaker);
 
@@ -4073,7 +4250,7 @@ ProtectionModel_3Feb2014.__dashjs_factory_name = 'ProtectionModel_3Feb2014';
 exports['default'] = _coreFactoryMaker2['default'].getClassFactory(ProtectionModel_3Feb2014);
 module.exports = exports['default'];
 
-},{"11":11,"23":23,"24":24,"26":26,"27":27,"29":29,"3":3,"5":5}],18:[function(_dereq_,module,exports){
+},{"11":11,"2":2,"23":23,"24":24,"26":26,"27":27,"29":29,"4":4}],18:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -4130,7 +4307,7 @@ var _voClearKeyKeySet = _dereq_(22);
 
 var _voClearKeyKeySet2 = _interopRequireDefault(_voClearKeyKeySet);
 
-var _coreFactoryMaker = _dereq_(3);
+var _coreFactoryMaker = _dereq_(2);
 
 var _coreFactoryMaker2 = _interopRequireDefault(_coreFactoryMaker);
 
@@ -4191,7 +4368,7 @@ ClearKey.__dashjs_factory_name = 'ClearKey';
 exports['default'] = _coreFactoryMaker2['default'].getSingletonFactory(ClearKey);
 module.exports = exports['default'];
 
-},{"22":22,"25":25,"3":3}],19:[function(_dereq_,module,exports){
+},{"2":2,"22":22,"25":25}],19:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -4237,7 +4414,7 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _coreFactoryMaker = _dereq_(3);
+var _coreFactoryMaker = _dereq_(2);
 
 var _coreFactoryMaker2 = _interopRequireDefault(_coreFactoryMaker);
 
@@ -4305,7 +4482,7 @@ DRMToday.__dashjs_factory_name = 'DRMToday';
 exports['default'] = _coreFactoryMaker2['default'].getSingletonFactory(DRMToday);
 module.exports = exports['default'];
 
-},{"1":1,"3":3}],20:[function(_dereq_,module,exports){
+},{"1":1,"2":2}],20:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -4353,7 +4530,7 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _coreFactoryMaker = _dereq_(3);
+var _coreFactoryMaker = _dereq_(2);
 
 var _coreFactoryMaker2 = _interopRequireDefault(_coreFactoryMaker);
 
@@ -4396,7 +4573,7 @@ PlayReady.__dashjs_factory_name = 'PlayReady';
 exports['default'] = _coreFactoryMaker2['default'].getSingletonFactory(PlayReady);
 module.exports = exports['default'];
 
-},{"3":3}],21:[function(_dereq_,module,exports){
+},{"2":2}],21:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -4435,7 +4612,7 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _coreFactoryMaker = _dereq_(3);
+var _coreFactoryMaker = _dereq_(2);
 
 var _coreFactoryMaker2 = _interopRequireDefault(_coreFactoryMaker);
 
@@ -4478,7 +4655,7 @@ Widevine.__dashjs_factory_name = 'Widevine';
 exports['default'] = _coreFactoryMaker2['default'].getSingletonFactory(Widevine);
 module.exports = exports['default'];
 
-},{"3":3}],22:[function(_dereq_,module,exports){
+},{"2":2}],22:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -4551,7 +4728,7 @@ var ClearKeyKeySet = (function () {
     _createClass(ClearKeyKeySet, [{
         key: 'toJWK',
         value: function toJWK() {
-            var i;
+            var i = undefined;
             var numKeys = this.keyPairs.length;
             var jwk = { keys: [] };
 
@@ -5030,196 +5207,6 @@ function NeedKey(initData, initDataType) {
 };
 
 exports["default"] = NeedKey;
-module.exports = exports["default"];
-
-},{}],30:[function(_dereq_,module,exports){
-/**
- * The copyright in this software is being made available under the BSD License,
- * included below. This software may be subject to other third party and contributor
- * rights, including patent rights, and no such rights are granted under this license.
- *
- * Copyright (c) 2013, Dash Industry Forum.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
- *  * Redistributions of source code must retain the above copyright notice, this
- *  list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above copyright notice,
- *  this list of conditions and the following disclaimer in the documentation and/or
- *  other materials provided with the distribution.
- *  * Neither the name of Dash Industry Forum nor the names of its
- *  contributors may be used to endorse or promote products derived from this software
- *  without specific prior written permission.
- *
- *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
- *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- *  POSSIBILITY OF SUCH DAMAGE.
- */
-'use strict';
-
-Object.defineProperty(exports, '__esModule', {
-    value: true
-});
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-var _coreEventBus = _dereq_(2);
-
-var _coreEventBus2 = _interopRequireDefault(_coreEventBus);
-
-var _coreEventsEvents = _dereq_(5);
-
-var _coreEventsEvents2 = _interopRequireDefault(_coreEventsEvents);
-
-var _coreFactoryMaker = _dereq_(3);
-
-var _coreFactoryMaker2 = _interopRequireDefault(_coreFactoryMaker);
-
-var CAPABILITY_ERROR_MEDIASOURCE = 'mediasource';
-var CAPABILITY_ERROR_MEDIAKEYS = 'mediakeys';
-
-var DOWNLOAD_ERROR_ID_MANIFEST = 'manifest';
-var DOWNLOAD_ERROR_ID_SIDX = 'SIDX';
-var DOWNLOAD_ERROR_ID_CONTENT = 'content';
-var DOWNLOAD_ERROR_ID_INITIALIZATION = 'initialization';
-var DOWNLOAD_ERROR_ID_XLINK = 'xlink';
-
-var MANIFEST_ERROR_ID_CODEC = 'codec';
-var MANIFEST_ERROR_ID_PARSE = 'parse';
-var MANIFEST_ERROR_ID_NOSTREAMS = 'nostreams';
-
-var TIMED_TEXT_ERROR_ID_PARSE = 'parse';
-
-function ErrorHandler() {
-
-    var instance = undefined;
-    var context = this.context;
-    var eventBus = (0, _coreEventBus2['default'])(context).getInstance();
-
-    // "mediasource"|"mediakeys"
-    function capabilityError(err) {
-        eventBus.trigger(_coreEventsEvents2['default'].ERROR, { error: 'capability', event: err });
-    }
-
-    // {id: "manifest"|"SIDX"|"content"|"initialization"|"xlink", url: "", request: {XMLHttpRequest instance}}
-    function downloadError(id, url, request) {
-        eventBus.trigger(_coreEventsEvents2['default'].ERROR, { error: 'download', event: { id: id, url: url, request: request } });
-    }
-
-    // {message: "", id: "codec"|"parse"|"nostreams", manifest: {parsed manifest}}
-    function manifestError(message, id, manifest, err) {
-        eventBus.trigger(_coreEventsEvents2['default'].ERROR, { error: 'manifestError', event: { message: message, id: id, manifest: manifest, event: err } });
-    }
-
-    // {message: '', id: 'parse', cc: ''}
-    function timedTextError(message, id, ccContent) {
-        eventBus.trigger(_coreEventsEvents2['default'].ERROR, { error: 'cc', event: { message: message, id: id, cc: ccContent } });
-    }
-
-    function mediaSourceError(err) {
-        eventBus.trigger(_coreEventsEvents2['default'].ERROR, { error: 'mediasource', event: err });
-    }
-
-    function mediaKeySessionError(err) {
-        eventBus.trigger(_coreEventsEvents2['default'].ERROR, { error: 'key_session', event: err });
-    }
-
-    function mediaKeyMessageError(err) {
-        eventBus.trigger(_coreEventsEvents2['default'].ERROR, { error: 'key_message', event: err });
-    }
-
-    instance = {
-        capabilityError: capabilityError,
-        downloadError: downloadError,
-        manifestError: manifestError,
-        timedTextError: timedTextError,
-        mediaSourceError: mediaSourceError,
-        mediaKeySessionError: mediaKeySessionError,
-        mediaKeyMessageError: mediaKeyMessageError
-    };
-
-    return instance;
-}
-
-ErrorHandler.__dashjs_factory_name = 'ErrorHandler';
-
-var factory = _coreFactoryMaker2['default'].getSingletonFactory(ErrorHandler);
-
-factory.CAPABILITY_ERROR_MEDIASOURCE = CAPABILITY_ERROR_MEDIASOURCE;
-factory.CAPABILITY_ERROR_MEDIAKEYS = CAPABILITY_ERROR_MEDIAKEYS;
-factory.DOWNLOAD_ERROR_ID_MANIFEST = DOWNLOAD_ERROR_ID_MANIFEST;
-factory.DOWNLOAD_ERROR_ID_SIDX = DOWNLOAD_ERROR_ID_SIDX;
-factory.DOWNLOAD_ERROR_ID_CONTENT = DOWNLOAD_ERROR_ID_CONTENT;
-factory.DOWNLOAD_ERROR_ID_INITIALIZATION = DOWNLOAD_ERROR_ID_INITIALIZATION;
-factory.DOWNLOAD_ERROR_ID_XLINK = DOWNLOAD_ERROR_ID_XLINK;
-factory.MANIFEST_ERROR_ID_CODEC = MANIFEST_ERROR_ID_CODEC;
-factory.MANIFEST_ERROR_ID_PARSE = MANIFEST_ERROR_ID_PARSE;
-factory.MANIFEST_ERROR_ID_NOSTREAMS = MANIFEST_ERROR_ID_NOSTREAMS;
-factory.TIMED_TEXT_ERROR_ID_PARSE = TIMED_TEXT_ERROR_ID_PARSE;
-
-exports['default'] = factory;
-module.exports = exports['default'];
-
-},{"2":2,"3":3,"5":5}],31:[function(_dereq_,module,exports){
-/**
- * The copyright in this software is being made available under the BSD License,
- * included below. This software may be subject to other third party and contributor
- * rights, including patent rights, and no such rights are granted under this license.
- *
- * Copyright (c) 2013, Dash Industry Forum.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
- *  * Redistributions of source code must retain the above copyright notice, this
- *  list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above copyright notice,
- *  this list of conditions and the following disclaimer in the documentation and/or
- *  other materials provided with the distribution.
- *  * Neither the name of Dash Industry Forum nor the names of its
- *  contributors may be used to endorse or promote products derived from this software
- *  without specific prior written permission.
- *
- *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
- *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- *  POSSIBILITY OF SUCH DAMAGE.
- */
-/**
- * @class
- * @ignore
- */
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var Error = function Error(code, message, data) {
-  _classCallCheck(this, Error);
-
-  this.code = code || null;
-  this.message = message || null;
-  this.data = data || null;
-};
-
-exports["default"] = Error;
 module.exports = exports["default"];
 
 },{}]},{},[8])(8)
