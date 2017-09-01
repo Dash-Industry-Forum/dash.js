@@ -2381,7 +2381,8 @@ function MediaPlayer() {
                 videoModel: videoModel,
                 capabilities: capabilities,
                 eventBus: eventBus,
-                adapter: adapter
+                adapter: adapter,
+                events: Events
             });
             return protectionController;
         }
@@ -2403,7 +2404,8 @@ function MediaPlayer() {
                 eventBus: eventBus,
                 mediaElement: getVideoElement(),
                 dashManifestModel: dashManifestModel,
-                metricsModel: metricsModel
+                metricsModel: metricsModel,
+                events: Events
             });
         }
     }
@@ -2421,7 +2423,8 @@ function MediaPlayer() {
                 metricsModel: metricsModel,
                 playbackController: playbackController,
                 protectionController: protectionController,
-                errHandler: errHandler
+                errHandler: errHandler,
+                events: Events
             });
         }
     }
