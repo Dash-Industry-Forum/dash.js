@@ -28,6 +28,10 @@ describe('StreamController', function () {
             expect(activeStream).to.be.null; // jshint ignore:line*/
         });
 
+        it("should throw an exception when attempting to call initialize while setConfig has not been called", function () {
+            expect(streamController.initialize.bind(streamController)).to.throw('setConfig function has to be called previously');
+        });
+
         it("should throw an exception when attempting to call load while setConfig has not been called", function () {
             expect(streamController.load.bind(streamController)).to.throw('setConfig function has to be called previously');
         });

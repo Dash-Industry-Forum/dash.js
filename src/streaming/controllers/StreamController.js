@@ -105,6 +105,8 @@ function StreamController() {
     }
 
     function initialize(autoPl, protData) {
+        checkSetConfigCall();
+
         autoPlay = autoPl;
         protectionData = protData;
         timelineConverter.initialize();
@@ -644,7 +646,8 @@ function StreamController() {
     }
 
     function checkSetConfigCall() {
-        if (!manifestLoader || !manifestLoader.hasOwnProperty('load')) {
+        if (!manifestLoader || !manifestLoader.hasOwnProperty('load') || !timelineConverter || !timelineConverter.hasOwnProperty('initialize') ||
+            !timelineConverter.hasOwnProperty('reset') || !timelineConverter.hasOwnProperty('getClientTimeOffset')) {
             throw new Error('setConfig function has to be called previously');
         }
     }
