@@ -630,7 +630,7 @@ function DashManifestModel(config) {
 
         let id = Period.DEFAULT_ID + '_' + i;
 
-        if (realPeriod.hasOwnProperty(DashConstants.ID) && realPeriod.id !== '__proto__') {
+        if (realPeriod.hasOwnProperty(DashConstants.ID) && realPeriod.id.length > 0 && realPeriod.id !== '__proto__') {
             id = realPeriod.id;
         }
 
