@@ -199,8 +199,7 @@ function DOMStorage(config) {
         getSavedBitrateSettings: getSavedBitrateSettings,
         setSavedBitrateSettings: setSavedBitrateSettings,
         getSavedMediaSettings: getSavedMediaSettings,
-        setSavedMediaSettings: setSavedMediaSettings,
-        isSupported: isSupported
+        setSavedMediaSettings: setSavedMediaSettings
     };
 
     setup();
