@@ -266,7 +266,7 @@ function StreamController() {
     }
 
     function getActiveStreamProcessors() {
-        return activeStream.getProcessors();
+        return activeStream ? activeStream.getProcessors() : [];
     }
 
     function getActiveStreamCommonEarliestTime() {
@@ -640,9 +640,14 @@ function StreamController() {
     }
 
     function checkSetConfigCall() {
-        if (!manifestLoader || !manifestLoader.hasOwnProperty('load') || ! manifestUpdater || !manifestUpdater.hasOwnProperty('setManifest') ||
-            !timeSyncController || !timeSyncController.hasOwnProperty('reset')) {
+        if (!manifestLoader || !manifestLoader.hasOwnProperty('load')) {
             throw new Error('setConfig function has to be called previously');
+        }
+    }
+
+    function checkInitializeCall() {
+        if (!manifestUpdater || !manifestUpdater.hasOwnProperty('setManifest')) {
+            throw new Error('initialize function has to be called previously');
         }
     }
 
@@ -652,7 +657,7 @@ function StreamController() {
     }
 
     function loadWithManifest(manifest) {
-        checkSetConfigCall();
+        checkInitializeCall();
         manifestUpdater.setManifest(manifest);
     }
 
