@@ -271,9 +271,11 @@ function StreamController() {
 
     function getActiveStreamCommonEarliestTime() {
         let commonEarliestTime = [];
-        activeStream.getProcessors().forEach(p => {
-            commonEarliestTime.push(p.getIndexHandler().getEarliestTime());
-        });
+        if (activeStream) {
+            activeStream.getProcessors().forEach(p => {
+                commonEarliestTime.push(p.getIndexHandler().getEarliestTime());
+            });
+        }
         return Math.min.apply(Math, commonEarliestTime);
     }
 
