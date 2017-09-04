@@ -27,6 +27,12 @@ describe('IsoFile', function () {
 	        
 	        expect(lastBox).to.be.null;  // jshint ignore:line
 		});
+
+		it('should return null when getBox is called and type is undefined', () => {
+				const box = isoFile.getBox();
+		        
+	            expect(box).to.be.null;                // jshint ignore:line
+		});
 	});
 	describe('when incorrect parsed file has been set', () => {
 		it('should return an empty array when getBoxes is called and type is undefined', () => {
@@ -54,8 +60,23 @@ describe('IsoFile', function () {
 	            expect(boxes).to.be.empty;                // jshint ignore:line
 		});
 
-		it('should return null when getBox is called and type is undefined', () => {
-				const box = isoFile.getBox();
+		it('should return null when getBox is called and parsedFile has no boxes attribute', () => {
+				isoFile.setData({});
+				const box = isoFile.getBox('typeA');
+		        
+	            expect(box).to.be.null;                // jshint ignore:line
+		});
+
+		it('should return null when getBox is called and parsedFile has an empty boxes array attribute', () => {
+				isoFile.setData({boxes: []});
+				const box = isoFile.getBox('typeA');
+		        
+	            expect(box).to.be.null;                // jshint ignore:line
+		});
+
+		it('should return null when getBox is called and parsedFile is incorrect', () => {
+				isoFile.setData({boxes: [{type: 'typeA'}, {type: 'typeB'}]});
+				const box = isoFile.getBox('typeA');
 		        
 	            expect(box).to.be.null;                // jshint ignore:line
 		});
