@@ -542,11 +542,13 @@ function StreamController() {
 
     function checkTrackPresence(type) {
         let isDetected = false;
-        activeStream.getProcessors().forEach(p => {
-            if (p.getMediaInfo().type === type) {
-                isDetected = true;
-            }
-        });
+        if (activeStream) {
+            activeStream.getProcessors().forEach(p => {
+                if (p.getMediaInfo().type === type) {
+                    isDetected = true;
+                }
+            });
+        }
         return isDetected;
     }
 

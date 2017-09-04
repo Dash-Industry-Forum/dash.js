@@ -51,5 +51,17 @@ describe('StreamController', function () {
             expect(activeStreamProcessorsArray).to.be.instanceOf(Array);    // jshint ignore:line
             expect(activeStreamProcessorsArray).to.be.empty;                // jshint ignore:line
         });
+
+        it("should return false when attempting to call isAudioTrackPresent while no activeStream has been defined", function () {
+            const isAudioTrackPresent = streamController.isAudioTrackPresent();
+
+            expect(isAudioTrackPresent).to.be.false;    // jshint ignore:line
+        });
+
+        it("should return false when attempting to call isVideoTrackPresent while no activeStream has been defined", function () {
+            const isVideoTrackPresent = streamController.isVideoTrackPresent();
+
+            expect(isVideoTrackPresent).to.be.false;    // jshint ignore:line
+        });
     });
 });
