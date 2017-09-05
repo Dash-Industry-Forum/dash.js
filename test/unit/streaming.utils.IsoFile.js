@@ -2,6 +2,7 @@ import IsoFile from '../../src/streaming/utils/IsoFile';
 import ISOBoxer from 'codem-isoboxer';
 
 const expect = require('chai').expect;
+const fs = require('fs');
 
 const context = {};
 const isoFile = IsoFile(context).create();
@@ -80,5 +81,35 @@ describe('IsoFile', function () {
 		        
 	            expect(box).to.be.null;                // jshint ignore:line
 		});
+	});
+
+	describe('when a correct parsed file has been set', () => {
+		
+		before(function () {
+			const file = fs.readFileSync(__dirname + '/data/mss/mss_moof.mp4');
+            const arrayBuffer = new Uint8Array(file).buffer;
+            const parsedFile = ISOBoxer.parseBuffer(arrayBuffer);
+			isoFile.setData(parsedFile);
+        });
+
+        it('should return null when getBox is called and type is not present in boxes array', () => {
+				const box = isoFile.getBox('emsg');
+		        
+	            expect(box).to.be.null;                // jshint ignore:line
+		});
+
+		it('should return the good box when getBox is called and type is present in boxes array', () => {
+				const box = isoFile.getBox('mfhd');
+		        
+	            expect(box).not.to.be.null;                // jshint ignore:line
+	            expect(box.type).to.equal('mfhd');
+		});
+
+		it('should return the good box when getLastBox is called', () => {
+				const box = isoFile.getLastBox();
+		        
+	            expect(box).not.to.be.null;                // jshint ignore:line
+	            expect(box.type).to.equal('mdat');
+		});		
 	});
 });
