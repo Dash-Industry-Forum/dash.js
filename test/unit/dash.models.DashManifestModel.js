@@ -4,14 +4,19 @@ import TimelineConverter from '../../src/dash/utils/TimelineConverter';
 import BaseURL from '../../src/dash/vo/BaseURL';
 import MpdHelper from './helpers/MPDHelper';
 
+import AdapterMock from './mocks/AdapterMock';
+import MediaControllerMock from './mocks/MediaControllerMock';
+
 const expect = require('chai').expect;
 
 const context = {};
-const mediaController = MediaController(context).getInstance();
+const adapterMock = new AdapterMock();
+const mediaControllerMock = new MediaControllerMock();
 const timelineConverter = TimelineConverter(context).getInstance();
 const dashManifestModel = DashManifestModel(context).getInstance({
-    mediaController: mediaController,
-    timelineConverter: timelineConverter
+    mediaController: mediaControllerMock,
+    timelineConverter: timelineConverter,
+    adapter: adapterMock
 });
 
 const TEST_URL = 'http://www.example.com/';
@@ -186,6 +191,27 @@ describe('DashManifestModel', function () {
         const adaptation = dashManifestModel.getAdaptationForType(manifest, 0, 'video', undefined);
 
         expect(adaptation.id).to.equal(0); // jshint ignore:line
+    });
+
+    it('should return the correct adaptation when getAdaptationForType is called', () => {
+        const manifest = { Period_asArray: [ { AdaptationSet_asArray: [ { id: undefined, mimeType: 'audio', lang: 'eng', Role_asArray: [{value: 'main'}] }, { id: undefined, mimeType: 'audio', lang: 'deu', Role_asArray: [{value: 'main'}] }] }]};
+        
+        const streamInfo = {
+            id: 'id'
+        };
+
+        const track1 = {codec:'audio/mp4;codecs="mp4a.40.2"', id: undefined, index: 0, isText: false, lang: 'eng',mimeType: 'audio/mp4', roles: ['main'], streamInfo: streamInfo};
+        const track2 = {codec:'audio/mp4;codecs="mp4a.40.2"', id: undefined, index: 1, isText: false, lang: 'deu',mimeType: 'audio/mp4', roles: ['main'], streamInfo: streamInfo};
+
+        mediaControllerMock.addTrack(track1);
+        mediaControllerMock.addTrack(track2);
+        mediaControllerMock.setTrack(track2);
+
+        const adaptation = dashManifestModel.getAdaptationForType(manifest, 0, 'audio', streamInfo);
+
+        //in the mediaControllerMock, the currentTrack is lang= deu
+
+        expect(adaptation.lang).to.equal('deu'); // jshint ignore:line
     });
 
     it('should return null when getCodec is called and adaptation is undefined', () => {
