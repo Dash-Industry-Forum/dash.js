@@ -28,10 +28,10 @@ describe('DashParser', function () {
         expect(dashParser.parse.bind('')).to.be.throw('Missing config parameter(s)');
     });
 
-	it('should throw an error when parse is called without data and config object has been set properly', function () {
-		const errorHandlerMock = new ErrorHandlerMock();
-		dashParser = DashParser(context).create({errorHandler: errorHandlerMock});
-		dashParser.parse();
-		expect(errorHandlerMock.error).to.equal('parsing the manifest failed');
+    it('should throw an error when parse is called without data and config object has been set properly', function () {
+        const errorHandlerMock = new ErrorHandlerMock();
+        dashParser = DashParser(context).create({errorHandler: errorHandlerMock});
+        dashParser.parse();
+        expect(errorHandlerMock.error).to.equal('parsing the manifest failed');
     });
 });

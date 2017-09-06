@@ -14,7 +14,7 @@ class MediaControllerMock {
 
     checkInitialMediaSettingsForType() {}
 
-    addTrack(/*track*/) {
+    addTrack(track) {
         this.tracks.push(track);
     }
 
