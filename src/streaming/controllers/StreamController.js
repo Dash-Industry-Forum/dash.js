@@ -105,6 +105,8 @@ function StreamController() {
     }
 
     function initialize(autoPl, protData) {
+        checkSetConfigCall();
+
         autoPlay = autoPl;
         protectionData = protData;
         timelineConverter.initialize();
@@ -266,14 +268,16 @@ function StreamController() {
     }
 
     function getActiveStreamProcessors() {
-        return activeStream.getProcessors();
+        return activeStream ? activeStream.getProcessors() : [];
     }
 
     function getActiveStreamCommonEarliestTime() {
         let commonEarliestTime = [];
-        activeStream.getProcessors().forEach(p => {
-            commonEarliestTime.push(p.getIndexHandler().getEarliestTime());
-        });
+        if (activeStream) {
+            activeStream.getProcessors().forEach(p => {
+                commonEarliestTime.push(p.getIndexHandler().getEarliestTime());
+            });
+        }
         return Math.min.apply(Math, commonEarliestTime);
     }
 
@@ -542,11 +546,13 @@ function StreamController() {
 
     function checkTrackPresence(type) {
         let isDetected = false;
-        activeStream.getProcessors().forEach(p => {
-            if (p.getMediaInfo().type === type) {
-                isDetected = true;
-            }
-        });
+        if (activeStream) {
+            activeStream.getProcessors().forEach(p => {
+                if (p.getMediaInfo().type === type) {
+                    isDetected = true;
+                }
+            });
+        }
         return isDetected;
     }
 
@@ -640,9 +646,15 @@ function StreamController() {
     }
 
     function checkSetConfigCall() {
-        if (!manifestLoader || !manifestLoader.hasOwnProperty('load') || ! manifestUpdater || !manifestUpdater.hasOwnProperty('setManifest') ||
-            !timeSyncController || !timeSyncController.hasOwnProperty('reset')) {
+        if (!manifestLoader || !manifestLoader.hasOwnProperty('load') || !timelineConverter || !timelineConverter.hasOwnProperty('initialize') ||
+            !timelineConverter.hasOwnProperty('reset') || !timelineConverter.hasOwnProperty('getClientTimeOffset')) {
             throw new Error('setConfig function has to be called previously');
+        }
+    }
+
+    function checkInitializeCall() {
+        if (!manifestUpdater || !manifestUpdater.hasOwnProperty('setManifest')) {
+            throw new Error('initialize function has to be called previously');
         }
     }
 
@@ -652,7 +664,7 @@ function StreamController() {
     }
 
     function loadWithManifest(manifest) {
-        checkSetConfigCall();
+        checkInitializeCall();
         manifestUpdater.setManifest(manifest);
     }
 
