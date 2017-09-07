@@ -273,9 +273,9 @@ function DashManifestModel(config) {
         return adaptations[0];
     }
 
-    function getCodec(adaptation) {
+    function getCodec(adaptation, representationId) {
         if (adaptation && adaptation.Representation_asArray && adaptation.Representation_asArray.length > 0) {
-            let representation = adaptation.Representation_asArray[0];
+            let representation = isInteger(representationId) && representationId >= 0 && representationId < adaptation.Representation_asArray.length ? adaptation.Representation_asArray[representationId] : adaptation.Representation_asArray[0];
             return (representation.mimeType + ';codecs="' + representation.codecs + '"');
         }
 
