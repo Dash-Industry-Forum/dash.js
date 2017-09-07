@@ -38,9 +38,6 @@ import FactoryMaker from '../core/FactoryMaker';
 import cea608parser from '../../externals/cea608-parser';
 
 function DashAdapter() {
-
-    //let context = this.context;
-
     let instance,
         dashManifestModel,
         voPeriods,
