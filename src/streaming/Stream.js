@@ -406,6 +406,10 @@ function Stream(config) {
         eventController.addInlineEvents(events);
 
         isUpdating = true;
+
+        filterCodecs(Constants.VIDEO);
+        filterCodecs(Constants.AUDIO);
+
         initializeMediaForType(Constants.VIDEO, mediaSource);
         initializeMediaForType(Constants.AUDIO, mediaSource);
         initializeMediaForType(Constants.TEXT, mediaSource);
@@ -427,6 +431,29 @@ function Stream(config) {
         } else {
             //log("Playback initialized!");
             checkIfInitializationCompleted();
+        }
+    }
+
+    function filterCodecs(type) {
+        let realAdaptation = dashManifestModel.getAdaptationForType(manifestModel.getValue(), streamInfo.index, type, streamInfo);
+        let codec,
+                i;
+
+        if (!realAdaptation || !Array.isArray(realAdaptation.Representation_asArray)) return null;
+
+        // Filter codecs that are not supported
+        // But keep at least codec from lowest representation
+        i = 1;
+        while (i < realAdaptation.Representation_asArray.length) {
+            codec = dashManifestModel.getCodec(realAdaptation, i);
+            if (codec) {
+                if (!capabilities.supportsCodec(VideoModel(context).getInstance().getElement(), codec)) {
+                    log('[Stream] codec not supported: ' + codec);
+                    realAdaptation.Representation_asArray.splice(i, 1);
+                    i--;
+                }
+            }
+            i++;
         }
     }
 
@@ -548,6 +575,9 @@ function Stream(config) {
             let events = adapter.getEventsFor(streamInfo);
             eventController.addInlineEvents(events);
         }
+
+        filterCodecs(Constants.VIDEO);
+        filterCodecs(Constants.AUDIO);
 
         for (let i = 0, ln = streamProcessors.length; i < ln; i++) {
             let streamProcessor = streamProcessors[i];
