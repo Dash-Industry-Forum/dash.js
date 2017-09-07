@@ -189,6 +189,26 @@ describe("MediaController", function () {
     });
 
     describe('Track Management', function () {
+        it('getTracksFor should return an empty array if parameters are not defined', function () {
+            const trackArray = mediaController.getTracksFor();
+
+            expect(trackArray).to.be.instanceOf(Array);    // jshint ignore:line
+            expect(trackArray).to.be.empty;                // jshint ignore:line
+        });
+
+        it('getTracksFor should return an empty array if parameters are defined, but internal tracks array is empty', function () {
+            const trackArray = mediaController.getTracksFor(Constants.VIDEO,{id: 'id'});
+
+            expect(trackArray).to.be.instanceOf(Array);    // jshint ignore:line
+            expect(trackArray).to.be.empty;                // jshint ignore:line
+        });
+
+        it('getCurrentTrackFor should return null if parameters are not defined', function () {
+            const currentTrack = mediaController.getCurrentTrackFor();
+
+            expect(currentTrack).to.be.null;    // jshint ignore:line
+        });
+
         it('should add and retrieve track', function () {
 
             let trackType = 'audio';
