@@ -52,7 +52,6 @@ function ScheduleController(config) {
     const mediaPlayerModel = config.mediaPlayerModel;
     const abrController = config.abrController;
     const playbackController = config.playbackController;
-    const mediaController = config.mediaController;
     const streamController = config.streamController;
     const textController = config.textController;
     const sourceBufferController = config.sourceBufferController;
@@ -245,13 +244,11 @@ function ScheduleController(config) {
         })[0];
 
         if (request && replaceRequestArray.indexOf(request) === -1 && !dashManifestModel.getIsTextTrack(type)) {
-            const isCurrentTrack = mediaController.isCurrentTrack(request.mediaInfo);
             const fastSwitchModeEnabled = mediaPlayerModel.getFastSwitchEnabled();
             const bufferLevel = streamProcessor.getBufferLevel();
             const abandonmentState = abrController.getAbandonmentStateFor(type);
 
-            if (!isCurrentTrack ||
-                fastSwitchModeEnabled && request.quality < currentRepresentationInfo.quality && bufferLevel >= safeBufferLevel && abandonmentState !== AbrController.ABANDON_LOAD) {
+            if (fastSwitchModeEnabled && request.quality < currentRepresentationInfo.quality && bufferLevel >= safeBufferLevel && abandonmentState !== AbrController.ABANDON_LOAD) {
                 replaceRequest(request);
                 log('Reloading outdated fragment at index: ', request.index);
             } else if (request.quality > currentRepresentationInfo.quality) {
