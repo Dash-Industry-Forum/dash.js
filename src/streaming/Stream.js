@@ -279,10 +279,10 @@ function Stream(config) {
             trackChangedEvent = e;
             manifestUpdater.refreshManifest();
         } else {
-            if (mediaInfo.type !== Constants.FRAGMENTED_TEXT) {
-                trackChangedEvent = e;
-            }
             processor.updateMediaInfo(mediaInfo);
+            if (mediaInfo.type !== Constants.FRAGMENTED_TEXT) {
+                processor.switchTrackAsked();
+            }
         }
     }
 
