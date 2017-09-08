@@ -193,7 +193,7 @@ function ScheduleController(config) {
                 log('ScheduleController - getNextFragment');
                 let fragmentController = streamProcessor.getFragmentController();
                 if (switchTrack) {
-                    log('ScheduleController - switch track has been asked, get init request');
+                    log('ScheduleController - switch track has been asked, get init request for ' + type + ' with representationid = ' + currentRepresentationInfo.id);
                     streamProcessor.switchInitData(streamProcessor.getStreamInfo().id, currentRepresentationInfo.id);
                     switchTrack = false;
                 } else if (currentRepresentationInfo.quality !== lastInitQuality) {
