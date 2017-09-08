@@ -127,6 +127,24 @@ function ProtectionController(config) {
     }
 
     /**
+     * Returns a set of supported key systems and CENC initialization data
+     * from the given array of ContentProtection elements.  Only
+     * key systems that are supported by this player will be returned.
+     * Key systems are returned in priority order (highest first).
+     *
+     * @param {Array.<Object>} cps - array of content protection elements parsed
+     * from the manifest
+     * @returns {Array.<Object>} array of objects indicating which supported key
+     * systems were found.  Empty array is returned if no
+     * supported key systems were found
+     * @memberof module:ProtectionKeyController
+     * @instance
+     */
+    function getSupportedKeySystemsFromContentProtection(cps) {
+        return protectionKeyController.getSupportedKeySystemsFromContentProtection(cps);
+    }
+
+    /**
      * Create a new key session associated with the given initialization data from
      * the MPD or from the PSSH box in the media
      *
@@ -580,6 +598,7 @@ function ProtectionController(config) {
         setSessionType: setSessionType,
         setRobustnessLevel: setRobustnessLevel,
         setProtectionData: setProtectionData,
+        getSupportedKeySystemsFromContentProtection: getSupportedKeySystemsFromContentProtection,
         reset: reset
     };
 

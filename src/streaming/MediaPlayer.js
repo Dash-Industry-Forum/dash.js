@@ -2421,6 +2421,7 @@ function MediaPlayer() {
                 mediaPlayerModel: mediaPlayerModel,
                 metricsModel: metricsModel,
                 playbackController: playbackController,
+                protectionController: protectionController,
                 errHandler: errHandler
             });
         }
