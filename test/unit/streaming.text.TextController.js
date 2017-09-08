@@ -41,21 +41,21 @@ describe('TextController', function () {
 
     describe('Method setTextTrack', function () {
 
-        beforeEach( function() {
+        beforeEach( function () {
             textTracks.addTextTrack({
-                index : 0,
-                kind : 'subtitles',
-                label : 'eng',
-                defaultTrack : true,
-                isTTML : true
+                index: 0,
+                kind: 'subtitles',
+                label: 'eng',
+                defaultTrack: true,
+                isTTML: true
             }, 2);
 
             textTracks.addTextTrack({
-                index : 1,
-                kind : "subtitles",
-                label : 'fr',
-                defaultTrack : false,
-                isTTML : true
+                index: 1,
+                kind: 'subtitles',
+                label: 'fr',
+                defaultTrack: false,
+                isTTML: true
             }, 2);
         });
 
