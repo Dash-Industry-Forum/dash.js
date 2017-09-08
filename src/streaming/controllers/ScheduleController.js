@@ -148,8 +148,6 @@ function ScheduleController(config) {
 
         startScheduleTimer(0);
 
-        switchTrack = true;
-
         log('Schedule controller starting for ' + type);
     }
 
@@ -614,6 +612,7 @@ function ScheduleController(config) {
         topQualityIndex = {};
         replaceRequestArray = [];
         isStopped = true;
+        switchTrack = true;
     }
 
     instance = {
