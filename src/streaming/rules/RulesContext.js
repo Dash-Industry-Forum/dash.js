@@ -34,13 +34,13 @@ import FactoryMaker from '../../core/FactoryMaker';
 function RulesContext(config) {
 
     let instance;
-    let abrController = config.abrController;
-    let streamProcessor = config.streamProcessor;
-    let representationInfo = config.streamProcessor.getCurrentRepresentationInfo();
-    let switchHistory = config.switchHistory;
-    let droppedFramesHistory = config.droppedFramesHistory;
-    let currentRequest = config.currentRequest;
-    let bufferOccupancyABR = config.useBufferOccupancyABR;
+    const abrController = config.abrController;
+    const streamProcessor = config.streamProcessor;
+    const representationInfo = config.streamProcessor.getCurrentRepresentationInfo();
+    const switchHistory = config.switchHistory;
+    const droppedFramesHistory = config.droppedFramesHistory;
+    const currentRequest = config.currentRequest;
+    const bufferOccupancyABR = config.useBufferOccupancyABR;
 
     function getMediaType() {
         return representationInfo.mediaInfo.type;

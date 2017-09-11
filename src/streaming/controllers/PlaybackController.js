@@ -333,7 +333,7 @@ function PlaybackController() {
     function onDataUpdateCompleted(e) {
         if (e.error) return;
 
-        let representationInfo = adapter.convertDataToRepresentationInfo(e.currentRepresentation);
+        const representationInfo = adapter.convertDataToRepresentationInfo(e.currentRepresentation);
         let info = representationInfo.mediaInfo.streamInfo;
 
         if (streamInfo.id !== info.id) return;
