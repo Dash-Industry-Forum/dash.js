@@ -435,26 +435,23 @@ function Stream(config) {
     }
 
     function filterCodecs(type) {
-        let realAdaptation = dashManifestModel.getAdaptationForType(manifestModel.getValue(), streamInfo.index, type, streamInfo);
-        let codec,
-                i;
+        const realAdaptation = dashManifestModel.getAdaptationForType(manifestModel.getValue(), streamInfo.index, type, streamInfo);
+        let codec;
 
         if (!realAdaptation || !Array.isArray(realAdaptation.Representation_asArray)) return null;
 
         // Filter codecs that are not supported
-        // But keep at least codec from lowest representation
-        i = 1;
-        while (i < realAdaptation.Representation_asArray.length) {
+        realAdaptation.Representation_asArray.filter((_, i) => {
+            // keep at least codec from lowest representation
+            if (i === 0) return true;
+
             codec = dashManifestModel.getCodec(realAdaptation, i);
-            if (codec) {
-                if (!capabilities.supportsCodec(VideoModel(context).getInstance().getElement(), codec)) {
-                    log('[Stream] codec not supported: ' + codec);
-                    realAdaptation.Representation_asArray.splice(i, 1);
-                    i--;
-                }
+            if (codec && !capabilities.supportsCodec(VideoModel(context).getInstance().getElement(), codec)) {
+                log('[Stream] codec not supported: ' + codec);
+                return false;
             }
-            i++;
-        }
+            return true;
+        });
     }
 
     function checkIfInitializationCompleted() {
