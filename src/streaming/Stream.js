@@ -436,7 +436,6 @@ function Stream(config) {
 
     function filterCodecs(type) {
         const realAdaptation = dashManifestModel.getAdaptationForType(manifestModel.getValue(), streamInfo.index, type, streamInfo);
-        let codec;
 
         if (!realAdaptation || !Array.isArray(realAdaptation.Representation_asArray)) return null;
 
@@ -445,7 +444,7 @@ function Stream(config) {
             // keep at least codec from lowest representation
             if (i === 0) return true;
 
-            codec = dashManifestModel.getCodec(realAdaptation, i);
+            const codec = dashManifestModel.getCodec(realAdaptation, i);
             if (codec && !capabilities.supportsCodec(VideoModel(context).getInstance().getElement(), codec)) {
                 log('[Stream] codec not supported: ' + codec);
                 return false;
