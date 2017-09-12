@@ -32,7 +32,6 @@ import Constants from './constants/Constants';
 import StreamProcessor from './StreamProcessor';
 import EventController from './controllers/EventController';
 import FragmentController from './controllers/FragmentController';
-import VideoModel from './models/VideoModel';
 import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import Debug from '../core/Debug';
@@ -252,7 +251,7 @@ function Stream(config) {
 
         if (!!mediaInfo.contentProtection && !capabilities.supportsEncryptedMedia()) {
             errHandler.capabilityError('encryptedmedia');
-        } else if (!capabilities.supportsCodec(VideoModel(context).getInstance().getElement(), codec)) {
+        } else if (!capabilities.supportsCodec(codec)) {
             msg = type + 'Codec (' + codec + ') is not supported.';
             errHandler.manifestError(msg, 'codec', manifestModel.getValue());
             log(msg);
@@ -445,7 +444,7 @@ function Stream(config) {
             if (i === 0) return true;
 
             const codec = dashManifestModel.getCodec(realAdaptation, i);
-            if (codec && !capabilities.supportsCodec(VideoModel(context).getInstance().getElement(), codec)) {
+            if (!capabilities.supportsCodec(codec)) {
                 log('[Stream] codec not supported: ' + codec);
                 return false;
             }
