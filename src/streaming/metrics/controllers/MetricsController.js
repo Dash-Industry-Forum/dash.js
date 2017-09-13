@@ -59,7 +59,8 @@ function MetricsController(config) {
 
             metricsHandlersController = MetricsHandlersController(context).create({
                 log: config.log,
-                eventBus: config.eventBus
+                eventBus: config.eventBus,
+                metricsConstants: config.metricsConstants
             });
 
             metricsHandlersController.initialize(metricsEntry.metrics, reportingController);

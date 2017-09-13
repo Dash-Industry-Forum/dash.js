@@ -63,7 +63,8 @@ function MetricsHandlerFactory(config) {
 
         try {
             handler = knownFactoryProducts[matches[1]](context).create({
-                eventBus: config.eventBus
+                eventBus: config.eventBus,
+                metricsConstants: config.metricsConstants
             });
 
             handler.initialize(

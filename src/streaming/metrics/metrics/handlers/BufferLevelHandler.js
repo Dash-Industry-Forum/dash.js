@@ -28,11 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import MetricsConstants from '../../../constants/MetricsConstants';
+
 import FactoryMaker from '../../../../core/FactoryMaker';
 import HandlerHelpers from '../../utils/HandlerHelpers';
 
-function BufferLevelHandler() {
+function BufferLevelHandler(config) {
 
     let instance,
         reportingController,
@@ -45,6 +45,8 @@ function BufferLevelHandler() {
     let handlerHelpers = HandlerHelpers(context).getInstance();
 
     let storedVOs = [];
+
+    const metricsConstants = config.metricsConstants;
 
     function getLowestBufferLevelVO() {
         try {
@@ -91,7 +93,7 @@ function BufferLevelHandler() {
     }
 
     function handleNewMetric(metric, vo, type) {
-        if (metric === MetricsConstants.BUFFER_LEVEL) {
+        if (metric === metricsConstants.BUFFER_LEVEL) {
             storedVOs[type] = vo;
         }
     }

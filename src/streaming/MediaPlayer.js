@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from './constants/Constants';
+import MetricsConstants from './constants/MetricsConstants';
 import UTCTiming from '../dash/vo/UTCTiming';
 import PlaybackController from './controllers/PlaybackController';
 import StreamController from './controllers/StreamController';
@@ -2406,7 +2407,8 @@ function MediaPlayer() {
                 dashManifestModel: dashManifestModel,
                 metricsModel: metricsModel,
                 events: Events,
-                constants: Constants
+                constants: Constants,
+                metricsConstants: MetricsConstants
             });
         }
     }

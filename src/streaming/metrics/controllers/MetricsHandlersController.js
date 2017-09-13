@@ -42,7 +42,8 @@ function MetricsHandlersController(config) {
 
     let metricsHandlerFactory = MetricsHandlerFactory(context).getInstance({
         log: config.log,
-        eventBus: config.eventBus
+        eventBus: config.eventBus,
+        metricsConstants: config.metricsConstants
     });
 
     function handle(e) {
