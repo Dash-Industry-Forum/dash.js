@@ -2426,7 +2426,8 @@ function MediaPlayer() {
                 protectionController: protectionController,
                 errHandler: errHandler,
                 events: Events,
-                constants: Constants
+                constants: Constants,
+                log: log
             });
         }
     }

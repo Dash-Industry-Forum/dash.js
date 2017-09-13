@@ -1,5 +1,6 @@
 import MssParser from '../../src/mss/parser/MssParser.js';
 import MediaPlayerModel from '../../src/streaming/models/MediaPlayerModel.js';
+import Debug from '../../src/core/Debug.js';
 
 const expect = require('chai').expect;
 const fs = require('fs');
@@ -29,7 +30,8 @@ describe('MssParser', function () {
 
     beforeEach(function () {
         mssParser = MssParser().create({
-            mediaPlayerModel: mediaPlayerModel
+            mediaPlayerModel: mediaPlayerModel,
+            log: Debug(context).getInstance().log
         });
 
         expect(mssParser).to.exist; // jshint ignore:line

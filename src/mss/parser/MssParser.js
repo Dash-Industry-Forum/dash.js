@@ -30,14 +30,13 @@
  */
 
 import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
 import BASE64 from '../../../externals/base64';
 
 function MssParser(config) {
 
     const context = this.context;
     const protectionController = config.protectionController;
-    const log = Debug(context).getInstance().log;
+    const log = config.log;
     const errorHandler = config.errHandler;
     const constants = config.constants;
 
