@@ -61,7 +61,7 @@ function TextController() {
 
         textTracks.initialize();
 
-        reset();
+        resetInitialSettings();
     }
 
     function setConfig(config) {
@@ -163,8 +163,12 @@ function TextController() {
         return textTracks.getCurrentTrackIdx();
     }
 
-    function reset() {
+    function resetInitialSettings() {
         allTracksAreDisabled = false;
+    }
+
+    function reset() {
+        resetInitialSettings();
         textSourceBuffer.resetEmbedded();
     }
 

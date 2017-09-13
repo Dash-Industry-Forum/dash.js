@@ -140,7 +140,6 @@ function Stream(config) {
 
         if (playbackController) {
             playbackController.pause();
-            playbackController = null;
         }
 
         if (fragmentController) {
@@ -149,14 +148,8 @@ function Stream(config) {
         }
 
         resetInitialSettings();
-        mediaController = null;
-        abrController = null;
-        manifestUpdater = null;
-        manifestModel = null;
-        adapter = null;
-        capabilities = null;
+
         log = null;
-        errHandler = null;
 
         eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
         eventBus.off(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
@@ -385,7 +378,7 @@ function Stream(config) {
         let events;
 
         eventController = EventController(context).create();
-        eventController.initialize();
+
         eventController.setConfig({
             manifestModel: manifestModel,
             manifestUpdater: manifestUpdater,

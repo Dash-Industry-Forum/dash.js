@@ -2320,7 +2320,6 @@ function MediaPlayer() {
 
         playbackController.setConfig({
             streamController: streamController,
-            timelineConverter: timelineConverter,
             metricsModel: metricsModel,
             dashMetrics: dashMetrics,
             manifestModel: manifestModel,

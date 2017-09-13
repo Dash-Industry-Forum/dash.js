@@ -92,7 +92,7 @@ function AbrController() {
     function setup() {
         log = debug.log.bind(instance);
 
-        reset();
+        resetInitialSettings();
     }
 
     function registerStreamType(type, streamProcessor) {
@@ -124,7 +124,7 @@ function AbrController() {
         abrRulesCollection.initialize();
     }
 
-    function reset() {
+    function resetInitialSettings() {
         autoSwitchBitrate = {video: true, audio: true};
         topQualities = {};
         qualityDict = {};
@@ -140,14 +140,21 @@ function AbrController() {
         if (windowResizeEventCalled === undefined) {
             windowResizeEventCalled = false;
         }
-        eventBus.off(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
-        eventBus.off(Events.QUALITY_CHANGE_RENDERED, onQualityChangeRendered, this);
-        eventBus.off(Events.METRIC_ADDED, onMetricAdded, this);
         playbackIndex = undefined;
         droppedFramesHistory = undefined;
         throughputHistory = undefined;
         clearTimeout(abandonmentTimeout);
         abandonmentTimeout = null;
+    }
+
+    function reset() {
+
+        resetInitialSettings();
+
+        eventBus.off(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
+        eventBus.off(Events.QUALITY_CHANGE_RENDERED, onQualityChangeRendered, this);
+        eventBus.off(Events.METRIC_ADDED, onMetricAdded, this);
+
         if (abrRulesCollection) {
             abrRulesCollection.reset();
         }

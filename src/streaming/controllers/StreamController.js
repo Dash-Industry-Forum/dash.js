@@ -100,6 +100,7 @@ function StreamController() {
         timeSyncController = TimeSyncController(context).getInstance();
         baseURLController = BaseURLController(context).getInstance();
         mediaSourceController = MediaSourceController(context).getInstance();
+        initCache = InitCache(context).getInstance();
 
         resetInitialSettings();
     }
@@ -110,15 +111,15 @@ function StreamController() {
         autoPlay = autoPl;
         protectionData = protData;
         timelineConverter.initialize();
-        initCache = InitCache(context).getInstance();
 
         manifestUpdater = ManifestUpdater(context).create();
         manifestUpdater.setConfig({
             manifestModel: manifestModel,
             dashManifestModel: dashManifestModel,
-            mediaPlayerModel: mediaPlayerModel
+            mediaPlayerModel: mediaPlayerModel,
+            manifestLoader: manifestLoader
         });
-        manifestUpdater.initialize(manifestLoader);
+        manifestUpdater.initialize();
 
         baseURLController.setConfig({
             dashManifestModel: dashManifestModel
