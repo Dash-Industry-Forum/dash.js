@@ -6,7 +6,6 @@ import Events from '../../src/core/events/Events';
 import EventBus from '../../src/core/EventBus';
 
 import VideoModelMock from './mocks/VideoModelMock';
-import VideoElementMock from './mocks/VideoElementMock';
 
 const expect = require('chai').expect;
 const context = {};
@@ -17,7 +16,6 @@ const objectUtils = ObjectUtils(context).getInstance();
 describe('TextController', function () {
 
     let videoModelMock = new VideoModelMock();
-    let videoMock;
     let textTracks;
     let textController;
 
@@ -47,14 +45,11 @@ describe('TextController', function () {
     describe('Method setTextTrack', function () {
 
         beforeEach( function() {
-            videoMock = new VideoElementMock();
-
             textTracks.addTextTrack({
                 index : 0,
                 kind : "subtitles",
                 label : 'eng',
                 defaultTrack : true,
-                video: videoMock,
                 isTTML : true
             }, 2);
 
@@ -63,7 +58,6 @@ describe('TextController', function () {
                 kind : "subtitles",
                 label : 'fr',
                 defaultTrack : false,
-                video: videoMock,
                 isTTML : true
             }, 2);
         });
@@ -75,7 +69,7 @@ describe('TextController', function () {
                 id: 'track2'
             }];
 
-            textController.setTextTrack();
+            textController.setTextTrack(-1);
             expect(textController.getAllTracksAreDisabled()).to.be.true;
 
         });
@@ -88,7 +82,7 @@ describe('TextController', function () {
                 id: 'track2'
             }];
 
-            textController.setTextTrack();
+            textController.setTextTrack(0);
             expect(textController.getAllTracksAreDisabled()).to.be.false;
 
         });

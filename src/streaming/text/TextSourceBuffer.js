@@ -146,7 +146,6 @@ function TextSourceBuffer() {
     function initEmbedded() {
         embeddedTracks = [];
         mediaInfos = [];
-        // videoModel = VideoModel(context).getInstance();
         textTracks = TextTracks(context).getInstance();
         textTracks.setConfig({
             videoModel: videoModel
@@ -287,7 +286,6 @@ function TextSourceBuffer() {
             textTrackInfo.label = mediaInfo.id; // AdaptationSet id (an unsigned int)
             textTrackInfo.index = mediaInfo.index; // AdaptationSet index in manifest
             textTrackInfo.isTTML = checkTTML();
-            textTrackInfo.video = videoModel.getElement();
             textTrackInfo.defaultTrack = getIsDefault(mediaInfo);
             textTrackInfo.isFragmented = isFragmented;
             textTrackInfo.isEmbedded = mediaInfo.isEmbedded ? true : false;

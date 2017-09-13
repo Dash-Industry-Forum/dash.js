@@ -1,3 +1,5 @@
+import VideoElementMock from './VideoElementMock';
+
 class VideoModelMock {
     constructor() {
         this.isplaying = false;
@@ -10,6 +12,7 @@ class VideoModelMock {
         this.State = 'ready';
         this.tracks = [];
         this.source = null;
+        this.element = new VideoElementMock();
 
         this.events = {};
     }
@@ -96,6 +99,15 @@ class VideoModelMock {
 
     getTextTracks() {
         return this.tracks;
+    }
+
+    getTextTrack(idx) {
+        return this.element.textTracks[idx];
+    }
+
+
+    addTextTrack(kind, label, lang) {
+        return this.element.addTextTrack(kind, label, lang);
     }
 
     getTTMLRenderingDiv() {

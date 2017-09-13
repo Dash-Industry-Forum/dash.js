@@ -52,6 +52,8 @@ declare namespace dashjs {
         isSeeking(): boolean;
         isDynamic(): boolean;
         seek(value: number): void;
+        setPlaybackRate(value:number): void;
+        getPlaybackRate(): number;
         setMute(value: boolean): void;
         isMuted(): boolean;
         setVolume(value: number): void;
