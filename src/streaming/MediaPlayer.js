@@ -63,6 +63,9 @@ import DashAdapter from '../dash/DashAdapter';
 import DashManifestModel from '../dash/models/DashManifestModel';
 import DashMetrics from '../dash/DashMetrics';
 import TimelineConverter from '../dash/utils/TimelineConverter';
+import {
+    HTTPRequest
+} from './vo/metrics/HTTPRequest';
 
 /**
  * @module MediaPlayer
@@ -2429,7 +2432,8 @@ function MediaPlayer() {
                 errHandler: errHandler,
                 events: Events,
                 constants: Constants,
-                log: log
+                log: log,
+                initSegmentType: HTTPRequest.INIT_SEGMENT_TYPE
             });
         }
     }

@@ -32,9 +32,6 @@ import EventBus from '../core/EventBus';
 import FactoryMaker from '../core/FactoryMaker';
 import DataChunk from '../streaming/vo/DataChunk';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
-import {
-    HTTPRequest
-} from '../streaming/vo/metrics/HTTPRequest';
 import MssFragmentInfoController from './MssFragmentInfoController';
 import MssFragmentProcessor from './MssFragmentProcessor';
 import MssParser from './parser/MssParser';
@@ -45,6 +42,7 @@ function MssHandler(config) {
     let eventBus = config.eventBus;
     const events = config.events;
     const constants = config.constants;
+    const initSegmentType = config.initSegmentType;
     let metricsModel = config.metricsModel;
     let playbackController = config.playbackController;
     let protectionController = config.protectionController;
@@ -72,7 +70,7 @@ function MssHandler(config) {
         period = representation.adaptation.period;
 
         request.mediaType = representation.adaptation.type;
-        request.type = HTTPRequest.INIT_SEGMENT_TYPE;
+        request.type = initSegmentType;
         request.range = representation.range;
         presentationStartTime = period.start;
         //request.availabilityStartTime = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationStartTime, representation.adaptation.period.mpd, isDynamic);
