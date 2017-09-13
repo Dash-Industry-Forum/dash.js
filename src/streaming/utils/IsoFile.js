@@ -43,7 +43,7 @@ function IsoFile() {
     * @memberof IsoFile#
     */
     function getBox(type) {
-        if (!type || !parsedIsoFile || !parsedIsoFile.boxes || (parsedIsoFile.boxes.length === 0)) return null;
+        if (!type || !parsedIsoFile || !parsedIsoFile.boxes || (parsedIsoFile.boxes.length === 0) || typeof parsedIsoFile.fetch !== 'function') return null;
 
         return convertToDashIsoBox(parsedIsoFile.fetch(type));
     }
@@ -54,12 +54,13 @@ function IsoFile() {
     * @memberof IsoFile#
     */
     function getBoxes(type) {
-        if (!parsedIsoFile) {
-            return null;
+        let boxes = [];
+
+        if (!type || !parsedIsoFile || typeof parsedIsoFile.fetchAll !== 'function') {
+            return boxes;
         }
 
         let boxData = parsedIsoFile.fetchAll(type);
-        let boxes = [];
         let box;
 
         for (let i = 0, ln = boxData.length; i < ln; i++) {
@@ -91,7 +92,7 @@ function IsoFile() {
         let type = parsedIsoFile.boxes[parsedIsoFile.boxes.length - 1].type;
         let boxes = getBoxes(type);
 
-        return boxes[boxes.length - 1];
+        return boxes.length > 0 ? boxes[boxes.length - 1] : null;
     }
 
     function convertToDashIsoBox(boxData) {
