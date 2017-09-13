@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from '../../streaming/constants/Constants';
+
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import BASE64 from '../../../externals/base64';
@@ -39,6 +39,7 @@ function MssParser(config) {
     const protectionController = config.protectionController;
     const log = Debug(context).getInstance().log;
     const errorHandler = config.errHandler;
+    const constants = config.constants;
 
     const TIME_SCALE_100_NANOSECOND_UNIT = 10000000.0;
     const SUPPORTED_CODECS = ['AAC', 'AACL', 'AVC1', 'H264', 'TTML', 'DFXP'];
@@ -198,7 +199,7 @@ function MssParser(config) {
             representation.audioSamplingRate = parseInt(qualityLevel.getAttribute('SamplingRate'), 10);
             representation.audioChannels = parseInt(qualityLevel.getAttribute('Channels'), 10);
         } else if (fourCCValue.indexOf('TTML') || fourCCValue.indexOf('DFXP')) {
-            representation.codecs = Constants.STPP;
+            representation.codecs = constants.STPP;
         }
 
         representation.codecPrivateData = '' + qualityLevel.getAttribute('CodecPrivateData');

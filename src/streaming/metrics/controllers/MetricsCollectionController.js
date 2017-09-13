@@ -51,7 +51,8 @@ function MetricsCollectionController(config) {
         let controllersToRemove = Object.keys(metricsControllers);
 
         const metrics = ManifestParsing(context).getInstance({
-            dashManifestModel: config.dashManifestModel
+            dashManifestModel: config.dashManifestModel,
+            constants: config.constants
         }).getMetrics(e.manifest);
 
         metrics.forEach(m => {

@@ -137,9 +137,7 @@ function MssFragmentProcessor(config) {
     function setup() {}
 
     function generateMoov(rep) {
-        let mssFragmentMoovProcessor = MSSFragmentMoovProcessor(context).create({
-            protectionController: protectionController
-        });
+        let mssFragmentMoovProcessor = MSSFragmentMoovProcessor(context).create({protectionController: protectionController, constants: config.constants});
         return mssFragmentMoovProcessor.generateMoov(rep);
     }
 

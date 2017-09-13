@@ -2405,7 +2405,8 @@ function MediaPlayer() {
                 mediaElement: getVideoElement(),
                 dashManifestModel: dashManifestModel,
                 metricsModel: metricsModel,
-                events: Events
+                events: Events,
+                constants: Constants
             });
         }
     }
@@ -2424,7 +2425,8 @@ function MediaPlayer() {
                 playbackController: playbackController,
                 protectionController: protectionController,
                 errHandler: errHandler,
-                events: Events
+                events: Events,
+                constants: Constants
             });
         }
     }

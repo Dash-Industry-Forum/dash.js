@@ -1,4 +1,3 @@
-import Constants from '../../../streaming/constants/Constants';
 import Metrics from '../vo/Metrics';
 import Range from '../vo/Range';
 import Reporting from '../vo/Reporting';
@@ -7,6 +6,7 @@ import FactoryMaker from '../../../core/FactoryMaker';
 function ManifestParsing (config) {
     let instance;
     let dashManifestModel = config.dashManifestModel;
+    const constants = config.constants;
 
     function getMetricsRangeStartTime(manifest, dynamic, range) {
         var mpd = dashManifestModel.getMpd(manifest);
@@ -36,7 +36,7 @@ function ManifestParsing (config) {
         // consumption.
         reportingStartTime = presentationStartTime;
 
-        if (range && range.hasOwnProperty(Constants.START_TIME)) {
+        if (range && range.hasOwnProperty(constants.START_TIME)) {
             reportingStartTime += range.starttime;
         }
 
@@ -83,7 +83,7 @@ function ManifestParsing (config) {
                     metric.Reporting_asArray.forEach(reporting => {
                         var reportingEntry = new Reporting();
 
-                        if (reporting.hasOwnProperty(Constants.SCHEME_ID_URI)) {
+                        if (reporting.hasOwnProperty(constants.SCHEME_ID_URI)) {
                             reportingEntry.schemeIdUri = reporting.schemeIdUri;
                         } else {
                             // Invalid Reporting. schemeIdUri must be set. Ignore.

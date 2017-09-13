@@ -28,7 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from '../streaming/constants/Constants';
 import EventBus from '../core/EventBus';
 import FactoryMaker from '../core/FactoryMaker';
 import DataChunk from '../streaming/vo/DataChunk';
@@ -45,6 +44,7 @@ function MssHandler(config) {
     let context = this.context;
     let eventBus = config.eventBus;
     const events = config.events;
+    const constants = config.constants;
     let metricsModel = config.metricsModel;
     let playbackController = config.playbackController;
     let protectionController = config.protectionController;
@@ -52,7 +52,8 @@ function MssHandler(config) {
         metricsModel: metricsModel,
         playbackController: playbackController,
         protectionController: protectionController,
-        eventBus: eventBus
+        eventBus: eventBus,
+        constants: constants
     });
     let mssParser;
 
@@ -124,9 +125,9 @@ function MssHandler(config) {
             if (streamController) {
                 let processors = streamController.getActiveStreamProcessors();
                 processors.forEach(function (processor) {
-                    if (processor.getType() === Constants.VIDEO ||
-                        processor.getType() === Constants.AUDIO ||
-                        processor.getType() === Constants.FRAGMENTED_TEXT) {
+                    if (processor.getType() === constants.VIDEO ||
+                        processor.getType() === constants.AUDIO ||
+                        processor.getType() === constants.FRAGMENTED_TEXT) {
 
                         let fragmentInfoController = MssFragmentInfoController(context).create({
                             streamProcessor: processor,
