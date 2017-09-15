@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventBus from '../core/EventBus';
+
 import FactoryMaker from '../core/FactoryMaker';
 import DataChunk from '../streaming/vo/DataChunk';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
@@ -143,9 +143,9 @@ function MssHandler(config) {
     }
 
     function registerEvents() {
-        eventBus.on(events.INIT_REQUESTED, onInitializationRequested, instance, EventBus.EVENT_PRIORITY_HIGH);
-        eventBus.on(events.PLAYBACK_SEEK_ASKED, onPlaybackSeekAsked, instance, EventBus.EVENT_PRIORITY_HIGH);
-        eventBus.on(events.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, instance, EventBus.EVENT_PRIORITY_HIGH);
+        eventBus.on(events.INIT_REQUESTED, onInitializationRequested, instance, FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH);
+        eventBus.on(events.PLAYBACK_SEEK_ASKED, onPlaybackSeekAsked, instance, FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH);
+        eventBus.on(events.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, instance, FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH);
     }
 
     function reset() {
