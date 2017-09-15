@@ -60,7 +60,6 @@ function ProtectionController(config) {
     let log = config.log;
 
     let instance,
-        keySystems,
         pendingNeedKeyData,
         audioInfo,
         videoInfo,
@@ -71,7 +70,6 @@ function ProtectionController(config) {
         keySystem;
 
     function setup() {
-        keySystems = protectionKeyController.getKeySystems();
         pendingNeedKeyData = [];
         initialized = false;
         sessionType = 'temporary';
@@ -587,6 +585,10 @@ function ProtectionController(config) {
         selectKeySystem(supportedKS, false);
     }
 
+    function getKeySystems() {
+        return protectionKeyController ? protectionKeyController.getKeySystems() : [];
+    }
+
     instance = {
         initialize: initialize,
         createKeySession: createKeySession,
@@ -599,6 +601,7 @@ function ProtectionController(config) {
         setRobustnessLevel: setRobustnessLevel,
         setProtectionData: setProtectionData,
         getSupportedKeySystemsFromContentProtection: getSupportedKeySystemsFromContentProtection,
+        getKeySystems: getKeySystems,
         reset: reset
     };
 
