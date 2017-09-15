@@ -38,16 +38,16 @@
 import CommonEncryption from '../CommonEncryption';
 
 import FactoryMaker from '../../../core/FactoryMaker';
-import BASE64 from '../../../../externals/base64';
 
 const uuid = '9a04f079-9840-4286-ab92-e65be0885f95';
 const systemString = 'com.microsoft.playready';
 const schemeIdURI = 'urn:uuid:' + uuid;
 
-function KeySystemPlayReady() {
+function KeySystemPlayReady(config) {
 
     let instance;
     let messageFormat = 'utf16';
+    let BASE64 = config.BASE64;
 
     function getRequestHeadersFromMessage(message) {
         let msg,
@@ -159,7 +159,7 @@ function KeySystemPlayReady() {
 
         // Handle common encryption PSSH
         if ('pssh' in cpData) {
-            return CommonEncryption.parseInitDataFromContentProtection(cpData);
+            return CommonEncryption.parseInitDataFromContentProtection(cpData, BASE64);
         }
         // Handle native MS PlayReady ContentProtection elements
         if ('pro' in cpData) {

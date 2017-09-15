@@ -33,7 +33,6 @@ import CommonEncryption from '../CommonEncryption';
 import MediaCapability from '../vo/MediaCapability';
 import KeySystemConfiguration from '../vo/KeySystemConfiguration';
 import FactoryMaker from '../../../core/FactoryMaker';
-import BASE64 from '../../../../externals/base64';
 
 /**
  * @module ProtectionController
@@ -57,6 +56,7 @@ function ProtectionController(config) {
     let eventBus = config.eventBus;
     const events = config.events;
     let log = config.log;
+    let BASE64 = config.BASE64;
 
     let instance,
         pendingNeedKeyData,

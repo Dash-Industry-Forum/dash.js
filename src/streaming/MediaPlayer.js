@@ -66,6 +66,7 @@ import TimelineConverter from '../dash/utils/TimelineConverter';
 import {
     HTTPRequest
 } from './vo/metrics/HTTPRequest';
+import BASE64 from '../../externals/base64';
 
 /**
  * @module MediaPlayer
@@ -2386,7 +2387,8 @@ function MediaPlayer() {
                 capabilities: capabilities,
                 eventBus: eventBus,
                 adapter: adapter,
-                events: Events
+                events: Events,
+                BASE64: BASE64
             });
             return protectionController;
         }
@@ -2433,7 +2435,8 @@ function MediaPlayer() {
                 events: Events,
                 constants: Constants,
                 log: log,
-                initSegmentType: HTTPRequest.INIT_SEGMENT_TYPE
+                initSegmentType: HTTPRequest.INIT_SEGMENT_TYPE,
+                BASE64: BASE64
             });
         }
     }

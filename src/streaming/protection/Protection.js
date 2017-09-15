@@ -118,7 +118,7 @@ function Protection() {
         let controller = null;
 
         let protectionKeyController = ProtectionKeyController(context).getInstance();
-        protectionKeyController.setConfig({log: config.log});
+        protectionKeyController.setConfig({log: config.log, BASE64: config.BASE64});
         protectionKeyController.initialize();
 
         let protectionModel =  getProtectionModel(config);
@@ -130,7 +130,8 @@ function Protection() {
                 adapter: config.adapter,
                 eventBus: config.eventBus,
                 log: config.log,
-                events: config.events
+                events: config.events,
+                BASE64: config.BASE64
             });
             config.capabilities.setEncryptedMediaSupported(true);
         }

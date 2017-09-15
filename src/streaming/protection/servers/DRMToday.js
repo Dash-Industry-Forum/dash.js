@@ -36,9 +36,10 @@
  * @class
  */
 import FactoryMaker from '../../../core/FactoryMaker';
-import BASE64 from '../../../../externals/base64';
 
-function DRMToday() {
+function DRMToday(config) {
+
+    let BASE64 = config.BASE64;
 
     const keySystems = {
         'com.widevine.alpha': {
