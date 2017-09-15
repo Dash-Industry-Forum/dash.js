@@ -51,7 +51,8 @@ function MssHandler(config) {
         playbackController: playbackController,
         protectionController: protectionController,
         eventBus: eventBus,
-        constants: constants
+        constants: constants,
+        BASE64: config.BASE64
     });
     let mssParser;
 

@@ -37,6 +37,7 @@ function MssFragmentMoovProcessor(config) {
     const NALUTYPE_SPS = 7;
     const NALUTYPE_PPS = 8;
     const constants = config.constants;
+    const BASE64 = config.BASE64;
 
     let protectionController = config.protectionController;
     let instance,
