@@ -32,7 +32,6 @@
 import Constants from '../streaming/constants/Constants';
 import FactoryMaker from '../core/FactoryMaker';
 import ISOBoxer from 'codem-isoboxer';
-//import BASE64 from '../../externals/base64';
 
 function MssFragmentMoovProcessor(config) {
     const TIME_SCALE = 10000000;
