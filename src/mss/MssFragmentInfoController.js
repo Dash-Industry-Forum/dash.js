@@ -268,4 +268,3 @@ function MssFragmentInfoController(config) {
 
 MssFragmentInfoController.__dashjs_factory_name = 'MssFragmentInfoController';
 export default FactoryMaker.getClassFactory(MssFragmentInfoController);
-export default FactoryMaker.getClassFactory(MssFragmentInfoController);
