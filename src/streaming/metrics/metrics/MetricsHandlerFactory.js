@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../../core/FactoryMaker';
 import BufferLevel from './handlers/BufferLevelHandler';
 import DVBErrors from './handlers/DVBErrorsHandler';
 import HttpList from './handlers/HttpListHandler';
@@ -100,4 +99,4 @@ function MetricsHandlerFactory(config) {
 }
 
 MetricsHandlerFactory.__dashjs_factory_name = 'MetricsHandlerFactory';
-export default FactoryMaker.getSingletonFactory(MetricsHandlerFactory);
+export default dashjs.FactoryMaker.getSingletonFactory(MetricsHandlerFactory); /* jshint ignore:line */

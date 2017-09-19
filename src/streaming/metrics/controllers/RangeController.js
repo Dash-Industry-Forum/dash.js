@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../../core/FactoryMaker';
 import CustomTimeRanges from '../../utils/CustomTimeRanges';
 
 function RangeController(config) {
@@ -100,4 +99,4 @@ function RangeController(config) {
 }
 
 RangeController.__dashjs_factory_name = 'RangeController';
-export default FactoryMaker.getClassFactory(RangeController);
+export default dashjs.FactoryMaker.getClassFactory(RangeController); /* jshint ignore:line */

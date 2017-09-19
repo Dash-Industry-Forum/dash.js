@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../../../core/FactoryMaker';
 import HandlerHelpers from '../../utils/HandlerHelpers';
 
 function BufferLevelHandler(config) {
@@ -108,4 +107,4 @@ function BufferLevelHandler(config) {
 }
 
 BufferLevelHandler.__dashjs_factory_name = 'BufferLevelHandler';
-export default FactoryMaker.getClassFactory(BufferLevelHandler);
+export default dashjs.FactoryMaker.getClassFactory(BufferLevelHandler); /* jshint ignore:line */

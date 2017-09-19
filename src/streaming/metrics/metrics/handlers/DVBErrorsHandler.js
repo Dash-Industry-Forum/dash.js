@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../../../core/FactoryMaker';
 import MetricsReportingEvents from '../../MetricsReportingEvents';
 
 function DVBErrorsHandler(config) {
@@ -89,4 +88,4 @@ function DVBErrorsHandler(config) {
     return instance;
 }
 
-export default FactoryMaker.getClassFactory(DVBErrorsHandler);
+export default dashjs.FactoryMaker.getClassFactory(DVBErrorsHandler); /* jshint ignore:line */

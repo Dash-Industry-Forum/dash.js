@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../../core/FactoryMaker';
 import RangeController from './RangeController';
 import ReportingController from './ReportingController';
 import MetricsHandlersController from './MetricsHandlersController';
@@ -93,4 +92,4 @@ function MetricsController(config) {
 }
 
 MetricsController.__dashjs_factory_name = 'MetricsController';
-export default FactoryMaker.getClassFactory(MetricsController);
+export default dashjs.FactoryMaker.getClassFactory(MetricsController); /* jshint ignore:line */

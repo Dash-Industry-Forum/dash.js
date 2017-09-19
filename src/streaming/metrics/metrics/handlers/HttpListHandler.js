@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../../../core/FactoryMaker';
 import HandlerHelpers from '../../utils/HandlerHelpers';
 
 function HttpListHandler(config) {
@@ -109,4 +108,4 @@ function HttpListHandler(config) {
 }
 
 HttpListHandler.__dashjs_factory_name = 'HttpListHandler';
-export default FactoryMaker.getClassFactory(HttpListHandler);
+export default dashjs.FactoryMaker.getClassFactory(HttpListHandler); /* jshint ignore:line */

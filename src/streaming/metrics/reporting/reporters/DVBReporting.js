@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../../../core/FactoryMaker';
 import MetricSerialiser from '../../utils/MetricSerialiser';
 import RNG from '../../utils/RNG';
 
@@ -181,4 +180,4 @@ function DVBReporting(config) {
 }
 
 DVBReporting.__dashjs_factory_name = 'DVBReporting';
-export default FactoryMaker.getClassFactory(DVBReporting);
+export default dashjs.FactoryMaker.getClassFactory(DVBReporting); /* jshint ignore:line */

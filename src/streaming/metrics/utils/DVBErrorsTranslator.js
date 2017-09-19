@@ -33,7 +33,6 @@ import DVBErrors from '../vo/DVBErrors';
 import Events from '../../../core/events/Events';
 import MediaPlayerEvents from '../../MediaPlayerEvents';
 import MetricsReportingEvents from '../MetricsReportingEvents';
-import FactoryMaker from '../../../core/FactoryMaker';
 
 function DVBErrorsTranslator(config) {
 
@@ -178,4 +177,4 @@ function DVBErrorsTranslator(config) {
 }
 
 DVBErrorsTranslator.__dashjs_factory_name = 'DVBErrorsTranslator';
-export default FactoryMaker.getSingletonFactory(DVBErrorsTranslator);
+export default dashjs.FactoryMaker.getSingletonFactory(DVBErrorsTranslator); /* jshint ignore:line */

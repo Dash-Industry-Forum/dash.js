@@ -31,7 +31,6 @@
 
 import MetricsController from './MetricsController';
 import ManifestParsing from '../utils/ManifestParsing';
-import FactoryMaker from '../../../core/FactoryMaker';
 import MetricsReportingEvents from '../MetricsReportingEvents';
 
 function MetricsCollectionController(config) {
@@ -109,4 +108,4 @@ function MetricsCollectionController(config) {
 }
 
 MetricsCollectionController.__dashjs_factory_name = 'MetricsCollectionController';
-export default FactoryMaker.getClassFactory(MetricsCollectionController);
+export default dashjs.FactoryMaker.getClassFactory(MetricsCollectionController); /* jshint ignore:line */
