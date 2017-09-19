@@ -29,9 +29,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../core/FactoryMaker';
 import Debug from '../core/Debug';
 
+/**
+ * @module MssFragmentMoovProcessor
+ * @param {Object} config object
+ */
 function MssFragmentMoofProcessor(config) {
 
     let context = this.context;
@@ -309,4 +312,4 @@ function MssFragmentMoofProcessor(config) {
 }
 
 MssFragmentMoofProcessor.__dashjs_factory_name = 'MssFragmentMoofProcessor';
-export default FactoryMaker.getClassFactory(MssFragmentMoofProcessor);
+export default dashjs.FactoryMaker.getClassFactory(MssFragmentMoofProcessor); /* jshint ignore:line */

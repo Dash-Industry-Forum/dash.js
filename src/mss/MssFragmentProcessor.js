@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../core/FactoryMaker';
+
 import MSSFragmentMoofProcessor from './MssFragmentMoofProcessor';
 import MSSFragmentMoovProcessor from './MssFragmentMoovProcessor';
 import MssEvents from './MssEvents';
@@ -184,4 +184,4 @@ function MssFragmentProcessor(config) {
 }
 
 MssFragmentProcessor.__dashjs_factory_name = 'MssFragmentProcessor';
-export default FactoryMaker.getClassFactory(MssFragmentProcessor);
+export default dashjs.FactoryMaker.getClassFactory(MssFragmentProcessor); /* jshint ignore:line */

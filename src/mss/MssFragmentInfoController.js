@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../core/FactoryMaker';
 import Debug from '../core/Debug';
 import MssEvents from './MssEvents';
 import MSSFragmentMoofProcessor from './MssFragmentMoofProcessor';
@@ -267,4 +266,4 @@ function MssFragmentInfoController(config) {
 }
 
 MssFragmentInfoController.__dashjs_factory_name = 'MssFragmentInfoController';
-export default FactoryMaker.getClassFactory(MssFragmentInfoController);
+export default dashjs.FactoryMaker.getClassFactory(MssFragmentInfoController); /* jshint ignore:line */

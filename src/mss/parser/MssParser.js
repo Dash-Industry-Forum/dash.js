@@ -29,8 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../core/FactoryMaker';
-
 function MssParser(config) {
 
     const context = this.context;
@@ -700,4 +698,4 @@ function MssParser(config) {
 }
 
 MssParser.__dashjs_factory_name = 'MssParser';
-export default FactoryMaker.getClassFactory(MssParser);
+export default dashjs.FactoryMaker.getClassFactory(MssParser); /* jshint ignore:line */

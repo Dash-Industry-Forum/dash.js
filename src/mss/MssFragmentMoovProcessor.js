@@ -29,8 +29,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../core/FactoryMaker';
-
+/**
+ * @module MssFragmentMoovProcessor
+ * @param {Object} config object
+ */
 function MssFragmentMoovProcessor(config) {
     const TIME_SCALE = 10000000;
     const NALUTYPE_SPS = 7;
@@ -647,4 +649,4 @@ function MssFragmentMoovProcessor(config) {
 }
 
 MssFragmentMoovProcessor.__dashjs_factory_name = 'MssFragmentMoovProcessor';
-export default FactoryMaker.getClassFactory(MssFragmentMoovProcessor);
+export default dashjs.FactoryMaker.getClassFactory(MssFragmentMoovProcessor); /* jshint ignore:line */
