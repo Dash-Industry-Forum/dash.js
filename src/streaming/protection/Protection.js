@@ -130,7 +130,8 @@ function Protection() {
                 eventBus: config.eventBus,
                 log: config.log,
                 events: config.events,
-                BASE64: config.BASE64
+                BASE64: config.BASE64,
+                Constants: config.Constants
             });
             config.capabilities.setEncryptedMediaSupported(true);
         }

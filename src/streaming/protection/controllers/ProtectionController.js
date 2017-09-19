@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from '../../../streaming/constants/Constants';
+
 import CommonEncryption from '../CommonEncryption';
 import MediaCapability from '../vo/MediaCapability';
 import KeySystemConfiguration from '../vo/KeySystemConfiguration';
@@ -56,6 +56,7 @@ function ProtectionController(config) {
     const events = config.events;
     let log = config.log;
     let BASE64 = config.BASE64;
+    const Constants = config.Constants;
 
     let instance,
         pendingNeedKeyData,

@@ -2389,7 +2389,8 @@ function MediaPlayer() {
                 eventBus: eventBus,
                 adapter: adapter,
                 events: Events,
-                BASE64: BASE64
+                BASE64: BASE64,
+                constants: Constants
             });
             return protectionController;
         }
