@@ -30,7 +30,6 @@
  */
 
 import MetricsHandlerFactory from '../metrics/MetricsHandlerFactory';
-import MediaPlayerEvents from '../../MediaPlayerEvents';
 
 function MetricsHandlersController(config) {
     let handlers = [];
@@ -38,6 +37,7 @@ function MetricsHandlersController(config) {
     let instance;
     let context = this.context;
     let eventBus = config.eventBus;
+    const Events = config.events;
 
     let metricsHandlerFactory = MetricsHandlerFactory(context).getInstance({
         log: config.log,
@@ -84,13 +84,13 @@ function MetricsHandlersController(config) {
         );
 
         eventBus.on(
-            MediaPlayerEvents.METRIC_ADDED,
+            Events.METRIC_ADDED,
             handle,
             instance
         );
 
         eventBus.on(
-            MediaPlayerEvents.METRIC_UPDATED,
+            Events.METRIC_UPDATED,
             handle,
             instance
         );
@@ -98,13 +98,13 @@ function MetricsHandlersController(config) {
 
     function reset() {
         eventBus.off(
-            MediaPlayerEvents.METRIC_ADDED,
+            Events.METRIC_ADDED,
             handle,
             instance
         );
 
         eventBus.off(
-            MediaPlayerEvents.METRIC_UPDATED,
+            Events.METRIC_UPDATED,
             handle,
             instance
         );

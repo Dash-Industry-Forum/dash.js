@@ -51,7 +51,8 @@ function MetricsReporting() {
         dvbErrorsTranslator = DVBErrorsTranslator(context).getInstance({
             eventBus: config.eventBus,
             metricsModel: config.metricsModel,
-            metricsConstants: config.metricsConstants
+            metricsConstants: config.metricsConstants,
+            events: config.events
         });
 
         return MetricsCollectionController(context).create(config);

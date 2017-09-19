@@ -30,8 +30,6 @@
  */
 
 import DVBErrors from '../vo/DVBErrors';
-import Events from '../../../core/events/Events';
-import MediaPlayerEvents from '../../MediaPlayerEvents';
 import MetricsReportingEvents from '../MetricsReportingEvents';
 
 function DVBErrorsTranslator(config) {
@@ -42,6 +40,8 @@ function DVBErrorsTranslator(config) {
     let mpd;
 
     const metricsConstants = config.metricsConstants;
+    //MediaPlayerEvents have been added to Events in MediaPlayer class
+    const Events = config.events;
 
     function report(vo) {
         let o = new DVBErrors();
@@ -139,9 +139,9 @@ function DVBErrorsTranslator(config) {
             onServiceLocationChanged,
             instance
         );
-        eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricEvent, instance);
-        eventBus.on(MediaPlayerEvents.METRIC_UPDATED, onMetricEvent, instance);
-        eventBus.on(MediaPlayerEvents.PLAYBACK_ERROR, onPlaybackError, instance);
+        eventBus.on(Events.METRIC_ADDED, onMetricEvent, instance);
+        eventBus.on(Events.METRIC_UPDATED, onMetricEvent, instance);
+        eventBus.on(Events.PLAYBACK_ERROR, onPlaybackError, instance);
         eventBus.on(
             MetricsReportingEvents.BECAME_REPORTING_PLAYER,
             onBecameReporter,
@@ -156,9 +156,9 @@ function DVBErrorsTranslator(config) {
             onServiceLocationChanged,
             instance
         );
-        eventBus.off(MediaPlayerEvents.METRIC_ADDED, onMetricEvent, instance);
-        eventBus.off(MediaPlayerEvents.METRIC_UPDATED, onMetricEvent, instance);
-        eventBus.off(MediaPlayerEvents.PLAYBACK_ERROR, onPlaybackError, instance);
+        eventBus.off(Events.METRIC_ADDED, onMetricEvent, instance);
+        eventBus.off(Events.METRIC_UPDATED, onMetricEvent, instance);
+        eventBus.off(Events.PLAYBACK_ERROR, onPlaybackError, instance);
         eventBus.off(
             MetricsReportingEvents.BECAME_REPORTING_PLAYER,
             onBecameReporter,
