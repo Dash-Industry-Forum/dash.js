@@ -34,7 +34,6 @@ import ProtectionEvents from './ProtectionEvents';
 import ProtectionModel_21Jan2015 from './models/ProtectionModel_21Jan2015';
 import ProtectionModel_3Feb2014 from './models/ProtectionModel_3Feb2014';
 import ProtectionModel_01b from './models/ProtectionModel_01b';
-import FactoryMaker from '../../core/FactoryMaker';
 
 const APIS_ProtectionModel_01b = [
     // Un-prefixed as per spec
@@ -195,7 +194,7 @@ function Protection() {
 }
 
 Protection.__dashjs_factory_name = 'Protection';
-let factory = FactoryMaker.getClassFactory(Protection);
+let factory = dashjs.FactoryMaker.getClassFactory(Protection); /* jshint ignore:line */
 factory.events = ProtectionEvents;
-FactoryMaker.updateClassFactory(Protection.__dashjs_factory_name, factory);
+dashjs.FactoryMaker.updateClassFactory(Protection.__dashjs_factory_name, factory); /* jshint ignore:line */
 export default factory;

@@ -42,7 +42,6 @@ import NeedKey from '../vo/NeedKey';
 import KeyError from '../vo/KeyError';
 import KeyMessage from '../vo/KeyMessage';
 import KeySystemAccess from '../vo/KeySystemAccess';
-import FactoryMaker from '../../../core/FactoryMaker';
 
 function ProtectionModel_21Jan2015(config) {
 
@@ -387,4 +386,4 @@ function ProtectionModel_21Jan2015(config) {
 }
 
 ProtectionModel_21Jan2015.__dashjs_factory_name = 'ProtectionModel_21Jan2015';
-export default FactoryMaker.getClassFactory(ProtectionModel_21Jan2015);
+export default dashjs.FactoryMaker.getClassFactory(ProtectionModel_21Jan2015); /* jshint ignore:line */

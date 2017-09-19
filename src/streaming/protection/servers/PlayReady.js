@@ -39,7 +39,6 @@
  * @implements LicenseServer
  * @class
  */
-import FactoryMaker from '../../../core/FactoryMaker';
 
 function PlayReady() {
 
@@ -145,4 +144,4 @@ function PlayReady() {
 }
 
 PlayReady.__dashjs_factory_name = 'PlayReady';
-export default FactoryMaker.getSingletonFactory(PlayReady);
+export default dashjs.FactoryMaker.getSingletonFactory(PlayReady); /* jshint ignore:line */

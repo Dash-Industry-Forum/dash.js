@@ -36,7 +36,6 @@ import DRMToday from './../servers/DRMToday';
 import PlayReady from './../servers/PlayReady';
 import Widevine from './../servers/Widevine';
 import ClearKey from './../servers/ClearKey';
-import FactoryMaker from '../../../core/FactoryMaker';
 
 /**
  * @module ProtectionKeyController
@@ -328,4 +327,4 @@ function ProtectionKeyController() {
 }
 
 ProtectionKeyController.__dashjs_factory_name = 'ProtectionKeyController';
-export default FactoryMaker.getSingletonFactory(ProtectionKeyController);
+export default dashjs.FactoryMaker.getSingletonFactory(ProtectionKeyController); /* jshint ignore:line */

@@ -37,8 +37,6 @@
  */
 import CommonEncryption from '../CommonEncryption';
 
-import FactoryMaker from '../../../core/FactoryMaker';
-
 const uuid = '9a04f079-9840-4286-ab92-e65be0885f95';
 const systemString = 'com.microsoft.playready';
 const schemeIdURI = 'urn:uuid:' + uuid;
@@ -228,4 +226,4 @@ function KeySystemPlayReady(config) {
 }
 
 KeySystemPlayReady.__dashjs_factory_name = 'KeySystemPlayReady';
-export default FactoryMaker.getSingletonFactory(KeySystemPlayReady);
+export default dashjs.FactoryMaker.getSingletonFactory(KeySystemPlayReady); /* jshint ignore:line */

@@ -32,7 +32,6 @@ import Constants from '../../../streaming/constants/Constants';
 import CommonEncryption from '../CommonEncryption';
 import MediaCapability from '../vo/MediaCapability';
 import KeySystemConfiguration from '../vo/KeySystemConfiguration';
-import FactoryMaker from '../../../core/FactoryMaker';
 
 /**
  * @module ProtectionController
@@ -629,4 +628,4 @@ function ProtectionController(config) {
 }
 
 ProtectionController.__dashjs_factory_name = 'ProtectionController';
-export default FactoryMaker.getClassFactory(ProtectionController);
+export default dashjs.FactoryMaker.getClassFactory(ProtectionController); /* jshint ignore:line */
