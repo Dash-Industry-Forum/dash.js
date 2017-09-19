@@ -29,23 +29,19 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import Debug from '../core/Debug';
-
 /**
  * @module MssFragmentMoovProcessor
  * @param {Object} config object
  */
 function MssFragmentMoofProcessor(config) {
 
-    let context = this.context;
-    let instance,
-        log;
+    let instance;
     let metricsModel = config.metricsModel;
     let playbackController = config.playbackController;
     const ISOBoxer = config.ISOBoxer;
+    const log = config.log;
 
     function setup() {
-        log = Debug(context).getInstance().log;
     }
 
     function processTfrf(request, tfrf, tfdt, streamProcessor) {

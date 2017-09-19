@@ -52,13 +52,15 @@ function MssHandler(config) {
         eventBus: eventBus,
         constants: constants,
         BASE64: config.BASE64,
-        ISOBoxer: config.ISOBoxer
+        ISOBoxer: config.ISOBoxer,
+        log: config.log
     });
     let mssParser;
 
     let instance;
 
-    function setup() {}
+    function setup() {
+    }
 
     function onInitializationRequested(e) {
         let streamProcessor = e.sender.getStreamProcessor();
@@ -132,7 +134,9 @@ function MssHandler(config) {
                             streamProcessor: processor,
                             eventBus: eventBus,
                             metricsModel: metricsModel,
-                            playbackController: playbackController
+                            playbackController: playbackController,
+                            ISOBoxer: config.ISOBoxer,
+                            log: config.log
                         });
                         fragmentInfoController.initialize();
                         fragmentInfoController.start();

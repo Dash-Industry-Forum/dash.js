@@ -125,6 +125,7 @@ function MssFragmentProcessor(config) {
     let eventBus = config.eventBus;
     let protectionController = config.protectionController;
     const ISOBoxer = config.ISOBoxer;
+    const log = config.log;
     let instance;
 
     function setup() {
@@ -156,7 +157,8 @@ function MssFragmentProcessor(config) {
             let mssFragmentMoofProcessor = MSSFragmentMoofProcessor(context).create({
                 metricsModel: metricsModel,
                 playbackController: playbackController,
-                ISOBoxer: ISOBoxer
+                ISOBoxer: ISOBoxer,
+                log: log
             });
             mssFragmentMoofProcessor.convertFragment(e, sp);
 

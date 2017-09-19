@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import Debug from '../core/Debug';
 import MssEvents from './MssEvents';
 import MSSFragmentMoofProcessor from './MssFragmentMoofProcessor';
 
@@ -38,7 +37,6 @@ function MssFragmentInfoController(config) {
     let context = this.context;
 
     let instance;
-    let log;
     let fragmentModel;
     let indexHandler;
     let started;
@@ -54,9 +52,10 @@ function MssFragmentInfoController(config) {
     let eventBus = config.eventBus;
     let metricsModel = config.metricsModel;
     let playbackController = config.playbackController;
+    const ISOBoxer = config.ISOBoxer;
+    const log = config.log;
 
     function setup() {
-        log = Debug(context).getInstance().log;
     }
 
     function initialize() {
@@ -82,7 +81,6 @@ function MssFragmentInfoController(config) {
     }
 
     function sendRequest(request) {
-        let fragmentModel = streamProcessor.getFragmentModel();
         fragmentModel.executeRequest(request);
     }
 
@@ -177,7 +175,9 @@ function MssFragmentInfoController(config) {
             // update segment list
             let mssFragmentMoofProcessor = MSSFragmentMoofProcessor(context).create({
                 metricsModel: metricsModel,
-                playbackController: playbackController
+                playbackController: playbackController,
+                ISOBoxer: ISOBoxer,
+                log: log
             });
             mssFragmentMoofProcessor.updateSegmentList(e.fragmentInfo, streamProcessor);
 
