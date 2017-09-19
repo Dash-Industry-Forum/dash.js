@@ -30,7 +30,6 @@
  */
 
 import FactoryMaker from '../core/FactoryMaker';
-import ISOBoxer from 'codem-isoboxer';
 
 function MssFragmentMoovProcessor(config) {
     const TIME_SCALE = 10000000;
@@ -38,6 +37,7 @@ function MssFragmentMoovProcessor(config) {
     const NALUTYPE_PPS = 8;
     const constants = config.constants;
     const BASE64 = config.BASE64;
+    const ISOBoxer = config.ISOBoxer;
 
     let protectionController = config.protectionController;
     let instance,

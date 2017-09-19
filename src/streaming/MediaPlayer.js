@@ -67,6 +67,7 @@ import {
     HTTPRequest
 } from './vo/metrics/HTTPRequest';
 import BASE64 from '../../externals/base64';
+import ISOBoxer from 'codem-isoboxer';
 
 /**
  * @module MediaPlayer
@@ -2436,7 +2437,8 @@ function MediaPlayer() {
                 constants: Constants,
                 log: log,
                 initSegmentType: HTTPRequest.INIT_SEGMENT_TYPE,
-                BASE64: BASE64
+                BASE64: BASE64,
+                ISOBoxer: ISOBoxer
             });
         }
     }

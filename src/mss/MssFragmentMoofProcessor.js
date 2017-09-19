@@ -31,7 +31,6 @@
 
 import FactoryMaker from '../core/FactoryMaker';
 import Debug from '../core/Debug';
-import ISOBoxer from 'codem-isoboxer';
 
 function MssFragmentMoofProcessor(config) {
 
@@ -40,6 +39,7 @@ function MssFragmentMoofProcessor(config) {
         log;
     let metricsModel = config.metricsModel;
     let playbackController = config.playbackController;
+    const ISOBoxer = config.ISOBoxer;
 
     function setup() {
         log = Debug(context).getInstance().log;

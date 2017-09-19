@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import FactoryMaker from '../core/FactoryMaker';
-import ISOBoxer from 'codem-isoboxer';
 import MSSFragmentMoofProcessor from './MssFragmentMoofProcessor';
 import MSSFragmentMoovProcessor from './MssFragmentMoovProcessor';
 import MssEvents from './MssEvents';
@@ -118,13 +117,6 @@ function uuidProcessor() {
     }
 }
 
-ISOBoxer.addBoxProcessor('uuid', uuidProcessor);
-ISOBoxer.addBoxProcessor('saio', saioProcessor);
-ISOBoxer.addBoxProcessor('saiz', saizProcessor);
-ISOBoxer.addBoxProcessor('senc', sencProcessor);
-
-
-
 function MssFragmentProcessor(config) {
 
     let context = this.context;
@@ -132,12 +124,18 @@ function MssFragmentProcessor(config) {
     let playbackController = config.playbackController;
     let eventBus = config.eventBus;
     let protectionController = config.protectionController;
+    const ISOBoxer = config.ISOBoxer;
     let instance;
 
-    function setup() {}
+    function setup() {
+        ISOBoxer.addBoxProcessor('uuid', uuidProcessor);
+        ISOBoxer.addBoxProcessor('saio', saioProcessor);
+        ISOBoxer.addBoxProcessor('saiz', saizProcessor);
+        ISOBoxer.addBoxProcessor('senc', sencProcessor);
+    }
 
     function generateMoov(rep) {
-        let mssFragmentMoovProcessor = MSSFragmentMoovProcessor(context).create({protectionController: protectionController, constants: config.constants, BASE64: config.BASE64});
+        let mssFragmentMoovProcessor = MSSFragmentMoovProcessor(context).create({protectionController: protectionController, constants: config.constants, BASE64: config.BASE64, ISOBoxer: config.ISOBoxer});
         return mssFragmentMoovProcessor.generateMoov(rep);
     }
 
@@ -157,7 +155,8 @@ function MssFragmentProcessor(config) {
             // it's a MediaSegment, let's convert fragment
             let mssFragmentMoofProcessor = MSSFragmentMoofProcessor(context).create({
                 metricsModel: metricsModel,
-                playbackController: playbackController
+                playbackController: playbackController,
+                ISOBoxer: ISOBoxer
             });
             mssFragmentMoofProcessor.convertFragment(e, sp);
 

@@ -52,7 +52,8 @@ function MssHandler(config) {
         protectionController: protectionController,
         eventBus: eventBus,
         constants: constants,
-        BASE64: config.BASE64
+        BASE64: config.BASE64,
+        ISOBoxer: config.ISOBoxer
     });
     let mssParser;
 
