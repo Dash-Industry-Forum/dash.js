@@ -214,6 +214,10 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     $scope.video = document.querySelector('.dash-video-player video');
     $scope.player = dashjs.MediaPlayer().create(); /* jshint ignore:line */
 
+    $scope.player.on(dashjs.MediaPlayer.events.ERROR, function (e) {
+        console.error(e.error + ' : ' + e.event.message);
+    }, $scope);
+
     $scope.player.initialize($scope.video, null, $scope.autoPlaySelected);
     $scope.player.setFastSwitchEnabled($scope.fastSwitchSelected);
     $scope.player.setJumpGaps($scope.jumpGapsSelected);
@@ -255,7 +259,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         $scope.$apply(function () {
             $scope.error = message;
             $scope.errorType = e.error;
-        });
+        }); 
         $("#errorModal").modal('show');
     }, $scope);
 
