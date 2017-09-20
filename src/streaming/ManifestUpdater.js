@@ -32,12 +32,14 @@ import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import FactoryMaker from '../core/FactoryMaker';
 import Debug from '../core/Debug';
+import ErrorHandler from './utils/ErrorHandler';
 
 function ManifestUpdater() {
 
     const context = this.context;
     const log = Debug(context).getInstance().log;
     const eventBus = EventBus(context).getInstance();
+    const errHandler = ErrorHandler(context).getInstance();
 
     let instance,
         refreshDelay,
@@ -146,6 +148,8 @@ function ManifestUpdater() {
     function onManifestLoaded(e) {
         if (!e.error) {
             update(e.manifest);
+        } else {
+            errHandler.manifestError(e.error.message, e.error.code);
         }
     }
 

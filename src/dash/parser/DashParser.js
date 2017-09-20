@@ -39,12 +39,11 @@ import NumericMatcher from './matchers/NumericMatcher';
 import RepresentationBaseValuesMap from './maps/RepresentationBaseValuesMap';
 import SegmentValuesMap from './maps/SegmentValuesMap';
 
-function DashParser(config) {
+function DashParser() {
 
     config = config || {};
     const context = this.context;
     const log = Debug(context).getInstance().log;
-    const errorHandler = config.errorHandler;
 
     let instance,
         matchers,
@@ -76,12 +75,6 @@ function DashParser(config) {
         ]);
     }
 
-    function checkConfig() {
-        if (!errorHandler || !errorHandler.hasOwnProperty('manifestError')) {
-            throw new Error('Missing config parameter(s)');
-        }
-    }
-
     function getMatchers() {
         return matchers;
     }
@@ -93,28 +86,21 @@ function DashParser(config) {
     function parse(data) {
         let manifest;
 
-        checkConfig();
+        const startTime = window.performance.now();
 
-        try {
-            const startTime = window.performance.now();
+        manifest = converter.xml_str2json(data);
 
-            manifest = converter.xml_str2json(data);
-
-            if (!manifest) {
-                throw new Error('parser error');
-            }
-
-            const jsonTime = window.performance.now();
-
-            objectIron.run(manifest);
-
-            const ironedTime = window.performance.now();
-
-            log('Parsing complete: ( xml2json: ' + (jsonTime - startTime).toPrecision(3) + 'ms, objectiron: ' + (ironedTime - jsonTime).toPrecision(3) + 'ms, total: ' + ((ironedTime - startTime) / 1000).toPrecision(3) + 's)');
-        } catch (err) {
-            errorHandler.manifestError('parsing the manifest failed', 'parse', data, err);
-            return null;
+        if (!manifest) {
+            throw new Error('parsing the manifest failed');
         }
+
+        const jsonTime = window.performance.now();
+
+        objectIron.run(manifest);
+
+        const ironedTime = window.performance.now();
+
+        log('Parsing complete: ( xml2json: ' + (jsonTime - startTime).toPrecision(3) + 'ms, objectiron: ' + (ironedTime - jsonTime).toPrecision(3) + 'ms, total: ' + ((ironedTime - startTime) / 1000).toPrecision(3) + 's)');
 
         return manifest;
     }

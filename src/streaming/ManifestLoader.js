@@ -97,14 +97,11 @@ function ManifestLoader(config) {
             if (mssHandler) {
                 parser = mssHandler.createMssParser();
                 mssHandler.registerEvents();
-            }else {
-                errHandler.manifestError('manifest type unsupported', 'createParser');
             }
+
             return parser;
         } else if (data.indexOf('MPD') > -1) {
-            return DashParser(context).create({
-                errorHandler: errHandler
-            });
+            return DashParser(context).create();
         } else {
             return parser;
         }
@@ -117,7 +114,8 @@ function ManifestLoader(config) {
             request: request,
             success: function (data, textStatus, xhr) {
                 let actualUrl,
-                    baseUri;
+                    baseUri,
+                    manifest;
 
                 // Handle redirects for the MPD - as per RFC3986 Section 5.1.3
                 // also handily resolves relative MPD URLs to absolute
@@ -146,7 +144,7 @@ function ManifestLoader(config) {
                             manifest: null,
                             error: new DashJSError(
                                 MANIFEST_LOADER_ERROR_PARSING_FAILURE,
-                                `Failed detecting manifest type: ${url}`
+                                `Failed detecting manifest type or manifest type unsupported : ${url}`
                             )
                         }
                     );
@@ -157,7 +155,20 @@ function ManifestLoader(config) {
                 xlinkController.setMatchers(parser.getMatchers());
                 xlinkController.setIron(parser.getIron());
 
-                const manifest = parser.parse(data);
+                try {
+                    manifest = parser.parse(data);
+                } catch (e) {
+                    eventBus.trigger(
+                        Events.INTERNAL_MANIFEST_LOADED, {
+                            manifest: null,
+                            error: new DashJSError(
+                                MANIFEST_LOADER_ERROR_PARSING_FAILURE,
+                                `Failed parsing manifest : ${url}`
+                            )
+                        }
+                    );
+                    return;
+                }
 
                 if (manifest) {
                     manifest.url = actualUrl || url;
