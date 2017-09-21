@@ -16,8 +16,8 @@ function SwitchHistoryRule() {
 
 
     function getMaxIndex(rulesContext) {
-        const switchRequestHistory = rulesContext.getSwitchHistory();
-        let switchRequests = switchRequestHistory.getSwitchRequests();
+        const switchRequestHistory = rulesContext ? rulesContext.getSwitchHistory() : null;
+        let switchRequests = switchRequestHistory ? switchRequestHistory.getSwitchRequests() : [];
         let drops = 0;
         let noDrops = 0;
         let dropSize = 0;
