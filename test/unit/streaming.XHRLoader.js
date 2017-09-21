@@ -1,6 +1,5 @@
 import XHRLoader from '../../src/streaming/XHRLoader';
 import RequestModifier from '../../src/streaming/utils/RequestModifier';
-import ErrorHandler from '../../src/streaming/utils/ErrorHandler';
 import MetricsModel from '../../src/streaming/models/MetricsModel';
 
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
@@ -20,7 +19,6 @@ describe('XHRLoader', function () {
 
     beforeEach(function () {
         mediaPlayerModelMock = new MediaPlayerModelMock();
-        errHandler = ErrorHandler(context).getInstance();
         metricsModel = MetricsModel(context).getInstance();
         requestModifier = RequestModifier(context).getInstance();
     });
@@ -54,7 +52,6 @@ describe('XHRLoader', function () {
         const callbackError = sinon.spy();
 
         xhrLoader = XHRLoader(context).create({
-            errHandler: errHandler,
             metricsModel: metricsModel,
             requestModifier: requestModifier,
             mediaPlayerModel: mediaPlayerModelMock

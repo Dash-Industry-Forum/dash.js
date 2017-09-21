@@ -56,20 +56,17 @@ function ManifestLoader(config) {
         xlinkController,
         parser;
     let mssHandler = config.mssHandler;
-    let errHandler = config.errHandler;
 
     function setup() {
         eventBus.on(Events.XLINK_READY, onXlinkReady, instance);
 
         xhrLoader = XHRLoader(context).create({
-            errHandler: errHandler,
             metricsModel: config.metricsModel,
             mediaPlayerModel: config.mediaPlayerModel,
             requestModifier: config.requestModifier
         });
 
         xlinkController = XlinkController(context).create({
-            errHandler: errHandler,
             metricsModel: config.metricsModel,
             mediaPlayerModel: config.mediaPlayerModel,
             requestModifier: config.requestModifier

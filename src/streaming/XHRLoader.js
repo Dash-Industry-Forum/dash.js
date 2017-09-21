@@ -30,7 +30,6 @@
  */
 import {HTTPRequest} from './vo/metrics/HTTPRequest';
 import FactoryMaker from '../core/FactoryMaker';
-import ErrorHandler from './utils/ErrorHandler';
 
 /**
  * @module XHRLoader
@@ -40,7 +39,6 @@ import ErrorHandler from './utils/ErrorHandler';
 function XHRLoader(cfg) {
 
     cfg = cfg || {};
-    const errHandler = cfg.errHandler;
     const metricsModel = cfg.metricsModel;
     const mediaPlayerModel = cfg.mediaPlayerModel;
     const requestModifier = cfg.requestModifier;
@@ -49,22 +47,11 @@ function XHRLoader(cfg) {
     let xhrs;
     let delayedXhrs;
     let retryTimers;
-    let downloadErrorToRequestTypeMap;
 
     function setup() {
         xhrs = [];
         delayedXhrs = [];
         retryTimers = [];
-
-        downloadErrorToRequestTypeMap = {
-            [HTTPRequest.MPD_TYPE]:                         ErrorHandler.DOWNLOAD_ERROR_ID_MANIFEST,
-            [HTTPRequest.XLINK_EXPANSION_TYPE]:             ErrorHandler.DOWNLOAD_ERROR_ID_XLINK,
-            [HTTPRequest.INIT_SEGMENT_TYPE]:                ErrorHandler.DOWNLOAD_ERROR_ID_INITIALIZATION,
-            [HTTPRequest.MEDIA_SEGMENT_TYPE]:               ErrorHandler.DOWNLOAD_ERROR_ID_CONTENT,
-            [HTTPRequest.INDEX_SEGMENT_TYPE]:               ErrorHandler.DOWNLOAD_ERROR_ID_CONTENT,
-            [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: ErrorHandler.DOWNLOAD_ERROR_ID_CONTENT,
-            [HTTPRequest.OTHER_TYPE]:                       ErrorHandler.DOWNLOAD_ERROR_ID_CONTENT
-        };
     }
 
     function internalLoad(config, remainingAttempts) {
@@ -123,12 +110,6 @@ function XHRLoader(cfg) {
                         }, mediaPlayerModel.getRetryIntervalForType(request.type))
                     );
                 } else {
-                    errHandler.downloadError(
-                        downloadErrorToRequestTypeMap[request.type],
-                        request.url,
-                        request
-                    );
-
                     if (config.error) {
                         config.error(request, 'error', xhr.statusText);
                     }
@@ -190,7 +171,7 @@ function XHRLoader(cfg) {
             }
         };
 
-        if (!requestModifier || !metricsModel || !errHandler) {
+        if (!requestModifier || !metricsModel) {
             throw new Error('config object is not correct or missing');
         }
 

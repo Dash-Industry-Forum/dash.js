@@ -2579,7 +2579,6 @@ function MediaPlayer() {
 
     function createManifestLoader() {
         return ManifestLoader(context).create({
-            errHandler: errHandler,
             metricsModel: metricsModel,
             mediaPlayerModel: mediaPlayerModel,
             requestModifier: RequestModifier(context).getInstance(),

@@ -5,6 +5,8 @@ const jsdom = require('jsdom').JSDOM;
 
 const context = {};
 
+let dashParser = DashParser(context).create();
+
 describe('DashParser', function () {
     let dashParser;
 
@@ -26,7 +28,6 @@ describe('DashParser', function () {
     });
 
 	it('should throw an error when parse is called without data and config object has been set properly', function () {
-		dashParser = DashParser(context).create();
         expect(dashParser.parse.bind('')).to.be.throw('parsing the manifest failed');
     });
 

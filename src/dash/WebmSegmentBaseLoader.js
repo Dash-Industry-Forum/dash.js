@@ -95,7 +95,6 @@ function WebmSegmentBaseLoader() {
     function initialize() {
         requestModifier = RequestModifier(context).getInstance();
         xhrLoader = XHRLoader(context).create({
-            errHandler: errHandler,
             metricsModel: metricsModel,
             mediaPlayerModel: mediaPlayerModel,
             requestModifier: requestModifier

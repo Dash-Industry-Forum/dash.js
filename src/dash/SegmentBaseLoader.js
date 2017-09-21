@@ -59,7 +59,6 @@ function SegmentBaseLoader() {
         boxParser = BoxParser(context).getInstance();
         requestModifier = RequestModifier(context).getInstance();
         xhrLoader = XHRLoader(context).create({
-            errHandler: errHandler,
             metricsModel: metricsModel,
             mediaPlayerModel: mediaPlayerModel,
             requestModifier: requestModifier
