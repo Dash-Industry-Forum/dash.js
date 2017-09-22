@@ -19,7 +19,6 @@ function WebmSegmentBaseLoader() {
 
     let instance,
         WebM,
-        errHandler,
         requestModifier,
         metricsModel,
         mediaPlayerModel,
@@ -102,13 +101,12 @@ function WebmSegmentBaseLoader() {
     }
 
     function setConfig(config) {
-        if (!config.baseURLController || !config.metricsModel || !config.mediaPlayerModel || !config.errHandler) {
+        if (!config.baseURLController || !config.metricsModel || !config.mediaPlayerModel) {
             throw new Error('Missing config parameter(s)');
         }
         baseURLController = config.baseURLController;
         metricsModel = config.metricsModel;
         mediaPlayerModel = config.mediaPlayerModel;
-        errHandler = config.errHandler;
     }
 
     function parseCues(ab) {
@@ -408,7 +406,6 @@ function WebmSegmentBaseLoader() {
     }
 
     function reset() {
-        errHandler = null;
         requestModifier = null;
         log = null;
     }

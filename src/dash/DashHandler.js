@@ -65,7 +65,7 @@ function DashHandler(config) {
     const dashMetrics = config.dashMetrics;
     const metricsModel = config.metricsModel;
     const mediaPlayerModel = config.mediaPlayerModel;
-    const errHandler = config.errHandler;
+
     const baseURLController = config.baseURLController;
 
     let instance,
@@ -86,8 +86,7 @@ function DashHandler(config) {
         segmentBaseLoader.setConfig({
             baseURLController: baseURLController,
             metricsModel: metricsModel,
-            mediaPlayerModel: mediaPlayerModel,
-            errHandler: errHandler
+            mediaPlayerModel: mediaPlayerModel
         });
 
         eventBus.on(Events.INITIALIZATION_LOADED, onInitializationLoaded, instance);

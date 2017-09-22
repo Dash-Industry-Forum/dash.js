@@ -46,7 +46,6 @@ function FragmentController( config ) {
     const log = Debug(context).getInstance().log;
     const eventBus = EventBus(context).getInstance();
 
-    const errHandler = config.errHandler;
     const mediaPlayerModel = config.mediaPlayerModel;
     const metricsModel = config.metricsModel;
 
@@ -66,7 +65,6 @@ function FragmentController( config ) {
                 fragmentLoader: FragmentLoader(context).create({
                     metricsModel: metricsModel,
                     mediaPlayerModel: mediaPlayerModel,
-                    errHandler: errHandler,
                     requestModifier: RequestModifier(context).getInstance()
                 })
             });

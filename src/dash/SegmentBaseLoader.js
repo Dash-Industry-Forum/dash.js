@@ -47,7 +47,6 @@ function SegmentBaseLoader() {
     const eventBus = EventBus(context).getInstance();
 
     let instance,
-        errHandler,
         boxParser,
         requestModifier,
         metricsModel,
@@ -76,10 +75,6 @@ function SegmentBaseLoader() {
 
         if (config.mediaPlayerModel) {
             mediaPlayerModel = config.mediaPlayerModel;
-        }
-
-        if (config.errHandler) {
-            errHandler = config.errHandler;
         }
     }
 
@@ -243,7 +238,6 @@ function SegmentBaseLoader() {
     function reset() {
         xhrLoader.abort();
         xhrLoader = null;
-        errHandler = null;
         boxParser = null;
         requestModifier = null;
     }

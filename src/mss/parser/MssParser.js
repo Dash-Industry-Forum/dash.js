@@ -189,7 +189,6 @@ function MssParser(config) {
         // Check if codec is supported
         if (SUPPORTED_CODECS.indexOf(fourCCValue.toUpperCase()) === -1) {
             // Do not send warning
-            //this.errHandler.sendWarning(MediaPlayer.dependencies.ErrorHandler.prototype.MEDIA_ERR_CODEC_UNSUPPORTED, 'Codec not supported', {codec: fourCCValue});
             log('[MssParser] Codec not supported: ' + fourCCValue);
             return null;
         }

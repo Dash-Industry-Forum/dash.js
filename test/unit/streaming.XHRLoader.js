@@ -9,7 +9,6 @@ const sinon = require('sinon');
 
 const context = {};
 
-let errHandler;
 let metricsModel;
 let requestModifier;
 let mediaPlayerModelMock;
@@ -71,7 +70,6 @@ describe('XHRLoader', function () {
         const callbackCompleted = sinon.spy();
         const callbackError = sinon.spy();
         xhrLoader = XHRLoader(context).create({
-            errHandler: errHandler,
             metricsModel: metricsModel,
             requestModifier: requestModifier,
             mediaPlayerModel: mediaPlayerModelMock

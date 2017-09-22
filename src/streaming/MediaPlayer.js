@@ -2516,7 +2516,6 @@ function MediaPlayer() {
 
         // configure controllers
         mediaController.setConfig({
-            errHandler: errHandler,
             domStorage: domStorage
         });
 
@@ -2652,7 +2651,6 @@ function MediaPlayer() {
                 metricsModel: metricsModel,
                 playbackController: playbackController,
                 protectionController: protectionController,
-                errHandler: errHandler,
                 events: Events,
                 constants: Constants,
                 log: log,
