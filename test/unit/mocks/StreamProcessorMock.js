@@ -97,6 +97,11 @@ class StreamProcessorMock {
         return this.bufferController.isBufferingCompleted();
     }
 
+    getFragmentController() {
+        return null;
+    }
+
+    switchInitData() {}
 
     reset() {}
 }
