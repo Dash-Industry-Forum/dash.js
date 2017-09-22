@@ -35,8 +35,7 @@ import TextRequest from './vo/TextRequest';
 import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import FactoryMaker from '../core/FactoryMaker';
-
-const XLINK_LOADER_ERROR_LOADING_FAILURE = 1;
+import ErrorConstants from './constants/ErrorConstants';
 
 function XlinkLoader(config) {
 
@@ -65,8 +64,8 @@ function XlinkLoader(config) {
                 error: content || resolveToZero ?
                     null :
                     new DashJSError(
-                        XLINK_LOADER_ERROR_LOADING_FAILURE,
-                        'Failed loading Xlink element: ' + url
+                        ErrorConstants.XLINK_LOADER_LOADING_FAILURE_ERROR_CODE,
+                        ErrorConstants.XLINK_LOADER_LOADING_FAILURE_ERROR_MESSAGE + url
                     )
             });
         };
@@ -104,8 +103,5 @@ function XlinkLoader(config) {
 }
 
 XlinkLoader.__dashjs_factory_name = 'XlinkLoader';
-
 const factory = FactoryMaker.getClassFactory(XlinkLoader);
-factory.XLINK_LOADER_ERROR_LOADING_FAILURE = XLINK_LOADER_ERROR_LOADING_FAILURE;
-FactoryMaker.updateClassFactory(XlinkLoader.__dashjs_factory_name, factory);
 export default factory;

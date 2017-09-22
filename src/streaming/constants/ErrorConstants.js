@@ -41,6 +41,22 @@ class ErrorConstants {
         this.MANIFEST_LOADER_PARSING_FAILURE_ERROR_MESSAGE = 'parsing failed for ';
         this.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE = 2;
         this.MANIFEST_LOADER_LOADING_FAILURE_ERROR_MESSAGE = `Failed loading manifest: `;
+        this.XLINK_LOADER_LOADING_FAILURE_ERROR_CODE = 1;
+        this.XLINK_LOADER_LOADING_FAILURE_ERROR_MESSAGE = 'Failed loading Xlink element: ';
+        this.SEGMENTS_UPDATE_FAILED_ERROR_CODE = 1;
+        this.SEGMENTS_UPDATE_FAILED_ERROR_MESSAGE = 'Segments update failed';
+        this.SEGMENTS_UNAVAILABLE_ERROR_CODE = 1;
+        this.SEGMENTS_UNAVAILABLE_ERROR_MESSAGE = 'no segments are available yet';
+        this.SEGMENT_BASE_LOADER_ERROR_CODE = 1;
+        this.SEGMENT_BASE_LOADER_ERROR_MESSAGE = 'error loading segments';
+        this.TIME_SYNC_FAILED_ERROR_CODE = 1;
+        this.TIME_SYNC_FAILED_ERROR_MESSAGE = 'Failed to synchronize time';
+        this.FRAGMENT_LOADER_LOADING_FAILURE_ERROR_CODE = 1;
+
+        this.FRAGMENT_LOADER_NULL_REQUEST_ERROR_CODE = 2;
+        this.FRAGMENT_LOADER_NULL_REQUEST_ERROR_MESSAGE = 'request is null';
+        this.URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE = 1;
+        this.URL_RESOLUTION_FAILED_GENERIC_ERROR_MESSAGE = 'Failed to resolve a valid URL';
     }
 
     constructor () {

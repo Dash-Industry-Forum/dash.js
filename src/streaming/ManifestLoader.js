@@ -237,7 +237,5 @@ function ManifestLoader(config) {
 }
 
 ManifestLoader.__dashjs_factory_name = 'ManifestLoader';
-
 const factory = FactoryMaker.getClassFactory(ManifestLoader);
-FactoryMaker.updateClassFactory(ManifestLoader.__dashjs_factory_name, factory);
 export default factory;
