@@ -21,7 +21,7 @@ function RulesContextMock () {
         fragRequest.index = 1;
 
         return fragRequest;
-    };    
+    };
     this.getTrackInfo = function () {};
     this.getAbrController = function () {};
     this.getSwitchHistory = function () {
