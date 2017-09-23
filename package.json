@@ -6,7 +6,7 @@
   "types": "build/typings/index.d.ts",
   "scripts": {
     "debug-mocha": "iron-node node_modules/mocha/bin/_mocha --require mochahook",
-    "test": "mocha --require mochahook",
+    "test": "mocha test/unit --require mochahook",
     "prepublish": "grunt prepublish",
     "debug": "iron-mocha --require mochahook",
     "coverage": "istanbul cover node_modules/mocha/bin/_mocha --require mochahook -- test/"
