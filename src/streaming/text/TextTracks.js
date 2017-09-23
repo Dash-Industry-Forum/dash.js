@@ -37,9 +37,9 @@ import { renderHTML } from 'imsc';
 
 function TextTracks() {
 
-    let context = this.context;
-    let eventBus = EventBus(context).getInstance();
-    let log = Debug(context).getInstance().log;
+    const context = this.context;
+    const eventBus = EventBus(context).getInstance();
+    const log = Debug(context).getInstance().log;
 
     let instance,
         Cue,
@@ -96,10 +96,10 @@ function TextTracks() {
     }
 
     function createTrackForUserAgent (i) {
-        let kind = textTrackQueue[i].kind;
-        let label = textTrackQueue[i].label !== undefined ? textTrackQueue[i].label : textTrackQueue[i].lang;
-        let lang = textTrackQueue[i].lang;
-        let track = isChrome ? document.createElement('track') : videoModel.addTextTrack(kind, label, lang);
+        const kind = textTrackQueue[i].kind;
+        const label = textTrackQueue[i].label !== undefined ? textTrackQueue[i].label : textTrackQueue[i].lang;
+        const lang = textTrackQueue[i].lang;
+        const track = isChrome ? document.createElement('track') : videoModel.addTextTrack(kind, label, lang);
 
         if (isChrome) {
             track.kind = kind;
@@ -119,7 +119,6 @@ function TextTracks() {
     }
 
     function addTextTrack(textTrackInfoVO, totalTextTracks) {
-
         if (textTrackQueue.length === totalTextTracks) {
             log('Trying to add too many tracks.');
             return;
@@ -134,7 +133,7 @@ function TextTracks() {
             captionContainer = videoModel.getTTMLRenderingDiv();
             let defaultIndex = -1;
             for (let i = 0 ; i < textTrackQueue.length; i++) {
-                let track = createTrackForUserAgent.call(this, i);
+                const track = createTrackForUserAgent.call(this, i);
                 trackElementArr.push(track); //used to remove tracks from video element when added manually
 
                 if (textTrackQueue[i].defaultTrack) {
@@ -148,7 +147,7 @@ function TextTracks() {
                     videoModel.appendChild(track);
                 }
 
-                let textTrack = videoModel.getTextTrack(textTrackQueue[i].kind, textTrackQueue[i].label, textTrackQueue[i].lang);
+                const textTrack = getTrackByIdx(i);
                 if (textTrack) {
                     //each time a track is created, its mode should be showing by default
                     //sometime, it's not on Chrome
@@ -168,7 +167,7 @@ function TextTracks() {
 
             if (defaultIndex >= 0) {
                 for (let idx = 0; idx < textTrackQueue.length; idx++) {
-                    let videoTextTrack = videoModel.getTextTrack(textTrackQueue[idx].kind, textTrackQueue[idx].label, textTrackQueue[idx].lang);
+                    const videoTextTrack = getTrackByIdx(idx);
                     if (videoTextTrack) {
                         videoTextTrack.mode = (idx === defaultIndex) ? Constants.TEXT_SHOWING : Constants.TEXT_HIDDEN;
                     }
@@ -233,45 +232,43 @@ function TextTracks() {
     }
 
     function checkVideoSize(track) {
-        if (track && track.renderingType === 'html') {
-            let clientWidth = videoModel.getClientWidth();
-            let clientHeight = videoModel.getClientHeight();
-            let videoWidth = videoModel.getVideoWidth();
-            let videoHeight = videoModel.getVideoHeight();
-            let aspectRatio =  clientWidth / clientHeight;
-            let use80Percent = false;
-            if (track.isFromCEA608) {
-                // If this is CEA608 then use predefined aspect ratio
-                aspectRatio = 3.5 / 3.0;
-                use80Percent = true;
+        const clientWidth = videoModel.getClientWidth();
+        const clientHeight = videoModel.getClientHeight();
+        const videoWidth = videoModel.getVideoWidth();
+        const videoHeight = videoModel.getVideoHeight();
+        let aspectRatio =  clientWidth / clientHeight;
+        let use80Percent = false;
+        if (track.isFromCEA608) {
+            // If this is CEA608 then use predefined aspect ratio
+            aspectRatio = 3.5 / 3.0;
+            use80Percent = true;
+        }
+
+        const realVideoSize = getVideoVisibleVideoSize.call(this, clientWidth, clientHeight, videoWidth, videoHeight, aspectRatio, use80Percent);
+
+        const newVideoWidth = realVideoSize.w;
+        const newVideoHeight = realVideoSize.h;
+
+        if (newVideoWidth != actualVideoWidth || newVideoHeight != actualVideoHeight) {
+            actualVideoLeft = realVideoSize.x;
+            actualVideoTop = realVideoSize.y;
+            actualVideoWidth = newVideoWidth;
+            actualVideoHeight = newVideoHeight;
+            captionContainer.style.left = actualVideoLeft + 'px';
+            captionContainer.style.top = actualVideoTop + 'px';
+            captionContainer.style.width = actualVideoWidth + 'px';
+            captionContainer.style.height = actualVideoHeight + 'px';
+
+            // Video view has changed size, so resize any active cues
+            for (let i = 0; track.activeCues && i < track.activeCues.length; ++i) {
+                const cue = track.activeCues[i];
+                cue.scaleCue(cue);
             }
 
-            const realVideoSize = getVideoVisibleVideoSize.call(this, clientWidth, clientHeight, videoWidth, videoHeight, aspectRatio, use80Percent);
-
-            const newVideoWidth = realVideoSize.w;
-            const newVideoHeight = realVideoSize.h;
-
-            if (newVideoWidth != actualVideoWidth || newVideoHeight != actualVideoHeight) {
-                actualVideoLeft = realVideoSize.x;
-                actualVideoTop = realVideoSize.y;
-                actualVideoWidth = newVideoWidth;
-                actualVideoHeight = newVideoHeight;
-                captionContainer.style.left = actualVideoLeft + 'px';
-                captionContainer.style.top = actualVideoTop + 'px';
-                captionContainer.style.width = actualVideoWidth + 'px';
-                captionContainer.style.height = actualVideoHeight + 'px';
-
-                // Video view has changed size, so resize any active cues
-                for (let i = 0; track.activeCues && i < track.activeCues.length; ++i) {
-                    let cue = track.activeCues[i];
-                    cue.scaleCue(cue);
-                }
-
-                if ((fullscreenAttribute && document[fullscreenAttribute]) || displayCCOnTop) {
-                    captionContainer.style.zIndex = topZIndex;
-                } else {
-                    captionContainer.style.zIndex = null;
-                }
+            if ((fullscreenAttribute && document[fullscreenAttribute]) || displayCCOnTop) {
+                captionContainer.style.zIndex = topZIndex;
+            } else {
+                captionContainer.style.zIndex = null;
             }
         }
     }
@@ -286,14 +283,14 @@ function TextTracks() {
             elements;
 
         if (activeCue.cellResolution) {
-            let cellUnit = [videoWidth / activeCue.cellResolution[0], videoHeight / activeCue.cellResolution[1]];
+            const cellUnit = [videoWidth / activeCue.cellResolution[0], videoHeight / activeCue.cellResolution[1]];
             if (activeCue.linePadding) {
                 for (key in activeCue.linePadding) {
                     if (activeCue.linePadding.hasOwnProperty(key)) {
-                        let valueLinePadding = activeCue.linePadding[key];
+                        const valueLinePadding = activeCue.linePadding[key];
                         replaceValue = (valueLinePadding * cellUnit[0]).toString();
                         // Compute the CellResolution unit in order to process properties using sizing (fontSize, linePadding, etc).
-                        let elementsSpan = document.getElementsByClassName('spanPadding');
+                        const elementsSpan = document.getElementsByClassName('spanPadding');
                         for (let i = 0; i < elementsSpan.length; i++) {
                             elementsSpan[i].style.cssText = elementsSpan[i].style.cssText.replace(/(padding-left\s*:\s*)[\d.,]+(?=\s*px)/gi, '$1' + replaceValue);
                             elementsSpan[i].style.cssText = elementsSpan[i].style.cssText.replace(/(padding-right\s*:\s*)[\d.,]+(?=\s*px)/gi, '$1' + replaceValue);
@@ -350,8 +347,8 @@ function TextTracks() {
      * Add captions to track, store for later adding, or add captions added before
      */
     function addCaptions(trackIdx, timeOffset, captionData) {
-        let track = trackIdx >= 0 && textTrackQueue[trackIdx] ? videoModel.getTextTrack(textTrackQueue[trackIdx].kind, textTrackQueue[trackIdx].label, textTrackQueue[trackIdx].lang) : null;
-        let self = this;
+        const track = getTrackByIdx(trackIdx);
+        const self = this;
 
         if (!track) {
             return;
@@ -367,10 +364,6 @@ function TextTracks() {
 
             track.cellResolution = currentItem.cellResolution;
             track.isFromCEA608 = currentItem.isFromCEA608;
-
-            if (!videoSizeCheckInterval && (currentItem.type === 'html' || currentItem.type === 'image')) {
-                videoSizeCheckInterval = setInterval(checkVideoSize.bind(self, track), 500);
-            }
 
             if (currentItem.type === 'html') {
                 cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, '');
@@ -394,22 +387,22 @@ function TextTracks() {
                 cue.onenter = function () {
                     if (track.mode === Constants.TEXT_SHOWING) {
                         if (this.isd) {
-                            var finalCue = document.createElement('div');
+                            const finalCue = document.createElement('div');
                             log('Cue enter id:' + this.cueID);
                             captionContainer.appendChild(finalCue);
                             renderHTML(this.isd, finalCue, function (uri) {
-                                let imsc1ImgUrnTester = /^(urn:)(mpeg:[a-z0-9][a-z0-9-]{0,31}:)(subs:)([0-9])$/;
-                                let smpteImgUrnTester = /^#(.*)$/;
+                                const imsc1ImgUrnTester = /^(urn:)(mpeg:[a-z0-9][a-z0-9-]{0,31}:)(subs:)([0-9])$/;
+                                const smpteImgUrnTester = /^#(.*)$/;
                                 if (imsc1ImgUrnTester.test(uri)) {
-                                    let match = imsc1ImgUrnTester.exec(uri);
-                                    let imageId = parseInt(match[4], 10) - 1;
-                                    let imageData = btoa(cue.images[imageId]);
-                                    let dataUrl = 'data:image/png;base64,' + imageData;
+                                    const match = imsc1ImgUrnTester.exec(uri);
+                                    const imageId = parseInt(match[4], 10) - 1;
+                                    const imageData = btoa(cue.images[imageId]);
+                                    const dataUrl = 'data:image/png;base64,' + imageData;
                                     return dataUrl;
                                 } else if (smpteImgUrnTester.test(uri)) {
-                                    let match = smpteImgUrnTester.exec(uri);
-                                    let imageId = match[1];
-                                    let dataUrl = 'data:image/png;base64,' + cue.embeddedImages[imageId];
+                                    const match = smpteImgUrnTester.exec(uri);
+                                    const imageId = match[1];
+                                    const dataUrl = 'data:image/png;base64,' + cue.embeddedImages[imageId];
                                     return dataUrl;
                                 } else {
                                     return null;
@@ -423,8 +416,8 @@ function TextTracks() {
                     }
                 };
 
-                cue.onexit =  function () {
-                    let divs = captionContainer.childNodes;
+                cue.onexit = function () {
+                    const divs = captionContainer.childNodes;
                     for (let i = 0; i < divs.length; ++i) {
                         if (divs[i].id === this.cueID) {
                             log('Cue exit id:' + divs[i].id);
@@ -454,13 +447,17 @@ function TextTracks() {
         }
     }
 
+    function getTrackByIdx(idx) {
+        return idx >= 0 && textTrackQueue[idx] ?
+            videoModel.getTextTrack(textTrackQueue[idx].kind, textTrackQueue[idx].label, textTrackQueue[idx].lang) : null;
+    }
+
     function getCurrentTrackIdx() {
         return currentTrackIdx;
     }
 
     function getTrackIdxForId(trackId) {
         let idx = -1;
-
         for (let i = 0; i < textTrackQueue.length; i++) {
             if (textTrackQueue[i].label === trackId) {
                 idx = i;
@@ -472,9 +469,22 @@ function TextTracks() {
     }
 
     function setCurrentTrackIdx(idx) {
+        if (idx === currentTrackIdx) {
+            return;
+        }
         currentTrackIdx = idx;
-        let track = currentTrackIdx >= 0 && textTrackQueue[currentTrackIdx] ? videoModel.getTextTrack(textTrackQueue[currentTrackIdx].kind, textTrackQueue[currentTrackIdx].label, textTrackQueue[currentTrackIdx].lang) : null;
+        const track = getTrackByIdx(currentTrackIdx);
         setCueStyleOnTrack.call(this, track);
+
+        if (videoSizeCheckInterval) {
+            clearInterval(videoSizeCheckInterval);
+            videoSizeCheckInterval = null;
+        }
+
+        if (track && track.renderingType === 'html') {
+            checkVideoSize.call(this, track);
+            videoSizeCheckInterval = setInterval(checkVideoSize.bind(this, track), 500);
+        }
     }
 
     function setCueStyleOnTrack(track) {
@@ -492,7 +502,7 @@ function TextTracks() {
 
     function deleteTrackCues(track) {
         if (track.cues) {
-            let cues = track.cues;
+            const cues = track.cues;
             const lastIdx = cues.length - 1;
 
             for (let r = lastIdx; r >= 0 ; r--) {
@@ -502,7 +512,7 @@ function TextTracks() {
     }
 
     function deleteCuesFromTrackIdx(trackIdx) {
-        let track = trackIdx >= 0 && textTrackQueue[trackIdx] ? videoModel.getTextTrack(textTrackQueue[trackIdx].kind, textTrackQueue[trackIdx].label, textTrackQueue[trackIdx].lang) : null;
+        const track = getTrackByIdx(trackIdx);
         if (track) {
             deleteTrackCues(track);
         }
@@ -513,8 +523,8 @@ function TextTracks() {
         for (let i = 0; i < ln; i++) {
             if (isChrome) {
                 videoModel.removeChild(trackElementArr[i]);
-            }else {
-                let track = textTrackQueue[i] ? videoModel.getTextTrack(textTrackQueue[i].kind, textTrackQueue[i].label, textTrackQueue[i].lang) : null;
+            } else {
+                const track = getTrackByIdx(i);
                 if (track) {
                     deleteTrackCues.call(this, track);
                     track.mode = 'disabled';
@@ -527,6 +537,7 @@ function TextTracks() {
             clearInterval(videoSizeCheckInterval);
             videoSizeCheckInterval = null;
         }
+        currentTrackIdx = -1;
         clearCaptionContainer.call(this);
     }
 
@@ -545,12 +556,11 @@ function TextTracks() {
             return; //Already set
         }
 
-
         styleElement = document.createElement('style');
         styleElement.id = 'native-cue-style';
         document.head.appendChild(styleElement);
-        let stylesheet = styleElement.sheet;
-        let video = videoModel.getElement();
+        const stylesheet = styleElement.sheet;
+        const video = videoModel.getElement();
         if (video) {
             if (video.id) {
                 stylesheet.insertRule('#' + video.id + '::cue {background: transparent}', 0);
@@ -567,7 +577,7 @@ function TextTracks() {
         if (!isChrome) {
             return;
         }
-        let styleElement = document.getElementById('native-cue-style');
+        const styleElement = document.getElementById('native-cue-style');
         if (styleElement) {
             document.head.removeChild(styleElement);
         }
@@ -591,7 +601,7 @@ function TextTracks() {
     }
 
     function setModeForTrackIdx(idx, mode) {
-        let track = idx >= 0 && textTrackQueue[idx] ? videoModel.getTextTrack(textTrackQueue[idx].kind, textTrackQueue[idx].label, textTrackQueue[idx].lang) : null;
+        const track = getTrackByIdx(idx);
         if (track && track.mode !== mode) {
             track.mode = mode;
         }
