@@ -140,7 +140,7 @@ function DOMStorage(config) {
         let settings = null;
         const key = LOCAL_STORAGE_SETTINGS_KEY_TEMPLATE.replace(/\?/, type);
         try {
-            const obj = JSON.parse(localStorage.getItem(key) || {});
+            const obj = JSON.parse(localStorage.getItem(key)) || {};
             const isExpired = (new Date().getTime() - parseInt(obj.timestamp, 10)) >= mediaPlayerModel.getLastMediaSettingsCachingInfo().ttl || false;
             settings = obj.settings;
 
@@ -164,7 +164,7 @@ function DOMStorage(config) {
         if (canStore(STORAGE_TYPE_LOCAL, LAST_BITRATE)) {
             const key = LOCAL_STORAGE_BITRATE_KEY_TEMPLATE.replace(/\?/, type);
             try {
-                const obj = JSON.parse(localStorage.getItem(key) || {});
+                const obj = JSON.parse(localStorage.getItem(key)) || {};
                 const isExpired = (new Date().getTime() - parseInt(obj.timestamp, 10)) >= mediaPlayerModel.getLastMediaSettingsCachingInfo().ttl || false;
                 const bitrate = parseFloat(obj.bitrate);
 
