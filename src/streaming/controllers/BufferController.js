@@ -112,6 +112,7 @@ function BufferController(config) {
         eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this, EventBus.EVENT_PRIORITY_HIGH);
         eventBus.on(Events.SOURCEBUFFER_APPEND_COMPLETED, onAppended, this);
         eventBus.on(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
+        eventBus.on(Events.PLAYBACK_SEEKED, onSeeked, this);
     }
 
     function createBuffer(mediaInfo) {
@@ -432,6 +433,30 @@ function BufferController(config) {
         }
     }
 
+    /*
+     * MacOS Safari doesn't like buffer being appended to the start of a buffered range.
+     * It removes a little bit of buffer just after the segment we append.
+     * Therefore, let's remove all buffer ahead of us after a seek.
+     */
+    function onSeeked() {
+        const ua = navigator.userAgent.toLowerCase();
+        //This whole test is just for safari on a mac.
+        if (/safari/.test(ua) && /mac/.test(ua) && !/chrome/.test(ua) && !/windows phone/.test(ua)) {
+            removeBufferAhead(playbackController.getTime());
+        }
+    }
+
+    //Removes buffered ranges ahead. It will not remove anything part of the current buffer timeRange.
+    function removeBufferAhead(time) {
+        const ranges = sourceBufferController.getAllRanges(buffer);
+        for (let i = 0; i < ranges.length; i++) {
+            if (ranges.start(i) > time) {
+                log('Removing buffer from: ' + ranges.start(i) + '-' + ranges.end(i));
+                sourceBufferController.remove(buffer, ranges.start(i), ranges.end(i), mediaSource);
+            }
+        }
+    }
+
     function onPlaybackRateChanged() {
         checkIfSufficientBuffer();
     }
@@ -503,6 +528,7 @@ function BufferController(config) {
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
         eventBus.off(Events.SOURCEBUFFER_APPEND_COMPLETED, onAppended, this);
         eventBus.off(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
+        eventBus.off(Events.PLAYBACK_SEEKED, onSeeked, this);
 
         resetInitialSettings();
 
