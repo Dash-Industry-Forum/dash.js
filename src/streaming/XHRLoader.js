@@ -288,7 +288,7 @@ function XHRLoader(cfg) {
             // abort will trigger onloadend which we don't want
             // when deliberately aborting inflight requests -
             // set them to undefined so they are not called
-            x.onloadend = x.onerror = x.onprogress = x.onabort = undefined;
+            x.onloadend = x.onerror = x.onprogress = undefined;
             x.abort();
         });
         xhrs = [];
