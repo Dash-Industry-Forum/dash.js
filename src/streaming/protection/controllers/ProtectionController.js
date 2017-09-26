@@ -497,18 +497,24 @@ function ProtectionController(config) {
             return;
         }
 
+        const reportError = function (xhr, eventData, keySystemString, messageType) {
+            let errorMsg = ((xhr.response) ? licenseServerData.getErrorResponse(xhr.response, keySystemString, messageType) : 'NONE');
+            sendLicenseRequestCompleteEvent(eventData, 'DRM: ' + keySystemString + ' update, XHR complete. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState + '.  Response is ' + errorMsg);
+        };
+
         xhr.open(licenseServerData.getHTTPMethod(messageType), url, true);
         xhr.responseType = licenseServerData.getResponseType(keySystemString, messageType);
         xhr.onload = function () {
             if (this.status == 200) {
-                sendLicenseRequestCompleteEvent(eventData);
-                protectionModel.updateKeySession(sessionToken,
-                        licenseServerData.getLicenseMessage(this.response, keySystemString, messageType));
+                let licenseMessage = licenseServerData.getLicenseMessage(this.response, keySystemString, messageType);
+                if (licenseMessage !== null) {
+                    sendLicenseRequestCompleteEvent(eventData);
+                    protectionModel.updateKeySession(sessionToken, licenseMessage);
+                } else {
+                    reportError(this, eventData, keySystemString, messageType);
+                }
             } else {
-                sendLicenseRequestCompleteEvent(eventData,
-                        'DRM: ' + keySystemString + ' update, XHR status is "' + this.statusText + '" (' + this.status +
-                        '), expected to be 200. readyState is ' + this.readyState +
-                        '.  Response is ' + ((this.response) ? licenseServerData.getErrorResponse(this.response, keySystemString, messageType) : 'NONE'));
+                reportError(this, eventData, keySystemString, messageType);
             }
         };
         xhr.onabort = function () {

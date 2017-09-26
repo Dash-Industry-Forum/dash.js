@@ -29,6 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* global escape: true */
+
 /**
  * Microsoft PlayReady Test License Server
  *
@@ -43,6 +45,74 @@ function PlayReady() {
 
     let instance;
 
+    const soap = 'http://schemas.xmlsoap.org/soap/envelope/';
+
+    function uintToString(arrayBuffer) {
+        let encodedString = String.fromCharCode.apply(null, new Uint8Array(arrayBuffer));
+        let decodedString = decodeURIComponent(escape(encodedString));
+        return decodedString;
+    }
+
+    function parseServerResponse(serverResponse) {
+        if (window.DOMParser) {
+            let stringResponse = uintToString(serverResponse);
+            let parser = new window.DOMParser();
+            let xmlDoc = parser.parseFromString(stringResponse, 'text/xml');
+            let envelope = xmlDoc ? xmlDoc.getElementsByTagNameNS(soap, 'Envelope')[0] : null;
+            let body = envelope ? envelope.getElementsByTagNameNS(soap, 'Body')[0] : null;
+            let fault = body ? body.getElementsByTagNameNS(soap, 'Fault')[0] : null;
+
+            if (fault) {
+                return null;
+            }
+        }
+        return serverResponse;
+    }
+
+    function parseErrorResponse(serverResponse) {
+        let faultstring = '';
+        let statusCode = '';
+        let message = '';
+        let idStart = -1;
+        let idEnd = -1;
+
+        if (window.DOMParser) {
+            let stringResponse = uintToString(serverResponse);
+            let parser = new window.DOMParser();
+            let xmlDoc = parser.parseFromString(stringResponse, 'text/xml');
+            let envelope = xmlDoc ? xmlDoc.getElementsByTagNameNS(soap, 'Envelope')[0] : null;
+            let body = envelope ? envelope.getElementsByTagNameNS(soap, 'Body')[0] : null;
+            let fault = body ? body.getElementsByTagNameNS(soap, 'Fault')[0] : null;
+            let detail = fault ? fault.getElementsByTagName('detail')[0] : null;
+            let exception = detail ? detail.getElementsByTagName('Exception')[0] : null;
+            let node = null;
+
+            if (fault === null) {
+                return stringResponse;
+            }
+
+            node = fault.getElementsByTagName('faultstring')[0].firstChild;
+            faultstring = node ? node.nodeValue : null;
+
+            if (exception !== null) {
+                node = exception.getElementsByTagName('StatusCode')[0];
+                statusCode = node ? node.firstChild.nodeValue : null;
+                node = exception.getElementsByTagName('Message')[0];
+                message = node ? node.firstChild.nodeValue : null;
+                idStart = message ? message.lastIndexOf('[') + 1 : -1;
+                idEnd = message ? message.indexOf(']') : -1;
+                message = message ? message.substring(idStart, idEnd) : '';
+            }
+        }
+
+        let errorString = `code: ${statusCode}, name: ${faultstring}`;
+        if (message) {
+            errorString += `, message: ${message}`;
+        }
+
+        return errorString;
+    }
+
     function getServerURLFromMessage(url /*, message, messageType*/) {
         return url;
     }
@@ -56,11 +126,11 @@ function PlayReady() {
     }
 
     function getLicenseMessage(serverResponse/*, keySystemStr, messageType*/) {
-        return serverResponse;
+        return parseServerResponse.call(this, serverResponse);
     }
 
     function getErrorResponse(serverResponse/*, keySystemStr, messageType*/) {
-        return String.fromCharCode.apply(null, new Uint8Array(serverResponse));
+        return parseErrorResponse.call(this, serverResponse);
     }
 
     instance = {
