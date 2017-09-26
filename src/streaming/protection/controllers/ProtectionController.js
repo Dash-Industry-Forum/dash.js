@@ -498,9 +498,8 @@ function ProtectionController(config) {
         }
 
         const reportError = function (xhr, eventData, keySystemString, messageType) {
-            sendLicenseRequestCompleteEvent(eventData, 'DRM: ' + keySystemString + ' update, XHR complete. status is "' + xhr.statusText + '" (' + xhr.status +
-            '), readyState is ' + xhr.readyState +
-            '.  Response is ' + ((xhr.response) ? licenseServerData.getErrorResponse(xhr.response, keySystemString, messageType) : 'NONE'));
+            let errorMsg = ((xhr.response) ? licenseServerData.getErrorResponse(xhr.response, keySystemString, messageType) : 'NONE');
+            sendLicenseRequestCompleteEvent(eventData, 'DRM: ' + keySystemString + ' update, XHR complete. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState + '.  Response is ' + errorMsg);
         };
 
         xhr.open(licenseServerData.getHTTPMethod(messageType), url, true);

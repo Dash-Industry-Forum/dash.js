@@ -58,8 +58,8 @@ function PlayReady() {
             let stringResponse = uintToString(serverResponse);
             let parser = new window.DOMParser();
             let xmlDoc = parser.parseFromString(stringResponse, 'text/xml');
-            let enveloppe = xmlDoc ? xmlDoc.getElementsByTagNameNS(soap, 'Envelope')[0] : null;
-            let body = enveloppe ? enveloppe.getElementsByTagNameNS(soap, 'Body')[0] : null;
+            let envelope = xmlDoc ? xmlDoc.getElementsByTagNameNS(soap, 'Envelope')[0] : null;
+            let body = envelope ? envelope.getElementsByTagNameNS(soap, 'Body')[0] : null;
             let fault = body ? body.getElementsByTagNameNS(soap, 'Fault')[0] : null;
 
             if (fault) {
@@ -80,8 +80,8 @@ function PlayReady() {
             let stringResponse = uintToString(serverResponse);
             let parser = new window.DOMParser();
             let xmlDoc = parser.parseFromString(stringResponse, 'text/xml');
-            let enveloppe = xmlDoc ? xmlDoc.getElementsByTagNameNS(soap, 'Envelope')[0] : null;
-            let body = enveloppe ? enveloppe.getElementsByTagNameNS(soap, 'Body')[0] : null;
+            let envelope = xmlDoc ? xmlDoc.getElementsByTagNameNS(soap, 'Envelope')[0] : null;
+            let body = envelope ? envelope.getElementsByTagNameNS(soap, 'Body')[0] : null;
             let fault = body ? body.getElementsByTagNameNS(soap, 'Fault')[0] : null;
             let detail = fault ? fault.getElementsByTagName('detail')[0] : null;
             let exception = detail ? detail.getElementsByTagName('Exception')[0] : null;
