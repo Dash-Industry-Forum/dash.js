@@ -60,9 +60,16 @@ function Capabilities() {
         encryptedMediaSupported = value;
     }
 
-    function supportsCodec(element, codec) {
-        let canPlay = element.canPlayType(codec);
-        return (canPlay === 'probably' || canPlay === 'maybe');
+    function supportsCodec(codec) {
+        if ('MediaSource' in window && MediaSource.isTypeSupported(codec)) {
+            return true;
+        }
+
+        if ('WebKitMediaSource' in window && WebKitMediaSource.isTypeSupported(codec)) {
+            return true;
+        }
+
+        return false;
     }
 
     instance = {
