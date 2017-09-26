@@ -113,6 +113,11 @@ function FragmentLoader(config) {
                             statusText
                         )
                     );
+                },
+                abort: function (request, status) {
+                    if (request && status === 0) {
+                        eventBus.trigger(Events.FRAGMENT_LOADING_ABANDONED, {null, request: request, mediaType: request.mediaType, newQuality: NaN});
+                    }
                 }
             });
         } else {

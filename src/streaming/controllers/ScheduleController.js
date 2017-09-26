@@ -423,12 +423,12 @@ function ScheduleController(config) {
     }
 
     function onFragmentLoadingAbandoned(e) {
-        if (e.streamProcessor !== streamProcessor) {
+        if (!e || e.mediaType !== streamProcessor.getType()) {
             return;
         }
-
-        replaceRequest(e.request);
+        log('[ScheduleController][' + type + '] Request ' + e.request.url + 'has been aborted');
         isFragmentProcessingInProgress = false;
+        replaceRequest(e.request);
         startScheduleTimer(0);
     }
 
