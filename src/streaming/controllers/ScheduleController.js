@@ -269,8 +269,6 @@ function ScheduleController(config) {
     }
 
     function getInitRequest(quality) {
-        lastInitQuality = quality;
-
         const request = adapter.getInitRequest(streamProcessor, quality);
         if (request) {
             isFragmentProcessingInProgress = true;
