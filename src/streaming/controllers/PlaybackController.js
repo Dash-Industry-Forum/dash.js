@@ -472,7 +472,7 @@ function PlaybackController() {
         const hasAudioTrack = streamController.isAudioTrackPresent();
 
         if (hasAudioTrack && hasVideoTrack) {
-            if (commonEarliestTime[streamInfo.id].audio && commonEarliestTime[streamInfo.id].video) {
+            if (!isNaN(commonEarliestTime[streamInfo.id].audio) && !isNaN(commonEarliestTime[streamInfo.id].video)) {
 
                 let earliestTime;
                 let ranges;
