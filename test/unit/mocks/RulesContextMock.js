@@ -10,20 +10,21 @@ function switchRequestHistoryMock() {
 
 function RulesContextMock () {
     this.getMediaInfo = function () {
-
     };
+
     this.getMediaType = function () {
         return 'video';
     };
-    this.getCurrentRequest = function() {
+
+    this.getCurrentRequest = function () {
         let fragRequest =  new FragmentRequest();
         fragRequest.index = 1;
 
         return fragRequest;
-    };    
-    this.getTrackInfo = function() {};
-    this.getAbrController = function() {};
-    this.getSwitchHistory = function() {
+    };
+    this.getTrackInfo = function () {};
+    this.getAbrController = function () {};
+    this.getSwitchHistory = function () {
         return new switchRequestHistoryMock();
     };
 }

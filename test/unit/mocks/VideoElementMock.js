@@ -9,7 +9,7 @@ class TextTrackMock {
 class VideoElementMock {
 
     setup() {
-		this.playbackRate = 0;
+        this.playbackRate = 0;
         this.muted = false;
         this.volume = 0;
         this.currentTime = 0;
@@ -19,7 +19,7 @@ class VideoElementMock {
 
     constructor() {
         this.setup();
-    }   
+    }
 
     addTextTrack(kind, label, lang) {
         let textTrack = new TextTrackMock();

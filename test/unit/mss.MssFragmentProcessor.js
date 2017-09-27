@@ -12,7 +12,7 @@ const eventBus = EventBus(context).getInstance();
 const mssFragmentProcessor = MssFragmentProcessor(context).create({metricsModel: metricsModel, playbackController: playbackController, eventBus: eventBus});
 
 describe('MssFragmentProcessor', function () {
-    
+
     it('should return undefined when generateMoov is called and representation is undefined', () => {
         const moov = mssFragmentProcessor.generateMoov();
 

@@ -8,7 +8,7 @@ let dashParser = DashParser(context).create({});
 
 describe('DashParser', function () {
 
-	beforeEach(function () {
+    beforeEach(function () {
         if (typeof window === 'undefined') {
             global.window = {
                 performance: {
@@ -24,15 +24,14 @@ describe('DashParser', function () {
         delete global.window;
     });
 
-	it('should throw an error when parse is called and config object has not been set properly', function () {
+    it('should throw an error when parse is called and config object has not been set properly', function () {
         expect(dashParser.parse.bind('')).to.be.throw('Missing config parameter(s)');
     });
 
-	it('should throw an error when parse is called without data and config object has been set properly', function () {
-		const errorHandlerMock = new ErrorHandlerMock();
-		dashParser = DashParser(context).create({errorHandler: errorHandlerMock});
-		dashParser.parse();
-		expect(errorHandlerMock.error).to.equal('parsing the manifest failed');
+    it('should throw an error when parse is called without data and config object has been set properly', function () {
+        const errorHandlerMock = new ErrorHandlerMock();
+        dashParser = DashParser(context).create({errorHandler: errorHandlerMock});
+        dashParser.parse();
+        expect(errorHandlerMock.error).to.equal('parsing the manifest failed');
     });
-
 });

@@ -68,7 +68,7 @@ describe('ScheduleController', function () {
         let onStreamInit = function () {
             eventBus.off(Events.STREAM_INITIALIZED, onStreamInit);
 
-            expect(scheduleController.isStarted()).to.be.true;
+            expect(scheduleController.isStarted()).to.be.true; // jshint ignore:line
             done();
         };
 
@@ -84,10 +84,10 @@ describe('ScheduleController', function () {
         let onStreamInit = function () {
             eventBus.off(Events.STREAM_INITIALIZED, onStreamInit);
 
-            expect(scheduleController.isStarted()).to.be.true;
+            expect(scheduleController.isStarted()).to.be.true; // jshint ignore:line
 
             scheduleController.stop();
-            expect(scheduleController.isStarted()).to.be.false;
+            expect(scheduleController.isStarted()).to.be.false; // jshint ignore:line
             done();
         };
 

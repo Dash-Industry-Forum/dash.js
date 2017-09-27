@@ -12,37 +12,16 @@ class MediaControllerMock {
         this.tracks = [];
     }
 
-    /**
-     * @param {string} type
-     * @param {StreamInfo} streamInfo
-     * @memberof MediaController#
-     */
-    checkInitialMediaSettingsForType(type, streamInfo) {}
+    checkInitialMediaSettingsForType() {}
 
-    /**
-     * @param {MediaInfo} track
-     * @memberof MediaController#
-     */
     addTrack(track) {
         this.tracks.push(track);
     }
 
-    /**
-     * @param {string} type
-     * @param {StreamInfo} streamInfo
-     * @returns {Array}
-     * @memberof MediaController#
-     */
     getTracksFor() {
         return this.tracks;
     }
 
-    /**
-     * @param {string} type
-     * @param {StreamInfo} streamInfo
-     * @returns {Object|null}
-     * @memberof MediaController#
-     */
     getCurrentTrackFor() {
         return this.track;
     }

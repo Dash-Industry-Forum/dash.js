@@ -15,8 +15,8 @@ import SpecHelper from './helpers/SpecHelper';
 import AbrController from '../../src/streaming/controllers/AbrController';
 import DOMStorage from '../../src/streaming/utils/DOMStorage';
 
-const chai = require('chai'),
-      spies = require('chai-spies');
+const chai = require('chai');
+const spies = require('chai-spies');
 
 chai.use(spies);
 
@@ -24,7 +24,7 @@ const expect = chai.expect;
 const voHelper = new VoHelper();
 const objectsHelper = new ObjectsHelper();
 
-describe("RepresentationController", function () {
+describe('RepresentationController', function () {
     // Arrange
     const context = {};
     const testType = 'video';
@@ -68,31 +68,31 @@ describe("RepresentationController", function () {
         domStorage: domStorage,
         dashManifestModel: dashManifestModel,
         manifestModel: manifestModel,
-        streamProcessor : streamProcessor
+        streamProcessor: streamProcessor
     });
     representationController.initialize();
 
-    it("should not contain data before it is set", function () {
+    it('should not contain data before it is set', function () {
         // Act
         const data = representationController.getData();
 
         // Assert
-        expect(data).not.exist;
+        expect(data).not.exist; // jshint ignore:line
     });
 
-    describe("when data update started", function () {
+    describe('when data update started', function () {
         let spy;
 
-        beforeEach(function() {
+        beforeEach(function () {
             spy = chai.spy();
             eventBus.on(Events.DATA_UPDATE_STARTED, spy);
         });
 
-        afterEach(function() {
+        afterEach(function () {
             eventBus.off(Events.DATA_UPDATE_STARTED, spy);
         });
 
-        it("should fire dataUpdateStarted event when new data is set", function () {
+        it('should fire dataUpdateStarted event when new data is set', function () {
             // Act
             representationController.updateData(data, adaptation, testType);
 
@@ -101,40 +101,40 @@ describe("RepresentationController", function () {
         });
     });
 
-    describe("when data update completed", function () {
+    describe('when data update completed', function () {
         beforeEach(function (done) {
             representationController.updateData(data, adaptation, testType);
-            setTimeout(function(){
+            setTimeout(function () {
                 done();
             }, specHelper.getExecutionDelay());
         });
 
-        it("should return the data that was set", function () {
+        it('should return the data that was set', function () {
             expect(representationController.getData()).to.equal(data);
         });
 
-        it("should return correct data index", function () {
-            var expectedValue = 0;
+        it('should return correct data index', function () {
+            const expectedValue = 0;
 
             expect(representationController.getDataIndex()).to.equal(expectedValue);
         });
 
-        it("should return correct representation for quality", function () {
-            var quality = 0,
-                expectedValue = 0;
+        it('should return correct representation for quality', function () {
+            const quality = 0;
+            const expectedValue = 0;
 
             expect(representationController.getRepresentationForQuality(quality).index).to.equal(expectedValue);
         });
     });
 
-    describe("when a call to reset is done", function () {
-        it("should not contain data after a call to reset", function () {
+    describe('when a call to reset is done', function () {
+        it('should not contain data after a call to reset', function () {
             representationController.reset();
             // Act
             const data = representationController.getData();
 
             // Assert
-            expect(data).not.exist;
+            expect(data).not.exist; // jshint ignore:line
         });
     });
 });

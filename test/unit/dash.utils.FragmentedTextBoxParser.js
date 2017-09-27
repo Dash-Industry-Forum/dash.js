@@ -7,21 +7,21 @@ const context = {};
 const fragmentedTextBoxParser = FragmentedTextBoxParser(context).getInstance();
 
 describe('FragmentedTextBoxParser', function () {
-    
+
     describe('when no boxParser has been set', () => {
         it('should throw an exception when attempting to call getSamplesInfo and no boxParser has been set', () => {
-            expect(fragmentedTextBoxParser.getSamplesInfo.bind(fragmentedTextBoxParser)).to.throw("boxParser is undefined");
+            expect(fragmentedTextBoxParser.getSamplesInfo.bind(fragmentedTextBoxParser)).to.throw('boxParser is undefined');
         });
 
         it('should throw an exception when attempting to call getMediaTimescaleFromMoov and no boxParser has been set', () => {
-            expect(fragmentedTextBoxParser.getMediaTimescaleFromMoov.bind(fragmentedTextBoxParser)).to.throw("boxParser is undefined");
+            expect(fragmentedTextBoxParser.getMediaTimescaleFromMoov.bind(fragmentedTextBoxParser)).to.throw('boxParser is undefined');
         });
     });
 
     describe('when no sample is defined', () => {
-         it('should return an object with an empty array called samplesInfo.sampleList when getSamplesInfo is called and sample is undefined', () => {
+        it('should return an object with an empty array called samplesInfo.sampleList when getSamplesInfo is called and sample is undefined', () => {
             const parser = BoxParser(context).getInstance();
-            const config = {boxParser : parser};
+            const config = {boxParser: parser};
             fragmentedTextBoxParser.setConfig(config);
             const samplesInfo = fragmentedTextBoxParser.getSamplesInfo();
 

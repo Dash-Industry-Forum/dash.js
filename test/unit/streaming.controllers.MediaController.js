@@ -11,7 +11,7 @@ const context = {};
 const eventBus = EventBus(context).getInstance();
 const objectUtils = ObjectUtils(context).getInstance();
 
-describe("MediaController", function () {
+describe('MediaController', function () {
     let mediaController;
     let domStorageMock;
 
@@ -33,27 +33,27 @@ describe("MediaController", function () {
     describe('Initial Settings', function () {
         it('should not set initial settings - type undefined', function () {
             let settings = mediaController.getInitialSettings(undefined);
-            expect(settings).to.not.exist;
+            expect(settings).to.not.exist; // jshint ignore:line
 
             mediaController.setInitialSettings(undefined);
 
             settings = mediaController.getInitialSettings(undefined);
-            expect(settings).to.not.exist;
+            expect(settings).to.not.exist; // jshint ignore:line
         });
 
         it('should not set initial settings - value undefined', function () {
             let settings = mediaController.getInitialSettings('test');
-            expect(settings).to.not.exist;
+            expect(settings).to.not.exist; // jshint ignore:line
 
             mediaController.setInitialSettings('test');
 
             settings = mediaController.getInitialSettings('test');
-            expect(settings).to.not.exist;
+            expect(settings).to.not.exist; // jshint ignore:line
         });
 
         it('should set and get initial settings', function () {
             let settings = mediaController.getInitialSettings('test');
-            expect(settings).to.not.exist;
+            expect(settings).to.not.exist; // jshint ignore:line
 
             mediaController.setInitialSettings('test', 'testvalue');
 
@@ -65,17 +65,17 @@ describe("MediaController", function () {
     describe('Switch Mode', function () {
         it('should not set switch mode if mode is not supported', function () {
             let switchmode = mediaController.getSwitchMode('test');
-            expect(switchmode).to.not.exist;
+            expect(switchmode).to.not.exist; // jshint ignore:line
 
             mediaController.setSwitchMode('test', 'unsupported');
 
             switchmode = mediaController.getSwitchMode('test');
-            expect(switchmode).to.not.exist;
+            expect(switchmode).to.not.exist; // jshint ignore:line
         });
 
         it('should set and get switch mode', function () {
             let switchmode = mediaController.getSwitchMode('test');
-            expect(switchmode).to.not.exist;
+            expect(switchmode).to.not.exist; // jshint ignore:line
 
             mediaController.setSwitchMode('test', MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE);
 
@@ -110,28 +110,28 @@ describe("MediaController", function () {
         it('should return false if type is not supported', function () {
 
             let supported = mediaController.isMultiTrackSupportedByType(null);
-            expect(supported).to.be.false;
+            expect(supported).to.be.false; // jshint ignore:line
 
             supported = mediaController.isMultiTrackSupportedByType(undefined);
-            expect(supported).to.be.false;
+            expect(supported).to.be.false; // jshint ignore:line
 
             supported = mediaController.isMultiTrackSupportedByType('toto');
-            expect(supported).to.be.false;
+            expect(supported).to.be.false; // jshint ignore:line
         });
 
         it('should return true if type is supported', function () {
 
             let supported = mediaController.isMultiTrackSupportedByType(Constants.AUDIO);
-            expect(supported).to.be.true;
+            expect(supported).to.be.true; // jshint ignore:line
 
             supported = mediaController.isMultiTrackSupportedByType(Constants.VIDEO);
-            expect(supported).to.be.true;
+            expect(supported).to.be.true; // jshint ignore:line
 
             supported = mediaController.isMultiTrackSupportedByType(Constants.TEXT);
-            expect(supported).to.be.true;
+            expect(supported).to.be.true; // jshint ignore:line
 
             supported = mediaController.isMultiTrackSupportedByType(Constants.FRAGMENTED_TEXT);
-            expect(supported).to.be.true;
+            expect(supported).to.be.true; // jshint ignore:line
         });
 
     });
@@ -158,7 +158,7 @@ describe("MediaController", function () {
 
             };
             let equal = mediaController.isTracksEqual(track1, track2);
-            expect(equal).to.be.false;
+            expect(equal).to.be.false; // jshint ignore:line
 
         });
 
@@ -183,7 +183,7 @@ describe("MediaController", function () {
 
             };
             let equal = mediaController.isTracksEqual(track1, track2);
-            expect(equal).to.be.true;
+            expect(equal).to.be.true; // jshint ignore:line
         });
 
     });
@@ -226,7 +226,7 @@ describe("MediaController", function () {
 
             let trackList = mediaController.getTracksFor(trackType, streamInfo);
             expect(trackList).to.have.lengthOf(1);
-            expect(objectUtils.areEqual(trackList[0], track)).to.be.true;
+            expect(objectUtils.areEqual(trackList[0], track)).to.be.true; // jshint ignore:line
         });
 
         it('should add and set current track', function () {
@@ -245,7 +245,7 @@ describe("MediaController", function () {
 
             // check that track has been added
             let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo);
-            expect(objectUtils.areEqual(currentTrack, track)).to.be.true;
+            expect(objectUtils.areEqual(currentTrack, track)).to.be.true; // jshint ignore:line
         });
 
         it('should check current track', function () {
@@ -269,7 +269,7 @@ describe("MediaController", function () {
 
             // check that track has been added
             let currentTrack = mediaController.isCurrentTrack(track);
-            expect(currentTrack).to.be.true;
+            expect(currentTrack).to.be.true; // jshint ignore:line
         });
 
         it('should emit Events.CURRENT_TRACK_CHANGED when track has changed', function (done) {
@@ -308,7 +308,7 @@ describe("MediaController", function () {
 
             // check that track has been added
             let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo);
-            expect(objectUtils.areEqual(currentTrack, track1)).to.be.true;
+            expect(objectUtils.areEqual(currentTrack, track1)).to.be.true; // jshint ignore:line
 
             let onTrackChanged = function (e) {
 
@@ -316,8 +316,8 @@ describe("MediaController", function () {
                 let current = e.newMediaInfo;
                 let switchMode = e.switchMode;
 
-                expect(objectUtils.areEqual(old, track1)).to.be.true;
-                expect(objectUtils.areEqual(current, track2)).to.be.true;
+                expect(objectUtils.areEqual(old, track1)).to.be.true; // jshint ignore:line
+                expect(objectUtils.areEqual(current, track2)).to.be.true; // jshint ignore:line
                 expect(switchMode).to.equal(MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE);
 
                 eventBus.off(Events.CURRENT_TRACK_CHANGED, onTrackChanged);
@@ -353,10 +353,10 @@ describe("MediaController", function () {
 
             let trackList = mediaController.getTracksFor(trackType, streamInfo);
             expect(trackList).to.have.lengthOf(1);
-            expect(objectUtils.areEqual(trackList[0], track)).to.be.true;
+            expect(objectUtils.areEqual(trackList[0], track)).to.be.true; // jshint ignore:line
 
             let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo);
-            expect(objectUtils.areEqual(currentTrack, track)).to.be.false;
+            expect(objectUtils.areEqual(currentTrack, track)).to.be.false; // jshint ignore:line
 
             // call to checkInitialMediaSettingsForType
             mediaController.setInitialSettings(trackType, {
@@ -366,7 +366,7 @@ describe("MediaController", function () {
             mediaController.checkInitialMediaSettingsForType(trackType, streamInfo);
 
             currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo);
-            expect(objectUtils.areEqual(currentTrack, track)).to.be.true;
+            expect(objectUtils.areEqual(currentTrack, track)).to.be.true; // jshint ignore:line
 
         });
 

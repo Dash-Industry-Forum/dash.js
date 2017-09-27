@@ -18,7 +18,7 @@ describe('PlaybackController', function () {
     let videoModelMock;
     let metricsModelMock;
     let dashMetricsMock;
-    let mediaPlayerModelMock
+    let mediaPlayerModelMock;
 
     beforeEach(function () {
         videoModelMock = new VideoModelMock();
@@ -44,8 +44,8 @@ describe('PlaybackController', function () {
     describe('Not initialized', function () {
         it('should initialize', function () {
 
-            expect(playbackController.getIsDynamic()).to.not.exist;
-            expect(playbackController.getLiveStartTime()).to.be.NaN;
+            expect(playbackController.getIsDynamic()).to.not.exist; // jshint ignore:line
+            expect(playbackController.getLiveStartTime()).to.be.NaN; // jshint ignore:line
 
             let streamInfo = {
                 manifestInfo: {
@@ -79,19 +79,19 @@ describe('PlaybackController', function () {
 
             it('should start playing video', function () {
                 playbackController.play();
-                expect(videoModelMock.isplaying).to.be.true;
+                expect(videoModelMock.isplaying).to.be.true; // jshint ignore:line
             });
 
             it('should pause the video', function () {
                 playbackController.pause();
-                expect(videoModelMock.ispaused).to.be.true;
+                expect(videoModelMock.ispaused).to.be.true; // jshint ignore:line
             });
 
             it('should return if video is paused', function () {
 
-                expect(playbackController.isPaused()).to.be.false;
+                expect(playbackController.isPaused()).to.be.false; // jshint ignore:line
                 playbackController.pause();
-                expect(playbackController.isPaused()).to.be.true;
+                expect(playbackController.isPaused()).to.be.true; // jshint ignore:line
             });
 
             it('should seek the video', function () {
@@ -104,7 +104,7 @@ describe('PlaybackController', function () {
                 let onSeekedAsked = function () {
                     eventBus.off(Events.PLAYBACK_SEEK_ASKED, onSeekedAsked);
                     done();
-                }
+                };
                 eventBus.on(Events.PLAYBACK_SEEK_ASKED, onSeekedAsked, this);
 
                 playbackController.seek(10);
@@ -259,7 +259,7 @@ describe('PlaybackController', function () {
                 };
 
                 eventBus.on(Events.PLAYBACK_ERROR, onError, this);
-                videoModelMock.fireEvent('error', [{target : { error: 'error'}}]);
+                videoModelMock.fireEvent('error', [{target: { error: 'error'}}]);
             });
         });
 
