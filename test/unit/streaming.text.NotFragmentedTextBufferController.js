@@ -4,7 +4,6 @@ import EventBus from '../../src/core/EventBus';
 import Events from '../../src/core/events/Events';
 import InitCache from '../../src/streaming/utils/InitCache';
 
-import SourceBufferControllerMock from './mocks/SourceBufferControllerMock';
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 import StreamProcessorMock from './mocks/StreamProcessorMock';
 
@@ -23,7 +22,6 @@ const initCache = InitCache(context).getInstance();
 describe('NotFragmentedTextBufferController', function () {
 
     let streamProcessorMock = new StreamProcessorMock(testType, streamInfo);
-    let sourceBufferMock = new SourceBufferControllerMock(testType);
     let errorHandlerMock = new ErrorHandlerMock();
     let notFragmentedTextBufferController;
 
@@ -31,7 +29,6 @@ describe('NotFragmentedTextBufferController', function () {
         notFragmentedTextBufferController = NotFragmentedTextBufferController(context).create({
             type: testType,
             errHandler: errorHandlerMock,
-            sourceBufferController: sourceBufferMock,
             streamProcessor: streamProcessorMock
         });
     });

@@ -67,6 +67,8 @@ function SourceBufferSink(mediaSource, mediaInfo) {
     let buffer,
         isAppendingInProgress;
 
+    let appendQueue = [];
+
     function setup() {
         isAppendingInProgress = false;
 
@@ -99,6 +101,7 @@ function SourceBufferSink(mediaSource, mediaInfo) {
             isAppendingInProgress = false;
             buffer = null;
         }
+        appendQueue = [];
     }
 
     function getBuffer() {
@@ -110,30 +113,10 @@ function SourceBufferSink(mediaSource, mediaInfo) {
     }
 
     function append(chunk) {
-        const bytes = chunk.bytes;
-        const sourceBufferSink = this;
-        waitForUpdateEnd(buffer, function () {
-            try {
-                buffer.appendBuffer(bytes);
-                isAppendingInProgress = true;
-
-                // updating is in progress, we should wait for it to complete before signaling that this operation is done
-                waitForUpdateEnd(buffer, function () {
-                    isAppendingInProgress = false;
-                    eventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {
-                        buffer: sourceBufferSink,
-                        bytes: bytes
-                    });
-                });
-            } catch (err) {
-                isAppendingInProgress = false;
-                eventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {
-                    buffer: sourceBufferSink,
-                    bytes: bytes,
-                    error: new Error(err.code, err.message, null)
-                });
-            }
-        });
+        appendQueue.push(chunk);
+        if (!isAppendingInProgress) {
+            waitForUpdateEnd(buffer, appendNextInQueue.bind(this));
+        }
     }
 
     function remove(start, end) {
@@ -163,7 +146,44 @@ function SourceBufferSink(mediaSource, mediaInfo) {
         });
     }
 
-    function abort(mediaSource, buffer) {
+    function appendNextInQueue() {
+        const sourceBufferSink = this;
+        if (appendQueue.length > 0) {
+            isAppendingInProgress = true;
+            const nextChunk = appendQueue[0];
+            appendQueue.splice(0,1);
+
+            try {
+                buffer.appendBuffer(nextChunk.bytes);
+                // updating is in progress, we should wait for it to complete before signaling that this operation is done
+                waitForUpdateEnd(buffer, function () {
+                    if (appendQueue.length > 0) {
+                        appendNextInQueue();
+                    } else {
+                        isAppendingInProgress = false;
+                        eventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {
+                            buffer: sourceBufferSink,
+                            bytes: nextChunk.bytes
+                        });
+                    }
+                });
+            } catch (err) {
+                if (appendQueue.length > 0) {
+                    appendNextInQueue();
+                } else {
+                    isAppendingInProgress = false;
+                }
+
+                eventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {
+                    buffer: sourceBufferSink,
+                    bytes: nextChunk.bytes,
+                    error: new DashJSError(err.code, err.message, null)
+                });
+            }
+        }
+    }
+
+    function abort() {
         try {
             if (mediaSource.readyState === 'open') {
                 buffer.abort();
@@ -173,6 +193,8 @@ function SourceBufferSink(mediaSource, mediaInfo) {
         } catch (ex) {
             log('SourceBuffer append abort failed: "' + ex + '"');
         }
+
+        appendQueue = [];
     }
 
     function waitForUpdateEnd(buffer, callback) {

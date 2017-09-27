@@ -10,7 +10,7 @@ import InitCache from '../../src/streaming/utils/InitCache';
 import Debug from '../../src/core/Debug';
 
 import StreamControllerMock from './mocks/StreamControllerMock';
-import SourceBufferControllerMock from './mocks/SourceBufferControllerMock';
+import SourceBufferSinkMock from './mocks/SourceBufferSinkMock';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 import StreamProcessorMock from './mocks/StreamProcessorMock';
 import MetricsModelMock from './mocks/MetricsModelMock';
@@ -34,13 +34,10 @@ describe('BufferController', function () {
     const debug = Debug(context).getInstance();
     debug.setLogToBrowserConsole(false);
     const streamProcessor = new StreamProcessorMock(testType, streamInfo);
-    const sourceBufferMock = new SourceBufferControllerMock(testType);
     const streamControllerMock = new StreamControllerMock();
     const adapterMock = new AdapterMock();
     const metricsModelMock = new MetricsModelMock();
     const playbackControllerMock = new PlaybackControllerMock();
-    const mediaPlayerModelMock = new MediaPlayerModelMock();
-
     let bufferController;
 
     beforeEach(function () {
@@ -50,8 +47,6 @@ describe('BufferController', function () {
 
         bufferController = BufferController(context).create({
             metricsModel: metricsModelMock,
-            mediaPlayerModel: mediaPlayerModelMock,
-            sourceBufferController: sourceBufferMock,
             errHandler: ErrorHandler(context).getInstance(),
             streamController: streamControllerMock,
             mediaController: MediaController(context).getInstance(),
@@ -480,4 +475,185 @@ describe('BufferController', function () {
             eventBus.trigger(Events.PLAYBACK_SEEKING);
         });
     });
+   /* 
+    describe('Method getTotalBufferedTime', function () {
+        let buffer;
+        beforeEach(function () {
+            let mediaInfo = {
+                codec: 'video/webm; codecs="vp8, vorbis"'
+            };
+
+            let mediaSource = new MediaSourceMock();
+            
+            buffer = SourceBufferSink(context).create(mediaSource, mediaInfo);
+            expect(mediaSource.buffers).to.have.lengthOf(1);
+        });
+
+        it('should return 0 if no buffer', function () {
+
+            let totalBufferedTime = sourceBufferController.getTotalBufferedTime(buffer);
+            expect(totalBufferedTime).to.equal(0);
+        });
+
+        it('should return totalBufferedTime ', function () {
+
+            buffer.addRange({
+                start: 2,
+                end: 5
+            });
+            buffer.addRange({
+                start: 8,
+                end: 9
+            });
+            let totalBufferedTime = sourceBufferController.getTotalBufferedTime(buffer);
+            expect(totalBufferedTime).to.equal(4);
+        });
+    });
+
+    describe('Method getBufferLength', function () {
+        let buffer;
+        beforeEach(function () {
+            let mediaInfo = {
+                codec: 'video/webm; codecs="vp8, vorbis"'
+            };
+
+            let mediaSource = new MediaSourceMock();
+            buffer = SourceBufferSink(context).create(mediaSource, mediaInfo);
+            expect(mediaSource.buffers).to.have.lengthOf(1);
+        });
+
+        it('should return 0 if no buffer', function () {
+
+            let totalBufferedLength = sourceBufferController.getBufferLength(buffer, 10);
+            expect(totalBufferedLength).to.equal(0);
+        });
+
+        it('should return 0 if no data buffered in time', function () {
+
+            buffer.addRange({
+                start: 2,
+                end: 5
+            });
+            let totalBufferedLength = sourceBufferController.getBufferLength(buffer, 10);
+            expect(totalBufferedLength).to.equal(0);
+        });
+
+        it('should return buffer length ', function () {
+
+            buffer.addRange({
+                start: 2,
+                end: 5
+            });
+            buffer.addRange({
+                start: 8,
+                end: 9
+            });
+
+            buffer.addRange({
+                start: 9,
+                end: 11
+            });
+            let totalBufferedLength = sourceBufferController.getBufferLength(buffer, 10);
+            expect(totalBufferedLength).to.equal(1);
+        });
+    });
+    */
+
+    describe('Method getBufferRange', function () {
+        let buffer;
+        beforeEach(function () {
+            let mediaInfo = {
+                codec: 'video/webm; codecs="vp8, vorbis"'
+            };
+
+            let mediaSource = new MediaSourceMock();
+            sourceBufferSink = SourceBufferSink(context).create(mediaSource, mediaInfo);
+            expect(mediaSource.buffers).to.have.lengthOf(1);
+            buffer = mediaSource.buffers[0];
+        });
+
+        it('should return range of buffered data', function () {
+            buffer.addRange({
+                start: 2,
+                end: 5
+            });
+            buffer.addRange({
+                start: 8,
+                end: 9
+            });
+            buffer.addRange({
+                start: 9,
+                end: 11
+            });
+            let range = sourceBufferSink.getBufferRange(buffer, 10);
+            expect(range.start).to.equal(9);
+            expect(range.end).to.equal(11);
+        });
+
+        it('should return range of buffered data - small discontinuity', function () {
+            buffer.addRange({
+                start: 2,
+                end: 5
+            });
+            buffer.addRange({
+                start: 8,
+                end: 9
+            });
+            buffer.addRange({
+                start: 9,
+                end: 10.05
+            });
+            buffer.addRange({
+                start: 10.1,
+                end: 11
+            });
+            let range = sourceBufferController.getBufferRange(buffer, 10);
+            expect(range.start).to.equal(9);
+            expect(range.end).to.equal(11);
+        });
+
+        it('should return null - time not in range', function () {
+            buffer.addRange({
+                start: 2,
+                end: 5
+            });
+            buffer.addRange({
+                start: 8,
+                end: 9
+            });
+            buffer.addRange({
+                start: 9,
+                end: 9.5
+            });
+            buffer.addRange({
+                start: 10.5,
+                end: 11
+            });
+            let range = sourceBufferController.getBufferRange(buffer, 10);
+            expect(range).to.be.null;
+        });
+
+        it('should return range of buffered data - time not in range (little gap)', function () {
+            buffer.addRange({
+                start: 2,
+                end: 5
+            });
+            buffer.addRange({
+                start: 8,
+                end: 9
+            });
+            buffer.addRange({
+                start: 9,
+                end: 9.9
+            });
+            buffer.addRange({
+                start: 10.1,
+                end: 11
+            });
+            let range = sourceBufferController.getBufferRange(buffer, 10);
+            expect(range.start).to.equal(10.1);
+            expect(range.end).to.equal(11);
+        });
+    });
+
 });

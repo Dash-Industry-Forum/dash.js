@@ -40,17 +40,13 @@ function PreBufferSink() {
     const eventBus = EventBus(context).getInstance();
 
     let chunks = [];
-    let initChunks = [];
 
     function reset() {
         chunks = [];
-        initChunks = [];
     }
 
     function append(chunk) {
-        if (chunk.segmentType === 'InitializationSegment') {
-            initChunks.push(chunk);
-        } else {
+        if (chunk.segmentType !== 'InitializationSegment') { //Init segments are stored in the initCache.
             chunks.push(chunk);
             chunks.sort(function (a, b) { return a.start - b.start; });
         }
@@ -108,9 +104,8 @@ function PreBufferSink() {
      * TODO: fragmentSource interface?
      */
     function discharge(start, end) {
-        const result = initChunks.concat(getChunksAt(start, end));
+        const result = getChunksAt(start, end);
         remove(start, end);
-        initChunks = [];
 
         return result;
     }
