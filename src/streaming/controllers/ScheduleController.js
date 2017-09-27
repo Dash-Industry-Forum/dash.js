@@ -164,7 +164,7 @@ function ScheduleController(config) {
         const newTopQualityIndex = abrController.getTopQualityIndexFor(type, id);
 
         if (topQualityIndex[id][type] != newTopQualityIndex) {
-            log('Top quality' + type + ' index has changed from ' + topQualityIndex[id][type] + ' to ' + newTopQualityIndex);
+            log('Top quality ' + type + ' index has changed from ' + topQualityIndex[id][type] + ' to ' + newTopQualityIndex);
             topQualityIndex[id][type] = newTopQualityIndex;
             return true;
         }
@@ -185,15 +185,15 @@ function ScheduleController(config) {
             bufferLevelRule.execute(streamProcessor, type, streamController.isVideoTrackPresent())) {
 
             const getNextFragment = function () {
-                log('ScheduleController - getNextFragment');
+                log('ScheduleController ' + type + '- getNextFragment');
                 const fragmentController = streamProcessor.getFragmentController();
                 if (switchTrack) {
-                    log('ScheduleController - switch track has been asked, get init request for ' + type + ' with representationid = ' + currentRepresentationInfo.id);
+                    log('ScheduleController ' + type + '- switch track has been asked, get init request for ' + type + ' with representationid = ' + currentRepresentationInfo.id);
                     streamProcessor.switchInitData(currentRepresentationInfo.id);
                     lastInitQuality = currentRepresentationInfo.quality;
                     switchTrack = false;
                 } else if (currentRepresentationInfo.quality !== lastInitQuality) {
-                    log('ScheduleController - quality has changed, get init request');
+                    log('ScheduleController ' + type + '- quality has changed, get init request');
                     lastInitQuality = currentRepresentationInfo.quality;
 
                     streamProcessor.switchInitData(currentRepresentationInfo.id);
@@ -206,10 +206,10 @@ function ScheduleController(config) {
                     } else {
                         const request = nextFragmentRequestRule.execute(streamProcessor, replacement);
                         if (request) {
-                            log('ScheduleController - getNextFragment - request is ' + request.url);
+                            log('ScheduleController ' + type + '- getNextFragment - request is ' + request.url);
                             fragmentModel.executeRequest(request);
                         } else { //Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
-                            log('getNextFragment - Playing at the bleeding live edge and frag is not available yet');
+                            log('getNextFragment ' + type + '- Playing at the bleeding live edge and frag is not available yet');
                             isFragmentProcessingInProgress = false;
                             startScheduleTimer(500);
                         }
