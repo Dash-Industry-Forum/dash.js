@@ -5,6 +5,7 @@ import Debug from '../../src/core/Debug';
 const expect = require('chai').expect;
 const fs = require('fs');
 const domParser = require('xmldom').DOMParser;
+const context = {};
 
 describe('MssParser', function () {
 
