@@ -27,7 +27,7 @@ describe('DashParser', function () {
         delete global.window;
     });
 
-	it('should throw an error when parse is called without data and config object has been set properly', function () {
+    it('should throw an error when parse is called without data and config object has been set properly', function () {
         expect(dashParser.parse.bind('')).to.be.throw('parsing the manifest failed');
     });
 
