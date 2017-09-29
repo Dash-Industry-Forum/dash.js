@@ -257,7 +257,8 @@ let FactoryMaker = (function () {
             }
         });
         if (!extensionContext) {
-            extensionContext = extensions.push(context);
+            extensions.push(context);
+            extensionContext = context;
         }
         return extensionContext;
     }
