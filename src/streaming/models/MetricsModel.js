@@ -38,7 +38,7 @@ import BufferLevel from '../vo/metrics/BufferLevel';
 import BufferState from '../vo/metrics/BufferState';
 import DVRInfo from '../vo/metrics/DVRInfo';
 import DroppedFrames from '../vo/metrics/DroppedFrames';
-import {ManifestUpdate, ManifestUpdateStreamInfo, ManifestUpdateTrackInfo} from '../vo/metrics/ManifestUpdate';
+import {ManifestUpdate, ManifestUpdateStreamInfo, ManifestUpdateRepresentationInfo} from '../vo/metrics/ManifestUpdate';
 import SchedulingInfo from '../vo/metrics/SchedulingInfo';
 import EventBus from '../../core/EventBus';
 import RequestsQueue from '../vo/metrics/RequestsQueue';
@@ -368,8 +368,8 @@ function MetricsModel() {
 
     function addManifestUpdateRepresentationInfo(manifestUpdate, id, index, streamIndex, mediaType, presentationTimeOffset, startNumber, fragmentInfoType) {
         if (manifestUpdate) {
-            let vo = new ManifestUpdateTrackInfo();
 
+            const vo = new ManifestUpdateRepresentationInfo();
             vo.id = id;
             vo.index = index;
             vo.streamIndex = streamIndex;
@@ -378,7 +378,7 @@ function MetricsModel() {
             vo.fragmentInfoType = fragmentInfoType;
             vo.presentationTimeOffset = presentationTimeOffset;
 
-            manifestUpdate.trackInfo.push(vo);
+            manifestUpdate.representationInfo.push(vo);
             metricUpdated(manifestUpdate.mediaType, MetricsConstants.MANIFEST_UPDATE_TRACK_INFO, manifestUpdate);
 
             return vo;

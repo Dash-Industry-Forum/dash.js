@@ -152,7 +152,7 @@ function DownloadRatioRuleClass() {
         }
 
         count = rulesContext.getMediaInfo().representationCount;
-        currentRepresentation = rulesContext.getTrackInfo();
+        currentRepresentation = rulesContext.getRepresentationInfo();
         currentBandwidth = dashManifest.getBandwidth(currentRepresentation);
         for (i = 0; i < count; i += 1) {
             bandwidths.push(rulesContext.getMediaInfo().bitrateList[i].bandwidth);
