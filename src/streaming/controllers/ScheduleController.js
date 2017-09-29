@@ -426,7 +426,7 @@ function ScheduleController(config) {
         if (e.streamProcessor !== streamProcessor) {
             return;
         }
-
+        log('[ScheduleController][' + type + '] Request ' + e.request.url + ' has been aborted');
         replaceRequest(e.request);
         isFragmentProcessingInProgress = false;
         startScheduleTimer(0);
