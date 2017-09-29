@@ -396,6 +396,7 @@ function AbrController() {
             changeQuality(type, oldQuality, newQuality, topQualityIdx, reason);
         }
     }
+
     function changeQuality(type, oldQuality, newQuality, topQualityIdx, reason) {
         if (type  && streamProcessorDict[type]) {
             var streamInfo = streamProcessorDict[type].getStreamInfo();
