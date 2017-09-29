@@ -564,6 +564,22 @@ function ProtectionController(config) {
             abInitData = abInitData.buffer;
         }
 
+        // If key system has already been selected and initData already seen, then do nothing
+        if (keySystem) {
+            let initDataForKS = CommonEncryption.getPSSHForKeySystem(keySystem, abInitData);
+            if (initDataForKS) {
+
+                // Check for duplicate initData
+                let currentInitData = protectionModel.getAllInitData();
+                for (let i = 0; i < currentInitData.length; i++) {
+                    if (protectionKeyController.initDataEquals(initDataForKS, currentInitData[i])) {
+                        log('DRM: Ignoring initData because we have already seen it!');
+                        return;
+                    }
+                }
+            }
+        }
+
         log('DRM: initData:', String.fromCharCode.apply(null, new Uint8Array(abInitData)));
 
         let supportedKS = protectionKeyController.getSupportedKeySystems(abInitData, protDataSet);
