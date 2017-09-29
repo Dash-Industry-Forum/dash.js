@@ -74,6 +74,7 @@ function BolaRule(config) {
         eventBus.on(Events.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, instance);
         eventBus.on(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, instance);
         eventBus.on(Events.METRIC_ADDED, onMetricAdded, instance);
+        eventBus.on(Events.QUALITY_CHANGE_REQUESTED, onQualityChangeRequested, instance);
         eventBus.on(Events.FRAGMENT_LOADING_ABANDONED, onFragmentLoadingAbandoned, instance);
     }
 
@@ -351,20 +352,31 @@ function BolaRule(config) {
         }
     }
 
+    function onQualityChangeRequested(e) {
+        // Useful to store change requests when abandoning a download.
+        if (e) {
+            const bolaState = bolaStateDict[e.mediaType];
+            if (bolaState && bolaState.state !== BOLA_STATE_ONE_BITRATE) {
+                bolaState.abrQuality = e.newQuality;
+            }
+        }
+    }
+
     function onFragmentLoadingAbandoned(e) {
-        if (e && !isNaN(e.newQuality)) {
-            let bolaState = bolaStateDict[e.mediaType];
+        if (e) {
+            const bolaState = bolaStateDict[e.mediaType];
             if (bolaState && bolaState.state !== BOLA_STATE_ONE_BITRATE) {
                 // deflate placeholderBuffer - note that we want to be conservative when abandoning
-                let bufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor(e.mediaType));
+                const bufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor(e.mediaType));
                 let wantEffectiveBufferLevel;
-                if (e.newQuality === 0) {
-                    wantEffectiveBufferLevel = MINIMUM_BUFFER_S;
-                } else {
+                if (bolaState.abrQuality > 0) {
                     // deflate to point where BOLA just chooses newQuality over newQuality-1
-                    wantEffectiveBufferLevel = minBufferLevelForQuality(bolaState, e.newQuality);
+                    wantEffectiveBufferLevel = minBufferLevelForQuality(bolaState, bolaState.abrQuality);
+                } else {
+                    wantEffectiveBufferLevel = MINIMUM_BUFFER_S;
                 }
-                bolaState.placeholderBuffer = Math.max(0, wantEffectiveBufferLevel - bufferLevel);
+                const maxPlaceholderBuffer = Math.max(0, wantEffectiveBufferLevel - bufferLevel);
+                bolaState.placeholderBuffer = Math.min(bolaState.placeholderBuffer, maxPlaceholderBuffer);
             }
         }
     }
@@ -507,6 +519,7 @@ function BolaRule(config) {
         eventBus.off(Events.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, instance);
         eventBus.off(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, instance);
         eventBus.off(Events.METRIC_ADDED, onMetricAdded, instance);
+        eventBus.off(Events.QUALITY_CHANGE_REQUESTED, onQualityChangeRequested, instance);
         eventBus.off(Events.FRAGMENT_LOADING_ABANDONED, onFragmentLoadingAbandoned, instance);
     }
 
