@@ -262,7 +262,6 @@ function MediaPlayer() {
             metricsReportingController.reset();
             metricsReportingController = null;
         }
-        mediaPlayerInitialized = false;
     }
 
     /**
