@@ -46,7 +46,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
         }
     }
 
-    function getSegmentsFromTimeline(representation, requestedTime, index, availabilityUpperLimit) {
+    function getSegmentsFromTimeline(representation, requestedTime, index) {
 
         checkConfig();
 
@@ -67,11 +67,8 @@ function TimelineSegmentsGetter(config, isDynamic) {
         const isAvailableSegmentNumberCalculated = representation.availableSegmentsNumber > 0;
 
         let maxSegmentsAhead;
-        if (availabilityUpperLimit) {
-            maxSegmentsAhead = availabilityUpperLimit;
-        } else {
-            maxSegmentsAhead = (index > -1 || requestedTime !== null) ? 10 : Infinity;
-        }
+
+        maxSegmentsAhead = (index > -1 || requestedTime !== null) ? 10 : Infinity;
 
         let time = 0;
         let scaledTime = 0;
