@@ -40,15 +40,14 @@ function VideoModel() {
         element,
         TTMLRenderingDiv,
         videoContainer,
-        stalledStreams,
         previousPlaybackRate;
 
     let context = this.context;
     let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
+    const stalledStreams = [];
 
     function initialize() {
-        stalledStreams = [];
         eventBus.on(Events.PLAYBACK_PLAYING, onPlaying, this);
     }
 
@@ -164,7 +163,7 @@ function VideoModel() {
         }
 
         stalledStreams.push(type);
-        if (stalledStreams.length === 1) {
+        if (element && stalledStreams.length === 1) {
             // Halt playback until nothing is stalled.
             event = document.createEvent('Event');
             event.initEvent('waiting', true, false);
@@ -185,7 +184,7 @@ function VideoModel() {
             stalledStreams.splice(index, 1);
         }
         // If nothing is stalled resume playback.
-        if (isStalled() === false && element.playbackRate === 0) {
+        if (element && isStalled() === false && element.playbackRate === 0) {
             setPlaybackRate(previousPlaybackRate || 1);
             if (!element.paused) {
                 event = document.createEvent('Event');
@@ -366,7 +365,6 @@ function VideoModel() {
     }
 
     instance = {
-        initialize: initialize,
         setCurrentTime: setCurrentTime,
         play: play,
         isPaused: isPaused,

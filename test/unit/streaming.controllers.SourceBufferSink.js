@@ -16,7 +16,7 @@ const streamInfo = {
     id: 'id'
 };
 
-describe('sink', function () {
+describe('SourceBufferSink', function () {
 
     let sink;
     let textControllerMock;

@@ -129,6 +129,24 @@ function Stream(config) {
         eventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
     }
 
+    function setMediaSource(mediaSource) {
+        for (let i = 0; i < streamProcessors.length;) {
+            if (isMediaSupported(streamProcessors[i].getMediaInfo())) {
+                streamProcessors[i].setMediaSource(mediaSource);
+                i++;
+            } else {
+                streamProcessors[i].reset();
+                streamProcessors.splice(i,1);
+            }
+        }
+
+        if (streamProcessors.length === 0) {
+            let msg = 'No streams to play.';
+            errHandler.manifestError(msg, 'nostreams', manifestModel.getValue());
+            log(msg);
+        }
+    }
+
     function resetInitialSettings() {
         deactivate();
         streamInfo = null;
@@ -241,7 +259,8 @@ function Stream(config) {
         return mediaInfo.type === Constants.TEXT ? mediaInfo.mimeType : mediaInfo.type;
     }
 
-    /*function isMediaSupported(mediaInfo) {
+    function isMediaSupported(mediaInfo) {
+        const element = VideoModel(context).getInstance().getElement();
         const type = mediaInfo.type;
         let codec,
             msg;
@@ -261,7 +280,7 @@ function Stream(config) {
 
         if (!!mediaInfo.contentProtection && !capabilities.supportsEncryptedMedia()) {
             errHandler.capabilityError('encryptedmedia');
-        } else if (!capabilities.supportsCodec(codec)) {
+        } else if (element && !capabilities.supportsCodec(element, codec)) {
             msg = type + 'Codec (' + codec + ') is not supported.';
             errHandler.manifestError(msg, 'codec', manifestModel.getValue());
             log(msg);
@@ -270,7 +289,7 @@ function Stream(config) {
 
         return true;
     }
-*/
+    
     function onCurrentTrackChanged(e) {
         if (e.newMediaInfo.streamInfo.id !== streamInfo.id) return;
 

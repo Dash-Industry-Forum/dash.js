@@ -120,7 +120,7 @@ function BufferController(config) {
     }
 
     function createBuffer(mediaInfo) {
-        if (!mediaInfo || !streamProcessor) return null;
+        if (!initCache || !mediaInfo || !streamProcessor) return null;
         
         if (mediaSource) {
             try {
@@ -169,7 +169,7 @@ function BufferController(config) {
                         buffer.append(initChunk);
                         lastInit = initChunk;
                     }
-                    buffer.append(chunk);
+                    buffer.append(chunk); //TODO Think about supressing buffer events the second time round after a discharge?
                 } //TODO else we lost the init(this shouldn't happen)
                 //either drop this chunk and fetch it again through the normal streaming process / get the init chunk and prepare a callback.
             }
@@ -457,14 +457,23 @@ function BufferController(config) {
             log('[BufferController][' + type + '] checkIfSufficientBuffer trigger BUFFERING_COMPLETED');
             eventBus.trigger(Events.BUFFERING_COMPLETED, { sender: instance, streamInfo: streamProcessor.getStreamInfo() });
         }
-
         if (bufferLevel < STALL_THRESHOLD && !isBufferingCompleted) {
             notifyBufferStateChanged(BUFFER_EMPTY);
         } else {
             if (isBufferingCompleted || bufferLevel >= mediaPlayerModel.getStableBufferTime()) {
                 notifyBufferStateChanged(BUFFER_LOADED);
             }
+            var videoElement = videoModel.getElement();
+            if (videoElement) {
+                var t = videoElement.currentTime;
+                var d = videoElement.duration;
+                if ( d - t > STALL_THRESHOLD ) {
+                    notifyBufferStateChanged(BUFFER_EMPTY);
+                    return;
+                }
+            }
         }
+        notifyBufferStateChanged(BUFFER_LOADED);
     }
 
     function notifyBufferStateChanged(state) {
@@ -621,8 +630,9 @@ function BufferController(config) {
     function updateBufferTimestampOffset(MSETimeOffset) {
         // Each track can have its own @presentationTimeOffset, so we should set the offset
         // if it has changed after switching the quality or updating an mpd
-        if (buffer && buffer.timestampOffset !== MSETimeOffset && !isNaN(MSETimeOffset)) {
-            buffer.timestampOffset = MSETimeOffset;
+        const sourceBuffer = buffer && buffer.getBuffer ? buffer.getBuffer() : null; //TODO: What happens when we try to set this on a prebuffer. Can we hold on to it and apply on discharge?
+        if (sourceBuffer && sourceBuffer.timestampOffset !== MSETimeOffset && !isNaN(MSETimeOffset)) {
+            sourceBuffer.timestampOffset = MSETimeOffset;
         }
     }
 
@@ -803,12 +813,12 @@ function BufferController(config) {
         wallclockTicked = 0;
         pendingPruningRanges = [];
 
-        if (!errored && buffer) {
-            buffer.abort();
+        if (buffer) {
+            if (!errored) {
+                buffer.abort();
+            }
             buffer.reset();
         }
-
-        buffer = null;
     }
 
     function reset(errored) {
