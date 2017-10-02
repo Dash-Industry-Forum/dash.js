@@ -39,7 +39,7 @@ function TemplateSegmentsGetter(config, isDynamic) {
 
     let instance;
 
-    function getSegmentsFromTemplate(representation, requestedTime, index, availabilityUpperLimit) {
+    function getSegmentsFromTemplate(representation, requestedTime, index) {
         const template = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
             AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate;
         const duration = representation.segmentDuration;
@@ -61,7 +61,7 @@ function TemplateSegmentsGetter(config, isDynamic) {
             segmentRange = {start: start, end: start};
         }
         else {
-            segmentRange = decideSegmentListRangeForTemplate(timelineConverter, isDynamic, representation, requestedTime, index, availabilityUpperLimit);
+            segmentRange = decideSegmentListRangeForTemplate(timelineConverter, isDynamic, representation, requestedTime, index);
         }
 
         startIdx = segmentRange.start;
