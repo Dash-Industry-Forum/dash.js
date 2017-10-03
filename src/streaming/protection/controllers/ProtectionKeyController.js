@@ -189,7 +189,8 @@ function ProtectionKeyController() {
                         if (!!initData) {
                             supportedKS.push({
                                 ks: keySystems[ksIdx],
-                                initData: initData
+                                initData: initData,
+                                cdmData: ks.getCDMData()
                             });
                         }
                     }

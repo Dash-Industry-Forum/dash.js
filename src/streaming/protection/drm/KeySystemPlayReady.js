@@ -40,6 +40,8 @@ import CommonEncryption from '../CommonEncryption';
 const uuid = '9a04f079-9840-4286-ab92-e65be0885f95';
 const systemString = 'com.microsoft.playready';
 const schemeIdURI = 'urn:uuid:' + uuid;
+const PRCDMData = '<PlayReadyCDMData type="LicenseAcquisition"><LicenseAcquisition version="1.0" Proactive="false"><CustomData encoding="base64encoded">%CUSTOMDATA%</CustomData></LicenseAcquisition></PlayReadyCDMData>';
+let protData;
 
 function KeySystemPlayReady(config) {
 
@@ -211,6 +213,52 @@ function KeySystemPlayReady(config) {
         messageFormat = format;
     }
 
+    function init(protectionData) {
+        if (protectionData) {
+            protData = protectionData;
+        }
+    }
+
+
+    /**
+     * Get Playready Custom data
+     */
+    function getCDMData() {
+        var customData,
+            cdmData,
+            cdmDataBytes,
+            i;
+
+        if (protData && protData.cdmData) {
+
+            // Convert custom data into multibyte string
+            customData = [];
+            for (i = 0; i < protData.cdmData.length; ++i) {
+                customData.push(protData.cdmData.charCodeAt(i));
+                customData.push(0);
+            }
+            customData = String.fromCharCode.apply(null, customData);
+
+            // Encode in Base 64 the custom data string
+            customData = BASE64.encode(customData);
+
+            // Initialize CDM data with Base 64 encoded custom data
+            // (see https://msdn.microsoft.com/en-us/library/dn457361.aspx)
+            cdmData = PRCDMData.replace('%CUSTOMDATA%', customData);
+
+            // Convert CDM data into multibyte characters
+            cdmDataBytes = [];
+            for (i = 0; i < cdmData.length; ++i) {
+                cdmDataBytes.push(cdmData.charCodeAt(i));
+                cdmDataBytes.push(0);
+            }
+
+            return new Uint8Array(cdmDataBytes).buffer;
+        }
+
+        return null;
+    }
+
     instance = {
         uuid: uuid,
         schemeIdURI: schemeIdURI,
@@ -219,7 +267,9 @@ function KeySystemPlayReady(config) {
         getRequestHeadersFromMessage: getRequestHeadersFromMessage,
         getLicenseRequestFromMessage: getLicenseRequestFromMessage,
         getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
-        setPlayReadyMessageFormat: setPlayReadyMessageFormat
+        getCDMData: getCDMData,
+        setPlayReadyMessageFormat: setPlayReadyMessageFormat,
+        init: init
     };
 
     return instance;

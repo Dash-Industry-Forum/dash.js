@@ -88,6 +88,10 @@ function KeySystemClearKey(config) {
         return null;
     }
 
+    function getCDMData() {
+        return null;
+    }
+
     instance = {
         uuid: uuid,
         schemeIdURI: schemeIdURI,
@@ -96,6 +100,7 @@ function KeySystemClearKey(config) {
         getRequestHeadersFromMessage: getRequestHeadersFromMessage,
         getLicenseRequestFromMessage: getLicenseRequestFromMessage,
         getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
+        getCDMData: getCDMData,
         getClearKeysFromProtectionData: getClearKeysFromProtectionData
     };
 
