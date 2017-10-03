@@ -60,7 +60,6 @@ function ProtectionController(config) {
     let log = config.log;
 
     let instance,
-        keySystems,
         pendingNeedKeyData,
         audioInfo,
         videoInfo,
@@ -71,7 +70,6 @@ function ProtectionController(config) {
         keySystem;
 
     function setup() {
-        keySystems = protectionKeyController.getKeySystems();
         pendingNeedKeyData = [];
         initialized = false;
         sessionType = 'temporary';
@@ -124,6 +122,24 @@ function ProtectionController(config) {
 
             initialized = true;
         }
+    }
+
+    /**
+     * Returns a set of supported key systems and CENC initialization data
+     * from the given array of ContentProtection elements.  Only
+     * key systems that are supported by this player will be returned.
+     * Key systems are returned in priority order (highest first).
+     *
+     * @param {Array.<Object>} cps - array of content protection elements parsed
+     * from the manifest
+     * @returns {Array.<Object>} array of objects indicating which supported key
+     * systems were found.  Empty array is returned if no
+     * supported key systems were found
+     * @memberof module:ProtectionKeyController
+     * @instance
+     */
+    function getSupportedKeySystemsFromContentProtection(cps) {
+        return protectionKeyController.getSupportedKeySystemsFromContentProtection(cps);
     }
 
     /**
@@ -591,6 +607,10 @@ function ProtectionController(config) {
         selectKeySystem(supportedKS, false);
     }
 
+    function getKeySystems() {
+        return protectionKeyController ? protectionKeyController.getKeySystems() : [];
+    }
+
     instance = {
         initialize: initialize,
         createKeySession: createKeySession,
@@ -602,6 +622,8 @@ function ProtectionController(config) {
         setSessionType: setSessionType,
         setRobustnessLevel: setRobustnessLevel,
         setProtectionData: setProtectionData,
+        getSupportedKeySystemsFromContentProtection: getSupportedKeySystemsFromContentProtection,
+        getKeySystems: getKeySystems,
         reset: reset
     };
 
