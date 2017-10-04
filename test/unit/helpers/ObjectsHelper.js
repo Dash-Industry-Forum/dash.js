@@ -10,7 +10,12 @@ class ObjectsHelper {
             getType: () => type,
             getCurrentTrack: () => {},
             getStreamInfo: () => { return { id: 'some_id', manifestInfo: {isDynamic: true} }; },
-            getMediaInfo: () => { return { bitrateList: [], mimeType:"video/mp4" }; },
+            getMediaInfo: () => { return { bitrateList: [
+                                                { bandwidth: 1000000 },
+                                                { bandwidth: 2000000 },
+                                                { bandwidth: 3000000 },
+                                           ], 
+                                           mimeType: "video/mp4" }},
             getIndexHandler: () => this.getDummyIndexHandler()
         };
     }
