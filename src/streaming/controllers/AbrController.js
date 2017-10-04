@@ -315,7 +315,7 @@ function AbrController() {
             const bitrateList = getBitrateList(streamProcessorDict[type].getMediaInfo());
             // This returns the quality index <= for the given bitrate
             let minIdx = getQualityForBitrate(streamProcessorDict[type].getMediaInfo(), minBitrate);
-            if (bitrateList[minIdx] && bitrateList[minIdx].bitrate < minBitrate * 1000) {
+            if (bitrateList[minIdx] && minIdx < bitrateList.length - 1 && bitrateList[minIdx].bitrate < minBitrate * 1000) {
                 minIdx++; // Go to the next bitrate
             }
             return minIdx;
