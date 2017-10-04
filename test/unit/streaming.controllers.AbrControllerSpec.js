@@ -189,37 +189,4 @@ describe('AbrController', function () {
         minAllowedIndex = abrCtrl.getMinAllowedIndexFor(testType);
         expect(minAllowedIndex).to.be.equal(0);
     });
-
-    it('should return the appropriate min allowed index for the min allowed bitrate set', function () {
-        let minAllowedIndex;
-
-        // Min allowed bitrate in kbps, bandwidth is in bps
-        abrCtrl.setMinAllowedBitrateFor(testType, streamProcessor.getMediaInfo().bitrateList[0].bandwidth / 1000);
-        minAllowedIndex = abrCtrl.getMinAllowedIndexFor(testType);
-        expect(minAllowedIndex).to.be.equal(0);
-
-        abrCtrl.setMinAllowedBitrateFor(testType, streamProcessor.getMediaInfo().bitrateList[1].bandwidth / 1000);
-        minAllowedIndex = abrCtrl.getMinAllowedIndexFor(testType);
-        expect(minAllowedIndex).to.be.equal(1);
-
-        abrCtrl.setMinAllowedBitrateFor(testType, streamProcessor.getMediaInfo().bitrateList[2].bandwidth / 1000);
-        minAllowedIndex = abrCtrl.getMinAllowedIndexFor(testType);
-        expect(minAllowedIndex).to.be.equal(2);
-
-        abrCtrl.setMinAllowedBitrateFor(testType, (streamProcessor.getMediaInfo().bitrateList[0].bandwidth / 1000) + 1);
-        minAllowedIndex = abrCtrl.getMinAllowedIndexFor(testType);
-        expect(minAllowedIndex).to.be.equal(1);
-
-        abrCtrl.setMinAllowedBitrateFor(testType, (streamProcessor.getMediaInfo().bitrateList[1].bandwidth / 1000) + 1);
-        minAllowedIndex = abrCtrl.getMinAllowedIndexFor(testType);
-        expect(minAllowedIndex).to.be.equal(2);
-
-        abrCtrl.setMinAllowedBitrateFor(testType, (streamProcessor.getMediaInfo().bitrateList[2].bandwidth / 1000) + 1);
-        minAllowedIndex = abrCtrl.getMinAllowedIndexFor(testType);
-        expect(minAllowedIndex).to.be.equal(2);
-
-        abrCtrl.setMinAllowedBitrateFor(testType, (streamProcessor.getMediaInfo().bitrateList[0].bandwidth / 1000) - 1);
-        minAllowedIndex = abrCtrl.getMinAllowedIndexFor(testType);
-        expect(minAllowedIndex).to.be.equal(0);
-    });
 });
