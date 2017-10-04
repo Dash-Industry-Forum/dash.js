@@ -20,11 +20,15 @@
             player;
 
         function startVideo() {
-            var url = FRAGMENTED_CAPTION_URL;
+            var url = FRAGMENTED_CAPTION_URL,
+                TTMLRenderingDiv;
 
             videoElement = document.querySelector(".videoContainer video");
+            TTMLRenderingDiv = document.querySelector("#ttml-rendering-div");
+
             player = dashjs.MediaPlayer().create();
             player.initialize(videoElement, url, true);
+            player.attachTTMLRenderingDiv(TTMLRenderingDiv);
             controlbar = new ControlBar(player); // Checkout ControlBar.js for more info on how to target/add text tracks to UI
             controlbar.initialize();
         }
@@ -45,6 +49,7 @@
     <body onload="startVideo()">
         <div class="videoContainer">
             <video preload="auto" autoplay="true" > </video>
+            <div id="ttml-rendering-div"></div>
 
             <div id="videoController" class="video-controller unselectable">
                 <div id="playPauseBtn" class="btn-play-pause" title="Play/Pause">
