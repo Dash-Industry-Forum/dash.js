@@ -29,9 +29,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @module MssParser
+ * @param {Object} config object
+ */
 function MssParser(config) {
-
-    const context = this.context;
     const protectionController = config.protectionController;
     const BASE64 = config.BASE64;
     const log = config.log;

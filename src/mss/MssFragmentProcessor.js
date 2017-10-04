@@ -136,7 +136,7 @@ function MssFragmentProcessor(config) {
     }
 
     function generateMoov(rep) {
-        let mssFragmentMoovProcessor = MSSFragmentMoovProcessor(context).create({protectionController: protectionController, constants: config.constants, BASE64: config.BASE64, ISOBoxer: config.ISOBoxer});
+        let mssFragmentMoovProcessor = MSSFragmentMoovProcessor(context).create({protectionController: protectionController, constants: config.constants, ISOBoxer: config.ISOBoxer});
         return mssFragmentMoovProcessor.generateMoov(rep);
     }
 
