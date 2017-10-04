@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from './constants/Constants';
+import MetricsConstants from './constants/MetricsConstants';
 import UTCTiming from '../dash/vo/UTCTiming';
 import PlaybackController from './controllers/PlaybackController';
 import StreamController from './controllers/StreamController';
@@ -62,6 +63,11 @@ import DashAdapter from '../dash/DashAdapter';
 import DashManifestModel from '../dash/models/DashManifestModel';
 import DashMetrics from '../dash/DashMetrics';
 import TimelineConverter from '../dash/utils/TimelineConverter';
+import {
+    HTTPRequest
+} from './vo/metrics/HTTPRequest';
+import BASE64 from '../../externals/base64';
+import ISOBoxer from 'codem-isoboxer';
 
 /**
  * @module MediaPlayer
@@ -262,7 +268,6 @@ function MediaPlayer() {
             metricsReportingController.reset();
             metricsReportingController = null;
         }
-        mediaPlayerInitialized = false;
     }
 
     /**
@@ -2383,7 +2388,10 @@ function MediaPlayer() {
                 videoModel: videoModel,
                 capabilities: capabilities,
                 eventBus: eventBus,
-                adapter: adapter
+                adapter: adapter,
+                events: Events,
+                BASE64: BASE64,
+                constants: Constants
             });
             return protectionController;
         }
@@ -2405,7 +2413,10 @@ function MediaPlayer() {
                 eventBus: eventBus,
                 mediaElement: getVideoElement(),
                 dashManifestModel: dashManifestModel,
-                metricsModel: metricsModel
+                metricsModel: metricsModel,
+                events: Events,
+                constants: Constants,
+                metricsConstants: MetricsConstants
             });
         }
     }
@@ -2422,7 +2433,14 @@ function MediaPlayer() {
                 mediaPlayerModel: mediaPlayerModel,
                 metricsModel: metricsModel,
                 playbackController: playbackController,
-                errHandler: errHandler
+                protectionController: protectionController,
+                errHandler: errHandler,
+                events: Events,
+                constants: Constants,
+                log: log,
+                initSegmentType: HTTPRequest.INIT_SEGMENT_TYPE,
+                BASE64: BASE64,
+                ISOBoxer: ISOBoxer
             });
         }
     }

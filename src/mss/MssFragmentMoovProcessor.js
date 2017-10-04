@@ -29,16 +29,18 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import Constants from '../streaming/constants/Constants';
-import FactoryMaker from '../core/FactoryMaker';
-import ISOBoxer from 'codem-isoboxer';
-import BASE64 from '../../externals/base64';
-
-function MssFragmentMoovProcessor() {
+/**
+ * @module MssFragmentMoovProcessor
+ * @param {Object} config object
+ */
+function MssFragmentMoovProcessor(config) {
     const TIME_SCALE = 10000000;
     const NALUTYPE_SPS = 7;
     const NALUTYPE_PPS = 8;
+    const constants = config.constants;
+    const ISOBoxer = config.ISOBoxer;
 
+    let protectionController = config.protectionController;
     let instance,
         period,
         adaptationSet,
@@ -85,11 +87,11 @@ function MssFragmentMoovProcessor() {
         let minf = ISOBoxer.createBox('minf', mdia);
 
         switch (adaptationSet.type) {
-            case Constants.VIDEO:
+            case constants.VIDEO:
                 // moov/trak/mdia/minf/vmhd
                 createVmhdBox(minf);
                 break;
-            case Constants.AUDIO:
+            case constants.AUDIO:
                 // moov/trak/mdia/minf/smhd
                 createSmhdBox(minf);
                 break;
@@ -134,8 +136,9 @@ function MssFragmentMoovProcessor() {
         // moov/mvex/trex
         createTrexBox(mvex);
 
-        if (contentProtection) {
-            createProtectionSystemSpecificHeaderBoxForPR(moov, contentProtection[0].pro.__text);
+        if (contentProtection && protectionController) {
+            let supportedKS = protectionController.getSupportedKeySystemsFromContentProtection(contentProtection);
+            createProtectionSystemSpecificHeaderBox(moov, supportedKS);
         }
     }
 
@@ -216,10 +219,10 @@ function MssFragmentMoovProcessor() {
 
         hdlr.pre_defined = 0;
         switch (adaptationSet.type) {
-            case Constants.VIDEO:
+            case constants.VIDEO:
                 hdlr.handler_type = 'vide';
                 break;
-            case Constants.AUDIO:
+            case constants.AUDIO:
                 hdlr.handler_type = 'soun';
                 break;
             default:
@@ -278,8 +281,8 @@ function MssFragmentMoovProcessor() {
 
         stsd.entries = [];
         switch (adaptationSet.type) {
-            case Constants.VIDEO:
-            case Constants.AUDIO:
+            case constants.VIDEO:
+            case constants.AUDIO:
                 stsd.entries.push(createSampleEntry(stsd));
                 break;
             default:
@@ -552,16 +555,20 @@ function MssFragmentMoovProcessor() {
         createTrackEncryptionBox(schi);
     }
 
-    function createProtectionSystemSpecificHeaderBoxForPR(moov, initData) {
-        let pssh = ISOBoxer.createFullBox('pssh', moov);
-        let uint8arraydecodedPROHeader = BASE64.decodeArray(initData);
+    function createProtectionSystemSpecificHeaderBox(moov, keySystems) {
+        let pssh_bytes;
+        let pssh;
+        let i;
+        let parsedBuffer;
 
-        pssh.flags = 0;
-        pssh.version = 0;
-        pssh.SystemID = new Uint8Array([0x9a, 0x04, 0xf0, 0x79, 0x98, 0x40, 0x42, 0x86, 0xab, 0x92, 0xe6, 0x5b, 0xe0, 0x88, 0x5f, 0x95]); //PlayReady System ID
-
-        pssh.DataSize = uint8arraydecodedPROHeader.length;
-        pssh.Data = uint8arraydecodedPROHeader;
+        for (i = 0; i < keySystems.length; i += 1) {
+            pssh_bytes = keySystems[i].initData;
+            parsedBuffer = ISOBoxer.parseBuffer(pssh_bytes);
+            pssh = parsedBuffer.fetch('pssh');
+            if (pssh) {
+                ISOBoxer.Utils.appendBox(moov, pssh);
+            }
+        }
     }
 
     function createTrackEncryptionBox(schi) {
@@ -641,4 +648,4 @@ function MssFragmentMoovProcessor() {
 }
 
 MssFragmentMoovProcessor.__dashjs_factory_name = 'MssFragmentMoovProcessor';
-export default FactoryMaker.getClassFactory(MssFragmentMoovProcessor);
+export default dashjs.FactoryMaker.getClassFactory(MssFragmentMoovProcessor); /* jshint ignore:line */

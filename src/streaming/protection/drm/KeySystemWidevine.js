@@ -37,17 +37,16 @@
  */
 
 import CommonEncryption from '../CommonEncryption';
-import FactoryMaker from '../../../core/FactoryMaker';
 
 const uuid = 'edef8ba9-79d6-4ace-a3c8-27dcd51d21ed';
 const systemString = 'com.widevine.alpha';
 const schemeIdURI = 'urn:uuid:' + uuid;
-import BASE64 from '../../../../externals/base64';
 
-function KeySystemWidevine() {
+function KeySystemWidevine(config) {
 
     let instance;
     let protData = null;
+    let BASE64 = config.BASE64;
 
     function init(protectionData) {
         if (protectionData) {
@@ -90,7 +89,7 @@ function KeySystemWidevine() {
         if (protData && protData.pssh) {
             pssh = BASE64.decodeArray(protData.pssh).buffer;
         } else {
-            pssh = CommonEncryption.parseInitDataFromContentProtection(cp);
+            pssh = CommonEncryption.parseInitDataFromContentProtection(cp, BASE64);
         }
 
         // Check if KID within pssh is empty, in that case set KID value according to 'cenc:default_KID' value
@@ -128,4 +127,4 @@ function KeySystemWidevine() {
 }
 
 KeySystemWidevine.__dashjs_factory_name = 'KeySystemWidevine';
-export default FactoryMaker.getSingletonFactory(KeySystemWidevine);
+export default dashjs.FactoryMaker.getSingletonFactory(KeySystemWidevine); /* jshint ignore:line */

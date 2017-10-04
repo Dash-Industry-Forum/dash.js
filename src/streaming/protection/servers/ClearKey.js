@@ -40,7 +40,6 @@
  */
 import KeyPair from '../vo/KeyPair';
 import ClearKeyKeySet from '../vo/ClearKeyKeySet';
-import FactoryMaker from '../../../core/FactoryMaker';
 
 function ClearKey() {
 
@@ -96,4 +95,4 @@ function ClearKey() {
 }
 
 ClearKey.__dashjs_factory_name = 'ClearKey';
-export default FactoryMaker.getSingletonFactory(ClearKey);
+export default dashjs.FactoryMaker.getSingletonFactory(ClearKey); /* jshint ignore:line */

@@ -29,8 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../../core/FactoryMaker';
-
 function MetricSerialiser() {
 
     // For each entry in the top level list within the metric (in the case
@@ -96,4 +94,4 @@ function MetricSerialiser() {
 }
 
 MetricSerialiser.__dashjs_factory_name = 'MetricSerialiser';
-export default FactoryMaker.getSingletonFactory(MetricSerialiser);
+export default dashjs.FactoryMaker.getSingletonFactory(MetricSerialiser); /* jshint ignore:line */

@@ -29,20 +29,19 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../core/FactoryMaker';
-import Debug from '../core/Debug';
-import ISOBoxer from 'codem-isoboxer';
-
+/**
+ * @module MssFragmentMoovProcessor
+ * @param {Object} config object
+ */
 function MssFragmentMoofProcessor(config) {
 
-    let context = this.context;
-    let instance,
-        log;
+    let instance;
     let metricsModel = config.metricsModel;
     let playbackController = config.playbackController;
+    const ISOBoxer = config.ISOBoxer;
+    const log = config.log;
 
     function setup() {
-        log = Debug(context).getInstance().log;
     }
 
     function processTfrf(request, tfrf, tfdt, streamProcessor) {
@@ -309,4 +308,4 @@ function MssFragmentMoofProcessor(config) {
 }
 
 MssFragmentMoofProcessor.__dashjs_factory_name = 'MssFragmentMoofProcessor';
-export default FactoryMaker.getClassFactory(MssFragmentMoofProcessor);
+export default dashjs.FactoryMaker.getClassFactory(MssFragmentMoofProcessor); /* jshint ignore:line */
