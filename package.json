@@ -1,6 +1,6 @@
 {
   "name": "dashjs",
-  "version": "2.6.0",
+  "version": "2.6.1",
   "description": "A reference client implementation for the playback of MPEG DASH via Javascript and compliant browsers.",
   "main": "build/es5/index.js",
   "types": "build/typings/index.d.ts",
