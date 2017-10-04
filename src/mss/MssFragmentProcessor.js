@@ -131,12 +131,15 @@ function MssFragmentProcessor(config) {
     let metricsModel = config.metricsModel;
     let playbackController = config.playbackController;
     let eventBus = config.eventBus;
+    let protectionController = config.protectionController;
     let instance;
 
     function setup() {}
 
     function generateMoov(rep) {
-        let mssFragmentMoovProcessor = MSSFragmentMoovProcessor(context).create();
+        let mssFragmentMoovProcessor = MSSFragmentMoovProcessor(context).create({
+            protectionController: protectionController
+        });
         return mssFragmentMoovProcessor.generateMoov(rep);
     }
 
