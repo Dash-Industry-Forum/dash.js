@@ -521,11 +521,12 @@ function MediaPlayer() {
     function getBufferLength(type) {
         const types = [Constants.VIDEO, Constants.AUDIO, Constants.FRAGMENTED_TEXT];
         if (!type) {
-            return types.map(
+            const buffer = types.map(
                 t => getTracksFor(t).length > 0 ? getDashMetrics().getCurrentBufferLevel(getMetricsFor(t)) : Number.MAX_VALUE
             ).reduce(
                 (p, c) => Math.min(p, c)
             );
+            return buffer === Number.MAX_VALUE ? NaN : buffer;
         } else {
             if (types.indexOf(type) !== -1) {
                 const buffer = getDashMetrics().getCurrentBufferLevel(getMetricsFor(type));

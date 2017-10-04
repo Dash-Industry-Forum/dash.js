@@ -56,7 +56,7 @@ function ScheduleController(config) {
     const textController = config.textController;
     const sourceBufferController = config.sourceBufferController;
     const type = config.type;
-    let streamProcessor = config.streamProcessor;
+    const streamProcessor = config.streamProcessor;
 
     let instance,
         log,
@@ -160,7 +160,6 @@ function ScheduleController(config) {
     }
 
     function hasTopQualityChanged(type, id) {
-
         topQualityIndex[id] = topQualityIndex[id] || {};
         const newTopQualityIndex = abrController.getTopQualityIndexFor(type, id);
 
@@ -174,7 +173,6 @@ function ScheduleController(config) {
     }
 
     function schedule() {
-
         if (isStopped || isFragmentProcessingInProgress || !streamProcessor.getBufferController() || playbackController.isPaused() && !scheduleWhilePaused) {
             return;
         }
@@ -184,12 +182,11 @@ function ScheduleController(config) {
         const isReplacement = replaceRequestArray.length > 0;
         if (switchTrack || isReplacement ||
             hasTopQualityChanged(currentRepresentationInfo.mediaInfo.type, streamProcessor.getStreamInfo().id) ||
-            bufferLevelRule.execute(streamProcessor, type, streamController.isVideoTrackPresent())
-        ) {
+            bufferLevelRule.execute(streamProcessor, type, streamController.isVideoTrackPresent())) {
 
             const getNextFragment = function () {
                 log('ScheduleController - getNextFragment');
-                let fragmentController = streamProcessor.getFragmentController();
+                const fragmentController = streamProcessor.getFragmentController();
                 if (switchTrack) {
                     log('ScheduleController - switch track has been asked, get init request for ' + type + ' with representationid = ' + currentRepresentationInfo.id);
                     streamProcessor.switchInitData(currentRepresentationInfo.id);
@@ -354,7 +351,7 @@ function ScheduleController(config) {
     }
 
     function setLiveEdgeSeekTarget() {
-        let liveEdgeFinder = streamProcessor.getLiveEdgeFinder();
+        const liveEdgeFinder = streamProcessor.getLiveEdgeFinder();
         if (liveEdgeFinder) {
             const liveEdge = liveEdgeFinder.getLiveEdge();
             const dvrWindowSize = currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo.DVRWindowSize / 2;
@@ -490,7 +487,6 @@ function ScheduleController(config) {
     }
 
     function onPlaybackSeeking(e) {
-
         seekTarget = e.seekTime;
         setTimeToLoadDelay(0);
 

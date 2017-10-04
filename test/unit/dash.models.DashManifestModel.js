@@ -267,10 +267,10 @@ describe('DashManifestModel', function () {
         expect(isDynamic).to.be.false;    // jshint ignore:line
     });
 
-    it('should return Number.MAX_VALUE when getDuration is called and manifest is undefined', () => {
+    it('should return Number.MAX_SAFE_NUMBER (or Number.MAX_VALUE in case MAX_SAFE_NUMBER is not defined) when getDuration is called and manifest is undefined', () => {
         const duration = dashManifestModel.getDuration();
 
-        expect(duration).to.equal(Number.MAX_VALUE); // jshint ignore:line
+        expect(duration).to.equal(Number.MAX_SAFE_INTEGER || Number.MAX_VALUE); // jshint ignore:line
     });
 
     it('should return 0 when getRepresentationCount is called and adaptation is undefined', () => {

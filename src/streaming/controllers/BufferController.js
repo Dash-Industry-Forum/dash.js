@@ -61,7 +61,7 @@ function BufferController(config) {
     const abrController = config.abrController;
     const playbackController = config.playbackController;
     const type = config.type;
-    let streamProcessor = config.streamProcessor;
+    const streamProcessor = config.streamProcessor;
 
     let instance,
         log,
@@ -81,7 +81,8 @@ function BufferController(config) {
         isPruningInProgress,
         initCache,
         seekStartTime,
-        seekClearedBufferingCompleted;
+        seekClearedBufferingCompleted,
+        isSafariOnMac;
 
     function setup() {
         log = Debug(context).getInstance().log.bind(instance);
@@ -98,6 +99,9 @@ function BufferController(config) {
         setMediaSource(Source);
 
         requiredQuality = abrController.getQualityFor(type, streamProcessor.getStreamInfo());
+        const ua = navigator.userAgent.toLowerCase();
+        //This whole test is just for safari on a mac.
+        isSafariOnMac = /safari/.test(ua) && /mac/.test(ua) && !/chrome/.test(ua) && !/windows phone/.test(ua);
 
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         eventBus.on(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
@@ -112,7 +116,10 @@ function BufferController(config) {
         eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this, EventBus.EVENT_PRIORITY_HIGH);
         eventBus.on(Events.SOURCEBUFFER_APPEND_COMPLETED, onAppended, this);
         eventBus.on(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
-        eventBus.on(Events.PLAYBACK_SEEKED, onSeeked, this);
+
+        if (isSafariOnMac) {
+            eventBus.on(Events.PLAYBACK_SEEKED, onSeeked, this);
+        }
     }
 
     function createBuffer(mediaInfo) {
@@ -254,7 +261,7 @@ function BufferController(config) {
 
         if (seekStartTime) {
             // if there is a seek start time, the first buffer data will be available on maximum value between first buffer range value and seek start time.
-            let ranges = sourceBufferController.getAllRanges(buffer);
+            const ranges = sourceBufferController.getAllRanges(buffer);
             if (ranges && ranges.length) {
                 ret = Math.max(ranges.start(0), seekStartTime);
             }
@@ -290,7 +297,6 @@ function BufferController(config) {
     }
 
     function checkIfSufficientBuffer() {
-
         // No need to check buffer if type is not audio or video (for example if several errors occur during text parsing, so that the buffer cannot be filled, no error must occur on video playback)
         if (type !== 'audio' && type !== 'video') return;
 
@@ -318,7 +324,6 @@ function BufferController(config) {
 
 
     function handleInbandEvents(data, request, mediaInbandEvents, trackInbandEvents) {
-
         const fragmentStartTime = Math.max(isNaN(request.startTime) ? 0 : request.startTime, 0);
         const eventStreams = [];
         const events = [];
@@ -362,7 +367,6 @@ function BufferController(config) {
     }
 
     function getClearRange(threshold) {
-
         if (!buffer) return null;
 
         // we need to remove data that is more than one fragment before the video currentTime
@@ -434,16 +438,13 @@ function BufferController(config) {
     }
 
     /*
+     * Listener set only for MacOS Safari.
      * MacOS Safari doesn't like buffer being appended to the start of a buffered range.
      * It removes a little bit of buffer just after the segment we append.
      * Therefore, let's remove all buffer ahead of us after a seek.
      */
     function onSeeked() {
-        const ua = navigator.userAgent.toLowerCase();
-        //This whole test is just for safari on a mac.
-        if (/safari/.test(ua) && /mac/.test(ua) && !/chrome/.test(ua) && !/windows phone/.test(ua)) {
-            removeBufferAhead(playbackController.getTime());
-        }
+        removeBufferAhead(playbackController.getTime());
     }
 
     //Removes buffered ranges ahead. It will not remove anything part of the current buffer timeRange.
@@ -514,7 +515,6 @@ function BufferController(config) {
     }
 
     function reset(errored) {
-
         eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         eventBus.off(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, this);
         eventBus.off(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
@@ -528,7 +528,10 @@ function BufferController(config) {
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
         eventBus.off(Events.SOURCEBUFFER_APPEND_COMPLETED, onAppended, this);
         eventBus.off(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
-        eventBus.off(Events.PLAYBACK_SEEKED, onSeeked, this);
+
+        if (isSafariOnMac) {
+            eventBus.off(Events.PLAYBACK_SEEKED, onSeeked, this);
+        }
 
         resetInitialSettings();
 
