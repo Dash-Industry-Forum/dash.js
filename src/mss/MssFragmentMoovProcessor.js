@@ -29,14 +29,16 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import Constants from '../streaming/constants/Constants';
-import FactoryMaker from '../core/FactoryMaker';
-import ISOBoxer from 'codem-isoboxer';
-
+/**
+ * @module MssFragmentMoovProcessor
+ * @param {Object} config object
+ */
 function MssFragmentMoovProcessor(config) {
     const TIME_SCALE = 10000000;
     const NALUTYPE_SPS = 7;
     const NALUTYPE_PPS = 8;
+    const constants = config.constants;
+    const ISOBoxer = config.ISOBoxer;
 
     let protectionController = config.protectionController;
     let instance,
@@ -85,11 +87,11 @@ function MssFragmentMoovProcessor(config) {
         let minf = ISOBoxer.createBox('minf', mdia);
 
         switch (adaptationSet.type) {
-            case Constants.VIDEO:
+            case constants.VIDEO:
                 // moov/trak/mdia/minf/vmhd
                 createVmhdBox(minf);
                 break;
-            case Constants.AUDIO:
+            case constants.AUDIO:
                 // moov/trak/mdia/minf/smhd
                 createSmhdBox(minf);
                 break;
@@ -217,10 +219,10 @@ function MssFragmentMoovProcessor(config) {
 
         hdlr.pre_defined = 0;
         switch (adaptationSet.type) {
-            case Constants.VIDEO:
+            case constants.VIDEO:
                 hdlr.handler_type = 'vide';
                 break;
-            case Constants.AUDIO:
+            case constants.AUDIO:
                 hdlr.handler_type = 'soun';
                 break;
             default:
@@ -279,8 +281,8 @@ function MssFragmentMoovProcessor(config) {
 
         stsd.entries = [];
         switch (adaptationSet.type) {
-            case Constants.VIDEO:
-            case Constants.AUDIO:
+            case constants.VIDEO:
+            case constants.AUDIO:
                 stsd.entries.push(createSampleEntry(stsd));
                 break;
             default:
@@ -646,4 +648,4 @@ function MssFragmentMoovProcessor(config) {
 }
 
 MssFragmentMoovProcessor.__dashjs_factory_name = 'MssFragmentMoovProcessor';
-export default FactoryMaker.getClassFactory(MssFragmentMoovProcessor);
+export default dashjs.FactoryMaker.getClassFactory(MssFragmentMoovProcessor); /* jshint ignore:line */

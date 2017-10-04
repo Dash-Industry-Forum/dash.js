@@ -35,7 +35,6 @@
  * @class
  * @implements KeySystem
  */
-import FactoryMaker from '../../../core/FactoryMaker';
 
 //TODO implement
 function KeySystemAdobeAccess() {
@@ -44,4 +43,4 @@ function KeySystemAdobeAccess() {
 }
 
 KeySystemAdobeAccess.__dashjs_factory_name = 'KeySystemAdobeAccess';
-export default FactoryMaker.getSingletonFactory(KeySystemAdobeAccess);
+export default dashjs.FactoryMaker.getSingletonFactory(KeySystemAdobeAccess); /* jshint ignore:line */

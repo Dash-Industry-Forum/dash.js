@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../../core/FactoryMaker';
 import ReportingFactory from '../reporting/ReportingFactory';
 
 function ReportingController(config) {
@@ -75,4 +74,4 @@ function ReportingController(config) {
 }
 
 ReportingController.__dashjs_factory_name = 'ReportingController';
-export default FactoryMaker.getClassFactory(ReportingController);
+export default dashjs.FactoryMaker.getClassFactory(ReportingController); /* jshint ignore:line */

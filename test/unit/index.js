@@ -29,74 +29,16 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import CustomTimeRanges from '../../utils/CustomTimeRanges';
+import FactoryMaker from '../../src/core/FactoryMaker';
 
-function RangeController(config) {
+// Shove both of these into the global scope
+var context = (typeof window !== 'undefined' && window) || global;
 
-    let useWallClockTime = false;
-    let context = this.context;
-    let instance,
-        ranges;
-
-    let mediaElement = config.mediaElement;
-
-    function initialize(rs) {
-        if (rs && rs.length) {
-            rs.forEach(r => {
-                let start = r.starttime;
-                let end = start + r.duration;
-
-                ranges.add(start, end);
-            });
-
-            useWallClockTime = !!rs[0]._useWallClockTime;
-        }
-    }
-
-    function reset() {
-        ranges.clear();
-    }
-
-    function setup() {
-        ranges = CustomTimeRanges(context).create();
-    }
-
-    function isEnabled() {
-        let numRanges = ranges.length;
-        let time;
-
-        if (!numRanges) {
-            return true;
-        }
-
-        // When not present, DASH Metrics reporting is requested
-        // for the whole duration of the content.
-        time = useWallClockTime ?
-                (new Date().getTime() / 1000) :
-                mediaElement.currentTime;
-
-        for (let i = 0; i < numRanges; i += 1) {
-            let start = ranges.start(i);
-            let end = ranges.end(i);
-
-            if ((start <= time) && (time < end)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    instance = {
-        initialize: initialize,
-        reset:      reset,
-        isEnabled:  isEnabled
-    };
-
-    setup();
-
-    return instance;
+var dashjs = context.dashjs;
+if (!dashjs) {
+    dashjs = context.dashjs = {};
 }
 
-RangeController.__dashjs_factory_name = 'RangeController';
-export default dashjs.FactoryMaker.getClassFactory(RangeController); /* jshint ignore:line */
+dashjs.FactoryMaker = FactoryMaker;
+
+export default dashjs;

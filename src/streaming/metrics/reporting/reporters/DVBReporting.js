@@ -28,12 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import MetricsConstants from '../../../constants/MetricsConstants';
-import FactoryMaker from '../../../../core/FactoryMaker';
+
 import MetricSerialiser from '../../utils/MetricSerialiser';
 import RNG from '../../utils/RNG';
 
-function DVBReporting() {
+function DVBReporting(config) {
     let instance;
 
     let context = this.context;
@@ -47,6 +46,8 @@ function DVBReporting() {
     let rangeController = null;
     let allowPendingRequestsToCompleteOnReset = true;
     let pendingRequests = [];
+
+    const metricsConstants = config.metricsConstants;
 
     function doGetRequest(url, successCB, failureCB) {
         let req = new XMLHttpRequest();
@@ -99,7 +100,7 @@ function DVBReporting() {
                 let url = metricSerialiser.serialise(vo);
 
                 // this has been proposed for errata
-                if (USE_DRAFT_DVB_SPEC && (type !== MetricsConstants.DVB_ERRORS)) {
+                if (USE_DRAFT_DVB_SPEC && (type !== metricsConstants.DVB_ERRORS)) {
                     url = `metricname=${type}&${url}`;
                 }
 
@@ -179,4 +180,4 @@ function DVBReporting() {
 }
 
 DVBReporting.__dashjs_factory_name = 'DVBReporting';
-export default FactoryMaker.getClassFactory(DVBReporting);
+export default dashjs.FactoryMaker.getClassFactory(DVBReporting); /* jshint ignore:line */
