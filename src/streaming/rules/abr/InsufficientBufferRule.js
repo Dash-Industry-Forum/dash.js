@@ -84,7 +84,7 @@ function InsufficientBufferRule(config) {
         const representationInfo = rulesContext.getRepresentationInfo();
         const fragmentDuration = representationInfo.fragmentDuration;
 
-        // Don't ask for a bitrate change if fragmentDuration is not defined
+        // Don't ask for a bitrate change if there is not info about buffer state or if fragmentDuration is not defined
         if (!lastBufferStateVO || !wasFirstBufferLoadedEventTriggered(mediaType, lastBufferStateVO) || !fragmentDuration) {
             return switchRequest;
         }

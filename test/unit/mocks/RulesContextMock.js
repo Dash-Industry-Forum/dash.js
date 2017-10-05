@@ -27,6 +27,11 @@ function RulesContextMock () {
     this.getSwitchHistory = function () {
         return new switchRequestHistoryMock();
     };
+    this.getRepresentationInfo = function () {
+        return {
+            fragmentDuration: NaN
+        };
+    };
 }
 
 export default RulesContextMock;
