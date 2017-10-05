@@ -1259,6 +1259,15 @@
       ]
     },
     {
+      "name": "Thumbnails",
+      "submenu": [
+        {
+          "name": "One thumbnail representation",
+          "url": "http://dash.edgesuite.net/akamai/bbb_30fps/bbb_with_tiled_thumbnails.mpd"
+        }
+      ]
+    },
+    {
       "name": "Other samples",
       "submenu": [
         {

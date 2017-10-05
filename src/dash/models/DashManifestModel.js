@@ -146,6 +146,10 @@ function DashManifestModel(config) {
         return getIsTypeOf(adaptation, Constants.MUXED);
     }
 
+    function getIsImage(adaptation) {
+        return getIsTypeOf(adaptation, Constants.IMAGE);
+    }
+
     function getIsTextTrack(type) {
         return (type === 'text/vtt' || type === 'application/ttml+xml');
     }
@@ -938,6 +942,7 @@ function DashManifestModel(config) {
         getIsMuxed: getIsMuxed,
         getIsTextTrack: getIsTextTrack,
         getIsFragmentedText: getIsFragmentedText,
+        getIsImage: getIsImage,
         getIsMain: getIsMain,
         getLanguageForAdaptation: getLanguageForAdaptation,
         getViewpointForAdaptation: getViewpointForAdaptation,

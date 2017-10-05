@@ -236,7 +236,7 @@ function Stream(config) {
             return false;
         }
 
-        if ((type === Constants.TEXT) || (type === Constants.FRAGMENTED_TEXT) || (type === Constants.EMBEDDED_TEXT)) {
+        if (type === Constants.TEXT || type === Constants.FRAGMENTED_TEXT || type === Constants.EMBEDDED_TEXT || type === Constants.IMAGE) {
             return true;
         }
         codec = mediaInfo.codec;
@@ -359,7 +359,7 @@ function Stream(config) {
             }
         }
 
-        if (type === Constants.EMBEDDED_TEXT || mediaController.getTracksFor(type, streamInfo).length === 0) {
+        if (type === Constants.EMBEDDED_TEXT || type === Constants.IMAGE || mediaController.getTracksFor(type, streamInfo).length === 0) {
             return;
         }
 
@@ -397,6 +397,7 @@ function Stream(config) {
         initializeMediaForType(Constants.FRAGMENTED_TEXT, mediaSource);
         initializeMediaForType(Constants.EMBEDDED_TEXT, mediaSource);
         initializeMediaForType(Constants.MUXED, mediaSource);
+        initializeMediaForType(Constants.IMAGE, mediaSource);
 
         createBuffers();
 

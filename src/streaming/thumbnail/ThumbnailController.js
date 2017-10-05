@@ -28,48 +28,59 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+//import EventBus from '../../core/EventBus';
+import FactoryMaker from '../../core/FactoryMaker';
 
-/**
- * Constants declaration
- * @class
- * @ignore
- */
-class Constants {
+const THUMBNAIL_CONTROLLER_TYPE = 'ThumbnailController';
+function ThumbnailController(config) {
 
-    init () {
-        this.STREAM = 'stream';
-        this.VIDEO = 'video';
-        this.AUDIO = 'audio';
-        this.TEXT = 'text';
-        this.FRAGMENTED_TEXT = 'fragmentedText';
-        this.EMBEDDED_TEXT = 'embeddedText';
-        this.MUXED = 'muxed';
-        this.IMAGE = 'image';
-        this.LOCATION = 'Location';
-        this.INITIALIZE = 'initialize';
-        this.TEXT_SHOWING = 'showing';
-        this.TEXT_HIDDEN = 'hidden';
-        this.CC1 = 'CC1';
-        this.CC3 = 'CC3';
-        this.STPP = 'stpp';
-        this.TTML = 'ttml';
-        this.VTT = 'vtt';
-        this.WVTT = 'wvtt';
-        this.UTF8 = 'utf-8';
-        this.SUGGESTED_PRESENTATION_DELAY = 'suggestedPresentationDelay';
-        this.SCHEME_ID_URI = 'schemeIdUri';
-        this.START_TIME = 'starttime';
-        this.ABR_STRATEGY_DYNAMIC = 'abrDynamic';
-        this.ABR_STRATEGY_BOLA = 'abrBola';
-        this.ABR_STRATEGY_THROUGHPUT = 'abrThroughput';
-        this.MOVING_AVERAGE_SLIDING_WINDOW = 'slidingWindow';
-        this.MOVING_AVERAGE_EWMA = 'ewma';
+    //const context = this.context;
+    //const eventBus = EventBus(context).getInstance();
+
+    const errHandler = config.errHandler;   /* jshint ignore:line */
+    const dashManifestModel = config.dashManifestModel; /* jshint ignore:line */
+    const manifestModel = config.manifestModel; /* jshint ignore:line */
+
+    let instance,
+        initialized,
+        mediaController,
+        streamController;
+
+    function setup() {
+        initialized = false;
+        mediaController = null;
+        streamController = null;
     }
 
-    constructor () {
-        this.init();
+
+    function initialize() {
     }
+
+    /**
+     * Return the thumbnail of quality idx at time position
+     * @param {number} time - A relative time, in seconds, based on the return value of the {@link module:MediaPlayer#duration duration()} method is expected
+     * @param {number} idx - Index of track based on the order of the order the tracks are added
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getThumbnail(time, idx) {
+        console.log('getThumbnail - Time: ', time, ', Index: ', idx);
+        return null;
+    }
+
+    function reset() {
+    }
+
+    instance = {
+        initialize: initialize,
+        getThumbnail: getThumbnail,
+        reset: reset
+    };
+
+    setup();
+
+    return instance;
 }
 
-let constants = new Constants();
-export default constants;
+ThumbnailController.__dashjs_factory_name = THUMBNAIL_CONTROLLER_TYPE;
+export default FactoryMaker.getSingletonFactory(ThumbnailController);
