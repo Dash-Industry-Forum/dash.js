@@ -132,7 +132,7 @@ function MediaPlayer() {
     }
 
     /**
-     * Configure media plyer with customs controllers. Helpful for tests
+     * Configure media player with customs controllers. Helpful for tests
      *
      * @param {object=} config controllers configuration
      * @memberof module:MediaPlayer
@@ -1921,6 +1921,9 @@ function MediaPlayer() {
      * @instance
      */
     function setInitialMediaSettingsFor(type, value) {
+        if (!mediaPlayerInitialized) {
+            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+        }
         mediaController.setInitialSettings(type, value);
     }
 

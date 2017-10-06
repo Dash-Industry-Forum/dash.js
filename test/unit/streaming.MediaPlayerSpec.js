@@ -985,6 +985,10 @@ describe('MediaPlayer', function () {
             it('Method setCurrentTrack should throw an exception', function () {
                 expect(player.setCurrentTrack).to.throw(MediaPlayer.PLAYBACK_NOT_INITIALIZED_ERROR);
             });
+
+            it('Method setInitialMediaSettingsFor should throw an exception', function () {
+                expect(player.setInitialMediaSettingsFor).to.throw(MediaPlayer.MEDIA_PLAYER_NOT_INITIALIZED_ERROR);
+            });
         });
 
         describe('When it is initialized', function () {
