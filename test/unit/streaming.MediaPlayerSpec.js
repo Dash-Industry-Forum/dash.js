@@ -989,6 +989,14 @@ describe('MediaPlayer', function () {
             it('Method setInitialMediaSettingsFor should throw an exception', function () {
                 expect(player.setInitialMediaSettingsFor).to.throw(MediaPlayer.MEDIA_PLAYER_NOT_INITIALIZED_ERROR);
             });
+
+            it('Method getInitialMediaSettingsFor should throw an exception', function () {
+                expect(player.getInitialMediaSettingsFor).to.throw(MediaPlayer.MEDIA_PLAYER_NOT_INITIALIZED_ERROR);
+            });
+
+            it('Method getTrackSwitchModeFor should throw an exception', function () {
+                expect(player.getTrackSwitchModeFor).to.throw(MediaPlayer.MEDIA_PLAYER_NOT_INITIALIZED_ERROR);
+            });
         });
 
         describe('When it is initialized', function () {
