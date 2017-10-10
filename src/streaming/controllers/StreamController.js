@@ -49,10 +49,6 @@ import BaseURLController from './BaseURLController';
 import MediaSourceController from './MediaSourceController';
 
 function StreamController() {
-
-    const STREAM_END_THRESHOLD = 0.5;
-    const STREAM_END_TIMEOUT_DELAY = 0.1;
-
     let context = this.context;
     let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
@@ -94,8 +90,7 @@ function StreamController() {
         initialPlayback,
         playListMetrics,
         videoTrackDetected,
-        audioTrackDetected,
-        endedTimeout;
+        audioTrackDetected;
 
     function setup() {
         timeSyncController = TimeSyncController(context).getInstance();
@@ -143,7 +138,7 @@ function StreamController() {
      * Called when current playback position is changed.
      * Used to determine the time current stream is finished and we should switch to the next stream.
      */
-    function onPlaybackTimeUpdated(e) {
+    function onPlaybackTimeUpdated(/*e*/) {
 
         if (isVideoTrackPresent()) {
             const playbackQuality = videoModel.getPlaybackQuality();
@@ -155,20 +150,6 @@ function StreamController() {
         // Sometimes after seeking timeUpdateHandler is called before seekingHandler and a new stream starts
         // from beginning instead of from a chosen position. So we do nothing if the player is in the seeking state
         if (playbackController.isSeeking()) return;
-
-        if (e.timeToEnd <= STREAM_END_THRESHOLD) {
-            // In some cases the ended event is not triggered at the end of the stream, do it artificially here.
-            // This should only be a fallback, put an extra STREAM_END_TIMEOUT_DELAY to give the real ended event time to trigger.
-            log('[StreamController][onPlaybackTimeUpdated] timeToEnd = ' + e.timeToEnd + ' PLAYBACK_ENDED need to be triggered');
-            if (endedTimeout) {
-                clearTimeout(endedTimeout);
-                endedTimeout = undefined;
-            }
-            endedTimeout = setTimeout(function () {
-                endedTimeout = undefined;
-                eventBus.trigger(Events.PLAYBACK_ENDED);
-            }, 1000 * (e.timeToEnd + STREAM_END_TIMEOUT_DELAY));
-        }
     }
 
     function onPlaybackSeeking(e) {
@@ -286,11 +267,6 @@ function StreamController() {
     }
 
     function onEnded() {
-        if (endedTimeout) {
-            clearTimeout(endedTimeout);
-            endedTimeout = undefined;
-        }
-
         const nextStream = getNextStream();
         if (nextStream) {
             switchStream(activeStream, nextStream, NaN);
@@ -801,11 +777,6 @@ function StreamController() {
                     data: manifestModel.getValue().url
                 });
             }
-        }
-
-        if (endedTimeout) {
-            clearTimeout(endedTimeout);
-            endedTimeout = undefined;
         }
 
         eventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
