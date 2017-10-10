@@ -189,6 +189,7 @@ function BufferController(config) {
 
     function appendToBuffer(chunk) {
         if (!isBufferingCompleted) {
+            isAppendingInProgress = true;
             appendedBytesInfo = chunk;
             sourceBufferController.append(buffer, chunk);
 
