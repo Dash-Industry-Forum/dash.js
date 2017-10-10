@@ -520,6 +520,8 @@ function Stream(config) {
             }
         }
 
+        log('[Stream] onBufferingCompleted - trigger STREAM_BUFFERING_COMPLETED');
+
         eventBus.trigger(Events.STREAM_BUFFERING_COMPLETED, {
             streamInfo: streamInfo
         });
