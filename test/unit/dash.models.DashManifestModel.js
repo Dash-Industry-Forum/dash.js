@@ -1,17 +1,21 @@
 import DashManifestModel from '../../src/dash/models/DashManifestModel';
-import MediaController from '../../src/streaming/controllers/MediaController';
 import TimelineConverter from '../../src/dash/utils/TimelineConverter';
 import BaseURL from '../../src/dash/vo/BaseURL';
 import MpdHelper from './helpers/MPDHelper';
 
+import AdapterMock from './mocks/AdapterMock';
+import MediaControllerMock from './mocks/MediaControllerMock';
+
 const expect = require('chai').expect;
 
 const context = {};
-const mediaController = MediaController(context).getInstance();
+const adapterMock = new AdapterMock();
+const mediaControllerMock = new MediaControllerMock();
 const timelineConverter = TimelineConverter(context).getInstance();
 const dashManifestModel = DashManifestModel(context).getInstance({
-    mediaController: mediaController,
-    timelineConverter: timelineConverter
+    mediaController: mediaControllerMock,
+    timelineConverter: timelineConverter,
+    adapter: adapterMock
 });
 
 const TEST_URL = 'http://www.example.com/';
@@ -23,13 +27,13 @@ describe('DashManifestModel', function () {
 
     const mpdHelper = new MpdHelper();
 
-    it("should throw an exception when attempting to call getIsTypeOf with undefined parameters", function () {
-        expect(dashManifestModel.getIsTypeOf.bind(dashManifestModel)).to.throw("adaptation is not defined");
+    it('should throw an exception when attempting to call getIsTypeOf with undefined parameters', function () {
+        expect(dashManifestModel.getIsTypeOf.bind(dashManifestModel)).to.throw('adaptation is not defined');
 
         var adaptation = mpdHelper.composeAdaptation('video');
-        expect(dashManifestModel.getIsTypeOf.bind(dashManifestModel, adaptation)).to.throw("type is not defined");
+        expect(dashManifestModel.getIsTypeOf.bind(dashManifestModel, adaptation)).to.throw('type is not defined');
 
-        expect(dashManifestModel.getIsTypeOf.bind(dashManifestModel, adaptation, EMPTY_STRING)).to.throw("type is not defined");
+        expect(dashManifestModel.getIsTypeOf.bind(dashManifestModel, adaptation, EMPTY_STRING)).to.throw('type is not defined');
     });
 
     it('should return false when getIsTextTrack is called and type is undefined', () => {
@@ -178,7 +182,7 @@ describe('DashManifestModel', function () {
     it('should return an empty array when getAdaptationsForType is called and type is undefined', () => {
         const manifest = { Period_asArray: [ { AdaptationSet_asArray: [ { id: 0 } ] }] };
 
-        expect(dashManifestModel.getAdaptationsForType.bind(dashManifestModel, manifest, 0, undefined)).to.throw("type is not defined");
+        expect(dashManifestModel.getAdaptationsForType.bind(dashManifestModel, manifest, 0, undefined)).to.throw('type is not defined');
     });
 
     it('should return an empty array when getAdaptationForType is called and streamInfo is undefined', () => {
@@ -186,6 +190,27 @@ describe('DashManifestModel', function () {
         const adaptation = dashManifestModel.getAdaptationForType(manifest, 0, 'video', undefined);
 
         expect(adaptation.id).to.equal(0); // jshint ignore:line
+    });
+
+    it('should return the correct adaptation when getAdaptationForType is called', () => {
+        const manifest = { Period_asArray: [ { AdaptationSet_asArray: [ { id: undefined, mimeType: 'audio', lang: 'eng', Role_asArray: [{value: 'main'}] }, { id: undefined, mimeType: 'audio', lang: 'deu', Role_asArray: [{value: 'main'}] }] }]};
+
+        const streamInfo = {
+            id: 'id'
+        };
+
+        const track1 = {codec: 'audio/mp4;codecs="mp4a.40.2"', id: undefined, index: 0, isText: false, lang: 'eng',mimeType: 'audio/mp4', roles: ['main'], streamInfo: streamInfo};
+        const track2 = {codec: 'audio/mp4;codecs="mp4a.40.2"', id: undefined, index: 1, isText: false, lang: 'deu',mimeType: 'audio/mp4', roles: ['main'], streamInfo: streamInfo};
+
+        mediaControllerMock.addTrack(track1);
+        mediaControllerMock.addTrack(track2);
+        mediaControllerMock.setTrack(track2);
+
+        const adaptation = dashManifestModel.getAdaptationForType(manifest, 0, 'audio', streamInfo);
+
+        //in the mediaControllerMock, the currentTrack is lang= deu
+
+        expect(adaptation.lang).to.equal('deu'); // jshint ignore:line
     });
 
     it('should return null when getCodec is called and adaptation is undefined', () => {
@@ -242,10 +267,10 @@ describe('DashManifestModel', function () {
         expect(isDynamic).to.be.false;    // jshint ignore:line
     });
 
-    it('should return Number.MAX_VALUE when getDuration is called and manifest is undefined', () => {
+    it('should return Number.MAX_SAFE_NUMBER (or Number.MAX_VALUE in case MAX_SAFE_NUMBER is not defined) when getDuration is called and manifest is undefined', () => {
         const duration = dashManifestModel.getDuration();
 
-        expect(duration).to.equal(Number.MAX_VALUE); // jshint ignore:line
+        expect(duration).to.equal(Number.MAX_SAFE_INTEGER || Number.MAX_VALUE); // jshint ignore:line
     });
 
     it('should return 0 when getRepresentationCount is called and adaptation is undefined', () => {
@@ -394,7 +419,7 @@ describe('DashManifestModel', function () {
     it('should return valid value when minimumUpdatePeriod is present in manifest and latencyOfLastUpdate is defined', () => {
         const minimumUpdatePeriod = 30;
         const latencyOfLastUpdate = 0.5;
-        const manifest = { minimumUpdatePeriod:minimumUpdatePeriod };
+        const manifest = { minimumUpdatePeriod: minimumUpdatePeriod };
         const expectedResult = minimumUpdatePeriod - latencyOfLastUpdate;
         const updatePeriod = dashManifestModel.getManifestUpdatePeriod(manifest, latencyOfLastUpdate);
         expect(updatePeriod).to.equal(expectedResult); // jshint ignore:line
@@ -402,8 +427,8 @@ describe('DashManifestModel', function () {
 
     it('should return valid value when minimumUpdatePeriod is present in manifest and latencyOfLastUpdate is not defined', () => {
         const minimumUpdatePeriod = 30;
-        const manifest = { minimumUpdatePeriod:minimumUpdatePeriod };
-        const expectedResult = minimumUpdatePeriod
+        const manifest = { minimumUpdatePeriod: minimumUpdatePeriod };
+        const expectedResult = minimumUpdatePeriod;
         const updatePeriod = dashManifestModel.getManifestUpdatePeriod(manifest);
         expect(updatePeriod).to.equal(expectedResult); // jshint ignore:line
     });
@@ -558,7 +583,7 @@ describe('DashManifestModel', function () {
 
         it('returns an Array of BaseURLs with BaseURL[0] resolved to the document base uri when the base uri is the mpd and the input url is relative', () => {
             const node = {
-                baseUri: TEST_URL + "example.mpd",
+                baseUri: TEST_URL + 'example.mpd',
                 BaseURL_asArray: [{
                     __text: RELATIVE_TEST_URL
                 }]

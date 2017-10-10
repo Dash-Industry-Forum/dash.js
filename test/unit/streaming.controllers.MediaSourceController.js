@@ -5,7 +5,7 @@ import VideoModelMock from './mocks/VideoModelMock';
 const expect = require('chai').expect;
 const context = {};
 
-describe("MediaSourceController", function () {
+describe('MediaSourceController', function () {
 
     let mediaSourceController;
 
@@ -44,9 +44,9 @@ describe("MediaSourceController", function () {
         mediaSourceController = null;
     });
 
-    describe("Method createMediaSource", function () {
+    describe('Method createMediaSource', function () {
         it('should return null if MediaSource is undefined', function () {
-            expect(mediaSourceController.createMediaSource()).to.not.exist;
+            expect(mediaSourceController.createMediaSource()).to.not.exist; // jshint ignore:line
         });
 
         it('should return null if MediaSource API is MediaSource', function () {
@@ -63,11 +63,11 @@ describe("MediaSourceController", function () {
 
     });
 
-    describe("Source management", function () {
+    describe('Source management', function () {
         it('should attach source to video model', function () {
 
             let videoModel = new VideoModelMock();
-            expect(videoModel.getSource()).to.not.exist;
+            expect(videoModel.getSource()).to.not.exist; // jshint ignore:line
 
             mediaSourceController.attachMediaSource('source', videoModel);
             expect(videoModel.getSource()).to.equal('source');
@@ -76,12 +76,12 @@ describe("MediaSourceController", function () {
         it('should detach source from video model', function () {
 
             let videoModel = new VideoModelMock();
-            expect(videoModel.getSource()).to.not.exist;
+            expect(videoModel.getSource()).to.not.exist; // jshint ignore:line
             videoModel.setSource('source');
             expect(videoModel.getSource()).to.equal('source');
 
             mediaSourceController.detachMediaSource(videoModel);
-            expect(videoModel.getSource()).to.not.exist;
+            expect(videoModel.getSource()).to.not.exist; // jshint ignore:line
         });
 
         it('should update source duration', function () {
@@ -141,7 +141,7 @@ describe("MediaSourceController", function () {
             let source = new FakeSource();
 
             mediaSourceController.signalEndOfStream(source);
-            expect(source.isEndOfStream).to.be.false;
+            expect(source.isEndOfStream).to.be.false; // jshint ignore:line
         });
 
         it('should not signal end of stream - one buffer updating', function () {
@@ -164,7 +164,7 @@ describe("MediaSourceController", function () {
             let source = new FakeSource();
 
             mediaSourceController.signalEndOfStream(source);
-            expect(source.isEndOfStream).to.be.false;
+            expect(source.isEndOfStream).to.be.false; // jshint ignore:line
         });
 
         it('should not signal end of stream - nothing buffered updating', function () {
@@ -187,7 +187,7 @@ describe("MediaSourceController", function () {
             let source = new FakeSource();
 
             mediaSourceController.signalEndOfStream(source);
-            expect(source.isEndOfStream).to.be.false;
+            expect(source.isEndOfStream).to.be.false; // jshint ignore:line
         });
 
         it('should signal end of stream', function () {
@@ -210,7 +210,7 @@ describe("MediaSourceController", function () {
             let source = new FakeSource();
 
             mediaSourceController.signalEndOfStream(source);
-            expect(source.isEndOfStream).to.be.true;
+            expect(source.isEndOfStream).to.be.true; // jshint ignore:line
 
         });
     });

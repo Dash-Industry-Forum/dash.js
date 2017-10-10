@@ -9,7 +9,7 @@ class TextBufferMock {
         this.chunk = chunk;
 
         let that = this;
-        setTimeout(function() {
+        setTimeout(function () {
             that.updating = false;
         }, 500);
     }

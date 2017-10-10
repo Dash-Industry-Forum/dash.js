@@ -16,7 +16,7 @@ describe('TextBufferController', function () {
 
         textBufferController = TextBufferController(context).create({
             type: 'fragmentedText',
-            sourceBufferController: sourceBufferMock,
+            sourceBufferController: sourceBufferMock
         });
 
         expect(textBufferController.getBufferControllerType()).to.equal('BufferController');

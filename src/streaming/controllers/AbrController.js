@@ -92,7 +92,7 @@ function AbrController() {
     function setup() {
         log = debug.log.bind(instance);
 
-        reset();
+        resetInitialSettings();
     }
 
     function registerStreamType(type, streamProcessor) {
@@ -124,7 +124,7 @@ function AbrController() {
         abrRulesCollection.initialize();
     }
 
-    function reset() {
+    function resetInitialSettings() {
         autoSwitchBitrate = {video: true, audio: true};
         topQualities = {};
         qualityDict = {};
@@ -140,14 +140,21 @@ function AbrController() {
         if (windowResizeEventCalled === undefined) {
             windowResizeEventCalled = false;
         }
-        eventBus.off(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
-        eventBus.off(Events.QUALITY_CHANGE_RENDERED, onQualityChangeRendered, this);
-        eventBus.off(Events.METRIC_ADDED, onMetricAdded, this);
         playbackIndex = undefined;
         droppedFramesHistory = undefined;
         throughputHistory = undefined;
         clearTimeout(abandonmentTimeout);
         abandonmentTimeout = null;
+    }
+
+    function reset() {
+
+        resetInitialSettings();
+
+        eventBus.off(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
+        eventBus.off(Events.QUALITY_CHANGE_RENDERED, onQualityChangeRendered, this);
+        eventBus.off(Events.METRIC_ADDED, onMetricAdded, this);
+
         if (abrRulesCollection) {
             abrRulesCollection.reset();
         }
@@ -389,6 +396,7 @@ function AbrController() {
             changeQuality(type, oldQuality, newQuality, topQualityIdx, reason);
         }
     }
+
     function changeQuality(type, oldQuality, newQuality, topQualityIdx, reason) {
         if (type  && streamProcessorDict[type]) {
             var streamInfo = streamProcessorDict[type].getStreamInfo();
@@ -660,7 +668,6 @@ function AbrController() {
                     switchHistoryDict[type].reset();
                     switchHistoryDict[type].push({oldValue: getQualityFor(type, streamController.getActiveStreamInfo()), newValue: switchRequest.quality, confidence: 1, reason: switchRequest.reason});
                     setPlaybackQuality(type, streamController.getActiveStreamInfo(), switchRequest.quality, switchRequest.reason);
-                    eventBus.trigger(Events.FRAGMENT_LOADING_ABANDONED, {streamProcessor: streamProcessorDict[type], request: request, mediaType: type, newQuality: switchRequest.quality});
 
                     clearTimeout(abandonmentTimeout);
                     abandonmentTimeout = setTimeout(

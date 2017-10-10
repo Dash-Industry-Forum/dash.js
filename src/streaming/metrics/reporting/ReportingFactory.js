@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../../core/FactoryMaker';
 import DVBReporting from './reporters/DVBReporting';
 
 function ReportingFactory(config) {
@@ -76,4 +75,4 @@ function ReportingFactory(config) {
 }
 
 ReportingFactory.__dashjs_factory_name = 'ReportingFactory';
-export default FactoryMaker.getSingletonFactory(ReportingFactory);
+export default dashjs.FactoryMaker.getSingletonFactory(ReportingFactory); /* jshint ignore:line */

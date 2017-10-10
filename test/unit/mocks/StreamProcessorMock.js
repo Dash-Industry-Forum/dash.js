@@ -14,7 +14,7 @@ class BufferControllerMock {
     }
 
     setSeekStartTime(time) {
-        this.seekStartTime = time
+        this.seekStartTime = time;
     }
 
     isBufferingCompleted() {
@@ -48,7 +48,7 @@ class StreamProcessorMock {
     getMediaInfo() {
         return {
             bitrateList: [],
-            mimeType: "video/mp4"
+            mimeType: 'video/mp4'
         };
     }
 
@@ -82,7 +82,7 @@ class StreamProcessorMock {
         let offest = quality ? 2 : 1;
         return {
             MSETimeOffset: offest
-        }
+        };
     }
 
     getStreamInfo() {
@@ -90,13 +90,18 @@ class StreamProcessorMock {
     }
 
     getCurrentRepresentationInfo() {
-        return {mediaInfo: {type : this.type}};
+        return {mediaInfo: {type: this.type}};
     }
 
     isBufferingCompleted() {
         return this.bufferController.isBufferingCompleted();
     }
 
+    getFragmentController() {
+        return null;
+    }
+
+    switchInitData() {}
 
     reset() {}
 }

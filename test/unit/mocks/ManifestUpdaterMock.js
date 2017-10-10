@@ -1,16 +1,5 @@
-class ManifestLoaderMock {
-    constructor() {
-        this.loadManifest = false;
-    }
 
-    getLoadManifest() {
-        return false;
-    }
-    
-    load() {
-        this.loadManifest = true;
-    }
-}
+import ManifestLoaderMock from './ManifestLoaderMock';
 
 class ManifestUpdaterMock {
     constructor() {

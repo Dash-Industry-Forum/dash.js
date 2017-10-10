@@ -18,7 +18,7 @@ class SourceBufferControllerMock {
     }
 
     createSourceBuffer() {
-        if(!this.createError){
+        if (!this.createError) {
             return this.buffer;
         } else {
             throw new Error('create error');

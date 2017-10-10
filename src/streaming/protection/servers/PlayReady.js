@@ -29,6 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* global escape: true */
+
 /**
  * Microsoft PlayReady Test License Server
  *
@@ -37,11 +39,78 @@
  * @implements LicenseServer
  * @class
  */
-import FactoryMaker from '../../../core/FactoryMaker';
 
 function PlayReady() {
 
     let instance;
+
+    const soap = 'http://schemas.xmlsoap.org/soap/envelope/';
+
+    function uintToString(arrayBuffer) {
+        const encodedString = String.fromCharCode.apply(null, new Uint8Array(arrayBuffer));
+        const decodedString = decodeURIComponent(escape(encodedString));
+        return decodedString;
+    }
+
+    function parseServerResponse(serverResponse) {
+        if (window.DOMParser) {
+            const stringResponse = uintToString(serverResponse);
+            const parser = new window.DOMParser();
+            const xmlDoc = parser.parseFromString(stringResponse, 'text/xml');
+            const envelope = xmlDoc ? xmlDoc.getElementsByTagNameNS(soap, 'Envelope')[0] : null;
+            const body = envelope ? envelope.getElementsByTagNameNS(soap, 'Body')[0] : null;
+            const fault = body ? body.getElementsByTagNameNS(soap, 'Fault')[0] : null;
+
+            if (fault) {
+                return null;
+            }
+        }
+        return serverResponse;
+    }
+
+    function parseErrorResponse(serverResponse) {
+        let faultstring = '';
+        let statusCode = '';
+        let message = '';
+        let idStart = -1;
+        let idEnd = -1;
+
+        if (window.DOMParser) {
+            const stringResponse = uintToString(serverResponse);
+            const parser = new window.DOMParser();
+            const xmlDoc = parser.parseFromString(stringResponse, 'text/xml');
+            const envelope = xmlDoc ? xmlDoc.getElementsByTagNameNS(soap, 'Envelope')[0] : null;
+            const body = envelope ? envelope.getElementsByTagNameNS(soap, 'Body')[0] : null;
+            const fault = body ? body.getElementsByTagNameNS(soap, 'Fault')[0] : null;
+            const detail = fault ? fault.getElementsByTagName('detail')[0] : null;
+            const exception = detail ? detail.getElementsByTagName('Exception')[0] : null;
+            let node = null;
+
+            if (fault === null) {
+                return stringResponse;
+            }
+
+            node = fault.getElementsByTagName('faultstring')[0].firstChild;
+            faultstring = node ? node.nodeValue : null;
+
+            if (exception !== null) {
+                node = exception.getElementsByTagName('StatusCode')[0];
+                statusCode = node ? node.firstChild.nodeValue : null;
+                node = exception.getElementsByTagName('Message')[0];
+                message = node ? node.firstChild.nodeValue : null;
+                idStart = message ? message.lastIndexOf('[') + 1 : -1;
+                idEnd = message ? message.indexOf(']') : -1;
+                message = message ? message.substring(idStart, idEnd) : '';
+            }
+        }
+
+        let errorString = `code: ${statusCode}, name: ${faultstring}`;
+        if (message) {
+            errorString += `, message: ${message}`;
+        }
+
+        return errorString;
+    }
 
     function getServerURLFromMessage(url /*, message, messageType*/) {
         return url;
@@ -56,11 +125,11 @@ function PlayReady() {
     }
 
     function getLicenseMessage(serverResponse/*, keySystemStr, messageType*/) {
-        return serverResponse;
+        return parseServerResponse.call(this, serverResponse);
     }
 
     function getErrorResponse(serverResponse/*, keySystemStr, messageType*/) {
-        return String.fromCharCode.apply(null, new Uint8Array(serverResponse));
+        return parseErrorResponse.call(this, serverResponse);
     }
 
     instance = {
@@ -75,4 +144,4 @@ function PlayReady() {
 }
 
 PlayReady.__dashjs_factory_name = 'PlayReady';
-export default FactoryMaker.getSingletonFactory(PlayReady);
+export default dashjs.FactoryMaker.getSingletonFactory(PlayReady); /* jshint ignore:line */

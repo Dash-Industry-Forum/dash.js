@@ -145,25 +145,9 @@ class AbrControllerMock{
 
     getAbandonmentStateFor() {}
 
-    /**
-     * @param {MediaInfo} mediaInfo
-     * @param {number} bitrate A bitrate value, kbps
-     * @param {number} latency Expected latency of connection, ms
-     * @returns {number} A quality index <= for the given bitrate
-     * @memberof AbrControllerMock#
-     */
-    getQualityForBitrate() {
+    getQualityForBitrate() {}
 
-    }
-
-    /**
-     * @param {MediaInfo} mediaInfo
-     * @returns {Array|null} A list of {@link BitrateInfo} objects
-     * @memberof AbrControllerMock#
-     */
-    getBitrateList() {
-
-    }
+    getBitrateList() {}
 
     getThroughputHistory() {
         return this.throughputHistory;
