@@ -189,6 +189,9 @@ function StreamController() {
         if (mediaSource && isLast) {
             log('[StreamController] onStreamBufferingCompleted calls signalEndOfStream of mediaSourceController');
             mediaSourceController.signalEndOfStream(mediaSource);
+        } else if (MediaSource) {
+            //send PLAYBACK_ENDED in order switch to a new period
+            eventBus.trigger(Events.PLAYBACK_ENDED);
         }
     }
 
