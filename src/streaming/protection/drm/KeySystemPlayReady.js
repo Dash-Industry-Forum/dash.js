@@ -213,6 +213,10 @@ function KeySystemPlayReady(config) {
         messageFormat = format;
     }
 
+    /**
+     * Initialize the Key system with protection data
+     * @param {Object} protectionData the protection data
+     */
     function init(protectionData) {
         if (protectionData) {
             protData = protectionData;
