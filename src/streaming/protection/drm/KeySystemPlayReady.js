@@ -47,7 +47,13 @@ function KeySystemPlayReady(config) {
 
     let instance;
     let messageFormat = 'utf16';
-    let BASE64 = config.BASE64;
+    let BASE64 = config ? config.BASE64 : null;
+
+    function checkConfig() {
+        if (!BASE64 || !BASE64.hasOwnProperty('decodeArray') || !BASE64.hasOwnProperty('decodeArray') ) {
+            throw new Error('Missing config parameter(s)');
+        }
+    }
 
     function getRequestHeadersFromMessage(message) {
         let msg,
@@ -81,6 +87,7 @@ function KeySystemPlayReady(config) {
         let parser = new DOMParser();
         let dataview = (messageFormat === 'utf16') ? new Uint16Array(message) : new Uint8Array(message);
 
+        checkConfig();
         msg = String.fromCharCode.apply(null, dataview);
         xmlDoc = parser.parseFromString(msg, 'application/xml');
 
@@ -157,6 +164,7 @@ function KeySystemPlayReady(config) {
             PSSHBox,
             PSSHData;
 
+        checkConfig();
         // Handle common encryption PSSH
         if ('pssh' in cpData) {
             return CommonEncryption.parseInitDataFromContentProtection(cpData, BASE64);
@@ -233,6 +241,7 @@ function KeySystemPlayReady(config) {
             cdmDataBytes,
             i;
 
+        checkConfig();
         if (protData && protData.cdmData) {
 
             // Convert custom data into multibyte string
