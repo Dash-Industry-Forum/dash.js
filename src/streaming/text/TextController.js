@@ -61,7 +61,7 @@ function TextController() {
 
         textTracks.initialize();
 
-        reset();
+        resetInitialSettings();
     }
 
     function setConfig(config) {
@@ -122,46 +122,40 @@ function TextController() {
         textSourceBuffer.addEmbeddedTrack(mediaInfo);
     }
 
-    function setTextTrack() {
+    function setTextTrack(idx) {
+        //For external time text file,  the only action needed to change a track is marking the track mode to showing.
+        // Fragmented text tracks need the additional step of calling TextController.setTextTrack();
 
         let config = textSourceBuffer.getConfig();
         let fragmentModel = config.fragmentModel;
-        let embeddedTracks = config.embeddedTracks;
-        let isFragmented = config.isFragmented;
         let fragmentedTracks = config.fragmentedTracks;
 
-        let tracks = videoModel.getTextTracks();
-        const ln = tracks.length;
-        let nrNonEmbeddedTracks = ln - embeddedTracks.length;
         let oldTrackIdx = textTracks.getCurrentTrackIdx();
+        if (oldTrackIdx !== idx) {
+            textTracks.setModeForTrackIdx(oldTrackIdx, Constants.TEXT_HIDDEN);
+            textTracks.setCurrentTrackIdx(idx);
+            textTracks.setModeForTrackIdx(idx, Constants.TEXT_SHOWING);
 
-        for (let i = 0; i < ln; i++) {
-            let track = tracks[i];
-            allTracksAreDisabled = track.mode !== Constants.TEXT_SHOWING;
-            if (track.mode === Constants.TEXT_SHOWING) {
-                if (oldTrackIdx !== i) { // do not reset track if already the current track.  This happens when all captions get turned off via UI and then turned on again and with videojs.
-                    textTracks.setCurrentTrackIdx(i);
-                    textTracks.addCaptions(i, 0, null); // Make sure that previously queued captions are added as cues
+            let currentTrackInfo = textTracks.getCurrentTrackInfo();
 
-                    // specific to fragmented text
-                    if (isFragmented && i < nrNonEmbeddedTracks) {
+            if (currentTrackInfo && currentTrackInfo.isFragmented && !currentTrackInfo.isEmbedded) {
+                for (let i = 0; i < fragmentedTracks.length; i++) {
+                    let mediaInfo = fragmentedTracks[i];
+                    if (currentTrackInfo.lang === mediaInfo.lang && currentTrackInfo.index === mediaInfo.index &&
+                        (currentTrackInfo.label ? currentTrackInfo.label === mediaInfo.id : true)) {
                         let currentFragTrack = mediaController.getCurrentTrackFor(Constants.FRAGMENTED_TEXT, streamController.getActiveStreamInfo());
-                        let newFragTrack = fragmentedTracks[i];
-                        if (newFragTrack !== currentFragTrack) {
+                        if (mediaInfo !== currentFragTrack) {
                             fragmentModel.abortRequests();
                             textTracks.deleteCuesFromTrackIdx(oldTrackIdx);
-                            mediaController.setTrack(newFragTrack);
+                            mediaController.setTrack(mediaInfo);
                             textSourceBuffer.setCurrentFragmentedTrackIdx(i);
                         }
                     }
                 }
-                break;
             }
         }
 
-        if (allTracksAreDisabled) {
-            textTracks.setCurrentTrackIdx(-1);
-        }
+        allTracksAreDisabled = idx === -1 ? true : false;
     }
 
     function getCurrentTrackIdx() {
@@ -169,8 +163,12 @@ function TextController() {
         return textTracks.getCurrentTrackIdx();
     }
 
-    function reset() {
+    function resetInitialSettings() {
         allTracksAreDisabled = false;
+    }
+
+    function reset() {
+        resetInitialSettings();
         textSourceBuffer.resetEmbedded();
     }
 

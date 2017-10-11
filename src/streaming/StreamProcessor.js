@@ -110,7 +110,6 @@ function StreamProcessor(config) {
             mediaPlayerModel: mediaPlayerModel,
             abrController: abrController,
             playbackController: playbackController,
-            mediaController: mediaController,
             streamController: streamController,
             textController: textController,
             sourceBufferController: sourceBufferController,

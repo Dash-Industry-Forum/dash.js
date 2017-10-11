@@ -28,18 +28,17 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from '../../streaming/constants/Constants';
-import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
-import BASE64 from '../../../externals/base64';
-import KeySystemWidevine from '../../streaming/protection/drm/KeySystemWidevine.js';
 
+/**
+ * @module MssParser
+ * @param {Object} config object
+ */
 function MssParser(config) {
-
-    const context = this.context;
-    const ksWidevine = KeySystemWidevine(context).getInstance();
-    const log = Debug(context).getInstance().log;
+    const protectionController = config.protectionController;
+    const BASE64 = config.BASE64;
+    const log = config.log;
     const errorHandler = config.errHandler;
+    const constants = config.constants;
 
     const TIME_SCALE_100_NANOSECOND_UNIT = 10000000.0;
     const SUPPORTED_CODECS = ['AAC', 'AACL', 'AVC1', 'H264', 'TTML', 'DFXP'];
@@ -199,7 +198,7 @@ function MssParser(config) {
             representation.audioSamplingRate = parseInt(qualityLevel.getAttribute('SamplingRate'), 10);
             representation.audioChannels = parseInt(qualityLevel.getAttribute('Channels'), 10);
         } else if (fourCCValue.indexOf('TTML') || fourCCValue.indexOf('DFXP')) {
-            representation.codecs = Constants.STPP;
+            representation.codecs = constants.STPP;
         }
 
         representation.codecPrivateData = '' + qualityLevel.getAttribute('CodecPrivateData');
@@ -453,6 +452,15 @@ function MssParser(config) {
 
 
     function createPRContentProtection(protectionHeader) {
+        const keySystems = protectionController ? protectionController.getKeySystems() : null;
+        let ksPlayReady;
+
+        for (let i = 0; i < keySystems.length; i++) {
+            if (keySystems[i].systemString && keySystems[i].systemString.indexOf('playready') !== -1) {
+                ksPlayReady = keySystems[i];
+                break;
+            }
+        }
 
         let contentProtection = {};
         let pro;
@@ -462,20 +470,32 @@ function MssParser(config) {
             __prefix: 'mspr'
         };
 
-        contentProtection.schemeIdUri = 'urn:uuid:9a04f079-9840-4286-ab92-e65be0885f95';
-        contentProtection.value = 'com.microsoft.playready';
-        contentProtection.pro = pro;
-        contentProtection.pro_asArray = pro;
+        if (ksPlayReady) {
+            contentProtection.schemeIdUri = ksPlayReady.schemeIdURI;
+            contentProtection.value = ksPlayReady.systemString;
+            contentProtection.pro = pro;
+            contentProtection.pro_asArray = pro;
+        }
 
         return contentProtection;
     }
 
     function createWidevineContentProtection(/*protectionHeader*/) {
+        const keySystems = protectionController ? protectionController.getKeySystems() : null;
+        let ksWidevine;
+
+        for (let i = 0; i < keySystems.length; i++) {
+            if (keySystems[i].systemString && keySystems[i].systemString.indexOf('widevine') !== -1) {
+                ksWidevine = keySystems[i];
+                break;
+            }
+        }
 
         var contentProtection = {};
-
-        contentProtection.schemeIdUri = ksWidevine.schemeIdURI;
-        contentProtection.value = ksWidevine.systemString;
+        if (ksWidevine) {
+            contentProtection.schemeIdUri = ksWidevine.schemeIdURI;
+            contentProtection.value = ksWidevine.systemString;
+        }
 
         return contentProtection;
     }
@@ -537,7 +557,7 @@ function MssParser(config) {
             contentProtections.push(contentProtection);
 
             // Create ContentProtection for Widevine (as a CENC protection)
-            contentProtection = createWidevineContentProtection.call(this, protectionHeader);
+            contentProtection = createWidevineContentProtection(protectionHeader);
             contentProtection['cenc:default_KID'] = KID;
             contentProtections.push(contentProtection);
 
@@ -635,6 +655,13 @@ function MssParser(config) {
         return xmlDoc;
     }
 
+    function getMatchers() {
+        return null;
+    }
+
+    function getIron() {
+        return null;
+    }
 
     function internalParse(data) {
         let xmlDoc = null;
@@ -662,7 +689,9 @@ function MssParser(config) {
     }
 
     instance = {
-        parse: internalParse
+        parse: internalParse,
+        getMatchers: getMatchers,
+        getIron: getIron
     };
 
     setup();
@@ -671,4 +700,4 @@ function MssParser(config) {
 }
 
 MssParser.__dashjs_factory_name = 'MssParser';
-export default FactoryMaker.getClassFactory(MssParser);
+export default dashjs.FactoryMaker.getClassFactory(MssParser); /* jshint ignore:line */

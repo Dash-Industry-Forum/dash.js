@@ -49,7 +49,7 @@ function SegmentsGetter(config, isDynamic) {
         listSegmentsGetter = ListSegmentsGetter(context).create(config, isDynamic);
     }
 
-    function getSegments(representation, requestedTime, index, onSegmentListUpdatedCallback, availabilityUpperLimit) {
+    function getSegments(representation, requestedTime, index, onSegmentListUpdatedCallback) {
         let segments;
         const type = representation.segmentInfoType;
 
@@ -58,11 +58,11 @@ function SegmentsGetter(config, isDynamic) {
             segments = representation.segments;
         } else {
             if (type === DashConstants.SEGMENT_TIMELINE) {
-                segments = timelineSegmentsGetter.getSegments(representation, requestedTime, index, availabilityUpperLimit);
+                segments = timelineSegmentsGetter.getSegments(representation, requestedTime, index);
             } else if (type === DashConstants.SEGMENT_TEMPLATE) {
-                segments = templateSegmentsGetter.getSegments(representation, requestedTime, index, availabilityUpperLimit);
+                segments = templateSegmentsGetter.getSegments(representation, requestedTime, index);
             } else if (type === DashConstants.SEGMENT_LIST) {
-                segments = listSegmentsGetter.getSegments(representation, requestedTime, index, availabilityUpperLimit);
+                segments = listSegmentsGetter.getSegments(representation, requestedTime, index);
             }
 
             if (onSegmentListUpdatedCallback) {

@@ -137,16 +137,20 @@ function DOMStorage(config) {
         //Checks local storage to see if there is valid, non-expired media settings
         if (!canStore(STORAGE_TYPE_LOCAL, LAST_MEDIA_SETTINGS)) return null;
 
-        let key = LOCAL_STORAGE_SETTINGS_KEY_TEMPLATE.replace(/\?/, type);
-        let obj = JSON.parse(localStorage.getItem(key)) || {};
-        let isExpired = (new Date().getTime() - parseInt(obj.timestamp, 10)) >= mediaPlayerModel.getLastMediaSettingsCachingInfo().ttl || false;
-        let settings = obj.settings;
+        let settings = null;
+        const key = LOCAL_STORAGE_SETTINGS_KEY_TEMPLATE.replace(/\?/, type);
+        try {
+            const obj = JSON.parse(localStorage.getItem(key)) || {};
+            const isExpired = (new Date().getTime() - parseInt(obj.timestamp, 10)) >= mediaPlayerModel.getLastMediaSettingsCachingInfo().ttl || false;
+            settings = obj.settings;
 
-        if (isExpired) {
-            localStorage.removeItem(key);
-            settings = null;
+            if (isExpired) {
+                localStorage.removeItem(key);
+                settings = null;
+            }
+        } catch (e) {
+            return null;
         }
-
         return settings;
     }
 
@@ -158,16 +162,20 @@ function DOMStorage(config) {
         //Checks local storage to see if there is valid, non-expired bit rate
         //hinting from the last play session to use as a starting bit rate.
         if (canStore(STORAGE_TYPE_LOCAL, LAST_BITRATE)) {
-            let key = LOCAL_STORAGE_BITRATE_KEY_TEMPLATE.replace(/\?/, type);
-            let obj = JSON.parse(localStorage.getItem(key)) || {};
-            let isExpired = (new Date().getTime() - parseInt(obj.timestamp, 10)) >= mediaPlayerModel.getLastBitrateCachingInfo().ttl || false;
-            let bitrate = parseFloat(obj.bitrate);
+            const key = LOCAL_STORAGE_BITRATE_KEY_TEMPLATE.replace(/\?/, type);
+            try {
+                const obj = JSON.parse(localStorage.getItem(key)) || {};
+                const isExpired = (new Date().getTime() - parseInt(obj.timestamp, 10)) >= mediaPlayerModel.getLastMediaSettingsCachingInfo().ttl || false;
+                const bitrate = parseFloat(obj.bitrate);
 
-            if (!isNaN(bitrate) && !isExpired) {
-                savedBitrate = bitrate;
-                log('Last saved bitrate for ' + type + ' was ' + bitrate);
-            } else if (isExpired) {
-                localStorage.removeItem(key);
+                if (!isNaN(bitrate) && !isExpired) {
+                    savedBitrate = bitrate;
+                    log('Last saved bitrate for ' + type + ' was ' + bitrate);
+                } else if (isExpired) {
+                    localStorage.removeItem(key);
+                }
+            } catch (e) {
+                return null;
             }
         }
         return savedBitrate;
@@ -199,8 +207,7 @@ function DOMStorage(config) {
         getSavedBitrateSettings: getSavedBitrateSettings,
         setSavedBitrateSettings: setSavedBitrateSettings,
         getSavedMediaSettings: getSavedMediaSettings,
-        setSavedMediaSettings: setSavedMediaSettings,
-        isSupported: isSupported
+        setSavedMediaSettings: setSavedMediaSettings
     };
 
     setup();

@@ -9,7 +9,7 @@ const expect = require('chai').expect;
 const context = {};
 const eventBus = EventBus(context).getInstance();
 
-describe("EventController", function () {
+describe('EventController', function () {
     let eventController;
 
     let manifestUpdaterMock = new ManifestUpdaterMock();
@@ -18,7 +18,6 @@ describe("EventController", function () {
 
     beforeEach(function () {
         eventController = EventController(context).create();
-        eventController.initialize();
     });
 
     afterEach(function () {
@@ -27,15 +26,15 @@ describe("EventController", function () {
     });
 
     describe('if not configured', function () {
-        it("should throw an exception when calling start", function () {
+        it('should throw an exception when calling start', function () {
             expect(eventController.start).to.throw('setConfig function has to be called previously');
         });
 
-        it("should throw an exception when calling addInbandEvents", function () {
+        it('should throw an exception when calling addInbandEvents', function () {
             expect(eventController.addInbandEvents).to.throw('setConfig function has to be called previously');
         });
 
-        it("should throw an exception when calling addInlineEvents", function () {
+        it('should throw an exception when calling addInlineEvents', function () {
             expect(eventController.addInlineEvents).to.throw('setConfig function has to be called previously');
         });
     });
@@ -52,12 +51,12 @@ describe("EventController", function () {
         it('should trigger added inband events', function (done) {
             let schemeIdUri = 'inbandEvent';
             let events = [{
-                eventStream : {
-                    timescale : 1,
+                eventStream: {
+                    timescale: 1,
                     schemeIdUri: schemeIdUri
                 },
-                id : 'event0',
-                presentationTime : 0
+                id: 'event0',
+                presentationTime: 0
             }];
 
             let onInbandEvent = function (e) {
@@ -75,12 +74,12 @@ describe("EventController", function () {
         it('should trigger added inline events', function (done) {
             let schemeIdUri = 'inbandEvent';
             let events = [{
-                eventStream : {
-                    timescale : 1,
+                eventStream: {
+                    timescale: 1,
                     schemeIdUri: schemeIdUri
                 },
-                id : 'event0',
-                presentationTime : 0
+                id: 'event0',
+                presentationTime: 0
             }];
 
             let onInlineEvent = function (e) {

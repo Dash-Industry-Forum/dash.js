@@ -32,7 +32,7 @@
  * @class
  * @ignore
  */
-class TrackInfo {
+class RepresentationInfo {
     constructor() {
         this.id = null;
         this.quality = null;
@@ -43,4 +43,4 @@ class TrackInfo {
     }
 }
 
-export default TrackInfo;
+export default RepresentationInfo;

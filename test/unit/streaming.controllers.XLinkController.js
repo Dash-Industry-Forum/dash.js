@@ -67,7 +67,7 @@ describe('XlinkController', function () {
         xLinkController = null;
     });
 
-    it('should resolve manifest on load', function(done) {
+    it('should resolve manifest on load', function (done) {
         let manifest;
         function onXLinkReady(e) {
             eventBus.off(Events.XLINK_READY, onXLinkReady, this);

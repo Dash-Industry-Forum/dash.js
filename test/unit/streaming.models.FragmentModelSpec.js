@@ -11,7 +11,7 @@ const expect = chai.expect;
 
 chai.use(spies);
 
-describe("FragmentModel", function () {
+describe('FragmentModel', function () {
     const specHelper = new SpecHelper();
     const voHelper = new VoHelper();
     const initRequest = voHelper.getInitRequest();
@@ -22,10 +22,10 @@ describe("FragmentModel", function () {
     const metricsModel = {
         addSchedulingInfo: () => {},
         addRequestsQueue: () => {}
-    }
+    };
     let fragmentModel = FragmentModel(context).create({metricsModel: metricsModel});
 
-    it("should not have any loading, executed, canceled or failed requests", function () {
+    it('should not have any loading, executed, canceled or failed requests', function () {
         const expectedValue = 0;
 
         expect(fragmentModel.getRequests().length).to.be.equal(expectedValue);
@@ -49,8 +49,8 @@ describe("FragmentModel", function () {
         fragmentModel.reset();
     });
 
-    describe("when a request has been added", function () {
-        it("should fire streamCompleted event for a complete request", function () {
+    describe('when a request has been added', function () {
+        it('should fire streamCompleted event for a complete request', function () {
             const spy = chai.spy();
 
             eventBus.on(Events.STREAM_COMPLETED, spy);
@@ -63,7 +63,7 @@ describe("FragmentModel", function () {
             eventBus.off(Events.STREAM_COMPLETED, spy);
         });
 
-        describe("when a request has been passed for executing", function () {
+        describe('when a request has been passed for executing', function () {
             const loader = { load: () => {}, abort: () => {} };
             const delay = specHelper.getExecutionDelay();
             let clock;
@@ -72,17 +72,17 @@ describe("FragmentModel", function () {
                 fragmentModel = FragmentModel(context).create({metricsModel: metricsModel, fragmentLoader: loader});
                 clock = sinon.useFakeTimers();
 
-                setTimeout(function(){
+                setTimeout(function () {
                     fragmentModel.executeRequest(initRequest);
                     fragmentModel.executeRequest(mediaRequest);
                 }, delay);
             });
 
-            afterEach(function(){
+            afterEach(function () {
                 clock.restore();
             });
 
-            it("should fire loadingStarted event a request", function () {
+            it('should fire loadingStarted event a request', function () {
                 const spy = chai.spy();
 
                 eventBus.on(Events.FRAGMENT_LOADING_STARTED, spy);
@@ -93,7 +93,7 @@ describe("FragmentModel", function () {
                 expect(spy).to.have.been.called();
             });
 
-            it("should add the request to loading requests", function () {
+            it('should add the request to loading requests', function () {
                 clock.tick(delay + 1);
 
                 const loadingRequests = fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_LOADING});
@@ -101,7 +101,7 @@ describe("FragmentModel", function () {
                 expect(loadingRequests.length).to.be.equal(2);
             });
 
-            it("should be able to abort loading requests", function () {
+            it('should be able to abort loading requests', function () {
                 clock.tick(delay + 1);
 
                 fragmentModel.abortRequests();

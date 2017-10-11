@@ -2,22 +2,17 @@ import TextController from '../../src/streaming/text/TextController';
 import TextTracks from '../../src/streaming/text/TextTracks';
 import TextSourceBuffer from '../../src/streaming/text/TextSourceBuffer';
 import ObjectUtils from '../../src/streaming/utils/ObjectUtils';
-import Events from '../../src/core/events/Events';
-import EventBus from '../../src/core/EventBus';
 
 import VideoModelMock from './mocks/VideoModelMock';
-import VideoElementMock from './mocks/VideoElementMock';
 
 const expect = require('chai').expect;
 const context = {};
 
-const eventBus = EventBus(context).getInstance();
 const objectUtils = ObjectUtils(context).getInstance();
 
 describe('TextController', function () {
 
     let videoModelMock = new VideoModelMock();
-    let videoMock;
     let textTracks;
     let textController;
 
@@ -41,30 +36,26 @@ describe('TextController', function () {
         let textSourceBuffer = textController.getTextSourceBuffer();
         let textSourceBufferSingleton = TextSourceBuffer(context).getInstance();
 
-        expect(objectUtils.areEqual(textSourceBuffer, textSourceBufferSingleton)).to.be.true;
+        expect(objectUtils.areEqual(textSourceBuffer, textSourceBufferSingleton)).to.be.true; // jshint ignore:line
     });
 
     describe('Method setTextTrack', function () {
 
-        beforeEach( function() {
-            videoMock = new VideoElementMock();
-
+        beforeEach( function () {
             textTracks.addTextTrack({
-                index : 0,
-                kind : "subtitles",
-                label : 'eng',
-                defaultTrack : true,
-                video: videoMock,
-                isTTML : true
+                index: 0,
+                kind: 'subtitles',
+                label: 'eng',
+                defaultTrack: true,
+                isTTML: true
             }, 2);
 
             textTracks.addTextTrack({
-                index : 1,
-                kind : "subtitles",
-                label : 'fr',
-                defaultTrack : false,
-                video: videoMock,
-                isTTML : true
+                index: 1,
+                kind: 'subtitles',
+                label: 'fr',
+                defaultTrack: false,
+                isTTML: true
             }, 2);
         });
 
@@ -75,9 +66,8 @@ describe('TextController', function () {
                 id: 'track2'
             }];
 
-            textController.setTextTrack();
-            expect(textController.getAllTracksAreDisabled()).to.be.true;
-
+            textController.setTextTrack(-1);
+            expect(textController.getAllTracksAreDisabled()).to.be.true; // jshint ignore:line
         });
 
         it('should set text tracks - one track showing', function () {
@@ -88,9 +78,8 @@ describe('TextController', function () {
                 id: 'track2'
             }];
 
-            textController.setTextTrack();
-            expect(textController.getAllTracksAreDisabled()).to.be.false;
-
+            textController.setTextTrack(0);
+            expect(textController.getAllTracksAreDisabled()).to.be.false; // jshint ignore:line
         });
     });
 });
