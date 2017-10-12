@@ -62,7 +62,7 @@ describe('MssParser', function () {
             }
         }
     });
-    it('should skip video adaptations id fourCC attribute is not found', function () {
+    it('should skip video adaptations if fourCC attribute is not found', function () {
         let xml = fs.readFileSync(__dirname + '/data/mss/manifestFourCCError.xml', 'utf8');
         let manifest = mssParser.parse(xml);
         let adaptations = manifest.Period.AdaptationSet_asArray;
