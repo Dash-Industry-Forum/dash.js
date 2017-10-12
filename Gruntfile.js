@@ -164,7 +164,7 @@ module.exports = function (grunt) {
             es5: {
                 files: [{
                     expand: true,
-                    src: ['index.js', 'src/**/*.js', 'externals/**/*.js'],
+                    src: ['index.js', 'index_mediaplayerOnly.js', 'src/**/*.js', 'externals/**/*.js'],
                     dest: 'build/es5/'
                 }]
             }
