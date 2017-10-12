@@ -158,7 +158,7 @@ function BufferController(config) {
                 log('PreBuffer discharge requested, but the PreBuffer was empty.');
             }
 
-            let chunks = preBuffer.discharge(0, 9999);//TODO Not very smart.
+            let chunks = preBuffer.discharge();
             let lastInit = null;
             for (let j = 0; j < chunks.length; j++) {
                 //TODO Check the effect of multiple chunks being appended in one go.
