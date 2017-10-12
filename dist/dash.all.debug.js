@@ -15372,7 +15372,7 @@ Object.defineProperty(exports, '__esModule', {
     value: true
 });
 exports.getVersionString = getVersionString;
-var VERSION = '2.6.1';
+var VERSION = '2.6.2';
 
 function getVersionString() {
     return VERSION;
