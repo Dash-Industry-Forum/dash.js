@@ -149,7 +149,7 @@ function BufferController(config) {
             //Log where new buffer will be added. TODO: Check current time against this to see if it's useful.
             const ranges = preBuffer.getAllBufferRanges();
             if (ranges.length > 0) {
-                let rangeStr = 'Beginning PreBuffer discharge, adding buffer for:';
+                let rangeStr = 'Beginning ' + mediaInfo.type + 'PreBuffer discharge, adding buffer for:';
                 for (let i = 0; i < ranges.length; i++) {
                     rangeStr += ' start: ' + ranges.start(i) + ', end: ' + ranges.end(i) + ';';
                 }
@@ -345,13 +345,13 @@ function BufferController(config) {
         // This function returns current working time for buffer (either start time or current time if playback has started)
         let ret = playbackController.getTime();
 
-        //if (seekStartTime) {
-        //    // if there is a seek start time, the first buffer data will be available on maximum value between first buffer range value and seek start time.
-        //    const ranges = buffer.getAllBufferRanges();
-        //    if (ranges && ranges.length) {
-        //        ret = Math.max(ranges.start(0), seekStartTime);
-        //    }
-        //}
+        if (seekStartTime) {
+            // if there is a seek start time, the first buffer data will be available on maximum value between first buffer range value and seek start time.
+            let ranges = buffer.getAllBufferRanges();
+            if (ranges && ranges.length) {
+                ret = Math.max(ranges.start(0), seekStartTime);
+            }
+        }
         return ret;
     }
 
