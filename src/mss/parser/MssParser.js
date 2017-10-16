@@ -162,6 +162,7 @@ function MssParser(config) {
 
         let representation = {};
         let fourCCValue = null;
+        let type = streamIndex.getAttribute('Type');
 
         representation.id = qualityLevel.Id;
         representation.bandwidth = parseInt(qualityLevel.getAttribute('Bitrate'), 10);
@@ -172,14 +173,19 @@ function MssParser(config) {
         fourCCValue = qualityLevel.getAttribute('FourCC');
 
         // If FourCC not defined at QualityLevel level, then get it from StreamIndex level
-        if (fourCCValue === null) {
+        if (fourCCValue === null || fourCCValue === '') {
             fourCCValue = streamIndex.getAttribute('FourCC');
         }
 
         // If still not defined (optionnal for audio stream, see https://msdn.microsoft.com/en-us/library/ff728116%28v=vs.95%29.aspx),
         // then we consider the stream is an audio AAC stream
-        if (fourCCValue === null) {
-            fourCCValue = 'AAC';
+        if (fourCCValue === null || fourCCValue === '') {
+            if (type === 'audio') {
+                fourCCValue = 'AAC';
+            } else if (type === 'video') {
+                log('[MssParser] FourCC is not defined whereas it is required for a QualityLevel element for a StreamIndex of type "video"');
+                return null;
+            }
         }
 
         // Check if codec is supported
