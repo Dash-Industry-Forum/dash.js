@@ -105,6 +105,8 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                 span.classList.remove('icon-mute-on')
                 span.classList.add('icon-mute-off');
             }
+
+            player.getThumbnail(0, 0);
         },
 
         onMuteClick = function (e) {

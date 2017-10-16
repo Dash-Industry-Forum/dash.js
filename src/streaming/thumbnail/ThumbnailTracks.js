@@ -28,60 +28,70 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
+import Constants from '../constants/Constants';
 import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
-import Thumbnail from '../vo/Thumbnail';
-import ThumbnailTracks from './ThumbnailTracks';
 
-function ThumbnailController(config) {
+function ThumbnailTracks(config) {
 
-    const context = this.context;
-    const log = Debug(context).getInstance().log;
-    // const eventBus = EventBus(context).getInstance();
-    // const baseURLController = config.baseURLController;
+    const dashManifestModel = config.dashManifestModel;
+    const manifestModel = config.manifestModel;
+    const stream = config.stream;
+    let instance,
+        tracks;
 
-    let instance;
-    let thumbnailTracks;
-
-    function setup() {
+    function initialize() {
         reset();
-        thumbnailTracks = ThumbnailTracks(context).create({
-            manifestModel: config.manifestModel,
-            dashManifestModel: config.dashManifestModel,
-            stream: config.stream
-        });
+
+        // parse representation and create tracks
+        addTracks();
     }
 
-    function getThumbnail(time, idx) {
-        log('Retrieving thumbnail from track index ', idx, ' at time ', time, ' seconds');
-        if (!thumbnailTracks) {
+    function addTracks() {
+        if (!stream || !manifestModel || !dashManifestModel) {
+            return;
+        }
+
+        const streamInfo = stream ? stream.getStreamInfo() : null;
+        if (!streamInfo) {
             return null;
         }
 
-        const track = thumbnailTracks.getTracks()[idx];
-        if (!track) {
+        const adaptation = dashManifestModel.getAdaptationForType(manifestModel.getValue(), streamInfo.index, Constants.IMAGE, streamInfo);
+        if (!adaptation) {
             return null;
         }
 
-        return new Thumbnail();
+        const representation = adaptation.Representation;
+        if (!representation) {
+            return null;
+        }
+
+        // Extract thumbnail tracks
+        createTrack();
+    }
+
+    function createTrack() {
+
+    }
+
+    function getTracks() {
+        return tracks;
     }
 
     function reset() {
-        if (thumbnailTracks) {
-            thumbnailTracks.reset();
-        }
+        tracks = [];
     }
 
     instance = {
-        get: getThumbnail,
+        initialize: initialize,
+        getTracks: getTracks,
         reset: reset
     };
 
-    setup();
+    initialize();
 
     return instance;
 }
 
-ThumbnailController.__dashjs_factory_name = 'ThumbnailController';
-export default FactoryMaker.getClassFactory(ThumbnailController);
+ThumbnailTracks.__dashjs_factory_name = 'ThumbnailTracks';
+export default FactoryMaker.getClassFactory(ThumbnailTracks);

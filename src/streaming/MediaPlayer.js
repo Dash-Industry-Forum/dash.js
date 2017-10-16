@@ -34,7 +34,6 @@ import UTCTiming from '../dash/vo/UTCTiming';
 import PlaybackController from './controllers/PlaybackController';
 import StreamController from './controllers/StreamController';
 import MediaController from './controllers/MediaController';
-import ThumbnailController from './thumbnail/ThumbnailController';
 import ManifestLoader from './ManifestLoader';
 import ErrorHandler from './utils/ErrorHandler';
 import Capabilities from './utils/Capabilities';
@@ -112,7 +111,6 @@ function MediaPlayer() {
         manifestModel,
         videoModel,
         textController,
-        thumbnailController,
         domStorage;
 
     /*
@@ -224,11 +222,6 @@ function MediaPlayer() {
         metricsModel = MetricsModel(context).getInstance();
 
         textController = TextController(context).getInstance();
-        thumbnailController = ThumbnailController(context).getInstance({
-            manifestModel: manifestModel,
-            dashManifestModel: dashManifestModel,
-            errHandler: errHandler
-        });
         domStorage = DOMStorage(context).getInstance({
             mediaPlayerModel: mediaPlayerModel
         });
@@ -2065,17 +2058,28 @@ function MediaPlayer() {
 
     /**
      * Return the thumbnail of quality idx at time position.
-     *
+     * @returns {Thumbnail|null} - Thumbnail for the given time position. It returns null in case there are is not a thumbnails representation or
+     * if it doesn't contain a thumbnail for the given time position.
      * @param {number} time - A relative time, in seconds, based on the return value of the {@link module:MediaPlayer#duration duration()} method is expected
      * @param {number} idx - Index of track based on the order of the order the tracks are added
      * @memberof module:MediaPlayer
      * @instance
      */
     function getThumbnail(time, idx) {
-        if (!thumbnailController) return null;
+        const s = playbackController.getIsDynamic() ? getDVRSeekOffset(time) : time;
+        const stream = streamController.getStreamForTime(s);
+        if (stream === null) {
+            return null;
+        }
 
-        let s = playbackController.getIsDynamic() ? getDVRSeekOffset(time) : time;
-        return thumbnailController.getThumbnail(s, idx);
+        const thumbnailController = stream.getThumbnailController();
+        const streamInfo = stream.getStreamInfo();
+        if (!thumbnailController || !streamInfo) {
+            return null;
+        }
+
+        const timeInPeriod = streamController.getTimeRelativeToStreamId(time, stream.getId());
+        return thumbnailController.get(timeInPeriod, idx);
     }
 
     /*
@@ -2301,7 +2305,6 @@ function MediaPlayer() {
             abrController.reset();
             mediaController.reset();
             textController.reset();
-            thumbnailController.reset();
             if (protectionController) {
                 protectionController.reset();
                 protectionController = null;

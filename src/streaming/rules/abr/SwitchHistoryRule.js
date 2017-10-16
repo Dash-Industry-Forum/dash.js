@@ -1,7 +1,7 @@
 
-import FactoryMaker from '../../../core/FactoryMaker.js';
+import FactoryMaker from '../../../core/FactoryMaker';
 import Debug from '../../../core/Debug';
-import SwitchRequest from '../SwitchRequest.js';
+import SwitchRequest from '../SwitchRequest';
 
 function SwitchHistoryRule() {
     const context = this.context;

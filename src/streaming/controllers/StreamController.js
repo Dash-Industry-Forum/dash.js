@@ -817,6 +817,7 @@ function StreamController() {
         isVideoTrackPresent: isVideoTrackPresent,
         isAudioTrackPresent: isAudioTrackPresent,
         getStreamById: getStreamById,
+        getStreamForTime: getStreamForTime,
         getTimeRelativeToStreamId: getTimeRelativeToStreamId,
         load: load,
         loadWithManifest: loadWithManifest,

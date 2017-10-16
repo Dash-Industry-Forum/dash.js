@@ -31,11 +31,11 @@
 import ThroughputRule from './ThroughputRule';
 import InsufficientBufferRule from './InsufficientBufferRule';
 import AbandonRequestsRule from './AbandonRequestsRule';
-import DroppedFramesRule from './DroppedFramesRule.js';
-import SwitchHistoryRule from './SwitchHistoryRule.js';
+import DroppedFramesRule from './DroppedFramesRule';
+import SwitchHistoryRule from './SwitchHistoryRule';
 import BolaRule from './BolaRule';
 import FactoryMaker from '../../../core/FactoryMaker';
-import SwitchRequest from '../SwitchRequest.js';
+import SwitchRequest from '../SwitchRequest';
 
 const QUALITY_SWITCH_RULES = 'qualitySwitchRules';
 const ABANDON_FRAGMENT_RULES = 'abandonFragmentRules';

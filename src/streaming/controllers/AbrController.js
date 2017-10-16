@@ -37,11 +37,11 @@ import FragmentModel from '../models/FragmentModel';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
-import RulesContext from '../rules/RulesContext.js';
-import SwitchRequest from '../rules/SwitchRequest.js';
-import SwitchRequestHistory from '../rules/SwitchRequestHistory.js';
-import DroppedFramesHistory from '../rules/DroppedFramesHistory.js';
-import ThroughputHistory from '../rules/ThroughputHistory.js';
+import RulesContext from '../rules/RulesContext';
+import SwitchRequest from '../rules/SwitchRequest';
+import SwitchRequestHistory from '../rules/SwitchRequestHistory';
+import DroppedFramesHistory from '../rules/DroppedFramesHistory';
+import ThroughputHistory from '../rules/ThroughputHistory';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import Debug from '../../core/Debug';
 

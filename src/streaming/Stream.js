@@ -32,6 +32,7 @@ import Constants from './constants/Constants';
 import StreamProcessor from './StreamProcessor';
 import EventController from './controllers/EventController';
 import FragmentController from './controllers/FragmentController';
+import ThumbnailController from './thumbnail/ThumbnailController';
 import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import Debug from '../core/Debug';
@@ -68,6 +69,7 @@ function Stream(config) {
         isUpdating,
         protectionController,
         fragmentController,
+        thumbnailController,
         eventController,
         trackChangedEvent;
 
@@ -181,6 +183,10 @@ function Stream(config) {
 
     function getFragmentController() {
         return fragmentController;
+    }
+
+    function getThumbnailController() {
+        return thumbnailController;
     }
 
     function checkConfig() {
@@ -359,7 +365,17 @@ function Stream(config) {
             }
         }
 
-        if (type === Constants.EMBEDDED_TEXT || type === Constants.IMAGE || mediaController.getTracksFor(type, streamInfo).length === 0) {
+        if (type === Constants.EMBEDDED_TEXT || mediaController.getTracksFor(type, streamInfo).length === 0) {
+            return;
+        }
+
+        if (type === Constants.IMAGE) {
+            thumbnailController = ThumbnailController(context).create({
+                manifestModel: manifestModel,
+                dashManifestModel: dashManifestModel,
+                baseURLController: config.baseURLController,
+                stream: instance
+            });
             return;
         }
 
@@ -587,6 +603,7 @@ function Stream(config) {
         getId: getId,
         getStreamInfo: getStreamInfo,
         getFragmentController: getFragmentController,
+        getThumbnailController: getThumbnailController,
         getEventController: getEventController,
         getBitrateListFor: getBitrateListFor,
         startEventController: startEventController,

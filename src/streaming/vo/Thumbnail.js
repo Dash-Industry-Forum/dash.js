@@ -28,60 +28,18 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
-import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
-import Thumbnail from '../vo/Thumbnail';
-import ThumbnailTracks from './ThumbnailTracks';
-
-function ThumbnailController(config) {
-
-    const context = this.context;
-    const log = Debug(context).getInstance().log;
-    // const eventBus = EventBus(context).getInstance();
-    // const baseURLController = config.baseURLController;
-
-    let instance;
-    let thumbnailTracks;
-
-    function setup() {
-        reset();
-        thumbnailTracks = ThumbnailTracks(context).create({
-            manifestModel: config.manifestModel,
-            dashManifestModel: config.dashManifestModel,
-            stream: config.stream
-        });
+/**
+ * @class
+ * @ignore
+ */
+class Thumbnail {
+    constructor() {
+        this.url = null;
+        this.width = null;
+        this.height = null;
+        this.x = null;
+        this.y = null;
     }
-
-    function getThumbnail(time, idx) {
-        log('Retrieving thumbnail from track index ', idx, ' at time ', time, ' seconds');
-        if (!thumbnailTracks) {
-            return null;
-        }
-
-        const track = thumbnailTracks.getTracks()[idx];
-        if (!track) {
-            return null;
-        }
-
-        return new Thumbnail();
-    }
-
-    function reset() {
-        if (thumbnailTracks) {
-            thumbnailTracks.reset();
-        }
-    }
-
-    instance = {
-        get: getThumbnail,
-        reset: reset
-    };
-
-    setup();
-
-    return instance;
 }
 
-ThumbnailController.__dashjs_factory_name = 'ThumbnailController';
-export default FactoryMaker.getClassFactory(ThumbnailController);
+export default Thumbnail;

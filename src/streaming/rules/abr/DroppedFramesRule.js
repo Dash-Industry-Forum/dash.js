@@ -1,6 +1,6 @@
 
-import FactoryMaker from '../../../core/FactoryMaker.js';
-import SwitchRequest from '../SwitchRequest.js';
+import FactoryMaker from '../../../core/FactoryMaker';
+import SwitchRequest from '../SwitchRequest';
 import Debug from '../../../core/Debug';
 
 function DroppedFramesRule() {

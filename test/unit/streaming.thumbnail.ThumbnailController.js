@@ -8,8 +8,11 @@ describe('ThumbnailController', function () {
     let thumbnailController;
 
     beforeEach(function () {
-        thumbnailController = ThumbnailController(context).getInstance({
-
+        thumbnailController = ThumbnailController(context).create({
+            /*manifestModel: manifestModel,
+            dashManifestModel: dashManifestModel,
+            baseURLController: config.baseURLController,
+            stream: instance*/
         });
     });
 
@@ -18,7 +21,7 @@ describe('ThumbnailController', function () {
     });
 
     it('should return null', function () {
-        const thumbnail = thumbnailController.getThumbnail(0, 0);
+        const thumbnail = thumbnailController.get(0, 0);
         expect(thumbnail).to.be.null; // jshint ignore:line
     });
 });
