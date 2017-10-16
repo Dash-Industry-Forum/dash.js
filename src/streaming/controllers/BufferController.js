@@ -81,7 +81,6 @@ function BufferController(config) {
         appendedBytesInfo,
         wallclockTicked,
         appendingMediaChunk,
-        isAppendingInProgress,
         isPruningInProgress,
         initCache,
         seekStartTime,
@@ -146,7 +145,6 @@ function BufferController(config) {
                 return;
             }
 
-            //Log where new buffer will be added. TODO: Check current time against this to see if it's useful.
             const ranges = preBuffer.getAllBufferRanges();
             if (ranges.length > 0) {
                 let rangeStr = 'Beginning ' + mediaInfo.type + 'PreBuffer discharge, adding buffer for:';
@@ -161,7 +159,6 @@ function BufferController(config) {
             let chunks = preBuffer.discharge();
             let lastInit = null;
             for (let j = 0; j < chunks.length; j++) {
-                //TODO Check the effect of multiple chunks being appended in one go.
                 const chunk = chunks[j];
                 const initChunk = initCache.extract(chunk.streamId, chunk.representationId);
                 if (initChunk) {
@@ -170,8 +167,7 @@ function BufferController(config) {
                         lastInit = initChunk;
                     }
                     buffer.append(chunk); //TODO Think about supressing buffer events the second time round after a discharge?
-                } //TODO else we lost the init(this shouldn't happen)
-                //either drop this chunk and fetch it again through the normal streaming process / get the init chunk and prepare a callback.
+                }
             }
         } // else we already had a sourcebuffer, so nothing to discharge.
     }
@@ -224,7 +220,6 @@ function BufferController(config) {
 
 
     function appendToBuffer(chunk) {
-        isAppendingInProgress = true;
         appendedBytesInfo = chunk; //TODO It's async - there's no reason to think this is valid after the return.
         buffer.append(chunk);
 
@@ -471,8 +466,8 @@ function BufferController(config) {
                     notifyBufferStateChanged(BUFFER_EMPTY);
                     return;
                 }
-                notifyBufferStateChanged(BUFFER_LOADED);
             }
+            notifyBufferStateChanged(BUFFER_LOADED);
         }
     }
 
@@ -665,7 +660,7 @@ function BufferController(config) {
     function onWallclockTimeUpdated() {
         wallclockTicked++;
         const secondsElapsed = (wallclockTicked * (mediaPlayerModel.getWallclockTimeUpdateInterval() / 1000));
-        if ((secondsElapsed >= mediaPlayerModel.getBufferPruningInterval()) && !isAppendingInProgress) {
+        if ((secondsElapsed >= mediaPlayerModel.getBufferPruningInterval())) {
             wallclockTicked = 0;
             pruneBuffer();
         }
@@ -806,7 +801,6 @@ function BufferController(config) {
         appendedBytesInfo = null;
         appendingMediaChunk = false;
         isBufferingCompleted = false;
-        isAppendingInProgress = false;
         isPruningInProgress = false;
         seekClearedBufferingCompleted = false;
         bufferLevel = 0;
@@ -819,6 +813,8 @@ function BufferController(config) {
             }
             buffer.reset();
         }
+        buffer.reset();
+        buffer = null;
     }
 
     function reset(errored) {

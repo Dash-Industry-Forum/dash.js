@@ -85,7 +85,7 @@ describe('BufferController', function () {
             expect(bufferController.getBuffer()).to.not.exist;
         });
 
-        it('should not create a preBufferSink if controller is initialized without a mediaSource', function () {
+        it('should create a preBufferSink if controller is initialized without a mediaSource', function () {
             bufferController.initialize(null);
             bufferController.createBuffer(mediaInfo);
             expect(bufferController.getBuffer().discharge).to.be.a('function'); //Is of type PreBufferSink.
@@ -97,6 +97,7 @@ describe('BufferController', function () {
             const sink = bufferController.getBuffer();
             expect(sink.getBuffer).to.be.a('function'); //Is of type SourceBufferSink
             expect(sink.getBuffer()).to.equal(mediaSourceMock.buffers[0]);
+        });
     });
 
     describe('Method getStreamProcessor', function () {
@@ -140,7 +141,8 @@ describe('BufferController', function () {
             // reset cache
             initCache.reset();
 
-            let onInitRequest = function () {
+            const onInitRequest = function () {
+                eventBus.off(Events.INIT_REQUESTED, onInitRequest);
                 done();
             };
             eventBus.on(Events.INIT_REQUESTED, onInitRequest, this);
@@ -402,43 +404,39 @@ describe('BufferController', function () {
             bufferController.createBuffer(mediaInfo);
         });
 
-        it('should trigger BUFFER_LEVEL_UPDATED event', function (done) {
+        it('should trigger BUFFER_LEVEL_UPDATED event', function () {
             const buffer = mediaSourceMock.buffers[0];
             buffer.addRange({start: 0, end: 20});
             let onBufferLevelUpdated = function (e) {
                 eventBus.off(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, this);
                 expect(e.bufferLevel).to.equal(buffer.buffered.end(0) - buffer.buffered.start(0));
 
-                done();
-            };
+            }
             eventBus.on(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, this);
 
             // send event
             eventBus.trigger(Events.PLAYBACK_SEEKING);
         });
 
-        it('should trigger BUFFER_LEVEL_STATE_CHANGED event', function (done) {
+        it('should trigger BUFFER_LEVEL_STATE_CHANGED event', function () {
             const buffer = mediaSourceMock.buffers[0];
             buffer.addRange({start: 0, end: 20});
-            const onBufferStateChanged = function (e) {
+            let onBufferStateChanged = function (e) {
                 eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferStateChanged, this);
                 expect(e.state).to.equal('bufferLoaded');
-
-                done();
-            };
+            }
             eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferStateChanged, this);
 
             // send event
             eventBus.trigger(Events.PLAYBACK_SEEKING);
         });
 
-        it('should trigger BUFFER_LOADED event if enough buffer', function (done) {
+        it('should trigger BUFFER_LOADED event if enough buffer', function () {
             const buffer = mediaSourceMock.buffers[0];
             buffer.addRange({start: 0, end: 20});
-            const onBufferLoaded = function (e) {
+            let onBufferLoaded = function (e) {
                 eventBus.off(Events.BUFFER_LOADED, onBufferLoaded, this);
-                done();
-            };
+            }
             eventBus.on(Events.BUFFER_LOADED, onBufferLoaded, this);
 
             // send event
