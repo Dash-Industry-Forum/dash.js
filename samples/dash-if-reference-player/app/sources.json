@@ -31,6 +31,14 @@
         {
           "url": "/switch_player/v3/chromecast/unittest/manifests/dash_kevs_test_6.mpd",
           "name": "(switch_player) manifests/dash_kevs_test_6.mpd"
+        },
+        {
+          "url": "http://localhost/streams/kevs_dash/output/stream.mpd",
+          "name": "(kevs localhost) Bento4 test"
+        },
+        {
+          "url": "http://localhost/streams/kevs_gpac/output/stream.mpd",
+          "name": "(kevs localhost) GPAC DASHcast test"
         }
       ]
     },
