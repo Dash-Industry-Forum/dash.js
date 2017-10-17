@@ -456,6 +456,11 @@ function MediaController() {
                 list: [],
                 storeLastSettings: true,
                 current: null
+            },
+            image: {
+                list: [],
+                storeLastSettings: true,
+                current: null
             }
         };
     }

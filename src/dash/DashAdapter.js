@@ -156,6 +156,10 @@ function DashAdapter() {
         mediaInfo.roles = ['caption'];
     }
 
+    function convertVideoInfoToThumbnailInfo(mediaInfo) {
+        mediaInfo.type = Constants.IMAGE;
+    }
+
     function convertPeriodToStreamInfo(period) {
         let streamInfo = new StreamInfo();
         const THRESHOLD = 1;
@@ -276,8 +280,11 @@ function DashAdapter() {
                         media = null;
                     }
                 }
-            }
-            if (media && type !== Constants.EMBEDDED_TEXT) {
+            } else if (type === Constants.IMAGE) {
+                convertVideoInfoToThumbnailInfo(media);
+                mediaArr.push(media);
+                media = null;
+            } else if (media) {
                 mediaArr.push(media);
             }
         }
