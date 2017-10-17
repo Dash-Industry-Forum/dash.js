@@ -29,25 +29,25 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../core/FactoryMaker';
-import Debug from '../core/Debug';
-import ISOBoxer from 'codem-isoboxer';
-
+/**
+ * @module MssFragmentMoovProcessor
+ * @param {Object} config object
+ */
 function MssFragmentMoofProcessor(config) {
 
-    let context = this.context;
-    let instance,
-        log;
+    let instance;
     let metricsModel = config.metricsModel;
     let playbackController = config.playbackController;
+    const ISOBoxer = config.ISOBoxer;
+    const log = config.log;
 
     function setup() {
-        log = Debug(context).getInstance().log;
     }
 
     function processTfrf(request, tfrf, tfdt, streamProcessor) {
         let representationController = streamProcessor.getRepresentationController();
         let representation = representationController.getCurrentRepresentation();
+        let indexHandler = streamProcessor.getIndexHandler();
 
         let manifest = representation.adaptation.period.mpd.manifest;
         let adaptation = manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index];
@@ -146,7 +146,25 @@ function MssFragmentMoofProcessor(config) {
                 }
             }
         }
+
+        if (segmentsUpdated) {
+            indexHandler.updateSegmentList(representation);
+        }
         return segmentsUpdated;
+    }
+
+    // This function returns the offset of the 1st byte of a child box within a container box
+    function getBoxOffset(parent, type) {
+        let offset = 8;
+        let i = 0;
+
+        for (i = 0; i < parent.boxes.length; i++) {
+            if (parent.boxes[i].type === type) {
+                return offset;
+            }
+            offset += parent.boxes[i].size;
+        }
+        return offset;
     }
 
     function convertFragment(e, sp) {
@@ -204,7 +222,7 @@ function MssFragmentMoofProcessor(config) {
                 saio.version = 0;
                 saio.flags = 0;
                 saio.entry_count = 1;
-                saio.offset = [];
+                saio.offset = [0];
 
                 let saiz = ISOBoxer.createFullBox('saiz', traf);
                 saiz.version = 0;
@@ -227,16 +245,25 @@ function MssFragmentMoofProcessor(config) {
             }
         }
 
-        tfhd.flags &= 16777214; // set tfhd.base-data-offset-present to false
-        tfhd.flags |= 131072; // set tfhd.default-base-is-moof to true
-        trun.flags |= 1; // set trun.data-offset-present to true
+        tfhd.flags &= 0xFFFFFE; // set tfhd.base-data-offset-present to false
+        tfhd.flags |= 0x020000; // set tfhd.default-base-is-moof to true
+        trun.flags |= 0x000001; // set trun.data-offset-present to true
 
+        // Update trun.data_offset field that corresponds to first data byte (inside mdat box)
         let moof = isoFile.fetch('moof');
-
         let length = moof.getLength();
-        //offset is equal to length of the moof box + size and type definition for mdat box.
         trun.data_offset = length + 8;
 
+        // Update saio box offset field according to new senc box offset
+        let saio = isoFile.fetch('saio');
+        if (saio !== null) {
+            let trafPosInMoof = getBoxOffset(moof, 'traf');
+            let sencPosInTraf = getBoxOffset(traf, 'senc');
+            // Set offset from begin fragment to the first IV field in senc box
+            saio.offset[0] = trafPosInMoof + sencPosInTraf + 16; // 16 = box header (12) + sample_count field size (4)
+        }
+
+        // Write transformed/processed fragment into request reponse data
         e.response = isoFile.write();
     }
 
@@ -269,7 +296,6 @@ function MssFragmentMoofProcessor(config) {
             tfrf._parent.boxes.splice(tfrf._parent.boxes.indexOf(tfrf), 1);
             tfrf = null;
         }
-
     }
 
     instance = {
@@ -282,4 +308,4 @@ function MssFragmentMoofProcessor(config) {
 }
 
 MssFragmentMoofProcessor.__dashjs_factory_name = 'MssFragmentMoofProcessor';
-export default FactoryMaker.getClassFactory(MssFragmentMoofProcessor);
+export default dashjs.FactoryMaker.getClassFactory(MssFragmentMoofProcessor); /* jshint ignore:line */

@@ -29,8 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import BASE64 from '../../../externals/base64';
-
 class CommonEncryption {
     /**
      * Find and return the ContentProtection element in the given array
@@ -97,9 +95,10 @@ class CommonEncryption {
      * base64-encoding of the init data
      *
      * @param {Object} cpData the ContentProtection element
+     * @param {BASE64} BASE64 reference
      * @returns {ArrayBuffer|null} the init data or null if not found
      */
-    static parseInitDataFromContentProtection(cpData) {
+    static parseInitDataFromContentProtection(cpData, BASE64) {
         if ('pssh' in cpData) {
             return BASE64.decodeArray(cpData.pssh.__text).buffer;
         }

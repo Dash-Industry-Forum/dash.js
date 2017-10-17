@@ -61,14 +61,13 @@ function ManifestUpdater() {
         if (config.mediaPlayerModel) {
             mediaPlayerModel = config.mediaPlayerModel;
         }
+        if (config.manifestLoader) {
+            manifestLoader = config.manifestLoader;
+        }
     }
 
-    function initialize(loader) {
-        manifestLoader = loader;
-        refreshDelay = NaN;
-        refreshTimer = null;
-        isUpdating = false;
-        isPaused = true;
+    function initialize() {
+        resetInitialSettings();
 
         eventBus.on(Events.STREAMS_COMPOSED, onStreamsComposed, this);
         eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
@@ -80,8 +79,11 @@ function ManifestUpdater() {
         update(manifest);
     }
 
-    function getManifestLoader() {
-        return manifestLoader;
+    function resetInitialSettings() {
+        refreshDelay = NaN;
+        isUpdating = false;
+        isPaused = true;
+        stopManifestRefreshTimer();
     }
 
     function reset() {
@@ -90,11 +92,8 @@ function ManifestUpdater() {
         eventBus.off(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
         eventBus.off(Events.STREAMS_COMPOSED, onStreamsComposed, this);
         eventBus.off(Events.INTERNAL_MANIFEST_LOADED, onManifestLoaded, this);
-        stopManifestRefreshTimer();
-        isPaused = true;
-        isUpdating = false;
-        refreshDelay = NaN;
-        mediaPlayerModel = null;
+
+        resetInitialSettings();
     }
 
     function stopManifestRefreshTimer() {
@@ -168,7 +167,6 @@ function ManifestUpdater() {
     instance = {
         initialize: initialize,
         setManifest: setManifest,
-        getManifestLoader: getManifestLoader,
         refreshManifest: refreshManifest,
         setConfig: setConfig,
         reset: reset

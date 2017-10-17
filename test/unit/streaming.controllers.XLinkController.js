@@ -1,8 +1,10 @@
 import DashParser from '../../src/dash/parser/DashParser';
 import URLUtils from '../../src/streaming/utils/URLUtils';
-import XLinkController from '../../src/streaming/controllers/XLinkController';
+import XlinkController from '../../src/streaming/controllers/XlinkController';
 import Events from '../../src/core/events/Events';
 import EventBus from '../../src/core/EventBus';
+
+import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 
 const fs = require('fs');
 const domParser = require('xmldom').DOMParser;
@@ -12,15 +14,7 @@ const expect = chai.expect;
 const context = {};
 const eventBus = EventBus(context).getInstance();
 
-function ErrorHandlerMock() {
-    this.error = undefined;
-
-    this.manifestError = function(error) {
-        this.error = error;
-    };
-}
-
-describe('XLinkController', function () {
+describe('XlinkController', function () {
     let xLinkController;
     let errorHandlerMock = new ErrorHandlerMock();
 
@@ -65,7 +59,7 @@ describe('XLinkController', function () {
     });
 
     beforeEach(function () {
-        xLinkController = XLinkController(context).create({});
+        xLinkController = XlinkController(context).create({});
     });
 
     afterEach(function () {
@@ -73,7 +67,7 @@ describe('XLinkController', function () {
         xLinkController = null;
     });
 
-    it('should resolve manifest on load', function(done) {
+    it('should resolve manifest on load', function (done) {
         let manifest;
         function onXLinkReady(e) {
             eventBus.off(Events.XLINK_READY, onXLinkReady, this);

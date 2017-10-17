@@ -31,7 +31,7 @@
 
 /*global dashjs*/
 
-var DownloadRatioRule;
+let DownloadRatioRule;
 
 function DownloadRatioRuleClass() {
 
@@ -40,6 +40,7 @@ function DownloadRatioRuleClass() {
     let MetricsModel = factory.getSingletonFactoryByName('MetricsModel');
     let DashMetrics = factory.getSingletonFactoryByName('DashMetrics');
     let DashManifestModel = factory.getSingletonFactoryByName('DashManifestModel');
+    let StreamController = factory.getSingletonFactoryByName('StreamController');
     let Debug = factory.getSingletonFactoryByName('Debug');
 
     let context = this.context;
@@ -51,15 +52,17 @@ function DownloadRatioRuleClass() {
 
     function getMaxIndex(rulesContext) {
 
-        var mediaType = rulesContext.getMediaInfo().type;
-        var current = rulesContext.getCurrentValue();
+        let mediaType = rulesContext.getMediaInfo().type;
 
         let metricsModel = MetricsModel(context).getInstance();
         let dashMetrics = DashMetrics(context).getInstance();
         let dashManifest = DashManifestModel(context).getInstance();
-        var metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
+        let metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
+        let streamController = StreamController(context).getInstance();
+        let abrController = rulesContext.getAbrController();
+        let current = abrController.getQualityFor(mediaType, streamController.getActiveStreamInfo());
 
-        var requests = dashMetrics.getHttpRequests(metrics),
+        let requests = dashMetrics.getHttpRequests(metrics),
             lastRequest = null,
             currentRequest = null,
             downloadTime,
@@ -125,8 +128,8 @@ function DownloadRatioRuleClass() {
 
             if (currentRequest.type !== 'MediaSegment' && currentRequest._tfinish && currentRequest.trequest && currentRequest.tresponse && currentRequest.trace && currentRequest.trace.length > 0) {
 
-                var _totalTime = (currentRequest._tfinish.getTime() - currentRequest.trequest.getTime()) / 1000;
-                var _downloadTime = (currentRequest._tfinish.getTime() - currentRequest.tresponse.getTime()) / 1000;
+                let _totalTime = (currentRequest._tfinish.getTime() - currentRequest.trequest.getTime()) / 1000;
+                let _downloadTime = (currentRequest._tfinish.getTime() - currentRequest.tresponse.getTime()) / 1000;
                 debug.log("[CustomRules][" + mediaType + "][DownloadRatioRule] DL: " + Number(_downloadTime.toFixed(3)) + "s, Total: " + Number(_totalTime.toFixed(3)) + "s, Length: " + getBytesLength(currentRequest));
 
                 totalTime += _totalTime;
@@ -149,7 +152,7 @@ function DownloadRatioRuleClass() {
         }
 
         count = rulesContext.getMediaInfo().representationCount;
-        currentRepresentation = rulesContext.getTrackInfo();
+        currentRepresentation = rulesContext.getRepresentationInfo();
         currentBandwidth = dashManifest.getBandwidth(currentRepresentation);
         for (i = 0; i < count; i += 1) {
             bandwidths.push(rulesContext.getMediaInfo().bitrateList[i].bandwidth);

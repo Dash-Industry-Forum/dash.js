@@ -2,125 +2,15 @@ import SourceBufferController from '../../src/streaming/controllers/SourceBuffer
 import Events from '../../src/core/events/Events';
 import EventBus from '../../src/core/EventBus';
 
+import TextBufferMock from './mocks/TextBufferMock';
+import TextControllerMock from './mocks/TextControllerMock';
+import MediaSourceBufferMock from './mocks/MediaSourceBufferMock';
+import MediaSourceMock from './mocks/MediaSourceMock';
+
 const expect = require('chai').expect;
 const context = {};
 
 const eventBus = EventBus(context).getInstance();
-
-const streamInfo = {
-    id: 'id'
-};
-
-class TimeRangesMock {
-    constructor() {
-        this.ranges = [];
-        this.length = this.ranges.length;
-    }
-
-    start(index) {
-        return this.ranges[index] ? this.ranges[index].start : null;
-    }
-    end(index) {
-        return this.ranges[index] ? this.ranges[index].end : null;
-    }
-
-    addRange(range) {
-        this.ranges.push(range);
-        this.length = this.ranges.length;
-    }
-}
-class MediaSourceBufferMock {
-    constructor() {
-        this.buffered = new TimeRangesMock();
-        this.updating = false;
-        this.chunk = null;
-        this.aborted = false;
-    }
-
-    addRange(range) {
-        this.buffered.addRange(range);
-    }
-
-    remove() {
-        this.updating = true;
-        this.chunk = null;
-
-        let that = this;
-        setTimeout(function() {
-            that.updating = false;
-        }, 500);
-    }
-
-    append(chunk) {
-        this.updating = true;
-        this.chunk = chunk;
-
-        let that = this;
-        setTimeout(function() {
-            that.updating = false;
-        }, 500);
-    }
-
-    abort() {
-        this.aborted = true;
-    }
-}
-class TextBufferMock {
-    constructor() {
-        this.updating = false;
-        this.chunk = null;
-    }
-
-    appendBuffer(chunk) {
-        this.updating = true;
-        this.chunk = chunk;
-
-        let that = this;
-        setTimeout(function() {
-            that.updating = false;
-        }, 500);
-    }
-}
-
-class TextControllerMock {
-    constructor() {
-        this.buffers = [];
-    }
-    getTextSourceBuffer() {
-        return new TextBufferMock();
-    }
-}
-
-class MediaSourceMock {
-    constructor() {
-        this.buffers = [];
-        this.readyState = 'open';
-    }
-
-    addSourceBuffer(codec) {
-        if (codec.match(/text/i)) {
-            throw new Error('not really supported');
-        }
-
-        if (codec.match(/unknown/i)) {
-            throw new Error('unknown');
-        }
-
-        let buffer = new MediaSourceBufferMock();
-        this.buffers.push(buffer);
-        return buffer;
-    }
-
-    removeSourceBuffer(buffer) {
-        let index = this.buffers.indexOf(buffer);
-
-        if (index === -1) {
-            return;
-        }
-
-        this.buffers.splice(index, 1);
-    }
-}
 
 describe('SourceBufferController', function () {
 
@@ -285,7 +175,7 @@ describe('SourceBufferController', function () {
                 end: 11
             });
             let range = sourceBufferController.getBufferRange(buffer, 10);
-            expect(range).to.be.null;
+            expect(range).to.be.null; // jshint ignore:line
         });
 
         it('should return range of buffered data - time not in range (little gap)', function () {
@@ -440,7 +330,7 @@ describe('SourceBufferController', function () {
             let buffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
             expect(mediaSource.buffers).to.have.lengthOf(1);
 
-            function onAppend(e) {
+            function onAppend(/*e*/) {
                 eventBus.off(Events.SOURCEBUFFER_APPEND_COMPLETED, onAppend, this);
                 expect(buffer.chunk).to.equal('toto');
                 done();
@@ -462,9 +352,9 @@ describe('SourceBufferController', function () {
             let buffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
             expect(buffer).to.be.instanceOf(TextBufferMock);
 
-            function onAppend(e) {
+            function onAppend(/*e*/) {
                 eventBus.off(Events.SOURCEBUFFER_APPEND_COMPLETED, onAppend, this);
-                expect(buffer.chunk).to.equal('toto')
+                expect(buffer.chunk).to.equal('toto');
                 done();
             }
             eventBus.on(Events.SOURCEBUFFER_APPEND_COMPLETED, onAppend, this);
@@ -485,16 +375,16 @@ describe('SourceBufferController', function () {
             let buffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
             expect(mediaSource.buffers).to.have.lengthOf(1);
 
-            function onAppend(e) {
+            function onAppend(/*e*/) {
                 eventBus.off(Events.SOURCEBUFFER_APPEND_COMPLETED, onAppend, this);
 
                 // remove data
-                sourceBufferController.remove(buffer, 0, 1, mediaSource)
+                sourceBufferController.remove(buffer, 0, 1, mediaSource);
             }
 
-            function onRemoved(e) {
+            function onRemoved(/*e*/) {
                 eventBus.off(Events.SOURCEBUFFER_REMOVE_COMPLETED, onAppend, this);
-                expect(buffer.chunk).to.be.null
+                expect(buffer.chunk).to.be.null; // jshint ignore:line
                 done();
             }
             eventBus.on(Events.SOURCEBUFFER_APPEND_COMPLETED, onAppend, this);
@@ -516,9 +406,9 @@ describe('SourceBufferController', function () {
             let buffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
             expect(mediaSource.buffers).to.have.lengthOf(1);
 
-            expect(buffer.aborted).to.be.false;
+            expect(buffer.aborted).to.be.false; // jshint ignore:line
             sourceBufferController.abort(mediaSource, buffer);
-            expect(buffer.aborted).to.be.true;
+            expect(buffer.aborted).to.be.true; // jshint ignore:line
         });
 
         it('should not abort if media source is not opened', function () {
@@ -532,9 +422,9 @@ describe('SourceBufferController', function () {
             let buffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
             expect(mediaSource.buffers).to.have.lengthOf(1);
 
-            expect(buffer.aborted).to.be.false;
+            expect(buffer.aborted).to.be.false; // jshint ignore:line
             sourceBufferController.abort(mediaSource, buffer);
-            expect(buffer.aborted).to.be.false;
+            expect(buffer.aborted).to.be.false; // jshint ignore:line
         });
     });
 

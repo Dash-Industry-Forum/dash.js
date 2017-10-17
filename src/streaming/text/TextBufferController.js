@@ -41,7 +41,7 @@ function TextBufferController(config) {
 
     let instance;
 
-    function setup(config) {
+    function setup() {
 
         // according to text type, we create corresponding buffer controller
         if (config.type === Constants.FRAGMENTED_TEXT) {
@@ -64,7 +64,7 @@ function TextBufferController(config) {
             });
         } else {
 
-            // in this case, internal buffer controller is a not fragmented text controller  object
+            // in this case, internal buffer controller is a not fragmented text controller object
             _BufferControllerImpl = NotFragmentedTextBufferController(context).create({
                 type: config.type,
                 errHandler: config.errHandler,
@@ -152,7 +152,7 @@ function TextBufferController(config) {
         reset: reset
     };
 
-    setup(config);
+    setup();
 
     return instance;
 }

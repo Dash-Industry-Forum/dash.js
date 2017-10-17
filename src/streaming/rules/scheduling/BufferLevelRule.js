@@ -54,7 +54,12 @@ function BufferLevelRule(config) {
             bufferTarget = textController.getAllTracksAreDisabled() ? 0 : representationInfo.fragmentDuration;
         } else if (type === Constants.AUDIO && videoTrackPresent) {
             const videoBufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor(Constants.VIDEO));
-            bufferTarget = Math.floor(Math.max(videoBufferLevel, representationInfo.fragmentDuration));
+            if (isNaN(representationInfo.fragmentDuration)) {
+                bufferTarget = videoBufferLevel;
+            } else {
+                bufferTarget = Math.max(videoBufferLevel, representationInfo.fragmentDuration);
+            }
+            // console.log('videoBufferLevel  - ' + videoBufferLevel + ' target : ' + bufferTarget);
         } else {
             const streamInfo = representationInfo.mediaInfo.streamInfo;
             if (abrController.isPlayingAtTopQuality(streamInfo)) {

@@ -4,101 +4,26 @@ import EventBus from '../../src/core/EventBus';
 import Events from '../../src/core/events/Events';
 import InitCache from '../../src/streaming/utils/InitCache';
 
+import SourceBufferControllerMock from './mocks/SourceBufferControllerMock';
+import ErrorHandlerMock from './mocks/ErrorHandlerMock';
+import StreamProcessorMock from './mocks/StreamProcessorMock';
+
 const chai = require('chai');
 const expect = chai.expect;
 
 const context = {};
 const testType = 'text';
+const streamInfo = {
+    id: 'id'
+};
 const eventBus = EventBus(context).getInstance();
 const objectUtils = ObjectUtils(context).getInstance();
 const initCache = InitCache(context).getInstance();
 
-function BufferMock() {
-    this.initialized = false;
-    this.bytes = undefined;
-    this.length = 20;
-
-    this.initialize = function () {
-        this.initialized = true;
-    };
-
-    this.append = function (chunk) {
-        this.bytes = chunk.bytes;
-    };
-}
-
-class ErrorHandlerMock {
-    constructor() {
-        this.error = '';
-    }
-
-    mediaSourceError(error) {
-        this.error = error;
-    }
-}
-
-class SourceBufferControllerMock {
-    constructor() {
-        this.reset();
-    }
-
-    reset() {
-        this.defaultStreamType = testType;
-        this.aborted = false;
-        this.sourceBufferRemoved = false;
-        this.buffer = new BufferMock();
-        this.createError = false;
-    }
-
-    createSourceBuffer() {
-        if(!this.createError){
-            return this.buffer;
-        } else {
-            throw new Error('create error');
-        }
-    }
-
-    abort() {
-        this.aborted = true;
-    }
-
-    append(buffer, chunk) {
-        this.buffer.append(chunk);
-    }
-
-    removeSourceBuffer() {
-        this.sourceBufferRemoved = true;
-    }
-}
-
-class RepresentationControllerMock {
-    constructor() {}
-}
-
-class StreamProcessorMock {
-    constructor() {
-        this.type = testType;
-        this.representationController = new RepresentationControllerMock();
-    }
-
-    getType() {
-        return this.type;
-    }
-
-    getRepresentationController() {
-        return this.representationController;
-    }
-
-    getFragmentModel() {
-        return 'fragmentModel';
-    }
-
-    reset() {}
-}
 describe('NotFragmentedTextBufferController', function () {
 
-    let streamProcessorMock = new StreamProcessorMock();
-    let sourceBufferMock = new SourceBufferControllerMock();
+    let streamProcessorMock = new StreamProcessorMock(testType, streamInfo);
+    let sourceBufferMock = new SourceBufferControllerMock(testType);
     let errorHandlerMock = new ErrorHandlerMock();
     let notFragmentedTextBufferController;
 
@@ -113,14 +38,14 @@ describe('NotFragmentedTextBufferController', function () {
 
     afterEach(function () {
         streamProcessorMock.reset();
-        sourceBufferMock.reset();
+        sourceBufferMock.reset(testType);
     });
 
     describe('when not initialized', function () {
         it('should initialize', function () {
 
             let source = notFragmentedTextBufferController.getMediaSource();
-            expect(source).to.not.exist;
+            expect(source).to.not.exist; // jshint ignore:line
             notFragmentedTextBufferController.initialize('source');
 
             source = notFragmentedTextBufferController.getMediaSource();
@@ -138,15 +63,15 @@ describe('NotFragmentedTextBufferController', function () {
 
                 sourceBufferMock.createError = true;
                 let buffer = notFragmentedTextBufferController.createBuffer('text');
-                expect(buffer).to.not.exist;
+                expect(buffer).to.not.exist; // jshint ignore:line
                 expect(errorHandlerMock.error).to.equal('Error creating ' + testType + ' source buffer.');
 
             });
 
             it('should create a sourceBuffer and initialize it', function () {
                 let buffer = notFragmentedTextBufferController.createBuffer('text');
-                expect(buffer).to.exist;
-                expect(buffer.initialized).to.be.true;
+                expect(buffer).to.exist; // jshint ignore:line
+                expect(buffer.initialized).to.be.true; // jshint ignore:line
             });
         });
 
@@ -161,21 +86,21 @@ describe('NotFragmentedTextBufferController', function () {
             it('should return created buffer', function () {
                 let buffer = notFragmentedTextBufferController.createBuffer('text');
                 let bufferToTest = notFragmentedTextBufferController.getBuffer();
-                expect(objectUtils.areEqual(buffer, bufferToTest)).to.be.true;
+                expect(objectUtils.areEqual(buffer, bufferToTest)).to.be.true; // jshint ignore:line
             });
 
             it('should return set buffer', function () {
                 let buffer = 'test';
                 notFragmentedTextBufferController.setBuffer(buffer);
                 let bufferToTest = notFragmentedTextBufferController.getBuffer();
-                expect(objectUtils.areEqual(buffer, bufferToTest)).to.be.true;
+                expect(objectUtils.areEqual(buffer, bufferToTest)).to.be.true; // jshint ignore:line
             });
         });
 
         describe('Method getStreamProcessor', function () {
             it('should return streamProcessor', function () {
                 let sp = notFragmentedTextBufferController.getStreamProcessor();
-                expect(objectUtils.areEqual(sp, streamProcessorMock)).to.be.true;
+                expect(objectUtils.areEqual(sp, streamProcessorMock)).to.be.true; // jshint ignore:line
             });
         });
 
@@ -189,7 +114,7 @@ describe('NotFragmentedTextBufferController', function () {
         describe('Method getIsBufferingCompleted', function () {
             it('should return false', function () {
                 let isBufferingCompleted = notFragmentedTextBufferController.getIsBufferingCompleted();
-                expect(isBufferingCompleted).to.be.false;
+                expect(isBufferingCompleted).to.be.false; // jshint ignore:line
             });
         });
 
@@ -197,7 +122,7 @@ describe('NotFragmentedTextBufferController', function () {
             it('should updated SeekStartTime', function () {
 
                 let seekstartTime = notFragmentedTextBufferController.getSeekStartTime();
-                expect(seekstartTime).to.not.exist;
+                expect(seekstartTime).to.not.exist; // jshint ignore:line
 
                 notFragmentedTextBufferController.setSeekStartTime(10);
 
@@ -210,21 +135,21 @@ describe('NotFragmentedTextBufferController', function () {
 
             it('should not abort buffer if there is an error', function () {
                 notFragmentedTextBufferController.reset('error');
-                expect(sourceBufferMock.aborted).to.be.false;
+                expect(sourceBufferMock.aborted).to.be.false; // jshint ignore:line
             });
 
             it('should abort buffer', function () {
                 notFragmentedTextBufferController.reset();
-                expect(sourceBufferMock.aborted).to.be.true;
+                expect(sourceBufferMock.aborted).to.be.true; // jshint ignore:line
             });
             it('should remove buffer if there is an error', function () {
                 notFragmentedTextBufferController.reset('error');
-                expect(sourceBufferMock.aborted).to.be.false;
+                expect(sourceBufferMock.aborted).to.be.false; // jshint ignore:line
             });
 
             it('should remove buffer', function () {
                 notFragmentedTextBufferController.reset();
-                expect(sourceBufferMock.sourceBufferRemoved).to.be.true;
+                expect(sourceBufferMock.sourceBufferRemoved).to.be.true; // jshint ignore:line
             });
         });
 
@@ -266,8 +191,8 @@ describe('NotFragmentedTextBufferController', function () {
             it('should trigger TIMED_TEXT_REQUESTED', function (done) {
 
                 let event = {
-                    sender : {
-                        getStreamProcessor : function() { return streamProcessorMock; }
+                    sender: {
+                        getStreamProcessor: function () { return streamProcessorMock; }
                     }
                 };
 
@@ -287,15 +212,15 @@ describe('NotFragmentedTextBufferController', function () {
                 let buffer = notFragmentedTextBufferController.createBuffer('text');
 
                 let event = {
-                    fragmentModel : 'wrongFragmentModel',
-                    chunk : {
-                        bytes : 'data'
+                    fragmentModel: 'wrongFragmentModel',
+                    chunk: {
+                        bytes: 'data'
                     }
                 };
 
                 let onEvent = function () {
                     eventBus.off(Events.INIT_FRAGMENT_LOADED, onEvent);
-                    expect(buffer.bytes).to.not.exist;
+                    expect(buffer.bytes).to.not.exist; // jshint ignore:line
 
                     done();
                 };
@@ -308,14 +233,14 @@ describe('NotFragmentedTextBufferController', function () {
                 let buffer = notFragmentedTextBufferController.createBuffer('text');
 
                 let event = {
-                    fragmentModel : 'fragmentModel',
-                    chunk : {
+                    fragmentModel: streamProcessorMock.getFragmentModel(),
+                    chunk: {
                     }
                 };
 
                 let onEvent = function () {
                     eventBus.off(Events.INIT_FRAGMENT_LOADED, onEvent);
-                    expect(buffer.bytes).to.not.exist;
+                    expect(buffer.bytes).to.not.exist; // jshint ignore:line
 
                     done();
                 };
@@ -328,9 +253,9 @@ describe('NotFragmentedTextBufferController', function () {
                 let buffer = notFragmentedTextBufferController.createBuffer('text');
 
                 let event = {
-                    fragmentModel : 'fragmentModel',
-                    chunk : {
-                        bytes : 'data'
+                    fragmentModel: streamProcessorMock.getFragmentModel(),
+                    chunk: {
+                        bytes: 'data'
                     }
                 };
 

@@ -40,13 +40,6 @@ function ThroughputRule(config) {
     const log = Debug(context).getInstance().log;
     const metricsModel = config.metricsModel;
 
-    let throughputArray,
-        latencyArray;
-
-    function setup() {
-        reset();
-    }
-
     function checkConfig() {
         if (!metricsModel || !metricsModel.hasOwnProperty('getReadOnlyMetricsFor')) {
             throw new Error('Missing config parameter(s)');
@@ -56,7 +49,7 @@ function ThroughputRule(config) {
     function getMaxIndex(rulesContext) {
         const switchRequest = SwitchRequest(context).create();
 
-        if (!rulesContext || !rulesContext.hasOwnProperty('getMediaInfo') || !rulesContext.hasOwnProperty('getMediaType') || !rulesContext.hasOwnProperty('hasRichBuffer') ||
+        if (!rulesContext || !rulesContext.hasOwnProperty('getMediaInfo') || !rulesContext.hasOwnProperty('getMediaType') || !rulesContext.hasOwnProperty('useBufferOccupancyABR') ||
             !rulesContext.hasOwnProperty('getAbrController') || !rulesContext.hasOwnProperty('getStreamProcessor')) {
             return switchRequest;
         }
@@ -68,21 +61,21 @@ function ThroughputRule(config) {
         const metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
         const streamProcessor = rulesContext.getStreamProcessor();
         const abrController = rulesContext.getAbrController();
-        const throughputHistory = abrController.getThroughputHistory();
         const streamInfo = rulesContext.getStreamInfo();
         const isDynamic = streamInfo && streamInfo.manifestInfo ? streamInfo.manifestInfo.isDynamic : null;
+        const throughputHistory = abrController.getThroughputHistory();
+        const throughput = throughputHistory.getSafeAverageThroughput(mediaType, isDynamic);
+        const latency = throughputHistory.getAverageLatency(mediaType);
         const bufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
-        const hasRichBuffer = rulesContext.hasRichBuffer();
+        const useBufferOccupancyABR = rulesContext.useBufferOccupancyABR();
 
-        if (!metrics || !bufferStateVO || hasRichBuffer) {
+        if (!metrics || isNaN(throughput) || !bufferStateVO || useBufferOccupancyABR) {
             return switchRequest;
         }
 
         if (abrController.getAbandonmentStateFor(mediaType) !== AbrController.ABANDON_LOAD) {
 
             if (bufferStateVO.state === BufferController.BUFFER_LOADED || isDynamic) {
-                let throughput = throughputHistory.getSafeAverageThroughput(mediaType, isDynamic);
-                let latency = throughputHistory.getAverageLatency(mediaType);
                 switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, throughput, latency);
                 streamProcessor.getScheduleController().setTimeToLoadDelay(0);
                 log('ThroughputRule requesting switch to index: ', switchRequest.quality, 'type: ',mediaType, 'Average throughput', Math.round(throughput), 'kbps');
@@ -94,8 +87,7 @@ function ThroughputRule(config) {
     }
 
     function reset() {
-        throughputArray = [];
-        latencyArray = [];
+        // no persistent information to reset
     }
 
     const instance = {
@@ -103,7 +95,6 @@ function ThroughputRule(config) {
         reset: reset
     };
 
-    setup();
     return instance;
 }
 

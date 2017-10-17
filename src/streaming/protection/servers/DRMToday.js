@@ -35,10 +35,10 @@
  * @implements LicenseServer
  * @class
  */
-import FactoryMaker from '../../../core/FactoryMaker';
-import BASE64 from '../../../../externals/base64';
 
-function DRMToday() {
+function DRMToday(config) {
+
+    let BASE64 = config.BASE64;
 
     const keySystems = {
         'com.widevine.alpha': {
@@ -63,6 +63,12 @@ function DRMToday() {
 
     let instance;
 
+    function checkConfig() {
+        if (!BASE64 || !BASE64.hasOwnProperty('decodeArray')) {
+            throw new Error('Missing config parameter(s)');
+        }
+    }
+
     function getServerURLFromMessage(url /*, message, messageType*/) {
         return url;
     }
@@ -76,6 +82,7 @@ function DRMToday() {
     }
 
     function getLicenseMessage(serverResponse, keySystemStr/*, messageType*/) {
+        checkConfig();
         return keySystems[keySystemStr].getLicenseMessage(serverResponse);
     }
 
@@ -95,4 +102,4 @@ function DRMToday() {
 }
 
 DRMToday.__dashjs_factory_name = 'DRMToday';
-export default FactoryMaker.getSingletonFactory(DRMToday);
+export default dashjs.FactoryMaker.getSingletonFactory(DRMToday); /* jshint ignore:line */

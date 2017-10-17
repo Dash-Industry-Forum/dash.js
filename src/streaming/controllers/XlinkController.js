@@ -67,11 +67,15 @@ function XlinkController(config) {
     }
 
     function setMatchers(value) {
-        matchers = value;
+        if (value) {
+            matchers = value;
+        }
     }
 
     function setIron(value) {
-        iron = value;
+        if (value) {
+            iron = value;
+        }
     }
 
     /**
@@ -131,8 +135,7 @@ function XlinkController(config) {
 
     function onXlinkElementLoaded(event) {
         let element,
-            resolveObject,
-            index;
+            resolveObject;
 
         const openingTag = '<response>';
         const closingTag = '</response>';
@@ -142,8 +145,11 @@ function XlinkController(config) {
         resolveObject = event.resolveObject;
         // if the element resolved into content parse the content
         if (element.resolvedContent) {
+            let index = 0;
             // we add a parent elements so the converter is able to parse multiple elements of the same type which are not wrapped inside a container
-            index = element.resolvedContent.indexOf('>') + 1; //find the closing position of the xml tag
+            if (element.resolvedContent.indexOf('<?xml') === 0) {
+                index = element.resolvedContent.indexOf('?>') + 2; //find the closing position of the xml declaration, if it exists.
+            }
             mergedContent = element.resolvedContent.substr(0,index) + openingTag + element.resolvedContent.substr(index) + closingTag;
             element.resolvedContent = converter.xml_str2json(mergedContent);
         }

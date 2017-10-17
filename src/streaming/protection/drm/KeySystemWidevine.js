@@ -37,21 +37,70 @@
  */
 
 import CommonEncryption from '../CommonEncryption';
-import FactoryMaker from '../../../core/FactoryMaker';
 
 const uuid = 'edef8ba9-79d6-4ace-a3c8-27dcd51d21ed';
 const systemString = 'com.widevine.alpha';
 const schemeIdURI = 'urn:uuid:' + uuid;
 
-function KeySystemWidevine() {
+function KeySystemWidevine(config) {
 
     let instance;
+    let protData = null;
+    let BASE64 = config.BASE64;
 
-    function getInitData(cp) {
-        return CommonEncryption.parseInitDataFromContentProtection(cp);
+    function init(protectionData) {
+        if (protectionData) {
+            protData = protectionData;
+        }
     }
 
-    function getRequestHeadersFromMessage(/*message*/) {
+    function replaceKID(pssh, KID) {
+        let pssh_array;
+        let replace = true;
+        let kidLen = 16;
+        let pos;
+        let i, j;
+
+        pssh_array = new Uint8Array(pssh);
+
+        for (i = 0; i <= pssh_array.length - (kidLen + 2); i++) {
+            if (pssh_array[i] === 0x12 && pssh_array[i + 1] === 0x10) {
+                pos = i + 2;
+                for (j = pos; j < (pos + kidLen); j++) {
+                    if (pssh_array[j] !== 0xFF) {
+                        replace = false;
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+
+        if (replace) {
+            pssh_array.set(KID, pos);
+        }
+
+        return pssh_array.buffer;
+    }
+
+    function getInitData(cp) {
+        var pssh = null;
+        // Get pssh from protectionData or from manifest
+        if (protData && protData.pssh) {
+            pssh = BASE64.decodeArray(protData.pssh).buffer;
+        } else {
+            pssh = CommonEncryption.parseInitDataFromContentProtection(cp, BASE64);
+        }
+
+        // Check if KID within pssh is empty, in that case set KID value according to 'cenc:default_KID' value
+        if (pssh) {
+            pssh = replaceKID(pssh, cp['cenc:default_KID']);
+        }
+
+        return pssh;
+    }
+
+    function getRequestHeadersFromMessage( /*message*/ ) {
         return null;
     }
 
@@ -59,7 +108,7 @@ function KeySystemWidevine() {
         return new Uint8Array(message);
     }
 
-    function getLicenseServerURLFromInitData(/*initData*/) {
+    function getLicenseServerURLFromInitData( /*initData*/ ) {
         return null;
     }
 
@@ -67,6 +116,7 @@ function KeySystemWidevine() {
         uuid: uuid,
         schemeIdURI: schemeIdURI,
         systemString: systemString,
+        init: init,
         getInitData: getInitData,
         getRequestHeadersFromMessage: getRequestHeadersFromMessage,
         getLicenseRequestFromMessage: getLicenseRequestFromMessage,
@@ -77,4 +127,4 @@ function KeySystemWidevine() {
 }
 
 KeySystemWidevine.__dashjs_factory_name = 'KeySystemWidevine';
-export default FactoryMaker.getSingletonFactory(KeySystemWidevine);
+export default dashjs.FactoryMaker.getSingletonFactory(KeySystemWidevine); /* jshint ignore:line */

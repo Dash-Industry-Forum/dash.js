@@ -28,16 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from '../streaming/constants/Constants';
-import Events from '../core/events/Events';
-import MediaPlayerEvents from '../streaming/MediaPlayerEvents';
-import EventBus from '../core/EventBus';
-import FactoryMaker from '../core/FactoryMaker';
+
 import DataChunk from '../streaming/vo/DataChunk';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
-import {
-    HTTPRequest
-} from '../streaming/vo/metrics/HTTPRequest';
 import MssFragmentInfoController from './MssFragmentInfoController';
 import MssFragmentProcessor from './MssFragmentProcessor';
 import MssParser from './parser/MssParser';
@@ -46,18 +39,27 @@ function MssHandler(config) {
 
     let context = this.context;
     let eventBus = config.eventBus;
+    const events = config.events;
+    const constants = config.constants;
+    const initSegmentType = config.initSegmentType;
     let metricsModel = config.metricsModel;
     let playbackController = config.playbackController;
+    let protectionController = config.protectionController;
     let mssFragmentProcessor = MssFragmentProcessor(context).create({
         metricsModel: metricsModel,
         playbackController: playbackController,
-        eventBus: eventBus
+        protectionController: protectionController,
+        eventBus: eventBus,
+        constants: constants,
+        ISOBoxer: config.ISOBoxer,
+        log: config.log
     });
     let mssParser;
 
     let instance;
 
-    function setup() {}
+    function setup() {
+    }
 
     function onInitializationRequested(e) {
         let streamProcessor = e.sender.getStreamProcessor();
@@ -70,7 +72,7 @@ function MssHandler(config) {
         period = representation.adaptation.period;
 
         request.mediaType = representation.adaptation.type;
-        request.type = HTTPRequest.INIT_SEGMENT_TYPE;
+        request.type = initSegmentType;
         request.range = representation.range;
         presentationStartTime = period.start;
         //request.availabilityStartTime = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationStartTime, representation.adaptation.period.mpd, isDynamic);
@@ -84,7 +86,7 @@ function MssHandler(config) {
         // Generate initialization segment (moov)
         chunk.bytes = mssFragmentProcessor.generateMoov(representation);
 
-        eventBus.trigger(Events.INIT_FRAGMENT_LOADED, {
+        eventBus.trigger(events.INIT_FRAGMENT_LOADED, {
             chunk: chunk,
             fragmentModel: streamProcessor.getFragmentModel()
         });
@@ -123,15 +125,17 @@ function MssHandler(config) {
             if (streamController) {
                 let processors = streamController.getActiveStreamProcessors();
                 processors.forEach(function (processor) {
-                    if (processor.getType() === Constants.VIDEO ||
-                        processor.getType() === Constants.AUDIO ||
-                        processor.getType() === Constants.FRAGMENTED_TEXT) {
+                    if (processor.getType() === constants.VIDEO ||
+                        processor.getType() === constants.AUDIO ||
+                        processor.getType() === constants.FRAGMENTED_TEXT) {
 
                         let fragmentInfoController = MssFragmentInfoController(context).create({
                             streamProcessor: processor,
                             eventBus: eventBus,
                             metricsModel: metricsModel,
-                            playbackController: playbackController
+                            playbackController: playbackController,
+                            ISOBoxer: config.ISOBoxer,
+                            log: config.log
                         });
                         fragmentInfoController.initialize();
                         fragmentInfoController.start();
@@ -142,15 +146,15 @@ function MssHandler(config) {
     }
 
     function registerEvents() {
-        eventBus.on(Events.INIT_REQUESTED, onInitializationRequested, instance, EventBus.EVENT_PRIORITY_HIGH);
-        eventBus.on(MediaPlayerEvents.PLAYBACK_SEEK_ASKED, onPlaybackSeekAsked, instance, EventBus.EVENT_PRIORITY_HIGH);
-        eventBus.on(MediaPlayerEvents.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, instance, EventBus.EVENT_PRIORITY_HIGH);
+        eventBus.on(events.INIT_REQUESTED, onInitializationRequested, instance, dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH); /* jshint ignore:line */
+        eventBus.on(events.PLAYBACK_SEEK_ASKED, onPlaybackSeekAsked, instance, dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH); /* jshint ignore:line */
+        eventBus.on(events.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, instance, dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH); /* jshint ignore:line */
     }
 
     function reset() {
-        eventBus.off(Events.INIT_REQUESTED, onInitializationRequested, this);
-        eventBus.off(MediaPlayerEvents.PLAYBACK_SEEK_ASKED, onPlaybackSeekAsked, this);
-        eventBus.off(MediaPlayerEvents.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, this);
+        eventBus.off(events.INIT_REQUESTED, onInitializationRequested, this);
+        eventBus.off(events.PLAYBACK_SEEK_ASKED, onPlaybackSeekAsked, this);
+        eventBus.off(events.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, this);
     }
 
     function createMssParser() {
@@ -170,4 +174,4 @@ function MssHandler(config) {
 }
 
 MssHandler.__dashjs_factory_name = 'MssHandler';
-export default FactoryMaker.getClassFactory(MssHandler);
+export default dashjs.FactoryMaker.getClassFactory(MssHandler); /* jshint ignore:line */

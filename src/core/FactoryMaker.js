@@ -34,13 +34,13 @@
 let FactoryMaker = (function () {
 
     let instance;
-    let extensions = [];
-    let singletonContexts = [];
-    let singletonFactories = [];
-    let classFactories = [];
+    const extensions = [];
+    const singletonContexts = [];
+    const singletonFactories = [];
+    const classFactories = [];
 
     function extend(name, childInstance, override, context) {
-        let extensionContext = getExtensionContext(context);
+        const extensionContext = getExtensionContext(context);
         if (!extensionContext[name] && childInstance) {
             extensionContext[name] = {
                 instance: childInstance,
@@ -62,8 +62,8 @@ let FactoryMaker = (function () {
      * @instance
      */
     function getSingletonInstance(context, className) {
-        for (let i in singletonContexts) {
-            let obj = singletonContexts[i];
+        for (const i in singletonContexts) {
+            const obj = singletonContexts[i];
             if (obj.context === context && obj.name === className) {
                 return obj.instance;
             }
@@ -81,8 +81,8 @@ let FactoryMaker = (function () {
      * @instance
      */
     function setSingletonInstance(context, className, instance) {
-        for (let i in singletonContexts) {
-            let obj = singletonContexts[i];
+        for (const i in singletonContexts) {
+            const obj = singletonContexts[i];
             if (obj.context === context && obj.name === className) {
                 singletonContexts[i].instance = instance;
                 return;
@@ -102,8 +102,8 @@ let FactoryMaker = (function () {
     /*------------------------------------------------------------------------------------------*/
 
     function registerFactory(name, factory, factoriesArray) {
-        for (let i in factoriesArray) {
-            let obj = factoriesArray[i];
+        for (const i in factoriesArray) {
+            const obj = factoriesArray[i];
             if (obj.name === name) {
                 factoriesArray[i].factory = factory;
                 return;
@@ -116,8 +116,8 @@ let FactoryMaker = (function () {
     }
 
     function getFactoryByName(name, factoriesArray) {
-        for (let i in factoriesArray) {
-            let obj = factoriesArray[i];
+        for (const i in factoriesArray) {
+            const obj = factoriesArray[i];
             if (obj.name === name) {
                 return factoriesArray[i].factory;
             }
@@ -126,8 +126,8 @@ let FactoryMaker = (function () {
     }
 
     function updateFactory(name, factory, factoriesArray) {
-        for (let i in factoriesArray) {
-            let obj = factoriesArray[i];
+        for (const i in factoriesArray) {
+            const obj = factoriesArray[i];
             if (obj.name === name) {
                 factoriesArray[i].factory = factory;
                 return;
@@ -224,8 +224,8 @@ let FactoryMaker = (function () {
         // Add getClassName function to class instance prototype (used by Debug)
         classConstructor.getClassName = function () {return name;};
 
-        let extensionContext = getExtensionContext(context);
-        let extensionObject = extensionContext[name];
+        const extensionContext = getExtensionContext(context);
+        const extensionObject = extensionContext[name];
         if (extensionObject) {
             let extension = extensionObject.instance;
             if (extensionObject.override) { //Override public methods in parent but keep parent.
@@ -257,7 +257,8 @@ let FactoryMaker = (function () {
             }
         });
         if (!extensionContext) {
-            extensionContext = extensions.push(context);
+            extensions.push(context);
+            extensionContext = context;
         }
         return extensionContext;
     }

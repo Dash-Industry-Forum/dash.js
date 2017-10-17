@@ -8,7 +8,7 @@ const context = {};
 const mpdHelper = new MpdHelper();
 const mpd = mpdHelper.getMpd('static');
 const manifestModel = ManifestModel(context).getInstance();
-const dashMetrics = DashMetrics(context).getInstance({dashManifestModel : {}, manifestModel:manifestModel });
+const dashMetrics = DashMetrics(context).getInstance({dashManifestModel: {}, manifestModel: manifestModel });
 
 manifestModel.setValue(mpd);
 
@@ -103,7 +103,7 @@ describe('DashMetrics', function () {
         });
 
         it('should return null when getLatestMPDRequestHeaderValueByID is called and id is undefined', () => {
-            const metrics = { HttpList : [{type: 'MPD', _responseHeaders: ''}, {type: 'MPD', _responseHeaders: ''}]};
+            const metrics = { HttpList: [{type: 'MPD', _responseHeaders: ''}, {type: 'MPD', _responseHeaders: ''}]};
 
             const lastMpdRequestHeader = dashMetrics.getLatestMPDRequestHeaderValueByID(metrics);
 
@@ -119,7 +119,7 @@ describe('DashMetrics', function () {
         });
 
         it('should return null when getLatestFragmentRequestHeaderValueByID is called and httpRequest._responseHeaders and id are undefined', () => {
-            const metrics = { HttpList : [{responsecode: 200}, {responsecode: 200}]};
+            const metrics = { HttpList: [{responsecode: 200}, {responsecode: 200}]};
             const lastFragmentRequestHeader = dashMetrics.getLatestFragmentRequestHeaderValueByID(metrics);
 
             expect(lastFragmentRequestHeader).to.be.null;  // jshint ignore:line

@@ -36,7 +36,6 @@ import DRMToday from './../servers/DRMToday';
 import PlayReady from './../servers/PlayReady';
 import Widevine from './../servers/Widevine';
 import ClearKey from './../servers/ClearKey';
-import FactoryMaker from '../../../core/FactoryMaker';
 
 /**
  * @module ProtectionKeyController
@@ -49,6 +48,7 @@ function ProtectionKeyController() {
     let instance,
         log,
         keySystems,
+        BASE64,
         clearkeyKeySystem;
 
     function setConfig(config) {
@@ -56,6 +56,10 @@ function ProtectionKeyController() {
 
         if (config.log) {
             log = config.log;
+        }
+
+        if (config.BASE64) {
+            BASE64 = config.BASE64;
         }
     }
 
@@ -65,15 +69,15 @@ function ProtectionKeyController() {
         let keySystem;
 
         // PlayReady
-        keySystem = KeySystemPlayReady(context).getInstance();
+        keySystem = KeySystemPlayReady(context).getInstance({BASE64: BASE64});
         keySystems.push(keySystem);
 
         // Widevine
-        keySystem = KeySystemWidevine(context).getInstance();
+        keySystem = KeySystemWidevine(context).getInstance({BASE64: BASE64});
         keySystems.push(keySystem);
 
         // ClearKey
-        keySystem = KeySystemClearKey(context).getInstance();
+        keySystem = KeySystemClearKey(context).getInstance({BASE64: BASE64});
         keySystems.push(keySystem);
         clearkeyKeySystem = keySystem;
     }
@@ -256,7 +260,7 @@ function ProtectionKeyController() {
 
         let licenseServerData = null;
         if (protData && protData.hasOwnProperty('drmtoday')) {
-            licenseServerData = DRMToday(context).getInstance();
+            licenseServerData = DRMToday(context).getInstance({BASE64: BASE64});
         } else if (keySystem.systemString === 'com.widevine.alpha') {
             licenseServerData = Widevine(context).getInstance();
         } else if (keySystem.systemString === 'com.microsoft.playready') {
@@ -288,8 +292,26 @@ function ProtectionKeyController() {
         }
     }
 
+    function setProtectionData(protectionDataSet) {
+        var getProtectionData = function (keySystemString) {
+            var protData = null;
+            if (protectionDataSet) {
+                protData = (keySystemString in protectionDataSet) ? protectionDataSet[keySystemString] : null;
+            }
+            return protData;
+        };
+
+        for (var i = 0; i < keySystems.length; i++) {
+            var keySystem = keySystems[i];
+            if (keySystem.hasOwnProperty('init')) {
+                keySystem.init(getProtectionData(keySystem.systemString));
+            }
+        }
+    }
+
     instance = {
         initialize: initialize,
+        setProtectionData: setProtectionData,
         isClearKey: isClearKey,
         initDataEquals: initDataEquals,
         getKeySystems: getKeySystems,
@@ -305,4 +327,4 @@ function ProtectionKeyController() {
 }
 
 ProtectionKeyController.__dashjs_factory_name = 'ProtectionKeyController';
-export default FactoryMaker.getSingletonFactory(ProtectionKeyController);
+export default dashjs.FactoryMaker.getSingletonFactory(ProtectionKeyController); /* jshint ignore:line */

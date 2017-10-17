@@ -37,13 +37,12 @@ import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
 import FactoryMaker from '../../core/FactoryMaker';
 import Representation from '../vo/Representation';
 
-function RepresentationController(config) {
+function RepresentationController() {
 
     const SEGMENTS_UPDATE_FAILED_ERROR_CODE = 1;
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
-    let streamProcessor = config.streamProcessor;
 
     let instance,
         realAdaptation,
@@ -59,13 +58,11 @@ function RepresentationController(config) {
         timelineConverter,
         dashManifestModel,
         dashMetrics,
+        streamProcessor,
         manifestModel;
 
     function setup() {
-        realAdaptation = null;
-        realAdaptationIndex = -1;
-        updating = true;
-        voAvailableRepresentations = [];
+        resetInitialSettings();
 
         eventBus.on(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
         eventBus.on(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
@@ -99,6 +96,9 @@ function RepresentationController(config) {
         if (config.manifestModel) {
             manifestModel = config.manifestModel;
         }
+        if (config.streamProcessor) {
+            streamProcessor = config.streamProcessor;
+        }
     }
 
     function initialize() {
@@ -125,14 +125,7 @@ function RepresentationController(config) {
         return currentVoRepresentation;
     }
 
-    function reset() {
-
-        eventBus.off(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
-        eventBus.off(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
-        eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
-        eventBus.off(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
-
-
+    function resetInitialSettings() {
         realAdaptation = null;
         realAdaptationIndex = -1;
         updating = true;
@@ -144,6 +137,16 @@ function RepresentationController(config) {
         timelineConverter = null;
         dashManifestModel = null;
         dashMetrics = null;
+    }
+
+    function reset() {
+
+        eventBus.off(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
+        eventBus.off(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
+        eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
+        eventBus.off(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
+
+        resetInitialSettings();
     }
 
     function updateData(newRealAdaptation, voAdaptation, type) {
@@ -299,8 +302,8 @@ function RepresentationController(config) {
         }
 
         if (manifestUpdateInfo) {
-            for (let i = 0; i < manifestUpdateInfo.trackInfo.length; i++) {
-                repInfo = manifestUpdateInfo.trackInfo[i];
+            for (let i = 0; i < manifestUpdateInfo.representationInfo.length; i++) {
+                repInfo = manifestUpdateInfo.representationInfo[i];
                 if (repInfo.index === r.index && repInfo.mediaType === streamProcessor.getType()) {
                     alreadyAdded = true;
                     break;
@@ -347,7 +350,10 @@ function RepresentationController(config) {
 
         if (e.oldQuality !== e.newQuality) {
             currentVoRepresentation = getRepresentationForQuality(e.newQuality);
-            domStorage.setSavedBitrateSettings(e.mediaType, currentVoRepresentation.bandwidth);
+            const bitrate = abrController.getThroughputHistory().getAverageThroughput(e.mediaType);
+            if (!isNaN(bitrate)) {
+                domStorage.setSavedBitrateSettings(e.mediaType, bitrate);
+            }
             addRepresentationSwitch();
         }
     }

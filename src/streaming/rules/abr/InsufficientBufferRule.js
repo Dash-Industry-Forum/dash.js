@@ -94,8 +94,8 @@ function InsufficientBufferRule(config) {
             const mediaInfo = rulesContext.getMediaInfo();
             const abrController = rulesContext.getAbrController();
             const throughputHistory = abrController.getThroughputHistory();
-            const trackInfo = rulesContext.getTrackInfo();
-            const fragmentDuration = trackInfo.fragmentDuration;
+            const representationInfo = rulesContext.getRepresentationInfo();
+            const fragmentDuration = representationInfo.fragmentDuration;
 
             let bufferLevel = dashMetrics.getCurrentBufferLevel(metrics);
 
@@ -133,8 +133,8 @@ function InsufficientBufferRule(config) {
     }
 
     function reset() {
-        eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
         resetInitialSettings();
+        eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
     }
 
     instance = {

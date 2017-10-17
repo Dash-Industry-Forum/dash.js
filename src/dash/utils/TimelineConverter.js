@@ -43,10 +43,7 @@ function TimelineConverter() {
         expectedLiveEdge;
 
     function initialize() {
-
-        clientServerTimeShift = 0;
-        isClientServerTimeSyncCompleted = false;
-        expectedLiveEdge = NaN;
+        resetInitialSettings();
         eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncComplete, this);
     }
 
@@ -165,12 +162,6 @@ function TimelineConverter() {
         return mpdRelativeTime - periodStartTime;
     }
 
-    function calcMpdRelativeTimeFromPeriodRelativeTime(representation, periodRelativeTime) {
-        const periodStartTime = representation.adaptation.period.start;
-
-        return periodRelativeTime + periodStartTime;
-    }
-
     /*
     * We need to figure out if we want to timesync for segmentTimeine where useCalculatedLiveEdge = true
     * seems we figure out client offset based on logic in liveEdgeFinder getLiveEdge timelineConverter.setClientTimeOffset(liveEdge - representationInfo.DVRWindow.end);
@@ -195,11 +186,15 @@ function TimelineConverter() {
         return (periodStart - presentationOffset);
     }
 
-    function reset() {
-        eventBus.off(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncComplete, this);
+    function resetInitialSettings() {
         clientServerTimeShift = 0;
         isClientServerTimeSyncCompleted = false;
         expectedLiveEdge = NaN;
+    }
+
+    function reset() {
+        eventBus.off(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncComplete, this);
+        resetInitialSettings();
     }
 
     instance = {
@@ -215,7 +210,6 @@ function TimelineConverter() {
         calcPresentationTimeFromWallTime: calcPresentationTimeFromWallTime,
         calcPresentationTimeFromMediaTime: calcPresentationTimeFromMediaTime,
         calcPeriodRelativeTimeFromMpdRelativeTime: calcPeriodRelativeTimeFromMpdRelativeTime,
-        calcMpdRelativeTimeFromPeriodRelativeTime: calcMpdRelativeTimeFromPeriodRelativeTime,
         calcMediaTimeFromPresentationTime: calcMediaTimeFromPresentationTime,
         calcSegmentAvailabilityRange: calcSegmentAvailabilityRange,
         calcWallTimeForSegment: calcWallTimeForSegment,

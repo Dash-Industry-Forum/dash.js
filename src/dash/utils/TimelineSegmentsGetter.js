@@ -39,7 +39,20 @@ function TimelineSegmentsGetter(config, isDynamic) {
 
     let instance;
 
-    function getSegmentsFromTimeline(representation, requestedTime, index, availabilityUpperLimit) {
+    function checkConfig() {
+        if (!timelineConverter || !timelineConverter.hasOwnProperty('calcMediaTimeFromPresentationTime') || !timelineConverter.hasOwnProperty('calcSegmentAvailabilityRange') ||
+            !timelineConverter.hasOwnProperty('calcMediaTimeFromPresentationTime')) {
+            throw new Error('Missing config parameter(s)');
+        }
+    }
+
+    function getSegmentsFromTimeline(representation, requestedTime, index) {
+
+        checkConfig();
+
+        if (!representation) {
+            throw new Error('no representation');
+        }
 
         if (requestedTime === undefined) {
             requestedTime = null;
@@ -54,11 +67,8 @@ function TimelineSegmentsGetter(config, isDynamic) {
         const isAvailableSegmentNumberCalculated = representation.availableSegmentsNumber > 0;
 
         let maxSegmentsAhead;
-        if (availabilityUpperLimit) {
-            maxSegmentsAhead = availabilityUpperLimit;
-        } else {
-            maxSegmentsAhead = (index > -1 || requestedTime !== null) ? 10 : Infinity;
-        }
+
+        maxSegmentsAhead = (index > -1 || requestedTime !== null) ? 10 : Infinity;
 
         let time = 0;
         let scaledTime = 0;
@@ -96,7 +106,8 @@ function TimelineSegmentsGetter(config, isDynamic) {
                 fTimescale,
                 media,
                 mediaRange,
-                availabilityIdx);
+                availabilityIdx,
+                s.tManifest);
         };
 
         fTimescale = representation.timescale;

@@ -34,13 +34,13 @@ import FactoryMaker from '../../core/FactoryMaker';
 function RulesContext(config) {
 
     let instance;
-    let abrController = config.abrController;
-    let sp = config.streamProcessor;
-    let representationInfo = config.streamProcessor.getCurrentRepresentationInfo();
-    let switchHistory = config.switchHistory;
-    let droppedFramesHistory = config.droppedFramesHistory;
-    let currentRequest = config.currentRequest;
-    let richBuffer = config.hasRichBuffer;
+    const abrController = config.abrController;
+    const streamProcessor = config.streamProcessor;
+    const representationInfo = config.streamProcessor.getCurrentRepresentationInfo();
+    const switchHistory = config.switchHistory;
+    const droppedFramesHistory = config.droppedFramesHistory;
+    const currentRequest = config.currentRequest;
+    const bufferOccupancyABR = config.useBufferOccupancyABR;
 
     function getMediaType() {
         return representationInfo.mediaInfo.type;
@@ -54,12 +54,12 @@ function RulesContext(config) {
         return representationInfo.mediaInfo;
     }
 
-    function getTrackInfo() {
+    function getRepresentationInfo() {
         return representationInfo;
     }
 
     function getStreamProcessor() {
-        return sp;
+        return streamProcessor;
     }
 
     function getAbrController() {
@@ -78,8 +78,8 @@ function RulesContext(config) {
         return currentRequest;
     }
 
-    function hasRichBuffer() {
-        return richBuffer;
+    function useBufferOccupancyABR() {
+        return bufferOccupancyABR;
     }
 
     instance = {
@@ -91,8 +91,8 @@ function RulesContext(config) {
         getStreamInfo: getStreamInfo,
         getStreamProcessor: getStreamProcessor,
         getAbrController: getAbrController,
-        getTrackInfo: getTrackInfo,
-        hasRichBuffer: hasRichBuffer
+        getRepresentationInfo: getRepresentationInfo,
+        useBufferOccupancyABR: useBufferOccupancyABR
     };
 
     return instance;
