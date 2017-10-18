@@ -51,6 +51,14 @@ function VideoModel() {
         stalledStreams = [];
     }
 
+    function setup() {
+        eventBus.on(Events.PLAYBACK_PLAYING, onPlaying, this);
+    }
+
+    function reset() {
+        eventBus.off(Events.PLAYBACK_PLAYING, onPlaying, this);
+    }
+
     function onPlaybackCanPlay() {
         element.playbackRate = previousPlaybackRate || 1;
         element.removeEventListener('canplay', onPlaybackCanPlay);
@@ -189,6 +197,15 @@ function VideoModel() {
             addStalledStream(type);
         } else {
             removeStalledStream(type);
+        }
+    }
+
+    //Calling play on the element will emit playing - even if the stream is stalled. If the stream is stalled, emit a waiting event.
+    function onPlaying() {
+        if (element && isStalled() && element.playbackRate === 0) {
+            const event = document.createEvent('Event');
+            event.initEvent('waiting', true, false);
+            element.dispatchEvent(event);
         }
     }
 
@@ -364,8 +381,11 @@ function VideoModel() {
         appendChild: appendChild,
         removeChild: removeChild,
         getVideoWidth: getVideoWidth,
-        getVideoHeight: getVideoHeight
+        getVideoHeight: getVideoHeight,
+        reset: reset
     };
+
+    setup();
 
     return instance;
 }

@@ -2289,6 +2289,7 @@ function MediaPlayer() {
             abrController.reset();
             mediaController.reset();
             textController.reset();
+            videoModel.reset();
             if (protectionController) {
                 protectionController.reset();
                 protectionController = null;
