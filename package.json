@@ -5,6 +5,7 @@
   "main": "build/es5/index.js",
   "types": "build/typings/index.d.ts",
   "scripts": {
+    "build": "grunt",
     "debug-mocha": "iron-node node_modules/mocha/bin/_mocha --require mochahook",
     "test": "mocha test/unit --require mochahook",
     "test_functional": "node node_modules/intern/runner.js config=test/functional/testsCommon.js browsers=$BROWSER selenium=remote app=remote_all && node node_modules/intern/runner.js config=test/functional/testsCommon.js browsers=$BROWSER selenium=remote app=remote_mss",
