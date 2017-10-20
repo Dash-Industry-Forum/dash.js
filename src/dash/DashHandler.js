@@ -304,10 +304,14 @@ function DashHandler(config) {
             i;
 
         if (segments && ln > 0) {
+            // In case timeThreshold is not provided, let's use the default value set in MediaPlayerModel
+            timeThreshold = (timeThreshold === undefined || timeThreshold === null) ?
+                mediaPlayerModel.getSegmentOverlapToleranceTime() : timeThreshold;
             for (i = 0; i < ln; i++) {
                 frag = segments[i];
                 ft = frag.presentationStartTime;
                 fd = frag.duration;
+                // In case timeThreshold is null, set epsilon to half the fragment duration
                 epsilon = (timeThreshold === undefined || timeThreshold === null) ? fd / 2 : timeThreshold;
                 if ((time + epsilon) >= ft &&
                     (time - epsilon) < (ft + fd)) {

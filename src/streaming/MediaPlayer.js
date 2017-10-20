@@ -82,10 +82,10 @@ function MediaPlayer() {
     const SOURCE_NOT_ATTACHED_ERROR = 'You must first call attachSource() with a valid source before calling this method';
     const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
 
-    let context = this.context;
-    let eventBus = EventBus(context).getInstance();
-    let debug = Debug(context).getInstance();
-    let log = debug.log;
+    const context = this.context;
+    const eventBus = EventBus(context).getInstance();
+    const debug = Debug(context).getInstance();
+    const log = debug.log;
 
     let instance,
         source,
@@ -395,7 +395,7 @@ function MediaPlayer() {
         if (!playbackInitialized) {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
-        let s = playbackController.getIsDynamic() ? getDVRSeekOffset(value) : value;
+        const s = playbackController.getIsDynamic() ? getDVRSeekOffset(value) : value;
         playbackController.seek(s);
     }
 
@@ -546,7 +546,7 @@ function MediaPlayer() {
      * @instance
      */
     function getDVRWindowSize() {
-        let metric = getDVRInfoMetric();
+        const metric = getDVRInfoMetric();
         if (!metric) {
             return 0;
         }
@@ -565,14 +565,12 @@ function MediaPlayer() {
      * @instance
      */
     function getDVRSeekOffset(value) {
-        let metric = getDVRInfoMetric();
-
+        const metric = getDVRInfoMetric();
         if (!metric) {
             return 0;
         }
 
         let val = metric.range.start + value;
-
         if (val > metric.range.end) {
             val = metric.range.end;
         }
@@ -601,7 +599,7 @@ function MediaPlayer() {
             t = streamController.getTimeRelativeToStreamId(t, streamId);
 
         } else if (playbackController.getIsDynamic()) {
-            let metric = getDVRInfoMetric();
+            const metric = getDVRInfoMetric();
             t = (metric === null) ? 0 : duration() - (metric.range.end - metric.time);
         }
 
@@ -623,7 +621,7 @@ function MediaPlayer() {
 
         if (playbackController.getIsDynamic()) {
 
-            let metric = getDVRInfoMetric();
+            const metric = getDVRInfoMetric();
             let range;
 
             if (!metric) {
@@ -1135,7 +1133,7 @@ function MediaPlayer() {
     }
 
     /**
-     * Obsolete since version 2.6.0.
+     * @deprecated since version 2.6.0.
      * Buffer-occupancy ABR is now switched on and off dynamically.
      * @see {@link module:MediaPlayer#setABRStrategy setABRStrategy()}
      *
@@ -1293,7 +1291,7 @@ function MediaPlayer() {
      */
     function addUTCTimingSource(schemeIdUri, value) {
         removeUTCTimingSource(schemeIdUri, value); //check if it already exists and remove if so.
-        let vo = new UTCTiming();
+        const vo = new UTCTiming();
         vo.schemeIdUri = schemeIdUri;
         vo.value = value;
         mediaPlayerModel.getUTCTimingSources().push(vo);
@@ -1309,7 +1307,7 @@ function MediaPlayer() {
      * @instance
      */
     function removeUTCTimingSource(schemeIdUri, value) {
-        let UTCTimingSources = mediaPlayerModel.getUTCTimingSources();
+        const UTCTimingSources = mediaPlayerModel.getUTCTimingSources();
         UTCTimingSources.forEach(function (obj, idx) {
             if (obj.schemeIdUri === schemeIdUri && obj.value === value) {
                 UTCTimingSources.splice(idx, 1);
@@ -1368,7 +1366,8 @@ function MediaPlayer() {
     /**
      * This value influences the buffer pruning logic.
      * Allows you to modify the buffer that is kept in source buffer in seconds.
-     *  0|-----------bufferToPrune-----------|-----bufferToKeep-----|currentTime|
+     *
+     * <pre>0|-----------bufferToPrune-----------|-----bufferToKeep-----|currentTime|</pre>
      *
      * @default 30 seconds
      * @param {int} value
@@ -1423,14 +1422,6 @@ function MediaPlayer() {
         return mediaPlayerModel.getStableBufferTime();
     }
 
-    /**
-     * The time that the internal buffer target will be set to once playing the top quality.
-     * If there are multiple bitrates in your adaptation, and the media is playing at the highest
-     * bitrate, then we try to build a larger buffer at the top quality to increase stability
-     * and to maintain media quality.
-     *
-     * @default 30 seconds.
-     * @param {int} value
     /**
      * The time that the internal buffer target will be set to once playing the top quality.
      * If there are multiple bitrates in your adaptation, and the media is playing at the highest
@@ -1502,7 +1493,7 @@ function MediaPlayer() {
     }
 
     /**
-     * Obsolete since version 2.6.0.
+     * @deprecated since version 2.6.0.
      * ABR rules now switch from Throughput to Buffer Occupancy mode when there is sufficient buffer.
      * This renders the rich buffer mechanism redundant.
      *
@@ -1512,6 +1503,26 @@ function MediaPlayer() {
      */
     function setRichBufferThreshold(value) {
         throw new Error('Calling obsolete function - setRichBufferThreshold(' + value + ') has no effect.');
+    }
+
+    /**
+     * The overlap tolerance time, at both the head and the tail of segments, considered when doing time to segment conversions.
+     *
+     * This is used when calculating which of the loaded segments of a representation corresponds with a given time position.
+     * Its value is never used for calculating the segment index in seeking operations in which it assumes overlap time threshold is zero.
+     *
+     * <pre>
+     * |-o-|--- segment X ----|-o-|
+     *                        |-o-|---- segment X+1 -----|-o-|
+     *                                                   |-o-|---- segment X+2 -----|-o-|
+     * </pre>
+     * @default 0.05 seconds.
+     * @param {number} value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setSegmentOverlapToleranceTime(value) {
+        mediaPlayerModel.setSegmentOverlapToleranceTime(value);
     }
 
     /**
@@ -1717,7 +1728,7 @@ function MediaPlayer() {
      * @instance
      */
     function displayCaptionsOnTop(value) {
-        let textTracks = TextTracks(context).getInstance();
+        const textTracks = TextTracks(context).getInstance();
         textTracks.setConfig({
             videoModel: videoModel
         });
@@ -1834,7 +1845,7 @@ function MediaPlayer() {
         if (!playbackInitialized) {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
-        let stream = getActiveStream();
+        const stream = getActiveStream();
         return stream ? stream.getBitrateListFor(type) : [];
     }
 
@@ -1863,7 +1874,7 @@ function MediaPlayer() {
         if (!playbackInitialized) {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
-        let streamInfo = streamController.getActiveStreamInfo();
+        const streamInfo = streamController.getActiveStreamInfo();
         if (!streamInfo) return [];
         return mediaController.getTracksFor(type, streamInfo);
     }
@@ -1898,7 +1909,7 @@ function MediaPlayer() {
         if (!playbackInitialized) {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
-        let streamInfo = streamController.getActiveStreamInfo();
+        const streamInfo = streamController.getActiveStreamInfo();
 
         if (!streamInfo) return null;
 
@@ -2084,8 +2095,8 @@ function MediaPlayer() {
      * @instance
      */
     function retrieveManifest(url, callback) {
-        let manifestLoader = createManifestLoader();
-        let self = this;
+        const manifestLoader = createManifestLoader();
+        const self = this;
 
         const handler = function (e) {
             if (!e.error) {
@@ -2099,7 +2110,7 @@ function MediaPlayer() {
 
         eventBus.on(Events.INTERNAL_MANIFEST_LOADED, handler, self);
 
-        let uriQueryFragModel = URIQueryAndFragmentModel(context).getInstance();
+        const uriQueryFragModel = URIQueryAndFragmentModel(context).getInstance();
         uriQueryFragModel.initialize();
         manifestLoader.load(uriQueryFragModel.parseURI(url));
     }
@@ -2137,7 +2148,7 @@ function MediaPlayer() {
         }
 
         if (typeof urlOrManifest === 'string') {
-            let uriQueryFragModel = URIQueryAndFragmentModel(context).getInstance();
+            const uriQueryFragModel = URIQueryAndFragmentModel(context).getInstance();
             uriQueryFragModel.initialize();
             source = uriQueryFragModel.parseURI(urlOrManifest);
         } else {
@@ -2178,9 +2189,9 @@ function MediaPlayer() {
     function convertToTimeCode(value) {
         value = Math.max(value, 0);
 
-        let h = Math.floor(value / 3600);
-        let m = Math.floor((value % 3600) / 60);
-        let s = Math.floor((value % 3600) % 60);
+        const h = Math.floor(value / 3600);
+        const m = Math.floor((value % 3600) / 60);
+        const s = Math.floor((value % 3600) % 60);
         return (h === 0 ? '' : (h < 10 ? '0' + h.toString() + ':' : h.toString() + ':')) + (m < 10 ? '0' + m.toString() : m.toString()) + ':' + (s < 10 ? '0' + s.toString() : s.toString());
     }
 
@@ -2305,9 +2316,9 @@ function MediaPlayer() {
     function createPlaybackControllers() {
 
         // creates or get objects instances
-        let manifestLoader = createManifestLoader();
+        const manifestLoader = createManifestLoader();
 
-        let sourceBufferController = SourceBufferController(context).getInstance({
+        const sourceBufferController = SourceBufferController(context).getInstance({
             textController: textController
         });
 
@@ -2393,9 +2404,9 @@ function MediaPlayer() {
             return protectionController;
         }
         // do not require Protection as dependencies as this is optional and intended to be loaded separately
-        let Protection = dashjs.Protection; /* jshint ignore:line */
+        const Protection = dashjs.Protection; /* jshint ignore:line */
         if (typeof Protection === 'function') { //TODO need a better way to register/detect plugin components
-            let protection = Protection(context).create();
+            const protection = Protection(context).create();
             Events.extend(Protection.events);
             MediaPlayerEvents.extend(Protection.events, {
                 publicOnly: true
@@ -2422,9 +2433,9 @@ function MediaPlayer() {
             return;
         }
         // do not require MetricsReporting as dependencies as this is optional and intended to be loaded separately
-        let MetricsReporting = dashjs.MetricsReporting; /* jshint ignore:line */
+        const MetricsReporting = dashjs.MetricsReporting; /* jshint ignore:line */
         if (typeof MetricsReporting === 'function') { //TODO need a better way to register/detect plugin components
-            let metricsReporting = MetricsReporting(context).create();
+            const metricsReporting = MetricsReporting(context).create();
 
             metricsReportingController = metricsReporting.createMetricsReporting({
                 log: log,
@@ -2444,7 +2455,7 @@ function MediaPlayer() {
             return;
         }
         // do not require MssHandler as dependencies as this is optional and intended to be loaded separately
-        let MssHandler = dashjs.MssHandler; /* jshint ignore:line */
+        const MssHandler = dashjs.MssHandler; /* jshint ignore:line */
         if (typeof MssHandler === 'function') { //TODO need a better way to register/detect plugin components
             mssHandler = MssHandler(context).create({
                 eventBus: eventBus,
@@ -2464,12 +2475,12 @@ function MediaPlayer() {
     }
 
     function getDVRInfoMetric() {
-        let metric = metricsModel.getReadOnlyMetricsFor(Constants.VIDEO) || metricsModel.getReadOnlyMetricsFor(Constants.AUDIO);
+        const metric = metricsModel.getReadOnlyMetricsFor(Constants.VIDEO) || metricsModel.getReadOnlyMetricsFor(Constants.AUDIO);
         return dashMetrics.getCurrentDVRInfo(metric);
     }
 
     function getAsUTC(valToConvert) {
-        let metric = getDVRInfoMetric();
+        const metric = getDVRInfoMetric();
         let availableFrom,
             utcValue;
 
@@ -2485,7 +2496,7 @@ function MediaPlayer() {
         if (!playbackInitialized) {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
-        let streamInfo = streamController.getActiveStreamInfo();
+        const streamInfo = streamController.getActiveStreamInfo();
         return streamInfo ? streamController.getStreamById(streamInfo.id) : null;
     }
 
@@ -2625,6 +2636,7 @@ function MediaPlayer() {
         getXHRWithCredentialsForType: getXHRWithCredentialsForType,
         setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,
         setRichBufferThreshold: setRichBufferThreshold,
+        setSegmentOverlapToleranceTime: setSegmentOverlapToleranceTime,
         getProtectionController: getProtectionController,
         attachProtectionController: attachProtectionController,
         setProtectionData: setProtectionData,
@@ -2644,7 +2656,7 @@ function MediaPlayer() {
 }
 
 MediaPlayer.__dashjs_factory_name = 'MediaPlayer';
-let factory = FactoryMaker.getClassFactory(MediaPlayer);
+const factory = FactoryMaker.getClassFactory(MediaPlayer);
 factory.events = MediaPlayerEvents;
 FactoryMaker.updateClassFactory(MediaPlayer.__dashjs_factory_name, factory);
 
