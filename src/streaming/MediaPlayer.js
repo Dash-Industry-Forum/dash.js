@@ -111,9 +111,7 @@ function MediaPlayer() {
         manifestModel,
         videoModel,
         textController,
-        domStorage,
-        skipDataLoss;
-
+        domStorage;
     /*
     ---------------------------------------------------------------------------
 
@@ -125,7 +123,6 @@ function MediaPlayer() {
         mediaPlayerInitialized = false;
         playbackInitialized = false;
         autoPlay = true;
-        skipDataLoss = false;
         protectionController = null;
         protectionData = null;
         adapter = null;
@@ -175,14 +172,14 @@ function MediaPlayer() {
      * @param {HTML5MediaElement=} view - Optional arg to set the video element. {@link module:MediaPlayer#attachView attachView()}
      * @param {string=} source - Optional arg to set the media source. {@link module:MediaPlayer#attachSource attachSource()}
      * @param {boolean=} AutoPlay - Optional arg to set auto play. {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
-     * @param {boolean=} SkipDataLoss - Optional arg to set whether skip discontinuity in buffer when frames dropped. {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
+     * @param {boolean=} SkipGaps - Optional arg to set whether skip discontinuity in buffer when frames dropped. {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
      * @see {@link module:MediaPlayer#attachView attachView()}
      * @see {@link module:MediaPlayer#attachSource attachSource()}
      * @see {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
      * @memberof module:MediaPlayer
      * @instance
      */
-    function initialize(view, source, AutoPlay, SkipDataLoss) {
+    function initialize(view, source, AutoPlay) {
 
         if (!capabilities) {
             capabilities = Capabilities(context).getInstance();
@@ -238,7 +235,6 @@ function MediaPlayer() {
 
         restoreDefaultUTCTimingSources();
         setAutoPlay(AutoPlay !== undefined ? AutoPlay : true);
-        setSkipDataLoss(SkipDataLoss !== undefined ? SkipDataLoss : false);
 
         if (view) {
             attachView(view);
@@ -988,7 +984,7 @@ function MediaPlayer() {
     }
 
     /**
-     * <p>Set to ture if want to skip small discontinuity in the buffer when there is video frames dropping</p>
+     * <p>Set to true if want to skip small discontinuity in the buffer when there is video frames dropping</p>
      *
      * @param {boolean} value
      * @default false
@@ -996,17 +992,20 @@ function MediaPlayer() {
      * @instance
      *
      */
-    function setSkipDataLoss(value) {
-        skipDataLoss = value;
+    function setSkipGaps(value) {
+        mediaPlayerModel.setSkipGaps(value);
+        if (streamController !== undefined) {
+            streamController.setSkipGaps(value);
+        }
     }
 
     /**
-     * @returns {boolean} The current skipDataLoss state.
+     * @returns {boolean} The current skipGaps state.
      * @memberof module:MediaPlayer
      * @instance
      */
-    function getSkipDataLoss() {
-        return skipDataLoss;
+    function getSkipGaps() {
+        return mediaPlayerModel.getSkipGaps();
     }
 
     /**
@@ -2383,7 +2382,7 @@ function MediaPlayer() {
             videoModel: videoModel
         });
         // initialises controller
-        streamController.initialize(autoPlay, protectionData, skipDataLoss);
+        streamController.initialize(autoPlay, protectionData);
     }
 
     function createManifestLoader() {
@@ -2564,8 +2563,8 @@ function MediaPlayer() {
         getMaxAllowedRepresentationRatioFor: getMaxAllowedRepresentationRatioFor,
         setAutoPlay: setAutoPlay,
         getAutoPlay: getAutoPlay,
-        setSkipDataLoss: setSkipDataLoss,
-        getSkipDataLoss: getSkipDataLoss,
+        setSkipGaps: setSkipGaps,
+        getSkipGaps: getSkipGaps,
         setScheduleWhilePaused: setScheduleWhilePaused,
         getScheduleWhilePaused: getScheduleWhilePaused,
         getDashMetrics: getDashMetrics,

@@ -56,7 +56,7 @@ function StreamController() {
 
     //Check whether there is framed dropping when stalling this times wallClockUpdate interval
     //which is 50ms interval default due to the setting of mediaPlayerModel.
-    const STALL_THRESHOLD_TO_CHECK_DATALOSS = 20;
+    const STALL_THRESHOLD_TO_CHECK_GAPS = 20;
 
     let context = this.context;
     let log = Debug(context).getInstance().log;
@@ -101,8 +101,7 @@ function StreamController() {
         audioTrackDetected,
         endedTimeout,
         wallclockTicked,
-        lastPlaybackTime,
-        skipDataLoss;
+        lastPlaybackTime;
 
     function setup() {
         timeSyncController = TimeSyncController(context).getInstance();
@@ -114,11 +113,10 @@ function StreamController() {
     }
 
 
-    function initialize(autoPl, protData, SkipDataLoss) {
+    function initialize(autoPl, protData) {
         checkSetConfigCall();
         autoPlay = autoPl;
         protectionData = protData;
-        skipDataLoss = SkipDataLoss;
         timelineConverter.initialize();
 
         manifestUpdater = ManifestUpdater(context).create();
@@ -144,20 +142,16 @@ function StreamController() {
         eventBus.on(Events.MANIFEST_UPDATED, onManifestUpdated, this);
         eventBus.on(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
         eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
-        if (skipDataLoss === true) {
-            eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
-        }
-
     }
 
 
     function onWallclockTimeUpdated(e) {
         wallclockTicked++;
-        if (wallclockTicked >= STALL_THRESHOLD_TO_CHECK_DATALOSS) {
+        if (wallclockTicked >= STALL_THRESHOLD_TO_CHECK_GAPS) {
             wallclockTicked = 0;
             let currentTime = playbackController.getTime();
             if (lastPlaybackTime === currentTime) {
-                skipWhenDataLoss(currentTime, e.timeToEnd);
+                skipGaps(currentTime, e.timeToEnd);
             } else {
                 lastPlaybackTime = currentTime;
             }
@@ -165,7 +159,15 @@ function StreamController() {
 
     }
 
-    function skipWhenDataLoss(time, timeToStreamEnd) {
+    function setSkipGaps(value) {
+        if (value) {
+            eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
+        } else {
+            eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
+        }
+    }
+
+    function skipGaps(time, timeToStreamEnd) {
         if (!activeStream) return;
         let streamProcessors = activeStream.getProcessors();
         let skipToPosition;
@@ -811,8 +813,6 @@ function StreamController() {
         isPaused = false;
         autoPlay = true;
         playListMetrics = null;
-        skipDataLoss = false;
-
     }
 
     function reset() {
@@ -896,6 +896,7 @@ function StreamController() {
         getActiveStreamProcessors: getActiveStreamProcessors,
         getActiveStreamCommonEarliestTime: getActiveStreamCommonEarliestTime,
         setConfig: setConfig,
+        setSkipGaps: setSkipGaps,
         reset: reset
     };
 

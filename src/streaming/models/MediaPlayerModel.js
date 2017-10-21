@@ -96,7 +96,8 @@ function MediaPlayerModel() {
         xhrWithCredentials,
         fastSwitchEnabled,
         customABRRule,
-        movingAverageMethod;
+        movingAverageMethod,
+        skipGaps;
 
     function setup() {
         UTCTimingSources = [];
@@ -106,6 +107,7 @@ function MediaPlayerModel() {
         ABRStrategy = Constants.ABR_STRATEGY_DYNAMIC;
         useDefaultABRRules = true;
         fastSwitchEnabled = false;
+        skipGaps = false;
         lastBitrateCachingInfo = {
             enabled: true,
             ttl: DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION
@@ -440,6 +442,15 @@ function MediaPlayerModel() {
         return movingAverageMethod;
     }
 
+    function setSkipGaps(value) {
+        skipGaps = value;
+    }
+
+    function getSkipGaps() {
+        return skipGaps;
+    }
+
+
     function reset() {
         //TODO need to figure out what props to persist across sessions and which to reset if any.
         //setup();
@@ -506,6 +517,8 @@ function MediaPlayerModel() {
         getFastSwitchEnabled: getFastSwitchEnabled,
         setMovingAverageMethod: setMovingAverageMethod,
         getMovingAverageMethod: getMovingAverageMethod,
+        setSkipGaps: setSkipGaps,
+        getSkipGaps: getSkipGaps,
         reset: reset
     };
 
