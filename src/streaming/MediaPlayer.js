@@ -172,7 +172,6 @@ function MediaPlayer() {
      * @param {HTML5MediaElement=} view - Optional arg to set the video element. {@link module:MediaPlayer#attachView attachView()}
      * @param {string=} source - Optional arg to set the media source. {@link module:MediaPlayer#attachSource attachSource()}
      * @param {boolean=} AutoPlay - Optional arg to set auto play. {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
-     * @param {boolean=} SkipGaps - Optional arg to set whether skip discontinuity in buffer when frames dropped. {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
      * @see {@link module:MediaPlayer#attachView attachView()}
      * @see {@link module:MediaPlayer#attachSource attachSource()}
      * @see {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
