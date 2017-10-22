@@ -101,7 +101,8 @@ function StreamController() {
         audioTrackDetected,
         endedTimeout,
         wallclockTicked,
-        lastPlaybackTime;
+        lastPlaybackTime,
+        isSkipGaps;
 
     function setup() {
         timeSyncController = TimeSyncController(context).getInstance();
@@ -142,6 +143,9 @@ function StreamController() {
         eventBus.on(Events.MANIFEST_UPDATED, onManifestUpdated, this);
         eventBus.on(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
         eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
+        if (isSkipGaps) {
+            eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
+        }
     }
 
 
@@ -160,6 +164,8 @@ function StreamController() {
     }
 
     function setSkipGaps(value) {
+        wallclockTicked = 0;
+        isSkipGaps = value;
         if (value) {
             eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
         } else {
@@ -840,7 +846,9 @@ function StreamController() {
         eventBus.off(Events.MANIFEST_UPDATED, onManifestUpdated, this);
         eventBus.off(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
         eventBus.off(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
-
+        if (isSkipGaps) {
+            eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
+        }
         baseURLController.reset();
         manifestUpdater.reset();
         metricsModel.clearAllCurrentMetrics();
