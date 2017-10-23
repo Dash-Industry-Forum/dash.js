@@ -985,6 +985,30 @@ describe('MediaPlayer', function () {
             it('Method setCurrentTrack should throw an exception', function () {
                 expect(player.setCurrentTrack).to.throw(MediaPlayer.PLAYBACK_NOT_INITIALIZED_ERROR);
             });
+
+            it('Method setInitialMediaSettingsFor should throw an exception', function () {
+                expect(player.setInitialMediaSettingsFor).to.throw(MediaPlayer.MEDIA_PLAYER_NOT_INITIALIZED_ERROR);
+            });
+
+            it('Method getInitialMediaSettingsFor should throw an exception', function () {
+                expect(player.getInitialMediaSettingsFor).to.throw(MediaPlayer.MEDIA_PLAYER_NOT_INITIALIZED_ERROR);
+            });
+
+            it('Method getTrackSwitchModeFor should throw an exception', function () {
+                expect(player.getTrackSwitchModeFor).to.throw(MediaPlayer.MEDIA_PLAYER_NOT_INITIALIZED_ERROR);
+            });
+
+            it('Method setTrackSwitchModeFor should throw an exception', function () {
+                expect(player.setTrackSwitchModeFor).to.throw(MediaPlayer.MEDIA_PLAYER_NOT_INITIALIZED_ERROR);
+            });
+
+            it('Method setSelectionModeForInitialTrack should throw an exception', function () {
+                expect(player.setSelectionModeForInitialTrack).to.throw(MediaPlayer.MEDIA_PLAYER_NOT_INITIALIZED_ERROR);
+            });
+
+            it('Method getSelectionModeForInitialTrack should throw an exception', function () {
+                expect(player.getSelectionModeForInitialTrack).to.throw(MediaPlayer.MEDIA_PLAYER_NOT_INITIALIZED_ERROR);
+            });
         });
 
         describe('When it is initialized', function () {
