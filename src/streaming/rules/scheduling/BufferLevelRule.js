@@ -59,7 +59,6 @@ function BufferLevelRule(config) {
             } else {
                 bufferTarget = Math.max(videoBufferLevel, representationInfo.fragmentDuration);
             }
-            // console.log('videoBufferLevel  - ' + videoBufferLevel + ' target : ' + bufferTarget);
         } else {
             const streamInfo = representationInfo.mediaInfo.streamInfo;
             if (abrController.isPlayingAtTopQuality(streamInfo)) {

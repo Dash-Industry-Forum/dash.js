@@ -43,6 +43,7 @@ import InitCache from '../utils/InitCache';
 const BUFFER_LOADED = 'bufferLoaded';
 const BUFFER_EMPTY = 'bufferStalled';
 const STALL_THRESHOLD = 0.5;
+const BUFFER_LENGTH_TO_KEEP_ON_TRACK_CHANGE = 2;
 
 const BUFFER_CONTROLLER_TYPE = 'BufferController';
 
@@ -204,7 +205,7 @@ function BufferController(config) {
                 }
                 if (e.error.code === SourceBufferController.QUOTA_EXCEEDED_ERROR_CODE || !hasEnoughSpaceToAppend()) {
                     eventBus.trigger(Events.QUOTA_EXCEEDED, {sender: instance, criticalBufferLevel: criticalBufferLevel}); //Tells ScheduleController to stop scheduling.
-                    clearBuffer(getClearRange()); // Then we clear the buffer and onCleared event will tell ScheduleController to start scheduling again.
+                    clearPlaybackBuffer(mediaPlayerModel.getStableBufferTime());
                 }
                 return;
             }
@@ -220,7 +221,6 @@ function BufferController(config) {
                     log('Buffered Range for type:', type, ':', ranges.start(i), ' - ', ranges.end(i));
                 }
             }
-
             onPlaybackProgression();
             isAppendingInProgress = false;
             if (appendedBytesInfo) {
@@ -366,7 +366,7 @@ function BufferController(config) {
         }
     }
 
-    function getClearRange(threshold) {
+    function getBehindRangeToClear(threshold) {
         if (!buffer) return null;
 
         // we need to remove data that is more than one fragment before the video currentTime
@@ -385,9 +385,23 @@ function BufferController(config) {
         };
     }
 
-    function clearBuffer(range) {
+    function getAheadRangeToClear(bufferToKeep) {
+        if (!buffer || buffer.buffered.length === 0) return null;
+
+        // we need to remove data that is more than one fragment before the video currentTime
+        const removeStart = playbackController.getTime() + (bufferToKeep > 0 ? bufferToKeep : 0);
+        const removeEnd = buffer.buffered.end(buffer.buffered.length - 1);
+        if (removeStart >= removeEnd) return null;
+
+        return {
+            start: removeStart,
+            end: removeEnd
+        };
+    }
+
+    function clearBuffer(range, forceRemoval) {
         if (!range || !buffer) return;
-        sourceBufferController.remove(buffer, range.start, range.end, mediaSource);
+        sourceBufferController.remove(buffer, range.start, range.end, mediaSource, forceRemoval);
     }
 
     function onRemoved(e) {
@@ -424,7 +438,21 @@ function BufferController(config) {
     function onCurrentTrackChanged(e) {
         if (!buffer || (e.newMediaInfo.type !== type) || (e.newMediaInfo.streamInfo.id !== streamProcessor.getStreamInfo().id)) return;
         if (mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE) {
-            clearBuffer(getClearRange(0));
+            clearPlaybackBuffer(BUFFER_LENGTH_TO_KEEP_ON_TRACK_CHANGE);
+        }
+    }
+
+    function clearPlaybackBuffer(bufferAheadToKeep) {
+        clearBuffer(getBehindRangeToClear(0));
+        const aheadRange = getAheadRangeToClear(bufferAheadToKeep);
+        if (aheadRange) {
+            isBufferingCompleted = false;
+            maxAppendedIndex = 0;
+
+            const currentTime = playbackController.getTime();
+            streamProcessor.getScheduleController().setSeekTarget(currentTime);
+            adapter.setIndexHandlerTime(streamProcessor, currentTime);
+            clearBuffer(aheadRange, true);
         }
     }
 
