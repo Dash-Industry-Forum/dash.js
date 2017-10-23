@@ -120,15 +120,17 @@ function TTMLParser() {
                     startTime = (mediaTimeEvents[i] + offsetTime) < startTimeSegment ? startTimeSegment : (mediaTimeEvents[i] + offsetTime);
                     endTime = (mediaTimeEvents[i + 1] + offsetTime) > endTimeSegment ? endTimeSegment : (mediaTimeEvents[i + 1] + offsetTime);
 
-                    captionArray.push({
-                        start: startTime,
-                        end: endTime,
-                        type: 'html',
-                        cueID: getCueID(),
-                        isd: isd,
-                        images: images,
-                        embeddedImages: embeddedImages
-                    });
+                    if (startTime < endTime) {
+                        captionArray.push({
+                            start: startTime,
+                            end: endTime,
+                            type: 'html',
+                            cueID: getCueID(),
+                            isd: isd,
+                            images: images,
+                            embeddedImages: embeddedImages
+                        });
+                    }
                 }
             }
         }

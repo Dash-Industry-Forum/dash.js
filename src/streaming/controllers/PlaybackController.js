@@ -239,10 +239,11 @@ function PlaybackController() {
 
     /**
      * @param {boolean} ignoreStartOffset - ignore URL fragment start offset if true
+     * @param {number} liveEdge - liveEdge value
      * @returns {number} object
      * @memberof PlaybackController#
      */
-    function getStreamStartTime(ignoreStartOffset) {
+    function getStreamStartTime(ignoreStartOffset, liveEdge) {
         let presentationStartTime;
         const fragData = URIQueryAndFragmentModel(context).getInstance().getURIFragmentData();
         let startTimeOffset = NaN;
@@ -259,11 +260,11 @@ function PlaybackController() {
         }
 
         if (isDynamic) {
-            if (!isNaN(startTimeOffset) && startTimeOffset > 1262304000) {
+            if (!isNaN(startTimeOffset)) {
                 presentationStartTime = startTimeOffset - (streamInfo.manifestInfo.availableFrom.getTime() / 1000);
 
                 if (presentationStartTime > liveStartTime ||
-                    presentationStartTime < (liveStartTime - streamInfo.manifestInfo.DVRWindowSize)) {
+                    presentationStartTime < (!isNaN(liveEdge) ? (liveEdge - streamInfo.manifestInfo.DVRWindowSize) : NaN)) {
                     presentationStartTime = null;
                 }
             }
@@ -469,11 +470,11 @@ function PlaybackController() {
         const hasVideoTrack = streamController.isVideoTrackPresent();
         const hasAudioTrack = streamController.isAudioTrackPresent();
 
+        initialStartTime = getStreamStartTime(false);
+
         if (hasAudioTrack && hasVideoTrack) {
             //current stream has audio and video contents
             if (!isNaN(commonEarliestTime[streamInfo.id].audio) && !isNaN(commonEarliestTime[streamInfo.id].video)) {
-
-                initialStartTime = getStreamStartTime(false);
 
                 if (commonEarliestTime[streamInfo.id].audio < commonEarliestTime[streamInfo.id].video) {
                     // common earliest is video time

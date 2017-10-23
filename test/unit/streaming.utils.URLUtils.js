@@ -346,4 +346,37 @@ describe('URLUtils', function () {
             expect(result).to.equal(expected); // jshint ignore:line
         });
     });
+
+    describe('isHTTPS', () => {
+        it('should return false for an url with http scheme', () => {
+            const httpUrl = 'http://www.example.com';
+
+            const result = urlUtils.isHTTPS(httpUrl);
+
+            expect(result).to.be.false; // jshint ignore:line
+        });
+
+        it('should return true for an url with https scheme', () => {
+            const httpsUrl = 'https://www.example.com';
+            const result = urlUtils.isHTTPS(httpsUrl);
+
+            expect(result).to.be.true; // jshint ignore:line
+        });
+
+        it('should return false for a non-HTTP-URL url', () => {
+            const ftpUrl = 'ftp://www.example.com';
+
+            const result = urlUtils.isHTTPS(ftpUrl);
+
+            expect(result).to.be.false; // jshint ignore:line
+        });
+
+        it('should return false for a relative url', () => {
+            const relativeUrl = '/path/to/some/file';
+
+            const result = urlUtils.isHTTPS(relativeUrl);
+
+            expect(result).to.be.false; // jshint ignore:line
+        });
+    });
 });

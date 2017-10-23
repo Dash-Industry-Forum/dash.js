@@ -299,6 +299,30 @@ function AbrController() {
         bitrateDict.min[type] = value;
     }
 
+    function getMaxAllowedIndexFor(type) {
+        const maxBitrate = getMaxAllowedBitrateFor(type);
+        if (maxBitrate) {
+            return getQualityForBitrate(streamProcessorDict[type].getMediaInfo(), maxBitrate);
+        } else {
+            return undefined;
+        }
+    }
+
+    function getMinAllowedIndexFor(type) {
+        const minBitrate = getMinAllowedBitrateFor(type);
+        if (minBitrate) {
+            const bitrateList = getBitrateList(streamProcessorDict[type].getMediaInfo());
+            // This returns the quality index <= for the given bitrate
+            let minIdx = getQualityForBitrate(streamProcessorDict[type].getMediaInfo(), minBitrate);
+            if (bitrateList[minIdx] && minIdx < bitrateList.length - 1 && bitrateList[minIdx].bitrate < minBitrate * 1000) {
+                minIdx++; // Go to the next bitrate
+            }
+            return minIdx;
+        } else {
+            return undefined;
+        }
+    }
+
     function getMaxAllowedRepresentationRatioFor(type) {
         if (ratioDict.hasOwnProperty('max') && ratioDict.max.hasOwnProperty(type)) {
             return ratioDict.max[type];
@@ -362,12 +386,17 @@ function AbrController() {
             }
 
             if (getAutoSwitchBitrateFor(type)) {
+                const minIdx = getMinAllowedIndexFor(type);
                 const topQualityIdx = getTopQualityIndexFor(type, streamId);
                 const switchRequest = abrRulesCollection.getMaxQuality(rulesContext);
                 let newQuality = switchRequest.quality;
+                if (minIdx !== undefined && newQuality < minIdx) {
+                    newQuality = minIdx;
+                }
                 if (newQuality > topQualityIdx) {
                     newQuality = topQualityIdx;
                 }
+
                 switchHistoryDict[type].push({oldValue: oldQuality, newValue: newQuality});
 
                 if (newQuality > SwitchRequest.NO_CHANGE && newQuality != oldQuality) {
@@ -572,15 +601,13 @@ function AbrController() {
             return newIdx;
         }
 
-        const minBitrate = getMinAllowedBitrateFor(type);
-        if (minBitrate) {
-            const minIdx = getQualityForBitrate(streamProcessorDict[type].getMediaInfo(), minBitrate);
+        const minIdx = getMinAllowedIndexFor(type);
+        if (minIdx !== undefined) {
             newIdx = Math.max (idx , minIdx);
         }
 
-        const maxBitrate = getMaxAllowedBitrateFor(type);
-        if (maxBitrate) {
-            const maxIdx = getQualityForBitrate(streamProcessorDict[type].getMediaInfo(), maxBitrate);
+        const maxIdx = getMaxAllowedIndexFor(type);
+        if (maxIdx !== undefined) {
             newIdx = Math.min (newIdx , maxIdx);
         }
 
@@ -682,6 +709,8 @@ function AbrController() {
         getMinAllowedBitrateFor: getMinAllowedBitrateFor,
         setMaxAllowedBitrateFor: setMaxAllowedBitrateFor,
         setMinAllowedBitrateFor: setMinAllowedBitrateFor,
+        getMaxAllowedIndexFor: getMaxAllowedIndexFor,
+        getMinAllowedIndexFor: getMinAllowedIndexFor,
         getMaxAllowedRepresentationRatioFor: getMaxAllowedRepresentationRatioFor,
         setMaxAllowedRepresentationRatioFor: setMaxAllowedRepresentationRatioFor,
         getInitialBitrateFor: getInitialBitrateFor,

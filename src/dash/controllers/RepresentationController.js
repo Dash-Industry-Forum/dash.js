@@ -150,12 +150,13 @@ function RepresentationController() {
     }
 
     function updateData(newRealAdaptation, voAdaptation, type) {
+        const streamInfo = streamProcessor.getStreamInfo();
+        const maxQuality = abrController.getTopQualityIndexFor(type, streamInfo.id);
+        const minIdx = abrController.getMinAllowedIndexFor(type);
+
         let quality,
             averageThroughput;
-
         let bitrate = null;
-        let streamInfo = streamProcessor.getStreamInfo();
-        let maxQuality = abrController.getTopQualityIndexFor(type, streamInfo.id);
 
         updating = true;
         eventBus.trigger(Events.DATA_UPDATE_STARTED, {sender: this});
@@ -170,6 +171,9 @@ function RepresentationController() {
             quality = abrController.getQualityFor(type, streamInfo);
         }
 
+        if (minIdx !== undefined && quality < minIdx) {
+            quality = minIdx;
+        }
         if (quality > maxQuality) {
             quality = maxQuality;
         }

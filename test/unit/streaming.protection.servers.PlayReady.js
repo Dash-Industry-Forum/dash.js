@@ -1,4 +1,4 @@
-import PlayReady from '../../src/streaming/protection/servers/PlayReady.js';
+import PlayReady from '../../src/streaming/protection/servers/PlayReady';
 
 const expect = require('chai').expect;
 const fs = require('fs');
