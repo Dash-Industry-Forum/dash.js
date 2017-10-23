@@ -83,7 +83,6 @@ function SourceBufferSink(mediaSource, mediaInfo) {
             }
 
             buffer = mediaSource.addSourceBuffer(codec);
-
         } catch (ex) {
             // Note that in the following, the quotes are open to allow for extra text after stpp and wvtt
             if ((mediaInfo.isText) || (codec.indexOf('codecs="stpp') !== -1) || (codec.indexOf('codecs="wvtt') !== -1)) {
@@ -97,7 +96,11 @@ function SourceBufferSink(mediaSource, mediaInfo) {
 
     function reset() {
         if (buffer) {
-            mediaSource.removeSourceBuffer(buffer);
+            try {
+                mediaSource.removeSourceBuffer(buffer);
+            } catch (e) {
+                log('Failed to remove source buffer from media source.');
+            }
             isAppendingInProgress = false;
             buffer = null;
         }
@@ -165,10 +168,15 @@ function SourceBufferSink(mediaSource, mediaInfo) {
             };
 
             try {
-                buffer.appendBuffer(nextChunk.bytes);
+                if (buffer.appendBuffer) {
+                    buffer.appendBuffer(nextChunk.bytes);
+                } else {
+                    buffer.append(nextChunk.bytes, nextChunk);
+                }
                 // updating is in progress, we should wait for it to complete before signaling that this operation is done
                 waitForUpdateEnd(buffer, afterSuccess.bind(this));
             } catch (err) {
+                log('SourceBuffer append failed "' + err + '"');
                 if (appendQueue.length > 0) {
                     appendNextInQueue();
                 } else {

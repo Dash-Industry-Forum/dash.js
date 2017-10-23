@@ -138,6 +138,10 @@ function TextBufferController(config) {
         return _BufferControllerImpl.getIsPruningInProgress();
     }
 
+    function getRangeAt(time) {
+        return _BufferControllerImpl.getRangeAt(time);
+    }
+
     instance = {
         getBufferControllerType: getBufferControllerType,
         initialize: initialize,
@@ -153,6 +157,7 @@ function TextBufferController(config) {
         getIsBufferingCompleted: getIsBufferingCompleted,
         getIsPruningInProgress: getIsPruningInProgress,
         switchInitData: switchInitData,
+        getRangeAt: getRangeAt,
         reset: reset
     };
 

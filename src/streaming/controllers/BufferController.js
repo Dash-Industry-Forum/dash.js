@@ -125,7 +125,11 @@ function BufferController(config) {
         if (mediaSource) {
             try {
                 buffer = SourceBufferSink(context).create(mediaSource, mediaInfo);
+                if (typeof buffer.getBuffer().initialize === 'function') {
+                    buffer.getBuffer().initialize(type, streamProcessor);
+                }
             } catch (e) {
+                log('Caught error on create SourceBuffer: ' + e);
                 errHandler.mediaSourceError('Error creating ' + type + ' source buffer.');
             }
         } else {

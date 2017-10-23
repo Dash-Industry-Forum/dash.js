@@ -1956,11 +1956,11 @@ function MediaPlayer() {
             }
         }
 
-        if (!streamingInitialized) {
-            resetAndInitializePlayback();
-        } else {
-            playbackInitialized = true;
+        if (playbackInitialized) { //Reset if we have been playing before, so this is a new element.
+            resetPlaybackControllers();
         }
+
+        initializePlayback();
     }
 
     /**
@@ -2350,7 +2350,10 @@ function MediaPlayer() {
             source = urlOrManifest;
         }
 
-        resetAndInitializePlayback();
+        if (streamingInitialized || playbackInitialized) {
+            resetPlaybackControllers();
+        }
+        initializePlayback();
     }
 
     /**
@@ -2436,18 +2439,6 @@ function MediaPlayer() {
             protectionController.reset();
             protectionController = null;
             detectProtection();
-        }
-    }
-
-    function resetAndInitializePlayback() {
-        if (playbackInitialized) {
-            resetPlaybackControllers();
-
-            if (isReady()) {
-                initializePlayback();
-            }
-        } else if (isReady()) {
-            initializePlayback();
         }
     }
 
@@ -2635,8 +2626,9 @@ function MediaPlayer() {
     }
 
     function initializePlayback() {
-        if (!streamingInitialized) {
+        if (!streamingInitialized && source) {
             streamingInitialized = true;
+            log('Streaming Initialized');
             createPlaybackControllers();
 
             if (typeof source === 'string') {
@@ -2644,11 +2636,11 @@ function MediaPlayer() {
             } else {
                 streamController.loadWithManifest(source);
             }
+        }
 
-            if (!playbackInitialized && videoModel.getElement()) {
-                playbackInitialized = true;
-                log('Playback Initialized');
-            }
+        if (!playbackInitialized && isReady()) {
+            playbackInitialized = true;
+            log('Playback Initialized');
         }
     }
 

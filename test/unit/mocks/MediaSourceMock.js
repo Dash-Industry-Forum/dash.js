@@ -7,6 +7,10 @@ class MediaSourceMock {
     }
 
     addSourceBuffer(codec) {
+        if (this.forceError) {
+            throw new Error('Unit test forced error');
+        }
+
         if (codec.match(/text/i)) {
             throw new Error('not really supported');
         }
