@@ -107,7 +107,7 @@ function FragmentModel(config) {
         // First, check if the fragment has already been loaded
         isLoaded = isFragmentLoaded(request);
 
-        // Then, check if the fragment is about to be loeaded
+        // Then, check if the fragment is about to be loaded
         if (!isLoaded) {
             for (i = 0; i < loadingRequests.length; i++) {
                 req = loadingRequests[i];
@@ -146,8 +146,25 @@ function FragmentModel(config) {
         return filteredRequests;
     }
 
-    function removeExecutedRequestsBeforeTime(time) {
-        executedRequests = executedRequests.filter(req => isNaN(req.startTime) || req.startTime >= time);
+    function removeExecutedRequestsInRange(e) {
+        executedRequests = executedRequests.filter(req => {
+            // If we are removing buffers ahead of us we have to clear completed flag (end of stream)
+            if (e.endSignalSent && req.action === FragmentRequest.ACTION_COMPLETE) {
+                return false;
+            }
+
+            if (isNaN(req.startTime) || isNaN(req.duration)) {
+                return true;
+            }
+
+            const endTime = req.startTime + req.duration;
+            if ((req.startTime >= e.from && req.startTime <= e.to) ||
+                (endTime >= e.from && endTime <= e.to) ||
+                (req.startTime <= e.from && endTime >= e.to)) {
+                return false;
+            }
+            return true;
+        });
     }
 
     function abortRequests() {
@@ -156,7 +173,6 @@ function FragmentModel(config) {
     }
 
     function executeRequest(request) {
-
         switch (request.action) {
             case FragmentRequest.ACTION_COMPLETE:
                 executedRequests.push(request);
@@ -293,7 +309,7 @@ function FragmentModel(config) {
         getRequests: getRequests,
         isFragmentLoaded: isFragmentLoaded,
         isFragmentLoadedOrPending: isFragmentLoadedOrPending,
-        removeExecutedRequestsBeforeTime: removeExecutedRequestsBeforeTime,
+        removeExecutedRequestsInRange: removeExecutedRequestsInRange,
         abortRequests: abortRequests,
         executeRequest: executeRequest,
         reset: reset

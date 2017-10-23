@@ -43,7 +43,6 @@ import InitCache from '../utils/InitCache';
 const BUFFER_LOADED = 'bufferLoaded';
 const BUFFER_EMPTY = 'bufferStalled';
 const STALL_THRESHOLD = 0.5;
-const BUFFER_LENGTH_TO_KEEP_ON_TRACK_CHANGE = 2;
 
 const BUFFER_CONTROLLER_TYPE = 'BufferController';
 
@@ -201,10 +200,12 @@ function BufferController(config) {
         if (buffer === e.buffer) {
             if (e.error) {
                 if (e.error.code === SourceBufferController.QUOTA_EXCEEDED_ERROR_CODE) {
+                    log('Quota exceeded for type: ' + type);
                     criticalBufferLevel = sourceBufferController.getTotalBufferedTime(buffer) * 0.8;
                 }
                 if (e.error.code === SourceBufferController.QUOTA_EXCEEDED_ERROR_CODE || !hasEnoughSpaceToAppend()) {
                     eventBus.trigger(Events.QUOTA_EXCEEDED, {sender: instance, criticalBufferLevel: criticalBufferLevel}); //Tells ScheduleController to stop scheduling.
+                    log('Clearing playback buffer to overcome quota exceed situation for type: ' + type);
                     clearPlaybackBuffer(mediaPlayerModel.getStableBufferTime());
                 }
                 return;
@@ -360,7 +361,7 @@ function BufferController(config) {
         const start = buffer.buffered.length ? buffer.buffered.start(0) : 0;
         const bufferToPrune = playbackController.getTime() - start - mediaPlayerModel.getBufferToKeep();
         if (bufferToPrune > 0) {
-            log('pruning buffer: ' + bufferToPrune + ' seconds.');
+            log('pruning ', type, 'buffer: ' + bufferToPrune + ' seconds.');
             isPruningInProgress = true;
             sourceBufferController.remove(buffer, 0, Math.round(start + bufferToPrune), mediaSource);
         }
@@ -412,8 +413,9 @@ function BufferController(config) {
         }
 
         updateBufferLevel();
-        eventBus.trigger(Events.BUFFER_CLEARED, {sender: instance, from: e.from, to: e.to, hasEnoughSpaceToAppend: hasEnoughSpaceToAppend()});
-        //TODO - REMEMBER removed a timerout hack calling clearBuffer after manifestInfo.minBufferTime * 1000 if !hasEnoughSpaceToAppend() Aug 04 2016
+        eventBus.trigger(Events.BUFFER_CLEARED, {sender: instance, from: e.from, to: e.to,
+            hasEnoughSpaceToAppend: hasEnoughSpaceToAppend(), endSignalSent: e.endSignalSent});
+        //TODO - REMEMBER removed a timeout hack calling clearBuffer after manifestInfo.minBufferTime * 1000 if !hasEnoughSpaceToAppend() Aug 04 2016
     }
 
     function updateBufferTimestampOffset(MSETimeOffset) {
@@ -438,13 +440,21 @@ function BufferController(config) {
     function onCurrentTrackChanged(e) {
         if (!buffer || (e.newMediaInfo.type !== type) || (e.newMediaInfo.streamInfo.id !== streamProcessor.getStreamInfo().id)) return;
         if (mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE) {
-            clearPlaybackBuffer(BUFFER_LENGTH_TO_KEEP_ON_TRACK_CHANGE);
+            clearPlaybackBuffer(0);
+            streamProcessor.getFragmentModel().abortRequests();
         }
     }
 
     function clearPlaybackBuffer(bufferAheadToKeep) {
-        clearBuffer(getBehindRangeToClear(0));
-        const aheadRange = getAheadRangeToClear(bufferAheadToKeep);
+        let aheadRange;
+        if (bufferAheadToKeep > 0) {
+            clearBuffer(getBehindRangeToClear(0));
+            aheadRange = getAheadRangeToClear(bufferAheadToKeep);
+        } else {
+            // If we shouldn't keep anything, just remove all the content in the buffer
+            aheadRange = sourceBufferController.getRangesAsSingleRange(buffer);
+        }
+
         if (aheadRange) {
             isBufferingCompleted = false;
             maxAppendedIndex = 0;
@@ -477,12 +487,10 @@ function BufferController(config) {
 
     //Removes buffered ranges ahead. It will not remove anything part of the current buffer timeRange.
     function removeBufferAhead(time) {
-        const ranges = sourceBufferController.getAllRanges(buffer);
-        for (let i = 0; i < ranges.length; i++) {
-            if (ranges.start(i) > time) {
-                log('Removing buffer from: ' + ranges.start(i) + '-' + ranges.end(i));
-                sourceBufferController.remove(buffer, ranges.start(i), ranges.end(i), mediaSource);
-            }
+        const range = sourceBufferController.getRangesAsSingleRange(buffer, time);
+        if (range) {
+            log('Removing buffer from: ' + range.start + '-' + range.end);
+            sourceBufferController.remove(buffer, range.start, range.end, mediaSource);
         }
     }
 
