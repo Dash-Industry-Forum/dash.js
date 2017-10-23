@@ -159,7 +159,8 @@ module.exports = function (grunt) {
 
         babel: {
             options: {
-                sourceMap: true
+                sourceMap: true,
+                compact: true
             },
             es5: {
                 files: [{
