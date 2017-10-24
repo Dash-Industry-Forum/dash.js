@@ -1,14 +1,12 @@
-class DashMetricsMock {
-    constructor() {
-    }
+function DashMetricsMock () {
 
-    getCurrentDVRInfo() {
+    this.getCurrentDVRInfo = function () {
         return null;
-    }
+    };
 
-    getCurrentBufferLevel() {
+    this.getCurrentBufferLevel = function () {
         return 15;
-    }
+    };
 }
 
 export default DashMetricsMock;

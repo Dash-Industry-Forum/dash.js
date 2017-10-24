@@ -42,7 +42,7 @@ const ABANDON_FRAGMENT_RULES = 'abandonFragmentRules';
 
 function ABRRulesCollection(config) {
 
-    let context = this.context;
+    const context = this.context;
 
     const mediaPlayerModel = config.mediaPlayerModel;
     const metricsModel = config.metricsModel;
@@ -57,7 +57,6 @@ function ABRRulesCollection(config) {
         abandonFragmentRules = [];
 
         if (mediaPlayerModel.getUseDefaultABRRules()) {
-
             // Only one of BolaRule and ThroughputRule will give a switchRequest.quality !== SwitchRequest.NO_CHANGE.
             // This is controlled by useBufferOccupancyABR mechanism in AbrController.
             qualitySwitchRules.push(
@@ -73,7 +72,6 @@ function ABRRulesCollection(config) {
                     dashMetrics: dashMetrics
                 })
             );
-
             qualitySwitchRules.push(
                 InsufficientBufferRule(context).create({
                     metricsModel: metricsModel,
@@ -86,7 +84,6 @@ function ABRRulesCollection(config) {
             qualitySwitchRules.push(
                 DroppedFramesRule(context).create()
             );
-
             abandonFragmentRules.push(
                 AbandonRequestsRule(context).create({
                     metricsModel: metricsModel,
@@ -97,7 +94,7 @@ function ABRRulesCollection(config) {
         }
 
         // add custom ABR rules if any
-        let customRules = mediaPlayerModel.getABRCustomRules();
+        const customRules = mediaPlayerModel.getABRCustomRules();
         customRules.forEach(function (rule) {
             if (rule.type === QUALITY_SWITCH_RULES) {
                 qualitySwitchRules.push(rule.rule(context).create());
@@ -114,8 +111,7 @@ function ABRRulesCollection(config) {
     }
 
     function getMinSwitchRequest(srArray) {
-
-        let values = {};
+        const values = {};
         let i,
             len,
             req,
@@ -157,17 +153,17 @@ function ABRRulesCollection(config) {
     }
 
     function getMaxQuality(rulesContext) {
-        let switchRequestArray = qualitySwitchRules.map(rule => rule.getMaxIndex(rulesContext));
-        let activeRules = getActiveRules(switchRequestArray);
-        let maxQuality = getMinSwitchRequest(activeRules);
+        const switchRequestArray = qualitySwitchRules.map(rule => rule.getMaxIndex(rulesContext));
+        const activeRules = getActiveRules(switchRequestArray);
+        const maxQuality = getMinSwitchRequest(activeRules);
 
         return maxQuality || SwitchRequest(context).create();
     }
 
     function shouldAbandonFragment(rulesContext) {
-        let abandonRequestArray = abandonFragmentRules.map(rule => rule.shouldAbandon(rulesContext));
-        let activeRules = getActiveRules(abandonRequestArray);
-        let shouldAbandon = getMinSwitchRequest(activeRules);
+        const abandonRequestArray = abandonFragmentRules.map(rule => rule.shouldAbandon(rulesContext));
+        const activeRules = getActiveRules(abandonRequestArray);
+        const shouldAbandon = getMinSwitchRequest(activeRules);
 
         return shouldAbandon || SwitchRequest(context).create();
     }
@@ -193,7 +189,7 @@ function ABRRulesCollection(config) {
 }
 
 ABRRulesCollection.__dashjs_factory_name = 'ABRRulesCollection';
-let factory = FactoryMaker.getClassFactory(ABRRulesCollection);
+const factory = FactoryMaker.getClassFactory(ABRRulesCollection);
 factory.QUALITY_SWITCH_RULES = QUALITY_SWITCH_RULES;
 factory.ABANDON_FRAGMENT_RULES = ABANDON_FRAGMENT_RULES;
 FactoryMaker.updateSingletonFactory(ABRRulesCollection.__dashjs_factory_name, factory);
