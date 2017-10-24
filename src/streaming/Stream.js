@@ -273,6 +273,7 @@ function Stream(config) {
         } else {
             processor.updateMediaInfo(mediaInfo);
             if (mediaInfo.type !== Constants.FRAGMENTED_TEXT) {
+                abrController.updateTopQualityIndex(mediaInfo);
                 processor.switchTrackAsked();
             }
         }
