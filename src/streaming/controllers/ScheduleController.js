@@ -74,7 +74,7 @@ function ScheduleController(config) {
         bufferLevelRule,
         nextFragmentRequestRule,
         scheduleWhilePaused,
-        lastQuality,
+        lastFragmentRequest,
         topQualityIndex,
         lastInitQuality,
         replaceRequestArray,
@@ -307,15 +307,15 @@ function ScheduleController(config) {
                 threshold: 0
             })[0];
             if (item && playbackController.getTime() >= item.startTime) {
-                if ((item.quality !== lastQuality.value || item.adaptationIndex !== lastQuality.adaptationIndex) && trigger) {
+                if ((item.quality !== lastFragmentRequest.quality || item.adaptationIndex !== lastFragmentRequest.adaptationIndex) && trigger) {
                     eventBus.trigger(Events.QUALITY_CHANGE_RENDERED, {
                         mediaType: type,
-                        oldQuality: lastQuality.index,
+                        oldQuality: lastFragmentRequest.quality,
                         newQuality: item.quality
                     });
                 }
-                lastQuality = {
-                    value: item.quality,
+                lastFragmentRequest = {
+                    quality: item.quality,
                     adaptationIndex: item.adaptationIndex
                 };
             }
@@ -577,7 +577,10 @@ function ScheduleController(config) {
         playListTraceMetricsClosed = true;
         initialRequest = true;
         lastInitQuality = NaN;
-        lastQuality = {};
+        lastFragmentRequest = {
+            quality: NaN,
+            adaptationIndex: NaN
+        };
         topQualityIndex = {};
         replaceRequestArray = [];
         isStopped = true;
