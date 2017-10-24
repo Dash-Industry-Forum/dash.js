@@ -87,7 +87,27 @@ module.exports = function (grunt) {
                     'build/temp/dash.all.min.js': 'build/temp/dash.all.debug.js'
                 }
             }
-
+        },
+        browserSync: {
+            bsFiles: {
+                src: ['dist/*.js', 'samples/**/*', 'contrib/**/*', 'externals/**/*.js']
+            },
+            options: {
+                watchTask: true,
+                host: 'localhost',
+                server: {
+                    baseDir: './',
+                    directory: true
+                },
+                plugins: [
+                    {
+                        module: 'bs-html-injector',
+                        options: {
+                            files: 'samples/**/*.html'
+                        }
+                    }
+                ]
+            }
         },
         copy: {
             dist: {
@@ -256,6 +276,23 @@ module.exports = function (grunt) {
                         debug: true
                     },
                     plugin: [
+                        'browserify-derequire'
+                    ],
+                    transform: ['babelify']
+                }
+            },
+            watch_dev: {
+                files: {
+                    'dist/dash.all.debug.js': ['index.js'],
+                    'dist/dash.mss.debug.js': ['src/mss/index.js']
+                },
+                options: {
+                    watch: true,
+                    keepAlive: true,
+                    browserifyOptions: {
+                        debug: true
+                    },
+                    plugin: [
                         ['browserify-derequire']
                     ],
                     transform: ['babelify']
@@ -302,8 +339,10 @@ module.exports = function (grunt) {
     grunt.registerTask('minimize', ['exorcise', 'githash', 'uglify']);
     grunt.registerTask('test', ['mocha_istanbul:test']);
     grunt.registerTask('watch', ['browserify:watch']);
+    grunt.registerTask('watch-dev', ['browserify:watch_dev']);
     grunt.registerTask('release', ['default', 'jsdoc']);
     grunt.registerTask('debug', ['clean', 'browserify:all', 'exorcise:all', 'copy:dist']);
     grunt.registerTask('lint', ['jshint', 'jscs']);
     grunt.registerTask('prepublish', ['githooks', 'dist']);
+    grunt.registerTask('dev', ['browserSync', 'watch-dev']);
 };
