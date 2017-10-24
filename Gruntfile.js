@@ -88,43 +88,25 @@ module.exports = function (grunt) {
                 }
             }
         },
-        connect: {
-            server: {
-                options: {
-                    port: 3001,
-                    base: '.',
-                    middleware: function (connect, options, middlewares) {
-                        middlewares.unshift(function (req, res, next) {
-                            if (req.url.indexOf('.html') === -1) {
-                                return next();
-                            }
-
-                            res._originalWrite = res.write;
-                            res.write = function (chunk, encoding, callback) {
-                                var string = chunk.toString('utf8');
-                                string = string.replace('</body>',
-                                    `<script id="__bs_script__">//<![CDATA[
-document.write('<script async src="http://HOST:3000/browser-sync/browser-sync-client.js?v=2.18.13"><\\/script>'.replace("HOST", location.hostname));
-//]]></script>
-</body>`);
-                                res.writeHead(200, { 'Content-Type': 'text/html', 'Content-Length': string.length + '' });
-                                res._originalWrite.call(res, Buffer.from(string, 'utf8'), encoding, callback);
-                            };
-                            next();
-                        });
-
-                        return middlewares;
-                    }
-                }
-            }
-        },
         browserSync: {
             bsFiles: {
-                src: ['dist/*.js']
+                src: ['dist/*.js', 'samples/**/*', 'contrib/**/*', 'externals/**/*.js']
             },
             options: {
                 watchTask: true,
-                host: 'localhost'
+                host: 'localhost',
+                server: {
+                    baseDir: './',
+                    directory: true
+                },
+                plugins: [
+                    {
+                        module: 'bs-html-injector',
+                        options: {
+                            files: 'samples/**/*.html'
+                        }
+                    }
+                ]
             }
         },
         copy: {
@@ -294,7 +276,7 @@ document.write('<script async src="http://HOST:3000/browser-sync/browser-sync-cl
                         debug: true
                     },
                     plugin: [
-                        ['browserify-derequire']
+                        'browserify-derequire'
                     ],
                     transform: ['babelify']
                 }
@@ -362,6 +344,5 @@ document.write('<script async src="http://HOST:3000/browser-sync/browser-sync-cl
     grunt.registerTask('debug', ['clean', 'browserify:all', 'exorcise:all', 'copy:dist']);
     grunt.registerTask('lint', ['jshint', 'jscs']);
     grunt.registerTask('prepublish', ['githooks', 'dist']);
-    grunt.registerTask('serve', ['connect', 'browserSync']);
-    grunt.registerTask('dev', ['serve', 'watch-dev']);
+    grunt.registerTask('dev', ['browserSync', 'watch-dev']);
 };

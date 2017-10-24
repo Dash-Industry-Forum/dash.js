@@ -15,6 +15,7 @@
     "babel": "^5.3.1",
     "babelify": "^6.1.0",
     "browserify-derequire": "^0.9.4",
+    "bs-html-injector": "^3.0.3",
     "bundle-collapser": "^1.2.1",
     "chai": "^3.4.1",
     "chai-spies": "^0.7.1",
