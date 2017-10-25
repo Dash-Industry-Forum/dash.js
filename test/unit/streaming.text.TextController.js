@@ -2,6 +2,8 @@ import TextController from '../../src/streaming/text/TextController';
 import TextTracks from '../../src/streaming/text/TextTracks';
 import TextSourceBuffer from '../../src/streaming/text/TextSourceBuffer';
 import ObjectUtils from '../../src/streaming/utils/ObjectUtils';
+import EventBus from '../../src/core/EventBus';
+import Events from '../../src/core/events/Events';
 
 import VideoModelMock from './mocks/VideoModelMock';
 
@@ -9,6 +11,7 @@ const expect = require('chai').expect;
 const context = {};
 
 const objectUtils = ObjectUtils(context).getInstance();
+const eventBus = EventBus(context).getInstance();
 
 describe('TextController', function () {
 
@@ -39,9 +42,25 @@ describe('TextController', function () {
         expect(objectUtils.areEqual(textSourceBuffer, textSourceBufferSingleton)).to.be.true; // jshint ignore:line
     });
 
+    describe('Method setTextDefaultLanguage', function () {
+        it('should not set text default language if language is not a string', function () {
+            textController.setTextDefaultLanguage(-1);
+            expect(textController.getTextDefaultLanguage()).to.equal(''); // jshint ignore:line
+
+            textController.setTextDefaultLanguage();
+            expect(textController.getTextDefaultLanguage()).to.equal(''); // jshint ignore:line
+        });
+
+        it('should set text default language if language is a string', function () {
+            textController.setTextDefaultLanguage('lang');
+            expect(textController.getTextDefaultLanguage()).to.equal('lang'); // jshint ignore:line
+        });
+
+    });
+
     describe('Method setTextTrack', function () {
 
-        beforeEach( function () {
+        beforeEach(function () {
             textTracks.addTextTrack({
                 index: 0,
                 kind: 'subtitles',
@@ -82,4 +101,70 @@ describe('TextController', function () {
             expect(textController.getAllTracksAreDisabled()).to.be.false; // jshint ignore:line
         });
     });
+
+    describe('Handle event TEXT_TRACKS_QUEUE_INITIALIZED', function () {
+        var textTracksQueue;
+        var initialIndex;
+
+        beforeEach(function () {
+            textTracksQueue = [];
+            initialIndex = 0;
+
+            textTracksQueue.push({
+                index: 0,
+                kind: 'subtitles',
+                label: 'sub_en',
+                lang: 'eng'
+            });
+
+            textTracksQueue.push({
+                index: 1,
+                kind: 'subtitles',
+                label: 'sub_fr',
+                lang: 'fr'
+            });
+        });
+
+        it('should send TEXT_TRACKS_ADDED event', function (done) {
+            // init test
+            textController.setTextDefaultLanguage('');
+
+            const event = {
+                index: initialIndex,
+                tracks: textTracksQueue
+            };
+            const onTracksAdded = function (e) {
+                expect(e.index).to.equal(initialIndex); // jshint ignore:line
+                expect(e.tracks.length).to.equal(textTracksQueue.length); // jshint ignore:line
+
+                eventBus.off(Events.TEXT_TRACKS_ADDED, onTracksAdded, this);
+                done();
+            };
+            eventBus.on(Events.TEXT_TRACKS_ADDED, onTracksAdded, this);
+
+            // send event
+            eventBus.trigger(Events.TEXT_TRACKS_QUEUE_INITIALIZED, event);
+        });
+
+        it('should choose langauge according to default language', function (done) {
+            // init test
+            textController.setTextDefaultLanguage('fr');
+
+            const event = {
+                index: initialIndex,
+                tracks: textTracksQueue
+            };
+            const onTracksAdded = function (e) {
+                expect(e.index).to.equal(1); // jshint ignore:line
+                expect(e.tracks.length).to.equal(textTracksQueue.length); // jshint ignore:line
+                eventBus.off(Events.TEXT_TRACKS_ADDED, onTracksAdded, this);
+                done();
+            };
+            eventBus.on(Events.TEXT_TRACKS_ADDED, onTracksAdded, this);
+
+            // send event
+            eventBus.trigger(Events.TEXT_TRACKS_QUEUE_INITIALIZED, event);
+        });
+    });
+
 });
