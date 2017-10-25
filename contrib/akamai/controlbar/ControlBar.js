@@ -402,13 +402,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             } else if (menuType === "bitrate") {
                 return player.getAutoSwitchQualityFor(mediaType) ? 0 : player.getQualityFor(mediaType);
             } else if (menuType === "caption") {
-                var idx = 0
-                info.arr.some(function(element, index){
-                    if (element.defaultTrack) {
-                        idx = index + 1;
-                        return true;
-                    }
-                })
+                var idx = player.getCurrentTextTrackIndex() + 1;
 
                 return idx;
             }

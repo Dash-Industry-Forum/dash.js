@@ -56,7 +56,7 @@ a:hover {
         OPTIONS PANEL
 *****************************/
 .options-show {
-    height: 200px;
+    height: 230px;
     transition-property: all;
     transition-duration: .5s;
 }
@@ -76,7 +76,7 @@ a:hover {
     background-color: #dfe2e2;
     margin: 2px;
     padding: 5px;
-    min-height: 195px;
+    min-height: 225px;
     float: left;
 }
 

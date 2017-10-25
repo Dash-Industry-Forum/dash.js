@@ -186,14 +186,20 @@
                     <!--<button class="btn btn-primary license" type="button" ng-click="doLicenseFetch()">Pre-Fetch Licenses</button>-->
                 </div>
             </div>
-
+            <div class="options-item">
+                <div class="options-item-title">Initial Settings</div>
+                <div class="options-item-body">
+                    <label class="options-label">Audio:</label>
+                    <input type="text" class="form-control" placeholder="audio initial lang, e.g. 'en'" ng-model="initialSettings.audio">
+                    <label class="options-label">Text:</label>
+                    <input type="text" class="form-control" placeholder="text initial lang, e.g. 'en'" ng-model="initialSettings.text">
+                    <label class="options-label">Video:</label>
+                    <input type="text" class="form-control" placeholder="initial role, e.g. 'alternate'" ng-model="initialSettings.video">
+                </div>
+            </div>
             <div class="options-item">
                 <div class="options-item-title">Track Switch Mode</div>
                 <div class="options-item-body">
-                    <label class="options-label">Audio:</label>
-                    <input type="text" class="form-control" placeholder="initial lang, e.g. 'en'" ng-model="initialSettings.audio">
-                    <label class="options-label">Video:</label>
-                    <input type="text" class="form-control" placeholder="initial role, e.g. 'alternate'" ng-model="initialSettings.video">
                     <label data-toggle="tooltip" data-placement="right"
                            title="When a track is switched, the portion of the buffer that contains old track data is cleared">
                         <input  type="radio" id="always-replace" autocomplete="off" name="track-switch" checked="checked" ng-click="changeTrackSwitchMode('alwaysReplace', 'video')" >

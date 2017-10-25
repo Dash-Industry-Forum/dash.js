@@ -140,7 +140,8 @@ app.controller('DashController', function ($scope, sources, contributors) {
     $scope.drmData = [];
     $scope.initialSettings = {
         audio: null,
-        video: null
+        video: null,
+        text: null
     };
     $scope.mediaSettingsCacheEnabled = true;
     $scope.metricsTimer = null;
@@ -579,6 +580,9 @@ app.controller('DashController', function ($scope, sources, contributors) {
             $scope.player.setInitialMediaSettingsFor("video", {
                 role: $scope.initialSettings.video
             });
+        }
+        if ($scope.initialSettings.text) {
+            $scope.player.setTextDefaultLanguage($scope.initialSettings.text);
         }
         $scope.controlbar.enable();
     };
