@@ -203,7 +203,7 @@ module.exports = function (grunt) {
                     plugin: [
                         'browserify-derequire', 'bundle-collapser/plugin'
                     ],
-                    transform: ['babelify']
+                    transform: [['babelify', {compact: true}]]
                 }
             },
             protection: {
@@ -218,7 +218,7 @@ module.exports = function (grunt) {
                     plugin: [
                         'browserify-derequire', 'bundle-collapser/plugin'
                     ],
-                    transform: ['babelify']
+                    transform: [['babelify', {compact: true}]]
                 }
             },
             reporting: {
@@ -233,7 +233,7 @@ module.exports = function (grunt) {
                     plugin: [
                         'browserify-derequire', 'bundle-collapser/plugin'
                     ],
-                    transform: ['babelify']
+                    transform: [['babelify', {compact: true}]]
                 }
             },
             all: {
@@ -247,7 +247,7 @@ module.exports = function (grunt) {
                     plugin: [
                         'browserify-derequire', 'bundle-collapser/plugin'
                     ],
-                    transform: ['babelify']
+                    transform: [['babelify', {compact: true}]]
                 }
             },
             mss: {
@@ -261,7 +261,7 @@ module.exports = function (grunt) {
                     plugin: [
                         'browserify-derequire', 'bundle-collapser/plugin'
                     ],
-                    transform: ['babelify']
+                    transform: [['babelify', {compact: true}]]
                 }
             },
 
@@ -279,7 +279,7 @@ module.exports = function (grunt) {
                     plugin: [
                         'browserify-derequire'
                     ],
-                    transform: ['babelify']
+                    transform: [['babelify', {compact: true}]]
                 }
             },
             watch_dev: {
@@ -296,7 +296,7 @@ module.exports = function (grunt) {
                     plugin: [
                         ['browserify-derequire']
                     ],
-                    transform: ['babelify']
+                    transform: [['babelify', {compact: true}]]
                 }
             }
         },
