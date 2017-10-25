@@ -174,7 +174,7 @@ function TextTracks() {
                 }
             }
 
-            eventBus.trigger(Events.TEXT_TRACKS_ADDED, {
+            eventBus.trigger(Events.TEXT_TRACKS_QUEUE_INITIALIZED, {
                 index: currentTrackIdx,
                 tracks: textTrackQueue
             }); //send default idx.

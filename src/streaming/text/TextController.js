@@ -34,6 +34,8 @@ import TextSourceBuffer from './TextSourceBuffer';
 import TextTracks from './TextTracks';
 import VTTParser from '../utils/VTTParser';
 import TTMLParser from '../utils/TTMLParser';
+import EventBus from '../../core/EventBus';
+import Events from '../../core/events/Events';
 
 function TextController() {
 
@@ -50,16 +52,21 @@ function TextController() {
         streamController,
         textTracks,
         vttParser,
-        ttmlParser;
+        ttmlParser,
+        eventBus,
+        defaultLanguage;
 
     function setup() {
 
+        defaultLanguage = '';
         textTracks = TextTracks(context).getInstance();
         vttParser = VTTParser(context).getInstance();
         ttmlParser = TTMLParser(context).getInstance();
         textSourceBuffer = TextSourceBuffer(context).getInstance();
+        eventBus = EventBus(context).getInstance();
 
         textTracks.initialize();
+        eventBus.on(Events.TEXT_TRACKS_QUEUE_INITIALIZED, onTextTracksAdded, instance);
 
         resetInitialSettings();
     }
@@ -122,6 +129,37 @@ function TextController() {
         textSourceBuffer.addEmbeddedTrack(mediaInfo);
     }
 
+    function setTextDefaultLanguage(lang) {
+        if (typeof lang !== 'string') {
+            return;
+        }
+
+        defaultLanguage = lang;
+    }
+
+    function getTextDefaultLanguage() {
+        return defaultLanguage;
+    }
+
+    function onTextTracksAdded(e) {
+        let tracks = e.tracks;
+        let index = e.index;
+        // find track corresponding to default subtitle and apply it
+        let defaultLanguageIndex = tracks.findIndex((item) => {
+            return (item.lang === defaultLanguage);
+        });
+
+        if (defaultLanguageIndex !== -1) {
+            this.setTextTrack(defaultLanguageIndex);
+            index = defaultLanguageIndex;
+        }
+
+        eventBus.trigger(Events.TEXT_TRACKS_ADDED, {
+            index: index,
+            tracks: tracks
+        });
+    }
+
     function setTextTrack(idx) {
         //For external time text file,  the only action needed to change a track is marking the track mode to showing.
         // Fragmented text tracks need the additional step of calling TextController.setTextTrack();
@@ -177,6 +215,8 @@ function TextController() {
         getTextSourceBuffer: getTextSourceBuffer,
         getAllTracksAreDisabled: getAllTracksAreDisabled,
         addEmbeddedTrack: addEmbeddedTrack,
+        getTextDefaultLanguage: getTextDefaultLanguage,
+        setTextDefaultLanguage: setTextDefaultLanguage,
         setTextTrack: setTextTrack,
         getCurrentTrackIdx: getCurrentTrackIdx,
         reset: reset
