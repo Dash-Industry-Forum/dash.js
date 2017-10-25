@@ -33,19 +33,23 @@ import DVBReporting from './reporters/DVBReporting';
 
 function ReportingFactory(config) {
 
-    let knownReportingSchemeIdUris = {
+    const knownReportingSchemeIdUris = {
         'urn:dvb:dash:reporting:2014': DVBReporting
     };
 
-    let context = this.context;
-    let log = config.log;
+    const context = this.context;
+    const log = config.log;
+    const metricsConstants = config.metricsConstants;
+
     let instance;
 
     function create(entry, rangeController) {
         let reporting;
 
         try {
-            reporting = knownReportingSchemeIdUris[entry.schemeIdUri](context).create();
+            reporting = knownReportingSchemeIdUris[entry.schemeIdUri](context).create({
+                metricsConstants: metricsConstants
+            });
 
             reporting.initialize(entry, rangeController);
         } catch (e) {
