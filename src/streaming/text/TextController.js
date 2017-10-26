@@ -172,6 +172,9 @@ function TextController() {
     }
 
     function setTextDefaultEnabled(enable) {
+        if (typeof enable !== 'boolean') {
+            return;
+        }
         textDefaultEnabled = enable;
     }
 
@@ -180,6 +183,9 @@ function TextController() {
     }
 
     function enableText(enable) {
+        if (typeof enable !== 'boolean') {
+            return;
+        }
         let isTextEnabled = (!allTracksAreDisabled);
         if (isTextEnabled !== enable) {
             // change track selection

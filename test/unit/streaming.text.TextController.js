@@ -33,6 +33,7 @@ describe('TextController', function () {
 
     afterEach(function () {
         textController.reset();
+        textTracks.deleteAllTextTracks();
     });
 
     it('should return TextSourceBuffer instance', function () {
@@ -56,6 +57,79 @@ describe('TextController', function () {
             expect(textController.getTextDefaultLanguage()).to.equal('lang'); // jshint ignore:line
         });
 
+    });
+
+    describe('Method setTextDefaultEnabled', function () {
+        it('should not set text default enabled if enable is not a boolean', function () {
+            textController.setTextDefaultEnabled(-1);
+            expect(textController.getTextDefaultEnabled()).to.equal(true); // jshint ignore:line
+
+            textController.setTextDefaultEnabled();
+            expect(textController.getTextDefaultEnabled()).to.equal(true); // jshint ignore:line
+        });
+
+        it('should set text default enabled if enable is a boolean', function () {
+            textController.setTextDefaultEnabled(false);
+            expect(textController.getTextDefaultEnabled()).to.equal(false); // jshint ignore:line
+
+            textController.setTextDefaultEnabled(true);
+            expect(textController.getTextDefaultEnabled()).to.equal(true); // jshint ignore:line
+        });
+
+    });
+
+    describe('Method enableText', function () {
+        beforeEach(function () {
+            textTracks.addTextTrack({
+                index: 0,
+                kind: 'subtitles',
+                label: 'eng',
+                defaultTrack: true,
+                isTTML: true
+            }, 2);
+
+            textTracks.addTextTrack({
+                index: 1,
+                kind: 'subtitles',
+                label: 'fr',
+                defaultTrack: false,
+                isTTML: true
+            }, 2);
+        });
+
+        it('should not enable text if enable is not a boolean', function () {
+
+            let textEnabled = textController.isTextEnabled();
+
+            textController.enableText(-1);
+            expect(textController.isTextEnabled()).to.equal(textEnabled); // jshint ignore:line
+
+            textController.enableText();
+            expect(textController.isTextEnabled()).to.equal(textEnabled); // jshint ignore:line
+
+            textController.enableText('toto');
+            expect(textController.isTextEnabled()).to.equal(textEnabled); // jshint ignore:line
+        });
+
+        it('should do nothing trying to enable/disbale text if text is already enabled/disbaled', function () {
+
+            let textEnabled = textController.isTextEnabled();
+
+            textController.enableText(textEnabled);
+            expect(textController.isTextEnabled()).to.equal(textEnabled); // jshint ignore:line
+        });
+
+        it('should enable/disable text', function () {
+
+            let textEnabled = textController.isTextEnabled();
+            expect(textEnabled).to.equal(true); // jshint ignore:line
+
+            textController.enableText(false);
+            expect(textController.isTextEnabled()).to.equal(false); // jshint ignore:line
+
+            textController.enableText(true);
+            expect(textController.isTextEnabled()).to.equal(true); // jshint ignore:line
+        });
     });
 
     describe('Method setTextTrack', function () {
@@ -157,6 +231,27 @@ describe('TextController', function () {
             const onTracksAdded = function (e) {
                 expect(e.index).to.equal(1); // jshint ignore:line
                 expect(e.tracks.length).to.equal(textTracksQueue.length); // jshint ignore:line
+                eventBus.off(Events.TEXT_TRACKS_ADDED, onTracksAdded, this);
+                done();
+            };
+            eventBus.on(Events.TEXT_TRACKS_ADDED, onTracksAdded, this);
+
+            // send event
+            eventBus.trigger(Events.TEXT_TRACKS_QUEUE_INITIALIZED, event);
+        });
+
+        it('should enable text according to default enable', function (done) {
+            // init test
+            textController.setTextDefaultEnabled(false);
+
+            const event = {
+                index: initialIndex,
+                tracks: textTracksQueue
+            };
+            const onTracksAdded = function (e) {
+                expect(e.index).to.equal(1); // jshint ignore:line
+                expect(e.tracks.length).to.equal(textTracksQueue.length); // jshint ignore:line
+                expect(e.enabled).to.equal(false);
                 eventBus.off(Events.TEXT_TRACKS_ADDED, onTracksAdded, this);
                 done();
             };
