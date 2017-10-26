@@ -141,7 +141,8 @@ app.controller('DashController', function ($scope, sources, contributors) {
     $scope.initialSettings = {
         audio: null,
         video: null,
-        text: null
+        text: null,
+        textEnabled: true
     };
     $scope.mediaSettingsCacheEnabled = true;
     $scope.metricsTimer = null;
@@ -584,6 +585,7 @@ app.controller('DashController', function ($scope, sources, contributors) {
         if ($scope.initialSettings.text) {
             $scope.player.setTextDefaultLanguage($scope.initialSettings.text);
         }
+        $scope.player.setTextDefaultEnabled($scope.initialSettings.textEnabled);
         $scope.controlbar.enable();
     };
 

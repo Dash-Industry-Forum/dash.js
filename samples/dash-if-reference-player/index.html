@@ -191,10 +191,15 @@
                 <div class="options-item-body">
                     <label class="options-label">Audio:</label>
                     <input type="text" class="form-control" placeholder="audio initial lang, e.g. 'en'" ng-model="initialSettings.audio">
-                    <label class="options-label">Text:</label>
-                    <input type="text" class="form-control" placeholder="text initial lang, e.g. 'en'" ng-model="initialSettings.text">
                     <label class="options-label">Video:</label>
-                    <input type="text" class="form-control" placeholder="initial role, e.g. 'alternate'" ng-model="initialSettings.video">
+                    <input type="text" class="form-control" placeholder="initial role, e.g. 'alternate'" ng-model="initialSettings.video">        <label class="options-label">Text:</label>
+                    <input type="text" class="form-control" placeholder="text initial lang, e.g. 'en'" ng-model="initialSettings.text">
+                    <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                           title="Enable subtitle on loading text">
+                        <input type="checkbox" id="enableTextAtLoading" ng-model="initialSettings.textEnabled">
+                        Enable Text At Loading
+                    </label>
+
                 </div>
             </div>
             <div class="options-item">
