@@ -43,8 +43,7 @@ function TextController() {
     let instance;
     let textSourceBuffer;
 
-    let allTracksAreDisabled,
-        errHandler,
+    let errHandler,
         dashManifestModel,
         manifestModel,
         mediaController,
@@ -54,11 +53,16 @@ function TextController() {
         vttParser,
         ttmlParser,
         eventBus,
-        defaultLanguage;
+        defaultLanguage,
+        lastEnabledIndex,
+        textDefaultEnabled, // this is used for default settings (each time a file is loaded, we check value of this settings )
+        allTracksAreDisabled; // this is used for one session (when a file has been loaded, we use this settings to enable/disable text)
 
     function setup() {
 
         defaultLanguage = '';
+        lastEnabledIndex = -1;
+        textDefaultEnabled = true;
         textTracks = TextTracks(context).getInstance();
         vttParser = VTTParser(context).getInstance();
         ttmlParser = TTMLParser(context).getInstance();
@@ -154,10 +158,46 @@ function TextController() {
             index = defaultLanguageIndex;
         }
 
+        if (!textDefaultEnabled) {
+            // disable text at startup
+            this.setTextTrack(-1);
+        }
+
+        lastEnabledIndex = index;
         eventBus.trigger(Events.TEXT_TRACKS_ADDED, {
+            enabled: !allTracksAreDisabled,
             index: index,
             tracks: tracks
         });
+    }
+
+    function setTextDefaultEnabled(enable) {
+        textDefaultEnabled = enable;
+    }
+
+    function getTextDefaultEnabled() {
+        return textDefaultEnabled;
+    }
+
+    function enableText(enable) {
+        let isTextEnabled = (!allTracksAreDisabled);
+        if (isTextEnabled !== enable) {
+            // change track selection
+            if (enable) {
+                // apply last enabled tractk
+                this.setTextTrack(lastEnabledIndex);
+            }
+
+            if (!enable) {
+                // keep last index and disable text track
+                lastEnabledIndex = this.getCurrentTrackIdx();
+                this.setTextTrack(-1);
+            }
+        }
+    }
+
+    function isTextEnabled() {
+        return !allTracksAreDisabled;
     }
 
     function setTextTrack(idx) {
@@ -197,7 +237,6 @@ function TextController() {
     }
 
     function getCurrentTrackIdx() {
-        let textTracks = textSourceBuffer.getConfig().textTracks;
         return textTracks.getCurrentTrackIdx();
     }
 
@@ -217,6 +256,10 @@ function TextController() {
         addEmbeddedTrack: addEmbeddedTrack,
         getTextDefaultLanguage: getTextDefaultLanguage,
         setTextDefaultLanguage: setTextDefaultLanguage,
+        setTextDefaultEnabled: setTextDefaultEnabled,
+        getTextDefaultEnabled: getTextDefaultEnabled,
+        enableText: enableText,
+        isTextEnabled: isTextEnabled,
         setTextTrack: setTextTrack,
         getCurrentTrackIdx: getCurrentTrackIdx,
         reset: reset
