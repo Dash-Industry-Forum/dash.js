@@ -107,7 +107,7 @@ function MediaPlayerModel() {
         ABRStrategy = Constants.ABR_STRATEGY_DYNAMIC;
         useDefaultABRRules = true;
         fastSwitchEnabled = false;
-        skipGaps = false;
+        skipGaps = true;
         lastBitrateCachingInfo = {
             enabled: true,
             ttl: DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION

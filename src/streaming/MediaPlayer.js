@@ -993,9 +993,6 @@ function MediaPlayer() {
      */
     function setSkipGaps(value) {
         mediaPlayerModel.setSkipGaps(value);
-        if (streamController !== undefined) {
-            streamController.setSkipGaps(value);
-        }
     }
 
     /**
