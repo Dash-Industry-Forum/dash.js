@@ -67,7 +67,7 @@ function AbandonRequestsRule(config) {
         const switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, {name: AbandonRequestsRule.__dashjs_factory_name});
 
         if (!rulesContext || !rulesContext.hasOwnProperty('getMediaInfo') || !rulesContext.hasOwnProperty('getMediaType') || !rulesContext.hasOwnProperty('getCurrentRequest') ||
-            !rulesContext.hasOwnProperty('getTrackInfo') || !rulesContext.hasOwnProperty('getAbrController')) {
+            !rulesContext.hasOwnProperty('getRepresentationInfo') || !rulesContext.hasOwnProperty('getAbrController')) {
             return switchRequest;
         }
 
@@ -76,7 +76,6 @@ function AbandonRequestsRule(config) {
         const req = rulesContext.getCurrentRequest();
 
         if (!isNaN(req.index)) {
-
             setFragmentRequestDict(mediaType, req.index);
 
             const stableBufferTime = mediaPlayerModel.getStableBufferTime();
@@ -112,7 +111,6 @@ function AbandonRequestsRule(config) {
                 const totalSampledValue = throughputArray[mediaType].reduce((a, b) => a + b, 0);
                 fragmentInfo.measuredBandwidthInKbps = Math.round(totalSampledValue / throughputArray[mediaType].length);
                 fragmentInfo.estimatedTimeOfDownload = +((fragmentInfo.bytesTotal * 8 / fragmentInfo.measuredBandwidthInKbps) / 1000).toFixed(2);
-                //log("id:",fragmentInfo.id, "kbps:", fragmentInfo.measuredBandwidthInKbps, "etd:",fragmentInfo.estimatedTimeOfDownload, fragmentInfo.bytesLoaded);
 
                 if (fragmentInfo.estimatedTimeOfDownload < fragmentInfo.segmentDuration * ABANDON_MULTIPLIER || rulesContext.getRepresentationInfo().quality === 0 ) {
                     return switchRequest;

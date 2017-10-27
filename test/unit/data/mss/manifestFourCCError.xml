@@ -1,0 +1,10 @@
+<SmoothStreamingMedia MajorVersion="1" MinorVersion="0" Duration="4084405506">
+    <StreamIndex Type="video" Chunks="208" Url="QualityLevels({bitrate})/Fragments(video={start time})">
+        <QualityLevel Index="0" Bitrate="3000000" Width="1280" Height="720" CodecPrivateData="00000001674d401fe9808009360294141815000003000100000300329c91c313800000000168efbc80"/>
+        <c n="0" d="19686294"/>
+    </StreamIndex>
+    <StreamIndex Type="audio" Chunks="208" Url="QualityLevels({bitrate})/Fragments(audio={start time})">
+        <QualityLevel Index="0" Bitrate="64000"  CodecPrivateData=""/>
+        <c n="0" d="19969160"/>
+    </StreamIndex>
+</SmoothStreamingMedia>

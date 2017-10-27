@@ -1,5 +1,5 @@
 import AbandonRequestsRule from '../../src/streaming/rules/abr/AbandonRequestsRule';
-
+import SwitchRequest from '../../src/streaming/rules/SwitchRequest';
 import MetricsModelMock from './mocks/MetricsModelMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
 import DashMetricsMock from './mocks/DashMetricsMock';
@@ -14,7 +14,7 @@ describe('AbandonRequestsRule', function () {
         const abandonRequestsRule = AbandonRequestsRule(context).create({});
         const abandonRequest = abandonRequestsRule.shouldAbandon();
 
-        expect(abandonRequest.quality).to.be.equal(-1);  // jshint ignore:line
+        expect(abandonRequest.quality).to.be.equal(SwitchRequest.NO_CHANGE);  // jshint ignore:line
     });
 
     it('should return an empty switchRequest when shouldAbandon function is called with a mock parameter', function () {
@@ -30,6 +30,6 @@ describe('AbandonRequestsRule', function () {
 
         const abandonRequest = abandonRequestsRule.shouldAbandon(rulesContextMock);
 
-        expect(abandonRequest.quality).to.be.equal(-1);  // jshint ignore:line
+        expect(abandonRequest.quality).to.be.equal(SwitchRequest.NO_CHANGE);  // jshint ignore:line
     });
 });

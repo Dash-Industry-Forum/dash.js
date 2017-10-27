@@ -34,7 +34,6 @@ import Stream from '../Stream';
 import ManifestUpdater from '../ManifestUpdater';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
-import URIQueryAndFragmentModel from '../models/URIQueryAndFragmentModel';
 import MediaPlayerModel from '../models/MediaPlayerModel';
 import FactoryMaker from '../../core/FactoryMaker';
 import {
@@ -43,6 +42,7 @@ import {
 } from '../vo/metrics/PlayList';
 import Debug from '../../core/Debug';
 import InitCache from '../utils/InitCache';
+import URLUtils from '../utils/URLUtils';
 import MediaPlayerEvents from '../MediaPlayerEvents';
 import TimeSyncController from './TimeSyncController';
 import BaseURLController from './BaseURLController';
@@ -82,6 +82,7 @@ function StreamController() {
         textController,
         sourceBufferController,
         initCache,
+        urlUtils,
         errHandler,
         timelineConverter,
         streams,
@@ -110,6 +111,7 @@ function StreamController() {
         baseURLController = BaseURLController(context).getInstance();
         mediaSourceController = MediaSourceController(context).getInstance();
         initCache = InitCache(context).getInstance();
+        urlUtils = URLUtils(context).getInstance();
 
         resetInitialSettings();
     }

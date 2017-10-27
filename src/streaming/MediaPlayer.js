@@ -131,7 +131,7 @@ function MediaPlayer() {
     }
 
     /**
-     * Configure media plyer with customs controllers. Helpful for tests
+     * Configure media player with customs controllers. Helpful for tests
      *
      * @param {object=} config controllers configuration
      * @memberof module:MediaPlayer
@@ -1942,6 +1942,9 @@ function MediaPlayer() {
      * @instance
      */
     function setInitialMediaSettingsFor(type, value) {
+        if (!mediaPlayerInitialized) {
+            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+        }
         mediaController.setInitialSettings(type, value);
     }
 
@@ -1959,6 +1962,9 @@ function MediaPlayer() {
      * @instance
      */
     function getInitialMediaSettingsFor(type) {
+        if (!mediaPlayerInitialized) {
+            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+        }
         return mediaController.getInitialSettings(type);
     }
 
@@ -1983,6 +1989,9 @@ function MediaPlayer() {
      * @instance
      */
     function getTrackSwitchModeFor(type) {
+        if (!mediaPlayerInitialized) {
+            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+        }
         return mediaController.getSwitchMode(type);
     }
 
@@ -2001,6 +2010,9 @@ function MediaPlayer() {
      * @instance
      */
     function setTrackSwitchModeFor(type, mode) {
+        if (!mediaPlayerInitialized) {
+            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+        }
         mediaController.setSwitchMode(type, mode);
     }
 
@@ -2019,6 +2031,9 @@ function MediaPlayer() {
      * @instance
      */
     function setSelectionModeForInitialTrack(mode) {
+        if (!mediaPlayerInitialized) {
+            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+        }
         mediaController.setSelectionModeForInitialTrack(mode);
     }
 
@@ -2030,6 +2045,9 @@ function MediaPlayer() {
      * @instance
      */
     function getSelectionModeForInitialTrack() {
+        if (!mediaPlayerInitialized) {
+            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+        }
         return mediaController.getSelectionModeForInitialTrack();
     }
 
