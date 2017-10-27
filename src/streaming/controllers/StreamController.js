@@ -172,21 +172,20 @@ function StreamController() {
             const mediaBuffer = streamProcessors[i].getBuffer();
             const sourceBufferController = SourceBufferController(context).getInstance();
             const ranges = sourceBufferController.getAllRanges(mediaBuffer);
-            let currentRangeIndex;
+            let nextRangeIndex = undefined;
             if (!ranges || ranges.length <= 1) continue;
 
             for (let j = 0; j < ranges.length; j++) {
-                if (time >= ranges.start(j) && time <= ranges.end(j)) {
-                    currentRangeIndex = j;
+                if (time < ranges.start(j)) {
+                    nextRangeIndex = j;
                     break;
                 }
             }
 
-            let nextRangeStartTime;
-            if (currentRangeIndex < ranges.length - 1) {
-                nextRangeStartTime = ranges.start(currentRangeIndex + 1);
+            if (nextRangeIndex !== undefined) {
+                const nextRangeStartTime = ranges.start(nextRangeIndex);
 
-                const gap = nextRangeStartTime - ranges.end(currentRangeIndex);
+                const gap = nextRangeStartTime - time;
                 if (gap > 0 && gap <= LOSS_TOLERANCE_THRESHOLD) {
                     if (skipToPosition === undefined || nextRangeStartTime > skipToPosition) {
                         skipToPosition = nextRangeStartTime;
@@ -571,7 +570,7 @@ function StreamController() {
 
             const manifestUTCTimingSources = dashManifestModel.getUTCTimingSources(e.manifest);
             const allUTCTimingSources = (!dashManifestModel.getIsDynamic(manifest) || useCalculatedLiveEdgeTime) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(mediaPlayerModel.getUTCTimingSources());
-            const isHTTPS = URIQueryAndFragmentModel(context).getInstance().isManifestHTTPS();
+            const isHTTPS = urlUtils.isHTTPS(e.manifest.url);
 
             //If https is detected on manifest then lets apply that protocol to only the default time source(s). In the future we may find the need to apply this to more then just default so left code at this level instead of in MediaPlayer.
             allUTCTimingSources.forEach(function (item) {
