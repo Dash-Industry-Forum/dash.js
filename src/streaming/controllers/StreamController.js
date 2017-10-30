@@ -172,7 +172,7 @@ function StreamController() {
             const mediaBuffer = streamProcessors[i].getBuffer();
             const sourceBufferController = SourceBufferController(context).getInstance();
             const ranges = sourceBufferController.getAllRanges(mediaBuffer);
-            let nextRangeIndex = undefined;
+            let nextRangeIndex;
             if (!ranges || ranges.length <= 1) continue;
 
             for (let j = 0; j < ranges.length; j++) {
