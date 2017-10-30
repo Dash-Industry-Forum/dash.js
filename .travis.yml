@@ -1,18 +1,29 @@
 language: node_js
 node_js:
-    - stable
+  - stable
 addons:
-    browserstack:
-      username: dashJSUserName
-      access_key:
-          secure: dashJSEncryptedAccessKey
+  browserstack:
+    username: epiclabsdash1
+    access_key:
+      secure: C0QNpumKXngZA7+nP5VsThSqrIPNnz3pU34oOpmmyrCJmY5clc/TvQJjp9ixu6TrSUrfEQhePU+eKM2F1qkmGVNIa0QqFZbqX8AkaJdtCLpn9EampSW0re76q8k7lhF35mP1lzxu6W3nqRQodbDxbHLt1OZ+BcUwuNkZW22vY5A=
+stages:
+  - build
+  - name: test
+    # If job triggered by cron job, then run functional tests
+    if: type = cron
+    script: npm run test_functional
+matrix:
+  - BROWSER=chrome
+  - BROWSER=firefox
+  - BROWSER=edge
+  - BROWSER=ie
 before_install: npm install -g grunt-cli
 after_success:
   - test $TRAVIS_BRANCH = "development" && grunt deploy --ftp-host=$DEPLOY_HOST --ftp-user=$DEPLOY_USER --ftp-pass=$DEPLOY_PASSWORD
 install:
-    - npm install
-script:
-    # Build the source files
-    - npm run build
-     # If job triggered by cron job, then run tests
-    - if [[ "$TRAVIS_EVENT_TYPE" = "cron" ]]; then npm run test_functional ; fi
+  - npm install
+include:
+  - stage: build
+    script:
+      # Build the source files
+      - npm run build
