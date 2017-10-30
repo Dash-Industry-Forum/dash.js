@@ -3,29 +3,42 @@
 
 <head>
     <meta charset="utf-8" />
-     <meta http-equiv="pragma" content="no-cache" />
+    <meta http-equiv="pragma" content="no-cache" />
     <meta http-equiv="cache-control" content="no-cache" />
-    <title>Baseline hasplayer.js Player</title>
+    <title>Baseline dash.js Player</title>
     <meta name="description" content="" />
-
-    <!-- sources -->
-    <script src="../../app//lib/log4javascript.js"></script>
-
-    <script src="../../dist/dash.all.debug.js"></script>
-    <script src="../../dist/dash.mss.debug.js"></script>
-    <!-- endsources -->
 
     <script>
         var player = null;
         var video = null;
-
+        var mssPackage = null;
+        function getURLParameter(name) {
+            return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null;
+        }
+        mssPackage = getURLParameter('mss');
+        var scriptTagDashjs = document.createElement('script');
+        scriptTagDashjs.type = "application/javascript";
+        scriptTagDashjs.src = "../../dist/dash.all.debug.js";
+        
+        document.head.appendChild(scriptTagDashjs);
+        scriptTagDashjs.onload = function(){
+            if (mssPackage) {
+                var scriptTagMss = document.createElement('script');
+                scriptTagMss.type = "application/javascript";
+                scriptTagMss.src = "../../dist/dash.mss.debug.js";
+                document.head.appendChild(scriptTagMss);
+            }
+        };
+        function loadVideo() {
+            if (!player) {
+                video = document.querySelector(".dash-video-player video");
+                player = dashjs.MediaPlayer().create();
+                player.initialize(video, null, true);
+                player.attachVideoContainer(document.querySelector(".dash-video-player"));
+            }
+        }
         function initVideo() {
-
-            video = document.querySelector(".dash-video-player video");
-
-            player = dashjs.MediaPlayer().create();
-            player.initialize(video, null, true);
-            player.attachVideoContainer(document.querySelector(".dash-video-player"));
+            loadVideo();
         }
     </script>
 
