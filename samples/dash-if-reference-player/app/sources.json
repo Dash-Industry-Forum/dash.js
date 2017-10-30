@@ -1147,6 +1147,38 @@
       ]
     },
     {
+      "name": "Microsoft Test Content",
+      "submenu": [
+        {
+          "name": "Microsoft AZURE MEDIA SERVICES ON DEMAND H264 AAC 4K CENC PLAYREADY 2.0",
+          "url": "http://profficialsite.origin.mediaservices.windows.net/c51358ea-9a5e-4322-8951-897d640fdfd7/tearsofsteel_4k.ism/manifest(format=mpd-time-csf)",
+          "protData": {
+            "com.microsoft.playready": {
+              "serverURL": "http://test.playready.microsoft.com/service/rightsmanager.asmx"
+            }
+          }
+        },
+        {
+          "name": "Source: XBox One commercial video",
+          "url": "http://profficialsite.origin.mediaservices.windows.net/9cc5e871-68ec-42c2-9fc7-fda95521f17d/dayoneplayready.ism/manifest(format=mpd-time-csf)",
+          "protData": {
+            "com.microsoft.playready": {
+              "serverURL": "http://test.playready.microsoft.com/service/rightsmanager.asmx"
+            }
+          }
+        },
+        {
+          "name": "AZURE MEDIA SERVICES LIVE PLAYREADY 2.0",
+          "url": "http://profficialsite.origin.mediaservices.windows.net/9cc5e871-68ec-42c2-9fc7-fda95521f17d/dayoneplayready.ism/manifest(format=mpd-time-csf)",
+          "protData": {
+            "com.microsoft.playready": {
+              "serverURL": "http://test.playready.microsoft.com/service/rightsmanager.asmx"
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "Wowza Test Content",
       "submenu": [
         {
