@@ -442,7 +442,7 @@ function AbrController() {
     }
 
     function getAbandonmentStateFor(type) {
-        return abandonmentStateDict[type].state;
+        return abandonmentStateDict[type] ? abandonmentStateDict[type].state : null;
     }
 
     /**
