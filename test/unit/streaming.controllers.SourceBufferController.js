@@ -13,12 +13,10 @@ const context = {};
 const eventBus = EventBus(context).getInstance();
 
 describe('SourceBufferController', function () {
-
     let sourceBufferController;
     let textControllerMock;
 
     beforeEach(function () {
-
         textControllerMock = new TextControllerMock();
         sourceBufferController = SourceBufferController(context).getInstance({
             textController: textControllerMock
@@ -31,56 +29,56 @@ describe('SourceBufferController', function () {
 
     describe('Method createSourceBuffer', function () {
         it('should create and return a buffer', function () {
-            let mediaInfo = {
+            const mediaInfo = {
                 codec: 'video/webm; codecs="vp8, vorbis"'
             };
 
-            let mediaSource = new MediaSourceMock();
+            const mediaSource = new MediaSourceMock();
 
-            let buffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
+            const buffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
             expect(buffer).to.be.instanceOf(MediaSourceBufferMock);
         });
 
         it('should create and return a text buffer if codec is of type application/mp4;codecs="stpp"', function () {
-            let mediaInfo = {
+            const mediaInfo = {
                 codec: 'application/mp4;codecs="stpp"'
             };
 
-            let mediaSource = new MediaSourceMock();
+            const mediaSource = new MediaSourceMock();
 
-            let buffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
+            const buffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
             expect(buffer).to.be.instanceOf(TextBufferMock);
         });
 
         it('should create and return a text buffer if codec is of type application/mp4;codecs="wvtt"', function () {
-            let mediaInfo = {
+            const mediaInfo = {
                 codec: 'application/mp4;codecs="wvtt"'
             };
 
-            let mediaSource = new MediaSourceMock();
+            const mediaSource = new MediaSourceMock();
 
-            let buffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
+            const buffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
             expect(buffer).to.be.instanceOf(TextBufferMock);
         });
 
         it('should create and return a text buffer if codec is of type text', function () {
-            let mediaInfo = {
+            const mediaInfo = {
                 codec: 'text',
                 isText: true
             };
 
-            let mediaSource = new MediaSourceMock();
+            const mediaSource = new MediaSourceMock();
 
-            let buffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
+            const buffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
             expect(buffer).to.be.instanceOf(TextBufferMock);
         });
 
         it('should throw an error if codec is unknonw', function () {
-            let mediaInfo = {
+            const mediaInfo = {
                 codec: 'unknown'
             };
 
-            let mediaSource = new MediaSourceMock();
+            const mediaSource = new MediaSourceMock();
             // http://chaijs.com/api/bdd/#method_throw
             expect(function () {
                 sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
@@ -90,29 +88,28 @@ describe('SourceBufferController', function () {
 
     describe('Method removeSourceBuffer', function () {
         it('should remove a created buffer', function () {
-            let mediaInfo = {
+            const mediaInfo = {
                 codec: 'video/webm; codecs="vp8, vorbis"'
             };
 
-            let mediaSource = new MediaSourceMock();
+            const mediaSource = new MediaSourceMock();
 
-            let buffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
+            const buffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
             expect(mediaSource.buffers).to.have.lengthOf(1);
 
             sourceBufferController.removeSourceBuffer(mediaSource, buffer);
             expect(mediaSource.buffers).to.have.lengthOf(0);
-
         });
     });
 
     describe('Method getBufferRange', function () {
         let buffer;
         beforeEach(function () {
-            let mediaInfo = {
+            const mediaInfo = {
                 codec: 'video/webm; codecs="vp8, vorbis"'
             };
 
-            let mediaSource = new MediaSourceMock();
+            const mediaSource = new MediaSourceMock();
             buffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
             expect(mediaSource.buffers).to.have.lengthOf(1);
         });
@@ -152,7 +149,7 @@ describe('SourceBufferController', function () {
                 start: 10.1,
                 end: 11
             });
-            let range = sourceBufferController.getBufferRange(buffer, 10);
+            const range = sourceBufferController.getBufferRange(buffer, 10);
             expect(range.start).to.equal(9);
             expect(range.end).to.equal(11);
         });
@@ -174,7 +171,7 @@ describe('SourceBufferController', function () {
                 start: 10.5,
                 end: 11
             });
-            let range = sourceBufferController.getBufferRange(buffer, 10);
+            const range = sourceBufferController.getBufferRange(buffer, 10);
             expect(range).to.be.null; // jshint ignore:line
         });
 
@@ -195,7 +192,7 @@ describe('SourceBufferController', function () {
                 start: 10.1,
                 end: 11
             });
-            let range = sourceBufferController.getBufferRange(buffer, 10);
+            const range = sourceBufferController.getBufferRange(buffer, 10);
             expect(range.start).to.equal(10.1);
             expect(range.end).to.equal(11);
         });
@@ -204,11 +201,11 @@ describe('SourceBufferController', function () {
     describe('Method getAllRanges', function () {
         let buffer;
         beforeEach(function () {
-            let mediaInfo = {
+            const mediaInfo = {
                 codec: 'video/webm; codecs="vp8, vorbis"'
             };
 
-            let mediaSource = new MediaSourceMock();
+            const mediaSource = new MediaSourceMock();
             buffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
             expect(mediaSource.buffers).to.have.lengthOf(1);
         });
@@ -226,7 +223,7 @@ describe('SourceBufferController', function () {
                 start: 9,
                 end: 11
             });
-            let ranges = sourceBufferController.getAllRanges(buffer);
+            const ranges = sourceBufferController.getAllRanges(buffer);
             expect(ranges.length).to.equal(3);
             expect(ranges.start(0)).to.equal(2);
             expect(ranges.end(0)).to.equal(5);
@@ -240,23 +237,21 @@ describe('SourceBufferController', function () {
     describe('Method getTotalBufferedTime', function () {
         let buffer;
         beforeEach(function () {
-            let mediaInfo = {
+            const mediaInfo = {
                 codec: 'video/webm; codecs="vp8, vorbis"'
             };
 
-            let mediaSource = new MediaSourceMock();
+            const mediaSource = new MediaSourceMock();
             buffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
             expect(mediaSource.buffers).to.have.lengthOf(1);
         });
 
         it('should return 0 if no buffer', function () {
-
-            let totalBufferedTime = sourceBufferController.getTotalBufferedTime(buffer);
+            const totalBufferedTime = sourceBufferController.getTotalBufferedTime(buffer);
             expect(totalBufferedTime).to.equal(0);
         });
 
         it('should return totalBufferedTime ', function () {
-
             buffer.addRange({
                 start: 2,
                 end: 5
@@ -265,7 +260,7 @@ describe('SourceBufferController', function () {
                 start: 8,
                 end: 9
             });
-            let totalBufferedTime = sourceBufferController.getTotalBufferedTime(buffer);
+            const totalBufferedTime = sourceBufferController.getTotalBufferedTime(buffer);
             expect(totalBufferedTime).to.equal(4);
         });
     });
@@ -273,33 +268,30 @@ describe('SourceBufferController', function () {
     describe('Method getBufferLength', function () {
         let buffer;
         beforeEach(function () {
-            let mediaInfo = {
+            const mediaInfo = {
                 codec: 'video/webm; codecs="vp8, vorbis"'
             };
 
-            let mediaSource = new MediaSourceMock();
+            const mediaSource = new MediaSourceMock();
             buffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
             expect(mediaSource.buffers).to.have.lengthOf(1);
         });
 
         it('should return 0 if no buffer', function () {
-
-            let totalBufferedLength = sourceBufferController.getBufferLength(buffer, 10);
+            const totalBufferedLength = sourceBufferController.getBufferLength(buffer, 10);
             expect(totalBufferedLength).to.equal(0);
         });
 
         it('should return 0 if no data buffered in time', function () {
-
             buffer.addRange({
                 start: 2,
                 end: 5
             });
-            let totalBufferedLength = sourceBufferController.getBufferLength(buffer, 10);
+            const totalBufferedLength = sourceBufferController.getBufferLength(buffer, 10);
             expect(totalBufferedLength).to.equal(0);
         });
 
         it('should return buffer length ', function () {
-
             buffer.addRange({
                 start: 2,
                 end: 5
@@ -313,21 +305,125 @@ describe('SourceBufferController', function () {
                 start: 9,
                 end: 11
             });
-            let totalBufferedLength = sourceBufferController.getBufferLength(buffer, 10);
+            const totalBufferedLength = sourceBufferController.getBufferLength(buffer, 10);
             expect(totalBufferedLength).to.equal(1);
         });
     });
 
-    describe('Method append', function () {
-
-        it('should append data to buffer', function (done) {
-
-            let mediaInfo = {
+    describe('Method getRangesAsSingleRange', function () {
+        let buffer;
+        beforeEach(function () {
+            const mediaInfo = {
                 codec: 'video/webm; codecs="vp8, vorbis"'
             };
 
-            let mediaSource = new MediaSourceMock();
-            let buffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
+            const mediaSource = new MediaSourceMock();
+            buffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
+            expect(mediaSource.buffers).to.have.lengthOf(1);
+        });
+
+        it('should return null if no buffer', function () {
+            const range = sourceBufferController.getRangesAsSingleRange(buffer);
+            expect(range).to.be.null; // jshint ignore:line
+        });
+
+        it('should return null if no data buffered in time', function () {
+            buffer.addRange({
+                start: 2,
+                end: 5
+            });
+            const range = sourceBufferController.getRangesAsSingleRange(buffer, 6);
+            expect(range).to.be.null; // jshint ignore:line
+        });
+
+        it('should return a single range combining all buffer ranges', function () {
+            buffer.addRange({
+                start: 2,
+                end: 5
+            });
+            buffer.addRange({
+                start: 8,
+                end: 9
+            });
+
+            buffer.addRange({
+                start: 9,
+                end: 11
+            });
+
+            buffer.addRange({
+                start: 40,
+                end: 100
+            });
+
+            const range = sourceBufferController.getRangesAsSingleRange(buffer);
+            expect(range.start).to.equal(2);
+            expect(range.end).to.equal(100);
+        });
+
+        it('should return a single range combining all buffer ranges filtering by buffer start time', function () {
+            buffer.addRange({
+                start: 2,
+                end: 5
+            });
+            buffer.addRange({
+                start: 8,
+                end: 9
+            });
+
+            buffer.addRange({
+                start: 9,
+                end: 11
+            });
+
+            buffer.addRange({
+                start: 40,
+                end: 100
+            });
+
+            let range = sourceBufferController.getRangesAsSingleRange(buffer, 4);
+            expect(range.start).to.equal(8);
+            expect(range.end).to.equal(100);
+
+            range = sourceBufferController.getRangesAsSingleRange(buffer, 12);
+            expect(range.start).to.equal(40);
+            expect(range.end).to.equal(100);
+        });
+
+        it('should return a single range including ranges whose range(i).start is greater than fromTime', function () {
+            buffer.addRange({
+                start: 2,
+                end: 5
+            });
+            buffer.addRange({
+                start: 8,
+                end: 9
+            });
+
+            buffer.addRange({
+                start: 9,
+                end: 11
+            });
+
+            buffer.addRange({
+                start: 40,
+                end: 100
+            });
+
+            const range = sourceBufferController.getRangesAsSingleRange(buffer, 8);
+            expect(range.start).to.equal(9);
+            expect(range.end).to.equal(100);
+        });
+    });
+
+    describe('Method append', function () {
+        it('should append data to buffer', function (done) {
+            const mediaInfo = {
+                codec: 'video/webm; codecs="vp8, vorbis"'
+            };
+
+            const mediaSource = new MediaSourceMock();
+            const buffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
             expect(mediaSource.buffers).to.have.lengthOf(1);
 
             function onAppend(/*e*/) {
@@ -341,15 +437,14 @@ describe('SourceBufferController', function () {
         });
 
         it('should append data to text buffer', function (done) {
-
-            let mediaInfo = {
+            const mediaInfo = {
                 codec: 'text',
                 isText: true
             };
 
-            let mediaSource = new MediaSourceMock();
+            const mediaSource = new MediaSourceMock();
 
-            let buffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
+            const buffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
             expect(buffer).to.be.instanceOf(TextBufferMock);
 
             function onAppend(/*e*/) {
@@ -364,15 +459,13 @@ describe('SourceBufferController', function () {
     });
 
     describe('Method remove', function () {
-
         it('should remove data from buffer', function (done) {
-
-            let mediaInfo = {
+            const mediaInfo = {
                 codec: 'video/webm; codecs="vp8, vorbis"'
             };
 
-            let mediaSource = new MediaSourceMock();
-            let buffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
+            const mediaSource = new MediaSourceMock();
+            const buffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
             expect(mediaSource.buffers).to.have.lengthOf(1);
 
             function onAppend(/*e*/) {
@@ -395,15 +488,13 @@ describe('SourceBufferController', function () {
     });
 
     describe('Method abort', function () {
-
         it('should abort', function () {
-
-            let mediaInfo = {
+            const mediaInfo = {
                 codec: 'video/webm; codecs="vp8, vorbis"'
             };
 
-            let mediaSource = new MediaSourceMock();
-            let buffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
+            const mediaSource = new MediaSourceMock();
+            const buffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
             expect(mediaSource.buffers).to.have.lengthOf(1);
 
             expect(buffer.aborted).to.be.false; // jshint ignore:line
@@ -412,14 +503,13 @@ describe('SourceBufferController', function () {
         });
 
         it('should not abort if media source is not opened', function () {
-
-            let mediaInfo = {
+            const mediaInfo = {
                 codec: 'video/webm; codecs="vp8, vorbis"'
             };
 
-            let mediaSource = new MediaSourceMock();
+            const mediaSource = new MediaSourceMock();
             mediaSource.readyState = 'closed';
-            let buffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
+            const buffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
             expect(mediaSource.buffers).to.have.lengthOf(1);
 
             expect(buffer.aborted).to.be.false; // jshint ignore:line
@@ -427,5 +517,4 @@ describe('SourceBufferController', function () {
             expect(buffer.aborted).to.be.false; // jshint ignore:line
         });
     });
-
 });
