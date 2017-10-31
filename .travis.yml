@@ -7,8 +7,11 @@ addons:
     access_key:
       secure: C0QNpumKXngZA7+nP5VsThSqrIPNnz3pU34oOpmmyrCJmY5clc/TvQJjp9ixu6TrSUrfEQhePU+eKM2F1qkmGVNIa0QqFZbqX8AkaJdtCLpn9EampSW0re76q8k7lhF35mP1lzxu6W3nqRQodbDxbHLt1OZ+BcUwuNkZW22vY5A=
 stages:
+  - name: build
+    # Run build stage except if cron job
+    if: type != cron
   - name: test
-    # If job triggered by cron job, then run functional tests
+    # Run functional tests only if cron joib
     if: type = cron
 env:
   matrix:
@@ -24,8 +27,6 @@ install:
 jobs:
   include:
     - stage: build
-      # If job triggered by cron job, then do not run build
-      if: type != cron
       script:
         # Build the source files
         - npm run build
