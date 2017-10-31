@@ -123,6 +123,10 @@ function Stream(config) {
             fragmentModel.removeExecutedRequestsBeforeTime(this.getStartTime() + this.getDuration());
             streamProcessors[i].reset();
         }
+        //all stream processors have been destroyed, stream has to reset abrController which has reference on stream processors.
+        if (abrController) {
+            abrController.reset();
+        }
         streamProcessors = [];
         isStreamActivated = false;
         isMediaInitialized = false;
