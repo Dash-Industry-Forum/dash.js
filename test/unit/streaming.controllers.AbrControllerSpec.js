@@ -46,6 +46,11 @@ describe('AbrController', function () {
         abrCtrl.reset();
     });
 
+    it('should return null when attempting to get abandonment state when abandonmentStateDict array is empty', function () {
+        const state = abrCtrl.getAbandonmentStateFor('audio');
+        expect(state).to.be.null;    // jshint ignore:line
+    });
+
     it('should update top quality index', function () {
         const expectedTopQuality = representationCount - 1;
         let actualTopQuality;
