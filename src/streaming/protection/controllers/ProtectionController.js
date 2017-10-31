@@ -539,9 +539,6 @@ function ProtectionController(config) {
         const updateHeaders = function (headers) {
             if (headers) {
                 for (const key in headers) {
-                    if ('authorization' === key.toLowerCase()) {
-                        xhr.withCredentials = true;
-                    }
                     xhr.setRequestHeader(key, headers[key]);
                 }
             }
@@ -552,8 +549,8 @@ function ProtectionController(config) {
         updateHeaders(keySystem.getRequestHeadersFromMessage(message));
 
         // Set withCredentials property from protData
-        if (protData && protData.withCredentials) {
-            xhr.withCredentials = true;
+        if (protData && typeof protData.withCredentials == 'boolean') {
+            xhr.withCredentials = protData.withCredentials;
         }
 
         xhr.send(keySystem.getLicenseRequestFromMessage(message));
