@@ -418,6 +418,7 @@ function Stream(config) {
             log(msg);
         } else {
             //log("Playback initialized!");
+            eventBus.trigger(Events.SOURCE_INITIALIZED);
             checkIfInitializationCompleted();
         }
     }
