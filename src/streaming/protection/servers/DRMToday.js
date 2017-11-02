@@ -63,6 +63,12 @@ function DRMToday(config) {
 
     let instance;
 
+    function checkConfig() {
+        if (!BASE64 || !BASE64.hasOwnProperty('decodeArray')) {
+            throw new Error('Missing config parameter(s)');
+        }
+    }
+
     function getServerURLFromMessage(url /*, message, messageType*/) {
         return url;
     }
@@ -76,6 +82,7 @@ function DRMToday(config) {
     }
 
     function getLicenseMessage(serverResponse, keySystemStr/*, messageType*/) {
+        checkConfig();
         return keySystems[keySystemStr].getLicenseMessage(serverResponse);
     }
 

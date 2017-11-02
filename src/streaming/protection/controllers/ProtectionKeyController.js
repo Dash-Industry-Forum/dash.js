@@ -189,7 +189,8 @@ function ProtectionKeyController() {
                         if (!!initData) {
                             supportedKS.push({
                                 ks: keySystems[ksIdx],
-                                initData: initData
+                                initData: initData,
+                                cdmData: ks.getCDMData()
                             });
                         }
                     }
@@ -260,7 +261,7 @@ function ProtectionKeyController() {
 
         let licenseServerData = null;
         if (protData && protData.hasOwnProperty('drmtoday')) {
-            licenseServerData = DRMToday(context).getInstance();
+            licenseServerData = DRMToday(context).getInstance({BASE64: BASE64});
         } else if (keySystem.systemString === 'com.widevine.alpha') {
             licenseServerData = Widevine(context).getInstance();
         } else if (keySystem.systemString === 'com.microsoft.playready') {

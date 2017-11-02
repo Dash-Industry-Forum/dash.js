@@ -112,6 +112,10 @@ function KeySystemWidevine(config) {
         return null;
     }
 
+    function getCDMData() {
+        return null;
+    }
+
     instance = {
         uuid: uuid,
         schemeIdURI: schemeIdURI,
@@ -120,7 +124,8 @@ function KeySystemWidevine(config) {
         getInitData: getInitData,
         getRequestHeadersFromMessage: getRequestHeadersFromMessage,
         getLicenseRequestFromMessage: getLicenseRequestFromMessage,
-        getLicenseServerURLFromInitData: getLicenseServerURLFromInitData
+        getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
+        getCDMData: getCDMData
     };
 
     return instance;

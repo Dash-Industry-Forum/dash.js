@@ -157,4 +157,5 @@ if (undefined === atob) {
 if (typeof exports !== 'undefined') {
     exports.decode = BASE64.decode;
     exports.decodeArray = BASE64.decodeArray;
+    exports.encode = BASE64.encode;
 }

@@ -40,17 +40,37 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         lastVolumeLevel = NaN,
         seeking = false,
         videoControllerVisibleTimeout = 0,
-        videoController = document.getElementById("videoController"),
-        playPauseBtn = document.getElementById("playPauseBtn"),
-        bitrateListBtn = document.getElementById("bitrateListBtn"),
-        captionBtn = document.getElementById("captionBtn"),
-        trackSwitchBtn = document.getElementById("trackSwitchBtn"),
-        seekbar = document.getElementById("seekbar"),
-        muteBtn = document.getElementById("muteBtn"),
-        volumebar = document.getElementById("volumebar"),
-        fullscreenBtn = document.getElementById("fullscreenBtn"),
-        timeDisplay = document.getElementById("videoTime"),
-        durationDisplay = document.getElementById("videoDuration"),
+        videoController,
+        playPauseBtn,
+        bitrateListBtn,
+        captionBtn,
+        trackSwitchBtn,
+        seekbar,
+        muteBtn,
+        volumebar,
+        fullscreenBtn,
+        timeDisplay,
+        durationDisplay,
+        idSuffix,
+
+        initControls = function (suffix) {
+            idSuffix = suffix;
+            videoController = document.getElementById(getControlId("videoController"));
+            playPauseBtn = document.getElementById(getControlId("playPauseBtn"));
+            bitrateListBtn = document.getElementById(getControlId("bitrateListBtn"));
+            captionBtn = document.getElementById(getControlId("captionBtn"));
+            trackSwitchBtn = document.getElementById(getControlId("trackSwitchBtn"));
+            seekbar = document.getElementById(getControlId("seekbar"));
+            muteBtn = document.getElementById(getControlId("muteBtn"));
+            volumebar = document.getElementById(getControlId("volumebar"));
+            fullscreenBtn = document.getElementById(getControlId("fullscreenBtn"));
+            timeDisplay = document.getElementById(getControlId("videoTime"));
+            durationDisplay = document.getElementById(getControlId("videoDuration"));
+        },
+
+        getControlId = function (id) {
+            return id + (idSuffix ? idSuffix : '');
+        },
 
 //************************************************************************************
 // PLAYBACK
@@ -65,7 +85,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         },
         
         setPlayBtn = function () {
-            var span = document.getElementById('iconPlayPause');
+            var span = document.getElementById(getControlId('iconPlayPause'));
             if (span !== null) {
                 span.classList.remove('icon-pause');
                 span.classList.add('icon-play');
@@ -73,7 +93,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         },
 
         setPauseBtn = function () {
-            var span = document.getElementById('iconPlayPause');
+            var span = document.getElementById(getControlId('iconPlayPause'));
             if (span !== null) {
                 span.classList.remove('icon-play');
                 span.classList.add('icon-pause');
@@ -108,7 +128,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 //************************************************************************************
 
         toggleMuteBtnState = function () {
-            var span = document.getElementById('iconMute');
+            var span = document.getElementById(getControlId('iconMute'));
             if (player.isMuted()) {
                 span.classList.remove('icon-mute-off');
                 span.classList.add('icon-mute-on');
@@ -617,7 +637,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         setDuration: setDuration,
         setTime: setTime,
 
-        initialize: function () {
+        initialize: function (suffix) {
 
             if (!player) {
                 throw new Error("Please pass an instance of MediaPlayer.js when instantiating the ControlBar Object");
@@ -629,6 +649,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
             displayUTCTimeCodes = displayUTCTimeCodes === undefined ? false : displayUTCTimeCodes;
 
+            initControls(suffix);
             video.controls = false;
             videoContainer = player.getVideoContainer();
             captionBtn.classList.add("hide");
