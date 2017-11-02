@@ -179,9 +179,10 @@ function ProtectionModel_21Jan2015(config) {
 
         let session = mediaKeys.createSession(sessionType);
         let sessionToken = createSessionToken(session, initData, sessionType);
+        let ks = this.getKeySystem();
 
         // Generate initial key request
-        session.generateRequest('cenc', initData).then(function () {
+        session.generateRequest(ks.systemString === 'org.w3.clearkey' ? 'keyids' : 'cenc', initData).then(function () {
             log('DRM: Session created.  SessionID = ' + sessionToken.getSessionID());
             eventBus.trigger(events.KEY_SESSION_CREATED, {data: sessionToken});
         }).catch(function (error) {

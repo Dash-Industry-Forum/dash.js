@@ -192,6 +192,11 @@ function ProtectionKeyController() {
                                 initData: initData,
                                 cdmData: ks.getCDMData()
                             });
+                        } else if (this.isClearKey(ks)) {
+                            supportedKS.push({
+                                ks: ks,
+                                initData: null
+                            });
                         }
                     }
                 }
