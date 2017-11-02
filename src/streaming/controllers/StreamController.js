@@ -90,7 +90,8 @@ function StreamController() {
         initialPlayback,
         playListMetrics,
         videoTrackDetected,
-        audioTrackDetected;
+        audioTrackDetected,
+        endedEventNeeded;
 
     function setup() {
         timeSyncController = TimeSyncController(context).getInstance();
@@ -138,13 +139,19 @@ function StreamController() {
      * Called when current playback position is changed.
      * Used to determine the time current stream is finished and we should switch to the next stream.
      */
-    function onPlaybackTimeUpdated(/*e*/) {
-
+    function onPlaybackTimeUpdated(e) {
         if (isVideoTrackPresent()) {
             const playbackQuality = videoModel.getPlaybackQuality();
             if (playbackQuality) {
                 metricsModel.addDroppedFrames(Constants.VIDEO, playbackQuality);
             }
+        }
+
+        //detect end of stream for a multiperiod stream. Like timeUpdate could occurs at different time from the end, trigger PLAYBACK_ENDED when timeToEnd is less or equal to 0.5 second.
+        if (endedEventNeeded && e.timeToEnd <= 0.5) {
+            //send PLAYBACK_ENDED in order switch to a new period
+            eventBus.trigger(Events.PLAYBACK_ENDED);
+            endedEventNeeded = false;
         }
 
         // Sometimes after seeking timeUpdateHandler is called before seekingHandler and a new stream starts
@@ -190,8 +197,7 @@ function StreamController() {
             log('[StreamController] onStreamBufferingCompleted calls signalEndOfStream of mediaSourceController');
             mediaSourceController.signalEndOfStream(mediaSource);
         } else if (MediaSource) {
-            //send PLAYBACK_ENDED in order switch to a new period
-            eventBus.trigger(Events.PLAYBACK_ENDED);
+            endedEventNeeded = true;
         }
     }
 
@@ -730,6 +736,7 @@ function StreamController() {
         isPaused = false;
         autoPlay = true;
         playListMetrics = null;
+        endedEventNeeded = false;
     }
 
     function reset() {
