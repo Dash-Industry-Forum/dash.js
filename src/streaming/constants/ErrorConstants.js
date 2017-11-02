@@ -57,6 +57,11 @@ class ErrorConstants {
         this.FRAGMENT_LOADER_NULL_REQUEST_ERROR_MESSAGE = 'request is null';
         this.URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE = 1;
         this.URL_RESOLUTION_FAILED_GENERIC_ERROR_MESSAGE = 'Failed to resolve a valid URL';
+
+        this.APPEND_ERROR_CODE = 1;
+        this.APPEND_ERROR_MESSAGE = 'buffer or chunk is not defined';
+        this.REMOVE_ERROR_CODE = 2;
+        this.REMOVE_ERROR_MESSAGE = 'buffer is not defined';
     }
 
     constructor () {
