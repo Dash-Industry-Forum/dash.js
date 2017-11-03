@@ -385,8 +385,7 @@ function Stream(config) {
             if (type === Constants.EMBEDDED_TEXT) {
                 textController.addEmbeddedTrack(mediaInfo);
             } else {
-                //TODO Perform this check before sourcebuffer creation but after prebuffer.
-                //if (!isMediaSupported(mediaInfo, mediaSource, manifest)) continue;
+                if (!isMediaSupported(mediaInfo)) continue;
 
                 if (mediaController.isMultiTrackSupportedByType(mediaInfo.type)) {
                     mediaController.addTrack(mediaInfo, streamInfo);

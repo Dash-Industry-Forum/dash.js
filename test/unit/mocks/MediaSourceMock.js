@@ -18,7 +18,6 @@ class MediaSourceMock {
         if (codec.match(/unknown/i)) {
             throw new Error('unknown');
         }
-
         let buffer = new MediaSourceBufferMock();
         this.buffers.push(buffer);
         return buffer;

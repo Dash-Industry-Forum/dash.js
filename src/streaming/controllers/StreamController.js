@@ -333,12 +333,10 @@ function StreamController() {
         }
         activeStream = newStream;
 
-        playbackController.initialize(activeStream.getStreamInfo());
-
         if (videoModel.getElement()) {
             //TODO detect if we should close jump to activateStream.
             playbackController.initialize(activeStream.getStreamInfo());
-            openMediaSource(seekTime, false, oldStream);
+            openMediaSource(seekTime, oldStream, false);
         } else {
             preloadStream(seekTime);
         }
@@ -350,10 +348,10 @@ function StreamController() {
 
     function switchToVideoElement(seekTime) {
         playbackController.initialize(activeStream.getStreamInfo());
-        openMediaSource(seekTime);
+        openMediaSource(seekTime, true);
     }
 
-    function openMediaSource(seekTime, oldStream) {
+    function openMediaSource(seekTime, oldStream, streamActivated) {
         let sourceUrl;
 
         function onMediaSourceOpen() {
@@ -367,7 +365,7 @@ function StreamController() {
                 eventBus.trigger(Events.SOURCE_INITIALIZED);
             }
 
-            if (activeStream.isActivated()) {
+            if (streamActivated) {
                 activeStream.setMediaSource(mediaSource);
             } else {
                 activateStream(seekTime);

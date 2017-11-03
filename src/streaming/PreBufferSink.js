@@ -59,7 +59,7 @@ function PreBufferSink() {
     }
 
     function remove(start, end) {
-        chunks = chunks.filter( a => !((isNaN(end) || a.start <= end) && (isNaN(start) || a.end >= start))); //The opposite of the getChunks predicate.
+        chunks = chunks.filter( a => !((isNaN(end) || a.start < end) && (isNaN(start) || a.end > start))); //The opposite of the getChunks predicate.
     }
 
     /**
@@ -111,7 +111,7 @@ function PreBufferSink() {
     }
 
     function getChunksAt(start, end) {
-        return chunks.filter( a => ((isNaN(end) || a.start <= end) && (isNaN(start) || a.end >= start)) );
+        return chunks.filter( a => ((isNaN(end) || a.start < end) && (isNaN(start) || a.end > start)) );
     }
 
     const instance = {

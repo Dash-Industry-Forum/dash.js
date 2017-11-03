@@ -438,81 +438,19 @@ describe('BufferController', function () {
             eventBus.trigger(Events.PLAYBACK_SEEKING);
         });
     });
-    /*describe('Method getTotalBufferedTime', function () {
-        it('should return 0 if no buffer', function () {
 
-            let totalBufferedTime = sourceBufferController.getTotalBufferedTime(buffer);
-            expect(totalBufferedTime).to.equal(0);
-        });
-
-        it('should return totalBufferedTime ', function () {
-
-            buffer.addRange({
-                start: 2,
-                end: 5
-            });
-            buffer.addRange({
-                start: 8,
-                end: 9
-            });
-            let totalBufferedTime = sourceBufferController.getTotalBufferedTime(buffer);
-            expect(totalBufferedTime).to.equal(4);
-        });
-    });
-
-    describe('Method getBufferLength', function () {
+    describe('Method getBufferRange', function () {
         let buffer;
         beforeEach(function () {
             let mediaInfo = {
                 codec: 'video/webm; codecs="vp8, vorbis"'
             };
 
-            let mediaSource = new MediaSourceMock();
-            buffer = SourceBufferSink(context).create(mediaSource, mediaInfo);
-            expect(mediaSource.buffers).to.have.lengthOf(1);
-        });
-
-        it('should return 0 if no buffer', function () {
-
-            let totalBufferedLength = sourceBufferController.getBufferLength(buffer, 10);
-            expect(totalBufferedLength).to.equal(0);
-        });
-
-        it('should return 0 if no data buffered in time', function () {
-
-            buffer.addRange({
-                start: 2,
-                end: 5
-            });
-            let totalBufferedLength = sourceBufferController.getBufferLength(buffer, 10);
-            expect(totalBufferedLength).to.equal(0);
-        });
-
-        it('should return buffer length ', function () {
-
-            buffer.addRange({
-                start: 2,
-                end: 5
-            });
-            buffer.addRange({
-                start: 8,
-                end: 9
-            });
-
-            buffer.addRange({
-                start: 9,
-                end: 11
-            });
-            let totalBufferedLength = sourceBufferController.getBufferLength(buffer, 10);
-            expect(totalBufferedLength).to.equal(1);
-        });
-    });
-    */
-    /*
-    describe('Method getBufferRange', function () {
-        beforeEach(function() {
             bufferController.initialize(mediaSourceMock);
             bufferController.createBuffer(mediaInfo);
+            const sink = bufferController.getBuffer();
+            buffer = sink.getBuffer();
+            expect(mediaSourceMock.buffers).to.have.lengthOf(1);
         });
 
         it('should return range of buffered data', function () {
@@ -528,7 +466,7 @@ describe('BufferController', function () {
                 start: 9,
                 end: 11
             });
-            let range = sourceBufferSink.getBufferRange(buffer, 10);
+            let range = bufferController.getRangeAt(10);
             expect(range.start).to.equal(9);
             expect(range.end).to.equal(11);
         });
@@ -550,7 +488,7 @@ describe('BufferController', function () {
                 start: 10.1,
                 end: 11
             });
-            let range = sourceBufferSink.getBufferRange(buffer, 10);
+            let range = bufferController.getRangeAt(10);
             expect(range.start).to.equal(9);
             expect(range.end).to.equal(11);
         });
@@ -572,8 +510,8 @@ describe('BufferController', function () {
                 start: 10.5,
                 end: 11
             });
-            let range = sourceBufferSink.getBufferRange(buffer, 10);
-            expect(range).to.be.null;
+            let range = bufferController.getRangeAt(10);
+            expect(range).to.be.null; // jshint ignore:line
         });
 
         it('should return range of buffered data - time not in range (little gap)', function () {
@@ -593,10 +531,10 @@ describe('BufferController', function () {
                 start: 10.1,
                 end: 11
             });
-            let range = sourceBufferSink.getBufferRange(buffer, 10);
+            let range = bufferController.getRangeAt(10);
             expect(range.start).to.equal(10.1);
             expect(range.end).to.equal(11);
         });
     });
-    */
+
 });

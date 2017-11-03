@@ -127,6 +127,9 @@ function BufferController(config) {
                 buffer = SourceBufferSink(context).create(mediaSource, mediaInfo);
                 if (typeof buffer.getBuffer().initialize === 'function') {
                     buffer.getBuffer().initialize(type, streamProcessor);
+                    if (bufferTimestampOffset) {
+                        updateBufferTimestampOffset(bufferTimestampOffset);
+                    }
                 }
             } catch (e) {
                 log('Caught error on create SourceBuffer: ' + e);
@@ -624,9 +627,12 @@ function BufferController(config) {
     function updateBufferTimestampOffset(MSETimeOffset) {
         // Each track can have its own @presentationTimeOffset, so we should set the offset
         // if it has changed after switching the quality or updating an mpd
-        const sourceBuffer = buffer && buffer.getBuffer ? buffer.getBuffer() : null; //TODO: What happens when we try to set this on a prebuffer. Can we hold on to it and apply on discharge?
+        const sourceBuffer = buffer && buffer.getBuffer ? buffer.getBuffer() : null;
         if (sourceBuffer && sourceBuffer.timestampOffset !== MSETimeOffset && !isNaN(MSETimeOffset)) {
             sourceBuffer.timestampOffset = MSETimeOffset;
+            bufferTimestampOffset = null;
+        } else {
+            bufferTimestampOffset = MSETimeOffset;
         }
     }
 
