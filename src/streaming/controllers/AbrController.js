@@ -113,6 +113,10 @@ function AbrController() {
         });
     }
 
+    function unRegisterStreamType(type) {
+        delete streamProcessorDict[type];
+    }
+
     function createAbrRulesCollection() {
         abrRulesCollection = ABRRulesCollection(context).create({
             metricsModel: metricsModel,
@@ -734,6 +738,7 @@ function AbrController() {
         setWindowResizeEventCalled: setWindowResizeEventCalled,
         createAbrRulesCollection: createAbrRulesCollection,
         registerStreamType: registerStreamType,
+        unRegisterStreamType: unRegisterStreamType,
         setConfig: setConfig,
         reset: reset
     };
