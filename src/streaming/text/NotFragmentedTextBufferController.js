@@ -28,7 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from '../constants/Constants';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
@@ -156,7 +155,7 @@ function NotFragmentedTextBufferController(config) {
             return;
         }
         initCache.save(e.chunk);
-        buffer.append(chunk);
+        buffer.append(e.chunk);
     }
 
     function switchInitData(streamId, representationId) {

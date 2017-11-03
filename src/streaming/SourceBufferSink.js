@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Debug from '../core/Debug';
-import Error from './vo/Error';
+import DashJSError from './vo/DashJSError';
 import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import FactoryMaker from '../core/FactoryMaker';
@@ -143,7 +143,7 @@ function SourceBufferSink(mediaSource, mediaInfo) {
                     buffer: sourceBufferSink,
                     from: start,
                     to: end,
-                    error: new Error(err.code, err.message, null)
+                    error: new DashJSError(err.code, err.message, null)
                 });
             }
         });

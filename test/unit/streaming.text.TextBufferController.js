@@ -13,7 +13,7 @@ describe('TextBufferController', function () {
 
 
         textBufferController = TextBufferController(context).create({
-            type: 'fragmentedText',
+            type: 'fragmentedText'
         });
 
         expect(textBufferController.getBufferControllerType()).to.equal('BufferController');

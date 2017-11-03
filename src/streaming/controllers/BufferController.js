@@ -121,7 +121,7 @@ function BufferController(config) {
 
     function createBuffer(mediaInfo) {
         if (!initCache || !mediaInfo || !streamProcessor) return null;
-        
+
         if (mediaSource) {
             try {
                 buffer = SourceBufferSink(context).create(mediaSource, mediaInfo);
@@ -812,9 +812,8 @@ function BufferController(config) {
                 buffer.abort();
             }
             buffer.reset();
+            buffer = null;
         }
-        buffer.reset();
-        buffer = null;
     }
 
     function reset(errored) {

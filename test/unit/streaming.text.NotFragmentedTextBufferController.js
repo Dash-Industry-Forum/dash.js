@@ -39,7 +39,6 @@ describe('NotFragmentedTextBufferController', function () {
     });
 
     afterEach(function () {
-        console.log('afterEach a');
         notFragmentedTextBufferController.reset();
         streamProcessorMock.reset();
     });
@@ -56,14 +55,14 @@ describe('NotFragmentedTextBufferController', function () {
             it('should create a sourceBuffer and initialize it', function () {
                 notFragmentedTextBufferController.createBuffer(mockMediaInfo);
                 const buffer = notFragmentedTextBufferController.getBuffer();
-                expect(buffer).to.exist;
+                expect(buffer).to.exist; // jshint ignore:line
             });
 
             it('should notify error handler if an error occurs', function () {
                 mediaSourceMock.forceError = true;
                 notFragmentedTextBufferController.createBuffer(mockMediaInfo);
                 const buffer = notFragmentedTextBufferController.getBuffer();
-                expect(buffer).to.not.exist;
+                expect(buffer).to.not.exist; // jshint ignore:line
                 expect(errorHandlerMock.error).to.equal('Error creating ' + testType + ' source buffer.');
             });
         });
@@ -79,7 +78,7 @@ describe('NotFragmentedTextBufferController', function () {
             it('should return created buffer', function () {
                 notFragmentedTextBufferController.createBuffer(mockMediaInfo);
                 let buffer = notFragmentedTextBufferController.getBuffer().getBuffer();
-                expect(objectUtils.areEqual(buffer, mediaSourceMock.buffers[0])).to.be.true;
+                expect(objectUtils.areEqual(buffer, mediaSourceMock.buffers[0])).to.be.true; // jshint ignore:line
             });
         });
 
@@ -112,24 +111,24 @@ describe('NotFragmentedTextBufferController', function () {
             it('should not abort buffer if there is an error', function () {
                 const buffer = mediaSourceMock.buffers[0];
                 notFragmentedTextBufferController.reset('error');
-                expect(buffer.aborted).to.be.false;
+                expect(buffer.aborted).to.be.false; // jshint ignore:line
             });
 
             it('should abort buffer', function () {
                 const buffer = mediaSourceMock.buffers[0];
                 notFragmentedTextBufferController.reset();
-                expect(buffer.aborted).to.be.true;
+                expect(buffer.aborted).to.be.true; // jshint ignore:line
             });
-            
+
             it('should remove buffer if there is an error', function () {
                 const buffer = mediaSourceMock.buffers[0];
                 notFragmentedTextBufferController.reset('error');
-                expect(buffer.aborted).to.be.false;
+                expect(buffer.aborted).to.be.false; // jshint ignore:line
             });
 
             it('should remove buffer', function () {
                 notFragmentedTextBufferController.reset();
-                expect(mediaSourceMock.buffers[0]).to.not.exist;
+                expect(mediaSourceMock.buffers[0]).to.not.exist; // jshint ignore:line
             });
         });
 
@@ -202,7 +201,7 @@ describe('NotFragmentedTextBufferController', function () {
 
                 let onEvent = function () {
                     eventBus.off(Events.INIT_FRAGMENT_LOADED, onEvent);
-                    expect(buffer.chunk).to.not.exist;
+                    expect(buffer.chunk).to.not.exist; // jshint ignore:line
 
                     done();
                 };
@@ -223,7 +222,7 @@ describe('NotFragmentedTextBufferController', function () {
 
                 let onEvent = function () {
                     eventBus.off(Events.INIT_FRAGMENT_LOADED, onEvent);
-                    expect(buffer.chunk).to.not.exist;
+                    expect(buffer.chunk).to.not.exist; // jshint ignore:line
 
                     done();
                 };

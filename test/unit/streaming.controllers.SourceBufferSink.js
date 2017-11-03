@@ -2,7 +2,7 @@ import SourceBufferSink from '../../src/streaming/SourceBufferSink';
 import Events from '../../src/core/events/Events';
 import EventBus from '../../src/core/EventBus';
 
-import TextBufferMock from './mocks/TextBufferMock';
+//import TextBufferMock from './mocks/TextBufferMock';
 import TextControllerMock from './mocks/TextControllerMock';
 import MediaSourceBufferMock from './mocks/MediaSourceBufferMock';
 import MediaSourceMock from './mocks/MediaSourceMock';
@@ -11,10 +11,6 @@ const expect = require('chai').expect;
 const context = {};
 
 const eventBus = EventBus(context).getInstance();
-
-const streamInfo = {
-    id: 'id'
-};
 
 describe('SourceBufferSink', function () {
 
@@ -41,7 +37,7 @@ describe('SourceBufferSink', function () {
             let mediaSource = new MediaSourceMock();
 
             sink = SourceBufferSink(context).create(mediaSource, mediaInfo);
-            expect(sink.getBuffer()).to.be.instanceOf(MediaSourceBufferMock);
+            expect(sink.getBuffer()).to.be.instanceOf(MediaSourceBufferMock); // jshint ignore:line
         });
 
         /*it('should create and return a text buffer if codec is of type application/mp4;codecs="stpp"', function () {
@@ -52,7 +48,7 @@ describe('SourceBufferSink', function () {
             let mediaSource = new MediaSourceMock();
 
             sink = SourceBufferSink(context).create(mediaSource, mediaInfo);
-            expect(buffer).to.be.instanceOf(TextBufferMock);
+            expect(buffer).to.be.instanceOf(TextBufferMock); // jshint ignore:line
         });
 
         it('should create and return a text buffer if codec is of type application/mp4;codecs="wvtt"', function () {
@@ -63,7 +59,7 @@ describe('SourceBufferSink', function () {
             let mediaSource = new MediaSourceMock();
 
             sink = SourceBufferSink(context).create(mediaSource, mediaInfo);
-            expect(buffer).to.be.instanceOf(TextBufferMock);
+            expect(buffer).to.be.instanceOf(TextBufferMock); // jshint ignore:line
         });
 
         it('should create and return a text buffer if codec is of type text', function () {
@@ -75,7 +71,7 @@ describe('SourceBufferSink', function () {
             let mediaSource = new MediaSourceMock();
 
             sink = SourceBufferSink(context).create(mediaSource, mediaInfo);
-            expect(sourecBufferSink.getBuffer).to.be.instanceOf(TextBufferMock);
+            expect(sourecBufferSink.getBuffer).to.be.instanceOf(TextBufferMock); // jshint ignore:line
         });*/
 
         it('should throw an error if codec is unknonw', function () {
@@ -158,7 +154,7 @@ describe('SourceBufferSink', function () {
             sink = SourceBufferSink(context).create(mediaSource, mediaInfo);
             expect(mediaSource.buffers).to.have.lengthOf(1);
 
-            function onAppend(e) {
+            function onAppend() {
                 eventBus.off(Events.SOURCEBUFFER_APPEND_COMPLETED, onAppend, this);
                 expect(mediaSource.buffers[0].chunk).to.equal('toto');
                 done();
@@ -204,16 +200,16 @@ describe('SourceBufferSink', function () {
             sink = SourceBufferSink(context).create(mediaSource, mediaInfo);
             expect(mediaSource.buffers).to.have.lengthOf(1);
 
-            function onAppend(e) {
+            function onAppend() {
                 eventBus.off(Events.SOURCEBUFFER_APPEND_COMPLETED, onAppend, this);
 
                 // remove data
                 sink.remove(0, 1);
             }
 
-            function onRemoved(e) {
+            function onRemoved() {
                 eventBus.off(Events.SOURCEBUFFER_REMOVE_COMPLETED, onAppend, this);
-                expect(mediaSource.buffers[0].chunk).to.be.null
+                expect(mediaSource.buffers[0].chunk).to.be.null; // jshint ignore:line
                 done();
             }
             eventBus.on(Events.SOURCEBUFFER_APPEND_COMPLETED, onAppend, this);
@@ -236,9 +232,9 @@ describe('SourceBufferSink', function () {
             expect(mediaSource.buffers).to.have.lengthOf(1);
             let buffer = mediaSource.buffers[0];
 
-            expect(buffer.aborted).to.be.false;
+            expect(buffer.aborted).to.be.false; // jshint ignore:line
             sink.abort();
-            expect(buffer.aborted).to.be.true;
+            expect(buffer.aborted).to.be.true; // jshint ignore:line
         });
 
         it('should not abort if media source is not opened', function () {
@@ -253,9 +249,9 @@ describe('SourceBufferSink', function () {
             expect(mediaSource.buffers).to.have.lengthOf(1);
             let buffer = mediaSource.buffers[0];
 
-            expect(buffer.aborted).to.be.false;
+            expect(buffer.aborted).to.be.false; // jshint ignore:line
             sink.abort();
-            expect(buffer.aborted).to.be.false;
+            expect(buffer.aborted).to.be.false; // jshint ignore:line
         });
     });
 
