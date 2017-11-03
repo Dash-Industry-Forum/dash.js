@@ -63,14 +63,13 @@ function ProtectionController(config) {
         audioInfo,
         videoInfo,
         protDataSet,
-        initialized,
         sessionType,
         robustnessLevel,
-        keySystem;
+        keySystem,
+        manifestInitData;
 
     function setup() {
         pendingNeedKeyData = [];
-        initialized = false;
         sessionType = 'temporary';
         robustnessLevel = '';
     }
@@ -95,27 +94,23 @@ function ProtectionController(config) {
         // which adaptation sets for which we have initialized, including the default key ID
         // value from the ContentProtection elements so we know whether or not we still need to
         // select key systems and acquire keys.
-        if (!initialized) {
-            let streamInfo;
+        let streamInfo;
 
-            if (!aInfo && !vInfo) {
-                // Look for ContentProtection elements.  InitData can be provided by either the
-                // dash264drm:Pssh ContentProtection format or a DRM-specific format.
-                streamInfo = adapter.getStreamsInfo()[0]; // TODO: Single period only for now. See TODO above
-            }
+        if (!aInfo && !vInfo) {
+            // Look for ContentProtection elements.  InitData can be provided by either the
+            // dash264drm:Pssh ContentProtection format or a DRM-specific format.
+            streamInfo = adapter.getStreamsInfo()[0]; // TODO: Single period only for now. See TODO above
+        }
 
-            audioInfo = aInfo || (streamInfo ? adapter.getMediaInfoForType(streamInfo, Constants.AUDIO) : null);
-            videoInfo = vInfo || (streamInfo ? adapter.getMediaInfoForType(streamInfo, Constants.VIDEO) : null);
-            const mediaInfo = (videoInfo) ? videoInfo : audioInfo; // We could have audio or video only
+        audioInfo = aInfo || (streamInfo ? adapter.getMediaInfoForType(streamInfo, Constants.AUDIO) : null);
+        videoInfo = vInfo || (streamInfo ? adapter.getMediaInfoForType(streamInfo, Constants.VIDEO) : null);
+        const mediaInfo = (videoInfo) ? videoInfo : audioInfo; // We could have audio or video only
 
-            // ContentProtection elements are specified at the AdaptationSet level, so the CP for audio
-            // and video will be the same.  Just use one valid MediaInfo object
-            const supportedKS = protectionKeyController.getSupportedKeySystemsFromContentProtection(mediaInfo.contentProtection);
-            if (supportedKS && supportedKS.length > 0) {
-                selectKeySystem(supportedKS, true);
-            }
-
-            initialized = true;
+        // ContentProtection elements are specified at the AdaptationSet level, so the CP for audio
+        // and video will be the same.  Just use one valid MediaInfo object
+        const supportedKS = protectionKeyController.getSupportedKeySystemsFromContentProtection(mediaInfo.contentProtection);
+        if (supportedKS && supportedKS.length > 0) {
+            selectKeySystem(supportedKS, true);
         }
     }
 
@@ -354,6 +349,12 @@ function ProtectionController(config) {
             // We have a key system
             for (ksIdx = 0; ksIdx < supportedKS.length; ksIdx++) {
                 if (keySystem === supportedKS[ksIdx].ks) {
+                    if (manifestInitData && protectionKeyController.initDataEquals(manifestInitData, supportedKS[ksIdx].initData)) {
+                        log('DRM: ignoring key system as init data is the same as MPD init data');
+                        break;
+                    } else {
+                        manifestInitData = undefined;
+                    }
 
                     requestedKeySystems.push({ks: supportedKS[ksIdx].ks, configs: [getKeySystemConfiguration(keySystem)]});
 
@@ -376,8 +377,7 @@ function ProtectionController(config) {
                     break;
                 }
             }
-        }
-        else if (keySystem === undefined) {
+        } else if (keySystem === undefined) {
             // First time through, so we need to select a key system
             keySystem = null;
             pendingNeedKeyData.push(supportedKS);
@@ -417,6 +417,10 @@ function ProtectionController(config) {
                     for (let i = 0; i < pendingNeedKeyData.length; i++) {
                         for (ksIdx = 0; ksIdx < pendingNeedKeyData[i].length; ksIdx++) {
                             if (keySystem === pendingNeedKeyData[i][ksIdx].ks) {
+                                if (fromManifest) {
+                                    manifestInitData = pendingNeedKeyData[i][ksIdx].initData;
+                                }
+
                                 createKeySession(pendingNeedKeyData[i][ksIdx].initData, pendingNeedKeyData[i][ksIdx].cdmData);
                                 break;
                             }
@@ -561,6 +565,14 @@ function ProtectionController(config) {
 
     function onNeedKey(event) {
         log('DRM: onNeedKey');
+
+        // If MPD init data (pssh box) is already present we do nothing,
+        // as it shall take precedence over initialization segment
+        if (manifestInitData) {
+            log('DRM: ignoring init data as MPD init data is already present');
+            return;
+        }
+
         // Ignore non-cenc initData
         if (event.key.initDataType !== 'cenc') {
             log('DRM:  Only \'cenc\' initData is supported!  Ignoring initData of type: ' + event.key.initDataType);
