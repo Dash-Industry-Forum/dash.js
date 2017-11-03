@@ -323,10 +323,10 @@ function StreamController() {
         playbackController.initialize(activeStream.getStreamInfo());
 
         //TODO detect if we should close and repose or jump to activateStream.
-        openMediaSource(seekTime);
+        openMediaSource(seekTime, oldStream);
     }
 
-    function openMediaSource(seekTime) {
+    function openMediaSource(seekTime, oldStream) {
 
         let sourceUrl;
 
@@ -337,6 +337,10 @@ function StreamController() {
             mediaSource.removeEventListener('webkitsourceopen', onMediaSourceOpen);
             setMediaDuration();
             activateStream(seekTime);
+
+            if (!oldStream) {
+                eventBus.trigger(Events.SOURCE_INITIALIZED);
+            }
         }
 
         if (!mediaSource) {
