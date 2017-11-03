@@ -120,7 +120,11 @@ function Stream(config) {
         let ln = streamProcessors ? streamProcessors.length : 0;
         for (let i = 0; i < ln; i++) {
             let fragmentModel = streamProcessors[i].getFragmentModel();
-            fragmentModel.removeExecutedRequestsBeforeTime(getStartTime() + getDuration());
+            fragmentModel.removeExecutedRequestsInRange({
+                from: getStartTime(),
+                to: getStartTime() + getDuration(),
+                endSignalSent: true
+            });
             streamProcessors[i].reset();
         }
         //all stream processors have been destroyed, stream has to reset abrController which has reference on stream processors.

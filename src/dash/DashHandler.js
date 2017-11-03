@@ -395,7 +395,7 @@ function DashHandler(config) {
             request.index = index;
             request.mediaType = type;
             request.mediaInfo = streamProcessor.getMediaInfo();
-            log('Signal complete.', request);
+            log('Signal complete in getSegmentRequestForTime - ', type, ' - Request:', request);
 
         } else {
             segment = getSegmentByIndex(index, representation);
@@ -451,7 +451,7 @@ function DashHandler(config) {
             request.index = index;
             request.mediaType = type;
             request.mediaInfo = streamProcessor.getMediaInfo();
-            log('Signal complete.');
+            log('Signal complete -', type);
         } else {
             updateSegments(representation);
             segment = getSegmentByIndex(index, representation);
