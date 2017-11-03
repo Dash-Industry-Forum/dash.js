@@ -55,6 +55,8 @@ function MssFragmentInfoController(config) {
     const ISOBoxer = config.ISOBoxer;
     const log = config.log;
 
+    const controllerType = 'MssFragmentInfoController';
+
     function setup() {
     }
 
@@ -256,6 +258,7 @@ function MssFragmentInfoController(config) {
 
     instance = {
         initialize: initialize,
+        controllerType: controllerType,
         start: doStart,
         reset: reset
     };

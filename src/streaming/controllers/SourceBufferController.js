@@ -34,6 +34,10 @@ import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 
 const QUOTA_EXCEEDED_ERROR_CODE = 22;
+const APPEND_ERROR_CODE = 1;
+const REMOVE_ERROR_CODE = 2;
+const APPEND_ERROR_MESSAGE = 'buffer or chunk is not defined';
+const REMOVE_ERROR_MESSAGE = 'buffer is not defined';
 
 function SourceBufferController(config) {
 
@@ -310,12 +314,21 @@ function SourceBufferController(config) {
     }
 
     function append(buffer, chunk) {
-        let bytes = chunk.bytes;
-        let appendMethod = ('append' in buffer) ? 'append' : (('appendBuffer' in buffer) ? 'appendBuffer' : null);
+        if (!buffer || !chunk) {
+            eventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {
+                buffer: null,
+                bytes: null,
+                error: new DashJSError(APPEND_ERROR_CODE, APPEND_ERROR_MESSAGE, null)
+            });
+            return;
+        }
+        const bytes = chunk.bytes;
+
+        const appendMethod = ('append' in buffer) ? 'append' : (('appendBuffer' in buffer) ? 'appendBuffer' : null);
         // our user-defined sourcebuffer-like object has Object as its
         // prototype whereas built-in SourceBuffers will have something
         // more sensible. do not pass chunk to built-in append.
-        let acceptsChunk = Object.prototype.toString.call(buffer).slice(8, -1) === 'Object';
+        const acceptsChunk = Object.prototype.toString.call(buffer).slice(8, -1) === 'Object';
 
         if (!appendMethod) return;
 
@@ -345,7 +358,15 @@ function SourceBufferController(config) {
     }
 
     function remove(buffer, start, end, mediaSource, forceRemoval) {
-
+        if (!buffer) {
+            eventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {
+                buffer: buffer,
+                from: start,
+                to: end,
+                error: new DashJSError(REMOVE_ERROR_CODE, REMOVE_ERROR_MESSAGE, null)
+            });
+            return;
+        }
         // make sure that the given time range is correct. Otherwise we will get InvalidAccessError
         waitForUpdateEnd(buffer, function () {
             try {

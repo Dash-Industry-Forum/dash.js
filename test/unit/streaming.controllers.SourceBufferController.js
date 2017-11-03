@@ -417,6 +417,37 @@ describe('SourceBufferController', function () {
     });
 
     describe('Method append', function () {
+        it('should not throw an error when append data to not defined buffer', function (done) {
+            function onAppend(e) {
+                eventBus.off(Events.SOURCEBUFFER_APPEND_COMPLETED, onAppend, this);
+                expect(e.error.code).to.equal(1);
+                done();
+            }
+
+            eventBus.on(Events.SOURCEBUFFER_APPEND_COMPLETED, onAppend, this);
+
+            sourceBufferController.append(null, {bytes: 'toto'});
+        });
+
+        it('should not throw an error when append not defined chunk to defined buffer', function (done) {
+            const mediaInfo = {
+                codec: 'video/webm; codecs="vp8, vorbis"'
+            };
+
+            const mediaSource = new MediaSourceMock();
+            const buffer = sourceBufferController.createSourceBuffer(mediaSource, mediaInfo);
+
+            function onAppend(e) {
+                eventBus.off(Events.SOURCEBUFFER_APPEND_COMPLETED, onAppend, this);
+                expect(e.error.code).to.equal(1);
+                done();
+            }
+
+            eventBus.on(Events.SOURCEBUFFER_APPEND_COMPLETED, onAppend, this);
+
+            sourceBufferController.append(buffer, null);
+        });
+
         it('should append data to buffer', function (done) {
             const mediaInfo = {
                 codec: 'video/webm; codecs="vp8, vorbis"'
@@ -459,6 +490,17 @@ describe('SourceBufferController', function () {
     });
 
     describe('Method remove', function () {
+        it('should not throw an error when remove data to not defined buffer', function (done) {
+            function onRemoved(e) {
+                eventBus.off(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
+                expect(e.error.code).to.equal(2);
+                done();
+            }
+
+            eventBus.on(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
+            sourceBufferController.remove(null);
+        });
+
         it('should remove data from buffer', function (done) {
             const mediaInfo = {
                 codec: 'video/webm; codecs="vp8, vorbis"'
@@ -470,12 +512,12 @@ describe('SourceBufferController', function () {
 
             function onAppend(/*e*/) {
                 eventBus.off(Events.SOURCEBUFFER_APPEND_COMPLETED, onAppend, this);
-
                 // remove data
                 sourceBufferController.remove(buffer, 0, 1, mediaSource);
             }
 
-            function onRemoved(/*e*/) {
+            function onRemoved(e) {
+                console.log(e);
                 eventBus.off(Events.SOURCEBUFFER_REMOVE_COMPLETED, onAppend, this);
                 expect(buffer.chunk).to.be.null; // jshint ignore:line
                 done();
