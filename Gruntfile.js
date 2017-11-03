@@ -147,31 +147,41 @@ module.exports = function (grunt) {
         },
         exorcise: {
             mediaplayer: {
-                options: {},
+                options: {
+                    base: './src'
+                },
                 files: {
                     'build/temp/dash.mediaplayer.debug.js.map': ['build/temp/dash.mediaplayer.debug.js']
                 }
             },
             protection: {
-                options: {},
+                options: {
+                    base: './src'
+                },
                 files: {
                     'build/temp/dash.protection.debug.js.map': ['build/temp/dash.protection.debug.js']
                 }
             },
             all: {
-                options: {},
+                options: {
+                    base: './src'
+                },
                 files: {
                     'build/temp/dash.all.debug.js.map': ['build/temp/dash.all.debug.js']
                 }
             },
             reporting: {
-                options: {},
+                options: {
+                    base: './src'
+                },
                 files: {
                     'build/temp/dash.reporting.debug.js.map': ['build/temp/dash.reporting.debug.js']
                 }
             },
             mss: {
-                options: {},
+                options: {
+                    base: './src'
+                },
                 files: {
                     'build/temp/dash.mss.debug.js.map': ['build/temp/dash.mss.debug.js']
                 }
