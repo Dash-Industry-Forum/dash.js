@@ -33,7 +33,7 @@ import KeyPair from '../vo/KeyPair';
 import ClearKeyKeySet from '../vo/ClearKeyKeySet';
 import CommonEncryption from '../CommonEncryption';
 
-const uuid = '1077efec-c0b2-4d02-ace3-3c1e52e2fb4b';
+const uuid = 'e2719d58-a985-b3c9-781a-b030af78d30e';
 const systemString = 'org.w3.clearkey';
 const schemeIdURI = 'urn:uuid:' + uuid;
 

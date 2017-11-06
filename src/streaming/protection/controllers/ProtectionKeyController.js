@@ -186,18 +186,11 @@ function ProtectionKeyController() {
 
                         // Look for DRM-specific ContentProtection
                         let initData = ks.getInitData(cp);
-                        if (!!initData) {
-                            supportedKS.push({
-                                ks: keySystems[ksIdx],
-                                initData: initData,
-                                cdmData: ks.getCDMData()
-                            });
-                        } else if (this.isClearKey(ks)) {
-                            supportedKS.push({
-                                ks: ks,
-                                initData: null
-                            });
-                        }
+                        supportedKS.push({
+                            ks: keySystems[ksIdx],
+                            initData: initData,
+                            cdmData: ks.getCDMData()
+                        });
                     }
                 }
             }
