@@ -53,11 +53,9 @@ function NotFragmentedTextBufferController(config) {
         mediaSource,
         buffer,
         representationController,
-        initCache,
-        id;
+        initCache;
 
     function setup() {
-        id = Math.random();
         initialized = false;
         mediaSource = null;
         representationController = null;
