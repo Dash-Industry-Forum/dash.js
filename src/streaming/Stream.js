@@ -379,15 +379,18 @@ function Stream(config) {
         checkConfig();
         let events;
 
-        eventController = EventController(context).create();
+        //if initializeMedia is called from a switch period, eventController could have been already created.
+        if (!eventController) {
+            eventController = EventController(context).create();
 
-        eventController.setConfig({
-            manifestModel: manifestModel,
-            manifestUpdater: manifestUpdater,
-            playbackController: playbackController
-        });
-        events = adapter.getEventsFor(streamInfo);
-        eventController.addInlineEvents(events);
+            eventController.setConfig({
+                manifestModel: manifestModel,
+                manifestUpdater: manifestUpdater,
+                playbackController: playbackController
+            });
+            events = adapter.getEventsFor(streamInfo);
+            eventController.addInlineEvents(events);
+        }
 
         isUpdating = true;
 
