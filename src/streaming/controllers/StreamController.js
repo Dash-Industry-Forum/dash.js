@@ -58,7 +58,7 @@ function StreamController() {
 
     // Check whether there is framed dropping when stalling this times wallClockUpdate interval
     // which is 50ms interval default due to the setting of mediaPlayerModel.
-    const STALL_THRESHOLD_TO_CHECK_GAPS = 2;
+    const STALL_THRESHOLD_TO_CHECK_GAPS = 20;
 
     let context = this.context;
     let log = Debug(context).getInstance().log;
