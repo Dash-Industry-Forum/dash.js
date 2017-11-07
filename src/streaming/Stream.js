@@ -126,7 +126,6 @@ function Stream(config) {
         streamProcessors = [];
         isStreamActivated = false;
         isMediaInitialized = false;
-        clearEventController();
         eventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
     }
 
@@ -208,9 +207,9 @@ function Stream(config) {
         }
     }
 
-    function clearEventController() {
+    function stopEventController() {
         if (eventController) {
-            eventController.clear();
+            eventController.stop();
         }
     }
 
@@ -592,6 +591,7 @@ function Stream(config) {
         getEventController: getEventController,
         getBitrateListFor: getBitrateListFor,
         startEventController: startEventController,
+        stopEventController: stopEventController,
         updateData: updateData,
         reset: reset,
         getProcessors: getProcessors

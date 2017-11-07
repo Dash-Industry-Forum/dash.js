@@ -74,7 +74,7 @@ function EventController() {
         }
     }
 
-    function clear() {
+    function stop() {
         if (eventInterval !== null && isStarted) {
             clearInterval(eventInterval);
             eventInterval = null;
@@ -209,14 +209,14 @@ function EventController() {
     }
 
     function reset() {
-        clear();
+        stop();
         resetInitialSettings();
     }
 
     instance = {
         addInlineEvents: addInlineEvents,
         addInbandEvents: addInbandEvents,
-        clear: clear,
+        stop: stop,
         start: start,
         setConfig: setConfig,
         reset: reset

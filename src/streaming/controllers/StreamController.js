@@ -318,7 +318,10 @@ function StreamController() {
             toStreamInfo: newStream.getStreamInfo()
         });
 
-        if (oldStream) oldStream.deactivate();
+        if (oldStream) {
+            oldStream.stopEventController();
+            oldStream.deactivate();
+        }
         activeStream = newStream;
         playbackController.initialize(activeStream.getStreamInfo());
 
