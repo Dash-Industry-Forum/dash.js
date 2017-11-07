@@ -127,9 +127,6 @@ function BufferController(config) {
                 buffer = SourceBufferSink(context).create(mediaSource, mediaInfo);
                 if (typeof buffer.getBuffer().initialize === 'function') {
                     buffer.getBuffer().initialize(type, streamProcessor);
-                    if (bufferTimestampOffset) {
-                        updateBufferTimestampOffset(bufferTimestampOffset);
-                    }
                 }
             } catch (e) {
                 log('Caught error on create SourceBuffer: ' + e);
@@ -630,9 +627,6 @@ function BufferController(config) {
         const sourceBuffer = buffer && buffer.getBuffer ? buffer.getBuffer() : null;
         if (sourceBuffer && sourceBuffer.timestampOffset !== MSETimeOffset && !isNaN(MSETimeOffset)) {
             sourceBuffer.timestampOffset = MSETimeOffset;
-            bufferTimestampOffset = null;
-        } else {
-            bufferTimestampOffset = MSETimeOffset;
         }
     }
 
