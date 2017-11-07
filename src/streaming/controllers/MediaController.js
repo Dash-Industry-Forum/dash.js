@@ -33,7 +33,6 @@ import Events from '../../core/events/Events';
 import EventBus from '../../core/EventBus';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
-import ObjectUtils from '../utils/ObjectUtils';
 
 const TRACK_SWITCH_MODE_NEVER_REPLACE = 'neverReplace';
 const TRACK_SWITCH_MODE_ALWAYS_REPLACE = 'alwaysReplace';
@@ -127,9 +126,8 @@ function MediaController() {
         const len = tracks[streamId][mediaType].list.length;
 
         for (let i = 0; i < len; i++) {
-            let objectUtils = ObjectUtils(context).getInstance();
             //track is already set.
-            if (objectUtils.areEqual(tracks[streamId][mediaType].list[i], track)) {
+            if (isTracksEqual(tracks[streamId][mediaType].list[i], track)) {
                 return;
             }
         }
