@@ -33,7 +33,7 @@ import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import InitCache from '../utils/InitCache';
 import SourceBufferSink from '../SourceBufferSink';
-import TextController from '../../Streaming/Text/TextController';
+import TextController from '../../streaming/text/TextController';
 
 const BUFFER_CONTROLLER_TYPE = 'NotFragmentedTextBufferController';
 function NotFragmentedTextBufferController(config) {
