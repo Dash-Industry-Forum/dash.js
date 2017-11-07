@@ -30,6 +30,7 @@
  */
 import CommonEncryption from './../CommonEncryption';
 import KeySystemClearKey from './../drm/KeySystemClearKey';
+import KeySystemW3CClearKey from './../drm/KeySystemW3CClearKey';
 import KeySystemWidevine from './../drm/KeySystemWidevine';
 import KeySystemPlayReady from './../drm/KeySystemPlayReady';
 import DRMToday from './../servers/DRMToday';
@@ -49,7 +50,8 @@ function ProtectionKeyController() {
         log,
         keySystems,
         BASE64,
-        clearkeyKeySystem;
+        clearkeyKeySystem,
+        clearkeyW3CKeySystem;
 
     function setConfig(config) {
         if (!config) return;
@@ -80,6 +82,11 @@ function ProtectionKeyController() {
         keySystem = KeySystemClearKey(context).getInstance({BASE64: BASE64});
         keySystems.push(keySystem);
         clearkeyKeySystem = keySystem;
+
+        // W3C ClearKey
+        keySystem = KeySystemW3CClearKey(context).getInstance({BASE64: BASE64, log: log});
+        keySystems.push(keySystem);
+        clearkeyW3CKeySystem = keySystem;
     }
 
     /**
@@ -131,7 +138,7 @@ function ProtectionKeyController() {
      * @instance
      */
     function isClearKey(keySystem) {
-        return (keySystem === clearkeyKeySystem);
+        return (keySystem === clearkeyKeySystem || keySystem === clearkeyW3CKeySystem);
     }
 
     /**
@@ -274,6 +281,7 @@ function ProtectionKeyController() {
     /**
      * Allows application-specific retrieval of ClearKey keys.
      *
+     * @param {KeySystem} clearkeyKeySystem They exact ClearKey System to be used
      * @param {ProtectionData} protData protection data to use for the
      * request
      * @param {ArrayBuffer} message the key message from the CDM
@@ -282,7 +290,7 @@ function ProtectionKeyController() {
      * @memberof module:ProtectionKeyController
      * @instance
      */
-    function processClearKeyLicenseRequest(protData, message) {
+    function processClearKeyLicenseRequest(clearkeyKeySystem, protData, message) {
         try {
             return clearkeyKeySystem.getClearKeysFromProtectionData(protData, message);
         } catch (error) {
