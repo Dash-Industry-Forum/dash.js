@@ -56,9 +56,9 @@ function StreamController() {
     const STREAM_END_TIMEOUT_DELAY = 0.1;
     const LOSS_TOLERANCE_THRESHOLD = 2;
 
-    //Check whether there is framed dropping when stalling this times wallClockUpdate interval
-    //which is 50ms interval default due to the setting of mediaPlayerModel.
-    const STALL_THRESHOLD_TO_CHECK_GAPS = 20;
+    // Check whether there is framed dropping when stalling this times wallClockUpdate interval
+    // which is 50ms interval default due to the setting of mediaPlayerModel.
+    const STALL_THRESHOLD_TO_CHECK_GAPS = 2;
 
     let context = this.context;
     let log = Debug(context).getInstance().log;
@@ -151,7 +151,10 @@ function StreamController() {
 
 
     function onWallclockTimeUpdated(e) {
-        if (isPaused || isStreamSwitchingInProgress || !activeStream || !mediaPlayerModel.getSkipGaps()) return;
+        if (!mediaPlayerModel.getSkipGaps() || isPaused || isStreamSwitchingInProgress ||
+            !activeStream || playbackController.isSeeking()) {
+            return;
+        }
 
         wallclockTicked++;
         if (wallclockTicked >= STALL_THRESHOLD_TO_CHECK_GAPS) {
