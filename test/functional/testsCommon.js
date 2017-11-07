@@ -10,8 +10,7 @@ define(function(require) {
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     // Selenium configuration
-
-    var seleniumConfig = seleniumConfigs.loacal;
+    var seleniumConfig = seleniumConfigs.local;
 
     var conf = {
 
@@ -55,7 +54,6 @@ define(function(require) {
             conf.environments = conf.environments.concat(osConfig[os][browser]);
         }
     });
-
     if (intern.args.tests) {
         var tests = intern.args.tests.split(',');
         conf.functionalSuites = [];
@@ -74,9 +72,9 @@ define(function(require) {
 
     // application
     testsConfig.testPage = applications.local;
-
     if (intern.args.app) {
         testsConfig.testPage = applications[intern.args.app];
+        testsConfig.smoothEnabled = decodeURIComponent((new RegExp('[?|&]mss=' + '([^&;]+?)(&|#|;|$)').exec(testsConfig.testPage)||[,""])[1].replace(/\+/g, '%20')) || 'false';
     }
 
     if (intern.args.appurl) {
