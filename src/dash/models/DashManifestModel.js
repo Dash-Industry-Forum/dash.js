@@ -569,7 +569,7 @@ function DashManifestModel(config) {
             // of the previous Period.
             else if (realPeriod1 !== null && realPeriod.hasOwnProperty(DashConstants.DURATION) && voPeriod1 !== null) {
                 voPeriod = new Period();
-                voPeriod.start = voPeriod1.start + voPeriod1.duration;
+                voPeriod.start = parseFloat((voPeriod1.start + voPeriod1.duration).toFixed(5));
                 voPeriod.duration = realPeriod.duration;
             }
             // If (i) @start attribute is absent, and (ii) the Period element
