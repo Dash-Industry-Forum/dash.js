@@ -222,7 +222,7 @@ function StreamController() {
 
         for (let i = 0; i < ln; i++) {
             stream = streams[i];
-            duration += stream.getDuration();
+            duration = parseFloat((duration + stream.getDuration()).toFixed(5));
 
             if (time < duration) {
                 return stream;
@@ -303,7 +303,7 @@ function StreamController() {
             const duration = activeStream.getStreamInfo().duration;
 
             return streams.filter(function (stream) {
-                return (stream.getStreamInfo().start === (start + duration));
+                return (stream.getStreamInfo().start === parseFloat((start + duration).toFixed(5)));
             })[0];
         }
     }
