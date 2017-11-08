@@ -38,6 +38,7 @@ function ThroughputRule(config) {
 
     const context = this.context;
     const log = Debug(context).getInstance().log;
+
     const metricsModel = config.metricsModel;
 
     function checkConfig() {
@@ -74,7 +75,6 @@ function ThroughputRule(config) {
         }
 
         if (abrController.getAbandonmentStateFor(mediaType) !== AbrController.ABANDON_LOAD) {
-
             if (bufferStateVO.state === BufferController.BUFFER_LOADED || isDynamic) {
                 switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, throughput, latency);
                 streamProcessor.getScheduleController().setTimeToLoadDelay(0);

@@ -142,6 +142,7 @@ function ProtectionController(config) {
      * the MPD or from the PSSH box in the media
      *
      * @param {ArrayBuffer} initData the initialization data
+     * @param {Uint8Array} cdmData the custom data to provide to licenser
      * @memberof module:ProtectionController
      * @instance
      * @fires ProtectionController#KeySessionCreated
@@ -150,7 +151,7 @@ function ProtectionController(config) {
      * API will need to modified (and a new "generateRequest(keySession, initData)" API created)
      * to come up to speed with the latest EME standard
      */
-    function createKeySession(initData) {
+    function createKeySession(initData, cdmData) {
         const initDataForKS = CommonEncryption.getPSSHForKeySystem(keySystem, initData);
         if (initDataForKS) {
 
@@ -163,7 +164,7 @@ function ProtectionController(config) {
                 }
             }
             try {
-                protectionModel.createKeySession(initDataForKS, sessionType);
+                protectionModel.createKeySession(initDataForKS, sessionType, cdmData);
             } catch (error) {
                 eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: 'Error creating key session! ' + error.message});
             }
@@ -367,7 +368,7 @@ function ProtectionController(config) {
                         } else {
                             log('DRM: KeySystem Access Granted');
                             eventBus.trigger(events.KEY_SYSTEM_SELECTED, {data: event.data});
-                            createKeySession(supportedKS[ksIdx].initData);
+                            createKeySession(supportedKS[ksIdx].initData, supportedKS[ksIdx].cdmData);
                         }
                     };
                     eventBus.on(events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
@@ -416,7 +417,7 @@ function ProtectionController(config) {
                     for (let i = 0; i < pendingNeedKeyData.length; i++) {
                         for (ksIdx = 0; ksIdx < pendingNeedKeyData[i].length; ksIdx++) {
                             if (keySystem === pendingNeedKeyData[i][ksIdx].ks) {
-                                createKeySession(pendingNeedKeyData[i][ksIdx].initData);
+                                createKeySession(pendingNeedKeyData[i][ksIdx].initData, pendingNeedKeyData[i][ksIdx].cdmData);
                                 break;
                             }
                         }

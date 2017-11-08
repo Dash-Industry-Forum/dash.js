@@ -146,6 +146,10 @@ function StreamProcessor(config) {
         }
     }
 
+    function getExternalControllers() {
+        return spExternalControllers;
+    }
+
     function unregisterAllExternalController() {
         spExternalControllers = [];
     }
@@ -175,6 +179,9 @@ function StreamProcessor(config) {
             representationController = null;
         }
 
+        if (abrController) {
+            abrController.unRegisterStreamType(type);
+        }
         spExternalControllers.forEach(function (controller) {
             controller.reset();
         });
@@ -361,6 +368,7 @@ function StreamProcessor(config) {
         setBuffer: setBuffer,
         registerExternalController: registerExternalController,
         unregisterExternalController: unregisterExternalController,
+        getExternalControllers: getExternalControllers,
         unregisterAllExternalController: unregisterAllExternalController,
         reset: reset
     };

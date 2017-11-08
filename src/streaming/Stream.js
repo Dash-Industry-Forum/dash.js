@@ -119,6 +119,8 @@ function Stream(config) {
     function deactivate() {
         let ln = streamProcessors ? streamProcessors.length : 0;
         for (let i = 0; i < ln; i++) {
+            let fragmentModel = streamProcessors[i].getFragmentModel();
+            fragmentModel.removeExecutedRequestsBeforeTime(getStartTime() + getDuration());
             streamProcessors[i].reset();
         }
         streamProcessors = [];
@@ -273,6 +275,7 @@ function Stream(config) {
         } else {
             processor.updateMediaInfo(mediaInfo);
             if (mediaInfo.type !== Constants.FRAGMENTED_TEXT) {
+                abrController.updateTopQualityIndex(mediaInfo);
                 processor.switchTrackAsked();
             }
         }

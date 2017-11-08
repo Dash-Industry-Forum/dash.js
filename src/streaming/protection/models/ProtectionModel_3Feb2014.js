@@ -191,7 +191,7 @@ function ProtectionModel_3Feb2014(config) {
         }
     }
 
-    function createKeySession(initData /*, keySystemType */) {
+    function createKeySession(initData, sessionType, cdmData) {
 
         if (!keySystem || !mediaKeys || !keySystemAccess) {
             throw new Error('Can not create sessions until you have selected a key system');
@@ -213,7 +213,7 @@ function ProtectionModel_3Feb2014(config) {
           throw new Error('Can not create sessions for unknown content types.');
 
         let contentType = capabilities.contentType;
-        let session = mediaKeys.createSession(contentType, new Uint8Array(initData));
+        let session = mediaKeys.createSession(contentType, new Uint8Array(initData), cdmData ? new Uint8Array(cdmData) : null);
         let sessionToken = createSessionToken(session, initData);
 
         // Add all event listeners

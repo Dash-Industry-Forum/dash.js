@@ -10,7 +10,7 @@ A reference client implementation for the playback of MPEG DASH via JavaScript a
 
 If your intent is to use the player code without contributing back to this project, then use the MASTER branch which holds the approved and stable public releases.
 
-If your goal is to improve or extend the code and contribute back to this project, then you should make your changes in, and submit a pull request against, the DEVELOPMENT branch. Read through our wiki section on https://github.com/Dash-Industry-Forum/dash.js/wiki/How-to-Contribute for a walk-through of the contribution process.
+If your goal is to improve or extend the code and contribute back to this project, then you should make your changes in, and submit a pull request against, the DEVELOPMENT branch. Read our [CONTRIBUTION.md](https://github.com/Dash-Industry-Forum/dash.js/blob/development/CONTRIBUTING.md) file for a walk-through of the contribution process.
 
 All new work should be in the development branch. Master is now reserved for tagged builds.
 
@@ -22,13 +22,13 @@ Full [API Documentation](http://cdn.dashjs.org/latest/jsdoc/module-MediaPlayer.h
 For help, join our [Slack channel](https://dashif-slack.azurewebsites.net), our [email list](https://groups.google.com/d/forum/dashjs) and read our [wiki](https://github.com/Dash-Industry-Forum/dash.js/wiki).
 
 ## Reference players
-The released [pre-built reference players](http://reference.dashif.org/dash.js/) are publicly accessible if you want direct access without writing any Javascript. 
+The released [pre-built reference players](http://reference.dashif.org/dash.js/) are publicly accessible if you want direct access without writing any Javascript.
 
-The [nightly build of the /dev branch reference player](http://reference.dashif.org/dash.js/nightly/samples/dash-if-reference-player/index.html), is pre-release but contains the latest fixes. It is a good place to start if you are debugging playback problems. 
+The [nightly build of the /dev branch reference player](http://reference.dashif.org/dash.js/nightly/samples/dash-if-reference-player/index.html), is pre-release but contains the latest fixes. It is a good place to start if you are debugging playback problems.
 
 A nightly build of the latest minified files are also available: [dash.all.min.js](http://reference.dashif.org/dash.js/nightly/dist/dash.all.min.js) and its debug version  [dash.all.debug.js](http://reference.dashif.org/dash.js/nightly/dist/dash.all.debug.js).
 
-All these reference builds and mninfied files are available under both http and https.
+All these reference builds and minified files are available under both http and https.
 
 ## Quick Start for Users
 If you just want a DASH player to use and don't need to see the code or commit to this project, then follow the instructions below. If you are a developer and want to work with this code base, then skip down to the "Quick Start for Developers" section.
@@ -54,29 +54,38 @@ Then place your page under a web server (do not try to run from the file system)
 
 View the /samples folder for many other examples of embedding and using the player. If you are interested in captioning support, which requires some additional UI elements, then please view the [captioning examples](https://github.com/Dash-Industry-Forum/dash.js/tree/development/samples/captioning).
 
+
 ## Quick Start for Developers
 
-### Reference Player
-1. Download 'development' branch
-2. Extract dash.js and move the entire folder to localhost (or run any http server instance such as python's SimpleHTTPServer at the root of the dash.js folder).
-3. Open samples/dash-if-reference-player/index.html in your MSE capable web browser.
+1. Install Core Dependencies
+    * [install nodejs](http://nodejs.org/)
+    * [install grunt](http://gruntjs.com/getting-started)
+        * ```npm install -g grunt-cli```
+2. Checkout project repository (default branch: development)
+    * ```git clone https://github.com/Dash-Industry-Forum/dash.js.git```
+3. Install dependencies
+    * ```npm install```
+4. Build, watch file changes and launch samples page, which has links that point to reference player and to other examples (basic examples, captioning, ads, live, etc).
+    * ```grunt dev```
 
-### Install Core Dependencies
-1. [install nodejs](http://nodejs.org/)
-2. [install grunt](http://gruntjs.com/getting-started)
-    * npm install -g grunt-cli
 
-### Build / Run tests on commandline.
-1. Install all Node Modules defined in package.json
-    * npm install
-2. Run the GruntFile.js default task
-    * grunt
-3. You can also target individual tasks: E.g.
-	* grunt debug (quickest build)
-    * grunt dist
-    * grunt release
-    * grunt test
-    
+### Other Grunt Tasks to Build / Run Tests on Commandline.
+
+1. Individual tasks:
+    * Quickest build
+        * ```grunt debug```
+    * Lint
+        * ```grunt lint```
+    * Run unit tests
+        * ```grunt test```
+    * Build distribution files (minification included)
+        * ```grunt dist```
+    * Build distribution files, lint, run unit tests and generate documentation
+        * ```grunt release```
+2. GruntFile.js default task (equivalent to ```grunt dist && grunt test```)
+    * ```grunt```
+
+
 
 ## Getting Started
 
@@ -95,7 +104,7 @@ Add dash.all.min.js to the end of the body.
   <script src="yourPathToDash/dash.all.min.js"></script>
 </body>
 ```
-Now comes the good stuff. We need to create a MediaPlayer and initialize it.  
+Now comes the good stuff. We need to create a MediaPlayer and initialize it.
 ``` js
 
 var url = "https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd";
@@ -140,7 +149,7 @@ bundlers can be found in the [`samples/modules`](https://github.com/Dash-Industr
 
 ### MediaPlayerFactory Setup
 
-An alternative way to build a Dash.js player in your web page is to use the MediaPlayerFactory.  The MediaPlayerFactory will automatically instantiate and initialize the MediaPlayer module on appropriately tagged video elements. 
+An alternative way to build a Dash.js player in your web page is to use the MediaPlayerFactory.  The MediaPlayerFactory will automatically instantiate and initialize the MediaPlayer module on appropriately tagged video elements.
 
 Create a video element somewhere in your html and provide the path to your `mpd` file as src. Also ensure that your video element has the `data-dashjs-player` attribute on it.
 ```html
