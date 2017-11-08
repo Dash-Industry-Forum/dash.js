@@ -33,6 +33,7 @@ import FactoryMaker from '../../core/FactoryMaker';
 
 function RulesContext(config) {
 
+    config = config || {};
     let instance;
     const abrController = config.abrController;
     const streamProcessor = config.streamProcessor;

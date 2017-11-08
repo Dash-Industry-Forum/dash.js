@@ -33,6 +33,7 @@ import CustomTimeRanges from '../../utils/CustomTimeRanges';
 
 function RangeController(config) {
 
+    config = config || {};
     let useWallClockTime = false;
     let context = this.context;
     let instance,

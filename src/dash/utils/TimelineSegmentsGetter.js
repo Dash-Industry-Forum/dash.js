@@ -35,6 +35,7 @@ import {getTimeBasedSegment} from './SegmentsUtils';
 
 function TimelineSegmentsGetter(config, isDynamic) {
 
+    config = config || {};
     let timelineConverter = config.timelineConverter;
 
     let instance;

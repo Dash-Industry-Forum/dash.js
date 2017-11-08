@@ -33,6 +33,7 @@ import HandlerHelpers from '../../utils/HandlerHelpers';
 
 function BufferLevelHandler(config) {
 
+    config = config || {};
     let instance,
         reportingController,
         n,

@@ -40,7 +40,7 @@ import FactoryMaker from '../core/FactoryMaker';
 function Stream(config) {
 
     const DATA_UPDATE_FAILED_ERROR_CODE = 1;
-
+    config = config || {};
     let context = this.context;
     let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();

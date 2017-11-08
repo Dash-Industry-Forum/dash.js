@@ -34,6 +34,7 @@ import Debug from '../../../core/Debug';
 
 function AbandonRequestsRule(config) {
 
+    config = config || {};
     const ABANDON_MULTIPLIER = 1.8;
     const GRACE_TIME_THRESHOLD = 500;
     const MIN_LENGTH_TO_AVERAGE = 5;

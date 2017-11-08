@@ -3,6 +3,7 @@ import Range from '../vo/Range';
 import Reporting from '../vo/Reporting';
 
 function ManifestParsing (config) {
+    config = config || {};
     let instance;
     let dashManifestModel = config.dashManifestModel;
     const constants = config.constants;

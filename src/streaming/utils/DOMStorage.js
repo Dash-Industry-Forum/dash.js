@@ -48,6 +48,7 @@ const LAST_MEDIA_SETTINGS = 'LastMediaSettings';
 
 function DOMStorage(config) {
 
+    config = config || {};
     let context = this.context;
     let log = Debug(context).getInstance().log;
     let mediaPlayerModel = config.mediaPlayerModel;

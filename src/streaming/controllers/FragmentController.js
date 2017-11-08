@@ -41,6 +41,7 @@ import Debug from '../../core/Debug';
 
 function FragmentController( config ) {
 
+    config = config || {};
     const context = this.context;
     const log = Debug(context).getInstance().log;
     const eventBus = EventBus(context).getInstance();

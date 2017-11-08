@@ -41,6 +41,7 @@ import SegmentValuesMap from './maps/SegmentValuesMap';
 
 function DashParser(config) {
 
+    config = config || {};
     const context = this.context;
     const log = Debug(context).getInstance().log;
     const errorHandler = config.errorHandler;

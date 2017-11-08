@@ -44,6 +44,7 @@ const RESOLVE_TO_ZERO = 'urn:mpeg:dash:resolve-to-zero:2013';
 
 function XlinkController(config) {
 
+    config = config || {};
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
     const urlUtils = URLUtils(context).getInstance();

@@ -37,6 +37,7 @@ import MssParser from './parser/MssParser';
 
 function MssHandler(config) {
 
+    config = config || {};
     let context = this.context;
     let eventBus = config.eventBus;
     const events = config.events;

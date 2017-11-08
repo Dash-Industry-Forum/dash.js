@@ -36,6 +36,7 @@ import SwitchRequest from '../SwitchRequest.js';
 
 function ThroughputRule(config) {
 
+    config = config || {};
     const context = this.context;
     const log = Debug(context).getInstance().log;
 

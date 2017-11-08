@@ -45,9 +45,10 @@ let protData;
 
 function KeySystemPlayReady(config) {
 
+    config = config || {};
     let instance;
     let messageFormat = 'utf16';
-    let BASE64 = config ? config.BASE64 : null;
+    let BASE64 = config.BASE64;
 
     function checkConfig() {
         if (!BASE64 || !BASE64.hasOwnProperty('decodeArray') || !BASE64.hasOwnProperty('decodeArray') ) {

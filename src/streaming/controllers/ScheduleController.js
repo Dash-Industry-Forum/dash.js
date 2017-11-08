@@ -42,6 +42,7 @@ import Debug from '../../core/Debug';
 
 function ScheduleController(config) {
 
+    config = config || {};
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
     const metricsModel = config.metricsModel;

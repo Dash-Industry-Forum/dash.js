@@ -35,6 +35,7 @@ import MetricsHandlersController from './MetricsHandlersController';
 
 function MetricsController(config) {
 
+    config = config || {};
     let metricsHandlersController,
         reportingController,
         rangeController,

@@ -34,6 +34,7 @@ import MetricsReportingEvents from '../MetricsReportingEvents';
 
 function DVBErrorsTranslator(config) {
 
+    config = config || {};
     let instance;
     let eventBus = config.eventBus;
     let metricModel = config.metricsModel;

@@ -33,6 +33,7 @@ import FactoryMaker from '../../../core/FactoryMaker';
 
 function BasicSelector(config) {
 
+    config = config || {};
     let instance;
 
     const blacklistController = config.blacklistController;

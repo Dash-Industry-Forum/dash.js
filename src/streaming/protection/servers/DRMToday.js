@@ -38,6 +38,7 @@
 
 function DRMToday(config) {
 
+    config = config || {};
     let BASE64 = config.BASE64;
 
     const keySystems = {

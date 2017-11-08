@@ -49,6 +49,7 @@ import KeySystemConfiguration from '../vo/KeySystemConfiguration';
 
 function ProtectionController(config) {
 
+    config = config || {};
     const protectionKeyController = config.protectionKeyController;
     let protectionModel = config.protectionModel;
     let adapter = config.adapter;

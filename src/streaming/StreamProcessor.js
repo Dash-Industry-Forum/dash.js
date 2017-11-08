@@ -40,6 +40,7 @@ import DashHandler from '../dash/DashHandler';
 
 function StreamProcessor(config) {
 
+    config = config || {};
     let context = this.context;
 
     let indexHandler;

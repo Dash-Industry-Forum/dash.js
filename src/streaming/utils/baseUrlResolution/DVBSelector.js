@@ -32,6 +32,7 @@ import FactoryMaker from '../../../core/FactoryMaker';
 
 function DVBSelector(config) {
 
+    config = config || {};
     let instance;
 
     const blacklistController = config.blacklistController;

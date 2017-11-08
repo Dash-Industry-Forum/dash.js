@@ -39,6 +39,7 @@ import { round10 } from 'round10';
  */
 function DashMetrics(config) {
 
+    config = config || {};
     let instance;
     let dashManifestModel = config.dashManifestModel;
     let manifestModel = config.manifestModel;

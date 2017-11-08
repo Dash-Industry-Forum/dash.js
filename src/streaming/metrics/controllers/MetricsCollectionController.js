@@ -35,6 +35,7 @@ import MetricsReportingEvents from '../MetricsReportingEvents';
 
 function MetricsCollectionController(config) {
 
+    config = config || {};
     let metricsControllers = {};
 
     let context = this.context;
