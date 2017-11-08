@@ -745,7 +745,8 @@ function MetricsController(config) {
             rangeController.initialize(metricsEntry.Range);
 
             reportingController = (0, _ReportingController2['default'])(context).create({
-                log: config.log
+                log: config.log,
+                metricsConstants: config.metricsConstants
             });
 
             reportingController.initialize(metricsEntry.Reporting, rangeController);
@@ -1073,9 +1074,7 @@ function ReportingController(config) {
     var reporters = [];
     var instance = undefined;
 
-    var reportingFactory = (0, _reportingReportingFactory2['default'])(this.context).getInstance({
-        log: config.log
-    });
+    var reportingFactory = (0, _reportingReportingFactory2['default'])(this.context).getInstance(config);
 
     function initialize(reporting, rangeController) {
         // "if multiple Reporting elements are present, it is expected that
@@ -1705,13 +1704,17 @@ function ReportingFactory(config) {
 
     var context = this.context;
     var log = config.log;
+    var metricsConstants = config.metricsConstants;
+
     var instance = undefined;
 
     function create(entry, rangeController) {
         var reporting = undefined;
 
         try {
-            reporting = knownReportingSchemeIdUris[entry.schemeIdUri](context).create();
+            reporting = knownReportingSchemeIdUris[entry.schemeIdUri](context).create({
+                metricsConstants: metricsConstants
+            });
 
             reporting.initialize(entry, rangeController);
         } catch (e) {

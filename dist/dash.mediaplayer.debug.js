@@ -160,6 +160,7 @@ if (undefined === atob) {
 if (typeof exports !== 'undefined') {
     exports.decode = BASE64.decode;
     exports.decodeArray = BASE64.decodeArray;
+    exports.encode = BASE64.encode;
 }
 
 },{}],2:[function(_dereq_,module,exports){
@@ -2093,18 +2094,9 @@ function X2JS(config) {
         if (window.DOMParser) {
             var parser = new window.DOMParser();
             var parsererrorNS = null;
-            // IE9+ now is here
-            if (!isIEParser) {
-                try {
-                    parsererrorNS = parser.parseFromString("INVALID", "text/xml").getElementsByTagName("parsererror")[0].namespaceURI;
-                } catch (err) {
-                    parsererrorNS = null;
-                }
-            }
             try {
                 xmlDoc = parser.parseFromString(xmlDocStr, "text/xml");
-                if (parsererrorNS != null && xmlDoc.getElementsByTagNameNS(parsererrorNS, "parsererror").length > 0) {
-                    //throw new Error('Error parsing XML: '+xmlDocStr);
+                if (xmlDoc.getElementsByTagNameNS("*", "parseerror").length > 0) {
                     xmlDoc = null;
                 }
             } catch (err) {
@@ -15309,7 +15301,7 @@ Object.defineProperty(exports, '__esModule', {
     value: true
 });
 exports.getVersionString = getVersionString;
-var VERSION = '2.6.2';
+var VERSION = '2.6.3';
 
 function getVersionString() {
     return VERSION;
@@ -15954,7 +15946,7 @@ function DashAdapter() {
         return indexHandler ? indexHandler.getInitRequest(representation) : null;
     }
 
-    function getNextFragmentRequest(streamProcessor, trackInfo) {
+    function getNextFragmentRequest(streamProcessor, representationInfo) {
         var representationController = undefined,
             representation = undefined,
             indexHandler = undefined;
@@ -15962,13 +15954,13 @@ function DashAdapter() {
         checkStreamProcessor(streamProcessor);
 
         representationController = streamProcessor.getRepresentationController();
-        representation = getRepresentationForRepresentationInfo(trackInfo, representationController);
+        representation = getRepresentationForRepresentationInfo(representationInfo, representationController);
         indexHandler = streamProcessor.getIndexHandler();
 
         return indexHandler ? indexHandler.getNextSegmentRequest(representation) : null;
     }
 
-    function getFragmentRequestForTime(streamProcessor, trackInfo, time, options) {
+    function getFragmentRequestForTime(streamProcessor, representationInfo, time, options) {
         var representationController = undefined,
             representation = undefined,
             indexHandler = undefined;
@@ -15976,13 +15968,13 @@ function DashAdapter() {
         checkStreamProcessor(streamProcessor);
 
         representationController = streamProcessor.getRepresentationController();
-        representation = getRepresentationForRepresentationInfo(trackInfo, representationController);
+        representation = getRepresentationForRepresentationInfo(representationInfo, representationController);
         indexHandler = streamProcessor.getIndexHandler();
 
         return indexHandler ? indexHandler.getSegmentRequestForTime(representation, time, options) : null;
     }
 
-    function generateFragmentRequestForTime(streamProcessor, trackInfo, time) {
+    function generateFragmentRequestForTime(streamProcessor, representationInfo, time) {
         var representationController = undefined,
             representation = undefined,
             indexHandler = undefined;
@@ -15990,7 +15982,7 @@ function DashAdapter() {
         checkStreamProcessor(streamProcessor);
 
         representationController = streamProcessor.getRepresentationController();
-        representation = getRepresentationForRepresentationInfo(trackInfo, representationController);
+        representation = getRepresentationForRepresentationInfo(representationInfo, representationController);
         indexHandler = streamProcessor.getIndexHandler();
 
         return indexHandler ? indexHandler.generateSegmentRequestForTime(representation, time) : null;
@@ -18340,19 +18332,20 @@ function RepresentationController() {
     }
 
     function updateData(newRealAdaptation, voAdaptation, type) {
-        var quality = undefined,
-            averageThroughput = undefined;
-
-        var bitrate = null;
         var streamInfo = streamProcessor.getStreamInfo();
         var maxQuality = abrController.getTopQualityIndexFor(type, streamInfo.id);
+        var minIdx = abrController.getMinAllowedIndexFor(type);
+
+        var quality = undefined,
+            averageThroughput = undefined;
+        var bitrate = null;
 
         updating = true;
         eventBus.trigger(_coreEventsEvents2['default'].DATA_UPDATE_STARTED, { sender: this });
 
         voAvailableRepresentations = updateRepresentations(voAdaptation);
 
-        if (realAdaptation === null && type !== _streamingConstantsConstants2['default'].FRAGMENTED_TEXT) {
+        if ((realAdaptation === null || realAdaptation.id != newRealAdaptation.id) && type !== _streamingConstantsConstants2['default'].FRAGMENTED_TEXT) {
             averageThroughput = abrController.getThroughputHistory().getAverageThroughput(type);
             bitrate = averageThroughput || abrController.getInitialBitrateFor(type, streamInfo);
             quality = abrController.getQualityForBitrate(streamProcessor.getMediaInfo(), bitrate);
@@ -18360,6 +18353,9 @@ function RepresentationController() {
             quality = abrController.getQualityFor(type, streamInfo);
         }
 
+        if (minIdx !== undefined && quality < minIdx) {
+            quality = minIdx;
+        }
         if (quality > maxQuality) {
             quality = maxQuality;
         }
@@ -23225,7 +23221,7 @@ function MediaPlayer() {
     }
 
     /**
-     * Configure media plyer with customs controllers. Helpful for tests
+     * Configure media player with customs controllers. Helpful for tests
      *
      * @param {object=} config controllers configuration
      * @memberof module:MediaPlayer
@@ -24997,6 +24993,9 @@ function MediaPlayer() {
      * @instance
      */
     function setInitialMediaSettingsFor(type, value) {
+        if (!mediaPlayerInitialized) {
+            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+        }
         mediaController.setInitialSettings(type, value);
     }
 
@@ -25014,6 +25013,9 @@ function MediaPlayer() {
      * @instance
      */
     function getInitialMediaSettingsFor(type) {
+        if (!mediaPlayerInitialized) {
+            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+        }
         return mediaController.getInitialSettings(type);
     }
 
@@ -25038,6 +25040,9 @@ function MediaPlayer() {
      * @instance
      */
     function getTrackSwitchModeFor(type) {
+        if (!mediaPlayerInitialized) {
+            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+        }
         return mediaController.getSwitchMode(type);
     }
 
@@ -25056,6 +25061,9 @@ function MediaPlayer() {
      * @instance
      */
     function setTrackSwitchModeFor(type, mode) {
+        if (!mediaPlayerInitialized) {
+            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+        }
         mediaController.setSwitchMode(type, mode);
     }
 
@@ -25074,6 +25082,9 @@ function MediaPlayer() {
      * @instance
      */
     function setSelectionModeForInitialTrack(mode) {
+        if (!mediaPlayerInitialized) {
+            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+        }
         mediaController.setSelectionModeForInitialTrack(mode);
     }
 
@@ -25085,6 +25096,9 @@ function MediaPlayer() {
      * @instance
      */
     function getSelectionModeForInitialTrack() {
+        if (!mediaPlayerInitialized) {
+            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+        }
         return mediaController.getSelectionModeForInitialTrack();
     }
 
@@ -26142,6 +26156,8 @@ function Stream(config) {
     function deactivate() {
         var ln = streamProcessors ? streamProcessors.length : 0;
         for (var i = 0; i < ln; i++) {
+            var fragmentModel = streamProcessors[i].getFragmentModel();
+            fragmentModel.removeExecutedRequestsBeforeTime(getStartTime() + getDuration());
             streamProcessors[i].reset();
         }
         streamProcessors = [];
@@ -26296,6 +26312,7 @@ function Stream(config) {
         } else {
             processor.updateMediaInfo(mediaInfo);
             if (mediaInfo.type !== _constantsConstants2['default'].FRAGMENTED_TEXT) {
+                abrController.updateTopQualityIndex(mediaInfo);
                 processor.switchTrackAsked();
             }
         }
@@ -26804,6 +26821,10 @@ function StreamProcessor(config) {
         }
     }
 
+    function getExternalControllers() {
+        return spExternalControllers;
+    }
+
     function unregisterAllExternalController() {
         spExternalControllers = [];
     }
@@ -26833,6 +26854,9 @@ function StreamProcessor(config) {
             representationController = null;
         }
 
+        if (abrController) {
+            abrController.unRegisterStreamType(type);
+        }
         spExternalControllers.forEach(function (controller) {
             controller.reset();
         });
@@ -27019,6 +27043,7 @@ function StreamProcessor(config) {
         setBuffer: setBuffer,
         registerExternalController: registerExternalController,
         unregisterExternalController: unregisterExternalController,
+        getExternalControllers: getExternalControllers,
         unregisterAllExternalController: unregisterAllExternalController,
         reset: reset
     };
@@ -27806,6 +27831,10 @@ function AbrController() {
         });
     }
 
+    function unRegisterStreamType(type) {
+        delete streamProcessorDict[type];
+    }
+
     function createAbrRulesCollection() {
         abrRulesCollection = (0, _rulesAbrABRRulesCollection2['default'])(context).create({
             metricsModel: metricsModel,
@@ -27922,7 +27951,6 @@ function AbrController() {
      * @memberof AbrController#
      */
     function getInitialBitrateFor(type) {
-
         var savedBitrate = domStorage.getSavedBitrateSettings(type);
 
         if (!bitrateDict.hasOwnProperty(type)) {
@@ -27993,6 +28021,30 @@ function AbrController() {
         bitrateDict.min[type] = value;
     }
 
+    function getMaxAllowedIndexFor(type) {
+        var maxBitrate = getMaxAllowedBitrateFor(type);
+        if (maxBitrate) {
+            return getQualityForBitrate(streamProcessorDict[type].getMediaInfo(), maxBitrate);
+        } else {
+            return undefined;
+        }
+    }
+
+    function getMinAllowedIndexFor(type) {
+        var minBitrate = getMinAllowedBitrateFor(type);
+        if (minBitrate) {
+            var bitrateList = getBitrateList(streamProcessorDict[type].getMediaInfo());
+            // This returns the quality index <= for the given bitrate
+            var minIdx = getQualityForBitrate(streamProcessorDict[type].getMediaInfo(), minBitrate);
+            if (bitrateList[minIdx] && minIdx < bitrateList.length - 1 && bitrateList[minIdx].bitrate < minBitrate * 1000) {
+                minIdx++; // Go to the next bitrate
+            }
+            return minIdx;
+        } else {
+            return undefined;
+        }
+    }
+
     function getMaxAllowedRepresentationRatioFor(type) {
         if (ratioDict.hasOwnProperty('max') && ratioDict.max.hasOwnProperty(type)) {
             return ratioDict.max[type];
@@ -28055,14 +28107,18 @@ function AbrController() {
                 droppedFramesHistory.push(playbackIndex, videoModel.getPlaybackQuality());
             }
 
-            //log("ABR enabled? (" + autoSwitchBitrate + ")");
             if (getAutoSwitchBitrateFor(type)) {
+                var minIdx = getMinAllowedIndexFor(type);
                 var topQualityIdx = getTopQualityIndexFor(type, streamId);
                 var switchRequest = abrRulesCollection.getMaxQuality(rulesContext);
                 var newQuality = switchRequest.quality;
+                if (minIdx !== undefined && newQuality < minIdx) {
+                    newQuality = minIdx;
+                }
                 if (newQuality > topQualityIdx) {
                     newQuality = topQualityIdx;
                 }
+
                 switchHistoryDict[type].push({ oldValue: oldQuality, newValue: newQuality });
 
                 if (newQuality > _rulesSwitchRequestJs2['default'].NO_CHANGE && newQuality != oldQuality) {
@@ -28096,7 +28152,7 @@ function AbrController() {
             var id = streamInfo ? streamInfo.id : null;
             if (debug.getLogToBrowserConsole()) {
                 var bufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor(type));
-                log('AbrController (' + type + ') switch from ' + oldQuality + ' to ' + newQuality + '/' + topQualityIdx + ' (buffer: ' + bufferLevel + ')\n' + JSON.stringify(reason));
+                log('AbrController (' + type + ') switch from ' + oldQuality + ' to ' + newQuality + '/' + topQualityIdx + ' (buffer: ' + bufferLevel + ') ' + (reason ? JSON.stringify(reason) : '.'));
             }
             setQualityFor(type, id, newQuality);
             eventBus.trigger(_coreEventsEvents2['default'].QUALITY_CHANGE_REQUESTED, { mediaType: type, streamInfo: streamInfo, oldQuality: oldQuality, newQuality: newQuality, reason: reason });
@@ -28108,7 +28164,7 @@ function AbrController() {
     }
 
     function getAbandonmentStateFor(type) {
-        return abandonmentStateDict[type].state;
+        return abandonmentStateDict[type] ? abandonmentStateDict[type].state : null;
     }
 
     /**
@@ -28220,12 +28276,11 @@ function AbrController() {
     }
 
     function isPlayingAtTopQuality(streamInfo) {
-        var isAtTop = undefined;
         var streamId = streamInfo.id;
         var audioQuality = getQualityFor(_constantsConstants2['default'].AUDIO);
         var videoQuality = getQualityFor(_constantsConstants2['default'].VIDEO);
 
-        isAtTop = audioQuality === getTopQualityIndexFor(_constantsConstants2['default'].AUDIO, streamId) && videoQuality === getTopQualityIndexFor(_constantsConstants2['default'].VIDEO, streamId);
+        var isAtTop = audioQuality === getTopQualityIndexFor(_constantsConstants2['default'].AUDIO, streamId) && videoQuality === getTopQualityIndexFor(_constantsConstants2['default'].VIDEO, streamId);
 
         return isAtTop;
     }
@@ -28267,15 +28322,13 @@ function AbrController() {
             return newIdx;
         }
 
-        var minBitrate = getMinAllowedBitrateFor(type);
-        if (minBitrate) {
-            var minIdx = getQualityForBitrate(streamProcessorDict[type].getMediaInfo(), minBitrate);
+        var minIdx = getMinAllowedIndexFor(type);
+        if (minIdx !== undefined) {
             newIdx = Math.max(idx, minIdx);
         }
 
-        var maxBitrate = getMaxAllowedBitrateFor(type);
-        if (maxBitrate) {
-            var maxIdx = getQualityForBitrate(streamProcessorDict[type].getMediaInfo(), maxBitrate);
+        var maxIdx = getMaxAllowedIndexFor(type);
+        if (maxIdx !== undefined) {
             newIdx = Math.min(newIdx, maxIdx);
         }
 
@@ -28340,10 +28393,6 @@ function AbrController() {
                 useBufferOccupancyABR: useBufferOccupancyABR(type)
             });
             var switchRequest = abrRulesCollection.shouldAbandonFragment(rulesContext);
-            //Removed overrideFunc
-            //    function (currentValue, newValue) {
-            //        return newValue;
-            //    });
 
             if (switchRequest.quality > _rulesSwitchRequestJs2['default'].NO_CHANGE) {
                 var fragmentModel = streamProcessor.getFragmentModel();
@@ -28375,6 +28424,8 @@ function AbrController() {
         getMinAllowedBitrateFor: getMinAllowedBitrateFor,
         setMaxAllowedBitrateFor: setMaxAllowedBitrateFor,
         setMinAllowedBitrateFor: setMinAllowedBitrateFor,
+        getMaxAllowedIndexFor: getMaxAllowedIndexFor,
+        getMinAllowedIndexFor: getMinAllowedIndexFor,
         getMaxAllowedRepresentationRatioFor: getMaxAllowedRepresentationRatioFor,
         setMaxAllowedRepresentationRatioFor: setMaxAllowedRepresentationRatioFor,
         getInitialBitrateFor: getInitialBitrateFor,
@@ -28398,6 +28449,7 @@ function AbrController() {
         setWindowResizeEventCalled: setWindowResizeEventCalled,
         createAbrRulesCollection: createAbrRulesCollection,
         registerStreamType: registerStreamType,
+        unRegisterStreamType: unRegisterStreamType,
         setConfig: setConfig,
         reset: reset
     };
@@ -30649,10 +30701,11 @@ function PlaybackController() {
 
     /**
      * @param {boolean} ignoreStartOffset - ignore URL fragment start offset if true
+     * @param {number} liveEdge - liveEdge value
      * @returns {number} object
      * @memberof PlaybackController#
      */
-    function getStreamStartTime(ignoreStartOffset) {
+    function getStreamStartTime(ignoreStartOffset, liveEdge) {
         var presentationStartTime = undefined;
         var fragData = (0, _modelsURIQueryAndFragmentModel2['default'])(context).getInstance().getURIFragmentData();
         var startTimeOffset = NaN;
@@ -30669,10 +30722,10 @@ function PlaybackController() {
         }
 
         if (isDynamic) {
-            if (!isNaN(startTimeOffset) && startTimeOffset > 1262304000) {
+            if (!isNaN(startTimeOffset)) {
                 presentationStartTime = startTimeOffset - streamInfo.manifestInfo.availableFrom.getTime() / 1000;
 
-                if (presentationStartTime > liveStartTime || presentationStartTime < liveStartTime - streamInfo.manifestInfo.DVRWindowSize) {
+                if (presentationStartTime > liveStartTime || presentationStartTime < (!isNaN(liveEdge) ? liveEdge - streamInfo.manifestInfo.DVRWindowSize : NaN)) {
                     presentationStartTime = null;
                 }
             }
@@ -31091,7 +31144,7 @@ function ScheduleController(config) {
         bufferLevelRule = undefined,
         nextFragmentRequestRule = undefined,
         scheduleWhilePaused = undefined,
-        lastQualityIndex = undefined,
+        lastFragmentRequest = undefined,
         topQualityIndex = undefined,
         lastInitQuality = undefined,
         replaceRequestArray = undefined,
@@ -31181,7 +31234,7 @@ function ScheduleController(config) {
         var newTopQualityIndex = abrController.getTopQualityIndexFor(type, id);
 
         if (topQualityIndex[id][type] != newTopQualityIndex) {
-            log('Top quality' + type + ' index has changed from ' + topQualityIndex[id][type] + ' to ' + newTopQualityIndex);
+            log('Top quality ' + type + ' index has changed from ' + topQualityIndex[id][type] + ' to ' + newTopQualityIndex);
             topQualityIndex[id][type] = newTopQualityIndex;
             return true;
         }
@@ -31199,14 +31252,15 @@ function ScheduleController(config) {
         if (switchTrack || isReplacement || hasTopQualityChanged(currentRepresentationInfo.mediaInfo.type, streamProcessor.getStreamInfo().id) || bufferLevelRule.execute(streamProcessor, type, streamController.isVideoTrackPresent())) {
 
             var getNextFragment = function getNextFragment() {
-                log('ScheduleController - getNextFragment');
+                log('ScheduleController ' + type + '- getNextFragment');
                 var fragmentController = streamProcessor.getFragmentController();
                 if (switchTrack) {
-                    log('ScheduleController - switch track has been asked, get init request for ' + type + ' with representationid = ' + currentRepresentationInfo.id);
+                    log('ScheduleController ' + type + '- switch track has been asked, get init request for ' + type + ' with representationid = ' + currentRepresentationInfo.id);
                     streamProcessor.switchInitData(currentRepresentationInfo.id);
+                    lastInitQuality = currentRepresentationInfo.quality;
                     switchTrack = false;
                 } else if (currentRepresentationInfo.quality !== lastInitQuality) {
-                    log('ScheduleController - quality has changed, get init request');
+                    log('ScheduleController ' + type + '- quality has changed, get init request');
                     lastInitQuality = currentRepresentationInfo.quality;
 
                     streamProcessor.switchInitData(currentRepresentationInfo.id);
@@ -31219,11 +31273,11 @@ function ScheduleController(config) {
                     } else {
                         var request = nextFragmentRequestRule.execute(streamProcessor, replacement);
                         if (request) {
-                            log('ScheduleController - getNextFragment - request is ' + request.url);
+                            log('ScheduleController ' + type + '- getNextFragment - request is ' + request.url);
                             fragmentModel.executeRequest(request);
                         } else {
                             //Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
-                            log('getNextFragment - Playing at the bleeding live edge and frag is not available yet');
+                            log('getNextFragment ' + type + '- Playing at the bleeding live edge and frag is not available yet');
                             isFragmentProcessingInProgress = false;
                             startScheduleTimer(500);
                         }
@@ -31282,8 +31336,6 @@ function ScheduleController(config) {
     }
 
     function getInitRequest(quality) {
-        lastInitQuality = quality;
-
         var request = adapter.getInitRequest(streamProcessor, quality);
         if (request) {
             isFragmentProcessingInProgress = true;
@@ -31322,14 +31374,17 @@ function ScheduleController(config) {
                 threshold: 0
             })[0];
             if (item && playbackController.getTime() >= item.startTime) {
-                if (item.quality !== lastQualityIndex && trigger) {
+                if ((item.quality !== lastFragmentRequest.quality || item.adaptationIndex !== lastFragmentRequest.adaptationIndex) && trigger) {
                     eventBus.trigger(_coreEventsEvents2['default'].QUALITY_CHANGE_RENDERED, {
                         mediaType: type,
-                        oldQuality: lastQualityIndex,
+                        oldQuality: lastFragmentRequest.quality,
                         newQuality: item.quality
                     });
                 }
-                lastQualityIndex = item.quality;
+                lastFragmentRequest = {
+                    quality: item.quality,
+                    adaptationIndex: item.adaptationIndex
+                };
             }
         }
     }
@@ -31373,15 +31428,14 @@ function ScheduleController(config) {
             var request = adapter.getFragmentRequestForTime(streamProcessor, currentRepresentationInfo, startTime, {
                 ignoreIsFinished: true
             });
-            seekTarget = playbackController.getLiveStartTime();
-            if (isNaN(seekTarget) || request.startTime > seekTarget) {
-                //special use case for multi period stream. If the startTime is out of the current period, send a seek command.
-                //in onPlaybackSeeking callback (StreamController), the detection of switch stream is done.
-                if (request.startTime > currentRepresentationInfo.mediaInfo.streamInfo.start + currentRepresentationInfo.mediaInfo.streamInfo.duration) {
-                    playbackController.seek(request.startTime);
-                }
-                playbackController.setLiveStartTime(request.startTime);
-                seekTarget = request.startTime;
+
+            playbackController.setLiveStartTime(request.startTime);
+            seekTarget = playbackController.getStreamStartTime(false, liveEdge);
+
+            //special use case for multi period stream. If the startTime is out of the current period, send a seek command.
+            //in onPlaybackSeeking callback (StreamController), the detection of switch stream is done.
+            if (seekTarget > currentRepresentationInfo.mediaInfo.streamInfo.start + currentRepresentationInfo.mediaInfo.streamInfo.duration) {
+                playbackController.seek(seekTarget);
             }
 
             var manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metricsModel.getMetricsFor(_constantsConstants2['default'].STREAM));
@@ -31590,7 +31644,10 @@ function ScheduleController(config) {
         playListTraceMetricsClosed = true;
         initialRequest = true;
         lastInitQuality = NaN;
-        lastQualityIndex = NaN;
+        lastFragmentRequest = {
+            quality: NaN,
+            adaptationIndex: NaN
+        };
         topQualityIndex = {};
         replaceRequestArray = [];
         isStopped = true;
@@ -31708,6 +31765,10 @@ var _coreFactoryMaker = _dereq_(50);
 var _coreFactoryMaker2 = _interopRequireDefault(_coreFactoryMaker);
 
 var QUOTA_EXCEEDED_ERROR_CODE = 22;
+var APPEND_ERROR_CODE = 1;
+var REMOVE_ERROR_CODE = 2;
+var APPEND_ERROR_MESSAGE = 'buffer or chunk is not defined';
+var REMOVE_ERROR_MESSAGE = 'buffer is not defined';
 
 function SourceBufferController(config) {
 
@@ -31945,7 +32006,16 @@ function SourceBufferController(config) {
     }
 
     function append(buffer, chunk) {
+        if (!buffer || !chunk) {
+            eventBus.trigger(_coreEventsEvents2['default'].SOURCEBUFFER_APPEND_COMPLETED, {
+                buffer: null,
+                bytes: null,
+                error: new _voDashJSError2['default'](APPEND_ERROR_CODE, APPEND_ERROR_MESSAGE, null)
+            });
+            return;
+        }
         var bytes = chunk.bytes;
+
         var appendMethod = 'append' in buffer ? 'append' : 'appendBuffer' in buffer ? 'appendBuffer' : null;
         // our user-defined sourcebuffer-like object has Object as its
         // prototype whereas built-in SourceBuffers will have something
@@ -31980,7 +32050,15 @@ function SourceBufferController(config) {
     }
 
     function remove(buffer, start, end, mediaSource) {
-
+        if (!buffer) {
+            eventBus.trigger(_coreEventsEvents2['default'].SOURCEBUFFER_REMOVE_COMPLETED, {
+                buffer: buffer,
+                from: start,
+                to: end,
+                error: new _voDashJSError2['default'](REMOVE_ERROR_CODE, REMOVE_ERROR_MESSAGE, null)
+            });
+            return;
+        }
         // make sure that the given time range is correct. Otherwise we will get InvalidAccessError
         waitForUpdateEnd(buffer, function () {
             try {
@@ -32140,10 +32218,6 @@ var _coreEventsEvents = _dereq_(53);
 
 var _coreEventsEvents2 = _interopRequireDefault(_coreEventsEvents);
 
-var _modelsURIQueryAndFragmentModel = _dereq_(119);
-
-var _modelsURIQueryAndFragmentModel2 = _interopRequireDefault(_modelsURIQueryAndFragmentModel);
-
 var _modelsMediaPlayerModel = _dereq_(117);
 
 var _modelsMediaPlayerModel2 = _interopRequireDefault(_modelsMediaPlayerModel);
@@ -32161,6 +32235,10 @@ var _coreDebug2 = _interopRequireDefault(_coreDebug);
 var _utilsInitCache = _dereq_(148);
 
 var _utilsInitCache2 = _interopRequireDefault(_utilsInitCache);
+
+var _utilsURLUtils = _dereq_(154);
+
+var _utilsURLUtils2 = _interopRequireDefault(_utilsURLUtils);
 
 var _MediaPlayerEvents = _dereq_(93);
 
@@ -32205,6 +32283,7 @@ function StreamController() {
         textController = undefined,
         sourceBufferController = undefined,
         initCache = undefined,
+        urlUtils = undefined,
         errHandler = undefined,
         timelineConverter = undefined,
         streams = undefined,
@@ -32231,6 +32310,7 @@ function StreamController() {
         baseURLController = (0, _BaseURLController2['default'])(context).getInstance();
         mediaSourceController = (0, _MediaSourceController2['default'])(context).getInstance();
         initCache = (0, _utilsInitCache2['default'])(context).getInstance();
+        urlUtils = (0, _utilsURLUtils2['default'])(context).getInstance();
 
         resetInitialSettings();
     }
@@ -32642,7 +32722,7 @@ function StreamController() {
 
                 var manifestUTCTimingSources = dashManifestModel.getUTCTimingSources(e.manifest);
                 var allUTCTimingSources = !dashManifestModel.getIsDynamic(manifest) || useCalculatedLiveEdgeTime ? manifestUTCTimingSources : manifestUTCTimingSources.concat(mediaPlayerModel.getUTCTimingSources());
-                var isHTTPS = (0, _modelsURIQueryAndFragmentModel2['default'])(context).getInstance().isManifestHTTPS();
+                var isHTTPS = urlUtils.isHTTPS(e.manifest.url);
 
                 //If https is detected on manifest then lets apply that protocol to only the default time source(s). In the future we may find the need to apply this to more then just default so left code at this level instead of in MediaPlayer.
                 allUTCTimingSources.forEach(function (item) {
@@ -32965,7 +33045,7 @@ StreamController.__dashjs_factory_name = 'StreamController';
 exports['default'] = _coreFactoryMaker2['default'].getSingletonFactory(StreamController);
 module.exports = exports['default'];
 
-},{"101":101,"107":107,"112":112,"117":117,"119":119,"148":148,"178":178,"48":48,"49":49,"50":50,"53":53,"91":91,"93":93,"94":94,"98":98,"99":99}],112:[function(_dereq_,module,exports){
+},{"101":101,"107":107,"112":112,"117":117,"148":148,"154":154,"178":178,"48":48,"49":49,"50":50,"53":53,"91":91,"93":93,"94":94,"98":98,"99":99}],112:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -36547,7 +36627,6 @@ function ABRRulesCollection(config) {
         abandonFragmentRules = [];
 
         if (mediaPlayerModel.getUseDefaultABRRules()) {
-
             // Only one of BolaRule and ThroughputRule will give a switchRequest.quality !== SwitchRequest.NO_CHANGE.
             // This is controlled by useBufferOccupancyABR mechanism in AbrController.
             qualitySwitchRules.push((0, _BolaRule2['default'])(context).create({
@@ -36559,14 +36638,12 @@ function ABRRulesCollection(config) {
                 metricsModel: metricsModel,
                 dashMetrics: dashMetrics
             }));
-
             qualitySwitchRules.push((0, _InsufficientBufferRule2['default'])(context).create({
                 metricsModel: metricsModel,
                 dashMetrics: dashMetrics
             }));
             qualitySwitchRules.push((0, _SwitchHistoryRuleJs2['default'])(context).create());
             qualitySwitchRules.push((0, _DroppedFramesRuleJs2['default'])(context).create());
-
             abandonFragmentRules.push((0, _AbandonRequestsRule2['default'])(context).create({
                 metricsModel: metricsModel,
                 dashMetrics: dashMetrics,
@@ -36594,7 +36671,6 @@ function ABRRulesCollection(config) {
     }
 
     function getMinSwitchRequest(srArray) {
-
         var values = {};
         var i = undefined,
             len = undefined,
@@ -36772,7 +36848,7 @@ function AbandonRequestsRule(config) {
     function shouldAbandon(rulesContext) {
         var switchRequest = (0, _SwitchRequest2['default'])(context).create(_SwitchRequest2['default'].NO_CHANGE, { name: AbandonRequestsRule.__dashjs_factory_name });
 
-        if (!rulesContext || !rulesContext.hasOwnProperty('getMediaInfo') || !rulesContext.hasOwnProperty('getMediaType') || !rulesContext.hasOwnProperty('getCurrentRequest') || !rulesContext.hasOwnProperty('getTrackInfo') || !rulesContext.hasOwnProperty('getAbrController')) {
+        if (!rulesContext || !rulesContext.hasOwnProperty('getMediaInfo') || !rulesContext.hasOwnProperty('getMediaType') || !rulesContext.hasOwnProperty('getCurrentRequest') || !rulesContext.hasOwnProperty('getRepresentationInfo') || !rulesContext.hasOwnProperty('getAbrController')) {
             return switchRequest;
         }
 
@@ -36781,7 +36857,6 @@ function AbandonRequestsRule(config) {
         var req = rulesContext.getCurrentRequest();
 
         if (!isNaN(req.index)) {
-
             setFragmentRequestDict(mediaType, req.index);
 
             var stableBufferTime = mediaPlayerModel.getStableBufferTime();
@@ -36817,7 +36892,6 @@ function AbandonRequestsRule(config) {
                 }, 0);
                 fragmentInfo.measuredBandwidthInKbps = Math.round(totalSampledValue / throughputArray[mediaType].length);
                 fragmentInfo.estimatedTimeOfDownload = +(fragmentInfo.bytesTotal * 8 / fragmentInfo.measuredBandwidthInKbps / 1000).toFixed(2);
-                //log("id:",fragmentInfo.id, "kbps:", fragmentInfo.measuredBandwidthInKbps, "etd:",fragmentInfo.estimatedTimeOfDownload, fragmentInfo.bytesLoaded);
 
                 if (fragmentInfo.estimatedTimeOfDownload < fragmentInfo.segmentDuration * ABANDON_MULTIPLIER || rulesContext.getRepresentationInfo().quality === 0) {
                     return switchRequest;
@@ -36953,6 +37027,7 @@ function BolaRule(config) {
 
     var context = this.context;
     var log = (0, _coreDebug2['default'])(context).getInstance().log;
+
     var dashMetrics = config.dashMetrics;
     var metricsModel = config.metricsModel;
     var mediaPlayerModel = config.mediaPlayerModel;
@@ -37007,7 +37082,6 @@ function BolaRule(config) {
 
     function getInitialBolaState(rulesContext) {
         var initialState = {};
-
         var mediaInfo = rulesContext.getMediaInfo();
         var bitrates = mediaInfo.bitrateList.map(function (b) {
             return b.bandwidth;
@@ -37462,6 +37536,7 @@ var _coreDebug = _dereq_(48);
 var _coreDebug2 = _interopRequireDefault(_coreDebug);
 
 function DroppedFramesRule() {
+
     var context = this.context;
     var log = (0, _coreDebug2['default'])(context).getInstance().log;
 
@@ -37500,9 +37575,7 @@ function DroppedFramesRule() {
 }
 
 DroppedFramesRule.__dashjs_factory_name = 'DroppedFramesRule';
-var factory = _coreFactoryMakerJs2['default'].getClassFactory(DroppedFramesRule);
-
-exports['default'] = factory;
+exports['default'] = _coreFactoryMakerJs2['default'].getClassFactory(DroppedFramesRule);
 module.exports = exports['default'];
 
 },{"123":123,"48":48,"50":50}],130:[function(_dereq_,module,exports){
@@ -37574,8 +37647,8 @@ function InsufficientBufferRule(config) {
 
     var context = this.context;
     var log = (0, _coreDebug2['default'])(context).getInstance().log;
-    var eventBus = (0, _coreEventBus2['default'])(context).getInstance();
 
+    var eventBus = (0, _coreEventBus2['default'])(context).getInstance();
     var metricsModel = config.metricsModel;
     var dashMetrics = config.dashMetrics;
 
@@ -37614,8 +37687,11 @@ function InsufficientBufferRule(config) {
         var mediaType = rulesContext.getMediaType();
         var metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
         var lastBufferStateVO = metrics.BufferState.length > 0 ? metrics.BufferState[metrics.BufferState.length - 1] : null;
+        var representationInfo = rulesContext.getRepresentationInfo();
+        var fragmentDuration = representationInfo.fragmentDuration;
 
-        if (!lastBufferStateVO || !wasFirstBufferLoadedEventTriggered(mediaType, lastBufferStateVO)) {
+        // Don't ask for a bitrate change if there is not info about buffer state or if fragmentDuration is not defined
+        if (!lastBufferStateVO || !wasFirstBufferLoadedEventTriggered(mediaType, lastBufferStateVO) || !fragmentDuration) {
             return switchRequest;
         }
 
@@ -37627,14 +37703,10 @@ function InsufficientBufferRule(config) {
             var mediaInfo = rulesContext.getMediaInfo();
             var abrController = rulesContext.getAbrController();
             var throughputHistory = abrController.getThroughputHistory();
-            var representationInfo = rulesContext.getRepresentationInfo();
-            var fragmentDuration = representationInfo.fragmentDuration;
 
             var bufferLevel = dashMetrics.getCurrentBufferLevel(metrics);
-
             var throughput = throughputHistory.getAverageThroughput(mediaType);
             var latency = throughputHistory.getAverageLatency(mediaType);
-
             var bitrate = throughput * (bufferLevel / fragmentDuration) * INSUFFICIENT_BUFFER_SAFETY_FACTOR;
 
             switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, bitrate, latency);
@@ -37706,6 +37778,7 @@ var _SwitchRequestJs = _dereq_(123);
 var _SwitchRequestJs2 = _interopRequireDefault(_SwitchRequestJs);
 
 function SwitchHistoryRule() {
+
     var context = this.context;
     var log = (0, _coreDebug2['default'])(context).getInstance().log;
 
@@ -37748,9 +37821,7 @@ function SwitchHistoryRule() {
 }
 
 SwitchHistoryRule.__dashjs_factory_name = 'SwitchHistoryRule';
-var factory = _coreFactoryMakerJs2['default'].getClassFactory(SwitchHistoryRule);
-
-exports['default'] = factory;
+exports['default'] = _coreFactoryMakerJs2['default'].getClassFactory(SwitchHistoryRule);
 module.exports = exports['default'];
 
 },{"123":123,"48":48,"50":50}],132:[function(_dereq_,module,exports){
@@ -37816,6 +37887,7 @@ function ThroughputRule(config) {
 
     var context = this.context;
     var log = (0, _coreDebug2['default'])(context).getInstance().log;
+
     var metricsModel = config.metricsModel;
 
     function checkConfig() {
@@ -37851,7 +37923,6 @@ function ThroughputRule(config) {
         }
 
         if (abrController.getAbandonmentStateFor(mediaType) !== _controllersAbrController2['default'].ABANDON_LOAD) {
-
             if (bufferStateVO.state === _controllersBufferController2['default'].BUFFER_LOADED || isDynamic) {
                 switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, throughput, latency);
                 streamProcessor.getScheduleController().setTimeToLoadDelay(0);
@@ -42155,15 +42226,17 @@ function TTMLParser() {
                     startTime = mediaTimeEvents[i] + offsetTime < startTimeSegment ? startTimeSegment : mediaTimeEvents[i] + offsetTime;
                     endTime = mediaTimeEvents[i + 1] + offsetTime > endTimeSegment ? endTimeSegment : mediaTimeEvents[i + 1] + offsetTime;
 
-                    captionArray.push({
-                        start: startTime,
-                        end: endTime,
-                        type: 'html',
-                        cueID: getCueID(),
-                        isd: isd,
-                        images: images,
-                        embeddedImages: embeddedImages
-                    });
+                    if (startTime < endTime) {
+                        captionArray.push({
+                            start: startTime,
+                            end: endTime,
+                            type: 'html',
+                            cueID: getCueID(),
+                            isd: isd,
+                            images: images,
+                            embeddedImages: embeddedImages
+                        });
+                    }
                 }
             }
         }
@@ -42250,6 +42323,7 @@ function URLUtils() {
 
     var schemeRegex = /^[a-z][a-z0-9+\-.]*:/i;
     var httpUrlRegex = /^https?:\/\//i;
+    var httpsUrlRegex = /^https:\/\//i;
     var originRegex = /^([a-z][a-z0-9+\-.]*:\/\/[^\/]+)\/?/i;
 
     /**
@@ -42429,6 +42503,17 @@ function URLUtils() {
     }
 
     /**
+     * Determines whether the supplied url has https scheme
+     * @return {bool}
+     * @param {string} url
+     * @memberof module:URLUtils
+     * @instance
+     */
+    function isHTTPS(url) {
+        return httpsUrlRegex.test(url);
+    }
+
+    /**
      * Resolves a url given an optional base url
      * @return {string}
      * @param {string} url
@@ -42450,6 +42535,7 @@ function URLUtils() {
         isPathAbsolute: isPathAbsolute,
         isSchemeRelative: isSchemeRelative,
         isHTTPURL: isHTTPURL,
+        isHTTPS: isHTTPS,
         resolve: resolve
     };
 

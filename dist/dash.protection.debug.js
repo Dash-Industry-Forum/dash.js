@@ -893,6 +893,7 @@ function ProtectionController(config) {
      * the MPD or from the PSSH box in the media
      *
      * @param {ArrayBuffer} initData the initialization data
+     * @param {Uint8Array} cdmData the custom data to provide to licenser
      * @memberof module:ProtectionController
      * @instance
      * @fires ProtectionController#KeySessionCreated
@@ -901,7 +902,7 @@ function ProtectionController(config) {
      * API will need to modified (and a new "generateRequest(keySession, initData)" API created)
      * to come up to speed with the latest EME standard
      */
-    function createKeySession(initData) {
+    function createKeySession(initData, cdmData) {
         var initDataForKS = _CommonEncryption2['default'].getPSSHForKeySystem(keySystem, initData);
         if (initDataForKS) {
 
@@ -914,7 +915,7 @@ function ProtectionController(config) {
                 }
             }
             try {
-                protectionModel.createKeySession(initDataForKS, sessionType);
+                protectionModel.createKeySession(initDataForKS, sessionType, cdmData);
             } catch (error) {
                 eventBus.trigger(events.KEY_SESSION_CREATED, { data: null, error: 'Error creating key session! ' + error.message });
             }
@@ -1116,7 +1117,7 @@ function ProtectionController(config) {
                             } else {
                                 log('DRM: KeySystem Access Granted');
                                 eventBus.trigger(events.KEY_SYSTEM_SELECTED, { data: event.data });
-                                createKeySession(supportedKS[ksIdx].initData);
+                                createKeySession(supportedKS[ksIdx].initData, supportedKS[ksIdx].cdmData);
                             }
                         };
                         eventBus.on(events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
@@ -1171,7 +1172,7 @@ function ProtectionController(config) {
                         for (var i = 0; i < pendingNeedKeyData.length; i++) {
                             for (ksIdx = 0; ksIdx < pendingNeedKeyData[i].length; ksIdx++) {
                                 if (keySystem === pendingNeedKeyData[i][ksIdx].ks) {
-                                    createKeySession(pendingNeedKeyData[i][ksIdx].initData);
+                                    createKeySession(pendingNeedKeyData[i][ksIdx].initData, pendingNeedKeyData[i][ksIdx].cdmData);
                                     break;
                                 }
                             }
@@ -1612,7 +1613,8 @@ function ProtectionKeyController() {
                         if (!!initData) {
                             supportedKS.push({
                                 ks: keySystems[ksIdx],
-                                initData: initData
+                                initData: initData,
+                                cdmData: ks.getCDMData()
                             });
                         }
                     }
@@ -1861,6 +1863,10 @@ function KeySystemClearKey(config) {
         return null;
     }
 
+    function getCDMData() {
+        return null;
+    }
+
     instance = {
         uuid: uuid,
         schemeIdURI: schemeIdURI,
@@ -1869,6 +1875,7 @@ function KeySystemClearKey(config) {
         getRequestHeadersFromMessage: getRequestHeadersFromMessage,
         getLicenseRequestFromMessage: getLicenseRequestFromMessage,
         getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
+        getCDMData: getCDMData,
         getClearKeysFromProtectionData: getClearKeysFromProtectionData
     };
 
@@ -1933,12 +1940,20 @@ var _CommonEncryption2 = _interopRequireDefault(_CommonEncryption);
 var uuid = '9a04f079-9840-4286-ab92-e65be0885f95';
 var systemString = 'com.microsoft.playready';
 var schemeIdURI = 'urn:uuid:' + uuid;
+var PRCDMData = '<PlayReadyCDMData type="LicenseAcquisition"><LicenseAcquisition version="1.0" Proactive="false"><CustomData encoding="base64encoded">%CUSTOMDATA%</CustomData></LicenseAcquisition></PlayReadyCDMData>';
+var protData = undefined;
 
 function KeySystemPlayReady(config) {
 
     var instance = undefined;
     var messageFormat = 'utf16';
-    var BASE64 = config.BASE64;
+    var BASE64 = config ? config.BASE64 : null;
+
+    function checkConfig() {
+        if (!BASE64 || !BASE64.hasOwnProperty('decodeArray') || !BASE64.hasOwnProperty('decodeArray')) {
+            throw new Error('Missing config parameter(s)');
+        }
+    }
 
     function getRequestHeadersFromMessage(message) {
         var msg = undefined,
@@ -1972,6 +1987,7 @@ function KeySystemPlayReady(config) {
         var parser = new DOMParser();
         var dataview = messageFormat === 'utf16' ? new Uint16Array(message) : new Uint8Array(message);
 
+        checkConfig();
         msg = String.fromCharCode.apply(null, dataview);
         xmlDoc = parser.parseFromString(msg, 'application/xml');
 
@@ -2048,6 +2064,7 @@ function KeySystemPlayReady(config) {
             PSSHBox = undefined,
             PSSHData = undefined;
 
+        checkConfig();
         // Handle common encryption PSSH
         if ('pssh' in cpData) {
             return _CommonEncryption2['default'].parseInitDataFromContentProtection(cpData, BASE64);
@@ -2102,6 +2119,53 @@ function KeySystemPlayReady(config) {
         messageFormat = format;
     }
 
+    /**
+     * Initialize the Key system with protection data
+     * @param {Object} protectionData the protection data
+     */
+    function init(protectionData) {
+        if (protectionData) {
+            protData = protectionData;
+        }
+    }
+
+    /**
+     * Get Playready Custom data
+     */
+    function getCDMData() {
+        var customData, cdmData, cdmDataBytes, i;
+
+        checkConfig();
+        if (protData && protData.cdmData) {
+
+            // Convert custom data into multibyte string
+            customData = [];
+            for (i = 0; i < protData.cdmData.length; ++i) {
+                customData.push(protData.cdmData.charCodeAt(i));
+                customData.push(0);
+            }
+            customData = String.fromCharCode.apply(null, customData);
+
+            // Encode in Base 64 the custom data string
+            customData = BASE64.encode(customData);
+
+            // Initialize CDM data with Base 64 encoded custom data
+            // (see https://msdn.microsoft.com/en-us/library/dn457361.aspx)
+            cdmData = PRCDMData.replace('%CUSTOMDATA%', customData);
+
+            // Convert CDM data into multibyte characters
+            cdmDataBytes = [];
+            for (i = 0; i < cdmData.length; ++i) {
+                cdmDataBytes.push(cdmData.charCodeAt(i));
+                cdmDataBytes.push(0);
+            }
+
+            return new Uint8Array(cdmDataBytes).buffer;
+        }
+
+        return null;
+    }
+
     instance = {
         uuid: uuid,
         schemeIdURI: schemeIdURI,
@@ -2110,7 +2174,9 @@ function KeySystemPlayReady(config) {
         getRequestHeadersFromMessage: getRequestHeadersFromMessage,
         getLicenseRequestFromMessage: getLicenseRequestFromMessage,
         getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
-        setPlayReadyMessageFormat: setPlayReadyMessageFormat
+        getCDMData: getCDMData,
+        setPlayReadyMessageFormat: setPlayReadyMessageFormat,
+        init: init
     };
 
     return instance;
@@ -2247,6 +2313,10 @@ function KeySystemWidevine(config) {
         return null;
     }
 
+    function getCDMData() {
+        return null;
+    }
+
     instance = {
         uuid: uuid,
         schemeIdURI: schemeIdURI,
@@ -2255,7 +2325,8 @@ function KeySystemWidevine(config) {
         getInitData: getInitData,
         getRequestHeadersFromMessage: getRequestHeadersFromMessage,
         getLicenseRequestFromMessage: getLicenseRequestFromMessage,
-        getLicenseServerURLFromInitData: getLicenseServerURLFromInitData
+        getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
+        getCDMData: getCDMData
     };
 
     return instance;
@@ -3332,7 +3403,7 @@ function ProtectionModel_3Feb2014(config) {
         }
     }
 
-    function createKeySession(initData /*, keySystemType */) {
+    function createKeySession(initData, sessionType, cdmData) {
 
         if (!keySystem || !mediaKeys || !keySystemAccess) {
             throw new Error('Can not create sessions until you have selected a key system');
@@ -3351,7 +3422,7 @@ function ProtectionModel_3Feb2014(config) {
         if (capabilities === null) throw new Error('Can not create sessions for unknown content types.');
 
         var contentType = capabilities.contentType;
-        var session = mediaKeys.createSession(contentType, new Uint8Array(initData));
+        var session = mediaKeys.createSession(contentType, new Uint8Array(initData), cdmData ? new Uint8Array(cdmData) : null);
         var sessionToken = createSessionToken(session, initData);
 
         // Add all event listeners
