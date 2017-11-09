@@ -191,6 +191,7 @@ function StreamController() {
         } else if (MediaSource) {
             //send PLAYBACK_ENDED in order switch to a new period, wait until the end of playing
             const timeToEnd = playbackController.getTimeToStreamEnd();
+            log('[StreamController] onStreamBufferingCompleted PLAYBACK_ENDED event will be triggered in ' + timeToEnd + ' seconds');
             setTimeout(function () {eventBus.trigger(Events.PLAYBACK_ENDED);}, timeToEnd > 0 ? timeToEnd * 1000 : 0);
         }
     }
