@@ -584,7 +584,7 @@ function DashManifestModel(config) {
             // The difference between the PeriodStart time of a Period and
             // the PeriodStart time of the following Period.
             if (voPeriod1 !== null && isNaN(voPeriod1.duration)) {
-                voPeriod1.duration = voPeriod.start - voPeriod1.start;
+                voPeriod1.duration = parseFloat((voPeriod.start - voPeriod1.start).toFixed(5));
             }
 
             if (voPeriod !== null) {
@@ -615,7 +615,7 @@ function DashManifestModel(config) {
         // The difference between the PeriodStart time of the last Period
         // and the mpd duration
         if (voPeriod1 !== null && isNaN(voPeriod1.duration)) {
-            voPeriod1.duration = getEndTimeForLastPeriod(voPeriod1) - voPeriod1.start;
+            voPeriod1.duration = parseFloat((getEndTimeForLastPeriod(voPeriod1) - voPeriod1.start).toFixed(5));
         }
 
         return voPeriods;

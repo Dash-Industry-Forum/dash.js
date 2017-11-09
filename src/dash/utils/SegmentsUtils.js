@@ -135,8 +135,8 @@ export function getIndexBasedSegment(timelineConverter, isDynamic, representatio
         duration = representation.adaptation.period.duration;
     }
 
-    presentationStartTime = representation.adaptation.period.start + (index * duration);
-    presentationEndTime = presentationStartTime + duration;
+    presentationStartTime = parseFloat((representation.adaptation.period.start + (index * duration)).toFixed(5));
+    presentationEndTime = parseFloat((presentationStartTime + duration).toFixed(5));
 
     seg = new Segment();
 
