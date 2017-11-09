@@ -515,7 +515,9 @@ function Stream(config) {
 
         // if there is at least one buffer controller that has not completed buffering yet do nothing
         for (let i = 0; i < ln; i++) {
-            if (!processors[i].isBufferingCompleted()) {
+            //if audio or video buffer is not buffering completed state, do not send STREAM_BUFFERING_COMPLETED
+            if (!processors[i].isBufferingCompleted() && (processors[i].getType() === Constants.AUDIO || processors[i].getType() === Constants.VIDEO)) {
+                log('[Stream] onBufferingCompleted - can\'t trigger STREAM_BUFFERING_COMPLETED because streamProcessor ' + processors[i].getType() + ' is not buffering completed');
                 return;
             }
         }
