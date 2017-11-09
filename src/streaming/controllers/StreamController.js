@@ -159,7 +159,7 @@ function StreamController() {
         if (e.timeToEnd <= STREAM_END_THRESHOLD) {
             // In some cases the ended event is not triggered at the end of the stream, do it artificially here.
             // This should only be a fallback, put an extra STREAM_END_TIMEOUT_DELAY to give the real ended event time to trigger.
-
+            log('[StreamController][onPlaybackTimeUpdated] timeToEnd = ' + e.timeToEnd + ' PLAYBACK_ENDED need to be triggered');
             if (endedTimeout) {
                 clearTimeout(endedTimeout);
                 endedTimeout = undefined;
@@ -168,6 +168,8 @@ function StreamController() {
                 endedTimeout = undefined;
                 eventBus.trigger(Events.PLAYBACK_ENDED);
             }, 1000 * (e.timeToEnd + STREAM_END_TIMEOUT_DELAY));
+        } else {
+            log('[StreamController][onPlaybackTimeUpdated] timeToEnd = ' + e.timeToEnd + ' no PLAYBACK_ENDED to trigger');
         }
     }
 
