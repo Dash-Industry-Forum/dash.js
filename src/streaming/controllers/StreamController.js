@@ -168,8 +168,6 @@ function StreamController() {
                 endedTimeout = undefined;
                 eventBus.trigger(Events.PLAYBACK_ENDED);
             }, 1000 * (e.timeToEnd + STREAM_END_TIMEOUT_DELAY));
-        } else {
-            log('[StreamController][onPlaybackTimeUpdated] timeToEnd = ' + e.timeToEnd + ' no PLAYBACK_ENDED to trigger');
         }
     }
 
