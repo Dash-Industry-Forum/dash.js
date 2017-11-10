@@ -374,6 +374,10 @@ MOBILE SOURCE MENU MODAL LIST
     white-space:pre-wrap;
 }
 
+.dropdown-menu > li > a {
+    cursor: pointer;
+}
+
 .dropdown-submenu {
     position: relative;
 }
@@ -386,8 +390,8 @@ MOBILE SOURCE MENU MODAL LIST
     -webkit-border-radius: 0 6px 6px 6px;
     -moz-border-radius: 0 6px 6px;
     border-radius: 0 6px 6px 6px;
-    max-height: 300px;
-    overflow: auto;
+    /*max-height: 300px;
+    overflow: auto;*/
 }
 
 .dropdown-submenu:hover > .dropdown-menu {
