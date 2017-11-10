@@ -146,6 +146,8 @@ function TextController() {
                         let currentFragTrack = mediaController.getCurrentTrackFor(Constants.FRAGMENTED_TEXT, streamController.getActiveStreamInfo());
                         if (mediaInfo !== currentFragTrack) {
                             fragmentModel.abortRequests();
+                            fragmentModel.removeExecutedRequestsBeforeTime();
+                            textSourceBuffer.remove();
                             textTracks.deleteCuesFromTrackIdx(oldTrackIdx);
                             mediaController.setTrack(mediaInfo);
                             textSourceBuffer.setCurrentFragmentedTrackIdx(i);
