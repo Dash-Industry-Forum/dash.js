@@ -99,6 +99,8 @@ function TextTracks() {
         const kind = textTrackQueue[i].kind;
         const label = textTrackQueue[i].label !== undefined ? textTrackQueue[i].label : textTrackQueue[i].lang;
         const lang = textTrackQueue[i].lang;
+        const isTTML = textTrackQueue[i].isTTML;
+        const isEmbedded = textTrackQueue[i].isEmbedded;
         const track = isChrome ? document.createElement('track') : videoModel.addTextTrack(kind, label, lang);
 
         if (isChrome) {
@@ -106,6 +108,9 @@ function TextTracks() {
             track.label = label;
             track.srclang = lang;
         }
+
+        track.isEmbedded = isEmbedded;
+        track.isTTML = isTTML;
 
         return track;
     }
@@ -449,7 +454,7 @@ function TextTracks() {
 
     function getTrackByIdx(idx) {
         return idx >= 0 && textTrackQueue[idx] ?
-            videoModel.getTextTrack(textTrackQueue[idx].kind, textTrackQueue[idx].label, textTrackQueue[idx].lang) : null;
+            videoModel.getTextTrack(textTrackQueue[idx].kind, textTrackQueue[idx].label, textTrackQueue[idx].lang, textTrackQueue[idx].isTTML, textTrackQueue[idx].isEmbedded) : null;
     }
 
     function getCurrentTrackIdx() {
