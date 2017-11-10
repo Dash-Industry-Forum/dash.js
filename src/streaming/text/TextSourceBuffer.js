@@ -560,6 +560,15 @@ function TextSourceBuffer() {
         return parser;
     }
 
+    function remove(start, end) {
+        //if start and end are not defined, remove all
+        if ((start === undefined) && (start === end)) {
+            start = this.buffered.start(0);
+            end = this.buffered.end(this.buffered.length - 1);
+        }
+        this.buffered.remove(start, end);
+    }
+
     instance = {
         initialize: initialize,
         append: append,
@@ -568,7 +577,8 @@ function TextSourceBuffer() {
         resetEmbedded: resetEmbedded,
         setConfig: setConfig,
         getConfig: getConfig,
-        setCurrentFragmentedTrackIdx: setCurrentFragmentedTrackIdx
+        setCurrentFragmentedTrackIdx: setCurrentFragmentedTrackIdx,
+        remove: remove
     };
 
     return instance;
