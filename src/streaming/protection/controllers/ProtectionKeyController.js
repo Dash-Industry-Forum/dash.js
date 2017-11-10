@@ -37,6 +37,7 @@ import DRMToday from './../servers/DRMToday';
 import PlayReady from './../servers/PlayReady';
 import Widevine from './../servers/Widevine';
 import ClearKey from './../servers/ClearKey';
+import Constants from '../../constants/Constants';
 
 /**
  * @module ProtectionKeyController
@@ -271,7 +272,7 @@ function ProtectionKeyController() {
             licenseServerData = Widevine(context).getInstance();
         } else if (keySystem.systemString === 'com.microsoft.playready') {
             licenseServerData = PlayReady(context).getInstance();
-        } else if (keySystem.systemString === 'org.w3.clearkey') {
+        } else if (keySystem.systemString === Constants.CLEARKEY_ORG_STRING) {
             licenseServerData = ClearKey(context).getInstance();
         }
 

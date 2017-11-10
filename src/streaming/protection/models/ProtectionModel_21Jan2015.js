@@ -42,6 +42,7 @@ import NeedKey from '../vo/NeedKey';
 import KeyError from '../vo/KeyError';
 import KeyMessage from '../vo/KeyMessage';
 import KeySystemAccess from '../vo/KeySystemAccess';
+import Constants from '../../constants/Constants';
 
 function ProtectionModel_21Jan2015(config) {
 
@@ -182,7 +183,7 @@ function ProtectionModel_21Jan2015(config) {
         let ks = this.getKeySystem();
 
         // Generate initial key request
-        session.generateRequest(ks.systemString === 'org.w3.clearkey' ? 'keyids' : 'cenc', initData).then(function () {
+        session.generateRequest(ks.systemString === Constants.CLEARKEY_ORG_STRING ? 'keyids' : 'cenc', initData).then(function () {
             log('DRM: Session created.  SessionID = ' + sessionToken.getSessionID());
             eventBus.trigger(events.KEY_SESSION_CREATED, {data: sessionToken});
         }).catch(function (error) {
