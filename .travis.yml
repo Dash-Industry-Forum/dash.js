@@ -1,6 +1,7 @@
 language: node_js
 node_js:
-  - "4"
-  - "6"
+  - stable
 before_install: npm install -g grunt-cli
 install: npm install
+after_success:
+  - test $TRAVIS_BRANCH = "development" && grunt deploy --ftp-host=$DEPLOY_HOST --ftp-user=$DEPLOY_USER --ftp-pass=$DEPLOY_PASSWORD
