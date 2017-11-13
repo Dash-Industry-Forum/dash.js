@@ -44,6 +44,7 @@ const schemeIdURI = 'urn:uuid:' + uuid;
 
 function KeySystemWidevine(config) {
 
+    config = config || {};
     let instance;
     let protData = null;
     let BASE64 = config.BASE64;

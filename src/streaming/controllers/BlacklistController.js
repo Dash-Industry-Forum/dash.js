@@ -34,6 +34,7 @@ import EventBus from '../../core/EventBus';
 
 function BlackListController(config) {
 
+    config = config || {};
     let blacklist = [];
 
     const eventBus = EventBus(this.context).getInstance();

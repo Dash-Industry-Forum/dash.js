@@ -34,6 +34,7 @@ import MSSFragmentMoofProcessor from './MssFragmentMoofProcessor';
 
 function MssFragmentInfoController(config) {
 
+    config = config || {};
     let context = this.context;
 
     let instance;

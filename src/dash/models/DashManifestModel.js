@@ -44,6 +44,7 @@ import FactoryMaker from '../../core/FactoryMaker';
 
 function DashManifestModel(config) {
 
+    config = config || {};
     let instance;
     const context = this.context;
 

@@ -56,6 +56,7 @@ const PLACEHOLDER_BUFFER_DECAY = 0.99; // Make sure placeholder buffer does not 
 
 function BolaRule(config) {
 
+    config = config || {};
     const context = this.context;
     const log = Debug(context).getInstance().log;
 
