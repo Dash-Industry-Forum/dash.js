@@ -36,7 +36,7 @@ import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 
-const LIVE_LAST_PLAYBACK_TIME_THRESHOLD_MS = 200;
+const LIVE_UPDATE_PLAYBACK_TIME_INTERVAL_MS = 500;
 
 function PlaybackController() {
 
@@ -386,7 +386,6 @@ function PlaybackController() {
 
     function onPlaybackTimeUpdated() {
         const time = getTime();
-        if (!getIsDynamic() && time === currentTime) return;
         currentTime = time;
         eventBus.trigger(Events.PLAYBACK_TIME_UPDATED, {
             timeToEnd: getTimeToStreamEnd(),
@@ -394,12 +393,11 @@ function PlaybackController() {
         });
     }
 
-    function onLivePausedPlaybackTimeUpdated() {
-        if (getIsDynamic() && isPaused()) {
-            if (!lastLivePlaybackTime || (new Date()).getTime() > lastLivePlaybackTime + LIVE_LAST_PLAYBACK_TIME_THRESHOLD_MS) {
-                onPlaybackTimeUpdated();
-                lastLivePlaybackTime = (new Date()).getTime();
-            }
+    function updateLivePlaybackTime() {
+        const now = Date.now();
+        if (!lastLivePlaybackTime || now > lastLivePlaybackTime + LIVE_UPDATE_PLAYBACK_TIME_INTERVAL_MS) {
+            lastLivePlaybackTime = now;
+            onPlaybackTimeUpdated();
         }
     }
 
@@ -441,8 +439,11 @@ function PlaybackController() {
             time: new Date()
         });
 
-        // Updates playback time for paused live streams
-        onLivePausedPlaybackTimeUpdated();
+        // Updates playback time for paused dynamic streams
+        // (video element doesn't call timeupdate when the playback is paused)
+        if (getIsDynamic() && isPaused()) {
+            updateLivePlaybackTime();
+        }
     }
 
     function checkTimeInRanges(time, ranges) {
