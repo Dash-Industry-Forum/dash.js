@@ -42,6 +42,7 @@ const ABANDON_FRAGMENT_RULES = 'abandonFragmentRules';
 
 function ABRRulesCollection(config) {
 
+    config = config || {};
     const context = this.context;
 
     const mediaPlayerModel = config.mediaPlayerModel;

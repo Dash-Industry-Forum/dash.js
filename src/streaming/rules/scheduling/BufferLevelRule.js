@@ -33,6 +33,7 @@ import FactoryMaker from '../../../core/FactoryMaker';
 
 function BufferLevelRule(config) {
 
+    config = config || {};
     const dashMetrics = config.dashMetrics;
     const metricsModel = config.metricsModel;
     const mediaPlayerModel = config.mediaPlayerModel;

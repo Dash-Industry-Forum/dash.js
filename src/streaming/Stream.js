@@ -40,7 +40,7 @@ import FactoryMaker from '../core/FactoryMaker';
 function Stream(config) {
 
     const DATA_UPDATE_FAILED_ERROR_CODE = 1;
-
+    config = config || {};
     let context = this.context;
     let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
@@ -127,14 +127,9 @@ function Stream(config) {
             });
             streamProcessors[i].reset();
         }
-        //all stream processors have been destroyed, stream has to reset abrController which has reference on stream processors.
-        if (abrController) {
-            abrController.reset();
-        }
         streamProcessors = [];
         isStreamActivated = false;
         isMediaInitialized = false;
-        clearEventController();
         eventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
     }
 
@@ -216,9 +211,9 @@ function Stream(config) {
         }
     }
 
-    function clearEventController() {
+    function stopEventController() {
         if (eventController) {
-            eventController.clear();
+            eventController.stop();
         }
     }
 
@@ -387,15 +382,18 @@ function Stream(config) {
         checkConfig();
         let events;
 
-        eventController = EventController(context).create();
+        //if initializeMedia is called from a switch period, eventController could have been already created.
+        if (!eventController) {
+            eventController = EventController(context).create();
 
-        eventController.setConfig({
-            manifestModel: manifestModel,
-            manifestUpdater: manifestUpdater,
-            playbackController: playbackController
-        });
-        events = adapter.getEventsFor(streamInfo);
-        eventController.addInlineEvents(events);
+            eventController.setConfig({
+                manifestModel: manifestModel,
+                manifestUpdater: manifestUpdater,
+                playbackController: playbackController
+            });
+            events = adapter.getEventsFor(streamInfo);
+            eventController.addInlineEvents(events);
+        }
 
         isUpdating = true;
 
@@ -600,6 +598,7 @@ function Stream(config) {
         getEventController: getEventController,
         getBitrateListFor: getBitrateListFor,
         startEventController: startEventController,
+        stopEventController: stopEventController,
         updateData: updateData,
         reset: reset,
         getProcessors: getProcessors

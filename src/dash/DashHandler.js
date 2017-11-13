@@ -48,8 +48,9 @@ const SEGMENTS_UNAVAILABLE_ERROR_CODE = 1;
 
 function DashHandler(config) {
 
-    const context = this.context;
-    const eventBus = EventBus(context).getInstance();
+    config = config || {};
+    let context = this.context;
+    let eventBus = EventBus(context).getInstance();
     const urlUtils = URLUtils(context).getInstance();
 
     const timelineConverter = config.timelineConverter;
@@ -205,7 +206,7 @@ function DashHandler(config) {
         } else {
             const seg = getSegmentByIndex(index, representation);
             if (seg) {
-                const time = seg.presentationStartTime - representation.adaptation.period.start;
+                const time = parseFloat((seg.presentationStartTime - representation.adaptation.period.start).toFixed(5));
                 const duration = representation.adaptation.period.duration;
                 log(representation.segmentInfoType + ': ' + time + ' / ' + duration);
                 isFinished = representation.segmentInfoType === DashConstants.SEGMENT_TIMELINE && isDynamic ? false : time >= duration;

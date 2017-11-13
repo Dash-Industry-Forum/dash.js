@@ -35,6 +35,7 @@ import FragmentRequest from '../../vo/FragmentRequest';
 
 function NextFragmentRequestRule(config) {
 
+    config = config || {};
     const context = this.context;
     const log = Debug(context).getInstance().log;
     const adapter = config.adapter;

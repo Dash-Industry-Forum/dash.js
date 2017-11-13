@@ -32,6 +32,8 @@
 import MetricsHandlerFactory from '../metrics/MetricsHandlerFactory';
 
 function MetricsHandlersController(config) {
+
+    config = config || {};
     let handlers = [];
 
     let instance;

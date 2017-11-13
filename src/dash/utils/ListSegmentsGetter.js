@@ -35,6 +35,7 @@ import {getIndexBasedSegment, decideSegmentListRangeForTemplate} from './Segment
 
 function ListSegmentsGetter(config, isDynamic) {
 
+    config = config || {};
     let timelineConverter = config.timelineConverter;
 
     let instance;

@@ -32,6 +32,7 @@
 import DVBReporting from './reporters/DVBReporting';
 
 function ReportingFactory(config) {
+    config = config || {};
 
     const knownReportingSchemeIdUris = {
         'urn:dvb:dash:reporting:2014': DVBReporting
