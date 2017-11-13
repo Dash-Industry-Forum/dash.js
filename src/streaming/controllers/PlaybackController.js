@@ -36,6 +36,8 @@ import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 
+const LIVE_UPDATE_PLAYBACK_TIME_INTERVAL_MS = 500;
+
 function PlaybackController() {
 
     const context = this.context;
@@ -58,7 +60,8 @@ function PlaybackController() {
         streamInfo,
         isDynamic,
         mediaPlayerModel,
-        playOnceInitialized;
+        playOnceInitialized,
+        lastLivePlaybackTime;
 
     function setup() {
         reset();
@@ -383,12 +386,19 @@ function PlaybackController() {
 
     function onPlaybackTimeUpdated() {
         const time = getTime();
-        if (time === currentTime) return;
         currentTime = time;
         eventBus.trigger(Events.PLAYBACK_TIME_UPDATED, {
             timeToEnd: getTimeToStreamEnd(),
             time: time
         });
+    }
+
+    function updateLivePlaybackTime() {
+        const now = Date.now();
+        if (!lastLivePlaybackTime || now > lastLivePlaybackTime + LIVE_UPDATE_PLAYBACK_TIME_INTERVAL_MS) {
+            lastLivePlaybackTime = now;
+            onPlaybackTimeUpdated();
+        }
     }
 
     function onPlaybackProgress() {
@@ -428,6 +438,12 @@ function PlaybackController() {
             isDynamic: isDynamic,
             time: new Date()
         });
+
+        // Updates playback time for paused dynamic streams
+        // (video element doesn't call timeupdate when the playback is paused)
+        if (getIsDynamic() && isPaused()) {
+            updateLivePlaybackTime();
+        }
     }
 
     function checkTimeInRanges(time, ranges) {
