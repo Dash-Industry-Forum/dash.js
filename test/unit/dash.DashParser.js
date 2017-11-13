@@ -8,7 +8,6 @@ const context = {};
 let dashParser = DashParser(context).create();
 
 describe('DashParser', function () {
-    let dashParser;
 
     beforeEach(function () {
         if (typeof window === 'undefined') {
