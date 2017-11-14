@@ -5,9 +5,15 @@ const expect = require('chai').expect;
 
 describe('TimelineSegmentsGetter', function () {
     const context = {};
-    let timelineSegmentsGetter = TimelineSegmentsGetter(context).create({});
+    let timelineSegmentsGetter;
+
+    it('should throw an error if config object is not defined', function () {
+        timelineSegmentsGetter = TimelineSegmentsGetter(context).create();
+        expect(timelineSegmentsGetter.getSegments.bind(timelineSegmentsGetter)).to.be.throw('Missing config parameter(s)');
+    });
 
     it('should throw an error if config object has not been properly passed', function () {
+        timelineSegmentsGetter = TimelineSegmentsGetter(context).create({});
         expect(timelineSegmentsGetter.getSegments.bind(timelineSegmentsGetter)).to.be.throw('Missing config parameter(s)');
     });
 

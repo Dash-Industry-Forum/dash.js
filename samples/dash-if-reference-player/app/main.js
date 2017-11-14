@@ -1,6 +1,6 @@
 'use strict';
 
-var app = angular.module('DashPlayer', ['DashSourcesService', 'DashContributorsService', 'angular-flot']);
+var app = angular.module('DashPlayer', ['DashSourcesService', 'DashContributorsService', 'DashIFTestVectorsService', 'angular-flot']);
 
 $(document).ready(function () {
     $('[data-toggle="tooltip"]').tooltip();
@@ -25,7 +25,16 @@ angular.module('DashContributorsService', ['ngResource']).factory('contributors'
     });
 });
 
-app.controller('DashController', function ($scope, sources, contributors) {
+angular.module('DashIFTestVectorsService', ['ngResource']).factory('dashifTestVectors', function ($resource) {
+    return $resource('https://testassets.dashif.org/dashjs.json', {}, {
+        query: {
+            method: 'GET',
+            isArray: false
+        }
+    });
+});
+
+app.controller('DashController', function ($scope, sources, contributors, dashifTestVectors) {
 
 
     $scope.selectedItem = {
@@ -43,6 +52,14 @@ app.controller('DashController', function ($scope, sources, contributors) {
                 }
             }
         }
+
+        // DASH Industry Forum Test Vectors
+        dashifTestVectors.query(function(data) {
+            $scope.availableStreams.splice(6, 0, {
+                name: 'DASH Industry Forum Test Vectors',
+                submenu: data.items
+            });
+        });
     });
 
     contributors.query(function (data) {

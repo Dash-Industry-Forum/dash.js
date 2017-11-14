@@ -34,6 +34,10 @@ import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 
 const QUOTA_EXCEEDED_ERROR_CODE = 22;
+const APPEND_ERROR_CODE = 1;
+const REMOVE_ERROR_CODE = 2;
+const APPEND_ERROR_MESSAGE = 'buffer or chunk is not defined';
+const REMOVE_ERROR_MESSAGE = 'buffer is not defined';
 
 function SourceBufferController(config) {
 
@@ -272,7 +276,16 @@ function SourceBufferController(config) {
     }
 
     function append(buffer, chunk) {
+        if (!buffer || !chunk) {
+            eventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {
+                buffer: null,
+                bytes: null,
+                error: new DashJSError(APPEND_ERROR_CODE, APPEND_ERROR_MESSAGE, null)
+            });
+            return;
+        }
         let bytes = chunk.bytes;
+
         let appendMethod = ('append' in buffer) ? 'append' : (('appendBuffer' in buffer) ? 'appendBuffer' : null);
         // our user-defined sourcebuffer-like object has Object as its
         // prototype whereas built-in SourceBuffers will have something
@@ -307,7 +320,15 @@ function SourceBufferController(config) {
     }
 
     function remove(buffer, start, end, mediaSource) {
-
+        if (!buffer) {
+            eventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {
+                buffer: buffer,
+                from: start,
+                to: end,
+                error: new DashJSError(REMOVE_ERROR_CODE, REMOVE_ERROR_MESSAGE, null)
+            });
+            return;
+        }
         // make sure that the given time range is correct. Otherwise we will get InvalidAccessError
         waitForUpdateEnd(buffer, function () {
             try {

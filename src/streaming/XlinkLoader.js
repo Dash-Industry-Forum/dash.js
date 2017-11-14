@@ -40,6 +40,7 @@ const XLINK_LOADER_ERROR_LOADING_FAILURE = 1;
 
 function XlinkLoader(config) {
 
+    config = config || {};
     const RESOLVE_TO_ZERO = 'urn:mpeg:dash:resolve-to-zero:2013';
 
     const context  = this.context;

@@ -26,7 +26,12 @@ define([
     // Test configuration (see config/testConfig.js)
     var testConfig = config.tests.seek,
         streams = tests.getTestStreams(config.tests.seek, function(stream) {
-            return (stream.type === 'VOD');
+            if (stream.type === 'VOD') {
+                if ((config.smoothEnabled === 'true' && stream.protocol === 'MSS') || (stream.protocol !== 'MSS')) {
+                    return true;
+                }
+            }
+            return false;
         });
 
     // Test constants

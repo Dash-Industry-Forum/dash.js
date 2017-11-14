@@ -35,6 +35,7 @@ import NotFragmentedTextBufferController from './NotFragmentedTextBufferControll
 
 function TextBufferController(config) {
 
+    config = config || {};
     let context = this.context;
 
     let _BufferControllerImpl;

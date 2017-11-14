@@ -39,6 +39,7 @@ const schemeIdURI = 'urn:uuid:' + uuid;
 
 function KeySystemClearKey(config) {
 
+    config = config || {};
     let instance;
     let BASE64 = config.BASE64;
     /**

@@ -113,6 +113,10 @@ function AbrController() {
         });
     }
 
+    function unRegisterStreamType(type) {
+        delete streamProcessorDict[type];
+    }
+
     function createAbrRulesCollection() {
         abrRulesCollection = ABRRulesCollection(context).create({
             metricsModel: metricsModel,
@@ -430,7 +434,7 @@ function AbrController() {
             const id = streamInfo ? streamInfo.id : null;
             if (debug.getLogToBrowserConsole()) {
                 const bufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor(type));
-                log('AbrController (' + type + ') switch from ' + oldQuality + ' to ' + newQuality + '/' + topQualityIdx + ' (buffer: ' + bufferLevel + ')\n' + JSON.stringify(reason));
+                log('AbrController (' + type + ') switch from ' + oldQuality + ' to ' + newQuality + '/' + topQualityIdx + ' (buffer: ' + bufferLevel + ') ' + (reason ? JSON.stringify(reason) : '.'));
             }
             setQualityFor(type, id, newQuality);
             eventBus.trigger(Events.QUALITY_CHANGE_REQUESTED, {mediaType: type, streamInfo: streamInfo, oldQuality: oldQuality, newQuality: newQuality, reason: reason});
@@ -442,7 +446,7 @@ function AbrController() {
     }
 
     function getAbandonmentStateFor(type) {
-        return abandonmentStateDict[type].state;
+        return abandonmentStateDict[type] ? abandonmentStateDict[type].state : null;
     }
 
     /**
@@ -734,6 +738,7 @@ function AbrController() {
         setWindowResizeEventCalled: setWindowResizeEventCalled,
         createAbrRulesCollection: createAbrRulesCollection,
         registerStreamType: registerStreamType,
+        unRegisterStreamType: unRegisterStreamType,
         setConfig: setConfig,
         reset: reset
     };
