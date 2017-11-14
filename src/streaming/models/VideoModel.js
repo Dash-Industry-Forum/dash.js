@@ -293,6 +293,14 @@ function VideoModel() {
         return element ? element.videoHeight : NaN;
     }
 
+    function getVideoRelativeOffsetTop() {
+        return element && element.parentNode ? element.offsetTop - element.parentNode.offsetTop : NaN;
+    }
+
+    function getVideoRelativeOffsetLeft() {
+        return element && element.parentNode ? element.getBoundingClientRect().x - element.parentNode.getBoundingClientRect().x : NaN;
+    }
+
     function getTextTracks() {
         return element ? element.textTracks : [];
     }
@@ -364,7 +372,9 @@ function VideoModel() {
         appendChild: appendChild,
         removeChild: removeChild,
         getVideoWidth: getVideoWidth,
-        getVideoHeight: getVideoHeight
+        getVideoHeight: getVideoHeight,
+        getVideoRelativeOffsetTop: getVideoRelativeOffsetTop,
+        getVideoRelativeOffsetLeft: getVideoRelativeOffsetLeft
     };
 
     return instance;
