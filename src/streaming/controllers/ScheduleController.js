@@ -109,7 +109,6 @@ function ScheduleController(config) {
             eventBus.on(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
         }
 
-        //eventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
         eventBus.on(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, this);
         eventBus.on(Events.DATA_UPDATE_STARTED, onDataUpdateStarted, this);
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
@@ -186,15 +185,15 @@ function ScheduleController(config) {
             bufferLevelRule.execute(streamProcessor, type, streamController.isVideoTrackPresent())) {
 
             const getNextFragment = function () {
-                log('ScheduleController ' + type + '- getNextFragment');
+                log('ScheduleController ' + type + ' - getNextFragment');
                 const fragmentController = streamProcessor.getFragmentController();
                 if (switchTrack) {
-                    log('ScheduleController ' + type + '- switch track has been asked, get init request for ' + type + ' with representationid = ' + currentRepresentationInfo.id);
+                    log('ScheduleController ' + type + ' - switch track has been asked, get init request for ' + type + ' with representationid = ' + currentRepresentationInfo.id);
                     streamProcessor.switchInitData(currentRepresentationInfo.id);
                     lastInitQuality = currentRepresentationInfo.quality;
                     switchTrack = false;
                 } else if (currentRepresentationInfo.quality !== lastInitQuality) {
-                    log('ScheduleController ' + type + '- quality has changed, get init request');
+                    log('ScheduleController ' + type + ' - quality has changed, get init request');
                     lastInitQuality = currentRepresentationInfo.quality;
 
                     streamProcessor.switchInitData(currentRepresentationInfo.id);
@@ -207,10 +206,10 @@ function ScheduleController(config) {
                     } else {
                         const request = nextFragmentRequestRule.execute(streamProcessor, replacement);
                         if (request) {
-                            log('ScheduleController ' + type + '- getNextFragment - request is ' + request.url);
+                            log('ScheduleController ' + type + ' - getNextFragment - request is ' + request.url);
                             fragmentModel.executeRequest(request);
                         } else { //Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
-                            log('getNextFragment ' + type + '- Playing at the bleeding live edge and frag is not available yet');
+                            log('getNextFragment ' + type + ' - Playing at the bleeding live edge and frag is not available yet');
                             isFragmentProcessingInProgress = false;
                             startScheduleTimer(500);
                         }
@@ -389,7 +388,7 @@ function ScheduleController(config) {
 
         stop();
         isFragmentProcessingInProgress = false;
-        log('Stream is complete');
+        log('Stream is complete - ', type);
     }
 
     function onFragmentLoadingCompleted(e) {
@@ -446,7 +445,7 @@ function ScheduleController(config) {
 
         // after the data has been removed from the buffer we should remove the requests from the list of
         // the executed requests for which playback time is inside the time interval that has been removed from the buffer
-        fragmentModel.removeExecutedRequestsBeforeTime(e.to);
+        fragmentModel.removeExecutedRequestsInRange(e);
 
         if (e.hasEnoughSpaceToAppend && isStopped) {
             start();
@@ -589,7 +588,6 @@ function ScheduleController(config) {
     }
 
     function reset() {
-        //eventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
         eventBus.off(Events.DATA_UPDATE_STARTED, onDataUpdateStarted, this);
         eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);

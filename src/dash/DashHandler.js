@@ -39,10 +39,8 @@ import FactoryMaker from '../core/FactoryMaker';
 import Debug from '../core/Debug';
 import URLUtils from '../streaming/utils/URLUtils';
 import Representation from './vo/Representation';
-
 import {replaceTokenForTemplate, getTimeBasedSegment, getSegmentByIndex} from './utils/SegmentsUtils';
 import SegmentsGetter from './utils/SegmentsGetter';
-
 import SegmentBaseLoader from './SegmentBaseLoader';
 import WebmSegmentBaseLoader from './WebmSegmentBaseLoader';
 
@@ -55,13 +53,13 @@ function DashHandler(config) {
     let eventBus = EventBus(context).getInstance();
     const urlUtils = URLUtils(context).getInstance();
 
-    let segmentBaseLoader;
-    let timelineConverter = config.timelineConverter;
-    let dashMetrics = config.dashMetrics;
-    let metricsModel = config.metricsModel;
-    let mediaPlayerModel = config.mediaPlayerModel;
-    let errHandler = config.errHandler;
+    const timelineConverter = config.timelineConverter;
+    const dashMetrics = config.dashMetrics;
+    const metricsModel = config.metricsModel;
+    const mediaPlayerModel = config.mediaPlayerModel;
+    const errHandler = config.errHandler;
     const baseURLController = config.baseURLController;
+    let segmentBaseLoader;
 
     let instance,
         log,
@@ -90,15 +88,14 @@ function DashHandler(config) {
     }
 
     function isWebM (mimeType) {
-        let type = mimeType.split('/')[1];
-
+        const type = mimeType.split('/')[1];
         return 'webm' === type.toLowerCase();
     }
 
     function initialize(StreamProcessor) {
         streamProcessor = StreamProcessor;
 
-        let isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
+        const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
 
         segmentBaseLoader.initialize();
 
@@ -143,7 +140,7 @@ function DashHandler(config) {
 
     function replaceIDForTemplate(url, value) {
         if (value === null || url === null || url.indexOf('$RepresentationID$') === -1) { return url; }
-        let v = value.toString();
+        const v = value.toString();
         return url.split('$RepresentationID$').join(v);
     }
 
@@ -174,7 +171,6 @@ function DashHandler(config) {
     }
 
     function generateInitRequest(representation, mediaType) {
-
         const request = new FragmentRequest();
         const period = representation.adaptation.period;
         const presentationStartTime = period.start;
@@ -202,7 +198,6 @@ function DashHandler(config) {
     }
 
     function isMediaFinished(representation) {
-
         let isFinished = false;
         const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
 
@@ -244,7 +239,6 @@ function DashHandler(config) {
     }
 
     function updateSegmentList(voRepresentation) {
-
         if (!voRepresentation) {
             throw new Error('no representation');
         }
@@ -305,10 +299,14 @@ function DashHandler(config) {
             i;
 
         if (segments && ln > 0) {
+            // In case timeThreshold is not provided, let's use the default value set in MediaPlayerModel
+            timeThreshold = (timeThreshold === undefined || timeThreshold === null) ?
+                mediaPlayerModel.getSegmentOverlapToleranceTime() : timeThreshold;
             for (i = 0; i < ln; i++) {
                 frag = segments[i];
                 ft = frag.presentationStartTime;
                 fd = frag.duration;
+                // In case timeThreshold is null, set epsilon to half the fragment duration
                 epsilon = (timeThreshold === undefined || timeThreshold === null) ? fd / 2 : timeThreshold;
                 if ((time + epsilon) >= ft &&
                     (time - epsilon) < (ft + fd)) {
@@ -326,12 +324,12 @@ function DashHandler(config) {
             return null;
         }
 
-        let request = new FragmentRequest();
-        let representation = segment.representation;
-        let bandwidth = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
+        const request = new FragmentRequest();
+        const representation = segment.representation;
+        const bandwidth = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
             AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].bandwidth;
-        let url = segment.media;
         const type = streamProcessor ? streamProcessor.getType() : null;
+        let url = segment.media;
 
         url = replaceTokenForTemplate(url, 'Number', segment.replacementNumber);
         url = replaceTokenForTemplate(url, 'Time', segment.replacementTime);
@@ -365,10 +363,10 @@ function DashHandler(config) {
 
         const type = streamProcessor ? streamProcessor.getType() : null;
         const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
-        let idx = index;
-        let keepIdx = options ? options.keepIdx : false;
-        let timeThreshold = options ? options.timeThreshold : null;
-        let ignoreIsFinished = (options && options.ignoreIsFinished) ? true : false;
+        const idx = index;
+        const keepIdx = options ? options.keepIdx : false;
+        const timeThreshold = options ? options.timeThreshold : null;
+        const ignoreIsFinished = (options && options.ignoreIsFinished) ? true : false;
 
         if (!representation) {
             return null;
@@ -376,7 +374,7 @@ function DashHandler(config) {
 
         if (requestedTime !== time) { // When playing at live edge with 0 delay we may loop back with same time and index until it is available. Reduces verboseness of logs.
             requestedTime = time;
-            log('Getting the request for ' + type + ' time : ' + time);
+            log('Getting the request for ' + type + ' time : ' + time + ', keepIdx: ' + keepIdx);
         }
 
         updateSegments(representation);
@@ -398,7 +396,7 @@ function DashHandler(config) {
             request.index = index;
             request.mediaType = type;
             request.mediaInfo = streamProcessor.getMediaInfo();
-            log('Signal complete.', request);
+            log('Signal complete in getSegmentRequestForTime - ', type, ' - Request:', request);
 
         } else {
             segment = getSegmentByIndex(index, representation);
@@ -436,10 +434,10 @@ function DashHandler(config) {
         requestedTime = null;
         index++;
 
-        log('Getting the next request at index: ' + index);
+        log('Getting the next request at index: ' + index + ', type: ' + type);
 
         // check that there is a segment in this index. If none, update segments and wait for next time loop is called
-        let seg = getSegmentByIndex(index, representation);
+        const seg = getSegmentByIndex(index, representation);
         if (!seg && isDynamic) {
             log('No segment found at index: ' + index + '. Wait for next loop');
             updateSegments(representation);
@@ -454,7 +452,7 @@ function DashHandler(config) {
             request.index = index;
             request.mediaType = type;
             request.mediaInfo = streamProcessor.getMediaInfo();
-            log('Signal complete.');
+            log('Signal complete -', type);
         } else {
             updateSegments(representation);
             segment = getSegmentByIndex(index, representation);
@@ -475,8 +473,7 @@ function DashHandler(config) {
     }
 
     function onInitializationLoaded(e) {
-        let representation = e.representation;
-        //log("Got an initialization.");
+        const representation = e.representation;
         if (!representation.segments) return;
 
         eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: representation});
@@ -488,8 +485,8 @@ function DashHandler(config) {
         if (e.error || (type !== e.mediaType)) return;
 
         const fragments = e.segments;
-        let representation = e.representation;
-        let segments = [];
+        const representation = e.representation;
+        const segments = [];
         let count = 0;
 
         let i,
@@ -547,7 +544,7 @@ function DashHandler(config) {
 }
 
 DashHandler.__dashjs_factory_name = 'DashHandler';
-let factory = FactoryMaker.getClassFactory(DashHandler);
+const factory = FactoryMaker.getClassFactory(DashHandler);
 factory.SEGMENTS_UNAVAILABLE_ERROR_CODE = SEGMENTS_UNAVAILABLE_ERROR_CODE;
 FactoryMaker.updateClassFactory(DashHandler.__dashjs_factory_name, factory);
 export default factory;

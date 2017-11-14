@@ -81,6 +81,44 @@ function SourceBufferController(config) {
         } catch (ex) {}
     }
 
+    function getRangesAsSingleRange(buffer, fromTime) {
+        let ranges;
+        let start = 0;
+        let end = 0;
+        let firstStart = null;
+        let lastEnd = null;
+        let len,
+            i;
+
+        try {
+            ranges = buffer.buffered;
+        } catch (ex) {
+            return null;
+        }
+
+        if (ranges !== null && ranges !== undefined) {
+            for (i = 0, len = ranges.length; i < len; i++) {
+                start = ranges.start(i);
+                end = ranges.end(i);
+                if ((firstStart === null || firstStart > start) && (fromTime === undefined || fromTime < start)) {
+                    firstStart = start;
+                }
+                if (lastEnd === null || lastEnd < end) {
+                    lastEnd = end;
+                }
+            }
+
+            if (firstStart !== null && firstStart < lastEnd) {
+                return {
+                    start: firstStart,
+                    end: lastEnd
+                };
+            }
+        }
+
+        return null;
+    }
+
     function getBufferRange(buffer, time, tolerance) {
         let ranges = null;
         let start = 0;
@@ -284,13 +322,13 @@ function SourceBufferController(config) {
             });
             return;
         }
-        let bytes = chunk.bytes;
+        const bytes = chunk.bytes;
 
-        let appendMethod = ('append' in buffer) ? 'append' : (('appendBuffer' in buffer) ? 'appendBuffer' : null);
+        const appendMethod = ('append' in buffer) ? 'append' : (('appendBuffer' in buffer) ? 'appendBuffer' : null);
         // our user-defined sourcebuffer-like object has Object as its
         // prototype whereas built-in SourceBuffers will have something
         // more sensible. do not pass chunk to built-in append.
-        let acceptsChunk = Object.prototype.toString.call(buffer).slice(8, -1) === 'Object';
+        const acceptsChunk = Object.prototype.toString.call(buffer).slice(8, -1) === 'Object';
 
         if (!appendMethod) return;
 
@@ -319,7 +357,7 @@ function SourceBufferController(config) {
         });
     }
 
-    function remove(buffer, start, end, mediaSource) {
+    function remove(buffer, start, end, mediaSource, forceRemoval) {
         if (!buffer) {
             eventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {
                 buffer: buffer,
@@ -332,7 +370,8 @@ function SourceBufferController(config) {
         // make sure that the given time range is correct. Otherwise we will get InvalidAccessError
         waitForUpdateEnd(buffer, function () {
             try {
-                if ((start >= 0) && (end > start) && (mediaSource.readyState !== 'ended')) {
+                const endSignalSent = mediaSource.readyState === 'ended';
+                if ((start >= 0) && (end > start) && (forceRemoval || mediaSource.readyState !== 'ended')) {
                     buffer.remove(start, end);
                 }
                 // updating is in progress, we should wait for it to complete before signaling that this operation is done
@@ -340,7 +379,8 @@ function SourceBufferController(config) {
                     eventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {
                         buffer: buffer,
                         from: start,
-                        to: end
+                        to: end,
+                        endSignalSent: endSignalSent
                     });
                 });
             } catch (err) {
@@ -412,7 +452,8 @@ function SourceBufferController(config) {
         getAllRanges: getAllRanges,
         getTotalBufferedTime: getTotalBufferedTime,
         getBufferLength: getBufferLength,
-        getRangeDifference: getRangeDifference
+        getRangeDifference: getRangeDifference,
+        getRangesAsSingleRange: getRangesAsSingleRange
     };
 
     return instance;

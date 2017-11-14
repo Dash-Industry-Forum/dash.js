@@ -201,11 +201,13 @@ function BufferController(config) {
         if (buffer === e.buffer) {
             if (e.error) {
                 if (e.error.code === SourceBufferController.QUOTA_EXCEEDED_ERROR_CODE) {
+                    log('Quota exceeded for type: ' + type);
                     criticalBufferLevel = sourceBufferController.getTotalBufferedTime(buffer) * 0.8;
                 }
                 if (e.error.code === SourceBufferController.QUOTA_EXCEEDED_ERROR_CODE || !hasEnoughSpaceToAppend()) {
                     eventBus.trigger(Events.QUOTA_EXCEEDED, {sender: instance, criticalBufferLevel: criticalBufferLevel}); //Tells ScheduleController to stop scheduling.
-                    clearBuffer(getClearRange()); // Then we clear the buffer and onCleared event will tell ScheduleController to start scheduling again.
+                    log('Clearing playback buffer to overcome quota exceed situation for type: ' + type);
+                    clearPlaybackBuffer(mediaPlayerModel.getStableBufferTime());
                 }
                 return;
             }
@@ -221,7 +223,6 @@ function BufferController(config) {
                     log('Buffered Range for type:', type, ':', ranges.start(i), ' - ', ranges.end(i));
                 }
             }
-
             onPlaybackProgression();
             isAppendingInProgress = false;
             if (appendedBytesInfo) {
@@ -361,13 +362,13 @@ function BufferController(config) {
         const start = buffer.buffered.length ? buffer.buffered.start(0) : 0;
         const bufferToPrune = playbackController.getTime() - start - mediaPlayerModel.getBufferToKeep();
         if (bufferToPrune > 0) {
-            log('pruning buffer: ' + bufferToPrune + ' seconds.');
+            log('pruning ', type, 'buffer: ' + bufferToPrune + ' seconds.');
             isPruningInProgress = true;
             sourceBufferController.remove(buffer, 0, Math.round(start + bufferToPrune), mediaSource);
         }
     }
 
-    function getClearRange(threshold) {
+    function getBehindRangeToClear(threshold) {
         if (!buffer) return null;
 
         // we need to remove data that is more than one fragment before the video currentTime
@@ -386,9 +387,23 @@ function BufferController(config) {
         };
     }
 
-    function clearBuffer(range) {
+    function getAheadRangeToClear(bufferToKeep) {
+        if (!buffer || buffer.buffered.length === 0) return null;
+
+        // we need to remove data that is more than one fragment before the video currentTime
+        const removeStart = playbackController.getTime() + (bufferToKeep > 0 ? bufferToKeep : 0);
+        const removeEnd = buffer.buffered.end(buffer.buffered.length - 1);
+        if (removeStart >= removeEnd) return null;
+
+        return {
+            start: removeStart,
+            end: removeEnd
+        };
+    }
+
+    function clearBuffer(range, forceRemoval) {
         if (!range || !buffer) return;
-        sourceBufferController.remove(buffer, range.start, range.end, mediaSource);
+        sourceBufferController.remove(buffer, range.start, range.end, mediaSource, forceRemoval);
     }
 
     function onRemoved(e) {
@@ -399,8 +414,9 @@ function BufferController(config) {
         }
 
         updateBufferLevel();
-        eventBus.trigger(Events.BUFFER_CLEARED, {sender: instance, from: e.from, to: e.to, hasEnoughSpaceToAppend: hasEnoughSpaceToAppend()});
-        //TODO - REMEMBER removed a timerout hack calling clearBuffer after manifestInfo.minBufferTime * 1000 if !hasEnoughSpaceToAppend() Aug 04 2016
+        eventBus.trigger(Events.BUFFER_CLEARED, {sender: instance, from: e.from, to: e.to,
+            hasEnoughSpaceToAppend: hasEnoughSpaceToAppend(), endSignalSent: e.endSignalSent});
+        //TODO - REMEMBER removed a timeout hack calling clearBuffer after manifestInfo.minBufferTime * 1000 if !hasEnoughSpaceToAppend() Aug 04 2016
     }
 
     function updateBufferTimestampOffset(MSETimeOffset) {
@@ -425,7 +441,29 @@ function BufferController(config) {
     function onCurrentTrackChanged(e) {
         if (!buffer || (e.newMediaInfo.type !== type) || (e.newMediaInfo.streamInfo.id !== streamProcessor.getStreamInfo().id)) return;
         if (mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE) {
-            clearBuffer(getClearRange(0));
+            clearPlaybackBuffer(0);
+            streamProcessor.getFragmentModel().abortRequests();
+        }
+    }
+
+    function clearPlaybackBuffer(bufferAheadToKeep) {
+        let aheadRange;
+        if (bufferAheadToKeep > 0) {
+            clearBuffer(getBehindRangeToClear(0));
+            aheadRange = getAheadRangeToClear(bufferAheadToKeep);
+        } else {
+            // If we shouldn't keep anything, just remove all the content in the buffer
+            aheadRange = sourceBufferController.getRangesAsSingleRange(buffer);
+        }
+
+        if (aheadRange) {
+            isBufferingCompleted = false;
+            maxAppendedIndex = 0;
+
+            const currentTime = playbackController.getTime();
+            streamProcessor.getScheduleController().setSeekTarget(currentTime);
+            adapter.setIndexHandlerTime(streamProcessor, currentTime);
+            clearBuffer(aheadRange, true);
         }
     }
 
@@ -450,12 +488,10 @@ function BufferController(config) {
 
     //Removes buffered ranges ahead. It will not remove anything part of the current buffer timeRange.
     function removeBufferAhead(time) {
-        const ranges = sourceBufferController.getAllRanges(buffer);
-        for (let i = 0; i < ranges.length; i++) {
-            if (ranges.start(i) > time) {
-                log('Removing buffer from: ' + ranges.start(i) + '-' + ranges.end(i));
-                sourceBufferController.remove(buffer, ranges.start(i), ranges.end(i), mediaSource);
-            }
+        const range = sourceBufferController.getRangesAsSingleRange(buffer, time);
+        if (range) {
+            log('Removing buffer from: ' + range.start + '-' + range.end);
+            sourceBufferController.remove(buffer, range.start, range.end, mediaSource);
         }
     }
 

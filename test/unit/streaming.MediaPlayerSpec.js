@@ -786,6 +786,15 @@ describe('MediaPlayer', function () {
             expect(LongFormContentDurationThreshold).to.equal(50);
         });
 
+        it('should configure setSegmentOverlapToleranceTime', function () {
+            let val = mediaPlayerModel.getSegmentOverlapToleranceTime();
+            expect(val).to.equal(0.05);
+
+            player.setSegmentOverlapToleranceTime(1.5);
+            val = mediaPlayerModel.getSegmentOverlapToleranceTime();
+            expect(val).to.equal(1.5);
+        });
+
         it('should configure BandwidthSafetyFactor', function () {
             let BandwidthSafetyFactor = mediaPlayerModel.getBandwidthSafetyFactor();
             expect(BandwidthSafetyFactor).to.equal(0.9);
