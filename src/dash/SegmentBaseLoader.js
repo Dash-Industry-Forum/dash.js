@@ -42,9 +42,9 @@ import XHRLoader from '../streaming/XHRLoader';
 
 function SegmentBaseLoader() {
 
-    let context = this.context;
-    let log = Debug(context).getInstance().log;
-    let eventBus = EventBus(context).getInstance();
+    const context = this.context;
+    const log = Debug(context).getInstance().log;
+    const eventBus = EventBus(context).getInstance();
 
     let instance,
         errHandler,
@@ -94,8 +94,8 @@ function SegmentBaseLoader() {
         checkSetConfigCall();
         let initRange = null;
         let isoFile = null;
-        let baseUrl = baseURLController.resolve(representation.path);
-        let info = loadingInfo || {
+        const baseUrl = baseURLController.resolve(representation.path);
+        const info = loadingInfo || {
             init: true,
             url: baseUrl ? baseUrl.url : undefined,
             range: {
@@ -112,7 +112,6 @@ function SegmentBaseLoader() {
         const request = getFragmentRequest(info);
 
         const onload = function (response) {
-
             info.bytesLoaded = info.range.end;
             isoFile = boxParser.parse(response);
             initRange = findInitRange(isoFile);
@@ -141,16 +140,16 @@ function SegmentBaseLoader() {
     function loadSegments(representation, type, range, loadingInfo, callback) {
         checkSetConfigCall();
         if (range && (range.start === undefined || range.end === undefined)) {
-            let parts = range ? range.toString().split('-') : null;
+            const parts = range ? range.toString().split('-') : null;
             range = parts ? {start: parseFloat(parts[0]), end: parseFloat(parts[1])} : null;
         }
 
         callback = !callback ? onLoaded : callback;
         let isoFile = null;
         let sidx = null;
-        let hasRange = !!range;
-        let baseUrl = baseURLController.resolve(representation.path);
-        let info = {
+        const hasRange = !!range;
+        const baseUrl = baseURLController.resolve(representation.path);
+        const info = {
             init: false,
             url: baseUrl ? baseUrl.url : undefined,
             range: hasRange ? range : { start: 0, end: 1500 },
@@ -162,8 +161,8 @@ function SegmentBaseLoader() {
         const request = getFragmentRequest(info);
 
         const onload = function (response) {
-            let extraBytes = info.bytesToLoad;
-            let loadedLength = response.byteLength;
+            const extraBytes = info.bytesToLoad;
+            const loadedLength = response.byteLength;
 
             info.bytesLoaded = info.range.end - info.range.start;
             isoFile = boxParser.parse(response);
@@ -178,7 +177,7 @@ function SegmentBaseLoader() {
                     callback(null, representation, type);
                     return;
                 } else {
-                    let lastBox = isoFile.getLastBox();
+                    const lastBox = isoFile.getLastBox();
 
                     if (lastBox && lastBox.size) {
                         info.range.start = lastBox.offset + lastBox.size;
@@ -189,7 +188,7 @@ function SegmentBaseLoader() {
                 }
                 loadSegments(representation, type, info.range, info, callback);
             } else {
-                let ref = sidx.references;
+                const ref = sidx.references;
                 let loadMultiSidx,
                     segments;
 
@@ -251,13 +250,12 @@ function SegmentBaseLoader() {
     }
 
     function getSegmentsForSidx(sidx, info) {
-
         const refs = sidx.references;
         const len = refs.length;
         const timescale = sidx.timescale;
         let time = sidx.earliest_presentation_time;
         let start = info.range.start + sidx.offset + sidx.first_offset + sidx.size;
-        let segments = [];
+        const segments = [];
         let segment,
             end,
             duration,
@@ -309,8 +307,7 @@ function SegmentBaseLoader() {
             return;
         }
 
-        let request = new FragmentRequest();
-
+        const request = new FragmentRequest();
         request.type = info.init ? HTTPRequest.INIT_SEGMENT_TYPE : HTTPRequest.MEDIA_SEGMENT_TYPE;
         request.url = info.url;
         request.range = info.range.start + '-' + info.range.end;

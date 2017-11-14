@@ -35,7 +35,7 @@ import {getTimeBasedSegment} from './SegmentsUtils';
 
 function TimelineSegmentsGetter(config, isDynamic) {
 
-    let timelineConverter = config.timelineConverter;
+    const timelineConverter = config.timelineConverter;
 
     let instance;
 
@@ -46,8 +46,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
         }
     }
 
-    function getSegmentsFromTimeline(representation, requestedTime, index) {
-
+    function getSegmentsFromTimeline(representation, requestedTime, index, availabilityUpperLimit) {
         checkConfig();
 
         if (!representation) {
@@ -68,12 +67,16 @@ function TimelineSegmentsGetter(config, isDynamic) {
 
         let maxSegmentsAhead;
 
-        maxSegmentsAhead = (index > -1 || requestedTime !== null) ? 10 : Infinity;
+        if (availabilityUpperLimit) {
+            maxSegmentsAhead = availabilityUpperLimit;
+        } else {
+            maxSegmentsAhead = (index > -1 || requestedTime !== null) ? 10 : Infinity;
+        }
 
         let time = 0;
         let scaledTime = 0;
         let availabilityIdx = -1;
-        let segments = [];
+        const segments = [];
         let requiredMediaTime = null;
 
         let fragments,
