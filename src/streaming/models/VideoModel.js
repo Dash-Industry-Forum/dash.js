@@ -49,9 +49,6 @@ function VideoModel() {
 
     function initialize() {
         stalledStreams = [];
-    }
-
-    function setup() {
         eventBus.on(Events.PLAYBACK_PLAYING, onPlaying, this);
     }
 
@@ -384,8 +381,6 @@ function VideoModel() {
         getVideoHeight: getVideoHeight,
         reset: reset
     };
-
-    setup();
 
     return instance;
 }

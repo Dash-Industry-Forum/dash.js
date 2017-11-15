@@ -1781,6 +1781,9 @@ function MediaPlayer() {
         if (!mediaPlayerInitialized) {
             throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
         }
+        if (videoModel) {
+            videoModel.reset();
+        }
         videoModel = null;
         if (element) {
             videoModel = VideoModel(context).getInstance();
@@ -2289,7 +2292,6 @@ function MediaPlayer() {
             abrController.reset();
             mediaController.reset();
             textController.reset();
-            videoModel.reset();
             if (protectionController) {
                 protectionController.reset();
                 protectionController = null;
