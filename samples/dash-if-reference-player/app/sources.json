@@ -190,6 +190,13 @@
         {
           "name": "1080p with W3C Clear Key, single key",
           "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_1080p_ClearKey.mpd",
+          "protData": {
+            "org.w3.clearkey": {
+              "clearkeys": {
+                "nrQFDeRLSAKTLifXUIPiZg": "FmY0xnWCPCNaSpRG-tUuTQ"
+              }
+            }
+          },
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
@@ -243,11 +250,29 @@
         {
            "name": "2160p with W3C Clear Key, single key",
           "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_ClearKey.mpd",
+          "protData": {
+            "org.w3.clearkey": {
+              "clearkeys": {
+                "nrQFDeRLSAKTLifXUIPiZg": "FmY0xnWCPCNaSpRG-tUuTQ"
+              }
+            }
+          },
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
            "name": "2160p with W3C Clear Key, multiple keys",
           "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey/Manifest_ClearKey.mpd",
+          "protData": {
+            "org.w3.clearkey": {
+              "clearkeys": {
+                "gDmb9YohQBSAU-J-dI6YwA": "3aHppzZ2g3Y3wK1uNnUXmg",
+                "kJU-CWyySaOiYHpf7-rUmQ": "zsmKW7Mq9Unz5R7oUGeF8w",
+                "Dk2pK9DoSmaMP8Jal-tlMg": "UmYYfGb7znuoFAQM79ayHw",
+                "WF8jPzByRvGfpG3CLGagFA": "jayKpC3tmPq4YKXkapa8FA",
+                "QiK9eLxFQb-2Pm-BTcOR3w": "GAMi9v92b9ca5yBwaptN-Q"
+              }
+            }
+          },
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
@@ -301,6 +326,17 @@
         {
           "name": "Audio with W3C Clear Key, multiple keys",
           "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey/Manifest_AudioOnly_ClearKey.mpd",
+          "protData": {
+            "org.w3.clearkey": {
+              "clearkeys": {
+                "gDmb9YohQBSAU-J-dI6YwA": "3aHppzZ2g3Y3wK1uNnUXmg",
+                "kJU-CWyySaOiYHpf7-rUmQ": "zsmKW7Mq9Unz5R7oUGeF8w",
+                "Dk2pK9DoSmaMP8Jal-tlMg": "UmYYfGb7znuoFAQM79ayHw",
+                "WF8jPzByRvGfpG3CLGagFA": "jayKpC3tmPq4YKXkapa8FA",
+                "QiK9eLxFQb-2Pm-BTcOR3w": "GAMi9v92b9ca5yBwaptN-Q"
+              }
+            }
+          },
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
@@ -330,6 +366,17 @@
         {
           "name": "Multi-period 1080p with W3C Clear Key, multiple keys",
           "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey-MultiPeriod/Manifest_1080p_ClearKey.mpd",
+          "protData": {
+            "org.w3.clearkey": {
+              "clearkeys": {
+                "gDmb9YohQBSAU-J-dI6YwA": "3aHppzZ2g3Y3wK1uNnUXmg",
+                "kJU-CWyySaOiYHpf7-rUmQ": "zsmKW7Mq9Unz5R7oUGeF8w",
+                "Dk2pK9DoSmaMP8Jal-tlMg": "UmYYfGb7znuoFAQM79ayHw",
+                "WF8jPzByRvGfpG3CLGagFA": "jayKpC3tmPq4YKXkapa8FA",
+                "QiK9eLxFQb-2Pm-BTcOR3w": "GAMi9v92b9ca5yBwaptN-Q"
+              }
+            }
+          },
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {

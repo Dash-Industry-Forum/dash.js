@@ -34,15 +34,14 @@ import ClearKeyKeySet from '../vo/ClearKeyKeySet';
 import CommonEncryption from '../CommonEncryption';
 import Constants from '../../constants/Constants';
 
-const uuid = 'e2719d58-a985-b3c9-781a-b030af78d30e';
+const uuid = '1077efec-c0b2-4d02-ace3-3c1e52e2fb4b';
 const systemString = Constants.CLEARKEY_ORG_STRING;
 const schemeIdURI = 'urn:uuid:' + uuid;
 
-function KeySystemClearKey(config) {
-
-    config = config || {};
+function KeySystemW3CClearKey(config) {
     let instance;
     let BASE64 = config.BASE64;
+    let log = config.log;
     /**
      * Returns desired clearkeys (as specified in the CDM message) from protection data
      *
@@ -70,6 +69,8 @@ function KeySystemClearKey(config) {
                 keyPairs.push(new KeyPair(clearkeyID, clearkey));
             }
             clearkeySet = new ClearKeyKeySet(keyPairs);
+
+            log('Warning: ClearKey schemeIdURI is using W3C Common PSSH systemID (1077efec-c0b2-4d02-ace3-3c1e52e2fb4b) in Content Protection. See DASH-IF IOP v4.1 section 7.6.2.4');
         }
         return clearkeySet;
     }
@@ -109,5 +110,6 @@ function KeySystemClearKey(config) {
     return instance;
 }
 
-KeySystemClearKey.__dashjs_factory_name = 'KeySystemClearKey';
-export default dashjs.FactoryMaker.getSingletonFactory(KeySystemClearKey); /* jshint ignore:line */
+KeySystemW3CClearKey.__dashjs_factory_name = 'KeySystemW3CClearKey';
+export default dashjs.FactoryMaker.getSingletonFactory(KeySystemW3CClearKey); /* jshint ignore:line */
+
