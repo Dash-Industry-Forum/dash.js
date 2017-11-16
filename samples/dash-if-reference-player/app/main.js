@@ -157,7 +157,9 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     $scope.drmData = [];
     $scope.initialSettings = {
         audio: null,
-        video: null
+        video: null,
+        text: null,
+        textEnabled: true
     };
     $scope.mediaSettingsCacheEnabled = true;
     $scope.metricsTimer = null;
@@ -597,6 +599,10 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
                 role: $scope.initialSettings.video
             });
         }
+        if ($scope.initialSettings.text) {
+            $scope.player.setTextDefaultLanguage($scope.initialSettings.text);
+        }
+        $scope.player.setTextDefaultEnabled($scope.initialSettings.textEnabled);
         $scope.controlbar.enable();
     };
 
