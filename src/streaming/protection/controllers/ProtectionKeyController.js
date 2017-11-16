@@ -37,7 +37,7 @@ import DRMToday from './../servers/DRMToday';
 import PlayReady from './../servers/PlayReady';
 import Widevine from './../servers/Widevine';
 import ClearKey from './../servers/ClearKey';
-import Constants from '../../constants/Constants';
+import ProtectionConstants from '../../constants/ProtectionConstants';
 
 /**
  * @module ProtectionKeyController
@@ -268,11 +268,11 @@ function ProtectionKeyController() {
         let licenseServerData = null;
         if (protData && protData.hasOwnProperty('drmtoday')) {
             licenseServerData = DRMToday(context).getInstance({BASE64: BASE64});
-        } else if (keySystem.systemString === 'com.widevine.alpha') {
+        } else if (keySystem.systemString === ProtectionConstants.WIDEVINE_KEYSTEM_STRING) {
             licenseServerData = Widevine(context).getInstance();
-        } else if (keySystem.systemString === 'com.microsoft.playready') {
+        } else if (keySystem.systemString === ProtectionConstants.PLAYREADY_KEYSTEM_STRING) {
             licenseServerData = PlayReady(context).getInstance();
-        } else if (keySystem.systemString === Constants.CLEARKEY_ORG_STRING) {
+        } else if (keySystem.systemString === ProtectionConstants.CLEARKEY_KEYSTEM_STRING) {
             licenseServerData = ClearKey(context).getInstance();
         }
 
