@@ -248,10 +248,12 @@ function TextTracks() {
 
         const newVideoWidth = realVideoSize.w;
         const newVideoHeight = realVideoSize.h;
+        const newVideoLeft = realVideoSize.x;
+        const newVideoTop = realVideoSize.y;
 
-        if (newVideoWidth != actualVideoWidth || newVideoHeight != actualVideoHeight) {
-            actualVideoLeft = realVideoSize.x + videoOffsetLeft;
-            actualVideoTop = realVideoSize.y + videoOffsetTop;
+        if (newVideoWidth != actualVideoWidth || newVideoHeight != actualVideoHeight || newVideoLeft != actualVideoLeft || newVideoTop != actualVideoTop) {
+            actualVideoLeft = newVideoLeft + videoOffsetLeft;
+            actualVideoTop = newVideoTop + videoOffsetTop;
             actualVideoWidth = newVideoWidth;
             actualVideoHeight = newVideoHeight;
             captionContainer.style.left = actualVideoLeft + 'px';

@@ -294,11 +294,11 @@ function VideoModel() {
     }
 
     function getVideoRelativeOffsetTop() {
-        return element && element.parentNode ? element.offsetTop - element.parentNode.offsetTop : NaN;
+        return element && element.parentNode ? element.getBoundingClientRect().top - element.parentNode.getBoundingClientRect().top : NaN;
     }
 
     function getVideoRelativeOffsetLeft() {
-        return element && element.parentNode ? element.getBoundingClientRect().x - element.parentNode.getBoundingClientRect().x : NaN;
+        return element && element.parentNode ? element.getBoundingClientRect().left - element.parentNode.getBoundingClientRect().left : NaN;
     }
 
     function getTextTracks() {
