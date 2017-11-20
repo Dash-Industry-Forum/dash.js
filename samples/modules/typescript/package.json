@@ -1,0 +1,19 @@
+{
+  "name": "dashjs-typescript-sample",
+  "version": "1.0.0",
+  "description": "Test using dash.js in a Typescript based project",
+  "dependencies": {
+    "dashjs": "^2.6.3"
+  },
+  "scripts": {
+    "build": "node_modules/webpack/bin/webpack.js"
+  },
+  "author": "Jesus Oliva",
+  "license": "BSD-3-Clause",
+  "devDependencies": {
+    "awesome-typescript-loader": "^3.2.1",
+    "html-webpack-plugin": "^2.30.1",
+    "typescript": "^2.2.2",
+    "webpack": "^1.12.13"
+  }
+}
