@@ -42,9 +42,11 @@ import NeedKey from '../vo/NeedKey';
 import KeyError from '../vo/KeyError';
 import KeyMessage from '../vo/KeyMessage';
 import KeySystemAccess from '../vo/KeySystemAccess';
+import Constants from '../../constants/Constants';
 
 function ProtectionModel_21Jan2015(config) {
 
+    config = config || {};
     let context = this.context;
     let eventBus = config.eventBus;//Need to pass in here so we can use same instance since this is optional module
     const events = config.events;
@@ -178,9 +180,10 @@ function ProtectionModel_21Jan2015(config) {
 
         let session = mediaKeys.createSession(sessionType);
         let sessionToken = createSessionToken(session, initData, sessionType);
+        let ks = this.getKeySystem();
 
         // Generate initial key request
-        session.generateRequest('cenc', initData).then(function () {
+        session.generateRequest(ks.systemString === Constants.CLEARKEY_ORG_STRING ? 'keyids' : 'cenc', initData).then(function () {
             log('DRM: Session created.  SessionID = ' + sessionToken.getSessionID());
             eventBus.trigger(events.KEY_SESSION_CREATED, {data: sessionToken});
         }).catch(function (error) {

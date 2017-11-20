@@ -32,13 +32,15 @@
 import KeyPair from '../vo/KeyPair';
 import ClearKeyKeySet from '../vo/ClearKeyKeySet';
 import CommonEncryption from '../CommonEncryption';
+import Constants from '../../constants/Constants';
 
-const uuid = '1077efec-c0b2-4d02-ace3-3c1e52e2fb4b';
-const systemString = 'org.w3.clearkey';
+const uuid = 'e2719d58-a985-b3c9-781a-b030af78d30e';
+const systemString = Constants.CLEARKEY_ORG_STRING;
 const schemeIdURI = 'urn:uuid:' + uuid;
 
 function KeySystemClearKey(config) {
 
+    config = config || {};
     let instance;
     let BASE64 = config.BASE64;
     /**

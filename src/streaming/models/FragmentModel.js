@@ -43,6 +43,7 @@ const FRAGMENT_MODEL_FAILED = 'failed';
 
 function FragmentModel(config) {
 
+    config = config || {};
     const context = this.context;
     const log = Debug(context).getInstance().log;
     const eventBus = EventBus(context).getInstance();
@@ -147,7 +148,7 @@ function FragmentModel(config) {
     }
 
     function removeExecutedRequestsBeforeTime(time) {
-        executedRequests = executedRequests.filter(req => isNaN(req.startTime) || req.startTime >= time);
+        executedRequests = executedRequests.filter(req => isNaN(req.startTime) || time !== undefined ? req.startTime >= time : false);
     }
 
     function abortRequests() {

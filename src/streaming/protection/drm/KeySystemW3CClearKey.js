@@ -29,79 +29,57 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * Google Widevine DRM
- *
- * @class
- * @implements MediaPlayer.dependencies.protection.KeySystem
- */
-
+import KeyPair from '../vo/KeyPair';
+import ClearKeyKeySet from '../vo/ClearKeyKeySet';
 import CommonEncryption from '../CommonEncryption';
+import Constants from '../../constants/Constants';
 
-const uuid = 'edef8ba9-79d6-4ace-a3c8-27dcd51d21ed';
-const systemString = 'com.widevine.alpha';
+const uuid = '1077efec-c0b2-4d02-ace3-3c1e52e2fb4b';
+const systemString = Constants.CLEARKEY_ORG_STRING;
 const schemeIdURI = 'urn:uuid:' + uuid;
 
-function KeySystemWidevine(config) {
-
-    config = config || {};
+function KeySystemW3CClearKey(config) {
     let instance;
-    let protData = null;
     let BASE64 = config.BASE64;
-
-    function init(protectionData) {
+    let log = config.log;
+    /**
+     * Returns desired clearkeys (as specified in the CDM message) from protection data
+     *
+     * @param {ProtectionData} protectionData the protection data
+     * @param {ArrayBuffer} message the ClearKey CDM message
+     * @returns {ClearKeyKeySet} the key set or null if none found
+     * @throws {Error} if a keyID specified in the CDM message was not found in the
+     * protection data
+     * @memberof KeySystemClearKey
+     */
+    function getClearKeysFromProtectionData(protectionData, message) {
+        let clearkeySet = null;
         if (protectionData) {
-            protData = protectionData;
-        }
-    }
-
-    function replaceKID(pssh, KID) {
-        let pssh_array;
-        let replace = true;
-        let kidLen = 16;
-        let pos;
-        let i, j;
-
-        pssh_array = new Uint8Array(pssh);
-
-        for (i = 0; i <= pssh_array.length - (kidLen + 2); i++) {
-            if (pssh_array[i] === 0x12 && pssh_array[i + 1] === 0x10) {
-                pos = i + 2;
-                for (j = pos; j < (pos + kidLen); j++) {
-                    if (pssh_array[j] !== 0xFF) {
-                        replace = false;
-                        break;
-                    }
+            // ClearKey is the only system that does not require a license server URL, so we
+            // handle it here when keys are specified in protection data
+            let jsonMsg = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(message)));
+            let keyPairs = [];
+            for (let i = 0; i < jsonMsg.kids.length; i++) {
+                let clearkeyID = jsonMsg.kids[i];
+                let clearkey = (protectionData.clearkeys.hasOwnProperty(clearkeyID)) ? protectionData.clearkeys[clearkeyID] : null;
+                if (!clearkey) {
+                    throw new Error('DRM: ClearKey keyID (' + clearkeyID + ') is not known!');
                 }
-                break;
+                // KeyIDs from CDM are not base64 padded.  Keys may or may not be padded
+                keyPairs.push(new KeyPair(clearkeyID, clearkey));
             }
-        }
+            clearkeySet = new ClearKeyKeySet(keyPairs);
 
-        if (replace) {
-            pssh_array.set(KID, pos);
+            log('Warning: ClearKey schemeIdURI is using W3C Common PSSH systemID (1077efec-c0b2-4d02-ace3-3c1e52e2fb4b) in Content Protection. See DASH-IF IOP v4.1 section 7.6.2.4');
         }
-
-        return pssh_array.buffer;
+        return clearkeySet;
     }
 
     function getInitData(cp) {
-        var pssh = null;
-        // Get pssh from protectionData or from manifest
-        if (protData && protData.pssh) {
-            pssh = BASE64.decodeArray(protData.pssh).buffer;
-        } else {
-            pssh = CommonEncryption.parseInitDataFromContentProtection(cp, BASE64);
-        }
-
-        // Check if KID within pssh is empty, in that case set KID value according to 'cenc:default_KID' value
-        if (pssh) {
-            pssh = replaceKID(pssh, cp['cenc:default_KID']);
-        }
-
-        return pssh;
+        return CommonEncryption.parseInitDataFromContentProtection(cp, BASE64);
     }
 
-    function getRequestHeadersFromMessage( /*message*/ ) {
+    function getRequestHeadersFromMessage(/*message*/) {
         return null;
     }
 
@@ -109,7 +87,7 @@ function KeySystemWidevine(config) {
         return new Uint8Array(message);
     }
 
-    function getLicenseServerURLFromInitData( /*initData*/ ) {
+    function getLicenseServerURLFromInitData(/*initData*/) {
         return null;
     }
 
@@ -121,16 +99,17 @@ function KeySystemWidevine(config) {
         uuid: uuid,
         schemeIdURI: schemeIdURI,
         systemString: systemString,
-        init: init,
         getInitData: getInitData,
         getRequestHeadersFromMessage: getRequestHeadersFromMessage,
         getLicenseRequestFromMessage: getLicenseRequestFromMessage,
         getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
-        getCDMData: getCDMData
+        getCDMData: getCDMData,
+        getClearKeysFromProtectionData: getClearKeysFromProtectionData
     };
 
     return instance;
 }
 
-KeySystemWidevine.__dashjs_factory_name = 'KeySystemWidevine';
-export default dashjs.FactoryMaker.getSingletonFactory(KeySystemWidevine); /* jshint ignore:line */
+KeySystemW3CClearKey.__dashjs_factory_name = 'KeySystemW3CClearKey';
+export default dashjs.FactoryMaker.getSingletonFactory(KeySystemW3CClearKey); /* jshint ignore:line */
+

@@ -3,6 +3,8 @@ As an open source project, operating under a [meritocratic governance model](gov
 
 For any kind of contribution your first port of call should be to join our [mailing list]( https://groups.google.com/d/forum/dashjs). We welcome all contributions to the mailing list (including asking questions which demonstrate our documentation needs to be improved).
 
+The dash.js project serves as the reference player for the DASH Industry Forum. Respecting this, if you wish to contribute features or behavior which are non-conforming with the [interop guidelines](http://dashif.org/guidelines/), then that feature must be explicitly enabled behind a compatibility flag. 
+
 ## Submitting and managing Issues
 
 We track work in our [Issue tracker](https://github.com/Dash-Industry-Forum/dash.js/issues) and welcome anyone to add items that we should consider. Tracked issues include, but are not limited to, bug reports, feature requests and documentation (support) requests.

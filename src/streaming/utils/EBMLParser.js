@@ -8,6 +8,7 @@ import FactoryMaker from '../../core/FactoryMaker';
  */
 function EBMLParser(config) {
 
+    config = config || {};
     let instance;
 
     let data = new DataView(config.data);

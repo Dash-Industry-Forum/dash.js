@@ -46,6 +46,7 @@ import KeySystemAccess from '../vo/KeySystemAccess';
 
 function ProtectionModel_01b(config) {
 
+    config = config || {};
     let context = this.context;
     let eventBus = config.eventBus;//Need to pass in here so we can use same instance since this is optional module
     const events = config.events;

@@ -63,6 +63,7 @@ class Constants {
         this.ABR_STRATEGY_THROUGHPUT = 'abrThroughput';
         this.MOVING_AVERAGE_SLIDING_WINDOW = 'slidingWindow';
         this.MOVING_AVERAGE_EWMA = 'ewma';
+        this.CLEARKEY_ORG_STRING = 'org.w3.clearkey';
     }
 
     constructor () {
