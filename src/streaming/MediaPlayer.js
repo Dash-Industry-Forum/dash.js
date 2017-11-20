@@ -1874,6 +1874,9 @@ function MediaPlayer() {
         if (!mediaPlayerInitialized) {
             throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
         }
+        if (videoModel) {
+            videoModel.reset();
+        }
         videoModel = null;
         if (element) {
             videoModel = VideoModel(context).getInstance();
