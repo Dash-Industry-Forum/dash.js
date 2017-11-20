@@ -32,17 +32,18 @@
 import KeyPair from '../vo/KeyPair';
 import ClearKeyKeySet from '../vo/ClearKeyKeySet';
 import CommonEncryption from '../CommonEncryption';
-import Constants from '../../constants/Constants';
+import ProtectionConstants from '../../constants/ProtectionConstants';
 
 const uuid = 'e2719d58-a985-b3c9-781a-b030af78d30e';
-const systemString = Constants.CLEARKEY_ORG_STRING;
+const systemString = ProtectionConstants.CLEARKEY_KEYSTEM_STRING;
 const schemeIdURI = 'urn:uuid:' + uuid;
 
 function KeySystemClearKey(config) {
 
     config = config || {};
     let instance;
-    let BASE64 = config.BASE64;
+    const BASE64 = config.BASE64;
+
     /**
      * Returns desired clearkeys (as specified in the CDM message) from protection data
      *
@@ -58,11 +59,11 @@ function KeySystemClearKey(config) {
         if (protectionData) {
             // ClearKey is the only system that does not require a license server URL, so we
             // handle it here when keys are specified in protection data
-            let jsonMsg = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(message)));
-            let keyPairs = [];
+            const jsonMsg = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(message)));
+            const keyPairs = [];
             for (let i = 0; i < jsonMsg.kids.length; i++) {
-                let clearkeyID = jsonMsg.kids[i];
-                let clearkey = (protectionData.clearkeys.hasOwnProperty(clearkeyID)) ? protectionData.clearkeys[clearkeyID] : null;
+                const clearkeyID = jsonMsg.kids[i];
+                const clearkey = (protectionData.clearkeys.hasOwnProperty(clearkeyID)) ? protectionData.clearkeys[clearkeyID] : null;
                 if (!clearkey) {
                     throw new Error('DRM: ClearKey keyID (' + clearkeyID + ') is not known!');
                 }

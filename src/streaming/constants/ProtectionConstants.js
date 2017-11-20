@@ -30,39 +30,16 @@
  */
 
 /**
- * Constants declaration
+ * Protection Constants declaration
  * @class
  * @ignore
  */
-class Constants {
+class ProtectionConstants {
 
     init () {
-        this.STREAM = 'stream';
-        this.VIDEO = 'video';
-        this.AUDIO = 'audio';
-        this.TEXT = 'text';
-        this.FRAGMENTED_TEXT = 'fragmentedText';
-        this.EMBEDDED_TEXT = 'embeddedText';
-        this.MUXED = 'muxed';
-        this.LOCATION = 'Location';
-        this.INITIALIZE = 'initialize';
-        this.TEXT_SHOWING = 'showing';
-        this.TEXT_HIDDEN = 'hidden';
-        this.CC1 = 'CC1';
-        this.CC3 = 'CC3';
-        this.STPP = 'stpp';
-        this.TTML = 'ttml';
-        this.VTT = 'vtt';
-        this.WVTT = 'wvtt';
-        this.UTF8 = 'utf-8';
-        this.SUGGESTED_PRESENTATION_DELAY = 'suggestedPresentationDelay';
-        this.SCHEME_ID_URI = 'schemeIdUri';
-        this.START_TIME = 'starttime';
-        this.ABR_STRATEGY_DYNAMIC = 'abrDynamic';
-        this.ABR_STRATEGY_BOLA = 'abrBola';
-        this.ABR_STRATEGY_THROUGHPUT = 'abrThroughput';
-        this.MOVING_AVERAGE_SLIDING_WINDOW = 'slidingWindow';
-        this.MOVING_AVERAGE_EWMA = 'ewma';
+        this.CLEARKEY_KEYSTEM_STRING = 'org.w3.clearkey';
+        this.WIDEVINE_KEYSTEM_STRING = 'com.widevine.alpha';
+        this.PLAYREADY_KEYSTEM_STRING = 'com.microsoft.playready';
     }
 
     constructor () {
@@ -70,5 +47,5 @@ class Constants {
     }
 }
 
-let constants = new Constants();
+let constants = new ProtectionConstants();
 export default constants;

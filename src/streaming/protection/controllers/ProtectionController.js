@@ -420,12 +420,10 @@ function ProtectionController(config) {
                     for (let i = 0; i < pendingNeedKeyData.length; i++) {
                         for (ksIdx = 0; ksIdx < pendingNeedKeyData[i].length; ksIdx++) {
                             if (keySystem === pendingNeedKeyData[i][ksIdx].ks) {
-                                if (pendingNeedKeyData[i][ksIdx].initData === null && protData.hasOwnProperty('clearkeys')) {
-                                    var initData = { kids: Object.keys(protData.clearkeys) };
-
+                                if (pendingNeedKeyData[i][ksIdx].initData === null && protData && protData.hasOwnProperty('clearkeys')) {
+                                    const initData = { kids: Object.keys(protData.clearkeys) };
                                     pendingNeedKeyData[i][ksIdx].initData = new TextEncoder().encode(JSON.stringify(initData));
                                 }
-
                                 createKeySession(pendingNeedKeyData[i][ksIdx].initData, pendingNeedKeyData[i][ksIdx].cdmData);
                                 break;
                             }
