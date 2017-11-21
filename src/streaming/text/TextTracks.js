@@ -348,6 +348,38 @@ function TextTracks() {
                 }
             }
         }
+
+        if (activeCue.isd) {
+            let htmlCaptionDiv = document.getElementById(activeCue.cueID);
+            if (htmlCaptionDiv) {
+                captionContainer.removeChild(htmlCaptionDiv);
+                renderCaption(activeCue);
+            }
+        }
+    }
+
+    function renderCaption(cue) {
+        const finalCue = document.createElement('div');
+        captionContainer.appendChild(finalCue);
+        renderHTML(cue.isd, finalCue, function (uri) {
+            const imsc1ImgUrnTester = /^(urn:)(mpeg:[a-z0-9][a-z0-9-]{0,31}:)(subs:)([0-9])$/;
+            const smpteImgUrnTester = /^#(.*)$/;
+            if (imsc1ImgUrnTester.test(uri)) {
+                const match = imsc1ImgUrnTester.exec(uri);
+                const imageId = parseInt(match[4], 10) - 1;
+                const imageData = btoa(cue.images[imageId]);
+                const dataUrl = 'data:image/png;base64,' + imageData;
+                return dataUrl;
+            } else if (smpteImgUrnTester.test(uri)) {
+                const match = smpteImgUrnTester.exec(uri);
+                const imageId = match[1];
+                const dataUrl = 'data:image/png;base64,' + cue.embeddedImages[imageId];
+                return dataUrl;
+            } else {
+                return null;
+            }
+        }, captionContainer.clientHeight, captionContainer.clientWidth);
+        finalCue.id = cue.cueID;
     }
 
     /*
@@ -394,28 +426,8 @@ function TextTracks() {
                 cue.onenter = function () {
                     if (track.mode === Constants.TEXT_SHOWING) {
                         if (this.isd) {
-                            const finalCue = document.createElement('div');
+                            renderCaption(this);
                             log('Cue enter id:' + this.cueID);
-                            captionContainer.appendChild(finalCue);
-                            renderHTML(this.isd, finalCue, function (uri) {
-                                const imsc1ImgUrnTester = /^(urn:)(mpeg:[a-z0-9][a-z0-9-]{0,31}:)(subs:)([0-9])$/;
-                                const smpteImgUrnTester = /^#(.*)$/;
-                                if (imsc1ImgUrnTester.test(uri)) {
-                                    const match = imsc1ImgUrnTester.exec(uri);
-                                    const imageId = parseInt(match[4], 10) - 1;
-                                    const imageData = btoa(cue.images[imageId]);
-                                    const dataUrl = 'data:image/png;base64,' + imageData;
-                                    return dataUrl;
-                                } else if (smpteImgUrnTester.test(uri)) {
-                                    const match = smpteImgUrnTester.exec(uri);
-                                    const imageId = match[1];
-                                    const dataUrl = 'data:image/png;base64,' + cue.embeddedImages[imageId];
-                                    return dataUrl;
-                                } else {
-                                    return null;
-                                }
-                            }, captionContainer.clientHeight, captionContainer.clientWidth);
-                            finalCue.id = this.cueID;
                         } else {
                             captionContainer.appendChild(this.cueHTMLElement);
                             scaleCue.call(self, this);
