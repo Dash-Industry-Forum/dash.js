@@ -566,15 +566,15 @@ function MediaPlayer() {
      */
     function getDVRSeekOffset(value) {
         let metric = getDVRInfoMetric();
-
+        let liveDelay = playbackController.getLiveDelay();
         if (!metric) {
             return 0;
         }
 
         let val = metric.range.start + value;
 
-        if (val > metric.range.end) {
-            val = metric.range.end;
+        if (val > (metric.range.end - liveDelay)) {
+            val = metric.range.end - liveDelay;
         }
 
         return val;

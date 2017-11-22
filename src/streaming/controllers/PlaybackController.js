@@ -56,6 +56,7 @@ function PlaybackController() {
         liveStartTime,
         wallclockTimeIntervalId,
         commonEarliestTime,
+        liveDelay,
         bufferedRange,
         streamInfo,
         isDynamic,
@@ -169,6 +170,7 @@ function PlaybackController() {
         const mpd = dashManifestModel.getMpd(manifestModel.getValue());
 
         let delay;
+        let ret;
         const END_OF_PLAYLIST_PADDING = 10;
 
         if (mediaPlayerModel.getUseSuggestedPresentationDelay() && mpd.hasOwnProperty(Constants.SUGGESTED_PRESENTATION_DELAY)) {
@@ -186,10 +188,16 @@ function PlaybackController() {
             // - dvrWindowSize / 2 for short playlists
             // - dvrWindowSize - END_OF_PLAYLIST_PADDING for longer playlists
             const targetDelayCapping = Math.max(dvrWindowSize - END_OF_PLAYLIST_PADDING, dvrWindowSize / 2);
-            return Math.min(delay, targetDelayCapping);
+            ret = Math.min(delay, targetDelayCapping);
         } else {
-            return delay;
+            ret = delay;
         }
+        liveDelay = ret;
+        return ret;
+    }
+
+    function getLiveDelay() {
+        return liveDelay;
     }
 
     function reset() {
@@ -198,6 +206,7 @@ function PlaybackController() {
         wallclockTimeIntervalId = null;
         playOnceInitialized = false;
         commonEarliestTime = {};
+        liveDelay = 0;
         bufferedRange = {};
         if (videoModel) {
             eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
@@ -568,6 +577,7 @@ function PlaybackController() {
         setLiveStartTime: setLiveStartTime,
         getLiveStartTime: getLiveStartTime,
         computeLiveDelay: computeLiveDelay,
+        getLiveDelay: getLiveDelay,
         play: play,
         isPaused: isPaused,
         pause: pause,
