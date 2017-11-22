@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import './index_mediaplayerOnly';
+import { MediaPlayer } from './index_mediaplayerOnly';
 
 import MetricsReporting from './src/streaming/metrics/MetricsReporting';
 import Protection from './src/streaming/protection/Protection';
@@ -40,4 +40,4 @@ dashjs.MetricsReporting = MetricsReporting;
 dashjs.MediaPlayerFactory = MediaPlayerFactory;
 
 export default dashjs;
-export { Protection, MetricsReporting, MediaPlayerFactory};
+export { MediaPlayer, Protection, MetricsReporting, MediaPlayerFactory};

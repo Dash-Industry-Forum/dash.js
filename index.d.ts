@@ -153,12 +153,14 @@ declare namespace dashjs {
         reset(): void;
     }
 
-    export interface MediaPlayer {
-        (): {
-            create(): MediaPlayerClass;
-        };
+    export interface MediaPlayerFactory {
+        create(): MediaPlayerClass;
+    }
 
-        events: MediaPlayerEvents;
+    export function MediaPlayer(): MediaPlayerFactory;
+
+    export namespace MediaPlayer {
+        export const events: MediaPlayerEvents;
     }
 
     interface MediaPlayerEvents {
