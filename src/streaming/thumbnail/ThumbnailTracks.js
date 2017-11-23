@@ -32,15 +32,20 @@ import Constants from '../constants/Constants';
 import DashConstants from '../../dash/constants/DashConstants';
 import FactoryMaker from '../../core/FactoryMaker';
 import ThumbnailTrackInfo from '../vo/ThumbnailTrackInfo';
+import URLUtils from '../../streaming/utils/URLUtils';
+import {replaceIDForTemplate} from '../../dash/utils/SegmentsUtils';
 
 const THUMBNAILS_SCHEME_ID_URI = 'http://dashif.org/thumbnail_tile';
 
 function ThumbnailTracks(config) {
 
+    const context = this.context;
     const dashManifestModel = config.dashManifestModel;
     const manifestModel = config.manifestModel;
+    const adapter = config.adapter;
+    const baseURLController = config.baseURLController;
     const stream = config.stream;
-    const log = config.log;
+    const urlUtils = URLUtils(context).getInstance();
     let instance,
         tracks,
         currentTrack;
@@ -53,7 +58,7 @@ function ThumbnailTracks(config) {
     }
 
     function addTracks() {
-        if (!stream || !manifestModel || !dashManifestModel) {
+        if (!stream || !manifestModel || !dashManifestModel || !adapter) {
             return;
         }
 
@@ -68,14 +73,21 @@ function ThumbnailTracks(config) {
         }
 
         // Extract thumbnail tracks
-        const representations = adaptation.Representation_asArray;
-        if (representations) {
-            representations.forEach(r=> {
-                if (r.hasOwnProperty(DashConstants.SEGMENT_TEMPLATE) && r[DashConstants.SEGMENT_TEMPLATE].duration > 0) {
-                    createTrack(r);
-                } else {
-                    log.warn('Only SegmentTemplate is allowed for Thumbnails adaptations. Thumbnails for representation', r.id, 'removed from the list of available representations');
-                }
+        const mediaInfo = adapter.getMediaInfoForType(streamInfo, Constants.IMAGE);
+        if (!mediaInfo) {
+            return;
+        }
+
+        const voAdaptation = adapter.getDataForMedia(mediaInfo);
+        if (!voAdaptation) {
+            return;
+        }
+
+        const voReps = dashManifestModel.getRepresentationsForAdaptation(voAdaptation);
+        if (voReps && voReps.length > 0) {
+            voReps.forEach((rep) => {
+                if (rep.segmentInfoType === DashConstants.SEGMENT_TEMPLATE && rep.segmentDuration > 0 && rep.media)
+                createTrack(rep);
             });
         }
 
@@ -86,17 +98,19 @@ function ThumbnailTracks(config) {
 
     function createTrack(representation) {
         const track = new ThumbnailTrackInfo();
-        track.idx = tracks.length;
+        track.id = representation.id;
         track.bandwidth = representation.bandwidth;
         track.width = representation.width;
         track.height = representation.height;
         track.tilesHor = 1;
         track.tilesVert = 1;
-        track.segmentInfo = representation[DashConstants.SEGMENT_TEMPLATE];
+        track.startNumber = representation.startNumber;
+        track.segmentDuration = representation.segmentDuration;
+        track.timescale = representation.timescale;
+        track.templateUrl = buildTemplateUrl(representation);
 
-        const properties = dashManifestModel.getEssentialPropertiesForRepresentation(representation);
-        if (properties) {
-            properties.forEach((p) => {
+        if (representation.essentialProperties) {
+            representation.essentialProperties.forEach((p) => {
                 if (p.schemeIdUri === THUMBNAILS_SCHEME_ID_URI && p.value) {
                     const vars = p.value.split('x');
                     if (vars.length === 2 && !isNaN(vars[0]) && !isNaN(vars[1])) {
@@ -109,6 +123,12 @@ function ThumbnailTracks(config) {
         if (track.tilesHor > 0 && track.tilesVert > 0) {
             tracks.push(track);
         }
+    }
+
+    function buildTemplateUrl(representation) {
+        let templateUrl = urlUtils.isRelative(representation.media) ?
+            urlUtils.resolve(representation.media, baseURLController.resolve(representation.path).url) : representation.media;
+        return replaceIDForTemplate(templateUrl, representation.id);
     }
 
     function getTracks() {

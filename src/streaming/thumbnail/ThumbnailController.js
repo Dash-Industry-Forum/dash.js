@@ -33,13 +33,12 @@ import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import Thumbnail from '../vo/Thumbnail';
 import ThumbnailTracks from './ThumbnailTracks';
+import {replaceTokenForTemplate, unescapeDollarsInTemplate} from '../../dash/utils/SegmentsUtils';
 
 function ThumbnailController(config) {
 
     const context = this.context;
     const log = Debug(context).getInstance().log;
-    // const eventBus = EventBus(context).getInstance();
-    const baseURLController = config.baseURLController;
 
     let instance;
     let thumbnailTracks;
@@ -49,6 +48,8 @@ function ThumbnailController(config) {
         thumbnailTracks = ThumbnailTracks(context).create({
             manifestModel: config.manifestModel,
             dashManifestModel: config.dashManifestModel,
+            adapter: config.adapter,
+            baseURLController: config.baseURLController,
             stream: config.stream
         });
     }
@@ -58,17 +59,17 @@ function ThumbnailController(config) {
             return null;
         }
         const track = thumbnailTracks.getCurrentTrack();
-        if (!track || track.segmentInfo.duration <= 0) {
+        if (!track || track.segmentDuration <= 0) {
             return null;
         }
         log('Retrieving thumbnail from track index ', track.id, ' at time ', time, ' seconds');
 
-        const seq = Math.floor(time / track.segmentInfo.duration);
-        const offset = time % track.segmentInfo.duration;
+        const seq = Math.floor(time / track.segmentDuration);
+        const offset = time % track.segmentDuration;
         const thumbIndex = Math.floor(offset / (track.tilesHor * track.tilesVert)) - 1;
 
         const thumbnail = new Thumbnail();
-        thumbnail.url = baseURLController.resolve('thumbnails_320x180/tile_' + (seq + 1) + '.jpg');
+        thumbnail.url = buildUrlFromTemplate(track, seq);
         thumbnail.width = Math.floor(track.width / track.tilesHor);
         thumbnail.height = Math.floor(track.height / track.tilesVert);
         thumbnail.x = Math.floor(thumbIndex % track.tilesHor) * thumbnail.width;
@@ -76,6 +77,14 @@ function ThumbnailController(config) {
 
         log('Time', time, 'Thumbnail - seq:', seq, ', x:', thumbnail.x, ', y:', thumbnail.y, ', w:', thumbnail.width, 'h:', thumbnail.height);
         return thumbnail;
+    }
+
+    function buildUrlFromTemplate(track, seq) {
+        const seqIdx = seq + track.startNumber;
+        let url = replaceTokenForTemplate(track.templateUrl, 'Number', seqIdx);
+        url = replaceTokenForTemplate(url, 'Time', (seqIdx - 1) * track.segmentDuration);
+        url = replaceTokenForTemplate(url, 'Bandwidth', track.bandwidth);
+        return unescapeDollarsInTemplate(url);
     }
 
     function setTrack(id) {

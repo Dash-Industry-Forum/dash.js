@@ -2065,6 +2065,9 @@ function MediaPlayer() {
      * @instance
      */
     function getThumbnail(time) {
+        if (time < 0) {
+            return null;
+        }
         const s = playbackController.getIsDynamic() ? getDVRSeekOffset(time) : time;
         const stream = streamController.getStreamForTime(s);
         if (stream === null) {

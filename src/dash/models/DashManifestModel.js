@@ -471,6 +471,8 @@ function DashManifestModel(config) {
                 voRepresentation.segmentInfoType = DashConstants.BASE_URL;
             }
 
+            voRepresentation.essentialProperties = getEssentialPropertiesForRepresentation(realRepresentation);
+
             if (segmentInfo) {
                 if (segmentInfo.hasOwnProperty(DashConstants.INITIALIZATION)) {
                     initialization = segmentInfo.Initialization;
@@ -496,6 +498,9 @@ function DashManifestModel(config) {
                     // exceeds @maxSegmentDuration
                     //representation.segmentDuration = Math.min(segmentInfo.duration / representation.timescale, adaptation.period.mpd.maxSegmentDuration);
                     voRepresentation.segmentDuration = segmentInfo.duration / voRepresentation.timescale;
+                }
+                if (segmentInfo.hasOwnProperty(DashConstants.MEDIA)) {
+                    voRepresentation.media = segmentInfo.media;
                 }
                 if (segmentInfo.hasOwnProperty(DashConstants.START_NUMBER)) {
                     voRepresentation.startNumber = segmentInfo.startNumber;
@@ -541,7 +546,9 @@ function DashManifestModel(config) {
                     voAdaptationSet.type = Constants.VIDEO;
                 } else if (getIsFragmentedText(realAdaptationSet)) {
                     voAdaptationSet.type = Constants.FRAGMENTED_TEXT;
-                } else {
+                } else if (getIsImage(realAdaptationSet)) {
+                    voAdaptationSet.type = Constants.IMAGE;
+                }else {
                     voAdaptationSet.type = Constants.TEXT;
                 }
                 voAdaptations.push(voAdaptationSet);
@@ -971,7 +978,6 @@ function DashManifestModel(config) {
         getManifestUpdatePeriod: getManifestUpdatePeriod,
         getRepresentationCount: getRepresentationCount,
         getBitrateListForAdaptation: getBitrateListForAdaptation,
-        getEssentialPropertiesForRepresentation: getEssentialPropertiesForRepresentation,
         getRepresentationFor: getRepresentationFor,
         getRepresentationsForAdaptation: getRepresentationsForAdaptation,
         getAdaptationsForPeriod: getAdaptationsForPeriod,
