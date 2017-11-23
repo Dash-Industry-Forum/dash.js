@@ -29,15 +29,21 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from '../constants/Constants';
+import DashConstants from '../../dash/constants/DashConstants';
 import FactoryMaker from '../../core/FactoryMaker';
+import ThumbnailTrackInfo from '../vo/ThumbnailTrackInfo';
+
+const THUMBNAILS_SCHEME_ID_URI = 'http://dashif.org/thumbnail_tile';
 
 function ThumbnailTracks(config) {
 
     const dashManifestModel = config.dashManifestModel;
     const manifestModel = config.manifestModel;
     const stream = config.stream;
+    const log = config.log;
     let instance,
-        tracks;
+        tracks,
+        currentTrack;
 
     function initialize() {
         reset();
@@ -53,39 +59,93 @@ function ThumbnailTracks(config) {
 
         const streamInfo = stream ? stream.getStreamInfo() : null;
         if (!streamInfo) {
-            return null;
+            return;
         }
 
         const adaptation = dashManifestModel.getAdaptationForType(manifestModel.getValue(), streamInfo.index, Constants.IMAGE, streamInfo);
         if (!adaptation) {
-            return null;
-        }
-
-        const representation = adaptation.Representation;
-        if (!representation) {
-            return null;
+            return;
         }
 
         // Extract thumbnail tracks
-        createTrack();
+        const representations = adaptation.Representation_asArray;
+        if (representations) {
+            representations.forEach(r=> {
+                if (r.hasOwnProperty(DashConstants.SEGMENT_TEMPLATE) && r[DashConstants.SEGMENT_TEMPLATE].duration > 0) {
+                    createTrack(r);
+                } else {
+                    log.warn('Only SegmentTemplate is allowed for Thumbnails adaptations. Thumbnails for representation', r.id, 'removed from the list of available representations');
+                }
+            });
+        }
+
+        if (tracks.length > 0) {
+            currentTrack = tracks[0];
+        }
     }
 
-    function createTrack() {
+    function createTrack(representation) {
+        const track = new ThumbnailTrackInfo();
+        track.idx = tracks.length;
+        track.bandwidth = representation.bandwidth;
+        track.width = representation.width;
+        track.height = representation.height;
+        track.tilesHor = 1;
+        track.tilesVert = 1;
+        track.segmentInfo = representation[DashConstants.SEGMENT_TEMPLATE];
 
+        const properties = dashManifestModel.getEssentialPropertiesForRepresentation(representation);
+        if (properties) {
+            properties.forEach((p) => {
+                if (p.schemeIdUri === THUMBNAILS_SCHEME_ID_URI && p.value) {
+                    const vars = p.value.split('x');
+                    if (vars.length === 2 && !isNaN(vars[0]) && !isNaN(vars[1])) {
+                        track.tilesHor = parseInt(vars[0], 10);
+                        track.tilesVert = parseInt(vars[1], 10);
+                    }
+                }
+            });
+        }
+        if (track.tilesHor > 0 && track.tilesVert > 0) {
+            tracks.push(track);
+        }
     }
 
     function getTracks() {
         return tracks;
     }
 
+    function getTrackById(id) {
+        if (id && tracks) {
+            for (let i = 0; i < tracks.length; i++) {
+                if (id === tracks[i].id) {
+                    return tracks[i];
+                }
+            }
+        }
+        return null;
+    }
+
+    function getCurrentTrack() {
+        return currentTrack;
+    }
+
+    function setCurrentTrackById(id) {
+        currentTrack = getTrackById(id);
+    }
+
     function reset() {
         tracks = [];
+        currentTrack = null;
     }
 
     instance = {
         initialize: initialize,
         getTracks: getTracks,
-        reset: reset
+        reset: reset,
+        getTrackById: getTrackById,
+        setCurrentTrackById: setCurrentTrackById,
+        getCurrentTrack: getCurrentTrack
     };
 
     initialize();

@@ -360,20 +360,26 @@ function DashManifestModel(config) {
 
         const processedRealAdaptation = processAdaptation(realAdaptation);
         const realRepresentations = processedRealAdaptation.Representation_asArray;
-        const ln = realRepresentations.length;
-        const bitrateList = [];
-        let i = 0;
 
-        for (i = 0; i < ln; i++) {
-            bitrateList.push({
-                bandwidth: realRepresentations[i].bandwidth,
-                width: realRepresentations[i].width || 0,
-                height: realRepresentations[i].height || 0,
-                scanType: realRepresentations[i].scanType || null
-            });
-        }
+        return realRepresentations.map((realRepresentation) => {
+            return {
+                bandwidth: realRepresentation.bandwidth,
+                width: realRepresentation.width || 0,
+                height: realRepresentation.height || 0,
+                scanType: realRepresentation.scanType || null
+            };
+        });
+    }
 
-        return bitrateList;
+    function getEssentialPropertiesForRepresentation(realRepresentation) {
+        if (!realRepresentation || ! realRepresentation.EssentialProperty_asArray || !realRepresentation.EssentialProperty_asArray.length) return null;
+
+        return realRepresentation.EssentialProperty_asArray.map( (prop) => {
+            return {
+                schemeIdUri: prop.schemeIdUri,
+                value: prop.value
+            };
+        });
     }
 
     function getRepresentationFor(index, adaptation) {
@@ -965,6 +971,7 @@ function DashManifestModel(config) {
         getManifestUpdatePeriod: getManifestUpdatePeriod,
         getRepresentationCount: getRepresentationCount,
         getBitrateListForAdaptation: getBitrateListForAdaptation,
+        getEssentialPropertiesForRepresentation: getEssentialPropertiesForRepresentation,
         getRepresentationFor: getRepresentationFor,
         getRepresentationsForAdaptation: getRepresentationsForAdaptation,
         getAdaptationsForPeriod: getAdaptationsForPeriod,

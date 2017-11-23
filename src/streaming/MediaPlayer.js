@@ -2061,11 +2061,10 @@ function MediaPlayer() {
      * @returns {Thumbnail|null} - Thumbnail for the given time position. It returns null in case there are is not a thumbnails representation or
      * if it doesn't contain a thumbnail for the given time position.
      * @param {number} time - A relative time, in seconds, based on the return value of the {@link module:MediaPlayer#duration duration()} method is expected
-     * @param {number} idx - Index of track based on the order of the order the tracks are added
      * @memberof module:MediaPlayer
      * @instance
      */
-    function getThumbnail(time, idx) {
+    function getThumbnail(time) {
         const s = playbackController.getIsDynamic() ? getDVRSeekOffset(time) : time;
         const stream = streamController.getStreamForTime(s);
         if (stream === null) {
@@ -2079,7 +2078,7 @@ function MediaPlayer() {
         }
 
         const timeInPeriod = streamController.getTimeRelativeToStreamId(time, stream.getId());
-        return thumbnailController.get(timeInPeriod, idx);
+        return thumbnailController.get(timeInPeriod);
     }
 
     /*

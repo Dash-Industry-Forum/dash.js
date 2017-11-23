@@ -266,3 +266,16 @@ div#videoController input[type="range"]{
     -moz-box-sizing: border-box;
     box-sizing: border-box;
 }
+
+.thumbnail-container {
+    position: absolute;
+    left: -1000px;
+}
+
+.thumbnail-elem {
+    position: absolute;
+    bottom: 2.3em;
+    border: 1px #000000 solid;
+}
+
+

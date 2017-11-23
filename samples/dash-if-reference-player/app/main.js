@@ -27,7 +27,6 @@ angular.module('DashContributorsService', ['ngResource']).factory('contributors'
 
 app.controller('DashController', function ($scope, sources, contributors) {
 
-
     $scope.selectedItem = {
         url: "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd"
     };
@@ -488,7 +487,7 @@ app.controller('DashController', function ($scope, sources, contributors) {
     };
 
     $scope.toggleUseCustomABRRules = function () {
-
+        $scope.player.getThumbnail($scope.player.time());
         if ($scope.customABRRulesSelected) {
             $scope.player.useDefaultABRRules(false);
             $scope.player.addABRCustomRule('qualitySwitchRules', 'DownloadRatioRule', DownloadRatioRule);

@@ -51,6 +51,8 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         fullscreenBtn = document.getElementById("fullscreenBtn"),
         timeDisplay = document.getElementById("videoTime"),
         durationDisplay = document.getElementById("videoDuration"),
+        thumbnailContainer = document.getElementById("thumbnail-container"),
+        thumbnailElem = document.getElementById("thumbnail-elem"),
 
 //************************************************************************************
 // PLAYBACK
@@ -105,8 +107,6 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                 span.classList.remove('icon-mute-on')
                 span.classList.add('icon-mute-off');
             }
-
-            player.getThumbnail(0, 0);
         },
 
         onMuteClick = function (e) {
@@ -150,6 +150,65 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
         onSeeked = function (e) {
             seeking = false;
+        },
+
+        onSeekBarMouseMove = function (event) {
+            if (!thumbnailContainer) return;
+
+            var left;
+            var pageXOffset = getScrollOffset().x;
+            var x = event.pageX;
+            if (event.changedTouches) {
+              x = event.changedTouches[0].pageX;
+            }
+
+            // Take into account page offset and seekbar position
+            left = x || (event.clientX + document.body.scrollLeft + document.documentElement.scrollLeft);
+            left -= seekbar.getBoundingClientRect().left + pageXOffset;
+
+            // Calculate time position given mouse position
+            var seekbarWidth = parseFloat(window.getComputedStyle(seekbar).width);
+            var mouseTime = Math.floor(player.duration() * left/seekbarWidth);
+            if (isNaN(mouseTime)) return;
+
+            // Get thumbnail information
+            var thumbnail = player.getThumbnail(mouseTime);
+            if (!thumbnail) return;
+
+            // Take into account thumbnail control
+            var ctrlWidth = parseInt(window.getComputedStyle(thumbnailContainer).width);
+            if (!isNaN(ctrlWidth)) {
+             //   left += ctrlWidth / 2;
+            }
+
+            // Set thumbnail control position
+            thumbnailContainer.style.left = left + 'px';
+            thumbnailContainer.style.opacity = 1.0;
+
+            var backgroundStyle = 'url("' + thumbnail.url + '") ' + (thumbnail.x > 0 ? '-' + thumbnail.x : '0') +
+                 'px ' + (thumbnail.y > 0 ? '-' + thumbnail.y : '0') + 'px';
+            console.log('JES: ' + backgroundStyle);
+            thumbnailElem.style.background = backgroundStyle;
+            thumbnailElem.style.width = thumbnail.width + 'px';
+            thumbnailElem.style.height = thumbnail.height + 'px';
+        },
+
+        onSeekBarMouseMoveOut = function (e) {
+            if (!thumbnailContainer) return;
+            thumbnailContainer.style.opacity = 0.0;
+        },
+
+        getScrollOffset = function() {
+            if (window.pageXOffset) {
+                return {
+                    x: window.pageXOffset,
+                    y: window.pageYOffset
+                };
+            }
+            return {
+              x: document.documentElement.scrollLeft,
+              y: document.documentElement.scrollTop
+            };
         },
 
 //************************************************************************************
@@ -631,6 +690,11 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             fullscreenBtn.addEventListener("click", onFullscreenClick);
             seekbar.addEventListener("change", onSeekBarChange, true);
             seekbar.addEventListener("input", onSeeking, true);
+            seekbar.addEventListener("mousemove", onSeekBarMouseMove, true);
+            seekbar.addEventListener("touchmove", onSeekBarMouseMove, true);
+            seekbar.addEventListener("mouseout", onSeekBarMouseMoveOut, true);
+            seekbar.addEventListener("touchcancel", onSeekBarMouseMoveOut, true);
+            seekbar.addEventListener("touchend", onSeekBarMouseMoveOut, true);
             volumebar.addEventListener("input", setVolume, true);
             document.addEventListener("fullscreenchange", onFullScreenChange, false);
             document.addEventListener("MSFullscreenChange", onFullScreenChange, false);
@@ -691,6 +755,11 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             seekbar.removeEventListener("change", onSeekBarChange);
             seekbar.removeEventListener("input", onSeeking);
             volumebar.removeEventListener("input", setVolume);
+            seekbar.removeEventListener("mousemove", onSeekBarMouseMove);
+            seekbar.removeEventListener("touchmove", onSeekBarMouseMove);
+            seekbar.removeEventListener("mouseout", onSeekBarMouseMoveOut);
+            seekbar.removeEventListener("touchcancel", onSeekBarMouseMoveOut);
+            seekbar.removeEventListener("touchend", onSeekBarMouseMoveOut);
 
             player.off(dashjs.MediaPlayer.events.PLAYBACK_STARTED, onPlayStart, this);
             player.off(dashjs.MediaPlayer.events.PLAYBACK_PAUSED, onPlaybackPaused, this);

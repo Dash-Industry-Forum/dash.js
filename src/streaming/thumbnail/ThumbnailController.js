@@ -39,7 +39,7 @@ function ThumbnailController(config) {
     const context = this.context;
     const log = Debug(context).getInstance().log;
     // const eventBus = EventBus(context).getInstance();
-    // const baseURLController = config.baseURLController;
+    const baseURLController = config.baseURLController;
 
     let instance;
     let thumbnailTracks;
@@ -53,18 +53,37 @@ function ThumbnailController(config) {
         });
     }
 
-    function getThumbnail(time, idx) {
-        log('Retrieving thumbnail from track index ', idx, ' at time ', time, ' seconds');
+    function getThumbnail(time) {
         if (!thumbnailTracks) {
             return null;
         }
-
-        const track = thumbnailTracks.getTracks()[idx];
-        if (!track) {
+        const track = thumbnailTracks.getCurrentTrack();
+        if (!track || track.segmentInfo.duration <= 0) {
             return null;
         }
+        log('Retrieving thumbnail from track index ', track.id, ' at time ', time, ' seconds');
 
-        return new Thumbnail();
+        const seq = Math.floor(time / track.segmentInfo.duration);
+        const offset = time % track.segmentInfo.duration;
+        const thumbIndex = Math.floor(offset / (track.tilesHor * track.tilesVert)) - 1;
+
+        const thumbnail = new Thumbnail();
+        thumbnail.url = baseURLController.resolve('thumbnails_320x180/tile_' + (seq + 1) + '.jpg');
+        thumbnail.width = Math.floor(track.width / track.tilesHor);
+        thumbnail.height = Math.floor(track.height / track.tilesVert);
+        thumbnail.x = Math.floor(thumbIndex % track.tilesHor) * thumbnail.width;
+        thumbnail.y = Math.floor(thumbIndex / track.tilesHor) * thumbnail.height;
+
+        log('Time', time, 'Thumbnail - seq:', seq, ', x:', thumbnail.x, ', y:', thumbnail.y, ', w:', thumbnail.width, 'h:', thumbnail.height);
+        return thumbnail;
+    }
+
+    function setTrack(id) {
+        thumbnailTracks.setCurrentTrackId(id);
+    }
+
+    function getCurrentTrack() {
+        return thumbnailTracks.getCurrentTrack();
     }
 
     function reset() {
@@ -75,6 +94,8 @@ function ThumbnailController(config) {
 
     instance = {
         get: getThumbnail,
+        setTrack: setTrack,
+        getCurrentTrack: getCurrentTrack,
         reset: reset
     };
 

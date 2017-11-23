@@ -449,7 +449,7 @@ function DashAdapter() {
         checkRepresentationController(representationController);
         checkQuality(quality);
 
-        let voRepresentation = representationController.getRepresentationForQuality(quality);
+        const voRepresentation = representationController.getRepresentationForQuality(quality);
         return voRepresentation ? convertRepresentationToRepresentationInfo(voRepresentation) : null;
     }
 
@@ -463,7 +463,7 @@ function DashAdapter() {
         if (!eventBox || !eventStreams) {
             return null;
         }
-        let event = new Event();
+        const event = new Event();
         const schemeIdUri = eventBox.scheme_id_uri;
         const value = eventBox.value;
         const timescale = eventBox.timescale;
@@ -488,7 +488,6 @@ function DashAdapter() {
     }
 
     function getEventsFor(info, streamProcessor) {
-
         let events = [];
 
         if (voPeriods.length === 0) {
