@@ -227,6 +227,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             thumbnailElem.style.background = backgroundStyle;
             thumbnailElem.style.width = thumbnail.width + 'px';
             thumbnailElem.style.height = thumbnail.height + 'px';
+
         },
 
         onSeekBarMouseMoveOut = function (e) {

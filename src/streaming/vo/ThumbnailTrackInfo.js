@@ -34,12 +34,16 @@
  */
 class ThumbnailTrackInfo {
     constructor() {
-        this.bandwidth = 0;
+        this.bitrate = 0;
         this.width = 0;
         this.height = 0;
         this.tilesHor = 0;
         this.tilesVert = 0;
-        this.tilesPerSegment = 0;
+        this.startNumber = 0;
+        this.segmentDuration = 0;
+        this.timescale = 0;
+        this.templateUrl = '';
+        this.id = '';
     }
 }
 

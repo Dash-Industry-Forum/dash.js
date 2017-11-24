@@ -275,8 +275,6 @@ div#videoController input[type="range"]{
 .thumbnail-elem {
     position: absolute;
     bottom: 2.3em;
-    border: 1px solid #000000;
-    background-color: #000000;
 }
 
 

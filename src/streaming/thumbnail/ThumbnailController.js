@@ -46,7 +46,6 @@ function ThumbnailController(config) {
     function setup() {
         reset();
         thumbnailTracks = ThumbnailTracks(context).create({
-            manifestModel: config.manifestModel,
             dashManifestModel: config.dashManifestModel,
             adapter: config.adapter,
             baseURLController: config.baseURLController,
@@ -55,9 +54,6 @@ function ThumbnailController(config) {
     }
 
     function getThumbnail(time) {
-        if (!thumbnailTracks) {
-            return null;
-        }
         const track = thumbnailTracks.getCurrentTrack();
         if (!track || track.segmentDuration <= 0) {
             return null;
@@ -66,8 +62,7 @@ function ThumbnailController(config) {
         // Calculate index of the sprite given a time
         const seq = Math.floor(time / track.segmentDuration);
         const offset = time % track.segmentDuration;
-        const thumbIndex = Math.floor(offset / (track.tilesHor * track.tilesVert)) - 1;
-
+        const thumbIndex = Math.floor(offset / (track.tilesHor * track.tilesVert));
         // Create and return the thumbnail
         const thumbnail = new Thumbnail();
         thumbnail.url = buildUrlFromTemplate(track, seq);
@@ -97,7 +92,7 @@ function ThumbnailController(config) {
 
     function getBitrateList() {
         const tracks = thumbnailTracks.getTracks();
-        if (!tracks) {
+        if (!tracks || tracks.length === 0) {
             return [];
         }
 

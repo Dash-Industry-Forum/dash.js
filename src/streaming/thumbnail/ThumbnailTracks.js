@@ -41,7 +41,6 @@ function ThumbnailTracks(config) {
 
     const context = this.context;
     const dashManifestModel = config.dashManifestModel;
-    const manifestModel = config.manifestModel;
     const adapter = config.adapter;
     const baseURLController = config.baseURLController;
     const stream = config.stream;
@@ -58,17 +57,12 @@ function ThumbnailTracks(config) {
     }
 
     function addTracks() {
-        if (!stream || !manifestModel || !dashManifestModel || !adapter) {
+        if (!stream || !dashManifestModel || !adapter) {
             return;
         }
 
         const streamInfo = stream ? stream.getStreamInfo() : null;
         if (!streamInfo) {
-            return;
-        }
-
-        const adaptation = dashManifestModel.getAdaptationForType(manifestModel.getValue(), streamInfo.index, Constants.IMAGE, streamInfo);
-        if (!adaptation) {
             return;
         }
 
@@ -128,8 +122,13 @@ function ThumbnailTracks(config) {
     }
 
     function buildTemplateUrl(representation) {
-        let templateUrl = urlUtils.isRelative(representation.media) ?
+        const templateUrl = urlUtils.isRelative(representation.media) ?
             urlUtils.resolve(representation.media, baseURLController.resolve(representation.path).url) : representation.media;
+
+        if (!templateUrl) {
+            return '';
+        }
+
         return replaceIDForTemplate(templateUrl, representation.id);
     }
 
@@ -149,7 +148,7 @@ function ThumbnailTracks(config) {
     }
 
     function setTrackByIndex(index) {
-        if (!tracks) {
+        if (!tracks || tracks.length === 0) {
             return;
         }
         // select highest bitrate in case selected index is higher than bitrate list length
