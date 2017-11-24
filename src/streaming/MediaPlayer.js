@@ -112,7 +112,6 @@ function MediaPlayer() {
         videoModel,
         textController,
         domStorage;
-
     /*
     ---------------------------------------------------------------------------
 
@@ -981,6 +980,28 @@ function MediaPlayer() {
      */
     function getAutoPlay() {
         return autoPlay;
+    }
+
+    /**
+     * <p>Set to true if want to skip small discontinuity in the buffer when there is video frames dropping</p>
+     *
+     * @param {boolean} value
+     * @default false
+     * @memberof module:MediaPlayer
+     * @instance
+     *
+     */
+    function setSkipGaps(value) {
+        mediaPlayerModel.setSkipGaps(value);
+    }
+
+    /**
+     * @returns {boolean} The current skipGaps state.
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getSkipGaps() {
+        return mediaPlayerModel.getSkipGaps();
     }
 
     /**
@@ -2652,6 +2673,8 @@ function MediaPlayer() {
         getMaxAllowedRepresentationRatioFor: getMaxAllowedRepresentationRatioFor,
         setAutoPlay: setAutoPlay,
         getAutoPlay: getAutoPlay,
+        setSkipGaps: setSkipGaps,
+        getSkipGaps: getSkipGaps,
         setScheduleWhilePaused: setScheduleWhilePaused,
         getScheduleWhilePaused: getScheduleWhilePaused,
         getDashMetrics: getDashMetrics,
