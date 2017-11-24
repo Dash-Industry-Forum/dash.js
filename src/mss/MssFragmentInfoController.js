@@ -34,6 +34,7 @@ import MSSFragmentMoofProcessor from './MssFragmentMoofProcessor';
 
 function MssFragmentInfoController(config) {
 
+    config = config || {};
     let context = this.context;
 
     let instance;
@@ -54,6 +55,8 @@ function MssFragmentInfoController(config) {
     let playbackController = config.playbackController;
     const ISOBoxer = config.ISOBoxer;
     const log = config.log;
+
+    const controllerType = 'MssFragmentInfoController';
 
     function setup() {
     }
@@ -256,6 +259,7 @@ function MssFragmentInfoController(config) {
 
     instance = {
         initialize: initialize,
+        controllerType: controllerType,
         start: doStart,
         reset: reset
     };

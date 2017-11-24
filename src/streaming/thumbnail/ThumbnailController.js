@@ -30,15 +30,15 @@
  */
 
 import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
+import Constants from '../constants/Constants';
 import Thumbnail from '../vo/Thumbnail';
 import ThumbnailTracks from './ThumbnailTracks';
+import BitrateInfo from '../vo/BitrateInfo';
 import {replaceTokenForTemplate, unescapeDollarsInTemplate} from '../../dash/utils/SegmentsUtils';
 
 function ThumbnailController(config) {
 
     const context = this.context;
-    const log = Debug(context).getInstance().log;
 
     let instance;
     let thumbnailTracks;
@@ -62,12 +62,13 @@ function ThumbnailController(config) {
         if (!track || track.segmentDuration <= 0) {
             return null;
         }
-        log('Retrieving thumbnail from track index ', track.id, ' at time ', time, ' seconds');
 
+        // Calculate index of the sprite given a time
         const seq = Math.floor(time / track.segmentDuration);
         const offset = time % track.segmentDuration;
         const thumbIndex = Math.floor(offset / (track.tilesHor * track.tilesVert)) - 1;
 
+        // Create and return the thumbnail
         const thumbnail = new Thumbnail();
         thumbnail.url = buildUrlFromTemplate(track, seq);
         thumbnail.width = Math.floor(track.width / track.tilesHor);
@@ -75,7 +76,6 @@ function ThumbnailController(config) {
         thumbnail.x = Math.floor(thumbIndex % track.tilesHor) * thumbnail.width;
         thumbnail.y = Math.floor(thumbIndex / track.tilesHor) * thumbnail.height;
 
-        log('Time', time, 'Thumbnail - seq:', seq, ', x:', thumbnail.x, ', y:', thumbnail.y, ', w:', thumbnail.width, 'h:', thumbnail.height);
         return thumbnail;
     }
 
@@ -87,12 +87,30 @@ function ThumbnailController(config) {
         return unescapeDollarsInTemplate(url);
     }
 
-    function setTrack(id) {
-        thumbnailTracks.setCurrentTrackId(id);
+    function setTrackByIndex(index) {
+        thumbnailTracks.setTrackByIndex(index);
     }
 
-    function getCurrentTrack() {
-        return thumbnailTracks.getCurrentTrack();
+    function getCurrentTrackIndex() {
+        return thumbnailTracks.getCurrentTrackIndex();
+    }
+
+    function getBitrateList() {
+        const tracks = thumbnailTracks.getTracks();
+        if (!tracks) {
+            return [];
+        }
+
+        let i = 0;
+        return tracks.map((t) => {
+            const bitrateInfo = new BitrateInfo();
+            bitrateInfo.mediaType = Constants.IMAGE;
+            bitrateInfo.qualityIndex = i++;
+            bitrateInfo.bitrate = t.bitrate;
+            bitrateInfo.width = t.width;
+            bitrateInfo.height = t.height;
+            return bitrateInfo;
+        });
     }
 
     function reset() {
@@ -103,8 +121,9 @@ function ThumbnailController(config) {
 
     instance = {
         get: getThumbnail,
-        setTrack: setTrack,
-        getCurrentTrack: getCurrentTrack,
+        setTrackByIndex: setTrackByIndex,
+        getCurrentTrackIndex: getCurrentTrackIndex,
+        getBitrateList: getBitrateList,
         reset: reset
     };
 

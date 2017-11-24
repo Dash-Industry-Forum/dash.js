@@ -35,6 +35,7 @@
  */
 function MssFragmentMoofProcessor(config) {
 
+    config = config || {};
     let instance;
     let metricsModel = config.metricsModel;
     let playbackController = config.playbackController;

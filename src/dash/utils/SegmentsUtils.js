@@ -47,7 +47,7 @@ export function unescapeDollarsInTemplate(url) {
 }
 
 export function replaceIDForTemplate(url, value) {
-    if (value === null || url === null || url.indexOf('$RepresentationID$') === -1) { return url; }
+    if (!value || !url || url.indexOf('$RepresentationID$') === -1) { return url; }
     let v = value.toString();
     return url.split('$RepresentationID$').join(v);
 }
@@ -145,8 +145,8 @@ export function getIndexBasedSegment(timelineConverter, isDynamic, representatio
         duration = representation.adaptation.period.duration;
     }
 
-    presentationStartTime = representation.adaptation.period.start + (index * duration);
-    presentationEndTime = presentationStartTime + duration;
+    presentationStartTime = parseFloat((representation.adaptation.period.start + (index * duration)).toFixed(5));
+    presentationEndTime = parseFloat((presentationStartTime + duration).toFixed(5));
 
     seg = new Segment();
 

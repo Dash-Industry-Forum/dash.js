@@ -62,4 +62,14 @@ describe('MssParser', function () {
             }
         }
     });
+    it('should skip video adaptations if fourCC attribute is not found', function () {
+        let xml = fs.readFileSync(__dirname + '/data/mss/manifestFourCCError.xml', 'utf8');
+        let manifest = mssParser.parse(xml);
+        let adaptations = manifest.Period.AdaptationSet_asArray;
+        expect(manifest).to.exist; // jshint ignore:line
+        expect(manifest.protocol).to.equal('MSS');
+        expect(adaptations).to.be.an.instanceof(Array);
+        expect(adaptations).to.have.lengthOf(1);
+        expect(adaptations[0].contentType).to.equal('audio');
+    });
 });

@@ -37,6 +37,7 @@ import MssParser from './parser/MssParser';
 
 function MssHandler(config) {
 
+    config = config || {};
     let context = this.context;
     let eventBus = config.eventBus;
     const events = config.events;
@@ -58,8 +59,7 @@ function MssHandler(config) {
 
     let instance;
 
-    function setup() {
-    }
+    function setup() {}
 
     function onInitializationRequested(e) {
         let streamProcessor = e.sender.getStreamProcessor();
@@ -129,16 +129,29 @@ function MssHandler(config) {
                         processor.getType() === constants.AUDIO ||
                         processor.getType() === constants.FRAGMENTED_TEXT) {
 
-                        let fragmentInfoController = MssFragmentInfoController(context).create({
-                            streamProcessor: processor,
-                            eventBus: eventBus,
-                            metricsModel: metricsModel,
-                            playbackController: playbackController,
-                            ISOBoxer: config.ISOBoxer,
-                            log: config.log
-                        });
-                        fragmentInfoController.initialize();
-                        fragmentInfoController.start();
+                        // check taht there is no fragment info controller registered to processor
+                        let i;
+                        let alreadyRegistered = false;
+                        let externalControllers = processor.getExternalControllers();
+                        for (i = 0; i < externalControllers.length; i++) {
+                            if (externalControllers[i].controllerType &&
+                                externalControllers[i].controllerType === 'MssFragmentInfoController') {
+                                alreadyRegistered = true;
+                            }
+                        }
+
+                        if (!alreadyRegistered) {
+                            let fragmentInfoController = MssFragmentInfoController(context).create({
+                                streamProcessor: processor,
+                                eventBus: eventBus,
+                                metricsModel: metricsModel,
+                                playbackController: playbackController,
+                                ISOBoxer: config.ISOBoxer,
+                                log: config.log
+                            });
+                            fragmentInfoController.initialize();
+                            fragmentInfoController.start();
+                        }
                     }
                 });
             }

@@ -34,7 +34,6 @@ import Stream from '../Stream';
 import ManifestUpdater from '../ManifestUpdater';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
-import URIQueryAndFragmentModel from '../models/URIQueryAndFragmentModel';
 import MediaPlayerModel from '../models/MediaPlayerModel';
 import FactoryMaker from '../../core/FactoryMaker';
 import {
@@ -43,6 +42,7 @@ import {
 } from '../vo/metrics/PlayList';
 import Debug from '../../core/Debug';
 import InitCache from '../utils/InitCache';
+import URLUtils from '../utils/URLUtils';
 import MediaPlayerEvents from '../MediaPlayerEvents';
 import TimeSyncController from './TimeSyncController';
 import BaseURLController from './BaseURLController';
@@ -75,6 +75,7 @@ function StreamController() {
         textController,
         sourceBufferController,
         initCache,
+        urlUtils,
         errHandler,
         timelineConverter,
         streams,
@@ -101,6 +102,7 @@ function StreamController() {
         baseURLController = BaseURLController(context).getInstance();
         mediaSourceController = MediaSourceController(context).getInstance();
         initCache = InitCache(context).getInstance();
+        urlUtils = URLUtils(context).getInstance();
 
         resetInitialSettings();
     }
@@ -157,7 +159,7 @@ function StreamController() {
         if (e.timeToEnd <= STREAM_END_THRESHOLD) {
             // In some cases the ended event is not triggered at the end of the stream, do it artificially here.
             // This should only be a fallback, put an extra STREAM_END_TIMEOUT_DELAY to give the real ended event time to trigger.
-
+            log('[StreamController][onPlaybackTimeUpdated] timeToEnd = ' + e.timeToEnd + ' PLAYBACK_ENDED need to be triggered');
             if (endedTimeout) {
                 clearTimeout(endedTimeout);
                 endedTimeout = undefined;
@@ -220,7 +222,7 @@ function StreamController() {
 
         for (let i = 0; i < ln; i++) {
             stream = streams[i];
-            duration += stream.getDuration();
+            duration = parseFloat((duration + stream.getDuration()).toFixed(5));
 
             if (time < duration) {
                 return stream;
@@ -301,7 +303,7 @@ function StreamController() {
             const duration = activeStream.getStreamInfo().duration;
 
             return streams.filter(function (stream) {
-                return (stream.getStreamInfo().start === (start + duration));
+                return (stream.getStreamInfo().start === parseFloat((start + duration).toFixed(5)));
             })[0];
         }
     }
@@ -316,7 +318,10 @@ function StreamController() {
             toStreamInfo: newStream.getStreamInfo()
         });
 
-        if (oldStream) oldStream.deactivate();
+        if (oldStream) {
+            oldStream.stopEventController();
+            oldStream.deactivate();
+        }
         activeStream = newStream;
         playbackController.initialize(activeStream.getStreamInfo());
 
@@ -508,7 +513,7 @@ function StreamController() {
 
             let manifestUTCTimingSources = dashManifestModel.getUTCTimingSources(e.manifest);
             let allUTCTimingSources = (!dashManifestModel.getIsDynamic(manifest) || useCalculatedLiveEdgeTime) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(mediaPlayerModel.getUTCTimingSources());
-            let isHTTPS = URIQueryAndFragmentModel(context).getInstance().isManifestHTTPS();
+            const isHTTPS = urlUtils.isHTTPS(e.manifest.url);
 
             //If https is detected on manifest then lets apply that protocol to only the default time source(s). In the future we may find the need to apply this to more then just default so left code at this level instead of in MediaPlayer.
             allUTCTimingSources.forEach(function (item) {

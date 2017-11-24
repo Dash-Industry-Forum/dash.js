@@ -48,7 +48,7 @@ function ThumbnailTracks(config) {
     const urlUtils = URLUtils(context).getInstance();
     let instance,
         tracks,
-        currentTrack;
+        currentTrackIndex;
 
     function initialize() {
         reset();
@@ -92,14 +92,16 @@ function ThumbnailTracks(config) {
         }
 
         if (tracks.length > 0) {
-            currentTrack = tracks[0];
+            // Sort bitrates and select the lowest bitrate rendition
+            tracks.sort((a, b) => a.bitrate - b.bitrate);
+            currentTrackIndex = 0;
         }
     }
 
     function createTrack(representation) {
         const track = new ThumbnailTrackInfo();
         track.id = representation.id;
-        track.bandwidth = representation.bandwidth;
+        track.bitrate = representation.bandwidth;
         track.width = representation.width;
         track.height = representation.height;
         track.tilesHor = 1;
@@ -135,37 +137,40 @@ function ThumbnailTracks(config) {
         return tracks;
     }
 
-    function getTrackById(id) {
-        if (id && tracks) {
-            for (let i = 0; i < tracks.length; i++) {
-                if (id === tracks[i].id) {
-                    return tracks[i];
-                }
-            }
-        }
-        return null;
+    function getCurrentTrackIndex() {
+        return currentTrackIndex;
     }
 
     function getCurrentTrack() {
-        return currentTrack;
+        if (currentTrackIndex < 0) {
+            return null;
+        }
+        return tracks[currentTrackIndex];
     }
 
-    function setCurrentTrackById(id) {
-        currentTrack = getTrackById(id);
+    function setTrackByIndex(index) {
+        if (!tracks) {
+            return;
+        }
+        // select highest bitrate in case selected index is higher than bitrate list length
+        if (index >= tracks.length) {
+            index = tracks.length - 1;
+        }
+        currentTrackIndex = index;
     }
 
     function reset() {
         tracks = [];
-        currentTrack = null;
+        currentTrackIndex = -1;
     }
 
     instance = {
         initialize: initialize,
         getTracks: getTracks,
         reset: reset,
-        getTrackById: getTrackById,
-        setCurrentTrackById: setCurrentTrackById,
-        getCurrentTrack: getCurrentTrack
+        setTrackByIndex: setTrackByIndex,
+        getCurrentTrack: getCurrentTrack,
+        getCurrentTrackIndex: getCurrentTrackIndex
     };
 
     initialize();

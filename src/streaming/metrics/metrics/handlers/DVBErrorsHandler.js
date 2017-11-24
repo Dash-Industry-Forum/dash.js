@@ -33,6 +33,7 @@ import MetricsReportingEvents from '../../MetricsReportingEvents';
 
 function DVBErrorsHandler(config) {
 
+    config = config || {};
     let instance,
         reportingController;
 

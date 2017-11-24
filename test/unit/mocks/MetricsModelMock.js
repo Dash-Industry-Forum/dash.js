@@ -1,19 +1,21 @@
-class MetricsModelMock {
-    constructor() {
-        this.bufferState = 0;
-        this.bufferLevel = 0;
-    }
-    addBufferState(type, bufferState/*, bufferTarget*/) {
+function MetricsModelMock () {
+
+    this.bufferState = 0;
+    this.bufferLevel = 0;
+
+    this.addBufferState = function (type, bufferState/*, bufferTarget*/) {
         this.bufferState = bufferState;
-    }
+    };
 
-    addBufferLevel(type, date, bufferLevel ) {
+    this.addBufferLevel = function (type, date, bufferLevel) {
         this.bufferState = bufferLevel;
-    }
+    };
 
-    getReadOnlyMetricsFor() {
-        return null;
-    }
+    this.getReadOnlyMetricsFor = function () {
+        return {
+            BufferState: ['bufferStalled']
+        };
+    };
 }
 
 export default MetricsModelMock;

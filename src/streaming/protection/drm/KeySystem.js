@@ -115,3 +115,11 @@
  * from the PSSH box definition
  * @returns {?string} The license server URL or null if URL is not available in initData
  */
+
+ /**
+ * Returns specific CDM (custom) data.
+ *
+ * @function
+ * @name MediaPlayer.dependencies.protection.KeySystem#getCDMData
+ * @returns {ArrayBuffer} the CDM (custom) data
+ */

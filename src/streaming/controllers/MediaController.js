@@ -123,7 +123,14 @@ function MediaController() {
 
         tracks[streamId] = tracks[streamId] || createTrackInfo();
 
-        if (tracks[streamId][mediaType].list.indexOf(track) >= 0) return;
+        const len = tracks[streamId][mediaType].list.length;
+
+        for (let i = 0; i < len; i++) {
+            //track is already set.
+            if (isTracksEqual(tracks[streamId][mediaType].list[i], track)) {
+                return;
+            }
+        }
 
         tracks[streamId][mediaType].list.push(track);
 
