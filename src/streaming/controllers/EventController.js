@@ -205,7 +205,7 @@ function EventController() {
                             activeEvents[eventId] = curr;
                         }
                         if (curr.eventStream.schemeIdUri == MPD_RELOAD_SCHEME && curr.eventStream.value == MPD_RELOAD_VALUE) {
-                            if (event.duration !== 0 || event.presentationTimeDelta !== 0) { //If both are set to zero, it indicates the media is over at this point. Don't reload the manifest.
+                            if (curr.duration !== 0 || curr.presentationTimeDelta !== 0) { //If both are set to zero, it indicates the media is over at this point. Don't reload the manifest.
                                 refreshManifest();
                             }
                         } else {
