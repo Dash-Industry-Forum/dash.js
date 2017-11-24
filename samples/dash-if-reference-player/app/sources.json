@@ -787,15 +787,6 @@
       ]
     },
     {
-      "name": "Thumbnails",
-      "submenu": [
-        {
-          "name": "One thumbnail representation",
-          "url": "http://dash.edgesuite.net/akamai/bbb_30fps/bbb_with_tiled_thumbnails.mpd"
-        }
-      ]
-    },
-    {
       "name": "Other samples",
       "submenu": [
         {
@@ -817,6 +808,10 @@
         {
           "name": "Unified Streaming Live",
           "url": "http://live.unified-streaming.com/loop/loop.isml/loop.mpd?format=mp4&session_id=25020"
+        },
+        {
+          "name": "Thumbnails",
+          "url": "http://dash.edgesuite.net/akamai/bbb_30fps/bbb_with_tiled_thumbnails.mpd"
         }
       ]
     },
