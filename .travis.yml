@@ -10,8 +10,8 @@ stages:
   - name: build
     # Run build stage except if cron job
     if: type != cron
-  - name: test
-    # Run functional tests only if cron joib
+  - name: test-functional
+    # Run functional tests only if cron job
     if: type = cron
 env:
   matrix:
@@ -30,3 +30,7 @@ jobs:
       script:
         # Build the source files
         - npm run build
+    - stage: test-functional
+      script:
+        # Run functional tests
+        - npm run test-functional
