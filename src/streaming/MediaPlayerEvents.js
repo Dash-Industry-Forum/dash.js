@@ -141,7 +141,13 @@ class MediaPlayerEvents extends EventsBase {
         this.QUALITY_CHANGE_RENDERED = 'qualityChangeRendered';
 
         /**
-         * Triggered when the stream is setup and ready.
+         * Triggered when the source is setup and ready.
+         * @event MediaPlayerEvents#SOURCE_INITIALIZED
+         */
+        this.SOURCE_INITIALIZED = 'sourceInitialized';
+
+        /**
+         * Triggered when a stream (period) is loaded
          * @event MediaPlayerEvents#STREAM_INITIALIZED
          */
         this.STREAM_INITIALIZED = 'streamInitialized';
