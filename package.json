@@ -52,7 +52,7 @@
     "xmldom": "^0.1.16"
   },
   "dependencies": {
-    "codem-isoboxer": "^0.3.3",
+    "codem-isoboxer": "0.3.5",
     "imsc": "^1.0.0-beta.3",
     "round10": "^1.0.3",
     "deep-equal": "^1.0.1"
