@@ -13,12 +13,6 @@ stages:
   - name: test-functional
     # Run functional tests only if cron job
     if: type = cron
-env:
-  matrix:
-    - BROWSER=chrome
-    - BROWSER=firefox
-    - BROWSER=edge
-    - BROWSER=ie
 before_install: npm install -g grunt-cli
 after_success:
   - test $TRAVIS_BRANCH = "development" && grunt deploy --ftp-host=$DEPLOY_HOST --ftp-user=$DEPLOY_USER --ftp-pass=$DEPLOY_PASSWORD
@@ -31,6 +25,12 @@ jobs:
         # Build the source files
         - npm run build
     - stage: test-functional
+      matrix:
+        include:
+        - BROWSER=chrome
+        - BROWSER=firefox
+        - BROWSER=edge
+        - BROWSER=ie
       script:
         # Run functional tests
         - npm run test-functional
