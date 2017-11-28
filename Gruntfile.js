@@ -363,6 +363,7 @@ module.exports = function (grunt) {
                         src: [
                             'contrib/**',
                             'dist/**',
+                            'test/functional/**',
                             'samples/dash-if-reference-player/**'
                         ]
                     }

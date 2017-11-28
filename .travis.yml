@@ -1,7 +1,36 @@
 language: node_js
 node_js:
   - stable
+addons:
+  browserstack:
+    username: epiclabsdash1
+    access_key:
+      secure: C0QNpumKXngZA7+nP5VsThSqrIPNnz3pU34oOpmmyrCJmY5clc/TvQJjp9ixu6TrSUrfEQhePU+eKM2F1qkmGVNIa0QqFZbqX8AkaJdtCLpn9EampSW0re76q8k7lhF35mP1lzxu6W3nqRQodbDxbHLt1OZ+BcUwuNkZW22vY5A=
+stages:
+  - name: build
+    # Run build stage except if cron job
+    if: type != cron
+  - name: test-functional
+    # Run functional tests only if cron job
+    if: type = cron
 before_install: npm install -g grunt-cli
-install: npm install
 after_success:
   - test $TRAVIS_BRANCH = "development" && grunt deploy --ftp-host=$DEPLOY_HOST --ftp-user=$DEPLOY_USER --ftp-pass=$DEPLOY_PASSWORD
+install:
+  - npm install
+jobs:
+  include:
+    - stage: build
+      script:
+        # Build the source files
+        - npm run build
+    - stage: test-functional
+      matrix:
+        include:
+        - BROWSER=chrome
+        - BROWSER=firefox
+        - BROWSER=edge
+        - BROWSER=ie
+      script:
+        # Run functional tests
+        - npm run test-functional
