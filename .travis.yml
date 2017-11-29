@@ -20,17 +20,19 @@ install:
   - npm install
 jobs:
   include:
+    # Stage for build
     - stage: build
-      script:
-        # Build the source files
-        - npm run build
+      script: npm run build
+    # Stages for functional tests
     - stage: test-functional
-      matrix:
-        include:
-        - BROWSER=chrome
-        - BROWSER=firefox
-        - BROWSER=edge
-        - BROWSER=ie
-      script:
-        # Run functional tests
-        - npm run test-functional
+      env: BROWSER=chrome
+      script: npm run test-functional
+    - stage: test-functional
+      env: BROWSER=firefox
+      script: npm run test-functional
+    - stage: test-functional
+      env: BROWSER=edge
+      script: npm run test-functional
+    - stage: test-functional
+      env: BROWSER=ie11
+      script: npm run test-functional
