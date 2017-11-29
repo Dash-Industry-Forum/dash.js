@@ -5,7 +5,7 @@ addons:
   browserstack:
     username: epiclabsdash1
     access_key:
-      secure: C0QNpumKXngZA7+nP5VsThSqrIPNnz3pU34oOpmmyrCJmY5clc/TvQJjp9ixu6TrSUrfEQhePU+eKM2F1qkmGVNIa0QqFZbqX8AkaJdtCLpn9EampSW0re76q8k7lhF35mP1lzxu6W3nqRQodbDxbHLt1OZ+BcUwuNkZW22vY5A=
+      secure: v5IPr/NWJT6QEA1lyMn08dsiTEXqL0zb/lB9b7FcpGB08+5fC4KbyBv/xIWQy/j9RMX19tqDgPjGl8lRGYOApcoeIbNE6/5XzdHxFD1zwDDBeyuoXyRRKVrtFoDfYAcmfVJFAP8bcLZXu6mhjO1EYaD0//s4URmb6VlPGTiP5w0=
 stages:
   - name: build
     # Run build stage except if cron job
