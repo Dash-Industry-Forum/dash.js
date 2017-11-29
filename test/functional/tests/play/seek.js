@@ -97,7 +97,7 @@ define([
                 seekPos = generateSeekPos();
                 tests.log(NAME, 'Seek: ' + seekPos);
                 // Seek the player
-                return  tests.executeAsync(command, player.seek, [seekPos], config.asyncTimeout)
+                return  tests.executeAsync(command, player.seek, [seekPos], ASYNC_TIMEOUT)
                 .then(function() {
                     if (checkPlaying) {
                         // Check if playing
