@@ -62,7 +62,7 @@ function ThumbnailController(config) {
         // Calculate index of the sprite given a time
         const seq = Math.floor(time / track.segmentDuration);
         const offset = time % track.segmentDuration;
-        const thumbIndex = Math.floor(offset / (track.tilesHor * track.tilesVert));
+        const thumbIndex = Math.floor((offset * track.tilesHor * track.tilesVert) / track.segmentDuration);
         // Create and return the thumbnail
         const thumbnail = new Thumbnail();
         thumbnail.url = buildUrlFromTemplate(track, seq);

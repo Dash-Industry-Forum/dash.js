@@ -49,6 +49,22 @@ const sampleRepresentation = {
     }]
 };
 
+const sampleRepresentation2 = {
+    id: 'rep_id',
+    segmentInfoType: 'SegmentTemplate',
+    bandwidth: 2000,
+    width: 1024,
+    height: 1152,
+    startNumber: 1,
+    segmentDuration: 634.566,
+    timescale: 1,
+    media: 'http://media/$RepresentationID$/$Number$.jpg',
+    essentialProperties: [{
+        schemeIdUri: 'http://dashif.org/thumbnail_tile',
+        value: '10x20'
+    }]
+};
+
 describe('Thumbnails', function () {
     describe('ThumbnailController', function () {
         const objectsHelper = new ObjectsHelper();
@@ -106,6 +122,40 @@ describe('Thumbnails', function () {
             expect(thumbnail.width).to.equal(320);
             expect(thumbnail.height).to.equal(180);
             expect(thumbnail.url).to.equal('http://media/rep_id/2.jpg');
+        });
+
+        it('should return a thumbnail when using multiple rows sprites ', function () {
+            dashManifestModel.setRepresentation(sampleRepresentation2);
+            thumbnailController = ThumbnailController(context).create({
+                dashManifestModel: dashManifestModel,
+                adapter: new DashAdapterMock(),
+                baseURLController: objectsHelper.getDummyBaseURLController(),
+                stream: new StreamMock()
+            });
+            let thumbnail = thumbnailController.get(0);
+            expect(thumbnail).to.be.not.null; // jshint ignore:line
+            expect(thumbnail.x).to.equal(0);
+            expect(thumbnail.y).to.equal(0);
+            expect(thumbnail.width).to.equal(102);
+            expect(thumbnail.height).to.equal(57);
+            expect(thumbnail.url).to.equal('http://media/rep_id/1.jpg');
+
+
+            thumbnail = thumbnailController.get(15);
+            expect(thumbnail).to.be.not.null; // jshint ignore:line
+            expect(thumbnail.x).to.equal(408);
+            expect(thumbnail.y).to.equal(0);
+            expect(thumbnail.width).to.equal(102);
+            expect(thumbnail.height).to.equal(57);
+            expect(thumbnail.url).to.equal('http://media/rep_id/1.jpg');
+
+            thumbnail = thumbnailController.get(40);
+            expect(thumbnail).to.be.not.null; // jshint ignore:line
+            expect(thumbnail.x).to.equal(204);
+            expect(thumbnail.y).to.equal(57);
+            expect(thumbnail.width).to.equal(102);
+            expect(thumbnail.height).to.equal(57);
+            expect(thumbnail.url).to.equal('http://media/rep_id/1.jpg');
         });
 
         it('shouldnt return any thumbnail after reset', function () {

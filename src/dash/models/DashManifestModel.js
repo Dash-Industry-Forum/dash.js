@@ -405,7 +405,7 @@ function DashManifestModel(config) {
             }
         }
 
-        if (processedRealAdaptation.Representation_asArray) {
+        if (processedRealAdaptation && processedRealAdaptation.Representation_asArray) {
             for (i = 0; processedRealAdaptation && i < processedRealAdaptation.Representation_asArray.length; i++) {
                 realRepresentation = processedRealAdaptation.Representation_asArray[i];
                 voRepresentation = new Representation();
