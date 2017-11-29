@@ -196,7 +196,8 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             }
 
             // Take into account page offset and seekbar position
-            var videoContainerRect = videoContainer.getBoundingClientRect();
+            var elem = videoContainer || video;
+            var videoContainerRect = elem.getBoundingClientRect();
             var seekbarRect = seekbar.getBoundingClientRect();
             left = x || (event.clientX + document.body.scrollLeft + document.documentElement.scrollLeft);
             left -= seekbarRect.left + pageXOffset;
