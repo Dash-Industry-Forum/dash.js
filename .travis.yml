@@ -34,5 +34,5 @@ jobs:
       env: BROWSER=edge
       script: npm run test-functional
     - stage: test-functional
-      env: BROWSER=ie11
+      env: BROWSER=ie
       script: npm run test-functional
