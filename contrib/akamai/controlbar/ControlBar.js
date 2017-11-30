@@ -53,6 +53,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         durationDisplay,
         thumbnailContainer,
         thumbnailElem,
+        thumbnailTimeLabel,
         idSuffix,
 
         initControls = function (suffix) {
@@ -70,6 +71,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             durationDisplay = document.getElementById(getControlId("videoDuration"));
             thumbnailContainer = document.getElementById(getControlId("thumbnail-container")),
             thumbnailElem = document.getElementById(getControlId("thumbnail-elem"))
+            thumbnailTimeLabel = document.getElementById(getControlId("thumbnail-time-label"));
         },
 
         getControlId = function (id) {
@@ -228,6 +230,10 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             thumbnailElem.style.background = backgroundStyle;
             thumbnailElem.style.width = thumbnail.width + 'px';
             thumbnailElem.style.height = thumbnail.height + 'px';
+
+            if (thumbnailTimeLabel) {
+                thumbnailTimeLabel.textContent = displayUTCTimeCodes ? player.formatUTC(mouseTime) : player.convertToTimeCode(mouseTime);
+            }
 
         },
 

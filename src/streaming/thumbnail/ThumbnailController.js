@@ -66,10 +66,10 @@ function ThumbnailController(config) {
         // Create and return the thumbnail
         const thumbnail = new Thumbnail();
         thumbnail.url = buildUrlFromTemplate(track, seq);
-        thumbnail.width = Math.floor(track.width / track.tilesHor);
-        thumbnail.height = Math.floor(track.height / track.tilesVert);
-        thumbnail.x = Math.floor(thumbIndex % track.tilesHor) * thumbnail.width;
-        thumbnail.y = Math.floor(thumbIndex / track.tilesHor) * thumbnail.height;
+        thumbnail.width = Math.floor(track.widthPerTile);
+        thumbnail.height = Math.floor(track.heightPerTile);
+        thumbnail.x = Math.floor(thumbIndex % track.tilesHor) * track.widthPerTile;
+        thumbnail.y = Math.floor(thumbIndex / track.tilesHor) * track.heightPerTile;
 
         return thumbnail;
     }

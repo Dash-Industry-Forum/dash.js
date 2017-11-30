@@ -117,6 +117,9 @@ function ThumbnailTracks(config) {
             });
         }
         if (track.tilesHor > 0 && track.tilesVert > 0) {
+            // Precalculate width and heigth per tile for perf reasons
+            track.widthPerTile = track.width / track.tilesHor;
+            track.heightPerTile = track.height / track.tilesVert;
             tracks.push(track);
         }
     }

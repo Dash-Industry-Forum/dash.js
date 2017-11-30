@@ -143,7 +143,7 @@ describe('Thumbnails', function () {
 
             thumbnail = thumbnailController.get(15);
             expect(thumbnail).to.be.not.null; // jshint ignore:line
-            expect(thumbnail.x).to.equal(408);
+            expect(thumbnail.x).to.equal(409.6);
             expect(thumbnail.y).to.equal(0);
             expect(thumbnail.width).to.equal(102);
             expect(thumbnail.height).to.equal(57);
@@ -151,8 +151,8 @@ describe('Thumbnails', function () {
 
             thumbnail = thumbnailController.get(40);
             expect(thumbnail).to.be.not.null; // jshint ignore:line
-            expect(thumbnail.x).to.equal(204);
-            expect(thumbnail.y).to.equal(57);
+            expect(thumbnail.x).to.equal(204.8);
+            expect(thumbnail.y).to.equal(57.6);
             expect(thumbnail.width).to.equal(102);
             expect(thumbnail.height).to.equal(57);
             expect(thumbnail.url).to.equal('http://media/rep_id/1.jpg');

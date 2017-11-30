@@ -39,6 +39,8 @@ class ThumbnailTrackInfo {
         this.height = 0;
         this.tilesHor = 0;
         this.tilesVert = 0;
+        this.widthPerTile = 0;
+        this.heightPerTile = 0;
         this.startNumber = 0;
         this.segmentDuration = 0;
         this.timescale = 0;
