@@ -80,9 +80,6 @@ function WebmSegmentBaseLoader() {
                                 tag: 0xF1,
                                 required: true,
                                 parse: 'getMatroskaUint'
-                            },
-                            CueBlockNumber: {
-                                tag: 0x5378
                             }
                         }
                     }
@@ -118,15 +115,12 @@ function WebmSegmentBaseLoader() {
     function parseCues(ab) {
         let cues = [];
         let cue;
-        let cueSize;
         let cueTrack;
         let ebmlParser = EBMLParser(context).create({
             data: ab
         });
-        let numSize;
 
-        ebmlParser.consumeTag(WebM.Segment.Cues);
-        cueSize = ebmlParser.getMatroskaCodedNum();
+        ebmlParser.consumeTagAndSize(WebM.Segment.Cues);
 
         while (ebmlParser.moreData() &&
             ebmlParser.consumeTagAndSize(WebM.Segment.Cues.CuePoint, true)) {
@@ -136,7 +130,9 @@ function WebmSegmentBaseLoader() {
 
             cue.CueTracks = [];
             while (ebmlParser.moreData() &&
-                ebmlParser.consumeTagAndSize(WebM.Segment.Cues.CuePoint.CueTrackPositions, true)) {
+                ebmlParser.consumeTag(WebM.Segment.Cues.CuePoint.CueTrackPositions, true)) {
+                const cueTrackPositionSize = ebmlParser.getMatroskaCodedNum();
+                const startPos = ebmlParser.getPos();
                 cueTrack = {};
 
                 cueTrack.Track = ebmlParser.parseTag(WebM.Segment.Cues.CuePoint.CueTrackPositions.CueTrack);
@@ -147,21 +143,10 @@ function WebmSegmentBaseLoader() {
                 cueTrack.ClusterPosition =
                     ebmlParser.parseTag(WebM.Segment.Cues.CuePoint.CueTrackPositions.CueClusterPosition);
 
-                // block number is strictly optional.
-                // we also have to make sure we don't go beyond the end
-                // of the cues
-                if (ebmlParser.getPos() + 4 > cueSize ||
-                    !ebmlParser.consumeTag(WebM.Segment.Cues.CuePoint.CueTrackPositions.CueBlockNumber, true)) {
-                    cue.CueTracks.push(cueTrack);
-                } else {
-                    // since we have already consumed the tag, get the size of
-                    // the tag's payload, and manually parse an unsigned int
-                    // from the bit stream
-                    numSize = ebmlParser.getMatroskaCodedNum();
-                    cueTrack.BlockNumber = ebmlParser.getMatroskaUint(numSize);
+                cue.CueTracks.push(cueTrack);
 
-                    cue.CueTracks.push(cueTrack);
-                }
+                // we're not interested any other elements - skip remaining bytes
+                ebmlParser.setPos(startPos + cueTrackPositionSize);
             }
 
             if (cue.CueTracks.length === 0) {

@@ -42,6 +42,7 @@ import Debug from '../../core/Debug';
 
 function ScheduleController(config) {
 
+    config = config || {};
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
     const metricsModel = config.metricsModel;
@@ -56,7 +57,7 @@ function ScheduleController(config) {
     const textController = config.textController;
     const sourceBufferController = config.sourceBufferController;
     const type = config.type;
-    let streamProcessor = config.streamProcessor;
+    const streamProcessor = config.streamProcessor;
 
     let instance,
         log,
@@ -74,7 +75,7 @@ function ScheduleController(config) {
         bufferLevelRule,
         nextFragmentRequestRule,
         scheduleWhilePaused,
-        lastQualityIndex,
+        lastFragmentRequest,
         topQualityIndex,
         lastInitQuality,
         replaceRequestArray,
@@ -160,12 +161,11 @@ function ScheduleController(config) {
     }
 
     function hasTopQualityChanged(type, id) {
-
         topQualityIndex[id] = topQualityIndex[id] || {};
         const newTopQualityIndex = abrController.getTopQualityIndexFor(type, id);
 
         if (topQualityIndex[id][type] != newTopQualityIndex) {
-            log('Top quality' + type + ' index has changed from ' + topQualityIndex[id][type] + ' to ' + newTopQualityIndex);
+            log('Top quality ' + type + ' index has changed from ' + topQualityIndex[id][type] + ' to ' + newTopQualityIndex);
             topQualityIndex[id][type] = newTopQualityIndex;
             return true;
         }
@@ -174,8 +174,8 @@ function ScheduleController(config) {
     }
 
     function schedule() {
-
         if (isStopped || isFragmentProcessingInProgress || !streamProcessor.getBufferController() || playbackController.isPaused() && !scheduleWhilePaused) {
+            log('ScheduleController ' + type + '- schedule stop!');
             return;
         }
 
@@ -184,18 +184,18 @@ function ScheduleController(config) {
         const isReplacement = replaceRequestArray.length > 0;
         if (switchTrack || isReplacement ||
             hasTopQualityChanged(currentRepresentationInfo.mediaInfo.type, streamProcessor.getStreamInfo().id) ||
-            bufferLevelRule.execute(streamProcessor, type, streamController.isVideoTrackPresent())
-        ) {
+            bufferLevelRule.execute(streamProcessor, type, streamController.isVideoTrackPresent())) {
 
             const getNextFragment = function () {
-                log('ScheduleController - getNextFragment');
-                let fragmentController = streamProcessor.getFragmentController();
+                log('ScheduleController ' + type + '- getNextFragment');
+                const fragmentController = streamProcessor.getFragmentController();
                 if (switchTrack) {
-                    log('ScheduleController - switch track has been asked, get init request for ' + type + ' with representationid = ' + currentRepresentationInfo.id);
+                    log('ScheduleController ' + type + '- switch track has been asked, get init request for ' + type + ' with representationid = ' + currentRepresentationInfo.id);
                     streamProcessor.switchInitData(currentRepresentationInfo.id);
+                    lastInitQuality = currentRepresentationInfo.quality;
                     switchTrack = false;
                 } else if (currentRepresentationInfo.quality !== lastInitQuality) {
-                    log('ScheduleController - quality has changed, get init request');
+                    log('ScheduleController ' + type + '- quality has changed, get init request');
                     lastInitQuality = currentRepresentationInfo.quality;
 
                     streamProcessor.switchInitData(currentRepresentationInfo.id);
@@ -208,10 +208,10 @@ function ScheduleController(config) {
                     } else {
                         const request = nextFragmentRequestRule.execute(streamProcessor, replacement);
                         if (request) {
-                            log('ScheduleController - getNextFragment - request is ' + request.url);
+                            log('ScheduleController ' + type + '- getNextFragment - request is ' + request.url);
                             fragmentModel.executeRequest(request);
                         } else { //Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
-                            log('getNextFragment - Playing at the bleeding live edge and frag is not available yet');
+                            log('getNextFragment ' + type + '- Playing at the bleeding live edge and frag is not available yet');
                             isFragmentProcessingInProgress = false;
                             startScheduleTimer(500);
                         }
@@ -271,8 +271,6 @@ function ScheduleController(config) {
     }
 
     function getInitRequest(quality) {
-        lastInitQuality = quality;
-
         const request = adapter.getInitRequest(streamProcessor, quality);
         if (request) {
             isFragmentProcessingInProgress = true;
@@ -311,14 +309,17 @@ function ScheduleController(config) {
                 threshold: 0
             })[0];
             if (item && playbackController.getTime() >= item.startTime) {
-                if (item.quality !== lastQualityIndex && trigger) {
+                if ((item.quality !== lastFragmentRequest.quality || item.adaptationIndex !== lastFragmentRequest.adaptationIndex) && trigger) {
                     eventBus.trigger(Events.QUALITY_CHANGE_RENDERED, {
                         mediaType: type,
-                        oldQuality: lastQualityIndex,
+                        oldQuality: lastFragmentRequest.quality,
                         newQuality: item.quality
                     });
                 }
-                lastQualityIndex = item.quality;
+                lastFragmentRequest = {
+                    quality: item.quality,
+                    adaptationIndex: item.adaptationIndex
+                };
             }
         }
     }
@@ -354,7 +355,7 @@ function ScheduleController(config) {
     }
 
     function setLiveEdgeSeekTarget() {
-        let liveEdgeFinder = streamProcessor.getLiveEdgeFinder();
+        const liveEdgeFinder = streamProcessor.getLiveEdgeFinder();
         if (liveEdgeFinder) {
             const liveEdge = liveEdgeFinder.getLiveEdge();
             const dvrWindowSize = currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo.DVRWindowSize / 2;
@@ -362,15 +363,14 @@ function ScheduleController(config) {
             const request = adapter.getFragmentRequestForTime(streamProcessor, currentRepresentationInfo, startTime, {
                 ignoreIsFinished: true
             });
-            seekTarget = playbackController.getLiveStartTime();
-            if (isNaN(seekTarget) || request.startTime > seekTarget) {
-                //special use case for multi period stream. If the startTime is out of the current period, send a seek command.
-                //in onPlaybackSeeking callback (StreamController), the detection of switch stream is done.
-                if (request.startTime > (currentRepresentationInfo.mediaInfo.streamInfo.start + currentRepresentationInfo.mediaInfo.streamInfo.duration)) {
-                    playbackController.seek(request.startTime);
-                }
-                playbackController.setLiveStartTime(request.startTime);
-                seekTarget = request.startTime;
+
+            playbackController.setLiveStartTime(request.startTime);
+            seekTarget = playbackController.getStreamStartTime(false, liveEdge);
+
+            //special use case for multi period stream. If the startTime is out of the current period, send a seek command.
+            //in onPlaybackSeeking callback (StreamController), the detection of switch stream is done.
+            if (seekTarget > (currentRepresentationInfo.mediaInfo.streamInfo.start + currentRepresentationInfo.mediaInfo.streamInfo.duration)) {
+                playbackController.seek(seekTarget);
             }
 
             const manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metricsModel.getMetricsFor(Constants.STREAM));
@@ -490,7 +490,6 @@ function ScheduleController(config) {
     }
 
     function onPlaybackSeeking(e) {
-
         seekTarget = e.seekTime;
         setTimeToLoadDelay(0);
 
@@ -580,7 +579,10 @@ function ScheduleController(config) {
         playListTraceMetricsClosed = true;
         initialRequest = true;
         lastInitQuality = NaN;
-        lastQualityIndex = NaN;
+        lastFragmentRequest = {
+            quality: NaN,
+            adaptationIndex: NaN
+        };
         topQualityIndex = {};
         replaceRequestArray = [];
         isStopped = true;

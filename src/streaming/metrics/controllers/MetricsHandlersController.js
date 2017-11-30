@@ -30,19 +30,21 @@
  */
 
 import MetricsHandlerFactory from '../metrics/MetricsHandlerFactory';
-import FactoryMaker from '../../../core/FactoryMaker';
-import MediaPlayerEvents from '../../MediaPlayerEvents';
 
 function MetricsHandlersController(config) {
+
+    config = config || {};
     let handlers = [];
 
     let instance;
     let context = this.context;
     let eventBus = config.eventBus;
+    const Events = config.events;
 
     let metricsHandlerFactory = MetricsHandlerFactory(context).getInstance({
         log: config.log,
-        eventBus: config.eventBus
+        eventBus: config.eventBus,
+        metricsConstants: config.metricsConstants
     });
 
     function handle(e) {
@@ -84,13 +86,13 @@ function MetricsHandlersController(config) {
         );
 
         eventBus.on(
-            MediaPlayerEvents.METRIC_ADDED,
+            Events.METRIC_ADDED,
             handle,
             instance
         );
 
         eventBus.on(
-            MediaPlayerEvents.METRIC_UPDATED,
+            Events.METRIC_UPDATED,
             handle,
             instance
         );
@@ -98,13 +100,13 @@ function MetricsHandlersController(config) {
 
     function reset() {
         eventBus.off(
-            MediaPlayerEvents.METRIC_ADDED,
+            Events.METRIC_ADDED,
             handle,
             instance
         );
 
         eventBus.off(
-            MediaPlayerEvents.METRIC_UPDATED,
+            Events.METRIC_UPDATED,
             handle,
             instance
         );
@@ -123,4 +125,4 @@ function MetricsHandlersController(config) {
 }
 
 MetricsHandlersController.__dashjs_factory_name = 'MetricsHandlersController';
-export default FactoryMaker.getClassFactory(MetricsHandlersController);
+export default dashjs.FactoryMaker.getClassFactory(MetricsHandlersController); /* jshint ignore:line */

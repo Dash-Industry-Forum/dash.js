@@ -1,9 +1,11 @@
-import MssParser from '../../src/mss/parser/MssParser.js';
-import MediaPlayerModel from '../../src/streaming/models/MediaPlayerModel.js';
+import MssParser from '../../src/mss/parser/MssParser';
+import MediaPlayerModel from '../../src/streaming/models/MediaPlayerModel';
+import Debug from '../../src/core/Debug';
 
 const expect = require('chai').expect;
 const fs = require('fs');
 const domParser = require('xmldom').DOMParser;
+const context = {};
 
 describe('MssParser', function () {
 
@@ -29,7 +31,8 @@ describe('MssParser', function () {
 
     beforeEach(function () {
         mssParser = MssParser().create({
-            mediaPlayerModel: mediaPlayerModel
+            mediaPlayerModel: mediaPlayerModel,
+            log: Debug(context).getInstance().log
         });
 
         expect(mssParser).to.exist; // jshint ignore:line
@@ -58,5 +61,15 @@ describe('MssParser', function () {
                 expect(representation.id).to.equal(expectedId);
             }
         }
+    });
+    it('should skip video adaptations if fourCC attribute is not found', function () {
+        let xml = fs.readFileSync(__dirname + '/data/mss/manifestFourCCError.xml', 'utf8');
+        let manifest = mssParser.parse(xml);
+        let adaptations = manifest.Period.AdaptationSet_asArray;
+        expect(manifest).to.exist; // jshint ignore:line
+        expect(manifest.protocol).to.equal('MSS');
+        expect(adaptations).to.be.an.instanceof(Array);
+        expect(adaptations).to.have.lengthOf(1);
+        expect(adaptations[0].contentType).to.equal('audio');
     });
 });

@@ -35,33 +35,41 @@
  * @implements LicenseServer
  * @class
  */
-import FactoryMaker from '../../../core/FactoryMaker';
-import BASE64 from '../../../../externals/base64';
 
-function DRMToday() {
+import ProtectionConstants from '../../constants/ProtectionConstants';
 
-    const keySystems = {
-        'com.widevine.alpha': {
-            responseType: 'json',
-            getLicenseMessage: function (response) {
-                return BASE64.decodeArray(response.license);
-            },
-            getErrorResponse: function (response) {
-                return response;
-            }
+function DRMToday(config) {
+
+    config = config || {};
+    const BASE64 = config.BASE64;
+
+    const keySystems = {};
+    keySystems[ProtectionConstants.WIDEVINE_KEYSTEM_STRING] = {
+        responseType: 'json',
+        getLicenseMessage: function (response) {
+            return BASE64.decodeArray(response.license);
         },
-        'com.microsoft.playready': {
-            responseType: 'arraybuffer',
-            getLicenseMessage: function (response) {
-                return response;
-            },
-            getErrorResponse: function (response) {
-                return String.fromCharCode.apply(null, new Uint8Array(response));
-            }
+        getErrorResponse: function (response) {
+            return response;
+        }
+    };
+    keySystems[ProtectionConstants.PLAYREADY_KEYSTEM_STRING] = {
+        responseType: 'arraybuffer',
+        getLicenseMessage: function (response) {
+            return response;
+        },
+        getErrorResponse: function (response) {
+            return String.fromCharCode.apply(null, new Uint8Array(response));
         }
     };
 
     let instance;
+
+    function checkConfig() {
+        if (!BASE64 || !BASE64.hasOwnProperty('decodeArray')) {
+            throw new Error('Missing config parameter(s)');
+        }
+    }
 
     function getServerURLFromMessage(url /*, message, messageType*/) {
         return url;
@@ -76,6 +84,7 @@ function DRMToday() {
     }
 
     function getLicenseMessage(serverResponse, keySystemStr/*, messageType*/) {
+        checkConfig();
         return keySystems[keySystemStr].getLicenseMessage(serverResponse);
     }
 
@@ -95,4 +104,4 @@ function DRMToday() {
 }
 
 DRMToday.__dashjs_factory_name = 'DRMToday';
-export default FactoryMaker.getSingletonFactory(DRMToday);
+export default dashjs.FactoryMaker.getSingletonFactory(DRMToday); /* jshint ignore:line */

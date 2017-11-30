@@ -29,21 +29,22 @@ const objectUtils = ObjectUtils(context).getInstance();
 const initCache = InitCache(context).getInstance();
 
 describe('BufferController', function () {
-
     // disable log
-
-    let debug = Debug(context).getInstance();
+    const debug = Debug(context).getInstance();
     debug.setLogToBrowserConsole(false);
-    let streamProcessor = new StreamProcessorMock(testType, streamInfo);
-    let sourceBufferMock = new SourceBufferControllerMock(testType);
-    let streamControllerMock = new StreamControllerMock();
-    let adapterMock = new AdapterMock();
-    let metricsModelMock = new MetricsModelMock();
-    let playbackControllerMock = new PlaybackControllerMock();
+    const streamProcessor = new StreamProcessorMock(testType, streamInfo);
+    const sourceBufferMock = new SourceBufferControllerMock(testType);
+    const streamControllerMock = new StreamControllerMock();
+    const adapterMock = new AdapterMock();
+    const metricsModelMock = new MetricsModelMock();
+    const playbackControllerMock = new PlaybackControllerMock();
 
     let bufferController;
 
     beforeEach(function () {
+        global.navigator = {
+            userAgent: 'node.js'
+        };
 
         bufferController = BufferController(context).create({
             metricsModel: metricsModelMock,
@@ -61,6 +62,7 @@ describe('BufferController', function () {
     });
 
     afterEach(function () {
+        delete global.navigator;
         bufferController = null;
         streamProcessor.reset();
         sourceBufferMock.reset(testType);
@@ -68,7 +70,6 @@ describe('BufferController', function () {
 
     describe('Method initialize', function () {
         it('should initialize the controller', function () {
-
             expect(bufferController.getType()).to.equal(testType);
             bufferController.initialize({});
 
@@ -77,20 +78,19 @@ describe('BufferController', function () {
 
     describe('Method createBuffer', function () {
         it('should not create a sourceBuffer if controller is not initialized', function () {
-
-            let buffer = bufferController.createBuffer('mediaInfos');
+            const buffer = bufferController.createBuffer('mediaInfos');
             expect(buffer).to.not.exist; // jshint ignore:line
         });
 
         it('should not create a sourceBuffer if controller is initialized with incorrect mediaSource', function () {
             bufferController.initialize(null);
-            let buffer = bufferController.createBuffer('mediaInfos');
+            const buffer = bufferController.createBuffer('mediaInfos');
             expect(buffer).to.not.exist; // jshint ignore:line
         });
 
         it('should create a sourceBuffer and initialize it', function () {
             bufferController.initialize({});
-            let buffer = bufferController.createBuffer('mediaInfos');
+            const buffer = bufferController.createBuffer('mediaInfos');
             expect(buffer).to.exist; // jshint ignore:line
             expect(buffer.timestampOffset).to.equal(1);
         });
@@ -98,14 +98,14 @@ describe('BufferController', function () {
 
     describe('Method getStreamProcessor', function () {
         it('should return configured stream processor', function () {
-            let configuredSP = bufferController.getStreamProcessor();
+            const configuredSP = bufferController.getStreamProcessor();
             expect(objectUtils.areEqual(configuredSP, streamProcessor)).to.be.true; // jshint ignore:line
         });
     });
 
     describe('Methods get/set Buffer', function () {
         it('should update buffer', function () {
-            let buffer = 'testBuffer';
+            const buffer = 'testBuffer';
             bufferController.setBuffer(buffer);
             expect(bufferController.getBuffer()).to.equal(buffer);
         });
@@ -113,7 +113,7 @@ describe('BufferController', function () {
 
     describe('Methods get/set Media Source', function () {
         it('should update media source', function () {
-            let mediaSource = 'test';
+            const mediaSource = 'test';
             bufferController.setMediaSource(mediaSource);
             expect(bufferController.getMediaSource()).to.equal(mediaSource);
         });
@@ -121,7 +121,7 @@ describe('BufferController', function () {
 
     describe('Method switchInitData', function () {
         it('should append init data to source buffer if data have been cached', function () {
-            let chunk = {
+            const chunk = {
                 bytes: 'initData',
                 quality: 2,
                 mediaInfo: {
@@ -139,12 +139,11 @@ describe('BufferController', function () {
         });
 
         it('should trigger INIT_REQUESTED if no init data is cached', function (done) {
-
             // reset cache
             initCache.reset();
 
             bufferController.initialize({});
-            let onInitRequest = function () {
+            const onInitRequest = function () {
                 eventBus.off(Events.INIT_REQUESTED, onInitRequest);
                 done();
             };
@@ -156,7 +155,7 @@ describe('BufferController', function () {
 
     describe('Method reset', function () {
         it('should reset buffer controller', function () {
-            let buffer = 'testBuffer';
+            const buffer = 'testBuffer';
             bufferController.setBuffer(buffer);
             expect(bufferController.getBuffer()).to.equal(buffer);
 
@@ -169,8 +168,7 @@ describe('BufferController', function () {
 
     describe('Event INIT_FRAGMENT_LOADED handler', function () {
         it('should not append data to source buffer if wrong fragment model', function (done) {
-
-            let event = {
+            const event = {
                 fragmentModel: 'wrongFragmentModel',
                 chunk: {
                     bytes: 'initData',
@@ -182,7 +180,7 @@ describe('BufferController', function () {
                     representationId: 'representationId'
                 }
             };
-            let onInitDataLoaded = function () {
+            const onInitDataLoaded = function () {
                 eventBus.off(Events.INIT_FRAGMENT_LOADED, onInitDataLoaded);
                 expect(sourceBufferMock.buffer.bytes).to.be.undefined; // jshint ignore:line
                 done();
@@ -195,8 +193,7 @@ describe('BufferController', function () {
         });
 
         it('should append data to source buffer ', function (done) {
-
-            let event = {
+            const event = {
                 fragmentModel: streamProcessor.getFragmentModel(),
                 chunk: {
                     bytes: 'initData',
@@ -208,7 +205,7 @@ describe('BufferController', function () {
                     representationId: 'representationId'
                 }
             };
-            let onInitDataLoaded = function () {
+            const onInitDataLoaded = function () {
                 eventBus.off(Events.INIT_FRAGMENT_LOADED, onInitDataLoaded);
                 expect(sourceBufferMock.buffer.bytes).to.equal(event.chunk.bytes);
                 done();
@@ -221,8 +218,7 @@ describe('BufferController', function () {
         });
 
         it('should save init data into cache', function (done) {
-
-            let chunk = {
+            const chunk = {
                 bytes: 'initData',
                 quality: 2,
                 mediaInfo: {
@@ -231,14 +227,14 @@ describe('BufferController', function () {
                 streamId: 'streamId',
                 representationId: 'representationId'
             };
-            let event = {
+            const event = {
                 fragmentModel: streamProcessor.getFragmentModel(),
                 chunk: chunk
             };
 
             initCache.reset();
             let cache = initCache.extract(chunk.streamId, chunk.representationId);
-            let onInitDataLoaded = function () {
+            const onInitDataLoaded = function () {
                 eventBus.off(Events.INIT_FRAGMENT_LOADED, onInitDataLoaded);
 
                 // check initCache
@@ -255,8 +251,7 @@ describe('BufferController', function () {
     });
     describe('Event MEDIA_FRAGMENT_LOADED handler', function () {
         it('should not append data to source buffer if wrong fragment model', function (done) {
-
-            let event = {
+            const event = {
                 fragmentModel: 'wrongFragmentModel',
                 chunk: {
                     bytes: 'data',
@@ -268,7 +263,7 @@ describe('BufferController', function () {
                     representationId: 'representationId'
                 }
             };
-            let onMediaFragmentLoaded = function () {
+            const onMediaFragmentLoaded = function () {
                 eventBus.off(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded);
                 expect(sourceBufferMock.buffer.bytes).to.be.undefined; // jshint ignore:line
                 done();
@@ -281,8 +276,7 @@ describe('BufferController', function () {
         });
 
         it('should append data to source buffer ', function (done) {
-
-            let event = {
+            const event = {
                 fragmentModel: streamProcessor.getFragmentModel(),
                 chunk: {
                     bytes: 'data',
@@ -290,7 +284,7 @@ describe('BufferController', function () {
                     mediaInfo: 'video'
                 }
             };
-            let onMediaFragmentLoaded = function () {
+            const onMediaFragmentLoaded = function () {
                 eventBus.off(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded);
                 expect(sourceBufferMock.buffer.bytes).to.equal(event.chunk.bytes);
                 done();
@@ -303,8 +297,7 @@ describe('BufferController', function () {
         });
 
         it('should trigger VIDEO_CHUNK_RECEIVED if event is video', function (done) {
-
-            let event = {
+            const event = {
                 fragmentModel: streamProcessor.getFragmentModel(),
                 chunk: {
                     bytes: 'data',
@@ -314,7 +307,7 @@ describe('BufferController', function () {
                     }
                 }
             };
-            let onVideoChunk = function () {
+            const onVideoChunk = function () {
                 eventBus.off(Events.VIDEO_CHUNK_RECEIVED, onVideoChunk);
                 done();
             };
@@ -327,21 +320,20 @@ describe('BufferController', function () {
 
     describe('Event MEDIA_FRAGMENT_LOADED handler', function () {
         it('should not update buffer timestamp offset - wrong stream processor id', function (done) {
-
             // init test
             bufferController.initialize({});
-            let buffer = bufferController.createBuffer('mediaInfos');
+            const buffer = bufferController.createBuffer('mediaInfos');
             expect(buffer).to.exist; // jshint ignore:line
             expect(buffer.timestampOffset).to.equal(1);
 
-            let event = {
+            const event = {
                 newQuality: 2,
                 mediaType: testType,
                 streamInfo: {
                     id: 'wrongid'
                 }
             };
-            let onQualityChanged = function () {
+            const onQualityChanged = function () {
                 eventBus.off(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, this);
 
                 expect(buffer.timestampOffset).to.equal(1);
@@ -354,21 +346,20 @@ describe('BufferController', function () {
         });
 
         it('should not update buffer timestamp offset - wrong media type', function (done) {
-
             // init test
             bufferController.initialize({});
-            let buffer = bufferController.createBuffer('mediaInfos');
+            const buffer = bufferController.createBuffer('mediaInfos');
             expect(buffer).to.exist; // jshint ignore:line
             expect(buffer.timestampOffset).to.equal(1);
 
-            let event = {
+            const event = {
                 newQuality: 2,
                 mediaType: 'wrongMediaType',
                 streamInfo: {
                     id: streamProcessor.getStreamInfo().id
                 }
             };
-            let onQualityChanged = function () {
+            const onQualityChanged = function () {
                 eventBus.off(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, this);
 
                 expect(buffer.timestampOffset).to.equal(1);
@@ -383,18 +374,18 @@ describe('BufferController', function () {
         it('should not update buffer timestamp offset - wrong quality', function (done) {
             // init test
             bufferController.initialize({});
-            let buffer = bufferController.createBuffer('mediaInfos');
+            const buffer = bufferController.createBuffer('mediaInfos');
             expect(buffer).to.exist; // jshint ignore:line
             expect(buffer.timestampOffset).to.equal(1);
 
-            let event = {
+            const event = {
                 newQuality: 0,
                 mediaType: testType,
                 streamInfo: {
                     id: streamProcessor.getStreamInfo().id
                 }
             };
-            let onQualityChanged = function () {
+            const onQualityChanged = function () {
                 eventBus.off(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, this);
 
                 expect(buffer.timestampOffset).to.equal(1);
@@ -407,21 +398,20 @@ describe('BufferController', function () {
         });
 
         it('should update buffer timestamp offset', function (done) {
-
             // init test
             bufferController.initialize({});
-            let buffer = bufferController.createBuffer('mediaInfos');
+            const buffer = bufferController.createBuffer('mediaInfos');
             expect(buffer).to.exist; // jshint ignore:line
             expect(buffer.timestampOffset).to.equal(1);
 
-            let event = {
+            const event = {
                 newQuality: 2,
                 mediaType: testType,
                 streamInfo: {
                     id: streamProcessor.getStreamInfo().id
                 }
             };
-            let onQualityChanged = function () {
+            const onQualityChanged = function () {
                 eventBus.off(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, this);
 
                 expect(buffer.timestampOffset).to.equal(2);
@@ -436,13 +426,12 @@ describe('BufferController', function () {
 
     describe('Event PLAYBACK_SEEKING handler', function () {
         it('should trigger BUFFER_LEVEL_UPDATED event', function (done) {
-
             // init test
             bufferController.initialize({});
-            let buffer = bufferController.createBuffer('mediaInfos');
+            const buffer = bufferController.createBuffer('mediaInfos');
             expect(buffer).to.exist; // jshint ignore:line
 
-            let onBufferLevelUpdated = function (e) {
+            const onBufferLevelUpdated = function (e) {
                 eventBus.off(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, this);
                 expect(e.bufferLevel).to.equal(sourceBufferMock.getBufferLength());
 
@@ -455,13 +444,12 @@ describe('BufferController', function () {
         });
 
         it('should trigger BUFFER_LEVEL_STATE_CHANGED event', function (done) {
-
             // init test
             bufferController.initialize({});
-            let buffer = bufferController.createBuffer('mediaInfos');
+            const buffer = bufferController.createBuffer('mediaInfos');
             expect(buffer).to.exist; // jshint ignore:line
 
-            let onBufferStateChanged = function (e) {
+            const onBufferStateChanged = function (e) {
                 eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferStateChanged, this);
                 expect(e.state).to.equal('bufferLoaded');
 
@@ -474,13 +462,12 @@ describe('BufferController', function () {
         });
 
         it('should trigger BUFFER_LOADED event if enough buffer', function (done) {
-
             // init test
             bufferController.initialize({});
-            let buffer = bufferController.createBuffer('mediaInfos');
+            const buffer = bufferController.createBuffer('mediaInfos');
             expect(buffer).to.exist; // jshint ignore:line
 
-            let onBufferLoaded = function (/*e*/) {
+            const onBufferLoaded = function (/*e*/) {
                 eventBus.off(Events.BUFFER_LOADED, onBufferLoaded, this);
                 done();
             };
@@ -490,5 +477,4 @@ describe('BufferController', function () {
             eventBus.trigger(Events.PLAYBACK_SEEKING);
         });
     });
-
 });

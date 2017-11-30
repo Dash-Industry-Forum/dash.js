@@ -39,7 +39,6 @@
  * @implements LicenseServer
  * @class
  */
-import FactoryMaker from '../../../core/FactoryMaker';
 
 function PlayReady() {
 
@@ -48,19 +47,19 @@ function PlayReady() {
     const soap = 'http://schemas.xmlsoap.org/soap/envelope/';
 
     function uintToString(arrayBuffer) {
-        let encodedString = String.fromCharCode.apply(null, new Uint8Array(arrayBuffer));
-        let decodedString = decodeURIComponent(escape(encodedString));
+        const encodedString = String.fromCharCode.apply(null, new Uint8Array(arrayBuffer));
+        const decodedString = decodeURIComponent(escape(encodedString));
         return decodedString;
     }
 
     function parseServerResponse(serverResponse) {
         if (window.DOMParser) {
-            let stringResponse = uintToString(serverResponse);
-            let parser = new window.DOMParser();
-            let xmlDoc = parser.parseFromString(stringResponse, 'text/xml');
-            let envelope = xmlDoc ? xmlDoc.getElementsByTagNameNS(soap, 'Envelope')[0] : null;
-            let body = envelope ? envelope.getElementsByTagNameNS(soap, 'Body')[0] : null;
-            let fault = body ? body.getElementsByTagNameNS(soap, 'Fault')[0] : null;
+            const stringResponse = uintToString(serverResponse);
+            const parser = new window.DOMParser();
+            const xmlDoc = parser.parseFromString(stringResponse, 'text/xml');
+            const envelope = xmlDoc ? xmlDoc.getElementsByTagNameNS(soap, 'Envelope')[0] : null;
+            const body = envelope ? envelope.getElementsByTagNameNS(soap, 'Body')[0] : null;
+            const fault = body ? body.getElementsByTagNameNS(soap, 'Fault')[0] : null;
 
             if (fault) {
                 return null;
@@ -77,14 +76,14 @@ function PlayReady() {
         let idEnd = -1;
 
         if (window.DOMParser) {
-            let stringResponse = uintToString(serverResponse);
-            let parser = new window.DOMParser();
-            let xmlDoc = parser.parseFromString(stringResponse, 'text/xml');
-            let envelope = xmlDoc ? xmlDoc.getElementsByTagNameNS(soap, 'Envelope')[0] : null;
-            let body = envelope ? envelope.getElementsByTagNameNS(soap, 'Body')[0] : null;
-            let fault = body ? body.getElementsByTagNameNS(soap, 'Fault')[0] : null;
-            let detail = fault ? fault.getElementsByTagName('detail')[0] : null;
-            let exception = detail ? detail.getElementsByTagName('Exception')[0] : null;
+            const stringResponse = uintToString(serverResponse);
+            const parser = new window.DOMParser();
+            const xmlDoc = parser.parseFromString(stringResponse, 'text/xml');
+            const envelope = xmlDoc ? xmlDoc.getElementsByTagNameNS(soap, 'Envelope')[0] : null;
+            const body = envelope ? envelope.getElementsByTagNameNS(soap, 'Body')[0] : null;
+            const fault = body ? body.getElementsByTagNameNS(soap, 'Fault')[0] : null;
+            const detail = fault ? fault.getElementsByTagName('detail')[0] : null;
+            const exception = detail ? detail.getElementsByTagName('Exception')[0] : null;
             let node = null;
 
             if (fault === null) {
@@ -145,4 +144,4 @@ function PlayReady() {
 }
 
 PlayReady.__dashjs_factory_name = 'PlayReady';
-export default FactoryMaker.getSingletonFactory(PlayReady);
+export default dashjs.FactoryMaker.getSingletonFactory(PlayReady); /* jshint ignore:line */

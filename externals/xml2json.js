@@ -535,19 +535,9 @@ function X2JS(config) {
         if (window.DOMParser) {
             var parser=new window.DOMParser();
             var parsererrorNS = null;
-            // IE9+ now is here
-            if(!isIEParser) {
-                try {
-                    parsererrorNS = parser.parseFromString("INVALID", "text/xml").getElementsByTagName("parsererror")[0].namespaceURI;
-                }
-                catch(err) {
-                    parsererrorNS = null;
-                }
-            }
             try {
                 xmlDoc = parser.parseFromString( xmlDocStr, "text/xml" );
-                if( parsererrorNS!= null && xmlDoc.getElementsByTagNameNS(parsererrorNS, "parsererror").length > 0) {
-                    //throw new Error('Error parsing XML: '+xmlDocStr);
+                if(xmlDoc.getElementsByTagNameNS("*", "parseerror").length > 0) {
                     xmlDoc = null;
                 }
             }

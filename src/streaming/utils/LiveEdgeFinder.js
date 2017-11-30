@@ -37,6 +37,7 @@ import FactoryMaker from '../../core/FactoryMaker';
  */
 function LiveEdgeFinder(config) {
 
+    config = config || {};
     let instance;
     let timelineConverter = config.timelineConverter;
     let streamProcessor = config.streamProcessor;

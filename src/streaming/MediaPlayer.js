@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from './constants/Constants';
+import MetricsConstants from './constants/MetricsConstants';
 import UTCTiming from '../dash/vo/UTCTiming';
 import PlaybackController from './controllers/PlaybackController';
 import StreamController from './controllers/StreamController';
@@ -62,6 +63,11 @@ import DashAdapter from '../dash/DashAdapter';
 import DashManifestModel from '../dash/models/DashManifestModel';
 import DashMetrics from '../dash/DashMetrics';
 import TimelineConverter from '../dash/utils/TimelineConverter';
+import {
+    HTTPRequest
+} from './vo/metrics/HTTPRequest';
+import BASE64 from '../../externals/base64';
+import ISOBoxer from 'codem-isoboxer';
 
 /**
  * @module MediaPlayer
@@ -126,7 +132,7 @@ function MediaPlayer() {
     }
 
     /**
-     * Configure media plyer with customs controllers. Helpful for tests
+     * Configure media player with customs controllers. Helpful for tests
      *
      * @param {object=} config controllers configuration
      * @memberof module:MediaPlayer
@@ -262,7 +268,6 @@ function MediaPlayer() {
             metricsReportingController.reset();
             metricsReportingController = null;
         }
-        mediaPlayerInitialized = false;
     }
 
     /**
@@ -516,11 +521,12 @@ function MediaPlayer() {
     function getBufferLength(type) {
         const types = [Constants.VIDEO, Constants.AUDIO, Constants.FRAGMENTED_TEXT];
         if (!type) {
-            return types.map(
+            const buffer = types.map(
                 t => getTracksFor(t).length > 0 ? getDashMetrics().getCurrentBufferLevel(getMetricsFor(t)) : Number.MAX_VALUE
             ).reduce(
                 (p, c) => Math.min(p, c)
             );
+            return buffer === Number.MAX_VALUE ? NaN : buffer;
         } else {
             if (types.indexOf(type) !== -1) {
                 const buffer = getDashMetrics().getCurrentBufferLevel(getMetricsFor(type));
@@ -560,15 +566,15 @@ function MediaPlayer() {
      */
     function getDVRSeekOffset(value) {
         let metric = getDVRInfoMetric();
-
+        let liveDelay = playbackController.getLiveDelay();
         if (!metric) {
             return 0;
         }
 
         let val = metric.range.start + value;
 
-        if (val > metric.range.end) {
-            val = metric.range.end;
+        if (val > (metric.range.end - liveDelay)) {
+            val = metric.range.end - liveDelay;
         }
 
         return val;
@@ -1675,6 +1681,99 @@ function MediaPlayer() {
     ---------------------------------------------------------------------------
     */
     /**
+     * Set default language for text. If default language is not one of text tracks, dash will choose the first one.
+     *
+     * @param {string} lang - default language
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setTextDefaultLanguage(lang) {
+        if (textController === undefined) {
+            textController = TextController(context).getInstance();
+        }
+
+        textController.setTextDefaultLanguage(lang);
+    }
+
+    /**
+     * Get default language for text.
+     *
+     * @return {string} the default language if it has been set using setTextDefaultLanguage
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getTextDefaultLanguage() {
+        if (textController === undefined) {
+            textController = TextController(context).getInstance();
+        }
+
+        return textController.getTextDefaultLanguage();
+    }
+
+    /**
+     * Set enabled default state.
+     * This is used to enable/disable text when a file is loaded.
+     * During playback, use enableText to enable text for the file
+     *
+     * @param {boolean} enable - true to enable text, false otherwise
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setTextDefaultEnabled(enable) {
+        if (textController === undefined) {
+            textController = TextController(context).getInstance();
+        }
+
+        textController.setTextDefaultEnabled(enable);
+    }
+
+    /**
+     * Get enabled default state.
+     *
+     * @return {boolean}  default enable state
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getTextDefaultEnabled() {
+        if (textController === undefined) {
+            textController = TextController(context).getInstance();
+        }
+
+        return textController.getTextDefaultEnabled();
+    }
+
+    /**
+     * Enable/disable text
+     * When enabling text, dash will choose the previous selected text track
+     *
+     * @param {boolean} enable - true to enable text, false otherwise (same as setTextTrack(-1))
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function enableText(enable) {
+        if (textController === undefined) {
+            textController = TextController(context).getInstance();
+        }
+
+        textController.enableText(enable);
+    }
+
+    /**
+     * Return if text is enabled
+     *
+     * @return {boolean} return true if text is enabled, false otherwise
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function isTextEnabled() {
+        if (textController === undefined) {
+            textController = TextController(context).getInstance();
+        }
+
+        return textController.isTextEnabled();
+    }
+
+    /**
      * Use this method to change the current text track for both external time text files and fragmented text tracks. There is no need to
      * set the track mode on the video object to switch a track when using this method.
      *
@@ -1774,6 +1873,9 @@ function MediaPlayer() {
     function attachView(element) {
         if (!mediaPlayerInitialized) {
             throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+        }
+        if (videoModel) {
+            videoModel.reset();
         }
         videoModel = null;
         if (element) {
@@ -1915,6 +2017,9 @@ function MediaPlayer() {
      * @instance
      */
     function setInitialMediaSettingsFor(type, value) {
+        if (!mediaPlayerInitialized) {
+            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+        }
         mediaController.setInitialSettings(type, value);
     }
 
@@ -1932,6 +2037,9 @@ function MediaPlayer() {
      * @instance
      */
     function getInitialMediaSettingsFor(type) {
+        if (!mediaPlayerInitialized) {
+            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+        }
         return mediaController.getInitialSettings(type);
     }
 
@@ -1956,6 +2064,9 @@ function MediaPlayer() {
      * @instance
      */
     function getTrackSwitchModeFor(type) {
+        if (!mediaPlayerInitialized) {
+            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+        }
         return mediaController.getSwitchMode(type);
     }
 
@@ -1974,6 +2085,9 @@ function MediaPlayer() {
      * @instance
      */
     function setTrackSwitchModeFor(type, mode) {
+        if (!mediaPlayerInitialized) {
+            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+        }
         mediaController.setSwitchMode(type, mode);
     }
 
@@ -1992,6 +2106,9 @@ function MediaPlayer() {
      * @instance
      */
     function setSelectionModeForInitialTrack(mode) {
+        if (!mediaPlayerInitialized) {
+            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+        }
         mediaController.setSelectionModeForInitialTrack(mode);
     }
 
@@ -2003,6 +2120,9 @@ function MediaPlayer() {
      * @instance
      */
     function getSelectionModeForInitialTrack() {
+        if (!mediaPlayerInitialized) {
+            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+        }
         return mediaController.getSelectionModeForInitialTrack();
     }
 
@@ -2382,7 +2502,10 @@ function MediaPlayer() {
                 videoModel: videoModel,
                 capabilities: capabilities,
                 eventBus: eventBus,
-                adapter: adapter
+                adapter: adapter,
+                events: Events,
+                BASE64: BASE64,
+                constants: Constants
             });
             return protectionController;
         }
@@ -2404,7 +2527,10 @@ function MediaPlayer() {
                 eventBus: eventBus,
                 mediaElement: getVideoElement(),
                 dashManifestModel: dashManifestModel,
-                metricsModel: metricsModel
+                metricsModel: metricsModel,
+                events: Events,
+                constants: Constants,
+                metricsConstants: MetricsConstants
             });
         }
     }
@@ -2421,7 +2547,14 @@ function MediaPlayer() {
                 mediaPlayerModel: mediaPlayerModel,
                 metricsModel: metricsModel,
                 playbackController: playbackController,
-                errHandler: errHandler
+                protectionController: protectionController,
+                errHandler: errHandler,
+                events: Events,
+                constants: Constants,
+                log: log,
+                initSegmentType: HTTPRequest.INIT_SEGMENT_TYPE,
+                BASE64: BASE64,
+                ISOBoxer: ISOBoxer
             });
         }
     }
@@ -2530,6 +2663,12 @@ function MediaPlayer() {
         setLimitBitrateByPortal: setLimitBitrateByPortal,
         getUsePixelRatioInLimitBitrateByPortal: getUsePixelRatioInLimitBitrateByPortal,
         setUsePixelRatioInLimitBitrateByPortal: setUsePixelRatioInLimitBitrateByPortal,
+        setTextDefaultLanguage: setTextDefaultLanguage,
+        getTextDefaultLanguage: getTextDefaultLanguage,
+        setTextDefaultEnabled: setTextDefaultEnabled,
+        getTextDefaultEnabled: getTextDefaultEnabled,
+        enableText: enableText,
+        isTextEnabled: isTextEnabled,
         setTextTrack: setTextTrack,
         getBitrateInfoListFor: getBitrateInfoListFor,
         setInitialBitrateFor: setInitialBitrateFor,

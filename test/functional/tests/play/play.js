@@ -22,7 +22,13 @@ define([
 
     // Test configuration (see config/testConfig.js)
     var testConfig = config.tests.play,
-        streams = tests.getTestStreams(config.tests.play);
+        streams = tests.getTestStreams(config.tests.play, function (stream) {
+            if ((config.smoothEnabled === 'true' && stream.protocol === 'MSS') || (stream.protocol !== 'MSS')) {
+                return true;
+            }
+            return false;
+        });
+
 
     // Test constants
     var PROGRESS_DELAY = 5;

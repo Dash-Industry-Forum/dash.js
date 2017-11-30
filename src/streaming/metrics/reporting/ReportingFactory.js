@@ -29,24 +29,28 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../../core/FactoryMaker';
 import DVBReporting from './reporters/DVBReporting';
 
 function ReportingFactory(config) {
+    config = config || {};
 
-    let knownReportingSchemeIdUris = {
+    const knownReportingSchemeIdUris = {
         'urn:dvb:dash:reporting:2014': DVBReporting
     };
 
-    let context = this.context;
-    let log = config.log;
+    const context = this.context;
+    const log = config.log;
+    const metricsConstants = config.metricsConstants;
+
     let instance;
 
     function create(entry, rangeController) {
         let reporting;
 
         try {
-            reporting = knownReportingSchemeIdUris[entry.schemeIdUri](context).create();
+            reporting = knownReportingSchemeIdUris[entry.schemeIdUri](context).create({
+                metricsConstants: metricsConstants
+            });
 
             reporting.initialize(entry, rangeController);
         } catch (e) {
@@ -76,4 +80,4 @@ function ReportingFactory(config) {
 }
 
 ReportingFactory.__dashjs_factory_name = 'ReportingFactory';
-export default FactoryMaker.getSingletonFactory(ReportingFactory);
+export default dashjs.FactoryMaker.getSingletonFactory(ReportingFactory); /* jshint ignore:line */

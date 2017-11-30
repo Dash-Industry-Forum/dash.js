@@ -29,19 +29,16 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * Adobe Access DRM
- *
- * @class
- * @implements KeySystem
- */
-import FactoryMaker from '../../../core/FactoryMaker';
+import FactoryMaker from '../../src/core/FactoryMaker';
 
-//TODO implement
-function KeySystemAdobeAccess() {
-    let instance = {};
-    return instance;
+// Shove both of these into the global scope
+var context = (typeof window !== 'undefined' && window) || global;
+
+var dashjs = context.dashjs;
+if (!dashjs) {
+    dashjs = context.dashjs = {};
 }
 
-KeySystemAdobeAccess.__dashjs_factory_name = 'KeySystemAdobeAccess';
-export default FactoryMaker.getSingletonFactory(KeySystemAdobeAccess);
+dashjs.FactoryMaker = FactoryMaker;
+
+export default dashjs;

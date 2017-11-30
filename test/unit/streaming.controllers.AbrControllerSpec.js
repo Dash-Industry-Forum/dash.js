@@ -33,12 +33,23 @@ describe('AbrController', function () {
     const representationCount = dummyMediaInfo.representationCount;
     const streamProcessor = objectsHelper.getDummyStreamProcessor(testType);
 
-    abrCtrl.setConfig({
-        metricsModel: metricsModel,
-        dashMetrics: dashMetrics,
-        videoModel: videoModel
+    beforeEach(function () {
+        abrCtrl.setConfig({
+            metricsModel: metricsModel,
+            dashMetrics: dashMetrics,
+            videoModel: videoModel
+        });
+        abrCtrl.registerStreamType('video', streamProcessor);
     });
-    abrCtrl.registerStreamType('video', streamProcessor);
+
+    afterEach(function () {
+        abrCtrl.reset();
+    });
+
+    it('should return null when attempting to get abandonment state when abandonmentStateDict array is empty', function () {
+        const state = abrCtrl.getAbandonmentStateFor('audio');
+        expect(state).to.be.null;    // jshint ignore:line
+    });
 
     it('should update top quality index', function () {
         const expectedTopQuality = representationCount - 1;
@@ -53,6 +64,7 @@ describe('AbrController', function () {
         const testQuality = 1;
         let newQuality;
 
+        abrCtrl.updateTopQualityIndex(dummyMediaInfo);
         abrCtrl.setPlaybackQuality(testType, dummyMediaInfo.streamInfo, testQuality);
         newQuality = abrCtrl.getQualityFor(testType);
         expect(newQuality).to.be.equal(testQuality);
@@ -115,5 +127,71 @@ describe('AbrController', function () {
         });
 
         expect(match.length).to.be.equal(expectedBitrates.length);
+    });
+
+    it('should return the appropriate max allowed index for the max allowed bitrate set', function () {
+        let maxAllowedIndex;
+
+        // Max allowed bitrate in kbps, bandwidth is in bps
+        abrCtrl.setMaxAllowedBitrateFor(testType, streamProcessor.getMediaInfo().bitrateList[0].bandwidth / 1000);
+        maxAllowedIndex = abrCtrl.getMaxAllowedIndexFor(testType);
+        expect(maxAllowedIndex).to.be.equal(0);
+
+        abrCtrl.setMaxAllowedBitrateFor(testType, streamProcessor.getMediaInfo().bitrateList[1].bandwidth / 1000);
+        maxAllowedIndex = abrCtrl.getMaxAllowedIndexFor(testType);
+        expect(maxAllowedIndex).to.be.equal(1);
+
+        abrCtrl.setMaxAllowedBitrateFor(testType, streamProcessor.getMediaInfo().bitrateList[2].bandwidth / 1000);
+        maxAllowedIndex = abrCtrl.getMaxAllowedIndexFor(testType);
+        expect(maxAllowedIndex).to.be.equal(2);
+
+        abrCtrl.setMaxAllowedBitrateFor(testType, (streamProcessor.getMediaInfo().bitrateList[0].bandwidth / 1000) + 1);
+        maxAllowedIndex = abrCtrl.getMaxAllowedIndexFor(testType);
+        expect(maxAllowedIndex).to.be.equal(0);
+
+        abrCtrl.setMaxAllowedBitrateFor(testType, (streamProcessor.getMediaInfo().bitrateList[1].bandwidth / 1000) + 1);
+        maxAllowedIndex = abrCtrl.getMaxAllowedIndexFor(testType);
+        expect(maxAllowedIndex).to.be.equal(1);
+
+        abrCtrl.setMaxAllowedBitrateFor(testType, (streamProcessor.getMediaInfo().bitrateList[2].bandwidth / 1000) + 1);
+        maxAllowedIndex = abrCtrl.getMaxAllowedIndexFor(testType);
+        expect(maxAllowedIndex).to.be.equal(2);
+
+        abrCtrl.setMaxAllowedBitrateFor(testType, (streamProcessor.getMediaInfo().bitrateList[0].bandwidth / 1000) - 1);
+        maxAllowedIndex = abrCtrl.getMaxAllowedIndexFor(testType);
+        expect(maxAllowedIndex).to.be.equal(0);
+    });
+
+    it('should return the appropriate min allowed index for the min allowed bitrate set', function () {
+        let minAllowedIndex;
+
+        // Min allowed bitrate in kbps, bandwidth is in bps
+        abrCtrl.setMinAllowedBitrateFor(testType, streamProcessor.getMediaInfo().bitrateList[0].bandwidth / 1000);
+        minAllowedIndex = abrCtrl.getMinAllowedIndexFor(testType);
+        expect(minAllowedIndex).to.be.equal(0);
+
+        abrCtrl.setMinAllowedBitrateFor(testType, streamProcessor.getMediaInfo().bitrateList[1].bandwidth / 1000);
+        minAllowedIndex = abrCtrl.getMinAllowedIndexFor(testType);
+        expect(minAllowedIndex).to.be.equal(1);
+
+        abrCtrl.setMinAllowedBitrateFor(testType, streamProcessor.getMediaInfo().bitrateList[2].bandwidth / 1000);
+        minAllowedIndex = abrCtrl.getMinAllowedIndexFor(testType);
+        expect(minAllowedIndex).to.be.equal(2);
+
+        abrCtrl.setMinAllowedBitrateFor(testType, (streamProcessor.getMediaInfo().bitrateList[0].bandwidth / 1000) + 1);
+        minAllowedIndex = abrCtrl.getMinAllowedIndexFor(testType);
+        expect(minAllowedIndex).to.be.equal(1);
+
+        abrCtrl.setMinAllowedBitrateFor(testType, (streamProcessor.getMediaInfo().bitrateList[1].bandwidth / 1000) + 1);
+        minAllowedIndex = abrCtrl.getMinAllowedIndexFor(testType);
+        expect(minAllowedIndex).to.be.equal(2);
+
+        abrCtrl.setMinAllowedBitrateFor(testType, (streamProcessor.getMediaInfo().bitrateList[2].bandwidth / 1000) + 1);
+        minAllowedIndex = abrCtrl.getMinAllowedIndexFor(testType);
+        expect(minAllowedIndex).to.be.equal(2);
+
+        abrCtrl.setMinAllowedBitrateFor(testType, (streamProcessor.getMediaInfo().bitrateList[0].bandwidth / 1000) - 1);
+        minAllowedIndex = abrCtrl.getMinAllowedIndexFor(testType);
+        expect(minAllowedIndex).to.be.equal(0);
     });
 });

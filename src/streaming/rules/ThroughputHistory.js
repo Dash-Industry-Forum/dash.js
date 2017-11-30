@@ -37,6 +37,7 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 
 function ThroughputHistory(config) {
 
+    config = config || {};
     // sliding window constants
     const MAX_MEASUREMENTS_TO_KEEP = 20;
     const AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE = 3;

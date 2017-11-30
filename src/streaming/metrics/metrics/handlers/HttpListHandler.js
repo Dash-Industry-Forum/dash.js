@@ -29,12 +29,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import MetricsConstants from '../../../constants/MetricsConstants';
-import FactoryMaker from '../../../../core/FactoryMaker';
 import HandlerHelpers from '../../utils/HandlerHelpers';
 
-function HttpListHandler() {
+function HttpListHandler(config) {
 
+    config = config || {};
     let instance,
         reportingController,
         n,
@@ -45,6 +44,8 @@ function HttpListHandler() {
     let storedVos = [];
 
     let handlerHelpers = HandlerHelpers(this.context).getInstance();
+
+    const metricsConstants = config.metricsConstants;
 
     function intervalCallback() {
         var vos = storedVos;
@@ -91,7 +92,7 @@ function HttpListHandler() {
     }
 
     function handleNewMetric(metric, vo) {
-        if (metric === MetricsConstants.HTTP_REQUEST) {
+        if (metric === metricsConstants.HTTP_REQUEST) {
             if (!type || (type === vo.type)) {
                 storedVos.push(vo);
             }
@@ -108,4 +109,4 @@ function HttpListHandler() {
 }
 
 HttpListHandler.__dashjs_factory_name = 'HttpListHandler';
-export default FactoryMaker.getClassFactory(HttpListHandler);
+export default dashjs.FactoryMaker.getClassFactory(HttpListHandler); /* jshint ignore:line */

@@ -4,6 +4,7 @@ import Debug from '../../../core/Debug';
 import SwitchRequest from '../SwitchRequest.js';
 
 function SwitchHistoryRule() {
+
     const context = this.context;
     const log = Debug(context).getInstance().log;
 
@@ -17,11 +18,11 @@ function SwitchHistoryRule() {
 
     function getMaxIndex(rulesContext) {
         const switchRequestHistory = rulesContext ? rulesContext.getSwitchHistory() : null;
-        let switchRequests = switchRequestHistory ? switchRequestHistory.getSwitchRequests() : [];
+        const switchRequests = switchRequestHistory ? switchRequestHistory.getSwitchRequests() : [];
         let drops = 0;
         let noDrops = 0;
         let dropSize = 0;
-        let switchRequest = SwitchRequest(context).create();
+        const switchRequest = SwitchRequest(context).create();
 
         for (let i = 0; i < switchRequests.length; i++) {
             if (switchRequests[i] !== undefined) {
@@ -48,6 +49,4 @@ function SwitchHistoryRule() {
 
 
 SwitchHistoryRule.__dashjs_factory_name = 'SwitchHistoryRule';
-let factory = FactoryMaker.getClassFactory(SwitchHistoryRule);
-
-export default factory;
+export default FactoryMaker.getClassFactory(SwitchHistoryRule);

@@ -28,18 +28,18 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from '../../streaming/constants/Constants';
-import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
-import BASE64 from '../../../externals/base64';
-import KeySystemWidevine from '../../streaming/protection/drm/KeySystemWidevine.js';
 
+/**
+ * @module MssParser
+ * @param {Object} config object
+ */
 function MssParser(config) {
-
-    const context = this.context;
-    const ksWidevine = KeySystemWidevine(context).getInstance();
-    const log = Debug(context).getInstance().log;
+    config = config || {};
+    const protectionController = config.protectionController;
+    const BASE64 = config.BASE64;
+    const log = config.log;
     const errorHandler = config.errHandler;
+    const constants = config.constants;
 
     const TIME_SCALE_100_NANOSECOND_UNIT = 10000000.0;
     const SUPPORTED_CODECS = ['AAC', 'AACL', 'AVC1', 'H264', 'TTML', 'DFXP'];
@@ -163,6 +163,7 @@ function MssParser(config) {
 
         let representation = {};
         let fourCCValue = null;
+        let type = streamIndex.getAttribute('Type');
 
         representation.id = qualityLevel.Id;
         representation.bandwidth = parseInt(qualityLevel.getAttribute('Bitrate'), 10);
@@ -173,14 +174,19 @@ function MssParser(config) {
         fourCCValue = qualityLevel.getAttribute('FourCC');
 
         // If FourCC not defined at QualityLevel level, then get it from StreamIndex level
-        if (fourCCValue === null) {
+        if (fourCCValue === null || fourCCValue === '') {
             fourCCValue = streamIndex.getAttribute('FourCC');
         }
 
         // If still not defined (optionnal for audio stream, see https://msdn.microsoft.com/en-us/library/ff728116%28v=vs.95%29.aspx),
         // then we consider the stream is an audio AAC stream
-        if (fourCCValue === null) {
-            fourCCValue = 'AAC';
+        if (fourCCValue === null || fourCCValue === '') {
+            if (type === 'audio') {
+                fourCCValue = 'AAC';
+            } else if (type === 'video') {
+                log('[MssParser] FourCC is not defined whereas it is required for a QualityLevel element for a StreamIndex of type "video"');
+                return null;
+            }
         }
 
         // Check if codec is supported
@@ -199,7 +205,7 @@ function MssParser(config) {
             representation.audioSamplingRate = parseInt(qualityLevel.getAttribute('SamplingRate'), 10);
             representation.audioChannels = parseInt(qualityLevel.getAttribute('Channels'), 10);
         } else if (fourCCValue.indexOf('TTML') || fourCCValue.indexOf('DFXP')) {
-            representation.codecs = Constants.STPP;
+            representation.codecs = constants.STPP;
         }
 
         representation.codecPrivateData = '' + qualityLevel.getAttribute('CodecPrivateData');
@@ -453,6 +459,15 @@ function MssParser(config) {
 
 
     function createPRContentProtection(protectionHeader) {
+        const keySystems = protectionController ? protectionController.getKeySystems() : null;
+        let ksPlayReady;
+
+        for (let i = 0; i < keySystems.length; i++) {
+            if (keySystems[i].systemString && keySystems[i].systemString.indexOf('playready') !== -1) {
+                ksPlayReady = keySystems[i];
+                break;
+            }
+        }
 
         let contentProtection = {};
         let pro;
@@ -462,20 +477,32 @@ function MssParser(config) {
             __prefix: 'mspr'
         };
 
-        contentProtection.schemeIdUri = 'urn:uuid:9a04f079-9840-4286-ab92-e65be0885f95';
-        contentProtection.value = 'com.microsoft.playready';
-        contentProtection.pro = pro;
-        contentProtection.pro_asArray = pro;
+        if (ksPlayReady) {
+            contentProtection.schemeIdUri = ksPlayReady.schemeIdURI;
+            contentProtection.value = ksPlayReady.systemString;
+            contentProtection.pro = pro;
+            contentProtection.pro_asArray = pro;
+        }
 
         return contentProtection;
     }
 
     function createWidevineContentProtection(/*protectionHeader*/) {
+        const keySystems = protectionController ? protectionController.getKeySystems() : null;
+        let ksWidevine;
+
+        for (let i = 0; i < keySystems.length; i++) {
+            if (keySystems[i].systemString && keySystems[i].systemString.indexOf('widevine') !== -1) {
+                ksWidevine = keySystems[i];
+                break;
+            }
+        }
 
         var contentProtection = {};
-
-        contentProtection.schemeIdUri = ksWidevine.schemeIdURI;
-        contentProtection.value = ksWidevine.systemString;
+        if (ksWidevine) {
+            contentProtection.schemeIdUri = ksWidevine.schemeIdURI;
+            contentProtection.value = ksWidevine.systemString;
+        }
 
         return contentProtection;
     }
@@ -537,7 +564,7 @@ function MssParser(config) {
             contentProtections.push(contentProtection);
 
             // Create ContentProtection for Widevine (as a CENC protection)
-            contentProtection = createWidevineContentProtection.call(this, protectionHeader);
+            contentProtection = createWidevineContentProtection(protectionHeader);
             contentProtection['cenc:default_KID'] = KID;
             contentProtections.push(contentProtection);
 
@@ -680,4 +707,4 @@ function MssParser(config) {
 }
 
 MssParser.__dashjs_factory_name = 'MssParser';
-export default FactoryMaker.getClassFactory(MssParser);
+export default dashjs.FactoryMaker.getClassFactory(MssParser); /* jshint ignore:line */

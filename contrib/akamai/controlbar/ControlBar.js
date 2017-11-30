@@ -40,32 +40,63 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         lastVolumeLevel = NaN,
         seeking = false,
         videoControllerVisibleTimeout = 0,
-        videoController = document.getElementById("videoController"),
-        playPauseBtn = document.getElementById("playPauseBtn"),
-        bitrateListBtn = document.getElementById("bitrateListBtn"),
-        captionBtn = document.getElementById("captionBtn"),
-        trackSwitchBtn = document.getElementById("trackSwitchBtn"),
-        seekbar = document.getElementById("seekbar"),
-        muteBtn = document.getElementById("muteBtn"),
-        volumebar = document.getElementById("volumebar"),
-        fullscreenBtn = document.getElementById("fullscreenBtn"),
-        timeDisplay = document.getElementById("videoTime"),
-        durationDisplay = document.getElementById("videoDuration"),
+        videoController,
+        playPauseBtn,
+        bitrateListBtn,
+        captionBtn,
+        trackSwitchBtn,
+        seekbar,
+        muteBtn,
+        volumebar,
+        fullscreenBtn,
+        timeDisplay,
+        durationDisplay,
+        idSuffix,
+
+        initControls = function (suffix) {
+            idSuffix = suffix;
+            videoController = document.getElementById(getControlId("videoController"));
+            playPauseBtn = document.getElementById(getControlId("playPauseBtn"));
+            bitrateListBtn = document.getElementById(getControlId("bitrateListBtn"));
+            captionBtn = document.getElementById(getControlId("captionBtn"));
+            trackSwitchBtn = document.getElementById(getControlId("trackSwitchBtn"));
+            seekbar = document.getElementById(getControlId("seekbar"));
+            muteBtn = document.getElementById(getControlId("muteBtn"));
+            volumebar = document.getElementById(getControlId("volumebar"));
+            fullscreenBtn = document.getElementById(getControlId("fullscreenBtn"));
+            timeDisplay = document.getElementById(getControlId("videoTime"));
+            durationDisplay = document.getElementById(getControlId("videoDuration"));
+        },
+
+        getControlId = function (id) {
+            return id + (idSuffix ? idSuffix : '');
+        },
 
 //************************************************************************************
 // PLAYBACK
 //************************************************************************************
 
         togglePlayPauseBtnState = function () {
-            var span = document.getElementById('iconPlayPause');
-            if(span !== null) {
-                if (player.isPaused()) {
-                    span.classList.remove('icon-pause');
-                    span.classList.add('icon-play');
-                } else {
-                    span.classList.remove('icon-play');
-                    span.classList.add('icon-pause');
-                }
+            if (player.isPaused()) {
+                setPlayBtn();
+            } else {
+                setPauseBtn();
+            }
+        },
+        
+        setPlayBtn = function () {
+            var span = document.getElementById(getControlId('iconPlayPause'));
+            if (span !== null) {
+                span.classList.remove('icon-pause');
+                span.classList.add('icon-play');
+            }
+        },
+
+        setPauseBtn = function () {
+            var span = document.getElementById(getControlId('iconPlayPause'));
+            if (span !== null) {
+                span.classList.remove('icon-play');
+                span.classList.add('icon-pause');
             }
         },
 
@@ -97,7 +128,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 //************************************************************************************
 
         toggleMuteBtnState = function () {
-            var span = document.getElementById('iconMute');
+            var span = document.getElementById(getControlId('iconMute'));
             if (player.isMuted()) {
                 span.classList.remove('icon-mute-off');
                 span.classList.add('icon-mute-on');
@@ -281,6 +312,8 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
         onStreamInitialized = function (e) {
 
+            updateDuration();
+
             var contentFunc;
             //Bitrate Menu
             if (bitrateListBtn) {
@@ -328,6 +361,12 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                 }
             }
 
+        },
+
+        onStreamTeardownComplete = function (e) {
+            setPlayBtn();
+            timeDisplay.textContent = '00:00';
+            seekbar.value = 0;
         },
 
         createMenu = function (info, contentFunc) {
@@ -382,13 +421,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             } else if (menuType === "bitrate") {
                 return player.getAutoSwitchQualityFor(mediaType) ? 0 : player.getQualityFor(mediaType);
             } else if (menuType === "caption") {
-                var idx = 0
-                info.arr.some(function(element, index){
-                    if (element.defaultTrack) {
-                        idx = index + 1;
-                        return true;
-                    }
-                })
+                var idx = player.getCurrentTextTrackIndex() + 1;
 
                 return idx;
             }
@@ -598,7 +631,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         setDuration: setDuration,
         setTime: setTime,
 
-        initialize: function () {
+        initialize: function (suffix) {
 
             if (!player) {
                 throw new Error("Please pass an instance of MediaPlayer.js when instantiating the ControlBar Object");
@@ -610,6 +643,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
             displayUTCTimeCodes = displayUTCTimeCodes === undefined ? false : displayUTCTimeCodes;
 
+            initControls(suffix);
             video.controls = false;
             videoContainer = player.getVideoContainer();
             captionBtn.classList.add("hide");
@@ -623,6 +657,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             player.on(dashjs.MediaPlayer.events.PLAYBACK_SEEKED, onSeeked, this);
             player.on(dashjs.MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded, this);
             player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, onStreamInitialized, this);
+            player.on(dashjs.MediaPlayer.events.STREAM_TEARDOWN_COMPLETE, onStreamTeardownComplete, this);
 
             playPauseBtn.addEventListener("click", onPlayPauseClick);
             muteBtn.addEventListener("click", onMuteClick);
@@ -696,6 +731,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             player.off(dashjs.MediaPlayer.events.PLAYBACK_SEEKED, onSeeked, this);
             player.off(dashjs.MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded, this);
             player.off(dashjs.MediaPlayer.events.STREAM_INITIALIZED, onStreamInitialized, this);
+            player.off(dashjs.MediaPlayer.events.STREAM_TEARDOWN_COMPLETE, onStreamTeardownComplete, this);
 
             document.removeEventListener("fullscreenchange", onFullScreenChange);
             document.removeEventListener("MSFullscreenChange", onFullScreenChange);

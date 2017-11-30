@@ -43,6 +43,7 @@ const FRAGMENT_MODEL_FAILED = 'failed';
 
 function FragmentModel(config) {
 
+    config = config || {};
     const context = this.context;
     const log = Debug(context).getInstance().log;
     const eventBus = EventBus(context).getInstance();
@@ -69,6 +70,11 @@ function FragmentModel(config) {
     }
 
     function isFragmentLoaded(request) {
+
+        const isEqualUrl = function (req1, req2) {
+            return (req1.url === req2.url);
+        };
+
         const isEqualComplete = function (req1, req2) {
             return ((req1.action === FragmentRequest.ACTION_COMPLETE) && (req1.action === req2.action));
         };
@@ -84,7 +90,7 @@ function FragmentModel(config) {
         const check = function (requests) {
             let isLoaded = false;
             requests.some(req => {
-                if (isEqualMedia(request, req) || isEqualInit(request, req) || isEqualComplete(request, req)) {
+                if ( isEqualUrl(request,req) && (isEqualMedia(request, req) || isEqualInit(request, req) || isEqualComplete(request, req))) {
                     isLoaded = true;
                     return isLoaded;
                 }
@@ -147,7 +153,7 @@ function FragmentModel(config) {
     }
 
     function removeExecutedRequestsBeforeTime(time) {
-        executedRequests = executedRequests.filter(req => isNaN(req.startTime) || req.startTime >= time);
+        executedRequests = executedRequests.filter(req => isNaN(req.startTime) || time !== undefined ? req.startTime >= time : false);
     }
 
     function abortRequests() {

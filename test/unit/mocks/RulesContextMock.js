@@ -22,10 +22,15 @@ function RulesContextMock () {
 
         return fragRequest;
     };
-    this.getTrackInfo = function () {};
+    this.getRepresentationInfo = function () {};
     this.getAbrController = function () {};
     this.getSwitchHistory = function () {
         return new switchRequestHistoryMock();
+    };
+    this.getRepresentationInfo = function () {
+        return {
+            fragmentDuration: NaN
+        };
     };
 }
 

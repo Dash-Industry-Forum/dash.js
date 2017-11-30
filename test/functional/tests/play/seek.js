@@ -26,11 +26,16 @@ define([
     // Test configuration (see config/testConfig.js)
     var testConfig = config.tests.seek,
         streams = tests.getTestStreams(config.tests.seek, function(stream) {
-            return (stream.type === 'VOD');
+            if (stream.type === 'VOD') {
+                if ((config.smoothEnabled === 'true' && stream.protocol === 'MSS') || (stream.protocol !== 'MSS')) {
+                    return true;
+                }
+            }
+            return false;
         });
 
     // Test constants
-    var PROGRESS_DELAY = 10; // Delay for checking progressing (in s)
+    var PROGRESS_DELAY = 20; // Delay for checking progressing (in s)
     var ASYNC_TIMEOUT = PROGRESS_DELAY + config.asyncTimeout;
 
     // Test variables
@@ -92,7 +97,7 @@ define([
                 seekPos = generateSeekPos();
                 tests.log(NAME, 'Seek: ' + seekPos);
                 // Seek the player
-                return  tests.executeAsync(command, player.seek, [seekPos], config.asyncTimeout)
+                return  tests.executeAsync(command, player.seek, [seekPos], ASYNC_TIMEOUT)
                 .then(function() {
                     if (checkPlaying) {
                         // Check if playing

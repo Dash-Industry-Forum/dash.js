@@ -1,4 +1,4 @@
-import PlayReady from '../../src/streaming/protection/servers/PlayReady.js';
+import PlayReady from '../../src/streaming/protection/servers/PlayReady';
 
 const expect = require('chai').expect;
 const fs = require('fs');
@@ -14,16 +14,19 @@ describe('PlayReady', function () {
     });
 
     describe('Response', function () {
-
         beforeEach(function () {
             if (typeof window === 'undefined') {
                 global.window = {
                     DOMParser: domParser
                 };
             }
+            licenseServerData = PlayReady(context).getInstance();
         });
 
-        licenseServerData = PlayReady(context).getInstance();
+        afterEach(function () {
+            delete global.window;
+            licenseServerData = null;
+        });
 
         it('should return the SOAP licenser response message', function (done) {
             fs.readFile(__dirname + '/data/licence/playreadySoapOKLicence.txt', function (err, buf) {
