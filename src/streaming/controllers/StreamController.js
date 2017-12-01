@@ -465,6 +465,17 @@ function StreamController() {
                 //const initStream = streamsInfo[0].manifestInfo.isDynamic ? streams[streams.length -1] : streams[0];
                 //TODO we need to figure out what the correct starting period is here and not just go to first or last in array.
                 switchStream(null, streams[0], NaN);
+            } else {
+                const currentTime = playbackController.getTime();
+                if (Math.ceil(currentTime) === Math.ceil(activeStream.getStartTime() + activeStream.getDuration())) {
+                    log('StreamController::composeStreams player needs to go to next period');
+                    const nextStream = getNextStream();
+                    if (nextStream) {
+                        switchStream(activeStream, nextStream, NaN);
+                    } else {
+                        log('StreamController::composeStreams no next stream found');
+                    }
+                }
             }
 
             eventBus.trigger(Events.STREAMS_COMPOSED);
