@@ -172,7 +172,7 @@ function ProtectionModel_21Jan2015(config) {
         });
     }
 
-    function createKeySession(initData, sessionType) {
+    function createKeySession(initData, protData, sessionType) {
         if (!keySystem || !mediaKeys) {
             throw new Error('Can not create sessions until you have selected a key system');
         }
@@ -181,8 +181,10 @@ function ProtectionModel_21Jan2015(config) {
         const sessionToken = createSessionToken(session, initData, sessionType);
         const ks = this.getKeySystem();
 
-        // Generate initial key request
-        session.generateRequest(ks.systemString === ProtectionConstants.CLEARKEY_KEYSTEM_STRING ? 'keyids' : 'cenc', initData).then(function () {
+        // Generate initial key request.
+        // keyids type is used for clearkey when keys are provided directly in the protection data and then request to a license server is not needed
+        const dataType = ks.systemString === ProtectionConstants.CLEARKEY_KEYSTEM_STRING && protData && protData.clearkeys ? 'keyids' : 'cenc';
+        session.generateRequest(dataType, initData).then(function () {
             log('DRM: Session created.  SessionID = ' + sessionToken.getSessionID());
             eventBus.trigger(events.KEY_SESSION_CREATED, {data: sessionToken});
         }).catch(function (error) {

@@ -60,8 +60,8 @@ function KeySystemW3CClearKey(config) {
             const jsonMsg = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(message)));
             const keyPairs = [];
             for (let i = 0; i < jsonMsg.kids.length; i++) {
-                let clearkeyID = jsonMsg.kids[i];
-                let clearkey = (protectionData.clearkeys.hasOwnProperty(clearkeyID)) ? protectionData.clearkeys[clearkeyID] : null;
+                const clearkeyID = jsonMsg.kids[i];
+                const clearkey = (protectionData.clearkeys && protectionData.clearkeys.hasOwnProperty(clearkeyID)) ? protectionData.clearkeys[clearkeyID] : null;
                 if (!clearkey) {
                     throw new Error('DRM: ClearKey keyID (' + clearkeyID + ') is not known!');
                 }
