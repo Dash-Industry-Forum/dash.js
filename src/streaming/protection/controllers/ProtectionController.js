@@ -542,11 +542,12 @@ function ProtectionController(config) {
         xhr.onerror = function () {
             sendLicenseRequestCompleteEvent(eventData, 'DRM: ' + keySystemString + ' update, XHR error. status is "' + this.statusText + '" (' + this.status + '), readyState is ' + this.readyState);
         };
-
-        // Set optional XMLHttpRequest headers from protection data and message
         const updateHeaders = function (headers) {
             if (headers) {
                 for (const key in headers) {
+                    if ('authorization' === key.toLowerCase()) {
+                        xhr.withCredentials = true;
+                    }
                     xhr.setRequestHeader(key, headers[key]);
                 }
             }
@@ -556,7 +557,7 @@ function ProtectionController(config) {
         }
         updateHeaders(keySystem.getRequestHeadersFromMessage(message));
 
-        // Set withCredentials property from protData
+        //Overwrite withCredentials property from protData, if present-
         if (protData && typeof protData.withCredentials == 'boolean') {
             xhr.withCredentials = protData.withCredentials;
         }
