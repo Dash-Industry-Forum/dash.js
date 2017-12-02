@@ -49,7 +49,6 @@ import KeySystemConfiguration from '../vo/KeySystemConfiguration';
 
 function ProtectionController(config) {
 
-    config = config || {};
     const protectionKeyController = config.protectionKeyController;
     let protectionModel = config.protectionModel;
     let adapter = config.adapter;
@@ -154,7 +153,6 @@ function ProtectionController(config) {
      */
     function createKeySession(initData, cdmData) {
         const initDataForKS = CommonEncryption.getPSSHForKeySystem(keySystem, initData);
-        const protData = getProtData(keySystem);
         if (initDataForKS) {
 
             // Check for duplicate initData
@@ -166,12 +164,10 @@ function ProtectionController(config) {
                 }
             }
             try {
-                protectionModel.createKeySession(initDataForKS, protData, sessionType, cdmData);
+                protectionModel.createKeySession(initDataForKS, sessionType, cdmData);
             } catch (error) {
                 eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: 'Error creating key session! ' + error.message});
             }
-        } else if (initData) {
-            protectionModel.createKeySession(initData, protData, sessionType, cdmData);
         } else {
             eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: 'Selected key system is ' + keySystem.systemString + '.  needkey/encrypted event contains no initData corresponding to that key system!'});
         }
@@ -421,10 +417,6 @@ function ProtectionController(config) {
                     for (let i = 0; i < pendingNeedKeyData.length; i++) {
                         for (ksIdx = 0; ksIdx < pendingNeedKeyData[i].length; ksIdx++) {
                             if (keySystem === pendingNeedKeyData[i][ksIdx].ks) {
-                                if (pendingNeedKeyData[i][ksIdx].initData === null && protData && protData.hasOwnProperty('clearkeys')) {
-                                    const initData = { kids: Object.keys(protData.clearkeys) };
-                                    pendingNeedKeyData[i][ksIdx].initData = new TextEncoder().encode(JSON.stringify(initData));
-                                }
                                 createKeySession(pendingNeedKeyData[i][ksIdx].initData, pendingNeedKeyData[i][ksIdx].cdmData);
                                 break;
                             }
@@ -477,7 +469,7 @@ function ProtectionController(config) {
 
         // Perform any special handling for ClearKey
         if (protectionKeyController.isClearKey(keySystem)) {
-            const clearkeys = protectionKeyController.processClearKeyLicenseRequest(keySystem, protData, message);
+            const clearkeys = protectionKeyController.processClearKeyLicenseRequest(protData, message);
             if (clearkeys)  {
                 log('DRM: ClearKey license request handled by application!');
                 sendLicenseRequestCompleteEvent(eventData);
@@ -542,6 +534,8 @@ function ProtectionController(config) {
         xhr.onerror = function () {
             sendLicenseRequestCompleteEvent(eventData, 'DRM: ' + keySystemString + ' update, XHR error. status is "' + this.statusText + '" (' + this.status + '), readyState is ' + this.readyState);
         };
+
+        // Set optional XMLHttpRequest headers from protection data and message
         const updateHeaders = function (headers) {
             if (headers) {
                 for (const key in headers) {
@@ -557,7 +551,7 @@ function ProtectionController(config) {
         }
         updateHeaders(keySystem.getRequestHeadersFromMessage(message));
 
-        //Overwrite withCredentials property from protData, if present-
+        // Overwrite withCredentials property from protData if present
         if (protData && typeof protData.withCredentials == 'boolean') {
             xhr.withCredentials = protData.withCredentials;
         }
