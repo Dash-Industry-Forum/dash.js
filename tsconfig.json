@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+        "noImplicitAny": true,
+        "removeComments": true,
+        "preserveConstEnums": true,
+        "strictFunctionTypes": true,
+        "strictNullChecks": true,
+        "target": "es5"
+    }
+}

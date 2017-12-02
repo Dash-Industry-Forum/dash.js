@@ -2,13 +2,14 @@ export = dashjs;
 export as namespace dashjs;
 
 declare namespace dashjs {
-    class Debug {
+    interface Debug {
+        getLogToBrowserConsole(): boolean;
         setLogToBrowserConsole(flag: boolean): void;
     }
 
-    class VideoModel { }
+    interface VideoModel { }
 
-    class ProtectionController {
+    interface ProtectionController {
         setRobustnessLevel(level: string): void;
     }
 
@@ -20,9 +21,9 @@ declare namespace dashjs {
     }
 
     export interface MediaInfo {
-        id: number | null;
+        id: string | null;
         index: number | null;
-        type: string | null;
+        type: 'video' | 'audio' | 'text' | 'fragmentedText' | 'embeddedText' | null;
         streamInfo: any | null;
         representationCount: number;
         lang: string | null;
@@ -38,13 +39,13 @@ declare namespace dashjs {
         bitrateList: Bitrate[];
     }
 
-    export class MediaPlayerClass {
+    export interface MediaPlayerClass {
         initialize(view?: HTMLElement, source?: string, autoPlay?: boolean): void;
-        on(type: string, listener: Function, scope?: Object): void
-        off(type: string, listener: Function, scope?: Object): void
-        extend(parentNameString: string, childInstance: Object, override: boolean): void;
+        on(type: string, listener: (e: any) => void, scope?: object): void
+        off(type: string, listener: (e: any) => void, scope?: object): void
+        extend(parentNameString: string, childInstance: object, override: boolean): void;
         attachView(element: HTMLElement): void;
-        attachSource(urlOrManifest: string | Object): void;
+        attachSource(urlOrManifest: string | object): void;
         isReady(): boolean;
         play(): void;
         isPaused(): boolean;
@@ -62,70 +63,70 @@ declare namespace dashjs {
         duration(): number;
         timeAsUTC(): number;
         durationAsUTC(): number;
-        getActiveStream(): Object | null;
+        getActiveStream(): Stream | null;
         getDVRWindowSize(): number;
         getDVRSeekOffset(value: number): number;
         convertToTimeCode(value: number): string;
         formatUTC(time: number, locales: string, hour12: boolean, withDate?: boolean): string;
         getVersion(): string;
         getDebug(): Debug;
-        getBufferLength(type: string): number;
+        getBufferLength(type: 'video' | 'audio' | 'fragmentedText'): number;
         getVideoModel(): VideoModel;
-        getVideoContainer(): Object | null;
-        getTTMLRenderingDiv(): Object | null;
-        getVideoElement: Object;
-        getSource(): string | Object;
+        getVideoContainer(): HTMLElement | null;
+        getTTMLRenderingDiv(): HTMLDivElement | null;
+        getVideoElement(): HTMLVideoElement;
+        getSource(): string | object;
         setLiveDelayFragmentCount(value: number): void;
         setLiveDelay(value: number): void;
         getLiveDelay(): number | undefined;
         useSuggestedPresentationDelay(value: boolean): void;
         enableLastBitrateCaching(enable: boolean, ttl?: number): void;
         enableLastMediaSettingsCaching(enable: boolean, ttl?: number): void;
-        setMaxAllowedBitrateFor(type: string, value: number): void;
-        getMaxAllowedBitrateFor(type: string): number;
-        setMaxAllowedRepresentationRatioFor(type: string, value: number): void;
-        getMaxAllowedRepresentationRatioFor(type: string): number;
+        setMaxAllowedBitrateFor(type: 'video' | 'audio', value: number): void;
+        getMaxAllowedBitrateFor(type: 'video' | 'audio'): number;
+        setMaxAllowedRepresentationRatioFor(type: 'video' | 'audio', value: number): void;
+        getMaxAllowedRepresentationRatioFor(type: 'video' | 'audio'): number;
         setAutoPlay(value: boolean): void;
         getAutoPlay(): boolean;
         setScheduleWhilePaused(value: boolean): void;
         getScheduleWhilePaused(): boolean;
-        getDashMetrics(): Object;
-        getMetricsFor(type: string): Object;
-        getQualityFor(type: string): number;
-        setQualityFor(type: string, value: number): void;
+        getDashMetrics(): DashMetrics;
+        getMetricsFor(type: 'video' | 'audio' | 'text' | 'stream'): MetricsList | null;
+        getQualityFor(type: 'video' | 'audio'): number;
+        setQualityFor(type: 'video' | 'audio', value: number): void;
         updatePortalSize(): void;
         getLimitBitrateByPortal(): any;
         setLimitBitrateByPortal(value: boolean): void;
         getUsePixelRatioInLimitBitrateByPortal(): any;
         setUsePixelRatioInLimitBitrateByPortal(value: boolean): void;
         setTextTrack(idx: number): void;
-        getBitrateInfoListFor(type: string): Object[];
-        setInitialBitrateFor(type: string, value: number): void;
-        getInitialBitrateFor(type: string): number;
-        setInitialRepresentationRatioFor(type: string, value: number): void;
-        getInitialRepresentationRatioFor(type: string): number;
-        getStreamsFromManifest(manifest: Object): Object[];
-        getTracksFor(type: string): Object[];
-        getTracksForTypeFromManifest(type: string, manifest: Object, streamInfo: Object): Object[];
-        getCurrentTrackFor(type: string): MediaInfo | null;
-        setInitialMediaSettingsFor(type: string, value: Object): void;
-        getInitialMediaSettingsFor(type: string): Object;
-        setCurrentTrack(track: Object): void;
-        getTrackSwitchModeFor(type: string): string;
-        setTrackSwitchModeFor(type: string, mode: string): void;
-        setSelectionModeForInitialTrack(mode: string): void;
-        getSelectionModeForInitialTrack(): string;
+        getBitrateInfoListFor(type: 'video' | 'audio'): BitrateInfo[];
+        setInitialBitrateFor(type: 'video' | 'audio', value: number): void;
+        getInitialBitrateFor(type: 'video' | 'audio'): number;
+        setInitialRepresentationRatioFor(type: 'video' | 'audio', value: number): void;
+        getInitialRepresentationRatioFor(type: 'video' | 'audio'): number;
+        getStreamsFromManifest(manifest: object): StreamInfo[];
+        getTracksFor(type: 'video' | 'audio' | 'text' | 'fragmentedText'): MediaInfo[];
+        getTracksForTypeFromManifest(type: 'video' | 'audio' | 'text' | 'fragmentedText', manifest: object, streamInfo: StreamInfo): MediaInfo[];
+        getCurrentTrackFor(type: 'video' | 'audio' | 'text' | 'fragmentedText'): MediaInfo | null;
+        setInitialMediaSettingsFor(type: 'video' | 'audio', value: MediaSettings): void;
+        getInitialMediaSettingsFor(type: 'video' | 'audio'): MediaSettings;
+        setCurrentTrack(track: MediaInfo): void;
+        getTrackSwitchModeFor(type: 'video' | 'audio'): TrackSwitchMode;
+        setTrackSwitchModeFor(type: 'video' | 'audio', mode: TrackSwitchMode): void;
+        setSelectionModeForInitialTrack(mode: TrackSelectionMode): void;
+        getSelectionModeForInitialTrack(): TrackSelectionMode;
         getAutoSwitchQuality(): boolean;
         setAutoSwitchQuality(value: boolean): void;
         setFastSwitchEnabled(value: boolean): void;
         getFastSwitchEnabled(): boolean;
         getAutoSwitchQualityFor(type: 'video' | 'audio'): boolean;
-        setAutoSwitchQualityFor(type: 'video' | 'audio', value?: boolean): void;
+        setAutoSwitchQualityFor(type: 'video' | 'audio', value: boolean): void;
         enableBufferOccupancyABR(value: boolean): void;
         setBandwidthSafetyFactor(value: number): void;
         getBandwidthSafetyFactor(): number;
         setAbandonLoadTimeout(value: number): void;
-        retrieveManifest(url: string, callback: Function): void;
+        retrieveManifest(url: string, callback: (manifest: object | null, error: any) => void): void;
         addUTCTimingSource(schemeIdUri: string, value: string): void;
         removeUTCTimingSource(schemeIdUri: string, value: string): void;
         clearDefaultUTCTimingSources(): void;
@@ -144,7 +145,7 @@ declare namespace dashjs {
         setRichBufferThreshold(value: number): void;
         getProtectionController(): ProtectionController;
         attachProtectionController(value: ProtectionController): void;
-        setProtectionData(value: Object): void;
+        setProtectionData(value: ProtectionData): void;
         enableManifestDateHeaderTimeSource(value: boolean): void;
         displayCaptionsOnTop(value: boolean): void;
         attachVideoContainer(container: HTMLElement): void;
@@ -210,4 +211,117 @@ declare namespace dashjs {
         TEXT_TRACKS_ADDED: string;
         TEXT_TRACK_ADDED: string;
     }
+
+    export class BitrateInfo {
+        mediaType: 'video' | 'audio';
+        bitrate: number;
+        width: number;
+        height: number;
+        scanType: string;
+        qualityIndex: number;
+    }
+
+    export interface MediaSettings {
+        lang?: string;
+        viewpoint?: any;
+        audioChannelConfiguration?: any[];
+        accessibility?: any;
+        role?: string;
+    }
+
+    export interface Stream {
+        initialize(streamInfo: StreamInfo, protectionController: ProtectionController): void;
+        activate(MediaSource: MediaSource): void;
+        deactivate(): void;
+        getDuration(): number;
+        getStartTime(): number;
+        getId(): string;
+        getStreamInfo(): StreamInfo | null;
+        getBitrateListFor(type: 'video' | 'audio'): BitrateInfo[];
+        updateData(updatedStreamInfo: StreamInfo): void;
+        reset(): void;
+    }
+
+    export class StreamInfo {
+        id: string;
+        index: number;
+        start: number;
+        duration: number;
+        manifestInfo: object;
+        isLast: boolean;
+    }
+
+    export interface DashMetrics {
+        getIndexForRepresentation(representationId: string, periodIdx: number): number;
+        /**
+         * This method returns the current max index based on what is defined in the MPD.
+         *
+         * @param bufferType String 'audio' or 'video',
+         * @param periodIdx Make sure this is the period index not id
+         */
+        getMaxIndexForBufferType(bufferType: 'video' | 'audio', periodIdx: number): number;
+        getCurrentRepresentationSwitch(metrics: MetricsList): any[];
+        getLatestBufferLevelVO(metrics: MetricsList): any[];
+        getCurrentBufferLevel(metrics: MetricsList): number;
+        getCurrentHttpRequest(metrics: MetricsList): any;
+        getHttpRequests(metrics: MetricsList): any[];
+        getCurrentDroppedFrames(metrics: MetricsList): any[];
+        getCurrentSchedulingInfo(metrics: MetricsList): any[];
+        getCurrentDVRInfo(metrics: MetricsList): any[];
+        getCurrentManifestUpdate(metrics: MetricsList): any[];
+        getLatestFragmentRequestHeaderValueByID(metrics: MetricsList, id: string): string;
+        getLatestMPDRequestHeaderValueByID(metrics: MetricsList, id: string): string;
+        getRequestsQueue(metrics: MetricsList): RequestsQueue | null;
+    }
+
+    export class ProtectionData {
+        /**
+         * A license server URL to use with this key system.
+         * When specified as a string, a single URL will be used regardless of message type.
+         * When specified as an object, the object will have property names for each message
+         * type with the corresponding property value being the URL to use for
+         * messages of that type
+         */
+        serverURL: string | { [P in MediaKeyMessageType]: string };
+
+        /** headers to add to the http request */
+        httpRequestHeaders: object;
+
+        /**
+         * Defines a set of clear keys that are available to the key system.
+         * Object properties are base64-encoded keyIDs (with no padding).
+         * Corresponding property values are keys, base64-encoded (no padding).
+         */
+        clearkeys: { [key: string]: string };
+    }
+
+    export class MetricsList {
+        TcpList: any[];
+        HttpList: any[];
+        RepSwitchList: any[];
+        BufferLevel: any[];
+        BufferState: any[];
+        PlayList: any[];
+        DroppedFrames: any[];
+        SchedulingInfo: any[];
+        DVRInfo: any[];
+        ManifestUpdate: any[];
+        RequestsQueue: RequestsQueue | null;
+        DVBErrors: any[];
+    }
+
+    export class RequestsQueue {
+        /**
+         * Array of all of the requests that have begun to load.
+         * This request may not make it into the executed queue if it is abandon due to ABR rules for example.
+         */
+        loadingRequests: any[];
+        /**
+         * Array of the the requests that have completed
+         */
+        executedRequests: any[];
+    }
+
+    type TrackSwitchMode = 'alwaysReplace' | 'neverReplace';
+    type TrackSelectionMode = 'highestBitrate' | 'widestRange';
 }
