@@ -109,6 +109,8 @@ function ProtectionController(config) {
             videoInfo = vInfo || (streamInfo ? adapter.getMediaInfoForType(streamInfo, Constants.VIDEO) : null);
             const mediaInfo = (videoInfo) ? videoInfo : audioInfo; // We could have audio or video only
 
+            eventBus.on(events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
+
             // ContentProtection elements are specified at the AdaptationSet level, so the CP for audio
             // and video will be the same.  Just use one valid MediaInfo object
             const supportedKS = protectionKeyController.getSupportedKeySystemsFromContentProtection(mediaInfo.contentProtection);
@@ -305,6 +307,9 @@ function ProtectionController(config) {
      * @instance
      */
     function reset() {
+
+        eventBus.off(events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
+
         setMediaElement(null);
 
         keySystem = undefined;//TODO-Refactor look at why undefined is needed for this. refactor
