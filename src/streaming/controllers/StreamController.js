@@ -293,6 +293,8 @@ function StreamController() {
         const nextStream = getNextStream();
         if (nextStream) {
             switchStream(activeStream, nextStream, NaN);
+        } else {
+            log('StreamController::onEnded no next stream found');
         }
         flushPlaylistMetrics(nextStream ? PlayListTrace.END_OF_PERIOD_STOP_REASON : PlayListTrace.END_OF_CONTENT_STOP_REASON);
     }
@@ -450,6 +452,7 @@ function StreamController() {
                     });
                     streams.push(stream);
                     stream.initialize(streamInfo, protectionController);
+                    log('StreamController::composeStreams stream id = ' + stream.getStreamInfo().id + ' has been added to streams array. Its start is : ' + stream.getStreamInfo().start);
 
                 } else {
                     stream.updateData(streamInfo);
@@ -462,6 +465,17 @@ function StreamController() {
                 //const initStream = streamsInfo[0].manifestInfo.isDynamic ? streams[streams.length -1] : streams[0];
                 //TODO we need to figure out what the correct starting period is here and not just go to first or last in array.
                 switchStream(null, streams[0], NaN);
+            } else {
+                const currentTime = playbackController.getTime();
+                if (Math.ceil(currentTime) === Math.ceil(activeStream.getStartTime() + activeStream.getDuration())) {
+                    log('StreamController::composeStreams player needs to go to next period');
+                    const nextStream = getNextStream();
+                    if (nextStream) {
+                        switchStream(activeStream, nextStream, NaN);
+                    } else {
+                        log('StreamController::composeStreams no next stream found');
+                    }
+                }
             }
 
             eventBus.trigger(Events.STREAMS_COMPOSED);
