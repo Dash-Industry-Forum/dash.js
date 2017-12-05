@@ -136,6 +136,7 @@ function StreamController() {
         eventBus.on(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
         eventBus.on(Events.MANIFEST_UPDATED, onManifestUpdated, this);
         eventBus.on(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
+        eventBus.on(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, this);
         eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
     }
 
@@ -671,6 +672,12 @@ function StreamController() {
         manifestUpdater.setManifest(manifest);
     }
 
+    function onManifestValidityChanged(e) {
+        if (!isNaN(e.newDuration)) {
+            setMediaDuration(e.newDuration);
+        }
+    }
+
     function setConfig(config) {
         if (!config) return;
 
@@ -769,6 +776,7 @@ function StreamController() {
         eventBus.off(Events.MANIFEST_UPDATED, onManifestUpdated, this);
         eventBus.off(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
         eventBus.off(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
+        eventBus.off(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, this);
 
         baseURLController.reset();
         manifestUpdater.reset();
