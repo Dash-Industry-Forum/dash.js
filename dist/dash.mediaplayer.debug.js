@@ -15301,7 +15301,7 @@ Object.defineProperty(exports, '__esModule', {
     value: true
 });
 exports.getVersionString = getVersionString;
-var VERSION = '2.6.3';
+var VERSION = '2.6.4';
 
 function getVersionString() {
     return VERSION;
@@ -15399,6 +15399,7 @@ var CoreEvents = (function (_EventsBase) {
         this.STREAMS_COMPOSED = 'streamsComposed';
         this.STREAM_BUFFERING_COMPLETED = 'streamBufferingCompleted';
         this.STREAM_COMPLETED = 'streamCompleted';
+        this.TEXT_TRACKS_QUEUE_INITIALIZED = 'textTracksQueueInitialized';
         this.TIMED_TEXT_REQUESTED = 'timedTextRequested';
         this.TIME_SYNCHRONIZATION_COMPLETED = 'timeSynchronizationComplete';
         this.URL_RESOLUTION_FAILED = 'urlResolutionFailed';
@@ -16223,6 +16224,7 @@ var SEGMENTS_UNAVAILABLE_ERROR_CODE = 1;
 
 function DashHandler(config) {
 
+    config = config || {};
     var context = this.context;
     var eventBus = (0, _coreEventBus2['default'])(context).getInstance();
     var urlUtils = (0, _streamingUtilsURLUtils2['default'])(context).getInstance();
@@ -16385,7 +16387,7 @@ function DashHandler(config) {
         } else {
             var seg = (0, _utilsSegmentsUtils.getSegmentByIndex)(index, representation);
             if (seg) {
-                var time = seg.presentationStartTime - representation.adaptation.period.start;
+                var time = parseFloat((seg.presentationStartTime - representation.adaptation.period.start).toFixed(5));
                 var duration = representation.adaptation.period.duration;
                 log(representation.segmentInfoType + ': ' + time + ' / ' + duration);
                 isFinished = representation.segmentInfoType === _constantsDashConstants2['default'].SEGMENT_TIMELINE && isDynamic ? false : time >= duration;
@@ -16773,6 +16775,7 @@ var _round10 = _dereq_(42);
  */
 function DashMetrics(config) {
 
+    config = config || {};
     var instance = undefined;
     var dashManifestModel = config.dashManifestModel;
     var manifestModel = config.manifestModel;
@@ -17288,7 +17291,6 @@ function SegmentBaseLoader() {
         var request = getFragmentRequest(info);
 
         var onload = function onload(response) {
-
             info.bytesLoaded = info.range.end;
             isoFile = boxParser.parse(response);
             initRange = findInitRange(isoFile);
@@ -17431,7 +17433,6 @@ function SegmentBaseLoader() {
     }
 
     function getSegmentsForSidx(sidx, info) {
-
         var refs = sidx.references;
         var len = refs.length;
         var timescale = sidx.timescale;
@@ -17490,7 +17491,6 @@ function SegmentBaseLoader() {
         }
 
         var request = new _streamingVoFragmentRequest2['default']();
-
         request.type = info.init ? _streamingVoMetricsHTTPRequest.HTTPRequest.INIT_SEGMENT_TYPE : _streamingVoMetricsHTTPRequest.HTTPRequest.MEDIA_SEGMENT_TYPE;
         request.url = info.url;
         request.range = info.range.start + '-' + info.range.end;
@@ -17637,9 +17637,6 @@ function WebmSegmentBaseLoader() {
                                 tag: 0xF1,
                                 required: true,
                                 parse: 'getMatroskaUint'
-                            },
-                            CueBlockNumber: {
-                                tag: 0x5378
                             }
                         }
                     }
@@ -17675,15 +17672,12 @@ function WebmSegmentBaseLoader() {
     function parseCues(ab) {
         var cues = [];
         var cue = undefined;
-        var cueSize = undefined;
         var cueTrack = undefined;
         var ebmlParser = (0, _streamingUtilsEBMLParser2['default'])(context).create({
             data: ab
         });
-        var numSize = undefined;
 
-        ebmlParser.consumeTag(WebM.Segment.Cues);
-        cueSize = ebmlParser.getMatroskaCodedNum();
+        ebmlParser.consumeTagAndSize(WebM.Segment.Cues);
 
         while (ebmlParser.moreData() && ebmlParser.consumeTagAndSize(WebM.Segment.Cues.CuePoint, true)) {
             cue = {};
@@ -17691,7 +17685,9 @@ function WebmSegmentBaseLoader() {
             cue.CueTime = ebmlParser.parseTag(WebM.Segment.Cues.CuePoint.CueTime);
 
             cue.CueTracks = [];
-            while (ebmlParser.moreData() && ebmlParser.consumeTagAndSize(WebM.Segment.Cues.CuePoint.CueTrackPositions, true)) {
+            while (ebmlParser.moreData() && ebmlParser.consumeTag(WebM.Segment.Cues.CuePoint.CueTrackPositions, true)) {
+                var cueTrackPositionSize = ebmlParser.getMatroskaCodedNum();
+                var startPos = ebmlParser.getPos();
                 cueTrack = {};
 
                 cueTrack.Track = ebmlParser.parseTag(WebM.Segment.Cues.CuePoint.CueTrackPositions.CueTrack);
@@ -17701,20 +17697,10 @@ function WebmSegmentBaseLoader() {
 
                 cueTrack.ClusterPosition = ebmlParser.parseTag(WebM.Segment.Cues.CuePoint.CueTrackPositions.CueClusterPosition);
 
-                // block number is strictly optional.
-                // we also have to make sure we don't go beyond the end
-                // of the cues
-                if (ebmlParser.getPos() + 4 > cueSize || !ebmlParser.consumeTag(WebM.Segment.Cues.CuePoint.CueTrackPositions.CueBlockNumber, true)) {
-                    cue.CueTracks.push(cueTrack);
-                } else {
-                    // since we have already consumed the tag, get the size of
-                    // the tag's payload, and manually parse an unsigned int
-                    // from the bit stream
-                    numSize = ebmlParser.getMatroskaCodedNum();
-                    cueTrack.BlockNumber = ebmlParser.getMatroskaUint(numSize);
+                cue.CueTracks.push(cueTrack);
 
-                    cue.CueTracks.push(cueTrack);
-                }
+                // we're not interested any other elements - skip remaining bytes
+                ebmlParser.setPos(startPos + cueTrackPositionSize);
             }
 
             if (cue.CueTracks.length === 0) {
@@ -18654,6 +18640,7 @@ var _coreFactoryMaker2 = _interopRequireDefault(_coreFactoryMaker);
 
 function DashManifestModel(config) {
 
+    config = config || {};
     var instance = undefined;
     var context = this.context;
 
@@ -19177,7 +19164,7 @@ function DashManifestModel(config) {
             // of the previous Period.
             else if (realPeriod1 !== null && realPeriod.hasOwnProperty(_constantsDashConstants2['default'].DURATION) && voPeriod1 !== null) {
                     voPeriod = new _voPeriod2['default']();
-                    voPeriod.start = voPeriod1.start + voPeriod1.duration;
+                    voPeriod.start = parseFloat((voPeriod1.start + voPeriod1.duration).toFixed(5));
                     voPeriod.duration = realPeriod.duration;
                 }
                 // If (i) @start attribute is absent, and (ii) the Period element
@@ -19192,7 +19179,7 @@ function DashManifestModel(config) {
             // The difference between the PeriodStart time of a Period and
             // the PeriodStart time of the following Period.
             if (voPeriod1 !== null && isNaN(voPeriod1.duration)) {
-                voPeriod1.duration = voPeriod.start - voPeriod1.start;
+                voPeriod1.duration = parseFloat((voPeriod.start - voPeriod1.start).toFixed(5));
             }
 
             if (voPeriod !== null) {
@@ -19223,7 +19210,7 @@ function DashManifestModel(config) {
         // The difference between the PeriodStart time of the last Period
         // and the mpd duration
         if (voPeriod1 !== null && isNaN(voPeriod1.duration)) {
-            voPeriod1.duration = getEndTimeForLastPeriod(voPeriod1) - voPeriod1.start;
+            voPeriod1.duration = parseFloat((getEndTimeForLastPeriod(voPeriod1) - voPeriod1.start).toFixed(5));
         }
 
         return voPeriods;
@@ -19668,6 +19655,7 @@ var _mapsSegmentValuesMap2 = _interopRequireDefault(_mapsSegmentValuesMap);
 
 function DashParser(config) {
 
+    config = config || {};
     var context = this.context;
     var log = (0, _coreDebug2['default'])(context).getInstance().log;
     var errorHandler = config.errorHandler;
@@ -20733,11 +20721,12 @@ var _SegmentsUtils = _dereq_(76);
 
 function ListSegmentsGetter(config, isDynamic) {
 
+    config = config || {};
     var timelineConverter = config.timelineConverter;
 
     var instance = undefined;
 
-    function getSegmentsFromList(representation, requestedTime, index) {
+    function getSegmentsFromList(representation, requestedTime, index, availabilityUpperLimit) {
         var list = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList;
         var len = list.SegmentURL_asArray.length;
 
@@ -20753,7 +20742,7 @@ function ListSegmentsGetter(config, isDynamic) {
 
         start = representation.startNumber;
 
-        range = (0, _SegmentsUtils.decideSegmentListRangeForTemplate)(timelineConverter, isDynamic, representation, requestedTime, index);
+        range = (0, _SegmentsUtils.decideSegmentListRangeForTemplate)(timelineConverter, isDynamic, representation, requestedTime, index, availabilityUpperLimit);
         startIdx = Math.max(range.start, 0);
         endIdx = Math.min(range.end, list.SegmentURL_asArray.length - 1);
 
@@ -20862,7 +20851,9 @@ function SegmentsGetter(config, isDynamic) {
         listSegmentsGetter = (0, _ListSegmentsGetter2['default'])(context).create(config, isDynamic);
     }
 
-    function getSegments(representation, requestedTime, index, onSegmentListUpdatedCallback) {
+    // availabilityUpperLimit parameter is not used directly by any dash.js function, but it is needed as a helper
+    // for other developments that extend dash.js, and provide their own transport layers (ex: P2P transport)
+    function getSegments(representation, requestedTime, index, onSegmentListUpdatedCallback, availabilityUpperLimit) {
         var segments = undefined;
         var type = representation.segmentInfoType;
 
@@ -20871,11 +20862,11 @@ function SegmentsGetter(config, isDynamic) {
             segments = representation.segments;
         } else {
             if (type === _constantsDashConstants2['default'].SEGMENT_TIMELINE) {
-                segments = timelineSegmentsGetter.getSegments(representation, requestedTime, index);
+                segments = timelineSegmentsGetter.getSegments(representation, requestedTime, index, availabilityUpperLimit);
             } else if (type === _constantsDashConstants2['default'].SEGMENT_TEMPLATE) {
-                segments = templateSegmentsGetter.getSegments(representation, requestedTime, index);
+                segments = templateSegmentsGetter.getSegments(representation, requestedTime, index, availabilityUpperLimit);
             } else if (type === _constantsDashConstants2['default'].SEGMENT_LIST) {
-                segments = listSegmentsGetter.getSegments(representation, requestedTime, index);
+                segments = listSegmentsGetter.getSegments(representation, requestedTime, index, availabilityUpperLimit);
             }
 
             if (onSegmentListUpdatedCallback) {
@@ -21069,8 +21060,8 @@ function getIndexBasedSegment(timelineConverter, isDynamic, representation, inde
         duration = representation.adaptation.period.duration;
     }
 
-    presentationStartTime = representation.adaptation.period.start + index * duration;
-    presentationEndTime = presentationStartTime + duration;
+    presentationStartTime = parseFloat((representation.adaptation.period.start + index * duration).toFixed(5));
+    presentationEndTime = parseFloat((presentationStartTime + duration).toFixed(5));
 
     seg = new _voSegment2['default']();
 
@@ -21261,7 +21252,7 @@ function TemplateSegmentsGetter(config, isDynamic) {
 
     var instance = undefined;
 
-    function getSegmentsFromTemplate(representation, requestedTime, index) {
+    function getSegmentsFromTemplate(representation, requestedTime, index, availabilityUpperLimit) {
         var template = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate;
         var duration = representation.segmentDuration;
         var availabilityWindow = representation.segmentAvailabilityRange;
@@ -21281,7 +21272,7 @@ function TemplateSegmentsGetter(config, isDynamic) {
         if (isNaN(duration) && !isDynamic) {
             segmentRange = { start: start, end: start };
         } else {
-            segmentRange = (0, _SegmentsUtils.decideSegmentListRangeForTemplate)(timelineConverter, isDynamic, representation, requestedTime, index);
+            segmentRange = (0, _SegmentsUtils.decideSegmentListRangeForTemplate)(timelineConverter, isDynamic, representation, requestedTime, index, availabilityUpperLimit);
         }
 
         startIdx = segmentRange.start;
@@ -21611,6 +21602,7 @@ var _SegmentsUtils = _dereq_(76);
 
 function TimelineSegmentsGetter(config, isDynamic) {
 
+    config = config || {};
     var timelineConverter = config.timelineConverter;
 
     var instance = undefined;
@@ -21621,8 +21613,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
         }
     }
 
-    function getSegmentsFromTimeline(representation, requestedTime, index) {
-
+    function getSegmentsFromTimeline(representation, requestedTime, index, availabilityUpperLimit) {
         checkConfig();
 
         if (!representation) {
@@ -21640,7 +21631,11 @@ function TimelineSegmentsGetter(config, isDynamic) {
 
         var maxSegmentsAhead = undefined;
 
-        maxSegmentsAhead = index > -1 || requestedTime !== null ? 10 : Infinity;
+        if (availabilityUpperLimit) {
+            maxSegmentsAhead = availabilityUpperLimit;
+        } else {
+            maxSegmentsAhead = index > -1 || requestedTime !== null ? 10 : Infinity;
+        }
 
         var time = 0;
         var scaledTime = 0;
@@ -22416,6 +22411,7 @@ var FRAGMENT_LOADER_MESSAGE_NULL_REQUEST = 'request is null';
 
 function FragmentLoader(config) {
 
+    config = config || {};
     var context = this.context;
     var eventBus = (0, _coreEventBus2['default'])(context).getInstance();
 
@@ -22616,6 +22612,7 @@ var MANIFEST_LOADER_MESSAGE_PARSING_FAILURE = 'parsing failed';
 
 function ManifestLoader(config) {
 
+    config = config || {};
     var context = this.context;
     var eventBus = (0, _coreEventBus2['default'])(context).getInstance();
     var urlUtils = (0, _utilsURLUtils2['default'])(context).getInstance();
@@ -23651,15 +23648,15 @@ function MediaPlayer() {
      */
     function getDVRSeekOffset(value) {
         var metric = getDVRInfoMetric();
-
+        var liveDelay = playbackController.getLiveDelay();
         if (!metric) {
             return 0;
         }
 
         var val = metric.range.start + value;
 
-        if (val > metric.range.end) {
-            val = metric.range.end;
+        if (val > metric.range.end - liveDelay) {
+            val = metric.range.end - liveDelay;
         }
 
         return val;
@@ -24757,6 +24754,99 @@ function MediaPlayer() {
      ---------------------------------------------------------------------------
     */
     /**
+     * Set default language for text. If default language is not one of text tracks, dash will choose the first one.
+     *
+     * @param {string} lang - default language
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setTextDefaultLanguage(lang) {
+        if (textController === undefined) {
+            textController = (0, _textTextController2['default'])(context).getInstance();
+        }
+
+        textController.setTextDefaultLanguage(lang);
+    }
+
+    /**
+     * Get default language for text.
+     *
+     * @return {string} the default language if it has been set using setTextDefaultLanguage
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getTextDefaultLanguage() {
+        if (textController === undefined) {
+            textController = (0, _textTextController2['default'])(context).getInstance();
+        }
+
+        return textController.getTextDefaultLanguage();
+    }
+
+    /**
+     * Set enabled default state.
+     * This is used to enable/disable text when a file is loaded.
+     * During playback, use enableText to enable text for the file
+     *
+     * @param {boolean} enable - true to enable text, false otherwise
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setTextDefaultEnabled(enable) {
+        if (textController === undefined) {
+            textController = (0, _textTextController2['default'])(context).getInstance();
+        }
+
+        textController.setTextDefaultEnabled(enable);
+    }
+
+    /**
+     * Get enabled default state.
+     *
+     * @return {boolean}  default enable state
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getTextDefaultEnabled() {
+        if (textController === undefined) {
+            textController = (0, _textTextController2['default'])(context).getInstance();
+        }
+
+        return textController.getTextDefaultEnabled();
+    }
+
+    /**
+     * Enable/disable text
+     * When enabling text, dash will choose the previous selected text track
+     *
+     * @param {boolean} enable - true to enable text, false otherwise (same as setTextTrack(-1))
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function enableText(enable) {
+        if (textController === undefined) {
+            textController = (0, _textTextController2['default'])(context).getInstance();
+        }
+
+        textController.enableText(enable);
+    }
+
+    /**
+     * Return if text is enabled
+     *
+     * @return {boolean} return true if text is enabled, false otherwise
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function isTextEnabled() {
+        if (textController === undefined) {
+            textController = (0, _textTextController2['default'])(context).getInstance();
+        }
+
+        return textController.isTextEnabled();
+    }
+
+    /**
      * Use this method to change the current text track for both external time text files and fragmented text tracks. There is no need to
      * set the track mode on the video object to switch a track when using this method.
      *
@@ -24854,6 +24944,9 @@ function MediaPlayer() {
     function attachView(element) {
         if (!mediaPlayerInitialized) {
             throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+        }
+        if (videoModel) {
+            videoModel.reset();
         }
         videoModel = null;
         if (element) {
@@ -25638,6 +25731,12 @@ function MediaPlayer() {
         setLimitBitrateByPortal: setLimitBitrateByPortal,
         getUsePixelRatioInLimitBitrateByPortal: getUsePixelRatioInLimitBitrateByPortal,
         setUsePixelRatioInLimitBitrateByPortal: setUsePixelRatioInLimitBitrateByPortal,
+        setTextDefaultLanguage: setTextDefaultLanguage,
+        getTextDefaultLanguage: getTextDefaultLanguage,
+        setTextDefaultEnabled: setTextDefaultEnabled,
+        getTextDefaultEnabled: getTextDefaultEnabled,
+        enableText: enableText,
+        isTextEnabled: isTextEnabled,
         setTextTrack: setTextTrack,
         getBitrateInfoListFor: getBitrateInfoListFor,
         setInitialBitrateFor: setInitialBitrateFor,
@@ -25888,7 +25987,13 @@ var MediaPlayerEvents = (function (_EventsBase) {
     this.QUALITY_CHANGE_RENDERED = 'qualityChangeRendered';
 
     /**
-     * Triggered when the stream is setup and ready.
+     * Triggered when the source is setup and ready.
+     * @event MediaPlayerEvents#SOURCE_INITIALIZED
+     */
+    this.SOURCE_INITIALIZED = 'sourceInitialized';
+
+    /**
+     * Triggered when a stream (period) is loaded
      * @event MediaPlayerEvents#STREAM_INITIALIZED
      */
     this.STREAM_INITIALIZED = 'streamInitialized';
@@ -26077,7 +26182,7 @@ var _coreFactoryMaker2 = _interopRequireDefault(_coreFactoryMaker);
 function Stream(config) {
 
     var DATA_UPDATE_FAILED_ERROR_CODE = 1;
-
+    config = config || {};
     var context = this.context;
     var log = (0, _coreDebug2['default'])(context).getInstance().log;
     var eventBus = (0, _coreEventBus2['default'])(context).getInstance();
@@ -26163,7 +26268,6 @@ function Stream(config) {
         streamProcessors = [];
         isStreamActivated = false;
         isMediaInitialized = false;
-        clearEventController();
         eventBus.off(_coreEventsEvents2['default'].CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
     }
 
@@ -26245,9 +26349,9 @@ function Stream(config) {
         }
     }
 
-    function clearEventController() {
+    function stopEventController() {
         if (eventController) {
-            eventController.clear();
+            eventController.stop();
         }
     }
 
@@ -26318,7 +26422,7 @@ function Stream(config) {
         }
     }
 
-    function createStreamProcessor(mediaInfo, mediaSource, optionalSettings) {
+    function createStreamProcessor(mediaInfo, allMediaForType, mediaSource, optionalSettings) {
         var streamProcessor = (0, _StreamProcessor2['default'])(context).create({
             type: getMimeTypeOrType(mediaInfo),
             mimeType: mediaInfo.mimeType,
@@ -26341,7 +26445,6 @@ function Stream(config) {
             errHandler: errHandler
         });
 
-        var allMediaForType = adapter.getAllMediaInfoForType(streamInfo, mediaInfo.type);
         streamProcessor.initialize(mediaSource);
         abrController.updateTopQualityIndex(mediaInfo);
 
@@ -26409,22 +26512,25 @@ function Stream(config) {
         // TODO : How to tell index handler live/duration?
         // TODO : Pass to controller and then pass to each method on handler?
 
-        createStreamProcessor(initialMediaInfo, mediaSource);
+        createStreamProcessor(initialMediaInfo, allMediaForType, mediaSource);
     }
 
     function initializeMedia(mediaSource) {
         checkConfig();
         var events = undefined;
 
-        eventController = (0, _controllersEventController2['default'])(context).create();
+        //if initializeMedia is called from a switch period, eventController could have been already created.
+        if (!eventController) {
+            eventController = (0, _controllersEventController2['default'])(context).create();
 
-        eventController.setConfig({
-            manifestModel: manifestModel,
-            manifestUpdater: manifestUpdater,
-            playbackController: playbackController
-        });
-        events = adapter.getEventsFor(streamInfo);
-        eventController.addInlineEvents(events);
+            eventController.setConfig({
+                manifestModel: manifestModel,
+                manifestUpdater: manifestUpdater,
+                playbackController: playbackController
+            });
+            events = adapter.getEventsFor(streamInfo);
+            eventController.addInlineEvents(events);
+        }
 
         isUpdating = true;
 
@@ -26629,6 +26735,7 @@ function Stream(config) {
         getEventController: getEventController,
         getBitrateListFor: getBitrateListFor,
         startEventController: startEventController,
+        stopEventController: stopEventController,
         updateData: updateData,
         reset: reset,
         getProcessors: getProcessors
@@ -26715,6 +26822,7 @@ var _dashDashHandler2 = _interopRequireDefault(_dashDashHandler);
 
 function StreamProcessor(config) {
 
+    config = config || {};
     var context = this.context;
 
     var indexHandler = undefined;
@@ -26748,10 +26856,12 @@ function StreamProcessor(config) {
         spExternalControllers = undefined;
 
     function setup() {
-        liveEdgeFinder = (0, _utilsLiveEdgeFinder2['default'])(context).create({
-            timelineConverter: timelineConverter,
-            streamProcessor: instance
-        });
+        if (playbackController && playbackController.getIsDynamic()) {
+            liveEdgeFinder = (0, _utilsLiveEdgeFinder2['default'])(context).create({
+                timelineConverter: timelineConverter,
+                streamProcessor: instance
+            });
+        }
         resetInitialSettings();
     }
 
@@ -26864,7 +26974,10 @@ function StreamProcessor(config) {
         resetInitialSettings();
         type = null;
         stream = null;
-        liveEdgeFinder.reset();
+        if (liveEdgeFinder) {
+            liveEdgeFinder.reset();
+            liveEdgeFinder = null;
+        }
     }
 
     function isUpdating() {
@@ -27112,8 +27225,8 @@ var _utilsErrorHandlerJs2 = _interopRequireDefault(_utilsErrorHandlerJs);
  * @param {Object} cfg - dependancies from parent
  */
 function XHRLoader(cfg) {
-    //const context = this.context;
-    //const log = Debug(context).getInstance().log;
+
+    cfg = cfg || {};
     var errHandler = cfg.errHandler;
     var metricsModel = cfg.metricsModel;
     var mediaPlayerModel = cfg.mediaPlayerModel;
@@ -27425,6 +27538,7 @@ var XLINK_LOADER_ERROR_LOADING_FAILURE = 1;
 
 function XlinkLoader(config) {
 
+    config = config || {};
     var RESOLVE_TO_ZERO = 'urn:mpeg:dash:resolve-to-zero:2013';
 
     var context = this.context;
@@ -28686,6 +28800,7 @@ var _coreEventBus2 = _interopRequireDefault(_coreEventBus);
 
 function BlackListController(config) {
 
+    config = config || {};
     var blacklist = [];
 
     var eventBus = (0, _coreEventBus2['default'])(this.context).getInstance();
@@ -28830,6 +28945,7 @@ var BUFFER_CONTROLLER_TYPE = 'BufferController';
 
 function BufferController(config) {
 
+    config = config || {};
     var context = this.context;
     var eventBus = (0, _coreEventBus2['default'])(context).getInstance();
     var metricsModel = config.metricsModel;
@@ -29450,7 +29566,7 @@ function EventController() {
         }
     }
 
-    function clear() {
+    function stop() {
         if (eventInterval !== null && isStarted) {
             clearInterval(eventInterval);
             eventInterval = null;
@@ -29585,14 +29701,14 @@ function EventController() {
     }
 
     function reset() {
-        clear();
+        stop();
         resetInitialSettings();
     }
 
     instance = {
         addInlineEvents: addInlineEvents,
         addInbandEvents: addInbandEvents,
-        clear: clear,
+        stop: stop,
         start: start,
         setConfig: setConfig,
         reset: reset
@@ -29686,6 +29802,7 @@ var _coreDebug2 = _interopRequireDefault(_coreDebug);
 
 function FragmentController(config) {
 
+    config = config || {};
     var context = this.context;
     var log = (0, _coreDebug2['default'])(context).getInstance().log;
     var eventBus = (0, _coreEventBus2['default'])(context).getInstance();
@@ -29940,7 +30057,14 @@ function MediaController() {
 
         tracks[streamId] = tracks[streamId] || createTrackInfo();
 
-        if (tracks[streamId][mediaType].list.indexOf(track) >= 0) return;
+        var len = tracks[streamId][mediaType].list.length;
+
+        for (var i = 0; i < len; i++) {
+            //track is already set.
+            if (isTracksEqual(tracks[streamId][mediaType].list[i], track)) {
+                return;
+            }
+        }
 
         tracks[streamId][mediaType].list.push(track);
 
@@ -30498,6 +30622,8 @@ var _coreDebug = _dereq_(48);
 
 var _coreDebug2 = _interopRequireDefault(_coreDebug);
 
+var LIVE_UPDATE_PLAYBACK_TIME_INTERVAL_MS = 500;
+
 function PlaybackController() {
 
     var context = this.context;
@@ -30516,11 +30642,13 @@ function PlaybackController() {
         liveStartTime = undefined,
         wallclockTimeIntervalId = undefined,
         commonEarliestTime = undefined,
+        liveDelay = undefined,
         bufferedRange = undefined,
         streamInfo = undefined,
         isDynamic = undefined,
         mediaPlayerModel = undefined,
-        playOnceInitialized = undefined;
+        playOnceInitialized = undefined,
+        lastLivePlaybackTime = undefined;
 
     function setup() {
         reset();
@@ -30628,6 +30756,7 @@ function PlaybackController() {
         var mpd = dashManifestModel.getMpd(manifestModel.getValue());
 
         var delay = undefined;
+        var ret = undefined;
         var END_OF_PLAYLIST_PADDING = 10;
 
         if (mediaPlayerModel.getUseSuggestedPresentationDelay() && mpd.hasOwnProperty(_constantsConstants2['default'].SUGGESTED_PRESENTATION_DELAY)) {
@@ -30645,10 +30774,16 @@ function PlaybackController() {
             // - dvrWindowSize / 2 for short playlists
             // - dvrWindowSize - END_OF_PLAYLIST_PADDING for longer playlists
             var targetDelayCapping = Math.max(dvrWindowSize - END_OF_PLAYLIST_PADDING, dvrWindowSize / 2);
-            return Math.min(delay, targetDelayCapping);
+            ret = Math.min(delay, targetDelayCapping);
         } else {
-            return delay;
+            ret = delay;
         }
+        liveDelay = ret;
+        return ret;
+    }
+
+    function getLiveDelay() {
+        return liveDelay;
     }
 
     function reset() {
@@ -30657,6 +30792,7 @@ function PlaybackController() {
         wallclockTimeIntervalId = null;
         playOnceInitialized = false;
         commonEarliestTime = {};
+        liveDelay = 0;
         bufferedRange = {};
         if (videoModel) {
             eventBus.off(_coreEventsEvents2['default'].DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
@@ -30843,12 +30979,19 @@ function PlaybackController() {
 
     function onPlaybackTimeUpdated() {
         var time = getTime();
-        if (time === currentTime) return;
         currentTime = time;
         eventBus.trigger(_coreEventsEvents2['default'].PLAYBACK_TIME_UPDATED, {
             timeToEnd: getTimeToStreamEnd(),
             time: time
         });
+    }
+
+    function updateLivePlaybackTime() {
+        var now = Date.now();
+        if (!lastLivePlaybackTime || now > lastLivePlaybackTime + LIVE_UPDATE_PLAYBACK_TIME_INTERVAL_MS) {
+            lastLivePlaybackTime = now;
+            onPlaybackTimeUpdated();
+        }
     }
 
     function onPlaybackProgress() {
@@ -30888,6 +31031,12 @@ function PlaybackController() {
             isDynamic: isDynamic,
             time: new Date()
         });
+
+        // Updates playback time for paused dynamic streams
+        // (video element doesn't call timeupdate when the playback is paused)
+        if (getIsDynamic() && isPaused()) {
+            updateLivePlaybackTime();
+        }
     }
 
     function checkTimeInRanges(time, ranges) {
@@ -31012,6 +31161,7 @@ function PlaybackController() {
         setLiveStartTime: setLiveStartTime,
         getLiveStartTime: getLiveStartTime,
         computeLiveDelay: computeLiveDelay,
+        getLiveDelay: getLiveDelay,
         play: play,
         isPaused: isPaused,
         pause: pause,
@@ -31112,6 +31262,7 @@ var _coreDebug2 = _interopRequireDefault(_coreDebug);
 
 function ScheduleController(config) {
 
+    config = config || {};
     var context = this.context;
     var eventBus = (0, _coreEventBus2['default'])(context).getInstance();
     var metricsModel = config.metricsModel;
@@ -31243,6 +31394,7 @@ function ScheduleController(config) {
 
     function schedule() {
         if (isStopped || isFragmentProcessingInProgress || !streamProcessor.getBufferController() || playbackController.isPaused() && !scheduleWhilePaused) {
+            log('ScheduleController ' + type + '- schedule stop!');
             return;
         }
 
@@ -32367,7 +32519,7 @@ function StreamController() {
         if (e.timeToEnd <= STREAM_END_THRESHOLD) {
             // In some cases the ended event is not triggered at the end of the stream, do it artificially here.
             // This should only be a fallback, put an extra STREAM_END_TIMEOUT_DELAY to give the real ended event time to trigger.
-
+            log('[StreamController][onPlaybackTimeUpdated] timeToEnd = ' + e.timeToEnd + ' PLAYBACK_ENDED need to be triggered');
             if (endedTimeout) {
                 clearTimeout(endedTimeout);
                 endedTimeout = undefined;
@@ -32430,7 +32582,7 @@ function StreamController() {
 
         for (var i = 0; i < ln; i++) {
             stream = streams[i];
-            duration += stream.getDuration();
+            duration = parseFloat((duration + stream.getDuration()).toFixed(5));
 
             if (time < duration) {
                 return stream;
@@ -32513,7 +32665,7 @@ function StreamController() {
 
                 return {
                     v: streams.filter(function (stream) {
-                        return stream.getStreamInfo().start === start + duration;
+                        return stream.getStreamInfo().start === parseFloat((start + duration).toFixed(5));
                     })[0]
                 };
             })();
@@ -32532,15 +32684,18 @@ function StreamController() {
             toStreamInfo: newStream.getStreamInfo()
         });
 
-        if (oldStream) oldStream.deactivate();
+        if (oldStream) {
+            oldStream.stopEventController();
+            oldStream.deactivate();
+        }
         activeStream = newStream;
         playbackController.initialize(activeStream.getStreamInfo());
 
         //TODO detect if we should close and repose or jump to activateStream.
-        openMediaSource(seekTime);
+        openMediaSource(seekTime, oldStream);
     }
 
-    function openMediaSource(seekTime) {
+    function openMediaSource(seekTime, oldStream) {
 
         var sourceUrl = undefined;
 
@@ -32551,6 +32706,10 @@ function StreamController() {
             mediaSource.removeEventListener('webkitsourceopen', onMediaSourceOpen);
             setMediaDuration();
             activateStream(seekTime);
+
+            if (!oldStream) {
+                eventBus.trigger(_coreEventsEvents2['default'].SOURCE_INITIALIZED);
+            }
         }
 
         if (!mediaSource) {
@@ -33497,6 +33656,7 @@ var RESOLVE_TO_ZERO = 'urn:mpeg:dash:resolve-to-zero:2013';
 
 function XlinkController(config) {
 
+    config = config || {};
     var context = this.context;
     var eventBus = (0, _coreEventBus2['default'])(context).getInstance();
     var urlUtils = (0, _utilsURLUtils2['default'])(context).getInstance();
@@ -34005,6 +34165,7 @@ var FRAGMENT_MODEL_FAILED = 'failed';
 
 function FragmentModel(config) {
 
+    config = config || {};
     var context = this.context;
     var log = (0, _coreDebug2['default'])(context).getInstance().log;
     var eventBus = (0, _coreEventBus2['default'])(context).getInstance();
@@ -34031,6 +34192,11 @@ function FragmentModel(config) {
     }
 
     function isFragmentLoaded(request) {
+
+        var isEqualUrl = function isEqualUrl(req1, req2) {
+            return req1.url === req2.url;
+        };
+
         var isEqualComplete = function isEqualComplete(req1, req2) {
             return req1.action === _voFragmentRequest2['default'].ACTION_COMPLETE && req1.action === req2.action;
         };
@@ -34046,7 +34212,7 @@ function FragmentModel(config) {
         var check = function check(requests) {
             var isLoaded = false;
             requests.some(function (req) {
-                if (isEqualMedia(request, req) || isEqualInit(request, req) || isEqualComplete(request, req)) {
+                if (isEqualUrl(request, req) && (isEqualMedia(request, req) || isEqualInit(request, req) || isEqualComplete(request, req))) {
                     isLoaded = true;
                     return isLoaded;
                 }
@@ -34110,7 +34276,7 @@ function FragmentModel(config) {
 
     function removeExecutedRequestsBeforeTime(time) {
         executedRequests = executedRequests.filter(function (req) {
-            return isNaN(req.startTime) || req.startTime >= time;
+            return isNaN(req.startTime) || time !== undefined ? req.startTime >= time : false;
         });
     }
 
@@ -35566,6 +35732,11 @@ function VideoModel() {
 
     function initialize() {
         stalledStreams = [];
+        eventBus.on(_coreEventsEvents2['default'].PLAYBACK_PLAYING, onPlaying, this);
+    }
+
+    function reset() {
+        eventBus.off(_coreEventsEvents2['default'].PLAYBACK_PLAYING, onPlaying, this);
     }
 
     function onPlaybackCanPlay() {
@@ -35709,6 +35880,15 @@ function VideoModel() {
         }
     }
 
+    //Calling play on the element will emit playing - even if the stream is stalled. If the stream is stalled, emit a waiting event.
+    function onPlaying() {
+        if (element && isStalled() && element.playbackRate === 0) {
+            var _event = document.createEvent('Event');
+            _event.initEvent('waiting', true, false);
+            element.dispatchEvent(_event);
+        }
+    }
+
     function getPlaybackQuality() {
         var hasWebKit = 'webkitDroppedFrameCount' in element && 'webkitDecodedFrameCount' in element;
         var hasQuality = ('getVideoPlaybackQuality' in element);
@@ -35809,16 +35989,24 @@ function VideoModel() {
         return element ? element.videoHeight : NaN;
     }
 
+    function getVideoRelativeOffsetTop() {
+        return element && element.parentNode ? element.getBoundingClientRect().top - element.parentNode.getBoundingClientRect().top : NaN;
+    }
+
+    function getVideoRelativeOffsetLeft() {
+        return element && element.parentNode ? element.getBoundingClientRect().left - element.parentNode.getBoundingClientRect().left : NaN;
+    }
+
     function getTextTracks() {
         return element ? element.textTracks : [];
     }
 
-    function getTextTrack(kind, label, lang) {
+    function getTextTrack(kind, label, lang, isTTML, isEmbedded) {
         if (element) {
             for (var i = 0; i < element.textTracks.length; i++) {
                 //label parameter could be a number (due to adaptationSet), but label, the attribute of textTrack, is a string => to modify...
                 //label could also be undefined (due to adaptationSet)
-                if (element.textTracks[i].kind === kind && (label ? element.textTracks[i].label == label : true) && element.textTracks[i].language === lang) {
+                if (element.textTracks[i].kind === kind && (label ? element.textTracks[i].label == label : true) && element.textTracks[i].language === lang && element.textTracks[i].isTTML === isTTML && element.textTracks[i].isEmbedded === isEmbedded) {
                     return element.textTracks[i];
                 }
             }
@@ -35837,6 +36025,11 @@ function VideoModel() {
     function appendChild(childElement) {
         if (element) {
             element.appendChild(childElement);
+            //in Chrome, we need to differenciate textTrack with same lang, kind and label but different format (vtt, ttml, etc...)
+            if (childElement.isTTML !== undefined) {
+                element.textTracks[element.textTracks.length - 1].isTTML = childElement.isTTML;
+                element.textTracks[element.textTracks.length - 1].isEmbedded = childElement.isEmbedded;
+            }
         }
     }
 
@@ -35879,7 +36072,10 @@ function VideoModel() {
         appendChild: appendChild,
         removeChild: removeChild,
         getVideoWidth: getVideoWidth,
-        getVideoHeight: getVideoHeight
+        getVideoHeight: getVideoHeight,
+        getVideoRelativeOffsetTop: getVideoRelativeOffsetTop,
+        getVideoRelativeOffsetLeft: getVideoRelativeOffsetLeft,
+        reset: reset
     };
 
     return instance;
@@ -35993,6 +36189,7 @@ var _coreFactoryMaker2 = _interopRequireDefault(_coreFactoryMaker);
 
 function RulesContext(config) {
 
+    config = config || {};
     var instance = undefined;
     var abrController = config.abrController;
     var streamProcessor = config.streamProcessor;
@@ -36313,6 +36510,7 @@ var _coreFactoryMakerJs2 = _interopRequireDefault(_coreFactoryMakerJs);
 
 function ThroughputHistory(config) {
 
+    config = config || {};
     // sliding window constants
     var MAX_MEASUREMENTS_TO_KEEP = 20;
     var AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE = 3;
@@ -36612,6 +36810,7 @@ var ABANDON_FRAGMENT_RULES = 'abandonFragmentRules';
 
 function ABRRulesCollection(config) {
 
+    config = config || {};
     var context = this.context;
 
     var mediaPlayerModel = config.mediaPlayerModel;
@@ -36816,6 +37015,7 @@ var _coreDebug2 = _interopRequireDefault(_coreDebug);
 
 function AbandonRequestsRule(config) {
 
+    config = config || {};
     var ABANDON_MULTIPLIER = 1.8;
     var GRACE_TIME_THRESHOLD = 500;
     var MIN_LENGTH_TO_AVERAGE = 5;
@@ -37025,6 +37225,7 @@ var PLACEHOLDER_BUFFER_DECAY = 0.99; // Make sure placeholder buffer does not st
 
 function BolaRule(config) {
 
+    config = config || {};
     var context = this.context;
     var log = (0, _coreDebug2['default'])(context).getInstance().log;
 
@@ -37643,6 +37844,7 @@ var _SwitchRequestJs2 = _interopRequireDefault(_SwitchRequestJs);
 
 function InsufficientBufferRule(config) {
 
+    config = config || {};
     var INSUFFICIENT_BUFFER_SAFETY_FACTOR = 0.5;
 
     var context = this.context;
@@ -37885,6 +38087,7 @@ var _SwitchRequestJs2 = _interopRequireDefault(_SwitchRequestJs);
 
 function ThroughputRule(config) {
 
+    config = config || {};
     var context = this.context;
     var log = (0, _coreDebug2['default'])(context).getInstance().log;
 
@@ -37999,6 +38202,7 @@ var _coreFactoryMaker2 = _interopRequireDefault(_coreFactoryMaker);
 
 function BufferLevelRule(config) {
 
+    config = config || {};
     var dashMetrics = config.dashMetrics;
     var metricsModel = config.metricsModel;
     var mediaPlayerModel = config.mediaPlayerModel;
@@ -38104,6 +38308,7 @@ var _coreFactoryMaker2 = _interopRequireDefault(_coreFactoryMaker);
 
 function NextFragmentRequestRule(config) {
 
+    config = config || {};
     var context = this.context;
     var log = (0, _coreDebug2['default'])(context).getInstance().log;
     var adapter = config.adapter;
@@ -38586,6 +38791,7 @@ var _utilsInitCache2 = _interopRequireDefault(_utilsInitCache);
 var BUFFER_CONTROLLER_TYPE = 'NotFragmentedTextBufferController';
 function NotFragmentedTextBufferController(config) {
 
+    config = config || {};
     var context = this.context;
     var eventBus = (0, _coreEventBus2['default'])(context).getInstance();
 
@@ -38812,6 +39018,7 @@ var _NotFragmentedTextBufferController2 = _interopRequireDefault(_NotFragmentedT
 
 function TextBufferController(config) {
 
+    config = config || {};
     var context = this.context;
 
     var _BufferControllerImpl = undefined;
@@ -39001,14 +39208,21 @@ var _utilsTTMLParser = _dereq_(153);
 
 var _utilsTTMLParser2 = _interopRequireDefault(_utilsTTMLParser);
 
+var _coreEventBus = _dereq_(49);
+
+var _coreEventBus2 = _interopRequireDefault(_coreEventBus);
+
+var _coreEventsEvents = _dereq_(53);
+
+var _coreEventsEvents2 = _interopRequireDefault(_coreEventsEvents);
+
 function TextController() {
 
     var context = this.context;
     var instance = undefined;
     var textSourceBuffer = undefined;
 
-    var allTracksAreDisabled = undefined,
-        errHandler = undefined,
+    var errHandler = undefined,
         dashManifestModel = undefined,
         manifestModel = undefined,
         mediaController = undefined,
@@ -39016,16 +39230,27 @@ function TextController() {
         streamController = undefined,
         textTracks = undefined,
         vttParser = undefined,
-        ttmlParser = undefined;
+        ttmlParser = undefined,
+        eventBus = undefined,
+        defaultLanguage = undefined,
+        lastEnabledIndex = undefined,
+        textDefaultEnabled = undefined,
+        // this is used for default settings (each time a file is loaded, we check value of this settings )
+    allTracksAreDisabled = undefined; // this is used for one session (when a file has been loaded, we use this settings to enable/disable text)
 
     function setup() {
 
+        defaultLanguage = '';
+        lastEnabledIndex = -1;
+        textDefaultEnabled = true;
         textTracks = (0, _TextTracks2['default'])(context).getInstance();
         vttParser = (0, _utilsVTTParser2['default'])(context).getInstance();
         ttmlParser = (0, _utilsTTMLParser2['default'])(context).getInstance();
         textSourceBuffer = (0, _TextSourceBuffer2['default'])(context).getInstance();
+        eventBus = (0, _coreEventBus2['default'])(context).getInstance();
 
         textTracks.initialize();
+        eventBus.on(_coreEventsEvents2['default'].TEXT_TRACKS_QUEUE_INITIALIZED, onTextTracksAdded, instance);
 
         resetInitialSettings();
     }
@@ -39088,6 +39313,79 @@ function TextController() {
         textSourceBuffer.addEmbeddedTrack(mediaInfo);
     }
 
+    function setTextDefaultLanguage(lang) {
+        if (typeof lang !== 'string') {
+            return;
+        }
+
+        defaultLanguage = lang;
+    }
+
+    function getTextDefaultLanguage() {
+        return defaultLanguage;
+    }
+
+    function onTextTracksAdded(e) {
+        var tracks = e.tracks;
+        var index = e.index;
+        // find track corresponding to default subtitle and apply it
+        var defaultLanguageIndex = tracks.findIndex(function (item) {
+            return item.lang === defaultLanguage;
+        });
+
+        if (defaultLanguageIndex !== -1) {
+            this.setTextTrack(defaultLanguageIndex);
+            index = defaultLanguageIndex;
+        }
+
+        if (!textDefaultEnabled) {
+            // disable text at startup
+            this.setTextTrack(-1);
+        }
+
+        lastEnabledIndex = index;
+        eventBus.trigger(_coreEventsEvents2['default'].TEXT_TRACKS_ADDED, {
+            enabled: !allTracksAreDisabled,
+            index: index,
+            tracks: tracks
+        });
+    }
+
+    function setTextDefaultEnabled(enable) {
+        if (typeof enable !== 'boolean') {
+            return;
+        }
+        textDefaultEnabled = enable;
+    }
+
+    function getTextDefaultEnabled() {
+        return textDefaultEnabled;
+    }
+
+    function enableText(enable) {
+        if (typeof enable !== 'boolean') {
+            return;
+        }
+        var isTextEnabled = !allTracksAreDisabled;
+        if (isTextEnabled !== enable) {
+            // change track selection
+            if (enable) {
+                // apply last enabled tractk
+                this.setTextTrack(lastEnabledIndex);
+            }
+
+            if (!enable) {
+                // keep last index and disable text track
+                lastEnabledIndex = this.getCurrentTrackIdx();
+                this.setTextTrack(-1);
+            }
+        }
+    }
+
+    function isTextEnabled() {
+        return !allTracksAreDisabled;
+    }
+
     function setTextTrack(idx) {
         //For external time text file,  the only action needed to change a track is marking the track mode to showing.
         // Fragmented text tracks need the additional step of calling TextController.setTextTrack();
@@ -39111,6 +39409,8 @@ function TextController() {
                         var currentFragTrack = mediaController.getCurrentTrackFor(_constantsConstants2['default'].FRAGMENTED_TEXT, streamController.getActiveStreamInfo());
                         if (mediaInfo !== currentFragTrack) {
                             fragmentModel.abortRequests();
+                            fragmentModel.removeExecutedRequestsBeforeTime();
+                            textSourceBuffer.remove();
                             textTracks.deleteCuesFromTrackIdx(oldTrackIdx);
                             mediaController.setTrack(mediaInfo);
                             textSourceBuffer.setCurrentFragmentedTrackIdx(i);
@@ -39124,7 +39424,6 @@ function TextController() {
     }
 
     function getCurrentTrackIdx() {
-        var textTracks = textSourceBuffer.getConfig().textTracks;
         return textTracks.getCurrentTrackIdx();
     }
 
@@ -39142,6 +39441,12 @@ function TextController() {
         getTextSourceBuffer: getTextSourceBuffer,
         getAllTracksAreDisabled: getAllTracksAreDisabled,
         addEmbeddedTrack: addEmbeddedTrack,
+        getTextDefaultLanguage: getTextDefaultLanguage,
+        setTextDefaultLanguage: setTextDefaultLanguage,
+        setTextDefaultEnabled: setTextDefaultEnabled,
+        getTextDefaultEnabled: getTextDefaultEnabled,
+        enableText: enableText,
+        isTextEnabled: isTextEnabled,
         setTextTrack: setTextTrack,
         getCurrentTrackIdx: getCurrentTrackIdx,
         reset: reset
@@ -39154,7 +39459,7 @@ TextController.__dashjs_factory_name = 'TextController';
 exports['default'] = _coreFactoryMaker2['default'].getSingletonFactory(TextController);
 module.exports = exports['default'];
 
-},{"139":139,"140":140,"153":153,"155":155,"50":50,"98":98}],139:[function(_dereq_,module,exports){
+},{"139":139,"140":140,"153":153,"155":155,"49":49,"50":50,"53":53,"98":98}],139:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -39769,6 +40074,15 @@ function TextSourceBuffer() {
         return parser;
     }
 
+    function remove(start, end) {
+        //if start and end are not defined, remove all
+        if (start === undefined && start === end) {
+            start = this.buffered.start(0);
+            end = this.buffered.end(this.buffered.length - 1);
+        }
+        this.buffered.remove(start, end);
+    }
+
     instance = {
         initialize: initialize,
         append: append,
@@ -39777,7 +40091,8 @@ function TextSourceBuffer() {
         resetEmbedded: resetEmbedded,
         setConfig: setConfig,
         getConfig: getConfig,
-        setCurrentFragmentedTrackIdx: setCurrentFragmentedTrackIdx
+        setCurrentFragmentedTrackIdx: setCurrentFragmentedTrackIdx,
+        remove: remove
     };
 
     return instance;
@@ -39913,6 +40228,8 @@ function TextTracks() {
         var kind = textTrackQueue[i].kind;
         var label = textTrackQueue[i].label !== undefined ? textTrackQueue[i].label : textTrackQueue[i].lang;
         var lang = textTrackQueue[i].lang;
+        var isTTML = textTrackQueue[i].isTTML;
+        var isEmbedded = textTrackQueue[i].isEmbedded;
         var track = isChrome ? document.createElement('track') : videoModel.addTextTrack(kind, label, lang);
 
         if (isChrome) {
@@ -39920,6 +40237,9 @@ function TextTracks() {
             track.label = label;
             track.srclang = lang;
         }
+
+        track.isEmbedded = isEmbedded;
+        track.isTTML = isTTML;
 
         return track;
     }
@@ -39989,7 +40309,7 @@ function TextTracks() {
                 }
             }
 
-            eventBus.trigger(_coreEventsEvents2['default'].TEXT_TRACKS_ADDED, {
+            eventBus.trigger(_coreEventsEvents2['default'].TEXT_TRACKS_QUEUE_INITIALIZED, {
                 index: currentTrackIdx,
                 tracks: textTrackQueue
             }); //send default idx.
@@ -40019,15 +40339,13 @@ function TextTracks() {
 
         if (videoPictureAspect > aspectRatio) {
             videoPictureHeightAspect = videoPictureHeight;
-            videoPictureWidthAspect = videoPictureHeight / (1 / aspectRatio);
-            videoPictureXAspect = (viewWidth - videoPictureWidthAspect) / 2;
-            videoPictureYAspect = 0;
+            videoPictureWidthAspect = videoPictureHeight * aspectRatio;
         } else {
             videoPictureWidthAspect = videoPictureWidth;
             videoPictureHeightAspect = videoPictureWidth / aspectRatio;
-            videoPictureXAspect = 0;
-            videoPictureYAspect = (viewHeight - videoPictureHeightAspect) / 2;
         }
+        videoPictureXAspect = (viewWidth - videoPictureWidthAspect) / 2;
+        videoPictureYAspect = (viewHeight - videoPictureHeightAspect) / 2;
 
         if (use80Percent) {
             return {
@@ -40051,7 +40369,9 @@ function TextTracks() {
         var clientHeight = videoModel.getClientHeight();
         var videoWidth = videoModel.getVideoWidth();
         var videoHeight = videoModel.getVideoHeight();
-        var aspectRatio = clientWidth / clientHeight;
+        var videoOffsetTop = videoModel.getVideoRelativeOffsetTop();
+        var videoOffsetLeft = videoModel.getVideoRelativeOffsetLeft();
+        var aspectRatio = videoWidth / videoHeight;
         var use80Percent = false;
         if (track.isFromCEA608) {
             // If this is CEA608 then use predefined aspect ratio
@@ -40063,10 +40383,12 @@ function TextTracks() {
 
         var newVideoWidth = realVideoSize.w;
         var newVideoHeight = realVideoSize.h;
+        var newVideoLeft = realVideoSize.x;
+        var newVideoTop = realVideoSize.y;
 
-        if (newVideoWidth != actualVideoWidth || newVideoHeight != actualVideoHeight) {
-            actualVideoLeft = realVideoSize.x;
-            actualVideoTop = realVideoSize.y;
+        if (newVideoWidth != actualVideoWidth || newVideoHeight != actualVideoHeight || newVideoLeft != actualVideoLeft || newVideoTop != actualVideoTop) {
+            actualVideoLeft = newVideoLeft + videoOffsetLeft;
+            actualVideoTop = newVideoTop + videoOffsetTop;
             actualVideoWidth = newVideoWidth;
             actualVideoHeight = newVideoHeight;
             captionContainer.style.left = actualVideoLeft + 'px';
@@ -40156,6 +40478,38 @@ function TextTracks() {
                 }
             }
         }
+
+        if (activeCue.isd) {
+            var htmlCaptionDiv = document.getElementById(activeCue.cueID);
+            if (htmlCaptionDiv) {
+                captionContainer.removeChild(htmlCaptionDiv);
+                renderCaption(activeCue);
+            }
+        }
+    }
+
+    function renderCaption(cue) {
+        var finalCue = document.createElement('div');
+        captionContainer.appendChild(finalCue);
+        (0, _imsc.renderHTML)(cue.isd, finalCue, function (uri) {
+            var imsc1ImgUrnTester = /^(urn:)(mpeg:[a-z0-9][a-z0-9-]{0,31}:)(subs:)([0-9])$/;
+            var smpteImgUrnTester = /^#(.*)$/;
+            if (imsc1ImgUrnTester.test(uri)) {
+                var match = imsc1ImgUrnTester.exec(uri);
+                var imageId = parseInt(match[4], 10) - 1;
+                var imageData = btoa(cue.images[imageId]);
+                var dataUrl = 'data:image/png;base64,' + imageData;
+                return dataUrl;
+            } else if (smpteImgUrnTester.test(uri)) {
+                var match = smpteImgUrnTester.exec(uri);
+                var imageId = match[1];
+                var dataUrl = 'data:image/png;base64,' + cue.embeddedImages[imageId];
+                return dataUrl;
+            } else {
+                return null;
+            }
+        }, captionContainer.clientHeight, captionContainer.clientWidth);
+        finalCue.id = cue.cueID;
     }
 
     /*
@@ -40173,7 +40527,7 @@ function TextTracks() {
             return;
         }
 
-        var _loop = function (item) {
+        for (var item in captionData) {
             var cue = undefined;
             var currentItem = captionData[item];
 
@@ -40202,28 +40556,8 @@ function TextTracks() {
                 cue.onenter = function () {
                     if (track.mode === _constantsConstants2['default'].TEXT_SHOWING) {
                         if (this.isd) {
-                            var finalCue = document.createElement('div');
+                            renderCaption(this);
                             log('Cue enter id:' + this.cueID);
-                            captionContainer.appendChild(finalCue);
-                            (0, _imsc.renderHTML)(this.isd, finalCue, function (uri) {
-                                var imsc1ImgUrnTester = /^(urn:)(mpeg:[a-z0-9][a-z0-9-]{0,31}:)(subs:)([0-9])$/;
-                                var smpteImgUrnTester = /^#(.*)$/;
-                                if (imsc1ImgUrnTester.test(uri)) {
-                                    var match = imsc1ImgUrnTester.exec(uri);
-                                    var imageId = parseInt(match[4], 10) - 1;
-                                    var imageData = btoa(cue.images[imageId]);
-                                    var dataUrl = 'data:image/png;base64,' + imageData;
-                                    return dataUrl;
-                                } else if (smpteImgUrnTester.test(uri)) {
-                                    var match = smpteImgUrnTester.exec(uri);
-                                    var imageId = match[1];
-                                    var dataUrl = 'data:image/png;base64,' + cue.embeddedImages[imageId];
-                                    return dataUrl;
-                                } else {
-                                    return null;
-                                }
-                            }, captionContainer.clientHeight, captionContainer.clientWidth);
-                            finalCue.id = this.cueID;
                         } else {
                             captionContainer.appendChild(this.cueHTMLElement);
                             scaleCue.call(self, this);
@@ -40259,15 +40593,11 @@ function TextTracks() {
             }
 
             track.addCue(cue);
-        };
-
-        for (var item in captionData) {
-            _loop(item);
         }
     }
 
     function getTrackByIdx(idx) {
-        return idx >= 0 && textTrackQueue[idx] ? videoModel.getTextTrack(textTrackQueue[idx].kind, textTrackQueue[idx].label, textTrackQueue[idx].lang) : null;
+        return idx >= 0 && textTrackQueue[idx] ? videoModel.getTextTrack(textTrackQueue[idx].kind, textTrackQueue[idx].label, textTrackQueue[idx].lang, textTrackQueue[idx].isTTML, textTrackQueue[idx].isEmbedded) : null;
     }
 
     function getCurrentTrackIdx() {
@@ -41047,6 +41377,7 @@ var LAST_MEDIA_SETTINGS = 'LastMediaSettings';
 
 function DOMStorage(config) {
 
+    config = config || {};
     var context = this.context;
     var log = (0, _coreDebug2['default'])(context).getInstance().log;
     var mediaPlayerModel = config.mediaPlayerModel;
@@ -41238,6 +41569,7 @@ var _coreFactoryMaker2 = _interopRequireDefault(_coreFactoryMaker);
  */
 function EBMLParser(config) {
 
+    config = config || {};
     var instance = undefined;
 
     var data = new DataView(config.data);
@@ -41906,6 +42238,7 @@ var _coreFactoryMaker2 = _interopRequireDefault(_coreFactoryMaker);
  */
 function LiveEdgeFinder(config) {
 
+    config = config || {};
     var instance = undefined;
     var timelineConverter = config.timelineConverter;
     var streamProcessor = config.streamProcessor;
@@ -42801,6 +43134,7 @@ var _coreFactoryMaker2 = _interopRequireDefault(_coreFactoryMaker);
 
 function BasicSelector(config) {
 
+    config = config || {};
     var instance = undefined;
 
     var blacklistController = config.blacklistController;
@@ -42876,6 +43210,7 @@ var _coreFactoryMaker2 = _interopRequireDefault(_coreFactoryMaker);
 
 function DVBSelector(config) {
 
+    config = config || {};
     var instance = undefined;
 
     var blacklistController = config.blacklistController;

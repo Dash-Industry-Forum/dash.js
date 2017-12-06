@@ -600,6 +600,7 @@ var _MetricsReportingEvents2 = _interopRequireDefault(_MetricsReportingEvents);
 
 function MetricsCollectionController(config) {
 
+    config = config || {};
     var metricsControllers = {};
 
     var context = this.context;
@@ -729,6 +730,7 @@ var _MetricsHandlersController2 = _interopRequireDefault(_MetricsHandlersControl
 
 function MetricsController(config) {
 
+    config = config || {};
     var metricsHandlersController = undefined,
         reportingController = undefined,
         rangeController = undefined,
@@ -837,6 +839,8 @@ var _metricsMetricsHandlerFactory = _dereq_(10);
 var _metricsMetricsHandlerFactory2 = _interopRequireDefault(_metricsMetricsHandlerFactory);
 
 function MetricsHandlersController(config) {
+
+    config = config || {};
     var handlers = [];
 
     var instance = undefined;
@@ -957,6 +961,7 @@ var _utilsCustomTimeRanges2 = _interopRequireDefault(_utilsCustomTimeRanges);
 
 function RangeController(config) {
 
+    config = config || {};
     var useWallClockTime = false;
     var context = this.context;
     var instance = undefined,
@@ -1176,6 +1181,7 @@ var _handlersGenericMetricHandler2 = _interopRequireDefault(_handlersGenericMetr
 
 function MetricsHandlerFactory(config) {
 
+    config = config || {};
     var instance = undefined;
     var log = config.log;
 
@@ -1284,6 +1290,7 @@ var _utilsHandlerHelpers2 = _interopRequireDefault(_utilsHandlerHelpers);
 
 function BufferLevelHandler(config) {
 
+    config = config || {};
     var instance = undefined,
         reportingController = undefined,
         n = undefined,
@@ -1406,6 +1413,7 @@ var _MetricsReportingEvents2 = _interopRequireDefault(_MetricsReportingEvents);
 
 function DVBErrorsHandler(config) {
 
+    config = config || {};
     var instance = undefined,
         reportingController = undefined;
 
@@ -1577,6 +1585,7 @@ var _utilsHandlerHelpers2 = _interopRequireDefault(_utilsHandlerHelpers);
 
 function HttpListHandler(config) {
 
+    config = config || {};
     var instance = undefined,
         reportingController = undefined,
         n = undefined,
@@ -1697,6 +1706,7 @@ var _reportersDVBReporting = _dereq_(16);
 var _reportersDVBReporting2 = _interopRequireDefault(_reportersDVBReporting);
 
 function ReportingFactory(config) {
+    config = config || {};
 
     var knownReportingSchemeIdUris = {
         'urn:dvb:dash:reporting:2014': _reportersDVBReporting2['default']
@@ -1797,6 +1807,7 @@ var _utilsRNG = _dereq_(21);
 var _utilsRNG2 = _interopRequireDefault(_utilsRNG);
 
 function DVBReporting(config) {
+    config = config || {};
     var instance = undefined;
 
     var context = this.context;
@@ -1998,6 +2009,7 @@ var _MetricsReportingEvents2 = _interopRequireDefault(_MetricsReportingEvents);
 
 function DVBErrorsTranslator(config) {
 
+    config = config || {};
     var instance = undefined;
     var eventBus = config.eventBus;
     var metricModel = config.metricsModel;
@@ -2232,6 +2244,7 @@ var _voReporting = _dereq_(25);
 var _voReporting2 = _interopRequireDefault(_voReporting);
 
 function ManifestParsing(config) {
+    config = config || {};
     var instance = undefined;
     var dashManifestModel = config.dashManifestModel;
     var constants = config.constants;
