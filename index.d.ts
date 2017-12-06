@@ -20,7 +20,7 @@ declare namespace dashjs {
         scanType?: string;
     }
 
-    export interface MediaInfo {
+    export class MediaInfo {
         id: string | null;
         index: number | null;
         type: 'video' | 'audio' | 'text' | 'fragmentedText' | 'embeddedText' | null;
