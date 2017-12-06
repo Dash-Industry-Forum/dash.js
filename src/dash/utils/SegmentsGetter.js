@@ -36,7 +36,7 @@ import ListSegmentsGetter from './ListSegmentsGetter';
 
 function SegmentsGetter(config, isDynamic) {
 
-    let context = this.context;
+    const context = this.context;
 
     let instance,
         timelineSegmentsGetter,
@@ -49,7 +49,9 @@ function SegmentsGetter(config, isDynamic) {
         listSegmentsGetter = ListSegmentsGetter(context).create(config, isDynamic);
     }
 
-    function getSegments(representation, requestedTime, index, onSegmentListUpdatedCallback) {
+    // availabilityUpperLimit parameter is not used directly by any dash.js function, but it is needed as a helper
+    // for other developments that extend dash.js, and provide their own transport layers (ex: P2P transport)
+    function getSegments(representation, requestedTime, index, onSegmentListUpdatedCallback, availabilityUpperLimit) {
         let segments;
         const type = representation.segmentInfoType;
 
@@ -58,11 +60,11 @@ function SegmentsGetter(config, isDynamic) {
             segments = representation.segments;
         } else {
             if (type === DashConstants.SEGMENT_TIMELINE) {
-                segments = timelineSegmentsGetter.getSegments(representation, requestedTime, index);
+                segments = timelineSegmentsGetter.getSegments(representation, requestedTime, index, availabilityUpperLimit);
             } else if (type === DashConstants.SEGMENT_TEMPLATE) {
-                segments = templateSegmentsGetter.getSegments(representation, requestedTime, index);
+                segments = templateSegmentsGetter.getSegments(representation, requestedTime, index, availabilityUpperLimit);
             } else if (type === DashConstants.SEGMENT_LIST) {
-                segments = listSegmentsGetter.getSegments(representation, requestedTime, index);
+                segments = listSegmentsGetter.getSegments(representation, requestedTime, index, availabilityUpperLimit);
             }
 
             if (onSegmentListUpdatedCallback) {
@@ -72,7 +74,7 @@ function SegmentsGetter(config, isDynamic) {
     }
 
     function isSegmentListUpdateRequired(representation, index) {
-        let segments = representation.segments;
+        const segments = representation.segments;
         let updateRequired = false;
 
         let upperIdx,

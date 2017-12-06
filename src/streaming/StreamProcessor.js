@@ -40,6 +40,7 @@ import DashHandler from '../dash/DashHandler';
 
 function StreamProcessor(config) {
 
+    config = config || {};
     let context = this.context;
 
     let indexHandler;
@@ -73,10 +74,12 @@ function StreamProcessor(config) {
         spExternalControllers;
 
     function setup() {
-        liveEdgeFinder = LiveEdgeFinder(context).create({
-            timelineConverter: timelineConverter,
-            streamProcessor: instance
-        });
+        if (playbackController && playbackController.getIsDynamic()) {
+            liveEdgeFinder = LiveEdgeFinder(context).create({
+                timelineConverter: timelineConverter,
+                streamProcessor: instance
+            });
+        }
         resetInitialSettings();
     }
 
@@ -189,7 +192,10 @@ function StreamProcessor(config) {
         resetInitialSettings();
         type = null;
         stream = null;
-        liveEdgeFinder.reset();
+        if (liveEdgeFinder) {
+            liveEdgeFinder.reset();
+            liveEdgeFinder = null;
+        }
     }
 
     function isUpdating() {

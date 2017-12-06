@@ -30,17 +30,22 @@
  */
 
 /**
- * Adobe Access DRM
- *
+ * Protection Constants declaration
  * @class
- * @implements KeySystem
+ * @ignore
  */
+class ProtectionConstants {
 
-//TODO implement
-function KeySystemAdobeAccess() {
-    let instance = {};
-    return instance;
+    init () {
+        this.CLEARKEY_KEYSTEM_STRING = 'org.w3.clearkey';
+        this.WIDEVINE_KEYSTEM_STRING = 'com.widevine.alpha';
+        this.PLAYREADY_KEYSTEM_STRING = 'com.microsoft.playready';
+    }
+
+    constructor () {
+        this.init();
+    }
 }
 
-KeySystemAdobeAccess.__dashjs_factory_name = 'KeySystemAdobeAccess';
-export default dashjs.FactoryMaker.getSingletonFactory(KeySystemAdobeAccess); /* jshint ignore:line */
+let constants = new ProtectionConstants();
+export default constants;

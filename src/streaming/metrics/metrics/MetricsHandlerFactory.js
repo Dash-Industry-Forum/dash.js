@@ -36,6 +36,7 @@ import GenericMetricHandler from './handlers/GenericMetricHandler';
 
 function MetricsHandlerFactory(config) {
 
+    config = config || {};
     let instance;
     let log = config.log;
 

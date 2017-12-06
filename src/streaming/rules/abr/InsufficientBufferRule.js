@@ -37,6 +37,7 @@ import SwitchRequest from '../SwitchRequest.js';
 
 function InsufficientBufferRule(config) {
 
+    config = config || {};
     const INSUFFICIENT_BUFFER_SAFETY_FACTOR = 0.5;
 
     const context = this.context;

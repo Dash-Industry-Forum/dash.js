@@ -46,8 +46,15 @@
                     <span ng-show="item.submenu">{{item.name}}</span>
                     <ul ng-show="item.submenu">
                         <li ng-repeat="subitem in item.submenu">
-                            <span ng-click="setStream(subitem)"
+                            <span ng-click="setStream(subitem)" ng-if="subitem.url"
                                   data-dismiss="modal">{{subitem.name}}</span>
+                            <span ng-if="!subitem.url">{{subitem.name}}</span>
+                            <ul ng-if="subitem.submenu">
+                                <li ng-repeat="subsubitem in subitem.submenu">
+                                    <span ng-click="setStream(subsubitem)"
+                                        data-dismiss="modal">{{subsubitem.name}}</span>
+                                </li>
+                            </ul>
                         </li>
                     </ul>
                   </li>
@@ -87,10 +94,19 @@
                         Stream <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu multi-level" role="menu" aria-labelledby="dropdownMenu">
-                        <li class="dropdown-submenu" ng-if="item.submenu" ng-repeat="item in availableStreams">
+                        <li class="dropdown-submenu" ng-if="item.submenu" ng-repeat="item in availableStreams" ng-mouseover="onStreamItemHover(item)">
                             <a tabindex="-1" href="#">{{item.name}}</a>
                             <ul class="dropdown-menu">
-                                <li ng-repeat="subitem in item.submenu">
+                                <li class="dropdown-submenu" ng-repeat="subitem in item.submenu" ng-if="subitem.submenu">
+                                    <a tabindex="-1" href="#">{{subitem.name}}</a>
+                                    <ul class="dropdown-menu">
+                                        <li ng-repeat="subsubitem in subitem.submenu">
+                                            <a title="{{ subsubitem.moreInfo && 'See ' + subsubitem.moreInfo + ' for more information' || undefined }}"
+                                               ng-click="setStream(subsubitem)">{{subsubitem.name}}</a>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li ng-repeat="subitem in item.submenu" ng-if="subitem.url">
                                     <a title="{{ subitem.moreInfo && 'See ' + subitem.moreInfo + ' for more information' || undefined }}"
                                        ng-click="setStream(subitem)">{{subitem.name}}</a>
                                 </li>
@@ -186,14 +202,25 @@
                     <!--<button class="btn btn-primary license" type="button" ng-click="doLicenseFetch()">Pre-Fetch Licenses</button>-->
                 </div>
             </div>
+            <div class="options-item">
+                <div class="options-item-title">Initial Settings</div>
+                <div class="options-item-body">
+                    <label class="options-label">Audio:</label>
+                    <input type="text" class="form-control" placeholder="audio initial lang, e.g. 'en'" ng-model="initialSettings.audio">
+                    <label class="options-label">Video:</label>
+                    <input type="text" class="form-control" placeholder="initial role, e.g. 'alternate'" ng-model="initialSettings.video">        <label class="options-label">Text:</label>
+                    <input type="text" class="form-control" placeholder="text initial lang, e.g. 'en'" ng-model="initialSettings.text">
+                    <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                           title="Enable subtitle on loading text">
+                        <input type="checkbox" id="enableTextAtLoading" ng-model="initialSettings.textEnabled">
+                        Enable Text At Loading
+                    </label>
 
+                </div>
+            </div>
             <div class="options-item">
                 <div class="options-item-title">Track Switch Mode</div>
                 <div class="options-item-body">
-                    <label class="options-label">Audio:</label>
-                    <input type="text" class="form-control" placeholder="initial lang, e.g. 'en'" ng-model="initialSettings.audio">
-                    <label class="options-label">Video:</label>
-                    <input type="text" class="form-control" placeholder="initial role, e.g. 'alternate'" ng-model="initialSettings.video">
                     <label data-toggle="tooltip" data-placement="right"
                            title="When a track is switched, the portion of the buffer that contains old track data is cleared">
                         <input  type="radio" id="always-replace" autocomplete="off" name="track-switch" checked="checked" ng-click="changeTrackSwitchMode('alwaysReplace', 'video')" >

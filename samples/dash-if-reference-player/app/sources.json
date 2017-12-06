@@ -190,6 +190,13 @@
         {
           "name": "1080p with W3C Clear Key, single key",
           "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_1080p_ClearKey.mpd",
+          "protData": {
+            "org.w3.clearkey": {
+              "clearkeys": {
+                "nrQFDeRLSAKTLifXUIPiZg": "FmY0xnWCPCNaSpRG-tUuTQ"
+              }
+            }
+          },
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
@@ -243,11 +250,29 @@
         {
            "name": "2160p with W3C Clear Key, single key",
           "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_ClearKey.mpd",
+          "protData": {
+            "org.w3.clearkey": {
+              "clearkeys": {
+                "nrQFDeRLSAKTLifXUIPiZg": "FmY0xnWCPCNaSpRG-tUuTQ"
+              }
+            }
+          },
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
            "name": "2160p with W3C Clear Key, multiple keys",
           "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey/Manifest_ClearKey.mpd",
+          "protData": {
+            "org.w3.clearkey": {
+              "clearkeys": {
+                "gDmb9YohQBSAU-J-dI6YwA": "3aHppzZ2g3Y3wK1uNnUXmg",
+                "kJU-CWyySaOiYHpf7-rUmQ": "zsmKW7Mq9Unz5R7oUGeF8w",
+                "Dk2pK9DoSmaMP8Jal-tlMg": "UmYYfGb7znuoFAQM79ayHw",
+                "WF8jPzByRvGfpG3CLGagFA": "jayKpC3tmPq4YKXkapa8FA",
+                "QiK9eLxFQb-2Pm-BTcOR3w": "GAMi9v92b9ca5yBwaptN-Q"
+              }
+            }
+          },
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
@@ -296,11 +321,29 @@
         {
           "name": "Audio with W3C Clear Key, single key",
           "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_AudioOnly_ClearKey.mpd",
+          "protData": {
+            "org.w3.clearkey": {
+              "clearkeys": {
+                "nrQFDeRLSAKTLifXUIPiZg": "FmY0xnWCPCNaSpRG-tUuTQ"
+              }
+            }
+          },
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
           "name": "Audio with W3C Clear Key, multiple keys",
           "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey/Manifest_AudioOnly_ClearKey.mpd",
+          "protData": {
+            "org.w3.clearkey": {
+              "clearkeys": {
+                "gDmb9YohQBSAU-J-dI6YwA": "3aHppzZ2g3Y3wK1uNnUXmg",
+                "kJU-CWyySaOiYHpf7-rUmQ": "zsmKW7Mq9Unz5R7oUGeF8w",
+                "Dk2pK9DoSmaMP8Jal-tlMg": "UmYYfGb7znuoFAQM79ayHw",
+                "WF8jPzByRvGfpG3CLGagFA": "jayKpC3tmPq4YKXkapa8FA",
+                "QiK9eLxFQb-2Pm-BTcOR3w": "GAMi9v92b9ca5yBwaptN-Q"
+              }
+            }
+          },
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
@@ -330,6 +373,17 @@
         {
           "name": "Multi-period 1080p with W3C Clear Key, multiple keys",
           "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey-MultiPeriod/Manifest_1080p_ClearKey.mpd",
+          "protData": {
+            "org.w3.clearkey": {
+              "clearkeys": {
+                "gDmb9YohQBSAU-J-dI6YwA": "3aHppzZ2g3Y3wK1uNnUXmg",
+                "kJU-CWyySaOiYHpf7-rUmQ": "zsmKW7Mq9Unz5R7oUGeF8w",
+                "Dk2pK9DoSmaMP8Jal-tlMg": "UmYYfGb7znuoFAQM79ayHw",
+                "WF8jPzByRvGfpG3CLGagFA": "jayKpC3tmPq4YKXkapa8FA",
+                "QiK9eLxFQb-2Pm-BTcOR3w": "GAMi9v92b9ca5yBwaptN-Q"
+              }
+            }
+          },
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
@@ -359,6 +413,17 @@
         {
           "name": "Multi-period 2160p with W3C Clear Key, multiple keys",
           "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey-MultiPeriod/Manifest_ClearKey.mpd",
+          "protData": {
+            "org.w3.clearkey": {
+              "clearkeys": {
+                "gDmb9YohQBSAU-J-dI6YwA": "3aHppzZ2g3Y3wK1uNnUXmg",
+                "kJU-CWyySaOiYHpf7-rUmQ": "zsmKW7Mq9Unz5R7oUGeF8w",
+                "Dk2pK9DoSmaMP8Jal-tlMg": "UmYYfGb7znuoFAQM79ayHw",
+                "WF8jPzByRvGfpG3CLGagFA": "jayKpC3tmPq4YKXkapa8FA",
+                "QiK9eLxFQb-2Pm-BTcOR3w": "GAMi9v92b9ca5yBwaptN-Q"
+              }
+            }
+          },
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
@@ -559,575 +624,6 @@
           "name": "Multi-period 2160p without encryption",
           "url": "https://media.axprod.net/TestVectors/v6.1-Clear/MultiPeriod_Manifest.mpd",
           "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
-        }
-      ]
-    },
-    {
-      "name": "DASH Industry Forum Test Vectors",
-      "submenu": [
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/1a/netflix/exMPD_BIP_TC1.mpd",
-          "name": "1. All video representations with same spatial resolution encoded at different bitrates with a single audio representation."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd",
-          "name": "2. All video representations with same spatial resolution encoded at different bitrates with a single audio representation."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/1a/qualcomm/1/MultiRate.mpd",
-          "name": "3. All video representations with same spatial resolution encoded at different bitrates with a single audio representation."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/1a/qualcomm/2/MultiRate.mpd",
-          "name": "4. All video representations with same spatial resolution encoded at different bitrates with a single audio representation."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/1b/qualcomm/1/MultiRatePatched.mpd",
-          "name": "5. All video representations with same spatial resolution encoded at different bitrates with a single audio representation."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/1b/qualcomm/2/MultiRate.mpd",
-          "name": "6. All video representations with same spatial resolution encoded at different bitrates with a single audio representation."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/1c/qualcomm/1/MultiRate.mpd",
-          "name": "7. All video representations with same spatial resolution encoded at different bitrates with a single audio representation."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/1c/qualcomm/2/MultiRate.mpd",
-          "name": "8. All video representations with same spatial resolution encoded at different bitrates with a single audio representation."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/2a/qualcomm/1/MultiResMPEG2.mpd",
-          "name": "1. Video representations with different spatial resolution and bitrate, with a single audio representation."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/2a/qualcomm/2/MultiRes.mpd",
-          "name": "2. Video representations with different spatial resolution and bitrate, with a single audio representation."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/2b/qualcomm/1/MultiResMPEG2.mpd",
-          "name": "3. Video representations with different spatial resolution and bitrate, with a single audio representation."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/2b/qualcomm/2/MultiRes.mpd",
-          "name": "4. Video representations with different spatial resolution and bitrate, with a single audio representation."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/2c/qualcomm/1/MultiResMPEG2.mpd",
-          "name": "5. Video representations with different spatial resolution and bitrate, with a single audio representation."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/2c/qualcomm/2/MultiRes.mpd",
-          "name": "6. Video representations with different spatial resolution and bitrate, with a single audio representation."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/3a/fraunhofer/aac-lc_stereo_without_video/ElephantsDream/elephants_dream_audio_only_aaclc_stereo_sidx.mpd",
-          "name": "1. Multiple audio representation with different audio bitrate."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/3a/fraunhofer/aac-lc_stereo_without_video/Sintel/sintel_audio_only_aaclc_stereo_sidx.mpd",
-          "name": "2. Multiple audio representation with different audio bitrate."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/3a/fraunhofer/heaac_stereo_without_video/ElephantsDream/elephants_dream_audio_only_heaac_stereo_sidx.mpd",
-          "name": "3. Multiple audio representation with different audio bitrate."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/3a/fraunhofer/heaac_stereo_without_video/Sintel/sintel_audio_only_heaac_stereo_sidx.mpd",
-          "name": "4. Multiple audio representation with different audio bitrate."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/3a/fraunhofer/heaacv2_stereo_without_video/ElephantsDream/elephants_dream_audio_only_heaacv2_stereo_sidx.mpd",
-          "name": "5. Multiple audio representation with different audio bitrate."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/3a/fraunhofer/heaacv2_stereo_without_video/Sintel/sintel_audio_only_heaacv2_stereo_sidx.mpd",
-          "name": "6. Multiple audio representation with different audio bitrate."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/3b/fraunhofer/aac-lc_stereo_with_video/ElephantsDream/elephants_dream_480p_aaclc_stereo_sidx.mpd",
-          "name": "7. Multiple audio representation with different audio bitrate."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/3b/fraunhofer/aac-lc_stereo_with_video/Sintel/sintel_480p_aaclc_stereo_sidx.mpd",
-          "name": "8. Multiple audio representation with different audio bitrate."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/3b/fraunhofer/heaac_stereo_with_video/ElephantsDream/elephants_dream_480p_heaac_stereo_sidx.mpd",
-          "name": "9. Multiple audio representation with different audio bitrate."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/3b/fraunhofer/heaac_stereo_with_video/Sintel/sintel_480p_heaac_stereo_sidx.mpd",
-          "name": "10.Multiple audio representation with different audio bitrate."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/3b/fraunhofer/heaacv2_stereo_with_video/ElephantsDream/elephants_dream_480p_heaacv2_stereo_sidx.mpd",
-          "name": "11. Multiple audio representation with different audio bitrate."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/3b/fraunhofer/heaacv2_stereo_with_video/Sintel/sintel_480p_heaacv2_stereo_sidx.mpd",
-          "name": "12. Multiple audio representation with different audio bitrate."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/3b/sony/SNE_DASH_CASE3B_SD_REVISED.mpd",
-          "name": "13. Multiple audio representation with different audio bitrate."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/4b/qualcomm/1/ED_OnDemand_5SecSeg_Subtitles.mpd",
-          "name": "1. One or more subtitle representations provided along with audio, video representations."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/4b/qualcomm/2/TearsOfSteel_onDem5secSegSubTitles.mpd",
-          "name": "2. One or more subtitle representations provided along with audio, video representations."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/4b/qualcomm/3/Solekai.mpd",
-          "name": "3. One or more subtitle representations provided along with audio, video representations."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/4c/1/dash.mpd",
-          "name": "4. One or more subtitle representations provided along with audio, video representations."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/5a/nomor/1.mpd",
-          "name": "1. Test content with more than one periods."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/5a/nomor/3.mpd",
-          "name": "2. Test content with more than one periods."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/5a/nomor/4.mpd",
-          "name": "3. Test content with more than one periods."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/5a/nomor/5.mpd",
-          "name": "4. Test content with more than one periods."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/5b/nomor/1.mpd",
-          "name": "5. Test content with more than one periods."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/5b/nomor/2.mpd",
-          "name": "6. Test content with more than one periods."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/5b/nomor/3.mpd",
-          "name": "7. Test content with more than one periods."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/5b/nomor/4.mpd",
-          "name": "8. Test content with more than one periods."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/5b/nomor/5.mpd",
-          "name": "9. Test content with more than one periods."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/5b/nomor/6.mpd",
-          "name": "10. Test content with more than one periods."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/5b/nomor/7.mpd",
-          "name": "11. Test content with more than one periods."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/5b/nomor/8.mpd",
-          "name": "12. Test content with more than one periods."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/5b/nomor/9.mpd",
-          "name": "13. Test content with more than one periods."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/5b/nomor/10.mpd",
-          "name": "14. Test content with more than one periods."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/5b/nomor/11.mpd",
-          "name": "15. Test content with more than one periods."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/6b/microsoft/CENC_SD_Time/CENC_SD_time_MPD.mpd",
-          "name": "1. Test content with encrypted representations."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/6b/microsoft/CENC_HD_Time/CENC_HD_time_MPD.mpd",
-          "name": "2. Test content with encrypted representations."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/6c/envivio/manifest.mpd",
-          "name": "3. Test content with encrypted representations."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/6c/envivio/manifest2.mpd",
-          "name": "4. Test content with encrypted representations."
-        },
-        {
-          "url": "http://html5.cablelabs.com:8100/cenc/prwv/dash.mpd",
-          "name": "5. Test content with encrypted representations."
-        },
-        {
-          "url": "http://html5.cablelabs.com:8100/cenc/prwv/dash_init.mpd",
-          "name": "6. Test content with encrypted representations."
-        },
-        {
-          "url": "http://54.72.87.160/stattodyn/statodyn.php?type=mpd&pt=1376172180&tsbd=120&origmpd=http%3A%2F%2Fdash.edgesuite.net%2Fdash264%2FTestCases%2F1b%2Fthomson-networks%2F2%2Fmanifest.mpd&php=http%3A%2F%2Fdasher.eu5.org%2Fstatodyn.php&mpd=&debug=0&hack=.mpd",
-          "name": "1. Test content with dynamic MPD type and no @minimumUpdatePeriod"
-        },
-        {
-          "url": "http://54.72.87.160/stattodyn/statodyn.php?type=mpd&pt=1376172390&tsbd=120&origmpd=http%3A%2F%2Fdash.edgesuite.net%2Fdash264%2FTestCases%2F2b%2Fthomson-networks%2F2%2Fmanifest.mpd&php=http%3A%2F%2Fdasher.eu5.org%2Fstatodyn.php&mpd=&debug=0&hack=.mpd",
-          "name": "2. Test content with dynamic MPD type and no @minimumUpdatePeriod"
-        },
-        {
-          "url": "http://54.72.87.160/stattodyn/statodyn.php?type=mpd&pt=1376172485&tsbd=10&origmpd=http%3A%2F%2Fdash.edgesuite.net%2Fdash264%2FTestCases%2F2b%2Fthomson-networks%2F1%2Fmanifest.mpd&php=http%3A%2F%2Fdasher.eu5.org%2Fstatodyn.php&mpd=&debug=0&hack=.mpd",
-          "name": "3. Test content with dynamic MPD type and no @minimumUpdatePeriod"
-        },
-        {
-          "url": "http://tvnlive.dashdemo.edgesuite.net/live/manifest.mpd",
-          "name": "1. Test content with dynamic MPD type and finite @minimumUpdatePeriod"
-        },
-        {
-          "url": "https://vm2.dashif.org/livesim/testpic_2s/Manifest.mpd",
-          "name": "2. Test content with dynamic MPD type and finite @minimumUpdatePeriod (livesim)"
-        },
-        {
-          "url": "https://vm2.dashif.org/livesim/start_1800/testpic_2s/Manifest.mpd",
-          "name": "3. Test content with dynamic MPD type and finite @minimumUpdatePeriod (livesim)"
-        },
-        {
-          "url": "https://vm2.dashif.org/livesim/mup_300/tsbd_500/testpic_2s/Manifest.mpd",
-          "name": "4. Test content with dynamic MPD type and finite @minimumUpdatePeriod (livesim)"
-        },
-        {
-          "url": "https://vm2.dashif.org/livesim/modulo_10/testpic_2s/Manifest.mpd",
-          "name": "5. Test content with dynamic MPD type and finite @minimumUpdatePeriod (livesim)"
-        },
-        {
-          "url": "https://vm2.dashif.org/livesim/periods_20/testpic_2s/Manifest.mpd",
-          "name": "6. Test content with dynamic MPD type and finite @minimumUpdatePeriod (livesim)"
-        },
-        {
-          "url": "https://vm2.dashif.org/livesim/scte35_2/testpic_2s/Manifest.mpd",
-          "name": "7. Test content with dynamic MPD type and finite @minimumUpdatePeriod (livesim)"
-        },
-        {
-          "url": "https://vm2.dashif.org/livesim/utc_direct-head/testpic_2s/Manifest.mpd",
-          "name": "8. Test content with dynamic MPD type and finite @minimumUpdatePeriod (livesim)"
-        },
-        {
-          "url": "https://vm2.dashif.org/livesim-dev/baseurl_d40_u20/baseurl_u40_d20/testpic_2s/Manifest.mpd",
-          "name": "9. Test content with dynamic MPD type and finite @minimumUpdatePeriod (livesim-dev)"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/9a/qualcomm/1/MultiRate.mpd",
-          "name": "1. Test content with a low bitrate and framerate representation to assist in trick modes."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/9a/qualcomm/2/MultiRate.mpd",
-          "name": "2. Test content with a low bitrate and framerate representation to assist in trick modes."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/9b/qualcomm/1/MultiRate.mpd",
-          "name": "3. Test content with a low bitrate and framerate representation to assist in trick modes."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/9b/qualcomm/2/MultiRate.mpd",
-          "name": "4. Test content with a low bitrate and framerate representation to assist in trick modes."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/9c/qualcomm/1/MultiRate.mpd",
-          "name": "5. Test content with a low bitrate and framerate representation to assist in trick modes."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCases/10a/1/iis_forest_short_poem_multi_lang_480p_single_adapt_aaclc_sidx.mpd",
-          "name": "1. Test content with multiple tracks, e.g. different audio language tracks, different video views etc."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesHD/1a/qualcomm/1/MultiRate.mpd",
-          "name": "1. All 1080p video representations encoded at different bitrates with a single audio representation."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesHD/1a/qualcomm/2/MultiRate.mpd",
-          "name": "2. All 1080p video representations encoded at different bitrates with a single audio representation."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesHD/1b/qualcomm/1/MultiRate.mpd",
-          "name": "3. All 1080p video representations encoded at different bitrates with a single audio representation."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesHD/1b/qualcomm/2/MultiRate.mpd",
-          "name": "4. All 1080p video representations encoded at different bitrates with a single audio representation."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesHD/1c/qualcomm/1/MultiRate.mpd",
-          "name": "5. All 1080p video representations encoded at different bitrates with a single audio representation."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesHD/2a/qualcomm/1/MultiResMPEG2.mpd",
-          "name": "1. Video representations with different spatial resolution and bitrate with at least on 1080p representation, with a single audio representation."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesHD/2a/qualcomm/2/MultiRes.mpd",
-          "name": "2. Video representations with different spatial resolution and bitrate with at least on 1080p representation, with a single audio representation."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesHD/2b/DTV/1/live.mpd",
-          "name": "3. Video representations with different spatial resolution and bitrate with at least on 1080p representation, with a single audio representation."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesHD/2b/qualcomm/1/MultiResMPEG2.mpd",
-          "name": "4. Video representations with different spatial resolution and bitrate with at least on 1080p representation, with a single audio representation."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesHD/2b/qualcomm/2/MultiRes.mpd",
-          "name": "5. Video representations with different spatial resolution and bitrate with at least on 1080p representation, with a single audio representation."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesHD/2c/qualcomm/1/MultiResMPEG2.mpd",
-          "name": "6. Video representations with different spatial resolution and bitrate with at least on 1080p representation, with a single audio representation."
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/dolby/1/1/ChID_voices_51_256_ddp.mpd",
-          "name": "6-CHANNEL ID"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/dolby/2/1/ChID_voices_71_768_ddp.mpd",
-          "name": "8-CHANNEL ID"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/dolby/3/1/ChID_voices_20_128_ddp.mpd",
-          "name": "SINGLE STEREO AUDIO TRACK"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/dolby/4/1/ChID_voices_71_384_448_768_ddp.mpd",
-          "name": "MULTIPLE ADAPTATION SETS"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/dolby/5/1/Living_Room_720p_20_96k_25fps.mpd",
-          "name": "1. AC-4 TEST VECTORS"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/dolby/5/2/Living_Room_720p_20_96k_2997fps.mpd",
-          "name": "2. AC-4 TEST VECTORS"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/dolby/5/3/Living_Room_720p_51_192k_25fps.mpd",
-          "name": "3. AC-4 TEST VECTORS"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/dolby/5/4/Living_Room_720p_51_192k_2997fps.mpd",
-          "name": "4. AC-4 TEST VECTORS"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/dolby/5/5/Living_Room_720p_51_51_192k_320k_25fps.mpd",
-          "name": "5. AC-4 TEST VECTORS"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/dolby/5/6/Living_Room_720p_51_51_192k_320k_2997fps.mpd",
-          "name": "6. AC-4 TEST VECTORS"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/dolby/5/7/Living_Room_720p_20_96k_25fps.mpd",
-          "name": "7. AC-4 TEST VECTORS"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/dolby/5/8/Living_Room_720p_20_96k_2997fps.mpd",
-          "name": "8. AC-4 TEST VECTORS"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/dolby/5/9/Living_Room_720p_51_192k_25fps.mpd",
-          "name": "9. AC-4 TEST VECTORS"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/dolby/5/10/Living_Room_720p_51_192k_2997fps.mpd",
-          "name": "10. AC-4 TEST VECTORS"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/dolby/5/11/Living_Room_720p_51_51_192k_320k_25fps.mpd",
-          "name": "11. AC-4 TEST VECTORS"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/dolby/5/12/Living_Room_720p_51_51_192k_320k_2997fps.mpd",
-          "name": "12. AC-4 TEST VECTORS"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/dts/1/Paint_dtsc_testA.mpd",
-          "name": "1. SINGLE MULTICHANNEL AUDIO TRACK"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/dts/1/Paint_dtse_testA.mpd",
-          "name": "2. SINGLE MULTICHANNEL AUDIO TRACK"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/dts/1/Paint_dtsh_testA.mpd",
-          "name": "3. SINGLE MULTICHANNEL AUDIO TRACK"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/dts/1/Paint_dtsl_testA.mpd",
-          "name": "4. SINGLE MULTICHANNEL AUDIO TRACK"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/dts/2/Paint_dtsc_testB.mpd",
-          "name": "1. SINGLE STEREO AUDIO TRACK"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/dts/2/Paint_dtse_testB.mpd",
-          "name": "2. SINGLE STEREO AUDIO TRACK"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/dts/2/Paint_dtsl_testB.mpd",
-          "name": "3. SINGLE STEREO AUDIO TRACK"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/dts/3/Paint_dtsc_testD.mpd",
-          "name": "1. MULTIPLE ADAPTATION SETS"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/dts/3/Paint_dtse_testD.mpd",
-          "name": "2. MULTIPLE ADAPTATION SETS"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/dts/3/Paint_dtsh_testD.mpd",
-          "name": "3. MULTIPLE ADAPTATION SETS"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/dts/3/Paint_dtsl_testD.mpd",
-          "name": "4, MULTIPLE ADAPTATION SETS"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/fraunhofer/HE-AACv2_Multichannel/1/6chID/6chId_480p_single_adapt_heaac5_1_sidx.mpd",
-          "name": "6-CHANNEL ID"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/fraunhofer/HE-AACv2_Multichannel/2/8chID/8ch_id_480p_single_adapt_heaac7_1_cf12_sidx.mpd",
-          "name": "8-CHANNEL ID"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/fraunhofer/HE-AACv2_Multichannel/3/ElephantsDream_6ch/elephants_dream_480p_heaac5_1_sidx.mpd",
-          "name": "1. MULTIPLE AUDIO REPRESENTATIONS"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/fraunhofer/HE-AACv2_Multichannel/3/Sintel_6ch/sintel_480p_heaac5_1_sidx.mpd",
-          "name": "2. MULTIPLE AUDIO REPRESENTATIONS"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/fraunhofer/HE-AACv2_Multichannel/3/Sintel_8ch/sintel_480p_heaac7_1_cf12_sidx.mpd",
-          "name": "3. MULTIPLE AUDIO REPRESENTATIONS"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/fraunhofer/MPEG_Surround/1/6chID/6chId_480p_single_adapt_mps5_1_sidx.mpd",
-          "name": "6-CHANNEL ID"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/fraunhofer/MPEG_Surround/2/ElephantsDream_6ch/elephants_dream_480p_mps5_1_sidx.mpd",
-          "name": "MULTIPLE AUDIO REPRESENTATIONS"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/fraunhofer/MPEG_Surround/2/Sintel_6ch/sintel_480p_mps5_1_sidx.mpd",
-          "name": "MULTIPLE AUDIO REPRESENTATIONS"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/fraunhofer/MPEGH_Stereo/1/sintel_audio_video_mpegh_stereo_sidx.mpd",
-          "name": "STEREO MPEG-H AUDIO"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/fraunhofer/MPEGH_51/1/sintel_audio_video_mpegh_5_1_brs_sidx.mpd",
-          "name": "5.1 MPEG-H AUDIO"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesMCA/fraunhofer/MPEGH_714/1/sintel_audio_video_mpegh_7_1_4_sidx.mpd",
-          "name": "7.1+4 MPEG-H AUDIO"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesHEVC/1a/1/TOS_OnDemand_HEVC_MultiRate.mpd",
-          "name": "1. HEVC SINGLE RESOLUTION MULTI-RATE"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesHEVC/1a/2/BBB_OnDemand_HEVC_MultiRate.mpd",
-          "name": "2. HEVC SINGLE RESOLUTION MULTI-RATE"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesHEVC/1a/9/tos_ondemand_multirate_hvc.mpd",
-          "name": "3. HEVC SINGLE RESOLUTION MULTI-RATE"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesHEVC/1b/1/TOS_Live_HEVC_MultiRate.mpd",
-          "name": "4. HEVC SINGLE RESOLUTION MULTI-RATE"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesHEVC/1b/2/BBB_Live_HEVC_MultiRate.mpd",
-          "name": "5. HEVC SINGLE RESOLUTION MULTI-RATE"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesHEVC/1b/10/tos_live_multirate_hvc.mpd",
-          "name": "6. HEVC SINGLE RESOLUTION MULTI-RATE"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesHEVC/2a/1/TOS_OnDemand_HEVC_MultiRes.mpd",
-          "name": "1. HEVC MULTI-RESOLUTION MULTI-RATE"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesHEVC/2a/2/BBB_OnDemand_HEVC_MultiRes.mpd",
-          "name": "2. HEVC MULTI-RESOLUTION MULTI-RATE"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesHEVC/2a/11/tos_ondemand_multires_hvc.mpd",
-          "name": "3. HEVC MULTI-RESOLUTION MULTI-RATE"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesHEVC/2a/12/tos_ondemand_multires_10bit_hev.mpd",
-          "name": "4. HEVC MULTI-RESOLUTION MULTI-RATE"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesHEVC/2a/13/tos_ondemand_multires_10bit_hvc.mpd",
-          "name": "5. HEVC MULTI-RESOLUTION MULTI-RATE"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesHEVC/2b/1/TOS_Live_HEVC_MultiRes.mpd",
-          "name": "6. HEVC MULTI-RESOLUTION MULTI-RATE"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesHEVC/2b/2/BBB_Live_HEVC_MultiRes.mpd",
-          "name": "7. HEVC MULTI-RESOLUTION MULTI-RATE"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesHEVC/2b/14/tos_live_multires_hvc.mpd",
-          "name": "8. HEVC MULTI-RESOLUTION MULTI-RATE"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesHEVC/2b/15/tos_live_multires_10bit_hev.mpd",
-          "name": "9. HEVC MULTI-RESOLUTION MULTI-RATE"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesHEVC/2b/16/tos_live_multires_10bit_hvc.mpd",
-          "name": "10. HEVC MULTI-RESOLUTION MULTI-RATE"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesHEVC/2b/17/bbb_live_multires_10bit_hev.mpd",
-          "name": "11. HEVC MULTI-RESOLUTION MULTI-RATE"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesHEVC/2b/18/bbb_live_multires_10bit_hvc.mpd",
-          "name": "12. HEVC MULTI-RESOLUTION MULTI-RATE"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesNegative/1/1.mpd",
-          "name": "1. NEGATIVE - ESSENTIAL PROPERTY"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesNegative/1/2.mpd",
-          "name": "2. NEGATIVE - ESSENTIAL PROPERTY"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesNegative/2/1.mpd",
-          "name": "1. NEGATIVE - CONTENT PROTECTION"
-        },
-        {
-          "url": "https://dash.akamaized.net/dash264/TestCasesNegative/2/2.mpd",
-          "name": "1. NEGATIVE - CONTENT PROTECTION"
         }
       ]
     },

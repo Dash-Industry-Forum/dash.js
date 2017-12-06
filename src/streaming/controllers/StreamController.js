@@ -159,7 +159,7 @@ function StreamController() {
         if (e.timeToEnd <= STREAM_END_THRESHOLD) {
             // In some cases the ended event is not triggered at the end of the stream, do it artificially here.
             // This should only be a fallback, put an extra STREAM_END_TIMEOUT_DELAY to give the real ended event time to trigger.
-
+            log('[StreamController][onPlaybackTimeUpdated] timeToEnd = ' + e.timeToEnd + ' PLAYBACK_ENDED need to be triggered');
             if (endedTimeout) {
                 clearTimeout(endedTimeout);
                 endedTimeout = undefined;
@@ -222,7 +222,7 @@ function StreamController() {
 
         for (let i = 0; i < ln; i++) {
             stream = streams[i];
-            duration += stream.getDuration();
+            duration = parseFloat((duration + stream.getDuration()).toFixed(5));
 
             if (time < duration) {
                 return stream;
@@ -303,7 +303,7 @@ function StreamController() {
             const duration = activeStream.getStreamInfo().duration;
 
             return streams.filter(function (stream) {
-                return (stream.getStreamInfo().start === (start + duration));
+                return (stream.getStreamInfo().start === parseFloat((start + duration).toFixed(5)));
             })[0];
         }
     }
@@ -318,15 +318,18 @@ function StreamController() {
             toStreamInfo: newStream.getStreamInfo()
         });
 
-        if (oldStream) oldStream.deactivate();
+        if (oldStream) {
+            oldStream.stopEventController();
+            oldStream.deactivate();
+        }
         activeStream = newStream;
         playbackController.initialize(activeStream.getStreamInfo());
 
         //TODO detect if we should close and repose or jump to activateStream.
-        openMediaSource(seekTime);
+        openMediaSource(seekTime, oldStream);
     }
 
-    function openMediaSource(seekTime) {
+    function openMediaSource(seekTime, oldStream) {
 
         let sourceUrl;
 
@@ -337,6 +340,10 @@ function StreamController() {
             mediaSource.removeEventListener('webkitsourceopen', onMediaSourceOpen);
             setMediaDuration();
             activateStream(seekTime);
+
+            if (!oldStream) {
+                eventBus.trigger(Events.SOURCE_INITIALIZED);
+            }
         }
 
         if (!mediaSource) {

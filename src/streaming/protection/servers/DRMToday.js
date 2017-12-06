@@ -36,28 +36,30 @@
  * @class
  */
 
+import ProtectionConstants from '../../constants/ProtectionConstants';
+
 function DRMToday(config) {
 
-    let BASE64 = config.BASE64;
+    config = config || {};
+    const BASE64 = config.BASE64;
 
-    const keySystems = {
-        'com.widevine.alpha': {
-            responseType: 'json',
-            getLicenseMessage: function (response) {
-                return BASE64.decodeArray(response.license);
-            },
-            getErrorResponse: function (response) {
-                return response;
-            }
+    const keySystems = {};
+    keySystems[ProtectionConstants.WIDEVINE_KEYSTEM_STRING] = {
+        responseType: 'json',
+        getLicenseMessage: function (response) {
+            return BASE64.decodeArray(response.license);
         },
-        'com.microsoft.playready': {
-            responseType: 'arraybuffer',
-            getLicenseMessage: function (response) {
-                return response;
-            },
-            getErrorResponse: function (response) {
-                return String.fromCharCode.apply(null, new Uint8Array(response));
-            }
+        getErrorResponse: function (response) {
+            return response;
+        }
+    };
+    keySystems[ProtectionConstants.PLAYREADY_KEYSTEM_STRING] = {
+        responseType: 'arraybuffer',
+        getLicenseMessage: function (response) {
+            return response;
+        },
+        getErrorResponse: function (response) {
+            return String.fromCharCode.apply(null, new Uint8Array(response));
         }
     };
 

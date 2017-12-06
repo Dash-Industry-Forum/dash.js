@@ -33,6 +33,7 @@ import MetricSerialiser from '../../utils/MetricSerialiser';
 import RNG from '../../utils/RNG';
 
 function DVBReporting(config) {
+    config = config || {};
     let instance;
 
     let context = this.context;

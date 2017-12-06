@@ -35,7 +35,7 @@ define([
         });
 
     // Test constants
-    var PROGRESS_DELAY = 10; // Delay for checking progressing (in s)
+    var PROGRESS_DELAY = 20; // Delay for checking progressing (in s)
     var ASYNC_TIMEOUT = PROGRESS_DELAY + config.asyncTimeout;
 
     // Test variables
@@ -97,7 +97,7 @@ define([
                 seekPos = generateSeekPos();
                 tests.log(NAME, 'Seek: ' + seekPos);
                 // Seek the player
-                return  tests.executeAsync(command, player.seek, [seekPos], config.asyncTimeout)
+                return  tests.executeAsync(command, player.seek, [seekPos], ASYNC_TIMEOUT)
                 .then(function() {
                     if (checkPlaying) {
                         // Check if playing

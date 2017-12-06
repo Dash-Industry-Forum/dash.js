@@ -36,18 +36,20 @@
  * @implements KeySystem
  */
 import CommonEncryption from '../CommonEncryption';
+import ProtectionConstants from '../../constants/ProtectionConstants';
 
 const uuid = '9a04f079-9840-4286-ab92-e65be0885f95';
-const systemString = 'com.microsoft.playready';
+const systemString = ProtectionConstants.PLAYREADY_KEYSTEM_STRING;
 const schemeIdURI = 'urn:uuid:' + uuid;
 const PRCDMData = '<PlayReadyCDMData type="LicenseAcquisition"><LicenseAcquisition version="1.0" Proactive="false"><CustomData encoding="base64encoded">%CUSTOMDATA%</CustomData></LicenseAcquisition></PlayReadyCDMData>';
 let protData;
 
 function KeySystemPlayReady(config) {
 
+    config = config || {};
     let instance;
     let messageFormat = 'utf16';
-    let BASE64 = config ? config.BASE64 : null;
+    const BASE64 = config.BASE64;
 
     function checkConfig() {
         if (!BASE64 || !BASE64.hasOwnProperty('decodeArray') || !BASE64.hasOwnProperty('decodeArray') ) {
@@ -58,15 +60,15 @@ function KeySystemPlayReady(config) {
     function getRequestHeadersFromMessage(message) {
         let msg,
             xmlDoc;
-        let headers = {};
-        let parser = new DOMParser();
-        let dataview = (messageFormat === 'utf16') ? new Uint16Array(message) : new Uint8Array(message);
+        const headers = {};
+        const parser = new DOMParser();
+        const dataview = (messageFormat === 'utf16') ? new Uint16Array(message) : new Uint8Array(message);
 
         msg = String.fromCharCode.apply(null, dataview);
         xmlDoc = parser.parseFromString(msg, 'application/xml');
 
-        let headerNameList = xmlDoc.getElementsByTagName('name');
-        let headerValueList = xmlDoc.getElementsByTagName('value');
+        const headerNameList = xmlDoc.getElementsByTagName('name');
+        const headerValueList = xmlDoc.getElementsByTagName('value');
         for (let i = 0; i < headerNameList.length; i++) {
             headers[headerNameList[i].childNodes[0].nodeValue] = headerValueList[i].childNodes[0].nodeValue;
         }
@@ -84,15 +86,15 @@ function KeySystemPlayReady(config) {
         let msg,
             xmlDoc;
         let licenseRequest = null;
-        let parser = new DOMParser();
-        let dataview = (messageFormat === 'utf16') ? new Uint16Array(message) : new Uint8Array(message);
+        const parser = new DOMParser();
+        const dataview = (messageFormat === 'utf16') ? new Uint16Array(message) : new Uint8Array(message);
 
         checkConfig();
         msg = String.fromCharCode.apply(null, dataview);
         xmlDoc = parser.parseFromString(msg, 'application/xml');
 
         if (xmlDoc.getElementsByTagName('Challenge')[0]) {
-            let Challenge = xmlDoc.getElementsByTagName('Challenge')[0].childNodes[0].nodeValue;
+            const Challenge = xmlDoc.getElementsByTagName('Challenge')[0].childNodes[0].nodeValue;
             if (Challenge) {
                 licenseRequest = BASE64.decode(Challenge);
             }
@@ -102,29 +104,29 @@ function KeySystemPlayReady(config) {
 
     function getLicenseServerURLFromInitData(initData) {
         if (initData) {
-            let data = new DataView(initData);
-            let numRecords = data.getUint16(4, true);
+            const data = new DataView(initData);
+            const numRecords = data.getUint16(4, true);
             let offset = 6;
-            let parser = new DOMParser();
+            const parser = new DOMParser();
 
             for (let i = 0; i < numRecords; i++) {
                 // Parse the PlayReady Record header
-                let recordType = data.getUint16(offset, true);
+                const recordType = data.getUint16(offset, true);
                 offset += 2;
-                let recordLength = data.getUint16(offset, true);
+                const recordLength = data.getUint16(offset, true);
                 offset += 2;
                 if (recordType !== 0x0001) {
                     offset += recordLength;
                     continue;
                 }
 
-                let recordData = initData.slice(offset, offset + recordLength);
-                let record = String.fromCharCode.apply(null, new Uint16Array(recordData));
-                let xmlDoc = parser.parseFromString(record, 'application/xml');
+                const recordData = initData.slice(offset, offset + recordLength);
+                const record = String.fromCharCode.apply(null, new Uint16Array(recordData));
+                const xmlDoc = parser.parseFromString(record, 'application/xml');
 
                 // First try <LA_URL>
                 if (xmlDoc.getElementsByTagName('LA_URL')[0]) {
-                    let laurl = xmlDoc.getElementsByTagName('LA_URL')[0].childNodes[0].nodeValue;
+                    const laurl = xmlDoc.getElementsByTagName('LA_URL')[0].childNodes[0].nodeValue;
                     if (laurl) {
                         return laurl;
                     }
@@ -132,7 +134,7 @@ function KeySystemPlayReady(config) {
 
                 // Optionally, try <LUI_URL>
                 if (xmlDoc.getElementsByTagName('LUI_URL')[0]) {
-                    let luiurl = xmlDoc.getElementsByTagName('LUI_URL')[0].childNodes[0].nodeValue;
+                    const luiurl = xmlDoc.getElementsByTagName('LUI_URL')[0].childNodes[0].nodeValue;
                     if (luiurl) {
                         return luiurl;
                     }
@@ -152,8 +154,8 @@ function KeySystemPlayReady(config) {
         // *   Protection SystemID (16)
         // *   protection system data size (4) - length of decoded PROHeader
         // *   decoded PROHeader data from MPD file
-        let PSSHBoxType = new Uint8Array([0x70, 0x73, 0x73, 0x68, 0x00, 0x00, 0x00, 0x00]); //'PSSH' 8 bytes
-        let playreadySystemID = new Uint8Array([0x9a, 0x04, 0xf0, 0x79, 0x98, 0x40, 0x42, 0x86, 0xab, 0x92, 0xe6, 0x5b, 0xe0, 0x88, 0x5f, 0x95]);
+        const PSSHBoxType = new Uint8Array([0x70, 0x73, 0x73, 0x68, 0x00, 0x00, 0x00, 0x00]); //'PSSH' 8 bytes
+        const playreadySystemID = new Uint8Array([0x9a, 0x04, 0xf0, 0x79, 0x98, 0x40, 0x42, 0x86, 0xab, 0x92, 0xe6, 0x5b, 0xe0, 0x88, 0x5f, 0x95]);
 
         let byteCursor = 0;
         let uint8arraydecodedPROHeader = null;
@@ -236,14 +238,13 @@ function KeySystemPlayReady(config) {
      * Get Playready Custom data
      */
     function getCDMData() {
-        var customData,
+        let customData,
             cdmData,
             cdmDataBytes,
             i;
 
         checkConfig();
         if (protData && protData.cdmData) {
-
             // Convert custom data into multibyte string
             customData = [];
             for (i = 0; i < protData.cdmData.length; ++i) {

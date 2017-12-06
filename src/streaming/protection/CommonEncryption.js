@@ -119,7 +119,7 @@ class CommonEncryption {
         if (data === null)
             return [];
 
-        let dv = new DataView(data);
+        let dv = new DataView(data.buffer || data); // data.buffer first for Uint8Array support
         let done = false;
         let pssh = {};
 
