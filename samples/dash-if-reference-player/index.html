@@ -16,7 +16,6 @@
     <!--Libs-->
     <script src="app/lib/jquery/jquery-3.1.1.min.js"></script>
 
-
     <script src="app/lib/angular/angular.min.js"></script>
     <script src="app/lib/angular/angular-resource.min.js"></script>
     <script src="app/lib/angular/angular-flot.js"></script>
@@ -266,6 +265,11 @@
                         <span id="videoDuration" class="duration-display">00:00:00</span>
                         <div class="seekContainer">
                             <input type="range" id="seekbar" value="0" class="seekbar" min="0" step="0.01"/>
+                        </div>
+                        <div id="thumbnail-container" class="thumbnail-container">
+                            <div id="thumbnail-elem" class="thumbnail-elem">
+                                <div id="thumbnail-time-label" class="thumbnail-time-label"></div>
+                            </div>
                         </div>
                     </div>
                 </div>

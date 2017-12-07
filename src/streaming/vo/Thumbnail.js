@@ -28,48 +28,18 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
- * Constants declaration
  * @class
  * @ignore
  */
-class Constants {
-
-    init () {
-        this.STREAM = 'stream';
-        this.VIDEO = 'video';
-        this.AUDIO = 'audio';
-        this.TEXT = 'text';
-        this.FRAGMENTED_TEXT = 'fragmentedText';
-        this.EMBEDDED_TEXT = 'embeddedText';
-        this.MUXED = 'muxed';
-        this.IMAGE = 'image';
-        this.LOCATION = 'Location';
-        this.INITIALIZE = 'initialize';
-        this.TEXT_SHOWING = 'showing';
-        this.TEXT_HIDDEN = 'hidden';
-        this.CC1 = 'CC1';
-        this.CC3 = 'CC3';
-        this.STPP = 'stpp';
-        this.TTML = 'ttml';
-        this.VTT = 'vtt';
-        this.WVTT = 'wvtt';
-        this.UTF8 = 'utf-8';
-        this.SUGGESTED_PRESENTATION_DELAY = 'suggestedPresentationDelay';
-        this.SCHEME_ID_URI = 'schemeIdUri';
-        this.START_TIME = 'starttime';
-        this.ABR_STRATEGY_DYNAMIC = 'abrDynamic';
-        this.ABR_STRATEGY_BOLA = 'abrBola';
-        this.ABR_STRATEGY_THROUGHPUT = 'abrThroughput';
-        this.MOVING_AVERAGE_SLIDING_WINDOW = 'slidingWindow';
-        this.MOVING_AVERAGE_EWMA = 'ewma';
-    }
-
-    constructor () {
-        this.init();
+class Thumbnail {
+    constructor() {
+        this.url = null;
+        this.width = null;
+        this.height = null;
+        this.x = null;
+        this.y = null;
     }
 }
 
-let constants = new Constants();
-export default constants;
+export default Thumbnail;

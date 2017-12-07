@@ -39,8 +39,13 @@ import FactoryMaker from '../core/FactoryMaker';
 import Debug from '../core/Debug';
 import URLUtils from '../streaming/utils/URLUtils';
 import Representation from './vo/Representation';
-
-import {replaceTokenForTemplate, getTimeBasedSegment, getSegmentByIndex} from './utils/SegmentsUtils';
+import {
+    replaceIDForTemplate,
+    unescapeDollarsInTemplate,
+    replaceTokenForTemplate,
+    getTimeBasedSegment,
+    getSegmentByIndex
+} from './utils/SegmentsUtils';
 import SegmentsGetter from './utils/SegmentsGetter';
 
 import SegmentBaseLoader from './SegmentBaseLoader';
@@ -135,16 +140,6 @@ function DashHandler(config) {
 
         eventBus.off(Events.INITIALIZATION_LOADED, onInitializationLoaded, instance);
         eventBus.off(Events.SEGMENTS_LOADED, onSegmentsLoaded, instance);
-    }
-
-    function unescapeDollarsInTemplate(url) {
-        return url ? url.split('$$').join('$') : url;
-    }
-
-    function replaceIDForTemplate(url, value) {
-        if (value === null || url === null || url.indexOf('$RepresentationID$') === -1) { return url; }
-        let v = value.toString();
-        return url.split('$RepresentationID$').join(v);
     }
 
     function setRequestUrl(request, destination, representation) {

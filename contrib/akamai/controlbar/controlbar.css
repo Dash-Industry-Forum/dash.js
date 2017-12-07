@@ -266,3 +266,30 @@ div#videoController input[type="range"]{
     -moz-box-sizing: border-box;
     box-sizing: border-box;
 }
+
+.thumbnail-container {
+    position: absolute;
+    left: -1000px;
+}
+
+.thumbnail-elem {
+    position: absolute;
+    bottom: 3.0em;
+    box-shadow: 0px 0px 0.9em #000000;
+}
+
+.thumbnail-time-label {
+    display: block;
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    padding: 2px 5px 2px 5px;
+    color: #ffffff;
+    background-color: rgba(0, 0, 0, 0.7);
+    font-size: 12px;
+    font-weight: bold;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+

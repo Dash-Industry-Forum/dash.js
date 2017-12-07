@@ -124,6 +124,27 @@
       ]
     },
     {
+      "name": "Thumbnails",
+      "submenu": [
+        {
+          "name": "Single adaption set, 7 tiles at 10x1, each thumb 320x180",
+          "url": "http://dash.edgesuite.net/akamai/bbb_30fps/bbb_with_tiled_thumbnails.mpd"
+        },
+        {
+          "name": "Single adaption set, 4 tiles at 10x1, each thumb 205x115",
+          "url": "http://dash.edgesuite.net/akamai/bbb_30fps/bbb_with_4_tiles_thumbnails.mpd"
+        },
+        {
+          "name": "Single adaption set, 1 tile at 10x20, each thumb 102x58",
+          "url": "http://dash.edgesuite.net/akamai/bbb_30fps/bbb_with_tiled_thumbnails_2.mpd"
+        },
+        {
+          "name": "Two adaption sets with different thumb resolutions",
+          "url": "http://dash.edgesuite.net/akamai/bbb_30fps/bbb_with_multiple_tiled_thumbnails.mpd"
+        }
+      ]
+    },
+    {
       "name": "Audio-only",
       "submenu": [
         {

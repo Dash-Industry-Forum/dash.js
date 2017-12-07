@@ -30,7 +30,7 @@
  */
 
 import Constants from '../constants/Constants';
-import FactoryMaker from '../../core/FactoryMaker.js';
+import FactoryMaker from '../../core/FactoryMaker';
 
 // throughput generally stored in kbit/s
 // latency generally stored in ms
