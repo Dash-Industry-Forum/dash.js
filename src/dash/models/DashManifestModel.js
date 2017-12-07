@@ -281,7 +281,11 @@ function DashManifestModel(config) {
         if (adaptation && adaptation.Representation_asArray && adaptation.Representation_asArray.length > 0) {
             const representation = isInteger(representationId) && representationId >= 0 && representationId < adaptation.Representation_asArray.length ?
                 adaptation.Representation_asArray[representationId] : adaptation.Representation_asArray[0];
-            return (representation.mimeType + ';codecs="' + representation.codecs + '"');
+            let codec = representation.mimeType + ';codecs="' + representation.codecs;
+            if (representation.width !== undefined) {
+                codec += '";width="' + representation.width + '";height="' + representation.height + '"';
+            }
+            return codec;
         }
 
         return null;

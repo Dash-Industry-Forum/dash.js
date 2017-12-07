@@ -448,7 +448,7 @@ function Stream(config) {
         if (!realAdaptation || !Array.isArray(realAdaptation.Representation_asArray)) return null;
 
         // Filter codecs that are not supported
-        realAdaptation.Representation_asArray.filter((_, i) => {
+        realAdaptation.Representation_asArray = realAdaptation.Representation_asArray.filter((_, i) => {
             // keep at least codec from lowest representation
             if (i === 0) return true;
 
