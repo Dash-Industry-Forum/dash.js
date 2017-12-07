@@ -99,6 +99,7 @@ declare namespace dashjs {
         getUsePixelRatioInLimitBitrateByPortal(): any;
         setUsePixelRatioInLimitBitrateByPortal(value: boolean): void;
         setTextTrack(idx: number): void;
+        getThumbnail(time: number): Thumbnail;
         getBitrateInfoListFor(type: string): Object[];
         setInitialBitrateFor(type: string, value: number): void;
         getInitialBitrateFor(type: string): number;
@@ -209,5 +210,13 @@ declare namespace dashjs {
         STREAM_INITIALIZED: string;
         TEXT_TRACKS_ADDED: string;
         TEXT_TRACK_ADDED: string;
+    }
+
+    export interface Thumbnail {
+        url: string;
+        width: number;
+        height: number;
+        x: number;
+        y: number;
     }
 }
