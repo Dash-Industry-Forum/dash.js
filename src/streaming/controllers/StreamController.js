@@ -90,7 +90,8 @@ function StreamController() {
         initialPlayback,
         playListMetrics,
         videoTrackDetected,
-        audioTrackDetected;
+        audioTrackDetected,
+        playbackEndedTimerId;
 
     function setup() {
         timeSyncController = TimeSyncController(context).getInstance();
@@ -188,12 +189,12 @@ function StreamController() {
         if (mediaSource && isLast) {
             log('[StreamController] onStreamBufferingCompleted calls signalEndOfStream of mediaSourceController');
             mediaSourceController.signalEndOfStream(mediaSource);
-        } else if (MediaSource) {
+        } else if (MediaSource && playbackEndedTimerId === undefined) {
             //send PLAYBACK_ENDED in order switch to a new period, wait until the end of playing
             const timeToEnd = playbackController.getTimeToStreamEnd();
             const delayPlaybackEnded = timeToEnd > 0 ? timeToEnd * 1000 : 0;
             log('[StreamController] onStreamBufferingCompleted PLAYBACK_ENDED event will be triggered in ' + delayPlaybackEnded + ' milliseconds');
-            setTimeout(function () {eventBus.trigger(Events.PLAYBACK_ENDED);}, delayPlaybackEnded);
+            playbackEndedTimerId = setTimeout(function () {eventBus.trigger(Events.PLAYBACK_ENDED);}, delayPlaybackEnded);
         }
     }
 
@@ -280,6 +281,7 @@ function StreamController() {
             log('StreamController no next stream found');
         }
         flushPlaylistMetrics(nextStream ? PlayListTrace.END_OF_PERIOD_STOP_REASON : PlayListTrace.END_OF_CONTENT_STOP_REASON);
+        playbackEndedTimerId = undefined;
     }
 
     function getNextStream() {
@@ -735,6 +737,7 @@ function StreamController() {
         isPaused = false;
         autoPlay = true;
         playListMetrics = null;
+        playbackEndedTimerId = undefined;
     }
 
     function reset() {
