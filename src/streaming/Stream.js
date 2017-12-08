@@ -513,6 +513,11 @@ function Stream(config) {
         let processors = getProcessors();
         const ln = processors.length;
 
+        if (ln === 0) {
+            log('[Stream] onBufferingCompleted - can\'t trigger STREAM_BUFFERING_COMPLETED because no streamProcessor is defined');
+            return;
+        }
+
         // if there is at least one buffer controller that has not completed buffering yet do nothing
         for (let i = 0; i < ln; i++) {
             //if audio or video buffer is not buffering completed state, do not send STREAM_BUFFERING_COMPLETED
