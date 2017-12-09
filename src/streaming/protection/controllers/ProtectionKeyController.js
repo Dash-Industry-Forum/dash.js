@@ -72,20 +72,20 @@ function ProtectionKeyController() {
         let keySystem;
 
         // PlayReady
-        keySystem = KeySystemPlayReady(context).getInstance({BASE64: BASE64});
+        keySystem = KeySystemPlayReady(context).getInstance({ BASE64: BASE64 });
         keySystems.push(keySystem);
 
         // Widevine
-        keySystem = KeySystemWidevine(context).getInstance({BASE64: BASE64});
+        keySystem = KeySystemWidevine(context).getInstance({ BASE64: BASE64 });
         keySystems.push(keySystem);
 
         // ClearKey
-        keySystem = KeySystemClearKey(context).getInstance({BASE64: BASE64});
+        keySystem = KeySystemClearKey(context).getInstance({ BASE64: BASE64 });
         keySystems.push(keySystem);
         clearkeyKeySystem = keySystem;
 
         // W3C ClearKey
-        keySystem = KeySystemW3CClearKey(context).getInstance({BASE64: BASE64, log: log});
+        keySystem = KeySystemW3CClearKey(context).getInstance({ BASE64: BASE64, log: log });
         keySystems.push(keySystem);
         clearkeyW3CKeySystem = keySystem;
     }
@@ -191,14 +191,20 @@ function ProtectionKeyController() {
                 for (cpIdx = 0; cpIdx < cps.length; ++cpIdx) {
                     cp = cps[cpIdx];
                     if (cp.schemeIdUri.toLowerCase() === ks.schemeIdURI) {
-
                         // Look for DRM-specific ContentProtection
                         let initData = ks.getInitData(cp);
-                        supportedKS.push({
-                            ks: keySystems[ksIdx],
-                            initData: initData,
-                            cdmData: ks.getCDMData()
-                        });
+                        if (!!initData) {
+                            supportedKS.push({
+                                ks: keySystems[ksIdx],
+                                initData: initData,
+                                cdmData: ks.getCDMData()
+                            });
+                        } else if (this.isClearKey(ks)) {
+                            supportedKS.push({
+                                ks: ks,
+                                initData: null
+                            });
+                        }
                     }
                 }
             }
@@ -267,7 +273,7 @@ function ProtectionKeyController() {
 
         let licenseServerData = null;
         if (protData && protData.hasOwnProperty('drmtoday')) {
-            licenseServerData = DRMToday(context).getInstance({BASE64: BASE64});
+            licenseServerData = DRMToday(context).getInstance({ BASE64: BASE64 });
         } else if (keySystem.systemString === ProtectionConstants.WIDEVINE_KEYSTEM_STRING) {
             licenseServerData = Widevine(context).getInstance();
         } else if (keySystem.systemString === ProtectionConstants.PLAYREADY_KEYSTEM_STRING) {

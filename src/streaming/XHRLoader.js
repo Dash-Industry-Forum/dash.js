@@ -30,7 +30,7 @@
  */
 import {HTTPRequest} from './vo/metrics/HTTPRequest';
 import FactoryMaker from '../core/FactoryMaker';
-import ErrorHandler from './utils/ErrorHandler.js';
+import ErrorHandler from './utils/ErrorHandler';
 
 /**
  * @module XHRLoader

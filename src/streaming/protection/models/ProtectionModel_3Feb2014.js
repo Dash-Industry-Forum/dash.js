@@ -192,7 +192,7 @@ function ProtectionModel_3Feb2014(config) {
         }
     }
 
-    function createKeySession(initData, sessionType, cdmData) {
+    function createKeySession(initData, protData, sessionType, cdmData) {
 
         if (!keySystem || !mediaKeys || !keySystemAccess) {
             throw new Error('Can not create sessions until you have selected a key system');

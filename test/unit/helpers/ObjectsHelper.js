@@ -14,7 +14,7 @@ class ObjectsHelper {
                                                 { bandwidth: 1000000 },
                                                 { bandwidth: 2000000 },
                                                 { bandwidth: 3000000 },
-                                           ], 
+                                           ],
                                            mimeType: "video/mp4" }},
             getIndexHandler: () => this.getDummyIndexHandler()
         };
@@ -39,7 +39,12 @@ class ObjectsHelper {
 
     getDummyBaseURLController() {
         return {
-            resolve: () => {}
+            resolve: () => {
+                return  {
+                    url: '',
+                    serviceLocation: ''
+                };
+            }
         };
     }
 

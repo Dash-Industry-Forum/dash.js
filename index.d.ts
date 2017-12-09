@@ -128,6 +128,7 @@ declare namespace dashjs {
         getUsePixelRatioInLimitBitrateByPortal(): any;
         setUsePixelRatioInLimitBitrateByPortal(value: boolean): void;
         setTextTrack(idx: number): void;
+        getThumbnail(time: number): Thumbnail;
         getBitrateInfoListFor(type: 'video' | 'audio'): BitrateInfo[];
         setInitialBitrateFor(type: 'video' | 'audio', value: number): void;
         getInitialBitrateFor(type: 'video' | 'audio'): number;
@@ -613,6 +614,14 @@ declare namespace dashjs {
         isd?: object;
         images?: string[];
         embeddedImages?: { [id: string]: string };
+    }
+
+    export interface Thumbnail {
+        url: string;
+        width: number;
+        height: number;
+        x: number;
+        y: number;
     }
 
     export type MetricType = 'ManifestUpdate' | 'RequestsQueue';

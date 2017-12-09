@@ -154,6 +154,7 @@ function ProtectionController(config) {
      */
     function createKeySession(initData, cdmData) {
         const initDataForKS = CommonEncryption.getPSSHForKeySystem(keySystem, initData);
+        const protData = getProtData(keySystem);
         if (initDataForKS) {
 
             // Check for duplicate initData
@@ -165,12 +166,12 @@ function ProtectionController(config) {
                 }
             }
             try {
-                protectionModel.createKeySession(initDataForKS, sessionType, cdmData);
+                protectionModel.createKeySession(initDataForKS, protData, sessionType, cdmData);
             } catch (error) {
                 eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: 'Error creating key session! ' + error.message});
             }
         } else if (initData) {
-            protectionModel.createKeySession(initData, sessionType, cdmData);
+            protectionModel.createKeySession(initData, protData, sessionType, cdmData);
         } else {
             eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: 'Selected key system is ' + keySystem.systemString + '.  needkey/encrypted event contains no initData corresponding to that key system!'});
         }
@@ -558,9 +559,9 @@ function ProtectionController(config) {
         }
         updateHeaders(keySystem.getRequestHeadersFromMessage(message));
 
-        // Set withCredentials property from protData
-        if (protData && protData.withCredentials) {
-            xhr.withCredentials = true;
+        // Overwrite withCredentials property from protData if present
+        if (protData && typeof protData.withCredentials == 'boolean') {
+            xhr.withCredentials = protData.withCredentials;
         }
 
         xhr.send(keySystem.getLicenseRequestFromMessage(message));

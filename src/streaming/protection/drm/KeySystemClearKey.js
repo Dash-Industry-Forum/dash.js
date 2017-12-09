@@ -63,7 +63,7 @@ function KeySystemClearKey(config) {
             const keyPairs = [];
             for (let i = 0; i < jsonMsg.kids.length; i++) {
                 const clearkeyID = jsonMsg.kids[i];
-                const clearkey = (protectionData.clearkeys.hasOwnProperty(clearkeyID)) ? protectionData.clearkeys[clearkeyID] : null;
+                const clearkey = (protectionData.clearkeys && protectionData.clearkeys.hasOwnProperty(clearkeyID)) ? protectionData.clearkeys[clearkeyID] : null;
                 if (!clearkey) {
                     throw new Error('DRM: ClearKey keyID (' + clearkeyID + ') is not known!');
                 }

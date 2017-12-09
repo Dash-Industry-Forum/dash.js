@@ -32,6 +32,7 @@ import Constants from './constants/Constants';
 import StreamProcessor from './StreamProcessor';
 import EventController from './controllers/EventController';
 import FragmentController from './controllers/FragmentController';
+import ThumbnailController from './thumbnail/ThumbnailController';
 import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import Debug from '../core/Debug';
@@ -68,6 +69,7 @@ function Stream(config) {
         isUpdating,
         protectionController,
         fragmentController,
+        thumbnailController,
         eventController,
         trackChangedEvent;
 
@@ -184,6 +186,10 @@ function Stream(config) {
         return fragmentController;
     }
 
+    function getThumbnailController() {
+        return thumbnailController;
+    }
+
     function checkConfig() {
         if (!abrController || !abrController.hasOwnProperty('getBitrateList') || !adapter || !adapter.hasOwnProperty('getAllMediaInfoForType') || !adapter.hasOwnProperty('getEventsFor')) {
             throw new Error('Missing config parameter(s)');
@@ -197,7 +203,13 @@ function Stream(config) {
      */
     function getBitrateListFor(type) {
         checkConfig();
-        let mediaInfo = getMediaInfo(type);
+        if (type === Constants.IMAGE) {
+            if (!thumbnailController) {
+                return [];
+            }
+            return thumbnailController.getBitrateList();
+        }
+        const mediaInfo = getMediaInfo(type);
         return abrController.getBitrateList(mediaInfo);
     }
 
@@ -237,7 +249,7 @@ function Stream(config) {
             return false;
         }
 
-        if ((type === Constants.TEXT) || (type === Constants.FRAGMENTED_TEXT) || (type === Constants.EMBEDDED_TEXT)) {
+        if (type === Constants.TEXT || type === Constants.FRAGMENTED_TEXT || type === Constants.EMBEDDED_TEXT || type === Constants.IMAGE) {
             return true;
         }
         codec = mediaInfo.codec;
@@ -364,6 +376,16 @@ function Stream(config) {
             return;
         }
 
+        if (type === Constants.IMAGE) {
+            thumbnailController = ThumbnailController(context).create({
+                dashManifestModel: dashManifestModel,
+                adapter: adapter,
+                baseURLController: config.baseURLController,
+                stream: instance
+            });
+            return;
+        }
+
         mediaController.checkInitialMediaSettingsForType(type, streamInfo);
         initialMediaInfo = mediaController.getCurrentTrackFor(type, streamInfo);
 
@@ -401,6 +423,7 @@ function Stream(config) {
         initializeMediaForType(Constants.FRAGMENTED_TEXT, mediaSource);
         initializeMediaForType(Constants.EMBEDDED_TEXT, mediaSource);
         initializeMediaForType(Constants.MUXED, mediaSource);
+        initializeMediaForType(Constants.IMAGE, mediaSource);
 
         createBuffers();
 
@@ -425,11 +448,11 @@ function Stream(config) {
         if (!realAdaptation || !Array.isArray(realAdaptation.Representation_asArray)) return null;
 
         // Filter codecs that are not supported
-        realAdaptation.Representation_asArray.filter((_, i) => {
+        realAdaptation.Representation_asArray = realAdaptation.Representation_asArray.filter((_, i) => {
             // keep at least codec from lowest representation
             if (i === 0) return true;
 
-            const codec = dashManifestModel.getCodec(realAdaptation, i);
+            const codec = dashManifestModel.getCodec(realAdaptation, i, true);
             if (!capabilities.supportsCodec(codec)) {
                 log('[Stream] codec not supported: ' + codec);
                 return false;
@@ -590,6 +613,7 @@ function Stream(config) {
         getId: getId,
         getStreamInfo: getStreamInfo,
         getFragmentController: getFragmentController,
+        getThumbnailController: getThumbnailController,
         getEventController: getEventController,
         getBitrateListFor: getBitrateListFor,
         startEventController: startEventController,

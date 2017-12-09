@@ -32,7 +32,7 @@ import BufferController from '../../controllers/BufferController';
 import AbrController from '../../controllers/AbrController';
 import FactoryMaker from '../../../core/FactoryMaker';
 import Debug from '../../../core/Debug';
-import SwitchRequest from '../SwitchRequest.js';
+import SwitchRequest from '../SwitchRequest';
 
 function ThroughputRule(config) {
 

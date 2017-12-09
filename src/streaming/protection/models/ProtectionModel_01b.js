@@ -194,7 +194,7 @@ function ProtectionModel_01b(config) {
         }
     }
 
-    function createKeySession(initData /*, keySystemType */) {
+    function createKeySession(initData /*, protData, keySystemType */) {
         if (!keySystem) {
             throw new Error('Can not create sessions until you have selected a key system');
         }
