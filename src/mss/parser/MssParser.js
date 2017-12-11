@@ -608,7 +608,7 @@ function MssParser(config) {
                 if (adaptations[i].contentType === 'audio' || adaptations[i].contentType === 'video') {
                     segments = adaptations[i].SegmentTemplate.SegmentTimeline.S_asArray;
                     startTime = segments[0].t;
-                    if (!timestampOffset) {
+                    if (timestampOffset === undefined) {
                         timestampOffset = startTime;
                     }
                     timestampOffset = Math.min(timestampOffset, startTime);
