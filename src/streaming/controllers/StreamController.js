@@ -531,7 +531,8 @@ function StreamController() {
 
             timeSyncController.setConfig({
                 metricsModel: metricsModel,
-                dashMetrics: dashMetrics
+                dashMetrics: dashMetrics,
+                baseURLController: baseURLController
             });
             timeSyncController.initialize(allUTCTimingSources, mediaPlayerModel.getUseManifestDateHeaderTimeSource());
         } else {

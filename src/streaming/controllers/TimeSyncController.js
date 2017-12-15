@@ -35,6 +35,7 @@ import EventBus from './../../core/EventBus';
 import Events from './../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
+import URLUtils from '../utils/URLUtils';
 
 const TIME_SYNC_FAILED_ERROR_CODE = 1;
 const HTTP_TIMEOUT_MS = 5000;
@@ -45,6 +46,8 @@ function TimeSyncController() {
     let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
 
+    const urlUtils = URLUtils(context).getInstance();
+
     let instance,
         offsetToDeviceTimeMs,
         isSynchronizing,
@@ -52,7 +55,8 @@ function TimeSyncController() {
         useManifestDateHeaderTimeSource,
         handlers,
         metricsModel,
-        dashMetrics;
+        dashMetrics,
+        baseURLController;
 
     function initialize(timingSources, useManifestDateHeader) {
         useManifestDateHeaderTimeSource = useManifestDateHeader;
@@ -100,6 +104,10 @@ function TimeSyncController() {
 
         if (config.dashMetrics) {
             dashMetrics = config.dashMetrics;
+        }
+
+        if (config.baseURLController) {
+            baseURLController = config.baseURLController;
         }
     }
 
@@ -250,6 +258,14 @@ function TimeSyncController() {
                 }
             }
         };
+
+        if (urlUtils.isRelative(url)) {
+            // passing no path to resolve will return just MPD BaseURL/baseUri
+            const baseUrl = baseURLController.resolve();
+            if (baseUrl) {
+                url = urlUtils.resolve(url, baseUrl.url);
+            }
+        }
 
         req.open(verb, url);
         req.timeout = HTTP_TIMEOUT_MS || 0;
