@@ -445,9 +445,9 @@ function ScheduleController(config) {
             return;
         }
 
-        // after the data has been removed from the buffer we should remove the requests from the list of
-        // the executed requests for which playback time is inside the time interval that has been removed from the buffer
-        fragmentModel.removeExecutedRequestsBeforeTime(e.to);
+        streamProcessor.getFragmentModel().syncExecutedRequestsWithBufferedRange(
+            streamProcessor.getBufferController().getBuffer().buffered,
+            streamProcessor.getStreamInfo().duration);
 
         if (e.hasEnoughSpaceToAppend && isStopped) {
             start();
