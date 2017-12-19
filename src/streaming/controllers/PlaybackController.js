@@ -94,7 +94,7 @@ function PlaybackController() {
     function getTimeToStreamEnd() {
         const startTime = getStreamStartTime(true);
         const offset = isDynamic ? startTime - streamInfo.start : 0;
-        return startTime + (streamInfo.duration - offset) - getTime();
+        return parseFloat((startTime + (streamInfo.duration - offset) - getTime()).toFixed(5));
     }
 
     function play() {
