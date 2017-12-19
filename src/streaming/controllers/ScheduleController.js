@@ -390,7 +390,7 @@ function ScheduleController(config) {
 
         stop();
         isFragmentProcessingInProgress = false;
-        log('Stream is complete');
+        log('[ScheduleController] Stream is complete');
     }
 
     function onFragmentLoadingCompleted(e) {
