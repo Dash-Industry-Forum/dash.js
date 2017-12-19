@@ -48,6 +48,7 @@ const BANDWIDTH_SAFETY_FACTOR = 0.9;
 const ABANDON_LOAD_TIMEOUT = 10000;
 
 const BUFFER_TO_KEEP = 30;
+const BUFFER_AHEAD_TO_KEEP = 80;
 const BUFFER_PRUNING_INTERVAL = 30;
 const DEFAULT_MIN_BUFFER_TIME = 12;
 const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
@@ -79,6 +80,7 @@ function MediaPlayerModel() {
         liveDelay,
         scheduleWhilePaused,
         bufferToKeep,
+        bufferAheadToKeep,
         bufferPruningInterval,
         lastBitrateCachingInfo,
         lastMediaSettingsCachingInfo,
@@ -117,6 +119,7 @@ function MediaPlayerModel() {
         liveDelayFragmentCount = LIVE_DELAY_FRAGMENT_COUNT;
         liveDelay = undefined; // Explicitly state that default is undefined
         bufferToKeep = BUFFER_TO_KEEP;
+        bufferAheadToKeep = BUFFER_AHEAD_TO_KEEP;
         bufferPruningInterval = BUFFER_PRUNING_INTERVAL;
         stableBufferTime = NaN;
         bufferTimeAtTopQuality = BUFFER_TIME_AT_TOP_QUALITY;
@@ -267,6 +270,14 @@ function MediaPlayerModel() {
 
     function getBufferToKeep() {
         return bufferToKeep;
+    }
+
+    function setBufferAheadToKeep(value) {
+        bufferAheadToKeep = value;
+    }
+
+    function getBufferAheadToKeep() {
+        return bufferAheadToKeep;
     }
 
     function setLastBitrateCachingInfo(enable, ttl) {
@@ -472,6 +483,8 @@ function MediaPlayerModel() {
         getLongFormContentDurationThreshold: getLongFormContentDurationThreshold,
         setBufferToKeep: setBufferToKeep,
         getBufferToKeep: getBufferToKeep,
+        setBufferAheadToKeep: setBufferAheadToKeep,
+        getBufferAheadToKeep: getBufferAheadToKeep,
         setBufferPruningInterval: setBufferPruningInterval,
         getBufferPruningInterval: getBufferPruningInterval,
         setFragmentRetryAttempts: setFragmentRetryAttempts,
