@@ -214,7 +214,6 @@ function BufferController(config) {
                         // recalculate buffer lengths to keep (bufferToKeep, bufferAheadToKeep, bufferTimeAtTopQuality) according to criticalBufferLevel
                         const bufferToKeep = Math.max(0.2 * criticalBufferLevel, 1);
                         const bufferAhead = criticalBufferLevel - bufferToKeep;
-
                         mediaPlayerModel.setBufferToKeep(parseFloat(bufferToKeep).toFixed(5));
                         mediaPlayerModel.setBufferAheadToKeep(parseFloat(bufferAhead).toFixed(5));
                     }
@@ -314,6 +313,57 @@ function BufferController(config) {
 
             const aheadRange = {
                 start: currentTimeRequest.startTime + currentTimeRequest.duration + STALL_THRESHOLD,
+                end: streamDuration
+            };
+            if (behindRange.start < behindRange.end) {
+                clearRanges.push(behindRange);
+            }
+            if (aheadRange.start < aheadRange.end) {
+                clearRanges.push(aheadRange);
+            }
+        }
+
+        return clearRanges;
+    }
+
+    // Prune full buffer but what is around current time position
+    function pruneAllSafely() {
+        const ranges = getAllRangesWithSafetyFactor();
+        if (ranges.length > 0) {
+            clearBuffers(ranges);
+        }
+    }
+
+    // Get all buffer ranges but a range around current time positionZ
+    function getAllRangesWithSafetyFactor() {
+        const clearRanges = [];
+        if (!buffer || !buffer.buffered || buffer.buffered.length === 0) {
+            return clearRanges;
+        }
+
+        const currentTime = playbackController.getTime();
+        const streamDuration = streamProcessor.getStreamInfo().duration;
+
+        const currentTimeRequest = streamProcessor.getFragmentModel().getRequests({
+            state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
+            time: currentTime
+        })[0];
+
+        // There is no request in current time position yet. Let's remove everything
+        if (!currentTimeRequest) {
+            log('getClearRangesAfterSeek for', type, '- No request found in current time position, removing full buffer 0 -', streamDuration);
+            clearRanges.push({
+                start: 0,
+                end: streamDuration
+            });
+        } else {
+            const behindRange = {
+                start: 0,
+                end: currentTimeRequest.startTime - BUFFER_RANGE_CALCULATION_THRESHOLD
+            };
+
+            const aheadRange = {
+                start: currentTimeRequest.startTime + currentTimeRequest.duration + 0.5,
                 end: streamDuration
             };
             if (behindRange.start < behindRange.end) {
@@ -545,7 +595,9 @@ function BufferController(config) {
             };
 
             log('ahead to clear for', type, '-', aheadRange.start, ' - ', aheadRange.end);
-            clearRanges.push(aheadRange);
+            if (aheadRange.start < aheadRange.end) {
+                clearRanges.push(aheadRange);
+            }
         }
 
         return clearRanges;
