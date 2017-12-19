@@ -55,6 +55,7 @@ const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
 const BUFFER_TIME_AT_TOP_QUALITY = 30;
 const BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 60;
 const LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;
+const SEGMENT_OVERLAP_TOLERANCE_TIME = 0.05;
 
 const FRAGMENT_RETRY_ATTEMPTS = 3;
 const FRAGMENT_RETRY_INTERVAL = 1000;
@@ -88,6 +89,7 @@ function MediaPlayerModel() {
         bufferTimeAtTopQuality,
         bufferTimeAtTopQualityLongForm,
         longFormContentDurationThreshold,
+        segmentOverlapToleranceTime,
         bandwidthSafetyFactor,
         abandonLoadTimeout,
         retryAttempts,
@@ -125,6 +127,7 @@ function MediaPlayerModel() {
         bufferTimeAtTopQuality = BUFFER_TIME_AT_TOP_QUALITY;
         bufferTimeAtTopQualityLongForm = BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM;
         longFormContentDurationThreshold = LONG_FORM_CONTENT_DURATION_THRESHOLD;
+        segmentOverlapToleranceTime = SEGMENT_OVERLAP_TOLERANCE_TIME;
         bandwidthSafetyFactor = BANDWIDTH_SAFETY_FACTOR;
         abandonLoadTimeout = ABANDON_LOAD_TIMEOUT;
         wallclockTimeUpdateInterval = WALLCLOCK_TIME_UPDATE_INTERVAL;
@@ -262,6 +265,14 @@ function MediaPlayerModel() {
 
     function getLongFormContentDurationThreshold() {
         return longFormContentDurationThreshold;
+    }
+
+    function setSegmentOverlapToleranceTime(value) {
+        segmentOverlapToleranceTime = value;
+    }
+
+    function getSegmentOverlapToleranceTime() {
+        return segmentOverlapToleranceTime;
     }
 
     function setBufferToKeep(value) {
@@ -481,6 +492,8 @@ function MediaPlayerModel() {
         getBufferTimeAtTopQualityLongForm: getBufferTimeAtTopQualityLongForm,
         setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,
         getLongFormContentDurationThreshold: getLongFormContentDurationThreshold,
+        setSegmentOverlapToleranceTime: setSegmentOverlapToleranceTime,
+        getSegmentOverlapToleranceTime: getSegmentOverlapToleranceTime,
         setBufferToKeep: setBufferToKeep,
         getBufferToKeep: getBufferToKeep,
         setBufferAheadToKeep: setBufferAheadToKeep,

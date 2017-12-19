@@ -84,6 +84,13 @@ function NextFragmentRequestRule(config) {
             request = adapter.getFragmentRequestForTime(streamProcessor, representationInfo, time, {
                 keepIdx: !hasSeekTarget
             });
+
+            // Sync executed queue with buffer range (to check for silent purge)
+            const bufferedRanges = sourceBufferController.getAllRanges(buffer);
+            const streamDuration = streamProcessor.getStreamInfo().duration;
+            streamProcessor.getFragmentModel().syncExecutedRequestsWithBufferedRange(bufferedRanges, streamDuration);
+
+            // Then, check if this request was downloaded or not
             while ( streamProcessor.getFragmentModel().isFragmentLoaded(request)) {
                 // loop until we found not loaded fragment, or no fragment
                 request = adapter.getNextFragmentRequest(streamProcessor, representationInfo);

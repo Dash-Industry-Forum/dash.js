@@ -115,7 +115,6 @@ function BufferController(config) {
         eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this, EventBus.EVENT_PRIORITY_HIGH);
         eventBus.on(Events.SOURCEBUFFER_APPEND_COMPLETED, onAppended, this);
         eventBus.on(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
-        eventBus.on(Events.PLAYBACK_SEEKED, onSeeked, this);
     }
 
     function createBuffer(mediaInfo) {
@@ -197,13 +196,21 @@ function BufferController(config) {
             if (e.error) {
                 if (e.error.code === SourceBufferController.QUOTA_EXCEEDED_ERROR_CODE) {
                     criticalBufferLevel = sourceBufferController.getTotalBufferedTime(buffer) * 0.8;
+                    log('Quota exceeded for type: ' + type + ', Critical Buffer: ' + criticalBufferLevel);
 
-                    // recalculate buffer lengths to keep (bufferToKeep, bufferAheadToKeep, bufferTimeAtTopQuality) according to criticalBufferLevel
-                    // TBD
+                    if (criticalBufferLevel > 0) {
+                        // recalculate buffer lengths to keep (bufferToKeep, bufferAheadToKeep, bufferTimeAtTopQuality) according to criticalBufferLevel
+                        const bufferToKeep = Math.max(0.2 * criticalBufferLevel, 1);
+                        const bufferAhead = criticalBufferLevel - bufferToKeep;
+
+                        mediaPlayerModel.setBufferToKeep(parseFloat(bufferToKeep).toFixed(5));
+                        mediaPlayerModel.setBufferAheadToKeep(parseFloat(bufferAhead).toFixed(5));
+                    }
                 }
                 if (e.error.code === SourceBufferController.QUOTA_EXCEEDED_ERROR_CODE || !hasEnoughSpaceToAppend()) {
+                    log('Clearing playback buffer to overcome quota exceed situation for type: ' + type);
                     eventBus.trigger(Events.QUOTA_EXCEEDED, {sender: instance, criticalBufferLevel: criticalBufferLevel}); //Tells ScheduleController to stop scheduling.
-                    clearBuffer(getClearRange()); // Then we clear the buffer and onCleared event will tell ScheduleController to start scheduling again.
+                    pruneAllSafely(); // Then we clear the buffer and onCleared event will tell ScheduleController to start scheduling again.
                 }
                 return;
             }
@@ -252,10 +259,61 @@ function BufferController(config) {
         }
         if (type !== Constants.FRAGMENTED_TEXT) {
             // remove buffer after seeking operations
-            // TBD
+            pruneAllSafely();
         }
         seekStartTime = undefined;
         onPlaybackProgression();
+    }
+
+    // Prune full buffer but what is around current time position
+    function pruneAllSafely() {
+        const ranges = getAllRangesWithSafetyFactor();
+        if (ranges.length > 0) {
+            clearBuffers(ranges);
+        }
+    }
+
+    // Get all buffer ranges but a range around current time positionZ
+    function getAllRangesWithSafetyFactor() {
+        const clearRanges = [];
+        if (!buffer || !buffer.buffered || buffer.buffered.length === 0) {
+            return clearRanges;
+        }
+
+        const currentTime = playbackController.getTime();
+        const streamDuration = streamProcessor.getStreamInfo().duration;
+
+        const currentTimeRequest = streamProcessor.getFragmentModel().getRequests({
+            state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
+            time: currentTime
+        })[0];
+
+        // There is no request in current time position yet. Let's remove everything
+        if (!currentTimeRequest) {
+            log('getClearRangesAfterSeek for', type, '- No request found in current time position, removing full buffer 0 -', streamDuration);
+            clearRanges.push({
+                start: 0,
+                end: streamDuration
+            });
+        } else {
+            const behindRange = {
+                start: 0,
+                end: currentTimeRequest.startTime - BUFFER_RANGE_CALCULATION_THRESHOLD
+            };
+
+            const aheadRange = {
+                start: currentTimeRequest.startTime + currentTimeRequest.duration + 0.5,
+                end: streamDuration
+            };
+            if (behindRange.start < behindRange.end) {
+                clearRanges.push(behindRange);
+            }
+            if (aheadRange.start < aheadRange.end) {
+                clearRanges.push(aheadRange);
+            }
+        }
+
+        return clearRanges;
     }
 
     function getWorkingTime() {
@@ -400,8 +458,10 @@ function BufferController(config) {
             for (let i = 0; i < ranges.length && ranges.end(i) <= rangeToKeep.start; i++) {
                 behindRange.end = ranges.end(i);
             }
-            log('behindRange to clear for', type, '-', behindRange.start, ' - ', behindRange.end);
-            clearRanges.push(behindRange);
+            if (behindRange.start < behindRange.end) {
+                log('behindRange to clear for', type, '-', behindRange.start, ' - ', behindRange.end);
+                clearRanges.push(behindRange);
+            }
         }
 
         if (ranges.end(ranges.length - 1) >= rangeToKeep.end) {
@@ -411,7 +471,9 @@ function BufferController(config) {
             };
 
             log('ahead to clear for', type, '-', aheadRange.start, ' - ', aheadRange.end);
-            clearRanges.push(aheadRange);
+            if (aheadRange.start < aheadRange.end) {
+                clearRanges.push(aheadRange);
+            }
         }
 
         return clearRanges;
@@ -520,65 +582,6 @@ function BufferController(config) {
         }
     }
 
-    /*
-     * Seeking operations tend to generate lot of allocate and unnecessary buffers so,
-     * after a seek, removes all buffers but what is around current time position
-     */
-    function onSeeked() {
-        if (type !== Constants.FRAGMENTED_TEXT) {
-            pruneBufferAfterSeek();
-        }
-    }
-
-    function pruneBufferAfterSeek() {
-        const ranges = getClearRangesAfterSeek();
-        if (ranges.length > 0) {
-            clearBuffers(ranges);
-        }
-    }
-
-    function getClearRangesAfterSeek() {
-        const clearRanges = [];
-        if (!buffer || !buffer.buffered || buffer.buffered.length === 0) {
-            return clearRanges;
-        }
-
-        const currentTime = playbackController.getTime();
-        const streamDuration = streamProcessor.getStreamInfo().duration;
-
-        const currentTimeRequest = streamProcessor.getFragmentModel().getRequests({
-            state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
-            time: currentTime
-        })[0];
-
-        // There is no request in current time position yet. Let's remove everything
-        if (!currentTimeRequest) {
-            log('getClearRangesAfterSeek for', type, '- No request found in current time position, removing full buffer 0 -', streamDuration);
-            clearRanges.push({
-                start: 0,
-                end: streamDuration
-            });
-        } else {
-            const behindRange = {
-                start: 0,
-                end: currentTimeRequest.startTime - BUFFER_RANGE_CALCULATION_THRESHOLD
-            };
-
-            const aheadRange = {
-                start: currentTimeRequest.startTime + currentTimeRequest.duration + BUFFER_RANGE_CALCULATION_THRESHOLD,
-                end: streamDuration
-            };
-            if (behindRange.start < behindRange.end) {
-                clearRanges.push(behindRange);
-            }
-            if (aheadRange.start < aheadRange.end) {
-                clearRanges.push(aheadRange);
-            }
-        }
-
-        return clearRanges;
-    }
-
     function onPlaybackRateChanged() {
         checkIfSufficientBuffer();
     }
@@ -650,7 +653,6 @@ function BufferController(config) {
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
         eventBus.off(Events.SOURCEBUFFER_APPEND_COMPLETED, onAppended, this);
         eventBus.off(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
-        eventBus.off(Events.PLAYBACK_SEEKED, onSeeked, this);
 
         resetInitialSettings();
 
