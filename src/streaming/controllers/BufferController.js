@@ -499,6 +499,58 @@ function BufferController(config) {
         return clearRanges;
     }
 
+    function getClearRanges() {
+        const clearRanges = [];
+
+        if (!buffer || !buffer.buffered || buffer.buffered.length === 0) {
+            return clearRanges;
+        }
+
+        const currentTime = playbackController.getTime();
+        const ranges = buffer.buffered;
+        const rangeToKeep = {
+            start: Math.max(0, currentTime - mediaPlayerModel.getBufferToKeep()),
+            end: currentTime + mediaPlayerModel.getBufferAheadToKeep()
+        };
+
+        const currentTimeRequest = streamProcessor.getFragmentModel().getRequests({
+            state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
+            time: currentTime,
+            threshold: BUFFER_RANGE_CALCULATION_THRESHOLD
+        })[0];
+
+        // Ensure we keep full range of current fragment
+        if (currentTimeRequest) {
+            rangeToKeep.start = Math.min(currentTimeRequest.startTime, rangeToKeep.start);
+            rangeToKeep.end = Math.max(currentTimeRequest.startTime + currentTimeRequest.duration, rangeToKeep.end);
+        }
+        log('getClearRanges for', type, '- Remove buffer out of ', rangeToKeep.start, ' - ', rangeToKeep.end);
+
+        if (ranges.start(0) <= rangeToKeep.start) {
+            const behindRange = {
+                start: 0,
+                end: rangeToKeep.start
+            };
+            for (let i = 0; i < ranges.length && ranges.end(i) <= rangeToKeep.start; i++) {
+                behindRange.end = ranges.end(i);
+            }
+            log('behindRange to clear for', type, '-', behindRange.start, ' - ', behindRange.end);
+            clearRanges.push(behindRange);
+        }
+
+        if (ranges.end(ranges.length - 1) >= rangeToKeep.end) {
+            const aheadRange = {
+                start: rangeToKeep.end,
+                end: ranges.end(ranges.length - 1) + BUFFER_RANGE_CALCULATION_THRESHOLD
+            };
+
+            log('ahead to clear for', type, '-', aheadRange.start, ' - ', aheadRange.end);
+            clearRanges.push(aheadRange);
+        }
+
+        return clearRanges;
+    }
+
     function getClearRange(threshold) {
         if (!buffer) return null;
         if (!buffer.buffered || buffer.buffered.length === 0) return null;
