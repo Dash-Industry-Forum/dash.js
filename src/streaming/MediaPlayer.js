@@ -1390,7 +1390,7 @@ function MediaPlayer() {
     /**
      * This value influences the buffer pruning logic.
      * Allows you to modify the buffer that is kept in source buffer in seconds.
-     *  0|-----------bufferToPrune-----------|-----bufferToKeep-----|currentTime|
+     * <pre>0|-----------bufferToPrune-----------|-----bufferToKeep-----|currentTime|</pre>
      *
      * @default 30 seconds
      * @param {int} value
@@ -1404,7 +1404,7 @@ function MediaPlayer() {
     /**
      * This value influences the buffer pruning logic.
      * Allows you to modify the buffer ahead of current time position that is kept in source buffer in seconds.
-     *  0|--------|currentTime|-----bufferAheadToKeep----|----bufferToPrune-----------|end|
+     * <pre>0|--------|currentTime|-----bufferAheadToKeep----|----bufferToPrune-----------|end|</pre>
      *
      * @default 80 seconds
      * @param {int} value
@@ -1538,7 +1538,7 @@ function MediaPlayer() {
     }
 
     /**
-     * Obsolete since version 2.6.0.
+     * @deprecated since version 2.6.0.
      * ABR rules now switch from Throughput to Buffer Occupancy mode when there is sufficient buffer.
      * This renders the rich buffer mechanism redundant.
      *
@@ -1548,6 +1548,27 @@ function MediaPlayer() {
      */
     function setRichBufferThreshold(value) {
         throw new Error('Calling obsolete function - setRichBufferThreshold(' + value + ') has no effect.');
+    }
+
+
+    /**
+     * The overlap tolerance time, at both the head and the tail of segments, considered when doing time to segment conversions.
+     *
+     * This is used when calculating which of the loaded segments of a representation corresponds with a given time position.
+     * Its value is never used for calculating the segment index in seeking operations in which it assumes overlap time threshold is zero.
+     *
+     * <pre>
+     * |-o-|--- segment X ----|-o-|
+     *                        |-o-|---- segment X+1 -----|-o-|
+     *                                                   |-o-|---- segment X+2 -----|-o-|
+     * </pre>
+     * @default 0.05 seconds.
+     * @param {number} value
+     * @memberof module:MediaPlayer
+     * @instance
+    */
+    function setSegmentOverlapToleranceTime(value) {
+        mediaPlayerModel.setSegmentOverlapToleranceTime(value);
     }
 
     /**
@@ -2801,6 +2822,7 @@ function MediaPlayer() {
         getXHRWithCredentialsForType: getXHRWithCredentialsForType,
         setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,
         setRichBufferThreshold: setRichBufferThreshold,
+        setSegmentOverlapToleranceTime: setSegmentOverlapToleranceTime,
         getProtectionController: getProtectionController,
         attachProtectionController: attachProtectionController,
         setProtectionData: setProtectionData,

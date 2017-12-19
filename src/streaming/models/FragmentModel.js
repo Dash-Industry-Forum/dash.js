@@ -153,7 +153,34 @@ function FragmentModel(config) {
     }
 
     function removeExecutedRequestsBeforeTime(time) {
-        executedRequests = executedRequests.filter(req => isNaN(req.startTime) || time !== undefined ? req.startTime >= time : false);
+        executedRequests = executedRequests.filter(req => isNaN(req.startTime) || time !== undefined ? req.startTime >= time - 0.25 : false);
+    }
+
+    function removeExecutedRequestsInTimeRange(start, end) {
+        if (end <= start + 0.5) {
+            return;
+        }
+
+        executedRequests = executedRequests.filter(req => {
+            return (isNaN(req.startTime) || req.startTime >= (end - 0.25)) ||
+                (isNaN(req.duration) || (req.startTime + req.duration) <= (start + 0.25));
+        });
+    }
+
+    // Remove requests that are not "represented" by any of buffered ranges
+    function syncExecutedRequestsWithBufferedRange(bufferedRanges, streamDuration) {
+        if (!bufferedRanges || bufferedRanges.length === 0) {
+            return;
+        }
+
+        let start = 0;
+        for (let i = 0, ln = bufferedRanges.length; i < ln; i++) {
+            removeExecutedRequestsInTimeRange(start, bufferedRanges.start(i));
+            start = bufferedRanges.end(i);
+        }
+        if (streamDuration > 0) {
+            removeExecutedRequestsInTimeRange(start, streamDuration);
+        }
     }
 
     function abortRequests() {
@@ -239,7 +266,6 @@ function FragmentModel(config) {
     }
 
     function addSchedulingInfoMetrics(request, state) {
-
         metricsModel.addSchedulingInfo(
             request.mediaType,
             new Date(),
@@ -301,6 +327,8 @@ function FragmentModel(config) {
         isFragmentLoaded: isFragmentLoaded,
         isFragmentLoadedOrPending: isFragmentLoadedOrPending,
         removeExecutedRequestsBeforeTime: removeExecutedRequestsBeforeTime,
+        removeExecutedRequestsInTimeRange: removeExecutedRequestsInTimeRange,
+        syncExecutedRequestsWithBufferedRange: syncExecutedRequestsWithBufferedRange,
         abortRequests: abortRequests,
         executeRequest: executeRequest,
         reset: reset

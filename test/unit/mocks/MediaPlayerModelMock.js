@@ -52,6 +52,7 @@ const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
 const BUFFER_TIME_AT_TOP_QUALITY = 30;
 const BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 60;
 const LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;
+const SEGMENT_OVERLAP_TOLERANCE_TIME = 0.05;
 
 const FRAGMENT_RETRY_ATTEMPTS = 3;
 const FRAGMENT_RETRY_INTERVAL = 1000;
@@ -176,6 +177,7 @@ class MediaPlayerModelMock {
         this.bufferTimeAtTopQuality = BUFFER_TIME_AT_TOP_QUALITY;
         this.bufferTimeAtTopQualityLongForm = BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM;
         this.longFormContentDurationThreshold = LONG_FORM_CONTENT_DURATION_THRESHOLD;
+        this.segmentOverlapToleranceTime = SEGMENT_OVERLAP_TOLERANCE_TIME;
         this.bandwidthSafetyFactor = BANDWIDTH_SAFETY_FACTOR;
         this.abandonLoadTimeout = ABANDON_LOAD_TIMEOUT;
         this.wallclockTimeUpdateInterval = WALLCLOCK_TIME_UPDATE_INTERVAL;
@@ -292,6 +294,14 @@ class MediaPlayerModelMock {
 
     getLongFormContentDurationThreshold() {
         return this.longFormContentDurationThreshold;
+    }
+
+    setSegmentOverlapToleranceTime(value) {
+        this.segmentOverlapToleranceTime = value;
+    }
+
+    getSegmentOverlapToleranceTime() {
+        return this.segmentOverlapToleranceTime;
     }
 
     setBufferToKeep(value) {

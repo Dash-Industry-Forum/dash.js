@@ -296,10 +296,15 @@ function DashHandler(config) {
             i;
 
         if (segments && ln > 0) {
+            // In case timeThreshold is not provided, let's use the default value set in MediaPlayerModel
+            timeThreshold = (timeThreshold === undefined || timeThreshold === null) ?
+                mediaPlayerModel.getSegmentOverlapToleranceTime() : timeThreshold;
+
             for (i = 0; i < ln; i++) {
                 frag = segments[i];
                 ft = frag.presentationStartTime;
                 fd = frag.duration;
+                // In case timeThreshold is null, set epsilon to half the fragment duration
                 epsilon = (timeThreshold === undefined || timeThreshold === null) ? fd / 2 : timeThreshold;
                 if ((time + epsilon) >= ft &&
                     (time - epsilon) < (ft + fd)) {
@@ -389,7 +394,7 @@ function DashHandler(config) {
             request.index = index;
             request.mediaType = type;
             request.mediaInfo = streamProcessor.getMediaInfo();
-            log('Signal complete.', request);
+            log('Signal complete in getSegmentRequestForTime -', type, '- Request:', request);
 
         } else {
             segment = getSegmentByIndex(index, representation);
@@ -426,7 +431,7 @@ function DashHandler(config) {
         requestedTime = null;
         index++;
 
-        log('Getting the next request at index: ' + index);
+        log('Getting the next request at index: ' + index + ', type: ' + type);
 
         // check that there is a segment in this index. If none, update segments and wait for next time loop is called
         const seg = getSegmentByIndex(index, representation);
@@ -444,7 +449,7 @@ function DashHandler(config) {
             request.index = index;
             request.mediaType = type;
             request.mediaInfo = streamProcessor.getMediaInfo();
-            log('Signal complete.');
+            log('Signal complete -', type);
         } else {
             updateSegments(representation);
             segment = getSegmentByIndex(index, representation);
