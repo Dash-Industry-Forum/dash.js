@@ -94,7 +94,7 @@ function PlaybackController() {
     function getTimeToStreamEnd() {
         const startTime = getStreamStartTime(true);
         const offset = isDynamic ? startTime - streamInfo.start : 0;
-        return startTime + (streamInfo.duration - offset) - getTime();
+        return parseFloat((startTime + (streamInfo.duration - offset) - getTime()).toFixed(5));
     }
 
     function play() {
@@ -513,7 +513,9 @@ function PlaybackController() {
                     ranges = bufferedRange[streamInfo.id].video;
                 }
                 if (checkTimeInRanges(earliestTime, ranges)) {
-                    seek(earliestTime);
+                    if (!isSeeking()) {
+                        seek(earliestTime);
+                    }
                     commonEarliestTime[streamInfo.id] = false;
                 }
             }
@@ -521,7 +523,9 @@ function PlaybackController() {
             //current stream has only audio or only video content
             if (commonEarliestTime[streamInfo.id][type]) {
                 earliestTime = commonEarliestTime[streamInfo.id][type] > initialStartTime ? commonEarliestTime[streamInfo.id][type] : initialStartTime;
-                seek(earliestTime);
+                if (!isSeeking()) {
+                    seek(earliestTime);
+                }
                 commonEarliestTime[streamInfo.id] = false;
             }
         }

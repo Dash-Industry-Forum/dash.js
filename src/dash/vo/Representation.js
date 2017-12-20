@@ -63,7 +63,7 @@ class Representation {
 
     static hasInitialization(r) {
         return (r.initialization !== null) ||
-            ((r.segmentInfoType !== DashConstants.BASE_URL || r.segmentInfoType !== DashConstants.SEGMENT_BASE ) && (r.range !== null));
+            ((r.segmentInfoType === DashConstants.BASE_URL || r.segmentInfoType === DashConstants.SEGMENT_BASE ) && (r.range !== null));
     }
 
     static hasSegments(r) {

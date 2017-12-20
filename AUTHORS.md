@@ -44,3 +44,5 @@
 * @waqarz
 * @WMSPanel [WMSPanel Team]
 * @matt-hammond-bbc [Matt Hammond, BBC R&D]
+* @siropeich [Siro Blanco, Epic Labs]
+* @epiclabsDASH [Jesus Oliva, Epic Labs]
