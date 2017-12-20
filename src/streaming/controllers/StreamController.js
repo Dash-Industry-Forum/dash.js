@@ -262,16 +262,6 @@ function StreamController() {
         return activeStream ? activeStream.getProcessors() : [];
     }
 
-    function getActiveStreamCommonEarliestTime() {
-        let commonEarliestTime = [];
-        if (activeStream) {
-            activeStream.getProcessors().forEach(p => {
-                commonEarliestTime.push(p.getIndexHandler().getEarliestTime());
-            });
-        }
-        return Math.min.apply(Math, commonEarliestTime);
-    }
-
     function onEnded() {
         const nextStream = getNextStream();
         if (nextStream) {
@@ -815,7 +805,6 @@ function StreamController() {
         load: load,
         loadWithManifest: loadWithManifest,
         getActiveStreamProcessors: getActiveStreamProcessors,
-        getActiveStreamCommonEarliestTime: getActiveStreamCommonEarliestTime,
         setConfig: setConfig,
         reset: reset
     };
