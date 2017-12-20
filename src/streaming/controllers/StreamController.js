@@ -347,7 +347,6 @@ function StreamController() {
                 activeStream.getProcessors().forEach(p => {
                     adapter.setIndexHandlerTime(p, startTime);
                 });
-                playbackController.seek(startTime); //seek to period start time
             }
         } else {
             videoTrackDetected = checkTrackPresence(Constants.VIDEO);
