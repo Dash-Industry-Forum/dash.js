@@ -114,7 +114,9 @@ function DashHandler(config) {
     }
 
     function setCurrentTime(value) {
-        currentTime = value;
+        if (!isNaN(value)) {
+            currentTime = value;
+        }
     }
 
     function getCurrentTime() {
