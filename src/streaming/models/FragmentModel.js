@@ -70,7 +70,6 @@ function FragmentModel(config) {
     }
 
     function isFragmentLoaded(request) {
-
         const isEqualUrl = function (req1, req2) {
             return (req1.url === req2.url);
         };
@@ -140,7 +139,6 @@ function FragmentModel(config) {
      * @memberof FragmentModel#
      */
     function getRequests(filter) {
-
         const states = filter ? filter.state instanceof Array ? filter.state : [filter.state] : [];
 
         let filteredRequests = [];
@@ -189,7 +187,6 @@ function FragmentModel(config) {
     }
 
     function executeRequest(request) {
-
         switch (request.action) {
             case FragmentRequest.ACTION_COMPLETE:
                 executedRequests.push(request);
@@ -250,7 +247,6 @@ function FragmentModel(config) {
     }
 
     function getRequestsForState(state) {
-
         let requests;
         switch (state) {
             case FRAGMENT_MODEL_LOADING:
@@ -327,7 +323,6 @@ function FragmentModel(config) {
         isFragmentLoaded: isFragmentLoaded,
         isFragmentLoadedOrPending: isFragmentLoadedOrPending,
         removeExecutedRequestsBeforeTime: removeExecutedRequestsBeforeTime,
-        removeExecutedRequestsInTimeRange: removeExecutedRequestsInTimeRange,
         syncExecutedRequestsWithBufferedRange: syncExecutedRequestsWithBufferedRange,
         abortRequests: abortRequests,
         executeRequest: executeRequest,

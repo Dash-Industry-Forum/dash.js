@@ -43,7 +43,7 @@ import InitCache from '../utils/InitCache';
 const BUFFER_LOADED = 'bufferLoaded';
 const BUFFER_EMPTY = 'bufferStalled';
 const STALL_THRESHOLD = 0.5;
-const BUFFER_RANGE_CALCULATION_THRESHOLD = 0.1;
+const BUFFER_RANGE_CALCULATION_THRESHOLD = 0.01;
 
 const BUFFER_CONTROLLER_TYPE = 'BufferController';
 
@@ -270,9 +270,7 @@ function BufferController(config) {
     // Prune full buffer but what is around current time position
     function pruneAllSafely() {
         const ranges = getAllRangesWithSafetyFactor();
-        if (ranges.length > 0) {
-            clearBuffers(ranges);
-        }
+        clearBuffers(ranges);
     }
 
     // Get all buffer ranges but a range around current time positionZ
@@ -292,19 +290,20 @@ function BufferController(config) {
 
         // There is no request in current time position yet. Let's remove everything
         if (!currentTimeRequest) {
-            log('getClearRangesAfterSeek for', type, '- No request found in current time position, removing full buffer 0 -', streamDuration);
+            log('getAllRangesWithSafetyFactor for', type, '- No request found in current time position, removing full buffer 0 -', streamDuration);
             clearRanges.push({
                 start: 0,
                 end: streamDuration
             });
         } else {
+            // Keep a minimim buffer (STALL_THRESHOLD) to avoid a stall because lack of buffer after pruning
             const behindRange = {
                 start: 0,
-                end: currentTimeRequest.startTime - BUFFER_RANGE_CALCULATION_THRESHOLD
+                end: currentTimeRequest.startTime - STALL_THRESHOLD
             };
 
             const aheadRange = {
-                start: currentTimeRequest.startTime + currentTimeRequest.duration + 0.5,
+                start: currentTimeRequest.startTime + currentTimeRequest.duration + STALL_THRESHOLD,
                 end: streamDuration
             };
             if (behindRange.start < behindRange.end) {
@@ -374,7 +373,14 @@ function BufferController(config) {
         if (bufferLevel < STALL_THRESHOLD && !isBufferingCompleted) {
             notifyBufferStateChanged(BUFFER_EMPTY);
         } else {
-            notifyBufferStateChanged(BUFFER_LOADED);
+            if (isBufferingCompleted) {
+                notifyBufferStateChanged(BUFFER_LOADED);
+                return;
+            }
+
+            if (bufferLevel >= mediaPlayerModel.getStableBufferTime()) {
+                notifyBufferStateChanged(BUFFER_LOADED);
+            }
         }
     }
 
