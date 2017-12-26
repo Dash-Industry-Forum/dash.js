@@ -15,6 +15,7 @@ import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 import StreamProcessorMock from './mocks/StreamProcessorMock';
 import MetricsModelMock from './mocks/MetricsModelMock';
 import AdapterMock from './mocks/AdapterMock';
+import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
 
 const chai = require('chai');
 const expect = chai.expect;
@@ -38,6 +39,7 @@ describe('BufferController', function () {
     const adapterMock = new AdapterMock();
     const metricsModelMock = new MetricsModelMock();
     const playbackControllerMock = new PlaybackControllerMock();
+    const mediaPlayerModelMock = new MediaPlayerModelMock();
 
     let bufferController;
 
@@ -48,6 +50,7 @@ describe('BufferController', function () {
 
         bufferController = BufferController(context).create({
             metricsModel: metricsModelMock,
+            mediaPlayerModel: mediaPlayerModelMock,
             sourceBufferController: sourceBufferMock,
             errHandler: ErrorHandler(context).getInstance(),
             streamController: streamControllerMock,
