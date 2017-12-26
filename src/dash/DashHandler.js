@@ -114,7 +114,9 @@ function DashHandler(config) {
     }
 
     function setCurrentTime(value) {
-        currentTime = value;
+        if (!isNaN(value)) {
+            currentTime = value;
+        }
     }
 
     function getCurrentTime() {
@@ -394,8 +396,7 @@ function DashHandler(config) {
             request.index = index;
             request.mediaType = type;
             request.mediaInfo = streamProcessor.getMediaInfo();
-            log('Signal complete in getSegmentRequestForTime -', type, '- Request:', request);
-
+            log('Signal complete in getSegmentRequestForTime -', type);
         } else {
             segment = getSegmentByIndex(index, representation);
             request = getRequestForSegment(segment);

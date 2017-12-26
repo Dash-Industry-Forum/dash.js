@@ -422,7 +422,7 @@ function DashAdapter() {
         checkStreamProcessor(streamProcessor);
 
         const indexHandler = streamProcessor.getIndexHandler();
-        if (indexHandler && !isNaN(value)) {
+        if (indexHandler) {
             indexHandler.setCurrentTime(value);
         }
     }
