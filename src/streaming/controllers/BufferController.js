@@ -268,14 +268,18 @@ function BufferController(config) {
         if (type !== Constants.FRAGMENTED_TEXT) {
             // remove buffer after seeking operations
             pruneAllSafely();
+        } else {
+            onPlaybackProgression();
         }
         seekStartTime = undefined;
-        onPlaybackProgression();
     }
 
     // Prune full buffer but what is around current time position
     function pruneAllSafely() {
         const ranges = getAllRangesWithSafetyFactor();
+        if (!ranges || ranges.length === 0) {
+            onPlaybackProgression();
+        }
         clearBuffers(ranges);
     }
 
