@@ -195,6 +195,14 @@ function BufferController(config) {
         }
     }
 
+    function showBufferRanges(ranges) {
+        if (ranges && ranges.length > 0) {
+            for (let i = 0, len = ranges.length; i < len; i++) {
+                log('Buffered Range for type:', type, ':', ranges.start(i), ' - ', ranges.end(i));
+            }
+        }
+    }
+
     function onAppended(e) {
         if (buffer === e.buffer) {
             if (e.error) {
@@ -225,11 +233,7 @@ function BufferController(config) {
             }
 
             const ranges = sourceBufferController.getAllRanges(buffer);
-            if (ranges && ranges.length > 0) {
-                for (let i = 0, len = ranges.length; i < len; i++) {
-                    log('Buffered Range for type:', type, ':', ranges.start(i), ' - ', ranges.end(i));
-                }
-            }
+            showBufferRanges(ranges);
 
             onPlaybackProgression();
             isAppendingInProgress = false;
