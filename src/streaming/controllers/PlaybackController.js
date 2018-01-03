@@ -265,6 +265,8 @@ function PlaybackController() {
             const fragT = parseInt(fragData.t, 10);
             if (!ignoreStartOffset) {
                 startTimeOffset = !isNaN(fragS) ? fragS : fragT;
+            } else {
+                startTimeOffset = streamInfo.start;
             }
         } else {
             // handle case where no media fragments are parsed from the manifest URL
@@ -287,10 +289,7 @@ function PlaybackController() {
                 presentationStartTime = startTimeOffset;
             } else {
                 let earliestTime = commonEarliestTime[streamInfo.id]; //set by ready bufferStart after first onBytesAppended
-                if (earliestTime === undefined) {
-                    earliestTime = streamController.getActiveStreamCommonEarliestTime(); //deal with calculated PST that is none 0 when streamInfo.start is 0
-                }
-                presentationStartTime = Math.max(earliestTime, streamInfo.start);
+                presentationStartTime = earliestTime !== undefined ? Math.max(earliestTime.audio, earliestTime.video, streamInfo.start) : streamInfo.start;
             }
         }
 
@@ -471,7 +470,7 @@ function PlaybackController() {
             initialStartTime;
         let ranges = e.bufferedRanges;
         if (!ranges || !ranges.length) return;
-        if (commonEarliestTime[streamInfo.id] === false) {
+        if (commonEarliestTime[streamInfo.id] && commonEarliestTime[streamInfo.id].started === true) {
             //stream has already been started.
             return;
         }
@@ -486,6 +485,7 @@ function PlaybackController() {
 
         if (commonEarliestTime[streamInfo.id] === undefined) {
             commonEarliestTime[streamInfo.id] = [];
+            commonEarliestTime[streamInfo.id].started = false;
         }
 
         if (commonEarliestTime[streamInfo.id][type] === undefined) {
@@ -516,7 +516,7 @@ function PlaybackController() {
                     if (!isSeeking()) {
                         seek(earliestTime);
                     }
-                    commonEarliestTime[streamInfo.id] = false;
+                    commonEarliestTime[streamInfo.id].started = true;
                 }
             }
         } else {
@@ -526,7 +526,7 @@ function PlaybackController() {
                 if (!isSeeking()) {
                     seek(earliestTime);
                 }
-                commonEarliestTime[streamInfo.id] = false;
+                commonEarliestTime[streamInfo.id].started = true;
             }
         }
     }
