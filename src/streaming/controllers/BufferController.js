@@ -144,12 +144,14 @@ function BufferController(config) {
         if (e.fragmentModel !== streamProcessor.getFragmentModel()) return;
         log('Init fragment finished loading saving to', type + '\'s init cache');
         initCache.save(e.chunk);
+        log('Append Init fragment', type, ' with representationId:', e.chunk.representationId, ' and quality:', e.chunk.quality);
         appendToBuffer(e.chunk);
     }
 
     function switchInitData(streamId, representationId) {
         const chunk = initCache.extract(streamId, representationId);
         if (chunk) {
+            log('Append Init fragment', type, ' with representationId:', chunk.representationId, ' and quality:', chunk.quality);
             appendToBuffer(chunk);
         } else {
             eventBus.trigger(Events.INIT_REQUESTED, {sender: instance});
@@ -542,6 +544,11 @@ function BufferController(config) {
 
     function onRemoved(e) {
         if (buffer !== e.buffer) return;
+
+        log('Removed', type, 'buffer from:', e.from, 'to', e.to);
+
+        const ranges = sourceBufferController.getAllRanges(buffer);
+        showBufferRanges(ranges);
 
         if (pendingPruningRanges.length === 0) {
             isPruningInProgress = false;
