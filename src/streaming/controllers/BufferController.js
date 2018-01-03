@@ -326,56 +326,6 @@ function BufferController(config) {
         return clearRanges;
     }
 
-    // Prune full buffer but what is around current time position
-    function pruneAllSafely() {
-        const ranges = getAllRangesWithSafetyFactor();
-        clearBuffers(ranges);
-    }
-
-    // Get all buffer ranges but a range around current time positionZ
-    function getAllRangesWithSafetyFactor() {
-        const clearRanges = [];
-        if (!buffer || !buffer.buffered || buffer.buffered.length === 0) {
-            return clearRanges;
-        }
-
-        const currentTime = playbackController.getTime();
-        const streamDuration = streamProcessor.getStreamInfo().duration;
-
-        const currentTimeRequest = streamProcessor.getFragmentModel().getRequests({
-            state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
-            time: currentTime
-        })[0];
-
-        // There is no request in current time position yet. Let's remove everything
-        if (!currentTimeRequest) {
-            log('getAllRangesWithSafetyFactor for', type, '- No request found in current time position, removing full buffer 0 -', streamDuration);
-            clearRanges.push({
-                start: 0,
-                end: streamDuration
-            });
-        } else {
-            // Keep a minimim buffer (STALL_THRESHOLD) to avoid a stall because lack of buffer after pruning
-            const behindRange = {
-                start: 0,
-                end: currentTimeRequest.startTime - STALL_THRESHOLD
-            };
-
-            const aheadRange = {
-                start: currentTimeRequest.startTime + currentTimeRequest.duration + STALL_THRESHOLD,
-                end: streamDuration
-            };
-            if (behindRange.start < behindRange.end) {
-                clearRanges.push(behindRange);
-            }
-            if (aheadRange.start < aheadRange.end) {
-                clearRanges.push(aheadRange);
-            }
-        }
-
-        return clearRanges;
-    }
-
     function getWorkingTime() {
         // This function returns current working time for buffer (either start time or current time if playback has started)
         let ret = playbackController.getTime();
