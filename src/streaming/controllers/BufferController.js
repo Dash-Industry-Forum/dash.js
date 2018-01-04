@@ -573,10 +573,10 @@ function BufferController(config) {
             isPruningInProgress = false;
         }
 
-        updateBufferLevel();
-
         if (isPruningInProgress) {
             clearNextRange();
+        } else {
+            updateBufferLevel();
         }
 
         eventBus.trigger(Events.BUFFER_CLEARED, {sender: instance, from: e.from, to: e.to, hasEnoughSpaceToAppend: hasEnoughSpaceToAppend()});
