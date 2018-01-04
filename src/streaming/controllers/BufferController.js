@@ -293,6 +293,8 @@ function BufferController(config) {
         const currentTime = playbackController.getTime();
         const streamDuration = streamProcessor.getStreamInfo().duration;
 
+        log('getAllRangesWithSafetyFactor for', type, '- Current Time:', currentTime, ', Stream Duration:', streamDuration);
+
         const currentTimeRequest = streamProcessor.getFragmentModel().getRequests({
             state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
             time: currentTime
@@ -309,17 +311,32 @@ function BufferController(config) {
             // Keep a minimim buffer (STALL_THRESHOLD) to avoid a stall because lack of buffer after pruning
             const behindRange = {
                 start: 0,
-                end: currentTimeRequest.startTime - STALL_THRESHOLD
+                end: Math.min(currentTimeRequest.startTime, currentTime) - STALL_THRESHOLD
             };
 
             const aheadRange = {
                 start: currentTimeRequest.startTime + currentTimeRequest.duration + STALL_THRESHOLD,
                 end: streamDuration
             };
+
+            const req = streamProcessor.getFragmentModel().getRequests({
+                state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
+                time: currentTimeRequest.starTime + currentTimeRequest.duration
+            })[0];
+
+            if (req) {
+                const extendedKeepEnd = req.startTime + req.duration + STALL_THRESHOLD;
+                if ( (extendedKeepEnd - behindRange.end) < criticalBufferLevel) {
+                    aheadRange.start = extendedKeepEnd;
+                }
+            }
+
             if (behindRange.start < behindRange.end) {
+                log('getAllRangesWithSafetyFactor for', type, '- Behind Range Range:', behindRange.start, '-', behindRange.end);
                 clearRanges.push(behindRange);
             }
             if (aheadRange.start < aheadRange.end) {
+                log('getAllRangesWithSafetyFactor for', type, '- Ahead Range:', aheadRange.start, '-', aheadRange.end);
                 clearRanges.push(aheadRange);
             }
         }
