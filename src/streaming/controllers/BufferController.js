@@ -324,7 +324,7 @@ function BufferController(config) {
                 time: currentTimeRequest.starTime + currentTimeRequest.duration
             })[0];
 
-            if (req) {
+            if (req && req.startTime != currentTimeRequest.startTime) {
                 const extendedKeepEnd = req.startTime + req.duration + STALL_THRESHOLD;
                 if ( (extendedKeepEnd - behindRange.end) < criticalBufferLevel) {
                     aheadRange.start = extendedKeepEnd;
