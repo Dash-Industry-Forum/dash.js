@@ -399,12 +399,7 @@ function BufferController(config) {
         if (bufferLevel < STALL_THRESHOLD && !isBufferingCompleted) {
             notifyBufferStateChanged(BUFFER_EMPTY);
         } else {
-            if (isBufferingCompleted) {
-                notifyBufferStateChanged(BUFFER_LOADED);
-                return;
-            }
-
-            if (bufferLevel >= mediaPlayerModel.getStableBufferTime()) {
+            if (isBufferingCompleted || bufferLevel >= mediaPlayerModel.getStableBufferTime()) {
                 notifyBufferStateChanged(BUFFER_LOADED);
             }
         }
