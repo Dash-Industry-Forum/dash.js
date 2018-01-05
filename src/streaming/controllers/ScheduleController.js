@@ -188,7 +188,6 @@ function ScheduleController(config) {
             bufferLevelRule.execute(streamProcessor, type, streamController.isVideoTrackPresent())) {
 
             const getNextFragment = function () {
-                log('ScheduleController - ' + type + ' - getNextFragment');
                 const fragmentController = streamProcessor.getFragmentController();
                 if (switchTrack) {
                     log('ScheduleController - ' + type + ' - switch track has been asked, get init request for ' + type + ' with representationid = ' + currentRepresentationInfo.id);
