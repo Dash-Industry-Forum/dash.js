@@ -29,20 +29,19 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Debug from '../core/Debug';
-import EventBus from '../core/EventBus';
-import Events from '../core/events/Events';
 import FactoryMaker from '../core/FactoryMaker';
 
 //implements fragmentSink
-function PreBufferSink() {
+function PreBufferSink(onAppendedCallback) {
     const context = this.context;
     const log = Debug(context).getInstance().log;
-    const eventBus = EventBus(context).getInstance();
 
     let chunks = [];
+    let onAppended = onAppendedCallback;
 
     function reset() {
         chunks = [];
+        onAppended = null;
     }
 
     function append(chunk) {
@@ -51,11 +50,11 @@ function PreBufferSink() {
             chunks.sort(function (a, b) { return a.start - b.start; });
         }
         log('PreBufferSink appended chunk s: ' + chunk.start + '; e: ' + chunk.end);
-        eventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {
-            buffer: this,
-            bytes: chunk.bytes,
-            canAppend: true
-        });
+        if (onAppended) {
+            onAppended({
+                chunk: chunk
+            });
+        }
     }
 
     function remove(start, end) {
