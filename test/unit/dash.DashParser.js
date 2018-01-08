@@ -4,9 +4,9 @@ import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 const expect = require('chai').expect;
 
 const context = {};
-let dashParser = DashParser(context).create({});
 
 describe('DashParser', function () {
+    let dashParser;
 
     beforeEach(function () {
         if (typeof window === 'undefined') {
@@ -24,7 +24,13 @@ describe('DashParser', function () {
         delete global.window;
     });
 
+    it('should throw an error when parse is called and config object is not defined', function () {
+        dashParser = DashParser(context).create();
+        expect(dashParser.parse.bind('')).to.be.throw('Missing config parameter(s)');
+    });
+
     it('should throw an error when parse is called and config object has not been set properly', function () {
+        dashParser = DashParser(context).create({});
         expect(dashParser.parse.bind('')).to.be.throw('Missing config parameter(s)');
     });
 

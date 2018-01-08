@@ -34,6 +34,7 @@
  * @param {Object} config object
  */
 function MssParser(config) {
+    config = config || {};
     const protectionController = config.protectionController;
     const BASE64 = config.BASE64;
     const log = config.log;
@@ -607,7 +608,7 @@ function MssParser(config) {
                 if (adaptations[i].contentType === 'audio' || adaptations[i].contentType === 'video') {
                     segments = adaptations[i].SegmentTemplate.SegmentTimeline.S_asArray;
                     startTime = segments[0].t;
-                    if (!timestampOffset) {
+                    if (timestampOffset === undefined) {
                         timestampOffset = startTime;
                     }
                     timestampOffset = Math.min(timestampOffset, startTime);

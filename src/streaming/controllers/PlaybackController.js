@@ -36,6 +36,8 @@ import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 
+const LIVE_UPDATE_PLAYBACK_TIME_INTERVAL_MS = 500;
+
 function PlaybackController() {
 
     const context = this.context;
@@ -54,11 +56,13 @@ function PlaybackController() {
         liveStartTime,
         wallclockTimeIntervalId,
         commonEarliestTime,
+        liveDelay,
         bufferedRange,
         streamInfo,
         isDynamic,
         mediaPlayerModel,
-        playOnceInitialized;
+        playOnceInitialized,
+        lastLivePlaybackTime;
 
     function setup() {
         reset();
@@ -90,7 +94,7 @@ function PlaybackController() {
     function getTimeToStreamEnd() {
         const startTime = getStreamStartTime(true);
         const offset = isDynamic ? startTime - streamInfo.start : 0;
-        return startTime + (streamInfo.duration - offset) - getTime();
+        return parseFloat((startTime + (streamInfo.duration - offset) - getTime()).toFixed(5));
     }
 
     function play() {
@@ -166,6 +170,7 @@ function PlaybackController() {
         const mpd = dashManifestModel.getMpd(manifestModel.getValue());
 
         let delay;
+        let ret;
         const END_OF_PLAYLIST_PADDING = 10;
 
         if (mediaPlayerModel.getUseSuggestedPresentationDelay() && mpd.hasOwnProperty(Constants.SUGGESTED_PRESENTATION_DELAY)) {
@@ -183,10 +188,16 @@ function PlaybackController() {
             // - dvrWindowSize / 2 for short playlists
             // - dvrWindowSize - END_OF_PLAYLIST_PADDING for longer playlists
             const targetDelayCapping = Math.max(dvrWindowSize - END_OF_PLAYLIST_PADDING, dvrWindowSize / 2);
-            return Math.min(delay, targetDelayCapping);
+            ret = Math.min(delay, targetDelayCapping);
         } else {
-            return delay;
+            ret = delay;
         }
+        liveDelay = ret;
+        return ret;
+    }
+
+    function getLiveDelay() {
+        return liveDelay;
     }
 
     function reset() {
@@ -195,6 +206,7 @@ function PlaybackController() {
         wallclockTimeIntervalId = null;
         playOnceInitialized = false;
         commonEarliestTime = {};
+        liveDelay = 0;
         bufferedRange = {};
         if (videoModel) {
             eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
@@ -253,6 +265,8 @@ function PlaybackController() {
             const fragT = parseInt(fragData.t, 10);
             if (!ignoreStartOffset) {
                 startTimeOffset = !isNaN(fragS) ? fragS : fragT;
+            } else {
+                startTimeOffset = streamInfo.start;
             }
         } else {
             // handle case where no media fragments are parsed from the manifest URL
@@ -275,10 +289,7 @@ function PlaybackController() {
                 presentationStartTime = startTimeOffset;
             } else {
                 let earliestTime = commonEarliestTime[streamInfo.id]; //set by ready bufferStart after first onBytesAppended
-                if (earliestTime === undefined) {
-                    earliestTime = streamController.getActiveStreamCommonEarliestTime(); //deal with calculated PST that is none 0 when streamInfo.start is 0
-                }
-                presentationStartTime = Math.max(earliestTime, streamInfo.start);
+                presentationStartTime = earliestTime !== undefined ? Math.max(earliestTime.audio, earliestTime.video, streamInfo.start) : streamInfo.start;
             }
         }
 
@@ -383,12 +394,19 @@ function PlaybackController() {
 
     function onPlaybackTimeUpdated() {
         const time = getTime();
-        if (time === currentTime) return;
         currentTime = time;
         eventBus.trigger(Events.PLAYBACK_TIME_UPDATED, {
             timeToEnd: getTimeToStreamEnd(),
             time: time
         });
+    }
+
+    function updateLivePlaybackTime() {
+        const now = Date.now();
+        if (!lastLivePlaybackTime || now > lastLivePlaybackTime + LIVE_UPDATE_PLAYBACK_TIME_INTERVAL_MS) {
+            lastLivePlaybackTime = now;
+            onPlaybackTimeUpdated();
+        }
     }
 
     function onPlaybackProgress() {
@@ -428,6 +446,12 @@ function PlaybackController() {
             isDynamic: isDynamic,
             time: new Date()
         });
+
+        // Updates playback time for paused dynamic streams
+        // (video element doesn't call timeupdate when the playback is paused)
+        if (getIsDynamic() && isPaused()) {
+            updateLivePlaybackTime();
+        }
     }
 
     function checkTimeInRanges(time, ranges) {
@@ -446,7 +470,7 @@ function PlaybackController() {
             initialStartTime;
         let ranges = e.bufferedRanges;
         if (!ranges || !ranges.length) return;
-        if (commonEarliestTime[streamInfo.id] === false) {
+        if (commonEarliestTime[streamInfo.id] && commonEarliestTime[streamInfo.id].started === true) {
             //stream has already been started.
             return;
         }
@@ -461,6 +485,7 @@ function PlaybackController() {
 
         if (commonEarliestTime[streamInfo.id] === undefined) {
             commonEarliestTime[streamInfo.id] = [];
+            commonEarliestTime[streamInfo.id].started = false;
         }
 
         if (commonEarliestTime[streamInfo.id][type] === undefined) {
@@ -488,16 +513,20 @@ function PlaybackController() {
                     ranges = bufferedRange[streamInfo.id].video;
                 }
                 if (checkTimeInRanges(earliestTime, ranges)) {
-                    seek(earliestTime);
-                    commonEarliestTime[streamInfo.id] = false;
+                    if (!isSeeking()) {
+                        seek(earliestTime);
+                    }
+                    commonEarliestTime[streamInfo.id].started = true;
                 }
             }
         } else {
             //current stream has only audio or only video content
             if (commonEarliestTime[streamInfo.id][type]) {
                 earliestTime = commonEarliestTime[streamInfo.id][type] > initialStartTime ? commonEarliestTime[streamInfo.id][type] : initialStartTime;
-                seek(earliestTime);
-                commonEarliestTime[streamInfo.id] = false;
+                if (!isSeeking()) {
+                    seek(earliestTime);
+                }
+                commonEarliestTime[streamInfo.id].started = true;
             }
         }
     }
@@ -552,6 +581,7 @@ function PlaybackController() {
         setLiveStartTime: setLiveStartTime,
         getLiveStartTime: getLiveStartTime,
         computeLiveDelay: computeLiveDelay,
+        getLiveDelay: getLiveDelay,
         play: play,
         isPaused: isPaused,
         pause: pause,

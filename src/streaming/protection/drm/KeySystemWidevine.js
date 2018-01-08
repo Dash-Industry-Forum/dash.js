@@ -37,16 +37,18 @@
  */
 
 import CommonEncryption from '../CommonEncryption';
+import ProtectionConstants from '../../constants/ProtectionConstants';
 
 const uuid = 'edef8ba9-79d6-4ace-a3c8-27dcd51d21ed';
-const systemString = 'com.widevine.alpha';
+const systemString = ProtectionConstants.WIDEVINE_KEYSTEM_STRING;
 const schemeIdURI = 'urn:uuid:' + uuid;
 
 function KeySystemWidevine(config) {
 
+    config = config || {};
     let instance;
     let protData = null;
-    let BASE64 = config.BASE64;
+    const BASE64 = config.BASE64;
 
     function init(protectionData) {
         if (protectionData) {
@@ -112,6 +114,10 @@ function KeySystemWidevine(config) {
         return null;
     }
 
+    function getCDMData() {
+        return null;
+    }
+
     instance = {
         uuid: uuid,
         schemeIdURI: schemeIdURI,
@@ -120,7 +126,8 @@ function KeySystemWidevine(config) {
         getInitData: getInitData,
         getRequestHeadersFromMessage: getRequestHeadersFromMessage,
         getLicenseRequestFromMessage: getLicenseRequestFromMessage,
-        getLicenseServerURLFromInitData: getLicenseServerURLFromInitData
+        getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
+        getCDMData: getCDMData
     };
 
     return instance;

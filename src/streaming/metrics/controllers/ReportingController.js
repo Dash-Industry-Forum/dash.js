@@ -36,9 +36,7 @@ function ReportingController(config) {
     let reporters = [];
     let instance;
 
-    let reportingFactory = ReportingFactory(this.context).getInstance({
-        log: config.log
-    });
+    const reportingFactory = ReportingFactory(this.context).getInstance(config);
 
     function initialize(reporting, rangeController) {
         // "if multiple Reporting elements are present, it is expected that

@@ -1,6 +1,6 @@
 'use strict';
 
-var app = angular.module('DashPlayer', ['DashSourcesService', 'DashContributorsService', 'angular-flot']);
+var app = angular.module('DashPlayer', ['DashSourcesService', 'DashContributorsService', 'DashIFTestVectorsService', 'angular-flot']);
 
 $(document).ready(function () {
     $('[data-toggle="tooltip"]').tooltip();
@@ -25,8 +25,16 @@ angular.module('DashContributorsService', ['ngResource']).factory('contributors'
     });
 });
 
-app.controller('DashController', function ($scope, sources, contributors) {
+angular.module('DashIFTestVectorsService', ['ngResource']).factory('dashifTestVectors', function ($resource) {
+    return $resource('https://testassets.dashif.org/dashjs.json', {}, {
+        query: {
+            method: 'GET',
+            isArray: false
+        }
+    });
+});
 
+app.controller('DashController', function ($scope, sources, contributors, dashifTestVectors) {
 
     $scope.selectedItem = {
         url: "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd"
@@ -43,6 +51,14 @@ app.controller('DashController', function ($scope, sources, contributors) {
                 }
             }
         }
+
+        // DASH Industry Forum Test Vectors
+        dashifTestVectors.query(function(data) {
+            $scope.availableStreams.splice(6, 0, {
+                name: 'DASH Industry Forum Test Vectors',
+                submenu: data.items
+            });
+        });
     });
 
     contributors.query(function (data) {
@@ -140,7 +156,9 @@ app.controller('DashController', function ($scope, sources, contributors) {
     $scope.drmData = [];
     $scope.initialSettings = {
         audio: null,
-        video: null
+        video: null,
+        text: null,
+        textEnabled: true
     };
     $scope.mediaSettingsCacheEnabled = true;
     $scope.metricsTimer = null;
@@ -488,7 +506,7 @@ app.controller('DashController', function ($scope, sources, contributors) {
     };
 
     $scope.toggleUseCustomABRRules = function () {
-
+        $scope.player.getThumbnail($scope.player.time());
         if ($scope.customABRRulesSelected) {
             $scope.player.useDefaultABRRules(false);
             $scope.player.addABRCustomRule('qualitySwitchRules', 'DownloadRatioRule', DownloadRatioRule);
@@ -580,6 +598,10 @@ app.controller('DashController', function ($scope, sources, contributors) {
                 role: $scope.initialSettings.video
             });
         }
+        if ($scope.initialSettings.text) {
+            $scope.player.setTextDefaultLanguage($scope.initialSettings.text);
+        }
+        $scope.player.setTextDefaultEnabled($scope.initialSettings.textEnabled);
         $scope.controlbar.enable();
     };
 

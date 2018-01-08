@@ -119,6 +119,7 @@ function uuidProcessor() {
 
 function MssFragmentProcessor(config) {
 
+    config = config || {};
     let context = this.context;
     let metricsModel = config.metricsModel;
     let playbackController = config.playbackController;

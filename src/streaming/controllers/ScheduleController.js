@@ -42,6 +42,7 @@ import Debug from '../../core/Debug';
 
 function ScheduleController(config) {
 
+    config = config || {};
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
     const metricsModel = config.metricsModel;
@@ -74,7 +75,7 @@ function ScheduleController(config) {
         bufferLevelRule,
         nextFragmentRequestRule,
         scheduleWhilePaused,
-        lastQualityIndex,
+        lastFragmentRequest,
         topQualityIndex,
         lastInitQuality,
         replaceRequestArray,
@@ -174,6 +175,7 @@ function ScheduleController(config) {
 
     function schedule() {
         if (isStopped || isFragmentProcessingInProgress || !streamProcessor.getBufferController() || playbackController.isPaused() && !scheduleWhilePaused) {
+            log('ScheduleController ' + type + '- schedule stop!');
             return;
         }
 
@@ -185,15 +187,15 @@ function ScheduleController(config) {
             bufferLevelRule.execute(streamProcessor, type, streamController.isVideoTrackPresent())) {
 
             const getNextFragment = function () {
-                log('ScheduleController ' + type + '- getNextFragment');
+                log('ScheduleController - ' + type + ' - getNextFragment');
                 const fragmentController = streamProcessor.getFragmentController();
                 if (switchTrack) {
-                    log('ScheduleController ' + type + '- switch track has been asked, get init request for ' + type + ' with representationid = ' + currentRepresentationInfo.id);
+                    log('ScheduleController - ' + type + ' - switch track has been asked, get init request for ' + type + ' with representationid = ' + currentRepresentationInfo.id);
                     streamProcessor.switchInitData(currentRepresentationInfo.id);
                     lastInitQuality = currentRepresentationInfo.quality;
                     switchTrack = false;
                 } else if (currentRepresentationInfo.quality !== lastInitQuality) {
-                    log('ScheduleController ' + type + '- quality has changed, get init request');
+                    log('ScheduleController - ' + type + ' - quality has changed, get init request for representationid = ' + currentRepresentationInfo.id);
                     lastInitQuality = currentRepresentationInfo.quality;
 
                     streamProcessor.switchInitData(currentRepresentationInfo.id);
@@ -206,10 +208,10 @@ function ScheduleController(config) {
                     } else {
                         const request = nextFragmentRequestRule.execute(streamProcessor, replacement);
                         if (request) {
-                            log('ScheduleController ' + type + '- getNextFragment - request is ' + request.url);
+                            log('ScheduleController - ' + type + ' - getNextFragment - request is ' + request.url);
                             fragmentModel.executeRequest(request);
                         } else { //Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
-                            log('getNextFragment ' + type + '- Playing at the bleeding live edge and frag is not available yet');
+                            log('getNextFragment - ' + type + ' - Playing at the bleeding live edge and frag is not available yet');
                             isFragmentProcessingInProgress = false;
                             startScheduleTimer(500);
                         }
@@ -307,14 +309,17 @@ function ScheduleController(config) {
                 threshold: 0
             })[0];
             if (item && playbackController.getTime() >= item.startTime) {
-                if (item.quality !== lastQualityIndex && trigger) {
+                if ((item.quality !== lastFragmentRequest.quality || item.adaptationIndex !== lastFragmentRequest.adaptationIndex) && trigger) {
                     eventBus.trigger(Events.QUALITY_CHANGE_RENDERED, {
                         mediaType: type,
-                        oldQuality: lastQualityIndex,
+                        oldQuality: lastFragmentRequest.quality,
                         newQuality: item.quality
                     });
                 }
-                lastQualityIndex = item.quality;
+                lastFragmentRequest = {
+                    quality: item.quality,
+                    adaptationIndex: item.adaptationIndex
+                };
             }
         }
     }
@@ -385,7 +390,7 @@ function ScheduleController(config) {
 
         stop();
         isFragmentProcessingInProgress = false;
-        log('Stream is complete');
+        log('[ScheduleController] Stream is complete');
     }
 
     function onFragmentLoadingCompleted(e) {
@@ -574,7 +579,10 @@ function ScheduleController(config) {
         playListTraceMetricsClosed = true;
         initialRequest = true;
         lastInitQuality = NaN;
-        lastQualityIndex = NaN;
+        lastFragmentRequest = {
+            quality: NaN,
+            adaptationIndex: NaN
+        };
         topQualityIndex = {};
         replaceRequestArray = [];
         isStopped = true;

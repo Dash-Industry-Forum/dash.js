@@ -44,6 +44,7 @@ class Constants {
         this.FRAGMENTED_TEXT = 'fragmentedText';
         this.EMBEDDED_TEXT = 'embeddedText';
         this.MUXED = 'muxed';
+        this.IMAGE = 'image';
         this.LOCATION = 'Location';
         this.INITIALIZE = 'initialize';
         this.TEXT_SHOWING = 'showing';

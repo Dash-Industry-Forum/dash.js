@@ -6,13 +6,6 @@
         "protocol": "DASH"
     },
 
-    "DASH_VOD_2": {
-        "url": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-events.mpd",
-        "name": "SegmentTemplate/Number, live profile",
-        "type": "VOD",
-        "protocol": "DASH"
-    },
-
     "DASH_LIVE_1": {
         "url": "https://vm2.dashif.org/livesim/testpic_2s/Manifest.mpd",
         "name": "SegmentTemplate without manifest updates (livesim)",
@@ -28,8 +21,8 @@
     },
 
     "MSS_VOD_1": {
-        "url": "http://2is7server2.rd.francetelecom.com/hasplayer/VOD_1/VOD_1.ism/manifest",
-        "name": "Prince Of Persia",
+        "url": "https://test.playready.microsoft.com/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest",
+        "name": "Super Speedway",
         "type": "VOD",
         "protocol": "MSS"
     }

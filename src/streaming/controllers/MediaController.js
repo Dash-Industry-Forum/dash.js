@@ -123,7 +123,14 @@ function MediaController() {
 
         tracks[streamId] = tracks[streamId] || createTrackInfo();
 
-        if (tracks[streamId][mediaType].list.indexOf(track) >= 0) return;
+        const len = tracks[streamId][mediaType].list.length;
+
+        for (let i = 0; i < len; i++) {
+            //track is already set.
+            if (isTracksEqual(tracks[streamId][mediaType].list[i], track)) {
+                return;
+            }
+        }
 
         tracks[streamId][mediaType].list.push(track);
 
@@ -286,7 +293,8 @@ function MediaController() {
      * @memberof MediaController#
      */
     function isMultiTrackSupportedByType(type) {
-        return (type === Constants.AUDIO || type === Constants.VIDEO || type === Constants.TEXT || type === Constants.FRAGMENTED_TEXT);
+        return (type === Constants.AUDIO || type === Constants.VIDEO || type === Constants.TEXT ||
+            type === Constants.FRAGMENTED_TEXT || type === Constants.IMAGE);
     }
 
     /**
@@ -452,6 +460,11 @@ function MediaController() {
                 current: null
             },
             fragmentedText: {
+                list: [],
+                storeLastSettings: true,
+                current: null
+            },
+            image: {
                 list: [],
                 storeLastSettings: true,
                 current: null

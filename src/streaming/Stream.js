@@ -32,6 +32,7 @@ import Constants from './constants/Constants';
 import StreamProcessor from './StreamProcessor';
 import EventController from './controllers/EventController';
 import FragmentController from './controllers/FragmentController';
+import ThumbnailController from './thumbnail/ThumbnailController';
 import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import Debug from '../core/Debug';
@@ -40,7 +41,7 @@ import FactoryMaker from '../core/FactoryMaker';
 function Stream(config) {
 
     const DATA_UPDATE_FAILED_ERROR_CODE = 1;
-
+    config = config || {};
     let context = this.context;
     let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
@@ -68,6 +69,7 @@ function Stream(config) {
         isUpdating,
         protectionController,
         fragmentController,
+        thumbnailController,
         eventController,
         trackChangedEvent;
 
@@ -119,12 +121,13 @@ function Stream(config) {
     function deactivate() {
         let ln = streamProcessors ? streamProcessors.length : 0;
         for (let i = 0; i < ln; i++) {
+            let fragmentModel = streamProcessors[i].getFragmentModel();
+            fragmentModel.removeExecutedRequestsBeforeTime(getStartTime() + getDuration());
             streamProcessors[i].reset();
         }
         streamProcessors = [];
         isStreamActivated = false;
         isMediaInitialized = false;
-        clearEventController();
         eventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
     }
 
@@ -183,6 +186,10 @@ function Stream(config) {
         return fragmentController;
     }
 
+    function getThumbnailController() {
+        return thumbnailController;
+    }
+
     function checkConfig() {
         if (!abrController || !abrController.hasOwnProperty('getBitrateList') || !adapter || !adapter.hasOwnProperty('getAllMediaInfoForType') || !adapter.hasOwnProperty('getEventsFor')) {
             throw new Error('Missing config parameter(s)');
@@ -196,7 +203,13 @@ function Stream(config) {
      */
     function getBitrateListFor(type) {
         checkConfig();
-        let mediaInfo = getMediaInfo(type);
+        if (type === Constants.IMAGE) {
+            if (!thumbnailController) {
+                return [];
+            }
+            return thumbnailController.getBitrateList();
+        }
+        const mediaInfo = getMediaInfo(type);
         return abrController.getBitrateList(mediaInfo);
     }
 
@@ -206,9 +219,9 @@ function Stream(config) {
         }
     }
 
-    function clearEventController() {
+    function stopEventController() {
         if (eventController) {
-            eventController.clear();
+            eventController.stop();
         }
     }
 
@@ -236,7 +249,7 @@ function Stream(config) {
             return false;
         }
 
-        if ((type === Constants.TEXT) || (type === Constants.FRAGMENTED_TEXT) || (type === Constants.EMBEDDED_TEXT)) {
+        if (type === Constants.TEXT || type === Constants.FRAGMENTED_TEXT || type === Constants.EMBEDDED_TEXT || type === Constants.IMAGE) {
             return true;
         }
         codec = mediaInfo.codec;
@@ -273,12 +286,13 @@ function Stream(config) {
         } else {
             processor.updateMediaInfo(mediaInfo);
             if (mediaInfo.type !== Constants.FRAGMENTED_TEXT) {
+                abrController.updateTopQualityIndex(mediaInfo);
                 processor.switchTrackAsked();
             }
         }
     }
 
-    function createStreamProcessor(mediaInfo, mediaSource, optionalSettings) {
+    function createStreamProcessor(mediaInfo, allMediaForType, mediaSource, optionalSettings) {
         let streamProcessor = StreamProcessor(context).create({
             type: getMimeTypeOrType(mediaInfo),
             mimeType: mediaInfo.mimeType,
@@ -301,7 +315,6 @@ function Stream(config) {
             errHandler: errHandler
         });
 
-        let allMediaForType = adapter.getAllMediaInfoForType(streamInfo, mediaInfo.type);
         streamProcessor.initialize(mediaSource);
         abrController.updateTopQualityIndex(mediaInfo);
 
@@ -363,28 +376,41 @@ function Stream(config) {
             return;
         }
 
+        if (type === Constants.IMAGE) {
+            thumbnailController = ThumbnailController(context).create({
+                dashManifestModel: dashManifestModel,
+                adapter: adapter,
+                baseURLController: config.baseURLController,
+                stream: instance
+            });
+            return;
+        }
+
         mediaController.checkInitialMediaSettingsForType(type, streamInfo);
         initialMediaInfo = mediaController.getCurrentTrackFor(type, streamInfo);
 
         // TODO : How to tell index handler live/duration?
         // TODO : Pass to controller and then pass to each method on handler?
 
-        createStreamProcessor(initialMediaInfo, mediaSource);
+        createStreamProcessor(initialMediaInfo, allMediaForType, mediaSource);
     }
 
     function initializeMedia(mediaSource) {
         checkConfig();
         let events;
 
-        eventController = EventController(context).create();
+        //if initializeMedia is called from a switch period, eventController could have been already created.
+        if (!eventController) {
+            eventController = EventController(context).create();
 
-        eventController.setConfig({
-            manifestModel: manifestModel,
-            manifestUpdater: manifestUpdater,
-            playbackController: playbackController
-        });
-        events = adapter.getEventsFor(streamInfo);
-        eventController.addInlineEvents(events);
+            eventController.setConfig({
+                manifestModel: manifestModel,
+                manifestUpdater: manifestUpdater,
+                playbackController: playbackController
+            });
+            events = adapter.getEventsFor(streamInfo);
+            eventController.addInlineEvents(events);
+        }
 
         isUpdating = true;
 
@@ -397,6 +423,7 @@ function Stream(config) {
         initializeMediaForType(Constants.FRAGMENTED_TEXT, mediaSource);
         initializeMediaForType(Constants.EMBEDDED_TEXT, mediaSource);
         initializeMediaForType(Constants.MUXED, mediaSource);
+        initializeMediaForType(Constants.IMAGE, mediaSource);
 
         createBuffers();
 
@@ -421,11 +448,11 @@ function Stream(config) {
         if (!realAdaptation || !Array.isArray(realAdaptation.Representation_asArray)) return null;
 
         // Filter codecs that are not supported
-        realAdaptation.Representation_asArray.filter((_, i) => {
+        realAdaptation.Representation_asArray = realAdaptation.Representation_asArray.filter((_, i) => {
             // keep at least codec from lowest representation
             if (i === 0) return true;
 
-            const codec = dashManifestModel.getCodec(realAdaptation, i);
+            const codec = dashManifestModel.getCodec(realAdaptation, i, true);
             if (!capabilities.supportsCodec(codec)) {
                 log('[Stream] codec not supported: ' + codec);
                 return false;
@@ -486,12 +513,21 @@ function Stream(config) {
         let processors = getProcessors();
         const ln = processors.length;
 
+        if (ln === 0) {
+            log('[Stream] onBufferingCompleted - can\'t trigger STREAM_BUFFERING_COMPLETED because no streamProcessor is defined');
+            return;
+        }
+
         // if there is at least one buffer controller that has not completed buffering yet do nothing
         for (let i = 0; i < ln; i++) {
-            if (!processors[i].isBufferingCompleted()) {
+            //if audio or video buffer is not buffering completed state, do not send STREAM_BUFFERING_COMPLETED
+            if (!processors[i].isBufferingCompleted() && (processors[i].getType() === Constants.AUDIO || processors[i].getType() === Constants.VIDEO)) {
+                log('[Stream] onBufferingCompleted - can\'t trigger STREAM_BUFFERING_COMPLETED because streamProcessor ' + processors[i].getType() + ' is not buffering completed');
                 return;
             }
         }
+
+        log('[Stream] onBufferingCompleted - trigger STREAM_BUFFERING_COMPLETED');
 
         eventBus.trigger(Events.STREAM_BUFFERING_COMPLETED, {
             streamInfo: streamInfo
@@ -586,9 +622,11 @@ function Stream(config) {
         getId: getId,
         getStreamInfo: getStreamInfo,
         getFragmentController: getFragmentController,
+        getThumbnailController: getThumbnailController,
         getEventController: getEventController,
         getBitrateListFor: getBitrateListFor,
         startEventController: startEventController,
+        stopEventController: stopEventController,
         updateData: updateData,
         reset: reset,
         getProcessors: getProcessors

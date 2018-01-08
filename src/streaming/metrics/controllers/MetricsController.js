@@ -35,6 +35,7 @@ import MetricsHandlersController from './MetricsHandlersController';
 
 function MetricsController(config) {
 
+    config = config || {};
     let metricsHandlersController,
         reportingController,
         rangeController,
@@ -51,7 +52,8 @@ function MetricsController(config) {
             rangeController.initialize(metricsEntry.Range);
 
             reportingController = ReportingController(context).create({
-                log: config.log
+                log: config.log,
+                metricsConstants: config.metricsConstants
             });
 
             reportingController.initialize(metricsEntry.Reporting, rangeController);

@@ -28,19 +28,18 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
- * Adobe Access DRM
- *
  * @class
- * @implements KeySystem
+ * @ignore
  */
-
-//TODO implement
-function KeySystemAdobeAccess() {
-    let instance = {};
-    return instance;
+class Thumbnail {
+    constructor() {
+        this.url = null;
+        this.width = null;
+        this.height = null;
+        this.x = null;
+        this.y = null;
+    }
 }
 
-KeySystemAdobeAccess.__dashjs_factory_name = 'KeySystemAdobeAccess';
-export default dashjs.FactoryMaker.getSingletonFactory(KeySystemAdobeAccess); /* jshint ignore:line */
+export default Thumbnail;

@@ -141,13 +141,15 @@ function BaseURLTreeModel() {
         let target = root;
         let nodes = [target.data];
 
-        path.forEach(p => {
-            target = target.children[p];
+        if (path) {
+            path.forEach(p => {
+                target = target.children[p];
 
-            if (target) {
-                nodes.push(target.data);
-            }
-        });
+                if (target) {
+                    nodes.push(target.data);
+                }
+            });
+        }
 
         return nodes.filter(n => n.baseUrls.length);
     }

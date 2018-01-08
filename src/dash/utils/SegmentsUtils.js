@@ -42,6 +42,16 @@ function getNumberForSegment(segment, segmentIndex) {
     return segment.representation.startNumber + segmentIndex;
 }
 
+export function unescapeDollarsInTemplate(url) {
+    return url ? url.split('$$').join('$') : url;
+}
+
+export function replaceIDForTemplate(url, value) {
+    if (!value || !url || url.indexOf('$RepresentationID$') === -1) { return url; }
+    let v = value.toString();
+    return url.split('$RepresentationID$').join(v);
+}
+
 export function replaceTokenForTemplate(url, token, value) {
     const formatTag = '%0';
 
@@ -135,8 +145,8 @@ export function getIndexBasedSegment(timelineConverter, isDynamic, representatio
         duration = representation.adaptation.period.duration;
     }
 
-    presentationStartTime = representation.adaptation.period.start + (index * duration);
-    presentationEndTime = presentationStartTime + duration;
+    presentationStartTime = parseFloat((representation.adaptation.period.start + (index * duration)).toFixed(5));
+    presentationEndTime = parseFloat((presentationStartTime + duration).toFixed(5));
 
     seg = new Segment();
 

@@ -49,6 +49,11 @@ function VideoModel() {
 
     function initialize() {
         stalledStreams = [];
+        eventBus.on(Events.PLAYBACK_PLAYING, onPlaying, this);
+    }
+
+    function reset() {
+        eventBus.off(Events.PLAYBACK_PLAYING, onPlaying, this);
     }
 
     function onPlaybackCanPlay() {
@@ -192,6 +197,15 @@ function VideoModel() {
         }
     }
 
+    //Calling play on the element will emit playing - even if the stream is stalled. If the stream is stalled, emit a waiting event.
+    function onPlaying() {
+        if (element && isStalled() && element.playbackRate === 0) {
+            const event = document.createEvent('Event');
+            event.initEvent('waiting', true, false);
+            element.dispatchEvent(event);
+        }
+    }
+
     function getPlaybackQuality() {
         let hasWebKit = ('webkitDroppedFrameCount' in element) && ('webkitDecodedFrameCount' in element);
         let hasQuality = ('getVideoPlaybackQuality' in element);
@@ -293,17 +307,25 @@ function VideoModel() {
         return element ? element.videoHeight : NaN;
     }
 
+    function getVideoRelativeOffsetTop() {
+        return element && element.parentNode ? element.getBoundingClientRect().top - element.parentNode.getBoundingClientRect().top : NaN;
+    }
+
+    function getVideoRelativeOffsetLeft() {
+        return element && element.parentNode ? element.getBoundingClientRect().left - element.parentNode.getBoundingClientRect().left : NaN;
+    }
+
     function getTextTracks() {
         return element ? element.textTracks : [];
     }
 
-    function getTextTrack(kind, label, lang) {
+    function getTextTrack(kind, label, lang, isTTML, isEmbedded) {
         if (element) {
             for (var i = 0; i < element.textTracks.length; i++) {
                 //label parameter could be a number (due to adaptationSet), but label, the attribute of textTrack, is a string => to modify...
                 //label could also be undefined (due to adaptationSet)
                 if (element.textTracks[i].kind === kind && (label ? element.textTracks[i].label == label : true) &&
-                   element.textTracks[i].language === lang) {
+                   element.textTracks[i].language === lang && element.textTracks[i].isTTML === isTTML && element.textTracks[i].isEmbedded === isEmbedded) {
                     return element.textTracks[i];
                 }
             }
@@ -322,6 +344,11 @@ function VideoModel() {
     function appendChild(childElement) {
         if (element) {
             element.appendChild(childElement);
+            //in Chrome, we need to differenciate textTrack with same lang, kind and label but different format (vtt, ttml, etc...)
+            if (childElement.isTTML !== undefined) {
+                element.textTracks[element.textTracks.length - 1].isTTML = childElement.isTTML;
+                element.textTracks[element.textTracks.length - 1].isEmbedded = childElement.isEmbedded;
+            }
         }
     }
 
@@ -364,7 +391,10 @@ function VideoModel() {
         appendChild: appendChild,
         removeChild: removeChild,
         getVideoWidth: getVideoWidth,
-        getVideoHeight: getVideoHeight
+        getVideoHeight: getVideoHeight,
+        getVideoRelativeOffsetTop: getVideoRelativeOffsetTop,
+        getVideoRelativeOffsetLeft: getVideoRelativeOffsetLeft,
+        reset: reset
     };
 
     return instance;

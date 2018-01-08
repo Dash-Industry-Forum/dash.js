@@ -39,8 +39,13 @@ import FactoryMaker from '../core/FactoryMaker';
 import Debug from '../core/Debug';
 import URLUtils from '../streaming/utils/URLUtils';
 import Representation from './vo/Representation';
-
-import {replaceTokenForTemplate, getTimeBasedSegment, getSegmentByIndex} from './utils/SegmentsUtils';
+import {
+    replaceIDForTemplate,
+    unescapeDollarsInTemplate,
+    replaceTokenForTemplate,
+    getTimeBasedSegment,
+    getSegmentByIndex
+} from './utils/SegmentsUtils';
 import SegmentsGetter from './utils/SegmentsGetter';
 
 import SegmentBaseLoader from './SegmentBaseLoader';
@@ -50,6 +55,7 @@ const SEGMENTS_UNAVAILABLE_ERROR_CODE = 1;
 
 function DashHandler(config) {
 
+    config = config || {};
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
     const urlUtils = URLUtils(context).getInstance();
@@ -136,16 +142,6 @@ function DashHandler(config) {
         eventBus.off(Events.SEGMENTS_LOADED, onSegmentsLoaded, instance);
     }
 
-    function unescapeDollarsInTemplate(url) {
-        return url ? url.split('$$').join('$') : url;
-    }
-
-    function replaceIDForTemplate(url, value) {
-        if (value === null || url === null || url.indexOf('$RepresentationID$') === -1) { return url; }
-        let v = value.toString();
-        return url.split('$RepresentationID$').join(v);
-    }
-
     function setRequestUrl(request, destination, representation) {
         const baseURL = baseURLController.resolve(representation.path);
         let url,
@@ -210,7 +206,7 @@ function DashHandler(config) {
         } else {
             const seg = getSegmentByIndex(index, representation);
             if (seg) {
-                const time = seg.presentationStartTime - representation.adaptation.period.start;
+                const time = parseFloat((seg.presentationStartTime - representation.adaptation.period.start).toFixed(5));
                 const duration = representation.adaptation.period.duration;
                 log(representation.segmentInfoType + ': ' + time + ' / ' + duration);
                 isFinished = representation.segmentInfoType === DashConstants.SEGMENT_TIMELINE && isDynamic ? false : time >= duration;

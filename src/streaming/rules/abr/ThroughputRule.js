@@ -32,12 +32,14 @@ import BufferController from '../../controllers/BufferController';
 import AbrController from '../../controllers/AbrController';
 import FactoryMaker from '../../../core/FactoryMaker';
 import Debug from '../../../core/Debug';
-import SwitchRequest from '../SwitchRequest.js';
+import SwitchRequest from '../SwitchRequest';
 
 function ThroughputRule(config) {
 
+    config = config || {};
     const context = this.context;
     const log = Debug(context).getInstance().log;
+
     const metricsModel = config.metricsModel;
 
     function checkConfig() {
@@ -74,7 +76,6 @@ function ThroughputRule(config) {
         }
 
         if (abrController.getAbandonmentStateFor(mediaType) !== AbrController.ABANDON_LOAD) {
-
             if (bufferStateVO.state === BufferController.BUFFER_LOADED || isDynamic) {
                 switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, throughput, latency);
                 streamProcessor.getScheduleController().setTimeToLoadDelay(0);

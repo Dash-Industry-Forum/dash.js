@@ -156,6 +156,10 @@ function DashAdapter() {
         mediaInfo.roles = ['caption'];
     }
 
+    function convertVideoInfoToThumbnailInfo(mediaInfo) {
+        mediaInfo.type = Constants.IMAGE;
+    }
+
     function convertPeriodToStreamInfo(period) {
         let streamInfo = new StreamInfo();
         const THRESHOLD = 1;
@@ -276,8 +280,11 @@ function DashAdapter() {
                         media = null;
                     }
                 }
-            }
-            if (media && type !== Constants.EMBEDDED_TEXT) {
+            } else if (type === Constants.IMAGE) {
+                convertVideoInfoToThumbnailInfo(media);
+                mediaArr.push(media);
+                media = null;
+            } else if (media) {
                 mediaArr.push(media);
             }
         }
@@ -358,7 +365,7 @@ function DashAdapter() {
         return indexHandler ? indexHandler.getInitRequest(representation) : null;
     }
 
-    function getNextFragmentRequest(streamProcessor, trackInfo) {
+    function getNextFragmentRequest(streamProcessor, representationInfo) {
         let representationController,
             representation,
             indexHandler;
@@ -366,13 +373,13 @@ function DashAdapter() {
         checkStreamProcessor(streamProcessor);
 
         representationController = streamProcessor.getRepresentationController();
-        representation = getRepresentationForRepresentationInfo(trackInfo, representationController);
+        representation = getRepresentationForRepresentationInfo(representationInfo, representationController);
         indexHandler = streamProcessor.getIndexHandler();
 
         return indexHandler ? indexHandler.getNextSegmentRequest(representation) : null;
     }
 
-    function getFragmentRequestForTime(streamProcessor, trackInfo, time, options) {
+    function getFragmentRequestForTime(streamProcessor, representationInfo, time, options) {
         let representationController,
             representation,
             indexHandler;
@@ -380,13 +387,13 @@ function DashAdapter() {
         checkStreamProcessor(streamProcessor);
 
         representationController = streamProcessor.getRepresentationController();
-        representation = getRepresentationForRepresentationInfo(trackInfo, representationController);
+        representation = getRepresentationForRepresentationInfo(representationInfo, representationController);
         indexHandler = streamProcessor.getIndexHandler();
 
         return indexHandler ? indexHandler.getSegmentRequestForTime(representation, time, options) : null;
     }
 
-    function generateFragmentRequestForTime(streamProcessor, trackInfo, time) {
+    function generateFragmentRequestForTime(streamProcessor, representationInfo, time) {
         let representationController,
             representation,
             indexHandler;
@@ -394,7 +401,7 @@ function DashAdapter() {
         checkStreamProcessor(streamProcessor);
 
         representationController = streamProcessor.getRepresentationController();
-        representation = getRepresentationForRepresentationInfo(trackInfo, representationController);
+        representation = getRepresentationForRepresentationInfo(representationInfo, representationController);
         indexHandler = streamProcessor.getIndexHandler();
 
         return indexHandler ? indexHandler.generateSegmentRequestForTime(representation, time) : null;
@@ -442,7 +449,7 @@ function DashAdapter() {
         checkRepresentationController(representationController);
         checkQuality(quality);
 
-        let voRepresentation = representationController.getRepresentationForQuality(quality);
+        const voRepresentation = representationController.getRepresentationForQuality(quality);
         return voRepresentation ? convertRepresentationToRepresentationInfo(voRepresentation) : null;
     }
 
@@ -456,7 +463,7 @@ function DashAdapter() {
         if (!eventBox || !eventStreams) {
             return null;
         }
-        let event = new Event();
+        const event = new Event();
         const schemeIdUri = eventBox.scheme_id_uri;
         const value = eventBox.value;
         const timescale = eventBox.timescale;
@@ -481,7 +488,6 @@ function DashAdapter() {
     }
 
     function getEventsFor(info, streamProcessor) {
-
         let events = [];
 
         if (voPeriods.length === 0) {
