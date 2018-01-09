@@ -214,7 +214,6 @@ function BufferController(config) {
                         // recalculate buffer lengths to keep (bufferToKeep, bufferAheadToKeep, bufferTimeAtTopQuality) according to criticalBufferLevel
                         const bufferToKeep = Math.max(0.2 * criticalBufferLevel, 1);
                         const bufferAhead = criticalBufferLevel - bufferToKeep;
-
                         mediaPlayerModel.setBufferToKeep(parseFloat(bufferToKeep).toFixed(5));
                         mediaPlayerModel.setBufferAheadToKeep(parseFloat(bufferAhead).toFixed(5));
                     }
@@ -400,12 +399,7 @@ function BufferController(config) {
         if (bufferLevel < STALL_THRESHOLD && !isBufferingCompleted) {
             notifyBufferStateChanged(BUFFER_EMPTY);
         } else {
-            if (isBufferingCompleted) {
-                notifyBufferStateChanged(BUFFER_LOADED);
-                return;
-            }
-
-            if (bufferLevel >= mediaPlayerModel.getStableBufferTime()) {
+            if (isBufferingCompleted || bufferLevel >= mediaPlayerModel.getStableBufferTime()) {
                 notifyBufferStateChanged(BUFFER_LOADED);
             }
         }
@@ -579,10 +573,10 @@ function BufferController(config) {
             isPruningInProgress = false;
         }
 
-        updateBufferLevel();
-
         if (isPruningInProgress) {
             clearNextRange();
+        } else {
+            updateBufferLevel();
         }
 
         eventBus.trigger(Events.BUFFER_CLEARED, {sender: instance, from: e.from, to: e.to, hasEnoughSpaceToAppend: hasEnoughSpaceToAppend()});

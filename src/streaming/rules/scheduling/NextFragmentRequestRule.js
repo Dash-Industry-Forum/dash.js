@@ -85,6 +85,7 @@ function NextFragmentRequestRule(config) {
             request = adapter.getFragmentRequestForTime(streamProcessor, representationInfo, time, {
                 keepIdx: !hasSeekTarget
             });
+
             // Sync executed queue with buffer range (to check for silent purge)
             const bufferedRanges = sourceBufferController.getAllRanges(buffer);
             const streamDuration = streamProcessor.getStreamInfo().duration;
