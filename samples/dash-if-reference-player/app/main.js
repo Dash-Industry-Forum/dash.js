@@ -4,7 +4,6 @@ var app = angular.module('DashPlayer', ['DashSourcesService', 'DashContributorsS
 
 $(document).ready(function () {
     $('[data-toggle="tooltip"]').tooltip();
-    $('#drmLicenseForm').hide();
 });
 
 angular.module('DashSourcesService', ['ngResource']).factory('sources', function ($resource) { /* jshint ignore:line */
@@ -53,7 +52,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
 
         // DASH Industry Forum Test Vectors
         dashifTestVectors.query(function(data) {
-            $scope.availableStreams.splice(6, 0, {
+            $scope.availableStreams.splice(7, 0, {
                 name: 'DASH Industry Forum Test Vectors',
                 submenu: data.items
             });
@@ -192,7 +191,6 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     $scope.audioDownload = "";
     $scope.audioRatioCount = 0;
     $scope.audioRatio = "";
-
 
     // Starting Options
     $scope.autoPlaySelected = true;
@@ -406,7 +404,6 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
 
     $scope.setDrmKeySystem = function (item) {
         $scope.drmKeySystem = item;
-        $('#drmLicenseForm').show();
     };
 
     // from: https://gist.github.com/siongui/4969449
