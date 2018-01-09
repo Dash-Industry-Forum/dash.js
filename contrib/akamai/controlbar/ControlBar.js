@@ -738,7 +738,8 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             seekbar.addEventListener("change", onSeekBarChange, true);
             seekbar.addEventListener("input", onSeeking, true);
             seekbar.addEventListener("mousemove", onSeekBarMouseMove, true);
-            seekbar.addEventListener("touchmove", onSeekBarMouseMove, true);
+            // set passive to true for scroll blocking listeners (https://www.chromestatus.com/feature/5745543795965952)
+            seekbar.addEventListener("touchmove", onSeekBarMouseMove, {passive: true});
             seekbar.addEventListener("mouseout", onSeekBarMouseMoveOut, true);
             seekbar.addEventListener("touchcancel", onSeekBarMouseMoveOut, true);
             seekbar.addEventListener("touchend", onSeekBarMouseMoveOut, true);
