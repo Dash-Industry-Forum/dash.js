@@ -47,6 +47,7 @@
     "iron-node": "^3.0.15",
     "istanbul": "^0.4.1",
     "jsdoc": "^3.4.0",
+    "jsdom": "^11.5.1",
     "load-grunt-tasks": "^3.1.0",
     "mocha": "^2.3.4",
     "sinon": "^1.17.2",
