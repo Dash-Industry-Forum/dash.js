@@ -2,7 +2,7 @@ import PlayReady from '../../src/streaming/protection/servers/PlayReady';
 
 const expect = require('chai').expect;
 const fs = require('fs');
-const domParser = require('xmldom').DOMParser;
+const jsdom = require('jsdom').JSDOM;
 
 describe('PlayReady', function () {
 
@@ -17,7 +17,7 @@ describe('PlayReady', function () {
         beforeEach(function () {
             if (typeof window === 'undefined') {
                 global.window = {
-                    DOMParser: domParser
+                    DOMParser: new jsdom().window.DOMParser
                 };
             }
             licenseServerData = PlayReady(context).getInstance();

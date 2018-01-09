@@ -7,7 +7,7 @@ import EventBus from '../../src/core/EventBus';
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 
 const fs = require('fs');
-const domParser = require('xmldom').DOMParser;
+const jsdom = require('jsdom').JSDOM;
 const chai = require('chai');
 const expect = chai.expect;
 
@@ -49,7 +49,7 @@ describe('XlinkController', function () {
                         return Date.now();
                     }
                 },
-                DOMParser: domParser
+                DOMParser: new jsdom().window.DOMParser
             };
         }
     });

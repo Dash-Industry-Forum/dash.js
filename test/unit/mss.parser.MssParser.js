@@ -4,7 +4,7 @@ import Debug from '../../src/core/Debug';
 
 const expect = require('chai').expect;
 const fs = require('fs');
-const domParser = require('xmldom').DOMParser;
+const jsdom = require('jsdom').JSDOM;
 const context = {};
 
 describe('MssParser', function () {
@@ -20,7 +20,7 @@ describe('MssParser', function () {
                         return Date.now();
                     }
                 },
-                DOMParser: domParser
+                DOMParser:  new jsdom().window.DOMParser
             };
         }
     });
