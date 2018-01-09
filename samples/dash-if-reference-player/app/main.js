@@ -235,16 +235,17 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     }, $scope);
 
     $scope.player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_REQUESTED, function (e) { /* jshint ignore:line */
-        $scope[e.mediaType + "Index"] = e.oldQuality + 1;
-        $scope[e.mediaType + "PendingIndex"] = e.newQuality + 1;
+        $scope[e.mediaType + 'Index'] = e.oldQuality + 1;
+        $scope[e.mediaType + 'PendingIndex'] = e.newQuality + 1;
         $scope.plotPoint('pendingIndex', e.mediaType, e.newQuality + 1);
-
+        $scope.safeApply();
     }, $scope);
 
     $scope.player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, function (e) { /* jshint ignore:line */
         $scope[e.mediaType + "Index"] = e.newQuality + 1;
         $scope[e.mediaType + "PendingIndex"] = e.newQuality + 1;
         $scope.plotPoint('index', e.mediaType, e.newQuality + 1);
+        $scope.safeApply();
     }, $scope);
 
     $scope.player.on(dashjs.MediaPlayer.events.PERIOD_SWITCH_COMPLETED, function (e) { /* jshint ignore:line */
@@ -255,8 +256,8 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         clearInterval($scope.metricsTimer);
         $scope.chartCount = 0;
         $scope.metricsTimer = setInterval(function () {
-            updateMetrics("video");
-            updateMetrics("audio");
+            updateMetrics('video');
+            updateMetrics('audio');
             $scope.chartCount++;
         }, $scope.updateMetricsInterval);
     }, $scope);
@@ -517,13 +518,12 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
                 }
             }
         }
-        $scope.safeApply();
     };
 
     $scope.enableChartByName = function (id, type) {
-        //enable stat item
+        // enable stat item
         if ($scope.chartState[type][id].selected) {
-            //block stat item if too many already.
+            // block stat item if too many already.
             if ($scope.chartData.length === $scope.maxChartableItems) {
                 alert("You have selected too many items to chart simultaneously. Max allowd is " + $scope.maxChartableItems + ". Please unselect another item first, then reselected " + $scope.chartState[type][id].label);
                 $scope.chartState[type][id].selected = false;
@@ -570,16 +570,16 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
             var bitrate = repSwitch ? Math.round(dashMetrics.getBandwidthForRepresentation(repSwitch.to, periodIdx) / 1000) : NaN;
             var droppedFPS = dashMetrics.getCurrentDroppedFrames(metrics) ? dashMetrics.getCurrentDroppedFrames(metrics).droppedFrames : 0;
 
-            $scope[type + "BufferLength"] = bufferLevel;
-            $scope[type + "MaxIndex"] = maxIndex;
-            $scope[type + "Bitrate"] = bitrate;
-            $scope[type + "DroppedFrames"] = droppedFPS;
+            $scope[type + 'BufferLength'] = bufferLevel;
+            $scope[type + 'MaxIndex'] = maxIndex;
+            $scope[type + 'Bitrate'] = bitrate;
+            $scope[type + 'DroppedFrames'] = droppedFPS;
 
             var httpMetrics = calculateHTTPMetrics(type, dashMetrics.getHttpRequests(metrics));
             if (httpMetrics) {
-                $scope[type + "Download"] = httpMetrics.download[type].low.toFixed(2) + " | " + httpMetrics.download[type].average.toFixed(2) + " | " + httpMetrics.download[type].high.toFixed(2);
-                $scope[type + "Latency"] = httpMetrics.latency[type].low.toFixed(2) + " | " + httpMetrics.latency[type].average.toFixed(2) + " | " + httpMetrics.latency[type].high.toFixed(2);
-                $scope[type + "Ratio"] = httpMetrics.ratio[type].low.toFixed(2) + " | " + httpMetrics.ratio[type].average.toFixed(2) + " | " + httpMetrics.ratio[type].high.toFixed(2);
+                $scope[type + 'Download'] = httpMetrics.download[type].low.toFixed(2) + ' | ' + httpMetrics.download[type].average.toFixed(2) + ' | ' + httpMetrics.download[type].high.toFixed(2);
+                $scope[type + 'Latency'] = httpMetrics.latency[type].low.toFixed(2) + ' | ' + httpMetrics.latency[type].average.toFixed(2) + ' | ' + httpMetrics.latency[type].high.toFixed(2);
+                $scope[type + 'Ratio'] = httpMetrics.ratio[type].low.toFixed(2) + ' | ' + httpMetrics.ratio[type].average.toFixed(2) + ' | ' + httpMetrics.ratio[type].high.toFixed(2);
             }
 
             if ($scope.chartCount % 2 === 0) {
@@ -587,11 +587,13 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
                 $scope.plotPoint('index', type, index);
                 $scope.plotPoint('bitrate', type, bitrate);
                 $scope.plotPoint('droppedFPS', type, droppedFPS);
+
                 if (httpMetrics) {
                     $scope.plotPoint('download', type, httpMetrics.download[type].average.toFixed(2));
                     $scope.plotPoint('latency', type, httpMetrics.latency[type].average.toFixed(2));
                     $scope.plotPoint('ratio', type, httpMetrics.ratio[type].average.toFixed(2));
                 }
+                $scope.safeApply();
             }
         }
     }
