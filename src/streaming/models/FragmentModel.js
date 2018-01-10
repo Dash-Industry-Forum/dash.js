@@ -159,10 +159,15 @@ function FragmentModel(config) {
             return;
         }
 
-        executedRequests = executedRequests.filter(req => {
+        const requestsAfterRemoving = executedRequests.filter(req => {
             return (isNaN(req.startTime) || req.startTime >= (end - 0.25)) ||
                 (isNaN(req.duration) || (req.startTime + req.duration) <= (start + 0.25));
         });
+
+        const len = executedRequests.length - requestsAfterRemoving.length;
+        executedRequests = requestsAfterRemoving;
+
+        return len;
     }
 
     // Remove requests that are not "represented" by any of buffered ranges
@@ -172,12 +177,17 @@ function FragmentModel(config) {
         }
 
         let start = 0;
+        let requestsRemoved = 0;
         for (let i = 0, ln = bufferedRanges.length; i < ln; i++) {
-            removeExecutedRequestsInTimeRange(start, bufferedRanges.start(i));
+            requestsRemoved += removeExecutedRequestsInTimeRange(start, bufferedRanges.start(i));
             start = bufferedRanges.end(i);
         }
         if (streamDuration > 0) {
-            removeExecutedRequestsInTimeRange(start, streamDuration);
+            requestsRemoved += removeExecutedRequestsInTimeRange(start, streamDuration);
+        }
+
+        if (requestsRemoved > 0) {
+            executedRequests = executedRequests.filter(req => req.action !== FragmentRequest.ACTION_COMPLETE);
         }
     }
 
@@ -222,7 +232,7 @@ function FragmentModel(config) {
             const req = arr[i];
             const start = req.startTime;
             const end = start + req.duration;
-            threshold = threshold !== undefined ? threshold : (req.duration / 2);
+            threshold = !isNaN(threshold) ? threshold : (req.duration / 2);
             if ((!isNaN(start) && !isNaN(end) && ((time + threshold) >= start) && ((time - threshold) < end)) || (isNaN(start) && isNaN(time))) {
                 return req;
             }

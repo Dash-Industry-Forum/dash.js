@@ -290,9 +290,9 @@ function BufferController(config) {
         }
 
         const currentTime = playbackController.getTime();
-        const streamDuration = streamProcessor.getStreamInfo().duration;
+        const endOfBuffer = buffer.buffered.end(buffer.buffered.length - 1);
 
-        log('getAllRangesWithSafetyFactor for', type, '- Current Time:', currentTime, ', Stream Duration:', streamDuration);
+        log('getAllRangesWithSafetyFactor for', type, '- Current Time:', currentTime, ', End of buffer:', endOfBuffer);
 
         const currentTimeRequest = streamProcessor.getFragmentModel().getRequests({
             state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
@@ -301,10 +301,10 @@ function BufferController(config) {
 
         // There is no request in current time position yet. Let's remove everything
         if (!currentTimeRequest) {
-            log('getAllRangesWithSafetyFactor for', type, '- No request found in current time position, removing full buffer 0 -', streamDuration);
+            log('getAllRangesWithSafetyFactor for', type, '- No request found in current time position, removing full buffer 0 -', endOfBuffer);
             clearRanges.push({
                 start: 0,
-                end: streamDuration
+                end: endOfBuffer
             });
         } else {
             // Keep a minimim buffer (STALL_THRESHOLD) to avoid a stall because lack of buffer after pruning
@@ -315,7 +315,7 @@ function BufferController(config) {
 
             const aheadRange = {
                 start: currentTimeRequest.startTime + currentTimeRequest.duration + STALL_THRESHOLD,
-                end: streamDuration
+                end: endOfBuffer
             };
 
             const req = streamProcessor.getFragmentModel().getRequests({

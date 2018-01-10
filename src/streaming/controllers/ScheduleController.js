@@ -182,8 +182,9 @@ function ScheduleController(config) {
         validateExecutedFragmentRequest();
 
         const isReplacement = replaceRequestArray.length > 0;
+        const streamInfo = streamProcessor.getStreamInfo();
         if (switchTrack || isReplacement ||
-            hasTopQualityChanged(currentRepresentationInfo.mediaInfo.type, streamProcessor.getStreamInfo().id) ||
+            hasTopQualityChanged(currentRepresentationInfo.mediaInfo.type, streamInfo.id) ||
             bufferLevelRule.execute(streamProcessor, type, streamController.isVideoTrackPresent())) {
 
             const getNextFragment = function () {
@@ -211,9 +212,14 @@ function ScheduleController(config) {
                             log('ScheduleController - ' + type + ' - getNextFragment - request is ' + request.url);
                             fragmentModel.executeRequest(request);
                         } else { //Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
-                            log('getNextFragment - ' + type + ' - Playing at the bleeding live edge and frag is not available yet');
-                            isFragmentProcessingInProgress = false;
-                            startScheduleTimer(500);
+                            if (streamInfo.manifestInfo && streamInfo.manifestInfo.isDynamic) {
+                                log('getNextFragment - ' + type + ' - Playing at the bleeding live edge and frag is not available yet');
+                                isFragmentProcessingInProgress = false;
+                                startScheduleTimer(500);
+                            } else {
+                                log('getNextFragment - ' + type + ' - Warning - Stream finished without previous notification');
+                                stop();
+                            }
                         }
                     }
                 }
