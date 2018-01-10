@@ -159,15 +159,10 @@ function FragmentModel(config) {
             return;
         }
 
-        const requestsAfterRemoving = executedRequests.filter(req => {
+        executedRequests = executedRequests.filter(req => {
             return (isNaN(req.startTime) || req.startTime >= (end - 0.25)) ||
                 (isNaN(req.duration) || (req.startTime + req.duration) <= (start + 0.25));
         });
-
-        const len = executedRequests.length - requestsAfterRemoving.length;
-        executedRequests = requestsAfterRemoving;
-
-        return len;
     }
 
     // Remove requests that are not "represented" by any of buffered ranges
@@ -177,17 +172,12 @@ function FragmentModel(config) {
         }
 
         let start = 0;
-        let requestsRemoved = 0;
         for (let i = 0, ln = bufferedRanges.length; i < ln; i++) {
-            requestsRemoved += removeExecutedRequestsInTimeRange(start, bufferedRanges.start(i));
+            removeExecutedRequestsInTimeRange(start, bufferedRanges.start(i));
             start = bufferedRanges.end(i);
         }
         if (streamDuration > 0) {
-            requestsRemoved += removeExecutedRequestsInTimeRange(start, streamDuration);
-        }
-
-        if (requestsRemoved > 0) {
-            executedRequests = executedRequests.filter(req => req.action !== FragmentRequest.ACTION_COMPLETE);
+            removeExecutedRequestsInTimeRange(start, streamDuration);
         }
     }
 

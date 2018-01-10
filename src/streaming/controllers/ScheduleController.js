@@ -214,12 +214,9 @@ function ScheduleController(config) {
                         } else { //Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
                             if (streamInfo.manifestInfo && streamInfo.manifestInfo.isDynamic) {
                                 log('getNextFragment - ' + type + ' - Playing at the bleeding live edge and frag is not available yet');
-                                isFragmentProcessingInProgress = false;
-                                startScheduleTimer(500);
-                            } else {
-                                log('getNextFragment - ' + type + ' - Warning - Stream finished without previous notification');
-                                stop();
                             }
+                            isFragmentProcessingInProgress = false;
+                            startScheduleTimer(500);
                         }
                     }
                 }
@@ -403,7 +400,7 @@ function ScheduleController(config) {
         if (e.sender !== fragmentModel) {
             return;
         }
-
+        log('[ScheduleController] onFragmentLoadingCompleted for', type);
         if (dashManifestModel.getIsTextTrack(type)) {
             isFragmentProcessingInProgress = false;
         }

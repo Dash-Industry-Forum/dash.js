@@ -43,6 +43,7 @@ import InitCache from '../utils/InitCache';
 const BUFFER_LOADED = 'bufferLoaded';
 const BUFFER_EMPTY = 'bufferStalled';
 const STALL_THRESHOLD = 0.5;
+const BUFFER_END_THRESHOLD = 0.5;
 const BUFFER_RANGE_CALCULATION_THRESHOLD = 0.01;
 
 const BUFFER_CONTROLLER_TYPE = 'BufferController';
@@ -280,6 +281,7 @@ function BufferController(config) {
             onPlaybackProgression();
         }
         clearBuffers(ranges);
+
     }
 
     // Get all buffer ranges but a range around current time positionZ
@@ -290,7 +292,7 @@ function BufferController(config) {
         }
 
         const currentTime = playbackController.getTime();
-        const endOfBuffer = buffer.buffered.end(buffer.buffered.length - 1);
+        const endOfBuffer = buffer.buffered.end(buffer.buffered.length - 1) + BUFFER_END_THRESHOLD;
 
         log('getAllRangesWithSafetyFactor for', type, '- Current Time:', currentTime, ', End of buffer:', endOfBuffer);
 
@@ -307,7 +309,7 @@ function BufferController(config) {
                 end: endOfBuffer
             });
         } else {
-            // Keep a minimim buffer (STALL_THRESHOLD) to avoid a stall because lack of buffer after pruning
+            // Keep a minimum buffer (STALL_THRESHOLD) to avoid playback stalls because lack of buffer after pruning
             const behindRange = {
                 start: 0,
                 end: Math.min(currentTimeRequest.startTime, currentTime) - STALL_THRESHOLD
@@ -409,6 +411,10 @@ function BufferController(config) {
         if (bufferState === state || (type === Constants.FRAGMENTED_TEXT && textController.getAllTracksAreDisabled())) return;
         bufferState = state;
         addBufferMetrics();
+
+        const ranges = sourceBufferController.getAllRanges(buffer);
+        showBufferRanges(ranges);
+
         eventBus.trigger(Events.BUFFER_LEVEL_STATE_CHANGED, {sender: instance, state: state, mediaType: type, streamInfo: streamProcessor.getStreamInfo()});
         eventBus.trigger(state === BUFFER_LOADED ? Events.BUFFER_LOADED : Events.BUFFER_EMPTY, {mediaType: type});
         log(state === BUFFER_LOADED ? 'Got enough buffer to start for ' + type : 'Waiting for more buffer before starting playback for '  + type);
@@ -577,9 +583,8 @@ function BufferController(config) {
             clearNextRange();
         } else {
             updateBufferLevel();
+            eventBus.trigger(Events.BUFFER_CLEARED, {sender: instance, from: e.from, to: e.to, hasEnoughSpaceToAppend: hasEnoughSpaceToAppend()});
         }
-
-        eventBus.trigger(Events.BUFFER_CLEARED, {sender: instance, from: e.from, to: e.to, hasEnoughSpaceToAppend: hasEnoughSpaceToAppend()});
         //TODO - REMEMBER removed a timerout hack calling clearBuffer after manifestInfo.minBufferTime * 1000 if !hasEnoughSpaceToAppend() Aug 04 2016
     }
 

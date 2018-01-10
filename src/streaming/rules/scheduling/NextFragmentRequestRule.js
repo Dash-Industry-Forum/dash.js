@@ -68,7 +68,7 @@ function NextFragmentRequestRule(config) {
         if (buffer) {
             const range = sourceBufferController.getBufferRange(buffer, time);
             if (range !== null) {
-                log('Prior to making a request for time, NextFragmentRequestRule is aligning index handler\'s currentTime with bufferedRange.end.', time, ' was changed to ', range.end);
+                log('Prior to making a request for time, NextFragmentRequestRule is aligning index handler\'s currentTime with bufferedRange.end for', mediaType, '.', time, 'was changed to', range.end);
                 time = range.end;
             }
         }
@@ -97,7 +97,9 @@ function NextFragmentRequestRule(config) {
                 request = adapter.getNextFragmentRequest(streamProcessor, representationInfo);
             }
             if (request) {
-                adapter.setIndexHandlerTime(streamProcessor, request.startTime + request.duration);
+                if (!isNaN(request.startTime + request.duration)) {
+                    adapter.setIndexHandlerTime(streamProcessor, request.startTime + request.duration);
+                }
                 request.delayLoadingTime = new Date().getTime() + scheduleController.getTimeToLoadDelay();
                 scheduleController.setTimeToLoadDelay(0);
             }
