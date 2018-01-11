@@ -438,8 +438,7 @@ function StreamController() {
             }
 
             if (!activeStream) {
-                //const initStream = streamsInfo[0].manifestInfo.isDynamic ? streams[streams.length -1] : streams[0];
-                //TODO we need to figure out what the correct starting period is here and not just go to first or last in array.
+                // we need to figure out what the correct starting period is
                 const startTimeFormUriParameters = playbackController.getStartTimeFromUriParameters();
                 let initialStream = null;
                 if (startTimeFormUriParameters) {
