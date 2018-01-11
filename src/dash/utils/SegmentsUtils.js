@@ -42,6 +42,16 @@ function getNumberForSegment(segment, segmentIndex) {
     return segment.representation.startNumber + segmentIndex;
 }
 
+export function unescapeDollarsInTemplate(url) {
+    return url ? url.split('$$').join('$') : url;
+}
+
+export function replaceIDForTemplate(url, value) {
+    if (!value || !url || url.indexOf('$RepresentationID$') === -1) { return url; }
+    let v = value.toString();
+    return url.split('$RepresentationID$').join(v);
+}
+
 export function replaceTokenForTemplate(url, token, value) {
     const formatTag = '%0';
 

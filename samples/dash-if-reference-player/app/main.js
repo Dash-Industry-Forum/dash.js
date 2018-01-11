@@ -36,7 +36,6 @@ angular.module('DashIFTestVectorsService', ['ngResource']).factory('dashifTestVe
 
 app.controller('DashController', function ($scope, sources, contributors, dashifTestVectors) {
 
-
     $scope.selectedItem = {
         url: "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd"
     };
@@ -507,7 +506,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     };
 
     $scope.toggleUseCustomABRRules = function () {
-
+        $scope.player.getThumbnail($scope.player.time());
         if ($scope.customABRRulesSelected) {
             $scope.player.useDefaultABRRules(false);
             $scope.player.addABRCustomRule('qualitySwitchRules', 'DownloadRatioRule', DownloadRatioRule);

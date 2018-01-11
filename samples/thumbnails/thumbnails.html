@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Thumbnails Dash Demo</title>
+    <meta name="description" content="" />
+    <link rel="icon" type="image/x-icon" href="http://dashif.org/wp-content/uploads/2014/12/dashif.ico" />
+    <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
+
+    <script src="../../dist/dash.all.debug.js"></script>
+    <!--dash.all.min.js should be used in production over dash.all.debug.js
+        Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
+    <!--<script src="../../dist/dash.all.min.js"></script>-->
+    <script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
+
+    <script>
+        function startVideo() {
+            var url = "http://dash.edgesuite.net/akamai/bbb_30fps/bbb_with_multiple_tiled_thumbnails.mpd",
+                video = document.querySelector(".dash-video-player video"),
+                player,
+                controlbar;
+
+            player = dashjs.MediaPlayer({}).create();
+            player.initialize(video, url, true);
+
+            //player.attachVideoContainer(document.getElementById("videoContainer"));
+            controlbar = new ControlBar(player);
+            controlbar.initialize();
+        }
+    </script>
+
+    <style>
+        .videoContainer {
+            position: relative;
+            width: 640px;
+            height: 360px;
+            margin: 0 auto;
+        }
+        .videoContainer video {
+            width: 100%;
+        }
+
+        .video-controller {
+            margin-top: -5px !important;
+        }
+    </style>
+
+    <body onload="startVideo()">
+        <div id="videoContainer" class="videoContainer">
+            <div class="dash-video-player">
+                <video controls="false"></video>
+            </div>
+            <div id="videoController" class="video-controller unselectable" ng-cloak>
+                <div id="playPauseBtn" class="btn-play-pause" data-toggle="tooltip" data-placement="bottom" title="Play/Pause">
+                    <span id="iconPlayPause" class="icon-play"></span>
+                </div>
+                <span id="videoTime" class="time-display">00:00:00</span>
+                <div id="fullscreenBtn" class="btn-fullscreen control-icon-layout" data-toggle="tooltip" data-placement="bottom" title="Fullscreen">
+                    <span class="icon-fullscreen-enter"></span>
+                </div>
+                <div id="bitrateListBtn" class="btn-bitrate control-icon-layout" data-toggle="tooltip" data-placement="bottom" title="Bitrate List">
+                    <span class="icon-bitrate"></span>
+                </div>
+                <input type="range" id="volumebar" class="volumebar" value="1" min="0" max="1" step=".01"/>
+                <div id="muteBtn" class="btn-mute control-icon-layout" data-toggle="tooltip" data-placement="bottom" title="Mute">
+                    <span id="iconMute" class="icon-mute-off"></span>
+                </div>
+                <div id="trackSwitchBtn" class="btn-track-switch control-icon-layout" data-toggle="tooltip" data-placement="bottom" title="Track List">
+                    <span class="icon-tracks"></span>
+                </div>
+                <div id="captionBtn" class="btn-caption control-icon-layout" data-toggle="tooltip" data-placement="bottom" title="Closed Caption / Subtitles">
+                    <span class="icon-caption"></span>
+                </div>
+                <span id="videoDuration" class="duration-display">00:00:00</span>
+                <div class="seekContainer">
+                    <input type="range" id="seekbar" value="0" class="seekbar" min="0" step="0.01"/>
+                </div>
+                <div id="thumbnail-container" class="thumbnail-container">
+                    <div id="thumbnail-elem" class="thumbnail-elem">
+                        <div id="thumbnail-time-label" class="thumbnail-time-label"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </body>
+</html>

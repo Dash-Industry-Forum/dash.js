@@ -32,45 +32,14 @@
  * @class
  * @ignore
  */
-
-import DashConstants from '../constants/DashConstants';
-
-class Representation {
+class Thumbnail {
     constructor() {
-        this.id = null;
-        this.index = -1;
-        this.adaptation = null;
-        this.segmentInfoType = null;
-        this.initialization = null;
-        this.codecs = null;
-        this.codecPrivateData = null;
-        this.segmentDuration = NaN;
-        this.timescale = 1;
-        this.startNumber = 1;
-        this.indexRange = null;
-        this.range = null;
-        this.presentationTimeOffset = 0;
-        // Set the source buffer timeOffset to this
-        this.MSETimeOffset = NaN;
-        this.segmentAvailabilityRange = null;
-        this.availableSegmentsNumber = 0;
-        this.bandwidth = NaN;
-        this.width = NaN;
-        this.height = NaN;
-        this.scanType = null;
-        this.maxPlayoutRate = NaN;
-    }
-
-    static hasInitialization(r) {
-        return (r.initialization !== null) ||
-            ((r.segmentInfoType === DashConstants.BASE_URL || r.segmentInfoType === DashConstants.SEGMENT_BASE ) && (r.range !== null));
-    }
-
-    static hasSegments(r) {
-        return r.segmentInfoType !== DashConstants.BASE_URL &&
-            r.segmentInfoType !== DashConstants.SEGMENT_BASE &&
-            !r.indexRange;
+        this.url = null;
+        this.width = null;
+        this.height = null;
+        this.x = null;
+        this.y = null;
     }
 }
 
-export default Representation;
+export default Thumbnail;

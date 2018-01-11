@@ -67,11 +67,5 @@ describe('StreamController', function () {
 
             expect(isVideoTrackPresent).to.be.false;    // jshint ignore:line
         });
-
-        it('should return Infinity when attempting to call getActiveStreamCommonEarliestTime while no activeStream has been defined', function () {
-            const earliestTime = streamController.getActiveStreamCommonEarliestTime();
-
-            expect(earliestTime).to.be.Infinity;    // jshint ignore:line
-        });
     });
 });

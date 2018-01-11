@@ -343,6 +343,19 @@ module.exports = function (grunt) {
                 'pre-commit': 'lint'
             }
         },
+        'string-replace': {
+            dist: {
+                files: {
+                    './samples/dash-if-reference-player/index.html': './samples/dash-if-reference-player/index.html'
+                },
+                options: {
+                    replacements: [{
+                        pattern: '<!-- commit-info -->',
+                        replacement: !grunt.option('git-commit') ? '' : '(development, commit: <a href="https://github.com/Dash-Industry-Forum/dash.js/commit/' + grunt.option('git-commit') + '">' + grunt.option('git-commit').toString().substring(0, 8) + ')</a>'
+                    }]
+                }
+            }
+        },
         ftp_push: {
             deployment: {
                 options: {
@@ -376,6 +389,7 @@ module.exports = function (grunt) {
     });
 
     require('load-grunt-tasks')(grunt);
+    grunt.loadNpmTasks('grunt-string-replace');
     grunt.registerTask('default', ['dist', 'test']);
     grunt.registerTask('dist', ['clean', 'jshint', 'jscs', 'browserify:mediaplayer', 'browserify:protection', 'browserify:reporting', 'browserify:mss', 'browserify:all', 'babel:es5', 'minimize', 'copy:dist']);
     grunt.registerTask('minimize', ['exorcise', 'githash', 'uglify']);
@@ -387,5 +401,5 @@ module.exports = function (grunt) {
     grunt.registerTask('lint', ['jshint', 'jscs']);
     grunt.registerTask('prepublish', ['githooks', 'dist']);
     grunt.registerTask('dev', ['browserSync', 'watch-dev']);
-    grunt.registerTask('deploy', ['ftp_push']);
+    grunt.registerTask('deploy', ['string-replace', 'ftp_push']);
 };
