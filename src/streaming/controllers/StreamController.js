@@ -440,7 +440,13 @@ function StreamController() {
             if (!activeStream) {
                 //const initStream = streamsInfo[0].manifestInfo.isDynamic ? streams[streams.length -1] : streams[0];
                 //TODO we need to figure out what the correct starting period is here and not just go to first or last in array.
-                switchStream(null, streams[0], NaN);
+                const startTimeFormUriParameters = playbackController.getStartTimeFromUriParameters();
+                let initialStream = null;
+                if (startTimeFormUriParameters) {
+                    const initialTime = !isNaN(startTimeFormUriParameters.fragS) ? startTimeFormUriParameters.fragS : startTimeFormUriParameters.fragT;
+                    initialStream = getStreamForTime(initialTime);
+                }
+                switchStream(null, initialStream !== null ? initialStream : streams[0], NaN);
             }
 
             eventBus.trigger(Events.STREAMS_COMPOSED);
