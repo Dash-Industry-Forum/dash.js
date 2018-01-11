@@ -265,6 +265,8 @@ function StreamController() {
     function onEnded() {
         const nextStream = getNextStream();
         if (nextStream) {
+            audioTrackDetected = undefined;
+            videoTrackDetected = undefined;
             switchStream(activeStream, nextStream, NaN);
         }
         else {
@@ -339,6 +341,9 @@ function StreamController() {
 
         activeStream.activate(mediaSource);
 
+        isAudioTrackPresent();
+        isVideoTrackPresent();
+
         if (!initialPlayback) {
             if (!isNaN(seekTime)) {
                 playbackController.seek(seekTime); //we only need to call seek here, IndexHandlerTime was set from seeking event
@@ -348,8 +353,6 @@ function StreamController() {
                     adapter.setIndexHandlerTime(p, startTime);
                 });
             }
-        } else {
-            videoTrackDetected = checkTrackPresence(Constants.VIDEO);
         }
 
         activeStream.startEventController();
