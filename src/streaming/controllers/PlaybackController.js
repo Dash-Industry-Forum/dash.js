@@ -289,7 +289,7 @@ function PlaybackController() {
                 presentationStartTime = startTimeOffset;
             } else {
                 let earliestTime = commonEarliestTime[streamInfo.id]; //set by ready bufferStart after first onBytesAppended
-                presentationStartTime = earliestTime !== undefined ? Math.max(earliestTime.audio, earliestTime.video, streamInfo.start) : streamInfo.start;
+                presentationStartTime = earliestTime !== undefined ? Math.max(earliestTime.audio !== undefined ? earliestTime.audio : 0, earliestTime.video !== undefined ? earliestTime.video : 0, streamInfo.start) : streamInfo.start;
             }
         }
 
