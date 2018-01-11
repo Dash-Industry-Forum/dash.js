@@ -249,6 +249,17 @@ function PlaybackController() {
         }
     }
 
+    function getStartTimeFromUriParameters() {
+        const fragData = URIQueryAndFragmentModel(context).getInstance().getURIFragmentData();
+        let uriParameters;
+        if (fragData) {
+            uriParameters = {};
+            uriParameters.fragS = parseInt(fragData.s, 10);
+            uriParameters.fragT = parseInt(fragData.t, 10);
+        }
+        return uriParameters;
+    }
+
     /**
      * @param {boolean} ignoreStartOffset - ignore URL fragment start offset if true
      * @param {number} liveEdge - liveEdge value
@@ -257,14 +268,12 @@ function PlaybackController() {
      */
     function getStreamStartTime(ignoreStartOffset, liveEdge) {
         let presentationStartTime;
-        const fragData = URIQueryAndFragmentModel(context).getInstance().getURIFragmentData();
         let startTimeOffset = NaN;
+        const uriParameters = getStartTimeFromUriParameters();
 
-        if (fragData) {
-            const fragS = parseInt(fragData.s, 10);
-            const fragT = parseInt(fragData.t, 10);
+        if (uriParameters) {
             if (!ignoreStartOffset) {
-                startTimeOffset = !isNaN(fragS) ? fragS : fragT;
+                startTimeOffset = !isNaN(uriParameters.fragS) ? uriParameters.fragS : uriParameters.fragT;
             } else {
                 startTimeOffset = streamInfo.start;
             }
@@ -570,6 +579,7 @@ function PlaybackController() {
     instance = {
         initialize: initialize,
         setConfig: setConfig,
+        getStartTimeFromUriParameters: getStartTimeFromUriParameters,
         getStreamStartTime: getStreamStartTime,
         getTimeToStreamEnd: getTimeToStreamEnd,
         getTime: getTime,
