@@ -91,6 +91,7 @@ function StreamController() {
         playListMetrics,
         videoTrackDetected,
         audioTrackDetected,
+        isStreamBufferingCompleted,
         playbackEndedTimerId;
 
     function setup() {
@@ -175,6 +176,7 @@ function StreamController() {
             if (isPaused) {
                 isPaused = false;
                 addPlaylistMetrics(PlayList.RESUME_FROM_PAUSE_START_REASON);
+                toggleEndPeriodTimer();
             }
         }
     }
@@ -184,6 +186,24 @@ function StreamController() {
         if (!e.ended) {
             isPaused = true;
             flushPlaylistMetrics(PlayListTrace.USER_REQUEST_STOP_REASON);
+            toggleEndPeriodTimer();
+        }
+    }
+
+    function toggleEndPeriodTimer() {
+        //stream buffering completed has not been detected, nothing to do....
+        if (isStreamBufferingCompleted) {
+            //stream buffering completed has been detected, if end period timer is running, stop it, otherwise start it....
+            if (playbackEndedTimerId) {
+                log('[StreamController][toggleEndPeriodTimer] stop end period timer.');
+                clearTimeout(playbackEndedTimerId);
+                playbackEndedTimerId = undefined;
+            } else {
+                const timeToEnd = playbackController.getTimeToStreamEnd();
+                const delayPlaybackEnded = timeToEnd > 0 ? timeToEnd * 1000 : 0;
+                log('[StreamController][toggleEndPeriodTimer] start-up of timer to notify PLAYBACK_ENDED event. It will be triggered in ' + delayPlaybackEnded + ' milliseconds');
+                playbackEndedTimerId = setTimeout(function () {eventBus.trigger(Events.PLAYBACK_ENDED);}, delayPlaybackEnded);
+            }
         }
     }
 
@@ -194,10 +214,11 @@ function StreamController() {
             mediaSourceController.signalEndOfStream(mediaSource);
         } else if (mediaSource && playbackEndedTimerId === undefined) {
             //send PLAYBACK_ENDED in order switch to a new period, wait until the end of playing
-            const timeToEnd = playbackController.getTimeToStreamEnd();
-            const delayPlaybackEnded = timeToEnd > 0 ? timeToEnd * 1000 : 0;
-            log('[StreamController] onStreamBufferingCompleted PLAYBACK_ENDED event will be triggered in ' + delayPlaybackEnded + ' milliseconds');
-            playbackEndedTimerId = setTimeout(function () {eventBus.trigger(Events.PLAYBACK_ENDED);}, delayPlaybackEnded);
+            log('[StreamController][onStreamBufferingCompleted] end of period detected');
+            isStreamBufferingCompleted = true;
+            if (isPaused === false) {
+                toggleEndPeriodTimer();
+            }
         }
     }
 
@@ -277,6 +298,7 @@ function StreamController() {
         }
         flushPlaylistMetrics(nextStream ? PlayListTrace.END_OF_PERIOD_STOP_REASON : PlayListTrace.END_OF_CONTENT_STOP_REASON);
         playbackEndedTimerId = undefined;
+        isStreamBufferingCompleted = false;
     }
 
     function getNextStream() {
@@ -745,6 +767,7 @@ function StreamController() {
         autoPlay = true;
         playListMetrics = null;
         playbackEndedTimerId = undefined;
+        isStreamBufferingCompleted = false;
     }
 
     function reset() {
