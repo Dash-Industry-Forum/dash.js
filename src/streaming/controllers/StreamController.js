@@ -167,6 +167,7 @@ function StreamController() {
     }
 
     function onPlaybackStarted( /*e*/ ) {
+        log('[StreamController][onPlaybackStarted]');
         if (initialPlayback) {
             initialPlayback = false;
             addPlaylistMetrics(PlayList.INITIAL_PLAYOUT_START_REASON);
@@ -179,6 +180,7 @@ function StreamController() {
     }
 
     function onPlaybackPaused(e) {
+        log('[StreamController][onPlaybackPaused]');
         if (!e.ended) {
             isPaused = true;
             flushPlaylistMetrics(PlayListTrace.USER_REQUEST_STOP_REASON);
@@ -188,7 +190,7 @@ function StreamController() {
     function onStreamBufferingCompleted() {
         const isLast = getActiveStreamInfo().isLast;
         if (mediaSource && isLast) {
-            log('[StreamController] onStreamBufferingCompleted calls signalEndOfStream of mediaSourceController');
+            log('[StreamController][onStreamBufferingCompleted] calls signalEndOfStream of mediaSourceController.');
             mediaSourceController.signalEndOfStream(mediaSource);
         } else if (mediaSource && playbackEndedTimerId === undefined) {
             //send PLAYBACK_ENDED in order switch to a new period, wait until the end of playing
