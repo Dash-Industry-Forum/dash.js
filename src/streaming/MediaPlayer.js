@@ -1524,7 +1524,7 @@ function MediaPlayer() {
     }
 
     /**
-     * Obsolete since version 2.6.0.
+     * @deprecated since version 2.6.0.
      * ABR rules now switch from Throughput to Buffer Occupancy mode when there is sufficient buffer.
      * This renders the rich buffer mechanism redundant.
      *
@@ -1534,6 +1534,21 @@ function MediaPlayer() {
      */
     function setRichBufferThreshold(value) {
         throw new Error('Calling obsolete function - setRichBufferThreshold(' + value + ') has no effect.');
+    }
+
+    /**
+     * For a given media type, the threshold which defines if the response to a fragment
+     * request is coming from browser cache or not.
+     * Valid media types are "video", "audio"
+     *
+     * @default 50 milliseconds for video fragment requests; 5 milliseconds for audio fragment requests.
+     * @param {string} type 'video' or 'audio' are the type options.
+     * @param {number} value Threshold value in milliseconds.
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setCacheLoadThresholdForType(type, value) {
+        mediaPlayerModel.setCacheLoadThresholdForType(type, value);
     }
 
     /**
@@ -2786,6 +2801,7 @@ function MediaPlayer() {
         getXHRWithCredentialsForType: getXHRWithCredentialsForType,
         setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,
         setRichBufferThreshold: setRichBufferThreshold,
+        setCacheLoadThresholdForType: setCacheLoadThresholdForType,
         getProtectionController: getProtectionController,
         attachProtectionController: attachProtectionController,
         setProtectionData: setProtectionData,
