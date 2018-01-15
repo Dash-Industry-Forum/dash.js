@@ -141,6 +141,10 @@
         {
           "name": "Two adaption sets with different thumb resolutions",
           "url": "http://dash.edgesuite.net/akamai/bbb_30fps/bbb_with_multiple_tiled_thumbnails.mpd"
+        },
+        {
+          "name": "Live stream, Single adaptation set, 1x1 tiles",
+          "url": "http://vm2.dashif.org/livesim-dev/testpic_2s/Manifest_thumbs.mpd"
         }
       ]
     },
