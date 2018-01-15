@@ -32,6 +32,7 @@ import {
     HTTPRequest
 }
 from '../../../src/streaming/vo/metrics/HTTPRequest';
+import Constants from '../../../src/streaming/constants/Constants';
 
 const DEFAULT_UTC_TIMING_SOURCE = {
     scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
@@ -67,6 +68,9 @@ const XLINK_RETRY_INTERVAL = 500;
 const WALLCLOCK_TIME_UPDATE_INTERVAL = 50;
 
 const DEFAULT_XHR_WITH_CREDENTIALS = false;
+
+const CACHE_LOAD_THRESHOLD_VIDEO = 50;
+const CACHE_LOAD_THRESHOLD_AUDIO = 5;
 
 class MediaPlayerModelMock {
 
@@ -193,6 +197,10 @@ class MediaPlayerModelMock {
         this.retryIntervals = {
             [HTTPRequest.MPD_TYPE]: MANIFEST_RETRY_INTERVAL, [HTTPRequest.XLINK_EXPANSION_TYPE]: XLINK_RETRY_INTERVAL, [HTTPRequest.MEDIA_SEGMENT_TYPE]: FRAGMENT_RETRY_INTERVAL, [HTTPRequest.INIT_SEGMENT_TYPE]: FRAGMENT_RETRY_INTERVAL, [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: FRAGMENT_RETRY_INTERVAL, [HTTPRequest.INDEX_SEGMENT_TYPE]: FRAGMENT_RETRY_INTERVAL, [HTTPRequest.OTHER_TYPE]: FRAGMENT_RETRY_INTERVAL
         };
+
+        this.cacheLoadThresholds = {};
+        this.cacheLoadThresholds[Constants.VIDEO] = CACHE_LOAD_THRESHOLD_VIDEO;
+        this.cacheLoadThresholds[Constants.AUDIO] = CACHE_LOAD_THRESHOLD_AUDIO;
     }
 
     //TODO Should we use Object.define to have setters/getters? makes more readable code on other side.
@@ -302,6 +310,14 @@ class MediaPlayerModelMock {
 
     getSegmentOverlapToleranceTime() {
         return this.segmentOverlapToleranceTime;
+    }
+
+    setCacheLoadThresholdForType(type, value) {
+        this.cacheLoadThresholds[type] = value;
+    }
+
+    getCacheLoadThresholdForType(type) {
+        return this.cacheLoadThresholds[type];
     }
 
     setBufferToKeep(value) {

@@ -265,6 +265,8 @@ function StreamController() {
     function onEnded() {
         const nextStream = getNextStream();
         if (nextStream) {
+            audioTrackDetected = undefined;
+            videoTrackDetected = undefined;
             switchStream(activeStream, nextStream, NaN);
         }
         else {
@@ -339,6 +341,9 @@ function StreamController() {
 
         activeStream.activate(mediaSource);
 
+        isAudioTrackPresent();
+        isVideoTrackPresent();
+
         if (!initialPlayback) {
             if (!isNaN(seekTime)) {
                 playbackController.seek(seekTime); //we only need to call seek here, IndexHandlerTime was set from seeking event
@@ -348,8 +353,6 @@ function StreamController() {
                     adapter.setIndexHandlerTime(p, startTime);
                 });
             }
-        } else {
-            videoTrackDetected = checkTrackPresence(Constants.VIDEO);
         }
 
         activeStream.startEventController();
@@ -435,9 +438,14 @@ function StreamController() {
             }
 
             if (!activeStream) {
-                //const initStream = streamsInfo[0].manifestInfo.isDynamic ? streams[streams.length -1] : streams[0];
-                //TODO we need to figure out what the correct starting period is here and not just go to first or last in array.
-                switchStream(null, streams[0], NaN);
+                // we need to figure out what the correct starting period is
+                const startTimeFormUriParameters = playbackController.getStartTimeFromUriParameters();
+                let initialStream = null;
+                if (startTimeFormUriParameters) {
+                    const initialTime = !isNaN(startTimeFormUriParameters.fragS) ? startTimeFormUriParameters.fragS : startTimeFormUriParameters.fragT;
+                    initialStream = getStreamForTime(initialTime);
+                }
+                switchStream(null, initialStream !== null ? initialStream : streams[0], NaN);
             }
 
             eventBus.trigger(Events.STREAMS_COMPOSED);
@@ -722,6 +730,7 @@ function StreamController() {
         hasMediaError = false;
         hasInitialisationError = false;
         videoTrackDetected = undefined;
+        audioTrackDetected = undefined;
         initialPlayback = true;
         isPaused = false;
         autoPlay = true;

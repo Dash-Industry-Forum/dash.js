@@ -57,6 +57,9 @@ const BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 60;
 const LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;
 const SEGMENT_OVERLAP_TOLERANCE_TIME = 0.05;
 
+const CACHE_LOAD_THRESHOLD_VIDEO = 50;
+const CACHE_LOAD_THRESHOLD_AUDIO = 5;
+
 const FRAGMENT_RETRY_ATTEMPTS = 3;
 const FRAGMENT_RETRY_INTERVAL = 1000;
 
@@ -100,7 +103,8 @@ function MediaPlayerModel() {
         xhrWithCredentials,
         fastSwitchEnabled,
         customABRRule,
-        movingAverageMethod;
+        movingAverageMethod,
+        cacheLoadThresholds;
 
     function setup() {
         UTCTimingSources = [];
@@ -156,6 +160,10 @@ function MediaPlayerModel() {
             [HTTPRequest.INDEX_SEGMENT_TYPE]:               FRAGMENT_RETRY_INTERVAL,
             [HTTPRequest.OTHER_TYPE]:                       FRAGMENT_RETRY_INTERVAL
         };
+
+        cacheLoadThresholds = {};
+        cacheLoadThresholds[Constants.VIDEO] = CACHE_LOAD_THRESHOLD_VIDEO;
+        cacheLoadThresholds[Constants.AUDIO] = CACHE_LOAD_THRESHOLD_AUDIO;
     }
 
     //TODO Should we use Object.define to have setters/getters? makes more readable code on other side.
@@ -273,6 +281,14 @@ function MediaPlayerModel() {
 
     function getSegmentOverlapToleranceTime() {
         return segmentOverlapToleranceTime;
+    }
+
+    function setCacheLoadThresholdForType(type, value) {
+        cacheLoadThresholds[type] = value;
+    }
+
+    function getCacheLoadThresholdForType(type) {
+        return cacheLoadThresholds[type];
     }
 
     function setBufferToKeep(value) {
@@ -494,6 +510,8 @@ function MediaPlayerModel() {
         getLongFormContentDurationThreshold: getLongFormContentDurationThreshold,
         setSegmentOverlapToleranceTime: setSegmentOverlapToleranceTime,
         getSegmentOverlapToleranceTime: getSegmentOverlapToleranceTime,
+        getCacheLoadThresholdForType: getCacheLoadThresholdForType,
+        setCacheLoadThresholdForType: setCacheLoadThresholdForType,
         setBufferToKeep: setBufferToKeep,
         getBufferToKeep: getBufferToKeep,
         setBufferAheadToKeep: setBufferAheadToKeep,

@@ -1572,6 +1572,21 @@ function MediaPlayer() {
     }
 
     /**
+     * For a given media type, the threshold which defines if the response to a fragment
+     * request is coming from browser cache or not.
+     * Valid media types are "video", "audio"
+     *
+     * @default 50 milliseconds for video fragment requests; 5 milliseconds for audio fragment requests.
+     * @param {string} type 'video' or 'audio' are the type options.
+     * @param {number} value Threshold value in milliseconds.
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setCacheLoadThresholdForType(type, value) {
+        mediaPlayerModel.setCacheLoadThresholdForType(type, value);
+    }
+
+    /**
      * A percentage between 0.0 and 1 to reduce the measured throughput calculations.
      * The default is 0.9. The lower the value the more conservative and restricted the
      * measured throughput calculations will be. please use carefully. This will directly
@@ -2823,6 +2838,7 @@ function MediaPlayer() {
         setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,
         setRichBufferThreshold: setRichBufferThreshold,
         setSegmentOverlapToleranceTime: setSegmentOverlapToleranceTime,
+        setCacheLoadThresholdForType: setCacheLoadThresholdForType,
         getProtectionController: getProtectionController,
         attachProtectionController: attachProtectionController,
         setProtectionData: setProtectionData,
