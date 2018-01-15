@@ -320,18 +320,6 @@ function BufferController(config) {
                 end: endOfBuffer
             };
 
-            const req = streamProcessor.getFragmentModel().getRequests({
-                state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
-                time: currentTimeRequest.starTime + currentTimeRequest.duration
-            })[0];
-
-            if (req && req.startTime != currentTimeRequest.startTime) {
-                const extendedKeepEnd = req.startTime + req.duration + STALL_THRESHOLD;
-                if ( (extendedKeepEnd - behindRange.end) < criticalBufferLevel) {
-                    aheadRange.start = extendedKeepEnd;
-                }
-            }
-
             if (behindRange.start < behindRange.end) {
                 log('getAllRangesWithSafetyFactor for', type, '- Behind Range Range:', behindRange.start, '-', behindRange.end);
                 clearRanges.push(behindRange);
