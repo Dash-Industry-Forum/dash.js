@@ -31,9 +31,6 @@ describe('DashParser', function () {
     });
 
     it('should throw an error when parse is called with invalid data', function () {
-        const errorHandlerMock = new ErrorHandlerMock();
-        dashParser = DashParser(context).create({errorHandler: errorHandlerMock});
-        dashParser.parse('<MPD');
-        expect(errorHandlerMock.error).to.equal('parsing the manifest failed');
+        expect(dashParser.parse.bind('<MPD')).to.be.throw('parsing the manifest failed');
     });
 });
