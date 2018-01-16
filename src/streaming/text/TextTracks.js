@@ -362,7 +362,7 @@ function TextTracks() {
         const finalCue = document.createElement('div');
         captionContainer.appendChild(finalCue);
         renderHTML(cue.isd, finalCue, function (uri) {
-            const imsc1ImgUrnTester = /^(urn:)(mpeg:[a-z0-9][a-z0-9-]{0,31}:)(subs:)([0-9])$/;
+            const imsc1ImgUrnTester = /^(urn:)(mpeg:[a-z0-9][a-z0-9-]{0,31}:)(subs:)([0-9]+)$/;
             const smpteImgUrnTester = /^#(.*)$/;
             if (imsc1ImgUrnTester.test(uri)) {
                 const match = imsc1ImgUrnTester.exec(uri);
