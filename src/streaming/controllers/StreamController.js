@@ -148,10 +148,6 @@ function StreamController() {
                 metricsModel.addDroppedFrames(Constants.VIDEO, playbackQuality);
             }
         }
-
-        // Sometimes after seeking timeUpdateHandler is called before seekingHandler and a new stream starts
-        // from beginning instead of from a chosen position. So we do nothing if the player is in the seeking state
-        if (playbackController.isSeeking()) return;
     }
 
     function onPlaybackSeeking(e) {
