@@ -362,8 +362,8 @@ function StreamController() {
 
         activeStream.activate(mediaSource);
 
-        isAudioTrackPresent();
-        isVideoTrackPresent();
+        audioTrackDetected = checkTrackPresence(Constants.AUDIO);
+        videoTrackDetected = checkTrackPresence(Constants.VIDEO);
 
         if (!initialPlayback) {
             if (!isNaN(seekTime)) {
@@ -547,16 +547,10 @@ function StreamController() {
     }
 
     function isAudioTrackPresent() {
-        if (audioTrackDetected === undefined) {
-            audioTrackDetected = checkTrackPresence(Constants.AUDIO);
-        }
         return audioTrackDetected;
     }
 
     function isVideoTrackPresent() {
-        if (videoTrackDetected === undefined) {
-            videoTrackDetected = checkTrackPresence(Constants.VIDEO);
-        }
         return videoTrackDetected;
     }
 
