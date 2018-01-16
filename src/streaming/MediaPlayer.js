@@ -2231,7 +2231,7 @@ function MediaPlayer() {
             return null;
         }
 
-        const timeInPeriod = streamController.getTimeRelativeToStreamId(time, stream.getId());
+        const timeInPeriod = streamController.getTimeRelativeToStreamId(s, stream.getId());
         return thumbnailController.get(timeInPeriod);
     }
 
