@@ -112,6 +112,10 @@
           "moreInfo": "http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/"
         },
         {
+            "url": "https://dash.akamaized.net/dash264/CTA/imsc1/IT1-20171027_dash.mpd",
+            "name": "IMSC1 Text Subtitles via sidecar file"
+        },
+        {
           "url": "https://vm2.dashif.org/dash/vod/testpic_2s/imsc1_img.mpd",
           "name": "IMSC1 (CMAF) Image Subtitles",
           "moreInfo": "https://vm2.dashif.org/dash/vod/testpic_2s/imsc1_img_subs_info.html"
