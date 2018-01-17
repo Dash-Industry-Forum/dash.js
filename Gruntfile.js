@@ -380,7 +380,7 @@ module.exports = function (grunt) {
                             'test/functional/testsCommon.js',
                             'test/functional/config/**',
                             'test/functional/tests/**',
-                            'samples/dash-if-reference-player/**'
+                            'samples/**'
                         ]
                     }
                 ]
