@@ -189,7 +189,7 @@ function StreamController() {
         if (mediaSource && isLast) {
             log('[StreamController] onStreamBufferingCompleted calls signalEndOfStream of mediaSourceController');
             mediaSourceController.signalEndOfStream(mediaSource);
-        } else if (MediaSource && playbackEndedTimerId === undefined) {
+        } else if (mediaSource && playbackEndedTimerId === undefined) {
             //send PLAYBACK_ENDED in order switch to a new period, wait until the end of playing
             const timeToEnd = playbackController.getTimeToStreamEnd();
             const delayPlaybackEnded = timeToEnd > 0 ? timeToEnd * 1000 : 0;
