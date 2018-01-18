@@ -59,7 +59,8 @@
     "codem-isoboxer": "0.3.5",
     "imsc": "^1.0.1-rc.1",
     "round10": "^1.0.3",
-    "deep-equal": "^1.0.1"
+    "deep-equal": "^1.0.1",
+    "protobufjs": "^6.8.4"
   },
   "repository": {
     "type": "git",
