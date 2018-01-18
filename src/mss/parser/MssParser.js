@@ -29,13 +29,14 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+import WidevineCencHeader from '../WidevineCencHeader';
+
 /**
  * @module MssParser
  * @param {Object} config object
  */
 function MssParser(config) {
     config = config || {};
-    const protectionController = config.protectionController;
     const BASE64 = config.BASE64;
     const log = config.log;
     const errorHandler = config.errHandler;
@@ -459,52 +460,65 @@ function MssParser(config) {
 
 
     function createPRContentProtection(protectionHeader) {
-        const keySystems = protectionController ? protectionController.getKeySystems() : null;
-        let ksPlayReady;
-
-        for (let i = 0; i < keySystems.length; i++) {
-            if (keySystems[i].systemString && keySystems[i].systemString.indexOf('playready') !== -1) {
-                ksPlayReady = keySystems[i];
-                break;
-            }
-        }
-
-        let contentProtection = {};
-        let pro;
-
-        pro = {
+        let pro = {
             __text: protectionHeader.firstChild.data,
             __prefix: 'mspr'
         };
-
-        if (ksPlayReady) {
-            contentProtection.schemeIdUri = ksPlayReady.schemeIdURI;
-            contentProtection.value = ksPlayReady.systemString;
-            contentProtection.pro = pro;
-            contentProtection.pro_asArray = pro;
-        }
-
-        return contentProtection;
+        return {
+            schemeIdUri: 'urn:uuid:9a04f079-9840-4286-ab92-e65be0885f95',
+            value: 'com.microsoft.playready',
+            pro: pro,
+            pro_asArray: pro
+        };
     }
 
-    function createWidevineContentProtection(/*protectionHeader*/) {
-        const keySystems = protectionController ? protectionController.getKeySystems() : null;
-        let ksWidevine;
+    function createWidevineContentProtection(protectionHeader, KID) {
+        // Create Widevine CENC header and encode it (Protocol Buffer)
+        let wvCencHeader = new WidevineCencHeader().encode({
+            algorithm: 1,
+            keyId: [KID],
+            trackTypeDeprecated: 'SD'
+        }).finish();
 
-        for (let i = 0; i < keySystems.length; i++) {
-            if (keySystems[i].systemString && keySystems[i].systemString.indexOf('widevine') !== -1) {
-                ksWidevine = keySystems[i];
-                break;
+        // Create a pssh box
+        let length = 12 /* box length, type, version and flags */ + 16 /* SystemID */ + 4 /* data length */ + wvCencHeader.length;
+        let pssh = new Uint8Array(length);
+        let i = 0;
+
+        // Set box length value
+        pssh[i++] = (length & 0xFF000000) >> 32;
+        pssh[i++] = (length & 0x00FF0000) >> 16;
+        pssh[i++] = (length & 0x0000FF00) >> 8;
+        pssh[i++] = (length & 0x000000FF);
+
+        // Set type ('pssh'), version (0) and flags (0)
+        pssh.set([0x70, 0x73, 0x73, 0x68, 0x00, 0x00, 0x00, 0x00], i);
+        i += 8;
+
+        // Set SystemID ('edef8ba9-79d6-4ace-a3c8-27dcd51d21ed')
+        pssh.set([0xed, 0xef, 0x8b, 0xa9,  0x79, 0xd6, 0x4a, 0xce, 0xa3, 0xc8, 0x27, 0xdc, 0xd5, 0x1d, 0x21, 0xed], i);
+        i += 16;
+
+        // Set data length value
+        pssh[i++] = (wvCencHeader.length & 0xFF000000) >> 32;
+        pssh[i++] = (wvCencHeader.length & 0x00FF0000) >> 16;
+        pssh[i++] = (wvCencHeader.length & 0x0000FF00) >> 8;
+        pssh[i++] = (wvCencHeader.length & 0x000000FF);
+
+        // Copy Widevine CENC header
+        pssh.set(wvCencHeader, i);
+
+        // Convert to BASE64 string
+        pssh = String.fromCharCode.apply(null, pssh);
+        pssh = BASE64.encodeASCII(pssh);
+
+        return {
+            schemeIdUri: 'urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed',
+            value: 'com.widevine.alpha',
+            pssh: {
+                __text: pssh
             }
-        }
-
-        var contentProtection = {};
-        if (ksWidevine) {
-            contentProtection.schemeIdUri = ksWidevine.schemeIdURI;
-            contentProtection.value = ksWidevine.systemString;
-        }
-
-        return contentProtection;
+        };
     }
 
     function processManifest(xmlDoc, manifestLoadedTime) {
@@ -564,7 +578,7 @@ function MssParser(config) {
             contentProtections.push(contentProtection);
 
             // Create ContentProtection for Widevine (as a CENC protection)
-            contentProtection = createWidevineContentProtection(protectionHeader);
+            contentProtection = createWidevineContentProtection(protectionHeader, KID);
             contentProtection['cenc:default_KID'] = KID;
             contentProtections.push(contentProtection);
 
