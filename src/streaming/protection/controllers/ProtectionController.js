@@ -251,11 +251,9 @@ function ProtectionController(config) {
         if (element) {
             protectionModel.setMediaElement(element);
             eventBus.on(events.NEED_KEY, onNeedKey, this);
-            eventBus.on(events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
         } else if (element === null) {
             protectionModel.setMediaElement(element);
             eventBus.off(events.NEED_KEY, onNeedKey, this);
-            eventBus.off(events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
         }
     }
 
