@@ -281,7 +281,6 @@ function BufferController(config) {
             onPlaybackProgression();
         }
         clearBuffers(ranges);
-
     }
 
     // Get all buffer ranges but a range around current time positionZ
@@ -320,11 +319,11 @@ function BufferController(config) {
                 end: endOfBuffer
             };
 
-            if (behindRange.start < behindRange.end) {
+            if (behindRange.start < behindRange.end && behindRange.end > buffer.buffered.start(0)) {
                 log('getAllRangesWithSafetyFactor for', type, '- Behind Range Range:', behindRange.start, '-', behindRange.end);
                 clearRanges.push(behindRange);
             }
-            if (aheadRange.start < aheadRange.end) {
+            if (aheadRange.start < aheadRange.end && aheadRange.start < endOfBuffer) {
                 log('getAllRangesWithSafetyFactor for', type, '- Ahead Range:', aheadRange.start, '-', aheadRange.end);
                 clearRanges.push(aheadRange);
             }
