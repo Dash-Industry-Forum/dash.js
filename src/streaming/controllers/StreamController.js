@@ -153,6 +153,12 @@ function StreamController() {
     function onPlaybackSeeking(e) {
         const seekingStream = getStreamForTime(e.seekTime);
 
+        //if end period has been detected, stop timer and reset isStreamBufferingCompleted
+        if (playbackEndedTimerId) {
+            stopEndPeriodTimer();
+            isStreamBufferingCompleted = false;
+        }
+
         if (seekingStream && seekingStream !== activeStream) {
             flushPlaylistMetrics(PlayListTrace.END_OF_PERIOD_STOP_REASON);
             switchStream(activeStream, seekingStream, e.seekTime);
@@ -186,14 +192,18 @@ function StreamController() {
         }
     }
 
+    function stopEndPeriodTimer() {
+        log('[StreamController][toggleEndPeriodTimer] stop end period timer.');
+        clearTimeout(playbackEndedTimerId);
+        playbackEndedTimerId = undefined;
+    }
+
     function toggleEndPeriodTimer() {
         //stream buffering completed has not been detected, nothing to do....
         if (isStreamBufferingCompleted) {
             //stream buffering completed has been detected, if end period timer is running, stop it, otherwise start it....
             if (playbackEndedTimerId) {
-                log('[StreamController][toggleEndPeriodTimer] stop end period timer.');
-                clearTimeout(playbackEndedTimerId);
-                playbackEndedTimerId = undefined;
+                stopEndPeriodTimer();
             } else {
                 const timeToEnd = playbackController.getTimeToStreamEnd();
                 const delayPlaybackEnded = timeToEnd > 0 ? timeToEnd * 1000 : 0;
@@ -209,7 +219,7 @@ function StreamController() {
             log('[StreamController][onStreamBufferingCompleted] calls signalEndOfStream of mediaSourceController.');
             mediaSourceController.signalEndOfStream(mediaSource);
         } else if (mediaSource && playbackEndedTimerId === undefined) {
-            //send PLAYBACK_ENDED in order switch to a new period, wait until the end of playing
+            //send PLAYBACK_ENDED in order to switch to a new period, wait until the end of playing
             log('[StreamController][onStreamBufferingCompleted] end of period detected');
             isStreamBufferingCompleted = true;
             if (isPaused === false) {
