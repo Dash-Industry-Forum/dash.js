@@ -258,7 +258,7 @@ function TextTracks() {
         const newVideoLeft = realVideoSize.x;
         const newVideoTop = realVideoSize.y;
 
-        if (newVideoWidth != actualVideoWidth || newVideoHeight != actualVideoHeight || newVideoLeft != actualVideoLeft || newVideoTop != actualVideoTop || (forceDrawing && forceDrawing === true)) {
+        if (newVideoWidth != actualVideoWidth || newVideoHeight != actualVideoHeight || newVideoLeft != actualVideoLeft || newVideoTop != actualVideoTop || forceDrawing) {
             actualVideoLeft = newVideoLeft + videoOffsetLeft;
             actualVideoTop = newVideoTop + videoOffsetTop;
             actualVideoWidth = newVideoWidth;
