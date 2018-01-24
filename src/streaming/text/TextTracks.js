@@ -236,7 +236,7 @@ function TextTracks() {
         }
     }
 
-    function checkVideoSize(track) {
+    function checkVideoSize(track, forceDrawing) {
         const clientWidth = videoModel.getClientWidth();
         const clientHeight = videoModel.getClientHeight();
         const videoWidth = videoModel.getVideoWidth();
@@ -258,7 +258,7 @@ function TextTracks() {
         const newVideoLeft = realVideoSize.x;
         const newVideoTop = realVideoSize.y;
 
-        if (newVideoWidth != actualVideoWidth || newVideoHeight != actualVideoHeight || newVideoLeft != actualVideoLeft || newVideoTop != actualVideoTop) {
+        if (newVideoWidth != actualVideoWidth || newVideoHeight != actualVideoHeight || newVideoLeft != actualVideoLeft || newVideoTop != actualVideoTop || (forceDrawing && forceDrawing === true)) {
             actualVideoLeft = newVideoLeft + videoOffsetLeft;
             actualVideoTop = newVideoTop + videoOffsetTop;
             actualVideoWidth = newVideoWidth;
@@ -355,8 +355,8 @@ function TextTracks() {
             let htmlCaptionDiv = document.getElementById(activeCue.cueID);
             if (htmlCaptionDiv) {
                 captionContainer.removeChild(htmlCaptionDiv);
-                renderCaption(activeCue);
             }
+            renderCaption(activeCue);
         }
     }
 
@@ -506,7 +506,7 @@ function TextTracks() {
         }
 
         if (track && track.renderingType === 'html') {
-            checkVideoSize.call(this, track);
+            checkVideoSize.call(this, track, true);
             videoSizeCheckInterval = setInterval(checkVideoSize.bind(this, track), 500);
         }
     }
