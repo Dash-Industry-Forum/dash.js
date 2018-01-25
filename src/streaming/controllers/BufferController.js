@@ -263,7 +263,8 @@ function BufferController(config) {
         if (isBufferingCompleted) {
             seekClearedBufferingCompleted = true;
             isBufferingCompleted = false;
-            maxAppendedIndex = 0;
+            //a seek command has occured, reset lastIndex value, it will be set next time that onStreamCompleted will be called.
+            lastIndex = Number.POSITIVE_INFINITY;
         }
         if (type !== Constants.FRAGMENTED_TEXT) {
             // remove buffer after seeking operations

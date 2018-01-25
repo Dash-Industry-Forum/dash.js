@@ -56,6 +56,7 @@ function TextTracks() {
         isChrome,
         fullscreenAttribute,
         displayCCOnTop,
+        previousISDState,
         topZIndex;
 
     function initialize() {
@@ -75,6 +76,7 @@ function TextTracks() {
         videoSizeCheckInterval = null;
         displayCCOnTop = false;
         topZIndex = 2147483647;
+        previousISDState = null;
 
         //TODO Check if IE has resolved issues: Then revert to not using the addTextTrack API for all browsers.
         // https://connect.microsoft.com/IE/feedbackdetail/view/1660701/text-tracks-do-not-fire-change-addtrack-or-removetrack-events
@@ -361,8 +363,8 @@ function TextTracks() {
     function renderCaption(cue) {
         const finalCue = document.createElement('div');
         captionContainer.appendChild(finalCue);
-        renderHTML(cue.isd, finalCue, function (uri) {
-            const imsc1ImgUrnTester = /^(urn:)(mpeg:[a-z0-9][a-z0-9-]{0,31}:)(subs:)([0-9])$/;
+        previousISDState = renderHTML(cue.isd, finalCue, function (uri) {
+            const imsc1ImgUrnTester = /^(urn:)(mpeg:[a-z0-9][a-z0-9-]{0,31}:)(subs:)([0-9]+)$/;
             const smpteImgUrnTester = /^#(.*)$/;
             if (imsc1ImgUrnTester.test(uri)) {
                 const match = imsc1ImgUrnTester.exec(uri);
@@ -378,7 +380,10 @@ function TextTracks() {
             } else {
                 return null;
             }
-        }, captionContainer.clientHeight, captionContainer.clientWidth);
+        }, captionContainer.clientHeight, captionContainer.clientWidth, false/*displayForcedOnlyMode*/, function (err) {
+            log('[TextTracks][renderCaption]', err);
+            //TODO add ErrorHandler management
+        }, previousISDState, true /*enableRollUp*/);
         finalCue.id = cue.cueID;
     }
 
