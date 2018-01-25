@@ -109,9 +109,6 @@ function Stream(config) {
             initializeMedia(mediaSource);
             isStreamActivated = true;
         }
-        //else { // TODO Check track change mode but why is this here. commented it out for now to check.
-        //    createBuffers();
-        //}
     }
 
     /**

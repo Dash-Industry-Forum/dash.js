@@ -56,16 +56,16 @@ describe('StreamController', function () {
             expect(activeStreamProcessorsArray).to.be.empty;                // jshint ignore:line
         });
 
-        it('should return false when attempting to call isAudioTrackPresent while no activeStream has been defined', function () {
+        it('should return undefined when attempting to call isAudioTrackPresent while no activeStream has been defined', function () {
             const isAudioTrackPresent = streamController.isAudioTrackPresent();
 
-            expect(isAudioTrackPresent).to.be.false;    // jshint ignore:line
+            expect(isAudioTrackPresent).to.be.undefined;    // jshint ignore:line
         });
 
-        it('should return false when attempting to call isVideoTrackPresent while no activeStream has been defined', function () {
+        it('should return undefined when attempting to call isVideoTrackPresent while no activeStream has been defined', function () {
             const isVideoTrackPresent = streamController.isVideoTrackPresent();
 
-            expect(isVideoTrackPresent).to.be.false;    // jshint ignore:line
+            expect(isVideoTrackPresent).to.be.undefined;    // jshint ignore:line
         });
     });
 });
