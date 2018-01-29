@@ -200,6 +200,10 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     $scope.fastSwitchSelected = true;
     $scope.ABRStrategy = 'abrDynamic';
 
+    // Error management
+    $scope.error = '';
+    $scope.errorType = '';
+
     ////////////////////////////////////////
     //
     // Player Setup
@@ -229,7 +233,12 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     $scope.version = $scope.player.getVersion();
 
     $scope.player.on(dashjs.MediaPlayer.events.ERROR, function (e) { /* jshint ignore:line */
-        console.error(e.error + ' : ' + e.event.message);
+        var message = e.event.message ? e.event.message : typeof e.event === 'string' ? e.event: e.event.url ? e.event.url : '';
+        $scope.$apply(function () {
+            $scope.error = message;
+            $scope.errorType = e.error;
+        });
+        $("#errorModal").modal('show');
     }, $scope);
 
     $scope.player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_REQUESTED, function (e) { /* jshint ignore:line */
