@@ -214,8 +214,13 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     $scope.video = document.querySelector('.dash-video-player video');
     $scope.player = dashjs.MediaPlayer().create(); /* jshint ignore:line */
 
-    $scope.player.on(dashjs.MediaPlayer.events.ERROR, function (e) {
-        console.error(e.error + ' : ' + ' with id : ' + e.event.id + ' and message : ' + e.event.message);
+    $scope.player.on(dashjs.MediaPlayer.events.ERROR, function (e) { /* jshint ignore:line */
+        var message = e.event.message ? e.event.message : typeof e.event === 'string' ? e.event: e.event.url ? e.event.url : '';
+        $scope.$apply(function () {
+            $scope.error = message;
+            $scope.errorType = e.error;
+        }); 
+        $("#errorModal").modal('show');
     }, $scope);
 
     $scope.player.initialize($scope.video, null, $scope.autoPlaySelected);
@@ -253,15 +258,6 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     $scope.controlbar.initialize();
     $scope.controlbar.disable();
     $scope.version = $scope.player.getVersion();
-
-    $scope.player.on(dashjs.MediaPlayer.events.ERROR, function (e) { /* jshint ignore:line */
-        var message = e.event.message ? e.event.message : typeof e.event === 'string' ? e.event: e.event.url ? e.event.url : '';
-        $scope.$apply(function () {
-            $scope.error = message;
-            $scope.errorType = e.error;
-        }); 
-        $("#errorModal").modal('show');
-    }, $scope);
 
     $scope.player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_REQUESTED, function (e) { /* jshint ignore:line */
         $scope[e.mediaType + 'Index'] = e.oldQuality + 1;
