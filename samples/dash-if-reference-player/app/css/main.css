@@ -206,6 +206,15 @@ a:hover {
 }
 
 /****************************
+    ERROR MODAL
+*****************************/
+
+.errorModalHeader {
+    background-color: #ff1a1a;
+    color: white;
+}
+
+/****************************
     CHARTING AND CHART TABS
 *****************************/
 

@@ -386,6 +386,23 @@
             </div>
         </div>
 
+        <!-- ERROR MODAL -->
+        <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header errorModalHeader">
+                        <h5 class="modal-title" id="errorModalLabel">Error {{errorType}}</h5>
+                    </div>
+                    <div class="modal-body">
+                        {{error}}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+      </div>
+
         <!-- CHARTING -->
        <div class="chart-panel">
             <div class="chart-controls">
