@@ -100,7 +100,7 @@ function DashParser(config) {
 
             manifest = converter.xml_str2json(data);
 
-            if (!manifest) {
+            if (!manifest || (manifest.body && manifest.body.parsererror)) {
                 throw new Error('parser error');
             }
 
