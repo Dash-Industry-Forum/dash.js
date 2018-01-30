@@ -56,6 +56,16 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         thumbnailTimeLabel,
         idSuffix,
 
+//************************************************************************************
+// THUMBNAIL CONSTANTS
+//************************************************************************************
+        // Maximum percentage of player height that the thumbnail will fill
+        maxPercentageThumbnailScreen = 0.15,
+        // Separation between the control bar and the thumbnail (in px)
+        bottomMarginThumbnail = 10,
+        // Maximum scale so small thumbs are not scaled too high
+        maximumScale = 2,
+
         initControls = function (suffix) {
             idSuffix = suffix;
             videoController = document.getElementById(getControlId("videoController"));
@@ -188,23 +198,17 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         },
 
         onSeekBarMouseMove = function (event) {
-            if (!thumbnailContainer) return;
 
-            var left;
-            var pageXOffset = getScrollOffset().x;
-            var x = event.pageX;
-            if (event.changedTouches) {
-              x = event.changedTouches[0].pageX;
-            }
+            if (!thumbnailContainer || !thumbnailElem) return;
 
             // Take into account page offset and seekbar position
             var elem = videoContainer || video;
             var videoContainerRect = elem.getBoundingClientRect();
             var seekbarRect = seekbar.getBoundingClientRect();
-            left = x || (event.clientX + document.body.scrollLeft + document.documentElement.scrollLeft);
-            left -= seekbarRect.left + pageXOffset;
+            var videoControllerRect = videoController.getBoundingClientRect();
 
             // Calculate time position given mouse position
+            var left = event.offsetX;
             var seekbarWidth = parseFloat(window.getComputedStyle(seekbar).width);
             var mouseTime = Math.floor(player.duration() * left/seekbarWidth);
             if (isNaN(mouseTime)) return;
@@ -221,15 +225,23 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                 left -= ctrlWidth / 2;
             }
 
+            var scale = (videoContainerRect.height * maxPercentageThumbnailScreen)/thumbnail.height;
+            if (scale > maximumScale) {
+                scale = maximumScale;
+            }
+
             // Set thumbnail control position
             thumbnailContainer.style.left = left + 'px';
-            thumbnailContainer.style.opacity = 1.0;
+            thumbnailContainer.style.display = '';
+            thumbnailContainer.style.bottom += Math.round(videoControllerRect.height + bottomMarginThumbnail ) + 'px';
+            thumbnailContainer.style.height = Math.round(thumbnail.height) + 'px';
 
             var backgroundStyle = 'url("' + thumbnail.url + '") ' + (thumbnail.x > 0 ? '-' + thumbnail.x : '0') +
                  'px ' + (thumbnail.y > 0 ? '-' + thumbnail.y : '0') + 'px';
             thumbnailElem.style.background = backgroundStyle;
             thumbnailElem.style.width = thumbnail.width + 'px';
             thumbnailElem.style.height = thumbnail.height + 'px';
+            thumbnailElem.style.transform = 'scale(' + scale + ',' + scale + ')';
 
             if (thumbnailTimeLabel) {
                 thumbnailTimeLabel.textContent = displayUTCTimeCodes ? player.formatUTC(mouseTime) : player.convertToTimeCode(mouseTime);
@@ -239,7 +251,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
         onSeekBarMouseMoveOut = function (e) {
             if (!thumbnailContainer) return;
-            thumbnailContainer.style.opacity = 0.0;
+            thumbnailContainer.style.display = 'none';
         },
 
         getScrollOffset = function() {
