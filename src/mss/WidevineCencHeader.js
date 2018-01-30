@@ -41,7 +41,7 @@ const $util = $protobuf.util;
  * This file has been generated using protobuf.js project (https://github.com/dcodeIO/ProtoBuf.js),
  * and its cli tool, with command line:
  * pbjs -t static-module -w amd -o WidevineCencHeader.js --no-decode --es6 WidevineCencHeader.proto
- * where WidevineCencHeader.proto contains the protocol definition as follows as defined in document
+ * where WidevineCencHeader.proto contains the protocol definition as defined in document
  * https://storage.googleapis.com/wvdocs/Widevine_DRM_Encryption_API.pdf
  * @ignore
  */
