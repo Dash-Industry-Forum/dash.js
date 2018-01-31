@@ -476,8 +476,7 @@ function MssParser(config) {
         // Create Widevine CENC header and encode it (Protocol Buffer)
         let wvCencHeader = new WidevineCencHeader().encode({
             algorithm: 1,
-            keyId: [KID],
-            trackTypeDeprecated: 'SD'
+            keyId: [KID]
         }).finish();
 
         // Create a pssh box
