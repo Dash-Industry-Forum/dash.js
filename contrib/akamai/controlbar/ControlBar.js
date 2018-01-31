@@ -46,6 +46,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         captionBtn,
         trackSwitchBtn,
         seekbar,
+        seekbarPlay,
         muteBtn,
         volumebar,
         fullscreenBtn,
@@ -74,6 +75,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             captionBtn = document.getElementById(getControlId("captionBtn"));
             trackSwitchBtn = document.getElementById(getControlId("trackSwitchBtn"));
             seekbar = document.getElementById(getControlId("seekbar"));
+            seekbarPlay = document.getElementById(getControlId("seekbar-play"));
             muteBtn = document.getElementById(getControlId("muteBtn"));
             volumebar = document.getElementById(getControlId("volumebar"));
             fullscreenBtn = document.getElementById(getControlId("fullscreenBtn"));
@@ -135,7 +137,9 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             updateDuration();
             if (!seeking) {
                 setTime(displayUTCTimeCodes ? player.timeAsUTC() : player.time());
-                seekbar.value = player.time();
+
+                if (!seekbarPlay) return ;
+                seekbarPlay.style.width = (player.time() / player.duration() * 100) + '%';
             }
         },
 
@@ -181,24 +185,43 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 // SEEKING
 // ************************************************************************************
 
-        onSeekBarChange = function (e) {
-            player.seek(parseFloat(seekbar.value));
+        calculateTimeByEvent = function (event) {
+            var seekbarWidth = parseFloat(window.getComputedStyle(seekbar).width);
+            var seekbarRect = seekbar.getBoundingClientRect();
+            return Math.floor(player.duration() * (event.clientX - seekbarRect.left) / seekbarWidth);
         },
 
-        onSeeking = function (e) {
+        onSeekBarChange = function (event) {
+            var mouseTime = calculateTimeByEvent(event);
+            player.seek(mouseTime);
+            document.removeEventListener("click", onSeekBarChange, true);
+
+            if (!seekbarPlay) return ;
+            seekbarPlay.style.width = (mouseTime / player.duration() * 100) + '%';
+        },
+
+        onSeeking = function (event) {
             //TODO Add call to seek in trick-mode once implemented. Preview Frames.
             seeking = true;
-            var seekValue = parseFloat(seekbar.value);
-            var value = displayUTCTimeCodes ? (player.timeAsUTC() - player.duration()) + seekValue : seekValue;
-            setTime(value);
+            var mouseTime = calculateTimeByEvent(event);
+            if (seekbarPlay) {
+                seekbarPlay.style.width = (mouseTime / player.duration() * 100) + '%';
+            }
+            setTime(mouseTime);
+            document.addEventListener("mousemove", onSeekBarMouseMove, true);
+            document.addEventListener("mouseup", onSeeked, true);
+            document.addEventListener("click", onSeekBarChange, true);
         },
 
-        onSeeked = function (e) {
+        onSeeked = function (event) {
             seeking = false;
+            // click event will be removed after the click happens
+            document.removeEventListener("mousemove", onSeekBarMouseMove, true);
+            document.removeEventListener("mouseup", onSeeked, true);
+            onSeekBarMouseMoveOut(event);
         },
 
         onSeekBarMouseMove = function (event) {
-
             if (!thumbnailContainer || !thumbnailElem) return;
 
             // Take into account page offset and seekbar position
@@ -208,10 +231,17 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             var videoControllerRect = videoController.getBoundingClientRect();
 
             // Calculate time position given mouse position
-            var left = event.offsetX;
-            var seekbarWidth = parseFloat(window.getComputedStyle(seekbar).width);
-            var mouseTime = Math.floor(player.duration() * left/seekbarWidth);
+            var left = event.clientX - seekbarRect.left;
+            var mouseTime = calculateTimeByEvent(event);
             if (isNaN(mouseTime)) return;
+
+            // Update timer and play progress bar if mousedown (mouse click down)
+            if (seeking) {
+                setTime(mouseTime);
+                if (seekbarPlay) {
+                    seekbarPlay.style.width = (mouseTime / player.duration() * 100) + '%';
+                }
+            }
 
             // Get thumbnail information
             var thumbnail = player.getThumbnail(mouseTime);
@@ -451,7 +481,6 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         onStreamTeardownComplete = function (e) {
             setPlayBtn();
             timeDisplay.textContent = '00:00';
-            seekbar.value = 0;
         },
 
         createMenu = function (info, contentFunc) {
@@ -747,8 +776,8 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             playPauseBtn.addEventListener("click", onPlayPauseClick);
             muteBtn.addEventListener("click", onMuteClick);
             fullscreenBtn.addEventListener("click", onFullscreenClick);
-            seekbar.addEventListener("change", onSeekBarChange, true);
-            seekbar.addEventListener("input", onSeeking, true);
+            seekbar.addEventListener("mousedown", onSeeking, true);
+            seekbar.addEventListener("click", onSeekBarChange, true);
             seekbar.addEventListener("mousemove", onSeekBarMouseMove, true);
             // set passive to true for scroll blocking listeners (https://www.chromestatus.com/feature/5745543795965952)
             seekbar.addEventListener("touchmove", onSeekBarMouseMove, {passive: true});
@@ -803,6 +832,10 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             }
             menuHandlersList = [];
             seeking = false;
+
+            if (seekbarPlay) {
+                seekbarPlay.style.width = '0%';
+            }
         },
 
         destroy: function () {
@@ -812,8 +845,8 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             playPauseBtn.removeEventListener("click", onPlayPauseClick);
             muteBtn.removeEventListener("click", onMuteClick);
             fullscreenBtn.removeEventListener("click", onFullscreenClick);
-            seekbar.removeEventListener("change", onSeekBarChange);
-            seekbar.removeEventListener("input", onSeeking);
+            seekbar.removeEventListener("mousedown", onSeeking);
+            seekbar.removeEventListener("click", onSeekBarChange);
             volumebar.removeEventListener("input", setVolume);
             seekbar.removeEventListener("mousemove", onSeekBarMouseMove);
             seekbar.removeEventListener("touchmove", onSeekBarMouseMove);
