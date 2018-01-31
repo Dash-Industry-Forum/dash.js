@@ -486,7 +486,7 @@ function MssParser(config) {
         let i = 0;
 
         // Set box length value
-        pssh[i++] = (length & 0xFF000000) >> 32;
+        pssh[i++] = (length & 0xFF000000) >> 24;
         pssh[i++] = (length & 0x00FF0000) >> 16;
         pssh[i++] = (length & 0x0000FF00) >> 8;
         pssh[i++] = (length & 0x000000FF);
@@ -500,7 +500,7 @@ function MssParser(config) {
         i += 16;
 
         // Set data length value
-        pssh[i++] = (wvCencHeader.length & 0xFF000000) >> 32;
+        pssh[i++] = (wvCencHeader.length & 0xFF000000) >> 24;
         pssh[i++] = (wvCencHeader.length & 0x00FF0000) >> 16;
         pssh[i++] = (wvCencHeader.length & 0x0000FF00) >> 8;
         pssh[i++] = (wvCencHeader.length & 0x000000FF);
