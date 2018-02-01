@@ -29,8 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import WidevineCencHeader from '../WidevineCencHeader';
-
 /**
  * @module MssParser
  * @param {Object} config object
@@ -473,11 +471,11 @@ function MssParser(config) {
     }
 
     function createWidevineContentProtection(protectionHeader, KID) {
-        // Create Widevine CENC header and encode it (Protocol Buffer)
-        let wvCencHeader = new WidevineCencHeader().encode({
-            algorithm: 1,
-            keyId: [KID]
-        }).finish();
+        // Create Widevine CENC header (Protocol Buffer) with KID value
+        let wvCencHeader = new Uint8Array(2 + KID.length);
+        wvCencHeader[0] = 0x12;
+        wvCencHeader[1] = 0x10;
+        wvCencHeader.set(KID, 2);
 
         // Create a pssh box
         let length = 12 /* box length, type, version and flags */ + 16 /* SystemID */ + 4 /* data length */ + wvCencHeader.length;
