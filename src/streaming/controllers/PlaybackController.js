@@ -254,6 +254,10 @@ function PlaybackController() {
         let uriParameters;
         if (fragData) {
             uriParameters = {};
+            const r = parseInt(fragData.r, 10);
+            if (r >= 0 && streamInfo && r < streamInfo.manifestInfo.DVRWindowSize && fragData.t === null) {
+                fragData.t = Math.floor(Date.now() / 1000) - streamInfo.manifestInfo.DVRWindowSize + r;
+            }
             uriParameters.fragS = parseInt(fragData.s, 10);
             uriParameters.fragT = parseInt(fragData.t, 10);
         }
@@ -314,7 +318,10 @@ function PlaybackController() {
         if (!DVRWindow) return NaN;
         if (currentTime > DVRWindow.end) {
             actualTime = Math.max(DVRWindow.end - streamInfo.manifestInfo.minBufferTime * 2, DVRWindow.start);
-        } else if (currentTime < DVRWindow.start) {
+        } else if (currentTime + 0.250 < DVRWindow.start) {
+            // Checking currentTime plus 250ms as the 'timeupdate' is fired with a frequency between 4Hz and 66Hz
+            // https://developer.mozilla.org/en-US/docs/Web/Events/timeupdate
+            // http://w3c.github.io/html/single-page.html#offsets-into-the-media-resource
             actualTime = DVRWindow.start;
         } else {
             return currentTime;
