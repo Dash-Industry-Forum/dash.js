@@ -207,7 +207,11 @@ function ScheduleController(config) {
                         //to be sure the specific init segment had not already been loaded.
                         streamProcessor.switchInitData(replacement.representationId);
                     } else {
-                        const request = nextFragmentRequestRule.execute(streamProcessor, replacement);
+                        let request;
+                        // don't schedule next fragments while pruning to avoid buffer inconsistencies
+                        if (!streamProcessor.getBufferController().getIsPruningInProgress()) {
+                            request = nextFragmentRequestRule.execute(streamProcessor, replacement);
+                        }
                         if (request) {
                             log('ScheduleController - ' + type + ' - getNextFragment - request is ' + request.url);
                             fragmentModel.executeRequest(request);
