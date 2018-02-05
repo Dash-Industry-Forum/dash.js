@@ -150,8 +150,15 @@ function FragmentModel(config) {
         return filteredRequests;
     }
 
+    function getRequestThreshold(req) {
+        return isNaN(req.duration) ? 0.25 : req.duration / 4;
+    }
+
     function removeExecutedRequestsBeforeTime(time) {
-        executedRequests = executedRequests.filter(req => isNaN(req.startTime) || time !== undefined ? req.startTime >= time - 0.25 : false);
+        executedRequests = executedRequests.filter(req => {
+            const threshold = getRequestThreshold(req);
+            return isNaN(req.startTime) || time !== undefined ? req.startTime >= time - threshold : false;
+        });
     }
 
     function removeExecutedRequestsInTimeRange(start, end) {
@@ -160,8 +167,9 @@ function FragmentModel(config) {
         }
 
         executedRequests = executedRequests.filter(req => {
-            return (isNaN(req.startTime) || req.startTime >= (end - 0.25)) ||
-                (isNaN(req.duration) || (req.startTime + req.duration) <= (start + 0.25));
+            const threshold = getRequestThreshold(req);
+            return (isNaN(req.startTime) || req.startTime >= (end - threshold)) ||
+                (isNaN(req.duration) || (req.startTime + req.duration) <= (start + threshold));
         });
     }
 
@@ -222,7 +230,7 @@ function FragmentModel(config) {
             const req = arr[i];
             const start = req.startTime;
             const end = start + req.duration;
-            threshold = !isNaN(threshold) ? threshold : (req.duration / 2);
+            threshold = !isNaN(threshold) ? threshold : getRequestThreshold(req);
             if ((!isNaN(start) && !isNaN(end) && ((time + threshold) >= start) && ((time - threshold) < end)) || (isNaN(start) && isNaN(time))) {
                 return req;
             }
