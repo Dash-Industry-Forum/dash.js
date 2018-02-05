@@ -155,7 +155,7 @@ function BufferController(config) {
             log('Append Init fragment', type, ' with representationId:', chunk.representationId, ' and quality:', chunk.quality);
             appendToBuffer(chunk);
         } else {
-            eventBus.trigger(Events.INIT_REQUESTED, {sender: instance});
+            eventBus.trigger(Events.INIT_REQUESTED, { sender: instance });
         }
     }
 
@@ -191,7 +191,7 @@ function BufferController(config) {
             sourceBufferController.append(buffer, chunk);
 
             if (chunk.mediaInfo.type === Constants.VIDEO) {
-                eventBus.trigger(Events.VIDEO_CHUNK_RECEIVED, {chunk: chunk});
+                eventBus.trigger(Events.VIDEO_CHUNK_RECEIVED, { chunk: chunk });
             }
         }
     }
@@ -221,7 +221,7 @@ function BufferController(config) {
                 }
                 if (e.error.code === SourceBufferController.QUOTA_EXCEEDED_ERROR_CODE || !hasEnoughSpaceToAppend()) {
                     log('Clearing playback buffer to overcome quota exceed situation for type: ' + type);
-                    eventBus.trigger(Events.QUOTA_EXCEEDED, {sender: instance, criticalBufferLevel: criticalBufferLevel}); //Tells ScheduleController to stop scheduling.
+                    eventBus.trigger(Events.QUOTA_EXCEEDED, { sender: instance, criticalBufferLevel: criticalBufferLevel }); //Tells ScheduleController to stop scheduling.
                     pruneAllSafely(); // Then we clear the buffer and onCleared event will tell ScheduleController to start scheduling again.
                 }
                 return;
@@ -284,7 +284,7 @@ function BufferController(config) {
         clearBuffers(ranges);
     }
 
-    // Get all buffer ranges but a range around current time positionZ
+    // Get all buffer ranges but a range around current time position
     function getAllRangesWithSafetyFactor() {
         const clearRanges = [];
         if (!buffer || !buffer.buffered || buffer.buffered.length === 0) {
@@ -294,11 +294,10 @@ function BufferController(config) {
         const currentTime = playbackController.getTime();
         const endOfBuffer = buffer.buffered.end(buffer.buffered.length - 1) + BUFFER_END_THRESHOLD;
 
-        log('getAllRangesWithSafetyFactor for', type, '- Current Time:', currentTime, ', End of buffer:', endOfBuffer);
-
         const currentTimeRequest = streamProcessor.getFragmentModel().getRequests({
             state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
-            time: currentTime
+            time: currentTime,
+            threshold: BUFFER_RANGE_CALCULATION_THRESHOLD
         })[0];
 
         // There is no request in current time position yet. Let's remove everything
@@ -309,23 +308,39 @@ function BufferController(config) {
                 end: endOfBuffer
             });
         } else {
-            // Keep a minimum buffer (STALL_THRESHOLD) to avoid playback stalls because lack of buffer after pruning
+            // Build buffer behind range. To avoid pruning time around current time position,
+            // we include fragment right behind the one in current time position
             const behindRange = {
                 start: 0,
-                end: Math.min(currentTimeRequest.startTime, currentTime) - STALL_THRESHOLD
+                end: currentTimeRequest.startTime - STALL_THRESHOLD
             };
+            const prevReq = streamProcessor.getFragmentModel().getRequests({
+                state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
+                time: currentTimeRequest.startTime - (currentTimeRequest.duration / 2),
+                threshold: BUFFER_RANGE_CALCULATION_THRESHOLD
+            })[0];
+            if (prevReq && prevReq.startTime != currentTimeRequest.startTime) {
+                behindRange.end = prevReq.startTime;
+            }
+            if (behindRange.start < behindRange.end && behindRange.end > buffer.buffered.start(0)) {
+                clearRanges.push(behindRange);
+            }
 
+            // Build buffer ahead range. To avoid pruning time around current time position,
+            // we include fragment right after the one in current time position
             const aheadRange = {
                 start: currentTimeRequest.startTime + currentTimeRequest.duration + STALL_THRESHOLD,
                 end: endOfBuffer
             };
-
-            if (behindRange.start < behindRange.end && behindRange.end > buffer.buffered.start(0)) {
-                log('getAllRangesWithSafetyFactor for', type, '- Behind Range Range:', behindRange.start, '-', behindRange.end);
-                clearRanges.push(behindRange);
+            const nextReq = streamProcessor.getFragmentModel().getRequests({
+                state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
+                time: currentTimeRequest.startTime + currentTimeRequest.duration + STALL_THRESHOLD,
+                threshold: BUFFER_RANGE_CALCULATION_THRESHOLD
+            })[0];
+            if (nextReq && nextReq.startTime !== currentTimeRequest.startTime) {
+                aheadRange.start = nextReq.startTime + nextReq.duration + STALL_THRESHOLD;
             }
             if (aheadRange.start < aheadRange.end && aheadRange.start < endOfBuffer) {
-                log('getAllRangesWithSafetyFactor for', type, '- Ahead Range:', aheadRange.start, '-', aheadRange.end);
                 clearRanges.push(aheadRange);
             }
         }
@@ -355,7 +370,7 @@ function BufferController(config) {
     function updateBufferLevel() {
         if (playbackController) {
             bufferLevel = sourceBufferController.getBufferLength(buffer, getWorkingTime());
-            eventBus.trigger(Events.BUFFER_LEVEL_UPDATED, {sender: instance, bufferLevel: bufferLevel});
+            eventBus.trigger(Events.BUFFER_LEVEL_UPDATED, { sender: instance, bufferLevel: bufferLevel });
             checkIfSufficientBuffer();
         }
     }
@@ -371,7 +386,7 @@ function BufferController(config) {
         if (isLastIdxAppended && !isBufferingCompleted) {
             isBufferingCompleted = true;
             log('[BufferController][' + type + '] checkIfBufferingCompleted trigger BUFFERING_COMPLETED');
-            eventBus.trigger(Events.BUFFERING_COMPLETED, {sender: instance, streamInfo: streamProcessor.getStreamInfo()});
+            eventBus.trigger(Events.BUFFERING_COMPLETED, { sender: instance, streamInfo: streamProcessor.getStreamInfo() });
         }
     }
 
@@ -383,7 +398,7 @@ function BufferController(config) {
             seekClearedBufferingCompleted = false;
             isBufferingCompleted = true;
             log('[BufferController][' + type + '] checkIfSufficientBuffer trigger BUFFERING_COMPLETED');
-            eventBus.trigger(Events.BUFFERING_COMPLETED, {sender: instance, streamInfo: streamProcessor.getStreamInfo()});
+            eventBus.trigger(Events.BUFFERING_COMPLETED, { sender: instance, streamInfo: streamProcessor.getStreamInfo() });
         }
 
         if (bufferLevel < STALL_THRESHOLD && !isBufferingCompleted) {
@@ -400,12 +415,9 @@ function BufferController(config) {
         bufferState = state;
         addBufferMetrics();
 
-        const ranges = sourceBufferController.getAllRanges(buffer);
-        showBufferRanges(ranges);
-
-        eventBus.trigger(Events.BUFFER_LEVEL_STATE_CHANGED, {sender: instance, state: state, mediaType: type, streamInfo: streamProcessor.getStreamInfo()});
-        eventBus.trigger(state === BUFFER_LOADED ? Events.BUFFER_LOADED : Events.BUFFER_EMPTY, {mediaType: type});
-        log(state === BUFFER_LOADED ? 'Got enough buffer to start for ' + type : 'Waiting for more buffer before starting playback for '  + type);
+        eventBus.trigger(Events.BUFFER_LEVEL_STATE_CHANGED, { sender: instance, state: state, mediaType: type, streamInfo: streamProcessor.getStreamInfo() });
+        eventBus.trigger(state === BUFFER_LOADED ? Events.BUFFER_LOADED : Events.BUFFER_EMPTY, { mediaType: type });
+        log(state === BUFFER_LOADED ? 'Got enough buffer to start for ' + type : 'Waiting for more buffer before starting playback for ' + type);
     }
 
 
@@ -473,6 +485,7 @@ function BufferController(config) {
             rangeToKeep.start = Math.min(currentTimeRequest.startTime, rangeToKeep.start);
             rangeToKeep.end = Math.max(currentTimeRequest.startTime + currentTimeRequest.duration, rangeToKeep.end);
         }
+
         log('getClearRanges for', type, '- Remove buffer out of ', rangeToKeep.start, ' - ', rangeToKeep.end);
 
         if (ranges.start(0) <= rangeToKeep.start) {
@@ -510,7 +523,7 @@ function BufferController(config) {
 
         // we need to remove data that is more than one fragment before the video currentTime
         const currentTime = playbackController.getTime();
-        const req = streamProcessor.getFragmentModel().getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED, time: currentTime, threshold: threshold})[0];
+        const req = streamProcessor.getFragmentModel().getRequests({ state: FragmentModel.FRAGMENT_MODEL_EXECUTED, time: currentTime, threshold: threshold })[0];
         const range = sourceBufferController.getBufferRange(buffer, currentTime);
 
         const removeStart = buffer.buffered.start(0);
@@ -552,6 +565,11 @@ function BufferController(config) {
         const range = pendingPruningRanges.shift();
         log('Removing', type, 'buffer from:', range.start, 'to', range.end);
         isPruningInProgress = true;
+
+        // If removing buffer ahead current playback position, update maxAppendedIndex
+        if (playbackController.getTime() < range.end) {
+            maxAppendedIndex = 0;
+        }
         sourceBufferController.remove(buffer, range.start, range.end, mediaSource);
     }
 
@@ -571,7 +589,7 @@ function BufferController(config) {
             clearNextRange();
         } else {
             updateBufferLevel();
-            eventBus.trigger(Events.BUFFER_CLEARED, {sender: instance, from: e.from, to: e.to, hasEnoughSpaceToAppend: hasEnoughSpaceToAppend()});
+            eventBus.trigger(Events.BUFFER_CLEARED, { sender: instance, from: e.from, to: e.to, hasEnoughSpaceToAppend: hasEnoughSpaceToAppend() });
         }
         //TODO - REMEMBER removed a timerout hack calling clearBuffer after manifestInfo.minBufferTime * 1000 if !hasEnoughSpaceToAppend() Aug 04 2016
     }
@@ -599,6 +617,7 @@ function BufferController(config) {
         if (!buffer || (e.newMediaInfo.type !== type) || (e.newMediaInfo.streamInfo.id !== streamProcessor.getStreamInfo().id)) return;
         if (mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE) {
             clearBuffer(getClearRange(0));
+            streamProcessor.getFragmentModel().abortRequests();
         }
     }
 
@@ -649,6 +668,10 @@ function BufferController(config) {
 
     function getIsBufferingCompleted() {
         return isBufferingCompleted;
+    }
+
+    function getIsPruningInProgress() {
+        return isPruningInProgress;
     }
 
     function resetInitialSettings() {
@@ -707,6 +730,7 @@ function BufferController(config) {
         getMediaSource: getMediaSource,
         getIsBufferingCompleted: getIsBufferingCompleted,
         switchInitData: switchInitData,
+        getIsPruningInProgress: getIsPruningInProgress,
         reset: reset
     };
 
