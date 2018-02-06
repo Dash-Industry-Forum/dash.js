@@ -151,7 +151,7 @@ function FragmentModel(config) {
     }
 
     function getRequestThreshold(req) {
-        return isNaN(req.duration) ? 0.25 : req.duration / 4;
+        return isNaN(req.duration) ? 0.25 : req.duration / 8;
     }
 
     function removeExecutedRequestsBeforeTime(time) {
