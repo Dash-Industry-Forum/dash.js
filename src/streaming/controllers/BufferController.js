@@ -185,14 +185,12 @@ function BufferController(config) {
 
 
     function appendToBuffer(chunk) {
-        if (!isBufferingCompleted) {
-            isAppendingInProgress = true;
-            appendedBytesInfo = chunk;
-            sourceBufferController.append(buffer, chunk);
+        isAppendingInProgress = true;
+        appendedBytesInfo = chunk;
+        sourceBufferController.append(buffer, chunk);
 
-            if (chunk.mediaInfo.type === Constants.VIDEO) {
-                eventBus.trigger(Events.VIDEO_CHUNK_RECEIVED, { chunk: chunk });
-            }
+        if (chunk.mediaInfo.type === Constants.VIDEO) {
+            eventBus.trigger(Events.VIDEO_CHUNK_RECEIVED, { chunk: chunk });
         }
     }
 

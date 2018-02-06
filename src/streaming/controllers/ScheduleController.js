@@ -175,7 +175,7 @@ function ScheduleController(config) {
 
     function schedule() {
         if (isStopped || isFragmentProcessingInProgress || !streamProcessor.getBufferController() || playbackController.isPaused() && !scheduleWhilePaused) {
-            log('ScheduleController ' + type + '- schedule stop!');
+            log('ScheduleController ' + type + ' - schedule stop!');
             return;
         }
 
@@ -211,14 +211,15 @@ function ScheduleController(config) {
                         // don't schedule next fragments while pruning to avoid buffer inconsistencies
                         if (!streamProcessor.getBufferController().getIsPruningInProgress()) {
                             request = nextFragmentRequestRule.execute(streamProcessor, replacement);
+                            if (!request && streamInfo.manifestInfo && streamInfo.manifestInfo.isDynamic) {
+                                log('getNextFragment - ' + type + ' - Playing at the bleeding live edge and frag is not available yet');
+                            }
                         }
+
                         if (request) {
                             log('ScheduleController - ' + type + ' - getNextFragment - request is ' + request.url);
                             fragmentModel.executeRequest(request);
                         } else { //Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
-                            if (streamInfo.manifestInfo && streamInfo.manifestInfo.isDynamic) {
-                                log('getNextFragment - ' + type + ' - Playing at the bleeding live edge and frag is not available yet');
-                            }
                             isFragmentProcessingInProgress = false;
                             startScheduleTimer(500);
                         }
@@ -227,12 +228,11 @@ function ScheduleController(config) {
             };
 
             isFragmentProcessingInProgress = true;
-            if (isReplacement || switchTrack) {
-                getNextFragment();
-            } else {
+            if (!isReplacement && !switchTrack) {
                 abrController.checkPlaybackQuality(type);
-                getNextFragment();
             }
+
+            getNextFragment();
 
         } else {
             startScheduleTimer(500);
