@@ -191,15 +191,6 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             return Math.floor(player.duration() * (event.clientX - seekbarRect.left) / seekbarWidth);
         },
 
-        onSeekBarChange = function (event) {
-            var mouseTime = calculateTimeByEvent(event);
-            player.seek(mouseTime);
-            document.removeEventListener("click", onSeekBarChange, true);
-
-            if (!seekbarPlay) return ;
-            seekbarPlay.style.width = (mouseTime / player.duration() * 100) + '%';
-        },
-
         onSeeking = function (event) {
             //TODO Add call to seek in trick-mode once implemented. Preview Frames.
             seeking = true;
@@ -210,15 +201,22 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             setTime(mouseTime);
             document.addEventListener("mousemove", onSeekBarMouseMove, true);
             document.addEventListener("mouseup", onSeeked, true);
-            document.addEventListener("click", onSeekBarChange, true);
         },
 
         onSeeked = function (event) {
             seeking = false;
-            // click event will be removed after the click happens
             document.removeEventListener("mousemove", onSeekBarMouseMove, true);
             document.removeEventListener("mouseup", onSeeked, true);
+
+            // seeking
+            var mouseTime = calculateTimeByEvent(event);
+            player.seek(mouseTime);
+
             onSeekBarMouseMoveOut(event);
+
+            if (!seekbarPlay) return ;
+            seekbarPlay.style.width = (mouseTime / player.duration() * 100) + '%';
+
         },
 
         onSeekBarMouseMove = function (event) {
@@ -777,7 +775,6 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             muteBtn.addEventListener("click", onMuteClick);
             fullscreenBtn.addEventListener("click", onFullscreenClick);
             seekbar.addEventListener("mousedown", onSeeking, true);
-            seekbar.addEventListener("click", onSeekBarChange, true);
             seekbar.addEventListener("mousemove", onSeekBarMouseMove, true);
             // set passive to true for scroll blocking listeners (https://www.chromestatus.com/feature/5745543795965952)
             seekbar.addEventListener("touchmove", onSeekBarMouseMove, {passive: true});
@@ -846,7 +843,6 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             muteBtn.removeEventListener("click", onMuteClick);
             fullscreenBtn.removeEventListener("click", onFullscreenClick);
             seekbar.removeEventListener("mousedown", onSeeking);
-            seekbar.removeEventListener("click", onSeekBarChange);
             volumebar.removeEventListener("input", setVolume);
             seekbar.removeEventListener("mousemove", onSeekBarMouseMove);
             seekbar.removeEventListener("touchmove", onSeekBarMouseMove);
