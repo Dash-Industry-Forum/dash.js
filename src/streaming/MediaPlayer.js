@@ -1157,19 +1157,6 @@ function MediaPlayer() {
     }
 
     /**
-     * Obsolete since version 2.6.0.
-     * Buffer-occupancy ABR is now switched on and off dynamically.
-     * @see {@link module:MediaPlayer#setABRStrategy setABRStrategy()}
-     *
-     * @param {boolean} value
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function enableBufferOccupancyABR(value) {
-        throw new Error('Calling obsolete function - enabledBufferOccupancyABR(' + value + ') has no effect.');
-    }
-
-    /**
      * Sets the ABR strategy. Valid strategies are "abrDynamic", "abrBola" and "abrThroughput".
      * The ABR strategy can also be changed during a streaming session.
      * The call has no effect if an invalid method is passed.
@@ -1536,20 +1523,6 @@ function MediaPlayer() {
     function setLongFormContentDurationThreshold(value) {
         mediaPlayerModel.setLongFormContentDurationThreshold(value);
     }
-
-    /**
-     * @deprecated since version 2.6.0.
-     * ABR rules now switch from Throughput to Buffer Occupancy mode when there is sufficient buffer.
-     * This renders the rich buffer mechanism redundant.
-     *
-     * @param {number} value
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function setRichBufferThreshold(value) {
-        throw new Error('Calling obsolete function - setRichBufferThreshold(' + value + ') has no effect.');
-    }
-
 
     /**
      * The overlap tolerance time, at both the head and the tail of segments, considered when doing time to segment conversions.
@@ -2417,69 +2390,6 @@ function MediaPlayer() {
         FactoryMaker.extend(parentNameString, childInstance, override, context);
     }
 
-    /*
-    ---------------------------------------------------------------------------
-
-        DEPRECATED FUNCTIONS
-
-    ---------------------------------------------------------------------------
-    */
-    /**
-     * @deprecated Since version 2.1.0.  <b>Instead use:</b>
-     * <ul>
-     * <li>{@link module:MediaPlayer#getVideoElement getVideoElement()}</li>
-     * <li>{@link module:MediaPlayer#getSource getSource()}</li>
-     * <li>{@link module:MediaPlayer#getVideoContainer getVideoContainer()}</li>
-     * <li>{@link module:MediaPlayer#getTTMLRenderingDiv getTTMLRenderingDiv()}</li>
-     * </ul>
-     *
-     * @returns {VideoModel}
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getVideoModel() {
-        if (!videoModel) {
-            throw ELEMENT_NOT_ATTACHED_ERROR;
-        }
-        return videoModel;
-    }
-
-    /**
-     * @deprecated since version 2.0 Instead use {@link module:MediaPlayer#getAutoSwitchQualityFor getAutoSwitchQualityFor()}.
-     * @returns {boolean} Current state of adaptive bitrate switching
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getAutoSwitchQuality() {
-        return abrController.getAutoSwitchBitrateFor(Constants.VIDEO) || abrController.getAutoSwitchBitrateFor(Constants.AUDIO);
-    }
-
-    /**
-     * Set to false to switch off adaptive bitrate switching.
-     *
-     * @deprecated since version 2.0 Instead use {@link module:MediaPlayer#setAutoSwitchQualityFor setAutoSwitchQualityFor()}.
-     * @param {boolean} value
-     * @default true
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function setAutoSwitchQuality(value) {
-        abrController.setAutoSwitchBitrateFor(Constants.VIDEO, value);
-        abrController.setAutoSwitchBitrateFor(Constants.AUDIO, value);
-    }
-
-    /**
-     * Sets whether withCredentials on all XHR requests is true or false
-     * @default false
-     * @param {boolean} value
-     * @memberof module:MediaPlayer
-     * @instance
-     * @deprecated since version 2.4 - use setXHRWithCredentialsForType
-     */
-    function setXHRWithCredentials(value) {
-        setXHRWithCredentialsForType(undefined, value);
-    }
-
     //***********************************
     // PRIVATE METHODS
     //***********************************
@@ -2742,7 +2652,6 @@ function MediaPlayer() {
         getVersion: getVersion,
         getDebug: getDebug,
         getBufferLength: getBufferLength,
-        getVideoModel: getVideoModel,
         getVideoContainer: getVideoContainer,
         getTTMLRenderingDiv: getTTMLRenderingDiv,
         getVideoElement: getVideoElement,
@@ -2795,15 +2704,12 @@ function MediaPlayer() {
         setTrackSwitchModeFor: setTrackSwitchModeFor,
         setSelectionModeForInitialTrack: setSelectionModeForInitialTrack,
         getSelectionModeForInitialTrack: getSelectionModeForInitialTrack,
-        getAutoSwitchQuality: getAutoSwitchQuality,
-        setAutoSwitchQuality: setAutoSwitchQuality,
         setFastSwitchEnabled: setFastSwitchEnabled,
         getFastSwitchEnabled: getFastSwitchEnabled,
         setMovingAverageMethod: setMovingAverageMethod,
         getMovingAverageMethod: getMovingAverageMethod,
         getAutoSwitchQualityFor: getAutoSwitchQualityFor,
         setAutoSwitchQualityFor: setAutoSwitchQualityFor,
-        enableBufferOccupancyABR: enableBufferOccupancyABR,
         setABRStrategy: setABRStrategy,
         getABRStrategy: getABRStrategy,
         useDefaultABRRules: useDefaultABRRules,
@@ -2832,11 +2738,9 @@ function MediaPlayer() {
         setFragmentLoaderRetryInterval: setFragmentLoaderRetryInterval,
         setManifestLoaderRetryAttempts: setManifestLoaderRetryAttempts,
         setManifestLoaderRetryInterval: setManifestLoaderRetryInterval,
-        setXHRWithCredentials: setXHRWithCredentials,
         setXHRWithCredentialsForType: setXHRWithCredentialsForType,
         getXHRWithCredentialsForType: getXHRWithCredentialsForType,
         setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,
-        setRichBufferThreshold: setRichBufferThreshold,
         setSegmentOverlapToleranceTime: setSegmentOverlapToleranceTime,
         setCacheLoadThresholdForType: setCacheLoadThresholdForType,
         getProtectionController: getProtectionController,
