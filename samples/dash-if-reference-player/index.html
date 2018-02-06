@@ -262,12 +262,13 @@
                         </div>
                         <span id="videoDuration" class="duration-display">00:00:00</span>
                         <div class="seekContainer">
-                            <input type="range" id="seekbar" value="0" class="seekbar" min="0" step="0.01"/>
+                            <div id="seekbar" class="seekbar seekbar-complete">
+                                <div id="seekbar-play" class="seekbar seekbar-play"></div>
+                            </div>
                         </div>
                         <div id="thumbnail-container" class="thumbnail-container">
-                            <div id="thumbnail-elem" class="thumbnail-elem">
-                                <div id="thumbnail-time-label" class="thumbnail-time-label"></div>
-                            </div>
+                            <div id="thumbnail-elem" class="thumbnail-elem"></div>
+                            <div id="thumbnail-time-label" class="thumbnail-time-label"></div>
                         </div>
                     </div>
                 </div>
@@ -386,6 +387,23 @@
                 </div>
             </div>
         </div>
+
+        <!-- ERROR MODAL -->
+        <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header errorModalHeader">
+                        <h5 class="modal-title" id="errorModalLabel">Error {{errorType}}</h5>
+                    </div>
+                    <div class="modal-body">
+                        {{error}}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+      </div>
 
         <!-- CHARTING -->
        <div class="chart-panel">
