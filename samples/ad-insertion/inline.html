@@ -59,8 +59,8 @@
 </div>
 
 <script> (function () {
-    $.get("http://se-mashup.fokus.fraunhofer.de:8080/getSession", function (data) {
-        var url = "http://se-mashup.fokus.fraunhofer.de:8080/dash/assets/adinsertion-samples/events/inline/dash.mpd?sid=" + data.sessionID;
+    $.get("https://se-mashup.fokus.fraunhofer.de/getAdSession", function (data) {
+        var url = "https://se-mashup.fokus.fraunhofer.de/dash/assets/adinsertion-samples/events/inline/dash.mpd?sid=" + data.sessionID;
         var player = dashjs.MediaPlayer().create();
         player.initialize(document.querySelector("#vid"), url, true);
     })
