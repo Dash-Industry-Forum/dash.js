@@ -75,7 +75,6 @@ function NextFragmentRequestRule(config) {
 
         let request;
         if (requestToReplace) {
-            // log('requestToReplace :' + requestToReplace.url);
             time = requestToReplace.startTime + (requestToReplace.duration / 2);
             request = adapter.getFragmentRequestForTime(streamProcessor, representationInfo, time, {
                 timeThreshold: 0,

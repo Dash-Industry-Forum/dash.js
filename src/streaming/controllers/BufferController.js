@@ -515,37 +515,6 @@ function BufferController(config) {
         return clearRanges;
     }
 
-    function getClearRange(threshold) {
-        if (!buffer) return null;
-        if (!buffer.buffered || buffer.buffered.length === 0) return null;
-
-        // we need to remove data that is more than one fragment before the video currentTime
-        const currentTime = playbackController.getTime();
-        const req = streamProcessor.getFragmentModel().getRequests({ state: FragmentModel.FRAGMENT_MODEL_EXECUTED, time: currentTime, threshold: threshold })[0];
-        const range = sourceBufferController.getBufferRange(buffer, currentTime);
-
-        const removeStart = buffer.buffered.start(0);
-        let removeEnd = (req && !isNaN(req.startTime)) ? req.startTime : Math.floor(currentTime);
-        if ((range === null) && (buffer.buffered.length > 0)) {
-            removeEnd = buffer.buffered.end(buffer.buffered.length - 1);
-        }
-
-        if ((removeStart <= currentTime) && (removeEnd >= currentTime)) {
-            // Don't allow remove a buffer that encloses currentTime position
-            removeEnd = Math.floor(currentTime);
-        }
-
-        return {
-            start: removeStart,
-            end: removeEnd
-        };
-    }
-
-    function clearBuffer(range) {
-        if (!range || !buffer) return;
-        clearBuffers([range]);
-    }
-
     function clearBuffers(ranges) {
         if (!ranges || !buffer || ranges.length === 0) return;
 
@@ -565,8 +534,12 @@ function BufferController(config) {
         isPruningInProgress = true;
 
         // If removing buffer ahead current playback position, update maxAppendedIndex
-        if (playbackController.getTime() < range.end) {
+        const currentTime = playbackController.getTime();
+        if (currentTime < range.end) {
+            isBufferingCompleted = false;
             maxAppendedIndex = 0;
+            streamProcessor.getScheduleController().setSeekTarget(currentTime);
+            adapter.setIndexHandlerTime(streamProcessor, currentTime);
         }
         sourceBufferController.remove(buffer, range.start, range.end, mediaSource);
     }
@@ -614,8 +587,15 @@ function BufferController(config) {
     function onCurrentTrackChanged(e) {
         if (!buffer || (e.newMediaInfo.type !== type) || (e.newMediaInfo.streamInfo.id !== streamProcessor.getStreamInfo().id)) return;
         if (mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE) {
-            clearBuffer(getClearRange(0));
-            streamProcessor.getFragmentModel().abortRequests();
+            if (buffer.buffered && buffer.buffered.length > 0) {
+                log('Clearing buffer because track changed - ' + (buffer.buffered.end(buffer.buffered.length - 1) + BUFFER_END_THRESHOLD));
+                clearBuffers([{
+                    start: 0,
+                    end: buffer.buffered.end(buffer.buffered.length - 1) + BUFFER_END_THRESHOLD
+                }]);
+                lastIndex = Number.POSITIVE_INFINITY;
+                streamProcessor.getFragmentModel().abortRequests();
+            }
         }
     }
 
