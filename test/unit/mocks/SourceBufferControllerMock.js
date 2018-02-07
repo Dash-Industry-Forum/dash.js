@@ -48,6 +48,9 @@ class SourceBufferControllerMock {
         this.buffer = new BufferMock();
         this.createError = false;
     }
+
+    getAllRanges() {
+    }
 }
 
 export default SourceBufferControllerMock;

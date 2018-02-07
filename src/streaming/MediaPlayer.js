@@ -1377,7 +1377,7 @@ function MediaPlayer() {
     /**
      * This value influences the buffer pruning logic.
      * Allows you to modify the buffer that is kept in source buffer in seconds.
-     *  0|-----------bufferToPrune-----------|-----bufferToKeep-----|currentTime|
+     * <pre>0|-----------bufferToPrune-----------|-----bufferToKeep-----|currentTime|</pre>
      *
      * @default 30 seconds
      * @param {int} value
@@ -1386,6 +1386,20 @@ function MediaPlayer() {
      */
     function setBufferToKeep(value) {
         mediaPlayerModel.setBufferToKeep(value);
+    }
+
+    /**
+     * This value influences the buffer pruning logic.
+     * Allows you to modify the buffer ahead of current time position that is kept in source buffer in seconds.
+     * <pre>0|--------|currentTime|-----bufferAheadToKeep----|----bufferToPrune-----------|end|</pre>
+     *
+     * @default 80 seconds
+     * @param {int} value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setBufferAheadToKeep(value) {
+        mediaPlayerModel.setBufferAheadToKeep(value);
     }
 
     /**
@@ -1508,6 +1522,26 @@ function MediaPlayer() {
      */
     function setLongFormContentDurationThreshold(value) {
         mediaPlayerModel.setLongFormContentDurationThreshold(value);
+    }
+
+    /**
+     * The overlap tolerance time, at both the head and the tail of segments, considered when doing time to segment conversions.
+     *
+     * This is used when calculating which of the loaded segments of a representation corresponds with a given time position.
+     * Its value is never used for calculating the segment index in seeking operations in which it assumes overlap time threshold is zero.
+     *
+     * <pre>
+     * |-o-|--- segment X ----|-o-|
+     *                        |-o-|---- segment X+1 -----|-o-|
+     *                                                   |-o-|---- segment X+2 -----|-o-|
+     * </pre>
+     * @default 0.05 seconds.
+     * @param {number} value
+     * @memberof module:MediaPlayer
+     * @instance
+    */
+    function setSegmentOverlapToleranceTime(value) {
+        mediaPlayerModel.setSegmentOverlapToleranceTime(value);
     }
 
     /**
@@ -2692,6 +2726,7 @@ function MediaPlayer() {
         clearDefaultUTCTimingSources: clearDefaultUTCTimingSources,
         restoreDefaultUTCTimingSources: restoreDefaultUTCTimingSources,
         setBufferToKeep: setBufferToKeep,
+        setBufferAheadToKeep: setBufferAheadToKeep,
         setBufferPruningInterval: setBufferPruningInterval,
         setStableBufferTime: setStableBufferTime,
         getStableBufferTime: getStableBufferTime,
@@ -2706,6 +2741,7 @@ function MediaPlayer() {
         setXHRWithCredentialsForType: setXHRWithCredentialsForType,
         getXHRWithCredentialsForType: getXHRWithCredentialsForType,
         setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,
+        setSegmentOverlapToleranceTime: setSegmentOverlapToleranceTime,
         setCacheLoadThresholdForType: setCacheLoadThresholdForType,
         getProtectionController: getProtectionController,
         attachProtectionController: attachProtectionController,

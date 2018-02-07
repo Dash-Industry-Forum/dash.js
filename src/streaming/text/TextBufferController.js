@@ -136,6 +136,10 @@ function TextBufferController(config) {
         _BufferControllerImpl.switchInitData(streamId, representationId);
     }
 
+    function getIsPruningInProgress() {
+        return _BufferControllerImpl.getIsPruningInProgress();
+    }
+
     instance = {
         getBufferControllerType: getBufferControllerType,
         initialize: initialize,
@@ -149,6 +153,7 @@ function TextBufferController(config) {
         setMediaSource: setMediaSource,
         getMediaSource: getMediaSource,
         getIsBufferingCompleted: getIsBufferingCompleted,
+        getIsPruningInProgress: getIsPruningInProgress,
         switchInitData: switchInitData,
         reset: reset
     };

@@ -68,7 +68,7 @@ function NextFragmentRequestRule(config) {
         if (buffer) {
             const range = sourceBufferController.getBufferRange(buffer, time);
             if (range !== null) {
-                log('Prior to making a request for time, NextFragmentRequestRule is aligning index handler\'s currentTime with bufferedRange.end.', time, ' was changed to ', range.end);
+                log('Prior to making a request for time, NextFragmentRequestRule is aligning index handler\'s currentTime with bufferedRange.end for', mediaType, '.', time, 'was changed to', range.end);
                 time = range.end;
             }
         }
@@ -85,12 +85,21 @@ function NextFragmentRequestRule(config) {
             request = adapter.getFragmentRequestForTime(streamProcessor, representationInfo, time, {
                 keepIdx: !hasSeekTarget
             });
+
+            // Sync executed queue with buffer range (to check for silent purge)
+            const bufferedRanges = sourceBufferController.getAllRanges(buffer);
+            const streamDuration = streamProcessor.getStreamInfo().duration;
+            streamProcessor.getFragmentModel().syncExecutedRequestsWithBufferedRange(bufferedRanges, streamDuration);
+
+            // Then, check if this request was downloaded or not
             while (request && request.action !== FragmentRequest.ACTION_COMPLETE && streamProcessor.getFragmentModel().isFragmentLoaded(request)) {
                 // loop until we found not loaded fragment, or no fragment
                 request = adapter.getNextFragmentRequest(streamProcessor, representationInfo);
             }
             if (request) {
-                adapter.setIndexHandlerTime(streamProcessor, request.startTime + request.duration);
+                if (!isNaN(request.startTime + request.duration)) {
+                    adapter.setIndexHandlerTime(streamProcessor, request.startTime + request.duration);
+                }
                 request.delayLoadingTime = new Date().getTime() + scheduleController.getTimeToLoadDelay();
                 scheduleController.setTimeToLoadDelay(0);
             }
