@@ -151,7 +151,7 @@ function FragmentModel(config) {
     }
 
     function getRequestThreshold(req) {
-        return isNaN(req.duration) ? 0.25 : req.duration / 4;
+        return isNaN(req.duration) ? 0.25 : req.duration / 8;
     }
 
     function removeExecutedRequestsBeforeTime(time) {
@@ -176,6 +176,7 @@ function FragmentModel(config) {
     // Remove requests that are not "represented" by any of buffered ranges
     function syncExecutedRequestsWithBufferedRange(bufferedRanges, streamDuration) {
         if (!bufferedRanges || bufferedRanges.length === 0) {
+            executedRequests = [];
             return;
         }
 
