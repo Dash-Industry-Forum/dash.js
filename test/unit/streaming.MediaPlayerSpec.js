@@ -216,24 +216,14 @@ describe('MediaPlayer', function () {
                 expect(paused).to.be.false; // jshint ignore:line
             });
 
-            it('Method seek should seek', function () {
+            it('Method seek should throw an exception', function () {
                 let isSeeking = playbackControllerMock.isSeeking();
                 expect(isSeeking).to.be.false; // jshint ignore:line
 
-                player.seek();
+                expect(player.seek).to.throw(MediaPlayer.MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
 
                 isSeeking = playbackControllerMock.isSeeking();
-                expect(isSeeking).to.be.true; // jshint ignore:line
-            });
-
-            it('Method isSeeking should return seek state', function () {
-                let isSeeking = player.isSeeking();
                 expect(isSeeking).to.be.false; // jshint ignore:line
-
-                player.seek();
-
-                isSeeking = player.isSeeking();
-                expect(isSeeking).to.be.true; // jshint ignore:line
             });
 
             it('Method isDynamic should get dynamic value', function () {

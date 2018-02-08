@@ -81,6 +81,7 @@ function MediaPlayer() {
     const ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the video element before calling this method';
     const SOURCE_NOT_ATTACHED_ERROR = 'You must first call attachSource() with a valid source before calling this method';
     const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
+    const MEDIA_PLAYER_BAD_ARGUMENT_ERROR = 'MediaPlayer Invalid Arguments!';
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
@@ -395,6 +396,11 @@ function MediaPlayer() {
         if (!playbackInitialized) {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
+
+        if (typeof value !== 'number' || isNaN(value)) {
+            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
+        }
+
         let s = playbackController.getIsDynamic() ? getDVRSeekOffset(value) : value;
         playbackController.seek(s);
     }
