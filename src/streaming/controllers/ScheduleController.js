@@ -137,7 +137,7 @@ function ScheduleController(config) {
         if (!currentRepresentationInfo || streamProcessor.isBufferingCompleted()) {
             return;
         }
-
+        log('[ScheduleController][', type,'] start');
         addPlaylistTraceMetrics();
         isStopped = false;
 
@@ -146,18 +146,15 @@ function ScheduleController(config) {
         }
 
         startScheduleTimer(0);
-
-        log('Schedule controller starting for ' + type);
     }
 
     function stop() {
         if (isStopped) {
             return;
         }
-
+        log('[ScheduleController][', type,'] stop');
         isStopped = true;
         clearTimeout(scheduleTimeout);
-        log('Schedule controller stopping for ' + type);
     }
 
     function hasTopQualityChanged(type, id) {
@@ -175,7 +172,7 @@ function ScheduleController(config) {
 
     function schedule() {
         if (isStopped || isFragmentProcessingInProgress || !streamProcessor.getBufferController() || playbackController.isPaused() && !scheduleWhilePaused) {
-            log('ScheduleController ' + type + ' - schedule stop!');
+            log('[ScheduleController][', type,'] - schedule stop!');
             return;
         }
 
@@ -264,8 +261,8 @@ function ScheduleController(config) {
     }
 
     function startScheduleTimer(value) {
+        log('[ScheduleController][', type,'] - startScheduleTimer in ', value,' ms');
         clearTimeout(scheduleTimeout);
-        scheduleTimeout = setTimeout(schedule, value);
     }
 
     function onInitRequested(e) {
@@ -403,7 +400,7 @@ function ScheduleController(config) {
         if (e.sender !== fragmentModel) {
             return;
         }
-        log('[ScheduleController] onFragmentLoadingCompleted for', type);
+        log('[ScheduleController][', type,'] - onFragmentLoadingCompleted');
         if (dashManifestModel.getIsTextTrack(type)) {
             isFragmentProcessingInProgress = false;
         }
@@ -465,7 +462,7 @@ function ScheduleController(config) {
 
     function onBufferLevelStateChanged(e) {
         if ((e.sender.getStreamProcessor() === streamProcessor) && e.state === BufferController.BUFFER_EMPTY && !playbackController.isSeeking()) {
-            log('Buffer is empty! Stalling!');
+            log('[ScheduleController][', type,'] - Buffer is empty! Stalling!');
             clearPlayListTraceMetrics(new Date(), PlayListTrace.REBUFFERING_REASON);
         }
     }
