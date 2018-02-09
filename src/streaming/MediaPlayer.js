@@ -1688,6 +1688,52 @@ function MediaPlayer() {
         return mediaPlayerModel.getXHRWithCredentialsForType(type);
     }
 
+    /**
+     * Sets whether player should jump small gaps (discontinuities) in the buffer.
+     *
+     * @param {boolean} value
+     * @default false
+     * @memberof module:MediaPlayer
+     * @instance
+     *
+     */
+    function setJumpGaps(value) {
+        mediaPlayerModel.setJumpGaps(value);
+    }
+
+    /**
+     * Gets current status of jump gaps feature.
+     * @returns {boolean} The current jump gaps state.
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getJumpGaps() {
+        return mediaPlayerModel.getJumpGaps();
+    }
+
+    /**
+     * Time in seconds for a gap to be considered small.
+     *
+     * @param {boolean} value
+     * @default 0.8
+     * @memberof module:MediaPlayer
+     * @instance
+     *
+     */
+    function setSmallGapLimit(value) {
+        mediaPlayerModel.setSmallGapLimit(value);
+    }
+
+    /**
+     * Time in seconds for a gap to be considered small.
+     * @returns {boolean} Current small gap limit
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getSmallGapLimit() {
+        return mediaPlayerModel.getSmallGapLimit();
+    }
+
     /*
     ---------------------------------------------------------------------------
 
@@ -2740,6 +2786,10 @@ function MediaPlayer() {
         setManifestLoaderRetryInterval: setManifestLoaderRetryInterval,
         setXHRWithCredentialsForType: setXHRWithCredentialsForType,
         getXHRWithCredentialsForType: getXHRWithCredentialsForType,
+        setJumpGaps: setJumpGaps,
+        getJumpGaps: getJumpGaps,
+        setSmallGapLimit: setSmallGapLimit,
+        getSmallGapLimit: getSmallGapLimit,
         setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,
         setSegmentOverlapToleranceTime: setSegmentOverlapToleranceTime,
         setCacheLoadThresholdForType: setCacheLoadThresholdForType,

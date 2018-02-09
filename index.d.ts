@@ -181,6 +181,10 @@ declare namespace dashjs {
         attachVideoContainer(container: HTMLElement): void;
         attachTTMLRenderingDiv(div: HTMLDivElement): void;
         getCurrentTextTrackIndex(): number;
+        setJumpGaps(value: boolean): void;
+        getJumpGaps(): boolean;
+        setSmallGapLimit(value: number): void;
+        getSmallGapLimit(): number;
         reset(): void;
     }
 

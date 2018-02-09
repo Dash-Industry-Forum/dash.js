@@ -72,6 +72,8 @@ const DEFAULT_XHR_WITH_CREDENTIALS = false;
 const CACHE_LOAD_THRESHOLD_VIDEO = 50;
 const CACHE_LOAD_THRESHOLD_AUDIO = 5;
 
+const SMALL_GAP_LIMIT = 0.8;
+
 class MediaPlayerModelMock {
 
     // Constants
@@ -201,6 +203,8 @@ class MediaPlayerModelMock {
         this.cacheLoadThresholds = {};
         this.cacheLoadThresholds[Constants.VIDEO] = CACHE_LOAD_THRESHOLD_VIDEO;
         this.cacheLoadThresholds[Constants.AUDIO] = CACHE_LOAD_THRESHOLD_AUDIO;
+        this.jumpGaps = false;
+        this.smallGapLimit = SMALL_GAP_LIMIT;
     }
 
     //TODO Should we use Object.define to have setters/getters? makes more readable code on other side.
@@ -482,13 +486,28 @@ class MediaPlayerModelMock {
         return useCreds;
     }
 
-
     getFastSwitchEnabled() {
         return this.fastSwitchEnabled;
     }
 
     setFastSwitchEnabled(value) {
         this.fastSwitchEnabled = value;
+    }
+
+    setJumpGaps(value) {
+        this.jumpGaps = value;
+    }
+
+    getJumpGaps() {
+        return this.jumpGaps;
+    }
+
+    setSmallGapLimit(value) {
+        this.smallGapLimit = value;
+    }
+
+    getSmallGapLimit() {
+        return this.smallGapLimit;
     }
 
     reset() {

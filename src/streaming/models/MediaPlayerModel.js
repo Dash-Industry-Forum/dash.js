@@ -56,6 +56,7 @@ const BUFFER_TIME_AT_TOP_QUALITY = 30;
 const BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 60;
 const LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;
 const SEGMENT_OVERLAP_TOLERANCE_TIME = 0.05;
+const SMALL_GAP_LIMIT = 0.8;
 
 const CACHE_LOAD_THRESHOLD_VIDEO = 50;
 const CACHE_LOAD_THRESHOLD_AUDIO = 5;
@@ -104,7 +105,9 @@ function MediaPlayerModel() {
         fastSwitchEnabled,
         customABRRule,
         movingAverageMethod,
-        cacheLoadThresholds;
+        cacheLoadThresholds,
+        jumpGaps,
+        smallGapLimit;
 
     function setup() {
         UTCTimingSources = [];
@@ -135,6 +138,8 @@ function MediaPlayerModel() {
         bandwidthSafetyFactor = BANDWIDTH_SAFETY_FACTOR;
         abandonLoadTimeout = ABANDON_LOAD_TIMEOUT;
         wallclockTimeUpdateInterval = WALLCLOCK_TIME_UPDATE_INTERVAL;
+        jumpGaps = false;
+        smallGapLimit = SMALL_GAP_LIMIT;
         xhrWithCredentials = {
             default: DEFAULT_XHR_WITH_CREDENTIALS
         };
@@ -461,7 +466,6 @@ function MediaPlayerModel() {
         return useCreds;
     }
 
-
     function getFastSwitchEnabled() {
         return fastSwitchEnabled;
     }
@@ -476,6 +480,22 @@ function MediaPlayerModel() {
 
     function getMovingAverageMethod() {
         return movingAverageMethod;
+    }
+
+    function setJumpGaps(value) {
+        jumpGaps = value;
+    }
+
+    function getJumpGaps() {
+        return jumpGaps;
+    }
+
+    function setSmallGapLimit(value) {
+        smallGapLimit = value;
+    }
+
+    function getSmallGapLimit() {
+        return smallGapLimit;
     }
 
     function reset() {
@@ -550,6 +570,10 @@ function MediaPlayerModel() {
         getFastSwitchEnabled: getFastSwitchEnabled,
         setMovingAverageMethod: setMovingAverageMethod,
         getMovingAverageMethod: getMovingAverageMethod,
+        setJumpGaps: setJumpGaps,
+        getJumpGaps: getJumpGaps,
+        setSmallGapLimit: setSmallGapLimit,
+        getSmallGapLimit: getSmallGapLimit,
         reset: reset
     };
 
