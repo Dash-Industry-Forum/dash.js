@@ -197,6 +197,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     $scope.loopSelected = true;
     $scope.scheduleWhilePausedSelected = true;
     $scope.localStorageSelected = true;
+    $scope.jumpGapsSelected = true;
     $scope.fastSwitchSelected = true;
     $scope.ABRStrategy = 'abrDynamic';
 
@@ -214,7 +215,8 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     $scope.player = dashjs.MediaPlayer().create(); /* jshint ignore:line */
 
     $scope.player.initialize($scope.video, null, $scope.autoPlaySelected);
-    $scope.player.setFastSwitchEnabled(true);
+    $scope.player.setFastSwitchEnabled($scope.fastSwitchSelected);
+    $scope.player.setJumpGaps($scope.jumpGapsSelected);
     $scope.player.attachVideoContainer(document.getElementById('videoContainer'));
     // Add HTML-rendered TTML subtitles except for Firefox < v49 (issue #1164)
     if (doesTimeMarchesOn()) {
@@ -320,6 +322,10 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     $scope.toggleLocalStorage = function () {
         $scope.player.enableLastBitrateCaching($scope.localStorageSelected);
         $scope.player.enableLastMediaSettingsCaching($scope.localStorageSelected);
+    };
+
+    $scope.toggleJumpGaps = function () {
+        $scope.player.setJumpGaps($scope.jumpGapsSelected);
     };
 
     $scope.setStream = function (item) {

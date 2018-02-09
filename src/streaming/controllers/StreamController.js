@@ -208,10 +208,10 @@ function StreamController() {
         // If there is a safe position to jump to, do the seeking
         if (seekToPosition > 0) {
             if (!isNaN(timeToStreamEnd) && seekToPosition >= time + timeToStreamEnd) {
-                log('Jump gap due to media gap (discontinuity) at time ', time, '. Jumping to end of the stream');
+                log('Jumping media gap (discontinuity) at time ', time, '. Jumping to end of the stream');
                 onEnded();
             } else {
-                log('Jump gap due to media gap (discontinuity) at time ', time, '. Jumping to time position', seekToPosition);
+                log('Jumping media gap (discontinuity) at time ', time, '. Jumping to time position', seekToPosition);
                 playbackController.seek(seekToPosition);
             }
         }
