@@ -40,6 +40,8 @@ import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import InitCache from '../utils/InitCache';
 
+import {HTTPRequest} from '../vo/metrics/HTTPRequest';
+
 const BUFFER_LOADED = 'bufferLoaded';
 const BUFFER_EMPTY = 'bufferStalled';
 const STALL_THRESHOLD = 0.5;
@@ -203,6 +205,8 @@ function BufferController(config) {
     }
 
     function onAppended(e) {
+        let ranges = null;
+
         if (buffer === e.buffer) {
             if (e.error) {
                 if (e.error.code === SourceBufferController.QUOTA_EXCEEDED_ERROR_CODE) {
@@ -230,10 +234,12 @@ function BufferController(config) {
                 checkIfBufferingCompleted();
             }
 
-            const ranges = sourceBufferController.getAllRanges(buffer);
-            showBufferRanges(ranges);
+            if (appendedBytesInfo.segmentType === HTTPRequest.MEDIA_SEGMENT_TYPE) {
+                ranges = sourceBufferController.getAllRanges(buffer);
+                showBufferRanges(ranges);
+                onPlaybackProgression();
+            }
 
-            onPlaybackProgression();
             isAppendingInProgress = false;
             if (appendedBytesInfo) {
                 eventBus.trigger(Events.BYTES_APPENDED, {
