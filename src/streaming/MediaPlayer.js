@@ -1379,7 +1379,7 @@ function MediaPlayer() {
      * Allows you to modify the buffer that is kept in source buffer in seconds.
      * <pre>0|-----------bufferToPrune-----------|-----bufferToKeep-----|currentTime|</pre>
      *
-     * @default 30 seconds
+     * @default 15 seconds
      * @param {int} value
      * @memberof module:MediaPlayer
      * @instance
@@ -1406,7 +1406,7 @@ function MediaPlayer() {
      * This value influences the buffer pruning logic.
      * Allows you to modify the interval of pruning buffer in seconds.
      *
-     * @default 30 seconds
+     * @default 10 seconds
      * @param {int} value
      * @memberof module:MediaPlayer
      * @instance
