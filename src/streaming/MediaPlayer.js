@@ -1385,7 +1385,7 @@ function MediaPlayer() {
      * Allows you to modify the buffer that is kept in source buffer in seconds.
      * <pre>0|-----------bufferToPrune-----------|-----bufferToKeep-----|currentTime|</pre>
      *
-     * @default 15 seconds
+     * @default 20 seconds
      * @param {int} value
      * @memberof module:MediaPlayer
      * @instance

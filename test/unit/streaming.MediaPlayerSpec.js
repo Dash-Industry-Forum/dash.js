@@ -713,7 +713,7 @@ describe('MediaPlayer', function () {
 
         it('should configure BufferToKeep', function () {
             let BufferToKeep = mediaPlayerModel.getBufferToKeep();
-            expect(BufferToKeep).to.equal(30);
+            expect(BufferToKeep).to.equal(20);
 
             player.setBufferToKeep(50);
 
@@ -723,7 +723,7 @@ describe('MediaPlayer', function () {
 
         it('should configure BufferPruningInterval', function () {
             let BufferPruningInterval = mediaPlayerModel.getBufferPruningInterval();
-            expect(BufferPruningInterval).to.equal(30);
+            expect(BufferPruningInterval).to.equal(10);
 
             player.setBufferPruningInterval(50);
 
