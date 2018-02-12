@@ -199,7 +199,7 @@ function BufferController(config) {
     function showBufferRanges(ranges) {
         if (ranges && ranges.length > 0) {
             for (let i = 0, len = ranges.length; i < len; i++) {
-                log('Buffered Range for type:', type, ':', ranges.start(i), ' - ', ranges.end(i));
+                log('Buffered Range for type:', type, ':', ranges.start(i), ' - ', ranges.end(i), ' currentTime = ', playbackController.getTime());
             }
         }
     }
@@ -551,7 +551,7 @@ function BufferController(config) {
     function onRemoved(e) {
         if (buffer !== e.buffer) return;
 
-        log('Removed', type, 'buffer from:', e.from, 'to', e.to);
+        log('[BufferController][', type,'] onRemoved buffer from:', e.from, 'to', e.to);
 
         const ranges = sourceBufferController.getAllRanges(buffer);
         showBufferRanges(ranges);
