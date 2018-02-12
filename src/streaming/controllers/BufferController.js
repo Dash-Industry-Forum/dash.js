@@ -81,7 +81,6 @@ function BufferController(config) {
         bufferState,
         appendedBytesInfo,
         wallclockTicked,
-        appendingMediaChunk,
         isAppendingInProgress,
         isPruningInProgress,
         initCache,
@@ -698,7 +697,6 @@ function BufferController(config) {
         lastIndex = Number.POSITIVE_INFINITY;
         maxAppendedIndex = 0;
         appendedBytesInfo = null;
-        appendingMediaChunk = false;
         isBufferingCompleted = false;
         isAppendingInProgress = false;
         isPruningInProgress = false;
