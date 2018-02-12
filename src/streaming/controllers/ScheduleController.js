@@ -263,6 +263,7 @@ function ScheduleController(config) {
     function startScheduleTimer(value) {
         log('[ScheduleController][', type,'] - startScheduleTimer in ', value,' ms');
         clearTimeout(scheduleTimeout);
+        scheduleTimeout = setTimeout(schedule, value);
     }
 
     function onInitRequested(e) {
