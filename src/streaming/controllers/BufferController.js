@@ -495,7 +495,6 @@ function BufferController(config) {
                 behindRange.end = ranges.end(i);
             }
             if (behindRange.start < behindRange.end) {
-                log('behindRange to clear for', type, '-', behindRange.start, ' - ', behindRange.end);
                 clearRanges.push(behindRange);
             }
         }
@@ -506,7 +505,6 @@ function BufferController(config) {
                 end: ranges.end(ranges.length - 1) + BUFFER_RANGE_CALCULATION_THRESHOLD
             };
 
-            log('ahead to clear for', type, '-', aheadRange.start, ' - ', aheadRange.end);
             if (aheadRange.start < aheadRange.end) {
                 clearRanges.push(aheadRange);
             }
