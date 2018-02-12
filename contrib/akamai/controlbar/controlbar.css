@@ -187,6 +187,7 @@
 }
 
 .seekContainer {
+    display: flex;
     overflow: auto;
     overflow-y: hidden;
     overflow-x: hidden;
@@ -283,10 +284,25 @@ input[type="range"]::-ms-thumb {
     width: 100%;
     height: 7px;
     margin-top: 16px;
+    background: #dfdfdfbb;
+    position: relative;
+}
+
+.seekbar-buffer {
+    z-index: 100;
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 0%;
+    height: 7px;
     background: lightgray;
 }
 
 .seekbar-play {
+    z-index: 1000;
+    position: absolute;
+    left: 0px;
+    top: 0px;
     width: 0%;
     height: 7px;
     background: rgb(0, 150, 215);
