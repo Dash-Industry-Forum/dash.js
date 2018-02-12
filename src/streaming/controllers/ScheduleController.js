@@ -39,6 +39,7 @@ import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
+import MediaController from './MediaController';
 
 function ScheduleController(config) {
 
@@ -58,6 +59,7 @@ function ScheduleController(config) {
     const sourceBufferController = config.sourceBufferController;
     const type = config.type;
     const streamProcessor = config.streamProcessor;
+    const mediaController = config.mediaController;
 
     let instance,
         log,

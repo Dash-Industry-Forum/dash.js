@@ -622,15 +622,10 @@ function BufferController(config) {
 
     function onCurrentTrackChanged(e) {
         if (!buffer || (e.newMediaInfo.type !== type) || (e.newMediaInfo.streamInfo.id !== streamProcessor.getStreamInfo().id)) return;
+
+        log('[BufferController][' + type + '] track change asked');
         if (mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE) {
-            // Clearing buffer when we are very close to the end of the stream causes playback stall issues
             if (buffer.buffered && buffer.buffered.length > 0 && playbackController.getTimeToStreamEnd() > STALL_THRESHOLD) {
-                log('Clearing buffer because track changed - ' + (buffer.buffered.end(buffer.buffered.length - 1) + BUFFER_END_THRESHOLD));
-                clearBuffers([{
-                    start: 0,
-                    end: buffer.buffered.end(buffer.buffered.length - 1) + BUFFER_END_THRESHOLD,
-                    force: true // Force buffer removal even when buffering is completed and MediaSource is ended
-                }]);
                 lastIndex = Number.POSITIVE_INFINITY;
                 streamProcessor.getFragmentModel().abortRequests();
             }

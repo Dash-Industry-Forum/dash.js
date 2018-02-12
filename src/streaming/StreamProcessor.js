@@ -116,7 +116,8 @@ function StreamProcessor(config) {
             streamController: streamController,
             textController: textController,
             sourceBufferController: sourceBufferController,
-            streamProcessor: instance
+            streamProcessor: instance,
+            mediaController: mediaController
         });
 
         representationController = RepresentationController(context).create();
