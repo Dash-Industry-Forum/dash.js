@@ -218,14 +218,14 @@ function ScheduleController(config) {
                             log('ScheduleController - ' + type + ' - getNextFragment - request is ' + request.url);
                             fragmentModel.executeRequest(request);
                         } else { //Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
-                            isFragmentProcessingInProgress = false;
+                            setFragmentProcessState(false);
                             startScheduleTimer(500);
                         }
                     }
                 }
             };
 
-            isFragmentProcessingInProgress = true;
+            setFragmentProcessState(true);
             if (!isReplacement && !switchTrack) {
                 abrController.checkPlaybackQuality(type);
             }
@@ -276,10 +276,18 @@ function ScheduleController(config) {
         getInitRequest(currentRepresentationInfo.quality);
     }
 
+    function setFragmentProcessState (state) {
+        if (isFragmentProcessingInProgress !== state ) {
+            isFragmentProcessingInProgress = state;
+        } else {
+            log('[ScheduleController][', type, '] isFragmentProcessingInProgress is already equal to', state);
+        }
+    }
+
     function getInitRequest(quality) {
         const request = adapter.getInitRequest(streamProcessor, quality);
         if (request) {
-            isFragmentProcessingInProgress = true;
+            setFragmentProcessState(true);
             fragmentModel.executeRequest(request);
         }
     }
@@ -395,7 +403,7 @@ function ScheduleController(config) {
         }
 
         stop();
-        isFragmentProcessingInProgress = false;
+        setFragmentProcessState(false);
         log('[ScheduleController] Stream is complete');
     }
 
@@ -405,12 +413,12 @@ function ScheduleController(config) {
         }
         log('[ScheduleController][', type,'] - onFragmentLoadingCompleted');
         if (dashManifestModel.getIsTextTrack(type)) {
-            isFragmentProcessingInProgress = false;
+            setFragmentProcessState(false);
         }
 
         if (e.error && e.request.serviceLocation && !isStopped) {
             replaceRequest(e.request);
-            isFragmentProcessingInProgress = false;
+            setFragmentProcessState(false);
             startScheduleTimer(0);
         }
     }
@@ -424,7 +432,11 @@ function ScheduleController(config) {
             return;
         }
 
-        isFragmentProcessingInProgress = false;
+        if (bufferResetInProgress && !isNaN(e.startTime)) {
+            bufferResetInProgress = false;
+        }
+
+        setFragmentProcessState(false);
         startScheduleTimer(0);
     }
 
@@ -437,7 +449,7 @@ function ScheduleController(config) {
             log('[ScheduleController][onFragmentLoadingAbandoned] for ' + type + ', request: ' + e.request.url + ' has to be downloaded again, origin is not seeking process');
             replaceRequest(e.request);
         }
-        isFragmentProcessingInProgress = false;
+        setFragmentProcessState(false);
         startScheduleTimer(0);
     }
 
@@ -476,7 +488,7 @@ function ScheduleController(config) {
         }
 
         stop();
-        isFragmentProcessingInProgress = false;
+        setFragmentProcessState(false);
     }
 
     function onURLResolutionFailed() {
