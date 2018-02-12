@@ -210,7 +210,9 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
             // seeking
             var mouseTime = calculateTimeByEvent(event);
-            player.seek(mouseTime);
+            if (!isNaN(mouseTime)) {
+                player.seek(mouseTime);
+            }
 
             onSeekBarMouseMoveOut(event);
 
