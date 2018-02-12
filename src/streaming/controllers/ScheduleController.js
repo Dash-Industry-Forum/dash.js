@@ -79,7 +79,8 @@ function ScheduleController(config) {
         topQualityIndex,
         lastInitQuality,
         replaceRequestArray,
-        switchTrack;
+        switchTrack,
+        bufferResetInProgress;
 
     function setup() {
         log = Debug(context).getInstance().log.bind(instance);
@@ -180,22 +181,23 @@ function ScheduleController(config) {
 
         const isReplacement = replaceRequestArray.length > 0;
         const streamInfo = streamProcessor.getStreamInfo();
-        if (switchTrack || isReplacement ||
+        if (bufferResetInProgress || isNaN(lastInitQuality) || switchTrack || isReplacement ||
             hasTopQualityChanged(currentRepresentationInfo.mediaInfo.type, streamInfo.id) ||
             bufferLevelRule.execute(streamProcessor, type, streamController.isVideoTrackPresent())) {
 
             const getNextFragment = function () {
                 const fragmentController = streamProcessor.getFragmentController();
-                if (switchTrack) {
-                    log('ScheduleController - ' + type + ' - switch track has been asked, get init request for ' + type + ' with representationid = ' + currentRepresentationInfo.id);
-                    streamProcessor.switchInitData(currentRepresentationInfo.id);
-                    lastInitQuality = currentRepresentationInfo.quality;
-                    switchTrack = false;
-                } else if (currentRepresentationInfo.quality !== lastInitQuality) {
+                if (currentRepresentationInfo.quality !== lastInitQuality) {
                     log('ScheduleController - ' + type + ' - quality has changed, get init request for representationid = ' + currentRepresentationInfo.id);
                     lastInitQuality = currentRepresentationInfo.quality;
 
                     streamProcessor.switchInitData(currentRepresentationInfo.id);
+                } else if (switchTrack) {
+                    log('ScheduleController - ' + type + ' - switch track has been asked, get init request for ' + type + ' with representationid = ' + currentRepresentationInfo.id);
+                    bufferResetInProgress = mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE ? true : false;
+                    streamProcessor.switchInitData(currentRepresentationInfo.id, bufferResetInProgress);
+                    lastInitQuality = currentRepresentationInfo.quality;
+                    switchTrack = false;
                 } else {
                     const replacement = replaceRequestArray.shift();
 
@@ -596,7 +598,8 @@ function ScheduleController(config) {
         topQualityIndex = {};
         replaceRequestArray = [];
         isStopped = true;
-        switchTrack = true;
+        switchTrack = false;
+        bufferResetInProgress = false;
     }
 
     function reset() {

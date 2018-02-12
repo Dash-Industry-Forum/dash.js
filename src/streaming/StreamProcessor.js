@@ -292,9 +292,9 @@ function StreamProcessor(config) {
         return bufferController.getBufferLevel();
     }
 
-    function switchInitData(representationId) {
+    function switchInitData(representationId, bufferResetEnabled) {
         if (bufferController) {
-            bufferController.switchInitData(getStreamInfo().id, representationId);
+            bufferController.switchInitData(getStreamInfo().id, representationId, bufferResetEnabled);
         }
     }
 

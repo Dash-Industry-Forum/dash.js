@@ -87,7 +87,9 @@ function BufferController(config) {
         initCache,
         seekStartTime,
         seekClearedBufferingCompleted,
-        pendingPruningRanges;
+        pendingPruningRanges,
+        bufferResetInProgress,
+        mediaChunk;
 
     function setup() {
         log = Debug(context).getInstance().log.bind(instance);
@@ -151,8 +153,9 @@ function BufferController(config) {
         appendToBuffer(e.chunk);
     }
 
-    function switchInitData(streamId, representationId) {
+    function switchInitData(streamId, representationId, bufferResetEnabled) {
         const chunk = initCache.extract(streamId, representationId);
+        bufferResetInProgress = bufferResetEnabled === true ? bufferResetEnabled : false;
         if (chunk) {
             log('Append Init fragment', type, ' with representationId:', chunk.representationId, ' and quality:', chunk.quality);
             appendToBuffer(chunk);
@@ -182,7 +185,18 @@ function BufferController(config) {
             streamProcessor.getEventController().addInbandEvents(events);
         }
 
-        appendToBuffer(chunk);
+        if (bufferResetInProgress) {
+            mediaChunk = chunk;
+            if (buffer.buffered && buffer.buffered.length > 0) {
+                log('Clearing buffer because track changed - ' + (buffer.buffered.end(buffer.buffered.length - 1) + BUFFER_END_THRESHOLD));
+                clearBuffers([{
+                    start: 0,
+                    end: buffer.buffered.end(buffer.buffered.length - 1) + BUFFER_END_THRESHOLD
+                }]);
+            }
+        } else {
+            appendToBuffer(chunk);
+        }
     }
 
 
@@ -238,7 +252,16 @@ function BufferController(config) {
                 ranges = sourceBufferController.getAllRanges(buffer);
                 showBufferRanges(ranges);
                 onPlaybackProgression();
+            } else {
+                if (bufferResetInProgress) {
+                    const currentTime = playbackController.getTime();
+                    log('[BufferController][', type,'] appendToBuffer seek target should be ' + currentTime);
+                    streamProcessor.getScheduleController().setSeekTarget(currentTime);
+                    adapter.setIndexHandlerTime(streamProcessor, currentTime);
+                }
             }
+
+            log('[BufferController][', type,'] onAppended chunk type = ', appendedBytesInfo.segmentType, ' and index = ', appendedBytesInfo.index);
 
             isAppendingInProgress = false;
             if (appendedBytesInfo) {
@@ -367,8 +390,10 @@ function BufferController(config) {
     }
 
     function onPlaybackProgression() {
-        updateBufferLevel();
-        addBufferMetrics();
+        if (!bufferResetInProgress) {
+            updateBufferLevel();
+            addBufferMetrics();
+        }
     }
 
     function updateBufferLevel() {
@@ -542,8 +567,10 @@ function BufferController(config) {
         if (currentTime < range.end) {
             isBufferingCompleted = false;
             maxAppendedIndex = 0;
-            streamProcessor.getScheduleController().setSeekTarget(currentTime);
-            adapter.setIndexHandlerTime(streamProcessor, currentTime);
+            if (!bufferResetInProgress) {
+                streamProcessor.getScheduleController().setSeekTarget(currentTime);
+                adapter.setIndexHandlerTime(streamProcessor, currentTime);
+            }
         }
         sourceBufferController.remove(buffer, range.start, range.end, mediaSource, range.force);
     }
@@ -563,7 +590,13 @@ function BufferController(config) {
         if (isPruningInProgress) {
             clearNextRange();
         } else {
-            updateBufferLevel();
+            if (!bufferResetInProgress) {
+                log('onRemoved : call updateBufferLevel');
+                updateBufferLevel();
+            } else {
+                bufferResetInProgress = false;
+                appendToBuffer(mediaChunk);
+            }
             eventBus.trigger(Events.BUFFER_CLEARED, { sender: instance, from: e.from, to: e.to, hasEnoughSpaceToAppend: hasEnoughSpaceToAppend() });
         }
         //TODO - REMEMBER removed a timerout hack calling clearBuffer after manifestInfo.minBufferTime * 1000 if !hasEnoughSpaceToAppend() Aug 04 2016
@@ -673,6 +706,7 @@ function BufferController(config) {
         bufferLevel = 0;
         wallclockTicked = 0;
         pendingPruningRanges = [];
+        bufferResetInProgress = false;
     }
 
     function reset(errored) {
