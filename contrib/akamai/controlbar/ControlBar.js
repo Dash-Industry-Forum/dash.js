@@ -210,9 +210,8 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 // ************************************************************************************
 
         calculateTimeByEvent = function (event) {
-            var seekbarWidth = parseFloat(window.getComputedStyle(seekbar).width);
             var seekbarRect = seekbar.getBoundingClientRect();
-            return Math.floor(player.duration() * (event.clientX - seekbarRect.left) / seekbarWidth);
+            return Math.floor(player.duration() * (event.clientX - seekbarRect.left) / seekbarRect.width);
         },
 
         onSeeking = function (event) {
@@ -792,7 +791,6 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             player.on(dashjs.MediaPlayer.events.PLAYBACK_STARTED, onPlayStart, this);
             player.on(dashjs.MediaPlayer.events.PLAYBACK_PAUSED, onPlaybackPaused, this);
             player.on(dashjs.MediaPlayer.events.PLAYBACK_TIME_UPDATED, onPlayTimeUpdate, this);
-            player.on(dashjs.MediaPlayer.events.PLAYBACK_SEEKED, onSeeked, this);
             player.on(dashjs.MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded, this);
             player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, onStreamInitialized, this);
             player.on(dashjs.MediaPlayer.events.STREAM_TEARDOWN_COMPLETE, onStreamTeardownComplete, this);
@@ -883,7 +881,6 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             player.off(dashjs.MediaPlayer.events.PLAYBACK_STARTED, onPlayStart, this);
             player.off(dashjs.MediaPlayer.events.PLAYBACK_PAUSED, onPlaybackPaused, this);
             player.off(dashjs.MediaPlayer.events.PLAYBACK_TIME_UPDATED, onPlayTimeUpdate, this);
-            player.off(dashjs.MediaPlayer.events.PLAYBACK_SEEKED, onSeeked, this);
             player.off(dashjs.MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded, this);
             player.off(dashjs.MediaPlayer.events.STREAM_INITIALIZED, onStreamInitialized, this);
             player.off(dashjs.MediaPlayer.events.STREAM_TEARDOWN_COMPLETE, onStreamTeardownComplete, this);
