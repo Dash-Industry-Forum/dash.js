@@ -85,7 +85,7 @@ function NextFragmentRequestRule(config) {
             });
 
             // Sync executed queue with buffer range (to check for silent purge)
-            const bufferedRanges = sourceBufferController.getAllRanges(buffer);
+            const bufferedRanges = bufferController.getBuffer().getAllBufferRanges();
             const streamDuration = streamProcessor.getStreamInfo().duration;
             streamProcessor.getFragmentModel().syncExecutedRequestsWithBufferedRange(bufferedRanges, streamDuration);
 

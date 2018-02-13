@@ -365,6 +365,7 @@ function VideoModel() {
     }
 
     instance = {
+        initialize: initialize,
         setCurrentTime: setCurrentTime,
         play: play,
         isPaused: isPaused,

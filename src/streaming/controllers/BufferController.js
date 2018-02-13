@@ -455,16 +455,6 @@ function BufferController(config) {
             if (isBufferingCompleted || bufferLevel >= mediaPlayerModel.getStableBufferTime()) {
                 notifyBufferStateChanged(BUFFER_LOADED);
             }
-            var videoElement = videoModel.getElement();
-            if (videoElement) {
-                var t = videoElement.currentTime;
-                var d = videoElement.duration;
-                if ( d - t > STALL_THRESHOLD ) {
-                    notifyBufferStateChanged(BUFFER_EMPTY);
-                    return;
-                }
-            }
-            notifyBufferStateChanged(BUFFER_LOADED);
         }
     }
 
@@ -752,18 +742,6 @@ function BufferController(config) {
         }
     }
 
-    function onRemoved(e) {
-        if (buffer !== e.buffer) return;
-
-        if (isPruningInProgress) {
-            isPruningInProgress = false;
-        }
-
-        updateBufferLevel();
-        eventBus.trigger(Events.BUFFER_CLEARED, {sender: instance, from: e.from, to: e.to, hasEnoughSpaceToAppend: hasEnoughSpaceToAppend()});
-        //TODO - REMEMBER removed a timerout hack calling clearBuffer after manifestInfo.minBufferTime * 1000 if !hasEnoughSpaceToAppend() Aug 04 2016
-    }
-
     function getTotalBufferedTime() {
         const ranges = buffer.getAllBufferRanges();
         let totalBufferedTime = 0;
@@ -784,12 +762,7 @@ function BufferController(config) {
         return (totalBufferedTime < criticalBufferLevel);
     }
 
-    function clearBuffer(range) {
-        if (!range || !buffer) return;
-        buffer.remove(range.start, range.end);
-    }
-
-    function resetInitialSettings() {
+    function resetInitialSettings(errored) {
         criticalBufferLevel = Number.POSITIVE_INFINITY;
         bufferState = BUFFER_EMPTY;
         requiredQuality = AbrController.QUALITY_DEFAULT;
@@ -827,7 +800,7 @@ function BufferController(config) {
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
         eventBus.off(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
 
-        resetInitialSettings();
+        resetInitialSettings(errored);
     }
 
     instance = {
