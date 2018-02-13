@@ -319,7 +319,7 @@ function SourceBufferController(config) {
         });
     }
 
-    function remove(buffer, start, end, mediaSource) {
+    function remove(buffer, start, end, mediaSource, forceRemoval) {
         if (!buffer) {
             eventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {
                 buffer: buffer,
@@ -332,7 +332,7 @@ function SourceBufferController(config) {
         // make sure that the given time range is correct. Otherwise we will get InvalidAccessError
         waitForUpdateEnd(buffer, function () {
             try {
-                if ((start >= 0) && (end > start) && (mediaSource.readyState !== 'ended')) {
+                if ((start >= 0) && (end > start) && (forceRemoval || mediaSource.readyState !== 'ended')) {
                     buffer.remove(start, end);
                 }
                 // updating is in progress, we should wait for it to complete before signaling that this operation is done
