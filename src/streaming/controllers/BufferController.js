@@ -521,7 +521,7 @@ function BufferController(config) {
             time: currentTime,
             threshold: BUFFER_RANGE_CALCULATION_THRESHOLD
         })[0];
-        
+
         // Ensure we keep full range of current fragment
         if (currentTimeRequest) {
             rangeToKeep.start = Math.min(currentTimeRequest.startTime, rangeToKeep.start);

@@ -1944,7 +1944,7 @@ function MediaPlayer() {
         if (!mediaPlayerInitialized) {
             throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
         }
-        
+
         if (element) {
             videoModel.setElement(element);
             detectProtection();

@@ -3,7 +3,7 @@ import Events from '../../src/core/events/Events';
 import EventBus from '../../src/core/EventBus';
 import FactoryMaker from '../../src/core/FactoryMaker.js';
 
-//import TextBufferMock from './mocks/TextBufferMock';
+import TextBufferMock from './mocks/TextBufferMock';
 import TextControllerMock from './mocks/TextControllerMock';
 import MediaSourceBufferMock from './mocks/MediaSourceBufferMock';
 import MediaSourceMock from './mocks/MediaSourceMock';

@@ -361,7 +361,7 @@ function StreamController() {
             mediaSource.removeEventListener('sourceopen', onMediaSourceOpen);
             mediaSource.removeEventListener('webkitsourceopen', onMediaSourceOpen);
             setMediaDuration();
-            
+
             if (!oldStream) {
                 eventBus.trigger(Events.SOURCE_INITIALIZED);
             }
