@@ -57,7 +57,6 @@ function StreamProcessor(config) {
     let streamController = config.streamController;
     let mediaController = config.mediaController;
     let textController = config.textController;
-    let sourceBufferController = config.sourceBufferController;
     let domStorage = config.domStorage;
     let metricsModel = config.metricsModel;
     let dashMetrics = config.dashMetrics;
@@ -115,7 +114,6 @@ function StreamProcessor(config) {
             playbackController: playbackController,
             streamController: streamController,
             textController: textController,
-            sourceBufferController: sourceBufferController,
             streamProcessor: instance
         });
 

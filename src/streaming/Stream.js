@@ -333,7 +333,6 @@ function Stream(config) {
             mediaController: mediaController,
             streamController: config.streamController,
             textController: textController,
-            sourceBufferController: config.sourceBufferController,
             errHandler: errHandler
         });
 
