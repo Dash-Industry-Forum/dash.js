@@ -82,7 +82,8 @@ function ScheduleController(config) {
         lastInitQuality,
         replaceRequestArray,
         switchTrack,
-        bufferResetInProgress;
+        bufferResetInProgress,
+        mediaRequest;
 
     function setup() {
         log = Debug(context).getInstance().log.bind(instance);
@@ -423,6 +424,10 @@ function ScheduleController(config) {
             setFragmentProcessState(false);
             startScheduleTimer(0);
         }
+
+        if (bufferResetInProgress) {
+            mediaRequest = e.request;
+        }
     }
 
     function onPlaybackTimeUpdated() {
@@ -436,6 +441,7 @@ function ScheduleController(config) {
 
         if (bufferResetInProgress && !isNaN(e.startTime)) {
             bufferResetInProgress = false;
+            fragmentModel.addExecutedRequest(mediaRequest);
         }
 
         setFragmentProcessState(false);
@@ -614,6 +620,7 @@ function ScheduleController(config) {
         isStopped = true;
         switchTrack = false;
         bufferResetInProgress = false;
+        mediaRequest = null;
     }
 
     function reset() {
