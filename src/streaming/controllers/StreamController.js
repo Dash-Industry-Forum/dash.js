@@ -349,7 +349,7 @@ function StreamController() {
 
     function switchToVideoElement(seekTime) {
         playbackController.initialize(activeStream.getStreamInfo());
-        openMediaSource(seekTime, true);
+        openMediaSource(seekTime, null, true);
     }
 
     function openMediaSource(seekTime, oldStream, streamActivated) {
