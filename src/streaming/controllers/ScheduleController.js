@@ -188,7 +188,6 @@ function ScheduleController(config) {
             bufferLevelRule.execute(streamProcessor, type, streamController.isVideoTrackPresent())) {
 
             const getNextFragment = function () {
-                log('ScheduleController - ' + type + ' - getNextFragment');
                 const fragmentController = streamProcessor.getFragmentController();
                 if (switchTrack) {
                     log('ScheduleController - ' + type + ' - switch track has been asked, get init request for ' + type + ' with representationid = ' + currentRepresentationInfo.id);
@@ -433,8 +432,11 @@ function ScheduleController(config) {
         if (e.streamProcessor !== streamProcessor) {
             return;
         }
-        log('[ScheduleController][' + type + '] Request ' + e.request.url + ' has been aborted');
-        replaceRequest(e.request);
+        log('[ScheduleController][onFragmentLoadingAbandoned] for ' + type + ', request: ' + e.request.url + ' has been aborted');
+        if (!playbackController.isSeeking()) {
+            log('[ScheduleController][onFragmentLoadingAbandoned] for ' + type + ', request: ' + e.request.url + ' has to be downloaded again, origin is not seeking process');
+            replaceRequest(e.request);
+        }
         isFragmentProcessingInProgress = false;
         startScheduleTimer(0);
     }
@@ -513,6 +515,9 @@ function ScheduleController(config) {
         //if, during the seek command, the scheduleController is waiting : stop waiting, request chunk as soon as possible
         if (!isFragmentProcessingInProgress) {
             startScheduleTimer(0);
+        } else {
+            log('[ScheduleController][onPlaybackSeeking] for ' + type + ', call fragmentModel.abortRequests in order to seek quicker');
+            fragmentModel.abortRequests();
         }
     }
 
