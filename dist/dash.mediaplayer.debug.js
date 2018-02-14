@@ -2096,7 +2096,7 @@ function X2JS(config) {
             var parsererrorNS = null;
             try {
                 xmlDoc = parser.parseFromString(xmlDocStr, "text/xml");
-                if (xmlDoc.getElementsByTagNameNS("*", "parseerror").length > 0) {
+                if (xmlDoc.getElementsByTagNameNS("*", "parsererror").length > 0) {
                     xmlDoc = null;
                 }
             } catch (err) {
@@ -7537,7 +7537,10 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
      * attribute and an <code>img</code> DOM element as input, and is expected to
      * set the <code>src</code> attribute of the <code>img</code> to the absolute URI of the image.
      * <pre>displayForcedOnlyMode</pre> sets the (boolean)
-     * value of the IMSC1 displayForcedOnlyMode parameter.
+     * value of the IMSC1 displayForcedOnlyMode parameter. The function returns
+     * an opaque object that should passed in <code>previousISDState</code> when this function
+     * is called for the next ISD, otherwise <code>previousISDState</code> should be set to 
+     * <code>null</code>.
      * 
      * @param {Object} isd ISD to be rendered
      * @param {Object} element Element into which the ISD is rendered
@@ -7549,9 +7552,21 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
      * @param {?boolean} displayForcedOnlyMode Value of the IMSC1 displayForcedOnlyMode parameter,
      *                   or false if null         
      * @param {?module:imscUtils.ErrorHandler} errorHandler Error callback
+     * @param {Object} previousISDState State saved during processing of the previous ISD, or null if initial call
+     * @param {?boolean} enableRollUp Enables roll-up animations (see CEA 708)
+     * @return {Object} ISD state to be provided when this funtion is called for the next ISD
      */
 
-    imscHTML.render = function (isd, element, imgResolver, eheight, ewidth, displayForcedOnlyMode, errorHandler) {
+    imscHTML.render = function (    isd,
+                                    element,
+                                    imgResolver,
+                                    eheight,
+                                    ewidth,
+                                    displayForcedOnlyMode,
+                                    errorHandler,
+                                    previousISDState,
+                                    enableRollUp
+                                ) {
 
         /* maintain aspect ratio if specified */
 
@@ -7594,7 +7609,10 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
             imgResolver: imgResolver,
             displayForcedOnlyMode: displayForcedOnlyMode || false,
             isd: isd,
-            errorHandler: errorHandler
+            errorHandler: errorHandler,
+            previousISDState: previousISDState,
+            enableRollUp : enableRollUp || false,
+            currentISDState: {}
         };
 
         element.appendChild(rootcontainer);
@@ -7604,6 +7622,8 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
             processElement(context, rootcontainer, isd.contents[i]);
 
         }
+
+        return context.currentISDState;
 
     };
 
@@ -7639,13 +7659,13 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
             e = document.createElement("br");
 
         }
-        
-        if (! e) {
-            
+
+        if (!e) {
+
             reportError(context.errorHandler, "Error processing ISD element kind: " + isd_element.kind);
-            
+
             return;
-            
+
         }
 
         /* override UA default margin */
@@ -7734,7 +7754,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
         if ((context.lp || context.mra) && isd_element.kind === "p") {
 
             var elist = [];
-            
+
             constructElementList(proc_e, elist, "red");
 
             /* TODO: linePadding only supported for horizontal scripts */
@@ -7749,6 +7769,61 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
                 delete context.mra;
 
         }
+
+        /* region processing */
+
+        if (isd_element.kind === "region") {
+
+            /* build line list */
+
+            var linelist = [];
+
+            constructLineList(proc_e, linelist);
+
+            /* perform roll up if needed */
+            
+            var wdir = isd_element.styleAttrs[imscStyles.byName.writingMode.qname];
+
+            if ((wdir === "lrtb" || wdir === "lr" || wdir === "rltb" || wdir === "rl") &&
+                context.enableRollUp && 
+                isd_element.contents.length > 0 &&
+                isd_element.styleAttrs[imscStyles.byName.displayAlign.qname] === 'after') {
+
+                /* horrible hack, perhaps default region id should be underscore everywhere? */
+
+                var rid = isd_element.id === '' ? '_' : isd_element.id;
+
+                var rb = new RegionPBuffer(rid, linelist);
+
+                context.currentISDState[rb.id] = rb;
+
+                if (context.previousISDState &&
+                    rb.id in context.previousISDState &&
+                    context.previousISDState[rb.id].plist.length > 0 &&
+                    rb.plist.length > 1 &&
+                    rb.plist[rb.plist.length - 2].text ===
+                    context.previousISDState[rb.id].plist[context.previousISDState[rb.id].plist.length - 1].text) {
+
+                    var body_elem = e.firstElementChild;
+
+                    body_elem.style.bottom = "-" + rb.plist[rb.plist.length - 1].height + "px";
+                    body_elem.style.transition = "transform 0.4s";
+                    body_elem.style.position = "relative";
+                    body_elem.style.transform = "translateY(-" + rb.plist[rb.plist.length - 1].height + "px)";
+
+                }
+
+            }
+
+        }
+    }
+
+
+    function RegionPBuffer(id, lineList) {
+
+        this.id = id;
+
+        this.plist = lineList;
 
     }
 
@@ -7785,7 +7860,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
             elist.push({
                 "element": element,
                 "bgcolor": bgcolor}
-                );
+            );
 
         } else {
 
@@ -7804,6 +7879,62 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
                 child = child.nextSibling;
             }
         }
+
+    }
+
+
+    function constructLineList(element, llist) {
+
+        if (element.childElementCount === 0 && element.localName === 'span') {
+
+            var r = element.getBoundingClientRect();
+
+            if (llist.length === 0 ||
+                (!isSameLine(r.top, r.height, llist[llist.length - 1].top, llist[llist.length - 1].height))
+                ) {
+
+                llist.push({
+                    top: r.top,
+                    height: r.height,
+                    text: element.textContent
+                });
+
+            } else {
+
+                if (r.top < llist[llist.length - 1].top) {
+                    llist[llist.length - 1].top = r.top;
+                }
+
+                if (r.height > llist[llist.length - 1].height) {
+                    llist[llist.length - 1].height = r.height;
+                }
+
+                llist[llist.length - 1].text += element.textContent;
+
+            }
+
+        } else {
+
+
+            var child = element.firstChild;
+
+            while (child) {
+
+                if (child.nodeType === Node.ELEMENT_NODE) {
+
+                    constructLineList(child, llist);
+
+                }
+
+                child = child.nextSibling;
+            }
+        }
+
+    }
+    
+    function isSameLine(top1, height1, top2, height2) {
+
+        return (((top1 + height1) < (top2 + height2)) && (top1 > top2)) || (((top2 + height2) <= (top1 + height1)) && (top2 >= top1));
 
     }
 
@@ -7830,7 +7961,11 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
 
             if (line_head === null ||
                 i === elist.length ||
-                elist[i].element.getBoundingClientRect().top !== elist[line_head].element.getBoundingClientRect().top) {
+                (!isSameLine(elist[i].element.getBoundingClientRect().top,
+                    elist[i].element.getBoundingClientRect().height,
+                    elist[line_head].element.getBoundingClientRect().top,
+                    elist[line_head].element.getBoundingClientRect().height))
+                ) {
 
                 /* apply right padding to previous line (if applicable and unless this is the first line) */
 
@@ -7843,7 +7978,10 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
                             addRightPadding(elist[i].element, elist[i].color, lp);
 
                             if (elist[i].element.getBoundingClientRect().width !== 0 &&
-                                elist[i].element.getBoundingClientRect().top === elist[line_head].element.getBoundingClientRect().top)
+                                isSameLine(elist[i].element.getBoundingClientRect().top,
+                                    elist[i].element.getBoundingClientRect().height,
+                                    elist[line_head].element.getBoundingClientRect().top,
+                                    elist[line_head].element.getBoundingClientRect().height))
                                 break;
 
                             removeRightPadding(elist[i].element);
@@ -8315,7 +8453,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
 
         STYLMAP_BY_QNAME[STYLING_MAP_DEFS[i].qname] = STYLING_MAP_DEFS[i];
     }
-    
+
     function reportError(errorHandler, msg) {
 
         if (errorHandler && errorHandler.error && errorHandler.error(msg))
@@ -8858,6 +8996,12 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
         /* assume the element is a region if it does not have a kind */
 
         this.kind = ttelem.kind || 'region';
+        
+        /* copy id */
+        
+        if (ttelem.id) {
+            this.id = ttelem.id;
+        }
 
         /* deep copy of style attributes */
         this.styleAttrs = {};
@@ -15312,7 +15456,7 @@ Object.defineProperty(exports, '__esModule', {
     value: true
 });
 exports.getVersionString = getVersionString;
-var VERSION = '2.6.5';
+var VERSION = '2.6.6';
 
 function getVersionString() {
     return VERSION;
@@ -16282,7 +16426,6 @@ function DashHandler(config) {
 
     function isWebM(mimeType) {
         var type = mimeType.split('/')[1];
-
         return 'webm' === type.toLowerCase();
     }
 
@@ -16355,7 +16498,6 @@ function DashHandler(config) {
     }
 
     function generateInitRequest(representation, mediaType) {
-
         var request = new _streamingVoFragmentRequest2['default']();
         var period = representation.adaptation.period;
         var presentationStartTime = period.start;
@@ -16383,7 +16525,6 @@ function DashHandler(config) {
     }
 
     function isMediaFinished(representation) {
-
         var isFinished = false;
         var isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
 
@@ -16425,7 +16566,6 @@ function DashHandler(config) {
     }
 
     function updateSegmentList(voRepresentation) {
-
         if (!voRepresentation) {
             throw new Error('no representation');
         }
@@ -16486,10 +16626,14 @@ function DashHandler(config) {
             i = undefined;
 
         if (segments && ln > 0) {
+            // In case timeThreshold is not provided, let's use the default value set in MediaPlayerModel
+            timeThreshold = timeThreshold === undefined || timeThreshold === null ? mediaPlayerModel.getSegmentOverlapToleranceTime() : timeThreshold;
+
             for (i = 0; i < ln; i++) {
                 frag = segments[i];
                 ft = frag.presentationStartTime;
                 fd = frag.duration;
+                // In case timeThreshold is null, set epsilon to half the fragment duration
                 epsilon = timeThreshold === undefined || timeThreshold === null ? fd / 2 : timeThreshold;
                 if (time + epsilon >= ft && time - epsilon < ft + fd) {
                     idx = frag.availabilityIdx;
@@ -16578,11 +16722,10 @@ function DashHandler(config) {
             request.index = index;
             request.mediaType = type;
             request.mediaInfo = streamProcessor.getMediaInfo();
-            log('Signal complete.', request);
+            log('Signal complete in getSegmentRequestForTime -', type);
         } else {
             segment = (0, _utilsSegmentsUtils.getSegmentByIndex)(index, representation);
             request = getRequestForSegment(segment);
-            // log('[getSegmentRequestForTime]request is ' + JSON.stringify(request));
         }
 
         if (keepIdx && idx >= 0) {
@@ -16615,7 +16758,7 @@ function DashHandler(config) {
         requestedTime = null;
         index++;
 
-        log('Getting the next request at index: ' + index);
+        log('Getting the next request at index: ' + index + ', type: ' + type);
 
         // check that there is a segment in this index. If none, update segments and wait for next time loop is called
         var seg = (0, _utilsSegmentsUtils.getSegmentByIndex)(index, representation);
@@ -16633,12 +16776,11 @@ function DashHandler(config) {
             request.index = index;
             request.mediaType = type;
             request.mediaInfo = streamProcessor.getMediaInfo();
-            log('Signal complete.');
+            log('Signal complete -', type);
         } else {
             updateSegments(representation);
             segment = (0, _utilsSegmentsUtils.getSegmentByIndex)(index, representation);
             request = getRequestForSegment(segment);
-            // log('[getSegmentRequestForTime]request is ' + JSON.stringify(request));
             if (!segment && isDynamic) {
                 /*
                  Sometimes when playing dynamic streams with 0 fragment delay at live edge we ask for
@@ -16655,7 +16797,6 @@ function DashHandler(config) {
 
     function onInitializationLoaded(e) {
         var representation = e.representation;
-        //log("Got an initialization.");
         if (!representation.segments) return;
 
         eventBus.trigger(_coreEventsEvents2['default'].REPRESENTATION_UPDATED, { sender: this, representation: representation });
@@ -18198,10 +18339,6 @@ var _coreEventsEvents = _dereq_(53);
 
 var _coreEventsEvents2 = _interopRequireDefault(_coreEventsEvents);
 
-var _streamingMediaPlayerEvents = _dereq_(93);
-
-var _streamingMediaPlayerEvents2 = _interopRequireDefault(_streamingMediaPlayerEvents);
-
 var _coreFactoryMaker = _dereq_(50);
 
 var _coreFactoryMaker2 = _interopRequireDefault(_coreFactoryMaker);
@@ -18241,6 +18378,7 @@ function RepresentationController() {
         eventBus.on(_coreEventsEvents2['default'].REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
         eventBus.on(_coreEventsEvents2['default'].WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
         eventBus.on(_coreEventsEvents2['default'].BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
+        eventBus.on(_coreEventsEvents2['default'].MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
     }
 
     function setConfig(config) {
@@ -18318,6 +18456,7 @@ function RepresentationController() {
         eventBus.off(_coreEventsEvents2['default'].REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
         eventBus.off(_coreEventsEvents2['default'].WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
         eventBus.off(_coreEventsEvents2['default'].BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
+        eventBus.off(_coreEventsEvents2['default'].MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
 
         resetInitialSettings();
     }
@@ -18442,7 +18581,7 @@ function RepresentationController() {
         };
 
         updating = false;
-        eventBus.trigger(_streamingMediaPlayerEvents2['default'].AST_IN_FUTURE, { delay: delay });
+        eventBus.trigger(_coreEventsEvents2['default'].AST_IN_FUTURE, { delay: delay });
         setTimeout(update, delay);
     }
 
@@ -18531,6 +18670,16 @@ function RepresentationController() {
         }
     }
 
+    function onManifestValidityChanged(e) {
+        if (e.newDuration) {
+            var representation = getCurrentRepresentation();
+            if (representation && representation.adaptation.period) {
+                var period = representation.adaptation.period;
+                period.duration = e.newDuration;
+            }
+        }
+    }
+
     instance = {
         initialize: initialize,
         setConfig: setConfig,
@@ -18552,7 +18701,7 @@ RepresentationController.__dashjs_factory_name = 'RepresentationController';
 exports['default'] = _coreFactoryMaker2['default'].getClassFactory(RepresentationController);
 module.exports = exports['default'];
 
-},{"161":161,"49":49,"50":50,"53":53,"60":60,"86":86,"93":93,"98":98}],62:[function(_dereq_,module,exports){
+},{"161":161,"49":49,"50":50,"53":53,"60":60,"86":86,"98":98}],62:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -21478,7 +21627,6 @@ function TimelineConverter() {
     }
 
     function calcPresentationTimeFromWallTime(wallTime, period) {
-        //console.log("XXX", wallTime.getTime() - period.mpd.availabilityStartTime.getTime(), clientServerTimeShift * 1000, clientServerTimeShift, period.mpd.availabilityStartTime.getTime())
         return (wallTime.getTime() - period.mpd.availabilityStartTime.getTime() + clientServerTimeShift * 1000) / 1000;
     }
 
@@ -21511,7 +21659,6 @@ function TimelineConverter() {
     }
 
     function calcSegmentAvailabilityRange(voRepresentation, isDynamic) {
-
         // Static Range Finder
         var voPeriod = voRepresentation.adaptation.period;
         var range = { start: voPeriod.start, end: voPeriod.start + voPeriod.duration };
@@ -21521,7 +21668,7 @@ function TimelineConverter() {
             return voRepresentation.segmentAvailabilityRange;
         }
 
-        //Dyanmic Range Finder
+        // Dynamic Range Finder
         var d = voRepresentation.segmentDuration || (voRepresentation.segments && voRepresentation.segments.length ? voRepresentation.segments[voRepresentation.segments.length - 1].duration : 0);
         var now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
         var periodEnd = voPeriod.start + voPeriod.duration;
@@ -21727,13 +21874,13 @@ function TimelineSegmentsGetter(config, isDynamic) {
                 repeat = frag.r;
             }
 
-            //For a repeated S element, t belongs only to the first segment
+            // For a repeated S element, t belongs only to the first segment
             if (frag.hasOwnProperty('t')) {
                 time = frag.t;
                 scaledTime = time / fTimescale;
             }
 
-            //This is a special case: "A negative value of the @r attribute of the S element indicates that the duration indicated in @d attribute repeats until the start of the next S element, the end of the Period or until the
+            // This is a special case: "A negative value of the @r attribute of the S element indicates that the duration indicated in @d attribute repeats until the start of the next S element, the end of the Period or until the
             // next MPD update."
             if (repeat < 0) {
                 nextFrag = fragments[i + 1];
@@ -23212,6 +23359,7 @@ function MediaPlayer() {
     var ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the video element before calling this method';
     var SOURCE_NOT_ATTACHED_ERROR = 'You must first call attachSource() with a valid source before calling this method';
     var MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
+    var MEDIA_PLAYER_BAD_ARGUMENT_ERROR = 'MediaPlayer Invalid Arguments!';
 
     var context = this.context;
     var eventBus = (0, _coreEventBus2['default'])(context).getInstance();
@@ -23520,6 +23668,11 @@ function MediaPlayer() {
         if (!playbackInitialized) {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
+
+        if (typeof value !== 'number' || isNaN(value)) {
+            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
+        }
+
         var s = playbackController.getIsDynamic() ? getDVRSeekOffset(value) : value;
         playbackController.seek(s);
     }
@@ -24278,19 +24431,6 @@ function MediaPlayer() {
     }
 
     /**
-     * Obsolete since version 2.6.0.
-     * Buffer-occupancy ABR is now switched on and off dynamically.
-     * @see {@link module:MediaPlayer#setABRStrategy setABRStrategy()}
-     *
-     * @param {boolean} value
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function enableBufferOccupancyABR(value) {
-        throw new Error('Calling obsolete function - enabledBufferOccupancyABR(' + value + ') has no effect.');
-    }
-
-    /**
      * Sets the ABR strategy. Valid strategies are "abrDynamic", "abrBola" and "abrThroughput".
      * The ABR strategy can also be changed during a streaming session.
      * The call has no effect if an invalid method is passed.
@@ -24510,9 +24650,9 @@ function MediaPlayer() {
     /**
      * This value influences the buffer pruning logic.
      * Allows you to modify the buffer that is kept in source buffer in seconds.
-     *  0|-----------bufferToPrune-----------|-----bufferToKeep-----|currentTime|
+     * <pre>0|-----------bufferToPrune-----------|-----bufferToKeep-----|currentTime|</pre>
      *
-     * @default 30 seconds
+     * @default 20 seconds
      * @param {int} value
      * @memberof module:MediaPlayer
      * @instance
@@ -24523,9 +24663,23 @@ function MediaPlayer() {
 
     /**
      * This value influences the buffer pruning logic.
+     * Allows you to modify the buffer ahead of current time position that is kept in source buffer in seconds.
+     * <pre>0|--------|currentTime|-----bufferAheadToKeep----|----bufferToPrune-----------|end|</pre>
+     *
+     * @default 80 seconds
+     * @param {int} value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setBufferAheadToKeep(value) {
+        mediaPlayerModel.setBufferAheadToKeep(value);
+    }
+
+    /**
+     * This value influences the buffer pruning logic.
      * Allows you to modify the interval of pruning buffer in seconds.
      *
-     * @default 30 seconds
+     * @default 10 seconds
      * @param {int} value
      * @memberof module:MediaPlayer
      * @instance
@@ -24644,16 +24798,38 @@ function MediaPlayer() {
     }
 
     /**
-     * Obsolete since version 2.6.0.
-     * ABR rules now switch from Throughput to Buffer Occupancy mode when there is sufficient buffer.
-     * This renders the rich buffer mechanism redundant.
+     * The overlap tolerance time, at both the head and the tail of segments, considered when doing time to segment conversions.
      *
+     * This is used when calculating which of the loaded segments of a representation corresponds with a given time position.
+     * Its value is never used for calculating the segment index in seeking operations in which it assumes overlap time threshold is zero.
+     *
+     * <pre>
+     * |-o-|--- segment X ----|-o-|
+     *                        |-o-|---- segment X+1 -----|-o-|
+     *                                                   |-o-|---- segment X+2 -----|-o-|
+     * </pre>
+     * @default 0.05 seconds.
      * @param {number} value
      * @memberof module:MediaPlayer
      * @instance
+    */
+    function setSegmentOverlapToleranceTime(value) {
+        mediaPlayerModel.setSegmentOverlapToleranceTime(value);
+    }
+
+    /**
+     * For a given media type, the threshold which defines if the response to a fragment
+     * request is coming from browser cache or not.
+     * Valid media types are "video", "audio"
+     *
+     * @default 50 milliseconds for video fragment requests; 5 milliseconds for audio fragment requests.
+     * @param {string} type 'video' or 'audio' are the type options.
+     * @param {number} value Threshold value in milliseconds.
+     * @memberof module:MediaPlayer
+     * @instance
      */
-    function setRichBufferThreshold(value) {
-        throw new Error('Calling obsolete function - setRichBufferThreshold(' + value + ') has no effect.');
+    function setCacheLoadThresholdForType(type, value) {
+        mediaPlayerModel.setCacheLoadThresholdForType(type, value);
     }
 
     /**
@@ -25324,7 +25500,7 @@ function MediaPlayer() {
             return null;
         }
 
-        var timeInPeriod = streamController.getTimeRelativeToStreamId(time, stream.getId());
+        var timeInPeriod = streamController.getTimeRelativeToStreamId(s, stream.getId());
         return thumbnailController.get(timeInPeriod);
     }
 
@@ -25473,67 +25649,6 @@ function MediaPlayer() {
      */
     function extend(parentNameString, childInstance, override) {
         _coreFactoryMaker2['default'].extend(parentNameString, childInstance, override, context);
-    }
-
-    /*
-    ---------------------------------------------------------------------------
-         DEPRECATED FUNCTIONS
-     ---------------------------------------------------------------------------
-    */
-    /**
-     * @deprecated Since version 2.1.0.  <b>Instead use:</b>
-     * <ul>
-     * <li>{@link module:MediaPlayer#getVideoElement getVideoElement()}</li>
-     * <li>{@link module:MediaPlayer#getSource getSource()}</li>
-     * <li>{@link module:MediaPlayer#getVideoContainer getVideoContainer()}</li>
-     * <li>{@link module:MediaPlayer#getTTMLRenderingDiv getTTMLRenderingDiv()}</li>
-     * </ul>
-     *
-     * @returns {VideoModel}
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getVideoModel() {
-        if (!videoModel) {
-            throw ELEMENT_NOT_ATTACHED_ERROR;
-        }
-        return videoModel;
-    }
-
-    /**
-     * @deprecated since version 2.0 Instead use {@link module:MediaPlayer#getAutoSwitchQualityFor getAutoSwitchQualityFor()}.
-     * @returns {boolean} Current state of adaptive bitrate switching
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getAutoSwitchQuality() {
-        return abrController.getAutoSwitchBitrateFor(_constantsConstants2['default'].VIDEO) || abrController.getAutoSwitchBitrateFor(_constantsConstants2['default'].AUDIO);
-    }
-
-    /**
-     * Set to false to switch off adaptive bitrate switching.
-     *
-     * @deprecated since version 2.0 Instead use {@link module:MediaPlayer#setAutoSwitchQualityFor setAutoSwitchQualityFor()}.
-     * @param {boolean} value
-     * @default true
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function setAutoSwitchQuality(value) {
-        abrController.setAutoSwitchBitrateFor(_constantsConstants2['default'].VIDEO, value);
-        abrController.setAutoSwitchBitrateFor(_constantsConstants2['default'].AUDIO, value);
-    }
-
-    /**
-     * Sets whether withCredentials on all XHR requests is true or false
-     * @default false
-     * @param {boolean} value
-     * @memberof module:MediaPlayer
-     * @instance
-     * @deprecated since version 2.4 - use setXHRWithCredentialsForType
-     */
-    function setXHRWithCredentials(value) {
-        setXHRWithCredentialsForType(undefined, value);
     }
 
     //***********************************
@@ -25801,7 +25916,6 @@ function MediaPlayer() {
         getVersion: getVersion,
         getDebug: getDebug,
         getBufferLength: getBufferLength,
-        getVideoModel: getVideoModel,
         getVideoContainer: getVideoContainer,
         getTTMLRenderingDiv: getTTMLRenderingDiv,
         getVideoElement: getVideoElement,
@@ -25854,15 +25968,12 @@ function MediaPlayer() {
         setTrackSwitchModeFor: setTrackSwitchModeFor,
         setSelectionModeForInitialTrack: setSelectionModeForInitialTrack,
         getSelectionModeForInitialTrack: getSelectionModeForInitialTrack,
-        getAutoSwitchQuality: getAutoSwitchQuality,
-        setAutoSwitchQuality: setAutoSwitchQuality,
         setFastSwitchEnabled: setFastSwitchEnabled,
         getFastSwitchEnabled: getFastSwitchEnabled,
         setMovingAverageMethod: setMovingAverageMethod,
         getMovingAverageMethod: getMovingAverageMethod,
         getAutoSwitchQualityFor: getAutoSwitchQualityFor,
         setAutoSwitchQualityFor: setAutoSwitchQualityFor,
-        enableBufferOccupancyABR: enableBufferOccupancyABR,
         setABRStrategy: setABRStrategy,
         getABRStrategy: getABRStrategy,
         useDefaultABRRules: useDefaultABRRules,
@@ -25879,6 +25990,7 @@ function MediaPlayer() {
         clearDefaultUTCTimingSources: clearDefaultUTCTimingSources,
         restoreDefaultUTCTimingSources: restoreDefaultUTCTimingSources,
         setBufferToKeep: setBufferToKeep,
+        setBufferAheadToKeep: setBufferAheadToKeep,
         setBufferPruningInterval: setBufferPruningInterval,
         setStableBufferTime: setStableBufferTime,
         getStableBufferTime: getStableBufferTime,
@@ -25890,11 +26002,11 @@ function MediaPlayer() {
         setFragmentLoaderRetryInterval: setFragmentLoaderRetryInterval,
         setManifestLoaderRetryAttempts: setManifestLoaderRetryAttempts,
         setManifestLoaderRetryInterval: setManifestLoaderRetryInterval,
-        setXHRWithCredentials: setXHRWithCredentials,
         setXHRWithCredentialsForType: setXHRWithCredentialsForType,
         getXHRWithCredentialsForType: getXHRWithCredentialsForType,
         setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,
-        setRichBufferThreshold: setRichBufferThreshold,
+        setSegmentOverlapToleranceTime: setSegmentOverlapToleranceTime,
+        setCacheLoadThresholdForType: setCacheLoadThresholdForType,
         getProtectionController: getProtectionController,
         attachProtectionController: attachProtectionController,
         setProtectionData: setProtectionData,
@@ -26200,6 +26312,11 @@ var MediaPlayerEvents = (function (_EventsBase) {
      * @event MediaPlayerEvents#PLAYBACK_TIME_UPDATED
      */
     this.PLAYBACK_TIME_UPDATED = 'playbackTimeUpdated';
+    /**
+     * Manifest validity changed - As a result of an MPD validity expiration event.
+     * @event MediaPlayerEvents#MANIFEST_VALIDITY_CHANGED
+     */
+    this.MANIFEST_VALIDITY_CHANGED = 'manifestValidityChanged';
   }
 
   return MediaPlayerEvents;
@@ -26355,9 +26472,6 @@ function Stream(config) {
             initializeMedia(mediaSource);
             isStreamActivated = true;
         }
-        //else { // TODO Check track change mode but why is this here. commented it out for now to check.
-        //    createBuffers();
-        //}
     }
 
     /**
@@ -29078,6 +29192,8 @@ var _utilsInitCache2 = _interopRequireDefault(_utilsInitCache);
 var BUFFER_LOADED = 'bufferLoaded';
 var BUFFER_EMPTY = 'bufferStalled';
 var STALL_THRESHOLD = 0.5;
+var BUFFER_END_THRESHOLD = 0.5;
+var BUFFER_RANGE_CALCULATION_THRESHOLD = 0.01;
 
 var BUFFER_CONTROLLER_TYPE = 'BufferController';
 
@@ -29118,7 +29234,7 @@ function BufferController(config) {
         initCache = undefined,
         seekStartTime = undefined,
         seekClearedBufferingCompleted = undefined,
-        isSafariOnMac = undefined;
+        pendingPruningRanges = undefined;
 
     function setup() {
         log = (0, _coreDebug2['default'])(context).getInstance().log.bind(instance);
@@ -29135,9 +29251,6 @@ function BufferController(config) {
         setMediaSource(Source);
 
         requiredQuality = abrController.getQualityFor(type, streamProcessor.getStreamInfo());
-        var ua = navigator.userAgent.toLowerCase();
-        //This whole test is just for safari on a mac.
-        isSafariOnMac = /safari/.test(ua) && /mac/.test(ua) && !/chrome/.test(ua) && !/windows phone/.test(ua);
 
         eventBus.on(_coreEventsEvents2['default'].DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         eventBus.on(_coreEventsEvents2['default'].INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
@@ -29152,10 +29265,6 @@ function BufferController(config) {
         eventBus.on(_coreEventsEvents2['default'].CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this, _coreEventBus2['default'].EVENT_PRIORITY_HIGH);
         eventBus.on(_coreEventsEvents2['default'].SOURCEBUFFER_APPEND_COMPLETED, onAppended, this);
         eventBus.on(_coreEventsEvents2['default'].SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
-
-        if (isSafariOnMac) {
-            eventBus.on(_coreEventsEvents2['default'].PLAYBACK_SEEKED, onSeeked, this);
-        }
     }
 
     function createBuffer(mediaInfo) {
@@ -29185,12 +29294,14 @@ function BufferController(config) {
         if (e.fragmentModel !== streamProcessor.getFragmentModel()) return;
         log('Init fragment finished loading saving to', type + '\'s init cache');
         initCache.save(e.chunk);
+        log('Append Init fragment', type, ' with representationId:', e.chunk.representationId, ' and quality:', e.chunk.quality);
         appendToBuffer(e.chunk);
     }
 
     function switchInitData(streamId, representationId) {
         var chunk = initCache.extract(streamId, representationId);
         if (chunk) {
+            log('Append Init fragment', type, ' with representationId:', chunk.representationId, ' and quality:', chunk.quality);
             appendToBuffer(chunk);
         } else {
             eventBus.trigger(_coreEventsEvents2['default'].INIT_REQUESTED, { sender: instance });
@@ -29222,13 +29333,19 @@ function BufferController(config) {
     }
 
     function appendToBuffer(chunk) {
-        if (!isBufferingCompleted) {
-            isAppendingInProgress = true;
-            appendedBytesInfo = chunk;
-            sourceBufferController.append(buffer, chunk);
+        isAppendingInProgress = true;
+        appendedBytesInfo = chunk;
+        sourceBufferController.append(buffer, chunk);
 
-            if (chunk.mediaInfo.type === _constantsConstants2['default'].VIDEO) {
-                eventBus.trigger(_coreEventsEvents2['default'].VIDEO_CHUNK_RECEIVED, { chunk: chunk });
+        if (chunk.mediaInfo.type === _constantsConstants2['default'].VIDEO) {
+            eventBus.trigger(_coreEventsEvents2['default'].VIDEO_CHUNK_RECEIVED, { chunk: chunk });
+        }
+    }
+
+    function showBufferRanges(ranges) {
+        if (ranges && ranges.length > 0) {
+            for (var i = 0, len = ranges.length; i < len; i++) {
+                log('Buffered Range for type:', type, ':', ranges.start(i), ' - ', ranges.end(i));
             }
         }
     }
@@ -29238,10 +29355,20 @@ function BufferController(config) {
             if (e.error) {
                 if (e.error.code === _SourceBufferController2['default'].QUOTA_EXCEEDED_ERROR_CODE) {
                     criticalBufferLevel = sourceBufferController.getTotalBufferedTime(buffer) * 0.8;
+                    log('Quota exceeded for type: ' + type + ', Critical Buffer: ' + criticalBufferLevel);
+
+                    if (criticalBufferLevel > 0) {
+                        // recalculate buffer lengths to keep (bufferToKeep, bufferAheadToKeep, bufferTimeAtTopQuality) according to criticalBufferLevel
+                        var bufferToKeep = Math.max(0.2 * criticalBufferLevel, 1);
+                        var bufferAhead = criticalBufferLevel - bufferToKeep;
+                        mediaPlayerModel.setBufferToKeep(parseFloat(bufferToKeep).toFixed(5));
+                        mediaPlayerModel.setBufferAheadToKeep(parseFloat(bufferAhead).toFixed(5));
+                    }
                 }
                 if (e.error.code === _SourceBufferController2['default'].QUOTA_EXCEEDED_ERROR_CODE || !hasEnoughSpaceToAppend()) {
+                    log('Clearing playback buffer to overcome quota exceed situation for type: ' + type);
                     eventBus.trigger(_coreEventsEvents2['default'].QUOTA_EXCEEDED, { sender: instance, criticalBufferLevel: criticalBufferLevel }); //Tells ScheduleController to stop scheduling.
-                    clearBuffer(getClearRange()); // Then we clear the buffer and onCleared event will tell ScheduleController to start scheduling again.
+                    pruneAllSafely(); // Then we clear the buffer and onCleared event will tell ScheduleController to start scheduling again.
                 }
                 return;
             }
@@ -29252,11 +29379,7 @@ function BufferController(config) {
             }
 
             var ranges = sourceBufferController.getAllRanges(buffer);
-            if (ranges && ranges.length > 0) {
-                for (var i = 0, len = ranges.length; i < len; i++) {
-                    log('Buffered Range for type:', type, ':', ranges.start(i), ' - ', ranges.end(i));
-                }
-            }
+            showBufferRanges(ranges);
 
             onPlaybackProgression();
             isAppendingInProgress = false;
@@ -29286,10 +29409,89 @@ function BufferController(config) {
         if (isBufferingCompleted) {
             seekClearedBufferingCompleted = true;
             isBufferingCompleted = false;
-            maxAppendedIndex = 0;
+            //a seek command has occured, reset lastIndex value, it will be set next time that onStreamCompleted will be called.
+            lastIndex = Number.POSITIVE_INFINITY;
+        }
+        if (type !== _constantsConstants2['default'].FRAGMENTED_TEXT) {
+            // remove buffer after seeking operations
+            pruneAllSafely();
+        } else {
+            onPlaybackProgression();
         }
         seekStartTime = undefined;
-        onPlaybackProgression();
+    }
+
+    // Prune full buffer but what is around current time position
+    function pruneAllSafely() {
+        var ranges = getAllRangesWithSafetyFactor();
+        if (!ranges || ranges.length === 0) {
+            onPlaybackProgression();
+        }
+        clearBuffers(ranges);
+    }
+
+    // Get all buffer ranges but a range around current time position
+    function getAllRangesWithSafetyFactor() {
+        var clearRanges = [];
+        if (!buffer || !buffer.buffered || buffer.buffered.length === 0) {
+            return clearRanges;
+        }
+
+        var currentTime = playbackController.getTime();
+        var endOfBuffer = buffer.buffered.end(buffer.buffered.length - 1) + BUFFER_END_THRESHOLD;
+
+        var currentTimeRequest = streamProcessor.getFragmentModel().getRequests({
+            state: _modelsFragmentModel2['default'].FRAGMENT_MODEL_EXECUTED,
+            time: currentTime,
+            threshold: BUFFER_RANGE_CALCULATION_THRESHOLD
+        })[0];
+
+        // There is no request in current time position yet. Let's remove everything
+        if (!currentTimeRequest) {
+            log('getAllRangesWithSafetyFactor for', type, '- No request found in current time position, removing full buffer 0 -', endOfBuffer);
+            clearRanges.push({
+                start: 0,
+                end: endOfBuffer
+            });
+        } else {
+            // Build buffer behind range. To avoid pruning time around current time position,
+            // we include fragment right behind the one in current time position
+            var behindRange = {
+                start: 0,
+                end: currentTimeRequest.startTime - STALL_THRESHOLD
+            };
+            var prevReq = streamProcessor.getFragmentModel().getRequests({
+                state: _modelsFragmentModel2['default'].FRAGMENT_MODEL_EXECUTED,
+                time: currentTimeRequest.startTime - currentTimeRequest.duration / 2,
+                threshold: BUFFER_RANGE_CALCULATION_THRESHOLD
+            })[0];
+            if (prevReq && prevReq.startTime != currentTimeRequest.startTime) {
+                behindRange.end = prevReq.startTime;
+            }
+            if (behindRange.start < behindRange.end && behindRange.end > buffer.buffered.start(0)) {
+                clearRanges.push(behindRange);
+            }
+
+            // Build buffer ahead range. To avoid pruning time around current time position,
+            // we include fragment right after the one in current time position
+            var aheadRange = {
+                start: currentTimeRequest.startTime + currentTimeRequest.duration + STALL_THRESHOLD,
+                end: endOfBuffer
+            };
+            var nextReq = streamProcessor.getFragmentModel().getRequests({
+                state: _modelsFragmentModel2['default'].FRAGMENT_MODEL_EXECUTED,
+                time: currentTimeRequest.startTime + currentTimeRequest.duration + STALL_THRESHOLD,
+                threshold: BUFFER_RANGE_CALCULATION_THRESHOLD
+            })[0];
+            if (nextReq && nextReq.startTime !== currentTimeRequest.startTime) {
+                aheadRange.start = nextReq.startTime + nextReq.duration + STALL_THRESHOLD;
+            }
+            if (aheadRange.start < aheadRange.end && aheadRange.start < endOfBuffer) {
+                clearRanges.push(aheadRange);
+            }
+        }
+
+        return clearRanges;
     }
 
     function getWorkingTime() {
@@ -29348,7 +29550,9 @@ function BufferController(config) {
         if (bufferLevel < STALL_THRESHOLD && !isBufferingCompleted) {
             notifyBufferStateChanged(BUFFER_EMPTY);
         } else {
-            notifyBufferStateChanged(BUFFER_LOADED);
+            if (isBufferingCompleted || bufferLevel >= mediaPlayerModel.getStableBufferTime()) {
+                notifyBufferStateChanged(BUFFER_LOADED);
+            }
         }
     }
 
@@ -29356,6 +29560,7 @@ function BufferController(config) {
         if (bufferState === state || type === _constantsConstants2['default'].FRAGMENTED_TEXT && textController.getAllTracksAreDisabled()) return;
         bufferState = state;
         addBufferMetrics();
+
         eventBus.trigger(_coreEventsEvents2['default'].BUFFER_LEVEL_STATE_CHANGED, { sender: instance, state: state, mediaType: type, streamInfo: streamProcessor.getStreamInfo() });
         eventBus.trigger(state === BUFFER_LOADED ? _coreEventsEvents2['default'].BUFFER_LOADED : _coreEventsEvents2['default'].BUFFER_EMPTY, { mediaType: type });
         log(state === BUFFER_LOADED ? 'Got enough buffer to start for ' + type : 'Waiting for more buffer before starting playback for ' + type);
@@ -29395,48 +29600,113 @@ function BufferController(config) {
     function pruneBuffer() {
         if (!buffer) return;
         if (type === _constantsConstants2['default'].FRAGMENTED_TEXT) return;
-        var start = buffer.buffered.length ? buffer.buffered.start(0) : 0;
-        var bufferToPrune = playbackController.getTime() - start - mediaPlayerModel.getBufferToKeep();
-        if (bufferToPrune > 0) {
-            log('pruning buffer: ' + bufferToPrune + ' seconds.');
-            isPruningInProgress = true;
-            sourceBufferController.remove(buffer, 0, Math.round(start + bufferToPrune), mediaSource);
+        if (!isBufferingCompleted) {
+            clearBuffers(getClearRanges());
         }
     }
 
-    function getClearRange(threshold) {
-        if (!buffer) return null;
+    function getClearRanges() {
+        var clearRanges = [];
 
-        // we need to remove data that is more than one fragment before the video currentTime
+        if (!buffer || !buffer.buffered || buffer.buffered.length === 0) {
+            return clearRanges;
+        }
+
         var currentTime = playbackController.getTime();
-        var req = streamProcessor.getFragmentModel().getRequests({ state: _modelsFragmentModel2['default'].FRAGMENT_MODEL_EXECUTED, time: currentTime, threshold: threshold })[0];
-        var range = sourceBufferController.getBufferRange(buffer, currentTime);
+        var ranges = buffer.buffered;
+        var rangeToKeep = {
+            start: Math.max(0, currentTime - mediaPlayerModel.getBufferToKeep()),
+            end: currentTime + mediaPlayerModel.getBufferAheadToKeep()
+        };
 
-        var removeEnd = req && !isNaN(req.startTime) ? req.startTime : Math.floor(currentTime);
-        if (range === null && buffer.buffered.length > 0) {
-            removeEnd = buffer.buffered.end(buffer.buffered.length - 1);
+        var currentTimeRequest = streamProcessor.getFragmentModel().getRequests({
+            state: _modelsFragmentModel2['default'].FRAGMENT_MODEL_EXECUTED,
+            time: currentTime,
+            threshold: BUFFER_RANGE_CALCULATION_THRESHOLD
+        })[0];
+
+        // Ensure we keep full range of current fragment
+        if (currentTimeRequest) {
+            rangeToKeep.start = Math.min(currentTimeRequest.startTime, rangeToKeep.start);
+            rangeToKeep.end = Math.max(currentTimeRequest.startTime + currentTimeRequest.duration, rangeToKeep.end);
         }
 
-        return {
-            start: buffer.buffered.start(0),
-            end: removeEnd
-        };
+        log('getClearRanges for', type, '- Remove buffer out of ', rangeToKeep.start, ' - ', rangeToKeep.end);
+
+        if (ranges.start(0) <= rangeToKeep.start) {
+            var behindRange = {
+                start: 0,
+                end: rangeToKeep.start
+            };
+            for (var i = 0; i < ranges.length && ranges.end(i) <= rangeToKeep.start; i++) {
+                behindRange.end = ranges.end(i);
+            }
+            if (behindRange.start < behindRange.end) {
+                clearRanges.push(behindRange);
+            }
+        }
+
+        if (ranges.end(ranges.length - 1) >= rangeToKeep.end) {
+            var aheadRange = {
+                start: rangeToKeep.end,
+                end: ranges.end(ranges.length - 1) + BUFFER_RANGE_CALCULATION_THRESHOLD
+            };
+
+            if (aheadRange.start < aheadRange.end) {
+                clearRanges.push(aheadRange);
+            }
+        }
+
+        return clearRanges;
     }
 
-    function clearBuffer(range) {
-        if (!range || !buffer) return;
+    function clearBuffers(ranges) {
+        if (!ranges || !buffer || ranges.length === 0) return;
+
+        pendingPruningRanges.push.apply(pendingPruningRanges, ranges);
+        if (isPruningInProgress) {
+            return;
+        }
+
+        clearNextRange();
+    }
+
+    function clearNextRange() {
+        if (pendingPruningRanges.length === 0) return;
+
+        var range = pendingPruningRanges.shift();
+        log('Removing', type, 'buffer from:', range.start, 'to', range.end);
+        isPruningInProgress = true;
+
+        // If removing buffer ahead current playback position, update maxAppendedIndex
+        var currentTime = playbackController.getTime();
+        if (currentTime < range.end) {
+            isBufferingCompleted = false;
+            maxAppendedIndex = 0;
+            streamProcessor.getScheduleController().setSeekTarget(currentTime);
+            adapter.setIndexHandlerTime(streamProcessor, currentTime);
+        }
         sourceBufferController.remove(buffer, range.start, range.end, mediaSource);
     }
 
     function onRemoved(e) {
         if (buffer !== e.buffer) return;
 
-        if (isPruningInProgress) {
+        log('Removed', type, 'buffer from:', e.from, 'to', e.to);
+
+        var ranges = sourceBufferController.getAllRanges(buffer);
+        showBufferRanges(ranges);
+
+        if (pendingPruningRanges.length === 0) {
             isPruningInProgress = false;
         }
 
-        updateBufferLevel();
-        eventBus.trigger(_coreEventsEvents2['default'].BUFFER_CLEARED, { sender: instance, from: e.from, to: e.to, hasEnoughSpaceToAppend: hasEnoughSpaceToAppend() });
+        if (isPruningInProgress) {
+            clearNextRange();
+        } else {
+            updateBufferLevel();
+            eventBus.trigger(_coreEventsEvents2['default'].BUFFER_CLEARED, { sender: instance, from: e.from, to: e.to, hasEnoughSpaceToAppend: hasEnoughSpaceToAppend() });
+        }
         //TODO - REMEMBER removed a timerout hack calling clearBuffer after manifestInfo.minBufferTime * 1000 if !hasEnoughSpaceToAppend() Aug 04 2016
     }
 
@@ -29462,7 +29732,15 @@ function BufferController(config) {
     function onCurrentTrackChanged(e) {
         if (!buffer || e.newMediaInfo.type !== type || e.newMediaInfo.streamInfo.id !== streamProcessor.getStreamInfo().id) return;
         if (mediaController.getSwitchMode(type) === _MediaController2['default'].TRACK_SWITCH_MODE_ALWAYS_REPLACE) {
-            clearBuffer(getClearRange(0));
+            if (buffer.buffered && buffer.buffered.length > 0) {
+                log('Clearing buffer because track changed - ' + (buffer.buffered.end(buffer.buffered.length - 1) + BUFFER_END_THRESHOLD));
+                clearBuffers([{
+                    start: 0,
+                    end: buffer.buffered.end(buffer.buffered.length - 1) + BUFFER_END_THRESHOLD
+                }]);
+                lastIndex = Number.POSITIVE_INFINITY;
+                streamProcessor.getFragmentModel().abortRequests();
+            }
         }
     }
 
@@ -29472,27 +29750,6 @@ function BufferController(config) {
         if (secondsElapsed >= mediaPlayerModel.getBufferPruningInterval() && !isAppendingInProgress) {
             wallclockTicked = 0;
             pruneBuffer();
-        }
-    }
-
-    /*
-     * Listener set only for MacOS Safari.
-     * MacOS Safari doesn't like buffer being appended to the start of a buffered range.
-     * It removes a little bit of buffer just after the segment we append.
-     * Therefore, let's remove all buffer ahead of us after a seek.
-     */
-    function onSeeked() {
-        removeBufferAhead(playbackController.getTime());
-    }
-
-    //Removes buffered ranges ahead. It will not remove anything part of the current buffer timeRange.
-    function removeBufferAhead(time) {
-        var ranges = sourceBufferController.getAllRanges(buffer);
-        for (var i = 0; i < ranges.length; i++) {
-            if (ranges.start(i) > time) {
-                log('Removing buffer from: ' + ranges.start(i) + '-' + ranges.end(i));
-                sourceBufferController.remove(buffer, ranges.start(i), ranges.end(i), mediaSource);
-            }
         }
     }
 
@@ -29536,6 +29793,10 @@ function BufferController(config) {
         return isBufferingCompleted;
     }
 
+    function getIsPruningInProgress() {
+        return isPruningInProgress;
+    }
+
     function resetInitialSettings() {
         criticalBufferLevel = Number.POSITIVE_INFINITY;
         bufferState = BUFFER_EMPTY;
@@ -29550,6 +29811,7 @@ function BufferController(config) {
         seekClearedBufferingCompleted = false;
         bufferLevel = 0;
         wallclockTicked = 0;
+        pendingPruningRanges = [];
     }
 
     function reset(errored) {
@@ -29566,10 +29828,6 @@ function BufferController(config) {
         eventBus.off(_coreEventsEvents2['default'].WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
         eventBus.off(_coreEventsEvents2['default'].SOURCEBUFFER_APPEND_COMPLETED, onAppended, this);
         eventBus.off(_coreEventsEvents2['default'].SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
-
-        if (isSafariOnMac) {
-            eventBus.off(_coreEventsEvents2['default'].PLAYBACK_SEEKED, onSeeked, this);
-        }
 
         resetInitialSettings();
 
@@ -29595,6 +29853,7 @@ function BufferController(config) {
         getMediaSource: getMediaSource,
         getIsBufferingCompleted: getIsBufferingCompleted,
         switchInitData: switchInitData,
+        getIsPruningInProgress: getIsPruningInProgress,
         reset: reset
     };
 
@@ -29661,6 +29920,10 @@ var _coreDebug2 = _interopRequireDefault(_coreDebug);
 var _coreEventBus = _dereq_(49);
 
 var _coreEventBus2 = _interopRequireDefault(_coreEventBus);
+
+var _coreEventsEvents = _dereq_(53);
+
+var _coreEventsEvents2 = _interopRequireDefault(_coreEventsEvents);
 
 function EventController() {
 
@@ -29754,11 +30017,35 @@ function EventController() {
         for (var i = 0; i < values.length; i++) {
             var event = values[i];
             if (!(event.id in inbandEvents)) {
+                if (event.eventStream.schemeIdUri === MPD_RELOAD_SCHEME && inbandEvents[event.id] === undefined) {
+                    handleManifestReloadEvent(event);
+                }
                 inbandEvents[event.id] = event;
                 log('Add inband event with id ' + event.id);
             } else {
                 log('Repeated event with id ' + event.id);
             }
+        }
+    }
+
+    function handleManifestReloadEvent(event) {
+        if (event.eventStream.value == MPD_RELOAD_VALUE) {
+            var timescale = event.eventStream.timescale || 1;
+            var validUntil = event.presentationTime / timescale;
+            var newDuration = undefined;
+            if (event.presentationTime == 0xFFFFFFFF) {
+                //0xFF... means remaining duration unknown
+                newDuration = NaN;
+            } else {
+                newDuration = (event.presentationTime + event.duration) / timescale;
+            }
+            log('Manifest validity changed: Valid until: ' + validUntil + '; remaining duration: ' + newDuration);
+            eventBus.trigger(_coreEventsEvents2['default'].MANIFEST_VALIDITY_CHANGED, {
+                id: event.id,
+                validUntil: validUntil,
+                newDuration: newDuration,
+                newManifestValidAfter: NaN //event.message_data - this is an arraybuffer with a timestring in it, but not used yet
+            });
         }
     }
 
@@ -29815,7 +30102,10 @@ function EventController() {
                             activeEvents[eventId] = curr;
                         }
                         if (curr.eventStream.schemeIdUri == MPD_RELOAD_SCHEME && curr.eventStream.value == MPD_RELOAD_VALUE) {
-                            refreshManifest();
+                            if (curr.duration !== 0 || curr.presentationTimeDelta !== 0) {
+                                //If both are set to zero, it indicates the media is over at this point. Don't reload the manifest.
+                                refreshManifest();
+                            }
                         } else {
                             eventBus.trigger(curr.eventStream.schemeIdUri, { event: curr });
                         }
@@ -29865,7 +30155,7 @@ EventController.__dashjs_factory_name = 'EventController';
 exports['default'] = _coreFactoryMaker2['default'].getClassFactory(EventController);
 module.exports = exports['default'];
 
-},{"48":48,"49":49,"50":50}],105:[function(_dereq_,module,exports){
+},{"48":48,"49":49,"50":50,"53":53}],105:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -30982,6 +31272,21 @@ function PlaybackController() {
         }
     }
 
+    function getStartTimeFromUriParameters() {
+        var fragData = (0, _modelsURIQueryAndFragmentModel2['default'])(context).getInstance().getURIFragmentData();
+        var uriParameters = undefined;
+        if (fragData) {
+            uriParameters = {};
+            var r = parseInt(fragData.r, 10);
+            if (r >= 0 && streamInfo && r < streamInfo.manifestInfo.DVRWindowSize && fragData.t === null) {
+                fragData.t = Math.floor(Date.now() / 1000) - streamInfo.manifestInfo.DVRWindowSize + r;
+            }
+            uriParameters.fragS = parseInt(fragData.s, 10);
+            uriParameters.fragT = parseInt(fragData.t, 10);
+        }
+        return uriParameters;
+    }
+
     /**
      * @param {boolean} ignoreStartOffset - ignore URL fragment start offset if true
      * @param {number} liveEdge - liveEdge value
@@ -30990,14 +31295,12 @@ function PlaybackController() {
      */
     function getStreamStartTime(ignoreStartOffset, liveEdge) {
         var presentationStartTime = undefined;
-        var fragData = (0, _modelsURIQueryAndFragmentModel2['default'])(context).getInstance().getURIFragmentData();
         var startTimeOffset = NaN;
+        var uriParameters = getStartTimeFromUriParameters();
 
-        if (fragData) {
-            var fragS = parseInt(fragData.s, 10);
-            var fragT = parseInt(fragData.t, 10);
+        if (uriParameters) {
             if (!ignoreStartOffset) {
-                startTimeOffset = !isNaN(fragS) ? fragS : fragT;
+                startTimeOffset = !isNaN(uriParameters.fragS) ? uriParameters.fragS : uriParameters.fragT;
             } else {
                 startTimeOffset = streamInfo.start;
             }
@@ -31036,7 +31339,10 @@ function PlaybackController() {
         if (!DVRWindow) return NaN;
         if (currentTime > DVRWindow.end) {
             actualTime = Math.max(DVRWindow.end - streamInfo.manifestInfo.minBufferTime * 2, DVRWindow.start);
-        } else if (currentTime < DVRWindow.start) {
+        } else if (currentTime + 0.250 < DVRWindow.start) {
+            // Checking currentTime plus 250ms as the 'timeupdate' is fired with a frequency between 4Hz and 66Hz
+            // https://developer.mozilla.org/en-US/docs/Web/Events/timeupdate
+            // http://w3c.github.io/html/single-page.html#offsets-into-the-media-resource
             actualTime = DVRWindow.start;
         } else {
             return currentTime;
@@ -31301,6 +31607,7 @@ function PlaybackController() {
     instance = {
         initialize: initialize,
         setConfig: setConfig,
+        getStartTimeFromUriParameters: getStartTimeFromUriParameters,
         getStreamStartTime: getStreamStartTime,
         getTimeToStreamEnd: getTimeToStreamEnd,
         getTime: getTime,
@@ -31545,14 +31852,15 @@ function ScheduleController(config) {
 
     function schedule() {
         if (isStopped || isFragmentProcessingInProgress || !streamProcessor.getBufferController() || playbackController.isPaused() && !scheduleWhilePaused) {
-            log('ScheduleController ' + type + '- schedule stop!');
+            log('ScheduleController ' + type + ' - schedule stop!');
             return;
         }
 
         validateExecutedFragmentRequest();
 
         var isReplacement = replaceRequestArray.length > 0;
-        if (switchTrack || isReplacement || hasTopQualityChanged(currentRepresentationInfo.mediaInfo.type, streamProcessor.getStreamInfo().id) || bufferLevelRule.execute(streamProcessor, type, streamController.isVideoTrackPresent())) {
+        var streamInfo = streamProcessor.getStreamInfo();
+        if (switchTrack || isReplacement || hasTopQualityChanged(currentRepresentationInfo.mediaInfo.type, streamInfo.id) || bufferLevelRule.execute(streamProcessor, type, streamController.isVideoTrackPresent())) {
 
             var getNextFragment = function getNextFragment() {
                 log('ScheduleController - ' + type + ' - getNextFragment');
@@ -31574,13 +31882,20 @@ function ScheduleController(config) {
                         //to be sure the specific init segment had not already been loaded.
                         streamProcessor.switchInitData(replacement.representationId);
                     } else {
-                        var request = nextFragmentRequestRule.execute(streamProcessor, replacement);
+                        var request = undefined;
+                        // don't schedule next fragments while pruning to avoid buffer inconsistencies
+                        if (!streamProcessor.getBufferController().getIsPruningInProgress()) {
+                            request = nextFragmentRequestRule.execute(streamProcessor, replacement);
+                            if (!request && streamInfo.manifestInfo && streamInfo.manifestInfo.isDynamic) {
+                                log('getNextFragment - ' + type + ' - Playing at the bleeding live edge and frag is not available yet');
+                            }
+                        }
+
                         if (request) {
                             log('ScheduleController - ' + type + ' - getNextFragment - request is ' + request.url);
                             fragmentModel.executeRequest(request);
                         } else {
                             //Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
-                            log('getNextFragment - ' + type + ' - Playing at the bleeding live edge and frag is not available yet');
                             isFragmentProcessingInProgress = false;
                             startScheduleTimer(500);
                         }
@@ -31589,12 +31904,11 @@ function ScheduleController(config) {
             };
 
             isFragmentProcessingInProgress = true;
-            if (isReplacement || switchTrack) {
-                getNextFragment();
-            } else {
+            if (!isReplacement && !switchTrack) {
                 abrController.checkPlaybackQuality(type);
-                getNextFragment();
             }
+
+            getNextFragment();
         } else {
             startScheduleTimer(500);
         }
@@ -31765,7 +32079,7 @@ function ScheduleController(config) {
         if (e.sender !== fragmentModel) {
             return;
         }
-
+        log('[ScheduleController] onFragmentLoadingCompleted for', type);
         if (dashManifestModel.getIsTextTrack(type)) {
             isFragmentProcessingInProgress = false;
         }
@@ -31813,9 +32127,7 @@ function ScheduleController(config) {
             return;
         }
 
-        // after the data has been removed from the buffer we should remove the requests from the list of
-        // the executed requests for which playback time is inside the time interval that has been removed from the buffer
-        fragmentModel.removeExecutedRequestsBeforeTime(e.to);
+        streamProcessor.getFragmentModel().syncExecutedRequestsWithBufferedRange(streamProcessor.getBufferController().getBuffer().buffered, streamProcessor.getStreamInfo().duration);
 
         if (e.hasEnoughSpaceToAppend && isStopped) {
             start();
@@ -32602,6 +32914,7 @@ function StreamController() {
         playListMetrics = undefined,
         videoTrackDetected = undefined,
         audioTrackDetected = undefined,
+        isStreamBufferingCompleted = undefined,
         playbackEndedTimerId = undefined;
 
     function setup() {
@@ -32643,6 +32956,7 @@ function StreamController() {
         eventBus.on(_coreEventsEvents2['default'].PLAYBACK_PAUSED, onPlaybackPaused, this);
         eventBus.on(_coreEventsEvents2['default'].MANIFEST_UPDATED, onManifestUpdated, this);
         eventBus.on(_coreEventsEvents2['default'].STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
+        eventBus.on(_coreEventsEvents2['default'].MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, this);
         eventBus.on(_MediaPlayerEvents2['default'].METRIC_ADDED, onMetricAdded, this);
     }
 
@@ -32657,14 +32971,16 @@ function StreamController() {
                 metricsModel.addDroppedFrames(_constantsConstants2['default'].VIDEO, playbackQuality);
             }
         }
-
-        // Sometimes after seeking timeUpdateHandler is called before seekingHandler and a new stream starts
-        // from beginning instead of from a chosen position. So we do nothing if the player is in the seeking state
-        if (playbackController.isSeeking()) return;
     }
 
     function onPlaybackSeeking(e) {
         var seekingStream = getStreamForTime(e.seekTime);
+
+        //if end period has been detected, stop timer and reset isStreamBufferingCompleted
+        if (playbackEndedTimerId) {
+            stopEndPeriodTimer();
+            isStreamBufferingCompleted = false;
+        }
 
         if (seekingStream && seekingStream !== activeStream) {
             flushPlaylistMetrics(_voMetricsPlayList.PlayListTrace.END_OF_PERIOD_STOP_REASON);
@@ -32677,6 +32993,7 @@ function StreamController() {
     }
 
     function onPlaybackStarted() /*e*/{
+        log('[StreamController][onPlaybackStarted]');
         if (initialPlayback) {
             initialPlayback = false;
             addPlaylistMetrics(_voMetricsPlayList.PlayList.INITIAL_PLAYOUT_START_REASON);
@@ -32684,30 +33001,55 @@ function StreamController() {
             if (isPaused) {
                 isPaused = false;
                 addPlaylistMetrics(_voMetricsPlayList.PlayList.RESUME_FROM_PAUSE_START_REASON);
+                toggleEndPeriodTimer();
             }
         }
     }
 
     function onPlaybackPaused(e) {
+        log('[StreamController][onPlaybackPaused]');
         if (!e.ended) {
             isPaused = true;
             flushPlaylistMetrics(_voMetricsPlayList.PlayListTrace.USER_REQUEST_STOP_REASON);
+            toggleEndPeriodTimer();
+        }
+    }
+
+    function stopEndPeriodTimer() {
+        log('[StreamController][toggleEndPeriodTimer] stop end period timer.');
+        clearTimeout(playbackEndedTimerId);
+        playbackEndedTimerId = undefined;
+    }
+
+    function toggleEndPeriodTimer() {
+        //stream buffering completed has not been detected, nothing to do....
+        if (isStreamBufferingCompleted) {
+            //stream buffering completed has been detected, if end period timer is running, stop it, otherwise start it....
+            if (playbackEndedTimerId) {
+                stopEndPeriodTimer();
+            } else {
+                var timeToEnd = playbackController.getTimeToStreamEnd();
+                var delayPlaybackEnded = timeToEnd > 0 ? timeToEnd * 1000 : 0;
+                log('[StreamController][toggleEndPeriodTimer] start-up of timer to notify PLAYBACK_ENDED event. It will be triggered in ' + delayPlaybackEnded + ' milliseconds');
+                playbackEndedTimerId = setTimeout(function () {
+                    eventBus.trigger(_coreEventsEvents2['default'].PLAYBACK_ENDED);
+                }, delayPlaybackEnded);
+            }
         }
     }
 
     function onStreamBufferingCompleted() {
         var isLast = getActiveStreamInfo().isLast;
         if (mediaSource && isLast) {
-            log('[StreamController] onStreamBufferingCompleted calls signalEndOfStream of mediaSourceController');
+            log('[StreamController][onStreamBufferingCompleted] calls signalEndOfStream of mediaSourceController.');
             mediaSourceController.signalEndOfStream(mediaSource);
-        } else if (MediaSource && playbackEndedTimerId === undefined) {
-            //send PLAYBACK_ENDED in order switch to a new period, wait until the end of playing
-            var timeToEnd = playbackController.getTimeToStreamEnd();
-            var delayPlaybackEnded = timeToEnd > 0 ? timeToEnd * 1000 : 0;
-            log('[StreamController] onStreamBufferingCompleted PLAYBACK_ENDED event will be triggered in ' + delayPlaybackEnded + ' milliseconds');
-            playbackEndedTimerId = setTimeout(function () {
-                eventBus.trigger(_coreEventsEvents2['default'].PLAYBACK_ENDED);
-            }, delayPlaybackEnded);
+        } else if (mediaSource && playbackEndedTimerId === undefined) {
+            //send PLAYBACK_ENDED in order to switch to a new period, wait until the end of playing
+            log('[StreamController][onStreamBufferingCompleted] end of period detected');
+            isStreamBufferingCompleted = true;
+            if (isPaused === false) {
+                toggleEndPeriodTimer();
+            }
         }
     }
 
@@ -32786,6 +33128,7 @@ function StreamController() {
         }
         flushPlaylistMetrics(nextStream ? _voMetricsPlayList.PlayListTrace.END_OF_PERIOD_STOP_REASON : _voMetricsPlayList.PlayListTrace.END_OF_CONTENT_STOP_REASON);
         playbackEndedTimerId = undefined;
+        isStreamBufferingCompleted = false;
     }
 
     function getNextStream() {
@@ -32859,8 +33202,8 @@ function StreamController() {
 
         activeStream.activate(mediaSource);
 
-        isAudioTrackPresent();
-        isVideoTrackPresent();
+        audioTrackDetected = checkTrackPresence(_constantsConstants2['default'].AUDIO);
+        videoTrackDetected = checkTrackPresence(_constantsConstants2['default'].VIDEO);
 
         if (!initialPlayback) {
             if (!isNaN(seekTime)) {
@@ -32957,9 +33300,14 @@ function StreamController() {
             }
 
             if (!activeStream) {
-                //const initStream = streamsInfo[0].manifestInfo.isDynamic ? streams[streams.length -1] : streams[0];
-                //TODO we need to figure out what the correct starting period is here and not just go to first or last in array.
-                switchStream(null, streams[0], NaN);
+                // we need to figure out what the correct starting period is
+                var startTimeFormUriParameters = playbackController.getStartTimeFromUriParameters();
+                var initialStream = null;
+                if (startTimeFormUriParameters) {
+                    var initialTime = !isNaN(startTimeFormUriParameters.fragS) ? startTimeFormUriParameters.fragS : startTimeFormUriParameters.fragT;
+                    initialStream = getStreamForTime(initialTime);
+                }
+                switchStream(null, initialStream !== null ? initialStream : streams[0], NaN);
             }
 
             eventBus.trigger(_coreEventsEvents2['default'].STREAMS_COMPOSED);
@@ -33038,16 +33386,10 @@ function StreamController() {
     }
 
     function isAudioTrackPresent() {
-        if (audioTrackDetected === undefined) {
-            audioTrackDetected = checkTrackPresence(_constantsConstants2['default'].AUDIO);
-        }
         return audioTrackDetected;
     }
 
     function isVideoTrackPresent() {
-        if (videoTrackDetected === undefined) {
-            videoTrackDetected = checkTrackPresence(_constantsConstants2['default'].VIDEO);
-        }
         return videoTrackDetected;
     }
 
@@ -33173,6 +33515,12 @@ function StreamController() {
         manifestUpdater.setManifest(manifest);
     }
 
+    function onManifestValidityChanged(e) {
+        if (!isNaN(e.newDuration)) {
+            setMediaDuration(e.newDuration);
+        }
+    }
+
     function setConfig(config) {
         if (!config) return;
 
@@ -33246,6 +33594,7 @@ function StreamController() {
         autoPlay = true;
         playListMetrics = null;
         playbackEndedTimerId = undefined;
+        isStreamBufferingCompleted = false;
     }
 
     function reset() {
@@ -33269,6 +33618,7 @@ function StreamController() {
         eventBus.off(_coreEventsEvents2['default'].MANIFEST_UPDATED, onManifestUpdated, this);
         eventBus.off(_coreEventsEvents2['default'].STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
         eventBus.off(_MediaPlayerEvents2['default'].METRIC_ADDED, onMetricAdded, this);
+        eventBus.off(_coreEventsEvents2['default'].MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, this);
 
         baseURLController.reset();
         manifestUpdater.reset();
@@ -34342,7 +34692,6 @@ function FragmentModel(config) {
     }
 
     function isFragmentLoaded(request) {
-
         var isEqualUrl = function isEqualUrl(req1, req2) {
             return req1.url === req2.url;
         };
@@ -34412,7 +34761,6 @@ function FragmentModel(config) {
      * @memberof FragmentModel#
      */
     function getRequests(filter) {
-
         var states = filter ? filter.state instanceof Array ? filter.state : [filter.state] : [];
 
         var filteredRequests = [];
@@ -34424,10 +34772,43 @@ function FragmentModel(config) {
         return filteredRequests;
     }
 
+    function getRequestThreshold(req) {
+        return isNaN(req.duration) ? 0.25 : req.duration / 8;
+    }
+
     function removeExecutedRequestsBeforeTime(time) {
         executedRequests = executedRequests.filter(function (req) {
-            return isNaN(req.startTime) || time !== undefined ? req.startTime >= time : false;
+            var threshold = getRequestThreshold(req);
+            return isNaN(req.startTime) || time !== undefined ? req.startTime >= time - threshold : false;
         });
+    }
+
+    function removeExecutedRequestsInTimeRange(start, end) {
+        if (end <= start + 0.5) {
+            return;
+        }
+
+        executedRequests = executedRequests.filter(function (req) {
+            var threshold = getRequestThreshold(req);
+            return isNaN(req.startTime) || req.startTime >= end - threshold || isNaN(req.duration) || req.startTime + req.duration <= start + threshold;
+        });
+    }
+
+    // Remove requests that are not "represented" by any of buffered ranges
+    function syncExecutedRequestsWithBufferedRange(bufferedRanges, streamDuration) {
+        if (!bufferedRanges || bufferedRanges.length === 0) {
+            executedRequests = [];
+            return;
+        }
+
+        var start = 0;
+        for (var i = 0, ln = bufferedRanges.length; i < ln; i++) {
+            removeExecutedRequestsInTimeRange(start, bufferedRanges.start(i));
+            start = bufferedRanges.end(i);
+        }
+        if (streamDuration > 0) {
+            removeExecutedRequestsInTimeRange(start, streamDuration);
+        }
     }
 
     function abortRequests() {
@@ -34436,7 +34817,6 @@ function FragmentModel(config) {
     }
 
     function executeRequest(request) {
-
         switch (request.action) {
             case _voFragmentRequest2['default'].ACTION_COMPLETE:
                 executedRequests.push(request);
@@ -34472,7 +34852,7 @@ function FragmentModel(config) {
             var req = arr[i];
             var start = req.startTime;
             var end = start + req.duration;
-            threshold = threshold !== undefined ? threshold : req.duration / 2;
+            threshold = !isNaN(threshold) ? threshold : getRequestThreshold(req);
             if (!isNaN(start) && !isNaN(end) && time + threshold >= start && time - threshold < end || isNaN(start) && isNaN(time)) {
                 return req;
             }
@@ -34497,7 +34877,6 @@ function FragmentModel(config) {
     }
 
     function getRequestsForState(state) {
-
         var requests = undefined;
         switch (state) {
             case FRAGMENT_MODEL_LOADING:
@@ -34513,7 +34892,6 @@ function FragmentModel(config) {
     }
 
     function addSchedulingInfoMetrics(request, state) {
-
         metricsModel.addSchedulingInfo(request.mediaType, new Date(), request.type, request.startTime, request.availabilityStartTime, request.duration, request.quality, request.range, state);
 
         metricsModel.addRequestsQueue(request.mediaType, loadingRequests, executedRequests);
@@ -34566,6 +34944,7 @@ function FragmentModel(config) {
         isFragmentLoaded: isFragmentLoaded,
         isFragmentLoadedOrPending: isFragmentLoadedOrPending,
         removeExecutedRequestsBeforeTime: removeExecutedRequestsBeforeTime,
+        syncExecutedRequestsWithBufferedRange: syncExecutedRequestsWithBufferedRange,
         abortRequests: abortRequests,
         executeRequest: executeRequest,
         reset: reset
@@ -34730,13 +35109,18 @@ var DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION = 360000;
 var BANDWIDTH_SAFETY_FACTOR = 0.9;
 var ABANDON_LOAD_TIMEOUT = 10000;
 
-var BUFFER_TO_KEEP = 30;
-var BUFFER_PRUNING_INTERVAL = 30;
+var BUFFER_TO_KEEP = 20;
+var BUFFER_AHEAD_TO_KEEP = 80;
+var BUFFER_PRUNING_INTERVAL = 10;
 var DEFAULT_MIN_BUFFER_TIME = 12;
 var DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
 var BUFFER_TIME_AT_TOP_QUALITY = 30;
 var BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 60;
 var LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;
+var SEGMENT_OVERLAP_TOLERANCE_TIME = 0.05;
+
+var CACHE_LOAD_THRESHOLD_VIDEO = 50;
+var CACHE_LOAD_THRESHOLD_AUDIO = 5;
 
 var FRAGMENT_RETRY_ATTEMPTS = 3;
 var FRAGMENT_RETRY_INTERVAL = 1000;
@@ -34762,6 +35146,7 @@ function MediaPlayerModel() {
         liveDelay = undefined,
         scheduleWhilePaused = undefined,
         bufferToKeep = undefined,
+        bufferAheadToKeep = undefined,
         bufferPruningInterval = undefined,
         lastBitrateCachingInfo = undefined,
         lastMediaSettingsCachingInfo = undefined,
@@ -34769,6 +35154,7 @@ function MediaPlayerModel() {
         bufferTimeAtTopQuality = undefined,
         bufferTimeAtTopQualityLongForm = undefined,
         longFormContentDurationThreshold = undefined,
+        segmentOverlapToleranceTime = undefined,
         bandwidthSafetyFactor = undefined,
         abandonLoadTimeout = undefined,
         retryAttempts = undefined,
@@ -34779,7 +35165,8 @@ function MediaPlayerModel() {
         xhrWithCredentials = undefined,
         fastSwitchEnabled = undefined,
         customABRRule = undefined,
-        movingAverageMethod = undefined;
+        movingAverageMethod = undefined,
+        cacheLoadThresholds = undefined;
 
     function setup() {
         var _retryAttempts, _retryIntervals;
@@ -34802,11 +35189,13 @@ function MediaPlayerModel() {
         liveDelayFragmentCount = LIVE_DELAY_FRAGMENT_COUNT;
         liveDelay = undefined; // Explicitly state that default is undefined
         bufferToKeep = BUFFER_TO_KEEP;
+        bufferAheadToKeep = BUFFER_AHEAD_TO_KEEP;
         bufferPruningInterval = BUFFER_PRUNING_INTERVAL;
         stableBufferTime = NaN;
         bufferTimeAtTopQuality = BUFFER_TIME_AT_TOP_QUALITY;
         bufferTimeAtTopQualityLongForm = BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM;
         longFormContentDurationThreshold = LONG_FORM_CONTENT_DURATION_THRESHOLD;
+        segmentOverlapToleranceTime = SEGMENT_OVERLAP_TOLERANCE_TIME;
         bandwidthSafetyFactor = BANDWIDTH_SAFETY_FACTOR;
         abandonLoadTimeout = ABANDON_LOAD_TIMEOUT;
         wallclockTimeUpdateInterval = WALLCLOCK_TIME_UPDATE_INTERVAL;
@@ -34819,6 +35208,10 @@ function MediaPlayerModel() {
         retryAttempts = (_retryAttempts = {}, _defineProperty(_retryAttempts, _voMetricsHTTPRequest.HTTPRequest.MPD_TYPE, MANIFEST_RETRY_ATTEMPTS), _defineProperty(_retryAttempts, _voMetricsHTTPRequest.HTTPRequest.XLINK_EXPANSION_TYPE, XLINK_RETRY_ATTEMPTS), _defineProperty(_retryAttempts, _voMetricsHTTPRequest.HTTPRequest.MEDIA_SEGMENT_TYPE, FRAGMENT_RETRY_ATTEMPTS), _defineProperty(_retryAttempts, _voMetricsHTTPRequest.HTTPRequest.INIT_SEGMENT_TYPE, FRAGMENT_RETRY_ATTEMPTS), _defineProperty(_retryAttempts, _voMetricsHTTPRequest.HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE, FRAGMENT_RETRY_ATTEMPTS), _defineProperty(_retryAttempts, _voMetricsHTTPRequest.HTTPRequest.INDEX_SEGMENT_TYPE, FRAGMENT_RETRY_ATTEMPTS), _defineProperty(_retryAttempts, _voMetricsHTTPRequest.HTTPRequest.OTHER_TYPE, FRAGMENT_RETRY_ATTEMPTS), _retryAttempts);
 
         retryIntervals = (_retryIntervals = {}, _defineProperty(_retryIntervals, _voMetricsHTTPRequest.HTTPRequest.MPD_TYPE, MANIFEST_RETRY_INTERVAL), _defineProperty(_retryIntervals, _voMetricsHTTPRequest.HTTPRequest.XLINK_EXPANSION_TYPE, XLINK_RETRY_INTERVAL), _defineProperty(_retryIntervals, _voMetricsHTTPRequest.HTTPRequest.MEDIA_SEGMENT_TYPE, FRAGMENT_RETRY_INTERVAL), _defineProperty(_retryIntervals, _voMetricsHTTPRequest.HTTPRequest.INIT_SEGMENT_TYPE, FRAGMENT_RETRY_INTERVAL), _defineProperty(_retryIntervals, _voMetricsHTTPRequest.HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE, FRAGMENT_RETRY_INTERVAL), _defineProperty(_retryIntervals, _voMetricsHTTPRequest.HTTPRequest.INDEX_SEGMENT_TYPE, FRAGMENT_RETRY_INTERVAL), _defineProperty(_retryIntervals, _voMetricsHTTPRequest.HTTPRequest.OTHER_TYPE, FRAGMENT_RETRY_INTERVAL), _retryIntervals);
+
+        cacheLoadThresholds = {};
+        cacheLoadThresholds[_constantsConstants2['default'].VIDEO] = CACHE_LOAD_THRESHOLD_VIDEO;
+        cacheLoadThresholds[_constantsConstants2['default'].AUDIO] = CACHE_LOAD_THRESHOLD_AUDIO;
     }
 
     //TODO Should we use Object.define to have setters/getters? makes more readable code on other side.
@@ -34930,12 +35323,36 @@ function MediaPlayerModel() {
         return longFormContentDurationThreshold;
     }
 
+    function setSegmentOverlapToleranceTime(value) {
+        segmentOverlapToleranceTime = value;
+    }
+
+    function getSegmentOverlapToleranceTime() {
+        return segmentOverlapToleranceTime;
+    }
+
+    function setCacheLoadThresholdForType(type, value) {
+        cacheLoadThresholds[type] = value;
+    }
+
+    function getCacheLoadThresholdForType(type) {
+        return cacheLoadThresholds[type];
+    }
+
     function setBufferToKeep(value) {
         bufferToKeep = value;
     }
 
     function getBufferToKeep() {
         return bufferToKeep;
+    }
+
+    function setBufferAheadToKeep(value) {
+        bufferAheadToKeep = value;
+    }
+
+    function getBufferAheadToKeep() {
+        return bufferAheadToKeep;
     }
 
     function setLastBitrateCachingInfo(enable, ttl) {
@@ -35138,8 +35555,14 @@ function MediaPlayerModel() {
         getBufferTimeAtTopQualityLongForm: getBufferTimeAtTopQualityLongForm,
         setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,
         getLongFormContentDurationThreshold: getLongFormContentDurationThreshold,
+        setSegmentOverlapToleranceTime: setSegmentOverlapToleranceTime,
+        getSegmentOverlapToleranceTime: getSegmentOverlapToleranceTime,
+        getCacheLoadThresholdForType: getCacheLoadThresholdForType,
+        setCacheLoadThresholdForType: setCacheLoadThresholdForType,
         setBufferToKeep: setBufferToKeep,
         getBufferToKeep: getBufferToKeep,
+        setBufferAheadToKeep: setBufferAheadToKeep,
+        getBufferAheadToKeep: getBufferAheadToKeep,
         setBufferPruningInterval: setBufferPruningInterval,
         getBufferPruningInterval: getBufferPruningInterval,
         setFragmentRetryAttempts: setFragmentRetryAttempts,
@@ -36676,9 +37099,6 @@ function ThroughputHistory(config) {
     var EWMA_LATENCY_SLOW_HALF_LIFE_COUNT = 2;
     var EWMA_LATENCY_FAST_HALF_LIFE_COUNT = 1;
 
-    var CACHE_LOAD_THRESHOLD_VIDEO = 50;
-    var CACHE_LOAD_THRESHOLD_AUDIO = 5;
-
     var mediaPlayerModel = config.mediaPlayerModel;
 
     var throughputDict = undefined,
@@ -36698,9 +37118,9 @@ function ThroughputHistory(config) {
 
     function isCachedResponse(mediaType, latencyMs, downloadTimeMs) {
         if (mediaType === _constantsConstants2['default'].VIDEO) {
-            return downloadTimeMs < CACHE_LOAD_THRESHOLD_VIDEO;
+            return downloadTimeMs < mediaPlayerModel.getCacheLoadThresholdForType(_constantsConstants2['default'].VIDEO);
         } else if (mediaType === _constantsConstants2['default'].AUDIO) {
-            return downloadTimeMs < CACHE_LOAD_THRESHOLD_AUDIO;
+            return downloadTimeMs < mediaPlayerModel.getCacheLoadThresholdForType(_constantsConstants2['default'].AUDIO);
         }
     }
 
@@ -38496,14 +38916,13 @@ function NextFragmentRequestRule(config) {
         if (buffer) {
             var range = sourceBufferController.getBufferRange(buffer, time);
             if (range !== null) {
-                log('Prior to making a request for time, NextFragmentRequestRule is aligning index handler\'s currentTime with bufferedRange.end.', time, ' was changed to ', range.end);
+                log('Prior to making a request for time, NextFragmentRequestRule is aligning index handler\'s currentTime with bufferedRange.end for', mediaType, '.', time, 'was changed to', range.end);
                 time = range.end;
             }
         }
 
         var request = undefined;
         if (requestToReplace) {
-            // log('requestToReplace :' + requestToReplace.url);
             time = requestToReplace.startTime + requestToReplace.duration / 2;
             request = adapter.getFragmentRequestForTime(streamProcessor, representationInfo, time, {
                 timeThreshold: 0,
@@ -38513,23 +38932,20 @@ function NextFragmentRequestRule(config) {
             request = adapter.getFragmentRequestForTime(streamProcessor, representationInfo, time, {
                 keepIdx: !hasSeekTarget
             });
+
+            // Then, check if this request was downloaded or not
             while (request && request.action !== _streamingVoFragmentRequest2['default'].ACTION_COMPLETE && streamProcessor.getFragmentModel().isFragmentLoaded(request)) {
                 // loop until we found not loaded fragment, or no fragment
                 request = adapter.getNextFragmentRequest(streamProcessor, representationInfo);
             }
             if (request) {
-                adapter.setIndexHandlerTime(streamProcessor, request.startTime + request.duration);
+                if (!isNaN(request.startTime + request.duration)) {
+                    adapter.setIndexHandlerTime(streamProcessor, request.startTime + request.duration);
+                }
                 request.delayLoadingTime = new Date().getTime() + scheduleController.getTimeToLoadDelay();
                 scheduleController.setTimeToLoadDelay(0);
             }
         }
-
-        /*
-        if (request) {
-            log('Return request :' + request.url);
-        } else {
-            log('no request');
-        }*/
 
         return request;
     }
@@ -39274,6 +39690,10 @@ function TextBufferController(config) {
         _BufferControllerImpl.switchInitData(streamId, representationId);
     }
 
+    function getIsPruningInProgress() {
+        return _BufferControllerImpl.getIsPruningInProgress();
+    }
+
     instance = {
         getBufferControllerType: getBufferControllerType,
         initialize: initialize,
@@ -39287,6 +39707,7 @@ function TextBufferController(config) {
         setMediaSource: setMediaSource,
         getMediaSource: getMediaSource,
         getIsBufferingCompleted: getIsBufferingCompleted,
+        getIsPruningInProgress: getIsPruningInProgress,
         switchInitData: switchInitData,
         reset: reset
     };
@@ -40339,6 +40760,7 @@ function TextTracks() {
         isChrome = undefined,
         fullscreenAttribute = undefined,
         displayCCOnTop = undefined,
+        previousISDState = undefined,
         topZIndex = undefined;
 
     function initialize() {
@@ -40358,6 +40780,7 @@ function TextTracks() {
         videoSizeCheckInterval = null;
         displayCCOnTop = false;
         topZIndex = 2147483647;
+        previousISDState = null;
 
         //TODO Check if IE has resolved issues: Then revert to not using the addTextTrack API for all browsers.
         // https://connect.microsoft.com/IE/feedbackdetail/view/1660701/text-tracks-do-not-fire-change-addtrack-or-removetrack-events
@@ -40519,7 +40942,7 @@ function TextTracks() {
             }
     }
 
-    function checkVideoSize(track) {
+    function checkVideoSize(track, forceDrawing) {
         var clientWidth = videoModel.getClientWidth();
         var clientHeight = videoModel.getClientHeight();
         var videoWidth = videoModel.getVideoWidth();
@@ -40541,7 +40964,7 @@ function TextTracks() {
         var newVideoLeft = realVideoSize.x;
         var newVideoTop = realVideoSize.y;
 
-        if (newVideoWidth != actualVideoWidth || newVideoHeight != actualVideoHeight || newVideoLeft != actualVideoLeft || newVideoTop != actualVideoTop) {
+        if (newVideoWidth != actualVideoWidth || newVideoHeight != actualVideoHeight || newVideoLeft != actualVideoLeft || newVideoTop != actualVideoTop || forceDrawing) {
             actualVideoLeft = newVideoLeft + videoOffsetLeft;
             actualVideoTop = newVideoTop + videoOffsetTop;
             actualVideoWidth = newVideoWidth;
@@ -40638,16 +41061,16 @@ function TextTracks() {
             var htmlCaptionDiv = document.getElementById(activeCue.cueID);
             if (htmlCaptionDiv) {
                 captionContainer.removeChild(htmlCaptionDiv);
-                renderCaption(activeCue);
             }
+            renderCaption(activeCue);
         }
     }
 
     function renderCaption(cue) {
         var finalCue = document.createElement('div');
         captionContainer.appendChild(finalCue);
-        (0, _imsc.renderHTML)(cue.isd, finalCue, function (uri) {
-            var imsc1ImgUrnTester = /^(urn:)(mpeg:[a-z0-9][a-z0-9-]{0,31}:)(subs:)([0-9])$/;
+        previousISDState = (0, _imsc.renderHTML)(cue.isd, finalCue, function (uri) {
+            var imsc1ImgUrnTester = /^(urn:)(mpeg:[a-z0-9][a-z0-9-]{0,31}:)(subs:)([0-9]+)$/;
             var smpteImgUrnTester = /^#(.*)$/;
             if (imsc1ImgUrnTester.test(uri)) {
                 var match = imsc1ImgUrnTester.exec(uri);
@@ -40663,7 +41086,10 @@ function TextTracks() {
             } else {
                 return null;
             }
-        }, captionContainer.clientHeight, captionContainer.clientWidth);
+        }, captionContainer.clientHeight, captionContainer.clientWidth, false, /*displayForcedOnlyMode*/function (err) {
+            log('[TextTracks][renderCaption]', err);
+            //TODO add ErrorHandler management
+        }, previousISDState, true /*enableRollUp*/);
         finalCue.id = cue.cueID;
     }
 
@@ -40785,7 +41211,7 @@ function TextTracks() {
         }
 
         if (track && track.renderingType === 'html') {
-            checkVideoSize.call(this, track);
+            checkVideoSize.call(this, track, true);
             videoSizeCheckInterval = setInterval(checkVideoSize.bind(this, track), 500);
         }
     }
@@ -44690,7 +45116,7 @@ var TextRequest = (function (_FragmentRequest) {
     this.url = url || null;
     this.type = type || null;
     this.mediaType = _constantsConstants2['default'].STREAM;
-    this.responseType = _constantsConstants2['default'].TEXT;
+    this.responseType = ''; //'text' value returns a bad encoding response in Firefox
   }
 
   return TextRequest;
@@ -44927,6 +45353,7 @@ var URIFragmentData = function URIFragmentData() {
     this.track = null;
     this.id = null;
     this.s = null;
+    this.r = null;
 };
 
 exports["default"] = URIFragmentData;
