@@ -58,7 +58,8 @@ function RepresentationController() {
         dashManifestModel,
         dashMetrics,
         streamProcessor,
-        manifestModel;
+        manifestModel,
+        mediaPlayerModel;
 
     function setup() {
         resetInitialSettings();
@@ -98,6 +99,9 @@ function RepresentationController() {
         }
         if (config.streamProcessor) {
             streamProcessor = config.streamProcessor;
+        }
+        if (config.mediaPlayerModel) {
+            mediaPlayerModel = config.mediaPlayerModel;
         }
     }
 
@@ -205,7 +209,7 @@ function RepresentationController() {
         let streamInfo = streamProcessor.getStreamInfo();
         let manifestInfo = streamInfo ? streamInfo.manifestInfo : null;
         let isDynamic = manifestInfo ? manifestInfo.isDynamic : null;
-        let range = timelineConverter.calcSegmentAvailabilityRange(currentVoRepresentation, isDynamic);
+        let range = timelineConverter.calcSegmentAvailabilityRange(currentVoRepresentation, isDynamic, mediaPlayerModel.getLowLatencyMode());
         metricsModel.addDVRInfo(streamProcessor.getType(), playbackController.getTime(), manifestInfo, range);
     }
 
@@ -244,7 +248,7 @@ function RepresentationController() {
 
         for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
             voRepresentation = voAvailableRepresentations[i];
-            voRepresentation.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(voRepresentation, isDynamic);
+            voRepresentation.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(voRepresentation, isDynamic,  mediaPlayerModel.getLowLatencyMode());
         }
     }
 

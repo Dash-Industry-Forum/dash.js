@@ -33,7 +33,7 @@ import FactoryMaker from '../../core/FactoryMaker';
 
 import {getTimeBasedSegment} from './SegmentsUtils';
 
-function TimelineSegmentsGetter(config, isDynamic) {
+function TimelineSegmentsGetter(config, isDynamic, lowLatencyMode) {
 
     config = config || {};
     const timelineConverter = config.timelineConverter;
@@ -145,7 +145,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
                 if (nextFrag && nextFrag.hasOwnProperty('t')) {
                     repeatEndTime = nextFrag.t / fTimescale;
                 } else {
-                    const availabilityEnd = representation.segmentAvailabilityRange ? representation.segmentAvailabilityRange.end : (timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic).end);
+                    const availabilityEnd = representation.segmentAvailabilityRange ? representation.segmentAvailabilityRange.end : (timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic, lowLatencyMode).end);
                     repeatEndTime = timelineConverter.calcMediaTimeFromPresentationTime(availabilityEnd, representation);
                     representation.segmentDuration = frag.d / fTimescale;
                 }

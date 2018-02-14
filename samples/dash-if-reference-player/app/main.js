@@ -370,7 +370,8 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
             liveDelay: $scope.defaultLiveDelay,
             stableBufferTime: $scope.defaultStableBufferDelay,
             bufferTimeAtTopQuality: $scope.defaultBufferTimeAtTopQuality,
-            bufferTimeAtTopQualityLongForm: $scope.defaultBufferTimeAtTopQualityLongForm
+            bufferTimeAtTopQualityLongForm: $scope.defaultBufferTimeAtTopQualityLongForm,
+            lowLatencyMode: $scope.defaultLowLatencyMode
         };
         if ($scope.selectedItem.hasOwnProperty('bufferConfig')) {
             var selectedConfig = $scope.selectedItem.bufferConfig;
@@ -390,12 +391,17 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
             if (selectedConfig.bufferTimeAtTopQualityLongForm) {
                 bufferConfig.bufferTimeAtTopQualityLongForm = selectedConfig.bufferTimeAtTopQualityLongForm;
             }
+
+            if (selectedConfig.lowLatencyMode) {
+                bufferConfig.lowLatencyMode = selectedConfig.lowLatencyMode;
+            }
         }
 
         $scope.player.setLiveDelay(bufferConfig.liveDelay);
         $scope.player.setStableBufferTime(bufferConfig.stableBufferTime);
         $scope.player.setBufferTimeAtTopQuality(bufferConfig.bufferTimeAtTopQuality);
         $scope.player.setBufferTimeAtTopQualityLongForm(bufferConfig.bufferTimeAtTopQualityLongForm);
+        $scope.player.setLowLatencyMode(bufferConfig.lowLatencyMode);
 
         $scope.controlbar.reset();
         $scope.player.setProtectionData(protData);

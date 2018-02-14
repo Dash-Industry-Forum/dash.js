@@ -1277,6 +1277,29 @@ function MediaPlayer() {
         return mediaPlayerModel.getMovingAverageMethod();
     }
 
+
+    /**
+     * Returns if low latency mode is enabled. Disabled by default.
+     * @return {boolean} true - if enabled
+     * @see {@link module:MediaPlayer#setLowLatencyMode setLowLatencyMode()}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getLowLatencyMode() {
+        return mediaPlayerModel.getLowLatencyMode();
+    }
+
+    /**
+     * Enables low latency mode for dynamic streams. If not specified, liveDelay is set to 3s of buffer.
+     * Browser compatibility (Check row 'ReadableStream response body'): https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
+     * @param {boolean} value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setLowLatencyMode(value) {
+        return mediaPlayerModel.setLowLatencyMode(value);
+    }
+
     /**
      * <p>Allows you to set a scheme and server source for UTC live edge detection for dynamic streams.
      * If UTCTiming is defined in the manifest, it will take precedence over any time source manually added.</p>
@@ -2796,6 +2819,8 @@ function MediaPlayer() {
         getJumpGaps: getJumpGaps,
         setSmallGapLimit: setSmallGapLimit,
         getSmallGapLimit: getSmallGapLimit,
+        getLowLatencyMode: getLowLatencyMode,
+        setLowLatencyMode: setLowLatencyMode,
         setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,
         setSegmentOverlapToleranceTime: setSegmentOverlapToleranceTime,
         setCacheLoadThresholdForType: setCacheLoadThresholdForType,

@@ -56,6 +56,7 @@ function FragmentController( config ) {
     function setup() {
         resetInitialSettings();
         eventBus.on(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, instance);
+        eventBus.on(Events.FRAGMENT_LOADING_PROGRESS, onFragmentLoadingCompleted, instance);
     }
 
     function getModel(type) {
@@ -90,10 +91,11 @@ function FragmentController( config ) {
 
     function reset() {
         eventBus.off(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
+        eventBus.off(Events.FRAGMENT_LOADING_PROGRESS, onFragmentLoadingCompleted, this);
         resetInitialSettings();
     }
 
-    function createDataChunk(bytes, request, streamId) {
+    function createDataChunk(bytes, request, streamId, endFragment) {
         const chunk = new DataChunk();
 
         chunk.streamId = streamId;
@@ -106,6 +108,7 @@ function FragmentController( config ) {
         chunk.index = request.index;
         chunk.quality = request.quality;
         chunk.representationId = request.representationId;
+        chunk.endFragment = endFragment;
 
         return chunk;
     }
@@ -131,8 +134,7 @@ function FragmentController( config ) {
             log('No ' + request.mediaType + ' bytes to push or stream is inactive.');
             return;
         }
-
-        const chunk = createDataChunk(bytes, request, streamInfo.id);
+        const chunk = createDataChunk(bytes, request, streamInfo.id, e.type !== Events.FRAGMENT_LOADING_PROGRESS);
         eventBus.trigger(isInit ? Events.INIT_FRAGMENT_LOADED : Events.MEDIA_FRAGMENT_LOADED, {
             chunk: chunk,
             fragmentModel: e.sender

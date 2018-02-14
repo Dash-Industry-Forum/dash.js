@@ -235,14 +235,18 @@ function BufferController(config) {
 
             onPlaybackProgression();
             isAppendingInProgress = false;
-            if (appendedBytesInfo) {
-                eventBus.trigger(Events.BYTES_APPENDED, {
-                    sender: instance,
-                    quality: appendedBytesInfo.quality,
-                    startTime: appendedBytesInfo.start,
-                    index: appendedBytesInfo.index,
-                    bufferedRanges: ranges
-                });
+
+            const dataEvent = {
+                sender: instance,
+                quality: appendedBytesInfo.quality,
+                startTime: appendedBytesInfo.start,
+                index: appendedBytesInfo.index,
+                bufferedRanges: ranges
+            };
+            if (appendedBytesInfo && !e.endFragment) {
+                eventBus.trigger(Events.BYTES_APPENDED, dataEvent);
+            } else if (appendedBytesInfo && e.endFragment) {
+                eventBus.trigger(Events.BYTES_APPENDED_END_FRAGMENT, dataEvent);
             }
         }
     }
@@ -525,7 +529,7 @@ function BufferController(config) {
     }
 
     function clearNextRange() {
-        if (pendingPruningRanges.length === 0) return;
+        if (pendingPruningRanges.length === 0 || !buffer || !buffer.buffered || buffer.buffered.length === 0) return;
 
         const range = pendingPruningRanges.shift();
         log('Removing', type, 'buffer from:', range.start, 'to', range.end);

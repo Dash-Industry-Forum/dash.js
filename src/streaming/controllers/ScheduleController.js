@@ -118,7 +118,7 @@ function ScheduleController(config) {
         eventBus.on(Events.STREAM_INITIALIZED, onStreamInitialized, this);
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
         eventBus.on(Events.BUFFER_CLEARED, onBufferCleared, this);
-        eventBus.on(Events.BYTES_APPENDED, onBytesAppended, this);
+        eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
         eventBus.on(Events.INIT_REQUESTED, onInitRequested, this);
         eventBus.on(Events.QUOTA_EXCEEDED, onQuotaExceeded, this);
         eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
@@ -370,7 +370,13 @@ function ScheduleController(config) {
                 ignoreIsFinished: true
             });
 
-            playbackController.setLiveStartTime(request.startTime);
+            // When low latency mode is selected but browser doesn't support fetch
+            // start at the beginning of the segment to avoid consuming the whole buffer
+            if (mediaPlayerModel.getLowLatencyMode()) {
+                playbackController.setLiveStartTime(request.startTime + request.duration - mediaPlayerModel.getLiveDelay());
+            } else {
+                playbackController.setLiveStartTime(request.startTime);
+            }
             seekTarget = playbackController.getStreamStartTime(false, liveEdge);
 
             //special use case for multi period stream. If the startTime is out of the current period, send a seek command.
@@ -611,7 +617,7 @@ function ScheduleController(config) {
         eventBus.off(Events.STREAM_COMPLETED, onStreamCompleted, this);
         eventBus.off(Events.STREAM_INITIALIZED, onStreamInitialized, this);
         eventBus.off(Events.QUOTA_EXCEEDED, onQuotaExceeded, this);
-        eventBus.off(Events.BYTES_APPENDED, onBytesAppended, this);
+        eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
         eventBus.off(Events.BUFFER_CLEARED, onBufferCleared, this);
         eventBus.off(Events.INIT_REQUESTED, onInitRequested, this);
         eventBus.off(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);

@@ -106,7 +106,7 @@ function DashHandler(config) {
 
         segmentBaseLoader.initialize();
 
-        segmentsGetter = SegmentsGetter(context).create(config, isDynamic);
+        segmentsGetter = SegmentsGetter(context).create(config, isDynamic, mediaPlayerModel.getLowLatencyMode());
     }
 
     function getStreamProcessor() {
@@ -257,7 +257,7 @@ function DashHandler(config) {
         }
 
         voRepresentation.segmentAvailabilityRange = null;
-        voRepresentation.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(voRepresentation, isDynamic);
+        voRepresentation.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(voRepresentation, isDynamic, mediaPlayerModel.getLowLatencyMode());
 
         if ((voRepresentation.segmentAvailabilityRange.end < voRepresentation.segmentAvailabilityRange.start) && !voRepresentation.useCalculatedLiveEdgeTime) {
             error = new DashJSError(SEGMENTS_UNAVAILABLE_ERROR_CODE, 'no segments are available yet', {availabilityDelay: voRepresentation.segmentAvailabilityRange.start - voRepresentation.segmentAvailabilityRange.end});

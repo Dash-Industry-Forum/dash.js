@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import XHRLoader from './XHRLoader';
+import HTTPLoader from './HTTPLoader';
 import HeadRequest from './vo/HeadRequest';
 import DashJSError from './vo/DashJSError';
 import EventBus from './../core/EventBus';
@@ -46,14 +46,15 @@ function FragmentLoader(config) {
     const eventBus = EventBus(context).getInstance();
 
     let instance,
-        xhrLoader;
+        httpLoader;
 
     function setup() {
-        xhrLoader = XHRLoader(context).create({
+        httpLoader = HTTPLoader(context).create({
             errHandler: config.errHandler,
             metricsModel: config.metricsModel,
             mediaPlayerModel: config.mediaPlayerModel,
-            requestModifier: config.requestModifier
+            requestModifier: config.requestModifier,
+            usingFetch: config.mediaPlayerModel.getLowLatencyMode()
         });
     }
 
@@ -70,7 +71,7 @@ function FragmentLoader(config) {
         if (request) {
             let headRequest = new HeadRequest(request.url);
 
-            xhrLoader.load({
+            httpLoader.load({
                 request: headRequest,
                 success: function () {
                     report(true);
@@ -95,17 +96,25 @@ function FragmentLoader(config) {
         };
 
         if (request) {
-            xhrLoader.load({
+            httpLoader.load({
                 request: request,
-                progress: function () {
+                progress: function (data) {
                     eventBus.trigger(Events.LOADING_PROGRESS, {
                         request: request
                     });
+                    if (data) {
+                        eventBus.trigger(Events.LOADING_DATA_PROGRESS, {
+                            request: request,
+                            response: data || null,
+                            error: null,
+                            sender: instance
+                        });
+                    }
                 },
                 success: function (data) {
                     report(data);
                 },
-                error: function (xhr, statusText, errorText) {
+                error: function (request, statusText, errorText) {
                     report(
                         undefined,
                         new DashJSError(
@@ -133,15 +142,15 @@ function FragmentLoader(config) {
     }
 
     function abort() {
-        if (xhrLoader) {
-            xhrLoader.abort();
+        if (httpLoader) {
+            httpLoader.abort();
         }
     }
 
     function reset() {
-        if (xhrLoader) {
-            xhrLoader.abort();
-            xhrLoader = null;
+        if (httpLoader) {
+            httpLoader.abort();
+            httpLoader = null;
         }
     }
 

@@ -34,7 +34,7 @@ import TimelineSegmentsGetter from './TimelineSegmentsGetter';
 import TemplateSegmentsGetter from './TemplateSegmentsGetter';
 import ListSegmentsGetter from './ListSegmentsGetter';
 
-function SegmentsGetter(config, isDynamic) {
+function SegmentsGetter(config, isDynamic, lowLatencyMode) {
 
     const context = this.context;
 
@@ -44,7 +44,7 @@ function SegmentsGetter(config, isDynamic) {
         listSegmentsGetter;
 
     function setup() {
-        timelineSegmentsGetter = TimelineSegmentsGetter(context).create(config, isDynamic);
+        timelineSegmentsGetter = TimelineSegmentsGetter(context).create(config, isDynamic, lowLatencyMode);
         templateSegmentsGetter = TemplateSegmentsGetter(context).create(config, isDynamic);
         listSegmentsGetter = ListSegmentsGetter(context).create(config, isDynamic);
     }

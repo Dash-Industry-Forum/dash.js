@@ -130,7 +130,8 @@ function StreamProcessor(config) {
             manifestModel: manifestModel,
             playbackController: playbackController,
             timelineConverter: timelineConverter,
-            streamProcessor: instance
+            streamProcessor: instance,
+            mediaPlayerModel: mediaPlayerModel
         });
         bufferController.initialize(mediaSource);
         scheduleController.initialize();

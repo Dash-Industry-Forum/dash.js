@@ -306,13 +306,15 @@ function SourceBufferController(config) {
                 waitForUpdateEnd(buffer, function () {
                     eventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {
                         buffer: buffer,
-                        bytes: bytes
+                        bytes: bytes,
+                        endFragment: chunk.endFragment
                     });
                 });
             } catch (err) {
                 eventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {
                     buffer: buffer,
                     bytes: bytes,
+                    endFragment: chunk.endFragment,
                     error: new DashJSError(err.code, err.message, null)
                 });
             }

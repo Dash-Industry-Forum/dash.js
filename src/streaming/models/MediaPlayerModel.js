@@ -70,6 +70,8 @@ const MANIFEST_RETRY_INTERVAL = 500;
 const XLINK_RETRY_ATTEMPTS = 1;
 const XLINK_RETRY_INTERVAL = 500;
 
+const DEFAULT_LOW_LATENCY_LIVE_DELAY = 3;
+
 //This value influences the startup time for live (in ms).
 const WALLCLOCK_TIME_UPDATE_INTERVAL = 50;
 
@@ -107,7 +109,8 @@ function MediaPlayerModel() {
         movingAverageMethod,
         cacheLoadThresholds,
         jumpGaps,
-        smallGapLimit;
+        smallGapLimit,
+        lowLatencyMode;
 
     function setup() {
         UTCTimingSources = [];
@@ -145,6 +148,7 @@ function MediaPlayerModel() {
         };
         customABRRule = [];
         movingAverageMethod = Constants.MOVING_AVERAGE_SLIDING_WINDOW;
+        lowLatencyMode = false;
 
         retryAttempts = {
             [HTTPRequest.MPD_TYPE]:                         MANIFEST_RETRY_ATTEMPTS,
@@ -419,6 +423,9 @@ function MediaPlayerModel() {
     }
 
     function getLiveDelay() {
+        if (lowLatencyMode) {
+            return liveDelay || DEFAULT_LOW_LATENCY_LIVE_DELAY;
+        }
         return liveDelay;
     }
 
@@ -498,6 +505,14 @@ function MediaPlayerModel() {
         return smallGapLimit;
     }
 
+    function getLowLatencyMode() {
+        return lowLatencyMode;
+    }
+
+    function setLowLatencyMode(value) {
+        lowLatencyMode = value;
+    }
+
     function reset() {
         //TODO need to figure out what props to persist across sessions and which to reset if any.
         //setup();
@@ -574,6 +589,8 @@ function MediaPlayerModel() {
         getJumpGaps: getJumpGaps,
         setSmallGapLimit: setSmallGapLimit,
         getSmallGapLimit: getSmallGapLimit,
+        getLowLatencyMode: getLowLatencyMode,
+        setLowLatencyMode: setLowLatencyMode,
         reset: reset
     };
 

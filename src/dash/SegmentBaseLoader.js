@@ -38,7 +38,7 @@ import FactoryMaker from '../core/FactoryMaker';
 import Debug from '../core/Debug';
 import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
-import XHRLoader from '../streaming/XHRLoader';
+import HTTPLoader from '../streaming/HTTPLoader';
 
 function SegmentBaseLoader() {
 
@@ -52,17 +52,18 @@ function SegmentBaseLoader() {
         requestModifier,
         metricsModel,
         mediaPlayerModel,
-        xhrLoader,
+        httpLoader,
         baseURLController;
 
     function initialize() {
         boxParser = BoxParser(context).getInstance();
         requestModifier = RequestModifier(context).getInstance();
-        xhrLoader = XHRLoader(context).create({
+        httpLoader = HTTPLoader(context).create({
             errHandler: errHandler,
             metricsModel: metricsModel,
             mediaPlayerModel: mediaPlayerModel,
-            requestModifier: requestModifier
+            requestModifier: requestModifier,
+            usingFetch: false
         });
     }
 
@@ -132,7 +133,7 @@ function SegmentBaseLoader() {
             eventBus.trigger(Events.INITIALIZATION_LOADED, {representation: representation});
         };
 
-        xhrLoader.load({request: request, success: onload, error: onerror});
+        httpLoader.load({request: request, success: onload, error: onerror});
 
         log('Perform init search: ' + info.url);
     }
@@ -237,13 +238,13 @@ function SegmentBaseLoader() {
             callback(null, representation, type);
         };
 
-        xhrLoader.load({request: request, success: onload, error: onerror});
+        httpLoader.load({request: request, success: onload, error: onerror});
         log('Perform SIDX load: ' + info.url);
     }
 
     function reset() {
-        xhrLoader.abort();
-        xhrLoader = null;
+        httpLoader.abort();
+        httpLoader = null;
         errHandler = null;
         boxParser = null;
         requestModifier = null;
