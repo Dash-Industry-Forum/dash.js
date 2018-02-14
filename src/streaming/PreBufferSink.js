@@ -31,7 +31,13 @@
 import Debug from '../core/Debug';
 import FactoryMaker from '../core/FactoryMaker';
 
-//implements fragmentSink
+/**
+ * This is a sink that is used to temporarily hold onto media chunks before a video element is added.
+ * The discharge() function is used to get the chunks out of the PreBuffer for adding to a real SourceBuffer.
+ *
+ * @class PreBufferSink
+ * @implements FragmentSink
+ */
 function PreBufferSink(onAppendedCallback) {
     const context = this.context;
     const log = Debug(context).getInstance().log;
@@ -61,9 +67,7 @@ function PreBufferSink(onAppendedCallback) {
         chunks = chunks.filter( a => !((isNaN(end) || a.start < end) && (isNaN(start) || a.end > start))); //The opposite of the getChunks predicate.
     }
 
-    /**
-     * Nothing async, nothing to abort.
-     */
+    //Nothing async, nothing to abort.
     function abort() {
     }
 
@@ -98,9 +102,14 @@ function PreBufferSink(onAppendedCallback) {
         return timeranges;
     }
 
-    /*
-     * Remove and return the chunks in the buffer between times start and end.
-     * TODO: fragmentSource interface?
+    /**
+     * Return the all chunks in the buffer the lie between times start and end.
+     * Because a chunk cannot be split, this returns the full chunk if any part of its time lies in the requested range.
+     * Chunks are removed from the buffer when they are discharged.
+     * @function PreBufferSink#discharge
+     * @param {?Number} start The start time from which to discharge from the buffer. If NaN, it is regarded as unbounded.
+     * @param {?Number} end The end time from which to discharge from the buffer. If NaN, it is regarded as unbounded.
+     * @returns {Array} The set of chunks from the buffer within the time ranges.
      */
     function discharge(start, end) {
         const result = getChunksAt(start, end);

@@ -34,27 +34,6 @@ import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import FactoryMaker from '../core/FactoryMaker';
 import TextController from './text/TextController';
-
-/**
- * The an end place to put fragments after they have been fetched.
- * @interface FragmentSink
- */
-/**
- * @function append
- */
-/**
- * @function remove
- */
-/**
- * @function abort
- */
-/**
- * @function getAllBufferRanges
- */
-/**
- * @function reset
- */
-
 /**
  * @class SourceBufferSink
  * @implements FragmentSink
