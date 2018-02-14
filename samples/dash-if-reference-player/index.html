@@ -113,7 +113,6 @@
                             </ul>
                         </li>
                     </ul>
-
                 </div>
                 <div id="mobile-streams" class="input-group-btn">
                     <button type="button" class="btn btn-primary" data-toggle="modal" href="#streamModal">
@@ -130,7 +129,6 @@
 
         <!-- OPTIONS MENU-->
         <div ng-cloak class="row options-wrapper" ng-class="{'options-show':optionsGutter, 'options-hide':!optionsGutter}">
-
             <div class="options-item">
                 <div class="options-item-title">Playback</div>
                 <div class="options-item-body">
@@ -195,11 +193,10 @@
                         </ul>
                     </div>
                     <p><label  class="options-label" >{{drmKeySystem}}</label></p>
-                    <div id="drmLicenseForm" >
+                    <div id="drmLicenseForm" ng-show="drmKeySystem">
                         <label class="options-label">License URL:</label>
                         <input type="text" class="form-control" placeholder="" ng-model="drmLicenseURL">
                     </div>
-                    <!--<button class="btn btn-primary license" type="button" ng-click="doLicenseFetch()">Pre-Fetch Licenses</button>-->
                 </div>
             </div>
             <div class="options-item">
@@ -226,8 +223,8 @@
                         <input  type="radio" id="always-replace" autocomplete="off" name="track-switch" checked="checked" ng-click="changeTrackSwitchMode('alwaysReplace', 'video')" >
                         always replace
                     </label>
-                    <label  data-toggle="tooltip" data-placement="right"
-                            title="When a track is switched, the portion of the buffer that contains old track data is NOT cleared">
+                    <label data-toggle="tooltip" data-placement="right"
+                           title="When a track is switched, the portion of the buffer that contains old track data is NOT cleared">
                         <input type="radio" id="never-replace" autocomplete="off" name="track-switch" ng-click="changeTrackSwitchMode('neverReplace', 'video')">
                         never replace
                     </label>
@@ -265,12 +262,13 @@
                         </div>
                         <span id="videoDuration" class="duration-display">00:00:00</span>
                         <div class="seekContainer">
-                            <input type="range" id="seekbar" value="0" class="seekbar" min="0" step="0.01"/>
+                            <div id="seekbar" class="seekbar seekbar-complete">
+                                <div id="seekbar-play" class="seekbar seekbar-play"></div>
+                            </div>
                         </div>
                         <div id="thumbnail-container" class="thumbnail-container">
-                            <div id="thumbnail-elem" class="thumbnail-elem">
-                                <div id="thumbnail-time-label" class="thumbnail-time-label"></div>
-                            </div>
+                            <div id="thumbnail-elem" class="thumbnail-elem"></div>
+                            <div id="thumbnail-time-label" class="thumbnail-time-label"></div>
                         </div>
                     </div>
                 </div>
@@ -289,10 +287,6 @@
                           Audio
                           </a>
                       </li>
-                      <!--<li><a href="#textStatsTab" role="tab" data-toggle="tab">-->
-                          <!--Text-->
-                          <!--</a>-->
-                      <!--</li>-->
                     </ul>
 
                     <!-- Tab panes -->
@@ -389,24 +383,29 @@
                             </div>
                         </div>
                       </div>
-                      <!--<div class="tab-pane fade" id="textStatsTab">-->
-                        <!--<div class="panel-body panel-stats">-->
-                            <!--&lt;!&ndash; TEXT STATS ITEMS&ndash;&gt;-->
-                            <!--<p class="text-primary">-->
-                                <!--<span class="text-success" data-toggle="tooltip" data-placement="top" -->
-                                      <!--title="The length of the forward buffer, in seconds">-->
-                                    <!--<em>Language:</em> {{audioBufferLength}}-->
-                                <!--</span>-->
-                            <!--</p>-->
-                        <!--</div>-->
-                      <!--</div>-->
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- CHARTING -->
+        <!-- ERROR MODAL -->
+        <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header errorModalHeader">
+                        <h5 class="modal-title" id="errorModalLabel">Error {{errorType}}</h5>
+                    </div>
+                    <div class="modal-body">
+                        {{error}}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+      </div>
 
+        <!-- CHARTING -->
        <div class="chart-panel">
             <div class="chart-controls">
                 <div class="btn-group">

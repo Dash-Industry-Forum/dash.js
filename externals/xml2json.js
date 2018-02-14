@@ -537,7 +537,7 @@ function X2JS(config) {
             var parsererrorNS = null;
             try {
                 xmlDoc = parser.parseFromString( xmlDocStr, "text/xml" );
-                if(xmlDoc.getElementsByTagNameNS("*", "parseerror").length > 0) {
+                if(xmlDoc.getElementsByTagNameNS("*", "parsererror").length > 0) {
                     xmlDoc = null;
                 }
             }

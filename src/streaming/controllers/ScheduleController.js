@@ -175,15 +175,16 @@ function ScheduleController(config) {
 
     function schedule() {
         if (isStopped || isFragmentProcessingInProgress || !streamProcessor.getBufferController() || playbackController.isPaused() && !scheduleWhilePaused) {
-            log('ScheduleController ' + type + '- schedule stop!');
+            log('ScheduleController ' + type + ' - schedule stop!');
             return;
         }
 
         validateExecutedFragmentRequest();
 
         const isReplacement = replaceRequestArray.length > 0;
+        const streamInfo = streamProcessor.getStreamInfo();
         if (switchTrack || isReplacement ||
-            hasTopQualityChanged(currentRepresentationInfo.mediaInfo.type, streamProcessor.getStreamInfo().id) ||
+            hasTopQualityChanged(currentRepresentationInfo.mediaInfo.type, streamInfo.id) ||
             bufferLevelRule.execute(streamProcessor, type, streamController.isVideoTrackPresent())) {
 
             const getNextFragment = function () {
@@ -206,12 +207,19 @@ function ScheduleController(config) {
                         //to be sure the specific init segment had not already been loaded.
                         streamProcessor.switchInitData(replacement.representationId);
                     } else {
-                        const request = nextFragmentRequestRule.execute(streamProcessor, replacement);
+                        let request;
+                        // don't schedule next fragments while pruning to avoid buffer inconsistencies
+                        if (!streamProcessor.getBufferController().getIsPruningInProgress()) {
+                            request = nextFragmentRequestRule.execute(streamProcessor, replacement);
+                            if (!request && streamInfo.manifestInfo && streamInfo.manifestInfo.isDynamic) {
+                                log('getNextFragment - ' + type + ' - Playing at the bleeding live edge and frag is not available yet');
+                            }
+                        }
+
                         if (request) {
                             log('ScheduleController - ' + type + ' - getNextFragment - request is ' + request.url);
                             fragmentModel.executeRequest(request);
                         } else { //Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
-                            log('getNextFragment - ' + type + ' - Playing at the bleeding live edge and frag is not available yet');
                             isFragmentProcessingInProgress = false;
                             startScheduleTimer(500);
                         }
@@ -220,12 +228,11 @@ function ScheduleController(config) {
             };
 
             isFragmentProcessingInProgress = true;
-            if (isReplacement || switchTrack) {
-                getNextFragment();
-            } else {
+            if (!isReplacement && !switchTrack) {
                 abrController.checkPlaybackQuality(type);
-                getNextFragment();
             }
+
+            getNextFragment();
 
         } else {
             startScheduleTimer(500);
@@ -397,7 +404,7 @@ function ScheduleController(config) {
         if (e.sender !== fragmentModel) {
             return;
         }
-
+        log('[ScheduleController] onFragmentLoadingCompleted for', type);
         if (dashManifestModel.getIsTextTrack(type)) {
             isFragmentProcessingInProgress = false;
         }
@@ -445,9 +452,9 @@ function ScheduleController(config) {
             return;
         }
 
-        // after the data has been removed from the buffer we should remove the requests from the list of
-        // the executed requests for which playback time is inside the time interval that has been removed from the buffer
-        fragmentModel.removeExecutedRequestsBeforeTime(e.to);
+        streamProcessor.getFragmentModel().syncExecutedRequestsWithBufferedRange(
+            streamProcessor.getBufferController().getBuffer().buffered,
+            streamProcessor.getStreamInfo().duration);
 
         if (e.hasEnoughSpaceToAppend && isStopped) {
             start();

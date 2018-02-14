@@ -104,7 +104,6 @@ function TimelineConverter() {
     }
 
     function calcPresentationTimeFromWallTime(wallTime, period) {
-        //console.log("XXX", wallTime.getTime() - period.mpd.availabilityStartTime.getTime(), clientServerTimeShift * 1000, clientServerTimeShift, period.mpd.availabilityStartTime.getTime())
         return ((wallTime.getTime() - period.mpd.availabilityStartTime.getTime() + clientServerTimeShift * 1000) / 1000);
     }
 
@@ -137,7 +136,6 @@ function TimelineConverter() {
     }
 
     function calcSegmentAvailabilityRange(voRepresentation, isDynamic) {
-
         // Static Range Finder
         const voPeriod = voRepresentation.adaptation.period;
         const range = { start: voPeriod.start, end: voPeriod.start + voPeriod.duration };
@@ -147,7 +145,7 @@ function TimelineConverter() {
             return voRepresentation.segmentAvailabilityRange;
         }
 
-        //Dyanmic Range Finder
+        // Dynamic Range Finder
         const d = voRepresentation.segmentDuration || (voRepresentation.segments && voRepresentation.segments.length ? voRepresentation.segments[voRepresentation.segments.length - 1].duration : 0);
         const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
         const periodEnd = voPeriod.start + voPeriod.duration;

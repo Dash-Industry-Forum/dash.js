@@ -172,6 +172,7 @@ declare namespace dashjs {
         setBufferTimeAtTopQualityLongForm(value: number): void;
         setLongFormContentDurationThreshold(value: number): void;
         setRichBufferThreshold(value: number): void;
+        setCacheLoadThresholdForType(type: 'video' | 'audio', value: number): void;
         getProtectionController(): ProtectionController;
         attachProtectionController(value: ProtectionController): void;
         setProtectionData(value: ProtectionData): void;

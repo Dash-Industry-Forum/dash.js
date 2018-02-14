@@ -8,6 +8,7 @@ import MediaPlayer from './../../src/streaming/MediaPlayer';
 import MediaPlayerModelMock from './mocks//MediaPlayerModelMock';
 import MediaControllerMock from './mocks/MediaControllerMock';
 import ObjectUtils from './../../src/streaming/utils/ObjectUtils';
+import Constants from '../../src/streaming/constants/Constants';
 
 const expect = require('chai').expect;
 
@@ -25,21 +26,21 @@ describe('MediaPlayer', function () {
     let dummyUrl = specHelper.getDummyUrl();
 
     // init mock
-    let videoElementMock = new VideoElementMock();
-    let capaMock = new CapabilitiesMock();
-    let streamControllerMock = new StreamControllerMock();
-    let abrControllerMock = new AbrControllerMock();
-    let playbackControllerMock = new PlaybackControllerMock();
-    let mediaPlayerModel = new MediaPlayerModelMock();
-    let mediaControllerMock = new MediaControllerMock();
-    let objectUtils = ObjectUtils(context).getInstance();
+    const videoElementMock = new VideoElementMock();
+    const capaMock = new CapabilitiesMock();
+    const streamControllerMock = new StreamControllerMock();
+    const abrControllerMock = new AbrControllerMock();
+    const playbackControllerMock = new PlaybackControllerMock();
+    const mediaPlayerModel = new MediaPlayerModelMock();
+    const mediaControllerMock = new MediaControllerMock();
+    const objectUtils = ObjectUtils(context).getInstance();
     let player;
 
     beforeEach(function () {
         player = MediaPlayer().create();
 
         // to avoid unwanted log
-        let debug = player.getDebug();
+        const debug = player.getDebug();
         expect(debug).to.exist; // jshint ignore:line
         debug.setLogToBrowserConsole(false);
 
@@ -60,7 +61,7 @@ describe('MediaPlayer', function () {
     describe('Init Functions', function () {
         describe('When it is not initialized', function () {
             it('Method isReady should return false', function () {
-                let isReady = player.isReady();
+                const isReady = player.isReady();
                 expect(isReady).to.be.false; // jshint ignore:line
             });
         });
@@ -70,7 +71,7 @@ describe('MediaPlayer', function () {
                 capaMock.setMediaSourceSupported(false);
                 player.initialize(videoElementMock, dummyUrl, false);
 
-                let isReady = player.isReady();
+                const isReady = player.isReady();
                 expect(isReady).to.be.false; // jshint ignore:line
 
                 capaMock.setMediaSourceSupported(true);
@@ -78,10 +79,10 @@ describe('MediaPlayer', function () {
 
             it('Method initialize should send an error if MSE is not supported', function (done) {
                 capaMock.setMediaSourceSupported(false);
-                let playerError = function (/*e*/) {
+                const playerError = function (/*e*/) {
                     player.off('error', playerError);
 
-                    let isReady = player.isReady();
+                    const isReady = player.isReady();
                     expect(isReady).to.be.false; // jshint ignore:line
 
                     // reinit mock
@@ -99,7 +100,7 @@ describe('MediaPlayer', function () {
                 player.initialize(videoElementMock, dummyUrl, false);
             });
             it('Method isReady should return true', function () {
-                let isReady = player.isReady();
+                const isReady = player.isReady();
                 expect(isReady).to.be.true; // jshint ignore:line
             });
         });
@@ -215,24 +216,14 @@ describe('MediaPlayer', function () {
                 expect(paused).to.be.false; // jshint ignore:line
             });
 
-            it('Method seek should seek', function () {
+            it('Method seek should throw an exception', function () {
                 let isSeeking = playbackControllerMock.isSeeking();
                 expect(isSeeking).to.be.false; // jshint ignore:line
 
-                player.seek();
+                expect(player.seek).to.throw(MediaPlayer.MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
 
                 isSeeking = playbackControllerMock.isSeeking();
-                expect(isSeeking).to.be.true; // jshint ignore:line
-            });
-
-            it('Method isSeeking should return seek state', function () {
-                let isSeeking = player.isSeeking();
                 expect(isSeeking).to.be.false; // jshint ignore:line
-
-                player.seek();
-
-                isSeeking = player.isSeeking();
-                expect(isSeeking).to.be.true; // jshint ignore:line
             });
 
             it('Method isDynamic should get dynamic value', function () {
@@ -249,15 +240,15 @@ describe('MediaPlayer', function () {
                 let playbackRate = videoElementMock.playbackRate;
                 expect(playbackRate).to.equal(0);
 
-                let newPlaybackRate = 5;
+                const newPlaybackRate = 5;
                 player.setPlaybackRate(newPlaybackRate);
                 playbackRate = videoElementMock.playbackRate;
                 expect(playbackRate).to.equal(newPlaybackRate);
             });
 
             it('Method setPlaybackRate should return video element playback rate', function () {
-                let elementPlayBackRate = videoElementMock.playbackRate;
-                let playerPlayBackRate = player.getPlaybackRate();
+                const elementPlayBackRate = videoElementMock.playbackRate;
+                const playerPlayBackRate = player.getPlaybackRate();
                 expect(playerPlayBackRate).to.equal(elementPlayBackRate);
             });
 
@@ -338,12 +329,7 @@ describe('MediaPlayer', function () {
                 duration = player.duration();
                 expect(duration).to.equal(4);
             });
-            //
-            //            it('Method timeAsUTC should throw an exception', function () {});
-            //
-            //            it('Method durationAsUTC should throw an exception', function () {});
         });
-
     });
 
     describe('AbrController Functions', function () {
@@ -507,7 +493,6 @@ describe('MediaPlayer', function () {
         });
 
         describe('When it is initialized', function () {
-
             beforeEach(function () {
                 player.initialize(videoElementMock, dummyUrl, false);
             });
@@ -728,7 +713,7 @@ describe('MediaPlayer', function () {
 
         it('should configure BufferToKeep', function () {
             let BufferToKeep = mediaPlayerModel.getBufferToKeep();
-            expect(BufferToKeep).to.equal(30);
+            expect(BufferToKeep).to.equal(20);
 
             player.setBufferToKeep(50);
 
@@ -738,7 +723,7 @@ describe('MediaPlayer', function () {
 
         it('should configure BufferPruningInterval', function () {
             let BufferPruningInterval = mediaPlayerModel.getBufferPruningInterval();
-            expect(BufferPruningInterval).to.equal(30);
+            expect(BufferPruningInterval).to.equal(10);
 
             player.setBufferPruningInterval(50);
 
@@ -784,6 +769,33 @@ describe('MediaPlayer', function () {
 
             LongFormContentDurationThreshold = mediaPlayerModel.getLongFormContentDurationThreshold();
             expect(LongFormContentDurationThreshold).to.equal(50);
+        });
+
+        it('should configure setSegmentOverlapToleranceTime', function () {
+            let val = mediaPlayerModel.getSegmentOverlapToleranceTime();
+            expect(val).to.equal(0.05);
+
+            player.setSegmentOverlapToleranceTime(1.5);
+            val = mediaPlayerModel.getSegmentOverlapToleranceTime();
+            expect(val).to.equal(1.5);
+        });
+
+        it('should configure cacheLoadThresholds', function () {
+            let cacheLoadThresholdForVideo = mediaPlayerModel.getCacheLoadThresholdForType(Constants.VIDEO);
+            expect(cacheLoadThresholdForVideo).to.equal(50);
+
+            player.setCacheLoadThresholdForType(Constants.VIDEO, 10);
+
+            cacheLoadThresholdForVideo = mediaPlayerModel.getCacheLoadThresholdForType(Constants.VIDEO);
+            expect(cacheLoadThresholdForVideo).to.equal(10);
+
+            let cacheLoadThresholdForAudio = mediaPlayerModel.getCacheLoadThresholdForType(Constants.AUDIO);
+            expect(cacheLoadThresholdForAudio).to.equal(5);
+
+            player.setCacheLoadThresholdForType(Constants.AUDIO, 2);
+
+            cacheLoadThresholdForAudio = mediaPlayerModel.getCacheLoadThresholdForType(Constants.AUDIO);
+            expect(cacheLoadThresholdForAudio).to.equal(2);
         });
 
         it('should configure BandwidthSafetyFactor', function () {
@@ -870,7 +882,6 @@ describe('MediaPlayer', function () {
     });
 
     describe('Text Management Functions', function () {
-
         describe('When it is not initialized', function () {
             it('Method setTextTrack should throw an exception', function () {
                 expect(player.setTextTrack).to.throw(MediaPlayer.PLAYBACK_NOT_INITIALIZED_ERROR);
@@ -896,6 +907,7 @@ describe('MediaPlayer', function () {
                 expect(player.getVideoElement).to.throw(MediaPlayer.ELEMENT_NOT_ATTACHED_ERROR);
             });
         });
+
         describe('When it is initialized', function () {
             beforeEach(function () {
                 player.initialize(videoElementMock, dummyUrl, false);
@@ -903,34 +915,32 @@ describe('MediaPlayer', function () {
 
             it('Method getVideoElement should return video element', function () {
 
-                let element = player.getVideoElement();
-                let areEquals = objectUtils.areEqual(element, videoElementMock);
+                const element = player.getVideoElement();
+                const areEquals = objectUtils.areEqual(element, videoElementMock);
                 expect(areEquals).to.be.true; // jshint ignore:line
             });
 
             it('should be able to attach video container', function () {
-
                 let videoContainer = player.getVideoContainer();
                 expect(videoContainer).to.be.undefined; // jshint ignore:line
 
-                let myVideoContainer = {
+                const myVideoContainer = {
                     videoContainer: 'videoContainer'
                 };
                 player.attachVideoContainer(myVideoContainer);
 
                 videoContainer = player.getVideoContainer();
-                let areEquals = objectUtils.areEqual(myVideoContainer, videoContainer);
+                const areEquals = objectUtils.areEqual(myVideoContainer, videoContainer);
                 expect(areEquals).to.be.true; // jshint ignore:line
             });
 
             it('should be able to attach view', function () {
-
                 let element = player.getVideoElement();
-                let objectUtils = ObjectUtils(context).getInstance();
+                const objectUtils = ObjectUtils(context).getInstance();
                 let areEquals = objectUtils.areEqual(element, videoElementMock);
                 expect(areEquals).to.be.true; // jshint ignore:line
 
-                let myNewView = {
+                const myNewView = {
                     view: 'view'
                 };
 
@@ -943,18 +953,17 @@ describe('MediaPlayer', function () {
             });
 
             it('should be able to attach TTML renderer div', function () {
-
                 let ttmlRenderer = player.getTTMLRenderingDiv();
                 expect(ttmlRenderer).to.be.undefined; // jshint ignore:line
 
-                let myTTMLRenderer = {
+                const myTTMLRenderer = {
                     style: {}
                 };
 
                 player.attachTTMLRenderingDiv(myTTMLRenderer);
 
                 ttmlRenderer = player.getTTMLRenderingDiv();
-                let areEquals = objectUtils.areEqual(ttmlRenderer, myTTMLRenderer);
+                const areEquals = objectUtils.areEqual(ttmlRenderer, myTTMLRenderer);
                 expect(areEquals).to.be.true; // jshint ignore:line
             });
         });
@@ -1021,17 +1030,17 @@ describe('MediaPlayer', function () {
             });
 
             it('Method getBitrateInfoListFor should return bitrate info list', function () {
-                let bitrateList = player.getBitrateInfoListFor();
+                const bitrateList = player.getBitrateInfoListFor();
                 expect(bitrateList.length).to.equal(2);
             });
 
             it('Method getTracksFor should return tracks', function () {
-                let tracks = player.getTracksFor();
+                const tracks = player.getTracksFor();
                 expect(tracks.length).to.equal(2);
             });
 
             it('Method getCurrentTrackFor should return current track', function () {
-                let track = player.getCurrentTrackFor();
+                const track = player.getCurrentTrackFor();
                 expect(track).to.equal('track1');
             });
 
@@ -1088,7 +1097,6 @@ describe('MediaPlayer', function () {
     });
 
     describe('Metrics Functions', function () {
-
         describe('When it is initialized', function () {
             beforeEach(function () {
                 player.initialize(videoElementMock, dummyUrl, false);
@@ -1108,5 +1116,4 @@ describe('MediaPlayer', function () {
             });
         });
     });
-
 });
