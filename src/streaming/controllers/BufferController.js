@@ -539,7 +539,7 @@ function BufferController(config) {
             streamProcessor.getScheduleController().setSeekTarget(currentTime);
             adapter.setIndexHandlerTime(streamProcessor, currentTime);
         }
-        sourceBufferController.remove(buffer, range.start, range.end, mediaSource);
+        sourceBufferController.remove(buffer, range.start, range.end, mediaSource, range.force);
     }
 
     function onRemoved(e) {
@@ -589,7 +589,8 @@ function BufferController(config) {
                 log('Clearing buffer because track changed - ' + (buffer.buffered.end(buffer.buffered.length - 1) + BUFFER_END_THRESHOLD));
                 clearBuffers([{
                     start: 0,
-                    end: buffer.buffered.end(buffer.buffered.length - 1) + BUFFER_END_THRESHOLD
+                    end: buffer.buffered.end(buffer.buffered.length - 1) + BUFFER_END_THRESHOLD,
+                    force: true // Force buffer removal even when buffering is completed and MediaSource is ended
                 }]);
                 lastIndex = Number.POSITIVE_INFINITY;
                 streamProcessor.getFragmentModel().abortRequests();
