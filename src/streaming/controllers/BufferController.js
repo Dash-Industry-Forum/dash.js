@@ -583,7 +583,7 @@ function BufferController(config) {
             streamProcessor.getScheduleController().setSeekTarget(currentTime);
             adapter.setIndexHandlerTime(streamProcessor, currentTime);
         }
-        
+
         buffer.remove(range.start, range.end, range.force);
     }
 
