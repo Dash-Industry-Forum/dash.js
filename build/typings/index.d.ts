@@ -10,13 +10,13 @@ declare namespace dashjs {
     interface VideoModel { }
 
     interface ProtectionController {
-        initialize(manifest: object, audioInfo: StreamInfo, videoInfo: StreamInfo): void;
-        setProtectionData(protData: object);
+        initialize(manifest: object | null, audioInfo: ProtectionMediaInfo, videoInfo: ProtectionMediaInfo): void;
+        setProtectionData(protData: object): void;
         setRobustnessLevel(level: string): void;
-        setSessionType(type: string);
-        loadKeySession(id: string);
-        closeSession(session: SessionToken);
-        removeKeySession(session: SessionToken);
+        setSessionType(type: string): void;
+        loadKeySession(id: string): void;
+        closeKeySession(session: SessionToken): void;
+        removeKeySession(session: SessionToken): void;
     }
 
     export interface Bitrate {
@@ -45,6 +45,11 @@ declare namespace dashjs {
         bitrateList: Bitrate[];
     }
 
+    export class ProtectionMediaInfo {
+        codec: string | null;
+        contentProtection: any | null;
+    }
+    
     export interface MediaPlayerClass {
         initialize(view?: HTMLElement, source?: string, autoPlay?: boolean): void;
         on(type: AstInFutureEvent['type'], listener: (e: AstInFutureEvent) => void, scope?: object): void;
