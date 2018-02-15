@@ -53,17 +53,14 @@ function MssFragmentMoofProcessor(config) {
         let manifest = representation.adaptation.period.mpd.manifest;
         let adaptation = manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index];
 
-        let segmentsUpdated = false;
         // Get adaptation's segment timeline (always a SegmentTimeline in Smooth Streaming use case)
         let segments = adaptation.SegmentTemplate.SegmentTimeline.S;
         let entries = tfrf.entry;
-        let fragment_absolute_time = 0;
-        let fragment_duration = 0;
+        let entry,
+            segmentTime;
         let segment = null;
+        let type = adaptation.type;
         let t = 0;
-        let i = 0;
-        let j = 0;
-        let segmentId = -1;
         let availabilityStartTime = null;
         let range;
 
@@ -71,65 +68,42 @@ function MssFragmentMoofProcessor(config) {
             return false;
         }
 
-        // Go through tfrf entries
-        while (i < entries.length) {
-            fragment_absolute_time = entries[i].fragment_absolute_time;
-            fragment_duration = entries[i].fragment_duration;
+        if (entries.length === 0) {
+            return;
+        }
 
+        // Consider only first tfrf entry (to avoid pre-condition failure on fragment info requests)
+        entry = entries[0];
+
+        // Get last segment time
+        segmentTime = segments[segments.length - 1].tManifest ? parseFloat(segments[segments.length - 1].tManifest) : segments[segments.length - 1].t;
+
+        // Check if we have to append new segment to timeline
+        if (entry.fragment_absolute_time <= segmentTime) {
+            return;
+        }
+
+        log('[MssFragmentMoofProcessor][', type, '] Add new segment - t = ', (entry.fragment_absolute_time /  10000000.0));
+        segment = {};
+        segment.t = entry.fragment_absolute_time;
+        segment.d = entry.fragment_duration;
+        segments.push(segment);
+
+        //
+        if (manifest.timeShiftBufferDepth && manifest.timeShiftBufferDepth > 0) {
             // Get timestamp of the last segment
             segment = segments[segments.length - 1];
             t = segment.t;
 
-            if (fragment_absolute_time > t) {
-                log('[MssFragmentMoofProcessor]Add new segment - t = ' + (fragment_absolute_time / 10000000.0));
-                segments.push({
-                    t: fragment_absolute_time,
-                    d: fragment_duration
-                });
-                segmentsUpdated = true;
-            }
+            // Determine the segments' availability start time
+            availabilityStartTime = t - (manifest.timeShiftBufferDepth * 10000000);
 
-            i += 1;
-        }
-
-        for (j = segments.length - 1; j >= 0; j -= 1) {
-            if (segments[j].t === tfdt.baseMediaDecodeTime) {
-                segmentId = j;
-                break;
-            }
-        }
-
-        if (segmentId >= 0) {
-            for (i = 0; i < entries.length; i += 1) {
-                if (segmentId + i < segments.length) {
-                    t = segments[segmentId + i].t;
-                    if ((t + segments[segmentId + i].d) !== entries[i].fragment_absolute_time) {
-                        segments[segmentId + i].t = entries[i].fragment_absolute_time;
-                        segments[segmentId + i].d = entries[i].fragment_duration;
-                        log('[MssFragmentMoofProcessor]Correct tfrf time  = ' + entries[i].fragment_absolute_time + 'and duration = ' + entries[i].fragment_duration + '! ********');
-                        segmentsUpdated = true;
-                    }
-                }
-            }
-        }
-
-        //
-        if (manifest.timeShiftBufferDepth && manifest.timeShiftBufferDepth > 0) {
-            if (segmentsUpdated) {
-                // Get timestamp of the last segment
-                segment = segments[segments.length - 1];
-                t = segment.t;
-
-                // Determine the segments' availability start time
-                availabilityStartTime = t - (manifest.timeShiftBufferDepth * 10000000);
-
-                // Remove segments prior to availability start time
+            // Remove segments prior to availability start time
+            segment = segments[0];
+            while (segment.t < availabilityStartTime) {
+                log('[MssFragmentMoofProcessor]Remove segment  - t = ' + (segment.t / 10000000.0));
+                segments.splice(0, 1);
                 segment = segments[0];
-                while (segment.t < availabilityStartTime) {
-                    log('[MssFragmentMoofProcessor]Remove segment  - t = ' + (segment.t / 10000000.0));
-                    segments.splice(0, 1);
-                    segment = segments[0];
-                }
             }
 
             // Update DVR window range
@@ -148,10 +122,7 @@ function MssFragmentMoofProcessor(config) {
             }
         }
 
-        if (segmentsUpdated) {
-            indexHandler.updateSegmentList(representation);
-        }
-        return segmentsUpdated;
+        indexHandler.updateSegmentList(representation);
     }
 
     // This function returns the offset of the 1st byte of a child box within a container box
