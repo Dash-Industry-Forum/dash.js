@@ -139,6 +139,7 @@ function ScheduleController(config) {
 
     function start() {
         if (!currentRepresentationInfo || streamProcessor.isBufferingCompleted()) {
+            log('[ScheduleController][', type,'] start denied');
             return;
         }
         log('[ScheduleController][', type,'] start');
