@@ -10,7 +10,13 @@ declare namespace dashjs {
     interface VideoModel { }
 
     interface ProtectionController {
+        initialize(manifest: object, audioInfo: StreamInfo, videoInfo: StreamInfo): void;
+        setProtectionData(protData: object);
         setRobustnessLevel(level: string): void;
+        setSessionType(type: string);
+        loadKeySession(id: string);
+        closeSession(session: SessionToken);
+        removeKeySession(session: SessionToken);
     }
 
     export interface Bitrate {
