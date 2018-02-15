@@ -134,6 +134,8 @@ a:hover {
 
 .col-md-9 video {
     width: 100%;
+    height: auto;
+    margin: auto;
 }
 
 .col-md-9 {
