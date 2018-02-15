@@ -216,24 +216,14 @@ describe('MediaPlayer', function () {
                 expect(paused).to.be.false; // jshint ignore:line
             });
 
-            it('Method seek should seek', function () {
+            it('Method seek should throw an exception', function () {
                 let isSeeking = playbackControllerMock.isSeeking();
                 expect(isSeeking).to.be.false; // jshint ignore:line
 
-                player.seek();
+                expect(player.seek).to.throw(MediaPlayer.MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
 
                 isSeeking = playbackControllerMock.isSeeking();
-                expect(isSeeking).to.be.true; // jshint ignore:line
-            });
-
-            it('Method isSeeking should return seek state', function () {
-                let isSeeking = player.isSeeking();
                 expect(isSeeking).to.be.false; // jshint ignore:line
-
-                player.seek();
-
-                isSeeking = player.isSeeking();
-                expect(isSeeking).to.be.true; // jshint ignore:line
             });
 
             it('Method isDynamic should get dynamic value', function () {
@@ -723,7 +713,7 @@ describe('MediaPlayer', function () {
 
         it('should configure BufferToKeep', function () {
             let BufferToKeep = mediaPlayerModel.getBufferToKeep();
-            expect(BufferToKeep).to.equal(30);
+            expect(BufferToKeep).to.equal(20);
 
             player.setBufferToKeep(50);
 
@@ -733,7 +723,7 @@ describe('MediaPlayer', function () {
 
         it('should configure BufferPruningInterval', function () {
             let BufferPruningInterval = mediaPlayerModel.getBufferPruningInterval();
-            expect(BufferPruningInterval).to.equal(30);
+            expect(BufferPruningInterval).to.equal(10);
 
             player.setBufferPruningInterval(50);
 

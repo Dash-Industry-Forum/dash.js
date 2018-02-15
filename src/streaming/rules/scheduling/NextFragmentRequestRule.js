@@ -84,11 +84,6 @@ function NextFragmentRequestRule(config) {
                 keepIdx: !hasSeekTarget
             });
 
-            // Sync executed queue with buffer range (to check for silent purge)
-            const bufferedRanges = bufferController.getBuffer().getAllBufferRanges();
-            const streamDuration = streamProcessor.getStreamInfo().duration;
-            streamProcessor.getFragmentModel().syncExecutedRequestsWithBufferedRange(bufferedRanges, streamDuration);
-
             // Then, check if this request was downloaded or not
             while (request && request.action !== FragmentRequest.ACTION_COMPLETE && streamProcessor.getFragmentModel().isFragmentLoaded(request)) {
                 // loop until we found not loaded fragment, or no fragment
@@ -102,13 +97,6 @@ function NextFragmentRequestRule(config) {
                 scheduleController.setTimeToLoadDelay(0);
             }
         }
-
-        /*
-        if (request) {
-            log('Return request :' + request.url);
-        } else {
-            log('no request');
-        }*/
 
         return request;
     }

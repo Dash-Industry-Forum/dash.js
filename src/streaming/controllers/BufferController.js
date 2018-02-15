@@ -539,7 +539,6 @@ function BufferController(config) {
                 behindRange.end = ranges.end(i);
             }
             if (behindRange.start < behindRange.end) {
-                log('behindRange to clear for', type, '-', behindRange.start, ' - ', behindRange.end);
                 clearRanges.push(behindRange);
             }
         }
@@ -550,7 +549,6 @@ function BufferController(config) {
                 end: ranges.end(ranges.length - 1) + BUFFER_RANGE_CALCULATION_THRESHOLD
             };
 
-            log('ahead to clear for', type, '-', aheadRange.start, ' - ', aheadRange.end);
             if (aheadRange.start < aheadRange.end) {
                 clearRanges.push(aheadRange);
             }
@@ -585,7 +583,8 @@ function BufferController(config) {
             streamProcessor.getScheduleController().setSeekTarget(currentTime);
             adapter.setIndexHandlerTime(streamProcessor, currentTime);
         }
-        buffer.remove(range.start, range.end, mediaSource);
+        
+        buffer.remove(range.start, range.end, range.force);
     }
 
     function onRemoved(e) {
@@ -636,7 +635,8 @@ function BufferController(config) {
                 log('Clearing buffer because track changed - ' + (buffer.buffered.end(buffer.buffered.length - 1) + BUFFER_END_THRESHOLD));
                 clearBuffers([{
                     start: 0,
-                    end: buffer.buffered.end(buffer.buffered.length - 1) + BUFFER_END_THRESHOLD
+                    end: buffer.buffered.end(buffer.buffered.length - 1) + BUFFER_END_THRESHOLD,
+                    force: true // Force buffer removal even when buffering is completed and MediaSource is ended
                 }]);
                 lastIndex = Number.POSITIVE_INFINITY;
                 streamProcessor.getFragmentModel().abortRequests();

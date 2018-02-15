@@ -218,14 +218,26 @@
             <div class="options-item">
                 <div class="options-item-title">Track Switch Mode</div>
                 <div class="options-item-body">
+                    <label class="options-label">Audio:</label>
                     <label data-toggle="tooltip" data-placement="right"
                            title="When a track is switched, the portion of the buffer that contains old track data is cleared">
-                        <input  type="radio" id="always-replace" autocomplete="off" name="track-switch" checked="checked" ng-click="changeTrackSwitchMode('alwaysReplace', 'video')" >
+                        <input  type="radio" id="always-replace-audio" autocomplete="off" name="track-switch-audio" checked="checked" ng-click="changeTrackSwitchMode('alwaysReplace', 'audio')" >
                         always replace
                     </label>
                     <label data-toggle="tooltip" data-placement="right"
                            title="When a track is switched, the portion of the buffer that contains old track data is NOT cleared">
-                        <input type="radio" id="never-replace" autocomplete="off" name="track-switch" ng-click="changeTrackSwitchMode('neverReplace', 'video')">
+                        <input type="radio" id="never-replace-audio" autocomplete="off" name="track-switch-audio" ng-click="changeTrackSwitchMode('neverReplace', 'audio')">
+                        never replace
+                    </label>
+                    <label class="options-label">Video:</label>
+                    <label data-toggle="tooltip" data-placement="right"
+                           title="When a track is switched, the portion of the buffer that contains old track data is cleared">
+                        <input  type="radio" id="always-replace-video" autocomplete="off" name="track-switch-video" checked="checked" ng-click="changeTrackSwitchMode('alwaysReplace', 'video')" >
+                        always replace
+                    </label>
+                    <label data-toggle="tooltip" data-placement="right"
+                           title="When a track is switched, the portion of the buffer that contains old track data is NOT cleared">
+                        <input type="radio" id="never-replace-video" autocomplete="off" name="track-switch-video" ng-click="changeTrackSwitchMode('neverReplace', 'video')">
                         never replace
                     </label>
                 </div>
@@ -264,6 +276,7 @@
                         <div class="seekContainer">
                             <div id="seekbar" class="seekbar seekbar-complete">
                                 <div id="seekbar-play" class="seekbar seekbar-play"></div>
+                                <div id="seekbar-buffer" class="seekbar seekbar-buffer"></div>
                             </div>
                         </div>
                         <div id="thumbnail-container" class="thumbnail-container">

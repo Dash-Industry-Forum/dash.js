@@ -44,6 +44,7 @@ declare namespace dashjs {
         on(type: AstInFutureEvent['type'], listener: (e: AstInFutureEvent) => void, scope?: object): void;
         on(type: BufferEvent['type'], listener: (e: BufferEvent) => void, scope?: object): void;
         on(type: ErrorEvent['type'], listener: (e: ErrorEvent) => void, scope?: object): void;
+        on(type: FragmentLoadingCompletedEvent['type'], listener: (e: FragmentLoadingCompletedEvent) => void, scope?: object): void;
         on(type: FragmentLoadingAbandonedEvent['type'], listener: (e: FragmentLoadingAbandonedEvent) => void, scope?: object): void;
         on(type: KeyErrorEvent['type'], listener: (e: KeyErrorEvent) => void, scope?: object): void;
         on(type: KeyMessageEvent['type'], listener: (e: KeyMessageEvent) => void, scope?: object): void;
@@ -70,7 +71,7 @@ declare namespace dashjs {
         on(type: StreamInitializedEvent['type'], listener: (e: StreamInitializedEvent) => void, scope?: object): void;
         on(type: TextTracksAddedEvent['type'], listener: (e: TextTracksAddedEvent) => void, scope?: object): void;
         on(type: string, listener: (e: Event) => void, scope?: object): void;
-        off(type: string, listener: (e: Event) => void, scope?: object): void;
+        off(type: string, listener: (e: any) => void, scope?: object): void;
         extend(parentNameString: string, childInstance: object, override: boolean): void;
         attachView(element: HTMLElement): void;
         attachSource(urlOrManifest: string | object): void;
@@ -128,6 +129,10 @@ declare namespace dashjs {
         getUsePixelRatioInLimitBitrateByPortal(): any;
         setUsePixelRatioInLimitBitrateByPortal(value: boolean): void;
         setTextTrack(idx: number): void;
+        getTextDefaultLanguage(): string | undefined;
+        setTextDefaultLanguage(lang: string): void;
+        getTextDefaultEnabled(): boolean | undefined;
+        setTextDefaultEnabled(enable: boolean): void;
         getThumbnail(time: number): Thumbnail;
         getBitrateInfoListFor(type: 'video' | 'audio'): BitrateInfo[];
         setInitialBitrateFor(type: 'video' | 'audio', value: number): void;
@@ -303,6 +308,13 @@ declare namespace dashjs {
 
     export type ErrorEvent = GenericErrorEvent | DownloadErrorEvent | ManifestErrorEvent | TimedTextErrorEvent;
 
+    export interface FragmentLoadingCompletedEvent extends Event {
+        type: MediaPlayerEvents['FRAGMENT_LOADING_COMPLETED'];
+        request: FragmentRequest;
+        response: ArrayBuffer;
+        sender: object;
+    }
+
     export interface FragmentLoadingAbandonedEvent extends Event {
         type: MediaPlayerEvents['FRAGMENT_LOADING_ABANDONED'];
         streamProcessor: object;
@@ -475,6 +487,30 @@ declare namespace dashjs {
         height: number;
         scanType: string;
         qualityIndex: number;
+    }
+
+    export interface FragmentRequest {
+        action: string;
+        availabilityEndTime: number;
+        availabilityStartTime: Date;
+        bytesLoaded: number;
+        bytesTotal: number;
+        delayLoadingTime: number;
+        duration: number;
+        firstByteDate: Date;
+        index: number;
+        mediaInfo: MediaInfo;
+        mediaType: 'video' | 'audio' | 'text' | 'fragmentedText' | 'embeddedText';
+        quality: number;
+        representationId: string;
+        requestStartDate: Date;
+        requestEndDate: Date | null;
+        responseType: string;
+        serviceLocation: string;
+        startTime: number;
+        timescale: number;
+        type: 'InitializationSegment' | 'MediaSegment';
+        url: string;
     }
 
     export interface MediaSettings {

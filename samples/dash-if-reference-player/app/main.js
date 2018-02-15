@@ -226,6 +226,22 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     $scope.defaultStableBufferDelay = $scope.player.getStableBufferTime();
     $scope.defaultBufferTimeAtTopQuality = $scope.player.getBufferTimeAtTopQuality();
     $scope.defaultBufferTimeAtTopQualityLongForm = $scope.player.getBufferTimeAtTopQualityLongForm();
+    
+    const initVideoTrackSwitchMode = $scope.player.getTrackSwitchModeFor('video');
+    const initAudioTrackSwitchMode = $scope.player.getTrackSwitchModeFor('audio');
+   
+    //get default track switch mode
+    if(initVideoTrackSwitchMode === 'alwaysReplace') {
+        document.getElementById('always-replace-video').checked = true;
+    } else {
+        document.getElementById('never-replace-video').checked = true;
+    }
+
+    if(initAudioTrackSwitchMode === 'alwaysReplace') {
+        document.getElementById('always-replace-audio').checked = true;
+    } else {
+        document.getElementById('never-replace-audio').checked = true;
+    }
 
     $scope.controlbar = new ControlBar($scope.player); /* jshint ignore:line */
     $scope.controlbar.initialize();
