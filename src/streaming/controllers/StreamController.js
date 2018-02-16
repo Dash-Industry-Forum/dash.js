@@ -49,9 +49,12 @@ import BaseURLController from './BaseURLController';
 import MediaSourceController from './MediaSourceController';
 
 function StreamController() {
-    let context = this.context;
-    let log = Debug(context).getInstance().log;
-    let eventBus = EventBus(context).getInstance();
+    // Check whether there is a gap every 20 wallClockUpdateEvent times
+    const STALL_THRESHOLD_TO_CHECK_GAPS = 20;
+
+    const context = this.context;
+    const log = Debug(context).getInstance().log;
+    const eventBus = EventBus(context).getInstance();
 
     let instance,
         capabilities,
@@ -92,7 +95,9 @@ function StreamController() {
         videoTrackDetected,
         audioTrackDetected,
         isStreamBufferingCompleted,
-        playbackEndedTimerId;
+        playbackEndedTimerId,
+        wallclockTicked,
+        lastPlaybackTime;
 
     function setup() {
         timeSyncController = TimeSyncController(context).getInstance();
@@ -134,6 +139,7 @@ function StreamController() {
         eventBus.on(Events.MANIFEST_UPDATED, onManifestUpdated, this);
         eventBus.on(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
         eventBus.on(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, this);
+        eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
         eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
     }
 
@@ -146,6 +152,67 @@ function StreamController() {
             const playbackQuality = videoModel.getPlaybackQuality();
             if (playbackQuality) {
                 metricsModel.addDroppedFrames(Constants.VIDEO, playbackQuality);
+            }
+        }
+    }
+
+    function onWallclockTimeUpdated(e) {
+        if (!mediaPlayerModel.getJumpGaps() || isPaused || isStreamSwitchingInProgress ||
+            !activeStream || playbackController.isSeeking()) {
+            return;
+        }
+
+        wallclockTicked++;
+        if (wallclockTicked >= STALL_THRESHOLD_TO_CHECK_GAPS) {
+            const currentTime = playbackController.getTime();
+            if (lastPlaybackTime === currentTime) {
+                log('Warning - Playback stalled for', (wallclockTicked * mediaPlayerModel.getWallclockTimeUpdateInterval()) ,'milliseconds. Time for a jump?');
+                jumpGap(currentTime, e.timeToEnd);
+            } else {
+                lastPlaybackTime = currentTime;
+            }
+            wallclockTicked = 0;
+        }
+    }
+
+    function jumpGap(time, timeToStreamEnd) {
+        const streamProcessors = activeStream.getProcessors();
+        let seekToPosition;
+
+        // Find out what is the right time position to jump to taking
+        // into account state of buffer
+        for (let i = 0; i < streamProcessors.length; i ++) {
+            const mediaBuffer = streamProcessors[i].getBuffer();
+            const ranges = sourceBufferController.getAllRanges(mediaBuffer);
+            let nextRangeStartTime;
+            if (!ranges || ranges.length <= 1) continue;
+
+            // Get the range just after current time position
+            for (let j = 0; j < ranges.length; j++) {
+                if (time < ranges.start(j)) {
+                    nextRangeStartTime = ranges.start(j);
+                    break;
+                }
+            }
+
+            if (nextRangeStartTime > 0) {
+                const gap = nextRangeStartTime - time;
+                if (gap > 0 && gap <= mediaPlayerModel.getSmallGapLimit()) {
+                    if (seekToPosition === undefined || nextRangeStartTime > seekToPosition) {
+                        seekToPosition = nextRangeStartTime;
+                    }
+                }
+            }
+        }
+
+        // If there is a safe position to jump to, do the seeking
+        if (seekToPosition > 0) {
+            if (!isNaN(timeToStreamEnd) && seekToPosition >= time + timeToStreamEnd) {
+                log('Jumping media gap (discontinuity) at time ', time, '. Jumping to end of the stream');
+                onEnded();
+            } else {
+                log('Jumping media gap (discontinuity) at time ', time, '. Jumping to time position', seekToPosition);
+                playbackController.seek(seekToPosition);
             }
         }
     }
@@ -319,7 +386,6 @@ function StreamController() {
     }
 
     function switchStream(oldStream, newStream, seekTime) {
-
         if (isStreamSwitchingInProgress || !newStream || oldStream === newStream) return;
         isStreamSwitchingInProgress = true;
 
@@ -340,7 +406,6 @@ function StreamController() {
     }
 
     function openMediaSource(seekTime, oldStream) {
-
         let sourceUrl;
 
         function onMediaSourceOpen() {
@@ -369,7 +434,6 @@ function StreamController() {
     }
 
     function activateStream(seekTime) {
-
         activeStream.activate(mediaSource);
 
         audioTrackDetected = checkTrackPresence(Constants.AUDIO);
@@ -413,7 +477,6 @@ function StreamController() {
     }
 
     function composeStreams() {
-
         try {
             const streamsInfo = adapter.getStreamsInfo();
             if (streamsInfo.length === 0) {
@@ -429,14 +492,12 @@ function StreamController() {
             });
 
             for (let i = 0, ln = streamsInfo.length; i < ln; i++) {
-
                 // If the Stream object does not exist we probably loaded the manifest the first time or it was
                 // introduced in the updated manifest, so we need to create a new Stream and perform all the initialization operations
                 const streamInfo = streamsInfo[i];
                 let stream = getComposedStream(streamInfo);
 
                 if (!stream) {
-
                     stream = Stream(context).create({
                         manifestModel: manifestModel,
                         dashManifestModel: dashManifestModel,
@@ -460,7 +521,6 @@ function StreamController() {
                     });
                     streams.push(stream);
                     stream.initialize(streamInfo, protectionController);
-
                 } else {
                     stream.updateData(streamInfo);
                 }
@@ -509,10 +569,10 @@ function StreamController() {
         if (!e.error) {
             //Since streams are not composed yet , need to manually look up useCalculatedLiveEdgeTime to detect if stream
             //is SegmentTimeline to avoid using time source
-            let manifest = e.manifest;
+            const manifest = e.manifest;
             adapter.updatePeriods(manifest);
-            let streamInfo = adapter.getStreamsInfo(manifest)[0];
-            let mediaInfo = (
+            const streamInfo = adapter.getStreamsInfo(manifest)[0];
+            const mediaInfo = (
                 adapter.getMediaInfoForType(streamInfo, Constants.VIDEO) ||
                 adapter.getMediaInfoForType(streamInfo, Constants.AUDIO)
             );
@@ -582,7 +642,7 @@ function StreamController() {
         if (playListMetrics) {
             if (activeStream) {
                 activeStream.getProcessors().forEach(p => {
-                    let ctrlr = p.getScheduleController();
+                    const ctrlr = p.getScheduleController();
                     if (ctrlr) {
                         ctrlr.finalisePlayList(time, reason);
                     }
@@ -611,7 +671,6 @@ function StreamController() {
 
 
     function onPlaybackError(e) {
-
         if (!e.error) return;
 
         let msg = '';
@@ -768,6 +827,7 @@ function StreamController() {
         playListMetrics = null;
         playbackEndedTimerId = undefined;
         isStreamBufferingCompleted = false;
+        wallclockTicked = 0;
     }
 
     function reset() {
@@ -782,7 +842,7 @@ function StreamController() {
         );
 
         for (let i = 0, ln = streams ? streams.length : 0; i < ln; i++) {
-            let stream = streams[i];
+            const stream = streams[i];
             stream.reset(hasMediaError);
         }
 
@@ -856,5 +916,4 @@ function StreamController() {
 }
 
 StreamController.__dashjs_factory_name = 'StreamController';
-
 export default FactoryMaker.getSingletonFactory(StreamController);
