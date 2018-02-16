@@ -250,6 +250,13 @@ function ProtectionModel_21Jan2015(config) {
     }
 
     function requestKeySystemAccessInternal(ksConfigurations, idx) {
+
+        if (navigator.requestMediaKeySystemAccess === undefined ||
+            typeof navigator.requestMediaKeySystemAccess !== 'function') {
+            eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {error: 'Insecure origins are not allowed'});
+            return;
+        }
+
         (function (i) {
             const keySystem = ksConfigurations[i].ks;
             const configs = ksConfigurations[i].configs;
