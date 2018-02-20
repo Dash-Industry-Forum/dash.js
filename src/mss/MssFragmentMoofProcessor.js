@@ -59,13 +59,13 @@ function MssFragmentMoofProcessor(config) {
         let entry,
             segmentTime;
         let segment = null;
-        let type = adaptation.type;
+        let type = adaptation.contentType;
         let t = 0;
         let availabilityStartTime = null;
         let range;
 
         if (manifest.type !== 'dynamic') {
-            return false;
+            return;
         }
 
         if (entries.length === 0) {
@@ -80,10 +80,19 @@ function MssFragmentMoofProcessor(config) {
 
         // Check if we have to append new segment to timeline
         if (entry.fragment_absolute_time <= segmentTime) {
+
+            // Update DVR window range
+            // => set range end to end time of current segment
+            range = {
+                start: segments[0].t / adaptation.SegmentTemplate.timescale,
+                end: (tfdt.baseMediaDecodeTime / adaptation.SegmentTemplate.timescale) + request.duration
+            };
+
+            updateDVR(request.mediaType, range, streamProcessor.getStreamInfo().manifestInfo);
             return;
         }
 
-        log('[MssFragmentMoofProcessor][', type, '] Add new segment - t = ', (entry.fragment_absolute_time /  10000000.0));
+        log('[MssFragmentMoofProcessor][', type,'] Add new segment - t = ', (entry.fragment_absolute_time /  10000000.0));
         segment = {};
         segment.t = entry.fragment_absolute_time;
         segment.d = entry.fragment_duration;
@@ -113,16 +122,20 @@ function MssFragmentMoofProcessor(config) {
                 end: (tfdt.baseMediaDecodeTime / adaptation.SegmentTemplate.timescale) + request.duration
             };
 
-            var dvrInfos = metricsModel.getMetricsFor(request.mediaType).DVRInfo;
-            if (dvrInfos) {
-                if (dvrInfos.length === 0 || (dvrInfos.length > 0 && range.end > dvrInfos[dvrInfos.length - 1].range.end)) {
-                    log('[MssFragmentMoofProcessor][' + request.mediaType + '] Update DVR Infos [' + range.start + ' - ' + range.end + ']');
-                    metricsModel.addDVRInfo(request.mediaType, playbackController.getTime(), streamProcessor.getStreamInfo().manifestInfo, range);
-                }
-            }
+            updateDVR(request.mediaType, range, streamProcessor.getStreamInfo().manifestInfo);
         }
 
         indexHandler.updateSegmentList(representation);
+    }
+
+    function updateDVR(type, range, manifestInfo) {
+        let dvrInfos = metricsModel.getMetricsFor(type).DVRInfo;
+        if (dvrInfos) {
+            if (dvrInfos.length === 0 || (dvrInfos.length > 0 && range.end > dvrInfos[dvrInfos.length - 1].range.end)) {
+                log('[MssFragmentMoofProcessor][', type, '] Update DVR Infos [' + range.start + ' - ' + range.end + ']');
+                metricsModel.addDVRInfo(type, playbackController.getTime(), manifestInfo, range);
+            }
+        }
     }
 
     // This function returns the offset of the 1st byte of a child box within a container box
