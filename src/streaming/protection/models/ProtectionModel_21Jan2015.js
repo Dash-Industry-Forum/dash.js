@@ -69,6 +69,22 @@ function ProtectionModel_21Jan2015(config) {
         eventHandler = createEventHandler();
     }
 
+    function arrayToHexString(array) {
+        let str = '[';
+        let i;
+
+        for (i = 0; i < array.length; i++) {
+            str += '0x' + array[i].toString(16);
+            if (i < (array.length - 1)) {
+                str += ',';
+            }
+        }
+
+        str += ']';
+
+        return str;
+    }
+
     function reset() {
         const numSessions = sessions.length;
         let session;
@@ -332,7 +348,37 @@ function ProtectionModel_21Jan2015(config) {
             handleEvent: function (event) {
                 switch (event.type) {
                     case 'keystatuseschange':
-                        eventBus.trigger(events.KEY_STATUSES_CHANGED, {data: this});
+                        eventBus.trigger(events.INTERNAL_KEY_STATUSES_CHANGED, {data: this});
+                        event.target.keyStatuses.forEach(function () {
+                            // has Edge and Chrome implement different version of keystatues, param are not on same order
+                            let status, keyId;
+                            if (arguments && arguments.length > 0) {
+                                if (arguments[0]) {
+                                    if (typeof arguments[0] === 'string') {
+                                        status = arguments[0];
+                                    } else {
+                                        keyId = arguments[0];
+                                    }
+                                }
+
+                                if (arguments[1]) {
+                                    if (typeof arguments[1] === 'string') {
+                                        status = arguments[1];
+                                    } else {
+                                        keyId = arguments[1];
+                                    }
+                                }
+                            }
+                            log('[DRM][PM_21Jan2015] status = ', status, 'for KID', arrayToHexString(new Uint8Array(keyId)));
+                            switch (status) {
+                                case 'expired':
+                                    eventBus.trigger(events.INTERNAL_KEY_STATUSES_CHANGED, {error: 'License has expired'});
+                                    break;
+                                default:
+                                    eventBus.trigger(events.INTERNAL_KEY_STATUSES_CHANGED,
+                                        {status: status, keyId: keyId});
+                            }
+                        });
                         break;
 
                     case 'message':

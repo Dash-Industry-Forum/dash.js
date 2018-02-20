@@ -58,6 +58,13 @@ class ProtectionEvents extends EventsBase {
         this.INTERNAL_KEY_SYSTEM_SELECTED = 'internalKeySystemSelected';
 
         /**
+         * Event ID for events delivered when the status of one or more
+         * decryption keys has changed
+         * @ignore
+         */
+        this.INTERNAL_KEY_STATUSES_CHANGED = 'internalkeyStatusesChanged';
+
+        /**
          * Event ID for events delivered when a new key has been added
          *
          * @constant

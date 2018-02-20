@@ -95,6 +95,7 @@ function Stream(config) {
             eventBus.on(Events.LICENSE_REQUEST_COMPLETE, onProtectionError, instance);
             eventBus.on(Events.KEY_SYSTEM_SELECTED, onProtectionError, instance);
             eventBus.on(Events.KEY_SESSION_CREATED, onProtectionError, instance);
+            eventBus.on(Events.KEY_STATUSES_CHANGED, onProtectionError, instance);
         }
     }
 
@@ -182,6 +183,7 @@ function Stream(config) {
         eventBus.off(Events.LICENSE_REQUEST_COMPLETE, onProtectionError, instance);
         eventBus.off(Events.KEY_SYSTEM_SELECTED, onProtectionError, instance);
         eventBus.off(Events.KEY_SESSION_CREATED, onProtectionError, instance);
+        eventBus.off(Events.KEY_STATUSES_CHANGED, onProtectionError, instance);
     }
 
     function getDuration() {
