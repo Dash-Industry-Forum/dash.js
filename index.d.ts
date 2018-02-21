@@ -128,6 +128,7 @@ declare namespace dashjs {
         setLimitBitrateByPortal(value: boolean): void;
         getUsePixelRatioInLimitBitrateByPortal(): any;
         setUsePixelRatioInLimitBitrateByPortal(value: boolean): void;
+        enableText(enable: boolean): void;
         setTextTrack(idx: number): void;
         getTextDefaultLanguage(): string | undefined;
         setTextDefaultLanguage(lang: string): void;
@@ -171,7 +172,6 @@ declare namespace dashjs {
         setBufferTimeAtTopQuality(value: number): void;
         setFragmentLoaderRetryAttempts(value: number): void;
         setFragmentLoaderRetryInterval(value: number): void;
-        setXHRWithCredentials(value: boolean): void;
         setXHRWithCredentialsForType(type: string, value: boolean): void;
         getXHRWithCredentialsForType(type: string): boolean;
         setBufferTimeAtTopQualityLongForm(value: number): void;
