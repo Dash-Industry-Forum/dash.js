@@ -453,7 +453,7 @@ function ScheduleController(config) {
         }
 
         streamProcessor.getFragmentModel().syncExecutedRequestsWithBufferedRange(
-            streamProcessor.getBufferController().getBuffer().buffered,
+            streamProcessor.getBufferController().getBuffer().getAllBufferRanges(),
             streamProcessor.getStreamInfo().duration);
 
         if (e.hasEnoughSpaceToAppend && isStopped) {
