@@ -798,6 +798,24 @@ describe('MediaPlayer', function () {
             expect(cacheLoadThresholdForAudio).to.equal(2);
         });
 
+        it('should configure jumpGap feature', function () {
+            let jumpGaps = mediaPlayerModel.getJumpGaps();
+            expect(jumpGaps).to.equal(false);
+
+            player.setJumpGaps(true);
+
+            jumpGaps = mediaPlayerModel.getJumpGaps();
+            expect(jumpGaps).to.equal(true);
+
+            let smallGapLimit = mediaPlayerModel.getSmallGapLimit();
+            expect(smallGapLimit).to.equal(0.8);
+
+            player.setSmallGapLimit(0.5);
+
+            smallGapLimit = mediaPlayerModel.getSmallGapLimit();
+            expect(smallGapLimit).to.equal(0.5);
+        });
+
         it('should configure BandwidthSafetyFactor', function () {
             let BandwidthSafetyFactor = mediaPlayerModel.getBandwidthSafetyFactor();
             expect(BandwidthSafetyFactor).to.equal(0.9);

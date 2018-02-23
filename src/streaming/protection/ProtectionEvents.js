@@ -115,7 +115,7 @@ class ProtectionEvents extends EventsBase {
          * has completed
          * @ignore
          */
-        this.KEY_SYSTEM_ACCESS_COMPLETE = 'keySystemAccessComplete';
+        this.KEY_SYSTEM_ACCESS_COMPLETE = 'public_keySystemAccessComplete';
 
         /**
          * Event ID for events delivered when a key system selection procedure
