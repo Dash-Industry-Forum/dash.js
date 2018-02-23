@@ -2590,6 +2590,9 @@ function MediaPlayer() {
             MediaPlayerEvents.extend(Protection.events, {
                 publicOnly: true
             });
+            if (!capabilities) {
+                capabilities = Capabilities(context).getInstance();
+            }
             protectionController = protection.createProtectionSystem({
                 log: log,
                 errHandler: errHandler,
