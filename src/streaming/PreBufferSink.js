@@ -43,10 +43,12 @@ function PreBufferSink(onAppendedCallback) {
     const log = Debug(context).getInstance().log;
 
     let chunks = [];
+    let outstandingInit;
     let onAppended = onAppendedCallback;
 
     function reset() {
         chunks = [];
+        outstandingInit = null;
         onAppended = null;
     }
 
@@ -54,7 +56,11 @@ function PreBufferSink(onAppendedCallback) {
         if (chunk.segmentType !== 'InitializationSegment') { //Init segments are stored in the initCache.
             chunks.push(chunk);
             chunks.sort(function (a, b) { return a.start - b.start; });
+            outstandingInit = null;
+        } else {//We need to hold an init chunk for when a corresponding media segment is being downloaded when the discharge happens.
+            outstandingInit = chunk;
         }
+
         log('PreBufferSink appended chunk s: ' + chunk.start + '; e: ' + chunk.end);
         if (onAppended) {
             onAppended({
@@ -113,6 +119,11 @@ function PreBufferSink(onAppendedCallback) {
      */
     function discharge(start, end) {
         const result = getChunksAt(start, end);
+        if (outstandingInit) {
+            result.push(outstandingInit);
+            outstandingInit = null;
+        }
+
         remove(start, end);
 
         return result;

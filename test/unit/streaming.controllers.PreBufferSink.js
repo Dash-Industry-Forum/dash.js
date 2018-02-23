@@ -61,14 +61,26 @@ describe('PreBufferSink', function () {
             }
         });
 
-        it('should ignore init segments that are passed in', function () {
+        it('should return an init segment if it is the last segment that is passed in', function () {
             const chunk = makeChunk();
             chunk.segmentType = 'InitializationSegment';
 
             sink.append(chunk);
 
             const chunkList = sink.discharge();
-            expect(chunkList).to.have.length(0);
+            expect(chunkList).to.have.length(1);
+        });
+
+        it('should not return an init segment if other media segments are passed in afterwards', function () {
+            const chunk = makeChunk();
+            chunk.segmentType = 'InitializationSegment';
+
+            sink.append(chunk);
+            sink.append(makeChunk(0, 4));
+
+            const chunkList = sink.discharge();
+            expect(chunkList).to.have.length(1);
+            expect(chunkList[0].segmentType).to.equal('data');
         });
 
         it('should discharge only over a specified timerange', function () {
