@@ -424,7 +424,9 @@ function ProtectionController(config) {
                     for (let i = 0; i < pendingNeedKeyData.length; i++) {
                         for (ksIdx = 0; ksIdx < pendingNeedKeyData[i].length; ksIdx++) {
                             if (keySystem === pendingNeedKeyData[i][ksIdx].ks) {
-                                if (pendingNeedKeyData[i][ksIdx].initData === null && protData && protData.hasOwnProperty('clearkeys')) {
+                                // For Clearkey: if parameters for generating init data was provided by the user, use them for generating
+                                // initData and overwrite possible initData indicated in encrypted event (EME)
+                                if (protectionKeyController.isClearKey(keySystem) && protData && protData.hasOwnProperty('clearkeys')) {
                                     const initData = { kids: Object.keys(protData.clearkeys) };
                                     pendingNeedKeyData[i][ksIdx].initData = new TextEncoder().encode(JSON.stringify(initData));
                                 }

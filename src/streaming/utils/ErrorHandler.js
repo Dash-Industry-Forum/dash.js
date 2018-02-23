@@ -63,7 +63,7 @@ function ErrorHandler() {
         eventBus.trigger(Events.ERROR, {error: 'download', event: {id: id, url: url, request: request}});
     }
 
-    // {message: "", id: "codec"|"parse"|"nostreams", manifest: {parsed manifest}}
+    // {message: "", id: "parse"|"nostreams", manifest: {parsed manifest}}
     function manifestError(message, id, manifest, err) {
         eventBus.trigger(Events.ERROR, {error: 'manifestError', event: {message: message, id: id, manifest: manifest, event: err}});
     }
