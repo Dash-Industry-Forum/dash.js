@@ -182,7 +182,7 @@ function StreamController() {
         // into account state of buffer
         for (let i = 0; i < streamProcessors.length; i ++) {
             const mediaBuffer = streamProcessors[i].getBuffer();
-            const ranges = buffer.getAllBufferRanges();
+            const ranges = mediaBuffer.getAllBufferRanges();
             let nextRangeStartTime;
             if (!ranges || ranges.length <= 1) continue;
 
