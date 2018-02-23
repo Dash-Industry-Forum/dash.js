@@ -10,7 +10,13 @@ declare namespace dashjs {
     interface VideoModel { }
 
     interface ProtectionController {
+        initialize(manifest: object | null, audioInfo: ProtectionMediaInfo, videoInfo: ProtectionMediaInfo): void;
+        setProtectionData(protData: object): void;
         setRobustnessLevel(level: string): void;
+        setSessionType(type: string): void;
+        loadKeySession(id: string): void;
+        closeKeySession(session: SessionToken): void;
+        removeKeySession(session: SessionToken): void;
     }
 
     export interface Bitrate {
@@ -39,6 +45,11 @@ declare namespace dashjs {
         bitrateList: Bitrate[];
     }
 
+    export class ProtectionMediaInfo {
+        codec: string | null;
+        contentProtection: any | null;
+    }
+    
     export interface MediaPlayerClass {
         initialize(view?: HTMLElement, source?: string, autoPlay?: boolean): void;
         on(type: AstInFutureEvent['type'], listener: (e: AstInFutureEvent) => void, scope?: object): void;
@@ -50,6 +61,7 @@ declare namespace dashjs {
         on(type: KeyMessageEvent['type'], listener: (e: KeyMessageEvent) => void, scope?: object): void;
         on(type: KeySessionClosedEvent['type'], listener: (e: KeySessionClosedEvent) => void, scope?: object): void;
         on(type: KeySessionEvent['type'], listener: (e: KeySessionEvent) => void, scope?: object): void;
+        on(type: KeyStatusesChangedEvent['type'], listener: (e: KeyStatusesChangedEvent) => void, scope?: object): void;
         on(type: KeySystemSelectedEvent['type'], listener: (e: KeySystemSelectedEvent) => void, scope?: object): void;
         on(type: LicenseRequestCompleteEvent['type'], listener: (e: LicenseRequestCompleteEvent) => void, scope?: object): void;
         on(type: LogEvent['type'], listener: (e: LogEvent) => void, scope?: object): void;
@@ -357,9 +369,14 @@ declare namespace dashjs {
     }
 
     export interface KeySessionEvent extends Event {
-        type: MediaPlayerEvents['KEY_SESSION_CREATED' | 'KEY_STATUSES_CHANGED'];
+        type: MediaPlayerEvents['KEY_SESSION_CREATED'];
         data: SessionToken | null;
         error?: string;
+    }
+
+    export interface KeyStatusesChangedEvent extends Event {
+        type: MediaPlayerEvents['KEY_STATUSES_CHANGED'];
+        data: SessionToken;
     }
 
     export interface KeySystemSelectedEvent extends Event {

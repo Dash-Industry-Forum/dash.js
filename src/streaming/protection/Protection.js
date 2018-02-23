@@ -143,10 +143,11 @@ function Protection() {
         let log = config.log;
         let eventBus = config.eventBus;
         let errHandler = config.errHandler;
-        let videoElement = config.videoModel.getElement();
+        let videoElement = config.videoModel ? config.videoModel.getElement() : null;
 
-        if (videoElement.onencrypted !== undefined &&
-            videoElement.mediaKeys !== undefined &&
+        if ((!videoElement || videoElement.onencrypted !== undefined) &&
+            (!videoElement || videoElement.mediaKeys !== undefined) &&
+            window.MediaKeys !== undefined &&
             navigator.requestMediaKeySystemAccess !== undefined &&
             typeof navigator.requestMediaKeySystemAccess === 'function') {
 
