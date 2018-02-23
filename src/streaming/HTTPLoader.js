@@ -108,7 +108,7 @@ function HTTPLoader(cfg) {
                     request.requestEndDate,
                     httpRequest.response ? httpRequest.response.status : null,
                     request.duration,
-                    httpRequest.response ? httpRequest.response.responseHeaders || httpRequest.response.getAllResponseHeaders() : null,
+                    httpRequest.response && httpRequest.response.getAllResponseHeaders ? httpRequest.response.getAllResponseHeaders() : httpRequest.response.responseHeaders,
                     success ? traces : null
                 );
             }
@@ -139,11 +139,11 @@ function HTTPLoader(cfg) {
                     );
 
                     if (config.error) {
-                        config.error(request, 'error', httpRequest.http.statusText);
+                        config.error(request, 'error', httpRequest.response.statusText);
                     }
 
                     if (config.complete) {
-                        config.complete(request, httpRequest.http.statusText);
+                        config.complete(request, httpRequest.response.statusText);
                     }
                 }
             }

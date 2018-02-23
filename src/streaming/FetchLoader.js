@@ -70,16 +70,17 @@ function FetchLoader(cfg) {
         };
 
         fetch(httpRequest.url, reqOptions).then(function (response) {
-            if (!response.ok) {
-                httpRequest.onend();
-            }
-
             if (!httpRequest.response) {
                 httpRequest.response = {};
             }
             httpRequest.response.status = response.status;
             httpRequest.response.statusText = response.statusText;
             httpRequest.response.responseURL = response.url;
+
+            if (!response.ok) {
+                httpRequest.onend();
+            }
+
             let responseHeaders = '';
             for (const key of response.headers.keys()) {
                 responseHeaders += key + ': ' + response.headers.get(key) + '\n';
