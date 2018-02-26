@@ -256,6 +256,7 @@ declare namespace dashjs {
         PLAYBACK_TIME_UPDATED: 'playbackTimeUpdated';
         PROTECTION_CREATED: 'public_protectioncreated';
         PROTECTION_DESTROYED: 'public_protectiondestroyed';
+        TRACK_CHANGE_RENDERED: 'trackChangeRequested';
         QUALITY_CHANGE_RENDERED: 'qualityChangeRequested';
         QUALITY_CHANGE_REQUESTED: 'qualityChangeRendered';
         STREAM_INITIALIZED: 'streamInitialized';
@@ -467,6 +468,13 @@ declare namespace dashjs {
     export interface ProtectionDestroyedEvent extends Event {
         type: MediaPlayerEvents['PROTECTION_DESTROYED'];
         data: string;
+    }
+
+    export interface TrackChangeRenderedEvent extends Event {
+        type: MediaPlayerEvents['TRACK_CHANGE_RENDERED'];
+        mediaType: 'video' | 'audio' | 'fragmentedText';
+        oldMediaInfo: MediaInfo;
+        newMediaInfo: MediaInfo;
     }
 
     export interface QualityChangeRenderedEvent extends Event {

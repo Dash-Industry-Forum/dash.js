@@ -327,6 +327,13 @@ function ScheduleController(config) {
                 threshold: 0
             })[0];
             if (item && playbackController.getTime() >= item.startTime) {
+                if ((!lastFragmentRequest.mediaInfo || (item.mediaInfo.type === lastFragmentRequest.mediaInfo.type && item.mediaInfo.id !== lastFragmentRequest.mediaInfo.id)) && trigger) {
+                    eventBus.trigger(Events.TRACK_CHANGE_RENDERED, {
+                        mediaType: type,
+                        oldMediaInfo: lastFragmentRequest.mediaInfo,
+                        newMediaInfo: item.mediaInfo
+                    });
+                }
                 if ((item.quality !== lastFragmentRequest.quality || item.adaptationIndex !== lastFragmentRequest.adaptationIndex) && trigger) {
                     eventBus.trigger(Events.QUALITY_CHANGE_RENDERED, {
                         mediaType: type,
@@ -335,6 +342,7 @@ function ScheduleController(config) {
                     });
                 }
                 lastFragmentRequest = {
+                    mediaInfo: item.mediaInfo,
                     quality: item.quality,
                     adaptationIndex: item.adaptationIndex
                 };
@@ -613,6 +621,7 @@ function ScheduleController(config) {
         initialRequest = true;
         lastInitQuality = NaN;
         lastFragmentRequest = {
+            mediaInfo: undefined,
             quality: NaN,
             adaptationIndex: NaN
         };
