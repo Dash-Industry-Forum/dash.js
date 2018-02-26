@@ -186,7 +186,7 @@ function BufferController(config) {
 
         if (bufferResetInProgress) {
             mediaChunk = chunk;
-            if (buffer.buffered && buffer.buffered.length > 0) {
+            if (buffer.buffered && buffer.buffered.length > 0 && playbackController.getTimeToStreamEnd() > STALL_THRESHOLD) {
                 log('Clearing buffer because track changed - ' + (buffer.buffered.end(buffer.buffered.length - 1) + BUFFER_END_THRESHOLD));
                 clearBuffers([{
                     start: 0,
