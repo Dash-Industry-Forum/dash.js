@@ -256,7 +256,7 @@ declare namespace dashjs {
         PLAYBACK_TIME_UPDATED: 'playbackTimeUpdated';
         PROTECTION_CREATED: 'public_protectioncreated';
         PROTECTION_DESTROYED: 'public_protectiondestroyed';
-        TRACK_CHANGE_RENDERED: 'trackChangeRequested';
+        TRACK_CHANGE_RENDERED: 'trackChangeRendered';
         QUALITY_CHANGE_RENDERED: 'qualityChangeRequested';
         QUALITY_CHANGE_REQUESTED: 'qualityChangeRendered';
         STREAM_INITIALIZED: 'streamInitialized';
