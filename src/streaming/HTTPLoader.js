@@ -287,7 +287,11 @@ function HTTPLoader(cfg) {
             x.onloadend = x.onerror = x.onprogress = undefined;
             if (x.response && x.response.abort) {
                 x.response.abort();
+            } else if (x.controller) {
+                // For firefox and edge
+                x.controller.abort();
             } else if (x.reader) {
+                // For Chrome
                 x.reader.cancel();
             }
             x.onabort();

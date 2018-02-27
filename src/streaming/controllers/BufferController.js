@@ -85,11 +85,13 @@ function BufferController(config) {
         initCache,
         seekStartTime,
         seekClearedBufferingCompleted,
-        pendingPruningRanges;
+        pendingPruningRanges,
+        chunksToAppend;
 
     function setup() {
         log = Debug(context).getInstance().log.bind(instance);
         initCache = InitCache(context).getInstance();
+        chunksToAppend = [];
 
         resetInitialSettings();
     }
@@ -184,13 +186,17 @@ function BufferController(config) {
     }
 
 
-    function appendToBuffer(chunk) {
-        isAppendingInProgress = true;
-        appendedBytesInfo = chunk;
-        sourceBufferController.append(buffer, chunk);
+    function appendToBuffer(chunk, forceAppend) {
+        if (!isAppendingInProgress || forceAppend) {
+            isAppendingInProgress = true;
+            appendedBytesInfo = chunk;
+            sourceBufferController.append(buffer, chunk);
 
-        if (chunk.mediaInfo.type === Constants.VIDEO) {
-            eventBus.trigger(Events.VIDEO_CHUNK_RECEIVED, { chunk: chunk });
+            if (chunk.mediaInfo.type === Constants.VIDEO) {
+                eventBus.trigger(Events.VIDEO_CHUNK_RECEIVED, { chunk: chunk });
+            }
+        } else {
+            chunksToAppend.push(chunk);
         }
     }
 
@@ -234,7 +240,6 @@ function BufferController(config) {
             showBufferRanges(ranges);
 
             onPlaybackProgression();
-            isAppendingInProgress = false;
 
             const dataEvent = {
                 sender: instance,
@@ -247,6 +252,13 @@ function BufferController(config) {
                 eventBus.trigger(Events.BYTES_APPENDED, dataEvent);
             } else if (appendedBytesInfo && e.endFragment) {
                 eventBus.trigger(Events.BYTES_APPENDED_END_FRAGMENT, dataEvent);
+            }
+
+            if (chunksToAppend.length === 0) {
+                isAppendingInProgress = false;
+            } else {
+                const chunk = chunksToAppend.shift();
+                appendToBuffer(chunk, true);
             }
         }
     }
@@ -268,6 +280,8 @@ function BufferController(config) {
             //a seek command has occured, reset lastIndex value, it will be set next time that onStreamCompleted will be called.
             lastIndex = Number.POSITIVE_INFINITY;
         }
+        chunksToAppend = [];
+        isAppendingInProgress = false;
         if (type !== Constants.FRAGMENTED_TEXT) {
             // remove buffer after seeking operations
             pruneAllSafely();

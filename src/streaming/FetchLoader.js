@@ -30,7 +30,6 @@
  */
 
 import FactoryMaker from '../core/FactoryMaker';
-import ISOBoxer from 'codem-isoboxer';
 
 /**
 * @module FetchLoader
@@ -63,10 +62,17 @@ function FetchLoader(cfg) {
             request.requestStartDate = requestStartTime;
         }
 
+        let controller;
+        if (typeof window.AbortController === 'function') {
+            controller = new AbortController(); /*jshint ignore:line*/
+            httpRequest.controller = controller;
+        }
+
         const reqOptions = {
             method: httpRequest.method,
             headers: headers,
-            credentials: httpRequest.withCredentials ? 'include' : undefined
+            credentials: httpRequest.withCredentials ? 'include' : undefined,
+            signal: controller ? controller.signal : undefined
         };
 
         fetch(httpRequest.url, reqOptions).then(function (response) {
@@ -107,7 +113,6 @@ function FetchLoader(cfg) {
             }
 
             let bytesReceived = 0;
-            let remaining = new Uint8Array();
             let dataArray;
 
             httpRequest.reader = response.body.getReader();
@@ -125,8 +130,8 @@ function FetchLoader(cfg) {
 
                 // Same structure as https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequestEventTarget/onprogress
                 const event = {
-                    loaded: bytesReceived,
-                    total: totalBytes
+                    loaded: isNaN(totalBytes) ? value.length : bytesReceived,
+                    total: isNaN(totalBytes) ? value.length : totalBytes
                 };
                 // Returning data on the following loop so that when it's done it sends data
                 // This also avoids a problem with subtitles
@@ -135,38 +140,14 @@ function FetchLoader(cfg) {
                     event.data = dataArray.slice(0).buffer;
                 }
                 httpRequest.progress(event);
-                [dataArray, remaining] = processData(value, remaining);
+                // [dataArray, remaining] = processData(value, remaining);
+                dataArray = value;
 
                 return httpRequest.reader.read().then(processResult);
 
             };
             return httpRequest.reader.read().then(processResult);
         });
-    }
-
-    function processData(data, remaining) {
-        const result = concatTypedArray(remaining, data);
-        const boxes = ISOBoxer.parseBuffer(result.buffer).boxes;
-        let end = 0;
-        for (let i = 0; i < boxes.length; i++) {
-            if (boxes[i]._incomplete) {
-                break;
-            } else if (['moov', 'mdat'].includes(boxes[i].type)) {
-                end = boxes[i]._offset + boxes[i].size;
-            }
-        }
-        return [result.subarray(0, end), result.subarray(end)];
-    }
-
-    function concatTypedArray(remaining, data) {
-        if (remaining.constructor !== data.constructor) {
-            throw new TypeError('Type mismatch. Expected: ' + remaining.constructor.name +
-                ', but got: ' + data.constructor.name + '.');
-        }
-        let result = new remaining.constructor(remaining.length + data.length);
-        result.set(remaining);
-        result.set(data, remaining.length);
-        return result;
     }
 
     instance = {
