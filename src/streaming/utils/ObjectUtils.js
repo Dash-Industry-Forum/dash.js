@@ -30,7 +30,7 @@
  */
 
 import FactoryMaker from '../../core/FactoryMaker';
-import deepEqual from 'deep-equal';
+import deepEqual from 'fast-deep-equal';
 
 /**
  * @module ObjectUtils
