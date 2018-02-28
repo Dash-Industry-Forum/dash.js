@@ -400,12 +400,20 @@ function DashManifestModel(config) {
             processedRealAdaptation,
             realRepresentation,
             i,
-            s;
+            s,
+            baseUrl;
 
         if (voAdaptation && voAdaptation.period && isInteger(voAdaptation.period.index)) {
             const periodArray = voAdaptation.period.mpd.manifest.Period_asArray[voAdaptation.period.index];
             if (periodArray && periodArray.AdaptationSet_asArray && isInteger(voAdaptation.index)) {
                 processedRealAdaptation = processAdaptation(periodArray.AdaptationSet_asArray[voAdaptation.index]);
+            }
+
+            // TODO: To be reviewed. We should get just the baseUrl elements that affects to the representations
+            // that we are processing
+            const baseUrls = getBaseURLsFromElement(voAdaptation.period.mpd.manifest);
+            if (baseUrls) {
+                baseUrl = baseUrls[0];
             }
         }
 
@@ -516,6 +524,16 @@ function DashManifestModel(config) {
                     }
                     if (segmentInfo.hasOwnProperty(DashConstants.PRESENTATION_TIME_OFFSET)) {
                         voRepresentation.presentationTimeOffset = segmentInfo.presentationTimeOffset / voRepresentation.timescale;
+                    }
+                    if (segmentInfo.hasOwnProperty(DashConstants.AVAILABILITY_TIME_OFFSET)) {
+                        voRepresentation.availabilityTimeOffset = segmentInfo.availabilityTimeOffset;
+                    } else if (baseUrl && baseUrl.availabilityTimeOffset !== undefined) {
+                        voRepresentation.availabilityTimeOffset = baseUrl.availabilityTimeOffset;
+                    }
+                    if (segmentInfo.hasOwnProperty(DashConstants.AVAILABILITY_TIME_COMPLETE)) {
+                        voRepresentation.availabilityTimeComplete = segmentInfo.availabilityTimeComplete !== 'false';
+                    } else if (baseUrl && baseUrl.availabilityTimeComplete !== undefined) {
+                        voRepresentation.availabilityTimeComplete = baseUrl.availabilityTimeComplete;
                     }
                 }
 
@@ -928,8 +946,14 @@ function DashManifestModel(config) {
                     baseUrl.dvb_weight = entry[DashConstants.DVB_WEIGHT];
                 }
 
-                /* NOTE: byteRange, availabilityTimeOffset,
-                 * availabilityTimeComplete currently unused
+                if (entry.hasOwnProperty(DashConstants.AVAILABILITY_TIME_OFFSET)) {
+                    baseUrl.availabilityTimeOffset = entry[DashConstants.AVAILABILITY_TIME_OFFSET];
+                }
+
+                if (entry.hasOwnProperty(DashConstants.AVAILABILITY_TIME_COMPLETE)) {
+                    baseUrl.availabilityTimeComplete = entry[DashConstants.AVAILABILITY_TIME_COMPLETE] !== 'false';
+                }
+                /* NOTE: byteRange currently unused
                  */
 
                 baseUrls.push(baseUrl);

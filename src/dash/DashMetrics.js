@@ -86,6 +86,9 @@ function DashMetrics(config) {
     function getMaxIndexForBufferType(bufferType, periodIdx) {
         let maxIndex;
         const manifest = manifestModel.getValue();
+        if (!manifest) {
+            return -1;
+        }
         let period = manifest.Period_asArray[periodIdx];
 
         maxIndex = findMaxBufferIndex(period, bufferType);

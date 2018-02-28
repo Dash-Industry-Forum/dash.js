@@ -68,8 +68,7 @@ function ManifestLoader(config) {
             errHandler: errHandler,
             metricsModel: config.metricsModel,
             mediaPlayerModel: config.mediaPlayerModel,
-            requestModifier: config.requestModifier,
-            usingFetch: false
+            requestModifier: config.requestModifier
         });
 
         xlinkController = XlinkController(context).create({

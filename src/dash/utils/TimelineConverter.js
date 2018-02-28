@@ -135,7 +135,7 @@ function TimelineConverter() {
         return wallTime;
     }
 
-    function calcSegmentAvailabilityRange(voRepresentation, isDynamic, lowLatencyMode) {
+    function calcSegmentAvailabilityRange(voRepresentation, isDynamic) {
         // Static Range Finder
         const voPeriod = voRepresentation.adaptation.period;
         const range = { start: voPeriod.start, end: voPeriod.start + voPeriod.duration };
@@ -150,11 +150,10 @@ function TimelineConverter() {
         const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
         const periodEnd = voPeriod.start + voPeriod.duration;
         range.start = Math.max((now - voPeriod.mpd.timeShiftBufferDepth), voPeriod.start);
-        if (lowLatencyMode) {
-            range.end = now >= periodEnd && now < periodEnd ? periodEnd : now;
-        } else {
-            range.end = now >= periodEnd && now - d < periodEnd ? periodEnd - d : now - d;
-        }
+
+        const endOffset = voRepresentation.availabilityTimeOffset !== undefined &&
+            voRepresentation.availabilityTimeOffset < d ? d - voRepresentation.availabilityTimeOffset : d;
+        range.end = now >= periodEnd && now - endOffset < periodEnd ? periodEnd : now - endOffset;
 
         return range;
     }

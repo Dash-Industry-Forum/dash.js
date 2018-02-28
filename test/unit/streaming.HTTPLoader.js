@@ -95,7 +95,7 @@ describe('HTTPLoader', function () {
         expect(httpLoader.load.bind(httpLoader, { request: {} })).to.throw('config object is not correct or missing');
     });
 
-    it('should use XHRLoader if it is not an arraybuffer request even if usingFetch is set to true', () => {
+    it('should use XHRLoader if it is not an arraybuffer request even if useFetch is set to true', () => {
         let self = this.ctx;
         const callbackSucceeded = sinon.spy();
         const callbackCompleted = sinon.spy();
@@ -106,7 +106,7 @@ describe('HTTPLoader', function () {
             metricsModel: metricsModel,
             requestModifier: requestModifier,
             mediaPlayerModel: mediaPlayerModelMock,
-            usingFetch: true
+            useFetch: true
         });
         global.fetch.returns(Promise.resolve(new global.Response('', { status: 200 })));
 
@@ -162,7 +162,7 @@ describe('HTTPLoader', function () {
         expect(callbackError.calledBefore(callbackCompleted)).to.be.true; // jshint ignore:line
     });
 
-    it('should use FetchLoader if it is an arraybuffer request, usingFetch is true and body is not an Stream. It should call success and complete callback when load is called successfully', (done) => {
+    it('should use FetchLoader if it is an arraybuffer request, useFetch is true and body is not an Stream. It should call success and complete callback when load is called successfully', (done) => {
         let self = this.ctx;
         const callbackSucceeded = sinon.spy();
         const callbackCompleted = sinon.spy();
@@ -173,7 +173,7 @@ describe('HTTPLoader', function () {
             metricsModel: metricsModel,
             requestModifier: requestModifier,
             mediaPlayerModel: mediaPlayerModelMock,
-            usingFetch: true
+            useFetch: true
         });
         global.fetch.returns(Promise.resolve(new global.Response('', { status: 200 })));
         httpLoader.load({ request: { checkExistenceOnly: true, responseType: 'arraybuffer' }, success: callbackSucceeded, complete: callbackCompleted, error: callbackError });
@@ -190,7 +190,7 @@ describe('HTTPLoader', function () {
         }, 10);
     });
 
-    it('should use FetchLoader if it is an arraybuffer request, usingFetch is true and body is an Stream. It should call success and complete callback when load is called successfully', (done) => {
+    it('should use FetchLoader if it is an arraybuffer request, useFetch is true and body is an Stream. It should call success and complete callback when load is called successfully', (done) => {
         let self = this.ctx;
         const callbackSucceeded = sinon.spy();
         const callbackCompleted = sinon.spy();
@@ -201,7 +201,7 @@ describe('HTTPLoader', function () {
             metricsModel: metricsModel,
             requestModifier: requestModifier,
             mediaPlayerModel: mediaPlayerModelMock,
-            usingFetch: true
+            useFetch: true
         });
         // Creating stream
         const stream = new Stream.Readable();
@@ -234,7 +234,7 @@ describe('HTTPLoader', function () {
             metricsModel: metricsModel,
             requestModifier: requestModifier,
             mediaPlayerModel: mediaPlayerModelMock,
-            usingFetch: true
+            useFetch: true
         });
         global.fetch.returns(Promise.resolve(new global.Response('', { status: 404 })));
         httpLoader.load({ request: { checkExistenceOnly: true, responseType: 'arraybuffer' }, success: callbackSucceeded, complete: callbackCompleted, error: callbackError });

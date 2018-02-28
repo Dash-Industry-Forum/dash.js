@@ -62,8 +62,7 @@ function SegmentBaseLoader() {
             errHandler: errHandler,
             metricsModel: metricsModel,
             mediaPlayerModel: mediaPlayerModel,
-            requestModifier: requestModifier,
-            usingFetch: false
+            requestModifier: requestModifier
         });
     }
 

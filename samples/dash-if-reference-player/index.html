@@ -359,10 +359,10 @@
                                 <label class="text-primary" for="videoRatioCB" data-toggle="tooltip" data-placement="top"
                                   title="The minimum, average and maximum ratio of the segment playback time to total download time over the last 4 segments">Ratio (min|avg|max) :</label> {{videoRatio}}
                             </div>
-                            <div class="text-success">
+                            <div class="text-success" ng-show="isDynamic">
                                 <input id="liveLatencyCB" type="checkbox" ng-model="chartState.video.liveLatency.selected" ng-change="enableChartByName('liveLatency', 'video')" >
                                 <label class="text-primary" for="liveLatencyCB" data-toggle="tooltip" data-placement="top"
-                                  title="Number of seconds of difference between the real live and the playing live">Live Latency:</label> {{videoLiveLatency}}
+                                  title="Difference between live time and current playback position in seconds">Live Latency:</label> {{videoLiveLatency}}
                             </div>
                         </div>
                       </div>

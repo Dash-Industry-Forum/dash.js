@@ -41,13 +41,14 @@ import ErrorHandler from './utils/ErrorHandler';
  */
 function HTTPLoader(cfg) {
 
-    const context = this.context;
     cfg = cfg || {};
+
+    const context = this.context;
     const errHandler = cfg.errHandler;
     const metricsModel = cfg.metricsModel;
     const mediaPlayerModel = cfg.mediaPlayerModel;
     const requestModifier = cfg.requestModifier;
-    const usingFetch = cfg.usingFetch;
+    const useFetch = cfg.useFetch || false;
 
     let instance;
     let requests;
@@ -56,7 +57,6 @@ function HTTPLoader(cfg) {
     let downloadErrorToRequestTypeMap;
 
     function setup() {
-
         requests = [];
         delayedRequests = [];
         retryTimers = [];
@@ -73,9 +73,8 @@ function HTTPLoader(cfg) {
     }
 
     function internalLoad(config, remainingAttempts) {
-
-        let request = config.request;
-        let traces = [];
+        const request = config.request;
+        const traces = [];
         let firstProgress = true;
         let needFailureReport = true;
         let requestStartTime = new Date();
@@ -200,7 +199,7 @@ function HTTPLoader(cfg) {
         };
 
         let loader;
-        if (usingFetch && window.fetch && request.responseType === 'arraybuffer') {
+        if (useFetch && window.fetch && request.responseType === 'arraybuffer') {
             loader = FetchLoader(context).create();
         } else {
             loader = XHRLoader(context).create();
@@ -226,7 +225,6 @@ function HTTPLoader(cfg) {
         let now = new Date().getTime();
         if (isNaN(request.delayLoadingTime) || now >= request.delayLoadingTime) {
             // no delay - just send
-
             requests.push(httpRequest);
             httpRequest.response = loader.send(httpRequest);
         } else {

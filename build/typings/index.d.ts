@@ -49,7 +49,7 @@ declare namespace dashjs {
         codec: string | null;
         contentProtection: any | null;
     }
-    
+
     export interface MediaPlayerClass {
         initialize(view?: HTMLElement, source?: string, autoPlay?: boolean): void;
         on(type: AstInFutureEvent['type'], listener: (e: AstInFutureEvent) => void, scope?: object): void;
@@ -202,8 +202,8 @@ declare namespace dashjs {
         getJumpGaps(): boolean;
         setSmallGapLimit(value: number): void;
         getSmallGapLimit(): number;
-        setLowLatencyMode(value: boolean): void;
-        getLowLatencyMode(): boolean;
+        setLowLatencyEnabled(value: boolean): void;
+        getLowLatencyEnabled(): boolean;
         reset(): void;
     }
 

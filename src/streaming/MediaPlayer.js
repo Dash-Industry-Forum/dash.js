@@ -1281,12 +1281,12 @@ function MediaPlayer() {
     /**
      * Returns if low latency mode is enabled. Disabled by default.
      * @return {boolean} true - if enabled
-     * @see {@link module:MediaPlayer#setLowLatencyMode setLowLatencyMode()}
+     * @see {@link module:MediaPlayer#setLowLatencyEnabled setLowLatencyEnabled()}
      * @memberof module:MediaPlayer
      * @instance
      */
-    function getLowLatencyMode() {
-        return mediaPlayerModel.getLowLatencyMode();
+    function getLowLatencyEnabled() {
+        return mediaPlayerModel.getLowLatencyEnabled();
     }
 
     /**
@@ -1296,8 +1296,8 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
-    function setLowLatencyMode(value) {
-        return mediaPlayerModel.setLowLatencyMode(value);
+    function setLowLatencyEnabled(value) {
+        return mediaPlayerModel.setLowLatencyEnabled(value);
     }
 
     /**
@@ -2822,8 +2822,8 @@ function MediaPlayer() {
         getJumpGaps: getJumpGaps,
         setSmallGapLimit: setSmallGapLimit,
         getSmallGapLimit: getSmallGapLimit,
-        getLowLatencyMode: getLowLatencyMode,
-        setLowLatencyMode: setLowLatencyMode,
+        getLowLatencyEnabled: getLowLatencyEnabled,
+        setLowLatencyEnabled: setLowLatencyEnabled,
         setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,
         setSegmentOverlapToleranceTime: setSegmentOverlapToleranceTime,
         setCacheLoadThresholdForType: setCacheLoadThresholdForType,

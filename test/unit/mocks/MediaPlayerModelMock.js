@@ -205,7 +205,7 @@ class MediaPlayerModelMock {
         this.cacheLoadThresholds[Constants.AUDIO] = CACHE_LOAD_THRESHOLD_AUDIO;
         this.jumpGaps = false;
         this.smallGapLimit = SMALL_GAP_LIMIT;
-        this.lowLatencyMode = false;
+        this.lowLatencyEnabled = false;
     }
 
     //TODO Should we use Object.define to have setters/getters? makes more readable code on other side.
@@ -511,12 +511,12 @@ class MediaPlayerModelMock {
         return this.smallGapLimit;
     }
 
-    setLowLatencyMode(value) {
-        this.lowLatencyMode = value;
+    setLowLatencyEnabled(value) {
+        this.lowLatencyEnabled = value;
     }
 
-    getLowLatencyMode() {
-        return this.lowLatencyMode;
+    getLowLatencyEnabled() {
+        return this.lowLatencyEnabled;
     }
 
     reset() {

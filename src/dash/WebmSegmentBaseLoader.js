@@ -98,8 +98,7 @@ function WebmSegmentBaseLoader() {
             errHandler: errHandler,
             metricsModel: metricsModel,
             mediaPlayerModel: mediaPlayerModel,
-            requestModifier: requestModifier,
-            usingFetch: false
+            requestModifier: requestModifier
         });
     }
 

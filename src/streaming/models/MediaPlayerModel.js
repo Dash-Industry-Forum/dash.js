@@ -110,7 +110,7 @@ function MediaPlayerModel() {
         cacheLoadThresholds,
         jumpGaps,
         smallGapLimit,
-        lowLatencyMode;
+        lowLatencyEnabled;
 
     function setup() {
         UTCTimingSources = [];
@@ -148,7 +148,7 @@ function MediaPlayerModel() {
         };
         customABRRule = [];
         movingAverageMethod = Constants.MOVING_AVERAGE_SLIDING_WINDOW;
-        lowLatencyMode = false;
+        lowLatencyEnabled = false;
 
         retryAttempts = {
             [HTTPRequest.MPD_TYPE]:                         MANIFEST_RETRY_ATTEMPTS,
@@ -423,7 +423,7 @@ function MediaPlayerModel() {
     }
 
     function getLiveDelay() {
-        if (lowLatencyMode) {
+        if (lowLatencyEnabled) {
             return liveDelay || DEFAULT_LOW_LATENCY_LIVE_DELAY;
         }
         return liveDelay;
@@ -505,12 +505,12 @@ function MediaPlayerModel() {
         return smallGapLimit;
     }
 
-    function getLowLatencyMode() {
-        return lowLatencyMode;
+    function getLowLatencyEnabled() {
+        return lowLatencyEnabled;
     }
 
-    function setLowLatencyMode(value) {
-        lowLatencyMode = value;
+    function setLowLatencyEnabled(value) {
+        lowLatencyEnabled = value;
     }
 
     function reset() {
@@ -589,8 +589,8 @@ function MediaPlayerModel() {
         getJumpGaps: getJumpGaps,
         setSmallGapLimit: setSmallGapLimit,
         getSmallGapLimit: getSmallGapLimit,
-        getLowLatencyMode: getLowLatencyMode,
-        setLowLatencyMode: setLowLatencyMode,
+        getLowLatencyEnabled: getLowLatencyEnabled,
+        setLowLatencyEnabled: setLowLatencyEnabled,
         reset: reset
     };
 

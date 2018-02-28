@@ -50,8 +50,7 @@ function XlinkLoader(config) {
         errHandler: config.errHandler,
         metricsModel: config.metricsModel,
         mediaPlayerModel: config.mediaPlayerModel,
-        requestModifier: config.requestModifier,
-        usingFetch: false
+        requestModifier: config.requestModifier
     });
 
     let instance;

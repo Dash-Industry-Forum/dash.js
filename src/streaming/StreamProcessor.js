@@ -118,9 +118,7 @@ function StreamProcessor(config) {
             sourceBufferController: sourceBufferController,
             streamProcessor: instance
         });
-
         representationController = RepresentationController(context).create();
-
         representationController.setConfig({
             abrController: abrController,
             domStorage: domStorage,
@@ -130,8 +128,7 @@ function StreamProcessor(config) {
             manifestModel: manifestModel,
             playbackController: playbackController,
             timelineConverter: timelineConverter,
-            streamProcessor: instance,
-            mediaPlayerModel: mediaPlayerModel
+            streamProcessor: instance
         });
         bufferController.initialize(mediaSource);
         scheduleController.initialize();

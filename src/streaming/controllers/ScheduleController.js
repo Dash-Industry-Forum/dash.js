@@ -372,7 +372,7 @@ function ScheduleController(config) {
 
             // When low latency mode is selected but browser doesn't support fetch
             // start at the beginning of the segment to avoid consuming the whole buffer
-            if (mediaPlayerModel.getLowLatencyMode()) {
+            if (mediaPlayerModel.getLowLatencyEnabled()) {
                 const liveStartTime = request.duration < mediaPlayerModel.getLiveDelay() ? request.startTime : request.startTime + request.duration - mediaPlayerModel.getLiveDelay();
                 playbackController.setLiveStartTime(liveStartTime);
             } else {

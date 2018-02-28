@@ -175,7 +175,7 @@ function PlaybackController() {
 
         if (mediaPlayerModel.getUseSuggestedPresentationDelay() && mpd.hasOwnProperty(Constants.SUGGESTED_PRESENTATION_DELAY)) {
             delay = mpd.suggestedPresentationDelay;
-        } else if (mediaPlayerModel.getLowLatencyMode()) {
+        } else if (mediaPlayerModel.getLowLatencyEnabled()) {
             delay = 0;
         } else if (mediaPlayerModel.getLiveDelay()) {
             delay = mediaPlayerModel.getLiveDelay(); // If set by user, this value takes precedence
@@ -514,7 +514,6 @@ function PlaybackController() {
         const hasAudioTrack = streamController.isAudioTrackPresent();
 
         initialStartTime = getStreamStartTime(false);
-
         if (hasAudioTrack && hasVideoTrack) {
             //current stream has audio and video contents
             if (!isNaN(commonEarliestTime[streamInfo.id].audio) && !isNaN(commonEarliestTime[streamInfo.id].video)) {

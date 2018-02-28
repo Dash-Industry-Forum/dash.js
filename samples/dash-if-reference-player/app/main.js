@@ -167,7 +167,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     $scope.drmKeySystem = '';
     $scope.drmLicenseURL = '';
 
-    $scope.avaliabilityStartTime = null;
+    $scope.availabilityStartTime = null;
     $scope.isDynamic = false;
 
     // metrics
@@ -236,7 +236,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     $scope.defaultStableBufferDelay = $scope.player.getStableBufferTime();
     $scope.defaultBufferTimeAtTopQuality = $scope.player.getBufferTimeAtTopQuality();
     $scope.defaultBufferTimeAtTopQualityLongForm = $scope.player.getBufferTimeAtTopQualityLongForm();
-    $scope.lowLatencyMode = $scope.player.getLowLatencyMode();
+    $scope.lowLatencyMode = $scope.player.getLowLatencyEnabled();
 
     const initVideoTrackSwitchMode = $scope.player.getTrackSwitchModeFor('video');
     const initAudioTrackSwitchMode = $scope.player.getTrackSwitchModeFor('audio');
@@ -269,7 +269,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     }, $scope);
 
     $scope.player.on(dashjs.MediaPlayer.events.MANIFEST_LOADED, function (e) { /* jshint ignore:line */
-        $scope.avaliabilityStartTime = new Date(e.data.availabilityStartTime).getTime();
+        $scope.availabilityStartTime = e.data.availabilityStartTime ? new Date(e.data.availabilityStartTime).getTime() : null;
         $scope.isDynamic = e.data.type === 'dynamic';
     }, $scope);
 
@@ -359,7 +359,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     };
 
     $scope.togglelowLatencyMode = function () {
-        $scope.player.setLowLatencyMode($scope.lowLatencyModeSelected);
+        $scope.player.setLowLatencyEnabled($scope.lowLatencyModeSelected);
     };
 
     $scope.setStream = function (item) {
@@ -419,7 +419,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         $scope.player.setStableBufferTime(bufferConfig.stableBufferTime);
         $scope.player.setBufferTimeAtTopQuality(bufferConfig.bufferTimeAtTopQuality);
         $scope.player.setBufferTimeAtTopQualityLongForm(bufferConfig.bufferTimeAtTopQualityLongForm);
-        $scope.player.setLowLatencyMode($scope.lowLatencyModeSelected || bufferConfig.lowLatencyMode);
+        $scope.player.setLowLatencyEnabled($scope.lowLatencyModeSelected || bufferConfig.lowLatencyMode);
 
         $scope.controlbar.reset();
         $scope.player.setProtectionData(protData);
@@ -622,8 +622,8 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
             var bitrate = repSwitch ? Math.round(dashMetrics.getBandwidthForRepresentation(repSwitch.to, periodIdx) / 1000) : NaN;
             var droppedFPS = dashMetrics.getCurrentDroppedFrames(metrics) ? dashMetrics.getCurrentDroppedFrames(metrics).droppedFrames : 0;
             var liveLatency = 0;
-            if ($scope.isDynamic && $scope.avaliabilityStartTime > 0) {
-                liveLatency = Math.round(new Date().getTime() - ($scope.video.currentTime*1000 + $scope.avaliabilityStartTime));
+            if ($scope.isDynamic && $scope.availabilityStartTime >= 0 && $scope.video.currentTime > 0) {
+                liveLatency = ((Math.round(new Date().getTime() - ($scope.video.currentTime * 1000 + $scope.availabilityStartTime))) / 1000).toFixed(3);
             }
 
             $scope[type + 'BufferLength'] = bufferLevel;
