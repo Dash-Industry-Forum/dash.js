@@ -257,8 +257,8 @@ declare namespace dashjs {
         PROTECTION_CREATED: 'public_protectioncreated';
         PROTECTION_DESTROYED: 'public_protectiondestroyed';
         TRACK_CHANGE_RENDERED: 'trackChangeRendered';
-        QUALITY_CHANGE_RENDERED: 'qualityChangeRequested';
-        QUALITY_CHANGE_REQUESTED: 'qualityChangeRendered';
+        QUALITY_CHANGE_RENDERED: 'qualityChangeRendered';
+        QUALITY_CHANGE_REQUESTED: 'qualityChangeRequested';
         STREAM_INITIALIZED: 'streamInitialized';
         TEXT_TRACKS_ADDED: 'allTextTracksAdded';
         TEXT_TRACK_ADDED: 'textTrackAdded';
