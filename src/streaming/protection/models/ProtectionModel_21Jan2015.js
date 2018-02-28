@@ -148,7 +148,9 @@ function ProtectionModel_21Jan2015(config) {
         // Replacing the previous element
         if (videoElement) {
             videoElement.removeEventListener('encrypted', eventHandler);
-            videoElement.setMediaKeys(null);
+            if (videoElement.setMediaKeys) {
+                videoElement.setMediaKeys(null);
+            }
         }
 
         videoElement = mediaElement;
@@ -156,7 +158,7 @@ function ProtectionModel_21Jan2015(config) {
         // Only if we are not detaching from the existing element
         if (videoElement) {
             videoElement.addEventListener('encrypted', eventHandler);
-            if (mediaKeys) {
+            if (videoElement.setMediaKeys && mediaKeys) {
                 videoElement.setMediaKeys(mediaKeys);
             }
         }
