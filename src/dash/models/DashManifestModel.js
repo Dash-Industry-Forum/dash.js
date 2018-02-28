@@ -396,7 +396,7 @@ function DashManifestModel(config) {
             isInteger(index) ? adaptation.Representation_asArray[index] : null;
     }
 
-    function getRepresentationsForAdaptation(voAdaptation) {
+    function getRepresentationsForAdaptation(voAdaptation, maxRepresentations) {
         const voRepresentations = [];
         let voRepresentation,
             initialization,
@@ -414,7 +414,10 @@ function DashManifestModel(config) {
         }
 
         if (processedRealAdaptation && processedRealAdaptation.Representation_asArray) {
-            for (i = 0; processedRealAdaptation && i < processedRealAdaptation.Representation_asArray.length; i++) {
+            if (!maxRepresentations) {
+                maxRepresentations = processedRealAdaptation.Representation_asArray.length;
+            }
+            for (i = 0; i < maxRepresentations; ++i) {
                 realRepresentation = processedRealAdaptation.Representation_asArray[i];
                 voRepresentation = new Representation();
                 voRepresentation.index = i;

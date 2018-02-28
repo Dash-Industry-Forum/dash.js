@@ -603,7 +603,7 @@ function StreamController() {
 
             if (mediaInfo) {
                 voAdaptation = adapter.getDataForMedia(mediaInfo);
-                useCalculatedLiveEdgeTime = dashManifestModel.getRepresentationsForAdaptation(voAdaptation)[0].useCalculatedLiveEdgeTime;
+                useCalculatedLiveEdgeTime = dashManifestModel.getRepresentationsForAdaptation(voAdaptation, 1)[0].useCalculatedLiveEdgeTime;
 
                 if (useCalculatedLiveEdgeTime) {
                     log('SegmentTimeline detected using calculated Live Edge Time');
