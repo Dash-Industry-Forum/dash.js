@@ -383,7 +383,13 @@ function ProtectionController(config) {
                         } else {
                             log('DRM: KeySystem Access Granted');
                             eventBus.trigger(events.KEY_SYSTEM_SELECTED, {data: event.data});
-                            createKeySession(supportedKS[ksIdx].initData, supportedKS[ksIdx].cdmData);
+                            if (supportedKS[ksIdx].sessionId) {
+                                // Load MediaKeySession with sessionId
+                                loadKeySession(supportedKS[ksIdx].sessionId, supportedKS[ksIdx].initData);
+                            } else if (supportedKS[ksIdx].initData) {
+                                // Create new MediaKeySession with initData
+                                createKeySession(supportedKS[ksIdx].initData, supportedKS[ksIdx].cdmData);
+                            }
                         }
                     };
                     eventBus.on(events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
@@ -435,7 +441,13 @@ function ProtectionController(config) {
                                     const initData = { kids: Object.keys(protData.clearkeys) };
                                     pendingNeedKeyData[i][ksIdx].initData = new TextEncoder().encode(JSON.stringify(initData));
                                 }
-                                createKeySession(pendingNeedKeyData[i][ksIdx].initData, pendingNeedKeyData[i][ksIdx].cdmData);
+                                if (pendingNeedKeyData[i][ksIdx].sessionId) {
+                                    // Load MediaKeySession with sessionId
+                                    loadKeySession(pendingNeedKeyData[i][ksIdx].sessionId, pendingNeedKeyData[i][ksIdx].initData);
+                                } else if (pendingNeedKeyData[i][ksIdx].initData !== null) {
+                                    // Create new MediaKeySession with initData
+                                    createKeySession(pendingNeedKeyData[i][ksIdx].initData, pendingNeedKeyData[i][ksIdx].cdmData);
+                                }
                                 break;
                             }
                         }
