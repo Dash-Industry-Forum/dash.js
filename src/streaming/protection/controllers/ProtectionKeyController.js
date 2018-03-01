@@ -192,19 +192,12 @@ function ProtectionKeyController() {
                     cp = cps[cpIdx];
                     if (cp.schemeIdUri.toLowerCase() === ks.schemeIdURI) {
                         // Look for DRM-specific ContentProtection
-                        let initData = ks.getInitData(cp);
-                        if (!!initData) {
-                            supportedKS.push({
-                                ks: keySystems[ksIdx],
-                                initData: initData,
-                                cdmData: ks.getCDMData()
-                            });
-                        } else if (this.isClearKey(ks)) {
-                            supportedKS.push({
-                                ks: ks,
-                                initData: null
-                            });
-                        }
+                        supportedKS.push({
+                            ks: ks,
+                            initData: ks.getInitData(cp),
+                            cdmData: ks.getCDMData(),
+                            sessionId: ks.getSessionId(cp)
+                        });
                     }
                 }
             }
@@ -231,15 +224,19 @@ function ProtectionKeyController() {
     function getSupportedKeySystems(initData, protDataSet) {
         let supportedKS = [];
         let pssh = CommonEncryption.parsePSSHList(initData);
+        let ks, keySystemString, shouldNotFilterOutKeySystem;
 
         for (let ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
-            let keySystemString = keySystems[ksIdx].systemString;
-            let shouldNotFilterOutKeySystem = (protDataSet) ? keySystemString in protDataSet : true;
+            ks = keySystems[ksIdx];
+            keySystemString = ks.systemString;
+            shouldNotFilterOutKeySystem = (protDataSet) ? keySystemString in protDataSet : true;
 
-            if (keySystems[ksIdx].uuid in pssh && shouldNotFilterOutKeySystem) {
+            if (ks.uuid in pssh && shouldNotFilterOutKeySystem) {
                 supportedKS.push({
-                    ks: keySystems[ksIdx],
-                    initData: pssh[keySystems[ksIdx].uuid]
+                    ks: ks,
+                    initData: pssh[ks.uuid],
+                    cdmData: ks.getCDMData(),
+                    sessionId: ks.getSessionId()
                 });
             }
         }
