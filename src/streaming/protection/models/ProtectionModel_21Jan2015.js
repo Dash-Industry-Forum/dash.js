@@ -115,7 +115,9 @@ function ProtectionModel_21Jan2015(config) {
     function getAllInitData() {
         const retVal = [];
         for (let i = 0; i < sessions.length; i++) {
-            retVal.push(sessions[i].initData);
+            if (sessions[i].initData) {
+                retVal.push(sessions[i].initData);
+            }
         }
         return retVal;
     }
