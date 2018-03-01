@@ -210,23 +210,25 @@ function ProtectionModel_21Jan2015(config) {
         });
     }
 
-    function loadKeySession(sessionID) {
+    function loadKeySession(sessionID, initData, sessionType) {
         if (!keySystem || !mediaKeys) {
             throw new Error('Can not load sessions until you have selected a key system');
         }
 
-        const session = mediaKeys.createSession();
+        const session = mediaKeys.createSession(sessionType);
+        const sessionToken = createSessionToken(session, initData, sessionType);
 
         // Load persisted session data into our newly created session object
         session.load(sessionID).then(function (success) {
             if (success) {
-                const sessionToken = createSessionToken(session);
-                log('DRM: Session created.  SessionID = ' + sessionToken.getSessionID());
+                log('DRM: Session loaded.  SessionID = ' + sessionToken.getSessionID());
                 eventBus.trigger(events.KEY_SESSION_CREATED, {data: sessionToken});
             } else {
+                removeSession(sessionToken);
                 eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: 'Could not load session! Invalid Session ID (' + sessionID + ')'});
             }
         }).catch(function (error) {
+            removeSession(sessionToken);
             eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: 'Could not load session (' + sessionID + ')! ' + error.name});
         });
     }
