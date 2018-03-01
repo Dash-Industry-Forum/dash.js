@@ -168,12 +168,12 @@ function ProtectionController(config) {
                 }
             }
             try {
-                protectionModel.createKeySession(initDataForKS, protData, sessionType, cdmData);
+                protectionModel.createKeySession(initDataForKS, protData, getSessionType(keySystem), cdmData);
             } catch (error) {
                 eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: 'Error creating key session! ' + error.message});
             }
         } else if (initData) {
-            protectionModel.createKeySession(initData, protData, sessionType, cdmData);
+            protectionModel.createKeySession(initData, protData, getSessionType(keySystem), cdmData);
         } else {
             eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: 'Selected key system is ' + keySystem.systemString + '.  needkey/encrypted event contains no initData corresponding to that key system!'});
         }
@@ -338,6 +338,7 @@ function ProtectionController(config) {
         const videoCapabilities = [];
         const audioRobustness = (protData && protData.audioRobustness && protData.audioRobustness.length > 0) ? protData.audioRobustness : robustnessLevel;
         const videoRobustness = (protData && protData.videoRobustness && protData.videoRobustness.length > 0) ? protData.videoRobustness : robustnessLevel;
+        const ksSessionType = getSessionType(keySystem);
 
         if (audioInfo) {
             audioCapabilities.push(new MediaCapability(audioInfo.codec, audioRobustness));
@@ -348,8 +349,14 @@ function ProtectionController(config) {
 
         return new KeySystemConfiguration(
             audioCapabilities, videoCapabilities, 'optional',
-            (sessionType === 'temporary') ? 'optional' : 'required',
-            [sessionType]);
+            (ksSessionType === 'temporary') ? 'optional' : 'required',
+            [ksSessionType]);
+    }
+
+    function getSessionType(keySystem) {
+        const protData = getProtData(keySystem);
+        const ksSessionType = (protData && protData.sessionType) ? protData.sessionType : sessionType;
+        return ksSessionType;
     }
 
     function selectKeySystem(supportedKS, fromManifest) {
