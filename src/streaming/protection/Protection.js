@@ -126,12 +126,11 @@ function Protection() {
             controller = ProtectionController(context).create({
                 protectionModel: protectionModel,
                 protectionKeyController: protectionKeyController,
-                adapter: config.adapter,
                 eventBus: config.eventBus,
                 log: config.log,
                 events: config.events,
                 BASE64: config.BASE64,
-                Constants: config.Constants
+                constants: config.constants
             });
             config.capabilities.setEncryptedMediaSupported(true);
         }
