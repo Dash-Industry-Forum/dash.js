@@ -176,6 +176,12 @@ class MediaPlayerEvents extends EventsBase {
         this.TEXT_TRACK_ADDED = 'textTrackAdded';
 
         /**
+         * Triggered when a ttml chunk is parsed.
+         * @event MediaPlayerEvents#TTML_PARSED
+         */
+        this.TTML_PARSED = 'ttmlParsed';
+
+        /**
          * Sent when enough data is available that the media can be played,
          * at least for a couple of frames.  This corresponds to the
          * HAVE_ENOUGH_DATA readyState.
