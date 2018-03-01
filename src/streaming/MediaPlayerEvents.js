@@ -129,7 +129,7 @@ class MediaPlayerEvents extends EventsBase {
         this.PERIOD_SWITCH_STARTED = 'periodSwitchStarted';
 
         /**
-         * Triggered when an ABR up /down switch is initialed; either by user in manual mode or auto mode via ABR rules.
+         * Triggered when an ABR up /down switch is initiated; either by user in manual mode or auto mode via ABR rules.
          * @event MediaPlayerEvents#QUALITY_CHANGE_REQUESTED
          */
         this.QUALITY_CHANGE_REQUESTED = 'qualityChangeRequested';
@@ -139,6 +139,12 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#QUALITY_CHANGE_RENDERED
          */
         this.QUALITY_CHANGE_RENDERED = 'qualityChangeRendered';
+
+        /**
+         * Triggered when the new track is being rendered.
+         * @event MediaPlayerEvents#TRACK_CHANGE_RENDERED
+         */
+        this.TRACK_CHANGE_RENDERED = 'trackChangeRendered';
 
         /**
          * Triggered when the source is setup and ready.
