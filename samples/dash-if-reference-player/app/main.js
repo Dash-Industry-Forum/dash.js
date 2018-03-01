@@ -441,6 +441,11 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         $scope.controlbar.enable();
     };
 
+    $scope.doStop = function () {
+        $scope.player.attachSource(null);
+        $scope.controlbar.reset();
+    }
+
     $scope.changeTrackSwitchMode = function (mode, type) {
         $scope.player.setTrackSwitchModeFor(type, mode);
     };
