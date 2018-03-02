@@ -202,7 +202,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     $scope.ABRStrategy = 'abrDynamic';
 
     // Persistent license
-    $scope.licenseSessionId = {};
+    $scope.persistentSessionId = {};
     $scope.selectedKeySystem = null;
 
     // Error management
@@ -308,7 +308,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         if (e.data) {
             var session = e.data;
             if (session.getSessionType() === 'persistent-license') {
-                $scope.licenseSessionId[$scope.selectedItem.url] = session.getSessionID();
+                $scope.persistentSessionId[$scope.selectedItem.url] = session.getSessionID();
             }
         }
     }, $scope);
@@ -385,7 +385,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         }
 
         // Check if persistent license session ID is stored for current stream
-        var sessionId = $scope.licenseSessionId[$scope.selectedItem.url];
+        var sessionId = $scope.persistentSessionId[$scope.selectedItem.url];
         if (sessionId) {
             protData[$scope.selectedKeySystem].sessionId = sessionId;
         }
