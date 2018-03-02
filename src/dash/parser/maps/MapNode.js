@@ -34,12 +34,10 @@
 import CommonProperty from './CommonProperty';
 
 class MapNode {
-    constructor(name, properties, children, isRoot, isArray) {
+    constructor(name, properties, children) {
         this._name = name || '';
         this._properties = [];
         this._children = children || [];
-        this._isRoot = isRoot || false;
-        this._isArray = isArray || true ;
 
         if (Array.isArray(properties)) {
             properties.forEach(p => {
@@ -50,14 +48,6 @@ class MapNode {
 
     get name() {
         return this._name;
-    }
-
-    get isRoot() {
-        return this._isRoot;
-    }
-
-    get isArray() {
-        return this._isArray;
     }
 
     get children() {

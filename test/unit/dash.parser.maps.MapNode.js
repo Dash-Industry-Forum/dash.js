@@ -14,14 +14,12 @@ describe('MapNode', function () {
         expect(mapNode.properties).to.be.empty; // jshint ignore:line
         expect(mapNode.children).to.be.instanceOf(Array); // jshint ignore:line
         expect(mapNode.children).to.be.empty; // jshint ignore:line
-        expect(mapNode.isRoot).to.equal(false); // jshint ignore:line
-        expect(mapNode.isArray).to.equal(true); // jshint ignore:line
     });
 
     it('should throw an exception if attempting to use setters', () => {
         const mapNode = new MapNode();
 
-        ['name', 'properties', 'children', 'isRoot', 'isArray'].forEach(p => {
+        ['name', 'properties', 'children'].forEach(p => {
             const f = () => mapNode[p] = p;
             expect(f).to.throw(Error);
         });

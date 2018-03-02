@@ -70,10 +70,10 @@ function DashParser(config) {
             matchers:           matchers
         });
 
-        objectIron = new ObjectIron([
-            new RepresentationBaseValuesMap(),
-            new SegmentValuesMap()
-        ]);
+        objectIron = new ObjectIron({
+            adaptationset: new RepresentationBaseValuesMap(),
+            period: new SegmentValuesMap()
+        });
     }
 
     function checkConfig() {
