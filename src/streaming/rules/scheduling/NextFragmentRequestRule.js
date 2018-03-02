@@ -66,7 +66,7 @@ function NextFragmentRequestRule(config) {
          * */
         if (bufferController) {
             const range = bufferController.getRangeAt(time);
-            if (range !== null) {
+            if (range !== null && !hasSeekTarget) {
                 log('Prior to making a request for time, NextFragmentRequestRule is aligning index handler\'s currentTime with bufferedRange.end for', mediaType, '.', time, 'was changed to', range.end);
                 time = range.end;
             }

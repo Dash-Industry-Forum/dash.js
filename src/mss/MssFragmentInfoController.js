@@ -223,14 +223,16 @@ function MssFragmentInfoController(config) {
         let representation = getCurrentRepresentation();
         segments = representation.segments;
 
-        if (segments) {
+        if (segments && segments.length > 0) {
             _fragmentInfoTime = segments[segments.length - 1].presentationStartTime - segments[segments.length - 1].duration;
 
             startPlayback();
         } else {
             indexHandler.updateSegmentList(representation);
             segments = representation.segments;
-            _fragmentInfoTime = segments[segments.length - 1].presentationStartTime - segments[segments.length - 1].duration;
+            if (segments && segments.length > 0) {
+                _fragmentInfoTime = segments[segments.length - 1].presentationStartTime - segments[segments.length - 1].duration;
+            }
 
             startPlayback();
         }
