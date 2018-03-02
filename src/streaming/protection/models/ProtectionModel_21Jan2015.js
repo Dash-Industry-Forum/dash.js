@@ -217,8 +217,16 @@ function ProtectionModel_21Jan2015(config) {
             throw new Error('Can not load sessions until you have selected a key system');
         }
 
+        // Check if session Id is not already loaded or loading
+        for (let i = 0; i < sessions.length; i++) {
+            if (sessionID === sessions[i].sessionId) {
+                log('DRM: Ignoring session ID because we have already seen it!');
+                return;
+            }
+        }
+
         const session = mediaKeys.createSession(sessionType);
-        const sessionToken = createSessionToken(session, initData, sessionType);
+        const sessionToken = createSessionToken(session, initData, sessionType, sessionID);
 
         // Load persisted session data into our newly created session object
         session.load(sessionID).then(function (success) {
@@ -325,10 +333,11 @@ function ProtectionModel_21Jan2015(config) {
 
     // Function to create our session token objects which manage the EME
     // MediaKeySession and session-specific event handler
-    function createSessionToken(session, initData, sessionType) {
+    function createSessionToken(session, initData, sessionType, sessionID) {
         const token = { // Implements SessionToken
             session: session,
             initData: initData,
+            sessionId: sessionID,
 
             // This is our main event handler for all desired MediaKeySession events
             // These events are translated into our API-independent versions of the
