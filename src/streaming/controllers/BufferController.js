@@ -710,11 +710,12 @@ function BufferController(config) {
     }
 
     function onCurrentTrackChanged(e) {
-        if (!buffer || (e.newMediaInfo.type !== type) || (e.newMediaInfo.streamInfo.id !== streamProcessor.getStreamInfo().id)) return;
-
+        const ranges = buffer && buffer.getAllBufferRanges();
+        if (!ranges || (e.newMediaInfo.type !== type) || (e.newMediaInfo.streamInfo.id !== streamProcessor.getStreamInfo().id)) return;
+        
         log('[BufferController][' + type + '] track change asked');
         if (mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE) {
-            if (buffer.buffered && buffer.buffered.length > 0 && playbackController.getTimeToStreamEnd() > STALL_THRESHOLD) {
+            if (ranges && ranges.length > 0 && playbackController.getTimeToStreamEnd() > STALL_THRESHOLD) {
                 isBufferingCompleted = false;
                 lastIndex = Number.POSITIVE_INFINITY;
                 streamProcessor.getFragmentModel().abortRequests();
