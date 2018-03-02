@@ -219,11 +219,12 @@ function BufferController(config) {
 
         if (bufferResetInProgress) {
             mediaChunk = chunk;
-            if (buffer.buffered && buffer.buffered.length > 0 && playbackController.getTimeToStreamEnd() > STALL_THRESHOLD) {
-                log('Clearing buffer because track changed - ' + (buffer.buffered.end(buffer.buffered.length - 1) + BUFFER_END_THRESHOLD));
+            const ranges = buffer && buffer.getAllBufferRanges();
+            if (ranges && ranges.length > 0 && playbackController.getTimeToStreamEnd() > STALL_THRESHOLD) {
+                log('Clearing buffer because track changed - ' + (ranges.end(ranges.length - 1) + BUFFER_END_THRESHOLD));
                 clearBuffers([{
                     start: 0,
-                    end: buffer.buffered.end(buffer.buffered.length - 1) + BUFFER_END_THRESHOLD,
+                    end: ranges.end(ranges.length - 1) + BUFFER_END_THRESHOLD,
                     force: true // Force buffer removal even when buffering is completed and MediaSource is ended
                 }]);
             }
