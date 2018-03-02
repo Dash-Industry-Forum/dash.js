@@ -471,8 +471,15 @@ function Stream(config) {
         if (!isMediaInitialized) {
             return;
         }
+
         if (protectionController) {
-            protectionController.initialize(manifestModel.getValue(), getMediaInfo(Constants.AUDIO), getMediaInfo(Constants.VIDEO));
+            for (let i = 0; i < ln; i++) {
+                if (streamProcessors[i].getType() === Constants.AUDIO ||
+                    streamProcessors[i].getType() === Constants.VIDEO ||
+                    streamProcessors[i].getType() === Constants.FRAGMENTED_TEXT) {
+                    protectionController.initializeForMedia(streamProcessors[i].getMediaInfo());
+                }
+            }
         }
         eventBus.trigger(Events.STREAM_INITIALIZED, {
             streamInfo: streamInfo,

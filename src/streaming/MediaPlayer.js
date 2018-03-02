@@ -2576,7 +2576,6 @@ function MediaPlayer() {
                 videoModel: videoModel,
                 capabilities: capabilities,
                 eventBus: eventBus,
-                adapter: adapter,
                 events: Events,
                 BASE64: BASE64,
                 constants: Constants
