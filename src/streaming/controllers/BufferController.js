@@ -712,7 +712,7 @@ function BufferController(config) {
     function onCurrentTrackChanged(e) {
         const ranges = buffer && buffer.getAllBufferRanges();
         if (!ranges || (e.newMediaInfo.type !== type) || (e.newMediaInfo.streamInfo.id !== streamProcessor.getStreamInfo().id)) return;
-        
+
         log('[BufferController][' + type + '] track change asked');
         if (mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE) {
             if (ranges && ranges.length > 0 && playbackController.getTimeToStreamEnd() > STALL_THRESHOLD) {
