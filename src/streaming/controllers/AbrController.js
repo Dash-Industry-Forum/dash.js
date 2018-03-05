@@ -386,9 +386,11 @@ function AbrController() {
             });
 
             if (droppedFramesHistory) {
-                droppedFramesHistory.push(playbackIndex, videoModel.getPlaybackQuality());
+                const playbackQuality = videoModel.getPlaybackQuality();
+                if (playbackQuality) {
+                    droppedFramesHistory.push(playbackIndex, playbackQuality);
+                }
             }
-
             if (getAutoSwitchBitrateFor(type)) {
                 const minIdx = getMinAllowedIndexFor(type);
                 const topQualityIdx = getTopQualityIndexFor(type, streamId);
@@ -631,10 +633,12 @@ function AbrController() {
     }
 
     function setElementSize() {
-        const hasPixelRatio = usePixelRatioInLimitBitrateByPortal && window.hasOwnProperty('devicePixelRatio');
-        const pixelRatio = hasPixelRatio ? window.devicePixelRatio : 1;
-        elementWidth = videoModel.getClientWidth() * pixelRatio;
-        elementHeight = videoModel.getClientHeight() * pixelRatio;
+        if (videoModel) {
+            const hasPixelRatio = usePixelRatioInLimitBitrateByPortal && window.hasOwnProperty('devicePixelRatio');
+            const pixelRatio = hasPixelRatio ? window.devicePixelRatio : 1;
+            elementWidth = videoModel.getClientWidth() * pixelRatio;
+            elementHeight = videoModel.getClientHeight() * pixelRatio;
+        }
     }
 
     function checkPortalSize(idx, type) {

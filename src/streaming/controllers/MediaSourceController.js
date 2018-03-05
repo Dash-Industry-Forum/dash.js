@@ -82,11 +82,17 @@ function MediaSourceController() {
         let buffers = source.sourceBuffers;
         const ln = buffers.length;
 
-        if (source.readyState !== 'open') return;
+        if (source.readyState !== 'open') {
+            return;
+        }
 
         for (let i = 0; i < ln; i++) {
-            if (buffers[i].updating) return;
-            if (buffers[i].buffered.length === 0) return;
+            if (buffers[i].updating) {
+                return;
+            }
+            if (buffers[i].buffered.length === 0) {
+                return;
+            }
         }
 
         source.endOfStream();

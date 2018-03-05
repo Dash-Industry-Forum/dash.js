@@ -72,7 +72,6 @@ function StreamController() {
         abrController,
         mediaController,
         textController,
-        sourceBufferController,
         initCache,
         urlUtils,
         errHandler,
@@ -183,7 +182,7 @@ function StreamController() {
         // into account state of buffer
         for (let i = 0; i < streamProcessors.length; i ++) {
             const mediaBuffer = streamProcessors[i].getBuffer();
-            const ranges = sourceBufferController.getAllRanges(mediaBuffer);
+            const ranges = mediaBuffer.getAllBufferRanges();
             let nextRangeStartTime;
             if (!ranges || ranges.length <= 1) continue;
 
@@ -401,11 +400,25 @@ function StreamController() {
         activeStream = newStream;
         playbackController.initialize(activeStream.getStreamInfo());
 
-        //TODO detect if we should close and repose or jump to activateStream.
-        openMediaSource(seekTime, oldStream);
+        if (videoModel.getElement()) {
+            //TODO detect if we should close jump to activateStream.
+            playbackController.initialize(activeStream.getStreamInfo());
+            openMediaSource(seekTime, oldStream, false);
+        } else {
+            preloadStream(seekTime);
+        }
     }
 
-    function openMediaSource(seekTime, oldStream) {
+    function preloadStream(seekTime) {
+        activateStream(seekTime);
+    }
+
+    function switchToVideoElement(seekTime) {
+        playbackController.initialize(activeStream.getStreamInfo());
+        openMediaSource(seekTime, null, true);
+    }
+
+    function openMediaSource(seekTime, oldStream, streamActivated) {
         let sourceUrl;
 
         function onMediaSourceOpen() {
@@ -414,10 +427,15 @@ function StreamController() {
             mediaSource.removeEventListener('sourceopen', onMediaSourceOpen);
             mediaSource.removeEventListener('webkitsourceopen', onMediaSourceOpen);
             setMediaDuration();
-            activateStream(seekTime);
 
             if (!oldStream) {
                 eventBus.trigger(Events.SOURCE_INITIALIZED);
+            }
+
+            if (streamActivated) {
+                activeStream.setMediaSource(mediaSource);
+            } else {
+                activateStream(seekTime);
             }
         }
 
@@ -515,7 +533,6 @@ function StreamController() {
                         playbackController: playbackController,
                         mediaController: mediaController,
                         textController: textController,
-                        sourceBufferController: sourceBufferController,
                         videoModel: videoModel,
                         streamController: instance
                     });
@@ -805,9 +822,6 @@ function StreamController() {
         if (config.textController) {
             textController = config.textController;
         }
-        if (config.sourceBufferController) {
-            sourceBufferController = config.sourceBufferController;
-        }
     }
 
     function setProtectionData(protData) {
@@ -910,6 +924,7 @@ function StreamController() {
         getActiveStreamInfo: getActiveStreamInfo,
         isVideoTrackPresent: isVideoTrackPresent,
         isAudioTrackPresent: isAudioTrackPresent,
+        switchToVideoElement: switchToVideoElement,
         getStreamById: getStreamById,
         getStreamForTime: getStreamForTime,
         getTimeRelativeToStreamId: getTimeRelativeToStreamId,

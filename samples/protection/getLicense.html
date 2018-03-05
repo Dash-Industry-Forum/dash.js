@@ -37,7 +37,7 @@
 
         function getLicense() {
 
-            // Configuration for stream "Axinom Test Content (conservative/legacy) / 1080p with PlayReady and Widevine DRM, single key 
+            // Configuration for stream "Axinom Test Content (conservative/legacy) / 1080p with PlayReady and Widevine DRM, single key
             var config = {
                 // From manifest
                 KID: '6e5a1d26-2757-47d7-8046-eaa5d1d34b5a',
@@ -62,12 +62,10 @@
             };
             protectionController.setProtectionData(protData);
 
-            // Set session type to 'persistent'
-            // protectionController.setSessionType('persistent-license');
-
             // Create audio/video infos
             var audioInfo = {
                 codec: 'audio/mp4;codecs="mp4a.40.2"',
+                type: 'audio',
                 contentProtection: [{
                     value: 'Widevine',
                     schemeIdUri: "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed",
@@ -80,6 +78,7 @@
             };
             var videoInfo = {
                 codec: 'video/mp4;codecs="avc1.640015"',
+                type: 'video',
                 contentProtection: [{
                     value: 'Widevine',
                     schemeIdUri: "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed",
@@ -109,7 +108,7 @@
                     sessionToken = e.data;
                 }
             });
-                            
+
             // Listen for 'licenseRequestComplete' to check for licenser request/response error
             mediaPlayer.on(dashjs.MediaPlayer.events.LICENSE_REQUEST_COMPLETE, function (e) {
                 if (e.error) {
@@ -148,7 +147,7 @@
                     console.log('[DASHJS-PROTECTION-PLUGIN] KEY_SESSION_CLOSED: ', e);
                 }
             });
-            
+
             // Listen for errors
             mediaPlayer.on(dashjs.MediaPlayer.events.ERROR, function (e) {
                 if (e.error === 'key_session' || e.error === 'key_message') {
@@ -162,7 +161,7 @@
             });
 
             // Initialize ProtectionController in order to initialize MediaKey session and then initiate license retrieval process
-            protectionController.initialize(null, audioInfo, videoInfo);
+            protectionController.initializeForMedia(videoInfo);
         }
     </script>
 </body>

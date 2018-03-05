@@ -109,6 +109,7 @@ function Stream(config) {
             initializeMedia(mediaSource);
             isStreamActivated = true;
         }
+        createBuffers();
     }
 
     /**
@@ -126,6 +127,30 @@ function Stream(config) {
         isStreamActivated = false;
         isMediaInitialized = false;
         eventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
+    }
+
+    function setMediaSource(mediaSource) {
+        for (let i = 0; i < streamProcessors.length;) {
+            if (isMediaSupported(streamProcessors[i].getMediaInfo())) {
+                streamProcessors[i].setMediaSource(mediaSource);
+                i++;
+            } else {
+                streamProcessors[i].reset();
+                streamProcessors.splice(i,1);
+            }
+        }
+
+        for (let i = 0; i < streamProcessors.length; i++) {
+            //Adding of new tracks to a stream processor isn't guaranteed by the spec after the METADATA_LOADED state
+            //so do this after the buffers are created above.
+            streamProcessors[i].dischargePreBuffer();
+        }
+
+        if (streamProcessors.length === 0) {
+            let msg = 'No streams to play.';
+            errHandler.manifestError(msg, 'nostreams', manifestModel.getValue());
+            log(msg);
+        }
     }
 
     function resetInitialSettings() {
@@ -307,7 +332,6 @@ function Stream(config) {
             mediaController: mediaController,
             streamController: config.streamController,
             textController: textController,
-            sourceBufferController: config.sourceBufferController,
             errHandler: errHandler
         });
 
@@ -359,9 +383,8 @@ function Stream(config) {
             if (type === Constants.EMBEDDED_TEXT) {
                 textController.addEmbeddedTrack(mediaInfo);
             } else {
-                if (!isMediaSupported(mediaInfo)) {
-                    continue;
-                }
+                if (!isMediaSupported(mediaInfo)) continue;
+
                 if (mediaController.isMultiTrackSupportedByType(mediaInfo.type)) {
                     mediaController.addTrack(mediaInfo, streamInfo);
                 }
@@ -471,8 +494,15 @@ function Stream(config) {
         if (!isMediaInitialized) {
             return;
         }
+
         if (protectionController) {
-            protectionController.initialize(manifestModel.getValue(), getMediaInfo(Constants.AUDIO), getMediaInfo(Constants.VIDEO));
+            for (let i = 0; i < ln; i++) {
+                if (streamProcessors[i].getType() === Constants.AUDIO ||
+                    streamProcessors[i].getType() === Constants.VIDEO ||
+                    streamProcessors[i].getType() === Constants.FRAGMENTED_TEXT) {
+                    protectionController.initializeForMedia(streamProcessors[i].getMediaInfo());
+                }
+            }
         }
         eventBus.trigger(Events.STREAM_INITIALIZED, {
             streamInfo: streamInfo,
@@ -625,7 +655,8 @@ function Stream(config) {
         stopEventController: stopEventController,
         updateData: updateData,
         reset: reset,
-        getProcessors: getProcessors
+        getProcessors: getProcessors,
+        setMediaSource: setMediaSource
     };
 
     setup();
