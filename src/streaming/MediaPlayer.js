@@ -45,7 +45,6 @@ import ManifestModel from './models/ManifestModel';
 import MediaPlayerModel from './models/MediaPlayerModel';
 import MetricsModel from './models/MetricsModel';
 import AbrController from './controllers/AbrController';
-import SourceBufferController from './controllers/SourceBufferController';
 import VideoModel from './models/VideoModel';
 import DOMStorage from './utils/DOMStorage';
 import Debug from './../core/Debug';
@@ -77,7 +76,8 @@ import ISOBoxer from 'codem-isoboxer';
  */
 function MediaPlayer() {
 
-    const PLAYBACK_NOT_INITIALIZED_ERROR = 'You must first call initialize() to init playback before calling this method';
+    const STREAMING_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a source before calling this method';
+    const PLAYBACK_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a valid source and view before calling this method';
     const ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the video element before calling this method';
     const SOURCE_NOT_ATTACHED_ERROR = 'You must first call attachSource() with a valid source before calling this method';
     const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
@@ -92,6 +92,7 @@ function MediaPlayer() {
         source,
         protectionData,
         mediaPlayerInitialized,
+        streamingInitialized,
         playbackInitialized,
         autoPlay,
         abrController,
@@ -124,12 +125,14 @@ function MediaPlayer() {
     function setup() {
         mediaPlayerInitialized = false;
         playbackInitialized = false;
+        streamingInitialized = false;
         autoPlay = true;
         protectionController = null;
         protectionData = null;
         adapter = null;
         Events.extend(MediaPlayerEvents);
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
+        videoModel = VideoModel(context).getInstance();
     }
 
     /**
@@ -281,7 +284,7 @@ function MediaPlayer() {
      * @instance
      */
     function isReady() {
-        return (!!videoModel && !!source);
+        return (!!source && !!videoModel.getElement());
     }
 
     /**
@@ -339,6 +342,28 @@ function MediaPlayer() {
 
     ---------------------------------------------------------------------------
     */
+
+    /**
+     * Causes the player to begin streaming the media as set by the {@link module:MediaPlayer#attachSource attachSource()}
+     * method in preparation for playing. It specifically does not require a view to be attached with {@link module:MediaPlayer#attachSource attachView()} to begin preloading.
+     * When a view is attached after preloading, the buffered data is transferred to the attached mediaSource buffers.
+     *
+     * @see {@link module:MediaPlayer#attachSource attachSource()}
+     * @see {@link module:MediaPlayer#attachView attachView()}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function preload() {
+        if (videoModel.getElement() || streamingInitialized) {
+            return false;
+        }
+        if (source) {
+            initializePlayback();
+        } else {
+            throw SOURCE_NOT_ATTACHED_ERROR;
+        }
+    }
+
     /**
      * The play method initiates playback of the media defined by the {@link module:MediaPlayer#attachSource attachSource()} method.
      * This method will call play on the native Video Element.
@@ -438,7 +463,7 @@ function MediaPlayer() {
      * @instance
      */
     function setPlaybackRate(value) {
-        if (!videoModel) {
+        if (!videoModel.getElement()) {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
         getVideoElement().playbackRate = value;
@@ -451,7 +476,7 @@ function MediaPlayer() {
      * @instance
      */
     function getPlaybackRate() {
-        if (!videoModel) {
+        if (!videoModel.getElement()) {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
         return getVideoElement().playbackRate;
@@ -464,7 +489,7 @@ function MediaPlayer() {
      * @instance
      */
     function setMute(value) {
-        if (!videoModel) {
+        if (!videoModel.getElement()) {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
         getVideoElement().muted = value;
@@ -477,7 +502,7 @@ function MediaPlayer() {
      * @instance
      */
     function isMuted() {
-        if (!videoModel) {
+        if (!videoModel.getElement()) {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
         return getVideoElement().muted;
@@ -490,7 +515,7 @@ function MediaPlayer() {
      * @instance
      */
     function setVolume(value) {
-        if (!videoModel) {
+        if (!videoModel.getElement()) {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
         getVideoElement().volume = value;
@@ -503,7 +528,7 @@ function MediaPlayer() {
      * @instance
      */
     function getVolume() {
-        if (!videoModel) {
+        if (!videoModel.getElement()) {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
         return getVideoElement().volume;
@@ -787,8 +812,8 @@ function MediaPlayer() {
      * @instance
      */
     function getQualityFor(type) {
-        if (!playbackInitialized) {
-            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR;
         }
         if (type === Constants.IMAGE) {
             const activeStream = getActiveStream();
@@ -816,8 +841,8 @@ function MediaPlayer() {
      * @instance
      */
     function setQualityFor(type, value) {
-        if (!playbackInitialized) {
-            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR;
         }
         if (type === Constants.IMAGE) {
             const activeStream = getActiveStream();
@@ -905,8 +930,8 @@ function MediaPlayer() {
      * @instance
      */
     function getInitialBitrateFor(type) {
-        if (!playbackInitialized) {
-            throw PLAYBACK_NOT_INITIALIZED_ERROR; //abrController.getInitialBitrateFor is overloaded with ratioDict logic that needs manifest force it to not be callable pre play.
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR; //abrController.getInitialBitrateFor is overloaded with ratioDict logic that needs manifest force it to not be callable pre play.
         }
         return abrController.getInitialBitrateFor(type);
     }
@@ -1930,7 +1955,7 @@ function MediaPlayer() {
      * @instance
      */
     function getVideoElement() {
-        if (!videoModel) {
+        if (!videoModel.getElement()) {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
         return videoModel.getElement();
@@ -1954,7 +1979,7 @@ function MediaPlayer() {
      * @instance
      */
     function attachVideoContainer(container) {
-        if (!videoModel) {
+        if (!videoModel.getElement()) {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
         videoModel.setVideoContainer(container);
@@ -1971,19 +1996,23 @@ function MediaPlayer() {
         if (!mediaPlayerInitialized) {
             throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
         }
-        if (videoModel) {
-            videoModel.reset();
-        }
-        videoModel = null;
+
         if (element) {
-            videoModel = VideoModel(context).getInstance();
-            videoModel.initialize();
             videoModel.setElement(element);
             detectProtection();
             detectMetricsReporting();
             detectMss();
+
+            if (streamController) {
+                streamController.switchToVideoElement();
+            }
         }
-        resetAndInitializePlayback();
+
+        if (playbackInitialized) { //Reset if we have been playing before, so this is a new element.
+            resetPlaybackControllers();
+        }
+
+        initializePlayback();
     }
 
     /**
@@ -2004,7 +2033,7 @@ function MediaPlayer() {
      * @instance
      */
     function attachTTMLRenderingDiv(div) {
-        if (!videoModel) {
+        if (!videoModel.getElement()) {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
         videoModel.setTTMLRenderingDiv(div);
@@ -2024,8 +2053,8 @@ function MediaPlayer() {
      * @instance
      */
     function getBitrateInfoListFor(type) {
-        if (!playbackInitialized) {
-            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR;
         }
         let stream = getActiveStream();
         return stream ? stream.getBitrateListFor(type) : [];
@@ -2039,8 +2068,8 @@ function MediaPlayer() {
      * @instance
      */
     function getStreamsFromManifest(manifest) {
-        if (!playbackInitialized) {
-            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR;
         }
         return adapter.getStreamsInfo(manifest);
     }
@@ -2053,8 +2082,8 @@ function MediaPlayer() {
      * @instance
      */
     function getTracksFor(type) {
-        if (!playbackInitialized) {
-            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR;
         }
         let streamInfo = streamController.getActiveStreamInfo();
         if (!streamInfo) return [];
@@ -2071,8 +2100,8 @@ function MediaPlayer() {
      * @instance
      */
     function getTracksForTypeFromManifest(type, manifest, streamInfo) {
-        if (!playbackInitialized) {
-            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR;
         }
 
         streamInfo = streamInfo || adapter.getStreamsInfo(manifest)[0];
@@ -2088,8 +2117,8 @@ function MediaPlayer() {
      * @instance
      */
     function getCurrentTrackFor(type) {
-        if (!playbackInitialized) {
-            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR;
         }
         let streamInfo = streamController.getActiveStreamInfo();
 
@@ -2146,8 +2175,8 @@ function MediaPlayer() {
      * @instance
      */
     function setCurrentTrack(track) {
-        if (!playbackInitialized) {
-            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR;
         }
         mediaController.setTrack(track);
     }
@@ -2373,7 +2402,13 @@ function MediaPlayer() {
             source = urlOrManifest;
         }
 
-        resetAndInitializePlayback();
+        if (streamingInitialized || playbackInitialized) {
+            resetPlaybackControllers();
+        }
+
+        if (isReady()) {
+            initializePlayback();
+        }
     }
 
     /**
@@ -2446,25 +2481,19 @@ function MediaPlayer() {
     // PRIVATE METHODS
     //***********************************
 
-    function resetAndInitializePlayback() {
-        if (playbackInitialized) {
-            playbackInitialized = false;
-            adapter.reset();
-            streamController.reset();
-            playbackController.reset();
-            abrController.reset();
-            mediaController.reset();
-            textController.reset();
-            if (protectionController) {
-                protectionController.reset();
-                protectionController = null;
-                detectProtection();
-            }
-            if (isReady()) {
-                initializePlayback();
-            }
-        } else if (isReady()) {
-            initializePlayback();
+    function resetPlaybackControllers() {
+        playbackInitialized = false;
+        streamingInitialized = false;
+        adapter.reset();
+        streamController.reset();
+        playbackController.reset();
+        abrController.reset();
+        mediaController.reset();
+        textController.reset();
+        if (protectionController) {
+            protectionController.reset();
+            protectionController = null;
+            detectProtection();
         }
     }
 
@@ -2472,10 +2501,6 @@ function MediaPlayer() {
 
         // creates or get objects instances
         let manifestLoader = createManifestLoader();
-
-        let sourceBufferController = SourceBufferController(context).getInstance({
-            textController: textController
-        });
 
         if (!streamController) {
             streamController = StreamController(context).getInstance();
@@ -2504,8 +2529,7 @@ function MediaPlayer() {
             domStorage: domStorage,
             abrController: abrController,
             mediaController: mediaController,
-            textController: textController,
-            sourceBufferController: sourceBufferController
+            textController: textController
         });
 
         playbackController.setConfig({
@@ -2651,25 +2675,29 @@ function MediaPlayer() {
     }
 
     function getActiveStream() {
-        if (!playbackInitialized) {
-            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR;
         }
         let streamInfo = streamController.getActiveStreamInfo();
         return streamInfo ? streamController.getStreamById(streamInfo.id) : null;
     }
 
     function initializePlayback() {
-        if (!playbackInitialized) {
+        if (!streamingInitialized && source) {
+            streamingInitialized = true;
+            log('Streaming Initialized');
             createPlaybackControllers();
-
-            playbackInitialized = true;
-            log('Playback Initialized');
 
             if (typeof source === 'string') {
                 streamController.load(source);
             } else {
                 streamController.loadWithManifest(source);
             }
+        }
+
+        if (!playbackInitialized && isReady()) {
+            playbackInitialized = true;
+            log('Playback Initialized');
         }
     }
 
@@ -2682,6 +2710,7 @@ function MediaPlayer() {
         attachView: attachView,
         attachSource: attachSource,
         isReady: isReady,
+        preload: preload,
         play: play,
         isPaused: isPaused,
         pause: pause,

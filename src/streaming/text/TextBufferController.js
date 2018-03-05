@@ -53,7 +53,6 @@ function TextBufferController(config) {
                 metricsModel: config.metricsModel,
                 mediaPlayerModel: config.mediaPlayerModel,
                 manifestModel: config.manifestModel,
-                sourceBufferController: config.sourceBufferController,
                 errHandler: config.errHandler,
                 streamController: config.streamController,
                 mediaController: config.mediaController,
@@ -69,7 +68,6 @@ function TextBufferController(config) {
             _BufferControllerImpl = NotFragmentedTextBufferController(context).create({
                 type: config.type,
                 errHandler: config.errHandler,
-                sourceBufferController: config.sourceBufferController,
                 streamProcessor: config.streamProcessor
             });
         }
@@ -140,6 +138,10 @@ function TextBufferController(config) {
         return _BufferControllerImpl.getIsPruningInProgress();
     }
 
+    function getRangeAt(time) {
+        return _BufferControllerImpl.getRangeAt(time);
+    }
+
     instance = {
         getBufferControllerType: getBufferControllerType,
         initialize: initialize,
@@ -155,6 +157,7 @@ function TextBufferController(config) {
         getIsBufferingCompleted: getIsBufferingCompleted,
         getIsPruningInProgress: getIsPruningInProgress,
         switchInitData: switchInitData,
+        getRangeAt: getRangeAt,
         reset: reset
     };
 

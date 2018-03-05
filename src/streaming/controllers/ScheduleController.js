@@ -56,7 +56,6 @@ function ScheduleController(config) {
     const playbackController = config.playbackController;
     const streamController = config.streamController;
     const textController = config.textController;
-    const sourceBufferController = config.sourceBufferController;
     const type = config.type;
     const streamProcessor = config.streamProcessor;
     const mediaController = config.mediaController;
@@ -105,7 +104,6 @@ function ScheduleController(config) {
 
         nextFragmentRequestRule = NextFragmentRequestRule(context).create({
             adapter: adapter,
-            sourceBufferController: sourceBufferController,
             textController: textController
         });
 
@@ -484,7 +482,7 @@ function ScheduleController(config) {
         }
 
         streamProcessor.getFragmentModel().syncExecutedRequestsWithBufferedRange(
-            streamProcessor.getBufferController().getBuffer().buffered,
+            streamProcessor.getBufferController().getBuffer().getAllBufferRanges(),
             streamProcessor.getStreamInfo().duration);
 
         if (e.hasEnoughSpaceToAppend && isStopped) {
