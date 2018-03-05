@@ -826,6 +826,11 @@ function StreamController() {
         }
     }
 
+    function setProtectionData(protData) {
+        protectionData = protData;
+    }
+
+
     function resetInitialSettings() {
         streams = [];
         protectionController = null;
@@ -922,6 +927,7 @@ function StreamController() {
         loadWithManifest: loadWithManifest,
         getActiveStreamProcessors: getActiveStreamProcessors,
         setConfig: setConfig,
+        setProtectionData: setProtectionData,
         reset: reset
     };
 
