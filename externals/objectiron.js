@@ -38,8 +38,8 @@ export default class ObjectIron{
                 if (child[property.name]) {
                     // check to see if we should merge
                     if (property.merge) {
-                       const parentValue = parent[property.name];
-                       const childValue = child[property.name];
+                        const parentValue = parent[property.name];
+                        const childValue = child[property.name];
 
                         // complex objects; merge properties
                         if (typeof parentValue === 'object' && typeof childValue === 'object') {
