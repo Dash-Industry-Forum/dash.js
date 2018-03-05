@@ -2257,6 +2257,11 @@ function MediaPlayer() {
      */
     function setProtectionData(value) {
         protectionData = value;
+
+        // Propagate changes in case StreamController is already created
+        if (streamController) {
+            streamController.setProtectionData(protectionData);
+        }
     }
 
     /*

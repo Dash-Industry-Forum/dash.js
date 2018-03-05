@@ -557,9 +557,7 @@ function StreamController() {
                 manifest: manifest
             });
             protectionController.setMediaElement(videoModel.getElement());
-            if (protectionData) {
-                protectionController.setProtectionData(protectionData);
-            }
+            setProtectionData(protectionData);
         }
 
         composeStreams();
@@ -812,6 +810,18 @@ function StreamController() {
         }
     }
 
+    function setProtectionData(protData) {
+        if (!protData) {
+            return;
+        }
+        protectionData = protData;
+
+        if (protectionController) {
+            protectionController.setProtectionData(protectionData);
+        }
+    }
+
+
     function resetInitialSettings() {
         streams = [];
         protectionController = null;
@@ -907,6 +917,7 @@ function StreamController() {
         loadWithManifest: loadWithManifest,
         getActiveStreamProcessors: getActiveStreamProcessors,
         setConfig: setConfig,
+        setProtectionData: setProtectionData,
         reset: reset
     };
 
