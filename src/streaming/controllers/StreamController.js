@@ -574,7 +574,9 @@ function StreamController() {
                 manifest: manifest
             });
             protectionController.setMediaElement(videoModel.getElement());
-            setProtectionData(protectionData);
+            if (protectionData) {
+                protectionController.setProtectionData(protectionData);
+            }
         }
 
         composeStreams();
@@ -825,14 +827,7 @@ function StreamController() {
     }
 
     function setProtectionData(protData) {
-        if (!protData) {
-            return;
-        }
         protectionData = protData;
-
-        if (protectionController) {
-            protectionController.setProtectionData(protectionData);
-        }
     }
 
 

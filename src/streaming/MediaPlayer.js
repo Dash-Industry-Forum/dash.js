@@ -1898,9 +1898,8 @@ function MediaPlayer() {
     /**
      * Use this method to change the current text track for both external time text files and fragmented text tracks. There is no need to
      * set the track mode on the video object to switch a track when using this method.
-     *
      * @param {number} idx - Index of track based on the order of the order the tracks are added Use -1 to disable all tracks. (turn captions off).  Use module:MediaPlayer#dashjs.MediaPlayer.events.TEXT_TRACK_ADDED.
-     * @see {@link module:MediaPlayer#dashjs.MediaPlayer.events.TEXT_TRACK_ADDED}
+     * @see {@link MediaPlayerEvents#event:TEXT_TRACK_ADDED dashjs.MediaPlayer.events.TEXT_TRACK_ADDED}
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -2278,6 +2277,10 @@ function MediaPlayer() {
     }
 
     /**
+     * Sets Protection Data requierd to setup the Protection Module (DRM). Protection Data must
+     * be set before initializing MediaPlayer or, once initialized, before PROTECTION_CREATED event is fired.
+     * @see {@link module:MediaPlayer#initialize initialize()}
+     * @see {@link ProtectionEvents#event:PROTECTION_CREATED dashjs.Protection.events.PROTECTION_CREATED}
      * @param {ProtectionData} value - object containing
      * property names corresponding to key system name strings and associated
      * values being instances of.
