@@ -2277,7 +2277,7 @@ function MediaPlayer() {
     }
 
     /**
-     * Sets Protection Data requierd to setup the Protection Module (DRM). Protection Data must
+     * Sets Protection Data required to setup the Protection Module (DRM). Protection Data must
      * be set before initializing MediaPlayer or, once initialized, before PROTECTION_CREATED event is fired.
      * @see {@link module:MediaPlayer#initialize initialize()}
      * @see {@link ProtectionEvents#event:PROTECTION_CREATED dashjs.Protection.events.PROTECTION_CREATED}
