@@ -98,10 +98,7 @@ function PlaybackController() {
     }
 
     function play() {
-        if (!streamInfo) {
-            return;
-        }
-        if (videoModel && videoModel.getElement()) {
+        if (streamInfo && videoModel && videoModel.getElement()) {
             videoModel.play();
         } else {
             playOnceInitialized = true;
