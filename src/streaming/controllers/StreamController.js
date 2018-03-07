@@ -156,8 +156,9 @@ function StreamController() {
     }
 
     function onWallclockTimeUpdated(e) {
-        if (!mediaPlayerModel.getJumpGaps() || isPaused || isStreamSwitchingInProgress ||
-            !activeStream || playbackController.isSeeking()) {
+        if (!mediaPlayerModel.getJumpGaps() || !activeStream || activeStream.getProcessors().length === 0 ||
+            playbackController.isSeeking() || isPaused || isStreamSwitchingInProgress ||
+            hasMediaError || hasInitialisationError) {
             return;
         }
 
@@ -165,7 +166,6 @@ function StreamController() {
         if (wallclockTicked >= STALL_THRESHOLD_TO_CHECK_GAPS) {
             const currentTime = playbackController.getTime();
             if (lastPlaybackTime === currentTime) {
-                log('Warning - Playback stalled for', (wallclockTicked * mediaPlayerModel.getWallclockTimeUpdateInterval()) ,'milliseconds. Time for a jump?');
                 jumpGap(currentTime, e.timeToEnd);
             } else {
                 lastPlaybackTime = currentTime;

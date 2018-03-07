@@ -496,7 +496,9 @@ function Stream(config) {
         }
 
         if (protectionController) {
-            for (let i = 0; i < ln; i++) {
+            // Need to check if streamProcessors exists because streamProcessors
+            // could be cleared in case an error is detected while initializing DRM keysystem
+            for (let i = 0; i < ln && streamProcessors[i]; i++) {
                 if (streamProcessors[i].getType() === Constants.AUDIO ||
                     streamProcessors[i].getType() === Constants.VIDEO ||
                     streamProcessors[i].getType() === Constants.FRAGMENTED_TEXT) {
