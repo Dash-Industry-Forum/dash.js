@@ -98,6 +98,9 @@ function PlaybackController() {
     }
 
     function play() {
+        if (!streamInfo) {
+            return;
+        }
         if (videoModel && videoModel.getElement()) {
             videoModel.play();
         } else {
@@ -106,21 +109,21 @@ function PlaybackController() {
     }
 
     function isPaused() {
-        return videoModel ? videoModel.isPaused() : null;
+        return streamInfo && videoModel ? videoModel.isPaused() : null;
     }
 
     function pause() {
-        if (videoModel) {
+        if (streamInfo && videoModel) {
             videoModel.pause();
         }
     }
 
     function isSeeking() {
-        return videoModel ? videoModel.isSeeking() : null;
+        return streamInfo && videoModel ? videoModel.isSeeking() : null;
     }
 
     function seek(time) {
-        if (videoModel) {
+        if (streamInfo && videoModel) {
             eventBus.trigger(Events.PLAYBACK_SEEK_ASKED);
             log('Requesting seek to time: ' + time);
             videoModel.setCurrentTime(time);
@@ -128,19 +131,19 @@ function PlaybackController() {
     }
 
     function getTime() {
-        return videoModel ? videoModel.getTime() : null;
+        return streamInfo && videoModel ? videoModel.getTime() : null;
     }
 
     function getPlaybackRate() {
-        return videoModel ? videoModel.getPlaybackRate() : null;
+        return streamInfo && videoModel ? videoModel.getPlaybackRate() : null;
     }
 
     function getPlayedRanges() {
-        return videoModel ? videoModel.getPlayedRanges() : null;
+        return streamInfo && videoModel ? videoModel.getPlayedRanges() : null;
     }
 
     function getEnded() {
-        return videoModel ? videoModel.getEnded() : null;
+        return streamInfo && videoModel ? videoModel.getEnded() : null;
     }
 
     function getIsDynamic() {
