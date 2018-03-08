@@ -1,6 +1,7 @@
 language: node_js
 node_js:
   - stable
+filter_secrets: false
 addons:
   browserstack:
     username: epiclabsdash1
