@@ -40,7 +40,7 @@ import Capabilities from './utils/Capabilities';
 import TextTracks from './text/TextTracks';
 import RequestModifier from './utils/RequestModifier';
 import TextController from './text/TextController';
-import URIQueryAndFragmentModel from './models/URIQueryAndFragmentModel';
+import URIFragmentModel from './models/URIFragmentModel';
 import ManifestModel from './models/ManifestModel';
 import MediaPlayerModel from './models/MediaPlayerModel';
 import MetricsModel from './models/MetricsModel';
@@ -2365,9 +2365,8 @@ function MediaPlayer() {
 
         eventBus.on(Events.INTERNAL_MANIFEST_LOADED, handler, self);
 
-        let uriQueryFragModel = URIQueryAndFragmentModel(context).getInstance();
-        uriQueryFragModel.initialize();
-        manifestLoader.load(uriQueryFragModel.parseURI(url));
+        URIFragmentModel(context).getInstance().initialize(url);
+        manifestLoader.load(url);
     }
 
     /**
@@ -2403,12 +2402,10 @@ function MediaPlayer() {
         }
 
         if (typeof urlOrManifest === 'string') {
-            let uriQueryFragModel = URIQueryAndFragmentModel(context).getInstance();
-            uriQueryFragModel.initialize();
-            source = uriQueryFragModel.parseURI(urlOrManifest);
-        } else {
-            source = urlOrManifest;
+            URIFragmentModel(context).getInstance().initialize(urlOrManifest);
         }
+
+        source = urlOrManifest;
 
         if (streamingInitialized || playbackInitialized) {
             resetPlaybackControllers();
