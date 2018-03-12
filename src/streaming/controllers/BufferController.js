@@ -682,7 +682,9 @@ function BufferController(config) {
                 updateBufferLevel();
             } else {
                 bufferResetInProgress = false;
-                appendToBuffer(mediaChunk);
+                if (mediaChunk) {
+                    appendToBuffer(mediaChunk);
+                }
             }
             eventBus.trigger(Events.BUFFER_CLEARED, { sender: instance, from: e.from, to: e.to, hasEnoughSpaceToAppend: hasEnoughSpaceToAppend() });
         }
@@ -718,7 +720,6 @@ function BufferController(config) {
             if (ranges && ranges.length > 0 && playbackController.getTimeToStreamEnd() > STALL_THRESHOLD) {
                 isBufferingCompleted = false;
                 lastIndex = Number.POSITIVE_INFINITY;
-                streamProcessor.getFragmentModel().abortRequests();
             }
         }
     }
