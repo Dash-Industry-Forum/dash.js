@@ -288,7 +288,6 @@ input[type="range"]::-ms-thumb {
 }
 
 .seekbar-buffer {
-    z-index: 100;
     position: absolute;
     left: 0px;
     top: 0px;
@@ -298,7 +297,6 @@ input[type="range"]::-ms-thumb {
 }
 
 .seekbar-play {
-    z-index: 1000;
     position: absolute;
     left: 0px;
     top: 0px;
