@@ -531,12 +531,11 @@ function Protection() {
             controller = (0, _controllersProtectionController2['default'])(context).create({
                 protectionModel: protectionModel,
                 protectionKeyController: protectionKeyController,
-                adapter: config.adapter,
                 eventBus: config.eventBus,
                 log: config.log,
                 events: config.events,
                 BASE64: config.BASE64,
-                Constants: config.Constants
+                constants: config.constants
             });
             config.capabilities.setEncryptedMediaSupported(true);
         }
@@ -548,10 +547,9 @@ function Protection() {
         var log = config.log;
         var eventBus = config.eventBus;
         var errHandler = config.errHandler;
-        var videoElement = config.videoModel.getElement();
+        var videoElement = config.videoModel ? config.videoModel.getElement() : null;
 
-        if (videoElement.onencrypted !== undefined && videoElement.mediaKeys !== undefined && navigator.requestMediaKeySystemAccess !== undefined && typeof navigator.requestMediaKeySystemAccess === 'function') {
-
+        if ((!videoElement || videoElement.onencrypted !== undefined) && (!videoElement || videoElement.mediaKeys !== undefined)) {
             log('EME detected on this user agent! (ProtectionModel_21Jan2015)');
             return (0, _modelsProtectionModel_21Jan20152['default'])(context).create({ log: log, eventBus: eventBus, events: config.events });
         } else if (getAPI(videoElement, APIS_ProtectionModel_3Feb2014)) {
@@ -739,7 +737,7 @@ var ProtectionEvents = (function (_EventsBase) {
      * has completed
      * @ignore
      */
-    this.KEY_SYSTEM_ACCESS_COMPLETE = 'keySystemAccessComplete';
+    this.KEY_SYSTEM_ACCESS_COMPLETE = 'public_keySystemAccessComplete';
 
     /**
      * Event ID for events delivered when a key system selection procedure
@@ -873,71 +871,52 @@ function ProtectionController(config) {
     config = config || {};
     var protectionKeyController = config.protectionKeyController;
     var protectionModel = config.protectionModel;
-    var adapter = config.adapter;
     var eventBus = config.eventBus;
     var events = config.events;
     var log = config.log;
     var BASE64 = config.BASE64;
-    var Constants = config.Constants;
+    var constants = config.constants;
 
     var instance = undefined,
         pendingNeedKeyData = undefined,
-        audioInfo = undefined,
-        videoInfo = undefined,
+        mediaInfoArr = undefined,
         protDataSet = undefined,
-        initialized = undefined,
         sessionType = undefined,
         robustnessLevel = undefined,
         keySystem = undefined;
 
     function setup() {
         pendingNeedKeyData = [];
-        initialized = false;
+        mediaInfoArr = [];
         sessionType = 'temporary';
         robustnessLevel = '';
     }
 
     /**
-     * Initialize this protection system with a given manifest and optional audio
-     * and video stream information.
+     * Initialize this protection system with a given audio
+     * or video stream information.
      *
-     * @param {Object} manifest the json version of the manifest XML document for the
-     * desired content.  Applications can download their manifest using
-     * {@link module:MediaPlayer#retrieveManifest}
-     * @param {StreamInfo} [aInfo] audio stream information
-     * @param {StreamInfo} [vInfo] video stream information
+     * @param {StreamInfo} [mediaInfo] Media information
      * @memberof module:ProtectionController
      * @instance
      * @todo This API will change when we have better support for allowing applications
      * to select different adaptation sets for playback.  Right now it is clunky for
      * applications to create {@link StreamInfo} with the right information,
      */
-    function initialize(manifest, aInfo, vInfo) {
-        // TODO: We really need to do much more here... We need to be smarter about knowing
-        // which adaptation sets for which we have initialized, including the default key ID
-        // value from the ContentProtection elements so we know whether or not we still need to
-        // select key systems and acquire keys.
-        if (!initialized) {
-            var streamInfo = undefined;
+    function initializeForMedia(mediaInfo) {
+        // Not checking here if a session for similar KS/KID combination is already created
+        // because still don't know which keysystem will be selected.
+        // Once Keysystem is selected and before creating the session, we will do that check
+        // so we create the strictly necessary DRM sessions
+        eventBus.on(events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
 
-            if (!aInfo && !vInfo) {
-                // Look for ContentProtection elements.  InitData can be provided by either the
-                // dash264drm:Pssh ContentProtection format or a DRM-specific format.
-                streamInfo = adapter.getStreamsInfo()[0]; // TODO: Single period only for now. See TODO above
-            }
+        mediaInfoArr.push(mediaInfo);
 
-            audioInfo = aInfo || (streamInfo ? adapter.getMediaInfoForType(streamInfo, Constants.AUDIO) : null);
-            videoInfo = vInfo || (streamInfo ? adapter.getMediaInfoForType(streamInfo, Constants.VIDEO) : null);
-            var mediaInfo = videoInfo ? videoInfo : audioInfo; // We could have audio or video only
-
-            // ContentProtection elements are specified at the AdaptationSet level, so the CP for audio
-            // and video will be the same.  Just use one valid MediaInfo object
-            var supportedKS = protectionKeyController.getSupportedKeySystemsFromContentProtection(mediaInfo.contentProtection);
-            if (supportedKS && supportedKS.length > 0) {
-                selectKeySystem(supportedKS, true);
-            }
-
-            initialized = true;
+        // ContentProtection elements are specified at the AdaptationSet level, so the CP for audio
+        // and video will be the same.  Just use one valid MediaInfo object
+        var supportedKS = protectionKeyController.getSupportedKeySystemsFromContentProtection(mediaInfo.contentProtection);
+        if (supportedKS && supportedKS.length > 0) {
+            selectKeySystem(supportedKS, true);
         }
     }
 
@@ -1070,11 +1049,9 @@ function ProtectionController(config) {
         if (element) {
             protectionModel.setMediaElement(element);
             eventBus.on(events.NEED_KEY, onNeedKey, this);
-            eventBus.on(events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
         } else if (element === null) {
             protectionModel.setMediaElement(element);
             eventBus.off(events.NEED_KEY, onNeedKey, this);
-            eventBus.off(events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
         }
     }
 
@@ -1126,6 +1103,9 @@ function ProtectionController(config) {
      * @instance
      */
     function reset() {
+
+        eventBus.off(events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
+
         setMediaElement(null);
 
         keySystem = undefined; //TODO-Refactor look at why undefined is needed for this. refactor
@@ -1134,6 +1114,8 @@ function ProtectionController(config) {
             protectionModel.reset();
             protectionModel = null;
         }
+
+        mediaInfoArr = [];
     }
 
     ///////////////
@@ -1157,12 +1139,13 @@ function ProtectionController(config) {
         var audioRobustness = protData && protData.audioRobustness && protData.audioRobustness.length > 0 ? protData.audioRobustness : robustnessLevel;
         var videoRobustness = protData && protData.videoRobustness && protData.videoRobustness.length > 0 ? protData.videoRobustness : robustnessLevel;
 
-        if (audioInfo) {
-            audioCapabilities.push(new _voMediaCapability2['default'](audioInfo.codec, audioRobustness));
-        }
-        if (videoInfo) {
-            videoCapabilities.push(new _voMediaCapability2['default'](videoInfo.codec, videoRobustness));
-        }
+        mediaInfoArr.forEach(function (media) {
+            if (media.type === constants.AUDIO) {
+                audioCapabilities.push(new _voMediaCapability2['default'](media.codec, audioRobustness));
+            } else if (media.type === constants.VIDEO) {
+                videoCapabilities.push(new _voMediaCapability2['default'](media.codec, videoRobustness));
+            }
+        });
 
         return new _voKeySystemConfiguration2['default'](audioCapabilities, videoCapabilities, 'optional', sessionType === 'temporary' ? 'optional' : 'required', [sessionType]);
     }
@@ -1221,7 +1204,6 @@ function ProtectionController(config) {
                     if (event.error) {
                         keySystem = undefined;
                         eventBus.off(events.INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
-
                         if (!fromManifest) {
                             eventBus.trigger(events.KEY_SYSTEM_SELECTED, { data: null, error: 'DRM: KeySystem Access Denied! -- ' + event.error });
                         }
@@ -1246,7 +1228,9 @@ function ProtectionController(config) {
                         for (var i = 0; i < pendingNeedKeyData.length; i++) {
                             for (ksIdx = 0; ksIdx < pendingNeedKeyData[i].length; ksIdx++) {
                                 if (keySystem === pendingNeedKeyData[i][ksIdx].ks) {
-                                    if (pendingNeedKeyData[i][ksIdx].initData === null && protData && protData.hasOwnProperty('clearkeys')) {
+                                    // For Clearkey: if parameters for generating init data was provided by the user, use them for generating
+                                    // initData and overwrite possible initData indicated in encrypted event (EME)
+                                    if (protectionKeyController.isClearKey(keySystem) && protData && protData.hasOwnProperty('clearkeys')) {
                                         var initData = { kids: Object.keys(protData.clearkeys) };
                                         pendingNeedKeyData[i][ksIdx].initData = new TextEncoder().encode(JSON.stringify(initData));
                                     }
@@ -1441,7 +1425,7 @@ function ProtectionController(config) {
     }
 
     instance = {
-        initialize: initialize,
+        initializeForMedia: initializeForMedia,
         createKeySession: createKeySession,
         loadKeySession: loadKeySession,
         removeKeySession: removeKeySession,
@@ -2506,51 +2490,8 @@ function KeySystemWidevine(config) {
         }
     }
 
-    function replaceKID(pssh, KID) {
-        var pssh_array = undefined;
-        var replace = true;
-        var kidLen = 16;
-        var pos = undefined;
-        var i = undefined,
-            j = undefined;
-
-        pssh_array = new Uint8Array(pssh);
-
-        for (i = 0; i <= pssh_array.length - (kidLen + 2); i++) {
-            if (pssh_array[i] === 0x12 && pssh_array[i + 1] === 0x10) {
-                pos = i + 2;
-                for (j = pos; j < pos + kidLen; j++) {
-                    if (pssh_array[j] !== 0xFF) {
-                        replace = false;
-                        break;
-                    }
-                }
-                break;
-            }
-        }
-
-        if (replace) {
-            pssh_array.set(KID, pos);
-        }
-
-        return pssh_array.buffer;
-    }
-
     function getInitData(cp) {
-        var pssh = null;
-        // Get pssh from protectionData or from manifest
-        if (protData && protData.pssh) {
-            pssh = BASE64.decodeArray(protData.pssh).buffer;
-        } else {
-            pssh = _CommonEncryption2['default'].parseInitDataFromContentProtection(cp, BASE64);
-        }
-
-        // Check if KID within pssh is empty, in that case set KID value according to 'cenc:default_KID' value
-        if (pssh) {
-            pssh = replaceKID(pssh, cp['cenc:default_KID']);
-        }
-
-        return pssh;
+        return _CommonEncryption2['default'].parseInitDataFromContentProtection(cp, BASE64);
     }
 
     function getRequestHeadersFromMessage() /*message*/{
@@ -3184,6 +3125,8 @@ function ProtectionModel_21Jan2015(config) {
                 videoElement.setMediaKeys(mediaKeys).then(function () {
                     eventBus.trigger(events.INTERNAL_KEY_SYSTEM_SELECTED);
                 });
+            } else {
+                eventBus.trigger(events.INTERNAL_KEY_SYSTEM_SELECTED);
             }
         })['catch'](function () {
             eventBus.trigger(events.INTERNAL_KEY_SYSTEM_SELECTED, { error: 'Error selecting keys system (' + keySystemAccess.keySystem.systemString + ')! Could not create MediaKeys -- TODO' });
@@ -3196,7 +3139,9 @@ function ProtectionModel_21Jan2015(config) {
         // Replacing the previous element
         if (videoElement) {
             videoElement.removeEventListener('encrypted', eventHandler);
-            videoElement.setMediaKeys(null);
+            if (videoElement.setMediaKeys) {
+                videoElement.setMediaKeys(null);
+            }
         }
 
         videoElement = mediaElement;
@@ -3204,7 +3149,7 @@ function ProtectionModel_21Jan2015(config) {
         // Only if we are not detaching from the existing element
         if (videoElement) {
             videoElement.addEventListener('encrypted', eventHandler);
-            if (mediaKeys) {
+            if (videoElement.setMediaKeys && mediaKeys) {
                 videoElement.setMediaKeys(mediaKeys);
             }
         }
@@ -3297,6 +3242,12 @@ function ProtectionModel_21Jan2015(config) {
     }
 
     function requestKeySystemAccessInternal(ksConfigurations, idx) {
+
+        if (navigator.requestMediaKeySystemAccess === undefined || typeof navigator.requestMediaKeySystemAccess !== 'function') {
+            eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { error: 'Insecure origins are not allowed' });
+            return;
+        }
+
         (function (i) {
             var keySystem = ksConfigurations[i].ks;
             var configs = ksConfigurations[i].configs;
@@ -3306,11 +3257,11 @@ function ProtectionModel_21Jan2015(config) {
                 var keySystemAccess = new _voKeySystemAccess2['default'](keySystem, configuration);
                 keySystemAccess.mksa = mediaKeySystemAccess;
                 eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { data: keySystemAccess });
-            })['catch'](function () {
+            })['catch'](function (error) {
                 if (++i < ksConfigurations.length) {
                     requestKeySystemAccessInternal(ksConfigurations, i);
                 } else {
-                    eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { error: 'Key system access denied!' });
+                    eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { error: 'Key system access denied! ' + error.message });
                 }
             });
         })(idx);
