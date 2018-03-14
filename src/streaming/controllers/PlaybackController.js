@@ -212,6 +212,7 @@ function PlaybackController() {
             eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
             eventBus.off(Events.BYTES_APPENDED, onBytesAppended, this);
+            eventBus.off(Events.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, this);
             stopUpdatingWallclockTime();
             removeAllListeners();
         }
