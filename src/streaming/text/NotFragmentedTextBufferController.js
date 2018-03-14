@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import Constants from '../constants/Constants';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
@@ -82,6 +83,14 @@ function NotFragmentedTextBufferController(config) {
     function createBuffer(mediaInfo) {
         try {
             buffer = SourceBufferSink(context).create(mediaSource, mediaInfo);
+            if (!initialized) {
+                const textBuffer = buffer.getBuffer();
+                if (textBuffer.hasOwnProperty(Constants.INITIALIZE)) {
+                    textBuffer.initialize(type, streamProcessor);
+                }
+                initialized = true;
+            }
+
         } catch (e) {
             if ((mediaInfo.isText) || (mediaInfo.codec.indexOf('codecs="stpp') !== -1) || (mediaInfo.codec.indexOf('codecs="wvtt') !== -1)) {
                 try {
