@@ -132,6 +132,8 @@ function ProtectionModel_21Jan2015(config) {
                 videoElement.setMediaKeys(mediaKeys).then(function () {
                     eventBus.trigger(events.INTERNAL_KEY_SYSTEM_SELECTED);
                 });
+            } else {
+                eventBus.trigger(events.INTERNAL_KEY_SYSTEM_SELECTED);
             }
 
         }).catch(function () {
@@ -146,7 +148,9 @@ function ProtectionModel_21Jan2015(config) {
         // Replacing the previous element
         if (videoElement) {
             videoElement.removeEventListener('encrypted', eventHandler);
-            videoElement.setMediaKeys(null);
+            if (videoElement.setMediaKeys) {
+                videoElement.setMediaKeys(null);
+            }
         }
 
         videoElement = mediaElement;
@@ -154,7 +158,7 @@ function ProtectionModel_21Jan2015(config) {
         // Only if we are not detaching from the existing element
         if (videoElement) {
             videoElement.addEventListener('encrypted', eventHandler);
-            if (mediaKeys) {
+            if (videoElement.setMediaKeys && mediaKeys) {
                 videoElement.setMediaKeys(mediaKeys);
             }
         }
@@ -248,6 +252,13 @@ function ProtectionModel_21Jan2015(config) {
     }
 
     function requestKeySystemAccessInternal(ksConfigurations, idx) {
+
+        if (navigator.requestMediaKeySystemAccess === undefined ||
+            typeof navigator.requestMediaKeySystemAccess !== 'function') {
+            eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {error: 'Insecure origins are not allowed'});
+            return;
+        }
+
         (function (i) {
             const keySystem = ksConfigurations[i].ks;
             const configs = ksConfigurations[i].configs;
@@ -259,11 +270,11 @@ function ProtectionModel_21Jan2015(config) {
                 keySystemAccess.mksa = mediaKeySystemAccess;
                 eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {data: keySystemAccess});
 
-            }).catch(function () {
+            }).catch(function (error) {
                 if (++i < ksConfigurations.length) {
                     requestKeySystemAccessInternal(ksConfigurations, i);
                 } else {
-                    eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {error: 'Key system access denied!'});
+                    eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {error: 'Key system access denied! ' + error.message});
                 }
             });
         })(idx);

@@ -60,7 +60,7 @@ a:hover {
         OPTIONS PANEL
 *****************************/
 .options-show {
-    height: 235px;
+    height: 260px;
     transition-property: all;
     transition-duration: .5s;
 }
@@ -134,6 +134,8 @@ a:hover {
 
 .col-md-9 video {
     width: 100%;
+    height: auto;
+    margin: auto;
 }
 
 .col-md-9 {

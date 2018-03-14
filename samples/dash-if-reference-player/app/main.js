@@ -197,6 +197,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     $scope.loopSelected = true;
     $scope.scheduleWhilePausedSelected = true;
     $scope.localStorageSelected = true;
+    $scope.jumpGapsSelected = true;
     $scope.fastSwitchSelected = true;
     $scope.ABRStrategy = 'abrDynamic';
 
@@ -214,7 +215,8 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     $scope.player = dashjs.MediaPlayer().create(); /* jshint ignore:line */
 
     $scope.player.initialize($scope.video, null, $scope.autoPlaySelected);
-    $scope.player.setFastSwitchEnabled(true);
+    $scope.player.setFastSwitchEnabled($scope.fastSwitchSelected);
+    $scope.player.setJumpGaps($scope.jumpGapsSelected);
     $scope.player.attachVideoContainer(document.getElementById('videoContainer'));
     // Add HTML-rendered TTML subtitles except for Firefox < v49 (issue #1164)
     if (doesTimeMarchesOn()) {
@@ -226,6 +228,22 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     $scope.defaultStableBufferDelay = $scope.player.getStableBufferTime();
     $scope.defaultBufferTimeAtTopQuality = $scope.player.getBufferTimeAtTopQuality();
     $scope.defaultBufferTimeAtTopQualityLongForm = $scope.player.getBufferTimeAtTopQualityLongForm();
+    
+    const initVideoTrackSwitchMode = $scope.player.getTrackSwitchModeFor('video');
+    const initAudioTrackSwitchMode = $scope.player.getTrackSwitchModeFor('audio');
+   
+    //get default track switch mode
+    if(initVideoTrackSwitchMode === 'alwaysReplace') {
+        document.getElementById('always-replace-video').checked = true;
+    } else {
+        document.getElementById('never-replace-video').checked = true;
+    }
+
+    if(initAudioTrackSwitchMode === 'alwaysReplace') {
+        document.getElementById('always-replace-audio').checked = true;
+    } else {
+        document.getElementById('never-replace-audio').checked = true;
+    }
 
     $scope.controlbar = new ControlBar($scope.player); /* jshint ignore:line */
     $scope.controlbar.initialize();
@@ -320,6 +338,10 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     $scope.toggleLocalStorage = function () {
         $scope.player.enableLastBitrateCaching($scope.localStorageSelected);
         $scope.player.enableLastMediaSettingsCaching($scope.localStorageSelected);
+    };
+
+    $scope.toggleJumpGaps = function () {
+        $scope.player.setJumpGaps($scope.jumpGapsSelected);
     };
 
     $scope.setStream = function (item) {

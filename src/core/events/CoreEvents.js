@@ -63,7 +63,6 @@ class CoreEvents extends EventsBase {
         this.SEGMENTS_LOADED = 'segmentsLoaded';
         this.SERVICE_LOCATION_BLACKLIST_ADD = 'serviceLocationBlacklistAdd';
         this.SERVICE_LOCATION_BLACKLIST_CHANGED = 'serviceLocationBlacklistChanged';
-        this.SOURCEBUFFER_APPEND_COMPLETED = 'sourceBufferAppendCompleted';
         this.SOURCEBUFFER_REMOVE_COMPLETED = 'sourceBufferRemoveCompleted';
         this.STREAMS_COMPOSED = 'streamsComposed';
         this.STREAM_BUFFERING_COMPLETED = 'streamBufferingCompleted';

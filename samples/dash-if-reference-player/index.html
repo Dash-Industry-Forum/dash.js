@@ -153,6 +153,11 @@
                         Allow Local Storage
                     </label>
                     <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                           title="Enables jump small gaps (discontinuities) in the media streams">
+                        <input type="checkbox" id="jumpGapsCB" ng-model="jumpGapsSelected" ng-change="toggleJumpGaps()" ng-checked="jumpGapsSelected">
+                        Jump Small Gaps
+                    </label>
+                    <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                            title="Enables faster ABR switching (time to render). Only when the new quality is higher than the current.">
                         <input type="checkbox" id="fastSwitchCB" ng-model="fastSwitchSelected" ng-change="toggleFastSwitch()" ng-checked="fastSwitchSelected">
                         Fast Switching ABR
@@ -218,14 +223,26 @@
             <div class="options-item">
                 <div class="options-item-title">Track Switch Mode</div>
                 <div class="options-item-body">
+                    <label class="options-label">Audio:</label>
                     <label data-toggle="tooltip" data-placement="right"
                            title="When a track is switched, the portion of the buffer that contains old track data is cleared">
-                        <input  type="radio" id="always-replace" autocomplete="off" name="track-switch" checked="checked" ng-click="changeTrackSwitchMode('alwaysReplace', 'video')" >
+                        <input  type="radio" id="always-replace-audio" autocomplete="off" name="track-switch-audio" checked="checked" ng-click="changeTrackSwitchMode('alwaysReplace', 'audio')" >
                         always replace
                     </label>
                     <label data-toggle="tooltip" data-placement="right"
                            title="When a track is switched, the portion of the buffer that contains old track data is NOT cleared">
-                        <input type="radio" id="never-replace" autocomplete="off" name="track-switch" ng-click="changeTrackSwitchMode('neverReplace', 'video')">
+                        <input type="radio" id="never-replace-audio" autocomplete="off" name="track-switch-audio" ng-click="changeTrackSwitchMode('neverReplace', 'audio')">
+                        never replace
+                    </label>
+                    <label class="options-label">Video:</label>
+                    <label data-toggle="tooltip" data-placement="right"
+                           title="When a track is switched, the portion of the buffer that contains old track data is cleared">
+                        <input  type="radio" id="always-replace-video" autocomplete="off" name="track-switch-video" checked="checked" ng-click="changeTrackSwitchMode('alwaysReplace', 'video')" >
+                        always replace
+                    </label>
+                    <label data-toggle="tooltip" data-placement="right"
+                           title="When a track is switched, the portion of the buffer that contains old track data is NOT cleared">
+                        <input type="radio" id="never-replace-video" autocomplete="off" name="track-switch-video" ng-click="changeTrackSwitchMode('neverReplace', 'video')">
                         never replace
                     </label>
                 </div>
@@ -263,6 +280,7 @@
                         <span id="videoDuration" class="duration-display">00:00:00</span>
                         <div class="seekContainer">
                             <div id="seekbar" class="seekbar seekbar-complete">
+                                <div id="seekbar-buffer" class="seekbar seekbar-buffer"></div>
                                 <div id="seekbar-play" class="seekbar seekbar-play"></div>
                             </div>
                         </div>

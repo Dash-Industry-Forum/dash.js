@@ -480,15 +480,15 @@ describe('MediaPlayer', function () {
 
         describe('When it is not initialized', function () {
             it('Method getQualityFor should throw an exception', function () {
-                expect(player.getQualityFor).to.throw(MediaPlayer.PLAYBACK_NOT_INITIALIZED_ERROR);
+                expect(player.getQualityFor).to.throw(MediaPlayer.STREAMING_NOT_INITIALIZED_ERROR);
             });
 
             it('Method setQualityFor should throw an exception', function () {
-                expect(player.setQualityFor).to.throw(MediaPlayer.PLAYBACK_NOT_INITIALIZED_ERROR);
+                expect(player.setQualityFor).to.throw(MediaPlayer.STREAMING_NOT_INITIALIZED_ERROR);
             });
 
             it('Method getInitialBitrateFor should throw an exception', function () {
-                expect(player.getInitialBitrateFor).to.throw(MediaPlayer.PLAYBACK_NOT_INITIALIZED_ERROR);
+                expect(player.getInitialBitrateFor).to.throw(MediaPlayer.STREAMING_NOT_INITIALIZED_ERROR);
             });
         });
 
@@ -798,6 +798,24 @@ describe('MediaPlayer', function () {
             expect(cacheLoadThresholdForAudio).to.equal(2);
         });
 
+        it('should configure jumpGap feature', function () {
+            let jumpGaps = mediaPlayerModel.getJumpGaps();
+            expect(jumpGaps).to.equal(false);
+
+            player.setJumpGaps(true);
+
+            jumpGaps = mediaPlayerModel.getJumpGaps();
+            expect(jumpGaps).to.equal(true);
+
+            let smallGapLimit = mediaPlayerModel.getSmallGapLimit();
+            expect(smallGapLimit).to.equal(0.8);
+
+            player.setSmallGapLimit(0.5);
+
+            smallGapLimit = mediaPlayerModel.getSmallGapLimit();
+            expect(smallGapLimit).to.equal(0.5);
+        });
+
         it('should configure BandwidthSafetyFactor', function () {
             let BandwidthSafetyFactor = mediaPlayerModel.getBandwidthSafetyFactor();
             expect(BandwidthSafetyFactor).to.equal(0.9);
@@ -972,27 +990,27 @@ describe('MediaPlayer', function () {
     describe('Stream and Track Management Functions', function () {
         describe('When it is not initialized', function () {
             it('Method getBitrateInfoListFor should throw an exception', function () {
-                expect(player.getBitrateInfoListFor).to.throw(MediaPlayer.PLAYBACK_NOT_INITIALIZED_ERROR);
+                expect(player.getBitrateInfoListFor).to.throw(MediaPlayer.STREAMING_NOT_INITIALIZED_ERROR);
             });
 
             it('Method getStreamsFromManifest should throw an exception', function () {
-                expect(player.getStreamsFromManifest).to.throw(MediaPlayer.PLAYBACK_NOT_INITIALIZED_ERROR);
+                expect(player.getStreamsFromManifest).to.throw(MediaPlayer.STREAMING_NOT_INITIALIZED_ERROR);
             });
 
             it('Method getTracksFor should throw an exception', function () {
-                expect(player.getTracksFor).to.throw(MediaPlayer.PLAYBACK_NOT_INITIALIZED_ERROR);
+                expect(player.getTracksFor).to.throw(MediaPlayer.STREAMING_NOT_INITIALIZED_ERROR);
             });
 
             it('Method getTracksForTypeFromManifest should throw an exception', function () {
-                expect(player.getTracksForTypeFromManifest).to.throw(MediaPlayer.PLAYBACK_NOT_INITIALIZED_ERROR);
+                expect(player.getTracksForTypeFromManifest).to.throw(MediaPlayer.STREAMING_NOT_INITIALIZED_ERROR);
             });
 
             it('Method getCurrentTrackFor should throw an exception', function () {
-                expect(player.getCurrentTrackFor).to.throw(MediaPlayer.PLAYBACK_NOT_INITIALIZED_ERROR);
+                expect(player.getCurrentTrackFor).to.throw(MediaPlayer.STREAMING_NOT_INITIALIZED_ERROR);
             });
 
             it('Method setCurrentTrack should throw an exception', function () {
-                expect(player.setCurrentTrack).to.throw(MediaPlayer.PLAYBACK_NOT_INITIALIZED_ERROR);
+                expect(player.setCurrentTrack).to.throw(MediaPlayer.STREAMING_NOT_INITIALIZED_ERROR);
             });
 
             it('Method setInitialMediaSettingsFor should throw an exception', function () {
@@ -1018,6 +1036,11 @@ describe('MediaPlayer', function () {
             it('Method getSelectionModeForInitialTrack should throw an exception', function () {
                 expect(player.getSelectionModeForInitialTrack).to.throw(MediaPlayer.MEDIA_PLAYER_NOT_INITIALIZED_ERROR);
             });
+        });
+    });
+
+    describe('Stream and Track Management Functions', function () {
+        describe('When it is not initialized', function () {
         });
 
         describe('When it is initialized', function () {
