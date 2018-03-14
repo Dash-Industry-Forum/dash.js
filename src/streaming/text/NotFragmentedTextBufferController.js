@@ -128,6 +128,9 @@ function NotFragmentedTextBufferController(config) {
         return false;
     }
 
+    function dischargePreBuffer() {
+    }
+
     function setSeekStartTime() { //Unused - TODO Remove need for stub function
     }
 
@@ -197,6 +200,7 @@ function NotFragmentedTextBufferController(config) {
         getMediaSource: getMediaSource,
         getIsBufferingCompleted: getIsBufferingCompleted,
         getIsPruningInProgress: getIsPruningInProgress,
+        dischargePreBuffer: dischargePreBuffer,
         switchInitData: switchInitData,
         getRangeAt: getRangeAt,
         reset: reset
