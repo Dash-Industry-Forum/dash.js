@@ -49,8 +49,8 @@ import BaseURLController from './BaseURLController';
 import MediaSourceController from './MediaSourceController';
 
 function StreamController() {
-    // Check whether there is a gap every 20 wallClockUpdateEvent times
-    const STALL_THRESHOLD_TO_CHECK_GAPS = 20;
+    // Check whether there is a gap every 40 wallClockUpdateEvent times
+    const STALL_THRESHOLD_TO_CHECK_GAPS = 40;
 
     const context = this.context;
     const log = Debug(context).getInstance().log;
@@ -155,7 +155,7 @@ function StreamController() {
         }
     }
 
-    function onWallclockTimeUpdated(e) {
+    function onWallclockTimeUpdated(/*e*/) {
         if (!mediaPlayerModel.getJumpGaps() || !activeStream || activeStream.getProcessors().length === 0 ||
             playbackController.isSeeking() || isPaused || isStreamSwitchingInProgress ||
             hasMediaError || hasInitialisationError) {
@@ -166,7 +166,7 @@ function StreamController() {
         if (wallclockTicked >= STALL_THRESHOLD_TO_CHECK_GAPS) {
             const currentTime = playbackController.getTime();
             if (lastPlaybackTime === currentTime) {
-                jumpGap(currentTime, e.timeToEnd);
+                jumpGap(currentTime);
             } else {
                 lastPlaybackTime = currentTime;
             }
@@ -174,8 +174,9 @@ function StreamController() {
         }
     }
 
-    function jumpGap(time, timeToStreamEnd) {
+    function jumpGap(time) {
         const streamProcessors = activeStream.getProcessors();
+        const smallGapLimit = mediaPlayerModel.getSmallGapLimit();
         let seekToPosition;
 
         // Find out what is the right time position to jump to taking
@@ -196,7 +197,7 @@ function StreamController() {
 
             if (nextRangeStartTime > 0) {
                 const gap = nextRangeStartTime - time;
-                if (gap > 0 && gap <= mediaPlayerModel.getSmallGapLimit()) {
+                if (gap > 0 && gap <= smallGapLimit) {
                     if (seekToPosition === undefined || nextRangeStartTime > seekToPosition) {
                         seekToPosition = nextRangeStartTime;
                     }
@@ -204,11 +205,16 @@ function StreamController() {
             }
         }
 
+        const timeToStreamEnd = playbackController.getTimeToStreamEnd();
+        if (seekToPosition === undefined && !isNaN(timeToStreamEnd) && timeToStreamEnd < smallGapLimit) {
+            seekToPosition = time + timeToStreamEnd;
+        }
+
         // If there is a safe position to jump to, do the seeking
         if (seekToPosition > 0) {
             if (!isNaN(timeToStreamEnd) && seekToPosition >= time + timeToStreamEnd) {
                 log('Jumping media gap (discontinuity) at time ', time, '. Jumping to end of the stream');
-                onEnded();
+                eventBus.trigger(Events.PLAYBACK_ENDED);
             } else {
                 log('Jumping media gap (discontinuity) at time ', time, '. Jumping to time position', seekToPosition);
                 playbackController.seek(seekToPosition);
@@ -399,10 +405,8 @@ function StreamController() {
         }
         activeStream = newStream;
         playbackController.initialize(activeStream.getStreamInfo());
-
         if (videoModel.getElement()) {
             //TODO detect if we should close jump to activateStream.
-            playbackController.initialize(activeStream.getStreamInfo());
             openMediaSource(seekTime, oldStream, false);
         } else {
             preloadStream(seekTime);
