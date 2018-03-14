@@ -124,6 +124,10 @@ function NotFragmentedTextBufferController(config) {
         return streamProcessor;
     }
 
+    function getIsPruningInProgress() {
+        return false;
+    }
+
     function setSeekStartTime() { //Unused - TODO Remove need for stub function
     }
 
@@ -192,6 +196,7 @@ function NotFragmentedTextBufferController(config) {
         setMediaSource: setMediaSource,
         getMediaSource: getMediaSource,
         getIsBufferingCompleted: getIsBufferingCompleted,
+        getIsPruningInProgress: getIsPruningInProgress,
         switchInitData: switchInitData,
         getRangeAt: getRangeAt,
         reset: reset
