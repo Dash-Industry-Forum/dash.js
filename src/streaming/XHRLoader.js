@@ -111,7 +111,7 @@ function XHRLoader(cfg) {
                     );
                 } else {
                     if (config.error) {
-                        config.error(request, 'error', xhr.statusText);
+                        config.error(request, 'error', xhr.status, xhr.statusText);
                     }
 
                     if (config.complete) {

@@ -194,13 +194,13 @@ function ManifestLoader(config) {
                     );
                 }
             },
-            error: function (xhr, statusText, errorText) {
+            error: function (xhr, statusText, errorCode, errorText) {
                 eventBus.trigger(
                     Events.INTERNAL_MANIFEST_LOADED, {
                         manifest: null,
                         error: new DashJSError(
                             ErrorConstants.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE,
-                            ErrorConstants.MANIFEST_LOADER_LOADING_FAILURE_ERROR_MESSAGE + `${url}, ${errorText}`
+                            ErrorConstants.MANIFEST_LOADER_LOADING_FAILURE_ERROR_MESSAGE + `${url}, ${errorCode},${errorText}`
                         )
                     }
                 );
