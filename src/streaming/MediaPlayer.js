@@ -2103,7 +2103,7 @@ function MediaPlayer() {
             throw STREAMING_NOT_INITIALIZED_ERROR;
         }
 
-        streamInfo = streamInfo || adapter.getStreamsInfo(manifest)[0];
+        streamInfo = streamInfo || adapter.getStreamsInfo(manifest, 1)[0];
 
         return streamInfo ? adapter.getAllMediaInfoForType(streamInfo, type, manifest) : [];
     }
