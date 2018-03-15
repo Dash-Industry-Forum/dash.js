@@ -109,7 +109,6 @@ function Stream(config) {
             initializeMedia(mediaSource);
             isStreamActivated = true;
         }
-        createBuffers();
     }
 
     /**
