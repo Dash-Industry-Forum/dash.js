@@ -101,12 +101,12 @@ function FragmentLoader(config) {
                 success: function (data) {
                     report(data);
                 },
-                error: function (xhr, statusText, errorText) {
+                error: function (xhr, statusText, errorCode, errorText) {
                     report(
                         undefined,
                         new DashJSError(
                             ErrorConstants.FRAGMENT_LOADER_LOADING_FAILURE_ERROR_CODE,
-                            errorText,
+                            errorCode + ':' + errorText,
                             statusText
                         )
                     );
