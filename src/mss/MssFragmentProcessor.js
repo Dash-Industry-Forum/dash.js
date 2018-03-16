@@ -155,7 +155,8 @@ function MssFragmentProcessor(config) {
                 metricsModel: metricsModel,
                 playbackController: playbackController,
                 ISOBoxer: ISOBoxer,
-                log: log
+                log: log,
+                errHandler: config.errHandler
             });
             mssFragmentMoofProcessor.convertFragment(e, sp);
 

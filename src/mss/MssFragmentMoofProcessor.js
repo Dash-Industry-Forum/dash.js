@@ -39,6 +39,7 @@ function MssFragmentMoofProcessor(config) {
     let instance;
     let metricsModel = config.metricsModel;
     let playbackController = config.playbackController;
+    let errorHandler = config.errHandler;
     const ISOBoxer = config.ISOBoxer;
     const log = config.log;
 
@@ -53,6 +54,15 @@ function MssFragmentMoofProcessor(config) {
         let manifest = representation.adaptation.period.mpd.manifest;
         let adaptation = manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index];
 
+        if (manifest.type !== 'dynamic') {
+            return;
+        }
+
+        if (!tfrf) {
+            errorHandler.mssError('MSS_NO_TFRF : Missing tfrf in live media segment');
+            return;
+        }
+
         // Get adaptation's segment timeline (always a SegmentTimeline in Smooth Streaming use case)
         let segments = adaptation.SegmentTemplate.SegmentTimeline.S;
         let entries = tfrf.entry;
@@ -63,10 +73,6 @@ function MssFragmentMoofProcessor(config) {
         let t = 0;
         let availabilityStartTime = null;
         let range;
-
-        if (manifest.type !== 'dynamic') {
-            return;
-        }
 
         if (entries.length === 0) {
             return;
@@ -158,9 +164,6 @@ function MssFragmentMoofProcessor(config) {
 
         // e.request contains request description object
         // e.response contains fragment bytes
-        if (!e.response) {
-            return;
-        }
         let isoFile = ISOBoxer.parseBuffer(e.response);
         // Update track_Id in tfhd box
         let tfhd = isoFile.fetch('tfhd');
@@ -186,8 +189,8 @@ function MssFragmentMoofProcessor(config) {
             tfxd = null;
         }
         let tfrf = isoFile.fetch('tfrf');
+        processTfrf(e.request, tfrf, tfdt, sp);
         if (tfrf) {
-            processTfrf(e.request, tfrf, tfdt, sp);
             tfrf._parent.boxes.splice(tfrf._parent.boxes.indexOf(tfrf), 1);
             tfrf = null;
         }
@@ -257,7 +260,7 @@ function MssFragmentMoofProcessor(config) {
         // e.request contains request description object
         // e.response contains fragment bytes
         if (!e.response) {
-            return;
+            throw new Error('e.response parameter is missing');
         }
 
         let isoFile = ISOBoxer.parseBuffer(e.response);
@@ -276,8 +279,8 @@ function MssFragmentMoofProcessor(config) {
         }
 
         let tfrf = isoFile.fetch('tfrf');
+        processTfrf(e.request, tfrf, tfdt, sp);
         if (tfrf) {
-            processTfrf(e.request, tfrf, tfdt, sp);
             tfrf._parent.boxes.splice(tfrf._parent.boxes.indexOf(tfrf), 1);
             tfrf = null;
         }

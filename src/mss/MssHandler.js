@@ -53,7 +53,8 @@ function MssHandler(config) {
         eventBus: eventBus,
         constants: constants,
         ISOBoxer: config.ISOBoxer,
-        log: config.log
+        log: config.log,
+        errHandler: config.errHandler
     });
     let mssParser;
 
