@@ -313,7 +313,7 @@ function Stream(config) {
         }
     }
 
-    function createStreamProcessor(mediaInfo, allMediaForType, mediaSource, optionalSettings) {
+    function createStreamProcessor(mediaInfo, allMediaForType, mediaSource) {
         let streamProcessor = StreamProcessor(context).create({
             type: getMimeTypeOrType(mediaInfo),
             mimeType: mediaInfo.mimeType,
@@ -338,17 +338,7 @@ function Stream(config) {
         streamProcessor.initialize(mediaSource);
         abrController.updateTopQualityIndex(mediaInfo);
 
-        if (optionalSettings) {
-            streamProcessor.setBuffer(optionalSettings.buffer);
-            streamProcessor.getIndexHandler().setCurrentTime(optionalSettings.currentTime);
-            streamProcessors[optionalSettings.replaceIdx] = streamProcessor;
-        } else {
-            streamProcessors.push(streamProcessor);
-        }
-
-        if (optionalSettings && optionalSettings.ignoreMediaInfo) {
-            return;
-        }
+        streamProcessors.push(streamProcessor);
 
         if ((mediaInfo.type === Constants.TEXT || mediaInfo.type === Constants.FRAGMENTED_TEXT)) {
             let idx;
