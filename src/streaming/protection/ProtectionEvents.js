@@ -109,7 +109,6 @@ class ProtectionEvents extends EventsBase {
          */
         this.KEY_SESSION_REMOVED = 'public_keySessionRemoved';
 
-
         /**
          * Event ID for events delivered when the status of one or more
          * decryption keys has changed

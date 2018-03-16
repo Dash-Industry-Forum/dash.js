@@ -69,22 +69,6 @@ function ProtectionModel_21Jan2015(config) {
         eventHandler = createEventHandler();
     }
 
-    function arrayToHexString(array) {
-        let str = '[';
-        let i;
-
-        for (i = 0; i < array.length; i++) {
-            str += '0x' + array[i].toString(16);
-            if (i < (array.length - 1)) {
-                str += ',';
-            }
-        }
-
-        str += ']';
-
-        return str;
-    }
-
     function reset() {
         const numSessions = sessions.length;
         let session;
@@ -369,14 +353,12 @@ function ProtectionModel_21Jan2015(config) {
                                     }
                                 }
                             }
-                            log('[DRM][PM_21Jan2015] status = ', status, 'for KID', arrayToHexString(new Uint8Array(keyId)));
                             switch (status) {
                                 case 'expired':
                                     eventBus.trigger(events.INTERNAL_KEY_STATUSES_CHANGED, {error: 'License has expired'});
                                     break;
                                 default:
-                                    eventBus.trigger(events.INTERNAL_KEY_STATUSES_CHANGED,
-                                        {status: status, keyId: keyId});
+                                    break;
                             }
                         });
                         break;
