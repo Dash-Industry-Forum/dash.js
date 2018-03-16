@@ -332,9 +332,9 @@ function ProtectionModel_21Jan2015(config) {
             handleEvent: function (event) {
                 switch (event.type) {
                     case 'keystatuseschange':
-                        eventBus.trigger(events.INTERNAL_KEY_STATUSES_CHANGED, {data: this});
+                        eventBus.trigger(events.KEY_STATUSES_CHANGED, {data: this});
                         event.target.keyStatuses.forEach(function () {
-                            // has Edge and Chrome implement different version of keystatues, param are not on same order
+                            // Edge and Chrome implement different version of keystatues, param are not on same order
                             let status, keyId;
                             if (arguments && arguments.length > 0) {
                                 if (arguments[0]) {
@@ -355,9 +355,10 @@ function ProtectionModel_21Jan2015(config) {
                             }
                             switch (status) {
                                 case 'expired':
-                                    eventBus.trigger(events.INTERNAL_KEY_STATUSES_CHANGED, {error: 'License has expired'});
+                                    eventBus.trigger(events.INTERNAL_KEY_STATUS_CHANGED, {error: 'License has expired'});
                                     break;
                                 default:
+                                    eventBus.trigger(events.INTERNAL_KEY_STATUS_CHANGED, {status: status, keyId: keyId});
                                     break;
                             }
                         });

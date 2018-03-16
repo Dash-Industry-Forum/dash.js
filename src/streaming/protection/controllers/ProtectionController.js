@@ -90,7 +90,7 @@ function ProtectionController(config) {
         // Once Keysystem is selected and before creating the session, we will do that check
         // so we create the strictly necessary DRM sessions
         eventBus.on(events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
-        eventBus.on(events.INTERNAL_KEY_STATUSES_CHANGED, onKeyStatusesChanged, this);
+        eventBus.on(events.INTERNAL_KEY_STATUS_CHANGED, onKeyStatusChanged, this);
 
         mediaInfoArr.push(mediaInfo);
 
@@ -287,7 +287,7 @@ function ProtectionController(config) {
     function reset() {
 
         eventBus.off(events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
-        eventBus.off(events.INTERNAL_KEY_STATUSES_CHANGED, onKeyStatusesChanged, this);
+        eventBus.off(events.INTERNAL_KEY_STATUS_CHANGED, onKeyStatusChanged, this);
 
         setMediaElement(null);
 
@@ -438,11 +438,11 @@ function ProtectionController(config) {
         eventBus.trigger(events.LICENSE_REQUEST_COMPLETE, {data: data, error: error});
     }
 
-    function onKeyStatusesChanged(e) {
-        if (!e.error) {
-            log('[DRM] Key statuses changed. statuses = ' + e.data);
-        } else {
+    function onKeyStatusChanged(e) {
+        if (e.error) {
             eventBus.trigger(events.KEY_STATUSES_CHANGED, {data: null, error: 'DRM: KeyStatusChange error! -- ' + e.error});
+        } else {
+            log('DRM: key status = ' + e.status);
         }
     }
 
