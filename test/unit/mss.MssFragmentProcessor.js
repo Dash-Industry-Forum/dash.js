@@ -14,22 +14,18 @@ const mssFragmentProcessor = MssFragmentProcessor(context).create({metricsModel:
 
 describe('MssFragmentProcessor', function () {
 
-    it('should return undefined when generateMoov is called and representation is undefined', () => {
-        const moov = mssFragmentProcessor.generateMoov();
 
-        expect(moov).to.be.undefined;  // jshint ignore:line
+    it('should throw an exception when attempting to call processFragment and e is undefined', () => {
+        expect(mssFragmentProcessor.processFragment.bind(mssFragmentProcessor)).to.throw('e parameter is missing or malformed');
     });
 
-    it('should return undefined when processFragment is called and e.request is undefined', () => {
-        const moof = mssFragmentProcessor.processFragment({});
-
-        expect(moof).to.be.undefined;  // jshint ignore:line
+    it('should throw an exception when attempting to call processFragment and e.request is undefined', () => {
+        expect(mssFragmentProcessor.processFragment.bind(mssFragmentProcessor, {})).to.throw('e parameter is missing or malformed');
     });
 
-    it('should return undefined when processFragment is called and e.response is undefined', () => {
-        const e = {request: {type: 'MediaSegment'}};
-        const moof = mssFragmentProcessor.processFragment(e);
+    it('should throw an exception when attempting to call processFragment and e.response is undefined', () => {
+        expect(mssFragmentProcessor.processFragment.bind(mssFragmentProcessor, {request: {type: 'MediaSegment'}})).to.throw('e parameter is missing or malformed');
+    });
 
-        expect(moof).to.be.undefined;  // jshint ignore:line
     });
 });
