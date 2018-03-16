@@ -115,25 +115,27 @@ function MediaController() {
      * @memberof MediaController#
      */
     function addTrack(track) {
-        let mediaType = track ? track.type : null;
-        let streamId = track ? track.streamInfo.id : null;
-        let initSettings = getInitialSettings(mediaType);
+        if (!track) return;
 
-        if (!track || (!isMultiTrackSupportedByType(mediaType))) return;
+        let mediaType = track.type;
+        if (!isMultiTrackSupportedByType(mediaType)) return;
 
-        tracks[streamId] = tracks[streamId] || createTrackInfo();
+        let streamId = track.streamInfo.id;
+        if (!tracks[streamId]) {
+            tracks[streamId] = createTrackInfo();
+        }
 
-        const len = tracks[streamId][mediaType].list.length;
-
-        for (let i = 0; i < len; i++) {
+        const mediaTracks = tracks[streamId][mediaType].list;
+        for (let i = 0, len = mediaTracks.length; i < len; ++i) {
             //track is already set.
-            if (isTracksEqual(tracks[streamId][mediaType].list[i], track)) {
+            if (isTracksEqual(mediaTracks[i], track)) {
                 return;
             }
         }
 
-        tracks[streamId][mediaType].list.push(track);
+        mediaTracks.push(track);
 
+        let initSettings = getInitialSettings(mediaType);
         if (initSettings && (matchSettings(initSettings, track)) && !getCurrentTrackFor(mediaType, track.streamInfo)) {
             setTrack(track);
         }
