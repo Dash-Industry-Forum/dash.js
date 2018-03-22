@@ -36,8 +36,8 @@ let FactoryMaker = (function () {
     let instance;
     const extensions = [];
     const singletonContexts = [];
-    const singletonFactories = [];
-    const classFactories = [];
+    const singletonFactories = {};
+    const classFactories = {};
 
     function extend(name, childInstance, override, context) {
         const extensionContext = getExtensionContext(context);
@@ -101,37 +101,13 @@ let FactoryMaker = (function () {
 
     /*------------------------------------------------------------------------------------------*/
 
-    function registerFactory(name, factory, factoriesArray) {
-        for (const i in factoriesArray) {
-            const obj = factoriesArray[i];
-            if (obj.name === name) {
-                factoriesArray[i].factory = factory;
-                return;
-            }
-        }
-        factoriesArray.push({
-            name: name,
-            factory: factory
-        });
-    }
-
     function getFactoryByName(name, factoriesArray) {
-        for (const i in factoriesArray) {
-            const obj = factoriesArray[i];
-            if (obj.name === name) {
-                return factoriesArray[i].factory;
-            }
-        }
-        return null;
+        return factoriesArray[name];
     }
 
     function updateFactory(name, factory, factoriesArray) {
-        for (const i in factoriesArray) {
-            const obj = factoriesArray[i];
-            if (obj.name === name) {
-                factoriesArray[i].factory = factory;
-                return;
-            }
+        if (name in factoriesArray) {
+            factoriesArray[name] = factory;
         }
     }
 
@@ -166,7 +142,7 @@ let FactoryMaker = (function () {
                 };
             };
 
-            registerFactory(classConstructor.__dashjs_factory_name, factory, classFactories); // store factory
+            classFactories[classConstructor.__dashjs_factory_name] = factory; // store factory
         }
         return factory;
     }
@@ -214,7 +190,7 @@ let FactoryMaker = (function () {
                     }
                 };
             };
-            registerFactory(classConstructor.__dashjs_factory_name, factory, singletonFactories); // store factory
+            singletonFactories[classConstructor.__dashjs_factory_name] = factory; // store factory
         }
 
         return factory;
