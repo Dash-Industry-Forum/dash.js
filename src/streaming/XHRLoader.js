@@ -186,7 +186,7 @@ function XHRLoader(cfg) {
 
         const onabort = function () {
             if (config.abort) {
-                config.abort(request, xhr.status);
+                config.abort(request);
             }
         };
 
