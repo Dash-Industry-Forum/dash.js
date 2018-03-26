@@ -42,6 +42,8 @@ function VideoModel() {
         videoContainer,
         previousPlaybackRate;
 
+    const VIDEO_MODEL_WRONG_ELEMENT_TYPE = 'element is not video or audio DOM type!';
+
     let context = this.context;
     let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
@@ -103,9 +105,16 @@ function VideoModel() {
     }
 
     function setElement(value) {
-        element = value;
-        // Workaround to force Firefox to fire the canplay event.
-        element.preload = 'auto';
+        //add check of value type
+        if (value === null || value === undefined || (value && value.nodeName && (value.nodeName === 'VIDEO' || value.nodeName === 'AUDIO'))) {
+            element = value;
+            // Workaround to force Firefox to fire the canplay event.
+            if (element) {
+                element.preload = 'auto';
+            }
+        } else {
+            throw VIDEO_MODEL_WRONG_ELEMENT_TYPE;
+        }
     }
 
     function setSource(source) {
