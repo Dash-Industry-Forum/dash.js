@@ -31,7 +31,7 @@
 import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
 import FactoryMaker from '../core/FactoryMaker';
 import MetricsConstants from '../streaming/constants/MetricsConstants';
-import { round10 } from 'round10';
+import Round10 from './utils/Round10';
 
 /**
  * @module DashMetrics
@@ -122,7 +122,7 @@ function DashMetrics(config) {
         const vo = getLatestBufferLevelVO(metrics);
 
         if (vo) {
-            return round10(vo.level / 1000, -3);
+            return Round10.round10(vo.level / 1000, -3);
         }
 
         return 0;
