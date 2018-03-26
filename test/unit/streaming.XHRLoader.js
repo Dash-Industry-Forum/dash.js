@@ -52,6 +52,7 @@ describe('XHRLoader', function () {
         const callbackSucceeded = sinon.spy();
         const callbackCompleted = sinon.spy();
         const callbackError = sinon.spy();
+        const callbackAbort = sinon.spy();
 
         xhrLoader = XHRLoader(context).create({
             errHandler: errHandler,
@@ -60,11 +61,13 @@ describe('XHRLoader', function () {
             mediaPlayerModel: mediaPlayerModelMock
         });
 
-        xhrLoader.load({request: {checkExistenceOnly: true}, success: callbackSucceeded, complete: callbackCompleted, error: callbackError});
+        xhrLoader.load({request: {checkExistenceOnly: true}, success: callbackSucceeded, complete: callbackCompleted, error: callbackError, abort: callbackAbort});
         expect(self.requests.length).to.equal(1);
         self.requests[0].respond(200);
+        sinon.assert.notCalled(callbackError);
         sinon.assert.calledOnce(callbackSucceeded);
         sinon.assert.calledOnce(callbackCompleted);
+        sinon.assert.notCalled(callbackAbort);
         expect(callbackSucceeded.calledBefore(callbackCompleted)).to.be.true; // jshint ignore:line
     });
 
@@ -73,18 +76,41 @@ describe('XHRLoader', function () {
         const callbackSucceeded = sinon.spy();
         const callbackCompleted = sinon.spy();
         const callbackError = sinon.spy();
+        const callbackAbort = sinon.spy();
         xhrLoader = XHRLoader(context).create({
             errHandler: errHandler,
             metricsModel: metricsModel,
             requestModifier: requestModifier,
             mediaPlayerModel: mediaPlayerModelMock
         });
-        xhrLoader.load({request: {checkExistenceOnly: true}, success: callbackSucceeded, complete: callbackCompleted, error: callbackError});
+        xhrLoader.load({request: {checkExistenceOnly: true}, success: callbackSucceeded, complete: callbackCompleted, error: callbackError, abort: callbackAbort});
         expect(self.requests.length).to.equal(1);
         self.requests[0].respond(404);
         sinon.assert.calledOnce(callbackError);
         sinon.assert.calledOnce(callbackCompleted);
         sinon.assert.notCalled(callbackSucceeded);
+        sinon.assert.notCalled(callbackAbort);
         expect(callbackError.calledBefore(callbackCompleted)).to.be.true; // jshint ignore:line
+    });
+
+    it('should call onabort callback when abort is called', () => {
+        const callbackSucceeded = sinon.spy();
+        const callbackCompleted = sinon.spy();
+        const callbackError = sinon.spy();
+        const callbackAbort = sinon.spy();
+
+        xhrLoader = XHRLoader(context).create({
+            errHandler: errHandler,
+            metricsModel: metricsModel,
+            requestModifier: requestModifier,
+            mediaPlayerModel: mediaPlayerModelMock
+        });
+        xhrLoader.load({request: {checkExistenceOnly: true}, success: callbackSucceeded, complete: callbackCompleted, error: callbackError, abort: callbackAbort});
+        xhrLoader.abort();
+
+        sinon.assert.notCalled(callbackError);
+        sinon.assert.notCalled(callbackCompleted);
+        sinon.assert.notCalled(callbackSucceeded);
+        sinon.assert.calledOnce(callbackAbort);
     });
 });
