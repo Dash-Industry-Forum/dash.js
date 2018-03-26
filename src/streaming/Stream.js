@@ -59,6 +59,7 @@ function Stream(config) {
     let playbackController = config.playbackController;
     let mediaController = config.mediaController;
     let textController = config.textController;
+    let videoModel = config.videoModel;
 
     let instance,
         streamProcessors,
@@ -419,6 +420,7 @@ function Stream(config) {
     function initializeMedia(mediaSource) {
         checkConfig();
         let events;
+        let element = videoModel.getElement();
 
         //if initializeMedia is called from a switch period, eventController could have been already created.
         if (!eventController) {
@@ -438,7 +440,9 @@ function Stream(config) {
         filterCodecs(Constants.VIDEO);
         filterCodecs(Constants.AUDIO);
 
-        initializeMediaForType(Constants.VIDEO, mediaSource);
+        if (element === null || (element && element.nodeName === 'VIDEO')) {
+            initializeMediaForType(Constants.VIDEO, mediaSource);
+        }
         initializeMediaForType(Constants.AUDIO, mediaSource);
         initializeMediaForType(Constants.TEXT, mediaSource);
         initializeMediaForType(Constants.FRAGMENTED_TEXT, mediaSource);
