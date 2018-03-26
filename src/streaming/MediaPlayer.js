@@ -2026,8 +2026,9 @@ function MediaPlayer() {
             throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
         }
 
+        videoModel.setElement(element);
+
         if (element) {
-            videoModel.setElement(element);
             detectProtection();
             detectMetricsReporting();
             detectMss();
