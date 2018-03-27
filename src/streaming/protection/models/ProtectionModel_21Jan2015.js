@@ -148,7 +148,9 @@ function ProtectionModel_21Jan2015(config) {
         // Replacing the previous element
         if (videoElement) {
             videoElement.removeEventListener('encrypted', eventHandler);
-            videoElement.setMediaKeys(null);
+            if (videoElement.setMediaKeys) {
+                videoElement.setMediaKeys(null);
+            }
         }
 
         videoElement = mediaElement;
@@ -156,7 +158,7 @@ function ProtectionModel_21Jan2015(config) {
         // Only if we are not detaching from the existing element
         if (videoElement) {
             videoElement.addEventListener('encrypted', eventHandler);
-            if (mediaKeys) {
+            if (videoElement.setMediaKeys && mediaKeys) {
                 videoElement.setMediaKeys(mediaKeys);
             }
         }
@@ -250,6 +252,13 @@ function ProtectionModel_21Jan2015(config) {
     }
 
     function requestKeySystemAccessInternal(ksConfigurations, idx) {
+
+        if (navigator.requestMediaKeySystemAccess === undefined ||
+            typeof navigator.requestMediaKeySystemAccess !== 'function') {
+            eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {error: 'Insecure origins are not allowed'});
+            return;
+        }
+
         (function (i) {
             const keySystem = ksConfigurations[i].ks;
             const configs = ksConfigurations[i].configs;

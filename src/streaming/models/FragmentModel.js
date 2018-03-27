@@ -338,6 +338,10 @@ function FragmentModel(config) {
         resetInitialSettings();
     }
 
+    function addExecutedRequest(request) {
+        executedRequests.push(request);
+    }
+
     instance = {
         setStreamProcessor: setStreamProcessor,
         getStreamProcessor: getStreamProcessor,
@@ -348,7 +352,8 @@ function FragmentModel(config) {
         syncExecutedRequestsWithBufferedRange: syncExecutedRequestsWithBufferedRange,
         abortRequests: abortRequests,
         executeRequest: executeRequest,
-        reset: reset
+        reset: reset,
+        addExecutedRequest: addExecutedRequest
     };
 
     setup();

@@ -116,7 +116,8 @@ function StreamProcessor(config) {
             streamController: streamController,
             textController: textController,
             sourceBufferController: sourceBufferController,
-            streamProcessor: instance
+            streamProcessor: instance,
+            mediaController: mediaController
         });
         representationController = RepresentationController(context).create();
         representationController.setConfig({
@@ -290,9 +291,9 @@ function StreamProcessor(config) {
         return bufferController.getBufferLevel();
     }
 
-    function switchInitData(representationId) {
+    function switchInitData(representationId, bufferResetEnabled) {
         if (bufferController) {
-            bufferController.switchInitData(getStreamInfo().id, representationId);
+            bufferController.switchInitData(getStreamInfo().id, representationId, bufferResetEnabled);
         }
     }
 

@@ -146,11 +146,7 @@ function Protection() {
         let videoElement = config.videoModel ? config.videoModel.getElement() : null;
 
         if ((!videoElement || videoElement.onencrypted !== undefined) &&
-            (!videoElement || videoElement.mediaKeys !== undefined) &&
-            window.MediaKeys !== undefined &&
-            navigator.requestMediaKeySystemAccess !== undefined &&
-            typeof navigator.requestMediaKeySystemAccess === 'function') {
-
+            (!videoElement || videoElement.mediaKeys !== undefined)) {
             log('EME detected on this user agent! (ProtectionModel_21Jan2015)');
             return ProtectionModel_21Jan2015(context).create({log: log, eventBus: eventBus, events: config.events});
 

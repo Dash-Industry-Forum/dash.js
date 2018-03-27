@@ -409,7 +409,7 @@ function DashManifestModel(config) {
                 processedRealAdaptation = processAdaptation(periodArray.AdaptationSet_asArray[voAdaptation.index]);
             }
 
-            // TODO: To be reviewed. We should get just the baseUrl elements that affects to the representations
+            // TODO: To be removed. We should get just the baseUrl elements that affects to the representations
             // that we are processing
             const baseUrls = getBaseURLsFromElement(voAdaptation.period.mpd.manifest);
             if (baseUrls) {

@@ -39,6 +39,7 @@ import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
+import MediaController from './MediaController';
 
 function ScheduleController(config) {
 
@@ -58,6 +59,7 @@ function ScheduleController(config) {
     const sourceBufferController = config.sourceBufferController;
     const type = config.type;
     const streamProcessor = config.streamProcessor;
+    const mediaController = config.mediaController;
 
     let instance,
         log,
@@ -79,7 +81,9 @@ function ScheduleController(config) {
         topQualityIndex,
         lastInitQuality,
         replaceRequestArray,
-        switchTrack;
+        switchTrack,
+        bufferResetInProgress,
+        mediaRequest;
 
     function setup() {
         log = Debug(context).getInstance().log.bind(instance);
@@ -135,9 +139,10 @@ function ScheduleController(config) {
 
     function start() {
         if (!currentRepresentationInfo || streamProcessor.isBufferingCompleted()) {
+            log('[ScheduleController][', type,'] start denied');
             return;
         }
-
+        log('[ScheduleController][', type,'] start');
         addPlaylistTraceMetrics();
         isStopped = false;
 
@@ -146,18 +151,15 @@ function ScheduleController(config) {
         }
 
         startScheduleTimer(0);
-
-        log('Schedule controller starting for ' + type);
     }
 
     function stop() {
         if (isStopped) {
             return;
         }
-
+        log('[ScheduleController][', type,'] stop');
         isStopped = true;
         clearTimeout(scheduleTimeout);
-        log('Schedule controller stopping for ' + type);
     }
 
     function hasTopQualityChanged(type, id) {
@@ -175,7 +177,7 @@ function ScheduleController(config) {
 
     function schedule() {
         if (isStopped || isFragmentProcessingInProgress || !streamProcessor.getBufferController() || playbackController.isPaused() && !scheduleWhilePaused) {
-            log('ScheduleController ' + type + ' - schedule stop!');
+            log('[ScheduleController][', type,'] - schedule stop!');
             return;
         }
 
@@ -183,31 +185,32 @@ function ScheduleController(config) {
 
         const isReplacement = replaceRequestArray.length > 0;
         const streamInfo = streamProcessor.getStreamInfo();
-        if (switchTrack || isReplacement ||
+        if (bufferResetInProgress || isNaN(lastInitQuality) || switchTrack || isReplacement ||
             hasTopQualityChanged(currentRepresentationInfo.mediaInfo.type, streamInfo.id) ||
             bufferLevelRule.execute(streamProcessor, type, streamController.isVideoTrackPresent())) {
 
             const getNextFragment = function () {
                 const fragmentController = streamProcessor.getFragmentController();
-                if (switchTrack) {
-                    log('ScheduleController - ' + type + ' - switch track has been asked, get init request for ' + type + ' with representationid = ' + currentRepresentationInfo.id);
-                    streamProcessor.switchInitData(currentRepresentationInfo.id);
-                    lastInitQuality = currentRepresentationInfo.quality;
-                    switchTrack = false;
-                } else if (currentRepresentationInfo.quality !== lastInitQuality) {
+                if (currentRepresentationInfo.quality !== lastInitQuality) {
                     log('ScheduleController - ' + type + ' - quality has changed, get init request for representationid = ' + currentRepresentationInfo.id);
                     lastInitQuality = currentRepresentationInfo.quality;
 
                     streamProcessor.switchInitData(currentRepresentationInfo.id);
+                } else if (switchTrack) {
+                    log('ScheduleController - ' + type + ' - switch track has been asked, get init request for ' + type + ' with representationid = ' + currentRepresentationInfo.id);
+                    bufferResetInProgress = mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE ? true : false;
+                    streamProcessor.switchInitData(currentRepresentationInfo.id, bufferResetInProgress);
+                    lastInitQuality = currentRepresentationInfo.quality;
+                    switchTrack = false;
                 } else {
                     const replacement = replaceRequestArray.shift();
 
                     if (fragmentController.isInitializationRequest(replacement)) {
-                        //to be sure the specific init segment had not already been loaded.
+                        // To be sure the specific init segment had not already been loaded.
                         streamProcessor.switchInitData(replacement.representationId);
                     } else {
                         let request;
-                        // don't schedule next fragments while pruning to avoid buffer inconsistencies
+                        // Don't schedule next fragments while pruning to avoid buffer inconsistencies
                         if (!streamProcessor.getBufferController().getIsPruningInProgress()) {
                             request = nextFragmentRequestRule.execute(streamProcessor, replacement);
                             if (!request && streamInfo.manifestInfo && streamInfo.manifestInfo.isDynamic) {
@@ -218,15 +221,15 @@ function ScheduleController(config) {
                         if (request) {
                             log('ScheduleController - ' + type + ' - getNextFragment - request is ' + request.url);
                             fragmentModel.executeRequest(request);
-                        } else { //Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
-                            isFragmentProcessingInProgress = false;
+                        } else { // Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
+                            setFragmentProcessState(false);
                             startScheduleTimer(500);
                         }
                     }
                 }
             };
 
-            isFragmentProcessingInProgress = true;
+            setFragmentProcessState(true);
             if (!isReplacement && !switchTrack) {
                 abrController.checkPlaybackQuality(type);
             }
@@ -239,7 +242,7 @@ function ScheduleController(config) {
     }
 
     function validateExecutedFragmentRequest() {
-        //Validate that the fragment request executed and appended into the source buffer is as
+        // Validate that the fragment request executed and appended into the source buffer is as
         // good of quality as the current quality and is the correct media track.
         const safeBufferLevel = currentRepresentationInfo.fragmentDuration * 1.5;
         const request = fragmentModel.getRequests({
@@ -257,7 +260,7 @@ function ScheduleController(config) {
                 replaceRequest(request);
                 log('Reloading outdated fragment at index: ', request.index);
             } else if (request.quality > currentRepresentationInfo.quality) {
-                //The buffer has better quality it in then what we would request so set append point to end of buffer!!
+                // The buffer has better quality it in then what we would request so set append point to end of buffer!!
                 setSeekTarget(playbackController.getTime() + streamProcessor.getBufferLevel());
             }
         }
@@ -276,10 +279,18 @@ function ScheduleController(config) {
         getInitRequest(currentRepresentationInfo.quality);
     }
 
+    function setFragmentProcessState (state) {
+        if (isFragmentProcessingInProgress !== state ) {
+            isFragmentProcessingInProgress = state;
+        } else {
+            log('[ScheduleController][', type, '] isFragmentProcessingInProgress is already equal to', state);
+        }
+    }
+
     function getInitRequest(quality) {
         const request = adapter.getInitRequest(streamProcessor, quality);
         if (request) {
-            isFragmentProcessingInProgress = true;
+            setFragmentProcessState(true);
             fragmentModel.executeRequest(request);
         }
     }
@@ -402,7 +413,7 @@ function ScheduleController(config) {
         }
 
         stop();
-        isFragmentProcessingInProgress = false;
+        setFragmentProcessState(false);
         log('[ScheduleController] Stream is complete');
     }
 
@@ -410,15 +421,19 @@ function ScheduleController(config) {
         if (e.sender !== fragmentModel) {
             return;
         }
-        log('[ScheduleController] onFragmentLoadingCompleted for', type);
+        log('[ScheduleController][', type,'] - onFragmentLoadingCompleted');
         if (dashManifestModel.getIsTextTrack(type)) {
-            isFragmentProcessingInProgress = false;
+            setFragmentProcessState(false);
         }
 
         if (e.error && e.request.serviceLocation && !isStopped) {
             replaceRequest(e.request);
-            isFragmentProcessingInProgress = false;
+            setFragmentProcessState(false);
             startScheduleTimer(0);
+        }
+
+        if (bufferResetInProgress) {
+            mediaRequest = e.request;
         }
     }
 
@@ -431,7 +446,12 @@ function ScheduleController(config) {
             return;
         }
 
-        isFragmentProcessingInProgress = false;
+        if (bufferResetInProgress && !isNaN(e.startTime)) {
+            bufferResetInProgress = false;
+            fragmentModel.addExecutedRequest(mediaRequest);
+        }
+
+        setFragmentProcessState(false);
         startScheduleTimer(0);
     }
 
@@ -444,7 +464,7 @@ function ScheduleController(config) {
             log('[ScheduleController][onFragmentLoadingAbandoned] for ' + type + ', request: ' + e.request.url + ' has to be downloaded again, origin is not seeking process');
             replaceRequest(e.request);
         }
-        isFragmentProcessingInProgress = false;
+        setFragmentProcessState(false);
         startScheduleTimer(0);
     }
 
@@ -472,7 +492,7 @@ function ScheduleController(config) {
 
     function onBufferLevelStateChanged(e) {
         if ((e.sender.getStreamProcessor() === streamProcessor) && e.state === BufferController.BUFFER_EMPTY && !playbackController.isSeeking()) {
-            log('Buffer is empty! Stalling!');
+            log('[ScheduleController][', type,'] - Buffer is empty! Stalling!');
             clearPlayListTraceMetrics(new Date(), PlayListTrace.REBUFFERING_REASON);
         }
     }
@@ -483,7 +503,7 @@ function ScheduleController(config) {
         }
 
         stop();
-        isFragmentProcessingInProgress = false;
+        setFragmentProcessState(false);
     }
 
     function onURLResolutionFailed() {
@@ -605,7 +625,9 @@ function ScheduleController(config) {
         topQualityIndex = {};
         replaceRequestArray = [];
         isStopped = true;
-        switchTrack = true;
+        switchTrack = false;
+        bufferResetInProgress = false;
+        mediaRequest = null;
     }
 
     function reset() {

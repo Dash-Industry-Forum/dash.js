@@ -256,7 +256,6 @@ function Stream(config) {
             errHandler.capabilityError('encryptedmedia');
         } else if (!capabilities.supportsCodec(codec)) {
             msg = type + 'Codec (' + codec + ') is not supported.';
-            errHandler.manifestError(msg, 'codec', manifestModel.getValue());
             log(msg);
             return false;
         }
