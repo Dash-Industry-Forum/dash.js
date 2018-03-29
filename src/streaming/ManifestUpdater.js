@@ -103,11 +103,16 @@ function ManifestUpdater() {
         }
     }
 
-    function startManifestRefreshTimer() {
+    function startManifestRefreshTimer(delay) {
         stopManifestRefreshTimer();
-        if (!isNaN(refreshDelay)) {
-            log('Refresh manifest in ' + refreshDelay + ' seconds.');
-            refreshTimer = setTimeout(onRefreshTimer, refreshDelay * 1000);
+
+        if (isNaN(delay) && !isNaN(refreshDelay)) {
+            delay = refreshDelay * 1000;
+        }
+
+        if (!isNaN(delay)) {
+            log('Refresh manifest in ' + delay + ' milliseconds.');
+            refreshTimer = setTimeout(onRefreshTimer, delay);
         }
     }
 
@@ -139,7 +144,13 @@ function ManifestUpdater() {
     }
 
     function onRefreshTimer() {
-        if (isPaused && !mediaPlayerModel.getScheduleWhilePaused() || isUpdating) return;
+        if (isPaused && !mediaPlayerModel.getScheduleWhilePaused()) {
+            return;
+        }
+        if (isUpdating) {
+            startManifestRefreshTimer(mediaPlayerModel.getManifestUpdateRetryInterval());
+            return;
+        }
         refreshManifest();
     }
 
