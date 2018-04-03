@@ -144,6 +144,8 @@ let ProtectionModel = function () { };
  * @memberof ProtectionModel
  * @param {string} sessionID the session ID corresponding to the persisted
  * session data to be loaded
+ * @param {ArrayBuffer} the corresponding initData PSSH box for the currently
+ * selected key system.
  */
 
 /**

@@ -861,6 +861,16 @@
         {
           "name": "Unified Streaming Live",
           "url": "http://live.unified-streaming.com/loop/loop.isml/loop.mpd?format=mp4&session_id=25020"
+        },
+        {
+          "name": "Unified Streaming (Widevine, persistent)",
+          "url": "http://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-dash-widevine.ism/.mpd",
+          "protData": {
+              "com.widevine.alpha": {
+                  "serverURL": "https://cwip-shaka-proxy.appspot.com/no_auth",
+                  "sessionType": "persistent-license"
+              }
+          }
         }
       ]
     },

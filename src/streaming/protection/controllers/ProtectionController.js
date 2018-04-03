@@ -160,12 +160,12 @@ function ProtectionController(config) {
                 }
             }
             try {
-                protectionModel.createKeySession(initDataForKS, protData, sessionType, cdmData);
+                protectionModel.createKeySession(initDataForKS, protData, getSessionType(keySystem), cdmData);
             } catch (error) {
                 eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: 'Error creating key session! ' + error.message});
             }
         } else if (initData) {
-            protectionModel.createKeySession(initData, protData, sessionType, cdmData);
+            protectionModel.createKeySession(initData, protData, getSessionType(keySystem), cdmData);
         } else {
             eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: 'Selected key system is ' + keySystem.systemString + '.  needkey/encrypted event contains no initData corresponding to that key system!'});
         }
@@ -176,12 +176,13 @@ function ProtectionController(config) {
      * essentially creates a new key session
      *
      * @param {string} sessionID
+     * @param {string} initData
      * @memberof module:ProtectionController
      * @instance
      * @fires ProtectionController#KeySessionCreated
      */
-    function loadKeySession(sessionID) {
-        protectionModel.loadKeySession(sessionID);
+    function loadKeySession(sessionID, initData) {
+        protectionModel.loadKeySession(sessionID, initData, getSessionType(keySystem));
     }
 
     /**
@@ -335,6 +336,7 @@ function ProtectionController(config) {
         const videoCapabilities = [];
         const audioRobustness = (protData && protData.audioRobustness && protData.audioRobustness.length > 0) ? protData.audioRobustness : robustnessLevel;
         const videoRobustness = (protData && protData.videoRobustness && protData.videoRobustness.length > 0) ? protData.videoRobustness : robustnessLevel;
+        const ksSessionType = getSessionType(keySystem);
 
         mediaInfoArr.forEach((media) => {
             if (media.type === constants.AUDIO) {
@@ -346,8 +348,14 @@ function ProtectionController(config) {
 
         return new KeySystemConfiguration(
             audioCapabilities, videoCapabilities, 'optional',
-            (sessionType === 'temporary') ? 'optional' : 'required',
-            [sessionType]);
+            (ksSessionType === 'temporary') ? 'optional' : 'required',
+            [ksSessionType]);
+    }
+
+    function getSessionType(keySystem) {
+        const protData = getProtData(keySystem);
+        const ksSessionType = (protData && protData.sessionType) ? protData.sessionType : sessionType;
+        return ksSessionType;
     }
 
     function selectKeySystem(supportedKS, fromManifest) {
@@ -373,7 +381,13 @@ function ProtectionController(config) {
                         } else {
                             log('DRM: KeySystem Access Granted');
                             eventBus.trigger(events.KEY_SYSTEM_SELECTED, {data: event.data});
-                            createKeySession(supportedKS[ksIdx].initData, supportedKS[ksIdx].cdmData);
+                            if (supportedKS[ksIdx].sessionId) {
+                                // Load MediaKeySession with sessionId
+                                loadKeySession(supportedKS[ksIdx].sessionId, supportedKS[ksIdx].initData);
+                            } else if (supportedKS[ksIdx].initData) {
+                                // Create new MediaKeySession with initData
+                                createKeySession(supportedKS[ksIdx].initData, supportedKS[ksIdx].cdmData);
+                            }
                         }
                     };
                     eventBus.on(events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
@@ -427,7 +441,13 @@ function ProtectionController(config) {
                                     const initData = { kids: Object.keys(protData.clearkeys) };
                                     pendingNeedKeyData[i][ksIdx].initData = new TextEncoder().encode(JSON.stringify(initData));
                                 }
-                                createKeySession(pendingNeedKeyData[i][ksIdx].initData, pendingNeedKeyData[i][ksIdx].cdmData);
+                                if (pendingNeedKeyData[i][ksIdx].sessionId) {
+                                    // Load MediaKeySession with sessionId
+                                    loadKeySession(pendingNeedKeyData[i][ksIdx].sessionId, pendingNeedKeyData[i][ksIdx].initData);
+                                } else if (pendingNeedKeyData[i][ksIdx].initData !== null) {
+                                    // Create new MediaKeySession with initData
+                                    createKeySession(pendingNeedKeyData[i][ksIdx].initData, pendingNeedKeyData[i][ksIdx].cdmData);
+                                }
                                 break;
                             }
                         }
