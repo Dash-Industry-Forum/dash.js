@@ -34,14 +34,7 @@
 import BaseMatcher from './BaseMatcher';
 import Constants from '../../../streaming/constants/Constants';
 import DashConstants from '../../constants/DashConstants';
-
-const durationRegex = /^([-])?P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/;
-
-const SECONDS_IN_YEAR = 365 * 24 * 60 * 60;
-const SECONDS_IN_MONTH = 30 * 24 * 60 * 60;
-const SECONDS_IN_DAY = 24 * 60 * 60;
-const SECONDS_IN_HOUR = 60 * 60;
-const SECONDS_IN_MIN = 60;
+import moment from 'moment';
 
 class DurationMatcher extends BaseMatcher {
     constructor() {
@@ -57,27 +50,16 @@ class DurationMatcher extends BaseMatcher {
 
                 for (let i = 0; i < len; i++) {
                     if (attr.nodeName === attributeList[i]) {
-                        return durationRegex.test(attr.value);
+                        return moment.duration(attr.value, moment.ISO_8601).isValid();
                     }
                 }
 
                 return false;
             },
             str => {
-                //str = "P10Y10M10DT10H10M10.1S";
-                const match = durationRegex.exec(str);
-                let result = (parseFloat(match[2] || 0) * SECONDS_IN_YEAR +
-                    parseFloat(match[4] || 0) * SECONDS_IN_MONTH +
-                    parseFloat(match[6] || 0) * SECONDS_IN_DAY +
-                    parseFloat(match[8] || 0) * SECONDS_IN_HOUR +
-                    parseFloat(match[10] || 0) * SECONDS_IN_MIN +
-                    parseFloat(match[12] || 0));
-
-                if (match[1] !== undefined) {
-                    result = -result;
-                }
-
-                return result;
+                var t = moment.unix(0).utc();
+                t.add(moment.duration(str, moment.ISO_8601));
+                return t.unix();
             }
         );
     }
