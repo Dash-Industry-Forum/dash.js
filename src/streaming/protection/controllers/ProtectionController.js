@@ -73,6 +73,12 @@ function ProtectionController(config) {
         robustnessLevel = '';
     }
 
+    function checkConfig() {
+        if (!eventBus || !eventBus.hasOwnProperty('on') || !protectionKeyController || !protectionKeyController.hasOwnProperty('getSupportedKeySystemsFromContentProtection')) {
+            throw new Error('Missing config parameter(s)');
+        }
+    }
+
     /**
      * Initialize this protection system with a given audio
      * or video stream information.
@@ -89,6 +95,12 @@ function ProtectionController(config) {
         // because still don't know which keysystem will be selected.
         // Once Keysystem is selected and before creating the session, we will do that check
         // so we create the strictly necessary DRM sessions
+        if (!mediaInfo) {
+            throw new Error('mediaInfo can not be null or undefined');
+        }
+
+        checkConfig();
+
         eventBus.on(events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
         eventBus.on(events.INTERNAL_KEY_STATUS_CHANGED, onKeyStatusChanged, this);
 
@@ -307,10 +319,12 @@ function ProtectionController(config) {
 
     function getProtData(keySystem) {
         let protData = null;
-        const keySystemString = keySystem.systemString;
+        if (keySystem) {
+            const keySystemString = keySystem.systemString;
 
-        if (protDataSet) {
-            protData = (keySystemString in protDataSet) ? protDataSet[keySystemString] : null;
+            if (protDataSet) {
+                protData = (keySystemString in protDataSet) ? protDataSet[keySystemString] : null;
+            }
         }
         return protData;
     }
@@ -460,9 +474,15 @@ function ProtectionController(config) {
         const message = keyMessage.message;
         const sessionToken = keyMessage.sessionToken;
         const protData = getProtData(keySystem);
-        const keySystemString = keySystem.systemString;
+        const keySystemString = keySystem ? keySystem.systemString : null;
         const licenseServerData = protectionKeyController.getLicenseServer(keySystem, protData, messageType);
         const eventData = { sessionToken: sessionToken, messageType: messageType };
+
+        // Ensure message from CDM is not empty
+        if (!message || message.byteLength === 0) {
+            sendLicenseRequestCompleteEvent(eventData, 'DRM: Empty key message from CDM');
+            return;
+        }
 
         // Message not destined for license server
         if (!licenseServerData) {
