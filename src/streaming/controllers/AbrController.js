@@ -232,7 +232,7 @@ function AbrController() {
      * @param {string} type - 'video' or 'audio' are the type options.
      * @returns {BitrateInfo | null}
      */
-    function getTopQualityBitrateInfoFor(type) {
+    function getTopBitrateInfoFor(type) {
         if (type  && streamProcessorDict && streamProcessorDict[type]) {
             const streamInfo = streamProcessorDict[type].getStreamInfo();
             if (streamInfo.id) {
@@ -731,7 +731,7 @@ function AbrController() {
         getBitrateList: getBitrateList,
         getQualityForBitrate: getQualityForBitrate,
         getMaxAllowedBitrateFor: getMaxAllowedBitrateFor,
-        getTopQualityBitrateInfoFor: getTopQualityBitrateInfoFor,
+        getTopBitrateInfoFor: getTopBitrateInfoFor,
         getMinAllowedBitrateFor: getMinAllowedBitrateFor,
         setMaxAllowedBitrateFor: setMaxAllowedBitrateFor,
         setMinAllowedBitrateFor: setMinAllowedBitrateFor,

@@ -41,7 +41,7 @@ class AbrControllerMock{
 
     getTopQualityIndexFor() {}
 
-    getTopQualityBitrateInfoFor() {}
+    getTopBitrateInfoFor() {}
 
     getInitialBitrateFor(type) {
         if (!this.bitrateDict.hasOwnProperty(type)) {

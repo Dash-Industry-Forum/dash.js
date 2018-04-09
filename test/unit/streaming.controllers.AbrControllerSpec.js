@@ -202,16 +202,16 @@ describe('AbrController', function () {
         expect(minAllowedIndex).to.be.equal(0);
     });
 
-    it('should return an appropriate BitrateInfo when calling getTopQualityBitrateInfoFor', function () {
+    it('should return an appropriate BitrateInfo when calling getTopBitrateInfoFor', function () {
         abrCtrl.updateTopQualityIndex(dummyMediaInfo);
 
-        let bitrateInfo = abrCtrl.getTopQualityBitrateInfoFor(testType);
+        let bitrateInfo = abrCtrl.getTopBitrateInfoFor(testType);
         expect(bitrateInfo).to.be.an.instanceOf(BitrateInfo);
         expect(bitrateInfo.bitrate).to.be.equal(3000000);
         expect(bitrateInfo.qualityIndex).to.be.equal(2);
 
         abrCtrl.setLimitBitrateByPortal(true);
-        bitrateInfo = abrCtrl.getTopQualityBitrateInfoFor(testType);
+        bitrateInfo = abrCtrl.getTopBitrateInfoFor(testType);
         expect(bitrateInfo).to.be.an.instanceOf(BitrateInfo);
         expect(bitrateInfo.bitrate).to.be.equal(2000000);
         expect(bitrateInfo.qualityIndex).to.be.equal(1);

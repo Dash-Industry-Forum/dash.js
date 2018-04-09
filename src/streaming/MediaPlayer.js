@@ -767,11 +767,11 @@ function MediaPlayer() {
      * @returns {BitrateInfo | null}
      * @instance
      */
-    function getTopQualityBitrateInfoFor(type) {
+    function getTopBitrateInfoFor(type) {
         if (!streamingInitialized) {
             throw STREAMING_NOT_INITIALIZED_ERROR;
         }
-        return abrController.getTopQualityBitrateInfoFor(type);
+        return abrController.getTopBitrateInfoFor(type);
     }
 
     /**
@@ -2802,7 +2802,7 @@ function MediaPlayer() {
         enableLastMediaSettingsCaching: enableLastMediaSettingsCaching,
         setMaxAllowedBitrateFor: setMaxAllowedBitrateFor,
         getMaxAllowedBitrateFor: getMaxAllowedBitrateFor,
-        getTopQualityBitrateInfoFor: getTopQualityBitrateInfoFor,
+        getTopBitrateInfoFor: getTopBitrateInfoFor,
         setMinAllowedBitrateFor: setMinAllowedBitrateFor,
         getMinAllowedBitrateFor: getMinAllowedBitrateFor,
         setMaxAllowedRepresentationRatioFor: setMaxAllowedRepresentationRatioFor,
