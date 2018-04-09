@@ -12,6 +12,10 @@ class StreamControllerMock {
         return true;
     }
 
+    switchToVideoElement() {
+
+    }
+
     getAutoPlay() {
         return false;
     }

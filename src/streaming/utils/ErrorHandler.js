@@ -85,6 +85,10 @@ function ErrorHandler() {
         eventBus.trigger(Events.ERROR, {error: 'key_message', event: err});
     }
 
+    function mssError(err) {
+        eventBus.trigger(Events.ERROR, {error: 'mssError', event: err});
+    }
+
     instance = {
         capabilityError: capabilityError,
         downloadError: downloadError,
@@ -92,7 +96,8 @@ function ErrorHandler() {
         timedTextError: timedTextError,
         mediaSourceError: mediaSourceError,
         mediaKeySessionError: mediaKeySessionError,
-        mediaKeyMessageError: mediaKeyMessageError
+        mediaKeyMessageError: mediaKeyMessageError,
+        mssError: mssError
     };
 
     return instance;

@@ -29,35 +29,55 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../core/FactoryMaker';
-import deepEqual from 'fast-deep-equal';
-
 /**
- * @module ObjectUtils
- * @description Provides utility functions for objects
+ * Static methods for rounding decimals
+ *
+ * Modified version of the CC0-licenced example at:
+ * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/round
+ *
+ * @export
+ * @class Round10
  */
-function ObjectUtils() {
-
-    let instance;
-
+export default class Round10 {
     /**
-     * Returns true if objects are equal
-     * @return {boolean}
-     * @param {object} obj1
-     * @param {object} obj2
-     * @memberof module:ObjectUtils
-     * @instance
-     */
-    function areEqual(obj1, obj2) {
-        return deepEqual(obj1, obj2);
+    * Decimal round.
+    *
+    * @param {Number}  value The number.
+    * @param {Integer} exp   The exponent (the 10 logarithm of the adjustment base).
+    * @returns {Number} The adjusted value.
+    */
+    static round10(value, exp) {
+        return _decimalAdjust('round', value, exp);
     }
-
-    instance = {
-        areEqual: areEqual
-    };
-
-    return instance;
 }
 
-ObjectUtils.__dashjs_factory_name = 'ObjectUtils';
-export default FactoryMaker.getSingletonFactory(ObjectUtils);
+/**
+ * Decimal adjustment of a number.
+ *
+ * @param {String}  type  The type of adjustment.
+ * @param {Number}  value The number.
+ * @param {Integer} exp   The exponent (the 10 logarithm of the adjustment base).
+ * @returns {Number} The adjusted value.
+ */
+function _decimalAdjust(type, value, exp) {
+    // If the exp is undefined or zero...
+    if (typeof exp === 'undefined' || +exp === 0) {
+        return Math[type](value);
+    }
+
+    value = +value;
+    exp = +exp;
+
+    // If the value is not a number or the exp is not an integer...
+    if (value === null || isNaN(value) || !(typeof exp === 'number' && exp % 1 === 0)) {
+        return NaN;
+    }
+
+    // Shift
+    value = value.toString().split('e');
+    value = Math[type](+(value[0] + 'e' + (value[1] ? (+value[1] - exp) : -exp)));
+
+    // Shift back
+    value = value.toString().split('e');
+    return +(value[0] + 'e' + (value[1] ? (+value[1] + exp) : exp));
+}

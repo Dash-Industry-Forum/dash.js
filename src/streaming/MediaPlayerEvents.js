@@ -46,12 +46,14 @@ class MediaPlayerEvents extends EventsBase {
          * Check delay property in payload to determine time before playback will start.
          */
         this.AST_IN_FUTURE = 'astInFuture';
+
         /**
          * Triggered when the video element's buffer state changes to stalled.
          * Check mediaType in payload to determine type (Video, Audio, FragmentedText).
          * @event MediaPlayerEvents#BUFFER_EMPTY
          */
         this.BUFFER_EMPTY = 'bufferStalled';
+
         /**
          * Triggered when the video element's buffer state changes to loaded.
          * Check mediaType in payload to determine type (Video, Audio, FragmentedText).
@@ -76,6 +78,7 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#FRAGMENT_LOADING_COMPLETED
          */
         this.FRAGMENT_LOADING_COMPLETED = 'fragmentLoadingCompleted';
+
         /**
          * Triggered when a partial fragment download has completed.
          * @event MediaPlayerEvents#FRAGMENT_LOADING_PROGRESS
@@ -86,47 +89,56 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#FRAGMENT_LOADING_STARTED
          */
         this.FRAGMENT_LOADING_STARTED = 'fragmentLoadingStarted';
+
         /**
          * Triggered when a fragment download is abandoned due to detection of slow download base on the ABR abandon rule..
          * @event MediaPlayerEvents#FRAGMENT_LOADING_ABANDONED
          */
         this.FRAGMENT_LOADING_ABANDONED = 'fragmentLoadingAbandoned';
+
         /**
          * Triggered when {@link module:Debug} log method is called.
          * @event MediaPlayerEvents#LOG
          */
         this.LOG = 'log';
+
         //TODO refactor with internal event
         /**
          * Triggered when the manifest load is complete
          * @event MediaPlayerEvents#MANIFEST_LOADED
          */
         this.MANIFEST_LOADED = 'manifestLoaded';
+
         /**
          * Triggered anytime there is a change to the overall metrics.
          * @event MediaPlayerEvents#METRICS_CHANGED
          */
         this.METRICS_CHANGED = 'metricsChanged';
+
         /**
          * Triggered when an individual metric is added, updated or cleared.
          * @event MediaPlayerEvents#METRIC_CHANGED
          */
         this.METRIC_CHANGED = 'metricChanged';
+
         /**
          * Triggered every time a new metric is added.
          * @event MediaPlayerEvents#METRIC_ADDED
          */
         this.METRIC_ADDED = 'metricAdded';
+
         /**
          * Triggered every time a metric is updated.
          * @event MediaPlayerEvents#METRIC_UPDATED
          */
         this.METRIC_UPDATED = 'metricUpdated';
+
         /**
          * Triggered at the stream end of a period.
          * @event MediaPlayerEvents#PERIOD_SWITCH_COMPLETED
          */
         this.PERIOD_SWITCH_COMPLETED = 'periodSwitchCompleted';
+
         /**
          * Triggered when a new period starts.
          * @event MediaPlayerEvents#PERIOD_SWITCH_STARTED
@@ -134,7 +146,7 @@ class MediaPlayerEvents extends EventsBase {
         this.PERIOD_SWITCH_STARTED = 'periodSwitchStarted';
 
         /**
-         * Triggered when an ABR up /down switch is initialed; either by user in manual mode or auto mode via ABR rules.
+         * Triggered when an ABR up /down switch is initiated; either by user in manual mode or auto mode via ABR rules.
          * @event MediaPlayerEvents#QUALITY_CHANGE_REQUESTED
          */
         this.QUALITY_CHANGE_REQUESTED = 'qualityChangeRequested';
@@ -144,6 +156,12 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#QUALITY_CHANGE_RENDERED
          */
         this.QUALITY_CHANGE_RENDERED = 'qualityChangeRendered';
+
+        /**
+         * Triggered when the new track is being rendered.
+         * @event MediaPlayerEvents#TRACK_CHANGE_RENDERED
+         */
+        this.TRACK_CHANGE_RENDERED = 'trackChangeRendered';
 
         /**
          * Triggered when the source is setup and ready.
@@ -168,11 +186,18 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#TEXT_TRACKS_ADDED
          */
         this.TEXT_TRACKS_ADDED = 'allTextTracksAdded';
+
         /**
          * Triggered when a text track is added to the video element's TextTrackList
          * @event MediaPlayerEvents#TEXT_TRACK_ADDED
          */
         this.TEXT_TRACK_ADDED = 'textTrackAdded';
+
+        /**
+         * Triggered when a ttml chunk is parsed.
+         * @event MediaPlayerEvents#TTML_PARSED
+         */
+        this.TTML_PARSED = 'ttmlParsed';
 
         /**
          * Sent when enough data is available that the media can be played,
@@ -194,22 +219,26 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#PLAYBACK_ERROR
          */
         this.PLAYBACK_ERROR = 'playbackError';
+
         /**
          * Sent when playback is not allowed (for example if user gesture is needed).
          * @event MediaPlayerEvents#PLAYBACK_NOT_ALLOWED
          */
         this.PLAYBACK_NOT_ALLOWED = 'playbackNotAllowed';
+
         /**
          * The media's metadata has finished loading; all attributes now
          * contain as much useful information as they're going to.
          * @event MediaPlayerEvents#PLAYBACK_METADATA_LOADED
          */
         this.PLAYBACK_METADATA_LOADED = 'playbackMetaDataLoaded';
+
         /**
          * Sent when playback is paused.
          * @event MediaPlayerEvents#PLAYBACK_PAUSED
          */
         this.PLAYBACK_PAUSED = 'playbackPaused';
+
         /**
          * Sent when the media begins to play (either for the first time, after having been paused,
          * or after ending and then restarting).
@@ -217,6 +246,7 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#PLAYBACK_PLAYING
          */
         this.PLAYBACK_PLAYING = 'playbackPlaying';
+
         /**
          * Sent periodically to inform interested parties of progress downloading
          * the media. Information about the current amount of the media that has
@@ -224,16 +254,19 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#PLAYBACK_PROGRESS
          */
         this.PLAYBACK_PROGRESS = 'playbackProgress';
+
         /**
          * Sent when the playback speed changes.
          * @event MediaPlayerEvents#PLAYBACK_RATE_CHANGED
          */
         this.PLAYBACK_RATE_CHANGED = 'playbackRateChanged';
+
         /**
          * Sent when a seek operation completes.
          * @event MediaPlayerEvents#PLAYBACK_SEEKED
          */
         this.PLAYBACK_SEEKED = 'playbackSeeked';
+
         /**
          * Sent when a seek operation begins.
          * @event MediaPlayerEvents#PLAYBACK_SEEKING
@@ -253,11 +286,20 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#PLAYBACK_STARTED
          */
         this.PLAYBACK_STARTED = 'playbackStarted';
+
         /**
          * The time indicated by the element's currentTime attribute has changed.
          * @event MediaPlayerEvents#PLAYBACK_TIME_UPDATED
          */
         this.PLAYBACK_TIME_UPDATED = 'playbackTimeUpdated';
+
+        /**
+         * Sent when the media playback has stopped because of a temporary lack of data.
+         *
+         * @event MediaPlayerEvents#PLAYBACK_WAITING
+         */
+        this.PLAYBACK_WAITING = 'playbackWaiting';
+
         /**
          * Manifest validity changed - As a result of an MPD validity expiration event.
          * @event MediaPlayerEvents#MANIFEST_VALIDITY_CHANGED

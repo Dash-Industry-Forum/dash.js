@@ -49,8 +49,8 @@ import BaseURLController from './BaseURLController';
 import MediaSourceController from './MediaSourceController';
 
 function StreamController() {
-    // Check whether there is a gap every 20 wallClockUpdateEvent times
-    const STALL_THRESHOLD_TO_CHECK_GAPS = 20;
+    // Check whether there is a gap every 40 wallClockUpdateEvent times
+    const STALL_THRESHOLD_TO_CHECK_GAPS = 40;
 
     const context = this.context;
     const log = Debug(context).getInstance().log;
@@ -72,7 +72,6 @@ function StreamController() {
         abrController,
         mediaController,
         textController,
-        sourceBufferController,
         initCache,
         urlUtils,
         errHandler,
@@ -156,9 +155,10 @@ function StreamController() {
         }
     }
 
-    function onWallclockTimeUpdated(e) {
-        if (!mediaPlayerModel.getJumpGaps() || isPaused || isStreamSwitchingInProgress ||
-            !activeStream || playbackController.isSeeking()) {
+    function onWallclockTimeUpdated(/*e*/) {
+        if (!mediaPlayerModel.getJumpGaps() || !activeStream || activeStream.getProcessors().length === 0 ||
+            playbackController.isSeeking() || isPaused || isStreamSwitchingInProgress ||
+            hasMediaError || hasInitialisationError) {
             return;
         }
 
@@ -166,8 +166,7 @@ function StreamController() {
         if (wallclockTicked >= STALL_THRESHOLD_TO_CHECK_GAPS) {
             const currentTime = playbackController.getTime();
             if (lastPlaybackTime === currentTime) {
-                log('Warning - Playback stalled for', (wallclockTicked * mediaPlayerModel.getWallclockTimeUpdateInterval()) ,'milliseconds. Time for a jump?');
-                jumpGap(currentTime, e.timeToEnd);
+                jumpGap(currentTime);
             } else {
                 lastPlaybackTime = currentTime;
             }
@@ -175,15 +174,16 @@ function StreamController() {
         }
     }
 
-    function jumpGap(time, timeToStreamEnd) {
+    function jumpGap(time) {
         const streamProcessors = activeStream.getProcessors();
+        const smallGapLimit = mediaPlayerModel.getSmallGapLimit();
         let seekToPosition;
 
         // Find out what is the right time position to jump to taking
         // into account state of buffer
         for (let i = 0; i < streamProcessors.length; i ++) {
             const mediaBuffer = streamProcessors[i].getBuffer();
-            const ranges = sourceBufferController.getAllRanges(mediaBuffer);
+            const ranges = mediaBuffer.getAllBufferRanges();
             let nextRangeStartTime;
             if (!ranges || ranges.length <= 1) continue;
 
@@ -197,7 +197,7 @@ function StreamController() {
 
             if (nextRangeStartTime > 0) {
                 const gap = nextRangeStartTime - time;
-                if (gap > 0 && gap <= mediaPlayerModel.getSmallGapLimit()) {
+                if (gap > 0 && gap <= smallGapLimit) {
                     if (seekToPosition === undefined || nextRangeStartTime > seekToPosition) {
                         seekToPosition = nextRangeStartTime;
                     }
@@ -205,11 +205,16 @@ function StreamController() {
             }
         }
 
+        const timeToStreamEnd = playbackController.getTimeToStreamEnd();
+        if (seekToPosition === undefined && !isNaN(timeToStreamEnd) && timeToStreamEnd < smallGapLimit) {
+            seekToPosition = time + timeToStreamEnd;
+        }
+
         // If there is a safe position to jump to, do the seeking
         if (seekToPosition > 0) {
             if (!isNaN(timeToStreamEnd) && seekToPosition >= time + timeToStreamEnd) {
                 log('Jumping media gap (discontinuity) at time ', time, '. Jumping to end of the stream');
-                onEnded();
+                eventBus.trigger(Events.PLAYBACK_ENDED);
             } else {
                 log('Jumping media gap (discontinuity) at time ', time, '. Jumping to time position', seekToPosition);
                 playbackController.seek(seekToPosition);
@@ -400,12 +405,24 @@ function StreamController() {
         }
         activeStream = newStream;
         playbackController.initialize(activeStream.getStreamInfo());
-
-        //TODO detect if we should close and repose or jump to activateStream.
-        openMediaSource(seekTime, oldStream);
+        if (videoModel.getElement()) {
+            //TODO detect if we should close jump to activateStream.
+            openMediaSource(seekTime, oldStream, false);
+        } else {
+            preloadStream(seekTime);
+        }
     }
 
-    function openMediaSource(seekTime, oldStream) {
+    function preloadStream(seekTime) {
+        activateStream(seekTime);
+    }
+
+    function switchToVideoElement(seekTime) {
+        playbackController.initialize(activeStream.getStreamInfo());
+        openMediaSource(seekTime, null, true);
+    }
+
+    function openMediaSource(seekTime, oldStream, streamActivated) {
         let sourceUrl;
 
         function onMediaSourceOpen() {
@@ -414,10 +431,15 @@ function StreamController() {
             mediaSource.removeEventListener('sourceopen', onMediaSourceOpen);
             mediaSource.removeEventListener('webkitsourceopen', onMediaSourceOpen);
             setMediaDuration();
-            activateStream(seekTime);
 
             if (!oldStream) {
                 eventBus.trigger(Events.SOURCE_INITIALIZED);
+            }
+
+            if (streamActivated) {
+                activeStream.setMediaSource(mediaSource);
+            } else {
+                activateStream(seekTime);
             }
         }
 
@@ -515,7 +537,6 @@ function StreamController() {
                         playbackController: playbackController,
                         mediaController: mediaController,
                         textController: textController,
-                        sourceBufferController: sourceBufferController,
                         videoModel: videoModel,
                         streamController: instance
                     });
@@ -571,7 +592,7 @@ function StreamController() {
             //is SegmentTimeline to avoid using time source
             const manifest = e.manifest;
             adapter.updatePeriods(manifest);
-            const streamInfo = adapter.getStreamsInfo(manifest)[0];
+            const streamInfo = adapter.getStreamsInfo(undefined, 1)[0];
             const mediaInfo = (
                 adapter.getMediaInfoForType(streamInfo, Constants.VIDEO) ||
                 adapter.getMediaInfoForType(streamInfo, Constants.AUDIO)
@@ -807,10 +828,12 @@ function StreamController() {
         if (config.textController) {
             textController = config.textController;
         }
-        if (config.sourceBufferController) {
-            sourceBufferController = config.sourceBufferController;
-        }
     }
+
+    function setProtectionData(protData) {
+        protectionData = protData;
+    }
+
 
     function resetInitialSettings() {
         streams = [];
@@ -900,6 +923,7 @@ function StreamController() {
         getActiveStreamInfo: getActiveStreamInfo,
         isVideoTrackPresent: isVideoTrackPresent,
         isAudioTrackPresent: isAudioTrackPresent,
+        switchToVideoElement: switchToVideoElement,
         getStreamById: getStreamById,
         getStreamForTime: getStreamForTime,
         getTimeRelativeToStreamId: getTimeRelativeToStreamId,
@@ -907,6 +931,7 @@ function StreamController() {
         loadWithManifest: loadWithManifest,
         getActiveStreamProcessors: getActiveStreamProcessors,
         setConfig: setConfig,
+        setProtectionData: setProtectionData,
         reset: reset
     };
 

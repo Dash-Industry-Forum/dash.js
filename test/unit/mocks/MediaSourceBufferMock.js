@@ -22,6 +22,7 @@ class MediaSourceBufferMock {
         this.updating = false;
         this.chunk = null;
         this.aborted = false;
+        this.timestampOffset = 1;
     }
 
     addRange(range) {
@@ -38,7 +39,7 @@ class MediaSourceBufferMock {
         }, 500);
     }
 
-    append(chunk) {
+    appendBuffer(chunk) {
         this.updating = true;
         this.chunk = chunk;
 

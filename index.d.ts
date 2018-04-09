@@ -49,7 +49,7 @@ declare namespace dashjs {
         codec: string | null;
         contentProtection: any | null;
     }
-    
+
     export interface MediaPlayerClass {
         initialize(view?: HTMLElement, source?: string, autoPlay?: boolean): void;
         on(type: AstInFutureEvent['type'], listener: (e: AstInFutureEvent) => void, scope?: object): void;
@@ -82,6 +82,7 @@ declare namespace dashjs {
         on(type: QualityChangeRequestedEvent['type'], listener: (e: QualityChangeRequestedEvent) => void, scope?: object): void;
         on(type: StreamInitializedEvent['type'], listener: (e: StreamInitializedEvent) => void, scope?: object): void;
         on(type: TextTracksAddedEvent['type'], listener: (e: TextTracksAddedEvent) => void, scope?: object): void;
+        on(type: TtmlParsedEvent['type'], listener: (e: TtmlParsedEvent) => void, scope?: object): void;
         on(type: string, listener: (e: Event) => void, scope?: object): void;
         off(type: string, listener: (e: any) => void, scope?: object): void;
         extend(parentNameString: string, childInstance: object, override: boolean): void;
@@ -202,6 +203,7 @@ declare namespace dashjs {
         getJumpGaps(): boolean;
         setSmallGapLimit(value: number): void;
         getSmallGapLimit(): number;
+        preload(): void;
         reset(): void;
     }
 
@@ -254,13 +256,16 @@ declare namespace dashjs {
         PLAYBACK_SEEKING: 'playbackSeeking';
         PLAYBACK_STARTED: 'playbackStarted';
         PLAYBACK_TIME_UPDATED: 'playbackTimeUpdated';
+        PLAYBACK_WAITING: 'playbackWaiting';
         PROTECTION_CREATED: 'public_protectioncreated';
         PROTECTION_DESTROYED: 'public_protectiondestroyed';
+        TRACK_CHANGE_RENDERED: 'trackChangeRendered';
         QUALITY_CHANGE_RENDERED: 'qualityChangeRendered';
         QUALITY_CHANGE_REQUESTED: 'qualityChangeRequested';
         STREAM_INITIALIZED: 'streamInitialized';
         TEXT_TRACKS_ADDED: 'allTextTracksAdded';
         TEXT_TRACK_ADDED: 'textTrackAdded';
+        TTML_PARSED: 'ttmlParsed';
     }
 
     export interface Event {
@@ -458,6 +463,11 @@ declare namespace dashjs {
         timeToEnd: number;
     }
 
+    export interface PlaybackWaitingEvent extends Event {
+        type: MediaPlayerEvents['PLAYBACK_WAITING'];
+        playingTime: number | null;
+    }
+
     export interface ProtectionCreatedEvent extends Event {
         type: MediaPlayerEvents['PROTECTION_CREATED'];
         controller: object;
@@ -467,6 +477,13 @@ declare namespace dashjs {
     export interface ProtectionDestroyedEvent extends Event {
         type: MediaPlayerEvents['PROTECTION_DESTROYED'];
         data: string;
+    }
+
+    export interface TrackChangeRenderedEvent extends Event {
+        type: MediaPlayerEvents['TRACK_CHANGE_RENDERED'];
+        mediaType: 'video' | 'audio' | 'fragmentedText';
+        oldMediaInfo: MediaInfo;
+        newMediaInfo: MediaInfo;
     }
 
     export interface QualityChangeRenderedEvent extends Event {
@@ -499,6 +516,12 @@ declare namespace dashjs {
         enabled: boolean;
         index: number;
         tracks: TextTrackInfo[];
+    }
+
+    export interface TtmlParsedEvent extends Event {
+        type: MediaPlayerEvents['TTML_PARSED'];
+        ttmlString: string;
+        ttmlDoc: object;
     }
 
     export class BitrateInfo {

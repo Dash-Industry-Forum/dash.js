@@ -124,8 +124,8 @@ function FragmentLoader(config) {
                         )
                     );
                 },
-                abort: function (request, status) {
-                    if (request && status === 0) {
+                abort: function (request) {
+                    if (request) {
                         eventBus.trigger(Events.LOADING_ABANDONED, {request: request, mediaType: request.mediaType, sender: instance});
                     }
                 }

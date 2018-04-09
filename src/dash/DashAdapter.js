@@ -309,7 +309,7 @@ function DashAdapter() {
         voAdaptations = {};
     }
 
-    function getStreamsInfo(externalManifest) {
+    function getStreamsInfo(externalManifest, maxStreamsInfo) {
         const streams = [];
         let voLocalPeriods = voPeriods;
 
@@ -321,7 +321,10 @@ function DashAdapter() {
             voLocalPeriods = dashManifestModel.getRegularPeriods(mpd);
         }
 
-        for (let i = 0; i < voLocalPeriods.length; i++) {
+        if (!maxStreamsInfo) {
+            maxStreamsInfo = voLocalPeriods.length;
+        }
+        for (let i = 0; i < maxStreamsInfo; i++) {
             streams.push(convertPeriodToStreamInfo(voLocalPeriods[i]));
         }
 

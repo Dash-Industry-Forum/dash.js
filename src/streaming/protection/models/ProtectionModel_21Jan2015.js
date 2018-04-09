@@ -270,11 +270,11 @@ function ProtectionModel_21Jan2015(config) {
                 keySystemAccess.mksa = mediaKeySystemAccess;
                 eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {data: keySystemAccess});
 
-            }).catch(function () {
+            }).catch(function (error) {
                 if (++i < ksConfigurations.length) {
                     requestKeySystemAccessInternal(ksConfigurations, i);
                 } else {
-                    eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {error: 'Key system access denied!'});
+                    eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {error: 'Key system access denied! ' + error.message});
                 }
             });
         })(idx);
@@ -333,6 +333,35 @@ function ProtectionModel_21Jan2015(config) {
                 switch (event.type) {
                     case 'keystatuseschange':
                         eventBus.trigger(events.KEY_STATUSES_CHANGED, {data: this});
+                        event.target.keyStatuses.forEach(function () {
+                            // Edge and Chrome implement different version of keystatues, param are not on same order
+                            let status, keyId;
+                            if (arguments && arguments.length > 0) {
+                                if (arguments[0]) {
+                                    if (typeof arguments[0] === 'string') {
+                                        status = arguments[0];
+                                    } else {
+                                        keyId = arguments[0];
+                                    }
+                                }
+
+                                if (arguments[1]) {
+                                    if (typeof arguments[1] === 'string') {
+                                        status = arguments[1];
+                                    } else {
+                                        keyId = arguments[1];
+                                    }
+                                }
+                            }
+                            switch (status) {
+                                case 'expired':
+                                    eventBus.trigger(events.INTERNAL_KEY_STATUS_CHANGED, {error: 'License has expired'});
+                                    break;
+                                default:
+                                    eventBus.trigger(events.INTERNAL_KEY_STATUS_CHANGED, {status: status, keyId: keyId});
+                                    break;
+                            }
+                        });
                         break;
 
                     case 'message':

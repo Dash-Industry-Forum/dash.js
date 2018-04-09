@@ -194,7 +194,7 @@ function HTTPLoader(cfg) {
 
         const onabort = function () {
             if (config.abort) {
-                config.abort(request, httpRequest.status);
+                config.abort(request);
             }
         };
 
