@@ -72,6 +72,8 @@ function TTMLParser() {
         let startTime,
             endTime;
 
+        let content = {};
+
         let embeddedImages = {};
         let currentImageId = '';
         let accumulated_image_data = '';
@@ -107,11 +109,15 @@ function TTMLParser() {
             throw new Error(errorMsg);
         }
 
-        let imsc1doc = fromXML(data, function (msg) {
+        content.data = data;
+
+        eventBus.trigger(Events.TTML_TO_PARSE, content);
+
+        let imsc1doc = fromXML(content.data, function (msg) {
             errorMsg = msg;
         },
             metadataHandler);
-        eventBus.trigger(Events.TTML_PARSED, {ttmlString: data, ttmlDoc: imsc1doc});
+        eventBus.trigger(Events.TTML_PARSED, {ttmlString: content.data, ttmlDoc: imsc1doc});
 
         let mediaTimeEvents = imsc1doc.getMediaTimeEvents();
 

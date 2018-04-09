@@ -9,7 +9,7 @@ import {
     HTTPRequest
 } from '../streaming/vo/metrics/HTTPRequest';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
-import HTTPLoader from '../streaming/HTTPLoader';
+import HTTPLoader from '../streaming/transport/HTTPLoader';
 
 function WebmSegmentBaseLoader() {
 

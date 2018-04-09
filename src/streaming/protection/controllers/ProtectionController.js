@@ -73,6 +73,12 @@ function ProtectionController(config) {
         robustnessLevel = '';
     }
 
+    function checkConfig() {
+        if (!eventBus || !eventBus.hasOwnProperty('on') || !protectionKeyController || !protectionKeyController.hasOwnProperty('getSupportedKeySystemsFromContentProtection')) {
+            throw new Error('Missing config parameter(s)');
+        }
+    }
+
     /**
      * Initialize this protection system with a given audio
      * or video stream information.
@@ -89,6 +95,12 @@ function ProtectionController(config) {
         // because still don't know which keysystem will be selected.
         // Once Keysystem is selected and before creating the session, we will do that check
         // so we create the strictly necessary DRM sessions
+        if (!mediaInfo) {
+            throw new Error('mediaInfo can not be null or undefined');
+        }
+
+        checkConfig();
+
         eventBus.on(events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
         eventBus.on(events.INTERNAL_KEY_STATUS_CHANGED, onKeyStatusChanged, this);
 
@@ -148,12 +160,12 @@ function ProtectionController(config) {
                 }
             }
             try {
-                protectionModel.createKeySession(initDataForKS, protData, sessionType, cdmData);
+                protectionModel.createKeySession(initDataForKS, protData, getSessionType(keySystem), cdmData);
             } catch (error) {
                 eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: 'Error creating key session! ' + error.message});
             }
         } else if (initData) {
-            protectionModel.createKeySession(initData, protData, sessionType, cdmData);
+            protectionModel.createKeySession(initData, protData, getSessionType(keySystem), cdmData);
         } else {
             eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: 'Selected key system is ' + keySystem.systemString + '.  needkey/encrypted event contains no initData corresponding to that key system!'});
         }
@@ -164,12 +176,13 @@ function ProtectionController(config) {
      * essentially creates a new key session
      *
      * @param {string} sessionID
+     * @param {string} initData
      * @memberof module:ProtectionController
      * @instance
      * @fires ProtectionController#KeySessionCreated
      */
-    function loadKeySession(sessionID) {
-        protectionModel.loadKeySession(sessionID);
+    function loadKeySession(sessionID, initData) {
+        protectionModel.loadKeySession(sessionID, initData, getSessionType(keySystem));
     }
 
     /**
@@ -307,10 +320,12 @@ function ProtectionController(config) {
 
     function getProtData(keySystem) {
         let protData = null;
-        const keySystemString = keySystem.systemString;
+        if (keySystem) {
+            const keySystemString = keySystem.systemString;
 
-        if (protDataSet) {
-            protData = (keySystemString in protDataSet) ? protDataSet[keySystemString] : null;
+            if (protDataSet) {
+                protData = (keySystemString in protDataSet) ? protDataSet[keySystemString] : null;
+            }
         }
         return protData;
     }
@@ -321,6 +336,7 @@ function ProtectionController(config) {
         const videoCapabilities = [];
         const audioRobustness = (protData && protData.audioRobustness && protData.audioRobustness.length > 0) ? protData.audioRobustness : robustnessLevel;
         const videoRobustness = (protData && protData.videoRobustness && protData.videoRobustness.length > 0) ? protData.videoRobustness : robustnessLevel;
+        const ksSessionType = getSessionType(keySystem);
 
         mediaInfoArr.forEach((media) => {
             if (media.type === constants.AUDIO) {
@@ -332,8 +348,14 @@ function ProtectionController(config) {
 
         return new KeySystemConfiguration(
             audioCapabilities, videoCapabilities, 'optional',
-            (sessionType === 'temporary') ? 'optional' : 'required',
-            [sessionType]);
+            (ksSessionType === 'temporary') ? 'optional' : 'required',
+            [ksSessionType]);
+    }
+
+    function getSessionType(keySystem) {
+        const protData = getProtData(keySystem);
+        const ksSessionType = (protData && protData.sessionType) ? protData.sessionType : sessionType;
+        return ksSessionType;
     }
 
     function selectKeySystem(supportedKS, fromManifest) {
@@ -359,7 +381,13 @@ function ProtectionController(config) {
                         } else {
                             log('DRM: KeySystem Access Granted');
                             eventBus.trigger(events.KEY_SYSTEM_SELECTED, {data: event.data});
-                            createKeySession(supportedKS[ksIdx].initData, supportedKS[ksIdx].cdmData);
+                            if (supportedKS[ksIdx].sessionId) {
+                                // Load MediaKeySession with sessionId
+                                loadKeySession(supportedKS[ksIdx].sessionId, supportedKS[ksIdx].initData);
+                            } else if (supportedKS[ksIdx].initData) {
+                                // Create new MediaKeySession with initData
+                                createKeySession(supportedKS[ksIdx].initData, supportedKS[ksIdx].cdmData);
+                            }
                         }
                     };
                     eventBus.on(events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
@@ -413,7 +441,13 @@ function ProtectionController(config) {
                                     const initData = { kids: Object.keys(protData.clearkeys) };
                                     pendingNeedKeyData[i][ksIdx].initData = new TextEncoder().encode(JSON.stringify(initData));
                                 }
-                                createKeySession(pendingNeedKeyData[i][ksIdx].initData, pendingNeedKeyData[i][ksIdx].cdmData);
+                                if (pendingNeedKeyData[i][ksIdx].sessionId) {
+                                    // Load MediaKeySession with sessionId
+                                    loadKeySession(pendingNeedKeyData[i][ksIdx].sessionId, pendingNeedKeyData[i][ksIdx].initData);
+                                } else if (pendingNeedKeyData[i][ksIdx].initData !== null) {
+                                    // Create new MediaKeySession with initData
+                                    createKeySession(pendingNeedKeyData[i][ksIdx].initData, pendingNeedKeyData[i][ksIdx].cdmData);
+                                }
                                 break;
                             }
                         }
@@ -460,9 +494,15 @@ function ProtectionController(config) {
         const message = keyMessage.message;
         const sessionToken = keyMessage.sessionToken;
         const protData = getProtData(keySystem);
-        const keySystemString = keySystem.systemString;
+        const keySystemString = keySystem ? keySystem.systemString : null;
         const licenseServerData = protectionKeyController.getLicenseServer(keySystem, protData, messageType);
         const eventData = { sessionToken: sessionToken, messageType: messageType };
+
+        // Ensure message from CDM is not empty
+        if (!message || message.byteLength === 0) {
+            sendLicenseRequestCompleteEvent(eventData, 'DRM: Empty key message from CDM');
+            return;
+        }
 
         // Message not destined for license server
         if (!licenseServerData) {

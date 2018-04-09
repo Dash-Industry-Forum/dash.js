@@ -42,6 +42,15 @@ function MssParser(config) {
 
     const TIME_SCALE_100_NANOSECOND_UNIT = 10000000.0;
     const SUPPORTED_CODECS = ['AAC', 'AACL', 'AVC1', 'H264', 'TTML', 'DFXP'];
+    // MPEG-DASH Role and accessibility mapping according to ETSI TS 103 285 v1.1.1 (section 7.1.2)
+    const ROLE = {
+        'SUBT': 'alternate',
+        'CAPT': 'alternate', // 'CAPT' is commonly equivalent to 'SUBT'
+        'DESC': 'main'
+    };
+    const ACCESSIBILITY = {
+        'DESC': '2'
+    };
     const samplingFrequencyIndex = {
         96000: 0x0,
         88200: 0x1,
@@ -113,6 +122,26 @@ function MssParser(config) {
         adaptationSet.subType = streamIndex.getAttribute('Subtype');
         adaptationSet.maxWidth = streamIndex.getAttribute('MaxWidth');
         adaptationSet.maxHeight = streamIndex.getAttribute('MaxHeight');
+
+        // Map subTypes to MPEG-DASH AdaptationSet role and accessibility (see ETSI TS 103 285 v1.1.1, section 7.1.2)
+        if (adaptationSet.subType) {
+            if (ROLE[adaptationSet.subType]) {
+                let role = {
+                    schemeIdUri: 'urn:mpeg:dash:role:2011',
+                    value: ROLE[adaptationSet.subType]
+                };
+                adaptationSet.Role = role;
+                adaptationSet.Role_asArray = [role];
+            }
+            if (ACCESSIBILITY[adaptationSet.subType]) {
+                let accessibility = {
+                    schemeIdUri: 'urn:tva:metadata:cs:AudioPurposeCS:2007',
+                    value: ACCESSIBILITY[adaptationSet.subType]
+                };
+                adaptationSet.Accessibility = accessibility;
+                adaptationSet.Accessibility_asArray = [accessibility];
+            }
+        }
 
         // Create a SegmentTemplate with a SegmentTimeline
         segmentTemplate = mapSegmentTemplate(streamIndex);

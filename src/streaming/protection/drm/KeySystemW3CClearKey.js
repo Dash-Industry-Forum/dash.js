@@ -95,6 +95,10 @@ function KeySystemW3CClearKey(config) {
         return null;
     }
 
+    function getSessionId(/*cp*/) {
+        return null;
+    }
+
     instance = {
         uuid: uuid,
         schemeIdURI: schemeIdURI,
@@ -104,6 +108,7 @@ function KeySystemW3CClearKey(config) {
         getLicenseRequestFromMessage: getLicenseRequestFromMessage,
         getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
         getCDMData: getCDMData,
+        getSessionId: getSessionId,
         getClearKeysFromProtectionData: getClearKeysFromProtectionData
     };
 

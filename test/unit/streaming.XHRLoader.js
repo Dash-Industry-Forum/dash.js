@@ -1,4 +1,4 @@
-import XHRLoader from '../../src/streaming/XHRLoader';
+import XHRLoader from '../../src/streaming/transport/XHRLoader';
 import RequestModifier from '../../src/streaming/utils/RequestModifier';
 import ErrorHandler from '../../src/streaming/utils/ErrorHandler';
 import MetricsModel from '../../src/streaming/models/MetricsModel';

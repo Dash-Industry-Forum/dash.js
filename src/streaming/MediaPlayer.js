@@ -1788,6 +1788,36 @@ function MediaPlayer() {
         return mediaPlayerModel.getSmallGapLimit();
     }
 
+    /**
+     * For live streams, set the interval-frequency in milliseconds at which
+     * dash.js will check if the current manifest is still processed before
+     * downloading the next manifest once the minimumUpdatePeriod time has
+     * expired.
+     * @param {int} value
+     * @default 100
+     * @memberof module:MediaPlayer
+     * @instance
+     * @see {@link module:MediaPlayer#getManifestUpdateRetryInterval getManifestUpdateRetryInterval()}
+     *
+     */
+    function setManifestUpdateRetryInterval(value) {
+        mediaPlayerModel.setManifestUpdateRetryInterval(value);
+    }
+
+    /**
+     * For live streams, get the interval-frequency in milliseconds at which
+     * dash.js will check if the current manifest is still processed before
+     * downloading the next manifest once the minimumUpdatePeriod time has
+     * expired.
+     * @returns {int} Current retry delay for manifest update
+     * @memberof module:MediaPlayer
+     * @instance
+     * @see {@link module:MediaPlayer#setManifestUpdateRetryInterval setManifestUpdateRetryInterval()}
+     */
+    function getManifestUpdateRetryInterval() {
+        return mediaPlayerModel.getManifestUpdateRetryInterval();
+    }
+
     /*
     ---------------------------------------------------------------------------
 
@@ -2860,6 +2890,8 @@ function MediaPlayer() {
         getSmallGapLimit: getSmallGapLimit,
         getLowLatencyEnabled: getLowLatencyEnabled,
         setLowLatencyEnabled: setLowLatencyEnabled,
+        setManifestUpdateRetryInterval: setManifestUpdateRetryInterval,
+        getManifestUpdateRetryInterval: getManifestUpdateRetryInterval,
         setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,
         setSegmentOverlapToleranceTime: setSegmentOverlapToleranceTime,
         setCacheLoadThresholdForType: setCacheLoadThresholdForType,

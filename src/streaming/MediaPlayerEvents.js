@@ -200,6 +200,12 @@ class MediaPlayerEvents extends EventsBase {
         this.TTML_PARSED = 'ttmlParsed';
 
         /**
+         * Triggered when a ttml chunk has to be parsed.
+         * @event MediaPlayerEvents#TTML_PARSED
+         */
+        this.TTML_TO_PARSE = 'ttmlToParse';
+
+        /**
          * Sent when enough data is available that the media can be played,
          * at least for a couple of frames.  This corresponds to the
          * HAVE_ENOUGH_DATA readyState.

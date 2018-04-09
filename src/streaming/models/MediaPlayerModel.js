@@ -57,6 +57,7 @@ const BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 60;
 const LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;
 const SEGMENT_OVERLAP_TOLERANCE_TIME = 0.05;
 const SMALL_GAP_LIMIT = 0.8;
+const MANIFEST_UPDATE_RETRY_INTERVAL = 100;
 
 const CACHE_LOAD_THRESHOLD_VIDEO = 50;
 const CACHE_LOAD_THRESHOLD_AUDIO = 5;
@@ -110,7 +111,8 @@ function MediaPlayerModel() {
         cacheLoadThresholds,
         jumpGaps,
         smallGapLimit,
-        lowLatencyEnabled;
+        lowLatencyEnabled,
+        manifestUpdateRetryInterval;
 
     function setup() {
         UTCTimingSources = [];
@@ -143,6 +145,7 @@ function MediaPlayerModel() {
         wallclockTimeUpdateInterval = WALLCLOCK_TIME_UPDATE_INTERVAL;
         jumpGaps = false;
         smallGapLimit = SMALL_GAP_LIMIT;
+        manifestUpdateRetryInterval = MANIFEST_UPDATE_RETRY_INTERVAL;
         xhrWithCredentials = {
             default: DEFAULT_XHR_WITH_CREDENTIALS
         };
@@ -513,6 +516,14 @@ function MediaPlayerModel() {
         lowLatencyEnabled = value;
     }
 
+    function setManifestUpdateRetryInterval(value) {
+        manifestUpdateRetryInterval = value;
+    }
+
+    function getManifestUpdateRetryInterval() {
+        return manifestUpdateRetryInterval;
+    }
+
     function reset() {
         //TODO need to figure out what props to persist across sessions and which to reset if any.
         //setup();
@@ -591,6 +602,8 @@ function MediaPlayerModel() {
         getSmallGapLimit: getSmallGapLimit,
         getLowLatencyEnabled: getLowLatencyEnabled,
         setLowLatencyEnabled: setLowLatencyEnabled,
+        setManifestUpdateRetryInterval: setManifestUpdateRetryInterval,
+        getManifestUpdateRetryInterval: getManifestUpdateRetryInterval,
         reset: reset
     };
 

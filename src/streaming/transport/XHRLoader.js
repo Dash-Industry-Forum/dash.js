@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../core/FactoryMaker';
+import FactoryMaker from '../../core/FactoryMaker';
 
 /**
  * @module XHRLoader
@@ -38,6 +38,7 @@ import FactoryMaker from '../core/FactoryMaker';
 function XHRLoader(cfg) {
 
     cfg = cfg || {};
+    const requestModifier = cfg.requestModifier;
 
     let instance;
 
@@ -65,6 +66,10 @@ function XHRLoader(cfg) {
 
         if (!request.requestStartDate) {
             request.requestStartDate = requestStartTime;
+        }
+
+        if (requestModifier) {
+            xhr = requestModifier.modifyRequestHeader(xhr);
         }
 
         xhr.withCredentials = httpRequest.withCredentials;

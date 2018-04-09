@@ -30,7 +30,7 @@
  */
 import Constants from './constants/Constants';
 import XlinkController from './controllers/XlinkController';
-import HTTPLoader from './HTTPLoader';
+import HTTPLoader from './transport/HTTPLoader';
 import URLUtils from './utils/URLUtils';
 import TextRequest from './vo/TextRequest';
 import DashJSError from './vo/DashJSError';

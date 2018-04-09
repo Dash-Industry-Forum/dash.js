@@ -28,11 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import { HTTPRequest } from './vo/metrics/HTTPRequest';
 import XHRLoader from './XHRLoader';
 import FetchLoader from './FetchLoader';
-import FactoryMaker from '../core/FactoryMaker';
-import ErrorHandler from './utils/ErrorHandler';
+import { HTTPRequest } from '../vo/metrics/HTTPRequest';
+import FactoryMaker from '../../core/FactoryMaker';
+import ErrorHandler from '../utils/ErrorHandler';
 
 /**
  * @module HTTPLoader
@@ -200,9 +200,13 @@ function HTTPLoader(cfg) {
 
         let loader;
         if (useFetch && window.fetch && request.responseType === 'arraybuffer') {
-            loader = FetchLoader(context).create();
+            loader = FetchLoader(context).create({
+                requestModifier: requestModifier
+            });
         } else {
-            loader = XHRLoader(context).create();
+            loader = XHRLoader(context).create({
+                requestModifier: requestModifier
+            });
         }
 
         const modifiedUrl = requestModifier.modifyRequestURL(request.url);
@@ -252,7 +256,7 @@ function HTTPLoader(cfg) {
     /**
      * Initiates a download of the resource described by config.request
      * @param {Object} config - contains request (FragmentRequest or derived type), and callbacks
-     * @memberof module:XHRLoader
+     * @memberof module:HTTPLoader
      * @instance
      */
     function load(config) {
@@ -268,7 +272,7 @@ function HTTPLoader(cfg) {
 
     /**
      * Aborts any inflight downloads
-     * @memberof module:XHRLoader
+     * @memberof module:HTTPLoader
      * @instance
      */
     function abort() {

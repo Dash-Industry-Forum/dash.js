@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../core/FactoryMaker';
+import FactoryMaker from '../../core/FactoryMaker';
 
 /**
 * @module FetchLoader
@@ -39,6 +39,7 @@ import FactoryMaker from '../core/FactoryMaker';
 function FetchLoader(cfg) {
 
     cfg = cfg || {};
+    const requestModifier = cfg.requestModifier;
 
     let instance;
 
@@ -60,6 +61,18 @@ function FetchLoader(cfg) {
 
         if (!request.requestStartDate) {
             request.requestStartDate = requestStartTime;
+        }
+
+        if (requestModifier) {
+            // modifyRequestHeader expects a XMLHttpRequest object so,
+            // to keep backward compatibility, we should expose a setRequestHeader method
+            // TODO: Remove RequestModifier dependency on XMLHttpRequest object and define
+            // a more generic way to intercept/modify requests
+            requestModifier.modifyRequestHeader({
+                setRequestHeader: function (header, value) {
+                    headers.append(header, value);
+                }
+            });
         }
 
         let controller;

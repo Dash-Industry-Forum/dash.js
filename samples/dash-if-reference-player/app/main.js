@@ -205,7 +205,6 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     $scope.scheduleWhilePausedSelected = true;
     $scope.localStorageSelected = true;
     $scope.jumpGapsSelected = true;
-    $scope.lowLatencyMode = false;
     $scope.fastSwitchSelected = true;
     $scope.ABRStrategy = 'abrDynamic';
 
@@ -236,7 +235,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     $scope.defaultStableBufferDelay = $scope.player.getStableBufferTime();
     $scope.defaultBufferTimeAtTopQuality = $scope.player.getBufferTimeAtTopQuality();
     $scope.defaultBufferTimeAtTopQualityLongForm = $scope.player.getBufferTimeAtTopQualityLongForm();
-    $scope.lowLatencyMode = $scope.player.getLowLatencyEnabled();
+    $scope.defaultLowLatencyMode = $scope.player.getLowLatencyEnabled();
 
     const initVideoTrackSwitchMode = $scope.player.getTrackSwitchModeFor('video');
     const initAudioTrackSwitchMode = $scope.player.getTrackSwitchModeFor('audio');
@@ -292,7 +291,8 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     }, $scope);
 
     $scope.player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, function (e) { /* jshint ignore:line */
-        clearInterval($scope.metricsTimer);
+        stopMetricsInterval();
+
         $scope.chartCount = 0;
         $scope.metricsTimer = setInterval(function () {
             updateMetrics('video');
@@ -440,6 +440,12 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         $scope.player.setTextDefaultEnabled($scope.initialSettings.textEnabled);
         $scope.controlbar.enable();
     };
+
+    $scope.doStop = function () {
+        $scope.player.attachSource(null);
+        $scope.controlbar.reset();
+        stopMetricsInterval();
+    }
 
     $scope.changeTrackSwitchMode = function (mode, type) {
         $scope.player.setTrackSwitchModeFor(type, mode);
@@ -653,6 +659,13 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
                 }
                 $scope.safeApply();
             }
+        }
+    }
+
+    function stopMetricsInterval() {
+        if ($scope.metricsTimer) {
+            clearInterval($scope.metricsTimer);
+            $scope.metricsTimer = null;
         }
     }
 
