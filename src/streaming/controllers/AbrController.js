@@ -228,6 +228,23 @@ function AbrController() {
     }
 
     /**
+     * Gets top BitrateInfo for the player
+     * @param {string} type - 'video' or 'audio' are the type options.
+     * @returns {BitrateInfo | null}
+     */
+    function getTopQualityBitrateInfoFor(type) {
+        if (type  && streamProcessorDict && streamProcessorDict[type]) {
+            const streamInfo = streamProcessorDict[type].getStreamInfo();
+            if (streamInfo.id) {
+                const idx = getTopQualityIndexFor(type, streamInfo.id);
+                const bitrates = getBitrateList(streamProcessorDict[type].getMediaInfo());
+                return bitrates[idx] ? bitrates[idx] : null;
+            }
+        }
+        return null;
+    }
+
+    /**
      * @param {string} type
      * @returns {number} A value of the initial bitrate, kbps
      * @memberof AbrController#
@@ -714,6 +731,7 @@ function AbrController() {
         getBitrateList: getBitrateList,
         getQualityForBitrate: getQualityForBitrate,
         getMaxAllowedBitrateFor: getMaxAllowedBitrateFor,
+        getTopQualityBitrateInfoFor: getTopQualityBitrateInfoFor,
         getMinAllowedBitrateFor: getMinAllowedBitrateFor,
         setMaxAllowedBitrateFor: setMaxAllowedBitrateFor,
         setMinAllowedBitrateFor: setMinAllowedBitrateFor,

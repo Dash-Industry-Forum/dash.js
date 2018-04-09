@@ -126,6 +126,7 @@ declare namespace dashjs {
         enableLastMediaSettingsCaching(enable: boolean, ttl?: number): void;
         setMaxAllowedBitrateFor(type: 'video' | 'audio', value: number): void;
         getMaxAllowedBitrateFor(type: 'video' | 'audio'): number;
+        getTopQualityBitrateInfoFor(type: 'video' | 'audio'): BitrateInfo;
         setMaxAllowedRepresentationRatioFor(type: 'video' | 'audio', value: number): void;
         getMaxAllowedRepresentationRatioFor(type: 'video' | 'audio'): number;
         setAutoPlay(value: boolean): void;
