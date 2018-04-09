@@ -768,6 +768,9 @@ function MediaPlayer() {
      * @instance
      */
     function getTopQualityBitrateInfoFor(type) {
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR;
+        }
         return abrController.getTopQualityBitrateInfoFor(type);
     }
 
