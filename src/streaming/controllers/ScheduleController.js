@@ -189,17 +189,18 @@ function ScheduleController(config) {
 
             const getNextFragment = function () {
                 const fragmentController = streamProcessor.getFragmentController();
-                if (currentRepresentationInfo.quality !== lastInitQuality) {
-                    log('ScheduleController - ' + type + ' - quality has changed, get init request for representationid = ' + currentRepresentationInfo.id);
-                    lastInitQuality = currentRepresentationInfo.quality;
-
-                    streamProcessor.switchInitData(currentRepresentationInfo.id);
-                } else if (switchTrack) {
+                if (switchTrack) {
                     log('ScheduleController - ' + type + ' - switch track has been asked, get init request for ' + type + ' with representationid = ' + currentRepresentationInfo.id);
                     bufferResetInProgress = mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE ? true : false;
+                    abrController.setPlaybackQuality(type, streamInfo, 0);
                     streamProcessor.switchInitData(currentRepresentationInfo.id, bufferResetInProgress);
                     lastInitQuality = currentRepresentationInfo.quality;
                     switchTrack = false;
+                } else if (currentRepresentationInfo.quality !== lastInitQuality) {
+                    log('ScheduleController - ' + type + ' - quality has changed (last quality was ' + lastInitQuality + ', new one is ' + currentRepresentationInfo.quality + '), get init request for representationid = ' + currentRepresentationInfo.id);
+                    lastInitQuality = currentRepresentationInfo.quality;
+
+                    streamProcessor.switchInitData(currentRepresentationInfo.id);
                 } else {
                     const replacement = replaceRequestArray.shift();
 
