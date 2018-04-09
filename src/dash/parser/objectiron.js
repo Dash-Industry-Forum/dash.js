@@ -16,13 +16,11 @@
  * copyright dash-if 2012
  */
 
-export default class ObjectIron{
+import FactoryMaker from '../../core/FactoryMaker';
 
-    constructor(mappers) {
-        this.mappers = mappers;
-    }
+function ObjectIron(mappers) {
 
-    mergeValues(parentItem, childItem) {
+    function mergeValues(parentItem, childItem) {
         for (let name in parentItem) {
             if (!childItem.hasOwnProperty(name)) {
                 childItem[name] = parentItem[name];
@@ -30,7 +28,7 @@ export default class ObjectIron{
         }
     }
 
-    mapProperties(properties, parent, child) {
+    function mapProperties(properties, parent, child) {
         for (let i = 0, len = properties.length; i < len; ++i) {
             const property = properties[i];
 
@@ -43,7 +41,7 @@ export default class ObjectIron{
 
                         // complex objects; merge properties
                         if (typeof parentValue === 'object' && typeof childValue === 'object') {
-                            this.mergeValues(parentValue, childValue);
+                            mergeValues(parentValue, childValue);
                         }
                         // simple objects; merge them together
                         else {
@@ -58,7 +56,7 @@ export default class ObjectIron{
         }
     }
 
-    mapItem(item, node) {
+    function mapItem(item, node) {
         for (let i = 0, len = item.children.length; i < len; ++i) {
             const childItem = item.children[i];
 
@@ -66,33 +64,32 @@ export default class ObjectIron{
             if (array) {
                 for (let v = 0, len2 = array.length; v < len2; ++v) {
                     const childNode = array[v];
-                    this.mapProperties(item.properties, node, childNode);
-                    this.mapItem(childItem, childNode);
+                    mapProperties(item.properties, node, childNode);
+                    mapItem(childItem, childNode);
                 }
             }
         }
     }
 
-    run(source) {
+    function run(source) {
 
         if (source === null || typeof source !== 'object') {
             return source;
         }
 
-        const mappers = this.mappers;
         if ('period' in mappers) {
             const periodMapper = mappers.period;
             const periods = source.Period_asArray;
             for (let i = 0, len = periods.length; i < len; ++i) {
                 const period = periods[i];
-                this.mapItem(periodMapper, period);
+                mapItem(periodMapper, period);
 
                 if ('adaptationset' in mappers) {
                     const adaptationSets = period.AdaptationSet_asArray;
                     if (adaptationSets) {
                         const adaptationSetMapper = mappers.adaptationset;
                         for (let i = 0, len = adaptationSets.length; i < len; ++i) {
-                            this.mapItem(adaptationSetMapper, adaptationSets[i]);
+                            mapItem(adaptationSetMapper, adaptationSets[i]);
                         }
                     }
                 }
@@ -101,4 +98,13 @@ export default class ObjectIron{
 
         return source;
     }
+
+    return {
+        run: run
+    };
 }
+
+
+ObjectIron.__dashjs_factory_name = 'ObjectIron';
+const factory = FactoryMaker.getClassFactory(ObjectIron);
+export default factory;
