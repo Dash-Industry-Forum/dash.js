@@ -1,4 +1,4 @@
-import HTTPLoader from '../../src/streaming/transport/HTTPLoader';
+import HTTPLoader from '../../src/streaming/net/HTTPLoader';
 import RequestModifier from '../../src/streaming/utils/RequestModifier';
 import ErrorHandler from '../../src/streaming/utils/ErrorHandler';
 import MetricsModel from '../../src/streaming/models/MetricsModel';

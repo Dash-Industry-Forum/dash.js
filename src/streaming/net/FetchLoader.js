@@ -43,7 +43,7 @@ function FetchLoader(cfg) {
 
     let instance;
 
-    function send(httpRequest) {
+    function load(httpRequest) {
 
         // Variables will be used in the callback functions
         let firstProgress = true; /*jshint ignore:line*/
@@ -75,17 +75,17 @@ function FetchLoader(cfg) {
             });
         }
 
-        let controller;
+        let abortController;
         if (typeof window.AbortController === 'function') {
-            controller = new AbortController(); /*jshint ignore:line*/
-            httpRequest.controller = controller;
+            abortController = new AbortController(); /*jshint ignore:line*/
+            httpRequest.abortController = abortController;
         }
 
         const reqOptions = {
             method: httpRequest.method,
             headers: headers,
             credentials: httpRequest.withCredentials ? 'include' : undefined,
-            signal: controller ? controller.signal : undefined
+            signal: abortController ? abortController.signal : undefined
         };
 
         fetch(httpRequest.url, reqOptions).then(function (response) {
@@ -97,7 +97,7 @@ function FetchLoader(cfg) {
             httpRequest.response.responseURL = response.url;
 
             if (!response.ok) {
-                httpRequest.onend();
+                httpRequest.onerror();
             }
 
             let responseHeaders = '';
@@ -163,8 +163,19 @@ function FetchLoader(cfg) {
         });
     }
 
+    function abort(request) {
+        if (request.abortController) {
+            // For firefox and edge
+            request.abortController.abort();
+        } else if (request.reader) {
+            // For Chrome
+            request.reader.cancel();
+        }
+    }
+
     instance = {
-        send: send
+        load: load,
+        abort: abort
     };
 
     return instance;

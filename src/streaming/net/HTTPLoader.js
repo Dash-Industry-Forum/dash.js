@@ -222,7 +222,8 @@ function HTTPLoader(cfg) {
             onend: onloadend,
             onerror: onloadend,
             progress: progress,
-            onabort: onabort
+            onabort: onabort,
+            loader: loader
         };
 
         // Adds the ability to delay single fragment loading time to control buffer.
@@ -230,7 +231,7 @@ function HTTPLoader(cfg) {
         if (isNaN(request.delayLoadingTime) || now >= request.delayLoadingTime) {
             // no delay - just send
             requests.push(httpRequest);
-            httpRequest.response = loader.send(httpRequest);
+            loader.load(httpRequest);
         } else {
             // delay
             let delayedRequest = { httpRequest: httpRequest };
@@ -245,7 +246,7 @@ function HTTPLoader(cfg) {
                     requestStartTime = new Date();
                     lastTraceTime = requestStartTime;
                     requests.push(delayedRequest.httpRequest);
-                    httpRequest.response = loader.send(delayedRequest.httpRequest);
+                    loader.load(delayedRequest.httpRequest);
                 } catch (e) {
                     delayedRequest.httpRequest.onerror();
                 }
@@ -287,15 +288,7 @@ function HTTPLoader(cfg) {
             // when deliberately aborting inflight requests -
             // set them to undefined so they are not called
             x.onloadend = x.onerror = x.onprogress = undefined;
-            if (x.response && x.response.abort) {
-                x.response.abort();
-            } else if (x.controller) {
-                // For firefox and edge
-                x.controller.abort();
-            } else if (x.reader) {
-                // For Chrome
-                x.reader.cancel();
-            }
+            x.loader.abort(x);
             x.onabort();
         });
         requests = [];

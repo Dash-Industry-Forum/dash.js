@@ -42,7 +42,7 @@ function XHRLoader(cfg) {
 
     let instance;
 
-    function send(httpRequest) {
+    function load(httpRequest) {
 
         // Variables will be used in the callback functions
         let firstProgress = true; /*jshint ignore:line*/
@@ -76,17 +76,22 @@ function XHRLoader(cfg) {
 
         xhr.onload = httpRequest.onload;
         xhr.onloadend = httpRequest.onend;
-        xhr.onerror = httpRequest.onend;
+        xhr.onerror = httpRequest.onerror;
         xhr.onprogress = httpRequest.progress;
         xhr.onabort = httpRequest.onabort;
 
         xhr.send();
 
-        return xhr;
+        httpRequest.response = xhr;
+    }
+
+    function abort(request) {
+        request.response.abort();
     }
 
     instance = {
-        send: send
+        load: load,
+        abort: abort
     };
 
     return instance;

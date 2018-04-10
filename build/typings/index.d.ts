@@ -101,7 +101,7 @@ declare namespace dashjs {
         isMuted(): boolean;
         setVolume(value: number): void;
         getVolume(): number;
-        time(streamId: string): number;
+        time(streamId: string | undefined): number;
         duration(): number;
         timeAsUTC(): number;
         durationAsUTC(): number;
@@ -203,8 +203,6 @@ declare namespace dashjs {
         getJumpGaps(): boolean;
         setSmallGapLimit(value: number): void;
         getSmallGapLimit(): number;
-        setLowLatencyEnabled(value: boolean): void;
-        getLowLatencyEnabled(): boolean;
         preload(): void;
         reset(): void;
     }
