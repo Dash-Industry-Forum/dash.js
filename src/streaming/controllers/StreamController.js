@@ -598,13 +598,9 @@ function StreamController() {
                 adapter.getMediaInfoForType(streamInfo, Constants.AUDIO)
             );
 
-            let voAdaptation,
-                useCalculatedLiveEdgeTime;
-
+            let useCalculatedLiveEdgeTime;
             if (mediaInfo) {
-                voAdaptation = adapter.getDataForMedia(mediaInfo);
-                useCalculatedLiveEdgeTime = dashManifestModel.getRepresentationsForAdaptation(voAdaptation, 1)[0].useCalculatedLiveEdgeTime;
-
+                useCalculatedLiveEdgeTime = dashManifestModel.getUseCalculatedLiveEdgeTimeForAdaptation(adapter.getDataForMedia(mediaInfo));
                 if (useCalculatedLiveEdgeTime) {
                     log('SegmentTimeline detected using calculated Live Edge Time');
                     mediaPlayerModel.setUseManifestDateHeaderTimeSource(false);

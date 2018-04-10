@@ -396,30 +396,47 @@ function DashManifestModel(config) {
             isInteger(index) ? adaptation.Representation_asArray[index] : null;
     }
 
-    function getRepresentationsForAdaptation(voAdaptation, maxRepresentations) {
-        const voRepresentations = [];
-        let voRepresentation,
-            initialization,
-            segmentInfo,
-            processedRealAdaptation,
-            realRepresentation,
-            i,
-            s;
-
+    function getRealAdaptationFor(voAdaptation) {
         if (voAdaptation && voAdaptation.period && isInteger(voAdaptation.period.index)) {
             const periodArray = voAdaptation.period.mpd.manifest.Period_asArray[voAdaptation.period.index];
             if (periodArray && periodArray.AdaptationSet_asArray && isInteger(voAdaptation.index)) {
-                processedRealAdaptation = processAdaptation(periodArray.AdaptationSet_asArray[voAdaptation.index]);
+                return processAdaptation(periodArray.AdaptationSet_asArray[voAdaptation.index]);
+            }
+        }
+    }
+
+    function isLastRepeatAttributeValid(segmentTimeline) {
+        let s = segmentTimeline.S_asArray[segmentTimeline.S_asArray.length - 1];
+        return !s.hasOwnProperty('r') || s.r >= 0;
+    }
+
+    function getUseCalculatedLiveEdgeTimeForAdaptation(voAdaptation) {
+        let realRepresentation = getRealAdaptationFor(voAdaptation).Representation_asArray[0];
+        let segmentInfo;
+        if (realRepresentation.hasOwnProperty(DashConstants.SEGMENT_LIST)) {
+            segmentInfo = realRepresentation.SegmentList;
+            return segmentInfo.hasOwnProperty(DashConstants.SEGMENT_TIMELINE) ?
+                isLastRepeatAttributeValid(segmentInfo.SegmentTimeline) :
+                true;
+        } else if (realRepresentation.hasOwnProperty(DashConstants.SEGMENT_TEMPLATE)) {
+            segmentInfo = realRepresentation.SegmentTemplate;
+            if (segmentInfo.hasOwnProperty(DashConstants.SEGMENT_TIMELINE)) {
+                return isLastRepeatAttributeValid(segmentInfo.SegmentTimeline);
             }
         }
 
+        return false;
+    }
+
+    function getRepresentationsForAdaptation(voAdaptation) {
+        const voRepresentations = [];
+        const processedRealAdaptation = getRealAdaptationFor(voAdaptation);
+        let segmentInfo;
+
         if (processedRealAdaptation && processedRealAdaptation.Representation_asArray) {
-            if (!maxRepresentations) {
-                maxRepresentations = processedRealAdaptation.Representation_asArray.length;
-            }
-            for (i = 0; i < maxRepresentations; ++i) {
-                realRepresentation = processedRealAdaptation.Representation_asArray[i];
-                voRepresentation = new Representation();
+            for (let i = 0, len = processedRealAdaptation.Representation_asArray.length; i < len; ++i) {
+                const realRepresentation = processedRealAdaptation.Representation_asArray[i];
+                const voRepresentation = new Representation();
                 voRepresentation.index = i;
                 voRepresentation.adaptation = voAdaptation;
 
@@ -447,6 +464,7 @@ function DashManifestModel(config) {
                 if (realRepresentation.hasOwnProperty(DashConstants.MAX_PLAYOUT_RATE)) {
                     voRepresentation.maxPlayoutRate = realRepresentation.maxPlayoutRate;
                 }
+
                 if (realRepresentation.hasOwnProperty(DashConstants.SEGMENT_BASE)) {
                     segmentInfo = realRepresentation.SegmentBase;
                     voRepresentation.segmentInfoType = DashConstants.SEGMENT_BASE;
@@ -455,10 +473,7 @@ function DashManifestModel(config) {
 
                     if (segmentInfo.hasOwnProperty(DashConstants.SEGMENT_TIMELINE)) {
                         voRepresentation.segmentInfoType = DashConstants.SEGMENT_TIMELINE;
-                        s = segmentInfo.SegmentTimeline.S_asArray[segmentInfo.SegmentTimeline.S_asArray.length - 1];
-                        if (!s.hasOwnProperty('r') || s.r >= 0) {
-                            voRepresentation.useCalculatedLiveEdgeTime = true;
-                        }
+                        voRepresentation.useCalculatedLiveEdgeTime = isLastRepeatAttributeValid(segmentInfo.SegmentTimeline);
                     } else {
                         voRepresentation.segmentInfoType = DashConstants.SEGMENT_LIST;
                         voRepresentation.useCalculatedLiveEdgeTime = true;
@@ -468,10 +483,7 @@ function DashManifestModel(config) {
 
                     if (segmentInfo.hasOwnProperty(DashConstants.SEGMENT_TIMELINE)) {
                         voRepresentation.segmentInfoType = DashConstants.SEGMENT_TIMELINE;
-                        s = segmentInfo.SegmentTimeline.S_asArray[segmentInfo.SegmentTimeline.S_asArray.length - 1];
-                        if (!s.hasOwnProperty('r') || s.r >= 0) {
-                            voRepresentation.useCalculatedLiveEdgeTime = true;
-                        }
+                        voRepresentation.useCalculatedLiveEdgeTime = isLastRepeatAttributeValid(segmentInfo.SegmentTimeline);
                     } else {
                         voRepresentation.segmentInfoType = DashConstants.SEGMENT_TEMPLATE;
                     }
@@ -488,7 +500,7 @@ function DashManifestModel(config) {
 
                 if (segmentInfo) {
                     if (segmentInfo.hasOwnProperty(DashConstants.INITIALIZATION)) {
-                        initialization = segmentInfo.Initialization;
+                        let initialization = segmentInfo.Initialization;
 
                         if (initialization.hasOwnProperty(DashConstants.SOURCE_URL)) {
                             voRepresentation.initialization = initialization.sourceURL;
@@ -1003,7 +1015,8 @@ function DashManifestModel(config) {
         getUTCTimingSources: getUTCTimingSources,
         getBaseURLsFromElement: getBaseURLsFromElement,
         getRepresentationSortFunction: getRepresentationSortFunction,
-        getLocation: getLocation
+        getLocation: getLocation,
+        getUseCalculatedLiveEdgeTimeForAdaptation: getUseCalculatedLiveEdgeTimeForAdaptation
     };
 
     return instance;
