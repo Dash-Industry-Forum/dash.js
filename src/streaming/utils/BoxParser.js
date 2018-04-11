@@ -33,6 +33,8 @@ import IsoFile from './IsoFile';
 import FactoryMaker from '../../core/FactoryMaker';
 import ISOBoxer from 'codem-isoboxer';
 
+import IsoBoxSearchInfo from '../vo/IsoBoxSearchInfo';
+
 function BoxParser(/*config*/) {
 
     let instance;
@@ -58,8 +60,60 @@ function BoxParser(/*config*/) {
         return dashIsoFile;
     }
 
+    /**
+     * @param {string} type
+     * @param {ArrayBuffer} buffer
+     * @param {number} offset
+     * @returns {IsoBoxSearchInfo}
+     * @memberof BoxParser#
+     */
+    function isTopIsoBoxCompleted(type, buffer, offset) {
+        if (offset === undefined) {
+            offset = 0;
+        }
+
+        // 8 = size (uint32) + type (4 characters)
+        if (!buffer || offset + 8 >= buffer.byteLength) {
+            return new IsoBoxSearchInfo(0, false);
+        }
+
+        const data = new Uint8Array(buffer);
+        while (offset < data.byteLength) {
+            const boxSize = parseUint32(data, offset);
+            const boxType = parseIsoBoxType(data, offset + 4);
+
+            if (boxSize === 0) {
+                offset = data.byteLength;
+                break;
+            }
+
+            if (offset + boxSize <= data.byteLength && boxType === type) {
+                return new IsoBoxSearchInfo(offset, true, boxSize);
+            }
+
+            offset += boxSize;
+        }
+
+        return new IsoBoxSearchInfo(offset, false);
+    }
+
+    function parseUint32(data, offset) {
+        return data[offset + 3] >>> 0 |
+            (data[offset + 2] << 8) >>> 0 |
+            (data[offset + 1] << 16) >>> 0 |
+            (data[offset] << 24) >>> 0;
+    }
+
+    function parseIsoBoxType(data, offset) {
+        return String.fromCharCode(data[offset++]) +
+            String.fromCharCode(data[offset++]) +
+            String.fromCharCode(data[offset++]) +
+            String.fromCharCode(data[offset]);
+    }
+
     instance = {
-        parse: parse
+        parse: parse,
+        isTopIsoBoxCompleted: isTopIsoBoxCompleted
     };
 
     return instance;
