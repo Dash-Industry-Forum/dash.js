@@ -156,11 +156,19 @@ function FetchLoader(cfg) {
                 // [dataArray, remaining] = processData(value, remaining);
                 dataArray = value;
 
-                return httpRequest.reader.read().then(processResult);
-
+                read(httpRequest, processResult);
             };
-            return httpRequest.reader.read().then(processResult);
+
+            read(httpRequest, processResult);
         });
+    }
+
+    function read(httpRequest, processResult) {
+        try {
+            httpRequest.reader.read().then(processResult);
+        } catch (e) {
+            httpRequest.onerror();
+        }
     }
 
     function abort(request) {
@@ -169,7 +177,12 @@ function FetchLoader(cfg) {
             request.abortController.abort();
         } else if (request.reader) {
             // For Chrome
-            request.reader.cancel();
+            try {
+                request.reader.cancel();
+            } catch (e) {
+                // throw exceptions (TypeError) when reader was previously closed,
+                // for example, because a network issue
+            }
         }
     }
 
