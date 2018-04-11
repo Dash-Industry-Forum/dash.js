@@ -461,10 +461,9 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                 var availableBitrates = {menuType: 'bitrate'};
                 availableBitrates.audio = player.getBitrateInfoListFor("audio") || [];
                 availableBitrates.video = player.getBitrateInfoListFor("video") || [];
-
                 if (availableBitrates.audio.length > 1 || availableBitrates.video.length > 1) {
                     contentFunc = function (element, index) {
-                        return isNaN(index) ? " Auto Switch" : Math.floor(element.bitrate / 1000) + " kbps";
+                        return isNaN(index) ? " Auto Switch" : Math.floor(element.bitrate / 1000) + ` kbps (${element.width}x${element.height})`;
                     }
                     bitrateListMenu = createMenu(availableBitrates, contentFunc);
                     var func = function () {
@@ -711,9 +710,14 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         },
 
         positionMenu = function (menu, btn) {
+            if (btn.offsetLeft + menu.clientWidth >= videoController.clientWidth) {
+                menu.style.right = '0px';
+                menu.style.left = '';
+            } else {
+                menu.style.left = btn.offsetLeft + "px";
+            }
             var menu_y = videoController.offsetTop - menu.offsetHeight;
             menu.style.top = menu_y + "px";
-            menu.style.left = btn.offsetLeft + "px";
         },
 
         destroyBitrateMenu = function () {

@@ -133,6 +133,10 @@
     position: absolute;
 }
 
+#bitrateMenu .menu-sub-menu-title {
+    min-width: 150px;
+}
+
 @font-face {
     font-family: 'icomoon';
     src: url("icomoon.ttf") format("truetype");
