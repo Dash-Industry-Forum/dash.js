@@ -112,7 +112,6 @@ function MssParser(config) {
         let qualityLevels,
             representation,
             segments,
-            range,
             i;
 
         adaptationSet.id = streamIndex.getAttribute('Name') ? streamIndex.getAttribute('Name') : streamIndex.getAttribute('Type');
@@ -178,11 +177,6 @@ function MssParser(config) {
         adaptationSet.SegmentTemplate = segmentTemplate;
 
         segments = segmentTemplate.SegmentTimeline.S_asArray;
-
-        range = {
-            start: segments[0].t / segmentTemplate.timescale,
-            end: (segments[segments.length - 1].t + segments[segments.length - 1].d) / segmentTemplate.timescale
-        };
 
         return adaptationSet;
     }
