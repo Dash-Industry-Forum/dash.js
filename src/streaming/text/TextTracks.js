@@ -466,8 +466,13 @@ function TextTracks() {
                     }
                 }
             }
-
-            track.addCue(cue);
+            try {
+                track.addCue(cue);
+            } catch (e) {
+                // Edge crash, delete everything and start adding again
+                deleteTrackCues(track);
+                track.addCue(cue);
+            }
         }
     }
 
