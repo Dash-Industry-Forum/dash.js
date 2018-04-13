@@ -686,6 +686,7 @@ function MssParser(config) {
                     }
                     if (adaptations[i].contentType === 'audio' || adaptations[i].contentType === 'video') {
                         period.start = Math.max(segments[0].t, period.start);
+                        adaptations[i].SegmentTemplate.presentationTimeOffset = period.start;
                     }
                 }
                 period.start /= manifest.timescale;
