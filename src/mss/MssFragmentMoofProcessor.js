@@ -53,6 +53,7 @@ function MssFragmentMoofProcessor(config) {
 
         let manifest = representation.adaptation.period.mpd.manifest;
         let adaptation = manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index];
+        let timescale = adaptation.SegmentTemplate.timescale;
 
         if (manifest.type !== 'dynamic') {
             return;
@@ -98,7 +99,7 @@ function MssFragmentMoofProcessor(config) {
             return;
         }
 
-        log('[MssFragmentMoofProcessor][', type,'] Add new segment - t = ', (entry.fragment_absolute_time /  10000000.0));
+        log('[MssFragmentMoofProcessor][', type,'] Add new segment - t = ', (entry.fragment_absolute_time / timescale));
         segment = {};
         segment.t = entry.fragment_absolute_time;
         segment.d = entry.fragment_duration;
@@ -111,12 +112,12 @@ function MssFragmentMoofProcessor(config) {
             t = segment.t;
 
             // Determine the segments' availability start time
-            availabilityStartTime = t - (manifest.timeShiftBufferDepth * 10000000);
+            availabilityStartTime = t - (manifest.timeShiftBufferDepth * timescale);
 
             // Remove segments prior to availability start time
             segment = segments[0];
             while (segment.t < availabilityStartTime) {
-                log('[MssFragmentMoofProcessor]Remove segment  - t = ' + (segment.t / 10000000.0));
+                log('[MssFragmentMoofProcessor]Remove segment  - t = ' + (segment.t / timescale));
                 segments.splice(0, 1);
                 segment = segments[0];
             }
