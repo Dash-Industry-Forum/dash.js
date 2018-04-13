@@ -385,6 +385,23 @@ function MssParser(config) {
 
             // Create new segment
             segments.push(segment);
+
+            // Support for 'r' attribute (i.e. "repeat" as in MPEG-DASH)
+            r = parseFloat(chunks[i].getAttribute('r'));
+            if (r) {
+
+                for (j = 0; j < (r - 1); j++) {
+                    prevSegment = segments[segments.length - 1];
+                    segment = {};
+                    segment.t = prevSegment.t + prevSegment.d;
+                    segment.d = prevSegment.d;
+                    if (prevSegment.tManifest) {
+                        segment.tManifest  = parseFloat(prevSegment.tManifest) + prevSegment.d;
+                    }
+                    duration += segment.d;
+                    segments.push(segment);
+                }
+            }
         }
 
         segmentTimeline.S = segments;
