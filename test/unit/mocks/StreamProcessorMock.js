@@ -26,7 +26,7 @@ class RepresentationControllerMock {
     constructor() {}
 
     getCurrentRepresentation() {
-        return {adaptation: {period: {mpd: {manifest: {type: 'dynamic', Period_asArray: [{AdaptationSet_asArray: []}]}}, index: 0}, index: 0}};
+        return {adaptation: {period: {mpd: {manifest: {type: 'dynamic', Period_asArray: [{AdaptationSet_asArray: [{SegmentTemplate: {timescale: 10000000}}]}]}}, index: 0}, index: 0}};
     }
 }
 
