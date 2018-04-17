@@ -470,8 +470,10 @@ function TextTracks() {
                 track.addCue(cue);
             } catch (e) {
                 // Edge crash, delete everything and start adding again
+                // @see https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/11979877/
                 deleteTrackCues(track);
                 track.addCue(cue);
+                throw e;
             }
         }
     }
