@@ -71,7 +71,7 @@ function FragmentModel(config) {
 
     function isFragmentLoaded(request) {
         const isEqualUrl = function (req1, req2) {
-            return (req1.url === req2.url);
+            return req1.url.replace(req1.representationId, '') === req2.url.replace(req2.representationId, '');
         };
 
         const isEqualComplete = function (req1, req2) {
