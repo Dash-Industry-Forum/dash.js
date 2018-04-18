@@ -79,7 +79,7 @@ function FragmentModel(config) {
         };
 
         const isEqualMedia = function (req1, req2) {
-            return !isNaN(req1.index) && (req1.startTime === req2.startTime) && (req1.adaptationIndex === req2.adaptationIndex);
+            return !isNaN(req1.index) && (req1.startTime === req2.startTime) && (req1.adaptationIndex === req2.adaptationIndex) && (req1.type === req2.type);
         };
 
         const isEqualInit = function (req1, req2) {
@@ -89,7 +89,7 @@ function FragmentModel(config) {
         const check = function (requests) {
             let isLoaded = false;
             requests.some(req => {
-                if ( isEqualUrl(request,req) && (isEqualMedia(request, req) || isEqualInit(request, req) || isEqualComplete(request, req))) {
+                if ( isEqualUrl(request, req) || isEqualMedia(request, req) || isEqualInit(request, req) || isEqualComplete(request, req)) {
                     isLoaded = true;
                     return isLoaded;
                 }
