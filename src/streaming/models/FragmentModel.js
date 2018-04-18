@@ -176,7 +176,7 @@ function FragmentModel(config) {
     // Remove requests that are not "represented" by any of buffered ranges
     function syncExecutedRequestsWithBufferedRange(bufferedRanges, streamDuration) {
         if (!bufferedRanges || bufferedRanges.length === 0) {
-            executedRequests = [];
+            removeExecutedRequestsBeforeTime();
             return;
         }
 

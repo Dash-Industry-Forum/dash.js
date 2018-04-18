@@ -43,21 +43,6 @@ describe('FragmentModel', function () {
         expect(isFragmentLoaded).to.be.false;  // jshint ignore:line
     });
 
-    it('should return an array of size equals to 1, when removeExecutedRequestsBeforeTime function has been called', function () {
-        fragmentModel.executeRequest(completeMediaRequest);
-        fragmentModel.executeRequest(completeInitRequest);
-
-        let executedRequests = fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED});
-
-        expect(executedRequests.length).to.be.equal(2);
-
-        fragmentModel.removeExecutedRequestsBeforeTime();
-
-        executedRequests = fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED});
-
-        expect(executedRequests.length).to.be.equal(1);
-    });
-
     it('should return false when isFragmentLoaded is called and request is undefined but executedRequests is not empty', () => {
         fragmentModel.executeRequest(completeInitRequest);
         const isFragmentLoaded = fragmentModel.isFragmentLoaded();
@@ -81,7 +66,7 @@ describe('FragmentModel', function () {
         });
 
         describe('when a request has been passed for executing', function () {
-            const loader = { load: () => {}, abort: () => {} };
+            const loader = { load: () => {}, abort: () => {}, reset: () => {}};
             const delay = specHelper.getExecutionDelay();
             let clock;
 
@@ -97,6 +82,7 @@ describe('FragmentModel', function () {
 
             afterEach(function () {
                 clock.restore();
+                fragmentModel.reset();
             });
 
             it('should fire loadingStarted event a request', function () {
@@ -125,6 +111,36 @@ describe('FragmentModel', function () {
                 const loadingRequests = fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_LOADING});
 
                 expect(loadingRequests.length).to.be.equal(0);
+            });
+
+            it('should return an array of size equals to 1, when removeExecutedRequestsBeforeTime function has been called', function () {
+                fragmentModel.executeRequest(completeMediaRequest);
+                fragmentModel.executeRequest(completeInitRequest);
+
+                let executedRequests = fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED});
+
+                expect(executedRequests.length).to.be.equal(2);
+
+                fragmentModel.removeExecutedRequestsBeforeTime();
+
+                executedRequests = fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED});
+
+                expect(executedRequests.length).to.be.equal(1);
+            });
+
+            it('should return an array of size equals to 1, when syncExecutedRequestsWithBufferedRange function has been called with an empty bufferedRanges', function () {
+                fragmentModel.executeRequest(completeMediaRequest);
+                fragmentModel.executeRequest(completeInitRequest);
+
+                let executedRequests = fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED});
+
+                expect(executedRequests.length).to.be.equal(2);
+
+                fragmentModel.syncExecutedRequestsWithBufferedRange();
+
+                executedRequests = fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED});
+
+                expect(executedRequests.length).to.be.equal(1);
             });
         });
     });
