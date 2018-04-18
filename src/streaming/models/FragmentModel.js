@@ -71,7 +71,7 @@ function FragmentModel(config) {
 
     function isFragmentLoaded(request) {
         const isEqualUrl = function (req1, req2) {
-            return req1.url.replace(req1.representationId, '') === req2.url.replace(req2.representationId, '');
+            return (req1.url === req2.url);
         };
 
         const isEqualComplete = function (req1, req2) {
@@ -89,7 +89,7 @@ function FragmentModel(config) {
         const check = function (requests) {
             let isLoaded = false;
             requests.some(req => {
-                if ( isEqualUrl(request,req) && (isEqualMedia(request, req) || isEqualInit(request, req) || isEqualComplete(request, req))) {
+                if ( isEqualUrl(request, req) || isEqualMedia(request, req) || isEqualInit(request, req) || isEqualComplete(request, req)) {
                     isLoaded = true;
                     return isLoaded;
                 }
