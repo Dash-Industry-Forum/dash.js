@@ -229,7 +229,7 @@ function ScheduleController(config) {
             };
 
             setFragmentProcessState(true);
-            if (!isReplacement && !switchTrack) {
+            if (!isReplacement && !switchTrack && !bufferResetInProgress) {
                 abrController.checkPlaybackQuality(type);
             }
 
@@ -250,12 +250,12 @@ function ScheduleController(config) {
             threshold: 0
         })[0];
 
-        if (request && replaceRequestArray.indexOf(request) === -1 && !dashManifestModel.getIsTextTrack(type)) {
+        if (!switchTrack && !bufferResetInProgress && request && replaceRequestArray.indexOf(request) === -1 && !dashManifestModel.getIsTextTrack(type)) {
             const fastSwitchModeEnabled = mediaPlayerModel.getFastSwitchEnabled();
             const bufferLevel = streamProcessor.getBufferLevel();
             const abandonmentState = abrController.getAbandonmentStateFor(type);
 
-            if (fastSwitchModeEnabled && request.quality < currentRepresentationInfo.quality && bufferLevel >= safeBufferLevel && abandonmentState !== AbrController.ABANDON_LOAD && !switchTrack) {
+            if (fastSwitchModeEnabled && request.quality < currentRepresentationInfo.quality && bufferLevel >= safeBufferLevel && abandonmentState !== AbrController.ABANDON_LOAD) {
                 replaceRequest(request);
                 log('Reloading outdated fragment at index: ', request.index);
             } else if (request.quality > currentRepresentationInfo.quality) {
