@@ -348,7 +348,7 @@ function TextSourceBuffer() {
                             result = parser.parse(ccContent, offsetTime, sampleStart / timescale, (sampleStart + sample.duration) / timescale, images);
                             textTracks.addCaptions(currFragmentedTrackIdx, firstSubtitleStart / timescale, result);
                         } catch (e) {
-                            fragmentModel.removeExecutedRequestsBeforeTime(Date.now());
+                            fragmentModel.removeExecutedRequestsBeforeTime();
                             this.remove();
                             log('TTML parser error: ' + e.message);
                         }
