@@ -89,6 +89,7 @@ function BufferController(config) {
         seekClearedBufferingCompleted,
         pendingPruningRanges,
         bufferResetInProgress,
+        mediaChunkDuration,
         mediaChunk;
 
     function setup() {
@@ -205,6 +206,10 @@ function BufferController(config) {
         const currentRepresentation = streamProcessor.getRepresentationInfoForQuality(quality);
         const eventStreamMedia = adapter.getEventsFor(currentRepresentation.mediaInfo, streamProcessor);
         const eventStreamTrack = adapter.getEventsFor(currentRepresentation, streamProcessor);
+
+        if (isNaN(mediaChunkDuration)) {
+            mediaChunkDuration = chunk.duration;
+        }
 
         if (eventStreamMedia && eventStreamMedia.length > 0 || eventStreamTrack && eventStreamTrack.length > 0) {
             const request = streamProcessor.getFragmentModel().getRequests({
@@ -528,7 +533,7 @@ function BufferController(config) {
         if (bufferLevel < STALL_THRESHOLD && !isBufferingCompleted) {
             notifyBufferStateChanged(BUFFER_EMPTY);
         } else {
-            if (isBufferingCompleted || bufferLevel >= mediaPlayerModel.getStableBufferTime()) {
+            if (isBufferingCompleted || bufferLevel >= (mediaChunkDuration / 2)) {
                 notifyBufferStateChanged(BUFFER_LOADED);
             }
         }
@@ -826,6 +831,7 @@ function BufferController(config) {
         }
 
         bufferResetInProgress = false;
+        mediaChunkDuration = NaN;
     }
 
     function reset(errored) {
