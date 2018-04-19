@@ -45,7 +45,6 @@ import ManifestModel from './models/ManifestModel';
 import MediaPlayerModel from './models/MediaPlayerModel';
 import MetricsModel from './models/MetricsModel';
 import AbrController from './controllers/AbrController';
-import SourceBufferController from './controllers/SourceBufferController';
 import VideoModel from './models/VideoModel';
 import DOMStorage from './utils/DOMStorage';
 import Debug from './../core/Debug';
@@ -77,10 +76,12 @@ import ISOBoxer from 'codem-isoboxer';
  */
 function MediaPlayer() {
 
-    const PLAYBACK_NOT_INITIALIZED_ERROR = 'You must first call initialize() to init playback before calling this method';
+    const STREAMING_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a source before calling this method';
+    const PLAYBACK_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a valid source and view before calling this method';
     const ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the video element before calling this method';
     const SOURCE_NOT_ATTACHED_ERROR = 'You must first call attachSource() with a valid source before calling this method';
     const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
+    const MEDIA_PLAYER_BAD_ARGUMENT_ERROR = 'MediaPlayer Invalid Arguments!';
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
@@ -91,6 +92,7 @@ function MediaPlayer() {
         source,
         protectionData,
         mediaPlayerInitialized,
+        streamingInitialized,
         playbackInitialized,
         autoPlay,
         abrController,
@@ -123,12 +125,14 @@ function MediaPlayer() {
     function setup() {
         mediaPlayerInitialized = false;
         playbackInitialized = false;
+        streamingInitialized = false;
         autoPlay = true;
         protectionController = null;
         protectionData = null;
         adapter = null;
         Events.extend(MediaPlayerEvents);
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
+        videoModel = VideoModel(context).getInstance();
     }
 
     /**
@@ -280,7 +284,7 @@ function MediaPlayer() {
      * @instance
      */
     function isReady() {
-        return (!!videoModel && !!source);
+        return (!!source && !!videoModel.getElement());
     }
 
     /**
@@ -338,6 +342,28 @@ function MediaPlayer() {
 
     ---------------------------------------------------------------------------
     */
+
+    /**
+     * Causes the player to begin streaming the media as set by the {@link module:MediaPlayer#attachSource attachSource()}
+     * method in preparation for playing. It specifically does not require a view to be attached with {@link module:MediaPlayer#attachSource attachView()} to begin preloading.
+     * When a view is attached after preloading, the buffered data is transferred to the attached mediaSource buffers.
+     *
+     * @see {@link module:MediaPlayer#attachSource attachSource()}
+     * @see {@link module:MediaPlayer#attachView attachView()}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function preload() {
+        if (videoModel.getElement() || streamingInitialized) {
+            return false;
+        }
+        if (source) {
+            initializePlayback();
+        } else {
+            throw SOURCE_NOT_ATTACHED_ERROR;
+        }
+    }
+
     /**
      * The play method initiates playback of the media defined by the {@link module:MediaPlayer#attachSource attachSource()} method.
      * This method will call play on the native Video Element.
@@ -395,6 +421,11 @@ function MediaPlayer() {
         if (!playbackInitialized) {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
+
+        if (typeof value !== 'number' || isNaN(value)) {
+            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
+        }
+
         let s = playbackController.getIsDynamic() ? getDVRSeekOffset(value) : value;
         playbackController.seek(s);
     }
@@ -432,7 +463,7 @@ function MediaPlayer() {
      * @instance
      */
     function setPlaybackRate(value) {
-        if (!videoModel) {
+        if (!videoModel.getElement()) {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
         getVideoElement().playbackRate = value;
@@ -445,7 +476,7 @@ function MediaPlayer() {
      * @instance
      */
     function getPlaybackRate() {
-        if (!videoModel) {
+        if (!videoModel.getElement()) {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
         return getVideoElement().playbackRate;
@@ -458,7 +489,7 @@ function MediaPlayer() {
      * @instance
      */
     function setMute(value) {
-        if (!videoModel) {
+        if (!videoModel.getElement()) {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
         getVideoElement().muted = value;
@@ -471,7 +502,7 @@ function MediaPlayer() {
      * @instance
      */
     function isMuted() {
-        if (!videoModel) {
+        if (!videoModel.getElement()) {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
         return getVideoElement().muted;
@@ -484,7 +515,7 @@ function MediaPlayer() {
      * @instance
      */
     function setVolume(value) {
-        if (!videoModel) {
+        if (!videoModel.getElement()) {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
         getVideoElement().volume = value;
@@ -497,7 +528,7 @@ function MediaPlayer() {
      * @instance
      */
     function getVolume() {
-        if (!videoModel) {
+        if (!videoModel.getElement()) {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
         return getVideoElement().volume;
@@ -781,8 +812,8 @@ function MediaPlayer() {
      * @instance
      */
     function getQualityFor(type) {
-        if (!playbackInitialized) {
-            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR;
         }
         if (type === Constants.IMAGE) {
             const activeStream = getActiveStream();
@@ -810,8 +841,8 @@ function MediaPlayer() {
      * @instance
      */
     function setQualityFor(type, value) {
-        if (!playbackInitialized) {
-            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR;
         }
         if (type === Constants.IMAGE) {
             const activeStream = getActiveStream();
@@ -899,8 +930,8 @@ function MediaPlayer() {
      * @instance
      */
     function getInitialBitrateFor(type) {
-        if (!playbackInitialized) {
-            throw PLAYBACK_NOT_INITIALIZED_ERROR; //abrController.getInitialBitrateFor is overloaded with ratioDict logic that needs manifest force it to not be callable pre play.
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR; //abrController.getInitialBitrateFor is overloaded with ratioDict logic that needs manifest force it to not be callable pre play.
         }
         return abrController.getInitialBitrateFor(type);
     }
@@ -1157,19 +1188,6 @@ function MediaPlayer() {
     }
 
     /**
-     * Obsolete since version 2.6.0.
-     * Buffer-occupancy ABR is now switched on and off dynamically.
-     * @see {@link module:MediaPlayer#setABRStrategy setABRStrategy()}
-     *
-     * @param {boolean} value
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function enableBufferOccupancyABR(value) {
-        throw new Error('Calling obsolete function - enabledBufferOccupancyABR(' + value + ') has no effect.');
-    }
-
-    /**
      * Sets the ABR strategy. Valid strategies are "abrDynamic", "abrBola" and "abrThroughput".
      * The ABR strategy can also be changed during a streaming session.
      * The call has no effect if an invalid method is passed.
@@ -1390,9 +1408,9 @@ function MediaPlayer() {
     /**
      * This value influences the buffer pruning logic.
      * Allows you to modify the buffer that is kept in source buffer in seconds.
-     *  0|-----------bufferToPrune-----------|-----bufferToKeep-----|currentTime|
+     * <pre>0|-----------bufferToPrune-----------|-----bufferToKeep-----|currentTime|</pre>
      *
-     * @default 30 seconds
+     * @default 20 seconds
      * @param {int} value
      * @memberof module:MediaPlayer
      * @instance
@@ -1403,9 +1421,23 @@ function MediaPlayer() {
 
     /**
      * This value influences the buffer pruning logic.
+     * Allows you to modify the buffer ahead of current time position that is kept in source buffer in seconds.
+     * <pre>0|--------|currentTime|-----bufferAheadToKeep----|----bufferToPrune-----------|end|</pre>
+     *
+     * @default 80 seconds
+     * @param {int} value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setBufferAheadToKeep(value) {
+        mediaPlayerModel.setBufferAheadToKeep(value);
+    }
+
+    /**
+     * This value influences the buffer pruning logic.
      * Allows you to modify the interval of pruning buffer in seconds.
      *
-     * @default 30 seconds
+     * @default 10 seconds
      * @param {int} value
      * @memberof module:MediaPlayer
      * @instance
@@ -1524,16 +1556,38 @@ function MediaPlayer() {
     }
 
     /**
-     * Obsolete since version 2.6.0.
-     * ABR rules now switch from Throughput to Buffer Occupancy mode when there is sufficient buffer.
-     * This renders the rich buffer mechanism redundant.
+     * The overlap tolerance time, at both the head and the tail of segments, considered when doing time to segment conversions.
      *
+     * This is used when calculating which of the loaded segments of a representation corresponds with a given time position.
+     * Its value is never used for calculating the segment index in seeking operations in which it assumes overlap time threshold is zero.
+     *
+     * <pre>
+     * |-o-|--- segment X ----|-o-|
+     *                        |-o-|---- segment X+1 -----|-o-|
+     *                                                   |-o-|---- segment X+2 -----|-o-|
+     * </pre>
+     * @default 0.05 seconds.
      * @param {number} value
      * @memberof module:MediaPlayer
      * @instance
+    */
+    function setSegmentOverlapToleranceTime(value) {
+        mediaPlayerModel.setSegmentOverlapToleranceTime(value);
+    }
+
+    /**
+     * For a given media type, the threshold which defines if the response to a fragment
+     * request is coming from browser cache or not.
+     * Valid media types are "video", "audio"
+     *
+     * @default 50 milliseconds for video fragment requests; 5 milliseconds for audio fragment requests.
+     * @param {string} type 'video' or 'audio' are the type options.
+     * @param {number} value Threshold value in milliseconds.
+     * @memberof module:MediaPlayer
+     * @instance
      */
-    function setRichBufferThreshold(value) {
-        throw new Error('Calling obsolete function - setRichBufferThreshold(' + value + ') has no effect.');
+    function setCacheLoadThresholdForType(type, value) {
+        mediaPlayerModel.setCacheLoadThresholdForType(type, value);
     }
 
     /**
@@ -1663,6 +1717,82 @@ function MediaPlayer() {
      */
     function getXHRWithCredentialsForType(type) {
         return mediaPlayerModel.getXHRWithCredentialsForType(type);
+    }
+
+    /**
+     * Sets whether player should jump small gaps (discontinuities) in the buffer.
+     *
+     * @param {boolean} value
+     * @default false
+     * @memberof module:MediaPlayer
+     * @instance
+     *
+     */
+    function setJumpGaps(value) {
+        mediaPlayerModel.setJumpGaps(value);
+    }
+
+    /**
+     * Gets current status of jump gaps feature.
+     * @returns {boolean} The current jump gaps state.
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getJumpGaps() {
+        return mediaPlayerModel.getJumpGaps();
+    }
+
+    /**
+     * Time in seconds for a gap to be considered small.
+     *
+     * @param {boolean} value
+     * @default 0.8
+     * @memberof module:MediaPlayer
+     * @instance
+     *
+     */
+    function setSmallGapLimit(value) {
+        mediaPlayerModel.setSmallGapLimit(value);
+    }
+
+    /**
+     * Time in seconds for a gap to be considered small.
+     * @returns {boolean} Current small gap limit
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getSmallGapLimit() {
+        return mediaPlayerModel.getSmallGapLimit();
+    }
+
+    /**
+     * For live streams, set the interval-frequency in milliseconds at which
+     * dash.js will check if the current manifest is still processed before
+     * downloading the next manifest once the minimumUpdatePeriod time has
+     * expired.
+     * @param {int} value
+     * @default 100
+     * @memberof module:MediaPlayer
+     * @instance
+     * @see {@link module:MediaPlayer#getManifestUpdateRetryInterval getManifestUpdateRetryInterval()}
+     *
+     */
+    function setManifestUpdateRetryInterval(value) {
+        mediaPlayerModel.setManifestUpdateRetryInterval(value);
+    }
+
+    /**
+     * For live streams, get the interval-frequency in milliseconds at which
+     * dash.js will check if the current manifest is still processed before
+     * downloading the next manifest once the minimumUpdatePeriod time has
+     * expired.
+     * @returns {int} Current retry delay for manifest update
+     * @memberof module:MediaPlayer
+     * @instance
+     * @see {@link module:MediaPlayer#setManifestUpdateRetryInterval setManifestUpdateRetryInterval()}
+     */
+    function getManifestUpdateRetryInterval() {
+        return mediaPlayerModel.getManifestUpdateRetryInterval();
     }
 
     /*
@@ -1798,9 +1928,8 @@ function MediaPlayer() {
     /**
      * Use this method to change the current text track for both external time text files and fragmented text tracks. There is no need to
      * set the track mode on the video object to switch a track when using this method.
-     *
      * @param {number} idx - Index of track based on the order of the order the tracks are added Use -1 to disable all tracks. (turn captions off).  Use module:MediaPlayer#dashjs.MediaPlayer.events.TEXT_TRACK_ADDED.
-     * @see {@link module:MediaPlayer#dashjs.MediaPlayer.events.TEXT_TRACK_ADDED}
+     * @see {@link MediaPlayerEvents#event:TEXT_TRACK_ADDED dashjs.MediaPlayer.events.TEXT_TRACK_ADDED}
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -1855,7 +1984,7 @@ function MediaPlayer() {
      * @instance
      */
     function getVideoElement() {
-        if (!videoModel) {
+        if (!videoModel.getElement()) {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
         return videoModel.getElement();
@@ -1879,7 +2008,7 @@ function MediaPlayer() {
      * @instance
      */
     function attachVideoContainer(container) {
-        if (!videoModel) {
+        if (!videoModel.getElement()) {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
         videoModel.setVideoContainer(container);
@@ -1896,19 +2025,23 @@ function MediaPlayer() {
         if (!mediaPlayerInitialized) {
             throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
         }
-        if (videoModel) {
-            videoModel.reset();
-        }
-        videoModel = null;
+
         if (element) {
-            videoModel = VideoModel(context).getInstance();
-            videoModel.initialize();
             videoModel.setElement(element);
             detectProtection();
             detectMetricsReporting();
             detectMss();
+
+            if (streamController) {
+                streamController.switchToVideoElement();
+            }
         }
-        resetAndInitializePlayback();
+
+        if (playbackInitialized) { //Reset if we have been playing before, so this is a new element.
+            resetPlaybackControllers();
+        }
+
+        initializePlayback();
     }
 
     /**
@@ -1929,7 +2062,7 @@ function MediaPlayer() {
      * @instance
      */
     function attachTTMLRenderingDiv(div) {
-        if (!videoModel) {
+        if (!videoModel.getElement()) {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
         videoModel.setTTMLRenderingDiv(div);
@@ -1949,8 +2082,8 @@ function MediaPlayer() {
      * @instance
      */
     function getBitrateInfoListFor(type) {
-        if (!playbackInitialized) {
-            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR;
         }
         let stream = getActiveStream();
         return stream ? stream.getBitrateListFor(type) : [];
@@ -1964,8 +2097,8 @@ function MediaPlayer() {
      * @instance
      */
     function getStreamsFromManifest(manifest) {
-        if (!playbackInitialized) {
-            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR;
         }
         return adapter.getStreamsInfo(manifest);
     }
@@ -1978,8 +2111,8 @@ function MediaPlayer() {
      * @instance
      */
     function getTracksFor(type) {
-        if (!playbackInitialized) {
-            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR;
         }
         let streamInfo = streamController.getActiveStreamInfo();
         if (!streamInfo) return [];
@@ -1996,11 +2129,11 @@ function MediaPlayer() {
      * @instance
      */
     function getTracksForTypeFromManifest(type, manifest, streamInfo) {
-        if (!playbackInitialized) {
-            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR;
         }
 
-        streamInfo = streamInfo || adapter.getStreamsInfo(manifest)[0];
+        streamInfo = streamInfo || adapter.getStreamsInfo(manifest, 1)[0];
 
         return streamInfo ? adapter.getAllMediaInfoForType(streamInfo, type, manifest) : [];
     }
@@ -2013,8 +2146,8 @@ function MediaPlayer() {
      * @instance
      */
     function getCurrentTrackFor(type) {
-        if (!playbackInitialized) {
-            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR;
         }
         let streamInfo = streamController.getActiveStreamInfo();
 
@@ -2071,8 +2204,8 @@ function MediaPlayer() {
      * @instance
      */
     function setCurrentTrack(track) {
-        if (!playbackInitialized) {
-            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR;
         }
         mediaController.setTrack(track);
     }
@@ -2174,6 +2307,10 @@ function MediaPlayer() {
     }
 
     /**
+     * Sets Protection Data required to setup the Protection Module (DRM). Protection Data must
+     * be set before initializing MediaPlayer or, once initialized, before PROTECTION_CREATED event is fired.
+     * @see {@link module:MediaPlayer#initialize initialize()}
+     * @see {@link ProtectionEvents#event:PROTECTION_CREATED dashjs.Protection.events.PROTECTION_CREATED}
      * @param {ProtectionData} value - object containing
      * property names corresponding to key system name strings and associated
      * values being instances of.
@@ -2182,6 +2319,11 @@ function MediaPlayer() {
      */
     function setProtectionData(value) {
         protectionData = value;
+
+        // Propagate changes in case StreamController is already created
+        if (streamController) {
+            streamController.setProtectionData(protectionData);
+        }
     }
 
     /*
@@ -2216,7 +2358,7 @@ function MediaPlayer() {
             return null;
         }
 
-        const timeInPeriod = streamController.getTimeRelativeToStreamId(time, stream.getId());
+        const timeInPeriod = streamController.getTimeRelativeToStreamId(s, stream.getId());
         return thumbnailController.get(timeInPeriod);
     }
 
@@ -2298,7 +2440,13 @@ function MediaPlayer() {
             source = urlOrManifest;
         }
 
-        resetAndInitializePlayback();
+        if (streamingInitialized || playbackInitialized) {
+            resetPlaybackControllers();
+        }
+
+        if (isReady()) {
+            initializePlayback();
+        }
     }
 
     /**
@@ -2367,92 +2515,23 @@ function MediaPlayer() {
         FactoryMaker.extend(parentNameString, childInstance, override, context);
     }
 
-    /*
-    ---------------------------------------------------------------------------
-
-        DEPRECATED FUNCTIONS
-
-    ---------------------------------------------------------------------------
-    */
-    /**
-     * @deprecated Since version 2.1.0.  <b>Instead use:</b>
-     * <ul>
-     * <li>{@link module:MediaPlayer#getVideoElement getVideoElement()}</li>
-     * <li>{@link module:MediaPlayer#getSource getSource()}</li>
-     * <li>{@link module:MediaPlayer#getVideoContainer getVideoContainer()}</li>
-     * <li>{@link module:MediaPlayer#getTTMLRenderingDiv getTTMLRenderingDiv()}</li>
-     * </ul>
-     *
-     * @returns {VideoModel}
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getVideoModel() {
-        if (!videoModel) {
-            throw ELEMENT_NOT_ATTACHED_ERROR;
-        }
-        return videoModel;
-    }
-
-    /**
-     * @deprecated since version 2.0 Instead use {@link module:MediaPlayer#getAutoSwitchQualityFor getAutoSwitchQualityFor()}.
-     * @returns {boolean} Current state of adaptive bitrate switching
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getAutoSwitchQuality() {
-        return abrController.getAutoSwitchBitrateFor(Constants.VIDEO) || abrController.getAutoSwitchBitrateFor(Constants.AUDIO);
-    }
-
-    /**
-     * Set to false to switch off adaptive bitrate switching.
-     *
-     * @deprecated since version 2.0 Instead use {@link module:MediaPlayer#setAutoSwitchQualityFor setAutoSwitchQualityFor()}.
-     * @param {boolean} value
-     * @default true
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function setAutoSwitchQuality(value) {
-        abrController.setAutoSwitchBitrateFor(Constants.VIDEO, value);
-        abrController.setAutoSwitchBitrateFor(Constants.AUDIO, value);
-    }
-
-    /**
-     * Sets whether withCredentials on all XHR requests is true or false
-     * @default false
-     * @param {boolean} value
-     * @memberof module:MediaPlayer
-     * @instance
-     * @deprecated since version 2.4 - use setXHRWithCredentialsForType
-     */
-    function setXHRWithCredentials(value) {
-        setXHRWithCredentialsForType(undefined, value);
-    }
-
     //***********************************
     // PRIVATE METHODS
     //***********************************
 
-    function resetAndInitializePlayback() {
-        if (playbackInitialized) {
-            playbackInitialized = false;
-            adapter.reset();
-            streamController.reset();
-            playbackController.reset();
-            abrController.reset();
-            mediaController.reset();
-            textController.reset();
-            if (protectionController) {
-                protectionController.reset();
-                protectionController = null;
-                detectProtection();
-            }
-            if (isReady()) {
-                initializePlayback();
-            }
-        } else if (isReady()) {
-            initializePlayback();
+    function resetPlaybackControllers() {
+        playbackInitialized = false;
+        streamingInitialized = false;
+        adapter.reset();
+        streamController.reset();
+        playbackController.reset();
+        abrController.reset();
+        mediaController.reset();
+        textController.reset();
+        if (protectionController) {
+            protectionController.reset();
+            protectionController = null;
+            detectProtection();
         }
     }
 
@@ -2460,10 +2539,6 @@ function MediaPlayer() {
 
         // creates or get objects instances
         let manifestLoader = createManifestLoader();
-
-        let sourceBufferController = SourceBufferController(context).getInstance({
-            textController: textController
-        });
 
         if (!streamController) {
             streamController = StreamController(context).getInstance();
@@ -2492,8 +2567,7 @@ function MediaPlayer() {
             domStorage: domStorage,
             abrController: abrController,
             mediaController: mediaController,
-            textController: textController,
-            sourceBufferController: sourceBufferController
+            textController: textController
         });
 
         playbackController.setConfig({
@@ -2555,13 +2629,15 @@ function MediaPlayer() {
             MediaPlayerEvents.extend(Protection.events, {
                 publicOnly: true
             });
+            if (!capabilities) {
+                capabilities = Capabilities(context).getInstance();
+            }
             protectionController = protection.createProtectionSystem({
                 log: log,
                 errHandler: errHandler,
                 videoModel: videoModel,
                 capabilities: capabilities,
                 eventBus: eventBus,
-                adapter: adapter,
                 events: Events,
                 BASE64: BASE64,
                 constants: Constants
@@ -2637,25 +2713,29 @@ function MediaPlayer() {
     }
 
     function getActiveStream() {
-        if (!playbackInitialized) {
-            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR;
         }
         let streamInfo = streamController.getActiveStreamInfo();
         return streamInfo ? streamController.getStreamById(streamInfo.id) : null;
     }
 
     function initializePlayback() {
-        if (!playbackInitialized) {
+        if (!streamingInitialized && source) {
+            streamingInitialized = true;
+            log('Streaming Initialized');
             createPlaybackControllers();
-
-            playbackInitialized = true;
-            log('Playback Initialized');
 
             if (typeof source === 'string') {
                 streamController.load(source);
             } else {
                 streamController.loadWithManifest(source);
             }
+        }
+
+        if (!playbackInitialized && isReady()) {
+            playbackInitialized = true;
+            log('Playback Initialized');
         }
     }
 
@@ -2668,6 +2748,7 @@ function MediaPlayer() {
         attachView: attachView,
         attachSource: attachSource,
         isReady: isReady,
+        preload: preload,
         play: play,
         isPaused: isPaused,
         pause: pause,
@@ -2692,7 +2773,6 @@ function MediaPlayer() {
         getVersion: getVersion,
         getDebug: getDebug,
         getBufferLength: getBufferLength,
-        getVideoModel: getVideoModel,
         getVideoContainer: getVideoContainer,
         getTTMLRenderingDiv: getTTMLRenderingDiv,
         getVideoElement: getVideoElement,
@@ -2745,15 +2825,12 @@ function MediaPlayer() {
         setTrackSwitchModeFor: setTrackSwitchModeFor,
         setSelectionModeForInitialTrack: setSelectionModeForInitialTrack,
         getSelectionModeForInitialTrack: getSelectionModeForInitialTrack,
-        getAutoSwitchQuality: getAutoSwitchQuality,
-        setAutoSwitchQuality: setAutoSwitchQuality,
         setFastSwitchEnabled: setFastSwitchEnabled,
         getFastSwitchEnabled: getFastSwitchEnabled,
         setMovingAverageMethod: setMovingAverageMethod,
         getMovingAverageMethod: getMovingAverageMethod,
         getAutoSwitchQualityFor: getAutoSwitchQualityFor,
         setAutoSwitchQualityFor: setAutoSwitchQualityFor,
-        enableBufferOccupancyABR: enableBufferOccupancyABR,
         setABRStrategy: setABRStrategy,
         getABRStrategy: getABRStrategy,
         useDefaultABRRules: useDefaultABRRules,
@@ -2770,6 +2847,7 @@ function MediaPlayer() {
         clearDefaultUTCTimingSources: clearDefaultUTCTimingSources,
         restoreDefaultUTCTimingSources: restoreDefaultUTCTimingSources,
         setBufferToKeep: setBufferToKeep,
+        setBufferAheadToKeep: setBufferAheadToKeep,
         setBufferPruningInterval: setBufferPruningInterval,
         setStableBufferTime: setStableBufferTime,
         getStableBufferTime: getStableBufferTime,
@@ -2781,11 +2859,17 @@ function MediaPlayer() {
         setFragmentLoaderRetryInterval: setFragmentLoaderRetryInterval,
         setManifestLoaderRetryAttempts: setManifestLoaderRetryAttempts,
         setManifestLoaderRetryInterval: setManifestLoaderRetryInterval,
-        setXHRWithCredentials: setXHRWithCredentials,
         setXHRWithCredentialsForType: setXHRWithCredentialsForType,
         getXHRWithCredentialsForType: getXHRWithCredentialsForType,
+        setJumpGaps: setJumpGaps,
+        getJumpGaps: getJumpGaps,
+        setSmallGapLimit: setSmallGapLimit,
+        getSmallGapLimit: getSmallGapLimit,
+        setManifestUpdateRetryInterval: setManifestUpdateRetryInterval,
+        getManifestUpdateRetryInterval: getManifestUpdateRetryInterval,
         setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,
-        setRichBufferThreshold: setRichBufferThreshold,
+        setSegmentOverlapToleranceTime: setSegmentOverlapToleranceTime,
+        setCacheLoadThresholdForType: setCacheLoadThresholdForType,
         getProtectionController: getProtectionController,
         attachProtectionController: attachProtectionController,
         setProtectionData: setProtectionData,

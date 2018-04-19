@@ -8,6 +8,10 @@ function ErrorHandlerMock () {
     this.mediaSourceError = function (error) {
         this.error = error;
     };
+
+    this.mssError = function (error) {
+        this.error = error;
+    };
 }
 
 export default ErrorHandlerMock;

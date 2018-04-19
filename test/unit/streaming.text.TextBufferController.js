@@ -1,5 +1,4 @@
 import TextBufferController from '../../src/streaming/text/TextBufferController';
-import SourceBufferControllerMock from './mocks/SourceBufferControllerMock';
 
 const chai = require('chai');
 const expect = chai.expect;
@@ -12,11 +11,9 @@ describe('TextBufferController', function () {
 
     it('should create a buffer of type "BufferController" if type is "fragmentedText"', function () {
 
-        let sourceBufferMock = new SourceBufferControllerMock('fragmentedText');
 
         textBufferController = TextBufferController(context).create({
-            type: 'fragmentedText',
-            sourceBufferController: sourceBufferMock
+            type: 'fragmentedText'
         });
 
         expect(textBufferController.getBufferControllerType()).to.equal('BufferController');

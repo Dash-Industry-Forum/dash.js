@@ -36,7 +36,6 @@ function ReceiverController($scope) {
                 pendingValue,
                 numBitratesValue,
                 bufferLengthValue = 0,
-                point,
                 lastFragmentDuration,
                 lastFragmentDownloadTime,
                 droppedFramesValue = 0;

@@ -53,7 +53,8 @@ function MssHandler(config) {
         eventBus: eventBus,
         constants: constants,
         ISOBoxer: config.ISOBoxer,
-        log: config.log
+        log: config.log,
+        errHandler: config.errHandler
     });
     let mssParser;
 
@@ -129,7 +130,7 @@ function MssHandler(config) {
                         processor.getType() === constants.AUDIO ||
                         processor.getType() === constants.FRAGMENTED_TEXT) {
 
-                        // check taht there is no fragment info controller registered to processor
+                        // check that there is no fragment info controller registered to processor
                         let i;
                         let alreadyRegistered = false;
                         let externalControllers = processor.getExternalControllers();
@@ -158,16 +159,28 @@ function MssHandler(config) {
         }
     }
 
+    function onTTMLPreProcess(ttmlSubtitles) {
+        if (!ttmlSubtitles || !ttmlSubtitles.data) {
+            return;
+        }
+
+        while (ttmlSubtitles.data.indexOf('http://www.w3.org/2006/10/ttaf1') !== -1) {
+            ttmlSubtitles.data = ttmlSubtitles.data.replace('http://www.w3.org/2006/10/ttaf1', 'http://www.w3.org/ns/ttml');
+        }
+    }
+
     function registerEvents() {
         eventBus.on(events.INIT_REQUESTED, onInitializationRequested, instance, dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH); /* jshint ignore:line */
         eventBus.on(events.PLAYBACK_SEEK_ASKED, onPlaybackSeekAsked, instance, dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH); /* jshint ignore:line */
         eventBus.on(events.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, instance, dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH); /* jshint ignore:line */
+        eventBus.on(events.TTML_TO_PARSE, onTTMLPreProcess, instance);
     }
 
     function reset() {
         eventBus.off(events.INIT_REQUESTED, onInitializationRequested, this);
         eventBus.off(events.PLAYBACK_SEEK_ASKED, onPlaybackSeekAsked, this);
         eventBus.off(events.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, this);
+        eventBus.off(events.TTML_TO_PARSE, onTTMLPreProcess, this);
     }
 
     function createMssParser() {

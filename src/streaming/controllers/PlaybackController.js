@@ -98,7 +98,7 @@ function PlaybackController() {
     }
 
     function play() {
-        if (videoModel && videoModel.getElement()) {
+        if (streamInfo && videoModel && videoModel.getElement()) {
             videoModel.play();
         } else {
             playOnceInitialized = true;
@@ -106,21 +106,21 @@ function PlaybackController() {
     }
 
     function isPaused() {
-        return videoModel ? videoModel.isPaused() : null;
+        return streamInfo && videoModel ? videoModel.isPaused() : null;
     }
 
     function pause() {
-        if (videoModel) {
+        if (streamInfo && videoModel) {
             videoModel.pause();
         }
     }
 
     function isSeeking() {
-        return videoModel ? videoModel.isSeeking() : null;
+        return streamInfo && videoModel ? videoModel.isSeeking() : null;
     }
 
     function seek(time) {
-        if (videoModel) {
+        if (streamInfo && videoModel) {
             eventBus.trigger(Events.PLAYBACK_SEEK_ASKED);
             log('Requesting seek to time: ' + time);
             videoModel.setCurrentTime(time);
@@ -128,19 +128,19 @@ function PlaybackController() {
     }
 
     function getTime() {
-        return videoModel ? videoModel.getTime() : null;
+        return streamInfo && videoModel ? videoModel.getTime() : null;
     }
 
     function getPlaybackRate() {
-        return videoModel ? videoModel.getPlaybackRate() : null;
+        return streamInfo && videoModel ? videoModel.getPlaybackRate() : null;
     }
 
     function getPlayedRanges() {
-        return videoModel ? videoModel.getPlayedRanges() : null;
+        return streamInfo && videoModel ? videoModel.getPlayedRanges() : null;
     }
 
     function getEnded() {
-        return videoModel ? videoModel.getEnded() : null;
+        return streamInfo && videoModel ? videoModel.getEnded() : null;
     }
 
     function getIsDynamic() {
@@ -212,6 +212,7 @@ function PlaybackController() {
             eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
             eventBus.off(Events.BYTES_APPENDED, onBytesAppended, this);
+            eventBus.off(Events.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, this);
             stopUpdatingWallclockTime();
             removeAllListeners();
         }
@@ -249,6 +250,21 @@ function PlaybackController() {
         }
     }
 
+    function getStartTimeFromUriParameters() {
+        const fragData = URIQueryAndFragmentModel(context).getInstance().getURIFragmentData();
+        let uriParameters;
+        if (fragData) {
+            uriParameters = {};
+            const r = parseInt(fragData.r, 10);
+            if (r >= 0 && streamInfo && r < streamInfo.manifestInfo.DVRWindowSize && fragData.t === null) {
+                fragData.t = Math.floor(Date.now() / 1000) - streamInfo.manifestInfo.DVRWindowSize + r;
+            }
+            uriParameters.fragS = parseInt(fragData.s, 10);
+            uriParameters.fragT = parseInt(fragData.t, 10);
+        }
+        return uriParameters;
+    }
+
     /**
      * @param {boolean} ignoreStartOffset - ignore URL fragment start offset if true
      * @param {number} liveEdge - liveEdge value
@@ -257,14 +273,12 @@ function PlaybackController() {
      */
     function getStreamStartTime(ignoreStartOffset, liveEdge) {
         let presentationStartTime;
-        const fragData = URIQueryAndFragmentModel(context).getInstance().getURIFragmentData();
         let startTimeOffset = NaN;
+        const uriParameters = getStartTimeFromUriParameters();
 
-        if (fragData) {
-            const fragS = parseInt(fragData.s, 10);
-            const fragT = parseInt(fragData.t, 10);
+        if (uriParameters) {
             if (!ignoreStartOffset) {
-                startTimeOffset = !isNaN(fragS) ? fragS : fragT;
+                startTimeOffset = !isNaN(uriParameters.fragS) ? uriParameters.fragS : uriParameters.fragT;
             } else {
                 startTimeOffset = streamInfo.start;
             }
@@ -289,7 +303,7 @@ function PlaybackController() {
                 presentationStartTime = startTimeOffset;
             } else {
                 let earliestTime = commonEarliestTime[streamInfo.id]; //set by ready bufferStart after first onBytesAppended
-                presentationStartTime = earliestTime !== undefined ? Math.max(earliestTime.audio, earliestTime.video, streamInfo.start) : streamInfo.start;
+                presentationStartTime = earliestTime !== undefined ? Math.max(earliestTime.audio !== undefined ? earliestTime.audio : 0, earliestTime.video !== undefined ? earliestTime.video : 0, streamInfo.start) : streamInfo.start;
             }
         }
 
@@ -305,7 +319,10 @@ function PlaybackController() {
         if (!DVRWindow) return NaN;
         if (currentTime > DVRWindow.end) {
             actualTime = Math.max(DVRWindow.end - streamInfo.manifestInfo.minBufferTime * 2, DVRWindow.start);
-        } else if (currentTime < DVRWindow.start) {
+        } else if (currentTime + 0.250 < DVRWindow.start) {
+            // Checking currentTime plus 250ms as the 'timeupdate' is fired with a frequency between 4Hz and 66Hz
+            // https://developer.mozilla.org/en-US/docs/Web/Events/timeupdate
+            // http://w3c.github.io/html/single-page.html#offsets-into-the-media-resource
             actualTime = DVRWindow.start;
         } else {
             return currentTime;
@@ -361,6 +378,13 @@ function PlaybackController() {
         startUpdatingWallclockTime();
         eventBus.trigger(Events.PLAYBACK_STARTED, {
             startTime: getTime()
+        });
+    }
+
+    function onPlaybackWaiting() {
+        log('Native video element event: waiting');
+        eventBus.trigger(Events.PLAYBACK_WAITING, {
+            playingTime: getTime()
         });
     }
 
@@ -540,6 +564,7 @@ function PlaybackController() {
     function addAllListeners() {
         videoModel.addEventListener('canplay', onCanPlay);
         videoModel.addEventListener('play', onPlaybackStart);
+        videoModel.addEventListener('waiting', onPlaybackWaiting);
         videoModel.addEventListener('playing', onPlaybackPlaying);
         videoModel.addEventListener('pause', onPlaybackPaused);
         videoModel.addEventListener('error', onPlaybackError);
@@ -555,6 +580,7 @@ function PlaybackController() {
     function removeAllListeners() {
         videoModel.removeEventListener('canplay', onCanPlay);
         videoModel.removeEventListener('play', onPlaybackStart);
+        videoModel.removeEventListener('waiting', onPlaybackWaiting);
         videoModel.removeEventListener('playing', onPlaybackPlaying);
         videoModel.removeEventListener('pause', onPlaybackPaused);
         videoModel.removeEventListener('error', onPlaybackError);
@@ -570,6 +596,7 @@ function PlaybackController() {
     instance = {
         initialize: initialize,
         setConfig: setConfig,
+        getStartTimeFromUriParameters: getStartTimeFromUriParameters,
         getStreamStartTime: getStreamStartTime,
         getTimeToStreamEnd: getTimeToStreamEnd,
         getTime: getTime,

@@ -47,13 +47,20 @@ const DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION = 360000;
 const BANDWIDTH_SAFETY_FACTOR = 0.9;
 const ABANDON_LOAD_TIMEOUT = 10000;
 
-const BUFFER_TO_KEEP = 30;
-const BUFFER_PRUNING_INTERVAL = 30;
+const BUFFER_TO_KEEP = 20;
+const BUFFER_AHEAD_TO_KEEP = 80;
+const BUFFER_PRUNING_INTERVAL = 10;
 const DEFAULT_MIN_BUFFER_TIME = 12;
 const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
 const BUFFER_TIME_AT_TOP_QUALITY = 30;
 const BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 60;
 const LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;
+const SEGMENT_OVERLAP_TOLERANCE_TIME = 0.05;
+const SMALL_GAP_LIMIT = 0.8;
+const MANIFEST_UPDATE_RETRY_INTERVAL = 100;
+
+const CACHE_LOAD_THRESHOLD_VIDEO = 50;
+const CACHE_LOAD_THRESHOLD_AUDIO = 5;
 
 const FRAGMENT_RETRY_ATTEMPTS = 3;
 const FRAGMENT_RETRY_INTERVAL = 1000;
@@ -79,6 +86,7 @@ function MediaPlayerModel() {
         liveDelay,
         scheduleWhilePaused,
         bufferToKeep,
+        bufferAheadToKeep,
         bufferPruningInterval,
         lastBitrateCachingInfo,
         lastMediaSettingsCachingInfo,
@@ -86,6 +94,7 @@ function MediaPlayerModel() {
         bufferTimeAtTopQuality,
         bufferTimeAtTopQualityLongForm,
         longFormContentDurationThreshold,
+        segmentOverlapToleranceTime,
         bandwidthSafetyFactor,
         abandonLoadTimeout,
         retryAttempts,
@@ -96,7 +105,11 @@ function MediaPlayerModel() {
         xhrWithCredentials,
         fastSwitchEnabled,
         customABRRule,
-        movingAverageMethod;
+        movingAverageMethod,
+        cacheLoadThresholds,
+        jumpGaps,
+        smallGapLimit,
+        manifestUpdateRetryInterval;
 
     function setup() {
         UTCTimingSources = [];
@@ -117,14 +130,19 @@ function MediaPlayerModel() {
         liveDelayFragmentCount = LIVE_DELAY_FRAGMENT_COUNT;
         liveDelay = undefined; // Explicitly state that default is undefined
         bufferToKeep = BUFFER_TO_KEEP;
+        bufferAheadToKeep = BUFFER_AHEAD_TO_KEEP;
         bufferPruningInterval = BUFFER_PRUNING_INTERVAL;
         stableBufferTime = NaN;
         bufferTimeAtTopQuality = BUFFER_TIME_AT_TOP_QUALITY;
         bufferTimeAtTopQualityLongForm = BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM;
         longFormContentDurationThreshold = LONG_FORM_CONTENT_DURATION_THRESHOLD;
+        segmentOverlapToleranceTime = SEGMENT_OVERLAP_TOLERANCE_TIME;
         bandwidthSafetyFactor = BANDWIDTH_SAFETY_FACTOR;
         abandonLoadTimeout = ABANDON_LOAD_TIMEOUT;
         wallclockTimeUpdateInterval = WALLCLOCK_TIME_UPDATE_INTERVAL;
+        jumpGaps = false;
+        smallGapLimit = SMALL_GAP_LIMIT;
+        manifestUpdateRetryInterval = MANIFEST_UPDATE_RETRY_INTERVAL;
         xhrWithCredentials = {
             default: DEFAULT_XHR_WITH_CREDENTIALS
         };
@@ -150,6 +168,10 @@ function MediaPlayerModel() {
             [HTTPRequest.INDEX_SEGMENT_TYPE]:               FRAGMENT_RETRY_INTERVAL,
             [HTTPRequest.OTHER_TYPE]:                       FRAGMENT_RETRY_INTERVAL
         };
+
+        cacheLoadThresholds = {};
+        cacheLoadThresholds[Constants.VIDEO] = CACHE_LOAD_THRESHOLD_VIDEO;
+        cacheLoadThresholds[Constants.AUDIO] = CACHE_LOAD_THRESHOLD_AUDIO;
     }
 
     //TODO Should we use Object.define to have setters/getters? makes more readable code on other side.
@@ -261,12 +283,36 @@ function MediaPlayerModel() {
         return longFormContentDurationThreshold;
     }
 
+    function setSegmentOverlapToleranceTime(value) {
+        segmentOverlapToleranceTime = value;
+    }
+
+    function getSegmentOverlapToleranceTime() {
+        return segmentOverlapToleranceTime;
+    }
+
+    function setCacheLoadThresholdForType(type, value) {
+        cacheLoadThresholds[type] = value;
+    }
+
+    function getCacheLoadThresholdForType(type) {
+        return cacheLoadThresholds[type];
+    }
+
     function setBufferToKeep(value) {
         bufferToKeep = value;
     }
 
     function getBufferToKeep() {
         return bufferToKeep;
+    }
+
+    function setBufferAheadToKeep(value) {
+        bufferAheadToKeep = value;
+    }
+
+    function getBufferAheadToKeep() {
+        return bufferAheadToKeep;
     }
 
     function setLastBitrateCachingInfo(enable, ttl) {
@@ -423,7 +469,6 @@ function MediaPlayerModel() {
         return useCreds;
     }
 
-
     function getFastSwitchEnabled() {
         return fastSwitchEnabled;
     }
@@ -440,6 +485,29 @@ function MediaPlayerModel() {
         return movingAverageMethod;
     }
 
+    function setJumpGaps(value) {
+        jumpGaps = value;
+    }
+
+    function getJumpGaps() {
+        return jumpGaps;
+    }
+
+    function setSmallGapLimit(value) {
+        smallGapLimit = value;
+    }
+
+    function getSmallGapLimit() {
+        return smallGapLimit;
+    }
+
+    function setManifestUpdateRetryInterval(value) {
+        manifestUpdateRetryInterval = value;
+    }
+
+    function getManifestUpdateRetryInterval() {
+        return manifestUpdateRetryInterval;
+    }
     function reset() {
         //TODO need to figure out what props to persist across sessions and which to reset if any.
         //setup();
@@ -470,8 +538,14 @@ function MediaPlayerModel() {
         getBufferTimeAtTopQualityLongForm: getBufferTimeAtTopQualityLongForm,
         setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,
         getLongFormContentDurationThreshold: getLongFormContentDurationThreshold,
+        setSegmentOverlapToleranceTime: setSegmentOverlapToleranceTime,
+        getSegmentOverlapToleranceTime: getSegmentOverlapToleranceTime,
+        getCacheLoadThresholdForType: getCacheLoadThresholdForType,
+        setCacheLoadThresholdForType: setCacheLoadThresholdForType,
         setBufferToKeep: setBufferToKeep,
         getBufferToKeep: getBufferToKeep,
+        setBufferAheadToKeep: setBufferAheadToKeep,
+        getBufferAheadToKeep: getBufferAheadToKeep,
         setBufferPruningInterval: setBufferPruningInterval,
         getBufferPruningInterval: getBufferPruningInterval,
         setFragmentRetryAttempts: setFragmentRetryAttempts,
@@ -506,6 +580,12 @@ function MediaPlayerModel() {
         getFastSwitchEnabled: getFastSwitchEnabled,
         setMovingAverageMethod: setMovingAverageMethod,
         getMovingAverageMethod: getMovingAverageMethod,
+        setJumpGaps: setJumpGaps,
+        getJumpGaps: getJumpGaps,
+        setSmallGapLimit: setSmallGapLimit,
+        getSmallGapLimit: getSmallGapLimit,
+        setManifestUpdateRetryInterval: setManifestUpdateRetryInterval,
+        getManifestUpdateRetryInterval: getManifestUpdateRetryInterval,
         reset: reset
     };
 

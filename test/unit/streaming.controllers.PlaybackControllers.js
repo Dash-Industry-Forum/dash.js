@@ -46,6 +46,12 @@ describe('PlaybackController', function () {
 
             expect(playbackController.getIsDynamic()).to.not.exist; // jshint ignore:line
             expect(playbackController.getLiveStartTime()).to.be.NaN; // jshint ignore:line
+            expect(playbackController.isPaused()).to.be.null; // jshint ignore:line
+            expect(playbackController.isSeeking()).to.be.null; // jshint ignore:line
+            expect(playbackController.getTime()).to.be.null; // jshint ignore:line
+            expect(playbackController.getPlaybackRate()).to.be.null; // jshint ignore:line
+            expect(playbackController.getPlayedRanges()).to.be.null; // jshint ignore:line
+            expect(playbackController.getEnded()).to.be.null; // jshint ignore:line
 
             let streamInfo = {
                 manifestInfo: {

@@ -142,15 +142,11 @@ function MssFragmentProcessor(config) {
     }
 
     function processFragment(e, sp) {
-        if (!e) {
-            return;
+        if (!e || !e.request || !e.response) {
+            throw new Error('e parameter is missing or malformed');
         }
 
         let request = e.request;
-
-        if (!request) {
-            return;
-        }
 
         if (request.type === 'MediaSegment') {
 
@@ -159,7 +155,8 @@ function MssFragmentProcessor(config) {
                 metricsModel: metricsModel,
                 playbackController: playbackController,
                 ISOBoxer: ISOBoxer,
-                log: log
+                log: log,
+                errHandler: config.errHandler
             });
             mssFragmentMoofProcessor.convertFragment(e, sp);
 

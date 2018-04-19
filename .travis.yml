@@ -6,6 +6,10 @@ addons:
     username: epiclabsdash1
     access_key:
       secure: v5IPr/NWJT6QEA1lyMn08dsiTEXqL0zb/lB9b7FcpGB08+5fC4KbyBv/xIWQy/j9RMX19tqDgPjGl8lRGYOApcoeIbNE6/5XzdHxFD1zwDDBeyuoXyRRKVrtFoDfYAcmfVJFAP8bcLZXu6mhjO1EYaD0//s4URmb6VlPGTiP5w0=
+sudo: false
+cache:
+  directories:
+    - node_modules
 stages:
   - name: build
     # Run build stage except if cron job

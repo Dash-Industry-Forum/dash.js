@@ -30,12 +30,15 @@
  */
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
+import EventBus from '../../core/EventBus';
+import Events from '../../core/events/Events';
 import { fromXML, generateISD } from 'imsc';
 
 function TTMLParser() {
 
     let context = this.context;
     let log = Debug(context).getInstance().log;
+    let eventBus = EventBus(context).getInstance();
 
     /*
      * This TTML parser follows "EBU-TT-D SUBTITLING DISTRIBUTION FORMAT - tech3380" spec - https://tech.ebu.ch/docs/tech/tech3380.pdf.
@@ -68,6 +71,8 @@ function TTMLParser() {
         let captionArray = [];
         let startTime,
             endTime;
+
+        let content = {};
 
         let embeddedImages = {};
         let currentImageId = '';
@@ -104,10 +109,16 @@ function TTMLParser() {
             throw new Error(errorMsg);
         }
 
-        let imsc1doc = fromXML(data, function (msg) {
+        content.data = data;
+
+        eventBus.trigger(Events.TTML_TO_PARSE, content);
+
+        let imsc1doc = fromXML(content.data, function (msg) {
             errorMsg = msg;
         },
             metadataHandler);
+        eventBus.trigger(Events.TTML_PARSED, {ttmlString: content.data, ttmlDoc: imsc1doc});
+
         let mediaTimeEvents = imsc1doc.getMediaTimeEvents();
 
         for (i = 0; i < mediaTimeEvents.length; i++) {

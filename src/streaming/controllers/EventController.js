@@ -32,6 +32,7 @@
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import EventBus from '../../core/EventBus';
+import Events from '../../core/events/Events';
 
 function EventController() {
 
@@ -120,11 +121,34 @@ function EventController() {
         for (var i = 0; i < values.length; i++) {
             var event = values[i];
             if (!(event.id in inbandEvents)) {
+                if (event.eventStream.schemeIdUri === MPD_RELOAD_SCHEME && inbandEvents[event.id] === undefined) {
+                    handleManifestReloadEvent(event);
+                }
                 inbandEvents[event.id] = event;
                 log('Add inband event with id ' + event.id);
             } else {
                 log('Repeated event with id ' + event.id);
             }
+        }
+    }
+
+    function handleManifestReloadEvent(event) {
+        if (event.eventStream.value == MPD_RELOAD_VALUE) {
+            const timescale = event.eventStream.timescale || 1;
+            const validUntil = event.presentationTime / timescale;
+            let newDuration;
+            if (event.presentationTime == 0xFFFFFFFF) {//0xFF... means remaining duration unknown
+                newDuration = NaN;
+            } else {
+                newDuration = (event.presentationTime + event.duration) / timescale;
+            }
+            log('Manifest validity changed: Valid until: ' + validUntil + '; remaining duration: ' + newDuration);
+            eventBus.trigger(Events.MANIFEST_VALIDITY_CHANGED, {
+                id: event.id,
+                validUntil: validUntil,
+                newDuration: newDuration,
+                newManifestValidAfter: NaN //event.message_data - this is an arraybuffer with a timestring in it, but not used yet
+            });
         }
     }
 
@@ -181,7 +205,9 @@ function EventController() {
                             activeEvents[eventId] = curr;
                         }
                         if (curr.eventStream.schemeIdUri == MPD_RELOAD_SCHEME && curr.eventStream.value == MPD_RELOAD_VALUE) {
-                            refreshManifest();
+                            if (curr.duration !== 0 || curr.presentationTimeDelta !== 0) { //If both are set to zero, it indicates the media is over at this point. Don't reload the manifest.
+                                refreshManifest();
+                            }
                         } else {
                             eventBus.trigger(curr.eventStream.schemeIdUri, {event: curr});
                         }

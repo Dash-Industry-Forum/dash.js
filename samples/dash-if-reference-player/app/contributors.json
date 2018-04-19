@@ -43,6 +43,11 @@
       "name": "Edgeware",
       "logo": "app/img/edgeware.png",
       "link": "http://www.edgeware.tv/"
+    },
+    {
+      "name": "Epic Labs",
+      "logo": "app/img/epiclabs.png",
+      "link": "https://www.epiclabs.io/"
     }
   ]
 }

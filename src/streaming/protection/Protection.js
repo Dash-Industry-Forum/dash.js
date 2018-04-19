@@ -126,12 +126,11 @@ function Protection() {
             controller = ProtectionController(context).create({
                 protectionModel: protectionModel,
                 protectionKeyController: protectionKeyController,
-                adapter: config.adapter,
                 eventBus: config.eventBus,
                 log: config.log,
                 events: config.events,
                 BASE64: config.BASE64,
-                Constants: config.Constants
+                constants: config.constants
             });
             config.capabilities.setEncryptedMediaSupported(true);
         }
@@ -143,13 +142,10 @@ function Protection() {
         let log = config.log;
         let eventBus = config.eventBus;
         let errHandler = config.errHandler;
-        let videoElement = config.videoModel.getElement();
+        let videoElement = config.videoModel ? config.videoModel.getElement() : null;
 
-        if (videoElement.onencrypted !== undefined &&
-            videoElement.mediaKeys !== undefined &&
-            navigator.requestMediaKeySystemAccess !== undefined &&
-            typeof navigator.requestMediaKeySystemAccess === 'function') {
-
+        if ((!videoElement || videoElement.onencrypted !== undefined) &&
+            (!videoElement || videoElement.mediaKeys !== undefined)) {
             log('EME detected on this user agent! (ProtectionModel_21Jan2015)');
             return ProtectionModel_21Jan2015(context).create({log: log, eventBus: eventBus, events: config.events});
 

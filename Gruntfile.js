@@ -366,7 +366,7 @@ module.exports = function (grunt) {
                     hideCredentials: true,
                     // disabling incrementalUpdates because this option is not working fine
                     incrementalUpdates: false,
-                    debug: false,
+                    debug: true,
                     port: 21
                 },
                 files: [
@@ -380,7 +380,7 @@ module.exports = function (grunt) {
                             'test/functional/testsCommon.js',
                             'test/functional/config/**',
                             'test/functional/tests/**',
-                            'samples/dash-if-reference-player/**'
+                            'samples/**'
                         ]
                     }
                 ]

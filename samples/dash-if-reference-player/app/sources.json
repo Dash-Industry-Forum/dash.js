@@ -114,6 +114,11 @@
         {
           "url": "http://24x7dash-i.akamaihd.net/dash/live/900080/dash-demo/dash.mpd",
           "name": "Akamai 24x7 reference stream - segmentTemplate"
+        },
+        {
+          "url": "https://akamai-axtest.akamaized.net/routes/lapd-v1-acceptance/www_c4/Manifest.mpd",
+          "name": "Axinom reference stream (Live-Clear)",
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors#live-clear"
         }
       ]
     },
@@ -154,6 +159,10 @@
           "moreInfo": "http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/"
         },
         {
+            "url": "https://dash.akamaized.net/dash264/CTA/imsc1/IT1-20171027_dash.mpd",
+            "name": "IMSC1 Text Subtitles via sidecar file"
+        },
+        {
           "url": "https://vm2.dashif.org/dash/vod/testpic_2s/imsc1_img.mpd",
           "name": "IMSC1 (CMAF) Image Subtitles",
           "moreInfo": "https://vm2.dashif.org/dash/vod/testpic_2s/imsc1_img_subs_info.html"
@@ -183,6 +192,10 @@
         {
           "name": "Two adaption sets with different thumb resolutions",
           "url": "http://dash.edgesuite.net/akamai/bbb_30fps/bbb_with_multiple_tiled_thumbnails.mpd"
+        },
+        {
+          "name": "Live stream, Single adaptation set, 1x1 tiles",
+          "url": "http://vm2.dashif.org/livesim-dev/testpic_2s/Manifest_thumbs.mpd"
         }
       ]
     },
@@ -212,6 +225,19 @@
     {
       "name": "Axinom Test Content (modern)",
       "submenu": [
+        {
+          "name": "1080p with Widevine DRM, license expired after 60s",
+          "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_1080p.mpd",
+          "protData": {
+            "com.widevine.alpha": {
+              "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
+              "httpRequestHeaders": {
+                "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImZpcnN0X3BsYXlfZXhwaXJhdGlvbiI6NjAsInBsYXlyZWFkeSI6eyJyZWFsX3RpbWVfZXhwaXJhdGlvbiI6dHJ1ZX0sImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.FAbIiPxX8BHi9RwfzD7Yn-wugU19ghrkBFKsaCPrZmU"
+              }
+            }
+          },
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors"
+        },
         {
           "name": "1080p with PlayReady and Widevine DRM, single key",
           "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_1080p.mpd",
@@ -265,6 +291,17 @@
         {
           "name": "1080p with W3C Clear Key, multiple keys",
           "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey/Manifest_1080p_ClearKey.mpd",
+          "protData": {
+            "org.w3.clearkey": {
+              "clearkeys": {
+                "gDmb9YohQBSAU-J-dI6YwA": "3aHppzZ2g3Y3wK1uNnUXmg",
+                "kJU-CWyySaOiYHpf7-rUmQ": "zsmKW7Mq9Unz5R7oUGeF8w",
+                "Dk2pK9DoSmaMP8Jal-tlMg": "UmYYfGb7znuoFAQM79ayHw",
+                "WF8jPzByRvGfpG3CLGagFA": "jayKpC3tmPq4YKXkapa8FA",
+                "QiK9eLxFQb-2Pm-BTcOR3w": "GAMi9v92b9ca5yBwaptN-Q"
+              }
+            }
+          },
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
@@ -871,6 +908,16 @@
         {
           "name": "Unified Streaming Live",
           "url": "http://live.unified-streaming.com/loop/loop.isml/loop.mpd?format=mp4&session_id=25020"
+        },
+        {
+          "name": "Unified Streaming (Widevine, persistent)",
+          "url": "http://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-dash-widevine.ism/.mpd",
+          "protData": {
+              "com.widevine.alpha": {
+                  "serverURL": "https://cwip-shaka-proxy.appspot.com/no_auth",
+                  "sessionType": "persistent-license"
+              }
+          }
         }
       ]
     },
