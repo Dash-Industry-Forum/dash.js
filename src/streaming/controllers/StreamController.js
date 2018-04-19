@@ -296,6 +296,7 @@ function StreamController() {
             isStreamBufferingCompleted = true;
             if (isPaused === false) {
                 toggleEndPeriodTimer();
+                preloadNextPeriod();
             }
         }
     }
@@ -415,6 +416,17 @@ function StreamController() {
 
     function preloadStream(seekTime) {
         activateStream(seekTime);
+    }
+
+    function preloadNextPeriod() {
+        log('[StreamController][onStreamBufferingCompleted] preloadNextPeriod');
+        const nextStream = getNextStream();
+        if (nextStream) {
+            let compatible = activeStream.isCompatibleWithStream(nextStream);
+            if (compatible) {
+                log('[StreamController][preloadNextPeriod] next stream is compatible');
+            }
+        }
     }
 
     function switchToVideoElement(seekTime) {
