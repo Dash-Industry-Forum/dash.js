@@ -419,12 +419,14 @@ function BufferController(config) {
                 ret = Math.max(ranges.start(0), seekStartTime);
             }
         }
+
         return ret;
     }
 
     function onPlaybackProgression() {
         if (!bufferResetInProgress) {
             updateBufferLevel();
+            checkIfSufficientBuffer();
             addBufferMetrics();
         }
     }
@@ -494,11 +496,8 @@ function BufferController(config) {
     }
 
     function updateBufferLevel() {
-        if (playbackController) {
-            bufferLevel = getBufferLength(getWorkingTime() || 0);
-            eventBus.trigger(Events.BUFFER_LEVEL_UPDATED, { sender: instance, bufferLevel: bufferLevel });
-            checkIfSufficientBuffer();
-        }
+        bufferLevel = getBufferLength(getWorkingTime() || 0);
+        eventBus.trigger(Events.BUFFER_LEVEL_UPDATED, { sender: instance, bufferLevel: bufferLevel });
     }
 
     function addBufferMetrics() {
@@ -684,6 +683,7 @@ function BufferController(config) {
             if (!bufferResetInProgress) {
                 log('onRemoved : call updateBufferLevel');
                 updateBufferLevel();
+                checkIfSufficientBuffer();
             } else {
                 bufferResetInProgress = false;
                 if (mediaChunk) {
