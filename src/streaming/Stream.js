@@ -635,6 +635,39 @@ function Stream(config) {
         checkIfInitializationCompleted();
     }
 
+    function isCompatibleWithStream(stream) {
+        return compareCodecs(stream, Constants.VIDEO) && compareCodecs(stream, Constants.AUDIO);
+    }
+
+    function compareCodecs( stream, type ) {
+        const newStreamInfo = stream.getStreamInfo();
+        const currentStreamInfo = getStreamInfo();
+        const newAdaptation = dashManifestModel.getAdaptationForType(manifestModel.getValue(), newStreamInfo.index, type, newStreamInfo);
+        const currentAdaptation = dashManifestModel.getAdaptationForType(manifestModel.getValue(), currentStreamInfo.index, type, currentStreamInfo);
+        const sameMimeType = newAdaptation.mimeType === currentAdaptation.mimeType;
+
+        const oldCodecs = currentAdaptation.Representation_asArray.map((representation) => {
+           return representation.codecs;
+        });
+
+        const newCodecs = newAdaptation.Representation_asArray.map((representation) => {
+            return representation.codecs;
+        });
+
+        const codecMatch = newCodecs.some((newCodec) => {
+            return oldCodecs.indexOf(newCodec) > -1;
+        });
+
+        const partialCodecMatch = codecMatch || newCodecs.some((newCodec) => {
+            return oldCodecs.some((oldCodec) => {
+                const codecRoot = oldCodec.split('.')[0]
+                return newCodec.indexOf(codecRoot) === 0;
+            });
+        });
+
+        return codecMatch || (partialCodecMatch && sameMimeType);
+    }
+
     instance = {
         initialize: initialize,
         activate: activate,
@@ -652,7 +685,8 @@ function Stream(config) {
         updateData: updateData,
         reset: reset,
         getProcessors: getProcessors,
-        setMediaSource: setMediaSource
+        setMediaSource: setMediaSource,
+        isCompatibleWithStream: isCompatibleWithStream
     };
 
     setup();
