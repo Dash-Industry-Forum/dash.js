@@ -405,8 +405,12 @@ function BufferController(config) {
     }
 
     function getWorkingTime() {
-        // This function returns current working time for buffer (either start time or current time if playback has started)
-        let ret = playbackController.getTime();
+        let ret = NaN;
+
+        if (playbackController) {
+            // This function returns current working time for buffer (either start time or current time if playback has started)
+            ret = playbackController.getTime();
+        }
 
         if (seekStartTime) {
             // if there is a seek start time, the first buffer data will be available on maximum value between first buffer range value and seek start time.
