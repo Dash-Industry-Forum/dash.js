@@ -402,7 +402,7 @@ function TextTracks() {
             return;
         }
 
-        for (let item in captionData) {
+        for (let item = 0; item < captionData.length; item++) {
             let cue;
             const currentItem = captionData[item];
 
