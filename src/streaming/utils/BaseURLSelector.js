@@ -114,7 +114,7 @@ function BaseURLSelector() {
                     )
                 }
             );
-
+            reset();
             return;
         }
 
