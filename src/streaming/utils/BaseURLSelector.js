@@ -114,7 +114,9 @@ function BaseURLSelector() {
                     )
                 }
             );
-            reset();
+            if (selector === basicSelector) {
+                reset();
+            }
             return;
         }
 
