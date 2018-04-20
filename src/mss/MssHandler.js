@@ -113,6 +113,9 @@ function MssHandler(config) {
     }
 
     function onSegmentMediaLoaded(e) {
+        if (e.error) {
+            return;
+        }
         // Process moof to transcode it from MSS to DASH
         let streamProcessor = e.sender.getStreamProcessor();
         mssFragmentProcessor.processFragment(e, streamProcessor);
