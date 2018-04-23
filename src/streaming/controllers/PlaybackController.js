@@ -62,17 +62,19 @@ function PlaybackController() {
         isDynamic,
         mediaPlayerModel,
         playOnceInitialized,
+        compatibleWithPreviousStream,
         lastLivePlaybackTime;
 
     function setup() {
         reset();
     }
 
-    function initialize(StreamInfo) {
+    function initialize(StreamInfo, compatible) {
         streamInfo = StreamInfo;
         addAllListeners();
         isDynamic = streamInfo.manifestInfo.isDynamic;
         liveStartTime = streamInfo.start;
+        compatibleWithPreviousStream = compatible;
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         eventBus.on(Events.BYTES_APPENDED, onBytesAppended, this);
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
@@ -119,11 +121,11 @@ function PlaybackController() {
         return streamInfo && videoModel ? videoModel.isSeeking() : null;
     }
 
-    function seek(time) {
+    function seek(time, stickToBuffered) {
         if (streamInfo && videoModel) {
             eventBus.trigger(Events.PLAYBACK_SEEK_ASKED);
             log('Requesting seek to time: ' + time);
-            videoModel.setCurrentTime(time);
+            videoModel.setCurrentTime(time, stickToBuffered);
         }
     }
 
@@ -538,7 +540,13 @@ function PlaybackController() {
                 }
                 if (checkTimeInRanges(earliestTime, ranges)) {
                     if (!isSeeking()) {
-                        seek(earliestTime);
+                        if (compatibleWithPreviousStream) {
+                            eventBus.trigger(Events.PLAYBACK_SEEK_ASKED);
+                            onPlaybackSeeking();
+                            onPlaybackSeeked();
+                        } else {
+                            seek(earliestTime, true);
+                        }
                     }
                     commonEarliestTime[streamInfo.id].started = true;
                 }

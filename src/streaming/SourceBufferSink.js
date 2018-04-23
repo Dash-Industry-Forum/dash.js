@@ -38,7 +38,7 @@ import TextController from './text/TextController';
  * @class SourceBufferSink
  * @implements FragmentSink
  */
-function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback) {
+function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer) {
     const context = this.context;
     const log = Debug(context).getInstance().log;
     const eventBus = EventBus(context).getInstance();
@@ -61,8 +61,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback) {
             if (codec.match(/application\/mp4;\s*codecs="(stpp|wvtt).*"/i)) {
                 throw new Error('not really supported');
             }
-
-            buffer = mediaSource.addSourceBuffer(codec);
+            buffer = oldBuffer ? oldBuffer : mediaSource.addSourceBuffer(codec);
         } catch (ex) {
             // Note that in the following, the quotes are open to allow for extra text after stpp and wvtt
             if ((mediaInfo.isText) || (codec.indexOf('codecs="stpp') !== -1) || (codec.indexOf('codecs="wvtt') !== -1)) {
@@ -93,7 +92,12 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback) {
     }
 
     function getAllBufferRanges() {
-        return buffer.buffered;
+        try {
+            return buffer.buffered;
+        } catch (e) {
+            log('getAllBufferRanges exception: ' + e.message);
+            return [];
+        }
     }
 
     function append(chunk) {

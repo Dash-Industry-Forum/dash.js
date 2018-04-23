@@ -121,12 +121,15 @@ function BufferController(config) {
         eventBus.on(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
     }
 
-    function createBuffer(mediaInfo) {
+    function createBuffer(mediaInfo, oldBuffers) {
         if (!initCache || !mediaInfo || !streamProcessor) return null;
-
         if (mediaSource) {
             try {
-                buffer = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppended.bind(this));
+                if (oldBuffers && oldBuffers[type]) {
+                    buffer = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppended.bind(this), oldBuffers[type].getBuffer());
+                } else {
+                    buffer = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppended.bind(this));
+                }
                 if (typeof buffer.getBuffer().initialize === 'function') {
                     buffer.getBuffer().initialize(type, streamProcessor);
                 }
@@ -138,6 +141,7 @@ function BufferController(config) {
             buffer = PreBufferSink(context).create(onAppended.bind(this));
         }
         updateBufferTimestampOffset(streamProcessor.getRepresentationInfoForQuality(requiredQuality).MSETimeOffset);
+        return buffer;
     }
 
     function dischargePreBuffer() {
@@ -174,7 +178,7 @@ function BufferController(config) {
     }
 
     function isActive() {
-        return streamProcessor && streamController ? streamProcessor.getStreamInfo().id === streamController.getActiveStreamInfo().id : false;
+        return streamProcessor && streamController && streamProcessor.getStreamInfo() ? streamProcessor.getStreamInfo().id === streamController.getActiveStreamInfo().id : false;
     }
 
     function onInitFragmentLoaded(e) {
@@ -753,6 +757,10 @@ function BufferController(config) {
         return buffer;
     }
 
+    function setBuffer(newBuffer) {
+        buffer = newBuffer;
+    }
+
     function getBufferLevel() {
         return bufferLevel;
     }
@@ -799,7 +807,7 @@ function BufferController(config) {
         return (totalBufferedTime < criticalBufferLevel);
     }
 
-    function resetInitialSettings(errored) {
+    function resetInitialSettings(errored, keepBuffers) {
         criticalBufferLevel = Number.POSITIVE_INFINITY;
         bufferState = BUFFER_EMPTY;
         requiredQuality = AbrController.QUALITY_DEFAULT;
@@ -813,18 +821,18 @@ function BufferController(config) {
         wallclockTicked = 0;
         pendingPruningRanges = [];
 
-        if (buffer) {
+        if (buffer && !keepBuffers) {
             if (!errored) {
                 buffer.abort();
             }
             buffer.reset();
             buffer = null;
         }
-
         bufferResetInProgress = false;
+
     }
 
-    function reset(errored) {
+    function reset(errored, keepBuffers) {
         eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         eventBus.off(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, this);
         eventBus.off(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
@@ -838,7 +846,7 @@ function BufferController(config) {
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
         eventBus.off(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
 
-        resetInitialSettings(errored);
+        resetInitialSettings(errored, keepBuffers);
     }
 
     instance = {
@@ -850,6 +858,7 @@ function BufferController(config) {
         getStreamProcessor: getStreamProcessor,
         setSeekStartTime: setSeekStartTime,
         getBuffer: getBuffer,
+        setBuffer: setBuffer,
         getBufferLevel: getBufferLevel,
         getRangeAt: getRangeAt,
         setMediaSource: setMediaSource,

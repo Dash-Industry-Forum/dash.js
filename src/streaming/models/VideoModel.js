@@ -73,7 +73,7 @@ function VideoModel() {
     }
 
     //TODO Move the DVR window calculations from MediaPlayer to Here.
-    function setCurrentTime(currentTime) {
+    function setCurrentTime(currentTime, stickToBuffered) {
         if (element) {
             //_currentTime = currentTime;
 
@@ -87,6 +87,7 @@ function VideoModel() {
             // set currentTime even if readyState = 0.
             // setTimeout is used to workaround InvalidStateError in IE11
             try {
+                currentTime = stickToBuffered ? stickTimeToBuffered(currentTime) : currentTime;
                 element.currentTime = currentTime;
             } catch (e) {
                 if (element.readyState === 0 && e.code === e.INVALID_STATE_ERR) {
@@ -96,6 +97,35 @@ function VideoModel() {
                 }
             }
         }
+    }
+
+    function stickTimeToBuffered(time) {
+        const buffered = getBufferRange();
+        let closestTime = time;
+        let closestDistance = 9999999999;
+        if (buffered) {
+            for (let i = 0; i < buffered.length; i++) {
+                const start = buffered.start(i);
+                const end = buffered.end(i);
+                const distanceToStart = Math.abs(start - time);
+                const distanceToEnd = Math.abs(end - time);
+
+                if (time >= start && time <= end) {
+                    return time;
+                }
+
+                if (distanceToStart < closestDistance) {
+                    closestDistance = distanceToStart;
+                    closestTime = start;
+                }
+
+                if (distanceToEnd < closestDistance) {
+                    closestDistance = distanceToEnd;
+                    closestTime = end;
+                }
+            }
+        }
+        return closestTime;
     }
 
     function getElement() {
