@@ -627,17 +627,17 @@ declare namespace dashjs {
          * type with the corresponding property value being the URL to use for
          * messages of that type
          */
-        serverURL: string | { [P in MediaKeyMessageType]: string };
+        serverURL?: string | { [P in MediaKeyMessageType]: string };
 
         /** headers to add to the http request */
-        httpRequestHeaders: object;
+        httpRequestHeaders?: object;
 
         /**
          * Defines a set of clear keys that are available to the key system.
          * Object properties are base64-encoded keyIDs (with no padding).
          * Corresponding property values are keys, base64-encoded (no padding).
          */
-        clearkeys: { [key: string]: string };
+        clearkeys?: { [key: string]: string };
     }
 
     export class MetricsList {
