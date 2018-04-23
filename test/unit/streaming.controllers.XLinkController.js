@@ -4,8 +4,6 @@ import XlinkController from '../../src/streaming/controllers/XlinkController';
 import Events from '../../src/core/events/Events';
 import EventBus from '../../src/core/EventBus';
 
-import ErrorHandlerMock from './mocks/ErrorHandlerMock';
-
 const fs = require('fs');
 const jsdom = require('jsdom').JSDOM;
 const chai = require('chai');
@@ -16,15 +14,11 @@ const eventBus = EventBus(context).getInstance();
 
 describe('XlinkController', function () {
     let xLinkController;
-    let errorHandlerMock = new ErrorHandlerMock();
-
 
     function parseManifest(url, xml, xlinkController) {
         let urlUtils = URLUtils(context).getInstance();
         let baseUri = urlUtils.parseBaseUrl(url);
-        let parser = DashParser(context).create({
-            errorHandler: errorHandlerMock
-        });
+        let parser = DashParser(context).create();
         const manifest = parser.parse(xml, xlinkController);
 
         if (manifest) {

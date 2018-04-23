@@ -78,8 +78,7 @@ function Stream(config) {
 
         fragmentController = FragmentController(context).create({
             mediaPlayerModel: mediaPlayerModel,
-            metricsModel: metricsModel,
-            errHandler: errHandler
+            metricsModel: metricsModel
         });
 
         eventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);

@@ -2546,7 +2546,6 @@ function MediaPlayer() {
 
         // configure controllers
         mediaController.setConfig({
-            errHandler: errHandler,
             domStorage: domStorage
         });
 
@@ -2609,7 +2608,6 @@ function MediaPlayer() {
 
     function createManifestLoader() {
         return ManifestLoader(context).create({
-            errHandler: errHandler,
             metricsModel: metricsModel,
             mediaPlayerModel: mediaPlayerModel,
             requestModifier: RequestModifier(context).getInstance(),
@@ -2683,7 +2681,6 @@ function MediaPlayer() {
                 metricsModel: metricsModel,
                 playbackController: playbackController,
                 protectionController: protectionController,
-                errHandler: errHandler,
                 events: Events,
                 constants: Constants,
                 log: log,

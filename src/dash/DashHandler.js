@@ -30,6 +30,7 @@
  */
 import Constants from '../streaming/constants/Constants';
 import DashConstants from './constants/DashConstants';
+import ErrorConstants from '../streaming/constants/ErrorConstants';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
 import DashJSError from '../streaming/vo/DashJSError';
 import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
@@ -51,8 +52,6 @@ import SegmentsGetter from './utils/SegmentsGetter';
 import SegmentBaseLoader from './SegmentBaseLoader';
 import WebmSegmentBaseLoader from './WebmSegmentBaseLoader';
 
-const SEGMENTS_UNAVAILABLE_ERROR_CODE = 1;
-
 function DashHandler(config) {
 
     config = config || {};
@@ -65,7 +64,7 @@ function DashHandler(config) {
     const dashMetrics = config.dashMetrics;
     const metricsModel = config.metricsModel;
     const mediaPlayerModel = config.mediaPlayerModel;
-    const errHandler = config.errHandler;
+
     const baseURLController = config.baseURLController;
 
     let instance,
@@ -86,8 +85,7 @@ function DashHandler(config) {
         segmentBaseLoader.setConfig({
             baseURLController: baseURLController,
             metricsModel: metricsModel,
-            mediaPlayerModel: mediaPlayerModel,
-            errHandler: errHandler
+            mediaPlayerModel: mediaPlayerModel
         });
 
         eventBus.on(Events.INITIALIZATION_LOADED, onInitializationLoaded, instance);
@@ -260,7 +258,7 @@ function DashHandler(config) {
         voRepresentation.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(voRepresentation, isDynamic);
 
         if ((voRepresentation.segmentAvailabilityRange.end < voRepresentation.segmentAvailabilityRange.start) && !voRepresentation.useCalculatedLiveEdgeTime) {
-            error = new DashJSError(SEGMENTS_UNAVAILABLE_ERROR_CODE, 'no segments are available yet', {availabilityDelay: voRepresentation.segmentAvailabilityRange.start - voRepresentation.segmentAvailabilityRange.end});
+            error = new DashJSError(ErrorConstants.SEGMENTS_UNAVAILABLE_ERROR_CODE, ErrorConstants.SEGMENTS_UNAVAILABLE_ERROR_MESSAGE, {availabilityDelay: voRepresentation.segmentAvailabilityRange.start - voRepresentation.segmentAvailabilityRange.end});
             eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: voRepresentation, error: error});
             return;
         }
@@ -541,6 +539,4 @@ function DashHandler(config) {
 
 DashHandler.__dashjs_factory_name = 'DashHandler';
 const factory = FactoryMaker.getClassFactory(DashHandler);
-factory.SEGMENTS_UNAVAILABLE_ERROR_CODE = SEGMENTS_UNAVAILABLE_ERROR_CODE;
-FactoryMaker.updateClassFactory(DashHandler.__dashjs_factory_name, factory);
 export default factory;

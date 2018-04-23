@@ -34,6 +34,7 @@ import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import FactoryMaker from '../core/FactoryMaker';
 import TextController from './text/TextController';
+import ErrorConstants from './constants/ErrorConstants';
 /**
  * @class SourceBufferSink
  * @implements FragmentSink
@@ -97,6 +98,14 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback) {
     }
 
     function append(chunk) {
+        if (!chunk) {
+            eventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {
+                buffer: null,
+                bytes: null,
+                error: new DashJSError(ErrorConstants.APPEND_ERROR_CODE, ErrorConstants.APPEND_ERROR_MESSAGE, null)
+            });
+            return;
+        }
         appendQueue.push(chunk);
         if (!isAppendingInProgress) {
             waitForUpdateEnd(buffer, appendNextInQueue.bind(this));

@@ -37,9 +37,7 @@ function MssParser(config) {
     config = config || {};
     const BASE64 = config.BASE64;
     const log = config.log;
-    const errorHandler = config.errHandler;
     const constants = config.constants;
-
     const TIME_SCALE_100_NANOSECOND_UNIT = 10000000.0;
     const SUPPORTED_CODECS = ['AAC', 'AACL', 'AVC1', 'H264', 'TTML', 'DFXP'];
     // MPEG-DASH Role and accessibility mapping according to ETSI TS 103 285 v1.1.1 (section 7.1.2)
@@ -220,7 +218,6 @@ function MssParser(config) {
         // Check if codec is supported
         if (SUPPORTED_CODECS.indexOf(fourCCValue.toUpperCase()) === -1) {
             // Do not send warning
-            //this.errHandler.sendWarning(MediaPlayer.dependencies.ErrorHandler.prototype.MEDIA_ERR_CODEC_UNSUPPORTED, 'Codec not supported', {codec: fourCCValue});
             log('[MssParser] Codec not supported: ' + fourCCValue);
             return null;
         }
@@ -686,19 +683,13 @@ function MssParser(config) {
         let xmlDoc = null;
 
         if (window.DOMParser) {
-            try {
-                let parser = new window.DOMParser();
+            let parser = new window.DOMParser();
 
-                xmlDoc = parser.parseFromString(data, 'text/xml');
-                if (xmlDoc.getElementsByTagName('parsererror').length > 0) {
-                    throw new Error('Error parsing XML');
-                }
-            } catch (e) {
-                errorHandler.manifestError('parsing the manifest failed', 'parse', data, e);
-                xmlDoc = null;
+            xmlDoc = parser.parseFromString(data, 'text/xml');
+            if (xmlDoc.getElementsByTagName('parsererror').length > 0) {
+                throw new Error('parsing the manifest failed');
             }
         }
-
         return xmlDoc;
     }
 

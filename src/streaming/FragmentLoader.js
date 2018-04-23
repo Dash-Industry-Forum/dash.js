@@ -34,10 +34,7 @@ import DashJSError from './vo/DashJSError';
 import EventBus from './../core/EventBus';
 import Events from './../core/events/Events';
 import FactoryMaker from '../core/FactoryMaker';
-
-const FRAGMENT_LOADER_ERROR_LOADING_FAILURE = 1;
-const FRAGMENT_LOADER_ERROR_NULL_REQUEST = 2;
-const FRAGMENT_LOADER_MESSAGE_NULL_REQUEST = 'request is null';
+import ErrorConstants from './constants/ErrorConstants';
 
 function FragmentLoader(config) {
 
@@ -50,7 +47,6 @@ function FragmentLoader(config) {
 
     function setup() {
         xhrLoader = XHRLoader(context).create({
-            errHandler: config.errHandler,
             metricsModel: config.metricsModel,
             mediaPlayerModel: config.mediaPlayerModel,
             requestModifier: config.requestModifier
@@ -105,12 +101,12 @@ function FragmentLoader(config) {
                 success: function (data) {
                     report(data);
                 },
-                error: function (xhr, statusText, errorText) {
+                error: function (xhr, statusText, errorCode, errorText) {
                     report(
                         undefined,
                         new DashJSError(
-                            FRAGMENT_LOADER_ERROR_LOADING_FAILURE,
-                            errorText,
+                            ErrorConstants.FRAGMENT_LOADER_LOADING_FAILURE_ERROR_CODE,
+                            errorCode + ':' + errorText,
                             statusText
                         )
                     );
@@ -125,8 +121,8 @@ function FragmentLoader(config) {
             report(
                 undefined,
                 new DashJSError(
-                    FRAGMENT_LOADER_ERROR_NULL_REQUEST,
-                    FRAGMENT_LOADER_MESSAGE_NULL_REQUEST
+                    ErrorConstants.FRAGMENT_LOADER_NULL_REQUEST_ERROR_CODE,
+                    ErrorConstants.FRAGMENT_LOADER_NULL_REQUEST_ERROR_MESSAGE
                 )
             );
         }
@@ -160,7 +156,4 @@ function FragmentLoader(config) {
 FragmentLoader.__dashjs_factory_name = 'FragmentLoader';
 
 const factory = FactoryMaker.getClassFactory(FragmentLoader);
-factory.FRAGMENT_LOADER_ERROR_LOADING_FAILURE = FRAGMENT_LOADER_ERROR_LOADING_FAILURE;
-factory.FRAGMENT_LOADER_ERROR_NULL_REQUEST = FRAGMENT_LOADER_ERROR_NULL_REQUEST;
-FactoryMaker.updateClassFactory(FragmentLoader.__dashjs_factory_name, factory);
 export default factory;

@@ -90,8 +90,7 @@ function StreamProcessor(config) {
             dashMetrics: dashMetrics,
             metricsModel: metricsModel,
             mediaPlayerModel: mediaPlayerModel,
-            baseURLController: config.baseURLController,
-            errHandler: errHandler
+            baseURLController: config.baseURLController
         });
 
         // initialize controllers

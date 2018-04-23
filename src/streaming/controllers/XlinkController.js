@@ -60,7 +60,6 @@ function XlinkController(config) {
         eventBus.on(Events.XLINK_ELEMENT_LOADED, onXlinkElementLoaded, instance);
 
         xlinkLoader = XlinkLoader(context).create({
-            errHandler: config.errHandler,
             metricsModel: config.metricsModel,
             mediaPlayerModel: config.mediaPlayerModel,
             requestModifier: config.requestModifier
