@@ -234,7 +234,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     $scope.defaultStableBufferDelay = $scope.player.getStableBufferTime();
     $scope.defaultBufferTimeAtTopQuality = $scope.player.getBufferTimeAtTopQuality();
     $scope.defaultBufferTimeAtTopQualityLongForm = $scope.player.getBufferTimeAtTopQualityLongForm();
-    $scope.defaultLowLatencyMode = $scope.player.getLowLatencyEnabled();
+    $scope.lowLatencyModeSelected = $scope.player.getLowLatencyEnabled();
 
     const initVideoTrackSwitchMode = $scope.player.getTrackSwitchModeFor('video');
     const initAudioTrackSwitchMode = $scope.player.getTrackSwitchModeFor('audio');
@@ -387,7 +387,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
             stableBufferTime: $scope.defaultStableBufferDelay,
             bufferTimeAtTopQuality: $scope.defaultBufferTimeAtTopQuality,
             bufferTimeAtTopQualityLongForm: $scope.defaultBufferTimeAtTopQualityLongForm,
-            lowLatencyMode: $scope.defaultLowLatencyMode
+            lowLatencyMode: $scope.lowLatencyMode
         };
         if ($scope.selectedItem.hasOwnProperty('bufferConfig')) {
             var selectedConfig = $scope.selectedItem.bufferConfig;

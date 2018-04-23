@@ -434,8 +434,10 @@ function DashManifestModel(config) {
         let segmentInfo;
         let baseUrl;
 
-        // TODO: To be removed. We should get just the baseUrl elements that affects to the representations
-        // that we are processing
+        // TODO: TO BE REMOVED. We should get just the baseUrl elements that affects to the representations
+        // that we are processing. Making it works properly will require much further changes and given
+        // parsing base Urls parameters is needed for our ultra low latency examples, we will
+        // keep this "tricky" code until the real (and good) solution comes
         if (voAdaptation && voAdaptation.period && isInteger(voAdaptation.period.index)) {
             const baseUrls = getBaseURLsFromElement(voAdaptation.period.mpd.manifest);
             if (baseUrls) {
