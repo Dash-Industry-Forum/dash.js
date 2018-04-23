@@ -406,7 +406,6 @@ function BolaRule(config) {
 
         if (bolaState.state === BOLA_STATE_ONE_BITRATE) {
             // shouldn't even have been called
-            log('BOLA ABR rule invoked for media type \'' + mediaType + '\' with only one bitrate.');
             return switchRequest;
         }
 

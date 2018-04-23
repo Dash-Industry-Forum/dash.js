@@ -256,7 +256,6 @@ function DashHandler(config) {
             updateSegmentList(voRepresentation);
         }
 
-        voRepresentation.segmentAvailabilityRange = null;
         voRepresentation.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(voRepresentation, isDynamic);
 
         if ((voRepresentation.segmentAvailabilityRange.end < voRepresentation.segmentAvailabilityRange.start) && !voRepresentation.useCalculatedLiveEdgeTime) {
@@ -378,6 +377,7 @@ function DashHandler(config) {
 
         updateSegments(representation);
         index = getIndexForSegments(time, representation, timeThreshold);
+
         //Index may be -1 if getSegments needs to update again.  So after getSegments is called and updated then try to get index again.
         if (index < 0) {
             updateSegments(representation);

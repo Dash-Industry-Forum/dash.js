@@ -70,6 +70,22 @@
           "name": "Infinite offset - all segments available at availability start (livesim)"
         },
         {
+          "url": "https://vm2.dashif.org/livesim-chunked/chunkdur_1/ato_7/testpic4_8s/Manifest300.mpd",
+          "name": "Low Latency (Single-Rate)",
+          "bufferConfig" : {
+            "lowLatencyMode": true,
+            "liveDelay": 2
+          }
+        },
+        {
+          "url": "https://vm2.dashif.org/livesim-chunked/chunkdur_1/ato_7/testpic4_8s/Manifest.mpd",
+          "name": "Low Latency (Multi-Rate)",
+          "bufferConfig" : {
+            "lowLatencyMode": true,
+            "liveDelay": 2
+          }
+        },
+        {
           "url": "http://24x7dash-i.akamaihd.net/dash/live/900080/dash-demo/dash.mpd",
           "name": "Akamai 24x7 reference stream - segmentTemplate"
         },

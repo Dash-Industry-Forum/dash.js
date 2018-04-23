@@ -80,7 +80,7 @@ function ReceiverController($scope) {
                     bitrateIndexValue = 0;
                 }
 
-                if (isNaN(numBitratesValue) || numBitratesValue === undefined) {
+                if (isNaN(numBitratesValue) || numBitratesValue === undefined || numBitratesValue === -1) {
                     numBitratesValue = 0;
                 }
 

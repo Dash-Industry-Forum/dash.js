@@ -28,26 +28,16 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * @class
  * @ignore
  */
-class DataChunk {
-    //Represents a data structure that keep all the necessary info about a single init/media segment
-    constructor() {
-        this.streamId = null;
-        this.mediaInfo = null;
-        this.segmentType = null;
-        this.quality = NaN;
-        this.index = NaN;
-        this.bytes = null;
-        this.start = NaN;
-        this.end = NaN;
-        this.duration = NaN;
-        this.representationId = null;
-        this.endFragment = null;
+class IsoBoxSearchInfo {
+    constructor(lastCompletedOffset, found, size) {
+        this.lastCompletedOffset = lastCompletedOffset;
+        this.found = found;
+        this.size = size;
     }
 }
 
-export default DataChunk;
+export default IsoBoxSearchInfo;

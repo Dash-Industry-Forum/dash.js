@@ -211,6 +211,7 @@ class MediaPlayerModelMock {
         this.cacheLoadThresholds[Constants.AUDIO] = CACHE_LOAD_THRESHOLD_AUDIO;
         this.jumpGaps = false;
         this.smallGapLimit = SMALL_GAP_LIMIT;
+        this.lowLatencyEnabled = false;
         this.manifestUpdateRetryInterval = MANIFEST_UPDATE_RETRY_INTERVAL;
     }
 
@@ -523,6 +524,14 @@ class MediaPlayerModelMock {
 
     getSmallGapLimit() {
         return this.smallGapLimit;
+    }
+
+    setLowLatencyEnabled(value) {
+        this.lowLatencyEnabled = value;
+    }
+
+    getLowLatencyEnabled() {
+        return this.lowLatencyEnabled;
     }
 
     reset() {
