@@ -62,7 +62,8 @@ function PlaybackController() {
         isDynamic,
         mediaPlayerModel,
         playOnceInitialized,
-        lastLivePlaybackTime;
+        lastLivePlaybackTime,
+        availabilityStartTime;
 
     function setup() {
         reset();
@@ -185,6 +186,10 @@ function PlaybackController() {
             delay = streamInfo.manifestInfo.minBufferTime * 2;
         }
 
+        if (mpd.availabilityStartTime) {
+            availabilityStartTime = mpd.availabilityStartTime.getTime();
+        }
+
         if (dvrWindowSize > 0) {
             // cap target latency to:
             // - dvrWindowSize / 2 for short playlists
@@ -202,6 +207,18 @@ function PlaybackController() {
         return liveDelay;
     }
 
+    function getCurrentLiveLatency() {
+        if (!isDynamic || isNaN(availabilityStartTime)) {
+            return NaN;
+        }
+        const currentTime = getTime();
+        if (isNaN(currentTime) || currentTime === 0) {
+            return 0;
+        }
+
+        return ((Math.round(new Date().getTime() - (currentTime * 1000 + availabilityStartTime))) / 1000).toFixed(3);
+    }
+
     function reset() {
         currentTime = 0;
         liveStartTime = NaN;
@@ -209,6 +226,7 @@ function PlaybackController() {
         playOnceInitialized = false;
         commonEarliestTime = {};
         liveDelay = 0;
+        availabilityStartTime = 0;
         bufferedRange = {};
         if (videoModel) {
             eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
@@ -610,6 +628,7 @@ function PlaybackController() {
         getLiveStartTime: getLiveStartTime,
         computeLiveDelay: computeLiveDelay,
         getLiveDelay: getLiveDelay,
+        getCurrentLiveLatency: getCurrentLiveLatency,
         play: play,
         isPaused: isPaused,
         pause: pause,

@@ -251,6 +251,7 @@ function BufferController(config) {
         }
     }
 
+    /*
     function showBufferRanges(ranges) {
         if (ranges && ranges.length > 0) {
             for (let i = 0, len = ranges.length; i < len; i++) {
@@ -258,6 +259,7 @@ function BufferController(config) {
             }
         }
     }
+    */
 
     function onAppended(e) {
         if (e.error) {
@@ -289,7 +291,7 @@ function BufferController(config) {
 
         const ranges = buffer.getAllBufferRanges();
         if (appendedBytesInfo.segmentType === HTTPRequest.MEDIA_SEGMENT_TYPE) {
-            showBufferRanges(ranges);
+            // showBufferRanges(ranges);
             onPlaybackProgression();
         } else {
             if (bufferResetInProgress) {
@@ -299,8 +301,6 @@ function BufferController(config) {
                 adapter.setIndexHandlerTime(streamProcessor, currentTime);
             }
         }
-
-        log('[BufferController][', type,'] onAppended chunk type = ', appendedBytesInfo.segmentType, ' and index = ', appendedBytesInfo.index);
 
         const dataEvent = {
             sender: instance,
@@ -564,7 +564,7 @@ function BufferController(config) {
 
 
     function handleInbandEvents(data, request, mediaInbandEvents, trackInbandEvents) {
-        const fragmentStartTime = Math.max(isNaN(request.startTime) ? 0 : request.startTime, 0);
+        const fragmentStartTime = Math.max(!request || isNaN(request.startTime) ? 0 : request.startTime, 0);
         const eventStreams = [];
         const events = [];
 
@@ -621,8 +621,6 @@ function BufferController(config) {
             rangeToKeep.start = Math.min(currentTimeRequest.startTime, rangeToKeep.start);
             rangeToKeep.end = Math.max(currentTimeRequest.startTime + currentTimeRequest.duration, rangeToKeep.end);
         }
-
-        log('getClearRanges for', type, '- Remove buffer out of ', rangeToKeep.start, ' - ', rangeToKeep.end);
 
         if (ranges.start(0) <= rangeToKeep.start) {
             const behindRange = {
@@ -688,8 +686,8 @@ function BufferController(config) {
 
         log('[BufferController][', type,'] onRemoved buffer from:', e.from, 'to', e.to);
 
-        const ranges = buffer.getAllBufferRanges();
-        showBufferRanges(ranges);
+        // const ranges = buffer.getAllBufferRanges();
+        // showBufferRanges(ranges);
 
         if (pendingPruningRanges.length === 0) {
             isPruningInProgress = false;

@@ -30,6 +30,7 @@
  */
 
 import FactoryMaker from '../../core/FactoryMaker';
+import BoxParser from '../utils/BoxParser';
 
 /**
 * @module FetchLoader
@@ -37,7 +38,6 @@ import FactoryMaker from '../../core/FactoryMaker';
 * @param {Object} cfg - dependencies from parent
 */
 function FetchLoader(cfg) {
-
     cfg = cfg || {};
     const requestModifier = cfg.requestModifier;
 
@@ -106,8 +106,6 @@ function FetchLoader(cfg) {
             }
             httpRequest.response.responseHeaders = responseHeaders;
 
-            const totalBytes = parseInt(response.headers.get('Content-Length'), 10);
-
             if (!response.body) {
                 // Fetch returning a ReadableStream response body is not currently supported by all browsers.
                 // Browser compatibility: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
@@ -125,50 +123,104 @@ function FetchLoader(cfg) {
                 });
             }
 
+            const totalBytes = parseInt(response.headers.get('Content-Length'), 10);
             let bytesReceived = 0;
-            let dataArray;
+            let signaledFirstByte = false;
+            let remaining = new Uint8Array();
+            let offset = 0;
 
             httpRequest.reader = response.body.getReader();
-
             const processResult = function ({ value, done }) {
                 if (done) {
-                    if (dataArray) {
-                        httpRequest.response.response = dataArray.buffer;
+                    if (remaining) {
+                        // If there is pending data, call progress so network metrics
+                        // are correctly generated
+                        // Same structure as https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequestEventTarget/onprogress
+                        httpRequest.progress({
+                            loaded: bytesReceived,
+                            total: isNaN(totalBytes) ? bytesReceived : totalBytes,
+                            lengthComputable: true
+                        });
+
+                        httpRequest.response.response = remaining.buffer;
                     }
                     httpRequest.onload();
                     httpRequest.onend();
                     return;
                 }
-                bytesReceived += value.length;
 
-                // Same structure as https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequestEventTarget/onprogress
-                const event = {
-                    loaded: isNaN(totalBytes) ? value.length : bytesReceived,
-                    total: isNaN(totalBytes) ? value.length : totalBytes
-                };
-                // Returning data on the following loop so that when it's done it sends data
-                // This also avoids a problem with subtitles
-                if (dataArray && dataArray.length > 0) {
-                    // Cloning data so that it's not overwritten while looping
-                    event.data = dataArray.slice(0).buffer;
+                if (value && value.length > 0) {
+                    remaining = concatTypedArray(remaining, value);
+                    bytesReceived += value.length;
+
+                    const boxesInfo = BoxParser().getInstance().findLastTopIsoBoxCompleted(['moov', 'mdat'], remaining, offset);
+                    if (boxesInfo.found) {
+                        const end = boxesInfo.lastCompletedOffset + boxesInfo.size;
+
+                        // If we are going to pass full buffer, avoid copying it and pass
+                        // complete buffer. Otherwise clone the part of the buffer that is completed
+                        // and adjust remaining buffer. A clone is needed because ArrayBuffer of a typed-array
+                        // keeps a reference to the original data
+                        let data;
+                        if (end === remaining.length) {
+                            data = remaining;
+                            remaining = new Uint8Array();
+                        } else {
+                            data = new Uint8Array(remaining.subarray(0, end));
+                            remaining = remaining.subarray(end);
+                        }
+
+                        // Announce progress but don't track traces. Throughput measures are quite unstable
+                        // when they are based in small amount of data
+                        httpRequest.progress({
+                            data: data.buffer,
+                            lengthComputable: false,
+                            noTrace: true
+                        });
+
+                        offset = 0;
+                    } else {
+                        offset = boxesInfo.lastCompletedOffset;
+
+                        // Call progress so it generates traces that will be later used to know when the first byte
+                        // were received
+                        if (!signaledFirstByte) {
+                            httpRequest.progress({
+                                lengthComputable: false,
+                                noTrace: true
+                            });
+                            signaledFirstByte = true;
+                        }
+                    }
                 }
-                httpRequest.progress(event);
-                // [dataArray, remaining] = processData(value, remaining);
-                dataArray = value;
-
                 read(httpRequest, processResult);
             };
 
             read(httpRequest, processResult);
+        })
+        .catch( function (e) {
+            if (httpRequest.onerror) {
+                httpRequest.onerror(e);
+            }
         });
     }
 
     function read(httpRequest, processResult) {
-        try {
-            httpRequest.reader.read().then(processResult);
-        } catch (e) {
-            httpRequest.onerror();
+        httpRequest.reader.read()
+        .then(processResult)
+        .catch(function () {
+            // don't do nothing. Manage this error in fetch method promise
+        });
+    }
+
+    function concatTypedArray(remaining, data) {
+        if (remaining.length === 0) {
+            return data;
         }
+        const result = new Uint8Array(remaining.length + data.length);
+        result.set(remaining);
+        result.set(data, remaining.length);
+        return result;
     }
 
     function abort(request) {

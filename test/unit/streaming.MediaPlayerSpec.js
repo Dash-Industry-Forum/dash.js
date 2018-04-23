@@ -1049,6 +1049,10 @@ describe('MediaPlayer', function () {
             it('Method getSelectionModeForInitialTrack should throw an exception', function () {
                 expect(player.getSelectionModeForInitialTrack).to.throw(MediaPlayer.MEDIA_PLAYER_NOT_INITIALIZED_ERROR);
             });
+
+            it('Method getCurrentLiveLatency should throw an exception', function () {
+                expect(player.getCurrentLiveLatency).to.throw(MediaPlayer.MEDIA_PLAYER_NOT_INITIALIZED_ERROR);
+            });
         });
     });
 

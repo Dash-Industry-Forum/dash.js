@@ -386,10 +386,7 @@ function Stream(config) {
                 textController.addEmbeddedTrack(mediaInfo);
             } else {
                 if (!isMediaSupported(mediaInfo)) continue;
-
-                if (mediaController.isMultiTrackSupportedByType(mediaInfo.type)) {
-                    mediaController.addTrack(mediaInfo, streamInfo);
-                }
+                mediaController.addTrack(mediaInfo);
             }
         }
 

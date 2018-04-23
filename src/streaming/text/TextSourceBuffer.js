@@ -78,8 +78,7 @@ function TextSourceBuffer() {
         embeddedSequenceNumbers,
         embeddedCea608FieldParsers,
         embeddedTextHtmlRender,
-        mseTimeOffset,
-        videoTimescale;
+        mseTimeOffset;
 
     function initialize(type, streamProcessor) {
         parser = null;
@@ -168,19 +167,13 @@ function TextSourceBuffer() {
         embeddedInitialized = true;
         embeddedTextHtmlRender = EmbeddedTextHtmlRender(context).getInstance();
 
-        let streamProcessors = streamController.getActiveStreamProcessors();
+        const streamProcessors = streamController.getActiveStreamProcessors();
         for (let i in streamProcessors) {
             if (streamProcessors[i].getType() === 'video') {
                 mseTimeOffset = streamProcessors[i].getCurrentRepresentationInfo().MSETimeOffset;
                 break;
             }
         }
-        videoTimescale = dashManifestModel.getAdaptationForType(
-            manifestModel.getValue(),
-            streamController.getActiveStreamInfo().index,
-            'video',
-            streamController.getActiveStreamInfo()
-        ).SegmentTemplate.timescale;
 
         eventBus.on(Events.VIDEO_CHUNK_RECEIVED, onVideoChunkReceived, this);
     }
@@ -527,7 +520,7 @@ function TextSourceBuffer() {
                         } else {
                             idx += 1;
                         }
-                        allCcData.fields[k].push([sample.cts + (mseTimeOffset * videoTimescale), ccData[k], idx]);
+                        allCcData.fields[k].push([sample.cts + (mseTimeOffset * embeddedTimescale), ccData[k], idx]);
                         lastSampleTime = sample.cts;
                     }
                 }

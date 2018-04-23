@@ -60,28 +60,28 @@ const initSegmentIncompleted = [
 describe('BoxParser', function () {
     describe('when no data is provided', () => {
         it('should return false when data is null or not defined', () => {
-            const res = boxParser.isTopIsoBoxCompleted('ftyp', null);
+            const res = boxParser.findLastTopIsoBoxCompleted(['ftyp'], null);
 
             expect(res.found).to.be.false;    // jshint ignore:line
         });
 
         it('should return false when data is empty', () => {
             const data = new ArrayBuffer();
-            const res = boxParser.isTopIsoBoxCompleted('ftyp', data);
+            const res = boxParser.findLastTopIsoBoxCompleted(['ftyp'], data);
 
             expect(res.found).to.be.false;    // jshint ignore:line
         });
 
         it('should return false when data length is lower than offset', () => {
             const data = new ArrayBuffer(5);
-            const res = boxParser.isTopIsoBoxCompleted('ftyp', data, 10);
+            const res = boxParser.findLastTopIsoBoxCompleted(['ftyp'], data, 10);
 
             expect(res.found).to.be.false;  // jshint ignore:line
         });
 
         it('should return false when data to read is lower than 8', () => {
             const data = new ArrayBuffer(16);
-            const res = boxParser.isTopIsoBoxCompleted('ftyp', data, 12);
+            const res = boxParser.findLastTopIsoBoxCompleted(['ftyp'], data, 12);
 
             expect(res.found).to.be.false; // jshint ignore:line
         });
@@ -90,40 +90,40 @@ describe('BoxParser', function () {
     describe('when data is provided', () => {
         it('should return true when looking for a box that is completed', () => {
             const data = new Uint8Array(ftypCompleted);
-            const res = boxParser.isTopIsoBoxCompleted('ftyp', data.buffer);
+            const res = boxParser.findLastTopIsoBoxCompleted(['ftyp'], data.buffer);
 
             expect(res.found).to.be.true; // jshint ignore:line
         });
 
         it('should return false when looking for a box that is not completed', () => {
             const data = new Uint8Array(ftypIncompleted);
-            const res = boxParser.isTopIsoBoxCompleted('ftyp', data.buffer);
+            const res = boxParser.findLastTopIsoBoxCompleted(['ftyp'], data.buffer);
 
             expect(res.found).to.be.false; // jshint ignore:line
         });
 
         it('should return true when looking for completed boxes in a buffer with multiple top boxes', () => {
             const data = new Uint8Array(initSegmentCompleted);
-            let res = boxParser.isTopIsoBoxCompleted('ftyp', data.buffer);
+            let res = boxParser.findLastTopIsoBoxCompleted(['ftyp'], data.buffer);
             expect(res.found).to.be.true; // jshint ignore:line
 
-            res = boxParser.isTopIsoBoxCompleted('moov', data.buffer);
+            res = boxParser.findLastTopIsoBoxCompleted(['moov'], data.buffer);
             expect(res.found).to.be.true; // jshint ignore:line
         });
 
         it('should return true when looking for completed boxes and using offset values', () => {
             const data = new Uint8Array(initSegmentCompleted);
 
-            const res = boxParser.isTopIsoBoxCompleted('moov', data.buffer, 132);
+            const res = boxParser.findLastTopIsoBoxCompleted(['ftyp', 'moov'], data.buffer, 132);
             expect(res.found).to.be.true; // jshint ignore:line
         });
 
         it('should return offset of the last completed box when the specified box type is not found', () => {
             const data = new Uint8Array(initSegmentIncompleted);
 
-            const res = boxParser.isTopIsoBoxCompleted('moov', data.buffer);
+            const res = boxParser.findLastTopIsoBoxCompleted(['moov'], data.buffer);
             expect(res.found).to.be.false; // jshint ignore:line
-            expect(res.lastCompletedOffset).to.equal(132); // jshint ignore:line
+            expect(res.lastCompletedOffset).to.equal(36); // jshint ignore:line
         });
     });
 });

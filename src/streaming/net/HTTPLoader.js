@@ -149,7 +149,7 @@ function HTTPLoader(cfg) {
         };
 
         const progress = function (event) {
-            let currentTime = new Date();
+            const currentTime = new Date();
 
             if (firstProgress) {
                 firstProgress = false;
@@ -164,16 +164,18 @@ function HTTPLoader(cfg) {
                 request.bytesTotal = event.total;
             }
 
-            traces.push({
-                s: lastTraceTime,
-                d: currentTime.getTime() - lastTraceTime.getTime(),
-                b: [event.loaded ? event.loaded - lastTraceReceivedCount : 0]
-            });
+            if (!event.noTrace) {
+                traces.push({
+                    s: lastTraceTime,
+                    d: currentTime.getTime() - lastTraceTime.getTime(),
+                    b: [event.loaded ? event.loaded - lastTraceReceivedCount : 0]
+                });
 
-            lastTraceTime = currentTime;
-            lastTraceReceivedCount = event.loaded;
+                lastTraceTime = currentTime;
+                lastTraceReceivedCount = event.loaded;
+            }
 
-            if (config.progress) {
+            if (config.progress && event.data) {
                 config.progress(event.data);
             }
         };
