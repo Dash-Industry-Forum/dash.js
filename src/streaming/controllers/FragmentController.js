@@ -123,8 +123,8 @@ function FragmentController( config ) {
         const isInit = isInitializationRequest(request);
         const streamInfo = request.mediaInfo.streamInfo;
 
-        if (e.error ) {
-            if (e.request.mediaType === Constants.AUDIO || e.request.mediaType === Constants.VIDEO) {
+        if (e.error) {
+            if (e.request.mediaType === Constants.AUDIO || e.request.mediaType === Constants.VIDEO || e.request.mediaType === Constants.FRAGMENTED_TEXT) {
                 // add service location to blacklist controller - only for audio or video. text should not set errors
                 eventBus.trigger(Events.SERVICE_LOCATION_BLACKLIST_ADD, {entry: e.request.serviceLocation});
             }
