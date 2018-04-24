@@ -64,8 +64,7 @@ function TTMLParser() {
      * @param {Array} images - images array referenced by subs MP4 box
      */
     function parse(data, offsetTime, startTimeSegment, endTimeSegment, images) {
-        let i,
-            j;
+        let i;
 
         let errorMsg = '';
         let captionArray = [];
@@ -125,23 +124,22 @@ function TTMLParser() {
             let isd = generateISD(imsc1doc, mediaTimeEvents[i], function (error) {
                 errorMsg = error;
             });
-            for (j = 0; j < isd.contents.length; j++) {
-                if (isd.contents[j].contents.length >= 1) {
-                    //be sure that mediaTimeEvents values are in the mp4 segment time ranges.
-                    startTime = (mediaTimeEvents[i] + offsetTime) < startTimeSegment ? startTimeSegment : (mediaTimeEvents[i] + offsetTime);
-                    endTime = (mediaTimeEvents[i + 1] + offsetTime) > endTimeSegment ? endTimeSegment : (mediaTimeEvents[i + 1] + offsetTime);
 
-                    if (startTime < endTime) {
-                        captionArray.push({
-                            start: startTime,
-                            end: endTime,
-                            type: 'html',
-                            cueID: getCueID(),
-                            isd: isd,
-                            images: images,
-                            embeddedImages: embeddedImages
-                        });
-                    }
+            if (isd.contents.some(topLevelContents => topLevelContents.contents.length)) {
+                //be sure that mediaTimeEvents values are in the mp4 segment time ranges.
+                startTime = (mediaTimeEvents[i] + offsetTime) < startTimeSegment ? startTimeSegment : (mediaTimeEvents[i] + offsetTime);
+                endTime = (mediaTimeEvents[i + 1] + offsetTime) > endTimeSegment ? endTimeSegment : (mediaTimeEvents[i + 1] + offsetTime);
+
+                if (startTime < endTime) {
+                    captionArray.push({
+                        start: startTime,
+                        end: endTime,
+                        type: 'html',
+                        cueID: getCueID(),
+                        isd: isd,
+                        images: images,
+                        embeddedImages: embeddedImages
+                    });
                 }
             }
         }
