@@ -243,14 +243,21 @@ function StreamProcessor(config) {
         return stream ? stream.getEventController() : null;
     }
 
-    function updateMediaInfo(newMediaInfo) {
+    function selectMediaInfo(newMediaInfo) {
         if (newMediaInfo !== mediaInfo && (!newMediaInfo || !mediaInfo || (newMediaInfo.type === mediaInfo.type))) {
             mediaInfo = newMediaInfo;
         }
+        adapter.updateData(this);
+    }
+
+    function addMediaInfo(newMediaInfo, selectNewMediaInfo) {
         if (mediaInfoArr.indexOf(newMediaInfo) === -1) {
             mediaInfoArr.push(newMediaInfo);
         }
-        adapter.updateData(this);
+
+        if (selectNewMediaInfo) {
+            this.selectMediaInfo(newMediaInfo);
+        }
     }
 
     function getMediaInfoArr() {
@@ -368,7 +375,8 @@ function StreamProcessor(config) {
         isBufferingCompleted: isBufferingCompleted,
         createBuffer: createBuffer,
         getStreamInfo: getStreamInfo,
-        updateMediaInfo: updateMediaInfo,
+        selectMediaInfo: selectMediaInfo,
+        addMediaInfo: addMediaInfo,
         switchTrackAsked: switchTrackAsked,
         getMediaInfoArr: getMediaInfoArr,
         getMediaInfo: getMediaInfo,
