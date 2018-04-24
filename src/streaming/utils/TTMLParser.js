@@ -115,8 +115,8 @@ function TTMLParser() {
 
         let imsc1doc = fromXML(content.data, function (msg) {
             errorMsg = msg;
-        },
-            metadataHandler);
+        }, metadataHandler);
+
         eventBus.trigger(Events.TTML_PARSED, {ttmlString: content.data, ttmlDoc: imsc1doc});
 
         let mediaTimeEvents = imsc1doc.getMediaTimeEvents();
@@ -148,13 +148,10 @@ function TTMLParser() {
 
         if (errorMsg !== '') {
             log(errorMsg);
-        }
-
-        if (captionArray.length > 0) {
-            return captionArray;
-        } else { // This seems too strong given that there are segments with no TTML subtitles
             throw new Error(errorMsg);
         }
+
+        return captionArray;
     }
 
     function setup() {
