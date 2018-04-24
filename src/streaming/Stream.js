@@ -513,13 +513,13 @@ function Stream(config) {
 
     function getMediaInfo(type) {
         const ln = streamProcessors.length;
-        let mediaCtrl = null;
+        let streamProcessor = null;
 
         for (let i = 0; i < ln; i++) {
-            mediaCtrl = streamProcessors[i];
+            streamProcessor = streamProcessors[i];
 
-            if (mediaCtrl.getType() === type) {
-                return mediaCtrl.getMediaInfo();
+            if (streamProcessor.getType() === type) {
+                return streamProcessor.getMediaInfo();
             }
         }
 
