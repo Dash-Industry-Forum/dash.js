@@ -2269,7 +2269,8 @@ function MediaPlayer() {
      * This method sets the current track switch mode. Available options are:
      *
      * MediaController.TRACK_SWITCH_MODE_NEVER_REPLACE
-     * (used to forbid clearing the buffered data (prior to current playback position) after track switch. Default for video)
+     * (used to forbid clearing the buffered data (prior to current playback position) after track switch.
+     * Defers to fastSwitchEnabled for placement of new data. Default for video)
      *
      * MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE
      * (used to clear the buffered data (prior to current playback position) after track switch. Default for audio)
