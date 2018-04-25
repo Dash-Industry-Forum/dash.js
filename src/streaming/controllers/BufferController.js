@@ -91,6 +91,7 @@ function BufferController(config) {
         pendingPruningRanges,
         chunksToAppend,
         bufferResetInProgress,
+        mediaChunkDuration,
         mediaChunk;
 
 
@@ -209,6 +210,10 @@ function BufferController(config) {
         const currentRepresentation = streamProcessor.getRepresentationInfoForQuality(quality);
         const eventStreamMedia = adapter.getEventsFor(currentRepresentation.mediaInfo, streamProcessor);
         const eventStreamTrack = adapter.getEventsFor(currentRepresentation, streamProcessor);
+
+        if (isNaN(mediaChunkDuration)) {
+            mediaChunkDuration = chunk.duration;
+        }
 
         if (eventStreamMedia && eventStreamMedia.length > 0 || eventStreamTrack && eventStreamTrack.length > 0) {
             const request = streamProcessor.getFragmentModel().getRequests({
@@ -426,8 +431,12 @@ function BufferController(config) {
     }
 
     function getWorkingTime() {
-        // This function returns current working time for buffer (either start time or current time if playback has started)
-        let ret = playbackController.getTime();
+        let ret = NaN;
+
+        if (playbackController) {
+            // This function returns current working time for buffer (either start time or current time if playback has started)
+            ret = playbackController.getTime();
+        }
 
         if (seekStartTime) {
             // if there is a seek start time, the first buffer data will be available on maximum value between first buffer range value and seek start time.
@@ -436,12 +445,14 @@ function BufferController(config) {
                 ret = Math.max(ranges.start(0), seekStartTime);
             }
         }
+
         return ret;
     }
 
     function onPlaybackProgression() {
         if (!bufferResetInProgress) {
             updateBufferLevel();
+            checkIfSufficientBuffer();
             addBufferMetrics();
         }
     }
@@ -511,11 +522,8 @@ function BufferController(config) {
     }
 
     function updateBufferLevel() {
-        if (playbackController) {
-            bufferLevel = getBufferLength(getWorkingTime() || 0);
-            eventBus.trigger(Events.BUFFER_LEVEL_UPDATED, { sender: instance, bufferLevel: bufferLevel });
-            checkIfSufficientBuffer();
-        }
+        bufferLevel = getBufferLength(getWorkingTime() || 0);
+        eventBus.trigger(Events.BUFFER_LEVEL_UPDATED, { sender: instance, bufferLevel: bufferLevel });
     }
 
     function addBufferMetrics() {
@@ -546,7 +554,7 @@ function BufferController(config) {
         if (bufferLevel < STALL_THRESHOLD && !isBufferingCompleted) {
             notifyBufferStateChanged(BUFFER_EMPTY);
         } else {
-            if (isBufferingCompleted || bufferLevel >= mediaPlayerModel.getStableBufferTime()) {
+            if (isBufferingCompleted || bufferLevel >= (mediaChunkDuration / 2)) {
                 notifyBufferStateChanged(BUFFER_LOADED);
             }
         }
@@ -699,6 +707,7 @@ function BufferController(config) {
             if (!bufferResetInProgress) {
                 log('onRemoved : call updateBufferLevel');
                 updateBufferLevel();
+                checkIfSufficientBuffer();
             } else {
                 bufferResetInProgress = false;
                 if (mediaChunk) {
@@ -842,6 +851,7 @@ function BufferController(config) {
         }
 
         bufferResetInProgress = false;
+        mediaChunkDuration = NaN;
     }
 
     function reset(errored) {

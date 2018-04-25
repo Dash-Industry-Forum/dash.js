@@ -189,17 +189,18 @@ function ScheduleController(config) {
 
             const getNextFragment = function () {
                 const fragmentController = streamProcessor.getFragmentController();
-                if (currentRepresentationInfo.quality !== lastInitQuality) {
-                    log('ScheduleController - ' + type + ' - quality has changed, get init request for representationid = ' + currentRepresentationInfo.id);
+                if (switchTrack) {
+                    log('ScheduleController - ' + type + ' - switch track has been asked, get init request for ' + type + ' with representationid = ' + currentRepresentationInfo.id);
+                    bufferResetInProgress = mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE ? true : false;
+                    lastInitQuality = 0;
+                    abrController.setPlaybackQuality(type, streamInfo, lastInitQuality);
+                    streamProcessor.switchInitData(currentRepresentationInfo.id, bufferResetInProgress);
+                    switchTrack = false;
+                } else if (currentRepresentationInfo.quality !== lastInitQuality) {
+                    log('ScheduleController - ' + type + ' - quality has changed (last quality was ' + lastInitQuality + ', new one is ' + currentRepresentationInfo.quality + '), get init request for representationid = ' + currentRepresentationInfo.id);
                     lastInitQuality = currentRepresentationInfo.quality;
 
                     streamProcessor.switchInitData(currentRepresentationInfo.id);
-                } else if (switchTrack) {
-                    log('ScheduleController - ' + type + ' - switch track has been asked, get init request for ' + type + ' with representationid = ' + currentRepresentationInfo.id);
-                    bufferResetInProgress = mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE ? true : false;
-                    streamProcessor.switchInitData(currentRepresentationInfo.id, bufferResetInProgress);
-                    lastInitQuality = currentRepresentationInfo.quality;
-                    switchTrack = false;
                 } else {
                     const replacement = replaceRequestArray.shift();
 
@@ -228,7 +229,7 @@ function ScheduleController(config) {
             };
 
             setFragmentProcessState(true);
-            if (!isReplacement && !switchTrack) {
+            if (!isReplacement && !switchTrack && !bufferResetInProgress) {
                 abrController.checkPlaybackQuality(type);
             }
 
@@ -249,7 +250,7 @@ function ScheduleController(config) {
             threshold: 0
         })[0];
 
-        if (request && replaceRequestArray.indexOf(request) === -1 && !dashManifestModel.getIsTextTrack(type)) {
+        if (!switchTrack && !bufferResetInProgress && request && replaceRequestArray.indexOf(request) === -1 && !dashManifestModel.getIsTextTrack(type)) {
             const fastSwitchModeEnabled = mediaPlayerModel.getFastSwitchEnabled();
             const bufferLevel = streamProcessor.getBufferLevel();
             const abandonmentState = abrController.getAbandonmentStateFor(type);
