@@ -104,6 +104,7 @@ function StreamProcessor(config) {
         bufferController = createBufferControllerForType(type);
         scheduleController = ScheduleController(context).create({
             type: type,
+            mimeType: mimeType,
             metricsModel: metricsModel,
             adapter: adapter,
             dashMetrics: dashMetrics,
@@ -339,6 +340,7 @@ function StreamProcessor(config) {
         } else {
             controller = TextBufferController(context).create({
                 type: type,
+                mimeType: mimeType,
                 metricsModel: metricsModel,
                 mediaPlayerModel: mediaPlayerModel,
                 manifestModel: manifestModel,

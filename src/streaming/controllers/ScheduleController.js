@@ -106,7 +106,7 @@ function ScheduleController(config) {
             textController: textController
         });
 
-        if (dashManifestModel.getIsTextTrack(type)) {
+        if (dashManifestModel.getIsTextTrack(config.mimeType)) {
             eventBus.on(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
         }
 

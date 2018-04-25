@@ -225,6 +225,8 @@ function TextController() {
         let config = textSourceBuffer.getConfig();
         let fragmentModel = config.fragmentModel;
         let fragmentedTracks = config.fragmentedTracks;
+        let mediaInfosArr,
+            streamProcessor;
 
         let oldTrackIdx = textTracks.getCurrentTrackIdx();
         if (oldTrackIdx !== idx) {
@@ -247,6 +249,24 @@ function TextController() {
                             textTracks.deleteCuesFromTrackIdx(oldTrackIdx);
                             mediaController.setTrack(mediaInfo);
                             textSourceBuffer.setCurrentFragmentedTrackIdx(i);
+                        }
+                    }
+                }
+            } else if (currentTrackInfo && !currentTrackInfo.isFragmented) {
+                const streamProcessors = streamController.getActiveStreamProcessors();
+                for (let i = 0; i < streamProcessors.length; i++) {
+                    if (streamProcessors[i].getType() === Constants.TEXT) {
+                        streamProcessor = streamProcessors[i];
+                        mediaInfosArr = streamProcessor.getMediaInfoArr();
+                        break;
+                    }
+                }
+
+                if (streamProcessor && mediaInfosArr) {
+                    for (let i = 0; i < mediaInfosArr.length; i++) {
+                        if (mediaInfosArr[i].lang === currentTrackInfo.lang) {
+                            streamProcessor.selectMediaInfo(mediaInfosArr[i]);
+                            break;
                         }
                     }
                 }

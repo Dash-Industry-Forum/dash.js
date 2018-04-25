@@ -46,6 +46,7 @@ function NotFragmentedTextBufferController(config) {
 
     let errHandler = config.errHandler;
     let type = config.type;
+    let mimeType = config.mimeType;
     let streamProcessor = config.streamProcessor;
 
     let instance,
@@ -86,7 +87,7 @@ function NotFragmentedTextBufferController(config) {
             if (!initialized) {
                 const textBuffer = buffer.getBuffer();
                 if (textBuffer.hasOwnProperty(Constants.INITIALIZE)) {
-                    textBuffer.initialize(type, streamProcessor);
+                    textBuffer.initialize(mimeType, streamProcessor);
                 }
                 initialized = true;
             }
