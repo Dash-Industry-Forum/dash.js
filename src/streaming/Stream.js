@@ -256,10 +256,6 @@ function Stream(config) {
         }
     }
 
-    function getMimeTypeOrType(mediaInfo) {
-        return mediaInfo.type === Constants.TEXT ? mediaInfo.mimeType : mediaInfo.type;
-    }
-
     function isMediaSupported(mediaInfo) {
         const type = mediaInfo.type;
         let codec,
@@ -317,7 +313,7 @@ function Stream(config) {
 
     function createStreamProcessor(mediaInfo, allMediaForType, mediaSource, optionalSettings) {
         let streamProcessor = StreamProcessor(context).create({
-            type: getMimeTypeOrType(mediaInfo),
+            type: mediaInfo.type,
             mimeType: mediaInfo.mimeType,
             timelineConverter: timelineConverter,
             adapter: adapter,
