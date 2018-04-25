@@ -585,14 +585,14 @@ function Stream(config) {
         let arr = [];
 
         let type,
-            controller;
+            streamProcessor;
 
         for (let i = 0; i < ln; i++) {
-            controller = streamProcessors[i];
-            type = controller.getType();
+            streamProcessor = streamProcessors[i];
+            type = streamProcessor.getType();
 
-            if (type === Constants.AUDIO || type === Constants.VIDEO || type === Constants.FRAGMENTED_TEXT) {
-                arr.push(controller);
+            if (type === Constants.AUDIO || type === Constants.VIDEO || type === Constants.FRAGMENTED_TEXT || type === Constants.TEXT) {
+                arr.push(streamProcessor);
             }
         }
 
