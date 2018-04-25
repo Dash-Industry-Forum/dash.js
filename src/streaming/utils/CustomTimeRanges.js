@@ -68,20 +68,20 @@ function CustomTimeRanges(/*config*/) {
                 this.customTimeRangeArray.splice(i,1);
                 i--;
 
-            }else if (start > this.customTimeRangeArray[i].start && end < this.customTimeRangeArray[i].end) {
+            } else if (start > this.customTimeRangeArray[i].start && end < this.customTimeRangeArray[i].end) {
                 //|-----------------Range i----------------|
                 //        |-------Range to remove -----|
                 this.customTimeRangeArray.splice(i + 1, 0, {start: end,end: this.customTimeRangeArray[i].end});
                 this.customTimeRangeArray[i].end = start;
                 break;
-            }else if ( start > this.customTimeRangeArray[i].start && start < this.customTimeRangeArray[i].end) {
+            } else if ( start > this.customTimeRangeArray[i].start && start < this.customTimeRangeArray[i].end) {
                 //|-----------Range i----------|
                 //                    |---------Range to remove --------|
                 //    or
                 //|-----------------Range i----------------|
                 //            |-------Range to remove -----|
                 this.customTimeRangeArray[i].end = start;
-            }else if ( end > this.customTimeRangeArray[i].start && end < this.customTimeRangeArray[i].end) {
+            } else if ( end > this.customTimeRangeArray[i].start && end < this.customTimeRangeArray[i].end) {
                 //                     |-----------Range i----------|
                 //|---------Range to remove --------|
                 //            or

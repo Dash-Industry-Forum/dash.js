@@ -97,7 +97,7 @@ function ManifestLoader(config) {
             if (mssHandler) {
                 parser = mssHandler.createMssParser();
                 mssHandler.registerEvents();
-            }else {
+            } else {
                 errHandler.manifestError('manifest type unsupported', 'createParser');
             }
             return parser;
