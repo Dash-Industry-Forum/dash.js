@@ -363,7 +363,7 @@
                             <div class="text-success" ng-show="isDynamic">
                                 <input id="liveLatencyCB" type="checkbox" ng-model="chartState.video.liveLatency.selected" ng-change="enableChartByName('liveLatency', 'video')" >
                                 <label class="text-primary" for="liveLatencyCB" data-toggle="tooltip" data-placement="top"
-                                  title="Difference between live time and current playback position in seconds">Live Latency:</label> {{videoLiveLatency}}
+                                  title="Difference between live time and current playback position in seconds. This latency estimate does not include the time taken by the encoder to encode the content">Live Latency:</label> {{videoLiveLatency}}
                             </div>
                         </div>
                       </div>
