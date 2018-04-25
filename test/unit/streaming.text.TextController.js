@@ -6,6 +6,7 @@ import EventBus from '../../src/core/EventBus';
 import Events from '../../src/core/events/Events';
 
 import VideoModelMock from './mocks/VideoModelMock';
+import StreamControllerMock from './mocks/StreamControllerMock';
 
 const expect = require('chai').expect;
 const context = {};
@@ -16,6 +17,7 @@ const eventBus = EventBus(context).getInstance();
 describe('TextController', function () {
 
     let videoModelMock = new VideoModelMock();
+    let streamControllerMock = new StreamControllerMock();
     let textTracks;
     let textController;
 
@@ -27,7 +29,8 @@ describe('TextController', function () {
 
         textController = TextController(context).getInstance();
         textController.setConfig({
-            videoModel: videoModelMock
+            videoModel: videoModelMock,
+            streamController: streamControllerMock
         });
     });
 
