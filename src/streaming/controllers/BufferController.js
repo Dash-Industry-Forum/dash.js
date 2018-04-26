@@ -661,7 +661,13 @@ function BufferController(config) {
     }
 
     function clearNextRange() {
-        if (pendingPruningRanges.length === 0 || !buffer || !buffer.buffered || buffer.buffered.length === 0) return;
+        if (pendingPruningRanges.length === 0 || !buffer) {
+            return;
+        }
+        const sourceBuffer = buffer.getBuffer();
+        if (!sourceBuffer || !sourceBuffer.buffered || sourceBuffer.buffered.length === 0) {
+            return;
+        }
 
         const range = pendingPruningRanges.shift();
         log('Removing', type, 'buffer from:', range.start, 'to', range.end);
