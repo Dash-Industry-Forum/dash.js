@@ -55,7 +55,7 @@ const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
 const BUFFER_TIME_AT_TOP_QUALITY = 30;
 const BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 60;
 const LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;
-const SEGMENT_OVERLAP_TOLERANCE_TIME = 0.05;
+const SEGMENT_OVERLAP_TOLERANCE_TIME = 0.2;
 const SMALL_GAP_LIMIT = 0.8;
 const MANIFEST_UPDATE_RETRY_INTERVAL = 100;
 
@@ -70,6 +70,8 @@ const MANIFEST_RETRY_INTERVAL = 500;
 
 const XLINK_RETRY_ATTEMPTS = 1;
 const XLINK_RETRY_INTERVAL = 500;
+
+const DEFAULT_LOW_LATENCY_LIVE_DELAY = 3;
 
 //This value influences the startup time for live (in ms).
 const WALLCLOCK_TIME_UPDATE_INTERVAL = 50;
@@ -109,6 +111,7 @@ function MediaPlayerModel() {
         cacheLoadThresholds,
         jumpGaps,
         smallGapLimit,
+        lowLatencyEnabled,
         manifestUpdateRetryInterval;
 
     function setup() {
@@ -148,6 +151,7 @@ function MediaPlayerModel() {
         };
         customABRRule = [];
         movingAverageMethod = Constants.MOVING_AVERAGE_SLIDING_WINDOW;
+        lowLatencyEnabled = false;
 
         retryAttempts = {
             [HTTPRequest.MPD_TYPE]:                         MANIFEST_RETRY_ATTEMPTS,
@@ -422,6 +426,9 @@ function MediaPlayerModel() {
     }
 
     function getLiveDelay() {
+        if (lowLatencyEnabled) {
+            return liveDelay || DEFAULT_LOW_LATENCY_LIVE_DELAY;
+        }
         return liveDelay;
     }
 
@@ -501,6 +508,14 @@ function MediaPlayerModel() {
         return smallGapLimit;
     }
 
+    function getLowLatencyEnabled() {
+        return lowLatencyEnabled;
+    }
+
+    function setLowLatencyEnabled(value) {
+        lowLatencyEnabled = value;
+    }
+
     function setManifestUpdateRetryInterval(value) {
         manifestUpdateRetryInterval = value;
     }
@@ -508,6 +523,7 @@ function MediaPlayerModel() {
     function getManifestUpdateRetryInterval() {
         return manifestUpdateRetryInterval;
     }
+
     function reset() {
         //TODO need to figure out what props to persist across sessions and which to reset if any.
         //setup();
@@ -584,6 +600,8 @@ function MediaPlayerModel() {
         getJumpGaps: getJumpGaps,
         setSmallGapLimit: setSmallGapLimit,
         getSmallGapLimit: getSmallGapLimit,
+        getLowLatencyEnabled: getLowLatencyEnabled,
+        setLowLatencyEnabled: setLowLatencyEnabled,
         setManifestUpdateRetryInterval: setManifestUpdateRetryInterval,
         getManifestUpdateRetryInterval: getManifestUpdateRetryInterval,
         reset: reset

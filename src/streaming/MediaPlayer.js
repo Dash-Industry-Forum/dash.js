@@ -1078,6 +1078,23 @@ function MediaPlayer() {
     }
 
     /**
+     * @memberof module:MediaPlayer
+     * @instance
+     * @returns {number|NaN} Current live stream latency in seconds. It is the difference between current time and time position at the playback head.
+     */
+    function getCurrentLiveLatency() {
+        if (!mediaPlayerInitialized) {
+            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+        }
+
+        if (!playbackInitialized) {
+            return NaN;
+        }
+
+        return playbackController.getCurrentLiveLatency();
+    }
+
+    /**
      * <p>Set to true if you would like to override the default live delay and honor the SuggestedPresentationDelay attribute in by the manifest.</p>
      * @param {boolean} value
      * @default false
@@ -1300,6 +1317,29 @@ function MediaPlayer() {
      */
     function getMovingAverageMethod() {
         return mediaPlayerModel.getMovingAverageMethod();
+    }
+
+
+    /**
+     * Returns if low latency mode is enabled. Disabled by default.
+     * @return {boolean} true - if enabled
+     * @see {@link module:MediaPlayer#setLowLatencyEnabled setLowLatencyEnabled()}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getLowLatencyEnabled() {
+        return mediaPlayerModel.getLowLatencyEnabled();
+    }
+
+    /**
+     * Enables low latency mode for dynamic streams. If not specified, liveDelay is set to 3s of buffer.
+     * Browser compatibility (Check row 'ReadableStream response body'): https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
+     * @param {boolean} value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setLowLatencyEnabled(value) {
+        return mediaPlayerModel.setLowLatencyEnabled(value);
     }
 
     /**
@@ -2780,6 +2820,7 @@ function MediaPlayer() {
         setLiveDelayFragmentCount: setLiveDelayFragmentCount,
         setLiveDelay: setLiveDelay,
         getLiveDelay: getLiveDelay,
+        getCurrentLiveLatency: getCurrentLiveLatency,
         useSuggestedPresentationDelay: useSuggestedPresentationDelay,
         enableLastBitrateCaching: enableLastBitrateCaching,
         enableLastMediaSettingsCaching: enableLastMediaSettingsCaching,
@@ -2865,6 +2906,8 @@ function MediaPlayer() {
         getJumpGaps: getJumpGaps,
         setSmallGapLimit: setSmallGapLimit,
         getSmallGapLimit: getSmallGapLimit,
+        getLowLatencyEnabled: getLowLatencyEnabled,
+        setLowLatencyEnabled: setLowLatencyEnabled,
         setManifestUpdateRetryInterval: setManifestUpdateRetryInterval,
         getManifestUpdateRetryInterval: getManifestUpdateRetryInterval,
         setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,

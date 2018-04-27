@@ -80,6 +80,11 @@ class MediaPlayerEvents extends EventsBase {
         this.FRAGMENT_LOADING_COMPLETED = 'fragmentLoadingCompleted';
 
         /**
+         * Triggered when a partial fragment download has completed.
+         * @event MediaPlayerEvents#FRAGMENT_LOADING_PROGRESS
+         */
+        this.FRAGMENT_LOADING_PROGRESS = 'fragmentLoadingProgress';
+        /**
          * Triggered when a fragment download has started.
          * @event MediaPlayerEvents#FRAGMENT_LOADING_STARTED
          */

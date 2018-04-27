@@ -60,7 +60,6 @@ a:hover {
         OPTIONS PANEL
 *****************************/
 .options-show {
-    height: 260px;
     transition-property: all;
     transition-duration: .5s;
 }

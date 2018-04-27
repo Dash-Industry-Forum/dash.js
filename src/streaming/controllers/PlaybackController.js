@@ -63,7 +63,8 @@ function PlaybackController() {
         mediaPlayerModel,
         playOnceInitialized,
         compatibleWithPreviousStream,
-        lastLivePlaybackTime;
+        lastLivePlaybackTime,
+        availabilityStartTime;
 
     function setup() {
         reset();
@@ -76,7 +77,7 @@ function PlaybackController() {
         liveStartTime = streamInfo.start;
         compatibleWithPreviousStream = compatible;
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
-        eventBus.on(Events.BYTES_APPENDED, onBytesAppended, this);
+        eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
         eventBus.on(Events.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, this);
 
@@ -177,12 +178,18 @@ function PlaybackController() {
 
         if (mediaPlayerModel.getUseSuggestedPresentationDelay() && mpd.hasOwnProperty(Constants.SUGGESTED_PRESENTATION_DELAY)) {
             delay = mpd.suggestedPresentationDelay;
+        } else if (mediaPlayerModel.getLowLatencyEnabled()) {
+            delay = 0;
         } else if (mediaPlayerModel.getLiveDelay()) {
             delay = mediaPlayerModel.getLiveDelay(); // If set by user, this value takes precedence
         } else if (!isNaN(fragmentDuration)) {
             delay = fragmentDuration * mediaPlayerModel.getLiveDelayFragmentCount();
         } else {
             delay = streamInfo.manifestInfo.minBufferTime * 2;
+        }
+
+        if (mpd.availabilityStartTime) {
+            availabilityStartTime = mpd.availabilityStartTime.getTime();
         }
 
         if (dvrWindowSize > 0) {
@@ -202,6 +209,18 @@ function PlaybackController() {
         return liveDelay;
     }
 
+    function getCurrentLiveLatency() {
+        if (!isDynamic || isNaN(availabilityStartTime)) {
+            return NaN;
+        }
+        const currentTime = getTime();
+        if (isNaN(currentTime) || currentTime === 0) {
+            return 0;
+        }
+
+        return ((Math.round(new Date().getTime() - (currentTime * 1000 + availabilityStartTime))) / 1000).toFixed(3);
+    }
+
     function reset() {
         currentTime = 0;
         liveStartTime = NaN;
@@ -209,11 +228,12 @@ function PlaybackController() {
         playOnceInitialized = false;
         commonEarliestTime = {};
         liveDelay = 0;
+        availabilityStartTime = 0;
         bufferedRange = {};
         if (videoModel) {
             eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
-            eventBus.off(Events.BYTES_APPENDED, onBytesAppended, this);
+            eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
             eventBus.off(Events.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, this);
             stopUpdatingWallclockTime();
             removeAllListeners();
@@ -522,7 +542,6 @@ function PlaybackController() {
         const hasAudioTrack = streamController.isAudioTrackPresent();
 
         initialStartTime = getStreamStartTime(false);
-
         if (hasAudioTrack && hasVideoTrack) {
             //current stream has audio and video contents
             if (!isNaN(commonEarliestTime[streamInfo.id].audio) && !isNaN(commonEarliestTime[streamInfo.id].video)) {
@@ -617,6 +636,7 @@ function PlaybackController() {
         getLiveStartTime: getLiveStartTime,
         computeLiveDelay: computeLiveDelay,
         getLiveDelay: getLiveDelay,
+        getCurrentLiveLatency: getCurrentLiveLatency,
         play: play,
         isPaused: isPaused,
         pause: pause,

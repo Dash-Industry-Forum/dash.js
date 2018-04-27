@@ -30,7 +30,7 @@
  */
 import Constants from './constants/Constants';
 import XlinkController from './controllers/XlinkController';
-import XHRLoader from './XHRLoader';
+import HTTPLoader from './net/HTTPLoader';
 import URLUtils from './utils/URLUtils';
 import TextRequest from './vo/TextRequest';
 import DashJSError from './vo/DashJSError';
@@ -55,7 +55,7 @@ function ManifestLoader(config) {
     const log = debug.log;
 
     let instance,
-        xhrLoader,
+        httpLoader,
         xlinkController,
         parser;
     let mssHandler = config.mssHandler;
@@ -64,7 +64,7 @@ function ManifestLoader(config) {
     function setup() {
         eventBus.on(Events.XLINK_READY, onXlinkReady, instance);
 
-        xhrLoader = XHRLoader(context).create({
+        httpLoader = HTTPLoader(context).create({
             errHandler: errHandler,
             metricsModel: config.metricsModel,
             mediaPlayerModel: config.mediaPlayerModel,
@@ -113,20 +113,20 @@ function ManifestLoader(config) {
     function load(url) {
         const request = new TextRequest(url, HTTPRequest.MPD_TYPE);
 
-        xhrLoader.load({
+        httpLoader.load({
             request: request,
-            success: function (data, textStatus, xhr) {
+            success: function (data, textStatus, responseURL) {
                 let actualUrl,
                     baseUri;
 
                 // Handle redirects for the MPD - as per RFC3986 Section 5.1.3
                 // also handily resolves relative MPD URLs to absolute
-                if (xhr.responseURL && xhr.responseURL !== url) {
-                    baseUri = urlUtils.parseBaseUrl(xhr.responseURL);
-                    actualUrl = xhr.responseURL;
+                if (responseURL && responseURL !== url) {
+                    baseUri = urlUtils.parseBaseUrl(responseURL);
+                    actualUrl = responseURL;
                 } else {
                     // usually this case will be caught and resolved by
-                    // xhr.responseURL above but it is not available for IE11 and Edge/12 and Edge/13
+                    // responseURL above but it is not available for IE11 and Edge/12 and Edge/13
                     // baseUri must be absolute for BaseURL resolution later
                     if (urlUtils.isRelative(url)) {
                         url = urlUtils.resolve(url, window.location.href);
@@ -189,7 +189,7 @@ function ManifestLoader(config) {
                     );
                 }
             },
-            error: function (xhr, statusText, errorText) {
+            error: function (request, statusText, errorText) {
                 eventBus.trigger(
                     Events.INTERNAL_MANIFEST_LOADED, {
                         manifest: null,
@@ -211,9 +211,9 @@ function ManifestLoader(config) {
             xlinkController = null;
         }
 
-        if (xhrLoader) {
-            xhrLoader.abort();
-            xhrLoader = null;
+        if (httpLoader) {
+            httpLoader.abort();
+            httpLoader = null;
         }
 
         if (mssHandler) {
