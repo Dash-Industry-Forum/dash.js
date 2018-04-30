@@ -402,7 +402,7 @@ function TextTracks() {
             return;
         }
 
-        for (let item in captionData) {
+        for (let item = 0; item < captionData.length; item++) {
             let cue;
             const currentItem = captionData[item];
 
@@ -466,8 +466,15 @@ function TextTracks() {
                     }
                 }
             }
-
-            track.addCue(cue);
+            try {
+                track.addCue(cue);
+            } catch (e) {
+                // Edge crash, delete everything and start adding again
+                // @see https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/11979877/
+                deleteTrackCues(track);
+                track.addCue(cue);
+                throw e;
+            }
         }
     }
 

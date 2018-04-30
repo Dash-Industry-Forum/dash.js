@@ -95,6 +95,7 @@ function Stream(config) {
             eventBus.on(Events.LICENSE_REQUEST_COMPLETE, onProtectionError, instance);
             eventBus.on(Events.KEY_SYSTEM_SELECTED, onProtectionError, instance);
             eventBus.on(Events.KEY_SESSION_CREATED, onProtectionError, instance);
+            eventBus.on(Events.KEY_STATUSES_CHANGED, onProtectionError, instance);
         }
     }
 
@@ -109,7 +110,6 @@ function Stream(config) {
             initializeMedia(mediaSource);
             isStreamActivated = true;
         }
-        createBuffers();
     }
 
     /**
@@ -182,6 +182,7 @@ function Stream(config) {
         eventBus.off(Events.LICENSE_REQUEST_COMPLETE, onProtectionError, instance);
         eventBus.off(Events.KEY_SYSTEM_SELECTED, onProtectionError, instance);
         eventBus.off(Events.KEY_SESSION_CREATED, onProtectionError, instance);
+        eventBus.off(Events.KEY_STATUSES_CHANGED, onProtectionError, instance);
     }
 
     function getDuration() {
@@ -309,6 +310,7 @@ function Stream(config) {
             if (mediaInfo.type !== Constants.FRAGMENTED_TEXT) {
                 abrController.updateTopQualityIndex(mediaInfo);
                 processor.switchTrackAsked();
+                processor.getFragmentModel().abortRequests();
             }
         }
     }
@@ -384,10 +386,7 @@ function Stream(config) {
                 textController.addEmbeddedTrack(mediaInfo);
             } else {
                 if (!isMediaSupported(mediaInfo)) continue;
-
-                if (mediaController.isMultiTrackSupportedByType(mediaInfo.type)) {
-                    mediaController.addTrack(mediaInfo, streamInfo);
-                }
+                mediaController.addTrack(mediaInfo);
             }
         }
 

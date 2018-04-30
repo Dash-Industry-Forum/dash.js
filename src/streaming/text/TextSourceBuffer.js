@@ -77,7 +77,8 @@ function TextSourceBuffer() {
         embeddedLastSequenceNumber,
         embeddedSequenceNumbers,
         embeddedCea608FieldParsers,
-        embeddedTextHtmlRender;
+        embeddedTextHtmlRender,
+        mseTimeOffset;
 
     function initialize(type, streamProcessor) {
         parser = null;
@@ -165,6 +166,14 @@ function TextSourceBuffer() {
         embeddedLastSequenceNumber = null;
         embeddedInitialized = true;
         embeddedTextHtmlRender = EmbeddedTextHtmlRender(context).getInstance();
+
+        const streamProcessors = streamController.getActiveStreamProcessors();
+        for (let i in streamProcessors) {
+            if (streamProcessors[i].getType() === 'video') {
+                mseTimeOffset = streamProcessors[i].getCurrentRepresentationInfo().MSETimeOffset;
+                break;
+            }
+        }
 
         eventBus.on(Events.VIDEO_CHUNK_RECEIVED, onVideoChunkReceived, this);
     }
@@ -332,6 +341,8 @@ function TextSourceBuffer() {
                             result = parser.parse(ccContent, offsetTime, sampleStart / timescale, (sampleStart + sample.duration) / timescale, images);
                             textTracks.addCaptions(currFragmentedTrackIdx, firstSubtitleStart / timescale, result);
                         } catch (e) {
+                            fragmentModel.removeExecutedRequestsBeforeTime();
+                            this.remove();
                             log('TTML parser error: ' + e.message);
                         }
                     }
@@ -511,7 +522,7 @@ function TextSourceBuffer() {
                         } else {
                             idx += 1;
                         }
-                        allCcData.fields[k].push([sample.cts, ccData[k], idx]);
+                        allCcData.fields[k].push([sample.cts + (mseTimeOffset * embeddedTimescale), ccData[k], idx]);
                         lastSampleTime = sample.cts;
                     }
                 }

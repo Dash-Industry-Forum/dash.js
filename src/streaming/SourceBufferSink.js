@@ -150,13 +150,17 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback) {
             };
 
             try {
-                if (buffer.appendBuffer) {
-                    buffer.appendBuffer(nextChunk.bytes);
+                if (nextChunk.bytes.length === 0) {
+                    afterSuccess.call(this);
                 } else {
-                    buffer.append(nextChunk.bytes, nextChunk);
+                    if (buffer.appendBuffer) {
+                        buffer.appendBuffer(nextChunk.bytes);
+                    } else {
+                        buffer.append(nextChunk.bytes, nextChunk);
+                    }
+                    // updating is in progress, we should wait for it to complete before signaling that this operation is done
+                    waitForUpdateEnd(buffer, afterSuccess.bind(this));
                 }
-                // updating is in progress, we should wait for it to complete before signaling that this operation is done
-                waitForUpdateEnd(buffer, afterSuccess.bind(this));
             } catch (err) {
                 log('SourceBuffer append failed "' + err + '"');
                 if (appendQueue.length > 0) {

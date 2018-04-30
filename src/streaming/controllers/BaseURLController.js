@@ -92,6 +92,8 @@ function BaseURLController() {
                 } else {
                     p.url = urlUtils.resolve(b.url, p.url);
                 }
+                p.availabilityTimeOffset = b.availabilityTimeOffset;
+                p.availabilityTimeComplete = b.availabilityTimeComplete;
             } else {
                 return new BaseURL();
             }

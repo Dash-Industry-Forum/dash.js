@@ -148,15 +148,14 @@ function TextController() {
     function onTextTracksAdded(e) {
         let tracks = e.tracks;
         let index = e.index;
-        // find track corresponding to default subtitle and apply it
-        let defaultLanguageIndex = tracks.findIndex((item) => {
-            return (item.lang === defaultLanguage);
-        });
 
-        if (defaultLanguageIndex !== -1) {
-            this.setTextTrack(defaultLanguageIndex);
-            index = defaultLanguageIndex;
-        }
+        tracks.some((item, idx) => {
+            if (item.lang === defaultLanguage) {
+                this.setTextTrack(idx);
+                index = idx;
+                return true;
+            }
+        });
 
         if (!textDefaultEnabled) {
             // disable text at startup

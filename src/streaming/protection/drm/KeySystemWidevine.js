@@ -76,6 +76,16 @@ function KeySystemWidevine(config) {
         return null;
     }
 
+    function getSessionId(cp) {
+        // Get sessionId from protectionData or from manifest
+        if (protData && protData.sessionId) {
+            return protData.sessionId;
+        } else if (cp && cp.sessionId) {
+            return cp.sessionId;
+        }
+        return null;
+    }
+
     instance = {
         uuid: uuid,
         schemeIdURI: schemeIdURI,
@@ -85,7 +95,8 @@ function KeySystemWidevine(config) {
         getRequestHeadersFromMessage: getRequestHeadersFromMessage,
         getLicenseRequestFromMessage: getLicenseRequestFromMessage,
         getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
-        getCDMData: getCDMData
+        getCDMData: getCDMData,
+        getSessionId: getSessionId
     };
 
     return instance;

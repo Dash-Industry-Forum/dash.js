@@ -95,6 +95,10 @@ function KeySystemClearKey(config) {
         return null;
     }
 
+    function getSessionId(/*cp*/) {
+        return null;
+    }
+
     instance = {
         uuid: uuid,
         schemeIdURI: schemeIdURI,
@@ -104,6 +108,7 @@ function KeySystemClearKey(config) {
         getLicenseRequestFromMessage: getLicenseRequestFromMessage,
         getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
         getCDMData: getCDMData,
+        getSessionId: getSessionId,
         getClearKeysFromProtectionData: getClearKeysFromProtectionData
     };
 

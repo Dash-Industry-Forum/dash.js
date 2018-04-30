@@ -59,6 +59,8 @@ class Representation {
         this.height = NaN;
         this.scanType = null;
         this.maxPlayoutRate = NaN;
+        this.availabilityTimeOffset = 0;
+        this.availabilityTimeComplete = true;
     }
 
     static hasInitialization(r) {

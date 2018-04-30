@@ -35,7 +35,6 @@
  */
 function MssFragmentMoovProcessor(config) {
     config = config || {};
-    const TIME_SCALE = 10000000;
     const NALUTYPE_SPS = 7;
     const NALUTYPE_PPS = 8;
     const constants = config.constants;
@@ -47,6 +46,7 @@ function MssFragmentMoovProcessor(config) {
         adaptationSet,
         representation,
         contentProtection,
+        timescale,
         trackId;
 
     function createFtypBox(isoFile) {
@@ -151,8 +151,8 @@ function MssFragmentMoovProcessor(config) {
 
         mvhd.creation_time = 0; // the creation time of the presentation => ignore (set to 0)
         mvhd.modification_time = 0; // the most recent time the presentation was modified => ignore (set to 0)
-        mvhd.timescale = TIME_SCALE; // the time-scale for the entire presentation => 10000000 for MSS
-        mvhd.duration = Math.round(period.duration * TIME_SCALE); // the length of the presentation (in the indicated timescale) =>  take duration of period
+        mvhd.timescale = timescale; // the time-scale for the entire presentation => 10000000 for MSS
+        mvhd.duration = Math.round(period.duration * timescale); // the length of the presentation (in the indicated timescale) =>  take duration of period
         mvhd.rate = 1.0; // 16.16 number, '1.0' = normal playback
         mvhd.volume = 1.0; // 8.8 number, '1.0' = full volume
         mvhd.reserved1 = 0;
@@ -181,7 +181,7 @@ function MssFragmentMoovProcessor(config) {
         tkhd.modification_time = 0; // the most recent time the presentation was modified => ignore (set to 0)
         tkhd.track_ID = trackId; // uniquely identifies this track over the entire life-time of this presentation
         tkhd.reserved1 = 0;
-        tkhd.duration = Math.round(period.duration * TIME_SCALE); // the duration of this track (in the timescale indicated in the Movie Header Box) =>  take duration of period
+        tkhd.duration = Math.round(period.duration * timescale); // the duration of this track (in the timescale indicated in the Movie Header Box) =>  take duration of period
         tkhd.reserved2 = [0x0, 0x0];
         tkhd.layer = 0; // specifies the front-to-back ordering of video tracks; tracks with lower numbers are closer to the viewer => 0 since only one video track
         tkhd.alternate_group = 0; // specifies a group or collection of tracks => ignore
@@ -206,8 +206,8 @@ function MssFragmentMoovProcessor(config) {
 
         mdhd.creation_time = 0; // the creation time of the presentation => ignore (set to 0)
         mdhd.modification_time = 0; // the most recent time the presentation was modified => ignore (set to 0)
-        mdhd.timescale = TIME_SCALE; // the time-scale for the entire presentation
-        mdhd.duration = Math.round(period.duration * TIME_SCALE); // the duration of this media (in the scale of the timescale). If the duration cannot be determined then duration is set to all 1s.
+        mdhd.timescale = timescale; // the time-scale for the entire presentation
+        mdhd.duration = Math.round(period.duration * timescale); // the duration of this media (in the scale of the timescale). If the duration cannot be determined then duration is set to all 1s.
         mdhd.language = adaptationSet.lang || 'und'; // declares the language code for this media (see getLanguageCode())
         mdhd.pre_defined = 0;
 
@@ -631,6 +631,8 @@ function MssFragmentMoovProcessor(config) {
         period = adaptationSet.period;
         trackId = adaptationSet.index + 1;
         contentProtection = period.mpd.manifest.Period_asArray[period.index].AdaptationSet_asArray[adaptationSet.index].ContentProtection;
+
+        timescale = period.mpd.manifest.Period_asArray[period.index].AdaptationSet_asArray[adaptationSet.index].SegmentTemplate.timescale;
 
         isoFile = ISOBoxer.createFile();
         createFtypBox(isoFile);

@@ -45,10 +45,11 @@ class BaseURL {
         this.dvb_priority = priority || DEFAULT_DVB_PRIORITY;
         this.dvb_weight = weight || DEFAULT_DVB_WEIGHT;
 
+        this.availabilityTimeOffset = 0;
+        this.availabilityTimeComplete = true;
+
         /* currently unused:
          * byteRange,
-         * availabilityTimeOffset,
-         * availabilityTimeComplete
          */
     }
 }

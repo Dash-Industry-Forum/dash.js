@@ -70,8 +70,29 @@
           "name": "Infinite offset - all segments available at availability start (livesim)"
         },
         {
+          "url": "https://vm2.dashif.org/livesim-chunked/chunkdur_1/ato_7/testpic4_8s/Manifest300.mpd",
+          "name": "Low Latency (Single-Rate)",
+          "bufferConfig" : {
+            "lowLatencyMode": true,
+            "liveDelay": 3
+          }
+        },
+        {
+          "url": "https://vm2.dashif.org/livesim-chunked/chunkdur_1/ato_7/testpic4_8s/Manifest.mpd",
+          "name": "Low Latency (Multi-Rate)",
+          "bufferConfig" : {
+            "lowLatencyMode": true,
+            "liveDelay": 3
+          }
+        },
+        {
           "url": "http://24x7dash-i.akamaihd.net/dash/live/900080/dash-demo/dash.mpd",
           "name": "Akamai 24x7 reference stream - segmentTemplate"
+        },
+        {
+          "url": "https://akamai-axtest.akamaized.net/routes/lapd-v1-acceptance/www_c4/Manifest.mpd",
+          "name": "Axinom reference stream (Live-Clear)",
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors#live-clear"
         }
       ]
     },
@@ -178,6 +199,19 @@
     {
       "name": "Axinom Test Content (modern)",
       "submenu": [
+        {
+          "name": "1080p with Widevine DRM, license expired after 60s",
+          "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_1080p.mpd",
+          "protData": {
+            "com.widevine.alpha": {
+              "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
+              "httpRequestHeaders": {
+                "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImZpcnN0X3BsYXlfZXhwaXJhdGlvbiI6NjAsInBsYXlyZWFkeSI6eyJyZWFsX3RpbWVfZXhwaXJhdGlvbiI6dHJ1ZX0sImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.FAbIiPxX8BHi9RwfzD7Yn-wugU19ghrkBFKsaCPrZmU"
+              }
+            }
+          },
+          "moreInfo": "https://github.com/Axinom/dash-test-vectors"
+        },
         {
           "name": "1080p with PlayReady and Widevine DRM, single key",
           "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_1080p.mpd",
@@ -848,6 +882,16 @@
         {
           "name": "Unified Streaming Live",
           "url": "http://live.unified-streaming.com/loop/loop.isml/loop.mpd?format=mp4&session_id=25020"
+        },
+        {
+          "name": "Unified Streaming (Widevine, persistent)",
+          "url": "http://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-dash-widevine.ism/.mpd",
+          "protData": {
+              "com.widevine.alpha": {
+                  "serverURL": "https://cwip-shaka-proxy.appspot.com/no_auth",
+                  "sessionType": "persistent-license"
+              }
+          }
         }
       ]
     },

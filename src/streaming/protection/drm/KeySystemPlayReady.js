@@ -273,6 +273,10 @@ function KeySystemPlayReady(config) {
         return null;
     }
 
+    function getSessionId(/*cp*/) {
+        return null;
+    }
+
     instance = {
         uuid: uuid,
         schemeIdURI: schemeIdURI,
@@ -282,6 +286,7 @@ function KeySystemPlayReady(config) {
         getLicenseRequestFromMessage: getLicenseRequestFromMessage,
         getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
         getCDMData: getCDMData,
+        getSessionId: getSessionId,
         setPlayReadyMessageFormat: setPlayReadyMessageFormat,
         init: init
     };
