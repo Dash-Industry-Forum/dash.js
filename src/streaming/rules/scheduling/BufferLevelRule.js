@@ -66,7 +66,7 @@ function BufferLevelRule(config) {
             if (abrController.isPlayingAtTopQuality(streamInfo)) {
                 const isLongFormContent = streamInfo.manifestInfo.duration >= mediaPlayerModel.getLongFormContentDurationThreshold();
                 bufferTarget = isLongFormContent ? mediaPlayerModel.getBufferTimeAtTopQualityLongForm() : mediaPlayerModel.getBufferTimeAtTopQuality();
-            }else {
+            } else {
                 bufferTarget = mediaPlayerModel.getStableBufferTime();
             }
         }

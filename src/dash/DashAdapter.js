@@ -223,8 +223,7 @@ function DashAdapter() {
             const mpd = dashManifestModel.getMpd(manifest);
 
             voLocalPeriods = dashManifestModel.getRegularPeriods(mpd);
-
-        }else {
+        } else {
             if (voPeriods.length > 0) {
                 manifest = voPeriods[0].mpd.manifest;
             } else {
