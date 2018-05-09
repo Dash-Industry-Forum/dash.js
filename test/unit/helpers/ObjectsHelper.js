@@ -9,7 +9,7 @@ class ObjectsHelper {
         return {
             getType: () => type,
             getCurrentTrack: () => {},
-            getStreamInfo: () => { return { id: 'some_id', manifestInfo: {isDynamic: true} }; },
+            getStreamInfo: () => { return { id: 'DUMMY_STREAM-01', manifestInfo: {isDynamic: true} }; },
             getMediaInfo: () => { return { bitrateList: [
                                                 { bandwidth: 1000000 },
                                                 { bandwidth: 2000000 },

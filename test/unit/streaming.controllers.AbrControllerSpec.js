@@ -5,8 +5,11 @@ import MediaController from '../../src/streaming/controllers/MediaController';
 import MetricsModel from '../../src/streaming/models/MetricsModel';
 import DashMetrics from '../../src/dash/DashMetrics';
 import DashManifestModel from '../../src/dash/models/DashManifestModel';
+import ManifestModel from '../../src/streaming/models/ManifestModel';
 import TimelineConverter from '../../src/dash/utils/TimelineConverter';
-import VideoModel from '../../src/streaming/models/VideoModel';
+import BitrateInfo from '../../src/streaming/vo/BitrateInfo';
+import DashManifestModelMock from './mocks/DashManifestModelMock';
+import VideoModelMock from './mocks/VideoModelMock';
 
 const expect = require('chai').expect;
 
@@ -27,17 +30,21 @@ describe('AbrController', function () {
     const dashMetrics = DashMetrics(context).getInstance({
         dashManifestModel: dashManifestModel
     });
-    const videoModel = VideoModel(context).getInstance();
     const abrCtrl = AbrController(context).getInstance();
     const dummyMediaInfo = voHelper.getDummyMediaInfo(testType);
     const representationCount = dummyMediaInfo.representationCount;
     const streamProcessor = objectsHelper.getDummyStreamProcessor(testType);
+    const manifestModel = ManifestModel().getInstance();
+    const dashManifestModelMock = new DashManifestModelMock();
+    const videoModelMock = new VideoModelMock();
 
     beforeEach(function () {
         abrCtrl.setConfig({
             metricsModel: metricsModel,
             dashMetrics: dashMetrics,
-            videoModel: videoModel
+            videoModel: videoModelMock,
+            manifestModel: manifestModel,
+            dashManifestModel: dashManifestModelMock
         });
         abrCtrl.registerStreamType('video', streamProcessor);
     });
@@ -193,5 +200,20 @@ describe('AbrController', function () {
         abrCtrl.setMinAllowedBitrateFor(testType, (streamProcessor.getMediaInfo().bitrateList[0].bandwidth / 1000) - 1);
         minAllowedIndex = abrCtrl.getMinAllowedIndexFor(testType);
         expect(minAllowedIndex).to.be.equal(0);
+    });
+
+    it('should return an appropriate BitrateInfo when calling getTopBitrateInfoFor', function () {
+        abrCtrl.updateTopQualityIndex(dummyMediaInfo);
+
+        let bitrateInfo = abrCtrl.getTopBitrateInfoFor(testType);
+        expect(bitrateInfo).to.be.an.instanceOf(BitrateInfo);
+        expect(bitrateInfo.bitrate).to.be.equal(3000000);
+        expect(bitrateInfo.qualityIndex).to.be.equal(2);
+
+        abrCtrl.setLimitBitrateByPortal(true);
+        bitrateInfo = abrCtrl.getTopBitrateInfoFor(testType);
+        expect(bitrateInfo).to.be.an.instanceOf(BitrateInfo);
+        expect(bitrateInfo.bitrate).to.be.equal(2000000);
+        expect(bitrateInfo.qualityIndex).to.be.equal(1);
     });
 });
