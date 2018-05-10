@@ -83,7 +83,6 @@ function StreamProcessor(config) {
     }
 
     function initialize(mediaSource) {
-
         indexHandler = DashHandler(context).create({
             mimeType: mimeType,
             timelineConverter: timelineConverter,

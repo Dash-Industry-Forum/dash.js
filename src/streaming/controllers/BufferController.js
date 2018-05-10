@@ -182,11 +182,14 @@ function BufferController(config) {
     }
 
     function isActive() {
-        return streamProcessor && streamController && streamProcessor.getStreamInfo() ? streamProcessor.getStreamInfo().id === streamController.getActiveStreamInfo().id : false;
+        // ? streamProcessor.getStreamInfo().id === streamController.getActiveStreamInfo().id : false
+        return streamProcessor && streamController && streamProcessor.getStreamInfo();
     }
 
     function onInitFragmentLoaded(e) {
-        if (e.fragmentModel !== streamProcessor.getFragmentModel()) return;
+        if (e.fragmentModel !== streamProcessor.getFragmentModel()) {
+            return;
+        }
         log('Init fragment finished loading saving to', type + '\'s init cache');
         initCache.save(e.chunk);
         log('Append Init fragment', type, ' with representationId:', e.chunk.representationId, ' and quality:', e.chunk.quality);
@@ -254,6 +257,7 @@ function BufferController(config) {
             chunksToAppend.push(chunk);
         }
     }
+
 
     /*
     function showBufferRanges(ranges) {

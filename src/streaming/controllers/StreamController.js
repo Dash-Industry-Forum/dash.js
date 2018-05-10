@@ -283,6 +283,9 @@ function StreamController() {
                 const delayPlaybackEnded = timeToEnd > 0 ? timeToEnd * 1000 : 0;
                 log('[StreamController][toggleEndPeriodTimer] start-up of timer to notify PLAYBACK_ENDED event. It will be triggered in ' + delayPlaybackEnded + ' milliseconds');
                 playbackEndedTimerId = setTimeout(function () {eventBus.trigger(Events.PLAYBACK_ENDED);}, delayPlaybackEnded);
+                const preloadDelay = delayPlaybackEnded < 2000 ? delayPlaybackEnded / 4 : delayPlaybackEnded - 2000;
+                log('[StreamController][toggleEndPeriodTimer] Going to fire preload in ' + preloadDelay);
+                setTimeout(onStreamCanLoadNext,  preloadDelay);
             }
         }
     }
@@ -298,6 +301,23 @@ function StreamController() {
             isStreamBufferingCompleted = true;
             if (isPaused === false) {
                 toggleEndPeriodTimer();
+            }
+        }
+    }
+
+    function onStreamCanLoadNext() {
+        const isLast = getActiveStreamInfo().isLast;
+        if (mediaSource && !isLast) {
+            const newStream = getNextStream();
+            compatible = activeStream.isCompatibleWithStream(newStream);
+            if (compatible) {
+                log('[StreamController][onStreamCanLoadNext] Preloading next stream');
+                activeStream.stopEventController();
+                activeStream.deactivate(true);
+                newStream.preload(mediaSource, buffers);
+                newStream.getProcessors().forEach(p => {
+                    adapter.setIndexHandlerTime(p, newStream.getStartTime());
+                });
             }
         }
     }
@@ -456,7 +476,6 @@ function StreamController() {
             log('MediaSource attached to element.  Waiting on open...');
         } else {
             if (keepBuffers) {
-                setMediaDuration();
                 activateStream(seekTime, keepBuffers);
                 if (!oldStream) {
                     eventBus.trigger(Events.SOURCE_INITIALIZED);
@@ -474,7 +493,6 @@ function StreamController() {
 
     function activateStream(seekTime, keepBuffers) {
         buffers = activeStream.activate(mediaSource, keepBuffers ? buffers : undefined);
-
         audioTrackDetected = checkTrackPresence(Constants.AUDIO);
         videoTrackDetected = checkTrackPresence(Constants.VIDEO);
 
@@ -706,7 +724,6 @@ function StreamController() {
 
     function onPlaybackError(e) {
         if (!e.error) return;
-
         let msg = '';
 
         switch (e.error.code) {

@@ -559,11 +559,7 @@ function PlaybackController() {
                 }
                 if (checkTimeInRanges(earliestTime, ranges)) {
                     if (!isSeeking()) {
-                        if (compatibleWithPreviousStream) {
-                            eventBus.trigger(Events.PLAYBACK_SEEK_ASKED);
-                            onPlaybackSeeking();
-                            onPlaybackSeeked();
-                        } else {
+                        if (!compatibleWithPreviousStream) {
                             seek(earliestTime, true);
                         }
                     }
