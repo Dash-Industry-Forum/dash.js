@@ -181,7 +181,7 @@ function BufferController(config) {
     }
 
     function isActive() {
-        return streamProcessor && streamController && streamProcessor.getStreamInfo() ? streamProcessor.getStreamInfo().id === streamController.getActiveStreamInfo().id : false;
+        return streamProcessor && streamController && streamProcessor.getStreamInfo();
     }
 
     function onInitFragmentLoaded(e) {
@@ -865,8 +865,8 @@ function BufferController(config) {
             buffer.reset();
             buffer = null;
         }
-        bufferResetInProgress = false;
 
+        bufferResetInProgress = false;
     }
 
     function reset(errored, keepBuffers) {

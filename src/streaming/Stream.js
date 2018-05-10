@@ -72,6 +72,7 @@ function Stream(config) {
         fragmentController,
         thumbnailController,
         eventController,
+        preloaded,
         trackChangedEvent;
 
     function setup() {
@@ -109,11 +110,18 @@ function Stream(config) {
      */
     function activate(mediaSource, previousBuffers) {
         if (!isStreamActivated) {
-            eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
-            const result = initializeMedia(mediaSource, previousBuffers);
+            let result;
+            if (!getPreloaded()) {
+                result = initializeMedia(mediaSource, previousBuffers);
+                eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
+            } else {
+                initializeAfterPreload();
+                result = previousBuffers;
+            }
             isStreamActivated = true;
             return result;
         }
+        return previousBuffers;
     }
 
     /**
@@ -444,8 +452,8 @@ function Stream(config) {
         initializeMediaForType(Constants.MUXED, mediaSource);
         initializeMediaForType(Constants.IMAGE, mediaSource);
 
-        const buffers = createBuffers(previousBuffers);
         //TODO. Consider initialization of TextSourceBuffer here if embeddedText, but no sideloadedText.
+        const buffers = createBuffers(previousBuffers);
 
         isMediaInitialized = true;
         isUpdating = false;
@@ -459,6 +467,39 @@ function Stream(config) {
         }
 
         return buffers;
+    }
+
+    function initializeAfterPreload() {
+        checkConfig();
+
+        let events;
+
+        //if initializeMedia is called from a switch period, eventController could have been already created.
+        if (!eventController) {
+            eventController = EventController(context).create();
+
+            eventController.setConfig({
+                manifestModel: manifestModel,
+                manifestUpdater: manifestUpdater,
+                playbackController: playbackController
+            });
+            events = adapter.getEventsFor(streamInfo);
+            eventController.addInlineEvents(events);
+        }
+        isUpdating = true;
+
+        filterCodecs(Constants.VIDEO);
+        filterCodecs(Constants.AUDIO);
+
+        isMediaInitialized = true;
+        isUpdating = false;
+        if (streamProcessors.length === 0) {
+            let msg = 'No streams to play.';
+            errHandler.manifestError(msg, 'nostreams', manifestModel.getValue());
+            log(msg);
+        } else {
+            checkIfInitializationCompleted();
+        }
     }
 
     function filterCodecs(type) {
@@ -484,7 +525,6 @@ function Stream(config) {
         const ln = streamProcessors.length;
         const hasError = !!updateError.audio || !!updateError.video;
         let error = hasError ? new Error(DATA_UPDATE_FAILED_ERROR_CODE, 'Data update failed', null) : null;
-
         for (let i = 0; i < ln; i++) {
             if (streamProcessors[i].isUpdating() || isUpdating) {
                 return;
@@ -506,6 +546,7 @@ function Stream(config) {
                 }
             }
         }
+
         eventBus.trigger(Events.STREAM_INITIALIZED, {
             streamInfo: streamInfo,
             error: error
@@ -649,10 +690,19 @@ function Stream(config) {
     function compareCodecs( stream, type ) {
         const newStreamInfo = stream.getStreamInfo();
         const currentStreamInfo = getStreamInfo();
+
+        if (!newStreamInfo || !currentStreamInfo) {
+            return false;
+        }
+
         const newAdaptation = dashManifestModel.getAdaptationForType(manifestModel.getValue(), newStreamInfo.index, type, newStreamInfo);
         const currentAdaptation = dashManifestModel.getAdaptationForType(manifestModel.getValue(), currentStreamInfo.index, type, currentStreamInfo);
-        const sameMimeType = newAdaptation.mimeType === currentAdaptation.mimeType;
 
+        if (!newAdaptation || !currentAdaptation) {
+            return false;
+        }
+
+        const sameMimeType =  newAdaptation && currentAdaptation && newAdaptation.mimeType === currentAdaptation.mimeType;
         const oldCodecs = currentAdaptation.Representation_asArray.map((representation) => {
             return representation.codecs;
         });
@@ -675,6 +725,33 @@ function Stream(config) {
         return codecMatch || (partialCodecMatch && sameMimeType);
     }
 
+    function setPreloaded(value) {
+        preloaded = value;
+    }
+
+    function getPreloaded() {
+        return preloaded;
+    }
+
+    function preload(mediaSource, previousBuffers) {
+        initializeMediaForType(Constants.VIDEO, mediaSource);
+        initializeMediaForType(Constants.AUDIO, mediaSource);
+        initializeMediaForType(Constants.TEXT, mediaSource);
+        initializeMediaForType(Constants.FRAGMENTED_TEXT, mediaSource);
+        initializeMediaForType(Constants.EMBEDDED_TEXT, mediaSource);
+        initializeMediaForType(Constants.MUXED, mediaSource);
+        initializeMediaForType(Constants.IMAGE, mediaSource);
+
+        createBuffers(previousBuffers);
+
+        eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
+        for (let i = 0; i < streamProcessors.length && streamProcessors[i]; i++) {
+            streamProcessors[i].getScheduleController().start();
+        }
+
+        setPreloaded(true);
+    }
+
     instance = {
         initialize: initialize,
         activate: activate,
@@ -683,6 +760,7 @@ function Stream(config) {
         getStartTime: getStartTime,
         getId: getId,
         getStreamInfo: getStreamInfo,
+        preload: preload,
         getFragmentController: getFragmentController,
         getThumbnailController: getThumbnailController,
         getEventController: getEventController,
