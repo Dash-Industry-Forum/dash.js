@@ -724,6 +724,7 @@ function StreamController() {
 
     function onPlaybackError(e) {
         if (!e.error) return;
+
         let msg = '';
 
         switch (e.error.code) {

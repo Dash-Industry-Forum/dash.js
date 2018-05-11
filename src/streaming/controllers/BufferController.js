@@ -182,7 +182,6 @@ function BufferController(config) {
     }
 
     function isActive() {
-        // ? streamProcessor.getStreamInfo().id === streamController.getActiveStreamInfo().id : false
         return streamProcessor && streamController && streamProcessor.getStreamInfo();
     }
 
@@ -257,7 +256,6 @@ function BufferController(config) {
             chunksToAppend.push(chunk);
         }
     }
-
 
     /*
     function showBufferRanges(ranges) {
@@ -858,8 +856,8 @@ function BufferController(config) {
             buffer.reset();
             buffer = null;
         }
-        bufferResetInProgress = false;
 
+        bufferResetInProgress = false;
     }
 
     function reset(errored, keepBuffers) {

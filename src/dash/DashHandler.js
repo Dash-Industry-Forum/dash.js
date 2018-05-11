@@ -469,9 +469,6 @@ function DashHandler(config) {
     }
 
     function onInitializationLoaded(e) {
-        if (e.streamProcessor !== streamProcessor) {
-            return;
-        }
         const representation = e.representation;
         if (!representation.segments) return;
 
@@ -479,9 +476,6 @@ function DashHandler(config) {
     }
 
     function onSegmentsLoaded(e) {
-        if (e.streamProcessor !== streamProcessor) {
-            return;
-        }
         const type = streamProcessor ? streamProcessor.getType() : null;
         const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
         if (e.error || (type !== e.mediaType)) return;
