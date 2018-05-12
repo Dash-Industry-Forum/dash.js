@@ -96,6 +96,23 @@ const APIS_ProtectionModel_3Feb2014 = [
         message: 'mskeymessage',
         ready: 'mskeyadded',
         close: 'mskeyclose'
+    },
+    // webkit-prefixed (Safari, OS X)
+    {
+        // Video Element
+        setMediaKeys: 'webkitSetMediaKeys',
+        // MediaKeys
+        MediaKeys: 'webkitKeys',
+
+        // MediaKeySession
+        release: 'close',
+
+        // Events
+        needkey: 'needkey',
+        error: 'keyerror',
+        message: 'keymessage',
+        ready: 'keyadded',
+        close: 'keyclose'
     }
 ];
 
