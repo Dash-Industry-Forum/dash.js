@@ -30,7 +30,7 @@
  */
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
-import ObjectIron from '../../../externals/objectiron';
+import ObjectIron from './objectiron';
 import X2JS from '../../../externals/xml2json';
 import StringMatcher from './matchers/StringMatcher';
 import DurationMatcher from './matchers/DurationMatcher';
@@ -70,10 +70,10 @@ function DashParser(config) {
             matchers:           matchers
         });
 
-        objectIron = new ObjectIron([
-            new RepresentationBaseValuesMap(),
-            new SegmentValuesMap()
-        ]);
+        objectIron = ObjectIron(context).create({
+            adaptationset: new RepresentationBaseValuesMap(),
+            period: new SegmentValuesMap()
+        });
     }
 
     function checkConfig() {
