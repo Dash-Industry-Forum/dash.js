@@ -37,7 +37,6 @@ function MssParser(config) {
     config = config || {};
     const BASE64 = config.BASE64;
     const log = config.log;
-    const errorHandler = config.errHandler;
     const constants = config.constants;
 
     const DEFAULT_TIME_SCALE = 10000000.0;
@@ -704,16 +703,11 @@ function MssParser(config) {
         let xmlDoc = null;
 
         if (window.DOMParser) {
-            try {
-                let parser = new window.DOMParser();
+            let parser = new window.DOMParser();
 
-                xmlDoc = parser.parseFromString(data, 'text/xml');
-                if (xmlDoc.getElementsByTagName('parsererror').length > 0) {
-                    throw new Error('Error parsing XML');
-                }
-            } catch (e) {
-                errorHandler.manifestError('parsing the manifest failed', 'parse', data, e);
-                xmlDoc = null;
+            xmlDoc = parser.parseFromString(data, 'text/xml');
+            if (xmlDoc.getElementsByTagName('parsererror').length > 0) {
+                throw new Error('parsing the manifest failed');
             }
         }
 
