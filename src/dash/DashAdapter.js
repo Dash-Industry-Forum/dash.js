@@ -152,7 +152,7 @@ function DashAdapter() {
         mediaInfo.codec = 'cea-608-in-SEI';
         mediaInfo.isText = true;
         mediaInfo.isEmbedded = true;
-        mediaInfo.lang = channel + ' ' + lang;
+        mediaInfo.lang = lang;
         mediaInfo.roles = ['caption'];
     }
 
