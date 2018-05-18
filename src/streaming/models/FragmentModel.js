@@ -87,8 +87,17 @@ function FragmentModel(config) {
             return isNaN(req1.index) && isNaN(req2.index) && (req1.quality === req2.quality);
         };
 
+        const isInBuffer = function (req) {
+            return streamProcessor.timeIsBuffered(req.startTime + (req.duration / 10));
+        };
+
         const check = function (requests) {
             let isLoaded = false;
+
+            if (!isInBuffer(request) && request.action !== FragmentRequest.ACTION_COMPLETE) {
+                return isLoaded;
+            }
+
             requests.some(req => {
                 if ( isEqualUrl(request,req) && (isEqualMedia(request, req) || isEqualInit(request, req) || isEqualComplete(request, req))) {
                     isLoaded = true;
