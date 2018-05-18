@@ -130,7 +130,7 @@ function BufferController(config) {
         if (mediaSource) {
             try {
                 if (oldBuffers && oldBuffers[type]) {
-                    buffer = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppended.bind(this), oldBuffers[type].getBuffer());
+                    buffer = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppended.bind(this), oldBuffers[type]);
                 } else {
                     buffer = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppended.bind(this));
                 }
@@ -849,11 +849,11 @@ function BufferController(config) {
         wallclockTicked = 0;
         pendingPruningRanges = [];
 
-        if (buffer && !keepBuffers) {
+        if (buffer) {
             if (!errored) {
                 buffer.abort();
             }
-            buffer.reset();
+            buffer.reset(keepBuffers);
             buffer = null;
         }
 

@@ -79,6 +79,11 @@ function NextFragmentRequestRule(config) {
                 timeThreshold: 0,
                 ignoreIsFinished: true
             });
+            if (request) {
+                if (!isNaN(request.startTime + request.duration)) {
+                    adapter.setIndexHandlerTime(streamProcessor, request.startTime + request.duration);
+                }
+            }
         } else {
             request = adapter.getFragmentRequestForTime(streamProcessor, representationInfo, time, {
                 keepIdx: !hasSeekTarget

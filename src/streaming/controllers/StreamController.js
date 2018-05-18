@@ -501,9 +501,11 @@ function StreamController() {
                 playbackController.seek(seekTime); //we only need to call seek here, IndexHandlerTime was set from seeking event
             } else {
                 let startTime = playbackController.getStreamStartTime(true);
-                activeStream.getProcessors().forEach(p => {
-                    adapter.setIndexHandlerTime(p, startTime);
-                });
+                if (!keepBuffers) {
+                    activeStream.getProcessors().forEach(p => {
+                        adapter.setIndexHandlerTime(p, startTime);
+                    });
+                }
             }
         }
 
