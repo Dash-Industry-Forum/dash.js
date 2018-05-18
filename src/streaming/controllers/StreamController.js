@@ -120,7 +120,8 @@ function StreamController() {
             manifestModel: manifestModel,
             dashManifestModel: dashManifestModel,
             mediaPlayerModel: mediaPlayerModel,
-            manifestLoader: manifestLoader
+            manifestLoader: manifestLoader,
+            errHandler: errHandler
         });
         manifestUpdater.initialize();
 
