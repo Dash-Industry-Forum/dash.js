@@ -165,6 +165,8 @@ function ManifestUpdater() {
     function onManifestLoaded(e) {
         if (!e.error) {
             update(e.manifest);
+        } else {
+            errHandler.manifestError(e.error.message, e.error.code);
         }
     }
 
