@@ -553,7 +553,7 @@ function BufferController(config) {
     }
 
     function notifyBufferStateChanged(state) {
-        if (bufferState === state || (type === Constants.FRAGMENTED_TEXT && textController.getAllTracksAreDisabled())) return;
+        if (bufferState === state || (type === Constants.FRAGMENTED_TEXT && !textController.isTextEnabled())) return;
         bufferState = state;
         addBufferMetrics();
 

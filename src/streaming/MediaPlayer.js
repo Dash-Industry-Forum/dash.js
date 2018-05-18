@@ -1967,6 +1967,25 @@ function MediaPlayer() {
         textController.enableText(enable);
     }
 
+
+    /**
+     * Enable/disable text
+     * When enabling dash will keep downloading and process fragmented text tracks even if all tracks are in mode "hidden"
+     *
+     * @param {boolean} enable - true to enable text streaming even if all text tracks are hidden.
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function enableForcedTextStreaming(enable) {
+        if (textController === undefined) {
+            textController = TextController(context).getInstance();
+        }
+
+        textController.enableForcedTextStreaming(enable);
+    }
+
+
+
     /**
      * Return if text is enabled
      *
@@ -2865,6 +2884,7 @@ function MediaPlayer() {
         setTextDefaultEnabled: setTextDefaultEnabled,
         getTextDefaultEnabled: getTextDefaultEnabled,
         enableText: enableText,
+        enableForcedTextStreaming: enableForcedTextStreaming,
         isTextEnabled: isTextEnabled,
         setTextTrack: setTextTrack,
         getBitrateInfoListFor: getBitrateInfoListFor,
