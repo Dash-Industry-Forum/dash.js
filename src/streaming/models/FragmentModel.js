@@ -88,12 +88,13 @@ function FragmentModel(config) {
         };
 
         const isInBuffer = function (req) {
-            return streamProcessor.timeIsBuffered(req.startTime + (req.duration / 10));
+            return streamProcessor.timeIsBuffered(req.startTime + getRequestThreshold(req));
         };
 
         const check = function (requests) {
             let isLoaded = false;
 
+            // This fixes buffer out of sync in Safari
             if (!isInBuffer(request) && request.action !== FragmentRequest.ACTION_COMPLETE) {
                 return isLoaded;
             }
