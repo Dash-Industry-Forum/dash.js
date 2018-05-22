@@ -90,7 +90,7 @@ function NotFragmentedTextBufferController(config) {
                 }
                 initialized = true;
             }
-
+            return buffer;
         } catch (e) {
             if ((mediaInfo.isText) || (mediaInfo.codec.indexOf('codecs="stpp') !== -1) || (mediaInfo.codec.indexOf('codecs="wvtt') !== -1)) {
                 try {

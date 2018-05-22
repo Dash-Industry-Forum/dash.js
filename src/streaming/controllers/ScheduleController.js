@@ -192,7 +192,6 @@ function ScheduleController(config) {
                 if (currentRepresentationInfo.quality !== lastInitQuality) {
                     log('ScheduleController - ' + type + ' - quality has changed, get init request for representationid = ' + currentRepresentationInfo.id);
                     lastInitQuality = currentRepresentationInfo.quality;
-
                     streamProcessor.switchInitData(currentRepresentationInfo.id);
                 } else if (switchTrack) {
                     log('ScheduleController - ' + type + ' - switch track has been asked, get init request for ' + type + ' with representationid = ' + currentRepresentationInfo.id);
@@ -491,9 +490,14 @@ function ScheduleController(config) {
             return;
         }
 
-        streamProcessor.getFragmentModel().syncExecutedRequestsWithBufferedRange(
-            streamProcessor.getBufferController().getBuffer().getAllBufferRanges(),
-            streamProcessor.getStreamInfo().duration);
+        if (e.unintended) {
+            // There was an unintended buffer remove, probably creating a gap in the buffer, remove every saved request
+            streamProcessor.getFragmentModel().syncExecutedRequestsWithBufferedRange();
+        } else {
+            streamProcessor.getFragmentModel().syncExecutedRequestsWithBufferedRange(
+                streamProcessor.getBufferController().getBuffer().getAllBufferRanges(),
+                streamProcessor.getStreamInfo().duration);
+        }
 
         if (e.hasEnoughSpaceToAppend && isStopped) {
             start();
