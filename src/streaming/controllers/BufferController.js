@@ -661,7 +661,11 @@ function BufferController(config) {
     }
 
     function clearNextRange() {
+        // If there's nothing to prune reset state
         if (pendingPruningRanges.length === 0 || !buffer) {
+            log('Nothing to prune, halt pruning');
+            pendingPruningRanges = [];
+            isPruningInProgress = false;
             return;
         }
 
