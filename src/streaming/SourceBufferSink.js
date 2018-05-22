@@ -150,7 +150,8 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
                     eventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {
                         buffer: sourceBufferSink,
                         from: start,
-                        to: end
+                        to: end,
+                        unintended: false
                     });
                 });
             } catch (err) {
@@ -158,6 +159,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
                     buffer: sourceBufferSink,
                     from: start,
                     to: end,
+                    unintended: false,
                     error: new DashJSError(err.code, err.message, null)
                 });
             }
@@ -169,8 +171,10 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
             isAppendingInProgress = true;
             const nextChunk = appendQueue[0];
             appendQueue.splice(0,1);
-
+            let oldRanges = [];
             const afterSuccess = function () {
+                const newRanges = getAllBufferRanges();
+                triggerBufferRemoveIfRemovedWhileAppending.call(this, oldRanges, newRanges, nextChunk);
                 if (appendQueue.length > 0) {
                     appendNextInQueue.call(this);
                 } else {
@@ -187,6 +191,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
                 if (nextChunk.bytes.length === 0) {
                     afterSuccess.call(this);
                 } else {
+                    oldRanges = getAllBufferRanges();
                     if (buffer.appendBuffer) {
                         buffer.appendBuffer(nextChunk.bytes);
                     } else {
@@ -211,6 +216,30 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
                 }
             }
         }
+    }
+
+    // Safari sometimes drops previous chunks after appending out of order, this handles it
+    function triggerBufferRemoveIfRemovedWhileAppending(oldRanges, newRanges, chunk) {
+        if (oldRanges.length > 0 && oldRanges.length < newRanges.length && chunkContinuesBuffer(oldRanges, chunk)) {
+            // A split in the range was created while appending
+            eventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {
+                buffer: this,
+                from: newRanges.end(newRanges.length - 2),
+                to: newRanges.start(newRanges.length - 1),
+                unintended: true
+            });
+        }
+    }
+
+    function chunkContinuesBuffer(oldRanges, chunk) {
+        for (let i = 0; i < oldRanges.length; i++ ) {
+            const start = Math.round(oldRanges.start(i));
+            const end = Math.round(oldRanges.end(i));
+            if (end === chunk.start || start === chunk.end || (chunk.start >= start && chunk.end <= end) ) {
+                return true;
+            }
+        }
+        return false;
     }
 
     function abort() {

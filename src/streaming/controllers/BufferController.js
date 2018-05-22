@@ -705,6 +705,11 @@ function BufferController(config) {
             isPruningInProgress = false;
         }
 
+        if (e.unintended) {
+            log('[BufferController][', type,'] detected unintended removal from:', e.from, 'to', e.to, 'setting index handler time to', e.from);
+            adapter.setIndexHandlerTime(streamProcessor, e.from);
+        }
+
         if (isPruningInProgress) {
             clearNextRange();
         } else {
@@ -717,7 +722,7 @@ function BufferController(config) {
                     appendToBuffer(mediaChunk);
                 }
             }
-            eventBus.trigger(Events.BUFFER_CLEARED, { sender: instance, from: e.from, to: e.to, hasEnoughSpaceToAppend: hasEnoughSpaceToAppend() });
+            eventBus.trigger(Events.BUFFER_CLEARED, { sender: instance, from: e.from, to: e.to, unintended: e.unintended,  hasEnoughSpaceToAppend: hasEnoughSpaceToAppend() });
         }
         //TODO - REMEMBER removed a timerout hack calling clearBuffer after manifestInfo.minBufferTime * 1000 if !hasEnoughSpaceToAppend() Aug 04 2016
     }
