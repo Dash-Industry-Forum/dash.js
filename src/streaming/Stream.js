@@ -72,7 +72,19 @@ function Stream(config) {
         fragmentController,
         thumbnailController,
         eventController,
+        preloaded,
         trackChangedEvent;
+
+    const codecCompatibilityTable = [
+        {
+            'codec': 'avc1',
+            'compatibleCodecs': ['avc3']
+        },
+        {
+            'codec': 'avc3',
+            'compatibleCodecs': ['avc1']
+        }
+    ];
 
     function setup() {
         resetInitialSettings();
@@ -104,25 +116,36 @@ function Stream(config) {
      * Activates Stream by re-initializing some of its components
      * @param {MediaSource} mediaSource
      * @memberof Stream#
+     * @param {SourceBuffer} previousBuffers
      */
-    function activate(mediaSource) {
+    function activate(mediaSource, previousBuffers) {
         if (!isStreamActivated) {
-            eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
-            initializeMedia(mediaSource);
+            let result;
+            if (!getPreloaded()) {
+                result = initializeMedia(mediaSource, previousBuffers);
+                eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
+            } else {
+                initializeAfterPreload();
+                result = previousBuffers;
+            }
             isStreamActivated = true;
+            return result;
         }
+        return previousBuffers;
     }
 
     /**
      * Partially resets some of the Stream elements
      * @memberof Stream#
+     * @param {boolean} keepBuffers
      */
-    function deactivate() {
+    function deactivate(keepBuffers) {
         let ln = streamProcessors ? streamProcessors.length : 0;
+        const errored = false;
         for (let i = 0; i < ln; i++) {
             let fragmentModel = streamProcessors[i].getFragmentModel();
             fragmentModel.removeExecutedRequestsBeforeTime(getStartTime() + getDuration());
-            streamProcessors[i].reset();
+            streamProcessors[i].reset(errored, keepBuffers);
         }
         streamProcessors = [];
         isStreamActivated = false;
@@ -414,7 +437,7 @@ function Stream(config) {
         createStreamProcessor(initialMediaInfo, allMediaForType, mediaSource);
     }
 
-    function initializeMedia(mediaSource) {
+    function initializeMedia(mediaSource, previousBuffers) {
         checkConfig();
         let events;
         let element = videoModel.getElement();
@@ -447,9 +470,8 @@ function Stream(config) {
         initializeMediaForType(Constants.MUXED, mediaSource);
         initializeMediaForType(Constants.IMAGE, mediaSource);
 
-        createBuffers();
-
         //TODO. Consider initialization of TextSourceBuffer here if embeddedText, but no sideloadedText.
+        const buffers = createBuffers(previousBuffers);
 
         isMediaInitialized = true;
         isUpdating = false;
@@ -459,7 +481,41 @@ function Stream(config) {
             errHandler.manifestError(msg, 'nostreams', manifestModel.getValue());
             log(msg);
         } else {
-            //log("Playback initialized!");
+            checkIfInitializationCompleted();
+        }
+
+        return buffers;
+    }
+
+    function initializeAfterPreload() {
+        checkConfig();
+
+        let events;
+
+        //if initializeMedia is called from a switch period, eventController could have been already created.
+        if (!eventController) {
+            eventController = EventController(context).create();
+
+            eventController.setConfig({
+                manifestModel: manifestModel,
+                manifestUpdater: manifestUpdater,
+                playbackController: playbackController
+            });
+            events = adapter.getEventsFor(streamInfo);
+            eventController.addInlineEvents(events);
+        }
+        isUpdating = true;
+
+        filterCodecs(Constants.VIDEO);
+        filterCodecs(Constants.AUDIO);
+
+        isMediaInitialized = true;
+        isUpdating = false;
+        if (streamProcessors.length === 0) {
+            let msg = 'No streams to play.';
+            errHandler.manifestError(msg, 'nostreams', manifestModel.getValue());
+            log(msg);
+        } else {
             checkIfInitializationCompleted();
         }
     }
@@ -487,7 +543,6 @@ function Stream(config) {
         const ln = streamProcessors.length;
         const hasError = !!updateError.audio || !!updateError.video;
         let error = hasError ? new Error(DATA_UPDATE_FAILED_ERROR_CODE, 'Data update failed', null) : null;
-
         for (let i = 0; i < ln; i++) {
             if (streamProcessors[i].isUpdating() || isUpdating) {
                 return;
@@ -509,6 +564,7 @@ function Stream(config) {
                 }
             }
         }
+
         eventBus.trigger(Events.STREAM_INITIALIZED, {
             streamInfo: streamInfo,
             error: error
@@ -530,10 +586,12 @@ function Stream(config) {
         return null;
     }
 
-    function createBuffers() {
+    function createBuffers(previousBuffers) {
+        const buffers = {};
         for (let i = 0, ln = streamProcessors.length; i < ln; i++) {
-            streamProcessors[i].createBuffer();
+            buffers[streamProcessors[i].getType()] = streamProcessors[i].createBuffer(previousBuffers).getBuffer();
         }
+        return buffers;
     }
 
     function onBufferingCompleted(e) {
@@ -644,6 +702,80 @@ function Stream(config) {
         checkIfInitializationCompleted();
     }
 
+    function isCompatibleWithStream(stream) {
+        return compareCodecs(stream, Constants.VIDEO) && compareCodecs(stream, Constants.AUDIO);
+    }
+
+    function compareCodecs( stream, type ) {
+        const newStreamInfo = stream.getStreamInfo();
+        const currentStreamInfo = getStreamInfo();
+
+        if (!newStreamInfo || !currentStreamInfo) {
+            return false;
+        }
+
+        const newAdaptation = dashManifestModel.getAdaptationForType(manifestModel.getValue(), newStreamInfo.index, type, newStreamInfo);
+        const currentAdaptation = dashManifestModel.getAdaptationForType(manifestModel.getValue(), currentStreamInfo.index, type, currentStreamInfo);
+
+        if (!newAdaptation || !currentAdaptation) {
+            return false;
+        }
+
+        const sameMimeType =  newAdaptation && currentAdaptation && newAdaptation.mimeType === currentAdaptation.mimeType;
+        const oldCodecs = currentAdaptation.Representation_asArray.map((representation) => {
+            return representation.codecs;
+        });
+
+        const newCodecs = newAdaptation.Representation_asArray.map((representation) => {
+            return representation.codecs;
+        });
+
+        const codecMatch = newCodecs.some((newCodec) => {
+            return oldCodecs.indexOf(newCodec) > -1;
+        });
+
+        const partialCodecMatch = newCodecs.some((newCodec) => oldCodecs.some((oldCodec) => codecRootCompatibleWithCodec(oldCodec, newCodec)));
+        return codecMatch || (partialCodecMatch && sameMimeType);
+    }
+
+    // Check if the root of the old codec is the same as the new one, or if it's declared as compatible in the compat table
+    function codecRootCompatibleWithCodec(codec1, codec2) {
+        const codecRoot = codec1.split('.')[0];
+        const compatTableCodec = codecCompatibilityTable.find((compat) => compat.codec === codecRoot);
+        const rootCompatible = codec2.indexOf(codecRoot) === 0;
+        if (compatTableCodec) {
+            return rootCompatible || compatTableCodec.compatibleCodecs.some((compatibleCodec) => codec2.indexOf(compatibleCodec) === 0);
+        }
+        return rootCompatible;
+    }
+
+    function setPreloaded(value) {
+        preloaded = value;
+    }
+
+    function getPreloaded() {
+        return preloaded;
+    }
+
+    function preload(mediaSource, previousBuffers) {
+        initializeMediaForType(Constants.VIDEO, mediaSource);
+        initializeMediaForType(Constants.AUDIO, mediaSource);
+        initializeMediaForType(Constants.TEXT, mediaSource);
+        initializeMediaForType(Constants.FRAGMENTED_TEXT, mediaSource);
+        initializeMediaForType(Constants.EMBEDDED_TEXT, mediaSource);
+        initializeMediaForType(Constants.MUXED, mediaSource);
+        initializeMediaForType(Constants.IMAGE, mediaSource);
+
+        createBuffers(previousBuffers);
+
+        eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
+        for (let i = 0; i < streamProcessors.length && streamProcessors[i]; i++) {
+            streamProcessors[i].getScheduleController().start();
+        }
+
+        setPreloaded(true);
+    }
+
     instance = {
         initialize: initialize,
         activate: activate,
@@ -652,6 +784,7 @@ function Stream(config) {
         getStartTime: getStartTime,
         getId: getId,
         getStreamInfo: getStreamInfo,
+        preload: preload,
         getFragmentController: getFragmentController,
         getThumbnailController: getThumbnailController,
         getEventController: getEventController,
@@ -661,7 +794,8 @@ function Stream(config) {
         updateData: updateData,
         reset: reset,
         getProcessors: getProcessors,
-        setMediaSource: setMediaSource
+        setMediaSource: setMediaSource,
+        isCompatibleWithStream: isCompatibleWithStream
     };
 
     setup();

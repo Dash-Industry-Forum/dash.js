@@ -5,13 +5,8 @@ class TextBufferMock {
     }
 
     appendBuffer(chunk) {
-        this.updating = true;
+        this.updating = false;
         this.chunk = chunk;
-
-        let that = this;
-        setTimeout(function () {
-            that.updating = false;
-        }, 500);
     }
 }
 

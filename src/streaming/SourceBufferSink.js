@@ -38,7 +38,7 @@ import TextController from './text/TextController';
  * @class SourceBufferSink
  * @implements FragmentSink
  */
-function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback) {
+function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer) {
     const context = this.context;
     const log = Debug(context).getInstance().log;
     const eventBus = EventBus(context).getInstance();
@@ -46,8 +46,11 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback) {
     let buffer,
         isAppendingInProgress;
 
+    let callbacks = [];
+
     let appendQueue = [];
     let onAppended = onAppendedCallback;
+    let intervalId;
 
     function setup() {
         isAppendingInProgress = false;
@@ -61,8 +64,26 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback) {
             if (codec.match(/application\/mp4;\s*codecs="(stpp|wvtt).*"/i)) {
                 throw new Error('not really supported');
             }
+            buffer = oldBuffer ? oldBuffer : mediaSource.addSourceBuffer(codec);
 
-            buffer = mediaSource.addSourceBuffer(codec);
+            const CHECK_INTERVAL = 50;
+            // use updateend event if possible
+            if (typeof buffer.addEventListener === 'function') {
+                try {
+                    buffer.addEventListener('updateend', updateEndHandler, false);
+                    buffer.addEventListener('error', errHandler, false);
+                    buffer.addEventListener('abort', errHandler, false);
+
+                } catch (err) {
+                    // use setInterval to periodically check if updating has been completed
+                    intervalId = setInterval(checkIsUpdateEnded, CHECK_INTERVAL);
+                }
+            } else {
+                // use setInterval to periodically check if updating has been completed
+                intervalId = setInterval(checkIsUpdateEnded, CHECK_INTERVAL);
+            }
+
+
         } catch (ex) {
             // Note that in the following, the quotes are open to allow for extra text after stpp and wvtt
             if ((mediaInfo.isText) || (codec.indexOf('codecs="stpp') !== -1) || (codec.indexOf('codecs="wvtt') !== -1)) {
@@ -74,15 +95,23 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback) {
         }
     }
 
-    function reset() {
+    function reset(keepBuffer) {
         if (buffer) {
-            try {
-                mediaSource.removeSourceBuffer(buffer);
-            } catch (e) {
-                log('Failed to remove source buffer from media source.');
+            if (typeof buffer.removeEventListener === 'function') {
+                buffer.removeEventListener('updateend', updateEndHandler, false);
+                buffer.removeEventListener('error', errHandler, false);
+                buffer.removeEventListener('abort', errHandler, false);
+            }
+            clearInterval(intervalId);
+            if (!keepBuffer) {
+                try {
+                    mediaSource.removeSourceBuffer(buffer);
+                } catch (e) {
+                    log('Failed to remove source buffer from media source.');
+                }
+                buffer = null;
             }
             isAppendingInProgress = false;
-            buffer = null;
         }
         appendQueue = [];
         onAppended = null;
@@ -93,7 +122,12 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback) {
     }
 
     function getAllBufferRanges() {
-        return buffer.buffered;
+        try {
+            return buffer.buffered;
+        } catch (e) {
+            log('getAllBufferRanges exception: ' + e.message);
+            return [];
+        }
     }
 
     function append(chunk) {
@@ -193,41 +227,42 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback) {
         appendQueue = [];
     }
 
-    function waitForUpdateEnd(buffer, callback) {
-        let intervalId;
-        const CHECK_INTERVAL = 50;
-
-        const checkIsUpdateEnded = function () {
-            // if updating is still in progress do nothing and wait for the next check again.
-            if (buffer.updating) return;
-            // updating is completed, now we can stop checking and resolve the promise
-            clearInterval(intervalId);
-            callback();
-        };
-
-        const updateEndHandler = function () {
-            if (buffer.updating) return;
-
-            buffer.removeEventListener('updateend', updateEndHandler, false);
-            callback();
-        };
-
-        if (!buffer.updating) {
-            callback();
-            return;
+    function executeCallback() {
+        if (callbacks.length > 0) {
+            const cb = callbacks.shift();
+            if (buffer.updating) {
+                waitForUpdateEnd(buffer, cb);
+            } else {
+                cb();
+            }
         }
 
-        // use updateend event if possible
-        if (typeof buffer.addEventListener === 'function') {
-            try {
-                buffer.addEventListener('updateend', updateEndHandler, false);
-            } catch (err) {
-                // use setInterval to periodically check if updating has been completed
-                intervalId = setInterval(checkIsUpdateEnded, CHECK_INTERVAL);
-            }
-        } else {
-            // use setInterval to periodically check if updating has been completed
-            intervalId = setInterval(checkIsUpdateEnded, CHECK_INTERVAL);
+    }
+
+    function checkIsUpdateEnded() {
+        // if updating is still in progress do nothing and wait for the next check again.
+        if (buffer.updating) return;
+        // updating is completed, now we can stop checking and resolve the promise
+        executeCallback();
+    }
+
+
+    function updateEndHandler() {
+        if (buffer.updating) return;
+
+        executeCallback();
+    }
+
+    function errHandler() {
+        log('SourceBufferSink error', mediaInfo.type);
+    }
+
+
+    function waitForUpdateEnd(buffer, callback) {
+        callbacks.push(callback);
+
+        if (!buffer.updating) {
+            executeCallback();
         }
     }
 

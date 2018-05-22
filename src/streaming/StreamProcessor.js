@@ -83,7 +83,6 @@ function StreamProcessor(config) {
     }
 
     function initialize(mediaSource) {
-
         indexHandler = DashHandler(context).create({
             mimeType: mimeType,
             timelineConverter: timelineConverter,
@@ -160,12 +159,12 @@ function StreamProcessor(config) {
         unregisterAllExternalController();
     }
 
-    function reset(errored) {
+    function reset(errored, keepBuffers) {
 
         indexHandler.reset();
 
         if (bufferController) {
-            bufferController.reset(errored);
+            bufferController.reset(errored, keepBuffers);
             bufferController = null;
         }
 
@@ -293,6 +292,14 @@ function StreamProcessor(config) {
         return false;
     }
 
+    function timeIsBuffered(time) {
+        if (bufferController) {
+            return bufferController.getRangeAt(time, 0) !== null;
+        }
+
+        return false;
+    }
+
     function getBufferLevel() {
         return bufferController.getBufferLevel();
     }
@@ -303,8 +310,8 @@ function StreamProcessor(config) {
         }
     }
 
-    function createBuffer() {
-        return (bufferController.getBuffer() || bufferController.createBuffer(mediaInfo));
+    function createBuffer(previousBuffers) {
+        return (bufferController.getBuffer() || bufferController.createBuffer(mediaInfo, previousBuffers));
     }
 
     function switchTrackAsked() {
@@ -366,6 +373,7 @@ function StreamProcessor(config) {
         getBufferLevel: getBufferLevel,
         switchInitData: switchInitData,
         isBufferingCompleted: isBufferingCompleted,
+        timeIsBuffered: timeIsBuffered,
         createBuffer: createBuffer,
         getStreamInfo: getStreamInfo,
         updateMediaInfo: updateMediaInfo,
