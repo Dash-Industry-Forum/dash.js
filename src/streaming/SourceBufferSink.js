@@ -97,9 +97,11 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
 
     function reset(keepBuffer) {
         if (buffer) {
-            buffer.removeEventListener('updateend', updateEndHandler, false);
-            buffer.removeEventListener('error', errHandler, false);
-            buffer.removeEventListener('abort', errHandler, false);
+            if (typeof buffer.removeEventListener === 'function') {
+                buffer.removeEventListener('updateend', updateEndHandler, false);
+                buffer.removeEventListener('error', errHandler, false);
+                buffer.removeEventListener('abort', errHandler, false);
+            }
             clearInterval(intervalId);
             if (!keepBuffer) {
                 try {
