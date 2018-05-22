@@ -96,6 +96,8 @@ function StreamController() {
         isStreamBufferingCompleted,
         playbackEndedTimerId,
         wallclockTicked,
+        buffers,
+        compatible,
         lastPlaybackTime;
 
     function setup() {
@@ -298,7 +300,6 @@ function StreamController() {
             isStreamBufferingCompleted = true;
             if (isPaused === false) {
                 toggleEndPeriodTimer();
-                preloadNextPeriod();
             }
         }
     }
@@ -402,43 +403,35 @@ function StreamController() {
             toStreamInfo: newStream.getStreamInfo()
         });
 
+        compatible = false;
         if (oldStream) {
             oldStream.stopEventController();
-            oldStream.deactivate();
+            compatible = activeStream.isCompatibleWithStream(newStream) && !seekTime;
+            oldStream.deactivate(compatible);
         }
+
         activeStream = newStream;
-        playbackController.initialize(activeStream.getStreamInfo());
+        playbackController.initialize(activeStream.getStreamInfo(), compatible);
         if (videoModel.getElement()) {
             //TODO detect if we should close jump to activateStream.
-            openMediaSource(seekTime, oldStream, false);
+            openMediaSource(seekTime, oldStream, false, compatible);
         } else {
             preloadStream(seekTime);
         }
     }
 
     function preloadStream(seekTime) {
-        activateStream(seekTime);
-    }
-
-    function preloadNextPeriod() {
-        log('[StreamController][onStreamBufferingCompleted] preloadNextPeriod');
-        const nextStream = getNextStream();
-        if (nextStream) {
-            let compatible = activeStream.isCompatibleWithStream(nextStream);
-            if (compatible) {
-                log('[StreamController][preloadNextPeriod] next stream is compatible');
-            }
-        }
+        activateStream(seekTime, compatible);
     }
 
     function switchToVideoElement(seekTime) {
         if (activeStream) {
             playbackController.initialize(activeStream.getStreamInfo());
-            openMediaSource(seekTime, null, true);
+            openMediaSource(seekTime, null, true, false);
         }
     }
 
-    function openMediaSource(seekTime, oldStream, streamActivated) {
+    function openMediaSource(seekTime, oldStream, streamActivated, keepBuffers) {
         let sourceUrl;
 
         function onMediaSourceOpen() {
@@ -458,24 +451,35 @@ function StreamController() {
             if (streamActivated) {
                 activeStream.setMediaSource(mediaSource);
             } else {
-                activateStream(seekTime);
+                activateStream(seekTime, keepBuffers);
             }
         }
 
         if (!mediaSource) {
             mediaSource = mediaSourceController.createMediaSource();
+            mediaSource.addEventListener('sourceopen', onMediaSourceOpen, false);
+            mediaSource.addEventListener('webkitsourceopen', onMediaSourceOpen, false);
+            sourceUrl = mediaSourceController.attachMediaSource(mediaSource, videoModel);
+            logger.debug('MediaSource attached to element.  Waiting on open...');
         } else {
-            mediaSourceController.detachMediaSource(videoModel);
+            if (keepBuffers) {
+                setMediaDuration();
+                activateStream(seekTime, keepBuffers);
+                if (!oldStream) {
+                    eventBus.trigger(Events.SOURCE_INITIALIZED);
+                }
+            } else {
+                mediaSourceController.detachMediaSource(videoModel);
+                mediaSource.addEventListener('sourceopen', onMediaSourceOpen, false);
+                mediaSource.addEventListener('webkitsourceopen', onMediaSourceOpen, false);
+                sourceUrl = mediaSourceController.attachMediaSource(mediaSource, videoModel);
+                logger.debug('MediaSource attached to element.  Waiting on open...');
+            }
         }
-
-        mediaSource.addEventListener('sourceopen', onMediaSourceOpen, false);
-        mediaSource.addEventListener('webkitsourceopen', onMediaSourceOpen, false);
-        sourceUrl = mediaSourceController.attachMediaSource(mediaSource, videoModel);
-        logger.debug('MediaSource attached to element.  Waiting on open...');
     }
 
-    function activateStream(seekTime) {
-        activeStream.activate(mediaSource);
+    function activateStream(seekTime, keepBuffers) {
+        buffers = activeStream.activate(mediaSource, keepBuffers ? buffers : undefined);
 
         audioTrackDetected = checkTrackPresence(Constants.AUDIO);
         videoTrackDetected = checkTrackPresence(Constants.VIDEO);

@@ -191,7 +191,6 @@ function ScheduleController(config) {
                 if (currentRepresentationInfo.quality !== lastInitQuality) {
                     logger.debug('Quality has changed, get init request for representationid = ' + currentRepresentationInfo.id);
                     lastInitQuality = currentRepresentationInfo.quality;
-
                     streamProcessor.switchInitData(currentRepresentationInfo.id);
                 } else if (switchTrack) {
                     logger.debug('Switch track has been asked, get init request for ' + type + ' with representationid = ' + currentRepresentationInfo.id);

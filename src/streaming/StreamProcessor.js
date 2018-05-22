@@ -161,12 +161,12 @@ function StreamProcessor(config) {
         unregisterAllExternalController();
     }
 
-    function reset(errored) {
+    function reset(errored, keepBuffers) {
 
         indexHandler.reset();
 
         if (bufferController) {
-            bufferController.reset(errored);
+            bufferController.reset(errored, keepBuffers);
             bufferController = null;
         }
 
@@ -311,8 +311,8 @@ function StreamProcessor(config) {
         }
     }
 
-    function createBuffer() {
-        return (bufferController.getBuffer() || bufferController.createBuffer(mediaInfo));
+    function createBuffer(previousBuffers) {
+        return (bufferController.getBuffer() || bufferController.createBuffer(mediaInfo, previousBuffers));
     }
 
     function switchTrackAsked() {

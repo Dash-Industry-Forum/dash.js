@@ -105,25 +105,29 @@ function Stream(config) {
      * Activates Stream by re-initializing some of its components
      * @param {MediaSource} mediaSource
      * @memberof Stream#
+     * @param {SourceBuffer} previousBuffers
      */
-    function activate(mediaSource) {
+    function activate(mediaSource, previousBuffers) {
         if (!isStreamActivated) {
             eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
-            initializeMedia(mediaSource);
+            const result = initializeMedia(mediaSource, previousBuffers);
             isStreamActivated = true;
+            return result;
         }
     }
 
     /**
      * Partially resets some of the Stream elements
      * @memberof Stream#
+     * @param {boolean} keepBuffers
      */
-    function deactivate() {
+    function deactivate(keepBuffers) {
         let ln = streamProcessors ? streamProcessors.length : 0;
+        const errored = false;
         for (let i = 0; i < ln; i++) {
             let fragmentModel = streamProcessors[i].getFragmentModel();
             fragmentModel.removeExecutedRequestsBeforeTime(getStartTime() + getDuration());
-            streamProcessors[i].reset();
+            streamProcessors[i].reset(errored, keepBuffers);
         }
         streamProcessors = [];
         isStreamActivated = false;
@@ -407,7 +411,7 @@ function Stream(config) {
         createStreamProcessor(initialMediaInfo, allMediaForType, mediaSource);
     }
 
-    function initializeMedia(mediaSource) {
+    function initializeMedia(mediaSource, previousBuffers) {
         checkConfig();
         let events;
         let element = videoModel.getElement();
@@ -440,8 +444,7 @@ function Stream(config) {
         initializeMediaForType(Constants.MUXED, mediaSource);
         initializeMediaForType(Constants.IMAGE, mediaSource);
 
-        createBuffers();
-
+        const buffers = createBuffers(previousBuffers);
         //TODO. Consider initialization of TextSourceBuffer here if embeddedText, but no sideloadedText.
 
         isMediaInitialized = true;
@@ -454,6 +457,8 @@ function Stream(config) {
         } else {
             checkIfInitializationCompleted();
         }
+
+        return buffers;
     }
 
     function filterCodecs(type) {
@@ -522,10 +527,12 @@ function Stream(config) {
         return null;
     }
 
-    function createBuffers() {
+    function createBuffers(previousBuffers) {
+        const buffers = {};
         for (let i = 0, ln = streamProcessors.length; i < ln; i++) {
-            streamProcessors[i].createBuffer();
+            buffers[streamProcessors[i].getType()] = streamProcessors[i].createBuffer(previousBuffers);
         }
+        return buffers;
     }
 
     function onBufferingCompleted(e) {
@@ -647,7 +654,7 @@ function Stream(config) {
         const sameMimeType = newAdaptation.mimeType === currentAdaptation.mimeType;
 
         const oldCodecs = currentAdaptation.Representation_asArray.map((representation) => {
-           return representation.codecs;
+            return representation.codecs;
         });
 
         const newCodecs = newAdaptation.Representation_asArray.map((representation) => {
@@ -660,7 +667,7 @@ function Stream(config) {
 
         const partialCodecMatch = codecMatch || newCodecs.some((newCodec) => {
             return oldCodecs.some((oldCodec) => {
-                const codecRoot = oldCodec.split('.')[0]
+                const codecRoot = oldCodec.split('.')[0];
                 return newCodec.indexOf(codecRoot) === 0;
             });
         });
