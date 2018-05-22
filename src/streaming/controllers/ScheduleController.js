@@ -491,9 +491,14 @@ function ScheduleController(config) {
             return;
         }
 
-        streamProcessor.getFragmentModel().syncExecutedRequestsWithBufferedRange(
-            streamProcessor.getBufferController().getBuffer().getAllBufferRanges(),
-            streamProcessor.getStreamInfo().duration);
+        if (e.unintended) {
+            // There was an unintended buffer remove, probably creating a gap in the buffer, remove every saved request
+            streamProcessor.getFragmentModel().syncExecutedRequestsWithBufferedRange();
+        } else {
+            streamProcessor.getFragmentModel().syncExecutedRequestsWithBufferedRange(
+                streamProcessor.getBufferController().getBuffer().getAllBufferRanges(),
+                streamProcessor.getStreamInfo().duration);
+        }
 
         if (e.hasEnoughSpaceToAppend && isStopped) {
             start();
