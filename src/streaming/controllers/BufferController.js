@@ -664,8 +664,13 @@ function BufferController(config) {
         if (pendingPruningRanges.length === 0 || !buffer) {
             return;
         }
+
         const sourceBuffer = buffer.getBuffer();
+        // If there's nothing buffered any pruning is invalid, so reset our state
         if (!sourceBuffer || !sourceBuffer.buffered || sourceBuffer.buffered.length === 0) {
+            log('SourceBuffer is empty (or does not exist), halt pruning');
+            pendingPruningRanges = [];
+            isPruningInProgress = false;
             return;
         }
 
