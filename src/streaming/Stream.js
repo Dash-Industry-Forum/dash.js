@@ -698,7 +698,8 @@ function Stream(config) {
         const currentAdaptation = dashManifestModel.getAdaptationForType(manifestModel.getValue(), currentStreamInfo.index, type, currentStreamInfo);
 
         if (!newAdaptation || !currentAdaptation) {
-            return false;
+            // If there is no adaptation for neither the old or the new stream they're compatible
+            return !newAdaptation && !currentAdaptation;
         }
 
         const sameMimeType =  newAdaptation && currentAdaptation && newAdaptation.mimeType === currentAdaptation.mimeType;
