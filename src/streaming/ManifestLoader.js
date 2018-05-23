@@ -112,6 +112,9 @@ function ManifestLoader(config) {
         httpLoader.load({
             request: request,
             success: function (data, textStatus, responseURL) {
+                // Manage situations in which success is called after calling reset
+                if (!xlinkController) return;
+
                 let actualUrl,
                     baseUri,
                     manifest;
