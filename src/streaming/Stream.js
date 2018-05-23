@@ -485,24 +485,8 @@ function Stream(config) {
     }
 
     function initializeAfterPreload() {
-        checkConfig();
-
-        let events;
-
-        //if initializeMedia is called from a switch period, eventController could have been already created.
-        if (!eventController) {
-            eventController = EventController(context).create();
-
-            eventController.setConfig({
-                manifestModel: manifestModel,
-                manifestUpdater: manifestUpdater,
-                playbackController: playbackController
-            });
-            events = adapter.getEventsFor(streamInfo);
-            eventController.addInlineEvents(events);
-        }
         isUpdating = true;
-
+        checkConfig();
         filterCodecs(Constants.VIDEO);
         filterCodecs(Constants.AUDIO);
 
@@ -754,6 +738,21 @@ function Stream(config) {
     }
 
     function preload(mediaSource, previousBuffers) {
+        let events;
+
+        //if initializeMedia is called from a switch period, eventController could have been already created.
+        if (!eventController) {
+            eventController = EventController(context).create();
+
+            eventController.setConfig({
+                manifestModel: manifestModel,
+                manifestUpdater: manifestUpdater,
+                playbackController: playbackController
+            });
+            events = adapter.getEventsFor(streamInfo);
+            eventController.addInlineEvents(events);
+        }
+
         initializeMediaForType(Constants.VIDEO, mediaSource);
         initializeMediaForType(Constants.AUDIO, mediaSource);
         initializeMediaForType(Constants.TEXT, mediaSource);
