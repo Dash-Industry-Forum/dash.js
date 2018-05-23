@@ -130,7 +130,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
             return buffer.buffered;
         } catch (e) {
             log('getAllBufferRanges exception: ' + e.message);
-            return [];
+            return null;
         }
     }
 
