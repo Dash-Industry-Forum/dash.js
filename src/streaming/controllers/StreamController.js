@@ -426,7 +426,7 @@ function StreamController() {
         compatible = false;
         if (oldStream) {
             oldStream.stopEventController();
-            compatible = activeStream.isCompatibleWithStream(newStream) && !seekTime;
+            compatible = activeStream.isCompatibleWithStream(newStream) && !seekTime || newStream.getPreloaded();
             oldStream.deactivate(compatible);
         }
 

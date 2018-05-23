@@ -128,6 +128,7 @@ function Stream(config) {
             } else {
                 initializeAfterPreload();
                 result = previousBuffers;
+                eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
             }
             isStreamActivated = true;
             return result;
@@ -151,6 +152,7 @@ function Stream(config) {
         streamProcessors = [];
         isStreamActivated = false;
         isMediaInitialized = false;
+        setPreloaded(false);
         eventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
     }
 
@@ -206,6 +208,8 @@ function Stream(config) {
         eventBus.off(Events.KEY_SYSTEM_SELECTED, onProtectionError, instance);
         eventBus.off(Events.KEY_SESSION_CREATED, onProtectionError, instance);
         eventBus.off(Events.KEY_STATUSES_CHANGED, onProtectionError, instance);
+
+        setPreloaded(false);
     }
 
     function getDuration() {
@@ -787,7 +791,8 @@ function Stream(config) {
         reset: reset,
         getProcessors: getProcessors,
         setMediaSource: setMediaSource,
-        isCompatibleWithStream: isCompatibleWithStream
+        isCompatibleWithStream: isCompatibleWithStream,
+        getPreloaded: getPreloaded
     };
 
     setup();
