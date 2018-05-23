@@ -205,6 +205,9 @@ declare namespace dashjs {
         getSmallGapLimit(): number;
         preload(): void;
         reset(): void;
+        addABRCustomRule(type: string, rulename: string, rule: object): void;
+        removeABRCustomRule(rulename: string): void;
+        removeAllABRCustomRule(): void;
     }
 
     export interface MediaPlayerFactory {
