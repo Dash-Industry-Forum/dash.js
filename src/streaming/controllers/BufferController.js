@@ -620,6 +620,9 @@ function BufferController(config) {
         if (currentTimeRequest) {
             rangeToKeep.start = Math.min(currentTimeRequest.startTime, rangeToKeep.start);
             rangeToKeep.end = Math.max(currentTimeRequest.startTime + currentTimeRequest.duration, rangeToKeep.end);
+        } else if (currentTime === 0 && playbackController.getIsDynamic()) {
+            // Don't prune before the live stream starts, it messes with low latency
+            return [];
         }
 
         if (ranges.start(0) <= rangeToKeep.start) {
