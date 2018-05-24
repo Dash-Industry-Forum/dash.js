@@ -156,6 +156,10 @@ function Stream(config) {
         eventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
     }
 
+    function isActive() {
+        return isStreamActivated;
+    }
+
     function setMediaSource(mediaSource) {
         for (let i = 0; i < streamProcessors.length;) {
             if (isMediaSupported(streamProcessors[i].getMediaInfo())) {
@@ -776,6 +780,7 @@ function Stream(config) {
         initialize: initialize,
         activate: activate,
         deactivate: deactivate,
+        isActive: isActive,
         getDuration: getDuration,
         getStartTime: getStartTime,
         getId: getId,

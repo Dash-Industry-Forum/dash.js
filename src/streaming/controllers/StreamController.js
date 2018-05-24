@@ -98,6 +98,7 @@ function StreamController() {
         wallclockTicked,
         buffers,
         compatible,
+        preloading,
         lastPlaybackTime;
 
     function setup() {
@@ -235,7 +236,12 @@ function StreamController() {
             isStreamBufferingCompleted = false;
         }
 
-        if (seekingStream && seekingStream !== activeStream) {
+        if ( seekingStream === activeStream && preloading ) {
+            // Seeking to the current period was requested while preloading the next one, deactivate preloading one
+            preloading.deactivate(true);
+        }
+
+        if (seekingStream && (seekingStream !== activeStream || !activeStream.isActive()) ) {
             flushPlaylistMetrics(PlayListTrace.END_OF_PERIOD_STOP_REASON);
             switchStream(activeStream, seekingStream, e.seekTime);
         } else {
@@ -317,6 +323,7 @@ function StreamController() {
                 activeStream.stopEventController();
                 activeStream.deactivate(true);
                 newStream.preload(mediaSource, buffers);
+                preloading = newStream;
                 newStream.getProcessors().forEach(p => {
                     adapter.setIndexHandlerTime(p, newStream.getStartTime());
                 });
@@ -415,7 +422,7 @@ function StreamController() {
     }
 
     function switchStream(oldStream, newStream, seekTime) {
-        if (isStreamSwitchingInProgress || !newStream || oldStream === newStream) return;
+        if (isStreamSwitchingInProgress || !newStream || (oldStream === newStream && newStream.isActive())) return;
         isStreamSwitchingInProgress = true;
 
         eventBus.trigger(Events.PERIOD_SWITCH_STARTED, {
@@ -431,6 +438,7 @@ function StreamController() {
         }
 
         activeStream = newStream;
+        preloading = false;
         playbackController.initialize(activeStream.getStreamInfo(), compatible);
         if (videoModel.getElement()) {
             //TODO detect if we should close jump to activateStream.
