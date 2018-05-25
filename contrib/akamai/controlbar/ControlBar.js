@@ -83,8 +83,8 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             fullscreenBtn = document.getElementById(getControlId("fullscreenBtn"));
             timeDisplay = document.getElementById(getControlId("videoTime"));
             durationDisplay = document.getElementById(getControlId("videoDuration"));
-            thumbnailContainer = document.getElementById(getControlId("thumbnail-container")),
-            thumbnailElem = document.getElementById(getControlId("thumbnail-elem"))
+            thumbnailContainer = document.getElementById(getControlId("thumbnail-container"));
+            thumbnailElem = document.getElementById(getControlId("thumbnail-elem"));
             thumbnailTimeLabel = document.getElementById(getControlId("thumbnail-time-label"));
         },
 
@@ -146,6 +146,10 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
                 if (seekbarBuffer) {
                     seekbarBuffer.style.width = ((player.time() + getBufferLevel()) / player.duration() * 100) + '%';
+                }
+
+                if (seekbar.getAttribute('type') === 'range') {
+                    seekbar.value = player.time();
                 }
 
             }
