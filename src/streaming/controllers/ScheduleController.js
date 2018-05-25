@@ -493,7 +493,8 @@ function ScheduleController(config) {
 
         if (e.unintended) {
             // There was an unintended buffer remove, probably creating a gap in the buffer, remove every saved request
-            streamProcessor.getFragmentModel().syncExecutedRequestsWithBufferedRange();
+            streamProcessor.getFragmentModel().removeExecutedRequestsAfterTime(e.from,
+                streamProcessor.getStreamInfo().duration);
         } else {
             streamProcessor.getFragmentModel().syncExecutedRequestsWithBufferedRange(
                 streamProcessor.getBufferController().getBuffer().getAllBufferRanges(),

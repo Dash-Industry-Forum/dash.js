@@ -162,6 +162,12 @@ function FragmentModel(config) {
         });
     }
 
+    function removeExecutedRequestsAfterTime(time) {
+        executedRequests = executedRequests.filter(req => {
+            return isNaN(req.startTime) || (time !== undefined ? req.startTime <= time : false);
+        });
+    }
+
     function removeExecutedRequestsInTimeRange(start, end) {
         if (end <= start + 0.5) {
             return;
@@ -349,6 +355,7 @@ function FragmentModel(config) {
         isFragmentLoaded: isFragmentLoaded,
         isFragmentLoadedOrPending: isFragmentLoadedOrPending,
         removeExecutedRequestsBeforeTime: removeExecutedRequestsBeforeTime,
+        removeExecutedRequestsAfterTime: removeExecutedRequestsAfterTime,
         syncExecutedRequestsWithBufferedRange: syncExecutedRequestsWithBufferedRange,
         abortRequests: abortRequests,
         executeRequest: executeRequest,

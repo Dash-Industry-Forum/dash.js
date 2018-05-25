@@ -141,8 +141,9 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback) {
             appendQueue.splice(0,1);
             let oldRanges = [];
             const afterSuccess = function () {
+                // Safari sometimes drops a portion of a buffer after appending. Handle these situations here
                 const newRanges = getAllBufferRanges();
-                triggerBufferRemoveIfRemovedWhileAppending(sourceBufferSink, oldRanges, newRanges, nextChunk);
+                checkBufferGapsAfterAppend(sourceBufferSink, oldRanges, newRanges, nextChunk);
                 if (appendQueue.length > 0) {
                     appendNextInQueue.call(this);
                 } else {
@@ -186,9 +187,9 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback) {
         }
     }
 
-    // Safari sometimes drops previous chunks after appending out of order, this handles it
-    function triggerBufferRemoveIfRemovedWhileAppending(buffer, oldRanges, newRanges, chunk) {
-        if (oldRanges && oldRanges.length > 0 && oldRanges.length < newRanges.length && chunkContinuesBuffer(oldRanges, chunk)) {
+    function checkBufferGapsAfterAppend(buffer, oldRanges, newRanges, chunk) {
+        if (oldRanges && oldRanges.length > 0 && oldRanges.length < newRanges.length &&
+            isChunkAlignedWithRange(oldRanges, chunk)) {
             // A split in the range was created while appending
             eventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {
                 buffer: buffer,
@@ -199,7 +200,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback) {
         }
     }
 
-    function chunkContinuesBuffer(oldRanges, chunk) {
+    function isChunkAlignedWithRange(oldRanges, chunk) {
         for (let i = 0; i < oldRanges.length; i++ ) {
             const start = Math.round(oldRanges.start(i));
             const end = Math.round(oldRanges.end(i));
