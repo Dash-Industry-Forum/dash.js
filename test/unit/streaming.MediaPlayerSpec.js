@@ -5,6 +5,7 @@ import CapabilitiesMock from './mocks/CapabilitiesMock';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 import AbrControllerMock from './mocks/AbrControllerMock';
 import MediaPlayer from './../../src/streaming/MediaPlayer';
+import VideoModel from './../../src/streaming/models/VideoModel';
 import MediaPlayerModelMock from './mocks//MediaPlayerModelMock';
 import MediaControllerMock from './mocks/MediaControllerMock';
 import ObjectUtils from './../../src/streaming/utils/ObjectUtils';
@@ -971,9 +972,7 @@ describe('MediaPlayer', function () {
                 let areEquals = objectUtils.areEqual(element, videoElementMock);
                 expect(areEquals).to.be.true; // jshint ignore:line
 
-                const myNewView = {
-                    view: 'view'
-                };
+                const myNewView = new VideoElementMock();
 
                 player.attachView(myNewView);
 
@@ -996,6 +995,15 @@ describe('MediaPlayer', function () {
                 ttmlRenderer = player.getTTMLRenderingDiv();
                 const areEquals = objectUtils.areEqual(ttmlRenderer, myTTMLRenderer);
                 expect(areEquals).to.be.true; // jshint ignore:line
+            });
+
+            it('Method attachView should throw an exception when attaching a view which is not VIDEO or AUDIO DOM element', function () {
+                player.attachView(null);
+                const myNewView = {
+                    view: 'view'
+                };
+
+                expect(player.attachView.bind(player, myNewView)).to.throw(VideoModel.VIDEO_MODEL_WRONG_ELEMENT_TYPE);
             });
         });
     });
@@ -1048,6 +1056,10 @@ describe('MediaPlayer', function () {
 
             it('Method getSelectionModeForInitialTrack should throw an exception', function () {
                 expect(player.getSelectionModeForInitialTrack).to.throw(MediaPlayer.MEDIA_PLAYER_NOT_INITIALIZED_ERROR);
+            });
+
+            it('Method getCurrentLiveLatency should throw an exception', function () {
+                expect(player.getCurrentLiveLatency).to.throw(MediaPlayer.MEDIA_PLAYER_NOT_INITIALIZED_ERROR);
             });
         });
     });

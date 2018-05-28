@@ -463,7 +463,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                 availableBitrates.video = player.getBitrateInfoListFor("video") || [];
                 if (availableBitrates.audio.length > 1 || availableBitrates.video.length > 1) {
                     contentFunc = function (element, index) {
-                        let result = isNaN(index) ? " Auto Switch" : Math.floor(element.bitrate / 1000) + ' kbps';
+                        var result = isNaN(index) ? " Auto Switch" : Math.floor(element.bitrate / 1000) + ' kbps';
                         result += element && element.width && element.height ? ` (${element.width}x${element.height})` : '';
                         return result;
                     }

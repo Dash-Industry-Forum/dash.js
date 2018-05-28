@@ -52,6 +52,7 @@ describe('PlaybackController', function () {
             expect(playbackController.getPlaybackRate()).to.be.null; // jshint ignore:line
             expect(playbackController.getPlayedRanges()).to.be.null; // jshint ignore:line
             expect(playbackController.getEnded()).to.be.null; // jshint ignore:line
+            expect(playbackController.getCurrentLiveLatency()).to.be.NaN; // jshint ignore:line
 
             let streamInfo = {
                 manifestInfo: {

@@ -103,13 +103,7 @@ function TextTracks() {
         const lang = textTrackQueue[i].lang;
         const isTTML = textTrackQueue[i].isTTML;
         const isEmbedded = textTrackQueue[i].isEmbedded;
-        const track = isChrome ? document.createElement('track') : videoModel.addTextTrack(kind, label, lang);
-
-        if (isChrome) {
-            track.kind = kind;
-            track.label = label;
-            track.srclang = lang;
-        }
+        const track = videoModel.addTextTrack(kind, label, lang);
 
         track.isEmbedded = isEmbedded;
         track.isTTML = isTTML;
@@ -149,9 +143,6 @@ function TextTracks() {
                     /*jshint -W024 */
                     track.default = true;
                     defaultIndex = i;
-                }
-                if (isChrome) {
-                    videoModel.appendChild(track);
                 }
 
                 const textTrack = getTrackByIdx(i);
@@ -402,7 +393,7 @@ function TextTracks() {
             return;
         }
 
-        for (let item in captionData) {
+        for (let item = 0; item < captionData.length; item++) {
             let cue;
             const currentItem = captionData[item];
 
@@ -466,8 +457,15 @@ function TextTracks() {
                     }
                 }
             }
-
-            track.addCue(cue);
+            try {
+                track.addCue(cue);
+            } catch (e) {
+                // Edge crash, delete everything and start adding again
+                // @see https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/11979877/
+                deleteTrackCues(track);
+                track.addCue(cue);
+                throw e;
+            }
         }
     }
 
@@ -545,14 +543,10 @@ function TextTracks() {
     function deleteAllTextTracks() {
         const ln = trackElementArr ? trackElementArr.length : 0;
         for (let i = 0; i < ln; i++) {
-            if (isChrome) {
-                videoModel.removeChild(trackElementArr[i]);
-            } else {
-                const track = getTrackByIdx(i);
-                if (track) {
-                    deleteTrackCues.call(this, track);
-                    track.mode = 'disabled';
-                }
+            const track = getTrackByIdx(i);
+            if (track) {
+                deleteTrackCues.call(this, track);
+                track.mode = 'disabled';
             }
         }
         trackElementArr = [];

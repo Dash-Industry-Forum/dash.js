@@ -28,35 +28,76 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import FactoryMaker from '../../core/FactoryMaker';
+
 /**
- * @classdesc a node at some level in a ValueMap
+ * @module XHRLoader
+ * @description Manages download of resources via HTTP.
+ * @param {Object} cfg - dependencies from parent
  */
-import CommonProperty from './CommonProperty';
+function XHRLoader(cfg) {
 
-class MapNode {
-    constructor(name, properties, children) {
-        this._name = name || '';
-        this._properties = [];
-        this._children = children || [];
+    cfg = cfg || {};
+    const requestModifier = cfg.requestModifier;
 
-        if (Array.isArray(properties)) {
-            properties.forEach(p => {
-                this._properties.push(new CommonProperty(p));
-            });
+    let instance;
+
+    function load(httpRequest) {
+
+        // Variables will be used in the callback functions
+        let firstProgress = true; /*jshint ignore:line*/
+        let needFailureReport = true; /*jshint ignore:line*/
+        let requestStartTime = new Date();
+        let lastTraceTime = requestStartTime; /*jshint ignore:line*/
+        let lastTraceReceivedCount = 0; /*jshint ignore:line*/
+
+        let request = httpRequest.request;
+
+        let xhr = new XMLHttpRequest();
+        xhr.open(httpRequest.method, httpRequest.url, true);
+
+        if (request.responseType) {
+            xhr.responseType = request.responseType;
         }
+
+        if (request.range) {
+            xhr.setRequestHeader('Range', 'bytes=' + request.range);
+        }
+
+        if (!request.requestStartDate) {
+            request.requestStartDate = requestStartTime;
+        }
+
+        if (requestModifier) {
+            xhr = requestModifier.modifyRequestHeader(xhr);
+        }
+
+        xhr.withCredentials = httpRequest.withCredentials;
+
+        xhr.onload = httpRequest.onload;
+        xhr.onloadend = httpRequest.onend;
+        xhr.onerror = httpRequest.onerror;
+        xhr.onprogress = httpRequest.progress;
+        xhr.onabort = httpRequest.onabort;
+
+        xhr.send();
+
+        httpRequest.response = xhr;
     }
 
-    get name() {
-        return this._name;
+    function abort(request) {
+        request.response.abort();
     }
 
-    get children() {
-        return this._children;
-    }
+    instance = {
+        load: load,
+        abort: abort
+    };
 
-    get properties() {
-        return this._properties;
-    }
+    return instance;
 }
 
-export default MapNode;
+XHRLoader.__dashjs_factory_name = 'XHRLoader';
+
+const factory = FactoryMaker.getClassFactory(XHRLoader);
+export default factory;

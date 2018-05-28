@@ -159,6 +159,11 @@
                         Jump Small Gaps
                     </label>
                     <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                           title="">
+                        <input type="checkbox" id="lowLatencyModeCB" ng-model="lowLatencyModeSelected" ng-change="togglelowLatencyMode()" ng-checked="lowLatencyModeSelected">
+                        Low Latency Mode
+                    </label>
+                    <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                            title="Enables faster ABR switching (time to render). Only when the new quality is higher than the current.">
                         <input type="checkbox" id="fastSwitchCB" ng-model="fastSwitchSelected" ng-change="toggleFastSwitch()" ng-checked="fastSwitchSelected">
                         Fast Switching ABR
@@ -355,6 +360,11 @@
                                 <label class="text-primary" for="videoRatioCB" data-toggle="tooltip" data-placement="top"
                                   title="The minimum, average and maximum ratio of the segment playback time to total download time over the last 4 segments">Ratio (min|avg|max) :</label> {{videoRatio}}
                             </div>
+                            <div class="text-success" ng-show="isDynamic">
+                                <input id="liveLatencyCB" type="checkbox" ng-model="chartState.video.liveLatency.selected" ng-change="enableChartByName('liveLatency', 'video')" >
+                                <label class="text-primary" for="liveLatencyCB" data-toggle="tooltip" data-placement="top"
+                                  title="Difference between live time and current playback position in seconds. This latency estimate does not include the time taken by the encoder to encode the content">Live Latency:</label> {{videoLiveLatency}}
+                            </div>
                         </div>
                       </div>
                       <div class="tab-pane fade" id="audioStatsTab">
@@ -399,6 +409,11 @@
                                 <input id="audioRatioCB" type="checkbox" ng-model="chartState.audio.ratio.selected" ng-change="enableChartByName('ratio', 'audio')" >
                                 <label class="text-primary" for="audioRatioCB" data-toggle="tooltip" data-placement="top"
                                   title="The minimum, average and maximum ratio of the segment playback time to total download time over the last 4 segments">Ratio (min|avg|max) :</label> {{audioRatio}}
+                            </div>
+                            <div class="text-success">
+                                <input id="liveLatencyCB" type="checkbox" ng-model="chartState.audio.liveLatency.selected" ng-change="enableChartByName('liveLatency', 'audio')" >
+                                <label class="text-primary" for="liveLatencyCB" data-toggle="tooltip" data-placement="top"
+                                  title="Number of seconds of difference between the real live and the playing live">Live Latency:</label> {{audioLiveLatency}}
                             </div>
                         </div>
                       </div>

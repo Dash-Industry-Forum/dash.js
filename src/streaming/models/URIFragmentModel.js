@@ -32,91 +32,56 @@
 import URIFragmentData from '../vo/URIFragmentData';
 import FactoryMaker from '../../core/FactoryMaker';
 
-function URIQueryAndFragmentModel() {
+/**
+ * Model class managing URI fragments.
+ */
+function URIFragmentModel() {
 
     let instance,
-        URIFragmentDataVO,
-        URIQueryData,
-        isHTTPS;
+        URIFragmentDataVO;
 
-    function initialize() {
+    /**
+     * @param {string} uri The URI to parse for fragment extraction
+     * @memberof module:URIFragmentModel
+     * @instance
+     */
+    function initialize(uri) {
         URIFragmentDataVO = new URIFragmentData();
-        URIQueryData = [];
-        isHTTPS = false;
+
+        if (!uri) return null;
+
+        const hashIndex = uri.indexOf('#');
+        if (hashIndex !== -1) {
+            const fragments = uri.substr(hashIndex + 1).split('&');
+            for (let i = 0, len = fragments.length; i < len; ++i) {
+                const fragment = fragments[i];
+                const equalIndex = fragment.indexOf('=');
+                if (equalIndex !== -1) {
+                    const key = fragment.substring(0,equalIndex);
+                    if (URIFragmentDataVO.hasOwnProperty(key)) {
+                        URIFragmentDataVO[key] = fragment.substr(equalIndex + 1);
+                    }
+                }
+            }
+        }
     }
 
+    /**
+     * @returns {URIFragmentData} Object containing supported URI fragments
+     * @memberof module:URIFragmentModel
+     * @instance
+     */
     function getURIFragmentData() {
         return URIFragmentDataVO;
     }
 
-    function getURIQueryData() {
-        return URIQueryData;
-    }
-
-    function isManifestHTTPS() {
-        return isHTTPS;
-    }
-
-    function parseURI(uri) {
-        if (!uri) return null;
-
-        let URIFragmentData = [];
-        let mappedArr;
-
-        let testQuery = new RegExp(/[?]/);
-        let testFragment = new RegExp(/[#]/);
-        let testHTTPS = new RegExp(/^(https:)?\/\//i);
-        let isQuery = testQuery.test(uri);
-        let isFragment = testFragment.test(uri);
-
-        isHTTPS = testHTTPS.test(uri);
-
-        function reduceArray(previousValue, currentValue, index, array) {
-            let arr =  array[0].split(/[=]/);
-            array.push({key: arr[0], value: arr[1]});
-            array.shift();
-            return array;
-        }
-
-        function mapArray(currentValue, index, array) {
-            if (index > 0)
-            {
-                if (isQuery && URIQueryData.length === 0) {
-                    URIQueryData = array[index].split(/[&]/);
-                } else if (isFragment) {
-                    URIFragmentData = array[index].split(/[&]/);
-                }
-            }
-
-            return array;
-        }
-
-        mappedArr = uri.split(/[?#]/).map(mapArray);
-
-        if (URIQueryData.length > 0) {
-            URIQueryData = URIQueryData.reduce(reduceArray, null);
-        }
-
-        if (URIFragmentData.length > 0) {
-            URIFragmentData = URIFragmentData.reduce(reduceArray, null);
-            URIFragmentData.forEach(function (object) {
-                URIFragmentDataVO[object.key] = object.value;
-            });
-        }
-
-        return uri;
-    }
-
     instance = {
         initialize: initialize,
-        parseURI: parseURI,
-        getURIFragmentData: getURIFragmentData,
-        getURIQueryData: getURIQueryData,
-        isManifestHTTPS: isManifestHTTPS
+        getURIFragmentData: getURIFragmentData
     };
 
     return instance;
 }
 
-URIQueryAndFragmentModel.__dashjs_factory_name = 'URIQueryAndFragmentModel';
-export default FactoryMaker.getSingletonFactory(URIQueryAndFragmentModel);
+URIFragmentModel.__dashjs_factory_name = 'URIFragmentModel';
+export default FactoryMaker.getSingletonFactory(URIFragmentModel);

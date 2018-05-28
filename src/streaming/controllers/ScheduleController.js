@@ -120,7 +120,7 @@ function ScheduleController(config) {
         eventBus.on(Events.STREAM_INITIALIZED, onStreamInitialized, this);
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
         eventBus.on(Events.BUFFER_CLEARED, onBufferCleared, this);
-        eventBus.on(Events.BYTES_APPENDED, onBytesAppended, this);
+        eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
         eventBus.on(Events.INIT_REQUESTED, onInitRequested, this);
         eventBus.on(Events.QUOTA_EXCEEDED, onQuotaExceeded, this);
         eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
@@ -204,11 +204,11 @@ function ScheduleController(config) {
                     const replacement = replaceRequestArray.shift();
 
                     if (fragmentController.isInitializationRequest(replacement)) {
-                        //to be sure the specific init segment had not already been loaded.
+                        // To be sure the specific init segment had not already been loaded.
                         streamProcessor.switchInitData(replacement.representationId);
                     } else {
                         let request;
-                        // don't schedule next fragments while pruning to avoid buffer inconsistencies
+                        // Don't schedule next fragments while pruning to avoid buffer inconsistencies
                         if (!streamProcessor.getBufferController().getIsPruningInProgress()) {
                             request = nextFragmentRequestRule.execute(streamProcessor, replacement);
                             if (!request && streamInfo.manifestInfo && streamInfo.manifestInfo.isDynamic) {
@@ -219,7 +219,7 @@ function ScheduleController(config) {
                         if (request) {
                             log('ScheduleController - ' + type + ' - getNextFragment - request is ' + request.url);
                             fragmentModel.executeRequest(request);
-                        } else { //Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
+                        } else { // Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
                             setFragmentProcessState(false);
                             startScheduleTimer(500);
                         }
@@ -240,7 +240,7 @@ function ScheduleController(config) {
     }
 
     function validateExecutedFragmentRequest() {
-        //Validate that the fragment request executed and appended into the source buffer is as
+        // Validate that the fragment request executed and appended into the source buffer is as
         // good of quality as the current quality and is the correct media track.
         const safeBufferLevel = currentRepresentationInfo.fragmentDuration * 1.5;
         const request = fragmentModel.getRequests({
@@ -254,18 +254,21 @@ function ScheduleController(config) {
             const bufferLevel = streamProcessor.getBufferLevel();
             const abandonmentState = abrController.getAbandonmentStateFor(type);
 
-            if (fastSwitchModeEnabled && request.quality < currentRepresentationInfo.quality && bufferLevel >= safeBufferLevel && abandonmentState !== AbrController.ABANDON_LOAD) {
+            // Only replace on track switch when NEVER_REPLACE
+            const trackChanged = !mediaController.isCurrentTrack(request.mediaInfo) && mediaController.getSwitchMode(request.mediaInfo.type) === MediaController.TRACK_SWITCH_MODE_NEVER_REPLACE;
+            const qualityChanged = request.quality < currentRepresentationInfo.quality;
+
+            if (fastSwitchModeEnabled && (trackChanged || qualityChanged) && bufferLevel >= safeBufferLevel && abandonmentState !== AbrController.ABANDON_LOAD) {
                 replaceRequest(request);
                 log('Reloading outdated fragment at index: ', request.index);
             } else if (request.quality > currentRepresentationInfo.quality) {
-                //The buffer has better quality it in then what we would request so set append point to end of buffer!!
+                // The buffer has better quality it in then what we would request so set append point to end of buffer!!
                 setSeekTarget(playbackController.getTime() + streamProcessor.getBufferLevel());
             }
         }
     }
 
     function startScheduleTimer(value) {
-        //log('[ScheduleController][', type,'] - startScheduleTimer in ', value,' ms');
         clearTimeout(scheduleTimeout);
         scheduleTimeout = setTimeout(schedule, value);
     }
@@ -388,7 +391,14 @@ function ScheduleController(config) {
                 ignoreIsFinished: true
             });
 
-            playbackController.setLiveStartTime(request.startTime);
+            // When low latency mode is selected but browser doesn't support fetch
+            // start at the beginning of the segment to avoid consuming the whole buffer
+            if (mediaPlayerModel.getLowLatencyEnabled()) {
+                const liveStartTime = request.duration < mediaPlayerModel.getLiveDelay() ? request.startTime : request.startTime + request.duration - mediaPlayerModel.getLiveDelay();
+                playbackController.setLiveStartTime(liveStartTime);
+            } else {
+                playbackController.setLiveStartTime(request.startTime);
+            }
             seekTarget = playbackController.getStreamStartTime(false, liveEdge);
 
             //special use case for multi period stream. If the startTime is out of the current period, send a seek command.
@@ -481,9 +491,15 @@ function ScheduleController(config) {
             return;
         }
 
-        streamProcessor.getFragmentModel().syncExecutedRequestsWithBufferedRange(
-            streamProcessor.getBufferController().getBuffer().getAllBufferRanges(),
-            streamProcessor.getStreamInfo().duration);
+        if (e.unintended) {
+            // There was an unintended buffer remove, probably creating a gap in the buffer, remove every saved request
+            streamProcessor.getFragmentModel().removeExecutedRequestsAfterTime(e.from,
+                streamProcessor.getStreamInfo().duration);
+        } else {
+            streamProcessor.getFragmentModel().syncExecutedRequestsWithBufferedRange(
+                streamProcessor.getBufferController().getBuffer().getAllBufferRanges(),
+                streamProcessor.getStreamInfo().duration);
+        }
 
         if (e.hasEnoughSpaceToAppend && isStopped) {
             start();
@@ -641,7 +657,7 @@ function ScheduleController(config) {
         eventBus.off(Events.STREAM_COMPLETED, onStreamCompleted, this);
         eventBus.off(Events.STREAM_INITIALIZED, onStreamInitialized, this);
         eventBus.off(Events.QUOTA_EXCEEDED, onQuotaExceeded, this);
-        eventBus.off(Events.BYTES_APPENDED, onBytesAppended, this);
+        eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
         eventBus.off(Events.BUFFER_CLEARED, onBufferCleared, this);
         eventBus.off(Events.INIT_REQUESTED, onInitRequested, this);
         eventBus.off(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);

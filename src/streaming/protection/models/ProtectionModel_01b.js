@@ -246,7 +246,11 @@ function ProtectionModel_01b(config) {
 
     function closeKeySession(sessionToken) {
         // Send our request to the CDM
-        videoElement[api.cancelKeyRequest](keySystem.systemString, sessionToken.sessionID);
+        try {
+            videoElement[api.cancelKeyRequest](keySystem.systemString, sessionToken.sessionID);
+        } catch (error) {
+            eventBus.trigger(events.KEY_SESSION_CLOSED, {data: null, error: 'Error closing session (' + sessionToken.sessionID + ') ' + error.message});
+        }
     }
 
     function setServerCertificate(/*serverCertificate*/) { /* Not supported */ }
@@ -329,6 +333,8 @@ function ProtectionModel_01b(config) {
                                 sessionToken = pendingSessions.shift();
                                 sessions.push(sessionToken);
                                 sessionToken.sessionID = event.sessionId;
+
+                                eventBus.trigger(events.KEY_SESSION_CREATED, {data: sessionToken});
                             }
                         } else if (pendingSessions.length > 0) { // SessionIDs not supported
                             sessionToken = pendingSessions.shift();

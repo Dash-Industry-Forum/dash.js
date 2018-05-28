@@ -126,6 +126,7 @@ declare namespace dashjs {
         enableLastMediaSettingsCaching(enable: boolean, ttl?: number): void;
         setMaxAllowedBitrateFor(type: 'video' | 'audio', value: number): void;
         getMaxAllowedBitrateFor(type: 'video' | 'audio'): number;
+        getTopBitrateInfoFor(type: 'video' | 'audio'): BitrateInfo;
         setMaxAllowedRepresentationRatioFor(type: 'video' | 'audio', value: number): void;
         getMaxAllowedRepresentationRatioFor(type: 'video' | 'audio'): number;
         setAutoPlay(value: boolean): void;
@@ -134,8 +135,8 @@ declare namespace dashjs {
         getScheduleWhilePaused(): boolean;
         getDashMetrics(): DashMetrics;
         getMetricsFor(type: 'video' | 'audio' | 'text' | 'stream'): MetricsList | null;
-        getQualityFor(type: 'video' | 'audio'): number;
-        setQualityFor(type: 'video' | 'audio', value: number): void;
+        getQualityFor(type: 'video' | 'audio' | 'image'): number;
+        setQualityFor(type: 'video' | 'audio' | 'image', value: number): void;
         updatePortalSize(): void;
         getLimitBitrateByPortal(): any;
         setLimitBitrateByPortal(value: boolean): void;
@@ -148,7 +149,7 @@ declare namespace dashjs {
         getTextDefaultEnabled(): boolean | undefined;
         setTextDefaultEnabled(enable: boolean): void;
         getThumbnail(time: number): Thumbnail;
-        getBitrateInfoListFor(type: 'video' | 'audio'): BitrateInfo[];
+        getBitrateInfoListFor(type: 'video' | 'audio' | 'image'): BitrateInfo[];
         setInitialBitrateFor(type: 'video' | 'audio', value: number): void;
         getInitialBitrateFor(type: 'video' | 'audio'): number;
         setInitialRepresentationRatioFor(type: 'video' | 'audio', value: number): void;
@@ -189,7 +190,6 @@ declare namespace dashjs {
         getXHRWithCredentialsForType(type: string): boolean;
         setBufferTimeAtTopQualityLongForm(value: number): void;
         setLongFormContentDurationThreshold(value: number): void;
-        setRichBufferThreshold(value: number): void;
         setCacheLoadThresholdForType(type: 'video' | 'audio', value: number): void;
         getProtectionController(): ProtectionController;
         attachProtectionController(value: ProtectionController): void;
@@ -205,6 +205,9 @@ declare namespace dashjs {
         getSmallGapLimit(): number;
         preload(): void;
         reset(): void;
+        addABRCustomRule(type: string, rulename: string, rule: object): void;
+        removeABRCustomRule(rulename: string): void;
+        removeAllABRCustomRule(): void;
     }
 
     export interface MediaPlayerFactory {
@@ -582,7 +585,7 @@ declare namespace dashjs {
         getStartTime(): number;
         getId(): string;
         getStreamInfo(): StreamInfo | null;
-        getBitrateListFor(type: 'video' | 'audio'): BitrateInfo[];
+        getBitrateListFor(type: 'video' | 'audio' | 'image'): BitrateInfo[];
         updateData(updatedStreamInfo: StreamInfo): void;
         reset(): void;
     }
@@ -627,17 +630,17 @@ declare namespace dashjs {
          * type with the corresponding property value being the URL to use for
          * messages of that type
          */
-        serverURL: string | { [P in MediaKeyMessageType]: string };
+        serverURL?: string | { [P in MediaKeyMessageType]: string };
 
         /** headers to add to the http request */
-        httpRequestHeaders: object;
+        httpRequestHeaders?: object;
 
         /**
          * Defines a set of clear keys that are available to the key system.
          * Object properties are base64-encoded keyIDs (with no padding).
          * Corresponding property values are keys, base64-encoded (no padding).
          */
-        clearkeys: { [key: string]: string };
+        clearkeys?: { [key: string]: string };
     }
 
     export class MetricsList {

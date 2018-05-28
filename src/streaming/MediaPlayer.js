@@ -40,7 +40,7 @@ import Capabilities from './utils/Capabilities';
 import TextTracks from './text/TextTracks';
 import RequestModifier from './utils/RequestModifier';
 import TextController from './text/TextController';
-import URIQueryAndFragmentModel from './models/URIQueryAndFragmentModel';
+import URIFragmentModel from './models/URIFragmentModel';
 import ManifestModel from './models/ManifestModel';
 import MediaPlayerModel from './models/MediaPlayerModel';
 import MetricsModel from './models/MetricsModel';
@@ -758,6 +758,23 @@ function MediaPlayer() {
     }
 
     /**
+     * Gets the top quality BitrateInfo checking portal limit and max allowed.
+     *
+     * It calls getTopQualityIndexFor internally
+     *
+     * @param {string} type - 'video' or 'audio' are the type options.
+     * @memberof module:MediaPlayer
+     * @returns {BitrateInfo | null}
+     * @instance
+     */
+    function getTopBitrateInfoFor(type) {
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR;
+        }
+        return abrController.getTopBitrateInfoFor(type);
+    }
+
+    /**
      * @param {string} type - 'video' or 'audio' are the type options.
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#setMinAllowedBitrateFor setMinAllowedBitrateFor()}
@@ -1078,6 +1095,23 @@ function MediaPlayer() {
     }
 
     /**
+     * @memberof module:MediaPlayer
+     * @instance
+     * @returns {number|NaN} Current live stream latency in seconds. It is the difference between current time and time position at the playback head.
+     */
+    function getCurrentLiveLatency() {
+        if (!mediaPlayerInitialized) {
+            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+        }
+
+        if (!playbackInitialized) {
+            return NaN;
+        }
+
+        return playbackController.getCurrentLiveLatency();
+    }
+
+    /**
      * <p>Set to true if you would like to override the default live delay and honor the SuggestedPresentationDelay attribute in by the manifest.</p>
      * @param {boolean} value
      * @default false
@@ -1300,6 +1334,29 @@ function MediaPlayer() {
      */
     function getMovingAverageMethod() {
         return mediaPlayerModel.getMovingAverageMethod();
+    }
+
+
+    /**
+     * Returns if low latency mode is enabled. Disabled by default.
+     * @return {boolean} true - if enabled
+     * @see {@link module:MediaPlayer#setLowLatencyEnabled setLowLatencyEnabled()}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getLowLatencyEnabled() {
+        return mediaPlayerModel.getLowLatencyEnabled();
+    }
+
+    /**
+     * Enables low latency mode for dynamic streams. If not specified, liveDelay is set to 3s of buffer.
+     * Browser compatibility (Check row 'ReadableStream response body'): https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
+     * @param {boolean} value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setLowLatencyEnabled(value) {
+        return mediaPlayerModel.setLowLatencyEnabled(value);
     }
 
     /**
@@ -1910,6 +1967,25 @@ function MediaPlayer() {
         textController.enableText(enable);
     }
 
+
+    /**
+     * Enable/disable text
+     * When enabling dash will keep downloading and process fragmented text tracks even if all tracks are in mode "hidden"
+     *
+     * @param {boolean} enable - true to enable text streaming even if all text tracks are hidden.
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function enableForcedTextStreaming(enable) {
+        if (textController === undefined) {
+            textController = TextController(context).getInstance();
+        }
+
+        textController.enableForcedTextStreaming(enable);
+    }
+
+
+
     /**
      * Return if text is enabled
      *
@@ -2026,8 +2102,9 @@ function MediaPlayer() {
             throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
         }
 
+        videoModel.setElement(element);
+
         if (element) {
-            videoModel.setElement(element);
             detectProtection();
             detectMetricsReporting();
             detectMss();
@@ -2229,7 +2306,8 @@ function MediaPlayer() {
      * This method sets the current track switch mode. Available options are:
      *
      * MediaController.TRACK_SWITCH_MODE_NEVER_REPLACE
-     * (used to forbid clearing the buffered data (prior to current playback position) after track switch. Default for video)
+     * (used to forbid clearing the buffered data (prior to current playback position) after track switch.
+     * Defers to fastSwitchEnabled for placement of new data. Default for video)
      *
      * MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE
      * (used to clear the buffered data (prior to current playback position) after track switch. Default for audio)
@@ -2395,9 +2473,8 @@ function MediaPlayer() {
 
         eventBus.on(Events.INTERNAL_MANIFEST_LOADED, handler, self);
 
-        let uriQueryFragModel = URIQueryAndFragmentModel(context).getInstance();
-        uriQueryFragModel.initialize();
-        manifestLoader.load(uriQueryFragModel.parseURI(url));
+        URIFragmentModel(context).getInstance().initialize(url);
+        manifestLoader.load(url);
     }
 
     /**
@@ -2433,12 +2510,10 @@ function MediaPlayer() {
         }
 
         if (typeof urlOrManifest === 'string') {
-            let uriQueryFragModel = URIQueryAndFragmentModel(context).getInstance();
-            uriQueryFragModel.initialize();
-            source = uriQueryFragModel.parseURI(urlOrManifest);
-        } else {
-            source = urlOrManifest;
+            URIFragmentModel(context).getInstance().initialize(urlOrManifest);
         }
+
+        source = urlOrManifest;
 
         if (streamingInitialized || playbackInitialized) {
             resetPlaybackControllers();
@@ -2780,11 +2855,13 @@ function MediaPlayer() {
         setLiveDelayFragmentCount: setLiveDelayFragmentCount,
         setLiveDelay: setLiveDelay,
         getLiveDelay: getLiveDelay,
+        getCurrentLiveLatency: getCurrentLiveLatency,
         useSuggestedPresentationDelay: useSuggestedPresentationDelay,
         enableLastBitrateCaching: enableLastBitrateCaching,
         enableLastMediaSettingsCaching: enableLastMediaSettingsCaching,
         setMaxAllowedBitrateFor: setMaxAllowedBitrateFor,
         getMaxAllowedBitrateFor: getMaxAllowedBitrateFor,
+        getTopBitrateInfoFor: getTopBitrateInfoFor,
         setMinAllowedBitrateFor: setMinAllowedBitrateFor,
         getMinAllowedBitrateFor: getMinAllowedBitrateFor,
         setMaxAllowedRepresentationRatioFor: setMaxAllowedRepresentationRatioFor,
@@ -2807,6 +2884,7 @@ function MediaPlayer() {
         setTextDefaultEnabled: setTextDefaultEnabled,
         getTextDefaultEnabled: getTextDefaultEnabled,
         enableText: enableText,
+        enableForcedTextStreaming: enableForcedTextStreaming,
         isTextEnabled: isTextEnabled,
         setTextTrack: setTextTrack,
         getBitrateInfoListFor: getBitrateInfoListFor,
@@ -2865,6 +2943,8 @@ function MediaPlayer() {
         getJumpGaps: getJumpGaps,
         setSmallGapLimit: setSmallGapLimit,
         getSmallGapLimit: getSmallGapLimit,
+        getLowLatencyEnabled: getLowLatencyEnabled,
+        setLowLatencyEnabled: setLowLatencyEnabled,
         setManifestUpdateRetryInterval: setManifestUpdateRetryInterval,
         getManifestUpdateRetryInterval: getManifestUpdateRetryInterval,
         setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,

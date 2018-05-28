@@ -194,18 +194,18 @@ function RepresentationController() {
     }
 
     function addRepresentationSwitch() {
-        let now = new Date();
-        let currentRepresentation = getCurrentRepresentation();
-        let currentVideoTimeMs = playbackController.getTime() * 1000;
+        const now = new Date();
+        const currentRepresentation = getCurrentRepresentation();
+        const currentVideoTimeMs = playbackController.getTime() * 1000;
 
         metricsModel.addRepresentationSwitch(currentRepresentation.adaptation.type, now, currentVideoTimeMs, currentRepresentation.id);
     }
 
     function addDVRMetric() {
-        let streamInfo = streamProcessor.getStreamInfo();
-        let manifestInfo = streamInfo ? streamInfo.manifestInfo : null;
-        let isDynamic = manifestInfo ? manifestInfo.isDynamic : null;
-        let range = timelineConverter.calcSegmentAvailabilityRange(currentVoRepresentation, isDynamic);
+        const streamInfo = streamProcessor.getStreamInfo();
+        const manifestInfo = streamInfo ? streamInfo.manifestInfo : null;
+        const isDynamic = manifestInfo ? manifestInfo.isDynamic : null;
+        const range = timelineConverter.calcSegmentAvailabilityRange(currentVoRepresentation, isDynamic);
         metricsModel.addDVRInfo(streamProcessor.getType(), playbackController.getTime(), manifestInfo, range);
     }
 

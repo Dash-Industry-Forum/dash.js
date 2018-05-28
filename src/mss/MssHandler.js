@@ -82,7 +82,7 @@ function MssHandler(config) {
         request.mediaInfo = streamProcessor.getMediaInfo();
         request.representationId = representation.id;
 
-        const chunk = createDataChunk(request, streamProcessor.getStreamInfo().id);
+        const chunk = createDataChunk(request, streamProcessor.getStreamInfo().id, e.type !== events.FRAGMENT_LOADING_PROGRESS);
 
         // Generate initialization segment (moov)
         chunk.bytes = mssFragmentProcessor.generateMoov(representation);
@@ -96,7 +96,7 @@ function MssHandler(config) {
         e.sender = null;
     }
 
-    function createDataChunk(request, streamId) {
+    function createDataChunk(request, streamId, endFragment) {
         const chunk = new DataChunk();
 
         chunk.streamId = streamId;
@@ -108,11 +108,15 @@ function MssHandler(config) {
         chunk.index = request.index;
         chunk.quality = request.quality;
         chunk.representationId = request.representationId;
+        chunk.endFragment = endFragment;
 
         return chunk;
     }
 
     function onSegmentMediaLoaded(e) {
+        if (e.error) {
+            return;
+        }
         // Process moof to transcode it from MSS to DASH
         let streamProcessor = e.sender.getStreamProcessor();
         mssFragmentProcessor.processFragment(e, streamProcessor);

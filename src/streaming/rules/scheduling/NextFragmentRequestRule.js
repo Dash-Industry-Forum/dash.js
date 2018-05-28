@@ -53,7 +53,7 @@ function NextFragmentRequestRule(config) {
 
         let time = hasSeekTarget ? seekTarget : adapter.getIndexHandlerTime(streamProcessor);
 
-        if (isNaN(time) || (mediaType === Constants.FRAGMENTED_TEXT && textController.getAllTracksAreDisabled())) {
+        if (isNaN(time) || (mediaType === Constants.FRAGMENTED_TEXT && !textController.isTextEnabled())) {
             return null;
         }
 

@@ -1,6 +1,7 @@
 import ObjectsHelper from './helpers/ObjectsHelper';
 import VoHelper from './helpers/VOHelper';
 import DashHandler from '../../src/dash/DashHandler';
+import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
 
 const expect = require('chai').expect;
 
@@ -17,11 +18,13 @@ describe('DashHandler', function () {
         const timelineConverter = objectsHelper.getDummyTimelineConverter();
         const streamProcessor = objectsHelper.getDummyStreamProcessor(testType);
         const baseURLController = objectsHelper.getDummyBaseURLController();
+        const mediaPlayerModel = new MediaPlayerModelMock();
 
         const config = {
             mimeType: streamProcessor.getMediaInfo().mimeType,
             timelineConverter: timelineConverter,
-            baseURLController: baseURLController
+            baseURLController: baseURLController,
+            mediaPlayerModel: mediaPlayerModel
         };
 
         const dashHandler = DashHandler(context).create(config);
