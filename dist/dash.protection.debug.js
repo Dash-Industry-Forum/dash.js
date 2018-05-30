@@ -2129,26 +2129,34 @@ function KeySystemPlayReady(config) {
             headers['Content-Type'] = headers.Content;
             delete headers.Content;
         }
+        // some devices (Ex: LG SmartTVs) require content-type to be defined
+        if (!headers.hasOwnProperty('Content-Type')) {
+            headers['Content-Type'] = 'text/xml; charset=' + messageFormat;
+        }
         return headers;
     }
 
     function getLicenseRequestFromMessage(message) {
-        var msg = undefined,
-            xmlDoc = undefined;
         var licenseRequest = null;
         var parser = new DOMParser();
         var dataview = messageFormat === 'utf16' ? new Uint16Array(message) : new Uint8Array(message);
 
         checkConfig();
-        msg = String.fromCharCode.apply(null, dataview);
-        xmlDoc = parser.parseFromString(msg, 'application/xml');
+        var msg = String.fromCharCode.apply(null, dataview);
+        var xmlDoc = parser.parseFromString(msg, 'application/xml');
 
         if (xmlDoc.getElementsByTagName('Challenge')[0]) {
             var Challenge = xmlDoc.getElementsByTagName('Challenge')[0].childNodes[0].nodeValue;
             if (Challenge) {
                 licenseRequest = BASE64.decode(Challenge);
             }
+        } else if (xmlDoc.getElementsByTagName('parsererror').length) {
+            // In case it is not an XML doc, return the message itself
+            // There are CDM implementations of some devices (example: some smartTVs) that
+            // return directly the challenge without wrapping it in an xml doc
+            return message;
         }
+
         return licenseRequest;
     }
 
@@ -2880,7 +2888,11 @@ function ProtectionModel_01b(config) {
 
     function closeKeySession(sessionToken) {
         // Send our request to the CDM
-        videoElement[api.cancelKeyRequest](keySystem.systemString, sessionToken.sessionID);
+        try {
+            videoElement[api.cancelKeyRequest](keySystem.systemString, sessionToken.sessionID);
+        } catch (error) {
+            eventBus.trigger(events.KEY_SESSION_CLOSED, { data: null, error: 'Error closing session (' + sessionToken.sessionID + ') ' + error.message });
+        }
     }
 
     function setServerCertificate() /*serverCertificate*/{/* Not supported */}
@@ -2963,6 +2975,8 @@ function ProtectionModel_01b(config) {
                                 sessionToken = pendingSessions.shift();
                                 sessions.push(sessionToken);
                                 sessionToken.sessionID = event.sessionId;
+
+                                eventBus.trigger(events.KEY_SESSION_CREATED, { data: sessionToken });
                             }
                         } else if (pendingSessions.length > 0) {
                             // SessionIDs not supported
