@@ -86,7 +86,9 @@ function XHRLoader(cfg) {
     }
 
     function abort(request) {
-        request.response.abort();
+        const x = request.response;
+        x.onloadend = x.onerror = x.onprogress = undefined; //Ignore events from aborted requests.
+        x.abort();
     }
 
     instance = {
