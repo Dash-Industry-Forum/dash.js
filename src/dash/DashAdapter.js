@@ -152,7 +152,7 @@ function DashAdapter() {
         mediaInfo.codec = 'cea-608-in-SEI';
         mediaInfo.isText = true;
         mediaInfo.isEmbedded = true;
-        mediaInfo.lang = channel + ' ' + lang;
+        mediaInfo.lang = lang;
         mediaInfo.roles = ['caption'];
     }
 
@@ -223,8 +223,7 @@ function DashAdapter() {
             const mpd = dashManifestModel.getMpd(manifest);
 
             voLocalPeriods = dashManifestModel.getRegularPeriods(mpd);
-
-        }else {
+        } else {
             if (voPeriods.length > 0) {
                 manifest = voPeriods[0].mpd.manifest;
             } else {

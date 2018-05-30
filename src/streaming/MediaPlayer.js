@@ -40,7 +40,7 @@ import Capabilities from './utils/Capabilities';
 import TextTracks from './text/TextTracks';
 import RequestModifier from './utils/RequestModifier';
 import TextController from './text/TextController';
-import URIQueryAndFragmentModel from './models/URIQueryAndFragmentModel';
+import URIFragmentModel from './models/URIFragmentModel';
 import ManifestModel from './models/ManifestModel';
 import MediaPlayerModel from './models/MediaPlayerModel';
 import MetricsModel from './models/MetricsModel';
@@ -755,6 +755,23 @@ function MediaPlayer() {
      */
     function getMaxAllowedBitrateFor(type) {
         return abrController.getMaxAllowedBitrateFor(type);
+    }
+
+    /**
+     * Gets the top quality BitrateInfo checking portal limit and max allowed.
+     *
+     * It calls getTopQualityIndexFor internally
+     *
+     * @param {string} type - 'video' or 'audio' are the type options.
+     * @memberof module:MediaPlayer
+     * @returns {BitrateInfo | null}
+     * @instance
+     */
+    function getTopBitrateInfoFor(type) {
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR;
+        }
+        return abrController.getTopBitrateInfoFor(type);
     }
 
     /**
@@ -1950,6 +1967,25 @@ function MediaPlayer() {
         textController.enableText(enable);
     }
 
+
+    /**
+     * Enable/disable text
+     * When enabling dash will keep downloading and process fragmented text tracks even if all tracks are in mode "hidden"
+     *
+     * @param {boolean} enable - true to enable text streaming even if all text tracks are hidden.
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function enableForcedTextStreaming(enable) {
+        if (textController === undefined) {
+            textController = TextController(context).getInstance();
+        }
+
+        textController.enableForcedTextStreaming(enable);
+    }
+
+
+
     /**
      * Return if text is enabled
      *
@@ -2066,8 +2102,9 @@ function MediaPlayer() {
             throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
         }
 
+        videoModel.setElement(element);
+
         if (element) {
-            videoModel.setElement(element);
             detectProtection();
             detectMetricsReporting();
             detectMss();
@@ -2269,7 +2306,8 @@ function MediaPlayer() {
      * This method sets the current track switch mode. Available options are:
      *
      * MediaController.TRACK_SWITCH_MODE_NEVER_REPLACE
-     * (used to forbid clearing the buffered data (prior to current playback position) after track switch. Default for video)
+     * (used to forbid clearing the buffered data (prior to current playback position) after track switch.
+     * Defers to fastSwitchEnabled for placement of new data. Default for video)
      *
      * MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE
      * (used to clear the buffered data (prior to current playback position) after track switch. Default for audio)
@@ -2435,9 +2473,8 @@ function MediaPlayer() {
 
         eventBus.on(Events.INTERNAL_MANIFEST_LOADED, handler, self);
 
-        let uriQueryFragModel = URIQueryAndFragmentModel(context).getInstance();
-        uriQueryFragModel.initialize();
-        manifestLoader.load(uriQueryFragModel.parseURI(url));
+        URIFragmentModel(context).getInstance().initialize(url);
+        manifestLoader.load(url);
     }
 
     /**
@@ -2473,12 +2510,10 @@ function MediaPlayer() {
         }
 
         if (typeof urlOrManifest === 'string') {
-            let uriQueryFragModel = URIQueryAndFragmentModel(context).getInstance();
-            uriQueryFragModel.initialize();
-            source = uriQueryFragModel.parseURI(urlOrManifest);
-        } else {
-            source = urlOrManifest;
+            URIFragmentModel(context).getInstance().initialize(urlOrManifest);
         }
+
+        source = urlOrManifest;
 
         if (streamingInitialized || playbackInitialized) {
             resetPlaybackControllers();
@@ -2826,6 +2861,7 @@ function MediaPlayer() {
         enableLastMediaSettingsCaching: enableLastMediaSettingsCaching,
         setMaxAllowedBitrateFor: setMaxAllowedBitrateFor,
         getMaxAllowedBitrateFor: getMaxAllowedBitrateFor,
+        getTopBitrateInfoFor: getTopBitrateInfoFor,
         setMinAllowedBitrateFor: setMinAllowedBitrateFor,
         getMinAllowedBitrateFor: getMinAllowedBitrateFor,
         setMaxAllowedRepresentationRatioFor: setMaxAllowedRepresentationRatioFor,
@@ -2848,6 +2884,7 @@ function MediaPlayer() {
         setTextDefaultEnabled: setTextDefaultEnabled,
         getTextDefaultEnabled: getTextDefaultEnabled,
         enableText: enableText,
+        enableForcedTextStreaming: enableForcedTextStreaming,
         isTextEnabled: isTextEnabled,
         setTextTrack: setTextTrack,
         getBitrateInfoListFor: getBitrateInfoListFor,

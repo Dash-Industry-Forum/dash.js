@@ -15,6 +15,7 @@ class VideoElementMock {
         this.currentTime = 0;
         this.duration = 0;
         this.textTracks = [];
+        this.nodeName = 'VIDEO';
     }
 
     constructor() {

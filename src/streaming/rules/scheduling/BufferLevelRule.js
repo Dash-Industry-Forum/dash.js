@@ -52,7 +52,7 @@ function BufferLevelRule(config) {
         let bufferTarget = NaN;
         const representationInfo = streamProcessor.getCurrentRepresentationInfo();
         if (type === Constants.FRAGMENTED_TEXT) {
-            bufferTarget = textController.getAllTracksAreDisabled() ? 0 : representationInfo.fragmentDuration;
+            bufferTarget = textController.isTextEnabled() ? representationInfo.fragmentDuration : 0;
         } else if (type === Constants.AUDIO && videoTrackPresent) {
             const videoBufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor(Constants.VIDEO));
             if (isNaN(representationInfo.fragmentDuration)) {
@@ -66,7 +66,7 @@ function BufferLevelRule(config) {
             if (abrController.isPlayingAtTopQuality(streamInfo)) {
                 const isLongFormContent = streamInfo.manifestInfo.duration >= mediaPlayerModel.getLongFormContentDurationThreshold();
                 bufferTarget = isLongFormContent ? mediaPlayerModel.getBufferTimeAtTopQualityLongForm() : mediaPlayerModel.getBufferTimeAtTopQuality();
-            }else {
+            } else {
                 bufferTarget = mediaPlayerModel.getStableBufferTime();
             }
         }

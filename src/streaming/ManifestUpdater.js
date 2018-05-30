@@ -47,7 +47,8 @@ function ManifestUpdater() {
         manifestLoader,
         manifestModel,
         dashManifestModel,
-        mediaPlayerModel;
+        mediaPlayerModel,
+        errHandler;
 
     function setConfig(config) {
         if (!config) return;
@@ -63,6 +64,9 @@ function ManifestUpdater() {
         }
         if (config.manifestLoader) {
             manifestLoader = config.manifestLoader;
+        }
+        if (config.errHandler) {
+            errHandler = config.errHandler;
         }
     }
 
@@ -161,6 +165,8 @@ function ManifestUpdater() {
     function onManifestLoaded(e) {
         if (!e.error) {
             update(e.manifest);
+        } else {
+            errHandler.manifestError(e.error.message, e.error.code);
         }
     }
 

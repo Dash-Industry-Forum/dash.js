@@ -553,7 +553,7 @@ function BufferController(config) {
     }
 
     function notifyBufferStateChanged(state) {
-        if (bufferState === state || (type === Constants.FRAGMENTED_TEXT && textController.getAllTracksAreDisabled())) return;
+        if (bufferState === state || (type === Constants.FRAGMENTED_TEXT && !textController.isTextEnabled())) return;
         bufferState = state;
         addBufferMetrics();
 
@@ -620,6 +620,9 @@ function BufferController(config) {
         if (currentTimeRequest) {
             rangeToKeep.start = Math.min(currentTimeRequest.startTime, rangeToKeep.start);
             rangeToKeep.end = Math.max(currentTimeRequest.startTime + currentTimeRequest.duration, rangeToKeep.end);
+        } else if (currentTime === 0 && playbackController.getIsDynamic()) {
+            // Don't prune before the live stream starts, it messes with low latency
+            return [];
         }
 
         if (ranges.start(0) <= rangeToKeep.start) {
@@ -661,11 +664,20 @@ function BufferController(config) {
     }
 
     function clearNextRange() {
+        // If there's nothing to prune reset state
         if (pendingPruningRanges.length === 0 || !buffer) {
+            log('Nothing to prune, halt pruning');
+            pendingPruningRanges = [];
+            isPruningInProgress = false;
             return;
         }
+
         const sourceBuffer = buffer.getBuffer();
+        // If there's nothing buffered any pruning is invalid, so reset our state
         if (!sourceBuffer || !sourceBuffer.buffered || sourceBuffer.buffered.length === 0) {
+            log('SourceBuffer is empty (or does not exist), halt pruning');
+            pendingPruningRanges = [];
+            isPruningInProgress = false;
             return;
         }
 
@@ -699,6 +711,11 @@ function BufferController(config) {
             isPruningInProgress = false;
         }
 
+        if (e.unintended) {
+            log('[BufferController][', type,'] detected unintended removal from:', e.from, 'to', e.to, 'setting index handler time to', e.from);
+            adapter.setIndexHandlerTime(streamProcessor, e.from);
+        }
+
         if (isPruningInProgress) {
             clearNextRange();
         } else {
@@ -711,7 +728,7 @@ function BufferController(config) {
                     appendToBuffer(mediaChunk);
                 }
             }
-            eventBus.trigger(Events.BUFFER_CLEARED, { sender: instance, from: e.from, to: e.to, hasEnoughSpaceToAppend: hasEnoughSpaceToAppend() });
+            eventBus.trigger(Events.BUFFER_CLEARED, { sender: instance, from: e.from, to: e.to, unintended: e.unintended,  hasEnoughSpaceToAppend: hasEnoughSpaceToAppend() });
         }
         //TODO - REMEMBER removed a timerout hack calling clearBuffer after manifestInfo.minBufferTime * 1000 if !hasEnoughSpaceToAppend() Aug 04 2016
     }

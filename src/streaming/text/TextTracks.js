@@ -103,13 +103,7 @@ function TextTracks() {
         const lang = textTrackQueue[i].lang;
         const isTTML = textTrackQueue[i].isTTML;
         const isEmbedded = textTrackQueue[i].isEmbedded;
-        const track = isChrome ? document.createElement('track') : videoModel.addTextTrack(kind, label, lang);
-
-        if (isChrome) {
-            track.kind = kind;
-            track.label = label;
-            track.srclang = lang;
-        }
+        const track = videoModel.addTextTrack(kind, label, lang);
 
         track.isEmbedded = isEmbedded;
         track.isTTML = isTTML;
@@ -149,9 +143,6 @@ function TextTracks() {
                     /*jshint -W024 */
                     track.default = true;
                     defaultIndex = i;
-                }
-                if (isChrome) {
-                    videoModel.appendChild(track);
                 }
 
                 const textTrack = getTrackByIdx(i);
@@ -552,14 +543,10 @@ function TextTracks() {
     function deleteAllTextTracks() {
         const ln = trackElementArr ? trackElementArr.length : 0;
         for (let i = 0; i < ln; i++) {
-            if (isChrome) {
-                videoModel.removeChild(trackElementArr[i]);
-            } else {
-                const track = getTrackByIdx(i);
-                if (track) {
-                    deleteTrackCues.call(this, track);
-                    track.mode = 'disabled';
-                }
+            const track = getTrackByIdx(i);
+            if (track) {
+                deleteTrackCues.call(this, track);
+                track.mode = 'disabled';
             }
         }
         trackElementArr = [];

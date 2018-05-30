@@ -71,16 +71,12 @@ function FragmentModel(config) {
     }
 
     function isFragmentLoaded(request) {
-        const isEqualUrl = function (req1, req2) {
-            return (req1.url === req2.url);
-        };
-
         const isEqualComplete = function (req1, req2) {
             return ((req1.action === FragmentRequest.ACTION_COMPLETE) && (req1.action === req2.action));
         };
 
         const isEqualMedia = function (req1, req2) {
-            return !isNaN(req1.index) && (req1.startTime === req2.startTime) && (req1.adaptationIndex === req2.adaptationIndex);
+            return !isNaN(req1.index) && (req1.startTime === req2.startTime) && (req1.adaptationIndex === req2.adaptationIndex) && (req1.type === req2.type);
         };
 
         const isEqualInit = function (req1, req2) {
@@ -90,7 +86,7 @@ function FragmentModel(config) {
         const check = function (requests) {
             let isLoaded = false;
             requests.some(req => {
-                if ( isEqualUrl(request,req) && (isEqualMedia(request, req) || isEqualInit(request, req) || isEqualComplete(request, req))) {
+                if (isEqualMedia(request, req) || isEqualInit(request, req) || isEqualComplete(request, req)) {
                     isLoaded = true;
                     return isLoaded;
                 }
@@ -159,6 +155,12 @@ function FragmentModel(config) {
         executedRequests = executedRequests.filter(req => {
             const threshold = getRequestThreshold(req);
             return isNaN(req.startTime) || (time !== undefined ? req.startTime >= time - threshold : false);
+        });
+    }
+
+    function removeExecutedRequestsAfterTime(time) {
+        executedRequests = executedRequests.filter(req => {
+            return isNaN(req.startTime) || (time !== undefined ? req.startTime <= time : false);
         });
     }
 
@@ -349,6 +351,7 @@ function FragmentModel(config) {
         isFragmentLoaded: isFragmentLoaded,
         isFragmentLoadedOrPending: isFragmentLoadedOrPending,
         removeExecutedRequestsBeforeTime: removeExecutedRequestsBeforeTime,
+        removeExecutedRequestsAfterTime: removeExecutedRequestsAfterTime,
         syncExecutedRequestsWithBufferedRange: syncExecutedRequestsWithBufferedRange,
         abortRequests: abortRequests,
         executeRequest: executeRequest,

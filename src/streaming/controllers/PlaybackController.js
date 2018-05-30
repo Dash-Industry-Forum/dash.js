@@ -30,7 +30,7 @@
  */
 import Constants from '../constants/Constants';
 import BufferController from './BufferController';
-import URIQueryAndFragmentModel from '../models/URIQueryAndFragmentModel';
+import URIFragmentModel from '../models/URIFragmentModel';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
@@ -271,7 +271,7 @@ function PlaybackController() {
     }
 
     function getStartTimeFromUriParameters() {
-        const fragData = URIQueryAndFragmentModel(context).getInstance().getURIFragmentData();
+        const fragData = URIFragmentModel(context).getInstance().getURIFragmentData();
         let uriParameters;
         if (fragData) {
             uriParameters = {};

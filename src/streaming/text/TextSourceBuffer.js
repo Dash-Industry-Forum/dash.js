@@ -195,6 +195,11 @@ function TextSourceBuffer() {
             initEmbedded();
         }
         if (mediaInfo.id === Constants.CC1 || mediaInfo.id === Constants.CC3) {
+            for (let i = 0; i < embeddedTracks.length; i++) {
+                if (embeddedTracks[i].id === mediaInfo.id) {
+                    return;
+                }
+            }
             embeddedTracks.push(mediaInfo);
         } else {
             log('Warning: Embedded track ' + mediaInfo.id + ' not supported!');

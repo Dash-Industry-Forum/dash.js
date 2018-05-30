@@ -2,8 +2,6 @@ import MssParser from '../../src/mss/parser/MssParser';
 import MediaPlayerModel from '../../src/streaming/models/MediaPlayerModel';
 import Debug from '../../src/core/Debug';
 
-import ErrorHandlerMock from './mocks/ErrorHandlerMock';
-
 const expect = require('chai').expect;
 const fs = require('fs');
 const jsdom = require('jsdom').JSDOM;
@@ -11,8 +9,7 @@ const context = {};
 
 describe('MssParser', function () {
 
-    let mssParser,
-        errorHandlerMock;
+    let mssParser;
     const mediaPlayerModel = MediaPlayerModel().getInstance();
 
     beforeEach(function () {
@@ -33,11 +30,9 @@ describe('MssParser', function () {
     });
 
     beforeEach(function () {
-        errorHandlerMock = new ErrorHandlerMock();
         mssParser = MssParser().create({
             mediaPlayerModel: mediaPlayerModel,
-            log: Debug(context).getInstance().log,
-            errHandler: errorHandlerMock
+            log: Debug(context).getInstance().log
         });
 
         expect(mssParser).to.exist; // jshint ignore:line
@@ -78,7 +73,6 @@ describe('MssParser', function () {
         expect(adaptations[0].contentType).to.equal('audio');
     });
     it('should throw an error when parse is called with invalid smooth data', function () {
-        mssParser.parse('<SmoothStreamingMedia');
-        expect(errorHandlerMock.error).to.equal('parsing the manifest failed');
+        expect(mssParser.parse.bind('<SmoothStreamingMedia')).to.be.throw('parsing the manifest failed');
     });
 });

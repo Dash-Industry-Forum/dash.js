@@ -13,7 +13,8 @@ class VideoModelMock {
         this.tracks = [];
         this.source = null;
         this.element = new VideoElementMock();
-
+        this.height = 600;
+        this.width = 800;
         this.events = {};
     }
 
@@ -50,6 +51,35 @@ class VideoModelMock {
         for (let i = 0; i < l; i++) {
             evs[i].apply(null, args);
         }
+    }
+
+    getPlaybackQuality() {
+        let element = this.element;
+        if (!element) { return null; }
+        let hasWebKit = ('webkitDroppedFrameCount' in element) && ('webkitDecodedFrameCount' in element);
+        let hasQuality = ('getVideoPlaybackQuality' in element);
+        let result = null;
+
+        if (hasQuality) {
+            result = element.getVideoPlaybackQuality();
+        }
+        else if (hasWebKit) {
+            result = {
+                droppedVideoFrames: element.webkitDroppedFrameCount,
+                totalVideoFrames: element.webkitDroppedFrameCount + element.webkitDecodedFrameCount,
+                creationTime: new Date()
+            };
+        }
+
+        return result;
+    }
+
+    getClientWidth() {
+        return this.width;
+    }
+
+    getClientHeight() {
+        return this.height;
     }
 
     getElement() {

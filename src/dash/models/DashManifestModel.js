@@ -596,7 +596,7 @@ function DashManifestModel(config) {
                     voAdaptationSet.type = Constants.FRAGMENTED_TEXT;
                 } else if (getIsImage(realAdaptationSet)) {
                     voAdaptationSet.type = Constants.IMAGE;
-                }else {
+                } else {
                     voAdaptationSet.type = Constants.TEXT;
                 }
                 voAdaptations.push(voAdaptationSet);
@@ -752,7 +752,7 @@ function DashManifestModel(config) {
         } else if (isDynamic) {
             periodEnd = Number.POSITIVE_INFINITY;
         } else {
-            throw new Error('Must have @mediaPresentationDuratio on MPD or an explicit @duration on the last period.');
+            throw new Error('Must have @mediaPresentationDuration on MPD or an explicit @duration on the last period.');
         }
 
         return periodEnd;
