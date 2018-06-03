@@ -38,12 +38,12 @@ function MetricsHandlerFactory(config) {
 
     config = config || {};
     let instance;
-    let log = config.log;
+    const debug = config.debug;
 
     // group 1: key, [group 3: n [, group 5: type]]
     let keyRegex = /([a-zA-Z]*)(\(([0-9]*)(\,\s*([a-zA-Z]*))?\))?/;
 
-    let context = this.context;
+    const context = this.context;
     let knownFactoryProducts = {
         BufferLevel:    BufferLevel,
         DVBErrors:      DVBErrors,
@@ -75,8 +75,7 @@ function MetricsHandlerFactory(config) {
             );
         } catch (e) {
             handler = null;
-
-            log(`MetricsHandlerFactory: Could not create handler for type ${matches[1]} with args ${matches[3]}, ${matches[5]} (${e.message})`);
+            debug.error(`MetricsHandlerFactory: Could not create handler for type ${matches[1]} with args ${matches[3]}, ${matches[5]} (${e.message})`);
         }
 
         return handler;

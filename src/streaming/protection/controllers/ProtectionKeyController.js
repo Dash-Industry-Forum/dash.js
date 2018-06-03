@@ -48,7 +48,8 @@ function ProtectionKeyController() {
     let context = this.context;
 
     let instance,
-        log,
+        debug,
+        logger,
         keySystems,
         BASE64,
         clearkeyKeySystem,
@@ -57,8 +58,9 @@ function ProtectionKeyController() {
     function setConfig(config) {
         if (!config) return;
 
-        if (config.log) {
-            log = config.log;
+        if (config.debug) {
+            debug = config.debug;
+            logger = debug.getLogger(instance);
         }
 
         if (config.BASE64) {
@@ -85,7 +87,7 @@ function ProtectionKeyController() {
         clearkeyKeySystem = keySystem;
 
         // W3C ClearKey
-        keySystem = KeySystemW3CClearKey(context).getInstance({ BASE64: BASE64, log: log });
+        keySystem = KeySystemW3CClearKey(context).getInstance({ BASE64: BASE64, debug: debug });
         keySystems.push(keySystem);
         clearkeyW3CKeySystem = keySystem;
     }
@@ -298,7 +300,7 @@ function ProtectionKeyController() {
         try {
             return clearkeyKeySystem.getClearKeysFromProtectionData(protData, message);
         } catch (error) {
-            log('Failed to retrieve clearkeys from ProtectionData');
+            logger.error('Failed to retrieve clearkeys from ProtectionData');
             return null;
         }
     }

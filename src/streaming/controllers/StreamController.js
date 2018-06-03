@@ -53,10 +53,10 @@ function StreamController() {
     const STALL_THRESHOLD_TO_CHECK_GAPS = 40;
 
     const context = this.context;
-    const log = Debug(context).getInstance().log;
     const eventBus = EventBus(context).getInstance();
 
     let instance,
+        logger,
         capabilities,
         manifestUpdater,
         manifestLoader,
@@ -99,6 +99,7 @@ function StreamController() {
         lastPlaybackTime;
 
     function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
         timeSyncController = TimeSyncController(context).getInstance();
         baseURLController = BaseURLController(context).getInstance();
         mediaSourceController = MediaSourceController(context).getInstance();
@@ -214,10 +215,10 @@ function StreamController() {
         // If there is a safe position to jump to, do the seeking
         if (seekToPosition > 0) {
             if (!isNaN(timeToStreamEnd) && seekToPosition >= time + timeToStreamEnd) {
-                log('Jumping media gap (discontinuity) at time ', time, '. Jumping to end of the stream');
+                logger.info('Jumping media gap (discontinuity) at time ', time, '. Jumping to end of the stream');
                 eventBus.trigger(Events.PLAYBACK_ENDED);
             } else {
-                log('Jumping media gap (discontinuity) at time ', time, '. Jumping to time position', seekToPosition);
+                logger.info('Jumping media gap (discontinuity) at time ', time, '. Jumping to time position', seekToPosition);
                 playbackController.seek(seekToPosition);
             }
         }
@@ -243,7 +244,7 @@ function StreamController() {
     }
 
     function onPlaybackStarted( /*e*/ ) {
-        log('[StreamController][onPlaybackStarted]');
+        logger.debug('[onPlaybackStarted]');
         if (initialPlayback) {
             initialPlayback = false;
             addPlaylistMetrics(PlayList.INITIAL_PLAYOUT_START_REASON);
@@ -257,7 +258,7 @@ function StreamController() {
     }
 
     function onPlaybackPaused(e) {
-        log('[StreamController][onPlaybackPaused]');
+        logger.debug('[onPlaybackPaused]');
         if (!e.ended) {
             isPaused = true;
             flushPlaylistMetrics(PlayListTrace.USER_REQUEST_STOP_REASON);
@@ -266,7 +267,7 @@ function StreamController() {
     }
 
     function stopEndPeriodTimer() {
-        log('[StreamController][toggleEndPeriodTimer] stop end period timer.');
+        logger.debug('[toggleEndPeriodTimer] stop end period timer.');
         clearTimeout(playbackEndedTimerId);
         playbackEndedTimerId = undefined;
     }
@@ -280,7 +281,7 @@ function StreamController() {
             } else {
                 const timeToEnd = playbackController.getTimeToStreamEnd();
                 const delayPlaybackEnded = timeToEnd > 0 ? timeToEnd * 1000 : 0;
-                log('[StreamController][toggleEndPeriodTimer] start-up of timer to notify PLAYBACK_ENDED event. It will be triggered in ' + delayPlaybackEnded + ' milliseconds');
+                logger.debug('[toggleEndPeriodTimer] start-up of timer to notify PLAYBACK_ENDED event. It will be triggered in ' + delayPlaybackEnded + ' milliseconds');
                 playbackEndedTimerId = setTimeout(function () {eventBus.trigger(Events.PLAYBACK_ENDED);}, delayPlaybackEnded);
             }
         }
@@ -289,11 +290,11 @@ function StreamController() {
     function onStreamBufferingCompleted() {
         const isLast = getActiveStreamInfo().isLast;
         if (mediaSource && isLast) {
-            log('[StreamController][onStreamBufferingCompleted] calls signalEndOfStream of mediaSourceController.');
+            logger.info('[onStreamBufferingCompleted] calls signalEndOfStream of mediaSourceController.');
             mediaSourceController.signalEndOfStream(mediaSource);
         } else if (mediaSource && playbackEndedTimerId === undefined) {
             //send PLAYBACK_ENDED in order to switch to a new period, wait until the end of playing
-            log('[StreamController][onStreamBufferingCompleted] end of period detected');
+            logger.info('[StreamController][onStreamBufferingCompleted] end of period detected');
             isStreamBufferingCompleted = true;
             if (isPaused === false) {
                 toggleEndPeriodTimer();
@@ -373,7 +374,7 @@ function StreamController() {
             switchStream(activeStream, nextStream, NaN);
         }
         else {
-            log('StreamController no next stream found');
+            logger.debug('StreamController no next stream found');
         }
         flushPlaylistMetrics(nextStream ? PlayListTrace.END_OF_PERIOD_STOP_REASON : PlayListTrace.END_OF_CONTENT_STOP_REASON);
         playbackEndedTimerId = undefined;
@@ -430,7 +431,7 @@ function StreamController() {
             // Manage situations in which a call to reset happens while MediaSource is being opened
             if (!mediaSource) return;
 
-            log('MediaSource is open!');
+            logger.debug('MediaSource is open!');
             window.URL.revokeObjectURL(sourceUrl);
             mediaSource.removeEventListener('sourceopen', onMediaSourceOpen);
             mediaSource.removeEventListener('webkitsourceopen', onMediaSourceOpen);
@@ -456,7 +457,7 @@ function StreamController() {
         mediaSource.addEventListener('sourceopen', onMediaSourceOpen, false);
         mediaSource.addEventListener('webkitsourceopen', onMediaSourceOpen, false);
         sourceUrl = mediaSourceController.attachMediaSource(mediaSource, videoModel);
-        log('MediaSource attached to element.  Waiting on open...');
+        logger.debug('MediaSource attached to element.  Waiting on open...');
     }
 
     function activateStream(seekTime) {
@@ -490,7 +491,7 @@ function StreamController() {
     function setMediaDuration() {
         const manifestDuration = activeStream.getStreamInfo().manifestInfo.duration;
         const mediaDuration = mediaSourceController.setDuration(mediaSource, manifestDuration);
-        log('Duration successfully set to: ' + mediaDuration);
+        logger.debug('Duration successfully set to: ' + mediaDuration);
     }
 
     function getComposedStream(streamInfo) {
@@ -606,7 +607,7 @@ function StreamController() {
             if (mediaInfo) {
                 useCalculatedLiveEdgeTime = dashManifestModel.getUseCalculatedLiveEdgeTimeForAdaptation(adapter.getDataForMedia(mediaInfo));
                 if (useCalculatedLiveEdgeTime) {
-                    log('SegmentTimeline detected using calculated Live Edge Time');
+                    logger.debug('SegmentTimeline detected using calculated Live Edge Time');
                     mediaPlayerModel.setUseManifestDateHeaderTimeSource(false);
                 }
             }
@@ -619,7 +620,7 @@ function StreamController() {
             allUTCTimingSources.forEach(function (item) {
                 if (item.value.replace(/.*?:\/\//g, '') === MediaPlayerModel.DEFAULT_UTC_TIMING_SOURCE.value.replace(/.*?:\/\//g, '')) {
                     item.value = item.value.replace(isHTTPS ? new RegExp(/^(http:)?\/\//i) : new RegExp(/^(https:)?\/\//i), isHTTPS ? 'https://' : 'http://');
-                    log('Matching default timing source protocol to manifest protocol: ', item.value);
+                    logger.debug('Matching default timing source protocol to manifest protocol: ', item.value);
                 }
             });
 
@@ -727,9 +728,9 @@ function StreamController() {
             msg += ' (0x' + (e.error.msExtendedCode >>> 0).toString(16).toUpperCase() + ')';
         }
 
-        log('Video Element Error: ' + msg);
+        logger.fatal('Video Element Error: ' + msg);
         if (e.error) {
-            log(e.error);
+            logger.fatal(e.error);
         }
         errHandler.mediaSourceError(msg);
         reset();

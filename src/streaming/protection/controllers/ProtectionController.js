@@ -52,13 +52,14 @@ function ProtectionController(config) {
     config = config || {};
     const protectionKeyController = config.protectionKeyController;
     let protectionModel = config.protectionModel;
-    let eventBus = config.eventBus;
+    const eventBus = config.eventBus;
     const events = config.events;
-    let log = config.log;
-    let BASE64 = config.BASE64;
+    const debug = config.debug;
+    const BASE64 = config.BASE64;
     const constants = config.constants;
 
     let instance,
+        logger,
         pendingNeedKeyData,
         mediaInfoArr,
         protDataSet,
@@ -67,6 +68,7 @@ function ProtectionController(config) {
         keySystem;
 
     function setup() {
+        logger = debug.getLogger(instance);
         pendingNeedKeyData = [];
         mediaInfoArr = [];
         sessionType = 'temporary';
@@ -155,7 +157,7 @@ function ProtectionController(config) {
             const currentInitData = protectionModel.getAllInitData();
             for (let i = 0; i < currentInitData.length; i++) {
                 if (protectionKeyController.initDataEquals(initDataForKS, currentInitData[i])) {
-                    log('DRM: Ignoring initData because we have already seen it!');
+                    logger.warn('DRM: Ignoring initData because we have already seen it!');
                     return;
                 }
             }
@@ -379,7 +381,7 @@ function ProtectionController(config) {
                                 eventBus.trigger(events.KEY_SYSTEM_SELECTED, {error: 'DRM: KeySystem Access Denied! -- ' + event.error});
                             }
                         } else {
-                            log('DRM: KeySystem Access Granted');
+                            logger.info('DRM: KeySystem Access Granted');
                             eventBus.trigger(events.KEY_SYSTEM_SELECTED, {data: event.data});
                             if (supportedKS[ksIdx].sessionId) {
                                 // Load MediaKeySession with sessionId
@@ -417,7 +419,7 @@ function ProtectionController(config) {
                     }
                 } else {
                     keySystemAccess = event.data;
-                    log('DRM: KeySystem Access Granted (' + keySystemAccess.keySystem.systemString + ')!  Selecting key system...');
+                    logger.info('DRM: KeySystem Access Granted (' + keySystemAccess.keySystem.systemString + ')!  Selecting key system...');
                     protectionModel.selectKeySystem(keySystemAccess);
                 }
             };
@@ -476,14 +478,14 @@ function ProtectionController(config) {
         if (e.error) {
             eventBus.trigger(events.KEY_STATUSES_CHANGED, {data: null, error: 'DRM: KeyStatusChange error! -- ' + e.error});
         } else {
-            log('DRM: key status = ' + e.status);
+            logger.debug('DRM: key status = ' + e.status);
         }
     }
 
     function onKeyMessage(e) {
-        log('DRM: onKeyMessage');
+        logger.debug('DRM: onKeyMessage');
         if (e.error) {
-            log(e.error);
+            logger.error(e.error);
             return;
         }
 
@@ -506,7 +508,7 @@ function ProtectionController(config) {
 
         // Message not destined for license server
         if (!licenseServerData) {
-            log('DRM: License server request not required for this message (type = ' + e.data.messageType + ').  Session ID = ' + sessionToken.getSessionID());
+            logger.debug('DRM: License server request not required for this message (type = ' + e.data.messageType + ').  Session ID = ' + sessionToken.getSessionID());
             sendLicenseRequestCompleteEvent(eventData);
             return;
         }
@@ -515,7 +517,7 @@ function ProtectionController(config) {
         if (protectionKeyController.isClearKey(keySystem)) {
             const clearkeys = protectionKeyController.processClearKeyLicenseRequest(keySystem, protData, message);
             if (clearkeys)  {
-                log('DRM: ClearKey license request handled by application!');
+                logger.debug('DRM: ClearKey license request handled by application!');
                 sendLicenseRequestCompleteEvent(eventData);
                 protectionModel.updateKeySession(sessionToken, clearkeys);
                 return;
@@ -604,10 +606,10 @@ function ProtectionController(config) {
     }
 
     function onNeedKey(event) {
-        log('DRM: onNeedKey');
+        logger.debug('DRM: onNeedKey');
         // Ignore non-cenc initData
         if (event.key.initDataType !== 'cenc') {
-            log('DRM:  Only \'cenc\' initData is supported!  Ignoring initData of type: ' + event.key.initDataType);
+            logger.warn('DRM:  Only \'cenc\' initData is supported!  Ignoring initData of type: ' + event.key.initDataType);
             return;
         }
 
@@ -627,18 +629,18 @@ function ProtectionController(config) {
                 const currentInitData = protectionModel.getAllInitData();
                 for (let i = 0; i < currentInitData.length; i++) {
                     if (protectionKeyController.initDataEquals(initDataForKS, currentInitData[i])) {
-                        log('DRM: Ignoring initData because we have already seen it!');
+                        logger.warn('DRM: Ignoring initData because we have already seen it!');
                         return;
                     }
                 }
             }
         }
 
-        log('DRM: initData:', String.fromCharCode.apply(null, new Uint8Array(abInitData)));
+        logger.debug('DRM: initData:', String.fromCharCode.apply(null, new Uint8Array(abInitData)));
 
         const supportedKS = protectionKeyController.getSupportedKeySystems(abInitData, protDataSet);
         if (supportedKS.length === 0) {
-            log('DRM: Received needkey event with initData, but we don\'t support any of the key systems!');
+            logger.debug('DRM: Received needkey event with initData, but we don\'t support any of the key systems!');
             return;
         }
 

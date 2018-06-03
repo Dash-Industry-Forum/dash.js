@@ -36,10 +36,10 @@ import Debug from '../core/Debug';
 function ManifestUpdater() {
 
     const context = this.context;
-    const log = Debug(context).getInstance().log;
     const eventBus = EventBus(context).getInstance();
 
     let instance,
+        logger,
         refreshDelay,
         refreshTimer,
         isPaused,
@@ -49,6 +49,10 @@ function ManifestUpdater() {
         dashManifestModel,
         mediaPlayerModel,
         errHandler;
+
+    function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
+    }
 
     function setConfig(config) {
         if (!config) return;
@@ -115,7 +119,7 @@ function ManifestUpdater() {
         }
 
         if (!isNaN(delay)) {
-            log('Refresh manifest in ' + delay + ' milliseconds.');
+            logger.debug('Refresh manifest in ' + delay + ' milliseconds.');
             refreshTimer = setTimeout(onRefreshTimer, delay);
         }
     }
@@ -144,7 +148,7 @@ function ManifestUpdater() {
             refreshDelay = 0x7FFFFFFF / 1000;
         }
         eventBus.trigger(Events.MANIFEST_UPDATED, {manifest: manifest});
-        log('Manifest has been refreshed at ' + date + '[' + date.getTime() / 1000 + '] ');
+        logger.info('Manifest has been refreshed at ' + date + '[' + date.getTime() / 1000 + '] ');
 
         if (!isPaused) {
             startManifestRefreshTimer();
@@ -193,6 +197,7 @@ function ManifestUpdater() {
         reset: reset
     };
 
+    setup();
     return instance;
 }
 ManifestUpdater.__dashjs_factory_name = 'ManifestUpdater';

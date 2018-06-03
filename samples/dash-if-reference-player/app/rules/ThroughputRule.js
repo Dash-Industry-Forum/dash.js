@@ -37,10 +37,17 @@ function CustomThroughputRuleClass() {
     let SwitchRequest = factory.getClassFactoryByName('SwitchRequest');
     let MetricsModel = factory.getSingletonFactoryByName('MetricsModel');
 
+    let Debug = factory.getSingletonFactoryByName('Debug');
+
     let context = this.context;
+    let instance,
+        logger;
+
+    function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
+    }
 
     function getMaxIndex(rulesContext) {
-
         // here you can get some informations aboit metrics for example, to implement the rule
         let metricsModel = MetricsModel(context).getInstance();
         var mediaType = rulesContext.getMediaInfo().type;
@@ -52,9 +59,12 @@ function CustomThroughputRuleClass() {
         return SwitchRequest(context).create();
     }
 
-    const instance = {
+    instance = {
         getMaxIndex: getMaxIndex
     };
+
+    setup();
+
     return instance;
 }
 

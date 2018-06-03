@@ -48,14 +48,14 @@ import KeySystemAccess from '../vo/KeySystemAccess';
 function ProtectionModel_3Feb2014(config) {
 
     config = config || {};
-    let context = this.context;
-    let eventBus = config.eventBus;//Need to pass in here so we can use same instance since this is optional module
+    const context = this.context;
+    const eventBus = config.eventBus;//Need to pass in here so we can use same instance since this is optional module
     const events = config.events;
-    let log = config.log;
-    let api = config.api;
-
+    const debug = config.debug;
+    const api = config.api;
 
     let instance,
+        logger,
         videoElement,
         keySystem,
         mediaKeys,
@@ -65,6 +65,7 @@ function ProtectionModel_3Feb2014(config) {
         protectionKeyController;
 
     function setup() {
+        logger = debug.getLogger(instance);
         videoElement = null;
         keySystem = null;
         mediaKeys = null;
@@ -93,7 +94,7 @@ function ProtectionModel_3Feb2014(config) {
     }
 
     function getAllInitData() {
-        let retVal = [];
+        const retVal = [];
         for (let i = 0; i < sessions.length; i++) {
             retVal.push(sessions[i].initData);
         }
@@ -106,16 +107,16 @@ function ProtectionModel_3Feb2014(config) {
         // is used
         let found = false;
         for (let ksIdx = 0; ksIdx < ksConfigurations.length; ksIdx++) {
-            let systemString = ksConfigurations[ksIdx].ks.systemString;
-            let configs = ksConfigurations[ksIdx].configs;
+            const systemString = ksConfigurations[ksIdx].ks.systemString;
+            const configs = ksConfigurations[ksIdx].configs;
             let supportedAudio = null;
             let supportedVideo = null;
 
             // Try key system configs in order, first one with supported audio/video
             // is used
             for (let configIdx = 0; configIdx < configs.length; configIdx++) {
-                let audios = configs[configIdx].audioCapabilities;
-                let videos = configs[configIdx].videoCapabilities;
+                const audios = configs[configIdx].audioCapabilities;
+                const videos = configs[configIdx].videoCapabilities;
 
                 // Look for supported audio container/codecs
                 if (audios && audios.length !== 0) {
@@ -147,8 +148,8 @@ function ProtectionModel_3Feb2014(config) {
 
                 // This configuration is supported
                 found = true;
-                let ksConfig = new KeySystemConfiguration(supportedAudio, supportedVideo);
-                let ks = protectionKeyController.getKeySystemBySystemString(systemString);
+                const ksConfig = new KeySystemConfiguration(supportedAudio, supportedVideo);
+                const ks = protectionKeyController.getKeySystemBySystemString(systemString);
                 eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {data: new KeySystemAccess(ks, ksConfig)});
                 break;
             }
@@ -193,7 +194,6 @@ function ProtectionModel_3Feb2014(config) {
     }
 
     function createKeySession(initData, protData, sessionType, cdmData) {
-
         if (!keySystem || !mediaKeys || !keySystemAccess) {
             throw new Error('Can not create sessions until you have selected a key system');
         }
@@ -213,9 +213,9 @@ function ProtectionModel_3Feb2014(config) {
         if (capabilities === null)
           throw new Error('Can not create sessions for unknown content types.');
 
-        let contentType = capabilities.contentType;
-        let session = mediaKeys.createSession(contentType, new Uint8Array(initData), cdmData ? new Uint8Array(cdmData) : null);
-        let sessionToken = createSessionToken(session, initData);
+        const contentType = capabilities.contentType;
+        const session = mediaKeys.createSession(contentType, new Uint8Array(initData), cdmData ? new Uint8Array(cdmData) : null);
+        const sessionToken = createSessionToken(session, initData);
 
         // Add all event listeners
         session.addEventListener(api.error, sessionToken);
@@ -225,13 +225,12 @@ function ProtectionModel_3Feb2014(config) {
 
         // Add to our session list
         sessions.push(sessionToken);
-        log('DRM: Session created.  SessionID = ' + sessionToken.getSessionID());
+        logger.debug('DRM: Session created.  SessionID = ' + sessionToken.getSessionID());
         eventBus.trigger(events.KEY_SESSION_CREATED, {data: sessionToken});
     }
 
     function updateKeySession(sessionToken, message) {
-
-        let session = sessionToken.session;
+        const session = sessionToken.session;
 
         if (!protectionKeyController.isClearKey(keySystem)) {
             // Send our request to the key session
@@ -249,8 +248,7 @@ function ProtectionModel_3Feb2014(config) {
      * @param {Object} sessionToken - the session token
      */
     function closeKeySession(sessionToken) {
-
-        let session = sessionToken.session;
+        const session = sessionToken.session;
 
         // Remove event listeners
         session.removeEventListener(api.error, sessionToken);
@@ -282,7 +280,7 @@ function ProtectionModel_3Feb2014(config) {
 
                     case api.needkey:
                         if (event.initData) {
-                            let initData = ArrayBuffer.isView(event.initData) ? event.initData.buffer : event.initData;
+                            const initData = ArrayBuffer.isView(event.initData) ? event.initData.buffer : event.initData;
                             eventBus.trigger(events.NEED_KEY, {key: new NeedKey(initData, 'cenc')});
                         }
                         break;
@@ -335,7 +333,6 @@ function ProtectionModel_3Feb2014(config) {
             // same events
             handleEvent: function (event) {
                 switch (event.type) {
-
                     case api.error:
                         let errorStr = 'KeyError'; // TODO: Make better string from event
                         eventBus.trigger(events.KEY_ERROR, { data: new KeyError(this, errorStr) });
@@ -345,12 +342,12 @@ function ProtectionModel_3Feb2014(config) {
                         eventBus.trigger(events.INTERNAL_KEY_MESSAGE, { data: new KeyMessage(this, message, event.destinationURL) });
                         break;
                     case api.ready:
-                        log('DRM: Key added.');
+                        logger.debug('DRM: Key added.');
                         eventBus.trigger(events.KEY_ADDED);
                         break;
 
                     case api.close:
-                        log('DRM: Session closed.  SessionID = ' + this.getSessionID());
+                        logger.debug('DRM: Session closed.  SessionID = ' + this.getSessionID());
                         eventBus.trigger(events.KEY_SESSION_CLOSED, { data: this.getSessionID() });
                         break;
                 }

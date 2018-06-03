@@ -71,7 +71,7 @@ function SwitchRequest(q, r, p) {
 }
 
 SwitchRequest.__dashjs_factory_name = 'SwitchRequest';
-let factory = FactoryMaker.getClassFactory(SwitchRequest);
+const factory = FactoryMaker.getClassFactory(SwitchRequest);
 factory.NO_CHANGE = NO_CHANGE;
 factory.PRIORITY = PRIORITY;
 FactoryMaker.updateClassFactory(SwitchRequest.__dashjs_factory_name, factory);

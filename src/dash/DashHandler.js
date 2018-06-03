@@ -69,7 +69,7 @@ function DashHandler(config) {
     const baseURLController = config.baseURLController;
 
     let instance,
-        log,
+        logger,
         index,
         requestedTime,
         currentTime,
@@ -78,8 +78,7 @@ function DashHandler(config) {
         segmentsGetter;
 
     function setup() {
-        log = Debug(context).getInstance().log.bind(instance);
-
+        logger = Debug(context).getInstance().getLogger(instance);
         resetInitialSettings();
 
         segmentBaseLoader = isWebM(config.mimeType) ? WebmSegmentBaseLoader(context).getInstance() : SegmentBaseLoader(context).getInstance();
@@ -205,10 +204,10 @@ function DashHandler(config) {
             if (seg) {
                 const time = parseFloat((seg.presentationStartTime - representation.adaptation.period.start).toFixed(5));
                 const duration = representation.adaptation.period.duration;
-                log(representation.segmentInfoType + ': ' + time + ' / ' + duration);
+                logger.debug(representation.segmentInfoType + ': ' + time + ' / ' + duration);
                 isFinished = representation.segmentInfoType === DashConstants.SEGMENT_TIMELINE && isDynamic ? false : time >= duration;
             } else {
-                log('isMediaFinished - no segment found');
+                logger.debug('isMediaFinished - no segment found');
             }
         }
 
@@ -372,7 +371,7 @@ function DashHandler(config) {
 
         if (requestedTime !== time) { // When playing at live edge with 0 delay we may loop back with same time and index until it is available. Reduces verboseness of logs.
             requestedTime = time;
-            log('Getting the request for ' + type + ' time : ' + time);
+            logger.debug('Getting the request for ' + type + ' time : ' + time);
         }
 
         updateSegments(representation);
@@ -385,7 +384,7 @@ function DashHandler(config) {
         }
 
         if (index > 0) {
-            log('Index for ' + type + ' time ' + time + ' is ' + index );
+            logger.debug('Index for ' + type + ' time ' + time + ' is ' + index );
         }
 
         finished = !ignoreIsFinished ? isMediaFinished(representation) : false;
@@ -395,7 +394,7 @@ function DashHandler(config) {
             request.index = index;
             request.mediaType = type;
             request.mediaInfo = streamProcessor.getMediaInfo();
-            log('Signal complete in getSegmentRequestForTime -', type);
+            logger.debug('Signal complete in getSegmentRequestForTime -', type);
         } else {
             segment = getSegmentByIndex(index, representation);
             request = getRequestForSegment(segment);
@@ -431,12 +430,12 @@ function DashHandler(config) {
         requestedTime = null;
         index++;
 
-        log('Getting the next request at index: ' + index + ', type: ' + type);
+        logger.debug('Getting the next request at index: ' + index + ', type: ' + type);
 
         // check that there is a segment in this index. If none, update segments and wait for next time loop is called
         const seg = getSegmentByIndex(index, representation);
         if (!seg && isDynamic) {
-            log('No segment found at index: ' + index + '. Wait for next loop');
+            logger.debug('No segment found at index: ' + index + '. Wait for next loop');
             updateSegments(representation);
             index--;
             return null;
@@ -449,7 +448,7 @@ function DashHandler(config) {
             request.index = index;
             request.mediaType = type;
             request.mediaInfo = streamProcessor.getMediaInfo();
-            log('Signal complete -', type);
+            logger.debug('Signal complete -', type);
         } else {
             updateSegments(representation);
             segment = getSegmentByIndex(index, representation);

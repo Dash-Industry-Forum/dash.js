@@ -52,14 +52,14 @@ function MetricsController(config) {
             rangeController.initialize(metricsEntry.Range);
 
             reportingController = ReportingController(context).create({
-                log: config.log,
+                debug: config.debug,
                 metricsConstants: config.metricsConstants
             });
 
             reportingController.initialize(metricsEntry.Reporting, rangeController);
 
             metricsHandlersController = MetricsHandlersController(context).create({
-                log: config.log,
+                debug: config.debug,
                 eventBus: config.eventBus,
                 metricsConstants: config.metricsConstants,
                 events: config.events

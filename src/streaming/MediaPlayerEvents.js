@@ -97,8 +97,9 @@ class MediaPlayerEvents extends EventsBase {
         this.FRAGMENT_LOADING_ABANDONED = 'fragmentLoadingAbandoned';
 
         /**
-         * Triggered when {@link module:Debug} log method is called.
+         * Triggered when {@link module:Debug} logger methods are called.
          * @event MediaPlayerEvents#LOG
+         * @deprecated
          */
         this.LOG = 'log';
 

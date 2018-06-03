@@ -43,10 +43,10 @@ import HTTPLoader from '../streaming/net/HTTPLoader';
 function SegmentBaseLoader() {
 
     const context = this.context;
-    const log = Debug(context).getInstance().log;
     const eventBus = EventBus(context).getInstance();
 
     let instance,
+        logger,
         errHandler,
         boxParser,
         requestModifier,
@@ -54,6 +54,10 @@ function SegmentBaseLoader() {
         mediaPlayerModel,
         httpLoader,
         baseURLController;
+
+    function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
+    }
 
     function initialize() {
         boxParser = BoxParser(context).getInstance();
@@ -107,7 +111,7 @@ function SegmentBaseLoader() {
             bytesToLoad: 1500
         };
 
-        log('Start searching for initialization.');
+        logger.debug('Start searching for initialization.');
 
         const request = getFragmentRequest(info);
 
@@ -134,7 +138,7 @@ function SegmentBaseLoader() {
 
         httpLoader.load({request: request, success: onload, error: onerror});
 
-        log('Perform init search: ' + info.url);
+        logger.debug('Perform init search: ' + info.url);
     }
 
     function loadSegments(representation, type, range, loadingInfo, callback) {
@@ -197,7 +201,7 @@ function SegmentBaseLoader() {
                 }
 
                 if (loadMultiSidx) {
-                    log('Initiate multiple SIDX load.');
+                    logger.debug('Initiate multiple SIDX load.');
                     info.range.end = info.range.start + sidx.size;
 
                     let j, len, ss, se, r;
@@ -226,7 +230,7 @@ function SegmentBaseLoader() {
                     }
 
                 } else {
-                    log('Parsing segments from SIDX.');
+                    logger.debug('Parsing segments from SIDX.');
                     segments = getSegmentsForSidx(sidx, info);
                     callback(segments, representation, type);
                 }
@@ -238,7 +242,7 @@ function SegmentBaseLoader() {
         };
 
         httpLoader.load({request: request, success: onload, error: onerror});
-        log('Perform SIDX load: ' + info.url);
+        logger.debug('Perform SIDX load: ' + info.url);
     }
 
     function reset() {
@@ -289,14 +293,14 @@ function SegmentBaseLoader() {
         let start,
             end;
 
-        log('Searching for initialization.');
+        logger.debug('Searching for initialization.');
 
         if (moov && moov.isComplete) {
             start = ftyp ? ftyp.offset : moov.offset;
             end = moov.offset + moov.size - 1;
             initRange = start + '-' + end;
 
-            log('Found the initialization.  Range: ' + initRange);
+            logger.debug('Found the initialization.  Range: ' + initRange);
         }
 
         return initRange;
@@ -330,6 +334,8 @@ function SegmentBaseLoader() {
         loadSegments: loadSegments,
         reset: reset
     };
+
+    setup();
 
     return instance;
 }

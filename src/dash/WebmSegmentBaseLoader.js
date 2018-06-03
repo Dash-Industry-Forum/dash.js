@@ -13,11 +13,11 @@ import HTTPLoader from '../streaming/net/HTTPLoader';
 
 function WebmSegmentBaseLoader() {
 
-    let context = this.context;
-    let log = Debug(context).getInstance().log;
-    let eventBus = EventBus(context).getInstance();
+    const context = this.context;
+    const eventBus = EventBus(context).getInstance();
 
     let instance,
+        logger,
         WebM,
         errHandler,
         requestModifier,
@@ -27,6 +27,7 @@ function WebmSegmentBaseLoader() {
         baseURLController;
 
     function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
         WebM = {
             EBML: {
                 tag: 0x1A45DFA3,
@@ -204,7 +205,7 @@ function WebmSegmentBaseLoader() {
             segments.push(segment);
         }
 
-        log('Parsed cues: ' + segments.length + ' cues.');
+        logger.debug('Parsed cues: ' + segments.length + ' cues.');
 
         return segments;
     }
@@ -228,7 +229,7 @@ function WebmSegmentBaseLoader() {
         let segmentEnd;
         let segmentStart;
 
-        log('Parse EBML header: ' + info.url);
+        logger.debug('Parse EBML header: ' + info.url);
 
         // skip over the header itself
         ebmlParser.skipOverElement(WebM.EBML);
@@ -276,7 +277,7 @@ function WebmSegmentBaseLoader() {
         };
 
         const onloadend = function () {
-            log('Download Error: Cues ' + info.url);
+            logger.error('Download Error: Cues ' + info.url);
             callback(null);
         };
 
@@ -286,7 +287,7 @@ function WebmSegmentBaseLoader() {
             error: onloadend
         });
 
-        log('Perform cues load: ' + info.url + ' bytes=' + info.range.start + '-' + info.range.end);
+        logger.debug('Perform cues load: ' + info.url + ' bytes=' + info.range.start + '-' + info.range.end);
     }
 
     function checkSetConfigCall() {
@@ -311,7 +312,7 @@ function WebmSegmentBaseLoader() {
             init: true
         };
 
-        log('Start loading initialization.');
+        logger.info('Start loading initialization.');
 
         request = getFragmentRequest(info);
 
@@ -335,7 +336,7 @@ function WebmSegmentBaseLoader() {
             error: onloadend
         });
 
-        log('Perform init load: ' + info.url);
+        logger.debug('Perform init load: ' + info.url);
     }
 
     function loadSegments(representation, type, theRange, callback) {
@@ -362,7 +363,7 @@ function WebmSegmentBaseLoader() {
         // first load the header, but preserve the manifest range so we can
         // load the cues after parsing the header
         // NOTE: we expect segment info to appear in the first 8192 bytes
-        log('Parsing ebml header');
+        logger.debug('Parsing ebml header');
 
         const onload = function (response) {
             parseEbmlHeader(response, media, theRange, function (segments) {
@@ -411,7 +412,6 @@ function WebmSegmentBaseLoader() {
     function reset() {
         errHandler = null;
         requestModifier = null;
-        log = null;
     }
 
     instance = {

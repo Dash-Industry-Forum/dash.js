@@ -36,24 +36,26 @@
 function MssFragmentMoofProcessor(config) {
 
     config = config || {};
-    let instance;
-    let metricsModel = config.metricsModel;
-    let playbackController = config.playbackController;
-    let errorHandler = config.errHandler;
+    let instance,
+        logger;
+    const metricsModel = config.metricsModel;
+    const playbackController = config.playbackController;
+    const errorHandler = config.errHandler;
     const ISOBoxer = config.ISOBoxer;
-    const log = config.log;
+    const debug = config.debug;
 
     function setup() {
+        logger = debug.getLogger(instance);
     }
 
     function processTfrf(request, tfrf, tfdt, streamProcessor) {
-        let representationController = streamProcessor.getRepresentationController();
-        let representation = representationController.getCurrentRepresentation();
-        let indexHandler = streamProcessor.getIndexHandler();
+        const representationController = streamProcessor.getRepresentationController();
+        const representation = representationController.getCurrentRepresentation();
+        const indexHandler = streamProcessor.getIndexHandler();
 
-        let manifest = representation.adaptation.period.mpd.manifest;
-        let adaptation = manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index];
-        let timescale = adaptation.SegmentTemplate.timescale;
+        const manifest = representation.adaptation.period.mpd.manifest;
+        const adaptation = manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index];
+        const timescale = adaptation.SegmentTemplate.timescale;
 
         if (manifest.type !== 'dynamic') {
             return;
@@ -65,12 +67,11 @@ function MssFragmentMoofProcessor(config) {
         }
 
         // Get adaptation's segment timeline (always a SegmentTimeline in Smooth Streaming use case)
-        let segments = adaptation.SegmentTemplate.SegmentTimeline.S;
-        let entries = tfrf.entry;
+        const segments = adaptation.SegmentTemplate.SegmentTimeline.S;
+        const entries = tfrf.entry;
         let entry,
             segmentTime;
         let segment = null;
-        let type = adaptation.contentType;
         let t = 0;
         let availabilityStartTime = null;
         let range;
@@ -87,7 +88,6 @@ function MssFragmentMoofProcessor(config) {
 
         // Check if we have to append new segment to timeline
         if (entry.fragment_absolute_time <= segmentTime) {
-
             // Update DVR window range
             // => set range end to end time of current segment
             range = {
@@ -99,13 +99,12 @@ function MssFragmentMoofProcessor(config) {
             return;
         }
 
-        log('[MssFragmentMoofProcessor][', type,'] Add new segment - t = ', (entry.fragment_absolute_time / timescale));
+        logger.debug('Add new segment - t = ', (entry.fragment_absolute_time / timescale));
         segment = {};
         segment.t = entry.fragment_absolute_time;
         segment.d = entry.fragment_duration;
         segments.push(segment);
 
-        //
         if (manifest.timeShiftBufferDepth && manifest.timeShiftBufferDepth > 0) {
             // Get timestamp of the last segment
             segment = segments[segments.length - 1];
@@ -117,7 +116,7 @@ function MssFragmentMoofProcessor(config) {
             // Remove segments prior to availability start time
             segment = segments[0];
             while (segment.t < availabilityStartTime) {
-                log('[MssFragmentMoofProcessor]Remove segment  - t = ' + (segment.t / timescale));
+                logger.debug('Remove segment  - t = ' + (segment.t / timescale));
                 segments.splice(0, 1);
                 segment = segments[0];
             }
@@ -136,10 +135,10 @@ function MssFragmentMoofProcessor(config) {
     }
 
     function updateDVR(type, range, manifestInfo) {
-        let dvrInfos = metricsModel.getMetricsFor(type).DVRInfo;
+        const dvrInfos = metricsModel.getMetricsFor(type).DVRInfo;
         if (dvrInfos) {
             if (dvrInfos.length === 0 || (dvrInfos.length > 0 && range.end > dvrInfos[dvrInfos.length - 1].range.end)) {
-                log('[MssFragmentMoofProcessor][', type, '] Update DVR Infos [' + range.start + ' - ' + range.end + ']');
+                logger.debug('Update DVR Infos [' + range.start + ' - ' + range.end + ']');
                 metricsModel.addDVRInfo(type, playbackController.getTime(), manifestInfo, range);
             }
         }
@@ -165,14 +164,14 @@ function MssFragmentMoofProcessor(config) {
 
         // e.request contains request description object
         // e.response contains fragment bytes
-        let isoFile = ISOBoxer.parseBuffer(e.response);
+        const isoFile = ISOBoxer.parseBuffer(e.response);
         // Update track_Id in tfhd box
-        let tfhd = isoFile.fetch('tfhd');
+        const tfhd = isoFile.fetch('tfhd');
         tfhd.track_ID = e.request.mediaInfo.index + 1;
 
         // Add tfdt box
         let tfdt = isoFile.fetch('tfdt');
-        let traf = isoFile.fetch('traf');
+        const traf = isoFile.fetch('traf');
         if (tfdt === null) {
             tfdt = ISOBoxer.createFullBox('tfdt', traf, tfhd);
             tfdt.version = 1;
@@ -180,7 +179,7 @@ function MssFragmentMoofProcessor(config) {
             tfdt.baseMediaDecodeTime = Math.floor(e.request.startTime * e.request.timescale);
         }
 
-        let trun = isoFile.fetch('trun');
+        const trun = isoFile.fetch('trun');
 
         // Process tfxd boxes
         // This box provide absolute timestamp but we take the segment start time for tfdt
@@ -199,7 +198,7 @@ function MssFragmentMoofProcessor(config) {
         // If protected content in PIFF1.1 format (sepiff box = Sample Encryption PIFF)
         // => convert sepiff box it into a senc box
         // => create saio and saiz boxes (if not already present)
-        let sepiff = isoFile.fetch('sepiff');
+        const sepiff = isoFile.fetch('sepiff');
         if (sepiff !== null) {
             sepiff.type = 'senc';
             sepiff.usertype = undefined;
@@ -213,7 +212,7 @@ function MssFragmentMoofProcessor(config) {
                 saio.entry_count = 1;
                 saio.offset = [0];
 
-                let saiz = ISOBoxer.createFullBox('saiz', traf);
+                const saiz = ISOBoxer.createFullBox('saiz', traf);
                 saiz.version = 0;
                 saiz.flags = 0;
                 saiz.sample_count = sepiff.sample_count;
@@ -239,7 +238,7 @@ function MssFragmentMoofProcessor(config) {
         trun.flags |= 0x000001; // set trun.data-offset-present to true
 
         // Update trun.data_offset field that corresponds to first data byte (inside mdat box)
-        let moof = isoFile.fetch('moof');
+        const moof = isoFile.fetch('moof');
         let length = moof.getLength();
         trun.data_offset = length + 8;
 
@@ -257,16 +256,15 @@ function MssFragmentMoofProcessor(config) {
     }
 
     function updateSegmentList(e, sp) {
-
         // e.request contains request description object
         // e.response contains fragment bytes
         if (!e.response) {
             throw new Error('e.response parameter is missing');
         }
 
-        let isoFile = ISOBoxer.parseBuffer(e.response);
+        const isoFile = ISOBoxer.parseBuffer(e.response);
         // Update track_Id in tfhd box
-        let tfhd = isoFile.fetch('tfhd');
+        const tfhd = isoFile.fetch('tfhd');
         tfhd.track_ID = e.request.mediaInfo.index + 1;
 
         // Add tfdt box

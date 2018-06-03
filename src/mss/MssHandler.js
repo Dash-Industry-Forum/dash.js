@@ -53,7 +53,7 @@ function MssHandler(config) {
         eventBus: eventBus,
         constants: constants,
         ISOBoxer: config.ISOBoxer,
-        log: config.log,
+        debug: config.debug,
         errHandler: config.errHandler
     });
     let mssParser;
@@ -152,7 +152,7 @@ function MssHandler(config) {
                                 metricsModel: metricsModel,
                                 playbackController: playbackController,
                                 ISOBoxer: config.ISOBoxer,
-                                log: config.log
+                                debug: config.debug
                             });
                             fragmentInfoController.initialize();
                             fragmentInfoController.start();

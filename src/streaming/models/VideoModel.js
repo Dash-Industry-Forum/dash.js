@@ -37,6 +37,7 @@ import Debug from '../../core/Debug';
 function VideoModel() {
 
     let instance,
+        logger,
         element,
         TTMLRenderingDiv,
         videoContainer,
@@ -44,10 +45,13 @@ function VideoModel() {
 
     const VIDEO_MODEL_WRONG_ELEMENT_TYPE = 'element is not video or audio DOM type!';
 
-    let context = this.context;
-    let log = Debug(context).getInstance().log;
-    let eventBus = EventBus(context).getInstance();
+    const context = this.context;
+    const eventBus = EventBus(context).getInstance();
     const stalledStreams = [];
+
+    function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
+    }
 
     function initialize() {
         eventBus.on(Events.PLAYBACK_PLAYING, onPlaying, this);
@@ -249,7 +253,7 @@ function VideoModel() {
                     if (e.name === 'NotAllowedError') {
                         eventBus.trigger(Events.PLAYBACK_NOT_ALLOWED);
                     }
-                    log(`Caught pending play exception - continuing (${e})`);
+                    logger.warn(`Caught pending play exception - continuing (${e})`);
                 });
             }
         }
@@ -411,6 +415,8 @@ function VideoModel() {
         getVideoRelativeOffsetLeft: getVideoRelativeOffsetLeft,
         reset: reset
     };
+
+    setup();
 
     return instance;
 }

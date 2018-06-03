@@ -36,7 +36,7 @@
 function MssParser(config) {
     config = config || {};
     const BASE64 = config.BASE64;
-    const log = config.log;
+    const debug = config.debug;
     const constants = config.constants;
 
     const DEFAULT_TIME_SCALE = 10000000.0;
@@ -72,15 +72,17 @@ function MssParser(config) {
     };
 
     let instance,
+        logger,
         mediaPlayerModel;
 
 
     function setup() {
+        logger = debug.getLogger(instance);
         mediaPlayerModel = config.mediaPlayerModel;
     }
 
     function mapPeriod(smoothStreamingMedia, timescale) {
-        let period = {};
+        const period = {};
         let streams,
             adaptation;
 
@@ -102,10 +104,9 @@ function MssParser(config) {
     }
 
     function mapAdaptationSet(streamIndex, timescale) {
-
-        let adaptationSet = {};
-        let representations = [];
-        let segmentTemplate = {};
+        const adaptationSet = {};
+        const representations = [];
+        let segmentTemplate;
         let qualityLevels,
             representation,
             segments,
@@ -179,10 +180,9 @@ function MssParser(config) {
     }
 
     function mapRepresentation(qualityLevel, streamIndex) {
-
-        let representation = {};
+        const representation = {};
+        const type = streamIndex.getAttribute('Type');
         let fourCCValue = null;
-        let type = streamIndex.getAttribute('Type');
 
         representation.id = qualityLevel.Id;
         representation.bandwidth = parseInt(qualityLevel.getAttribute('Bitrate'), 10);
@@ -203,7 +203,7 @@ function MssParser(config) {
             if (type === 'audio') {
                 fourCCValue = 'AAC';
             } else if (type === 'video') {
-                log('[MssParser] FourCC is not defined whereas it is required for a QualityLevel element for a StreamIndex of type "video"');
+                logger.debug('FourCC is not defined whereas it is required for a QualityLevel element for a StreamIndex of type "video"');
                 return null;
             }
         }
@@ -212,7 +212,7 @@ function MssParser(config) {
         if (SUPPORTED_CODECS.indexOf(fourCCValue.toUpperCase()) === -1) {
             // Do not send warning
             //this.errHandler.sendWarning(MediaPlayer.dependencies.ErrorHandler.prototype.MEDIA_ERR_CODEC_UNSUPPORTED, 'Codec not supported', {codec: fourCCValue});
-            log('[MssParser] Codec not supported: ' + fourCCValue);
+            logger.warn('Codec not supported: ' + fourCCValue);
             return null;
         }
 
@@ -250,9 +250,9 @@ function MssParser(config) {
     }
 
     function getAACCodec(qualityLevel, fourCCValue) {
-        let objectType = 0;
+        const samplingRate = parseInt(qualityLevel.getAttribute('SamplingRate'), 10);
         let codecPrivateData = qualityLevel.getAttribute('CodecPrivateData').toString();
-        let samplingRate = parseInt(qualityLevel.getAttribute('SamplingRate'), 10);
+        let objectType = 0;
         let codecPrivateDataHex,
             arr16,
             indexFreq,
@@ -312,8 +312,7 @@ function MssParser(config) {
     }
 
     function mapSegmentTemplate(streamIndex, timescale) {
-
-        let segmentTemplate = {};
+        const segmentTemplate = {};
         let mediaUrl,
             streamIndexTimeScale;
 
@@ -332,10 +331,9 @@ function MssParser(config) {
     }
 
     function mapSegmentTimeline(streamIndex, timescale) {
-
-        let segmentTimeline = {};
-        let chunks = streamIndex.getElementsByTagName('c');
-        let segments = [];
+        const segmentTimeline = {};
+        const chunks = streamIndex.getElementsByTagName('c');
+        const segments = [];
         let segment;
         let prevSegment;
         let tManifest;
@@ -492,7 +490,7 @@ function MssParser(config) {
     }
 
     function swapBytes(bytes, pos1, pos2) {
-        let temp = bytes[pos1];
+        const temp = bytes[pos1];
         bytes[pos1] = bytes[pos2];
         bytes[pos2] = temp;
     }
@@ -513,13 +511,13 @@ function MssParser(config) {
 
     function createWidevineContentProtection(protectionHeader, KID) {
         // Create Widevine CENC header (Protocol Buffer) with KID value
-        let wvCencHeader = new Uint8Array(2 + KID.length);
+        const wvCencHeader = new Uint8Array(2 + KID.length);
         wvCencHeader[0] = 0x12;
         wvCencHeader[1] = 0x10;
         wvCencHeader.set(KID, 2);
 
         // Create a pssh box
-        let length = 12 /* box length, type, version and flags */ + 16 /* SystemID */ + 4 /* data length */ + wvCencHeader.length;
+        const length = 12 /* box length, type, version and flags */ + 16 /* SystemID */ + 4 /* data length */ + wvCencHeader.length;
         let pssh = new Uint8Array(length);
         let i = 0;
 
@@ -560,10 +558,10 @@ function MssParser(config) {
     }
 
     function processManifest(xmlDoc, manifestLoadedTime) {
-        let manifest = {};
-        let contentProtections = [];
-        let smoothStreamingMedia = xmlDoc.getElementsByTagName('SmoothStreamingMedia')[0];
-        let protection = xmlDoc.getElementsByTagName('Protection')[0];
+        const manifest = {};
+        const contentProtections = [];
+        const smoothStreamingMedia = xmlDoc.getElementsByTagName('SmoothStreamingMedia')[0];
+        const protection = xmlDoc.getElementsByTagName('Protection')[0];
         let protectionHeader = null;
         let period,
             adaptations,
@@ -699,11 +697,10 @@ function MssParser(config) {
     }
 
     function parseDOM(data) {
-
         let xmlDoc = null;
 
         if (window.DOMParser) {
-            let parser = new window.DOMParser();
+            const parser = new window.DOMParser();
 
             xmlDoc = parser.parseFromString(data, 'text/xml');
             if (xmlDoc.getElementsByTagName('parsererror').length > 0) {
@@ -742,7 +739,7 @@ function MssParser(config) {
 
         const mss2dashTime = window.performance.now();
 
-        log('Parsing complete: (xmlParsing: ' + (xmlParseTime - startTime).toPrecision(3) + 'ms, mss2dash: ' + (mss2dashTime - xmlParseTime).toPrecision(3) + 'ms, total: ' + ((mss2dashTime - startTime) / 1000).toPrecision(3) + 's)');
+        logger.info('Parsing complete: (xmlParsing: ' + (xmlParseTime - startTime).toPrecision(3) + 'ms, mss2dash: ' + (mss2dashTime - xmlParseTime).toPrecision(3) + 'ms, total: ' + ((mss2dashTime - startTime) / 1000).toPrecision(3) + 's)');
 
         return manifest;
     }
