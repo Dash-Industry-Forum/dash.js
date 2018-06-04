@@ -305,6 +305,7 @@ function TextSourceBuffer() {
             textTrackInfo.isEmbedded = mediaInfo.isEmbedded ? true : false;
             textTrackInfo.kind = getKind();
             textTrackInfo.roles = mediaInfo.roles;
+            textTrackInfo.roles = mediaInfo.accessibility;
             let totalNrTracks = (mediaInfos ? mediaInfos.length : 0) + embeddedTracks.length;
             textTracks.addTextTrack(textTrackInfo, totalNrTracks);
         }
