@@ -19,7 +19,7 @@ function MediaPlayerFactory() {
      * @returns {MediaPlayer|null}
      */
     function create(video, source, context) {
-        if (!video || video.nodeName !== 'VIDEO') return null;
+        if (!video || !(/^VIDEO$/i).test(video.nodeName)) return null;
 
         if (video._dashjs_player) return video._dashjs_player;
 
@@ -80,7 +80,7 @@ function MediaPlayerFactory() {
     }
 
     function findVideo(el) {
-        if (el.nodeName.toLowerCase() === 'video') {
+        if ((/^VIDEO$/i).test(el.nodeName)) {
             return el;
         } else {
             return findVideo(el.parentNode);
