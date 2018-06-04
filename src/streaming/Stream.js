@@ -437,7 +437,7 @@ function Stream(config) {
         filterCodecs(Constants.VIDEO);
         filterCodecs(Constants.AUDIO);
 
-        if (element === null || (element && element.nodeName === 'VIDEO')) {
+        if (element === null || (element && (/^VIDEO$/i).test(element.nodeName))) {
             initializeMediaForType(Constants.VIDEO, mediaSource);
         }
         initializeMediaForType(Constants.AUDIO, mediaSource);
