@@ -580,6 +580,13 @@ function PlaybackController() {
         videoModel.setStallState(e.mediaType, e.state === BufferController.BUFFER_EMPTY);
     }
 
+    function onPlaybackStalled(e) {
+        log('Native video element event: stalled', e);
+        eventBus.trigger(Events.PLAYBACK_STALLED, {
+            e: e
+        });
+    }
+
     function addAllListeners() {
         videoModel.addEventListener('canplay', onCanPlay);
         videoModel.addEventListener('play', onPlaybackStart);
@@ -594,6 +601,7 @@ function PlaybackController() {
         videoModel.addEventListener('ratechange', onPlaybackRateChanged);
         videoModel.addEventListener('loadedmetadata', onPlaybackMetaDataLoaded);
         videoModel.addEventListener('ended', onPlaybackEnded);
+        videoModel.addEventListener('stalled', onPlaybackStalled);
     }
 
     function removeAllListeners() {
@@ -610,6 +618,8 @@ function PlaybackController() {
         videoModel.removeEventListener('ratechange', onPlaybackRateChanged);
         videoModel.removeEventListener('loadedmetadata', onPlaybackMetaDataLoaded);
         videoModel.removeEventListener('ended', onPlaybackEnded);
+        videoModel.removeEventListener('stalled', onPlaybackStalled);
+
     }
 
     instance = {

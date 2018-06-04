@@ -257,6 +257,7 @@ declare namespace dashjs {
         PLAYBACK_RATE_CHANGED: 'playbackRateChanged';
         PLAYBACK_SEEKED: 'playbackSeeked';
         PLAYBACK_SEEKING: 'playbackSeeking';
+        PLAYBACK_STALLED: 'playbackStalled';
         PLAYBACK_STARTED: 'playbackStarted';
         PLAYBACK_TIME_UPDATED: 'playbackTimeUpdated';
         PLAYBACK_WAITING: 'playbackWaiting';

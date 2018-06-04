@@ -286,6 +286,12 @@ class MediaPlayerEvents extends EventsBase {
         this.PLAYBACK_SEEK_ASKED = 'playbackSeekAsked';
 
         /**
+         * Sent when the video element reports stalled
+         * @event MediaPlayerEvents#PLAYBACK_STALLED
+         */
+        this.PLAYBACK_STALLED = 'playbackStalled';
+
+        /**
          * Sent when playback of the media starts after having been paused;
          * that is, when playback is resumed after a prior pause event.
          *
