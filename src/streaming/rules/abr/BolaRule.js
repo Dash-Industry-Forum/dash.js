@@ -58,7 +58,6 @@ function BolaRule(config) {
 
     config = config || {};
     const context = this.context;
-    const log = Debug(context).getInstance().log;
 
     const dashMetrics = config.dashMetrics;
     const metricsModel = config.metricsModel;
@@ -66,9 +65,11 @@ function BolaRule(config) {
     const eventBus = EventBus(context).getInstance();
 
     let instance,
+        logger,
         bolaStateDict;
 
     function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
         resetInitialSettings();
 
         eventBus.on(Events.BUFFER_EMPTY, onBufferEmpty, instance);
@@ -494,7 +495,7 @@ function BolaRule(config) {
                 break; // BOLA_STATE_STEADY
 
             default:
-                log('BOLA ABR rule invoked in bad state.');
+                logger.debug('BOLA ABR rule invoked in bad state.');
                 // should not arrive here, try to recover
                 switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, safeThroughput, latency);
                 switchRequest.reason.state = bolaState.state;

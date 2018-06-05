@@ -2,9 +2,31 @@ export = dashjs;
 export as namespace dashjs;
 
 declare namespace dashjs {
+    interface Logger {
+        debug(...params): void;
+        info(...params): void;
+        warn(...params): void;
+        error(...params): void;
+        fatal(...params): void;
+    }
+
+    enum LogLevel {
+        LOG_LEVEL_NONE = 0,
+        LOG_LEVEL_FATAL = 1,
+        LOG_LEVEL_ERROR = 2,
+        LOG_LEVEL_WARNING = 3,
+        LOG_LEVEL_INFO = 4,
+        LOG_LEVEL_DEBUG = 5
+    }
+
     interface Debug {
+        getLogger(): Logger;
+        setLogTimestampVisible(flag: boolean): void;
+        setCalleeNameVisible(flag: boolean): void;
         getLogToBrowserConsole(): boolean;
         setLogToBrowserConsole(flag: boolean): void;
+        setLogLevel(level: LogLevel): void;
+        getLogLevel(): LogLevel;
     }
 
     interface VideoModel { }

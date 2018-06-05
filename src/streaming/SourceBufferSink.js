@@ -40,16 +40,18 @@ import TextController from './text/TextController';
  */
 function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback) {
     const context = this.context;
-    const log = Debug(context).getInstance().log;
     const eventBus = EventBus(context).getInstance();
 
-    let buffer,
+    let instance,
+        logger,
+        buffer,
         isAppendingInProgress;
 
     let appendQueue = [];
     let onAppended = onAppendedCallback;
 
     function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
         isAppendingInProgress = false;
 
         const codec = mediaInfo.codec;
@@ -79,7 +81,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback) {
             try {
                 mediaSource.removeSourceBuffer(buffer);
             } catch (e) {
-                log('Failed to remove source buffer from media source.');
+                logger.error('Failed to remove source buffer from media source.');
             }
             isAppendingInProgress = false;
             buffer = null;
@@ -170,7 +172,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback) {
                     waitForUpdateEnd(buffer, afterSuccess.bind(this));
                 }
             } catch (err) {
-                log('SourceBuffer append failed "' + err + '"');
+                logger.fatal('SourceBuffer append failed "' + err + '"');
                 if (appendQueue.length > 0) {
                     appendNextInQueue();
                 } else {
@@ -219,7 +221,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback) {
                 buffer.abort(); //The cues need to be removed from the TextSourceBuffer via a call to abort()
             }
         } catch (ex) {
-            log('SourceBuffer append abort failed: "' + ex + '"');
+            logger.error('SourceBuffer append abort failed: "' + ex + '"');
         }
 
         appendQueue = [];
@@ -263,7 +265,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback) {
         }
     }
 
-    const instance = {
+    instance = {
         getAllBufferRanges: getAllBufferRanges,
         getBuffer: getBuffer,
         append: append,

@@ -46,7 +46,6 @@ describe('TimeSyncController', function () {
 
 
     it('should synchronize time when time source is defined', function (done) {
-
         let self = this;
         let date = new Date();
 

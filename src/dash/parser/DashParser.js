@@ -42,14 +42,15 @@ import SegmentValuesMap from './maps/SegmentValuesMap';
 function DashParser() {
 
     const context = this.context;
-    const log = Debug(context).getInstance().log;
 
     let instance,
+        logger,
         matchers,
         converter,
         objectIron;
 
     function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
         matchers = [
             new DurationMatcher(),
             new DateTimeMatcher(),
@@ -84,7 +85,6 @@ function DashParser() {
 
     function parse(data) {
         let manifest;
-
         const startTime = window.performance.now();
 
         manifest = converter.xml_str2json(data);
@@ -94,12 +94,10 @@ function DashParser() {
         }
 
         const jsonTime = window.performance.now();
-
         objectIron.run(manifest);
 
         const ironedTime = window.performance.now();
-
-        log('Parsing complete: ( xml2json: ' + (jsonTime - startTime).toPrecision(3) + 'ms, objectiron: ' + (ironedTime - jsonTime).toPrecision(3) + 'ms, total: ' + ((ironedTime - startTime) / 1000).toPrecision(3) + 's)');
+        logger.info('Parsing complete: ( xml2json: ' + (jsonTime - startTime).toPrecision(3) + 'ms, objectiron: ' + (ironedTime - jsonTime).toPrecision(3) + 'ms, total: ' + ((ironedTime - startTime) / 1000).toPrecision(3) + 's)');
 
         return manifest;
     }

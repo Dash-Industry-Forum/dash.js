@@ -44,7 +44,12 @@ function DownloadRatioRuleClass() {
     let Debug = factory.getSingletonFactoryByName('Debug');
 
     let context = this.context;
-    let debug = Debug(context).getInstance();
+    let instance,
+        logger;
+
+    function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
+    }
 
     function getBytesLength(request) {
         return request.trace.reduce((a, b) => a + b.b[0], 0);
@@ -81,11 +86,10 @@ function DownloadRatioRuleClass() {
 
         latencyInBandwidth = true;
         switchUpRatioSafetyFactor = 1.5;
-        //debug.log("Checking download ratio rule...");
-        debug.log("[CustomRules][" + mediaType + "][DownloadRatioRule] Checking download ratio rule... (current = " + current + ")");
+        logger.debug("[CustomRules][" + mediaType + "][DownloadRatioRule] Checking download ratio rule... (current = " + current + ")");
 
         if (!metrics) {
-            debug.log("[CustomRules][" + mediaType + "][DownloadRatioRule] No metrics, bailing.");
+            logger.debug("[CustomRules][" + mediaType + "][DownloadRatioRule] No metrics, bailing.");
             return SwitchRequest(context).create();
         }
 
@@ -100,12 +104,12 @@ function DownloadRatioRuleClass() {
         }
 
         if (lastRequest === null) {
-            debug.log("[CustomRules][" + mediaType + "][DownloadRatioRule] No valid requests made for this stream yet, bailing.");
+            logger.debug("[CustomRules][" + mediaType + "][DownloadRatioRule] No valid requests made for this stream yet, bailing.");
             return SwitchRequest(context).create();
         }
 
         if(lastRequest.type !== 'MediaSegment' ) {
-            debug.log("[CustomRules][" + mediaType + "][DownloadRatioRule] Last request is not a media segment, bailing.");
+            logger.debug("[CustomRules][" + mediaType + "][DownloadRatioRule] Last request is not a media segment, bailing.");
             return SwitchRequest(context).create();
         }
 
@@ -113,13 +117,13 @@ function DownloadRatioRuleClass() {
         downloadTime = (lastRequest._tfinish.getTime() - lastRequest.tresponse.getTime()) / 1000;
 
         if (totalTime <= 0) {
-            debug.log("[CustomRules][" + mediaType + "][DownloadRatioRule] Don't know how long the download of the last fragment took, bailing.");
+            logger.debug("[CustomRules][" + mediaType + "][DownloadRatioRule] Don't know how long the download of the last fragment took, bailing.");
             return SwitchRequest(context).create();
         }
 
         totalBytesLength = getBytesLength(lastRequest);
 
-        debug.log("[CustomRules][" + mediaType + "][DownloadRatioRule] DL: " + Number(downloadTime.toFixed(3)) + "s, Total: " + Number(totalTime.toFixed(3)) + "s, Length: " + totalBytesLength);
+        logger.debug("[CustomRules][" + mediaType + "][DownloadRatioRule] DL: " + Number(downloadTime.toFixed(3)) + "s, Total: " + Number(totalTime.toFixed(3)) + "s, Length: " + totalBytesLength);
 
         // Take average bandwidth over 3 requests
         count = 1;
@@ -130,7 +134,7 @@ function DownloadRatioRuleClass() {
 
                 let _totalTime = (currentRequest._tfinish.getTime() - currentRequest.trequest.getTime()) / 1000;
                 let _downloadTime = (currentRequest._tfinish.getTime() - currentRequest.tresponse.getTime()) / 1000;
-                debug.log("[CustomRules][" + mediaType + "][DownloadRatioRule] DL: " + Number(_downloadTime.toFixed(3)) + "s, Total: " + Number(_totalTime.toFixed(3)) + "s, Length: " + getBytesLength(currentRequest));
+                logger.debug("[CustomRules][" + mediaType + "][DownloadRatioRule] DL: " + Number(_downloadTime.toFixed(3)) + "s, Total: " + Number(_totalTime.toFixed(3)) + "s, Length: " + getBytesLength(currentRequest));
 
                 totalTime += _totalTime;
                 downloadTime += _downloadTime;
@@ -145,7 +149,7 @@ function DownloadRatioRuleClass() {
 
         calculatedBandwidth = latencyInBandwidth ? (totalBytesLength / totalTime) : (totalBytesLength / downloadTime);
 
-        debug.log("[CustomRules][" + mediaType + "][DownloadRatioRule] BW = " + Math.round(calculatedBandwidth / 1000) + " kb/s");
+        logger.debug("[CustomRules][" + mediaType + "][DownloadRatioRule] BW = " + Math.round(calculatedBandwidth / 1000) + " kb/s");
 
         if (isNaN(calculatedBandwidth)) {
             return SwitchRequest(context).create();
@@ -166,12 +170,12 @@ function DownloadRatioRuleClass() {
             q = i;
             p = SwitchRequest.PRIORITY.WEAK;
 
-            debug.log("[CustomRules][" + mediaType + "][DownloadRatioRule] SwitchRequest: q=" + q + "/" + (count - 1) + " (" + bandwidths[q] + ")"/* + ", p=" + p*/);
+            logger.debug("[CustomRules] SwitchRequest: q=" + q + "/" + (count - 1) + " (" + bandwidths[q] + ")"/* + ", p=" + p*/);
             return SwitchRequest(context).create(q, {name : DownloadRatioRuleClass.__dashjs_factory_name},  p);
         } else {
             for (i = count - 1; i > current; i -= 1) {
                 if (calculatedBandwidth > (bandwidths[i] * switchUpRatioSafetyFactor)) {
-                    // debug.log("[CustomRules][" + mediaType + "][DownloadRatioRule] bw = " + calculatedBandwidth + " results[i] * switchUpRatioSafetyFactor =" + (bandwidths[i] * switchUpRatioSafetyFactor) + " with i=" + i);
+                    // logger.debug("[CustomRules][" + mediaType + "][DownloadRatioRule] bw = " + calculatedBandwidth + " results[i] * switchUpRatioSafetyFactor =" + (bandwidths[i] * switchUpRatioSafetyFactor) + " with i=" + i);
                     break;
                 }
             }
@@ -179,14 +183,17 @@ function DownloadRatioRuleClass() {
             q = i;
             p = SwitchRequest.PRIORITY.STRONG;
 
-            debug.log("[CustomRules][" + mediaType + "][DownloadRatioRule] SwitchRequest: q=" + q + "/" + (count - 1) + " (" + bandwidths[q] + ")"/* + ", p=" + p*/);
+            logger.debug("[CustomRules] SwitchRequest: q=" + q + "/" + (count - 1) + " (" + bandwidths[q] + ")"/* + ", p=" + p*/);
             return SwitchRequest(context).create(q, {name : DownloadRatioRuleClass.__dashjs_factory_name},  p);
         }
     }
 
-    const instance = {
+    instance = {
         getMaxIndex: getMaxIndex
     };
+
+    setup();
+
     return instance;
 }
 

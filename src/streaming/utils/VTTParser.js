@@ -34,16 +34,17 @@ import Debug from '../../core/Debug';
 const WEBVTT = 'WEBVTT';
 
 function VTTParser() {
-    let context = this.context;
-    let log = Debug(context).getInstance().log;
+    const context = this.context;
 
     let instance,
+        logger,
         regExNewLine,
         regExToken,
         regExWhiteSpace,
         regExWhiteSpaceWordBoundary;
 
     function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
         regExNewLine = /(?:\r\n|\r|\n)/gm;
         regExToken = /-->/;
         regExWhiteSpace = /(^[\s]+|[\s]+$)/g;
@@ -51,7 +52,7 @@ function VTTParser() {
     }
 
     function parse(data) {
-        let captionArray = [];
+        const captionArray = [];
         let len,
             lastStartTime;
 
@@ -63,20 +64,17 @@ function VTTParser() {
         len = data.length;
         lastStartTime = -1;
 
-        for (let i = 0 ; i < len; i++)
-        {
+        for (let i = 0 ; i < len; i++) {
             let item = data[i];
 
-            if (item.length > 0 && item !== WEBVTT)
-            {
-                if (item.match(regExToken))
-                {
-                    let attributes = parseItemAttributes(item);
-                    let cuePoints = attributes.cuePoints;
-                    let styles = attributes.styles;
-                    let text = getSublines(data, i + 1);
-                    let startTime = convertCuePointTimes(cuePoints[0].replace(regExWhiteSpace, ''));
-                    let endTime = convertCuePointTimes(cuePoints[1].replace(regExWhiteSpace, ''));
+            if (item.length > 0 && item !== WEBVTT) {
+                if (item.match(regExToken)) {
+                    const attributes = parseItemAttributes(item);
+                    const cuePoints = attributes.cuePoints;
+                    const styles = attributes.styles;
+                    const text = getSublines(data, i + 1);
+                    const startTime = convertCuePointTimes(cuePoints[0].replace(regExWhiteSpace, ''));
+                    const endTime = convertCuePointTimes(cuePoints[1].replace(regExWhiteSpace, ''));
 
                     if ((!isNaN(startTime) && !isNaN(endTime)) && startTime >= lastStartTime && endTime > startTime) {
                         if (text !== '') {
@@ -90,11 +88,11 @@ function VTTParser() {
                             });
                         }
                         else {
-                            log('Skipping cue due to empty/malformed cue text');
+                            logger.error('Skipping cue due to empty/malformed cue text');
                         }
                     }
                     else {
-                        log('Skipping cue due to incorrect cue timing');
+                        logger.error('Skipping cue due to incorrect cue timing');
                     }
                 }
             }
@@ -104,7 +102,7 @@ function VTTParser() {
     }
 
     function convertCuePointTimes(time) {
-        let timeArray = time.split(':');
+        const timeArray = time.split(':');
         const len = timeArray.length - 1;
 
         time = parseInt( timeArray[len - 1], 10 ) * 60 + parseFloat( timeArray[len]);
@@ -117,8 +115,8 @@ function VTTParser() {
     }
 
     function parseItemAttributes(data) {
-        let vttCuePoints = data.split(regExToken);
-        let arr = vttCuePoints[1].split(regExWhiteSpaceWordBoundary);
+        const vttCuePoints = data.split(regExToken);
+        const arr = vttCuePoints[1].split(regExWhiteSpaceWordBoundary);
         arr.shift(); //remove first array index it is empty...
         vttCuePoints[1] = arr[0];
         arr.shift();
@@ -126,7 +124,7 @@ function VTTParser() {
     }
 
     function getCaptionStyles(arr) {
-        let styleObject = {};
+        const styleObject = {};
         arr.forEach(function (element) {
             if (element.split(/:/).length > 1) {
                 let val = element.split(/:/)[1];

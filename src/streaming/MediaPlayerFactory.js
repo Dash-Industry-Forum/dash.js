@@ -39,7 +39,7 @@ function MediaPlayerFactory() {
         context = context || {};
         player = MediaPlayer(context).create();
         player.initialize(video, source.src, video.autoplay);
-        player.getDebug().log('Converted ' + videoID + ' to dash.js player and added content: ' + source.src);
+        player.getDebug().debug.info('Converted ' + videoID + ' to dash.js player and added content: ' + source.src);
 
         // Store a reference to the player on the video element so it can be gotten at for debugging and so we know its
         // already been setup.

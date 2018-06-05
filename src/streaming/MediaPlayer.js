@@ -83,12 +83,12 @@ function MediaPlayer() {
     const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
     const MEDIA_PLAYER_BAD_ARGUMENT_ERROR = 'MediaPlayer Invalid Arguments!';
 
-    let context = this.context;
-    let eventBus = EventBus(context).getInstance();
-    let debug = Debug(context).getInstance();
-    let log = debug.log;
+    const context = this.context;
+    const eventBus = EventBus(context).getInstance();
+    const debug = Debug(context).getInstance();
 
     let instance,
+        logger,
         source,
         protectionData,
         mediaPlayerInitialized,
@@ -123,6 +123,7 @@ function MediaPlayer() {
     ---------------------------------------------------------------------------
     */
     function setup() {
+        logger = debug.getLogger(instance);
         mediaPlayerInitialized = false;
         playbackInitialized = false;
         streamingInitialized = false;
@@ -184,7 +185,6 @@ function MediaPlayer() {
      * @instance
      */
     function initialize(view, source, AutoPlay) {
-
         if (!capabilities) {
             capabilities = Capabilities(context).getInstance();
         }
@@ -248,7 +248,7 @@ function MediaPlayer() {
             attachSource(source);
         }
 
-        log('[dash.js ' + getVersion() + '] ' + 'MediaPlayer has been initialized');
+        logger.info('[dash.js ' + getVersion() + '] ' + 'MediaPlayer has been initialized');
     }
 
     /**
@@ -563,7 +563,7 @@ function MediaPlayer() {
                 const buffer = getDashMetrics().getCurrentBufferLevel(getMetricsFor(type));
                 return buffer ? buffer : NaN;
             } else {
-                log('Warning  - getBufferLength requested for invalid type');
+                logger.warn('Warning  - getBufferLength requested for invalid type');
                 return NaN;
             }
         }
@@ -1239,7 +1239,7 @@ function MediaPlayer() {
         if (value === Constants.ABR_STRATEGY_DYNAMIC || value === Constants.ABR_STRATEGY_BOLA || value === Constants.ABR_STRATEGY_THROUGHPUT) {
             mediaPlayerModel.setABRStrategy(value);
         } else {
-            log('Warning: Ignoring setABRStrategy(' + value + ') - unknown value.');
+            logger.warn('Warning: Ignoring setABRStrategy(' + value + ') - unknown value.');
         }
     }
 
@@ -1321,7 +1321,7 @@ function MediaPlayer() {
         if (value === Constants.MOVING_AVERAGE_SLIDING_WINDOW || value === Constants.MOVING_AVERAGE_EWMA) {
             mediaPlayerModel.setMovingAverageMethod(value);
         } else {
-            log('Warning: Ignoring setMovingAverageMethod(' + value + ') - unknown value.');
+            logger.warn('Warning: Ignoring setMovingAverageMethod(' + value + ') - unknown value.');
         }
     }
 
@@ -2611,9 +2611,8 @@ function MediaPlayer() {
     }
 
     function createPlaybackControllers() {
-
         // creates or get objects instances
-        let manifestLoader = createManifestLoader();
+        const manifestLoader = createManifestLoader();
 
         if (!streamController) {
             streamController = StreamController(context).getInstance();
@@ -2708,7 +2707,7 @@ function MediaPlayer() {
                 capabilities = Capabilities(context).getInstance();
             }
             protectionController = protection.createProtectionSystem({
-                log: log,
+                debug: debug,
                 errHandler: errHandler,
                 videoModel: videoModel,
                 capabilities: capabilities,
@@ -2733,7 +2732,7 @@ function MediaPlayer() {
             let metricsReporting = MetricsReporting(context).create();
 
             metricsReportingController = metricsReporting.createMetricsReporting({
-                log: log,
+                debug: debug,
                 eventBus: eventBus,
                 mediaElement: getVideoElement(),
                 dashManifestModel: dashManifestModel,
@@ -2761,7 +2760,7 @@ function MediaPlayer() {
                 errHandler: errHandler,
                 events: Events,
                 constants: Constants,
-                log: log,
+                debug: debug,
                 initSegmentType: HTTPRequest.INIT_SEGMENT_TYPE,
                 BASE64: BASE64,
                 ISOBoxer: ISOBoxer
@@ -2798,7 +2797,7 @@ function MediaPlayer() {
     function initializePlayback() {
         if (!streamingInitialized && source) {
             streamingInitialized = true;
-            log('Streaming Initialized');
+            logger.info('Streaming Initialized');
             createPlaybackControllers();
 
             if (typeof source === 'string') {
@@ -2810,7 +2809,7 @@ function MediaPlayer() {
 
         if (!playbackInitialized && isReady()) {
             playbackInitialized = true;
-            log('Playback Initialized');
+            logger.info('Playback Initialized');
         }
     }
 
@@ -2970,7 +2969,7 @@ function MediaPlayer() {
 }
 
 MediaPlayer.__dashjs_factory_name = 'MediaPlayer';
-let factory = FactoryMaker.getClassFactory(MediaPlayer);
+const factory = FactoryMaker.getClassFactory(MediaPlayer);
 factory.events = MediaPlayerEvents;
 FactoryMaker.updateClassFactory(MediaPlayer.__dashjs_factory_name, factory);
 
