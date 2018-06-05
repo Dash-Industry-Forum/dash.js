@@ -108,6 +108,10 @@ function PreBufferSink(onAppendedCallback) {
         return timeranges;
     }
 
+    function updateTimestampOffset() {
+        // Nothing to do
+    }
+
     /**
      * Return the all chunks in the buffer the lie between times start and end.
      * Because a chunk cannot be split, this returns the full chunk if any part of its time lies in the requested range.
@@ -139,7 +143,8 @@ function PreBufferSink(onAppendedCallback) {
         remove: remove,
         abort: abort,
         discharge: discharge,
-        reset: reset
+        reset: reset,
+        updateTimestampOffset: updateTimestampOffset
     };
 
     return instance;

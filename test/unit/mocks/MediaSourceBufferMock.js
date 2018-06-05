@@ -49,6 +49,13 @@ class MediaSourceBufferMock {
         }, 500);
     }
 
+    updateTimestampOffset(timestampOffset) {
+        this.timestampOffset = timestampOffset;
+        setTimeout(() => {
+            this.updating = false;
+        }, 500);
+    }
+
     abort() {
         this.aborted = true;
     }

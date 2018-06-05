@@ -146,6 +146,13 @@ function TextBufferController(config) {
         return _BufferControllerImpl.getRangeAt(time);
     }
 
+    function updateTimestampOffset(MSETimeOffset) {
+        const buffer = getBuffer();
+        if (buffer.timestampOffset !== MSETimeOffset && !isNaN(MSETimeOffset)) {
+            buffer.timestampOffset = MSETimeOffset;
+        }
+    }
+
     instance = {
         getBufferControllerType: getBufferControllerType,
         initialize: initialize,
@@ -163,7 +170,8 @@ function TextBufferController(config) {
         dischargePreBuffer: dischargePreBuffer,
         switchInitData: switchInitData,
         getRangeAt: getRangeAt,
-        reset: reset
+        reset: reset,
+        updateTimestampOffset: updateTimestampOffset
     };
 
     setup();
