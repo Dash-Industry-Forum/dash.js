@@ -59,7 +59,7 @@ function MssFragmentInfoController(config) {
     const controllerType = 'MssFragmentInfoController';
 
     function setup() {
-        logger = Debug(context).getInstance().getLogger(instance);
+        logger = debug.getLogger(instance);
     }
 
     function initialize() {
