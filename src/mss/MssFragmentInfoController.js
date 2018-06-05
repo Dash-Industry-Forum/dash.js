@@ -252,6 +252,10 @@ function MssFragmentInfoController(config) {
         startTimeStampValue = null;
     }
 
+    function getType() {
+        return type;
+    }
+
     function reset() {
         doStop();
         streamProcessor.unregisterExternalController(instance);
@@ -261,6 +265,7 @@ function MssFragmentInfoController(config) {
         initialize: initialize,
         controllerType: controllerType,
         start: doStart,
+        getType: getType,
         reset: reset
     };
 

@@ -430,7 +430,7 @@ function ScheduleController(config) {
         if (e.sender !== fragmentModel) {
             return;
         }
-        logger.info('OnFragmentLoadingCompleted - Type:', type, ', Url:', e.request ? e.request.url : 'undefined');
+        logger.info('OnFragmentLoadingCompleted - Url:', e.request ? e.request.url : 'undefined');
         if (dashManifestModel.getIsTextTrack(type)) {
             setFragmentProcessState(false);
         }
