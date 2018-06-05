@@ -376,7 +376,7 @@ function TextTracks() {
                 return null;
             }
         }, captionContainer.clientHeight, captionContainer.clientWidth, false/*displayForcedOnlyMode*/, function (err) {
-            logger.info('[TextTracks][renderCaption]', err);
+            logger.info('renderCaption :', err);
             //TODO add ErrorHandler management
         }, previousISDState, true /*enableRollUp*/);
         finalCue.id = cue.cueID;
