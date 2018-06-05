@@ -41,12 +41,14 @@ import EventStream from '../vo/EventStream';
 import ObjectUtils from '../../streaming/utils/ObjectUtils';
 import URLUtils from '../../streaming/utils/URLUtils';
 import FactoryMaker from '../../core/FactoryMaker';
+import Debug from '../../core/Debug';
 
 function DashManifestModel(config) {
 
     config = config || {};
     let instance;
     const context = this.context;
+    const log = Debug(context).getInstance().log;
 
     const urlUtils = URLUtils(context).getInstance();
     const mediaController = config.mediaController;
@@ -609,9 +611,9 @@ function DashManifestModel(config) {
     function getRegularPeriods(mpd) {
         const isDynamic = mpd ? getIsDynamic(mpd.manifest) : false;
         const voPeriods = [];
-        let realPeriod1 = null;
+        let realPreviousPeriod = null;
         let realPeriod = null;
-        let voPeriod1 = null;
+        let voPreviousPeriod = null;
         let voPeriod = null;
         let len,
             i;
@@ -632,10 +634,9 @@ function DashManifestModel(config) {
             // Period PeriodStart is the sum of the start time of the previous
             // Period PeriodStart and the value of the attribute @duration
             // of the previous Period.
-            else if (realPeriod1 !== null && realPeriod.hasOwnProperty(DashConstants.DURATION) && voPeriod1 !== null) {
+            else if (realPreviousPeriod !== null && realPreviousPeriod.hasOwnProperty(DashConstants.DURATION) && voPreviousPeriod !== null) {
                 voPeriod = new Period();
-                voPeriod.start = parseFloat((voPeriod1.start + voPeriod1.duration).toFixed(5));
-                voPeriod.duration = realPeriod.duration;
+                voPeriod.start = parseFloat((voPreviousPeriod.start + voPreviousPeriod.duration).toFixed(5));
             }
             // If (i) @start attribute is absent, and (ii) the Period element
             // is the first in the MPD, and (iii) the MPD@type is 'static',
@@ -648,24 +649,26 @@ function DashManifestModel(config) {
             // The Period extends until the PeriodStart of the next Period.
             // The difference between the PeriodStart time of a Period and
             // the PeriodStart time of the following Period.
-            if (voPeriod1 !== null && isNaN(voPeriod1.duration)) {
-                voPeriod1.duration = parseFloat((voPeriod.start - voPeriod1.start).toFixed(5));
+            if (voPreviousPeriod !== null && isNaN(voPreviousPeriod.duration)) {
+                if (voPeriod !== null) {
+                    voPreviousPeriod.duration = parseFloat((voPeriod.start - voPreviousPeriod.start).toFixed(5));
+                } else {
+                    log('Warning - First period duration could not be calculated because lack of start and duration period properties. This will cause timing issues during playback');
+                }
             }
 
             if (voPeriod !== null) {
                 voPeriod.id = getPeriodId(realPeriod, i);
-            }
-
-            if (voPeriod !== null && realPeriod.hasOwnProperty(DashConstants.DURATION)) {
-                voPeriod.duration = realPeriod.duration;
-            }
-
-            if (voPeriod !== null) {
                 voPeriod.index = i;
                 voPeriod.mpd = mpd;
+
+                if (realPeriod.hasOwnProperty(DashConstants.DURATION)) {
+                    voPeriod.duration = realPeriod.duration;
+                }
+
                 voPeriods.push(voPeriod);
-                realPeriod1 = realPeriod;
-                voPeriod1 = voPeriod;
+                realPreviousPeriod = realPeriod;
+                voPreviousPeriod = voPeriod;
             }
 
             realPeriod = null;
@@ -679,8 +682,8 @@ function DashManifestModel(config) {
         // The last Period extends until the end of the Media Presentation.
         // The difference between the PeriodStart time of the last Period
         // and the mpd duration
-        if (voPeriod1 !== null && isNaN(voPeriod1.duration)) {
-            voPeriod1.duration = parseFloat((getEndTimeForLastPeriod(voPeriod1) - voPeriod1.start).toFixed(5));
+        if (voPreviousPeriod !== null && isNaN(voPreviousPeriod.duration)) {
+            voPreviousPeriod.duration = parseFloat((getEndTimeForLastPeriod(voPreviousPeriod) - voPreviousPeriod.start).toFixed(5));
         }
 
         return voPeriods;
