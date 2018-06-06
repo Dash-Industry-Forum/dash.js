@@ -29,23 +29,37 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import MediaPlayer from './src/streaming/MediaPlayer';
-import FactoryMaker from './src/core/FactoryMaker';
-import Debug from './src/core/Debug';
-import {getVersionString} from './src/core/Version';
+/**
+ * The an end place to put fragments after they have been fetched.
+ * @interface Logger
+ */
 
-// Shove both of these into the global scope
-var context = (typeof window !== 'undefined' && window) || global;
+/**
+* This method allows you to send fatal error messages (fatal errors implies playback interruption) to the browser's console.
+* @param {...*} arguments The message you want to debug. The Arguments object is supported for this method so you can send in comma separated logging items.
+* @function Logger#fatal
+*/
 
-var dashjs = context.dashjs;
-if (!dashjs) {
-    dashjs = context.dashjs = {};
-}
+/**
+ * This method allows you to send error messages to the browser's console.
+ * @param {...*} arguments The message you want to debug. The Arguments object is supported for this method so you can send in comma separated logging items.
+ * @function Logger#error
+ */
 
-dashjs.MediaPlayer = MediaPlayer;
-dashjs.FactoryMaker = FactoryMaker;
-dashjs.Debug = Debug;
-dashjs.Version = getVersionString();
+/**
+ * This method allows you to send warning messages to the browser's console.
+ * @param {...*} arguments The message you want to debug. The Arguments object is supported for this method so you can send in comma separated logging items.
+ * @function Logger#warning
+ */
 
-export default dashjs;
-export { MediaPlayer, FactoryMaker, Debug};
+/**
+ * This method allows you to send info messages to the browser's console.
+ * @param {...*} arguments The message you want to debug. The Arguments object is supported for this method so you can send in comma separated logging items.
+ * @function Logger#info
+ */
+
+/**
+ * This method allows you to send debug messages to the browser's console.
+ * @param {...*} arguments The message you want to debug. The Arguments object is supported for this method so you can send in comma separated logging items.
+ * @function Logger#debug
+ */

@@ -31,7 +31,7 @@
 /**
  * @module FactoryMaker
  */
-let FactoryMaker = (function () {
+const FactoryMaker = (function () {
 
     let instance;
     const singletonContexts = [];

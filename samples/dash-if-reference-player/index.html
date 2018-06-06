@@ -253,6 +253,42 @@
                     </label>
                 </div>
             </div>
+            <div class="options-item">
+                <div class="options-item-title">Debug</div>
+                <div class="options-item-body">
+                    <label class="options-label">Log Level:</label>
+                    <label data-toggle="tooltip" data-placement="right"
+                           title="Don't write any log message in browser console">
+                        <input  type="radio" id="log-none" value="none" autocomplete="off" name="log-level" ng-click="setLogLevel()" >
+                        NONE
+                    </label>
+                    <label data-toggle="tooltip" data-placement="right"
+                           title="Sets log level of to LOG_LEVEL_FATAL">
+                           <input  type="radio" id="log-fatal" value="fatal" autocomplete="off" name="log-level" ng-click="setLogLevel()" >
+                        FATAL
+                    </label>
+                    <label data-toggle="tooltip" data-placement="right"
+                           title="Sets log level of to LOG_LEVEL_ERROR">
+                           <input  type="radio" id="log-error" value="error" autocomplete="off" name="log-level" ng-click="setLogLevel()" >
+                        ERROR
+                    </label>
+                    <label data-toggle="tooltip" data-placement="right"
+                            title="Sets log level of to LOG_LEVEL_WARNING">
+                           <input  type="radio" id="log-warning" value="warning" autocomplete="off" name="log-level" ng-click="setLogLevel()" >
+                        WARNING
+                    </label>
+                    <label data-toggle="tooltip" data-placement="right"
+                            title="Sets log level of to LOG_LEVEL_INFO">
+                           <input  type="radio" id="log-info" value="info" autocomplete="off" name="log-level" checked="checked" ng-click="setLogLevel()" >
+                        INFO
+                    </label>
+                    <label data-toggle="tooltip" data-placement="right"
+                            title="Sets log level of to LOG_LEVEL_DEBUG">
+                           <input  type="radio" id="log-debug" value="debug" autocomplete="off" name="log-level" ng-click="setLogLevel()" >
+                        DEBUG
+                    </label>
+                </div>
+            </div>
 
         </div>
 

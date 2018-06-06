@@ -42,26 +42,26 @@ function Stream(config) {
 
     const DATA_UPDATE_FAILED_ERROR_CODE = 1;
     config = config || {};
-    let context = this.context;
-    let log = Debug(context).getInstance().log;
-    let eventBus = EventBus(context).getInstance();
+    const context = this.context;
+    const eventBus = EventBus(context).getInstance();
 
-    let manifestModel = config.manifestModel;
-    let dashManifestModel = config.dashManifestModel;
-    let mediaPlayerModel = config.mediaPlayerModel;
-    let manifestUpdater = config.manifestUpdater;
-    let adapter = config.adapter;
-    let capabilities = config.capabilities;
-    let errHandler = config.errHandler;
-    let timelineConverter = config.timelineConverter;
-    let metricsModel = config.metricsModel;
-    let abrController = config.abrController;
-    let playbackController = config.playbackController;
-    let mediaController = config.mediaController;
-    let textController = config.textController;
-    let videoModel = config.videoModel;
+    const manifestModel = config.manifestModel;
+    const dashManifestModel = config.dashManifestModel;
+    const mediaPlayerModel = config.mediaPlayerModel;
+    const manifestUpdater = config.manifestUpdater;
+    const adapter = config.adapter;
+    const capabilities = config.capabilities;
+    const errHandler = config.errHandler;
+    const timelineConverter = config.timelineConverter;
+    const metricsModel = config.metricsModel;
+    const abrController = config.abrController;
+    const playbackController = config.playbackController;
+    const mediaController = config.mediaController;
+    const textController = config.textController;
+    const videoModel = config.videoModel;
 
     let instance,
+        logger,
         streamProcessors,
         isStreamActivated,
         isMediaInitialized,
@@ -75,6 +75,7 @@ function Stream(config) {
         trackChangedEvent;
 
     function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
         resetInitialSettings();
 
         fragmentController = FragmentController(context).create({
@@ -150,7 +151,7 @@ function Stream(config) {
         if (streamProcessors.length === 0) {
             let msg = 'No streams to play.';
             errHandler.manifestError(msg, 'nostreams', manifestModel.getValue());
-            log(msg);
+            logger.fatal(msg);
         }
     }
 
@@ -173,8 +174,6 @@ function Stream(config) {
         }
 
         resetInitialSettings();
-
-        log = null;
 
         eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
         eventBus.off(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
@@ -252,7 +251,7 @@ function Stream(config) {
     function onProtectionError(event) {
         if (event.error) {
             errHandler.mediaKeySessionError(event.error);
-            log(event.error);
+            logger.fatal(event.error);
             reset();
         }
     }
@@ -268,7 +267,7 @@ function Stream(config) {
 
         if (type === Constants.MUXED && mediaInfo) {
             msg = 'Multiplexed representations are intentionally not supported, as they are not compliant with the DASH-AVC/264 guidelines';
-            log(msg);
+            logger.fatal(msg);
             errHandler.manifestError(msg, 'multiplexedrep', manifestModel.getValue());
             return false;
         }
@@ -277,13 +276,13 @@ function Stream(config) {
             return true;
         }
         codec = mediaInfo.codec;
-        log(type + ' codec: ' + codec);
+        logger.debug(type + ' codec: ' + codec);
 
         if (!!mediaInfo.contentProtection && !capabilities.supportsEncryptedMedia()) {
             errHandler.capabilityError('encryptedmedia');
         } else if (!capabilities.supportsCodec(codec)) {
             msg = type + 'Codec (' + codec + ') is not supported.';
-            log(msg);
+            logger.error(msg);
             return false;
         }
 
@@ -297,13 +296,13 @@ function Stream(config) {
         if (!processor) return;
 
         let currentTime = playbackController.getTime();
-        log('Stream -  Process track changed at current time ' + currentTime);
+        logger.info('Stream -  Process track changed at current time ' + currentTime);
         let mediaInfo = e.newMediaInfo;
         let manifest = manifestModel.getValue();
 
-        log('Stream -  Update stream controller');
+        logger.debug('Stream -  Update stream controller');
         if (manifest.refreshManifestOnSwitchTrack) {
-            log('Stream -  Refreshing manifest for switch track');
+            logger.debug('Stream -  Refreshing manifest for switch track');
             trackChangedEvent = e;
             manifestUpdater.refreshManifest();
         } else {
@@ -376,7 +375,7 @@ function Stream(config) {
         let initialMediaInfo;
 
         if (!allMediaForType || allMediaForType.length === 0) {
-            log('No ' + type + ' data.');
+            logger.info('No ' + type + ' data.');
             return;
         }
 
@@ -437,7 +436,7 @@ function Stream(config) {
         filterCodecs(Constants.VIDEO);
         filterCodecs(Constants.AUDIO);
 
-        if (element === null || (element && element.nodeName === 'VIDEO')) {
+        if (element === null || (element && (/^VIDEO$/i).test(element.nodeName))) {
             initializeMediaForType(Constants.VIDEO, mediaSource);
         }
         initializeMediaForType(Constants.AUDIO, mediaSource);
@@ -455,11 +454,10 @@ function Stream(config) {
         isUpdating = false;
 
         if (streamProcessors.length === 0) {
-            let msg = 'No streams to play.';
+            const msg = 'No streams to play.';
             errHandler.manifestError(msg, 'nostreams', manifestModel.getValue());
-            log(msg);
+            logger.fatal(msg);
         } else {
-            //log("Playback initialized!");
             checkIfInitializationCompleted();
         }
     }
@@ -476,7 +474,7 @@ function Stream(config) {
 
             const codec = dashManifestModel.getCodec(realAdaptation, i, true);
             if (!capabilities.supportsCodec(codec)) {
-                log('[Stream] codec not supported: ' + codec);
+                logger.error('[Stream] codec not supported: ' + codec);
                 return false;
             }
             return true;
@@ -545,7 +543,7 @@ function Stream(config) {
         const ln = processors.length;
 
         if (ln === 0) {
-            log('[Stream] onBufferingCompleted - can\'t trigger STREAM_BUFFERING_COMPLETED because no streamProcessor is defined');
+            logger.warn('onBufferingCompleted - can\'t trigger STREAM_BUFFERING_COMPLETED because no streamProcessor is defined');
             return;
         }
 
@@ -553,12 +551,12 @@ function Stream(config) {
         for (let i = 0; i < ln; i++) {
             //if audio or video buffer is not buffering completed state, do not send STREAM_BUFFERING_COMPLETED
             if (!processors[i].isBufferingCompleted() && (processors[i].getType() === Constants.AUDIO || processors[i].getType() === Constants.VIDEO)) {
-                log('[Stream] onBufferingCompleted - can\'t trigger STREAM_BUFFERING_COMPLETED because streamProcessor ' + processors[i].getType() + ' is not buffering completed');
+                logger.warn('onBufferingCompleted - can\'t trigger STREAM_BUFFERING_COMPLETED because streamProcessor ' + processors[i].getType() + ' is not buffering completed');
                 return;
             }
         }
 
-        log('[Stream] onBufferingCompleted - trigger STREAM_BUFFERING_COMPLETED');
+        logger.debug('onBufferingCompleted - trigger STREAM_BUFFERING_COMPLETED');
 
         eventBus.trigger(Events.STREAM_BUFFERING_COMPLETED, {
             streamInfo: streamInfo
@@ -608,8 +606,7 @@ function Stream(config) {
     }
 
     function updateData(updatedStreamInfo) {
-
-        log('Manifest updated... updating data system wide.');
+        logger.info('Manifest updated... updating data system wide.');
 
         isStreamActivated = false;
         isUpdating = true;

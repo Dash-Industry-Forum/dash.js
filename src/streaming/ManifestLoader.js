@@ -51,10 +51,9 @@ function ManifestLoader(config) {
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
     const urlUtils = URLUtils(context).getInstance();
-    const debug = Debug(context).getInstance();
-    const log = debug.log;
 
     let instance,
+        logger,
         httpLoader,
         xlinkController,
         parser;
@@ -62,6 +61,7 @@ function ManifestLoader(config) {
     let errHandler = config.errHandler;
 
     function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
         eventBus.on(Events.XLINK_READY, onXlinkReady, instance);
 
         httpLoader = HTTPLoader(context).create({
@@ -184,7 +184,7 @@ function ManifestLoader(config) {
                     // Compare with ManifestUpdater/DashManifestModel
                     if (manifest.hasOwnProperty(Constants.LOCATION)) {
                         baseUri = urlUtils.parseBaseUrl(manifest.Location_asArray[0]);
-                        log('BaseURI set by Location to: ' + baseUri);
+                        logger.debug('BaseURI set by Location to: ' + baseUri);
                     }
 
                     manifest.baseUri = baseUri;

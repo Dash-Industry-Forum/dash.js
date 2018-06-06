@@ -41,10 +41,10 @@ const LIVE_UPDATE_PLAYBACK_TIME_INTERVAL_MS = 500;
 function PlaybackController() {
 
     const context = this.context;
-    const log = Debug(context).getInstance().log;
     const eventBus = EventBus(context).getInstance();
 
     let instance,
+        logger,
         streamController,
         metricsModel,
         dashMetrics,
@@ -66,6 +66,7 @@ function PlaybackController() {
         availabilityStartTime;
 
     function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
         reset();
     }
 
@@ -123,7 +124,7 @@ function PlaybackController() {
     function seek(time) {
         if (streamInfo && videoModel) {
             eventBus.trigger(Events.PLAYBACK_SEEK_ASKED);
-            log('Requesting seek to time: ' + time);
+            logger.info('Requesting seek to time: ' + time);
             videoModel.setCurrentTime(time);
         }
     }
@@ -222,7 +223,6 @@ function PlaybackController() {
     function reset() {
         currentTime = 0;
         liveStartTime = NaN;
-        wallclockTimeIntervalId = null;
         playOnceInitialized = false;
         commonEarliestTime = {};
         liveDelay = 0;
@@ -236,6 +236,7 @@ function PlaybackController() {
             stopUpdatingWallclockTime();
             removeAllListeners();
         }
+        wallclockTimeIntervalId = null;
         videoModel = null;
         streamInfo = null;
         isDynamic = null;
@@ -393,7 +394,7 @@ function PlaybackController() {
     }
 
     function onPlaybackStart() {
-        log('Native video element event: play');
+        logger.info('Native video element event: play');
         updateCurrentTime();
         startUpdatingWallclockTime();
         eventBus.trigger(Events.PLAYBACK_STARTED, {
@@ -402,21 +403,21 @@ function PlaybackController() {
     }
 
     function onPlaybackWaiting() {
-        log('Native video element event: waiting');
+        logger.info('Native video element event: waiting');
         eventBus.trigger(Events.PLAYBACK_WAITING, {
             playingTime: getTime()
         });
     }
 
     function onPlaybackPlaying() {
-        log('Native video element event: playing');
+        logger.info('Native video element event: playing');
         eventBus.trigger(Events.PLAYBACK_PLAYING, {
             playingTime: getTime()
         });
     }
 
     function onPlaybackPaused() {
-        log('Native video element event: pause');
+        logger.info('Native video element event: pause');
         eventBus.trigger(Events.PLAYBACK_PAUSED, {
             ended: getEnded()
         });
@@ -424,7 +425,7 @@ function PlaybackController() {
 
     function onPlaybackSeeking() {
         const seekTime = getTime();
-        log('Seeking to: ' + seekTime);
+        logger.info('Seeking to: ' + seekTime);
         startUpdatingWallclockTime();
         eventBus.trigger(Events.PLAYBACK_SEEKING, {
             seekTime: seekTime
@@ -432,7 +433,7 @@ function PlaybackController() {
     }
 
     function onPlaybackSeeked() {
-        log('Native video element event: seeked');
+        logger.info('Native video element event: seeked');
         eventBus.trigger(Events.PLAYBACK_SEEKED);
     }
 
@@ -459,20 +460,20 @@ function PlaybackController() {
 
     function onPlaybackRateChanged() {
         const rate = getPlaybackRate();
-        log('Native video element event: ratechange: ', rate);
+        logger.info('Native video element event: ratechange: ', rate);
         eventBus.trigger(Events.PLAYBACK_RATE_CHANGED, {
             playbackRate: rate
         });
     }
 
     function onPlaybackMetaDataLoaded() {
-        log('Native video element event: loadedmetadata');
+        logger.info('Native video element event: loadedmetadata');
         eventBus.trigger(Events.PLAYBACK_METADATA_LOADED);
         startUpdatingWallclockTime();
     }
 
     function onPlaybackEnded() {
-        log('Native video element event: ended');
+        logger.info('Native video element event: ended');
         pause();
         stopUpdatingWallclockTime();
         eventBus.trigger(Events.PLAYBACK_ENDED);

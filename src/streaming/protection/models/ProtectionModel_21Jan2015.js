@@ -50,9 +50,10 @@ function ProtectionModel_21Jan2015(config) {
     const context = this.context;
     const eventBus = config.eventBus;//Need to pass in here so we can use same instance since this is optional module
     const events = config.events;
-    const log = config.log;
+    const debug = config.debug;
 
     let instance,
+        logger,
         keySystem,
         videoElement,
         mediaKeys,
@@ -61,6 +62,7 @@ function ProtectionModel_21Jan2015(config) {
         protectionKeyController;
 
     function setup() {
+        logger = debug.getLogger(instance);
         keySystem = null;
         videoElement = null;
         mediaKeys = null;
@@ -171,7 +173,7 @@ function ProtectionModel_21Jan2015(config) {
             throw new Error('Can not set server certificate until you have selected a key system');
         }
         mediaKeys.setServerCertificate(serverCertificate).then(function () {
-            log('DRM: License server certificate successfully updated.');
+            logger.info('DRM: License server certificate successfully updated.');
             eventBus.trigger(events.SERVER_CERTIFICATE_UPDATED);
         }).catch(function (error) {
             eventBus.trigger(events.SERVER_CERTIFICATE_UPDATED, {error: 'Error updating server certificate -- ' + error.name});
@@ -191,7 +193,7 @@ function ProtectionModel_21Jan2015(config) {
         // keyids type is used for clearkey when keys are provided directly in the protection data and then request to a license server is not needed
         const dataType = ks.systemString === ProtectionConstants.CLEARKEY_KEYSTEM_STRING && protData && protData.clearkeys ? 'keyids' : 'cenc';
         session.generateRequest(dataType, initData).then(function () {
-            log('DRM: Session created.  SessionID = ' + sessionToken.getSessionID());
+            logger.debug('DRM: Session created.  SessionID = ' + sessionToken.getSessionID());
             eventBus.trigger(events.KEY_SESSION_CREATED, {data: sessionToken});
         }).catch(function (error) {
             // TODO: Better error string
@@ -220,7 +222,7 @@ function ProtectionModel_21Jan2015(config) {
         // Check if session Id is not already loaded or loading
         for (let i = 0; i < sessions.length; i++) {
             if (sessionID === sessions[i].sessionId) {
-                log('DRM: Ignoring session ID because we have already seen it!');
+                logger.warn('DRM: Ignoring session ID because we have already seen it!');
                 return;
             }
         }
@@ -231,7 +233,7 @@ function ProtectionModel_21Jan2015(config) {
         // Load persisted session data into our newly created session object
         session.load(sessionID).then(function (success) {
             if (success) {
-                log('DRM: Session loaded.  SessionID = ' + sessionToken.getSessionID());
+                logger.debug('DRM: Session loaded.  SessionID = ' + sessionToken.getSessionID());
                 eventBus.trigger(events.KEY_SESSION_CREATED, {data: sessionToken});
             } else {
                 removeSession(sessionToken);
@@ -247,7 +249,7 @@ function ProtectionModel_21Jan2015(config) {
         const session = sessionToken.session;
 
         session.remove().then(function () {
-            log('DRM: Session removed.  SessionID = ' + sessionToken.getSessionID());
+            logger.debug('DRM: Session removed.  SessionID = ' + sessionToken.getSessionID());
             eventBus.trigger(events.KEY_SESSION_REMOVED, {data: sessionToken.getSessionID()});
         }, function (error) {
             eventBus.trigger(events.KEY_SESSION_REMOVED, {data: null, error: 'Error removing session (' + sessionToken.getSessionID() + '). ' + error.name});
@@ -408,7 +410,7 @@ function ProtectionModel_21Jan2015(config) {
         // Register callback for session closed Promise
         session.closed.then(function () {
             removeSession(token);
-            log('DRM: Session closed.  SessionID = ' + token.getSessionID());
+            logger.debug('DRM: Session closed.  SessionID = ' + token.getSessionID());
             eventBus.trigger(events.KEY_SESSION_CLOSED, {data: token.getSessionID()});
         });
 

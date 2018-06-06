@@ -39,9 +39,9 @@ function TextTracks() {
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
-    const log = Debug(context).getInstance().log;
 
     let instance,
+        logger,
         Cue,
         videoModel,
         textTrackQueue,
@@ -58,6 +58,10 @@ function TextTracks() {
         displayCCOnTop,
         previousISDState,
         topZIndex;
+
+    function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
+    }
 
     function initialize() {
         if (typeof window === 'undefined' || typeof navigator === 'undefined') {
@@ -121,7 +125,7 @@ function TextTracks() {
 
     function addTextTrack(textTrackInfoVO, totalTextTracks) {
         if (textTrackQueue.length === totalTextTracks) {
-            log('Trying to add too many tracks.');
+            logger.error('Trying to add too many tracks.');
             return;
         }
 
@@ -372,7 +376,7 @@ function TextTracks() {
                 return null;
             }
         }, captionContainer.clientHeight, captionContainer.clientWidth, false/*displayForcedOnlyMode*/, function (err) {
-            log('[TextTracks][renderCaption]', err);
+            logger.info('renderCaption :', err);
             //TODO add ErrorHandler management
         }, previousISDState, true /*enableRollUp*/);
         finalCue.id = cue.cueID;
@@ -423,7 +427,7 @@ function TextTracks() {
                     if (track.mode === Constants.TEXT_SHOWING) {
                         if (this.isd) {
                             renderCaption(this);
-                            log('Cue enter id:' + this.cueID);
+                            logger.debug('Cue enter id:' + this.cueID);
                         } else {
                             captionContainer.appendChild(this.cueHTMLElement);
                             scaleCue.call(self, this);
@@ -435,7 +439,7 @@ function TextTracks() {
                     const divs = captionContainer.childNodes;
                     for (let i = 0; i < divs.length; ++i) {
                         if (divs[i].id === this.cueID) {
-                            log('Cue exit id:' + divs[i].id);
+                            logger.debug('Cue exit id:' + divs[i].id);
                             captionContainer.removeChild(divs[i]);
                         }
                     }
@@ -644,6 +648,8 @@ function TextTracks() {
         deleteTextTrack: deleteTextTrack,
         setConfig: setConfig
     };
+
+    setup();
 
     return instance;
 }

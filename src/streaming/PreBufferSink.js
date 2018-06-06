@@ -40,11 +40,16 @@ import FactoryMaker from '../core/FactoryMaker';
  */
 function PreBufferSink(onAppendedCallback) {
     const context = this.context;
-    const log = Debug(context).getInstance().log;
 
+    let instance,
+        logger;
     let chunks = [];
     let outstandingInit;
     let onAppended = onAppendedCallback;
+
+    function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
+    }
 
     function reset() {
         chunks = [];
@@ -61,7 +66,7 @@ function PreBufferSink(onAppendedCallback) {
             outstandingInit = chunk;
         }
 
-        log('PreBufferSink appended chunk s: ' + chunk.start + '; e: ' + chunk.end);
+        logger.debug('PreBufferSink appended chunk s: ' + chunk.start + '; e: ' + chunk.end);
         if (onAppended) {
             onAppended({
                 chunk: chunk
@@ -133,7 +138,7 @@ function PreBufferSink(onAppendedCallback) {
         return chunks.filter( a => ((isNaN(end) || a.start < end) && (isNaN(start) || a.end > start)) );
     }
 
-    const instance = {
+    instance = {
         getAllBufferRanges: getAllBufferRanges,
         append: append,
         remove: remove,
@@ -141,6 +146,8 @@ function PreBufferSink(onAppendedCallback) {
         discharge: discharge,
         reset: reset
     };
+
+    setup();
 
     return instance;
 }

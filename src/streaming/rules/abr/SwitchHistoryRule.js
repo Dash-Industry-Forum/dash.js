@@ -6,7 +6,9 @@ import SwitchRequest from '../SwitchRequest';
 function SwitchHistoryRule() {
 
     const context = this.context;
-    const log = Debug(context).getInstance().log;
+
+    let instance,
+        logger;
 
     //MAX_SWITCH is the number of drops made. It doesn't consider the size of the drop.
     const MAX_SWITCH = 0.075;
@@ -15,6 +17,9 @@ function SwitchHistoryRule() {
     //must be < SwitchRequestHistory SWITCH_REQUEST_HISTORY_DEPTH to enable rule
     const SAMPLE_SIZE = 6;
 
+    function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
+    }
 
     function getMaxIndex(rulesContext) {
         const switchRequestHistory = rulesContext ? rulesContext.getSwitchHistory() : null;
@@ -33,7 +38,7 @@ function SwitchHistoryRule() {
                 if (drops + noDrops >= SAMPLE_SIZE && (drops / noDrops > MAX_SWITCH)) {
                     switchRequest.quality = (i > 0 && switchRequests[i].drops > 0) ? i - 1 : i;
                     switchRequest.reason = {index: switchRequest.quality, drops: drops, noDrops: noDrops, dropSize: dropSize};
-                    log('Switch history rule index: ' + switchRequest.quality + ' samples: ' + (drops + noDrops) + ' drops: ' + drops);
+                    logger.info('Switch history rule index: ' + switchRequest.quality + ' samples: ' + (drops + noDrops) + ' drops: ' + drops);
                     break;
                 }
             }
@@ -42,9 +47,13 @@ function SwitchHistoryRule() {
         return switchRequest;
     }
 
-    return {
+    instance = {
         getMaxIndex: getMaxIndex
     };
+
+    setup();
+
+    return instance;
 }
 
 
