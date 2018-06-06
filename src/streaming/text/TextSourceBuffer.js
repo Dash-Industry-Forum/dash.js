@@ -301,7 +301,7 @@ function TextSourceBuffer() {
 
             textTrackInfo.captionData = captionData;
             textTrackInfo.lang = mediaInfo.lang;
-            textTrackInfo.label = mediaInfo.id; // AdaptationSet id (an unsigned int)
+            textTrackInfo.label = mediaInfo.id ? mediaInfo.id : mediaInfo.index; // AdaptationSet id (an unsigned int) as it's optionnal parameter, use mediaInfo.index
             textTrackInfo.index = mediaInfo.index; // AdaptationSet index in manifest
             textTrackInfo.isTTML = checkTTML();
             textTrackInfo.defaultTrack = getIsDefault(mediaInfo);

@@ -264,7 +264,7 @@ function TextController() {
 
                 if (streamProcessor && mediaInfosArr) {
                     for (let i = 0; i < mediaInfosArr.length; i++) {
-                        if (mediaInfosArr[i].lang === currentTrackInfo.lang) {
+                        if (mediaInfosArr[i].index === currentTrackInfo.index && mediaInfosArr[i].lang === currentTrackInfo.lang) {
                             streamProcessor.selectMediaInfo(mediaInfosArr[i]);
                             break;
                         }
