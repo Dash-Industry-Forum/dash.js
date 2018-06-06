@@ -390,10 +390,13 @@ describe('DashManifestModel', function () {
             'maxSegmentDuration': 4.5,
             'mediaPresentationDuration': 300.0
         };
+
         const periodsArray = dashManifestModel.getRegularPeriods(manifest);
 
         expect(periodsArray).to.be.instanceOf(Array);    // jshint ignore:line
         expect(periodsArray).to.have.lengthOf(1);        // jshint ignore:line
+        expect(periodsArray[0].start).to.equals(0);
+        expect(periodsArray[0].duration).to.equals(300);
     });
 
     it('should calculate period start and duration properties of periods when duration properties are provided for all but the latest', () => {

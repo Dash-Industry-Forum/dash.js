@@ -563,7 +563,7 @@ function MediaPlayer() {
                 const buffer = getDashMetrics().getCurrentBufferLevel(getMetricsFor(type));
                 return buffer ? buffer : NaN;
             } else {
-                logger.warn('Warning  - getBufferLength requested for invalid type');
+                logger.warn('getBufferLength requested for invalid type');
                 return NaN;
             }
         }
@@ -1239,7 +1239,7 @@ function MediaPlayer() {
         if (value === Constants.ABR_STRATEGY_DYNAMIC || value === Constants.ABR_STRATEGY_BOLA || value === Constants.ABR_STRATEGY_THROUGHPUT) {
             mediaPlayerModel.setABRStrategy(value);
         } else {
-            logger.warn('Warning: Ignoring setABRStrategy(' + value + ') - unknown value.');
+            logger.warn('Ignoring setABRStrategy(' + value + ') - unknown value.');
         }
     }
 

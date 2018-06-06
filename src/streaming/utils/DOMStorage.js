@@ -76,7 +76,7 @@ function DOMStorage(config) {
                 storage = window[type];
             }
         } catch (error) {
-            logger.warn('Warning: DOMStorage access denied: ' + error.message);
+            logger.warn('DOMStorage access denied: ' + error.message);
             return supported;
         }
 
@@ -94,7 +94,7 @@ function DOMStorage(config) {
             storage.removeItem(testKey);
             supported = true;
         } catch (error) {
-            logger.warn('Warning: DOMStorage is supported, but cannot be used: ' + error.message);
+            logger.warn('DOMStorage is supported, but cannot be used: ' + error.message);
         }
 
         return supported;

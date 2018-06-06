@@ -85,7 +85,7 @@ function TTMLParser() {
             onOpenTag: function (ns, name, attrs) {
                 if (name === 'image' && ns === 'http://www.smpte-ra.org/schemas/2052-1/2010/smpte-tt') {
                     if (!attrs[' imagetype'] || attrs[' imagetype'].value !== 'PNG') {
-                        logger.warn('Warning: smpte-tt imagetype != PNG. Discarded');
+                        logger.warn('smpte-tt imagetype != PNG. Discarded');
                         return;
                     }
                     currentImageId = attrs['http://www.w3.org/XML/1998/namespace id'].value;

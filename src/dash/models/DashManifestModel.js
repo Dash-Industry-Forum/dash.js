@@ -46,21 +46,27 @@ import Debug from '../../core/Debug';
 function DashManifestModel(config) {
 
     config = config || {};
-    let instance;
-    const context = this.context;
-    const log = Debug(context).getInstance().log;
 
+    let instance,
+        logger;
+
+    const context = this.context;
     const urlUtils = URLUtils(context).getInstance();
     const mediaController = config.mediaController;
     const timelineConverter = config.timelineConverter;
     const adapter = config.adapter;
 
     const PROFILE_DVB = 'urn:dvb:dash:profile:dvb-dash:2014';
+
     const isInteger = Number.isInteger || function (value) {
         return typeof value === 'number' &&
             isFinite(value) &&
             Math.floor(value) === value;
     };
+
+    function setup () {
+        logger = Debug(context).getInstance().getLogger(instance);
+    }
 
     function getIsTypeOf(adaptation, type) {
 
@@ -653,7 +659,7 @@ function DashManifestModel(config) {
                 if (voPeriod !== null) {
                     voPreviousPeriod.duration = parseFloat((voPeriod.start - voPreviousPeriod.start).toFixed(5));
                 } else {
-                    log('Warning - First period duration could not be calculated because lack of start and duration period properties. This will cause timing issues during playback');
+                    logger.warn('First period duration could not be calculated because lack of start and duration period properties. This will cause timing issues during playback');
                 }
             }
 
@@ -1049,6 +1055,8 @@ function DashManifestModel(config) {
         getLocation: getLocation,
         getUseCalculatedLiveEdgeTimeForAdaptation: getUseCalculatedLiveEdgeTimeForAdaptation
     };
+
+    setup();
 
     return instance;
 }
