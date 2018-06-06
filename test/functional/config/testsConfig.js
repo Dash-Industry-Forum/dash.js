@@ -10,7 +10,7 @@ define(function (require) {
 
     var _createInstance = function () {
         return {
-            asyncTimeout: 10,
+            asyncTimeout: 30,
 
             tests: {
                 default: {

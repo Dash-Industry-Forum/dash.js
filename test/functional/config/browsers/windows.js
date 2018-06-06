@@ -9,7 +9,10 @@ define(function () {
 
     var IE11_CONFIG = {
         browserName: 'internet explorer',
-        platform: 'WINDOWS'
+        platform: 'WINDOWS',
+        os: 'WINDOWS',
+        os_version: '10',
+        version: '11'
     };
 
     var EDGE_CONFIG = {
