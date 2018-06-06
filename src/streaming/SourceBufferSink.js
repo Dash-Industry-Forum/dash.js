@@ -105,6 +105,14 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback) {
         }
     }
 
+    function updateTimestampOffset(MSETimeOffset) {
+        if (buffer.timestampOffset !== MSETimeOffset && !isNaN(MSETimeOffset)) {
+            waitForUpdateEnd(buffer, () => {
+                buffer.timestampOffset = MSETimeOffset;
+            });
+        }
+    }
+
     function remove(start, end, forceRemoval) {
         const sourceBufferSink = this;
         // make sure that the given time range is correct. Otherwise we will get InvalidAccessError
@@ -271,7 +279,8 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback) {
         append: append,
         remove: remove,
         abort: abort,
-        reset: reset
+        reset: reset,
+        updateTimestampOffset: updateTimestampOffset
     };
 
     setup();
