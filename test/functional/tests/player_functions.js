@@ -4,6 +4,8 @@ define([], function () {
 
         loadStream: function (stream) {
             player.attachSource(stream.url);
+            // browser stack hardware is limited, use low resolution
+            player.setMaxAllowedBitrateFor('video', 1000);
         },
 
         getDuration: function () {
