@@ -40,7 +40,7 @@ describe('KeySystemW3CClearKey', function () {
     it('should warn when using this system', function () {
         keySystem = KeySystemW3CClearKey(context).getInstance(config);
         keySystem.getClearKeysFromProtectionData(protData, message);
-        expect(debug.warn).to.have.been.called.with('Warning: ClearKey schemeIdURI is using W3C Common PSSH systemID (1077efec-c0b2-4d02-ace3-3c1e52e2fb4b) in Content Protection. See DASH-IF IOP v4.1 section 7.6.2.4');
+        expect(debug.warn).to.have.been.called.with('ClearKey schemeIdURI is using W3C Common PSSH systemID (1077efec-c0b2-4d02-ace3-3c1e52e2fb4b) in Content Protection. See DASH-IF IOP v4.1 section 7.6.2.4');
     });
 
     it('returns clearkey pair', function () {

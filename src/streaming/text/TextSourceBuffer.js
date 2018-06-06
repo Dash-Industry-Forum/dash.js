@@ -206,7 +206,7 @@ function TextSourceBuffer() {
             }
             embeddedTracks.push(mediaInfo);
         } else {
-            logger.warn('Warning: Embedded track ' + mediaInfo.id + ' not supported!');
+            logger.warn('Embedded track ' + mediaInfo.id + ' not supported!');
         }
     }
 
