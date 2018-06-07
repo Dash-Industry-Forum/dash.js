@@ -9,7 +9,7 @@ class PlaybackControllerMock {
         this.playing = false;
         this.seeking = false;
         this.isDynamic = false;
-        this.catchUpPlaybackRate = 1.05;
+        this.catchUpPlaybackRate = 0.05;
     }
 
     initialize() {}

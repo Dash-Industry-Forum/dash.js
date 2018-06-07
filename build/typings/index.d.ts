@@ -123,7 +123,7 @@ declare namespace dashjs {
         isMuted(): boolean;
         setVolume(value: number): void;
         getVolume(): number;
-        time(streamId: string | undefined): number;
+        time(streamId?: string): number;
         duration(): number;
         timeAsUTC(): number;
         durationAsUTC(): number;

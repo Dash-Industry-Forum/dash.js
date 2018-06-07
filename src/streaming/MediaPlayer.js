@@ -484,13 +484,22 @@ function MediaPlayer() {
     }
 
     /**
-     * Use this method to set the playback rate that will be used when catching up with live stream. Set 1 to disable the feature.
-     * @param {number} value
+     * Use this method to set the catch up rate, as a percentage, for low latency live streams. In low latency mode,
+     * when measured latency is higher than the target one ({@link module:MediaPlayer#setLiveDelay setLiveDelay()}),
+     * dash.js increases playback rate the percentage defined with this method until target is reached.
+     *
+     * Valid values for catch up rate are in range 0-20%. Set it to 0% to turn off live catch up feature.
+     *
+     * Note: Catch-up mechanism is only applied when playing low latency live streams.
+     *
+     * @param {number} value Percentage in which playback rate is increased when live catch up mechanism is activated.
      * @memberof module:MediaPlayer
+     * @see {@link module:MediaPlayer#setLiveDelay setLiveDelay()}
+     * @default {number} 0.05
      * @instance
      */
     function setCatchUpPlaybackRate(value) {
-        if (isNaN(value) || value < 1 || value > 1.20) {
+        if (isNaN(value) || value < 0.0 || value > 0.20) {
             throw PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR;
         }
         playbackController.setCatchUpPlaybackRate(value);
@@ -499,6 +508,7 @@ function MediaPlayer() {
     /**
      * Returns the current catchup playback rate.
      * @returns {number}
+     * @see {@link module:MediaPlayer#setCatchUpPlaybackRate setCatchUpPlaybackRate()}
      * @memberof module:MediaPlayer
      * @instance
      */

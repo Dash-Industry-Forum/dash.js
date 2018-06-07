@@ -37,8 +37,11 @@ import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 
 const LIVE_UPDATE_PLAYBACK_TIME_INTERVAL_MS = 500;
-const DEFAULT_CATCHUP_PLAYBACK_RATE = 1.05;
-const LIVE_CATCHUP_THRESHOLD = 0.5;
+const DEFAULT_CATCHUP_PLAYBACK_RATE = 0.05;
+
+// Start catching up mechanism for low latency live streaming
+// when latency goes beyong targetDelay * (1 + LIVE_CATCHUP_START_THRESHOLD)
+const LIVE_CATCHUP_START_THRESHOLD = 0.35;
 
 function PlaybackController() {
 
@@ -85,8 +88,6 @@ function PlaybackController() {
         eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
         eventBus.on(Events.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, this);
-        eventBus.on(Events.PLAYBACK_CATCHUP_END, onPlaybackCatchUpEnd, this);
-        eventBus.on(Events.PLAYBACK_CATCHUP_START, onPlaybackCatchUpStart, this);
         eventBus.on(Events.PLAYBACK_PROGRESS, onPlaybackProgression, this);
         eventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
 
@@ -173,6 +174,11 @@ function PlaybackController() {
 
     function setCatchUpPlaybackRate(value) {
         catchUpPlaybackRate = value;
+
+        // If value == 0.0, deactivate catchup mechanism
+        if (value === 0.0 && getPlaybackRate() > 1.0) {
+            stopPlaybackCatchUp();
+        }
     }
 
     function getCatchUpPlaybackRate() {
@@ -238,18 +244,33 @@ function PlaybackController() {
         return ((Math.round(new Date().getTime() - (currentTime * 1000 + availabilityStartTime))) / 1000).toFixed(3);
     }
 
-    function onPlaybackCatchUpStart() {
+    function startPlaybackCatchUp() {
         if (videoModel) {
-            logger.info('onPlaybackCatchUpStart setting playback rate to', getCatchUpPlaybackRate());
-            originalPlaybackRate = originalPlaybackRate || getPlaybackRate();
-            videoModel.getElement().playbackRate = getCatchUpPlaybackRate();
+            const playbackRate = 1 + getCatchUpPlaybackRate();
+            const currentRate = getPlaybackRate();
+            if (playbackRate !== currentRate) {
+                catchingUp = true;
+
+                logger.info('Starting live catchup mechanism. Setting playback rate to', playbackRate);
+                originalPlaybackRate = currentRate;
+                videoModel.getElement().playbackRate = playbackRate;
+
+                eventBus.trigger(Events.PLAYBACK_CATCHUP_START, { sender: instance });
+            }
         }
     }
 
-    function onPlaybackCatchUpEnd() {
+    function stopPlaybackCatchUp() {
         if (videoModel) {
-            logger.info('onPlaybackCatchUpEnd setting playback rate to', originalPlaybackRate || 1);
-            videoModel.getElement().playbackRate = originalPlaybackRate || 1;
+            const playbackRate = originalPlaybackRate || 1;
+            if (playbackRate !== getPlaybackRate()) {
+                catchingUp = false;
+
+                logger.info('Stopping live catchup mechanism. Setting playback rate to', playbackRate);
+                videoModel.getElement().playbackRate = playbackRate;
+
+                eventBus.trigger(Events.PLAYBACK_CATCHUP_END, { sender: instance });
+            }
         }
     }
 
@@ -267,8 +288,6 @@ function PlaybackController() {
             eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
             eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
             eventBus.off(Events.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, this);
-            eventBus.off(Events.PLAYBACK_CATCHUP_END, onPlaybackCatchUpEnd, this);
-            eventBus.off(Events.PLAYBACK_CATCHUP_START, onPlaybackCatchUpStart, this);
             eventBus.off(Events.PLAYBACK_PROGRESS, onPlaybackProgression, this);
             eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
             stopUpdatingWallclockTime();
@@ -549,28 +568,21 @@ function PlaybackController() {
     }
 
     function onPlaybackProgression() {
-        if (needToCatchUp() && !catchingUp) {
-            catchingUp = true;
-            eventBus.trigger(Events.PLAYBACK_CATCHUP_START, { sender: instance });
-        } else if (stopCatchingUp()) {
-            catchingUp = false;
-            eventBus.trigger(Events.PLAYBACK_CATCHUP_END, { sender: instance });
+        if (isDynamic && mediaPlayerModel.getLowLatencyEnabled() && getCatchUpPlaybackRate() > 0.0) {
+            if (!catchingUp && needToCatchUp()) {
+                startPlaybackCatchUp();
+            } else if (stopCatchingUp()) {
+                stopPlaybackCatchUp();
+            }
         }
     }
 
     function needToCatchUp() {
-        if (getIsDynamic() && getCatchUpPlaybackRate() !== 1) {
-            return getCurrentLiveLatency() > (mediaPlayerModel.getLiveDelay() * (1 + LIVE_CATCHUP_THRESHOLD));
-        }
-        return false;
+        return getCurrentLiveLatency() > (mediaPlayerModel.getLiveDelay() * (1 + LIVE_CATCHUP_START_THRESHOLD));
     }
 
     function stopCatchingUp() {
-        if (catchingUp && getIsDynamic()) {
-            return getCurrentLiveLatency() <= (mediaPlayerModel.getLiveDelay() + LIVE_CATCHUP_THRESHOLD );
-        }
-
-        return false;
+        return getCurrentLiveLatency() <= (mediaPlayerModel.getLiveDelay() );
     }
 
     function onBytesAppended(e) {

@@ -333,15 +333,15 @@ describe('MediaPlayer', function () {
 
             it('Method setCatchUpPlaybackRate should change catchUpPlaybackRate', function () {
                 let rate = player.getCatchUpPlaybackRate();
-                expect(rate).to.equal(1.05);
+                expect(rate).to.equal(0.05);
 
-                player.setCatchUpPlaybackRate(1.2);
+                player.setCatchUpPlaybackRate(0.2);
                 rate = player.getCatchUpPlaybackRate();
-                expect(rate).to.equal(1.2);
+                expect(rate).to.equal(0.2);
 
-                player.setCatchUpPlaybackRate(1);
+                player.setCatchUpPlaybackRate(0.0);
                 rate = player.getCatchUpPlaybackRate();
-                expect(rate).to.equal(1);
+                expect(rate).to.equal(0.0);
             });
 
             it('Method setCatchUpPlaybackRate should throw an exception if given bad values', function () {
