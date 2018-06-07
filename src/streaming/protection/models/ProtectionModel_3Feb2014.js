@@ -85,7 +85,7 @@ function ProtectionModel_3Feb2014(config) {
             }
             eventBus.trigger(events.TEARDOWN_COMPLETE);
         } catch (error) {
-            eventBus.trigger(events.TEARDOWN_COMPLETE, {error: 'Error tearing down key sessions and MediaKeys! -- ' + error.message});
+            eventBus.trigger(events.TEARDOWN_COMPLETE, { error: 'Error tearing down key sessions and MediaKeys! -- ' + error.message });
         }
     }
 
@@ -150,12 +150,12 @@ function ProtectionModel_3Feb2014(config) {
                 found = true;
                 const ksConfig = new KeySystemConfiguration(supportedAudio, supportedVideo);
                 const ks = protectionKeyController.getKeySystemBySystemString(systemString);
-                eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {data: new KeySystemAccess(ks, ksConfig)});
+                eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { data: new KeySystemAccess(ks, ksConfig) });
                 break;
             }
         }
         if (!found) {
-            eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {error: 'Key system access denied! -- No valid audio/video content configurations detected!'});
+            eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { error: 'Key system access denied! -- No valid audio/video content configurations detected!' });
         }
     }
 
@@ -169,7 +169,7 @@ function ProtectionModel_3Feb2014(config) {
             }
             eventBus.trigger(events.INTERNAL_KEY_SYSTEM_SELECTED);
         } catch (error) {
-            eventBus.trigger(events.INTERNAL_KEY_SYSTEM_SELECTED, {error: 'Error selecting keys system (' + keySystem.systemString + ')! Could not create MediaKeys -- TODO'});
+            eventBus.trigger(events.INTERNAL_KEY_SYSTEM_SELECTED, { error: 'Error selecting keys system (' + keySystem.systemString + ')! Could not create MediaKeys -- TODO' });
         }
     }
 
@@ -204,14 +204,17 @@ function ProtectionModel_3Feb2014(config) {
         // If player is trying to playback Audio only stream - don't error out.
         let capabilities = null;
 
-        if (keySystemAccess.ksConfiguration.videoCapabilities !== null && keySystemAccess.ksConfiguration.videoCapabilities.length > 0)
-          capabilities = keySystemAccess.ksConfiguration.videoCapabilities[0];
+        if (keySystemAccess.ksConfiguration.videoCapabilities && keySystemAccess.ksConfiguration.videoCapabilities.length > 0) {
+            capabilities = keySystemAccess.ksConfiguration.videoCapabilities[0];
+        }
 
-        if (capabilities === null && keySystemAccess.ksConfiguration.audioCapabilities !== null && keySystemAccess.ksConfiguration.audioCapabilities.length > 0)
-          capabilities = keySystemAccess.ksConfiguration.audioCapabilities[0];
+        if (capabilities === null && keySystemAccess.ksConfiguration.audioCapabilities && keySystemAccess.ksConfiguration.audioCapabilities.length > 0) {
+            capabilities = keySystemAccess.ksConfiguration.audioCapabilities[0];
+        }
 
-        if (capabilities === null)
-          throw new Error('Can not create sessions for unknown content types.');
+        if (capabilities === null) {
+            throw new Error('Can not create sessions for unknown content types.');
+        }
 
         const contentType = capabilities.contentType;
         const session = mediaKeys.createSession(contentType, new Uint8Array(initData), cdmData ? new Uint8Array(cdmData) : null);
@@ -226,7 +229,7 @@ function ProtectionModel_3Feb2014(config) {
         // Add to our session list
         sessions.push(sessionToken);
         logger.debug('DRM: Session created.  SessionID = ' + sessionToken.getSessionID());
-        eventBus.trigger(events.KEY_SESSION_CREATED, {data: sessionToken});
+        eventBus.trigger(events.KEY_SESSION_CREATED, { data: sessionToken });
     }
 
     function updateKeySession(sessionToken, message) {
@@ -259,7 +262,7 @@ function ProtectionModel_3Feb2014(config) {
         // Remove from our session list
         for (let i = 0; i < sessions.length; i++) {
             if (sessions[i] === sessionToken) {
-                sessions.splice(i,1);
+                sessions.splice(i, 1);
                 break;
             }
         }
@@ -281,7 +284,7 @@ function ProtectionModel_3Feb2014(config) {
                     case api.needkey:
                         if (event.initData) {
                             const initData = ArrayBuffer.isView(event.initData) ? event.initData.buffer : event.initData;
-                            eventBus.trigger(events.NEED_KEY, {key: new NeedKey(initData, 'cenc')});
+                            eventBus.trigger(events.NEED_KEY, { key: new NeedKey(initData, 'cenc') });
                         }
                         break;
                 }
