@@ -74,7 +74,7 @@
           "name": "Low Latency (Single-Rate)",
           "bufferConfig" : {
             "lowLatencyMode": true,
-            "liveDelay": 3
+            "liveDelay": 3.5
           }
         },
         {
@@ -82,7 +82,7 @@
           "name": "Low Latency (Multi-Rate)",
           "bufferConfig" : {
             "lowLatencyMode": true,
-            "liveDelay": 3
+            "liveDelay": 3.5
           }
         },
         {

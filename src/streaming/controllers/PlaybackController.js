@@ -37,6 +37,11 @@ import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 
 const LIVE_UPDATE_PLAYBACK_TIME_INTERVAL_MS = 500;
+const DEFAULT_CATCHUP_PLAYBACK_RATE = 0.05;
+
+// Start catching up mechanism for low latency live streaming
+// when latency goes beyong targetDelay * (1 + LIVE_CATCHUP_START_THRESHOLD)
+const LIVE_CATCHUP_START_THRESHOLD = 0.35;
 
 function PlaybackController() {
 
@@ -63,7 +68,11 @@ function PlaybackController() {
         mediaPlayerModel,
         playOnceInitialized,
         lastLivePlaybackTime,
+        originalPlaybackRate,
+        catchingUp,
         availabilityStartTime;
+
+    let catchUpPlaybackRate = DEFAULT_CATCHUP_PLAYBACK_RATE;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -79,6 +88,8 @@ function PlaybackController() {
         eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
         eventBus.on(Events.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, this);
+        eventBus.on(Events.PLAYBACK_PROGRESS, onPlaybackProgression, this);
+        eventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
 
         if (playOnceInitialized) {
             playOnceInitialized = false;
@@ -161,6 +172,19 @@ function PlaybackController() {
         return liveStartTime;
     }
 
+    function setCatchUpPlaybackRate(value) {
+        catchUpPlaybackRate = value;
+
+        // If value == 0.0, deactivate catchup mechanism
+        if (value === 0.0 && getPlaybackRate() > 1.0) {
+            stopPlaybackCatchUp();
+        }
+    }
+
+    function getCatchUpPlaybackRate() {
+        return catchUpPlaybackRate;
+    }
+
     /**
      * Computes the desirable delay for the live edge to avoid a risk of getting 404 when playing at the bleeding edge
      * @param {number} fragmentDuration - seconds?
@@ -220,6 +244,36 @@ function PlaybackController() {
         return ((Math.round(new Date().getTime() - (currentTime * 1000 + availabilityStartTime))) / 1000).toFixed(3);
     }
 
+    function startPlaybackCatchUp() {
+        if (videoModel) {
+            const playbackRate = 1 + getCatchUpPlaybackRate();
+            const currentRate = getPlaybackRate();
+            if (playbackRate !== currentRate) {
+                catchingUp = true;
+
+                logger.info('Starting live catchup mechanism. Setting playback rate to', playbackRate);
+                originalPlaybackRate = currentRate;
+                videoModel.getElement().playbackRate = playbackRate;
+
+                eventBus.trigger(Events.PLAYBACK_CATCHUP_START, { sender: instance });
+            }
+        }
+    }
+
+    function stopPlaybackCatchUp() {
+        if (videoModel) {
+            const playbackRate = originalPlaybackRate || 1;
+            if (playbackRate !== getPlaybackRate()) {
+                catchingUp = false;
+
+                logger.info('Stopping live catchup mechanism. Setting playback rate to', playbackRate);
+                videoModel.getElement().playbackRate = playbackRate;
+
+                eventBus.trigger(Events.PLAYBACK_CATCHUP_END, { sender: instance });
+            }
+        }
+    }
+
     function reset() {
         currentTime = 0;
         liveStartTime = NaN;
@@ -227,12 +281,15 @@ function PlaybackController() {
         commonEarliestTime = {};
         liveDelay = 0;
         availabilityStartTime = 0;
+        catchUpPlaybackRate = DEFAULT_CATCHUP_PLAYBACK_RATE;
         bufferedRange = {};
         if (videoModel) {
             eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
             eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
             eventBus.off(Events.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, this);
+            eventBus.off(Events.PLAYBACK_PROGRESS, onPlaybackProgression, this);
+            eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
             stopUpdatingWallclockTime();
             removeAllListeners();
         }
@@ -510,6 +567,24 @@ function PlaybackController() {
         return false;
     }
 
+    function onPlaybackProgression() {
+        if (isDynamic && mediaPlayerModel.getLowLatencyEnabled() && getCatchUpPlaybackRate() > 0.0) {
+            if (!catchingUp && needToCatchUp()) {
+                startPlaybackCatchUp();
+            } else if (stopCatchingUp()) {
+                stopPlaybackCatchUp();
+            }
+        }
+    }
+
+    function needToCatchUp() {
+        return getCurrentLiveLatency() > (mediaPlayerModel.getLiveDelay() * (1 + LIVE_CATCHUP_START_THRESHOLD));
+    }
+
+    function stopCatchingUp() {
+        return getCurrentLiveLatency() <= (mediaPlayerModel.getLiveDelay() );
+    }
+
     function onBytesAppended(e) {
         let earliestTime,
             initialStartTime;
@@ -625,6 +700,7 @@ function PlaybackController() {
         getEnded: getEnded,
         getIsDynamic: getIsDynamic,
         getStreamController: getStreamController,
+        setCatchUpPlaybackRate: setCatchUpPlaybackRate,
         setLiveStartTime: setLiveStartTime,
         getLiveStartTime: getLiveStartTime,
         computeLiveDelay: computeLiveDelay,

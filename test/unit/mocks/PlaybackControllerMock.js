@@ -9,6 +9,7 @@ class PlaybackControllerMock {
         this.playing = false;
         this.seeking = false;
         this.isDynamic = false;
+        this.catchUpPlaybackRate = 0.05;
     }
 
     initialize() {}
@@ -96,6 +97,14 @@ class PlaybackControllerMock {
 
     getStreamStartTime() {
         return 0;
+    }
+
+    setCatchUpPlaybackRate(value) {
+        this.catchUpPlaybackRate = value;
+    }
+
+    getCatchUpPlaybackRate() {
+        return this.catchUpPlaybackRate;
     }
 }
 

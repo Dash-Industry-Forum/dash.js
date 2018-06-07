@@ -82,6 +82,7 @@ function MediaPlayer() {
     const SOURCE_NOT_ATTACHED_ERROR = 'You must first call attachSource() with a valid source before calling this method';
     const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
     const MEDIA_PLAYER_BAD_ARGUMENT_ERROR = 'MediaPlayer Invalid Arguments!';
+    const PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR = 'Playback catchup rate invalid argument! Use a number from 1 to 1.2';
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
@@ -480,6 +481,39 @@ function MediaPlayer() {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
         return getVideoElement().playbackRate;
+    }
+
+    /**
+     * Use this method to set the catch up rate, as a percentage, for low latency live streams. In low latency mode,
+     * when measured latency is higher than the target one ({@link module:MediaPlayer#setLiveDelay setLiveDelay()}),
+     * dash.js increases playback rate the percentage defined with this method until target is reached.
+     *
+     * Valid values for catch up rate are in range 0-20%. Set it to 0% to turn off live catch up feature.
+     *
+     * Note: Catch-up mechanism is only applied when playing low latency live streams.
+     *
+     * @param {number} value Percentage in which playback rate is increased when live catch up mechanism is activated.
+     * @memberof module:MediaPlayer
+     * @see {@link module:MediaPlayer#setLiveDelay setLiveDelay()}
+     * @default {number} 0.05
+     * @instance
+     */
+    function setCatchUpPlaybackRate(value) {
+        if (isNaN(value) || value < 0.0 || value > 0.20) {
+            throw PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR;
+        }
+        playbackController.setCatchUpPlaybackRate(value);
+    }
+
+    /**
+     * Returns the current catchup playback rate.
+     * @returns {number}
+     * @see {@link module:MediaPlayer#setCatchUpPlaybackRate setCatchUpPlaybackRate()}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getCatchUpPlaybackRate() {
+        return playbackController.getCatchUpPlaybackRate();
     }
 
     /**
@@ -2831,6 +2865,8 @@ function MediaPlayer() {
         seek: seek,
         setPlaybackRate: setPlaybackRate,
         getPlaybackRate: getPlaybackRate,
+        setCatchUpPlaybackRate: setCatchUpPlaybackRate,
+        getCatchUpPlaybackRate: getCatchUpPlaybackRate,
         setMute: setMute,
         isMuted: isMuted,
         setVolume: setVolume,
