@@ -214,6 +214,19 @@ class MediaPlayerEvents extends EventsBase {
          */
         this.CAN_PLAY = 'canPlay';
 
+
+        /**
+         * Sent live catch up stops and playback rate goes back to normal
+         * @event MediaPlayerEvents#PLAYBACK_CATCHUP_END
+         */
+        this.PLAYBACK_CATCHUP_END = 'playbackCatchupEnd';
+
+        /**
+         * Sent when playing live and buffer is too long, the player starts catching up by accelerating.
+         * @event MediaPlayerEvents#PLAYBACK_CATCHUP_START
+         */
+        this.PLAYBACK_CATCHUP_START = 'playbackCatchupStart';
+
         /**
          * Sent when playback completes.
          * @event MediaPlayerEvents#PLAYBACK_ENDED

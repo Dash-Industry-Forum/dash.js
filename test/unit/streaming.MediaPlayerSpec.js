@@ -247,7 +247,7 @@ describe('MediaPlayer', function () {
                 expect(playbackRate).to.equal(newPlaybackRate);
             });
 
-            it('Method setPlaybackRate should return video element playback rate', function () {
+            it('Method getPlaybackRate should return video element playback rate', function () {
                 const elementPlayBackRate = videoElementMock.playbackRate;
                 const playerPlayBackRate = player.getPlaybackRate();
                 expect(playerPlayBackRate).to.equal(elementPlayBackRate);
@@ -329,6 +329,25 @@ describe('MediaPlayer', function () {
                 videoElementMock.duration = 4;
                 duration = player.duration();
                 expect(duration).to.equal(4);
+            });
+
+            it('Method setCatchUpPlaybackRate should change catchUpPlaybackRate', function () {
+                let rate = player.getCatchUpPlaybackRate();
+                expect(rate).to.equal(1.05);
+
+                player.setCatchUpPlaybackRate(1.2);
+                rate = player.getCatchUpPlaybackRate();
+                expect(rate).to.equal(1.2);
+
+                player.setCatchUpPlaybackRate(1);
+                rate = player.getCatchUpPlaybackRate();
+                expect(rate).to.equal(1);
+            });
+
+            it('Method setCatchUpPlaybackRate should throw an exception if given bad values', function () {
+                expect(() => {player.setCatchUpPlaybackRate(0.9);}).to.throw(MediaPlayer.PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR);
+                expect(() => {player.setCatchUpPlaybackRate(13);}).to.throw(MediaPlayer.PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR);
+                expect(() => {player.setCatchUpPlaybackRate('string');}).to.throw(MediaPlayer.PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR);
             });
         });
     });

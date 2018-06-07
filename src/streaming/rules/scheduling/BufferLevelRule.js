@@ -69,7 +69,6 @@ function BufferLevelRule(config) {
                 bufferTarget = mediaPlayerModel.getStableBufferTime();
             }
         }
-
         return bufferTarget;
     }
 

@@ -82,6 +82,7 @@ function MediaPlayer() {
     const SOURCE_NOT_ATTACHED_ERROR = 'You must first call attachSource() with a valid source before calling this method';
     const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
     const MEDIA_PLAYER_BAD_ARGUMENT_ERROR = 'MediaPlayer Invalid Arguments!';
+    const PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR = 'Playback catchup rate invalid argument! Use a number from 1 to 1.2';
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
@@ -480,6 +481,29 @@ function MediaPlayer() {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
         return getVideoElement().playbackRate;
+    }
+
+    /**
+     * Use this method to set the playback rate that will be used when catching up with live stream. Set 1 to disable the feature.
+     * @param {number} value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setCatchUpPlaybackRate(value) {
+        if (isNaN(value) || value < 1 || value > 1.20) {
+            throw PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR;
+        }
+        playbackController.setCatchUpPlaybackRate(value);
+    }
+
+    /**
+     * Returns the current catchup playback rate.
+     * @returns {number}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getCatchUpPlaybackRate() {
+        return playbackController.getCatchUpPlaybackRate();
     }
 
     /**
@@ -2831,6 +2855,8 @@ function MediaPlayer() {
         seek: seek,
         setPlaybackRate: setPlaybackRate,
         getPlaybackRate: getPlaybackRate,
+        setCatchUpPlaybackRate: setCatchUpPlaybackRate,
+        getCatchUpPlaybackRate: getCatchUpPlaybackRate,
         setMute: setMute,
         isMuted: isMuted,
         setVolume: setVolume,
