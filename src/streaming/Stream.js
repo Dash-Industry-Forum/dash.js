@@ -499,7 +499,7 @@ function Stream(config) {
         if (streamProcessors.length === 0) {
             let msg = 'No streams to play.';
             errHandler.manifestError(msg, 'nostreams', manifestModel.getValue());
-            log(msg);
+            logger.debug(msg);
         } else {
             checkIfInitializationCompleted();
         }

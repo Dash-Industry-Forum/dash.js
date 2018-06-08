@@ -634,10 +634,8 @@ function PlaybackController() {
                     ranges = bufferedRange[streamInfo.id].video;
                 }
                 if (checkTimeInRanges(earliestTime, ranges)) {
-                    if (!isSeeking()) {
-                        if (!compatibleWithPreviousStream) {
-                            seek(earliestTime, true);
-                        }
+                    if (!isSeeking() && !compatibleWithPreviousStream) {
+                        seek(earliestTime, true);
                     }
                     commonEarliestTime[streamInfo.id].started = true;
                 }
@@ -646,7 +644,7 @@ function PlaybackController() {
             //current stream has only audio or only video content
             if (commonEarliestTime[streamInfo.id][type]) {
                 earliestTime = commonEarliestTime[streamInfo.id][type] > initialStartTime ? commonEarliestTime[streamInfo.id][type] : initialStartTime;
-                if (!isSeeking()) {
+                if (!isSeeking() && !compatibleWithPreviousStream) {
                     seek(earliestTime);
                 }
                 commonEarliestTime[streamInfo.id].started = true;

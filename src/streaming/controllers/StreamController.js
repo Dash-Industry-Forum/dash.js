@@ -292,7 +292,7 @@ function StreamController() {
                 logger.debug('[toggleEndPeriodTimer] start-up of timer to notify PLAYBACK_ENDED event. It will be triggered in ' + delayPlaybackEnded + ' milliseconds');
                 playbackEndedTimerId = setTimeout(function () {eventBus.trigger(Events.PLAYBACK_ENDED);}, delayPlaybackEnded);
                 const preloadDelay = delayPlaybackEnded < 2000 ? delayPlaybackEnded / 4 : delayPlaybackEnded - 2000;
-                log('[StreamController][toggleEndPeriodTimer] Going to fire preload in ' + preloadDelay);
+                logger.info('[StreamController][toggleEndPeriodTimer] Going to fire preload in ' + preloadDelay);
                 setTimeout(onStreamCanLoadNext,  preloadDelay);
             }
         }
@@ -319,7 +319,7 @@ function StreamController() {
             const newStream = getNextStream();
             compatible = activeStream.isCompatibleWithStream(newStream);
             if (compatible) {
-                log('[StreamController][onStreamCanLoadNext] Preloading next stream');
+                logger.info('[StreamController][onStreamCanLoadNext] Preloading next stream');
                 activeStream.stopEventController();
                 activeStream.deactivate(true);
                 newStream.preload(mediaSource, buffers);
