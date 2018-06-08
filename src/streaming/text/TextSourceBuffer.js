@@ -84,7 +84,7 @@ function TextSourceBuffer() {
         logger = Debug(context).getInstance().getLogger(instance);
     }
 
-    function initialize(type, streamProcessor) {
+    function initialize(mimeType, streamProcessor) {
         parser = null;
         fragmentModel = null;
         initializationSegmentReceived = false;
@@ -101,7 +101,7 @@ function TextSourceBuffer() {
             videoModel: videoModel
         });
         textTracks.initialize();
-        isFragmented = !dashManifestModel.getIsTextTrack(type);
+        isFragmented = !dashManifestModel.getIsTextTrack(mimeType);
         boxParser = BoxParser(context).getInstance();
         fragmentedTextBoxParser = FragmentedTextBoxParser(context).getInstance();
         fragmentedTextBoxParser.setConfig({
@@ -302,7 +302,7 @@ function TextSourceBuffer() {
 
             textTrackInfo.captionData = captionData;
             textTrackInfo.lang = mediaInfo.lang;
-            textTrackInfo.label = mediaInfo.id; // AdaptationSet id (an unsigned int)
+            textTrackInfo.label = mediaInfo.id ? mediaInfo.id : mediaInfo.index; // AdaptationSet id (an unsigned int) as it's optionnal parameter, use mediaInfo.index
             textTrackInfo.index = mediaInfo.index; // AdaptationSet index in manifest
             textTrackInfo.isTTML = checkTTML();
             textTrackInfo.defaultTrack = getIsDefault(mediaInfo);
@@ -407,7 +407,10 @@ function TextSourceBuffer() {
 
             try {
                 result = getParser(codecType).parse(ccContent, 0);
-                createTextTrackFromMediaInfo(result, mediaInfo);
+                for (i = 0; i < mediaInfos.length; i++) {
+                    createTextTrackFromMediaInfo(null, mediaInfos[i]);
+                }
+                textTracks.addCaptions(textTracks.getCurrentTrackIdx(), 0, result);
             } catch (e) {
                 errHandler.timedTextError(e, 'parse', ccContent);
             }

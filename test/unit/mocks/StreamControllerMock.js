@@ -46,6 +46,8 @@ class StreamControllerMock {
     setConfig() {}
 
     reset() {}
+
+    getActiveStreamProcessors() { return [];}
 }
 
 export default StreamControllerMock;
