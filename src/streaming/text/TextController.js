@@ -267,6 +267,7 @@ function TextController() {
     function reset() {
         resetInitialSettings();
         textSourceBuffer.resetEmbedded();
+        textSourceBuffer.reset();
     }
 
     instance = {
