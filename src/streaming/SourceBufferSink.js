@@ -79,7 +79,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback) {
     function reset() {
         if (buffer) {
             try {
-                if (!buffer.addEmbeddedTrack) {
+                if (!buffer.getClassName || buffer.getClassName() !== 'TextSourceBuffer') {
                     mediaSource.removeSourceBuffer(buffer);
                 }
             } catch (e) {
