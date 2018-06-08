@@ -269,6 +269,8 @@ declare namespace dashjs {
         METRIC_UPDATED: 'metricUpdated';
         PERIOD_SWITCH_COMPLETED: 'periodSwitchCompleted';
         PERIOD_SWITCH_STARTED: 'periodSwitchStarted';
+        PLAYBACK_CATCHUP_END: 'playbackCatchupEnd';
+        PLAYBACK_CATCHUP_START: 'playbackCatchupStart';
         PLAYBACK_ENDED: 'playbackEnded';
         PLAYBACK_ERROR: 'playbackError';
         PLAYBACK_METADATA_LOADED: 'playbackMetaDataLoaded';

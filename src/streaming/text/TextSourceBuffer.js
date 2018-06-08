@@ -124,21 +124,22 @@ function TextSourceBuffer() {
 
     function abort() {
         textTracks.deleteAllTextTracks();
-        parser = null;
         fragmentedTextBoxParser = null;
+        boxParser = null;
         mediaInfos = null;
-        textTracks = null;
         isFragmented = false;
         fragmentModel = null;
         initializationSegmentReceived = false;
-        timescale = NaN;
         fragmentedTracks = [];
-        videoModel = null;
-        streamController = null;
-        embeddedInitialized = false;
-        embeddedTracks = null;
     }
 
+    function reset() {
+        parser = null;
+        streamController = null;
+        videoModel = null;
+        timescale = NaN;
+        textTracks = null;
+    }
 
     function onVideoChunkReceived(e) {
         const chunk = e.chunk;
@@ -593,7 +594,8 @@ function TextSourceBuffer() {
         setConfig: setConfig,
         getConfig: getConfig,
         setCurrentFragmentedTrackIdx: setCurrentFragmentedTrackIdx,
-        remove: remove
+        remove: remove,
+        reset: reset
     };
 
     setup();
