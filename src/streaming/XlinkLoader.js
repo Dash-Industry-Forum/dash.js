@@ -74,7 +74,7 @@ function XlinkLoader(config) {
         if (url === RESOLVE_TO_ZERO) {
             report(null, true);
         } else {
-            const request = new TextRequest(url, HTTPRequest.XLINK_TYPE);
+            const request = new TextRequest(url, HTTPRequest.XLINK_EXPANSION_TYPE);
 
             httpLoader.load({
                 request: request,
