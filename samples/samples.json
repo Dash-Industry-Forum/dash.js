@@ -15,16 +15,6 @@
                 "href": "getting-started/auto-load-single-video.html"
             },
             {
-                "title": "Manual load single video",
-                "description": "A sample showing how to load a single video",
-                "href": "getting-started/manual-load-single-video.html"
-            },
-            {
-                "title": "Manual load with custom settings",
-                "description": "A sample showing how to load a video using custom settings",
-                "href": "getting-started/manual-load-with-custom-settings.html"
-            },
-            {
                 "title": "Auto load single video with reference",
                 "description": "While the Dash.CreateAll() method is handy for automated instantiation within a page, the Dash.create() method takes three optional parameters to give you more control. This example illustrates calling Dash.create() in four different ways. The first simply specifies a target video element with a child source element. The second specifies a target video element with a src attribute. The third specifies the video element and a dynamically generated source object. The fourth specifies the video element, a source object and a custom DashContext object.",
                 "href": "getting-started/auto-load-single-video-with-reference.html",
@@ -36,6 +26,16 @@
                 "href": "getting-started/auto-load-multi-video.html"
             },
             {
+                "title": "Manual load single video",
+                "description": "A sample showing how to load a single video",
+                "href": "getting-started/manual-load-single-video.html"
+            },
+            {
+                "title": "Manual load with custom settings",
+                "description": "A sample showing how to load a video using custom settings",
+                "href": "getting-started/manual-load-with-custom-settings.html"
+            },
+            {
                 "title": "Listening to events",
                 "description": "Example showing how to listen to DASH.js events",
                 "href": "getting-started/listening-to-events.html"
@@ -45,8 +45,6 @@
                 "description": "This example shows how to add monitoring to the stream, fetch values from the Player etc",
                 "href": "monitoring/index.html"
             }
-
-
         ]
     },
     {
