@@ -1,12 +1,13 @@
 import MediaPlayer from './MediaPlayer';
 
 function MediaPlayerFactory() {
-
     /**
      * mime-type identifier for any source content to be accepted as a dash manifest by the create() method.
      * @type {string}
      */
     const SUPPORTED_MIME_TYPE = 'application/dash+xml';
+
+    let logger;
 
     /**
      *  A new MediaPlayer is instantiated for the supplied videoElement and optional source and context.  If no context is provided,
@@ -39,7 +40,11 @@ function MediaPlayerFactory() {
         context = context || {};
         player = MediaPlayer(context).create();
         player.initialize(video, source.src, video.autoplay);
-        player.getDebug().debug.info('Converted ' + videoID + ' to dash.js player and added content: ' + source.src);
+
+        if (!logger) {
+            logger = player.getDebug().getLogger();
+        }
+        logger.debug('Converted ' + videoID + ' to dash.js player and added content: ' + source.src);
 
         // Store a reference to the player on the video element so it can be gotten at for debugging and so we know its
         // already been setup.
