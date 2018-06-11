@@ -881,7 +881,7 @@
         },
         {
           "name": "Unified Streaming Live",
-          "url": "http://live.unified-streaming.com/loop/loop.isml/loop.mpd?format=mp4&session_id=25020"
+          "url": "https://live.unified-streaming.com/smptebitc/smptebitc.isml/.mpd"
         },
         {
           "name": "Unified Streaming (Widevine, persistent)",
