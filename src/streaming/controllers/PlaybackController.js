@@ -657,7 +657,7 @@ function PlaybackController() {
     }
 
     function onPlaybackStalled(e) {
-        log('Native video element event: stalled', e);
+        logger.info('Native video element event: stalled', e);
         eventBus.trigger(Events.PLAYBACK_STALLED, {
             e: e
         });
