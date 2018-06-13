@@ -230,6 +230,35 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         $scope.$apply(function () {
             $scope.error = message;
             $scope.errorType = e.error;
+            switch (e.event.id) {
+                case dashjs.ErrorConstants.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE:
+                    break;
+                case dashjs.ErrorConstants.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE:
+                    $scope.error += '. Please, check your internet connection!';
+                    break;
+                case dashjs.ErrorConstants.XLINK_LOADER_LOADING_FAILURE_ERROR_CODE:
+                    break;
+                case dashjs.ErrorConstants.SEGMENTS_UPDATE_FAILED_ERROR_CODE:
+                    break;
+                case dashjs.ErrorConstants.SEGMENTS_UNAVAILABLE_ERROR_CODE:
+                    break;
+                case dashjs.ErrorConstants.SEGMENT_BASE_LOADER_ERROR_CODE:
+                    break;                    
+                case dashjs.ErrorConstants.TIME_SYNC_FAILED_ERROR_CODE:
+                    break;
+                case dashjs.ErrorConstants.FRAGMENT_LOADER_LOADING_FAILURE_ERROR_CODE:
+                    break;
+                case dashjs.ErrorConstants.FRAGMENT_LOADER_NULL_REQUEST_ERROR_CODE:
+                    break;
+                case dashjs.ErrorConstants.URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE:
+                    break;
+                case dashjs.ErrorConstants.APPEND_ERROR_CODE:
+                    break;
+                case dashjs.ErrorConstants.REMOVE_ERROR_CODE:
+                    break;
+                case dashjs.ErrorConstants.DATA_UPDATE_FAILED_ERROR_CODE:
+                    break;                                                                                
+            }
         });
         $("#errorModal").modal('show');
     }, $scope);
