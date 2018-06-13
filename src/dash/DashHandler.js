@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from '../streaming/constants/Constants';
+import ErrorConstants from '../streaming/constants/ErrorConstants';
 import DashConstants from './constants/DashConstants';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
 import DashJSError from '../streaming/vo/DashJSError';
@@ -51,8 +52,6 @@ import SegmentsGetter from './utils/SegmentsGetter';
 import SegmentBaseLoader from './SegmentBaseLoader';
 import WebmSegmentBaseLoader from './WebmSegmentBaseLoader';
 
-const SEGMENTS_UNAVAILABLE_ERROR_CODE = 1;
-
 function DashHandler(config) {
 
     config = config || {};
@@ -74,10 +73,12 @@ function DashHandler(config) {
         requestedTime,
         currentTime,
         streamProcessor,
-        segmentsGetter;
+        segmentsGetter,
+        errorConstants;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
+        errorConstants = ErrorConstants(context).getInstance();
         resetInitialSettings();
 
         segmentBaseLoader = isWebM(config.mimeType) ? WebmSegmentBaseLoader(context).getInstance() : SegmentBaseLoader(context).getInstance();
@@ -256,7 +257,7 @@ function DashHandler(config) {
         voRepresentation.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(voRepresentation, isDynamic);
 
         if ((voRepresentation.segmentAvailabilityRange.end < voRepresentation.segmentAvailabilityRange.start) && !voRepresentation.useCalculatedLiveEdgeTime) {
-            error = new DashJSError(SEGMENTS_UNAVAILABLE_ERROR_CODE, 'no segments are available yet', {availabilityDelay: voRepresentation.segmentAvailabilityRange.start - voRepresentation.segmentAvailabilityRange.end});
+            error = new DashJSError(ErrorConstants.SEGMENTS_UNAVAILABLE_ERROR_CODE, errorConstants.getErrorMessage(ErrorConstants.SEGMENTS_UNAVAILABLE_ERROR_CODE), {availabilityDelay: voRepresentation.segmentAvailabilityRange.start - voRepresentation.segmentAvailabilityRange.end});
             eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: voRepresentation, error: error});
             return;
         }
@@ -530,7 +531,4 @@ function DashHandler(config) {
 }
 
 DashHandler.__dashjs_factory_name = 'DashHandler';
-const factory = FactoryMaker.getClassFactory(DashHandler);
-factory.SEGMENTS_UNAVAILABLE_ERROR_CODE = SEGMENTS_UNAVAILABLE_ERROR_CODE;
-FactoryMaker.updateClassFactory(DashHandler.__dashjs_factory_name, factory);
-export default factory;
+export default FactoryMaker.getClassFactory(DashHandler);

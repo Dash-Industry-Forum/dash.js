@@ -96,8 +96,8 @@ function XlinkController(config) {
         });
 
         manifest = mpd;
-        elements = getElementsToResolve(manifest.Period_asArray, manifest, DashConstants.ELEMENT_TYPE_PERIOD, RESOLVE_TYPE_ONLOAD);
-        resolve(elements, DashConstants.ELEMENT_TYPE_PERIOD, RESOLVE_TYPE_ONLOAD);
+        elements = getElementsToResolve(manifest.Period_asArray, manifest, DashConstants.PERIOD, RESOLVE_TYPE_ONLOAD);
+        resolve(elements, DashConstants.PERIOD, RESOLVE_TYPE_ONLOAD);
     }
 
     function reset() {
@@ -170,19 +170,19 @@ function XlinkController(config) {
         if (resolveObject.resolveType === RESOLVE_TYPE_ONLOAD) {
             switch (resolveObject.type) {
                 // Start resolving the other elements. We can do Adaptation Set and EventStream in parallel
-                case DashConstants.ELEMENT_TYPE_PERIOD:
-                    for (i = 0; i < manifest[DashConstants.ELEMENT_TYPE_PERIOD + '_asArray'].length; i++) {
-                        obj = manifest[DashConstants.ELEMENT_TYPE_PERIOD + '_asArray'][i];
-                        if (obj.hasOwnProperty(DashConstants.ELEMENT_TYPE_ADAPTATIONSET + '_asArray')) {
-                            elements = elements.concat(getElementsToResolve(obj[DashConstants.ELEMENT_TYPE_ADAPTATIONSET + '_asArray'], obj, DashConstants.ELEMENT_TYPE_ADAPTATIONSET, RESOLVE_TYPE_ONLOAD));
+                case DashConstants.PERIOD:
+                    for (i = 0; i < manifest[DashConstants.PERIOD + '_asArray'].length; i++) {
+                        obj = manifest[DashConstants.PERIOD + '_asArray'][i];
+                        if (obj.hasOwnProperty(DashConstants.ADAPTATION_SET + '_asArray')) {
+                            elements = elements.concat(getElementsToResolve(obj[DashConstants.ADAPTATION_SET + '_asArray'], obj, DashConstants.ADAPTATION_SET, RESOLVE_TYPE_ONLOAD));
                         }
-                        if (obj.hasOwnProperty(DashConstants.ELEMENT_TYPE_EVENTSTREAM + '_asArray')) {
-                            elements = elements.concat(getElementsToResolve(obj[DashConstants.ELEMENT_TYPE_EVENTSTREAM + '_asArray'], obj, DashConstants.ELEMENT_TYPE_EVENTSTREAM, RESOLVE_TYPE_ONLOAD));
+                        if (obj.hasOwnProperty(DashConstants.EVENT_STREAM + '_asArray')) {
+                            elements = elements.concat(getElementsToResolve(obj[DashConstants.EVENT_STREAM + '_asArray'], obj, DashConstants.EVENT_STREAM, RESOLVE_TYPE_ONLOAD));
                         }
                     }
-                    resolve(elements, DashConstants.ELEMENT_TYPE_ADAPTATIONSET, RESOLVE_TYPE_ONLOAD);
+                    resolve(elements, DashConstants.ADAPTATION_SET, RESOLVE_TYPE_ONLOAD);
                     break;
-                case DashConstants.ELEMENT_TYPE_ADAPTATIONSET:
+                case DashConstants.ADAPTATION_SET:
                     // TODO: Resolve SegmentList here
                     eventBus.trigger(Events.XLINK_READY, {manifest: manifest});
                     break;

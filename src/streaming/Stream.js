@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from './constants/Constants';
+import ErrorConstants from './constants/ErrorConstants';
 import StreamProcessor from './StreamProcessor';
 import EventController from './controllers/EventController';
 import FragmentController from './controllers/FragmentController';
@@ -37,10 +38,10 @@ import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import Debug from '../core/Debug';
 import FactoryMaker from '../core/FactoryMaker';
+import DashJSError from './vo/DashJSError';
 
 function Stream(config) {
 
-    const DATA_UPDATE_FAILED_ERROR_CODE = 1;
     config = config || {};
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
@@ -73,7 +74,8 @@ function Stream(config) {
         thumbnailController,
         eventController,
         preloaded,
-        trackChangedEvent;
+        trackChangedEvent,
+        errorConstants;
 
     const codecCompatibilityTable = [
         {
@@ -87,6 +89,7 @@ function Stream(config) {
     ];
 
     function setup() {
+        errorConstants = ErrorConstants(context).getInstance();
         logger = Debug(context).getInstance().getLogger(instance);
         resetInitialSettings();
 
@@ -535,7 +538,8 @@ function Stream(config) {
     function checkIfInitializationCompleted() {
         const ln = streamProcessors.length;
         const hasError = !!updateError.audio || !!updateError.video;
-        let error = hasError ? new Error(DATA_UPDATE_FAILED_ERROR_CODE, 'Data update failed', null) : null;
+        let error = hasError ? new DashJSError(ErrorConstants.DATA_UPDATE_FAILED_ERROR_CODE, errorConstants.getErrorMessage(ErrorConstants.DATA_UPDATE_FAILED_ERROR_CODE), null) : null;
+
         for (let i = 0; i < ln; i++) {
             if (streamProcessors[i].isUpdating() || isUpdating) {
                 return;

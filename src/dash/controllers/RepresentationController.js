@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from '../../streaming/constants/Constants';
+import ErrorConstants from '../../streaming/constants/ErrorConstants';
 import DashConstants from '../constants/DashConstants';
 import DashJSError from '../../streaming/vo/DashJSError';
 import EventBus from '../../core/EventBus';
@@ -37,8 +38,6 @@ import FactoryMaker from '../../core/FactoryMaker';
 import Representation from '../vo/Representation';
 
 function RepresentationController() {
-
-    const SEGMENTS_UPDATE_FAILED_ERROR_CODE = 1;
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
@@ -58,10 +57,13 @@ function RepresentationController() {
         dashManifestModel,
         dashMetrics,
         streamProcessor,
-        manifestModel;
+        manifestModel,
+        errorConstants;
 
     function setup() {
         resetInitialSettings();
+
+        errorConstants = ErrorConstants(context).getInstance();
 
         eventBus.on(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
         eventBus.on(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
@@ -300,7 +302,7 @@ function RepresentationController() {
         if (postponeTimePeriod > 0) {
             addDVRMetric();
             postponeUpdate(postponeTimePeriod);
-            err = new DashJSError(SEGMENTS_UPDATE_FAILED_ERROR_CODE, 'Segments update failed', null);
+            err = new DashJSError(ErrorConstants.SEGMENTS_UPDATE_FAILED_ERROR_CODE, errorConstants.getErrorMessage(ErrorConstants.SEGMENTS_UPDATE_FAILED_ERROR_CODE), null);
             eventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: this, data: realAdaptation, currentRepresentation: currentVoRepresentation, error: err});
 
             return;

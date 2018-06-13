@@ -29,15 +29,14 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+import ErrorConstants from '../constants/ErrorConstants';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import BlacklistController from '../controllers/BlacklistController';
 import DVBSelector from './baseUrlResolution/DVBSelector';
 import BasicSelector from './baseUrlResolution/BasicSelector';
 import FactoryMaker from '../../core/FactoryMaker';
-
-const URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE = 1;
-const URL_RESOLUTION_FAILED_GENERIC_ERROR_MESSAGE = 'Failed to resolve a valid URL';
+import DashJSError from '../vo/DashJSError';
 
 function BaseURLSelector() {
 
@@ -49,6 +48,7 @@ function BaseURLSelector() {
         serviceLocationBlacklistController,
         basicSelector,
         dvbSelector,
+        errorConstants,
         selector;
 
     function setup() {
@@ -66,6 +66,8 @@ function BaseURLSelector() {
         });
 
         selector = basicSelector;
+
+        errorConstants = ErrorConstants(context).getInstance();
     }
 
     function setConfig(config) {
@@ -111,9 +113,9 @@ function BaseURLSelector() {
         if (!selectedBaseUrl) {
             eventBus.trigger(
                 Events.URL_RESOLUTION_FAILED, {
-                    error: new Error(
-                        URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE,
-                        URL_RESOLUTION_FAILED_GENERIC_ERROR_MESSAGE
+                    error: new DashJSError(
+                        ErrorConstants.URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE,
+                        errorConstants.getErrorMessage(ErrorConstants.URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE)
                     )
                 }
             );
@@ -145,8 +147,4 @@ function BaseURLSelector() {
 }
 
 BaseURLSelector.__dashjs_factory_name = 'BaseURLSelector';
-const factory = FactoryMaker.getClassFactory(BaseURLSelector);
-factory.URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE = URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE;
-factory.URL_RESOLUTION_FAILED_GENERIC_ERROR_MESSAGE = URL_RESOLUTION_FAILED_GENERIC_ERROR_MESSAGE;
-FactoryMaker.updateClassFactory(BaseURLSelector.__dashjs_factory_name, factory);
-export default factory;
+export default FactoryMaker.getClassFactory(BaseURLSelector);

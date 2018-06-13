@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from '../constants/Constants';
+import ErrorConstants from '../constants/ErrorConstants';
 import DashJSError from './../vo/DashJSError';
 import {HTTPRequest} from './../vo/metrics/HTTPRequest';
 import EventBus from './../../core/EventBus';
@@ -37,7 +38,6 @@ import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import URLUtils from '../utils/URLUtils';
 
-const TIME_SYNC_FAILED_ERROR_CODE = 1;
 const HTTP_TIMEOUT_MS = 5000;
 
 function TimeSyncController() {
@@ -55,10 +55,12 @@ function TimeSyncController() {
         handlers,
         metricsModel,
         dashMetrics,
-        baseURLController;
+        baseURLController,
+        errorConstants;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
+        errorConstants = ErrorConstants(context).getInstance();
     }
 
     function initialize(timingSources, useManifestDateHeader) {
@@ -296,7 +298,7 @@ function TimeSyncController() {
 
     function completeTimeSyncSequence(failed, time, offset) {
         setIsSynchronizing(false);
-        eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED, { time: time, offset: offset, error: failed ? new DashJSError(TIME_SYNC_FAILED_ERROR_CODE) : null });
+        eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED, { time: time, offset: offset, error: failed ? new DashJSError(ErrorConstants.TIME_SYNC_FAILED_ERROR_CODE, errorConstants.getErrorMessage(ErrorConstants.TIME_SYNC_FAILED_ERROR_CODE)) : null });
     }
 
     function calculateTimeOffset(serverTime, deviceTime) {
@@ -392,7 +394,6 @@ function TimeSyncController() {
 
 TimeSyncController.__dashjs_factory_name = 'TimeSyncController';
 const factory = FactoryMaker.getSingletonFactory(TimeSyncController);
-factory.TIME_SYNC_FAILED_ERROR_CODE = TIME_SYNC_FAILED_ERROR_CODE;
 factory.HTTP_TIMEOUT_MS = HTTP_TIMEOUT_MS;
 FactoryMaker.updateSingletonFactory(TimeSyncController.__dashjs_factory_name, factory);
 export default factory;
