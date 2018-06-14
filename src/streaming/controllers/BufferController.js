@@ -83,13 +83,11 @@ function BufferController(config) {
         bufferState,
         appendedBytesInfo,
         wallclockTicked,
-        isAppendingInProgress,
         isPruningInProgress,
         initCache,
         seekStartTime,
         seekClearedBufferingCompleted,
         pendingPruningRanges,
-        chunksToAppend,
         bufferResetInProgress,
         mediaChunk;
 
@@ -97,7 +95,6 @@ function BufferController(config) {
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
         initCache = InitCache(context).getInstance();
-        chunksToAppend = [];
 
         resetInitialSettings();
     }
@@ -239,17 +236,11 @@ function BufferController(config) {
         }
     }
 
-    function appendToBuffer(chunk, forceAppend) {
-        if (!isAppendingInProgress || forceAppend) {
-            isAppendingInProgress = true;
-            appendedBytesInfo = chunk;
-            buffer.append(chunk);
+    function appendToBuffer(chunk) {
+        buffer.append(chunk);
 
-            if (chunk.mediaInfo.type === Constants.VIDEO) {
-                eventBus.trigger(Events.VIDEO_CHUNK_RECEIVED, { chunk: chunk });
-            }
-        } else {
-            chunksToAppend.push(chunk);
+        if (chunk.mediaInfo.type === Constants.VIDEO) {
+            eventBus.trigger(Events.VIDEO_CHUNK_RECEIVED, { chunk: chunk });
         }
     }
 
@@ -314,13 +305,6 @@ function BufferController(config) {
         } else if (appendedBytesInfo) {
             eventBus.trigger(Events.BYTES_APPENDED_END_FRAGMENT, dataEvent);
         }
-
-        if (chunksToAppend.length === 0) {
-            isAppendingInProgress = false;
-        } else {
-            const chunk = chunksToAppend.shift();
-            appendToBuffer(chunk, true);
-        }
     }
 
     function onQualityChanged(e) {
@@ -340,8 +324,6 @@ function BufferController(config) {
             //a seek command has occured, reset lastIndex value, it will be set next time that onStreamCompleted will be called.
             lastIndex = Number.POSITIVE_INFINITY;
         }
-        chunksToAppend = [];
-        isAppendingInProgress = false;
         if (type !== Constants.FRAGMENTED_TEXT) {
             // remove buffer after seeking operations
             pruneAllSafely();
@@ -862,7 +844,6 @@ function BufferController(config) {
         maxAppendedIndex = 0;
         appendedBytesInfo = null;
         isBufferingCompleted = false;
-        isAppendingInProgress = false;
         isPruningInProgress = false;
         seekClearedBufferingCompleted = false;
         bufferLevel = 0;
