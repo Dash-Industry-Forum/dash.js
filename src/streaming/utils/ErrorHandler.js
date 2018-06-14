@@ -32,9 +32,6 @@ import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 
-const CAPABILITY_ERROR_MEDIASOURCE      = 'mediasource';
-const CAPABILITY_ERROR_MEDIAKEYS        = 'mediakeys';
-
 const DOWNLOAD_ERROR_ID_MANIFEST        = 'manifest';
 const DOWNLOAD_ERROR_ID_SIDX            = 'SIDX';
 const DOWNLOAD_ERROR_ID_CONTENT         = 'content';
@@ -107,8 +104,6 @@ ErrorHandler.__dashjs_factory_name = 'ErrorHandler';
 
 const factory = FactoryMaker.getSingletonFactory(ErrorHandler);
 
-factory.CAPABILITY_ERROR_MEDIASOURCE        = CAPABILITY_ERROR_MEDIASOURCE;
-factory.CAPABILITY_ERROR_MEDIAKEYS          = CAPABILITY_ERROR_MEDIAKEYS;
 factory.DOWNLOAD_ERROR_ID_MANIFEST          = DOWNLOAD_ERROR_ID_MANIFEST;
 factory.DOWNLOAD_ERROR_ID_SIDX              = DOWNLOAD_ERROR_ID_SIDX;
 factory.DOWNLOAD_ERROR_ID_CONTENT           = DOWNLOAD_ERROR_ID_CONTENT;

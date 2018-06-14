@@ -44,6 +44,8 @@ const URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE = 10;
 const APPEND_ERROR_CODE = 11;
 const REMOVE_ERROR_CODE = 12;
 const DATA_UPDATE_FAILED_ERROR_CODE = 13;
+const CAPABILITY_MEDIASOURCE_ERROR_CODE = 14;
+const CAPABILITY_MEDIAKEYS_ERROR_CODE = 15;
 
 /**
  * ErrorConstants declaration
@@ -111,6 +113,12 @@ function ErrorConstants () {
             case DATA_UPDATE_FAILED_ERROR_CODE:
                 msg = DATA_UPDATE_FAILED_ERROR_MESSAGE;
                 break;
+            case CAPABILITY_MEDIASOURCE_ERROR_CODE:
+                msg = '';
+                break;
+            case CAPABILITY_MEDIAKEYS_ERROR_CODE:
+                msg = '';
+                break;
             default:
                 msg = '';
         }
@@ -141,5 +149,7 @@ factory.URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE = URL_RESOLUTION_FAILED_GENERIC
 factory.APPEND_ERROR_CODE = APPEND_ERROR_CODE;
 factory.REMOVE_ERROR_CODE = REMOVE_ERROR_CODE;
 factory.DATA_UPDATE_FAILED_ERROR_CODE = DATA_UPDATE_FAILED_ERROR_CODE;
+factory.CAPABILITY_MEDIASOURCE_ERROR_CODE = CAPABILITY_MEDIASOURCE_ERROR_CODE;
+factory.CAPABILITY_MEDIAKEYS_ERROR_CODE = CAPABILITY_MEDIAKEYS_ERROR_CODE;
 FactoryMaker.updateSingletonFactory(ErrorConstants.__dashjs_factory_name, factory);
 export default factory;

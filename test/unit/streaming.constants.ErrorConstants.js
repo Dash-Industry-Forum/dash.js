@@ -18,6 +18,8 @@ describe('ErrorConstants', function () {
         expect(ErrorConstants.APPEND_ERROR_CODE).to.equal(11);
         expect(ErrorConstants.REMOVE_ERROR_CODE).to.equal(12);
         expect(ErrorConstants.DATA_UPDATE_FAILED_ERROR_CODE).to.equal(13);
+        expect(ErrorConstants.CAPABILITY_MEDIASOURCE_ERROR_CODE).to.equal(14);
+        expect(ErrorConstants.CAPABILITY_MEDIAKEYS_ERROR_CODE).to.equal(15);
     });
 
     it('ErrorConstants should return the correct error message', () => {
@@ -37,5 +39,7 @@ describe('ErrorConstants', function () {
         expect(errorConstants.getErrorMessage(ErrorConstants.APPEND_ERROR_CODE)).to.equal('buffer or chunk is not defined');
         expect(errorConstants.getErrorMessage(ErrorConstants.REMOVE_ERROR_CODE)).to.equal('buffer is not defined');
         expect(errorConstants.getErrorMessage(ErrorConstants.DATA_UPDATE_FAILED_ERROR_CODE)).to.equal('Data update failed');
+        expect(errorConstants.getErrorMessage(ErrorConstants.CAPABILITY_MEDIASOURCE_ERROR_CODE)).to.equal('');
+        expect(errorConstants.getErrorMessage(ErrorConstants.CAPABILITY_MEDIAKEYS_ERROR_CODE)).to.equal('');
     });
 });

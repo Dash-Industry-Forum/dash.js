@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from './constants/Constants';
+import ErrorConstants from './constants/ErrorConstants';
 import MetricsConstants from './constants/MetricsConstants';
 import UTCTiming from '../dash/vo/UTCTiming';
 import PlaybackController from './controllers/PlaybackController';
@@ -193,7 +194,7 @@ function MediaPlayer() {
         errHandler = ErrorHandler(context).getInstance();
 
         if (!capabilities.supportsMediaSource()) {
-            errHandler.capabilityError('mediasource');
+            errHandler.capabilityError(ErrorConstants.CAPABILITY_MEDIASOURCE_ERROR_CODE);
             return;
         }
 

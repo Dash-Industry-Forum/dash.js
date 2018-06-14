@@ -308,7 +308,7 @@ function Stream(config) {
         logger.debug(type + ' codec: ' + codec);
 
         if (!!mediaInfo.contentProtection && !capabilities.supportsEncryptedMedia()) {
-            errHandler.capabilityError('encryptedmedia');
+            errHandler.capabilityError(ErrorConstants.CAPABILITY_MEDIAKEYS_ERROR_CODE);
         } else if (!capabilities.supportsCodec(codec)) {
             msg = type + 'Codec (' + codec + ') is not supported.';
             logger.error(msg);
