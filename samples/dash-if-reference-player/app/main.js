@@ -257,7 +257,29 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
                 case dashjs.ErrorConstants.REMOVE_ERROR_CODE:
                     break;
                 case dashjs.ErrorConstants.DATA_UPDATE_FAILED_ERROR_CODE:
-                    break;                                                                                
+                    break;
+                case dashjs.ErrorConstants.CAPABILITY_MEDIASOURCE_ERROR_CODE:
+                    break;
+                case dashjs.ErrorConstants.CAPABILITY_MEDIAKEYS_ERROR_CODE:
+                    break;
+                case dashjs.ErrorConstants.DOWNLOAD_ERROR_ID_MANIFEST:
+                    break;
+                case dashjs.ErrorConstants.DOWNLOAD_ERROR_ID_SIDX:
+                    break;
+                case dashjs.ErrorConstants.DOWNLOAD_ERROR_ID_CONTENT:
+                    break;
+                case dashjs.ErrorConstants.DOWNLOAD_ERROR_ID_INITIALIZATION:
+                    break;
+                case dashjs.ErrorConstants.DOWNLOAD_ERROR_ID_XLINK:
+                    break;
+                case dashjs.ErrorConstants.MANIFEST_ERROR_ID_CODEC:
+                    break;
+                case dashjs.ErrorConstants.MANIFEST_ERROR_ID_PARSE:
+                    break;
+                case dashjs.ErrorConstants.MANIFEST_ERROR_ID_NOSTREAMS:
+                    break;
+                case dashjs.ErrorConstants.TIMED_TEXT_ERROR_ID_PARSE:
+                    break;
             }
         });
         $("#errorModal").modal('show');
