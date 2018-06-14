@@ -44,8 +44,21 @@ const URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE = 10;
 const APPEND_ERROR_CODE = 11;
 const REMOVE_ERROR_CODE = 12;
 const DATA_UPDATE_FAILED_ERROR_CODE = 13;
-const CAPABILITY_MEDIASOURCE_ERROR_CODE = 14;
-const CAPABILITY_MEDIAKEYS_ERROR_CODE = 15;
+
+const CAPABILITY_MEDIASOURCE_ERROR_CODE      = 'mediasource';
+const CAPABILITY_MEDIAKEYS_ERROR_CODE        = 'mediakeys';
+
+const DOWNLOAD_ERROR_ID_MANIFEST        = 'manifest';
+const DOWNLOAD_ERROR_ID_SIDX            = 'SIDX';
+const DOWNLOAD_ERROR_ID_CONTENT         = 'content';
+const DOWNLOAD_ERROR_ID_INITIALIZATION  = 'initialization';
+const DOWNLOAD_ERROR_ID_XLINK           = 'xlink';
+
+const MANIFEST_ERROR_ID_CODEC           = 'codec';
+const MANIFEST_ERROR_ID_PARSE           = 'parse';
+const MANIFEST_ERROR_ID_NOSTREAMS       = 'nostreams';
+
+const TIMED_TEXT_ERROR_ID_PARSE         = 'parse';
 
 /**
  * ErrorConstants declaration
@@ -95,9 +108,6 @@ function ErrorConstants () {
             case TIME_SYNC_FAILED_ERROR_CODE:
                 msg = TIME_SYNC_FAILED_ERROR_MESSAGE;
                 break;
-            case FRAGMENT_LOADER_LOADING_FAILURE_ERROR_CODE:
-                msg = '';
-                break;
             case FRAGMENT_LOADER_NULL_REQUEST_ERROR_CODE:
                 msg = FRAGMENT_LOADER_NULL_REQUEST_ERROR_MESSAGE;
                 break;
@@ -113,10 +123,19 @@ function ErrorConstants () {
             case DATA_UPDATE_FAILED_ERROR_CODE:
                 msg = DATA_UPDATE_FAILED_ERROR_MESSAGE;
                 break;
+            // use cases with no specific message now currently
+            case FRAGMENT_LOADER_LOADING_FAILURE_ERROR_CODE:
             case CAPABILITY_MEDIASOURCE_ERROR_CODE:
-                msg = '';
-                break;
             case CAPABILITY_MEDIAKEYS_ERROR_CODE:
+            case DOWNLOAD_ERROR_ID_MANIFEST:
+            case DOWNLOAD_ERROR_ID_SIDX:
+            case DOWNLOAD_ERROR_ID_CONTENT:
+            case DOWNLOAD_ERROR_ID_INITIALIZATION:
+            case DOWNLOAD_ERROR_ID_XLINK:
+            case MANIFEST_ERROR_ID_CODEC:
+            case MANIFEST_ERROR_ID_PARSE:
+            case MANIFEST_ERROR_ID_NOSTREAMS:
+            case TIMED_TEXT_ERROR_ID_PARSE:
                 msg = '';
                 break;
             default:
@@ -151,5 +170,16 @@ factory.REMOVE_ERROR_CODE = REMOVE_ERROR_CODE;
 factory.DATA_UPDATE_FAILED_ERROR_CODE = DATA_UPDATE_FAILED_ERROR_CODE;
 factory.CAPABILITY_MEDIASOURCE_ERROR_CODE = CAPABILITY_MEDIASOURCE_ERROR_CODE;
 factory.CAPABILITY_MEDIAKEYS_ERROR_CODE = CAPABILITY_MEDIAKEYS_ERROR_CODE;
+
+factory.DOWNLOAD_ERROR_ID_MANIFEST          = DOWNLOAD_ERROR_ID_MANIFEST;
+factory.DOWNLOAD_ERROR_ID_SIDX              = DOWNLOAD_ERROR_ID_SIDX;
+factory.DOWNLOAD_ERROR_ID_CONTENT           = DOWNLOAD_ERROR_ID_CONTENT;
+factory.DOWNLOAD_ERROR_ID_INITIALIZATION    = DOWNLOAD_ERROR_ID_INITIALIZATION;
+factory.DOWNLOAD_ERROR_ID_XLINK             = DOWNLOAD_ERROR_ID_XLINK;
+factory.MANIFEST_ERROR_ID_CODEC             = MANIFEST_ERROR_ID_CODEC;
+factory.MANIFEST_ERROR_ID_PARSE             = MANIFEST_ERROR_ID_PARSE;
+factory.MANIFEST_ERROR_ID_NOSTREAMS         = MANIFEST_ERROR_ID_NOSTREAMS;
+factory.TIMED_TEXT_ERROR_ID_PARSE           = TIMED_TEXT_ERROR_ID_PARSE;
+
 FactoryMaker.updateSingletonFactory(ErrorConstants.__dashjs_factory_name, factory);
 export default factory;

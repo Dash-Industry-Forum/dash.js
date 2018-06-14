@@ -18,8 +18,17 @@ describe('ErrorConstants', function () {
         expect(ErrorConstants.APPEND_ERROR_CODE).to.equal(11);
         expect(ErrorConstants.REMOVE_ERROR_CODE).to.equal(12);
         expect(ErrorConstants.DATA_UPDATE_FAILED_ERROR_CODE).to.equal(13);
-        expect(ErrorConstants.CAPABILITY_MEDIASOURCE_ERROR_CODE).to.equal(14);
-        expect(ErrorConstants.CAPABILITY_MEDIAKEYS_ERROR_CODE).to.equal(15);
+        expect(ErrorConstants.CAPABILITY_MEDIASOURCE_ERROR_CODE).to.equal('mediasource');
+        expect(ErrorConstants.CAPABILITY_MEDIAKEYS_ERROR_CODE).to.equal('mediakeys');
+        expect(ErrorConstants.DOWNLOAD_ERROR_ID_MANIFEST).to.equal('manifest');
+        expect(ErrorConstants.DOWNLOAD_ERROR_ID_SIDX).to.equal('SIDX');
+        expect(ErrorConstants.DOWNLOAD_ERROR_ID_CONTENT).to.equal('content');
+        expect(ErrorConstants.DOWNLOAD_ERROR_ID_INITIALIZATION).to.equal('initialization');
+        expect(ErrorConstants.DOWNLOAD_ERROR_ID_XLINK).to.equal('xlink');
+        expect(ErrorConstants.MANIFEST_ERROR_ID_CODEC).to.equal('codec');
+        expect(ErrorConstants.MANIFEST_ERROR_ID_PARSE).to.equal('parse');
+        expect(ErrorConstants.MANIFEST_ERROR_ID_NOSTREAMS).to.equal('nostreams');
+        expect(ErrorConstants.TIMED_TEXT_ERROR_ID_PARSE).to.equal('parse');
     });
 
     it('ErrorConstants should return the correct error message', () => {
@@ -41,5 +50,14 @@ describe('ErrorConstants', function () {
         expect(errorConstants.getErrorMessage(ErrorConstants.DATA_UPDATE_FAILED_ERROR_CODE)).to.equal('Data update failed');
         expect(errorConstants.getErrorMessage(ErrorConstants.CAPABILITY_MEDIASOURCE_ERROR_CODE)).to.equal('');
         expect(errorConstants.getErrorMessage(ErrorConstants.CAPABILITY_MEDIAKEYS_ERROR_CODE)).to.equal('');
+        expect(errorConstants.getErrorMessage(ErrorConstants.DOWNLOAD_ERROR_ID_MANIFEST)).to.equal('');
+        expect(errorConstants.getErrorMessage(ErrorConstants.DOWNLOAD_ERROR_ID_SIDX)).to.equal('');
+        expect(errorConstants.getErrorMessage(ErrorConstants.DOWNLOAD_ERROR_ID_CONTENT)).to.equal('');
+        expect(errorConstants.getErrorMessage(ErrorConstants.DOWNLOAD_ERROR_ID_INITIALIZATION)).to.equal('');
+        expect(errorConstants.getErrorMessage(ErrorConstants.DOWNLOAD_ERROR_ID_XLINK)).to.equal('');
+        expect(errorConstants.getErrorMessage(ErrorConstants.MANIFEST_ERROR_ID_CODEC)).to.equal('');
+        expect(errorConstants.getErrorMessage(ErrorConstants.MANIFEST_ERROR_ID_PARSE)).to.equal('');
+        expect(errorConstants.getErrorMessage(ErrorConstants.MANIFEST_ERROR_ID_NOSTREAMS)).to.equal('');
+        expect(errorConstants.getErrorMessage(ErrorConstants.TIMED_TEXT_ERROR_ID_PARSE)).to.equal('');
     });
 });

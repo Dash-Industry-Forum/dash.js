@@ -32,17 +32,6 @@ import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 
-const DOWNLOAD_ERROR_ID_MANIFEST        = 'manifest';
-const DOWNLOAD_ERROR_ID_SIDX            = 'SIDX';
-const DOWNLOAD_ERROR_ID_CONTENT         = 'content';
-const DOWNLOAD_ERROR_ID_INITIALIZATION  = 'initialization';
-const DOWNLOAD_ERROR_ID_XLINK           = 'xlink';
-
-const MANIFEST_ERROR_ID_CODEC           = 'codec';
-const MANIFEST_ERROR_ID_PARSE           = 'parse';
-const MANIFEST_ERROR_ID_NOSTREAMS       = 'nostreams';
-
-const TIMED_TEXT_ERROR_ID_PARSE         = 'parse';
 
 function ErrorHandler() {
 
@@ -101,19 +90,4 @@ function ErrorHandler() {
 }
 
 ErrorHandler.__dashjs_factory_name = 'ErrorHandler';
-
-const factory = FactoryMaker.getSingletonFactory(ErrorHandler);
-
-factory.DOWNLOAD_ERROR_ID_MANIFEST          = DOWNLOAD_ERROR_ID_MANIFEST;
-factory.DOWNLOAD_ERROR_ID_SIDX              = DOWNLOAD_ERROR_ID_SIDX;
-factory.DOWNLOAD_ERROR_ID_CONTENT           = DOWNLOAD_ERROR_ID_CONTENT;
-factory.DOWNLOAD_ERROR_ID_INITIALIZATION    = DOWNLOAD_ERROR_ID_INITIALIZATION;
-factory.DOWNLOAD_ERROR_ID_XLINK             = DOWNLOAD_ERROR_ID_XLINK;
-factory.MANIFEST_ERROR_ID_CODEC             = MANIFEST_ERROR_ID_CODEC;
-factory.MANIFEST_ERROR_ID_PARSE             = MANIFEST_ERROR_ID_PARSE;
-factory.MANIFEST_ERROR_ID_NOSTREAMS         = MANIFEST_ERROR_ID_NOSTREAMS;
-factory.TIMED_TEXT_ERROR_ID_PARSE           = TIMED_TEXT_ERROR_ID_PARSE;
-
-FactoryMaker.updateSingletonFactory(ErrorHandler.__dashjs_factory_name, factory);
-
-export default factory;
+export default FactoryMaker.getSingletonFactory(ErrorHandler);
