@@ -182,6 +182,25 @@ describe('SourceBufferSink', function () {
 
             sink.append({bytes: 'toto'});
         });
+
+        it('should return an error if data to append is null or undefined', function (done) {
+
+            let mediaInfo = {
+                codec: 'video/webm; codecs="vp8, vorbis"'
+            };
+            let mediaSource = new MediaSourceMock();
+            function onAppend(e) {
+                expect(e.error.code).to.equal(11);
+                expect(e.error.message).to.equal('chunk is not defined');
+                done();
+            }
+
+            sink = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppend);
+            expect(mediaSource.buffers).to.have.lengthOf(1);
+
+            sink.append();
+        });
+
     });
 
     describe('Method remove', function () {

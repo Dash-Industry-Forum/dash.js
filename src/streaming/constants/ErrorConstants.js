@@ -76,7 +76,7 @@ function ErrorConstants () {
     const TIME_SYNC_FAILED_ERROR_MESSAGE = 'Failed to synchronize time';
     const FRAGMENT_LOADER_NULL_REQUEST_ERROR_MESSAGE = 'request is null';
     const URL_RESOLUTION_FAILED_GENERIC_ERROR_MESSAGE = 'Failed to resolve a valid URL';
-    const APPEND_ERROR_MESSAGE = 'buffer or chunk is not defined';
+    const APPEND_ERROR_MESSAGE = 'chunk is not defined';
     const REMOVE_ERROR_MESSAGE = 'buffer is not defined';
     const DATA_UPDATE_FAILED_ERROR_MESSAGE = 'Data update failed';
     let instance;

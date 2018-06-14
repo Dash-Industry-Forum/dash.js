@@ -34,6 +34,8 @@ import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import FactoryMaker from '../core/FactoryMaker';
 import TextController from './text/TextController';
+import ErrorConstants from './constants/ErrorConstants';
+
 /**
  * @class SourceBufferSink
  * @implements FragmentSink
@@ -44,6 +46,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
 
     let instance,
         logger,
+        errorConstants,
         buffer,
         isAppendingInProgress;
 
@@ -55,6 +58,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
+        errorConstants = ErrorConstants(context).getInstance();
         isAppendingInProgress = false;
 
         const codec = mediaInfo.codec;
@@ -135,6 +139,13 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
     }
 
     function append(chunk) {
+        if (!chunk) {
+            onAppended({
+                chunk: chunk,
+                error: new DashJSError(ErrorConstants.APPEND_ERROR_CODE, errorConstants.getErrorMessage(ErrorConstants.APPEND_ERROR_CODE), null)
+            });
+            return;
+        }
         appendQueue.push(chunk);
         if (!isAppendingInProgress) {
             waitForUpdateEnd(buffer, appendNextInQueue.bind(this));

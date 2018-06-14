@@ -45,7 +45,7 @@ describe('ErrorConstants', function () {
         expect(errorConstants.getErrorMessage(ErrorConstants.FRAGMENT_LOADER_LOADING_FAILURE_ERROR_CODE)).to.equal('');
         expect(errorConstants.getErrorMessage(ErrorConstants.FRAGMENT_LOADER_NULL_REQUEST_ERROR_CODE)).to.equal('request is null');
         expect(errorConstants.getErrorMessage(ErrorConstants.URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE)).to.equal('Failed to resolve a valid URL');
-        expect(errorConstants.getErrorMessage(ErrorConstants.APPEND_ERROR_CODE)).to.equal('buffer or chunk is not defined');
+        expect(errorConstants.getErrorMessage(ErrorConstants.APPEND_ERROR_CODE)).to.equal('chunk is not defined');
         expect(errorConstants.getErrorMessage(ErrorConstants.REMOVE_ERROR_CODE)).to.equal('buffer is not defined');
         expect(errorConstants.getErrorMessage(ErrorConstants.DATA_UPDATE_FAILED_ERROR_CODE)).to.equal('Data update failed');
         expect(errorConstants.getErrorMessage(ErrorConstants.CAPABILITY_MEDIASOURCE_ERROR_CODE)).to.equal('');
