@@ -2824,6 +2824,7 @@ function MediaPlayer() {
         // do not require MssHandler as dependencies as this is optional and intended to be loaded separately
         let MssHandler = dashjs.MssHandler; /* jshint ignore:line */
         if (typeof MssHandler === 'function') { //TODO need a better way to register/detect plugin components
+            Errors.extend(MssHandler.errors);
             mssHandler = MssHandler(context).create({
                 eventBus: eventBus,
                 mediaPlayerModel: mediaPlayerModel,

@@ -9,8 +9,8 @@ function ErrorHandlerMock () {
         this.error = error;
     };
 
-    this.mssError = function (error) {
-        this.error = error;
+    this.mssError = function (errorObj) {
+        this.error = errorObj.message;
     };
 
     this.timedTextError = function (error, msg) {
