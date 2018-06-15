@@ -11,7 +11,7 @@ import {
 import FragmentRequest from '../streaming/vo/FragmentRequest';
 import HTTPLoader from '../streaming/net/HTTPLoader';
 import DashJSError from '../streaming/vo/DashJSError';
-import ErrorConstants from '../streaming/constants/ErrorConstants';
+import Errors from '../core/errors/Errors';
 
 function WebmSegmentBaseLoader() {
 
@@ -26,12 +26,10 @@ function WebmSegmentBaseLoader() {
         metricsModel,
         mediaPlayerModel,
         httpLoader,
-        baseURLController,
-        errorConstants;
+        baseURLController;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
-        errorConstants = ErrorConstants(context).getInstance();
         WebM = {
             EBML: {
                 tag: 0x1A45DFA3,
@@ -398,7 +396,7 @@ function WebmSegmentBaseLoader() {
                 segments: null,
                 representation: representation,
                 mediaType: type,
-                error: new DashJSError(ErrorConstants.SEGMENT_BASE_LOADER_ERROR_CODE, errorConstants.getErrorMessage(ErrorConstants.SEGMENT_BASE_LOADER_ERROR_CODE), null)
+                error: new DashJSError(Errors.SEGMENT_BASE_LOADER_ERROR_CODE, Errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE, null)
             });
         }
     }

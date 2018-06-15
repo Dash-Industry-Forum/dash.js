@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from './constants/Constants';
-import ErrorConstants from './constants/ErrorConstants';
 import MetricsConstants from './constants/MetricsConstants';
 import UTCTiming from '../dash/vo/UTCTiming';
 import PlaybackController from './controllers/PlaybackController';
@@ -50,6 +49,7 @@ import AbrController from './controllers/AbrController';
 import VideoModel from './models/VideoModel';
 import DOMStorage from './utils/DOMStorage';
 import Debug from './../core/Debug';
+import Errors from './../core/errors/Errors';
 import EventBus from './../core/EventBus';
 import Events from './../core/events/Events';
 import MediaPlayerEvents from './MediaPlayerEvents';
@@ -194,7 +194,7 @@ function MediaPlayer() {
         errHandler = ErrorHandler(context).getInstance();
 
         if (!capabilities.supportsMediaSource()) {
-            errHandler.capabilityError(ErrorConstants.CAPABILITY_MEDIASOURCE_ERROR_CODE);
+            errHandler.capabilityError(Errors.CAPABILITY_MEDIASOURCE_ERROR_CODE);
             return;
         }
 
@@ -3048,6 +3048,7 @@ function MediaPlayer() {
 MediaPlayer.__dashjs_factory_name = 'MediaPlayer';
 const factory = FactoryMaker.getClassFactory(MediaPlayer);
 factory.events = MediaPlayerEvents;
+factory.errors = Errors;
 FactoryMaker.updateClassFactory(MediaPlayer.__dashjs_factory_name, factory);
 
 export default factory;

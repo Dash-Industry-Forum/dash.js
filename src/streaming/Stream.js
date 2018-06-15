@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from './constants/Constants';
-import ErrorConstants from './constants/ErrorConstants';
 import StreamProcessor from './StreamProcessor';
 import EventController from './controllers/EventController';
 import FragmentController from './controllers/FragmentController';
@@ -37,6 +36,7 @@ import ThumbnailController from './thumbnail/ThumbnailController';
 import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import Debug from '../core/Debug';
+import Errors from '../core/errors/Errors';
 import FactoryMaker from '../core/FactoryMaker';
 import DashJSError from './vo/DashJSError';
 
@@ -74,8 +74,7 @@ function Stream(config) {
         thumbnailController,
         eventController,
         preloaded,
-        trackChangedEvent,
-        errorConstants;
+        trackChangedEvent;
 
     const codecCompatibilityTable = [
         {
@@ -89,7 +88,6 @@ function Stream(config) {
     ];
 
     function setup() {
-        errorConstants = ErrorConstants(context).getInstance();
         logger = Debug(context).getInstance().getLogger(instance);
         resetInitialSettings();
 
@@ -308,7 +306,7 @@ function Stream(config) {
         logger.debug(type + ' codec: ' + codec);
 
         if (!!mediaInfo.contentProtection && !capabilities.supportsEncryptedMedia()) {
-            errHandler.capabilityError(ErrorConstants.CAPABILITY_MEDIAKEYS_ERROR_CODE);
+            errHandler.capabilityError(Errors.CAPABILITY_MEDIAKEYS_ERROR_CODE);
         } else if (!capabilities.supportsCodec(codec)) {
             msg = type + 'Codec (' + codec + ') is not supported.';
             logger.error(msg);
@@ -538,7 +536,7 @@ function Stream(config) {
     function checkIfInitializationCompleted() {
         const ln = streamProcessors.length;
         const hasError = !!updateError.audio || !!updateError.video;
-        let error = hasError ? new DashJSError(ErrorConstants.DATA_UPDATE_FAILED_ERROR_CODE, errorConstants.getErrorMessage(ErrorConstants.DATA_UPDATE_FAILED_ERROR_CODE), null) : null;
+        let error = hasError ? new DashJSError(Errors.DATA_UPDATE_FAILED_ERROR_CODE, Errors.DATA_UPDATE_FAILED_ERROR_MESSAGE, null) : null;
 
         for (let i = 0; i < ln; i++) {
             if (streamProcessors[i].isUpdating() || isUpdating) {

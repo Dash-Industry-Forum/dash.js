@@ -33,8 +33,8 @@ import HeadRequest from './vo/HeadRequest';
 import DashJSError from './vo/DashJSError';
 import EventBus from './../core/EventBus';
 import Events from './../core/events/Events';
+import Errors from './../core/errors/Errors';
 import FactoryMaker from '../core/FactoryMaker';
-import ErrorConstants from './constants/ErrorConstants';
 
 function FragmentLoader(config) {
 
@@ -43,11 +43,9 @@ function FragmentLoader(config) {
     const eventBus = EventBus(context).getInstance();
 
     let instance,
-        httpLoader,
-        errorConstants;
+        httpLoader;
 
     function setup() {
-        errorConstants = ErrorConstants(context).getInstance();
         httpLoader = HTTPLoader(context).create({
             errHandler: config.errHandler,
             metricsModel: config.metricsModel,
@@ -117,7 +115,7 @@ function FragmentLoader(config) {
                     report(
                         undefined,
                         new DashJSError(
-                            ErrorConstants.FRAGMENT_LOADER_LOADING_FAILURE_ERROR_CODE,
+                            Errors.FRAGMENT_LOADER_LOADING_FAILURE_ERROR_CODE,
                             errorText,
                             statusText
                         )
@@ -133,8 +131,8 @@ function FragmentLoader(config) {
             report(
                 undefined,
                 new DashJSError(
-                    ErrorConstants.FRAGMENT_LOADER_NULL_REQUEST_ERROR_CODE,
-                    errorConstants.getErrorMessage(ErrorConstants.FRAGMENT_LOADER_NULL_REQUEST_ERROR_CODE)
+                    Errors.FRAGMENT_LOADER_NULL_REQUEST_ERROR_CODE,
+                    Errors.FRAGMENT_LOADER_NULL_REQUEST_ERROR_MESSAGE
                 )
             );
         }

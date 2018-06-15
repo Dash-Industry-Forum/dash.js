@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from './constants/Constants';
-import ErrorConstants from './constants/ErrorConstants';
 import XlinkController from './controllers/XlinkController';
 import HTTPLoader from './net/HTTPLoader';
 import URLUtils from './utils/URLUtils';
@@ -38,6 +37,7 @@ import DashJSError from './vo/DashJSError';
 import {HTTPRequest} from './vo/metrics/HTTPRequest';
 import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
+import Errors from '../core/errors/Errors';
 import FactoryMaker from '../core/FactoryMaker';
 import DashParser from '../dash/parser/DashParser';
 import Debug from '../core/Debug';
@@ -53,8 +53,7 @@ function ManifestLoader(config) {
         logger,
         httpLoader,
         xlinkController,
-        parser,
-        errorConstants;
+        parser;
 
     let mssHandler = config.mssHandler;
     let errHandler = config.errHandler;
@@ -62,8 +61,6 @@ function ManifestLoader(config) {
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
         eventBus.on(Events.XLINK_READY, onXlinkReady, instance);
-
-        errorConstants = ErrorConstants(context).getInstance();
 
         httpLoader = HTTPLoader(context).create({
             errHandler: errHandler,
@@ -146,8 +143,8 @@ function ManifestLoader(config) {
                         Events.INTERNAL_MANIFEST_LOADED, {
                             manifest: null,
                             error: new DashJSError(
-                                ErrorConstants.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE,
-                                errorConstants.getErrorMessage(ErrorConstants.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE) + `${url}`
+                                Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE,
+                                Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_MESSAGE + `${url}`
                             )
                         }
                     );
@@ -165,8 +162,8 @@ function ManifestLoader(config) {
                         Events.INTERNAL_MANIFEST_LOADED, {
                             manifest: null,
                             error: new DashJSError(
-                                ErrorConstants.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE,
-                                errorConstants.getErrorMessage(ErrorConstants.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE) + `${url}`
+                                Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE,
+                                Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_MESSAGE + `${url}`
                            )
                         }
                     );
@@ -196,8 +193,8 @@ function ManifestLoader(config) {
                         Events.INTERNAL_MANIFEST_LOADED, {
                             manifest: null,
                             error: new DashJSError(
-                                ErrorConstants.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE,
-                                errorConstants.getErrorMessage(ErrorConstants.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE) + `${url}`
+                                Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE,
+                                Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_MESSAGE + `${url}`
                             )
                         }
                     );
@@ -208,8 +205,8 @@ function ManifestLoader(config) {
                     Events.INTERNAL_MANIFEST_LOADED, {
                         manifest: null,
                         error: new DashJSError(
-                            ErrorConstants.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE,
-                            errorConstants.getErrorMessage(ErrorConstants.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE) + `${url}, ${errorText}`
+                            Errors.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE,
+                            Errors.MANIFEST_LOADER_LOADING_FAILURE_ERROR_MESSAGE + `${url}, ${errorText}`
                         )
                     }
                 );

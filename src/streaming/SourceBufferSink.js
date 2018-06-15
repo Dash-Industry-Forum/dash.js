@@ -34,7 +34,7 @@ import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import FactoryMaker from '../core/FactoryMaker';
 import TextController from './text/TextController';
-import ErrorConstants from './constants/ErrorConstants';
+import Errors from '../core/errors/Errors';
 
 /**
  * @class SourceBufferSink
@@ -46,7 +46,6 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
 
     let instance,
         logger,
-        errorConstants,
         buffer,
         isAppendingInProgress;
 
@@ -58,7 +57,6 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
-        errorConstants = ErrorConstants(context).getInstance();
         isAppendingInProgress = false;
 
         const codec = mediaInfo.codec;
@@ -142,7 +140,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
         if (!chunk) {
             onAppended({
                 chunk: chunk,
-                error: new DashJSError(ErrorConstants.APPEND_ERROR_CODE, errorConstants.getErrorMessage(ErrorConstants.APPEND_ERROR_CODE), null)
+                error: new DashJSError(Errors.APPEND_ERROR_CODE, Errors.APPEND_ERROR_MESSAGE, null)
             });
             return;
         }

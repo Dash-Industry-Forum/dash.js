@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from '../../streaming/constants/Constants';
-import ErrorConstants from '../../streaming/constants/ErrorConstants';
+import Errors from '../../core/errors/Errors';
 import DashConstants from '../constants/DashConstants';
 import DashJSError from '../../streaming/vo/DashJSError';
 import EventBus from '../../core/EventBus';
@@ -57,13 +57,10 @@ function RepresentationController() {
         dashManifestModel,
         dashMetrics,
         streamProcessor,
-        manifestModel,
-        errorConstants;
+        manifestModel;
 
     function setup() {
         resetInitialSettings();
-
-        errorConstants = ErrorConstants(context).getInstance();
 
         eventBus.on(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
         eventBus.on(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
@@ -302,7 +299,7 @@ function RepresentationController() {
         if (postponeTimePeriod > 0) {
             addDVRMetric();
             postponeUpdate(postponeTimePeriod);
-            err = new DashJSError(ErrorConstants.SEGMENTS_UPDATE_FAILED_ERROR_CODE, errorConstants.getErrorMessage(ErrorConstants.SEGMENTS_UPDATE_FAILED_ERROR_CODE), null);
+            err = new DashJSError(Errors.SEGMENTS_UPDATE_FAILED_ERROR_CODE, Errors.SEGMENTS_UPDATE_FAILED_ERROR_MESSAGE, null);
             eventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: this, data: realAdaptation, currentRepresentation: currentVoRepresentation, error: err});
 
             return;

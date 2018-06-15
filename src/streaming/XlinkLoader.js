@@ -35,7 +35,7 @@ import TextRequest from './vo/TextRequest';
 import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import FactoryMaker from '../core/FactoryMaker';
-import ErrorConstants from './constants/ErrorConstants';
+import Errors from '../core/errors/Errors';
 
 function XlinkLoader(config) {
 
@@ -44,7 +44,6 @@ function XlinkLoader(config) {
 
     const context  = this.context;
     const eventBus = EventBus(context).getInstance();
-    const errorConstants = ErrorConstants(context).getInstance();
 
     let httpLoader = HTTPLoader(context).create({
         errHandler: config.errHandler,
@@ -66,8 +65,8 @@ function XlinkLoader(config) {
                 error: content || resolveToZero ?
                     null :
                     new DashJSError(
-                        ErrorConstants.XLINK_LOADER_LOADING_FAILURE_ERROR_CODE,
-                        errorConstants.getErrorMessage(ErrorConstants.XLINK_LOADER_LOADING_FAILURE_ERROR_CODE) + url
+                        Errors.XLINK_LOADER_LOADING_FAILURE_ERROR_CODE,
+                        Errors.XLINK_LOADER_LOADING_FAILURE_ERROR_MESSAGE + url
                     )
             });
         };

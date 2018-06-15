@@ -29,11 +29,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from '../constants/Constants';
-import ErrorConstants from '../constants/ErrorConstants';
 import DashJSError from './../vo/DashJSError';
 import {HTTPRequest} from './../vo/metrics/HTTPRequest';
 import EventBus from './../../core/EventBus';
 import Events from './../../core/events/Events';
+import Errors from './../../core/errors/Errors';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import URLUtils from '../utils/URLUtils';
@@ -55,12 +55,10 @@ function TimeSyncController() {
         handlers,
         metricsModel,
         dashMetrics,
-        baseURLController,
-        errorConstants;
+        baseURLController;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
-        errorConstants = ErrorConstants(context).getInstance();
     }
 
     function initialize(timingSources, useManifestDateHeader) {
@@ -298,7 +296,7 @@ function TimeSyncController() {
 
     function completeTimeSyncSequence(failed, time, offset) {
         setIsSynchronizing(false);
-        eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED, { time: time, offset: offset, error: failed ? new DashJSError(ErrorConstants.TIME_SYNC_FAILED_ERROR_CODE, errorConstants.getErrorMessage(ErrorConstants.TIME_SYNC_FAILED_ERROR_CODE)) : null });
+        eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED, { time: time, offset: offset, error: failed ? new DashJSError(Errors.TIME_SYNC_FAILED_ERROR_CODE, Errors.TIME_SYNC_FAILED_ERROR_MESSAGE) : null });
     }
 
     function calculateTimeOffset(serverTime, deviceTime) {

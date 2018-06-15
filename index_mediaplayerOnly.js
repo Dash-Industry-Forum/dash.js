@@ -32,7 +32,6 @@
 import MediaPlayer from './src/streaming/MediaPlayer';
 import FactoryMaker from './src/core/FactoryMaker';
 import Debug from './src/core/Debug';
-import ErrorConstants from './src/streaming/constants/ErrorConstants';
 import {getVersionString} from './src/core/Version';
 
 // Shove both of these into the global scope
@@ -46,8 +45,7 @@ if (!dashjs) {
 dashjs.MediaPlayer = MediaPlayer;
 dashjs.FactoryMaker = FactoryMaker;
 dashjs.Debug = Debug;
-dashjs.ErrorConstants = ErrorConstants;
 dashjs.Version = getVersionString();
 
 export default dashjs;
-export { MediaPlayer, FactoryMaker, Debug, ErrorConstants};
+export { MediaPlayer, FactoryMaker, Debug};

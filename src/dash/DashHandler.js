@@ -29,13 +29,13 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from '../streaming/constants/Constants';
-import ErrorConstants from '../streaming/constants/ErrorConstants';
 import DashConstants from './constants/DashConstants';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
 import DashJSError from '../streaming/vo/DashJSError';
 import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
 import Events from '../core/events/Events';
 import EventBus from '../core/EventBus';
+import Errors from '../core/errors/Errors';
 import FactoryMaker from '../core/FactoryMaker';
 import Debug from '../core/Debug';
 import URLUtils from '../streaming/utils/URLUtils';
@@ -73,12 +73,10 @@ function DashHandler(config) {
         requestedTime,
         currentTime,
         streamProcessor,
-        segmentsGetter,
-        errorConstants;
+        segmentsGetter;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
-        errorConstants = ErrorConstants(context).getInstance();
         resetInitialSettings();
 
         segmentBaseLoader = isWebM(config.mimeType) ? WebmSegmentBaseLoader(context).getInstance() : SegmentBaseLoader(context).getInstance();
@@ -257,7 +255,7 @@ function DashHandler(config) {
         voRepresentation.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(voRepresentation, isDynamic);
 
         if ((voRepresentation.segmentAvailabilityRange.end < voRepresentation.segmentAvailabilityRange.start) && !voRepresentation.useCalculatedLiveEdgeTime) {
-            error = new DashJSError(ErrorConstants.SEGMENTS_UNAVAILABLE_ERROR_CODE, errorConstants.getErrorMessage(ErrorConstants.SEGMENTS_UNAVAILABLE_ERROR_CODE), {availabilityDelay: voRepresentation.segmentAvailabilityRange.start - voRepresentation.segmentAvailabilityRange.end});
+            error = new DashJSError(Errors.SEGMENTS_UNAVAILABLE_ERROR_CODE, Errors.SEGMENTS_UNAVAILABLE_ERROR_MESSAGE, {availabilityDelay: voRepresentation.segmentAvailabilityRange.start - voRepresentation.segmentAvailabilityRange.end});
             eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: voRepresentation, error: error});
             return;
         }

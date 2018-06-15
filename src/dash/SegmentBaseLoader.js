@@ -39,7 +39,7 @@ import Debug from '../core/Debug';
 import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
 import HTTPLoader from '../streaming/net/HTTPLoader';
-import ErrorConstants from '../streaming/constants/ErrorConstants';
+import Errors from '../core/errors/Errors';
 
 function SegmentBaseLoader() {
 
@@ -54,12 +54,10 @@ function SegmentBaseLoader() {
         metricsModel,
         mediaPlayerModel,
         httpLoader,
-        baseURLController,
-        errorConstants;
+        baseURLController;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
-        errorConstants = ErrorConstants(context).getInstance();
     }
 
     function initialize() {
@@ -326,7 +324,7 @@ function SegmentBaseLoader() {
         if (segments) {
             eventBus.trigger(Events.SEGMENTS_LOADED, {segments: segments, representation: representation, mediaType: type});
         } else {
-            eventBus.trigger(Events.SEGMENTS_LOADED, {segments: null, representation: representation, mediaType: type, error: new DashJSError(ErrorConstants.SEGMENT_BASE_LOADER_ERROR_CODE, errorConstants.getErrorMessage(ErrorConstants.SEGMENT_BASE_LOADER_ERROR_CODE), null)});
+            eventBus.trigger(Events.SEGMENTS_LOADED, {segments: null, representation: representation, mediaType: type, error: new DashJSError(Errors.SEGMENT_BASE_LOADER_ERROR_CODE, Errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE, null)});
         }
     }
 

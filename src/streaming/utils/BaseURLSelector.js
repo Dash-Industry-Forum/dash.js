@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import ErrorConstants from '../constants/ErrorConstants';
+import Errors from '../../core/errors/Errors';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import BlacklistController from '../controllers/BlacklistController';
@@ -48,7 +48,6 @@ function BaseURLSelector() {
         serviceLocationBlacklistController,
         basicSelector,
         dvbSelector,
-        errorConstants,
         selector;
 
     function setup() {
@@ -66,8 +65,6 @@ function BaseURLSelector() {
         });
 
         selector = basicSelector;
-
-        errorConstants = ErrorConstants(context).getInstance();
     }
 
     function setConfig(config) {
@@ -114,8 +111,8 @@ function BaseURLSelector() {
             eventBus.trigger(
                 Events.URL_RESOLUTION_FAILED, {
                     error: new DashJSError(
-                        ErrorConstants.URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE,
-                        errorConstants.getErrorMessage(ErrorConstants.URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE)
+                        Errors.URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE,
+                        Errors.URL_RESOLUTION_FAILED_GENERIC_ERROR_MESSAGE
                     )
                 }
             );
