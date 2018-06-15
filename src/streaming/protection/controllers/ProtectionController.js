@@ -509,10 +509,6 @@ function ProtectionController(config) {
 
     function onKeyMessage(e) {
         logger.debug('DRM: onKeyMessage');
-        if (e.error) {
-            logger.error(e.error);
-            return;
-        }
 
         // Dispatch event to applications indicating we received a key message
         const keyMessage = e.data;
