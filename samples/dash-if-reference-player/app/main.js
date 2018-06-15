@@ -280,6 +280,24 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
                     break;
                 case dashjs.MediaPlayer.errors.TIMED_TEXT_ERROR_ID_PARSE:
                     break;
+                // mss errors
+                case dashjs.MediaPlayer.errors.MSS_NO_TFRF_CODE:
+                    break;
+                // protection errors
+                case dashjs.MediaPlayer.errors.MEDIA_KEYERR_CODE:
+                    break;
+                case dashjs.MediaPlayer.errors.MEDIA_KEYERR_UNKNOWN_CODE:
+                    break;
+                case dashjs.MediaPlayer.errors.MEDIA_KEYERR_CLIENT_CODE:
+                    break;
+                case dashjs.MediaPlayer.errors.MEDIA_KEYERR_SERVICE_CODE:
+                    break;
+                case dashjs.MediaPlayer.errors.MEDIA_KEYERR_OUTPUT_CODE:
+                    break;
+                case dashjs.MediaPlayer.errors.MEDIA_KEYERR_HARDWARECHANGE_CODE:
+                    break;
+                case dashjs.MediaPlayer.errors.MEDIA_KEYERR_DOMAIN_CODE:
+                    break;
             }
         });
         $("#errorModal").modal('show');
