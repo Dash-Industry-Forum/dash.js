@@ -231,54 +231,54 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
             $scope.error = message;
             $scope.errorType = e.error;
             switch (e.event.id) {
-                case dashjs.ErrorConstants.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE:
+                case dashjs.MediaPlayer.errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE:
                     break;
-                case dashjs.ErrorConstants.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE:
+                case dashjs.MediaPlayer.errors.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE:
                     $scope.error += '. Please, check your internet connection!';
                     break;
-                case dashjs.ErrorConstants.XLINK_LOADER_LOADING_FAILURE_ERROR_CODE:
+                case dashjs.MediaPlayer.errors.XLINK_LOADER_LOADING_FAILURE_ERROR_CODE:
                     break;
-                case dashjs.ErrorConstants.SEGMENTS_UPDATE_FAILED_ERROR_CODE:
+                case dashjs.MediaPlayer.errors.SEGMENTS_UPDATE_FAILED_ERROR_CODE:
                     break;
-                case dashjs.ErrorConstants.SEGMENTS_UNAVAILABLE_ERROR_CODE:
+                case dashjs.MediaPlayer.errors.SEGMENTS_UNAVAILABLE_ERROR_CODE:
                     break;
-                case dashjs.ErrorConstants.SEGMENT_BASE_LOADER_ERROR_CODE:
+                case dashjs.MediaPlayer.errors.SEGMENT_BASE_LOADER_ERROR_CODE:
                     break;                    
-                case dashjs.ErrorConstants.TIME_SYNC_FAILED_ERROR_CODE:
+                case dashjs.MediaPlayer.errors.TIME_SYNC_FAILED_ERROR_CODE:
                     break;
-                case dashjs.ErrorConstants.FRAGMENT_LOADER_LOADING_FAILURE_ERROR_CODE:
+                case dashjs.MediaPlayer.errors.FRAGMENT_LOADER_LOADING_FAILURE_ERROR_CODE:
                     break;
-                case dashjs.ErrorConstants.FRAGMENT_LOADER_NULL_REQUEST_ERROR_CODE:
+                case dashjs.MediaPlayer.errors.FRAGMENT_LOADER_NULL_REQUEST_ERROR_CODE:
                     break;
-                case dashjs.ErrorConstants.URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE:
+                case dashjs.MediaPlayer.errors.URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE:
                     break;
-                case dashjs.ErrorConstants.APPEND_ERROR_CODE:
+                case dashjs.MediaPlayer.errors.APPEND_ERROR_CODE:
                     break;
-                case dashjs.ErrorConstants.REMOVE_ERROR_CODE:
+                case dashjs.MediaPlayer.errors.REMOVE_ERROR_CODE:
                     break;
-                case dashjs.ErrorConstants.DATA_UPDATE_FAILED_ERROR_CODE:
+                case dashjs.MediaPlayer.errors.DATA_UPDATE_FAILED_ERROR_CODE:
                     break;
-                case dashjs.ErrorConstants.CAPABILITY_MEDIASOURCE_ERROR_CODE:
+                case dashjs.MediaPlayer.errors.CAPABILITY_MEDIASOURCE_ERROR_CODE:
                     break;
-                case dashjs.ErrorConstants.CAPABILITY_MEDIAKEYS_ERROR_CODE:
+                case dashjs.MediaPlayer.errors.CAPABILITY_MEDIAKEYS_ERROR_CODE:
                     break;
-                case dashjs.ErrorConstants.DOWNLOAD_ERROR_ID_MANIFEST:
+                case dashjs.MediaPlayer.errors.DOWNLOAD_ERROR_ID_MANIFEST:
                     break;
-                case dashjs.ErrorConstants.DOWNLOAD_ERROR_ID_SIDX:
+                case dashjs.MediaPlayer.errors.DOWNLOAD_ERROR_ID_SIDX:
                     break;
-                case dashjs.ErrorConstants.DOWNLOAD_ERROR_ID_CONTENT:
+                case dashjs.MediaPlayer.errors.DOWNLOAD_ERROR_ID_CONTENT:
                     break;
-                case dashjs.ErrorConstants.DOWNLOAD_ERROR_ID_INITIALIZATION:
+                case dashjs.MediaPlayer.errors.DOWNLOAD_ERROR_ID_INITIALIZATION:
                     break;
-                case dashjs.ErrorConstants.DOWNLOAD_ERROR_ID_XLINK:
+                case dashjs.MediaPlayer.errors.DOWNLOAD_ERROR_ID_XLINK:
                     break;
-                case dashjs.ErrorConstants.MANIFEST_ERROR_ID_CODEC:
+                case dashjs.MediaPlayer.errors.MANIFEST_ERROR_ID_CODEC:
                     break;
-                case dashjs.ErrorConstants.MANIFEST_ERROR_ID_PARSE:
+                case dashjs.MediaPlayer.errors.MANIFEST_ERROR_ID_PARSE:
                     break;
-                case dashjs.ErrorConstants.MANIFEST_ERROR_ID_NOSTREAMS:
+                case dashjs.MediaPlayer.errors.MANIFEST_ERROR_ID_NOSTREAMS:
                     break;
-                case dashjs.ErrorConstants.TIMED_TEXT_ERROR_ID_PARSE:
+                case dashjs.MediaPlayer.errors.TIMED_TEXT_ERROR_ID_PARSE:
                     break;
             }
         });
