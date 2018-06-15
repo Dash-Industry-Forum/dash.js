@@ -66,6 +66,9 @@ class Errors extends ErrorsBase {
 
         this.TIMED_TEXT_ERROR_ID_PARSE         = 24;//'parse';
 
+        this.MANIFEST_ERROR_ID_MULTIPLEXED     = 25;
+        this.MEDIASOURCE_TYPE_UNSUPPORTED_CODE = 26;
+
         this.MANIFEST_LOADER_PARSING_FAILURE_ERROR_MESSAGE = 'parsing failed for ';
         this.MANIFEST_LOADER_LOADING_FAILURE_ERROR_MESSAGE = 'Failed loading manifest: ';
         this.XLINK_LOADER_LOADING_FAILURE_ERROR_MESSAGE = 'Failed loading Xlink element: ';
@@ -78,6 +81,11 @@ class Errors extends ErrorsBase {
         this.APPEND_ERROR_MESSAGE = 'chunk is not defined';
         this.REMOVE_ERROR_MESSAGE = 'buffer is not defined';
         this.DATA_UPDATE_FAILED_ERROR_MESSAGE = 'Data update failed';
+
+        this.CAPABILITY_MEDIASOURCE_ERROR_MESSAGE = 'mediasource is not supported';
+        this.CAPABILITY_MEDIAKEYS_ERROR_MESSAGE = 'mediakeys is not supported';
+        this.TIMED_TEXT_ERROR_MESSAGE_PARSE = 'parsing error :';
+        this.MEDIASOURCE_TYPE_UNSUPPORTED_MESSAGE = 'Error creating source buffer of type : ';
     }
 }
 

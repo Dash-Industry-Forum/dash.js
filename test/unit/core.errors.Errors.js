@@ -29,6 +29,8 @@ describe('Errors', function () {
         expect(Errors.MANIFEST_ERROR_ID_PARSE).to.equal(22);
         expect(Errors.MANIFEST_ERROR_ID_NOSTREAMS).to.equal(23);
         expect(Errors.TIMED_TEXT_ERROR_ID_PARSE).to.equal(24);
+        expect(Errors.MANIFEST_ERROR_ID_MULTIPLEXED).to.equal(25);
+        expect(Errors.MEDIASOURCE_TYPE_UNSUPPORTED_CODE).to.equal(26);
     });
 
     it('Errors should return the correct error message', () => {
@@ -45,5 +47,9 @@ describe('Errors', function () {
         expect(Errors.APPEND_ERROR_MESSAGE).to.equal('chunk is not defined');
         expect(Errors.REMOVE_ERROR_MESSAGE).to.equal('buffer is not defined');
         expect(Errors.DATA_UPDATE_FAILED_ERROR_MESSAGE).to.equal('Data update failed');
+        expect(Errors.CAPABILITY_MEDIASOURCE_ERROR_MESSAGE).to.equal('mediasource is not supported');
+        expect(Errors.CAPABILITY_MEDIAKEYS_ERROR_MESSAGE).to.equal('mediakeys is not supported');
+        expect(Errors.TIMED_TEXT_ERROR_MESSAGE_PARSE).to.equal('parsing error :');
+        expect(Errors.MEDIASOURCE_TYPE_UNSUPPORTED_MESSAGE).to.equal('Error creating source buffer of type : ');
     });
 });

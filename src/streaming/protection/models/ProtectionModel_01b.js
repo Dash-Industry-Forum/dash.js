@@ -351,7 +351,8 @@ function ProtectionModel_01b(config) {
                             sessions.push(sessionToken);
 
                             if (pendingSessions.length !== 0) {
-                                errHandler.mediaKeyMessageError('Multiple key sessions were creates with a user-agent that does not support sessionIDs!! Unpredictable behavior ahead!');
+                                errHandler.mediaKeyMessageError(ProtectionErrors.MEDIA_KEY_MESSAGE_ERROR_MESSAGE);
+                                errHandler.mediaKeyMessageErrorNew(new DashJSError(ProtectionErrors.MEDIA_KEY_MESSAGE_ERROR_CODE, ProtectionErrors.MEDIA_KEY_MESSAGE_ERROR_MESSAGE));
                             }
                         }
 

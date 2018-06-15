@@ -180,6 +180,7 @@ function Stream(config) {
         if (streamProcessors.length === 0) {
             let msg = 'No streams to play.';
             errHandler.manifestError(msg, 'nostreams', manifestModel.getValue());
+            errHandler.manifestErrorNew(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS, msg +  'nostreams', manifestModel.getValue()));
             logger.fatal(msg);
         }
     }
@@ -282,6 +283,7 @@ function Stream(config) {
     function onProtectionError(event) {
         if (event.error) {
             errHandler.mediaKeySessionError(event.error);
+            errHandler.mediaKeySessionErrorNew(event.error);
             logger.fatal(event.error);
             reset();
         }
@@ -296,6 +298,7 @@ function Stream(config) {
             msg = 'Multiplexed representations are intentionally not supported, as they are not compliant with the DASH-AVC/264 guidelines';
             logger.fatal(msg);
             errHandler.manifestError(msg, 'multiplexedrep', manifestModel.getValue());
+            errHandler.manifestErrorNew(new DashJSError(Errors.MANIFEST_ERROR_ID_MULTIPLEXED, msg, manifestModel.getValue()));
             return false;
         }
 
@@ -307,6 +310,7 @@ function Stream(config) {
 
         if (!!mediaInfo.contentProtection && !capabilities.supportsEncryptedMedia()) {
             errHandler.capabilityError(Errors.CAPABILITY_MEDIAKEYS_ERROR_CODE);
+            errHandler.capabilityErrorNew(new DashJSError(Errors.CAPABILITY_MEDIAKEYS_ERROR_CODE, Errors.CAPABILITY_MEDIAKEYS_ERROR_MESSAGE));
         } else if (!capabilities.supportsCodec(codec)) {
             msg = type + 'Codec (' + codec + ') is not supported.';
             logger.error(msg);
@@ -489,6 +493,7 @@ function Stream(config) {
         if (streamProcessors.length === 0) {
             const msg = 'No streams to play.';
             errHandler.manifestError(msg, 'nostreams', manifestModel.getValue());
+            errHandler.manifestErrorNew(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS, msg, manifestModel.getValue()));
             logger.fatal(msg);
         } else {
             checkIfInitializationCompleted();

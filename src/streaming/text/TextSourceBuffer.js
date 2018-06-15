@@ -42,6 +42,8 @@ import ISOBoxer from 'codem-isoboxer';
 import cea608parser from '../../../externals/cea608-parser';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
+import DashJSError from '../vo/DashJSError';
+import Errors from '../../core/errors/Errors';
 
 function TextSourceBuffer() {
 
@@ -422,6 +424,7 @@ function TextSourceBuffer() {
                 textTracks.addCaptions(textTracks.getCurrentTrackIdx(), 0, result);
             } catch (e) {
                 errHandler.timedTextError(e, 'parse', ccContent);
+                errHandler.timedTextErrorNew(new DashJSError(Errors.TIMED_TEXT_ERROR_ID_PARSE, Errors.TIMED_TEXT_ERROR_MESSAGE_PARSE + e.message, ccContent));
             }
         } else if (mediaType === Constants.VIDEO) { //embedded text
             if (chunk.segmentType === HTTPRequest.INIT_SEGMENT_TYPE) {

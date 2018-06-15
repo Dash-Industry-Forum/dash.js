@@ -69,6 +69,7 @@ import {
 } from './vo/metrics/HTTPRequest';
 import BASE64 from '../../externals/base64';
 import ISOBoxer from 'codem-isoboxer';
+import DashJSError from './vo/DashJSError';
 
 /**
  * @module MediaPlayer
@@ -195,6 +196,7 @@ function MediaPlayer() {
 
         if (!capabilities.supportsMediaSource()) {
             errHandler.capabilityError(Errors.CAPABILITY_MEDIASOURCE_ERROR_CODE);
+            errHandler.capabilityErrorNew(new DashJSError(Errors.CAPABILITY_MEDIASOURCE_ERROR_CODE, Errors.CAPABILITY_MEDIASOURCE_ERROR_MESSAGE));
             return;
         }
 

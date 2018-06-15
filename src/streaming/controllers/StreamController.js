@@ -47,6 +47,8 @@ import MediaPlayerEvents from '../MediaPlayerEvents';
 import TimeSyncController from './TimeSyncController';
 import BaseURLController from './BaseURLController';
 import MediaSourceController from './MediaSourceController';
+import DashJSError from '../vo/DashJSError';
+import Errors from '../../core/errors/Errors';
 
 function StreamController() {
     // Check whether there is a gap every 40 wallClockUpdateEvent times
@@ -646,6 +648,7 @@ function StreamController() {
 
         } catch (e) {
             errHandler.manifestError(e.message, 'nostreamscomposed', manifestModel.getValue());
+            errHandler.manifestErrorNew(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS, e.message + 'nostreamscomposed', manifestModel.getValue()));
             hasInitialisationError = true;
             reset();
         }
@@ -810,6 +813,7 @@ function StreamController() {
             logger.fatal(e.error);
         }
         errHandler.mediaSourceError(msg);
+        errHandler.mediaSourceErrorNew(new DashJSError(e.error.code, msg));
         reset();
     }
 

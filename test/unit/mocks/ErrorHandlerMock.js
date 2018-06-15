@@ -5,8 +5,16 @@ function ErrorHandlerMock () {
         this.error = error;
     };
 
+    this.manifestErrorNew = function (objError) {
+        this.error = objError.message;
+    };
+
     this.mediaSourceError = function (error) {
         this.error = error;
+    };
+
+    this.mediaSourceErrorNew = function (objError) {
+        this.error = objError.message;
     };
 
     this.mssError = function (errorObj) {

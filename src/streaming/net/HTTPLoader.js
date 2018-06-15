@@ -33,6 +33,7 @@ import FetchLoader from './FetchLoader';
 import { HTTPRequest } from '../vo/metrics/HTTPRequest';
 import FactoryMaker from '../../core/FactoryMaker';
 import Errors from '../../core/errors/Errors';
+import DashJSError from '../vo/DashJSError';
 
 /**
  * @module HTTPLoader
@@ -137,6 +138,8 @@ function HTTPLoader(cfg) {
                         request.url,
                         request
                     );
+
+                    errHandler.downloadErrorNew(new DashJSError(downloadErrorToRequestTypeMap[request.type], request.url + ' is not available', request));
 
                     if (config.error) {
                         config.error(request, 'error', httpRequest.response.statusText);

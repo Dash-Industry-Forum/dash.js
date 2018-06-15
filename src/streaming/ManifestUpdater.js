@@ -32,6 +32,7 @@ import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import FactoryMaker from '../core/FactoryMaker';
 import Debug from '../core/Debug';
+import DashJSError from './vo/DashJSError';
 
 function ManifestUpdater() {
 
@@ -171,6 +172,7 @@ function ManifestUpdater() {
             update(e.manifest);
         } else {
             errHandler.manifestError(e.error.message, e.error.code);
+            errHandler.manifestErrorNew(new DashJSError(e.error.code, e.error.message));
         }
     }
 

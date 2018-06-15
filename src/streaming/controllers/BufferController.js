@@ -40,6 +40,8 @@ import BoxParser from '../utils/BoxParser';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import InitCache from '../utils/InitCache';
+import DashJSError from '../vo/DashJSError';
+import Errors from '../../core/errors/Errors';
 
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 
@@ -140,6 +142,7 @@ function BufferController(config) {
             } catch (e) {
                 logger.fatal('Caught error on create SourceBuffer: ' + e);
                 errHandler.mediaSourceError('Error creating ' + type + ' source buffer.');
+                errHandler.mediaSourceErrorNew(new DashJSError(Errors.MEDIASOURCE_TYPE_UNSUPPORTED_CODE, Errors.MEDIASOURCE_TYPE_UNSUPPORTED_MESSAGE + type));
             }
         } else {
             buffer = PreBufferSink(context).create(onAppended.bind(this));

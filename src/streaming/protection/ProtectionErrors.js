@@ -45,12 +45,15 @@ class ProtectionErrors extends ErrorsBase {
         this.MEDIA_KEYERR_HARDWARECHANGE_CODE = 105;
         this.MEDIA_KEYERR_DOMAIN_CODE = 106;
 
+        this.MEDIA_KEY_MESSAGE_ERROR_CODE = 107;
+
         this.MEDIA_KEYERR_UNKNOWN_MESSAGE = 'An unspecified error occurred. This value is used for errors that don\'t match any of the other codes.';
         this.MEDIA_KEYERR_CLIENT_MESSAGE = 'The Key System could not be installed or updated.';
         this.MEDIA_KEYERR_SERVICE_MESSAGE = 'The message passed into update indicated an error from the license service.';
         this.MEDIA_KEYERR_OUTPUT_MESSAGE = 'There is no available output device with the required characteristics for the content protection system.';
         this.MEDIA_KEYERR_HARDWARECHANGE_MESSAGE = 'A hardware configuration change caused a content protection error.';
         this.MEDIA_KEYERR_DOMAIN_MESSAGE = 'An error occurred in a multi-device domain licensing configuration. The most common error is a failure to join the domain.';
+        this.MEDIA_KEY_MESSAGE_ERROR_MESSAGE = 'Multiple key sessions were creates with a user-agent that does not support sessionIDs!! Unpredictable behavior ahead!';
     }
 }
 
