@@ -420,8 +420,10 @@ function StreamController() {
     }
 
     function switchToVideoElement(seekTime) {
-        playbackController.initialize(activeStream.getStreamInfo());
-        openMediaSource(seekTime, null, true);
+        if (activeStream) {
+            playbackController.initialize(activeStream.getStreamInfo());
+            openMediaSource(seekTime, null, true);
+        }
     }
 
     function openMediaSource(seekTime, oldStream, streamActivated) {
