@@ -2776,6 +2776,7 @@ function MediaPlayer() {
             MediaPlayerEvents.extend(Protection.events, {
                 publicOnly: true
             });
+            Errors.extend(Protection.errors);
             if (!capabilities) {
                 capabilities = Capabilities(context).getInstance();
             }
