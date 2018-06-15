@@ -175,8 +175,8 @@ function HTTPLoader(cfg) {
                 lastTraceReceivedCount = event.loaded;
             }
 
-            if (config.progress && event.data) {
-                config.progress(event.data);
+            if (config.progress && event) {
+                config.progress(event);
             }
         };
 
