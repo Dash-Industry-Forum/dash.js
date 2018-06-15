@@ -28,14 +28,15 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
+import ErrorsBase from './ErrorsBase';
 /**
  * Errors declaration
  * @class
  * @ignore
  */
-class Errors {
+class Errors extends ErrorsBase {
     constructor () {
+        super();
         this.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE = 1;
         this.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE = 2;
         this.XLINK_LOADER_LOADING_FAILURE_ERROR_CODE = 3;
