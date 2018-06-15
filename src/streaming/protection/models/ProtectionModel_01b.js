@@ -39,7 +39,7 @@
  */
 import ProtectionKeyController from '../controllers/ProtectionKeyController';
 import NeedKey from '../vo/NeedKey';
-import KeyError from '../vo/KeyError';
+import DashJSError from '../../vo/DashJSError';
 import KeyMessage from '../vo/KeyMessage';
 import KeySystemConfiguration from '../vo/KeySystemConfiguration';
 import KeySystemAccess from '../vo/KeySystemAccess';
@@ -277,30 +277,37 @@ function ProtectionModel_01b(config) {
                         }
 
                         if (sessionToken) {
+                            let code = ProtectionErrors.MEDIA_KEYERR_CODE;
                             let msg = '';
                             switch (event.errorCode.code) {
                                 case 1:
+                                    code = ProtectionErrors.MEDIA_KEYERR_UNKNOWN_CODE;
                                     msg += 'MEDIA_KEYERR_UNKNOWN - ' + ProtectionErrors.MEDIA_KEYERR_UNKNOWN_MESSAGE;
                                     break;
                                 case 2:
+                                    code = ProtectionErrors.MEDIA_KEYERR_CLIENT_CODE;
                                     msg += 'MEDIA_KEYERR_CLIENT - ' + ProtectionErrors.MEDIA_KEYERR_CLIENT_MESSAGE;
                                     break;
                                 case 3:
+                                    code = ProtectionErrors.MEDIA_KEYERR_SERVICE_CODE;
                                     msg += 'MEDIA_KEYERR_SERVICE - ' + ProtectionErrors.MEDIA_KEYERR_SERVICE_MESSAGE;
                                     break;
                                 case 4:
+                                    code = ProtectionErrors.MEDIA_KEYERR_OUTPUT_CODE;
                                     msg += 'MEDIA_KEYERR_OUTPUT - ' + ProtectionErrors.MEDIA_KEYERR_OUTPUT_MESSAGE;
                                     break;
                                 case 5:
+                                    code = ProtectionErrors.MEDIA_KEYERR_HARDWARECHANGE_CODE;
                                     msg += 'MEDIA_KEYERR_HARDWARECHANGE - ' + ProtectionErrors.MEDIA_KEYERR_HARDWARECHANGE_MESSAGE;
                                     break;
                                 case 6:
+                                    code = ProtectionErrors.MEDIA_KEYERR_DOMAIN_CODE;
                                     msg += 'MEDIA_KEYERR_DOMAIN - ' + ProtectionErrors.MEDIA_KEYERR_DOMAIN_MESSAGE;
                                     break;
                             }
                             msg += '  System Code = ' + event.systemCode;
                             // TODO: Build error string based on key error
-                            eventBus.trigger(events.KEY_ERROR, {data: new KeyError(sessionToken, msg)});
+                            eventBus.trigger(events.KEY_ERROR, {data: new DashJSError(code, msg, sessionToken)});
                         } else {
                             logger.error('No session token found for key error');
                         }
