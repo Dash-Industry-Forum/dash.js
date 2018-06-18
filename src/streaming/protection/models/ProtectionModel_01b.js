@@ -43,7 +43,7 @@ import DashJSError from '../../vo/DashJSError';
 import KeyMessage from '../vo/KeyMessage';
 import KeySystemConfiguration from '../vo/KeySystemConfiguration';
 import KeySystemAccess from '../vo/KeySystemAccess';
-import ProtectionErrors from '../ProtectionErrors';
+import ProtectionErrors from '../errors/ProtectionErrors';
 
 function ProtectionModel_01b(config) {
 

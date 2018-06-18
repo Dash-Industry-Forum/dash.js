@@ -39,7 +39,7 @@
  */
 import ProtectionKeyController from '../controllers/ProtectionKeyController';
 import NeedKey from '../vo/NeedKey';
-import ProtectionErrors from '../ProtectionErrors';
+import ProtectionErrors from '../errors/ProtectionErrors';
 import DashJSError from '../../vo/DashJSError';
 import KeyMessage from '../vo/KeyMessage';
 import KeySystemAccess from '../vo/KeySystemAccess';
