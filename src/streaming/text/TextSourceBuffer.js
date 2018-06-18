@@ -468,7 +468,7 @@ function TextSourceBuffer() {
                             return;
                         }
                         handler = makeCueAdderForIndex(this, trackIdx);
-                        embeddedCea608FieldParsers[i] = new cea608parser.Cea608Parser(i, {
+                        embeddedCea608FieldParsers[i] = new cea608parser.Cea608Parser(i + 1, {
                             'newCue': handler
                         }, null);
                     }
