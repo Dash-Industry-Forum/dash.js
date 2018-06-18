@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import DashJSError from '../streaming/vo/DashJSError';
-import MssErrors from './MssErrors';
+import MssErrors from './errors/MssErrors';
 
 import Events from '../streaming/MediaPlayerEvents';
 

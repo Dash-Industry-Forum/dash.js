@@ -34,7 +34,7 @@ import FragmentRequest from '../streaming/vo/FragmentRequest';
 import MssFragmentInfoController from './MssFragmentInfoController';
 import MssFragmentProcessor from './MssFragmentProcessor';
 import MssParser from './parser/MssParser';
-import MssErrors from './MssErrors';
+import MssErrors from './errors/MssErrors';
 
 function MssHandler(config) {
 
