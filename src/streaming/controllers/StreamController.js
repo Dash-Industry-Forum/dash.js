@@ -127,8 +127,7 @@ function StreamController() {
             manifestModel: manifestModel,
             dashManifestModel: dashManifestModel,
             mediaPlayerModel: mediaPlayerModel,
-            manifestLoader: manifestLoader,
-            errHandler: errHandler
+            manifestLoader: manifestLoader
         });
         manifestUpdater.initialize();
 

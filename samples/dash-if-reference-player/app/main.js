@@ -230,11 +230,10 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         $scope.$apply(function () {
             $scope.error = message;
             $scope.errorType = e.error;
-            switch (e.event.id) {
+            switch (e.event.code) {
                 case dashjs.MediaPlayer.errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE:
                     break;
                 case dashjs.MediaPlayer.errors.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE:
-                    $scope.error += '. Please, check your internet connection!';
                     break;
                 case dashjs.MediaPlayer.errors.XLINK_LOADER_LOADING_FAILURE_ERROR_CODE:
                     break;
@@ -263,6 +262,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
                 case dashjs.MediaPlayer.errors.CAPABILITY_MEDIAKEYS_ERROR_CODE:
                     break;
                 case dashjs.MediaPlayer.errors.DOWNLOAD_ERROR_ID_MANIFEST:
+                    $scope.error += '. Please, check your internet connection. Http status code is ' + e.event.data.response.status;
                     break;
                 case dashjs.MediaPlayer.errors.DOWNLOAD_ERROR_ID_SIDX:
                     break;
