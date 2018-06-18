@@ -1,4 +1,5 @@
 import PlaybackController from '../../src/streaming/controllers/PlaybackController';
+import URIFragmentModel from '../../src/streaming/models/URIFragmentModel';
 import Events from '../../src/core/events/Events';
 import EventBus from '../../src/core/EventBus';
 
@@ -27,6 +28,7 @@ describe('PlaybackController', function () {
         mediaPlayerModelMock = new MediaPlayerModelMock();
 
         playbackController = PlaybackController(context).getInstance();
+        URIFragmentModel(context).getInstance().initialize('http://urlOfManifest.com/manifest.mpd#t=18.2');
 
         playbackController.setConfig({
             videoModel: videoModelMock,
@@ -140,6 +142,12 @@ describe('PlaybackController', function () {
             it('should return video ended ', function () {
                 videoModelMock.ended = true;
                 expect(playbackController.getEnded()).to.equal(videoModelMock.ended);
+            });
+
+            it('getStartTimeFromUriParameters should return the expected value', function () {
+                const uriParameters = playbackController.getStartTimeFromUriParameters();
+                expect(uriParameters.fragT).to.exist; // jshint ignore:line
+                expect(uriParameters.fragT).to.equal(18.2);
             });
         });
 
