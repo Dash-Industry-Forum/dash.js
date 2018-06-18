@@ -330,8 +330,8 @@ function TimeSyncController() {
                     source.value,
                     function (serverTime) {
                         // the timing source returned something useful
-                        let deviceTime = new Date().getTime();
-                        let offset = serverTime - deviceTime;
+                        const deviceTime = new Date().getTime();
+                        const offset = Math.trunc((serverTime - deviceTime) / 1000) * 1000;
 
                         setOffsetMs(offset);
 
