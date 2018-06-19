@@ -58,7 +58,7 @@
   "dependencies": {
     "codem-isoboxer": "0.3.5",
     "fast-deep-equal": "1.1.0",
-    "imsc": "^1.0.1-rc.1"
+    "imsc": "^1.0.1-rc.2"
   },
   "repository": {
     "type": "git",
