@@ -538,7 +538,7 @@ function BufferController(config) {
             eventBus.trigger(Events.BUFFERING_COMPLETED, { sender: instance, streamInfo: streamProcessor.getStreamInfo() });
         }
 
-        if (bufferLevel < STALL_THRESHOLD && !isBufferingCompleted) {
+        if (((!mediaPlayerModel.getLowLatencyEnabled() && bufferLevel < STALL_THRESHOLD) || bufferLevel === 0) && !isBufferingCompleted) {
             notifyBufferStateChanged(BUFFER_EMPTY);
         } else {
             if (isBufferingCompleted || bufferLevel >= mediaPlayerModel.getStableBufferTime()) {
