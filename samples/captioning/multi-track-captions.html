@@ -12,7 +12,7 @@
         Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
     <!--<script src="../../dist/dash.all.min.js"></script>-->
 
-    <script>
+    <script class="code">
         var EXTERNAL_CAPTION_URL = "https://dash.akamaized.net/dash264/TestCases/4b/qualcomm/1/ED_OnDemand_5SecSeg_Subtitles.mpd", // need to manually seek to get stream to start... issue with MPD but only sample with multi adaptations for external sidecar caption text xml
             FRAGMENTED_CAPTION_URL = "https://vm2.dashif.org/dash/vod/testpic_2s/multi_subs.mpd",
             videoElement,
@@ -47,7 +47,7 @@
     </style>
 
     <body onload="startVideo()">
-        <div class="dash-video-player">
+        <div class="dash-video-player code">
             <div class="videoContainer" id="videoContainer">
                 <video preload="auto" autoplay="true" > </video>
                 <div id="ttml-rendering-div"></div>
@@ -83,5 +83,6 @@
                 </div>
             </div>
         </div>
+        <script src="../highlighter.js"></script>
     </body>
 </html>

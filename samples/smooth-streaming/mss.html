@@ -5,13 +5,13 @@
     <meta charset="utf-8" />
     <title>Smooth Streaming example, single videoElement</title>
 
-    <script src="../../dist/dash.all.debug.js"></script>
+    <script class="code" src="../../dist/dash.all.debug.js"></script>
     <!--dash.all.min.js should be used in production over dash.all.debug.js
         Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
     <!--<script src="../../dist/dash.all.min.js"></script>-->
 
     <!-- add mss package which is required to play Smooth Streaming streams -->
-    <script src="../../dist/dash.mss.debug.js"></script>
+    <script class="code" src="../../dist/dash.mss.debug.js"></script>
 
     <style>
         video {
@@ -38,7 +38,7 @@
     <div class="inputForm">
         <div>
             <label>Stream Url: </label>
-            <input type="text" id="streamUrl" value="http://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest">
+            <input class="code" type="text" id="streamUrl" value="http://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest">
         </div>
         <div>
             <label>License Server Url: </label>
@@ -48,12 +48,11 @@
             <input type="button" value="Load" onclick="loadStream()">
         </div>
     </div>
-    </div>
     <div>
         <video controls="true"></video>
     </div>
 
-    <script>
+    <script class="code">
         function loadStream() {
             var streamUrl = document.getElementById('streamUrl').value;
             var licenseServerUrl = document.getElementById('licenseServerUrl').value;
@@ -83,6 +82,7 @@
             player.attachSource(streamUrl); // provide the manifest source
         }
     </script>
+    <script src="../highlighter.js"></script>
 </body>
 
 </html>

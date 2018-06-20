@@ -8,13 +8,13 @@
     <link rel="icon" type="image/x-icon" href="http://dashif.org/wp-content/uploads/2014/12/dashif.ico" />
     <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
 
-    <script src="../../dist/dash.all.debug.js"></script>
+    <script  class="code" src="../../dist/dash.all.debug.js"></script>
     <!--dash.all.min.js should be used in production over dash.all.debug.js
         Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
     <!--<script src="../../dist/dash.all.min.js"></script>-->
-    <script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
+    <script class="code" src="../../contrib/akamai/controlbar/ControlBar.js"></script>
 
-    <script>
+    <script class="code">
         function startVideo() {
             var url = "http://dash.edgesuite.net/akamai/bbb_30fps/bbb_with_multiple_tiled_thumbnails.mpd",
                 video = document.querySelector(".dash-video-player video"),
@@ -30,9 +30,9 @@
         }
     </script>
 
-    <style>
+    <style class="code">
         .dash-video-player {
-            position: relative;
+            position: relative;  /* This position relative is needed to position the thumbnails */
             width: 640px;
             margin: 0 auto;
         }
@@ -45,8 +45,8 @@
         }
     </style>
 
-    <body onload="startVideo()">
-        <div class="dash-video-player">
+    <body onload="startVideo()" >
+        <div class="dash-video-player code">
             <div id="videoContainer" class="videoContainer">
                 <video></video>
                 <div id="videoController" class="video-controller unselectable" ng-cloak>
@@ -80,12 +80,13 @@
                             <div id="seekbar-play" class="seekbar seekbar-play"></div>
                         </div>
                     </div>
-                    <div id="thumbnail-container" class="thumbnail-container">
+                    <div id="thumbnail-container" class="thumbnail-container"> <!-- Thumbnails will be rendered here -->
                         <div id="thumbnail-elem" class="thumbnail-elem"></div>
                         <div id="thumbnail-time-label" class="thumbnail-time-label"></div>
                     </div>
                 </div>
             </div>
         </div>
+        <script src="../highlighter.js"></script>
     </body>
 </html>

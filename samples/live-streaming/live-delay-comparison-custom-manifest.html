@@ -9,7 +9,7 @@
         Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
     <!--<script src="../../dist/dash.all.min.js"></script>-->
 
-    <script>
+    <script class="code">
         var player,firstLoad = true;
         function init()
         {
@@ -96,10 +96,9 @@ The first takes the desired delay in seconds. The second takes the delay in term
 If you use both together, setLiveDelay <br/> will take priority. If you set neither, the default delay of 4 segment durations will be used.
 Note that using either method will not result in the <br/> offset exactly matching the requested setings. The final achieved delay is a function of the segment duration, when the
 stream is requested <br/>with respect to the segment boundaries, as well as the amount of data the source buffers need to begin decoding.
-<p/>
 Enter the URL to a live (dynamic) stream manifest :
-<input id="manifest" type="text" value="https://vm2.dashif.org/livesim/testpic_2s/Manifest.mpd"/><br/>
-<form>
+<input class="code" id="manifest" type="text" value="https://vm2.dashif.org/livesim/testpic_2s/Manifest.mpd"/><br/>
+<form class="code">
     Set the live delay at stream start-up using one of the three possible methods:<br/>
     <input type="radio" onclick="delaySelect(this)" name="delay" value="default" checked> Default<br/>
     <input type="radio" onclick="delaySelect(this)" name="delay" value="segments"> Fragment Count<br/>
@@ -110,15 +109,12 @@ Enter the URL to a live (dynamic) stream manifest :
     <div id="secondsEntry">
         Enter the desired value for setLiveDelay in seconds <input id="delayInSeconds" type="text"/><br/>
     </div>
-    <p/>
     <input id="loadButton" type="button" value="LOAD PLAYER" onclick="load(this)"/>
-    <p/>
 </form>
 
-<div>
+<div class="code">
     <video controls="true">
     </video>
-    <p/>
     Playhead seconds behind live: <span id="videoDelay"></span><br/>
     Buffer length: <span id="videoBuffer"></span>
     <div>Wall clock time
@@ -127,7 +123,7 @@ Enter the URL to a live (dynamic) stream manifest :
         </div>
     </div>
 </div>
-<script>
+<script class="code">
     document.addEventListener("DOMContentLoaded", function () {
         init();
     });
