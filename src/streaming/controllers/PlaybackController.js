@@ -70,7 +70,8 @@ function PlaybackController() {
         lastLivePlaybackTime,
         originalPlaybackRate,
         catchingUp,
-        availabilityStartTime;
+        availabilityStartTime,
+        compatibleWithPreviousStream;
 
     let catchUpPlaybackRate = DEFAULT_CATCHUP_PLAYBACK_RATE;
 
@@ -79,11 +80,12 @@ function PlaybackController() {
         reset();
     }
 
-    function initialize(StreamInfo) {
+    function initialize(StreamInfo, compatible) {
         streamInfo = StreamInfo;
         addAllListeners();
         isDynamic = streamInfo.manifestInfo.isDynamic;
         liveStartTime = streamInfo.start;
+        compatibleWithPreviousStream = compatible;
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
@@ -132,11 +134,11 @@ function PlaybackController() {
         return streamInfo && videoModel ? videoModel.isSeeking() : null;
     }
 
-    function seek(time) {
+    function seek(time, stickToBuffered) {
         if (streamInfo && videoModel) {
             eventBus.trigger(Events.PLAYBACK_SEEK_ASKED);
             logger.info('Requesting seek to time: ' + time);
-            videoModel.setCurrentTime(time);
+            videoModel.setCurrentTime(time, stickToBuffered);
         }
     }
 
@@ -632,8 +634,8 @@ function PlaybackController() {
                     ranges = bufferedRange[streamInfo.id].video;
                 }
                 if (checkTimeInRanges(earliestTime, ranges)) {
-                    if (!isSeeking()) {
-                        seek(earliestTime);
+                    if (!isSeeking() && !compatibleWithPreviousStream) {
+                        seek(earliestTime, true);
                     }
                     commonEarliestTime[streamInfo.id].started = true;
                 }
@@ -642,7 +644,7 @@ function PlaybackController() {
             //current stream has only audio or only video content
             if (commonEarliestTime[streamInfo.id][type]) {
                 earliestTime = commonEarliestTime[streamInfo.id][type] > initialStartTime ? commonEarliestTime[streamInfo.id][type] : initialStartTime;
-                if (!isSeeking()) {
+                if (!isSeeking() && !compatibleWithPreviousStream) {
                     seek(earliestTime);
                 }
                 commonEarliestTime[streamInfo.id].started = true;

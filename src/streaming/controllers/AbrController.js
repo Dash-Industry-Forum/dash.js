@@ -107,6 +107,8 @@ function AbrController() {
             setElementSize();
         }
         eventBus.on(Events.METRIC_ADDED, onMetricAdded, this);
+        eventBus.on(Events.PERIOD_SWITCH_COMPLETED, createAbrRulesCollection, this);
+
         throughputHistory = ThroughputHistory(context).create({
             mediaPlayerModel: mediaPlayerModel
         });
@@ -157,6 +159,7 @@ function AbrController() {
         eventBus.off(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
         eventBus.off(Events.QUALITY_CHANGE_RENDERED, onQualityChangeRendered, this);
         eventBus.off(Events.METRIC_ADDED, onMetricAdded, this);
+        eventBus.off(Events.PERIOD_SWITCH_COMPLETED, createAbrRulesCollection, this);
 
         if (abrRulesCollection) {
             abrRulesCollection.reset();

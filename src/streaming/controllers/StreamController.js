@@ -96,6 +96,9 @@ function StreamController() {
         isStreamBufferingCompleted,
         playbackEndedTimerId,
         wallclockTicked,
+        buffers,
+        compatible,
+        preloading,
         lastPlaybackTime;
 
     function setup() {
@@ -233,7 +236,12 @@ function StreamController() {
             isStreamBufferingCompleted = false;
         }
 
-        if (seekingStream && seekingStream !== activeStream) {
+        if ( seekingStream === activeStream && preloading ) {
+            // Seeking to the current period was requested while preloading the next one, deactivate preloading one
+            preloading.deactivate(true);
+        }
+
+        if (seekingStream && (seekingStream !== activeStream || !activeStream.isActive()) ) {
             flushPlaylistMetrics(PlayListTrace.END_OF_PERIOD_STOP_REASON);
             switchStream(activeStream, seekingStream, e.seekTime);
         } else {
@@ -283,6 +291,9 @@ function StreamController() {
                 const delayPlaybackEnded = timeToEnd > 0 ? timeToEnd * 1000 : 0;
                 logger.debug('[toggleEndPeriodTimer] start-up of timer to notify PLAYBACK_ENDED event. It will be triggered in ' + delayPlaybackEnded + ' milliseconds');
                 playbackEndedTimerId = setTimeout(function () {eventBus.trigger(Events.PLAYBACK_ENDED);}, delayPlaybackEnded);
+                const preloadDelay = delayPlaybackEnded < 2000 ? delayPlaybackEnded / 4 : delayPlaybackEnded - 2000;
+                logger.info('[StreamController][toggleEndPeriodTimer] Going to fire preload in ' + preloadDelay);
+                setTimeout(onStreamCanLoadNext,  preloadDelay);
             }
         }
     }
@@ -298,6 +309,24 @@ function StreamController() {
             isStreamBufferingCompleted = true;
             if (isPaused === false) {
                 toggleEndPeriodTimer();
+            }
+        }
+    }
+
+    function onStreamCanLoadNext() {
+        const isLast = getActiveStreamInfo().isLast;
+        if (mediaSource && !isLast) {
+            const newStream = getNextStream();
+            compatible = activeStream.isCompatibleWithStream(newStream);
+            if (compatible) {
+                logger.info('[StreamController][onStreamCanLoadNext] Preloading next stream');
+                activeStream.stopEventController();
+                activeStream.deactivate(true);
+                newStream.preload(mediaSource, buffers);
+                preloading = newStream;
+                newStream.getProcessors().forEach(p => {
+                    adapter.setIndexHandlerTime(p, newStream.getStartTime());
+                });
             }
         }
     }
@@ -393,7 +422,7 @@ function StreamController() {
     }
 
     function switchStream(oldStream, newStream, seekTime) {
-        if (isStreamSwitchingInProgress || !newStream || oldStream === newStream) return;
+        if (isStreamSwitchingInProgress || !newStream || (oldStream === newStream && newStream.isActive())) return;
         isStreamSwitchingInProgress = true;
 
         eventBus.trigger(Events.PERIOD_SWITCH_STARTED, {
@@ -401,32 +430,36 @@ function StreamController() {
             toStreamInfo: newStream.getStreamInfo()
         });
 
+        compatible = false;
         if (oldStream) {
             oldStream.stopEventController();
-            oldStream.deactivate();
+            compatible = activeStream.isCompatibleWithStream(newStream) && !seekTime || newStream.getPreloaded();
+            oldStream.deactivate(compatible);
         }
+
         activeStream = newStream;
-        playbackController.initialize(activeStream.getStreamInfo());
+        preloading = false;
+        playbackController.initialize(activeStream.getStreamInfo(), compatible);
         if (videoModel.getElement()) {
             //TODO detect if we should close jump to activateStream.
-            openMediaSource(seekTime, oldStream, false);
+            openMediaSource(seekTime, oldStream, false, compatible);
         } else {
             preloadStream(seekTime);
         }
     }
 
     function preloadStream(seekTime) {
-        activateStream(seekTime);
+        activateStream(seekTime, compatible);
     }
 
     function switchToVideoElement(seekTime) {
         if (activeStream) {
             playbackController.initialize(activeStream.getStreamInfo());
-            openMediaSource(seekTime, null, true);
+            openMediaSource(seekTime, null, true, false);
         }
     }
 
-    function openMediaSource(seekTime, oldStream, streamActivated) {
+    function openMediaSource(seekTime, oldStream, streamActivated, keepBuffers) {
         let sourceUrl;
 
         function onMediaSourceOpen() {
@@ -446,25 +479,34 @@ function StreamController() {
             if (streamActivated) {
                 activeStream.setMediaSource(mediaSource);
             } else {
-                activateStream(seekTime);
+                activateStream(seekTime, keepBuffers);
             }
         }
 
         if (!mediaSource) {
             mediaSource = mediaSourceController.createMediaSource();
+            mediaSource.addEventListener('sourceopen', onMediaSourceOpen, false);
+            mediaSource.addEventListener('webkitsourceopen', onMediaSourceOpen, false);
+            sourceUrl = mediaSourceController.attachMediaSource(mediaSource, videoModel);
+            logger.debug('MediaSource attached to element.  Waiting on open...');
         } else {
-            mediaSourceController.detachMediaSource(videoModel);
+            if (keepBuffers) {
+                activateStream(seekTime, keepBuffers);
+                if (!oldStream) {
+                    eventBus.trigger(Events.SOURCE_INITIALIZED);
+                }
+            } else {
+                mediaSourceController.detachMediaSource(videoModel);
+                mediaSource.addEventListener('sourceopen', onMediaSourceOpen, false);
+                mediaSource.addEventListener('webkitsourceopen', onMediaSourceOpen, false);
+                sourceUrl = mediaSourceController.attachMediaSource(mediaSource, videoModel);
+                logger.debug('MediaSource attached to element.  Waiting on open...');
+            }
         }
-
-        mediaSource.addEventListener('sourceopen', onMediaSourceOpen, false);
-        mediaSource.addEventListener('webkitsourceopen', onMediaSourceOpen, false);
-        sourceUrl = mediaSourceController.attachMediaSource(mediaSource, videoModel);
-        logger.debug('MediaSource attached to element.  Waiting on open...');
     }
 
-    function activateStream(seekTime) {
-        activeStream.activate(mediaSource);
-
+    function activateStream(seekTime, keepBuffers) {
+        buffers = activeStream.activate(mediaSource, keepBuffers ? buffers : undefined);
         audioTrackDetected = checkTrackPresence(Constants.AUDIO);
         videoTrackDetected = checkTrackPresence(Constants.VIDEO);
 
@@ -473,9 +515,11 @@ function StreamController() {
                 playbackController.seek(seekTime); //we only need to call seek here, IndexHandlerTime was set from seeking event
             } else {
                 let startTime = playbackController.getStreamStartTime(true);
-                activeStream.getProcessors().forEach(p => {
-                    adapter.setIndexHandlerTime(p, startTime);
-                });
+                if (!keepBuffers) {
+                    activeStream.getProcessors().forEach(p => {
+                        adapter.setIndexHandlerTime(p, startTime);
+                    });
+                }
             }
         }
 
