@@ -92,6 +92,7 @@ function PlaybackController() {
         eventBus.on(Events.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, this);
         eventBus.on(Events.PLAYBACK_PROGRESS, onPlaybackProgression, this);
         eventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
+        eventBus.on(Events.PLAYBACK_ENDED, onPlaybackEnded, this);
 
         if (playOnceInitialized) {
             playOnceInitialized = false;
@@ -107,9 +108,13 @@ function PlaybackController() {
     }
 
     function getTimeToStreamEnd() {
+        return parseFloat(( getStreamEndTime() - getTime()).toFixed(5));
+    }
+
+    function getStreamEndTime() {
         const startTime = getStreamStartTime(true);
         const offset = isDynamic ? startTime - streamInfo.start : 0;
-        return parseFloat((startTime + (streamInfo.duration - offset) - getTime()).toFixed(5));
+        return startTime + (streamInfo.duration - offset);
     }
 
     function play() {
@@ -292,6 +297,7 @@ function PlaybackController() {
             eventBus.off(Events.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, this);
             eventBus.off(Events.PLAYBACK_PROGRESS, onPlaybackProgression, this);
             eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
+            eventBus.off(Events.PLAYBACK_ENDED, onPlaybackEnded, this);
             stopUpdatingWallclockTime();
             removeAllListeners();
         }
@@ -531,11 +537,23 @@ function PlaybackController() {
         startUpdatingWallclockTime();
     }
 
-    function onPlaybackEnded() {
+    // Event to handle the native video element ended event
+    function onNativePlaybackEnded() {
         logger.info('Native video element event: ended');
         pause();
         stopUpdatingWallclockTime();
         eventBus.trigger(Events.PLAYBACK_ENDED);
+    }
+
+    // Handle DASH PLAYBACK_ENDED event
+    function onPlaybackEnded() {
+        if (wallclockTimeIntervalId) {
+            // PLAYBACK_ENDED was triggered elsewhere, react.
+            logger.info('[PlaybackController] onPlaybackEnded -- PLAYBACK_ENDED but native video element didn\'t fire ended');
+            videoModel.setCurrentTime(getStreamEndTime());
+            pause();
+            stopUpdatingWallclockTime();
+        }
     }
 
     function onPlaybackError(event) {
@@ -678,8 +696,8 @@ function PlaybackController() {
         videoModel.addEventListener('progress', onPlaybackProgress);
         videoModel.addEventListener('ratechange', onPlaybackRateChanged);
         videoModel.addEventListener('loadedmetadata', onPlaybackMetaDataLoaded);
-        videoModel.addEventListener('ended', onPlaybackEnded);
         videoModel.addEventListener('stalled', onPlaybackStalled);
+        videoModel.addEventListener('ended', onNativePlaybackEnded);
     }
 
     function removeAllListeners() {
@@ -695,9 +713,8 @@ function PlaybackController() {
         videoModel.removeEventListener('progress', onPlaybackProgress);
         videoModel.removeEventListener('ratechange', onPlaybackRateChanged);
         videoModel.removeEventListener('loadedmetadata', onPlaybackMetaDataLoaded);
-        videoModel.removeEventListener('ended', onPlaybackEnded);
         videoModel.removeEventListener('stalled', onPlaybackStalled);
-
+        videoModel.removeEventListener('ended', onNativePlaybackEnded);
     }
 
     instance = {
