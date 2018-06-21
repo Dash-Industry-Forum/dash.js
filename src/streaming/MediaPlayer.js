@@ -1544,6 +1544,10 @@ function MediaPlayer() {
      * to see automatic bitrate switches but will have a larger buffer which
      * will increase stability.
      *
+     * Note: The value set for Stable Buffer Time is not considered when Low Latency Mode is enabled.
+     * When in Low Latency mode dash.js takes ownership of Stable Buffer Time value to minimize latency
+     * that comes from buffer filling process.
+     *
      * @default 12 seconds.
      * @param {int} value
      * @memberof module:MediaPlayer
@@ -1737,6 +1741,9 @@ function MediaPlayer() {
      * Total number of retry attempts that will occur on a fragment load before it fails.
      * Increase this value to a maximum in order to achieve an automatic playback resume
      * in case of completely lost internet connection.
+     *
+     * Note: This parameter is not taken into account when Low Latency Mode is enabled. For Low Latency
+     * Playback dash.js takes control and sets a number of retry attempts that ensures playback stability.
      *
      * @default 3
      * @param {int} value

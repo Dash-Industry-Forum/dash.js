@@ -69,7 +69,6 @@ function PlaybackController() {
         playOnceInitialized,
         lastLivePlaybackTime,
         originalPlaybackRate,
-        catchingUp,
         availabilityStartTime,
         compatibleWithPreviousStream;
 
@@ -256,8 +255,6 @@ function PlaybackController() {
             const playbackRate = 1 + getCatchUpPlaybackRate();
             const currentRate = getPlaybackRate();
             if (playbackRate !== currentRate) {
-                catchingUp = true;
-
                 logger.info('Starting live catchup mechanism. Setting playback rate to', playbackRate);
                 originalPlaybackRate = currentRate;
                 videoModel.getElement().playbackRate = playbackRate;
@@ -271,8 +268,6 @@ function PlaybackController() {
         if (videoModel) {
             const playbackRate = originalPlaybackRate || 1;
             if (playbackRate !== getPlaybackRate()) {
-                catchingUp = false;
-
                 logger.info('Stopping live catchup mechanism. Setting playback rate to', playbackRate);
                 videoModel.getElement().playbackRate = playbackRate;
 
@@ -589,7 +584,7 @@ function PlaybackController() {
 
     function onPlaybackProgression() {
         if (isDynamic && mediaPlayerModel.getLowLatencyEnabled() && getCatchUpPlaybackRate() > 0.0) {
-            if (!catchingUp && needToCatchUp()) {
+            if (!isCatchingUp() && needToCatchUp()) {
                 startPlaybackCatchUp();
             } else if (stopCatchingUp()) {
                 stopPlaybackCatchUp();
@@ -603,6 +598,10 @@ function PlaybackController() {
 
     function stopCatchingUp() {
         return getCurrentLiveLatency() <= (mediaPlayerModel.getLiveDelay() );
+    }
+
+    function isCatchingUp() {
+        return getCatchUpPlaybackRate() + 1 === getPlaybackRate();
     }
 
     function onBytesAppended(e) {
