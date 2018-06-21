@@ -1544,6 +1544,8 @@ function MediaPlayer() {
      * to see automatic bitrate switches but will have a larger buffer which
      * will increase stability.
      *
+     * Low Latency feature overrides this configuration because buffer is always below stable buffer time.
+     *
      * @default 12 seconds.
      * @param {int} value
      * @memberof module:MediaPlayer
@@ -1737,6 +1739,8 @@ function MediaPlayer() {
      * Total number of retry attempts that will occur on a fragment load before it fails.
      * Increase this value to a maximum in order to achieve an automatic playback resume
      * in case of completely lost internet connection.
+     *
+     * Low Latency feature overrides this configuration by increasing the retries.
      *
      * @default 3
      * @param {int} value

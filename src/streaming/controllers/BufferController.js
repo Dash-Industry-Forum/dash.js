@@ -538,6 +538,7 @@ function BufferController(config) {
             eventBus.trigger(Events.BUFFERING_COMPLETED, { sender: instance, streamInfo: streamProcessor.getStreamInfo() });
         }
 
+        // When the player is working in low latency mode, the buffer is often below STALL_THRESHOLD, only stalling in low-lat if it's 0
         if (((!mediaPlayerModel.getLowLatencyEnabled() && bufferLevel < STALL_THRESHOLD) || bufferLevel === 0) && !isBufferingCompleted) {
             notifyBufferStateChanged(BUFFER_EMPTY);
         } else {
