@@ -7,6 +7,7 @@ import MetricsModelMock from './mocks/MetricsModelMock';
 import VideoModelMock from './mocks/VideoModelMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
 import DashMetricsMock from './mocks/DashMetricsMock';
+import StreamControllerMock from './mocks/StreamControllerMock';
 
 const expect = require('chai').expect;
 const context = {};
@@ -20,13 +21,14 @@ describe('PlaybackController', function () {
     let metricsModelMock;
     let dashMetricsMock;
     let mediaPlayerModelMock;
+    let streamControllerMock;
 
     beforeEach(function () {
         videoModelMock = new VideoModelMock();
         metricsModelMock = new MetricsModelMock();
         dashMetricsMock = new DashMetricsMock();
         mediaPlayerModelMock = new MediaPlayerModelMock();
-
+        streamControllerMock = new StreamControllerMock();
         playbackController = PlaybackController(context).getInstance();
         URIFragmentModel(context).getInstance().initialize('http://urlOfManifest.com/manifest.mpd#t=18.2');
 
@@ -34,7 +36,8 @@ describe('PlaybackController', function () {
             videoModel: videoModelMock,
             metricsModel: metricsModelMock,
             dashMetrics: dashMetricsMock,
-            mediaPlayerModel: mediaPlayerModelMock
+            mediaPlayerModel: mediaPlayerModelMock,
+            streamController: streamControllerMock
         });
     });
 

@@ -542,12 +542,12 @@ function PlaybackController() {
         logger.info('Native video element event: ended');
         pause();
         stopUpdatingWallclockTime();
-        eventBus.trigger(Events.PLAYBACK_ENDED);
+        eventBus.trigger(Events.PLAYBACK_ENDED, {'isLast': streamController.getActiveStreamInfo().isLast});
     }
 
     // Handle DASH PLAYBACK_ENDED event
-    function onPlaybackEnded() {
-        if (wallclockTimeIntervalId) {
+    function onPlaybackEnded(e) {
+        if (wallclockTimeIntervalId && e.isLast) {
             // PLAYBACK_ENDED was triggered elsewhere, react.
             logger.info('[PlaybackController] onPlaybackEnded -- PLAYBACK_ENDED but native video element didn\'t fire ended');
             videoModel.setCurrentTime(getStreamEndTime());
