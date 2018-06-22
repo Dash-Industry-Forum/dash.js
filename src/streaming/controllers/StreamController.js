@@ -241,7 +241,8 @@ function StreamController() {
             preloading.deactivate(true);
         }
 
-        if (seekingStream && (seekingStream !== activeStream || !activeStream.isActive()) ) {
+        if (seekingStream && (seekingStream !== activeStream || (preloading && !activeStream.isActive()))) {
+            // If we're preloading other stream, the active one was deactivated and we need to switch back
             flushPlaylistMetrics(PlayListTrace.END_OF_PERIOD_STOP_REASON);
             switchStream(activeStream, seekingStream, e.seekTime);
         } else {
