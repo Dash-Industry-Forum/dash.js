@@ -240,7 +240,7 @@ function TextController() {
                 for (let i = 0; i < fragmentedTracks.length; i++) {
                     let mediaInfo = fragmentedTracks[i];
                     if (currentTrackInfo.lang === mediaInfo.lang && currentTrackInfo.index === mediaInfo.index &&
-                        (currentTrackInfo.label ? currentTrackInfo.label === mediaInfo.id : true)) {
+                        (mediaInfo.id ? currentTrackInfo.label === mediaInfo.id : currentTrackInfo.label === mediaInfo.index)) {
                         let currentFragTrack = mediaController.getCurrentTrackFor(Constants.FRAGMENTED_TEXT, streamController.getActiveStreamInfo());
                         if (mediaInfo !== currentFragTrack) {
                             fragmentModel.abortRequests();
