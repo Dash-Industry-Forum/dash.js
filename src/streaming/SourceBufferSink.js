@@ -278,6 +278,8 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
                 waitForUpdateEnd(buffer, cb);
             } else {
                 cb();
+                // Try to execute next callback if still not updating
+                executeCallback();
             }
         }
 
