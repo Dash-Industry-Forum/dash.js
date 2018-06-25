@@ -110,6 +110,18 @@ function ProtectionModel_21Jan2015(config) {
         }
     }
 
+    function stop() {
+        // Close and remove not usable sessions
+        let session;
+        for (let i = 0; i < sessions.length; i++) {
+            session = sessions[i];
+            if (!session.getUsable()) {
+                removeSession(session);
+                closeKeySessionInternal(session);
+            }
+        }
+    }
+
     function getKeySystem() {
         return keySystem;
     }
@@ -328,9 +340,36 @@ function ProtectionModel_21Jan2015(config) {
         for (let i = 0; i < sessions.length; i++) {
             if (sessions[i] === token) {
                 sessions.splice(i,1);
+                logger.debug('DRM: Session removed.  SessionID = ' + token.getSessionID());
                 break;
             }
         }
+    }
+
+    function parseKeyStatus(args) {
+        // Edge and Chrome implement different version of keystatues, param are not on same order
+        let status, keyId;
+        if (args && args.length > 0) {
+            if (args[0]) {
+                if (typeof args[0] === 'string') {
+                    status = args[0];
+                } else {
+                    keyId = args[0];
+                }
+            }
+
+            if (args[1]) {
+                if (typeof args[1] === 'string') {
+                    status = args[1];
+                } else {
+                    keyId = args[1];
+                }
+            }
+        }
+        return {
+            status: status,
+            keyId: keyId
+        };
     }
 
     // Function to create our session token objects which manage the EME
@@ -349,31 +388,13 @@ function ProtectionModel_21Jan2015(config) {
                     case 'keystatuseschange':
                         eventBus.trigger(events.KEY_STATUSES_CHANGED, {data: this});
                         event.target.keyStatuses.forEach(function () {
-                            // Edge and Chrome implement different version of keystatues, param are not on same order
-                            let status, keyId;
-                            if (arguments && arguments.length > 0) {
-                                if (arguments[0]) {
-                                    if (typeof arguments[0] === 'string') {
-                                        status = arguments[0];
-                                    } else {
-                                        keyId = arguments[0];
-                                    }
-                                }
-
-                                if (arguments[1]) {
-                                    if (typeof arguments[1] === 'string') {
-                                        status = arguments[1];
-                                    } else {
-                                        keyId = arguments[1];
-                                    }
-                                }
-                            }
-                            switch (status) {
+                            let keyStatus = parseKeyStatus(arguments);
+                            switch (keyStatus.status) {
                                 case 'expired':
                                     eventBus.trigger(events.INTERNAL_KEY_STATUS_CHANGED, {error: 'License has expired'});
                                     break;
                                 default:
-                                    eventBus.trigger(events.INTERNAL_KEY_STATUS_CHANGED, {status: status, keyId: keyId});
+                                    eventBus.trigger(events.INTERNAL_KEY_STATUS_CHANGED, keyStatus);
                                     break;
                             }
                         });
@@ -396,6 +417,17 @@ function ProtectionModel_21Jan2015(config) {
 
             getKeyStatuses: function () {
                 return session.keyStatuses;
+            },
+
+            getUsable: function () {
+                let usable  = false;
+                session.keyStatuses.forEach(function () {
+                    let keyStatus = parseKeyStatus(arguments);
+                    if (keyStatus.status === 'usable') {
+                        usable = true;
+                    }
+                });
+                return usable;
             },
 
             getSessionType: function () {
@@ -432,6 +464,7 @@ function ProtectionModel_21Jan2015(config) {
         loadKeySession: loadKeySession,
         removeKeySession: removeKeySession,
         closeKeySession: closeKeySession,
+        stop: stop,
         reset: reset
     };
 
