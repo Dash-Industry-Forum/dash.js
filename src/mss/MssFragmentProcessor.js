@@ -120,13 +120,13 @@ function uuidProcessor() {
 function MssFragmentProcessor(config) {
 
     config = config || {};
-    let context = this.context;
-    let metricsModel = config.metricsModel;
-    let playbackController = config.playbackController;
-    let eventBus = config.eventBus;
-    let protectionController = config.protectionController;
+    const context = this.context;
+    const metricsModel = config.metricsModel;
+    const playbackController = config.playbackController;
+    const eventBus = config.eventBus;
+    const protectionController = config.protectionController;
     const ISOBoxer = config.ISOBoxer;
-    const log = config.log;
+    const debug = config.debug;
     let instance;
 
     function setup() {
@@ -137,7 +137,8 @@ function MssFragmentProcessor(config) {
     }
 
     function generateMoov(rep) {
-        let mssFragmentMoovProcessor = MSSFragmentMoovProcessor(context).create({protectionController: protectionController, constants: config.constants, ISOBoxer: config.ISOBoxer});
+        let mssFragmentMoovProcessor = MSSFragmentMoovProcessor(context).create({protectionController: protectionController,
+            constants: config.constants, ISOBoxer: config.ISOBoxer});
         return mssFragmentMoovProcessor.generateMoov(rep);
     }
 
@@ -155,7 +156,7 @@ function MssFragmentProcessor(config) {
                 metricsModel: metricsModel,
                 playbackController: playbackController,
                 ISOBoxer: ISOBoxer,
-                log: log,
+                debug: debug,
                 errHandler: config.errHandler
             });
             mssFragmentMoofProcessor.convertFragment(e, sp);

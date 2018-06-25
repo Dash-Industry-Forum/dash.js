@@ -38,9 +38,14 @@ function ThroughputRule(config) {
 
     config = config || {};
     const context = this.context;
-    const log = Debug(context).getInstance().log;
-
     const metricsModel = config.metricsModel;
+
+    let instance,
+        logger;
+
+    function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
+    }
 
     function checkConfig() {
         if (!metricsModel || !metricsModel.hasOwnProperty('getReadOnlyMetricsFor')) {
@@ -79,7 +84,7 @@ function ThroughputRule(config) {
             if (bufferStateVO.state === BufferController.BUFFER_LOADED || isDynamic) {
                 switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, throughput, latency);
                 streamProcessor.getScheduleController().setTimeToLoadDelay(0);
-                log('ThroughputRule requesting switch to index: ', switchRequest.quality, 'type: ',mediaType, 'Average throughput', Math.round(throughput), 'kbps');
+                logger.info('requesting switch to index: ', switchRequest.quality, 'type: ',mediaType, 'Average throughput', Math.round(throughput), 'kbps');
                 switchRequest.reason = {throughput: throughput, latency: latency};
             }
         }
@@ -91,10 +96,12 @@ function ThroughputRule(config) {
         // no persistent information to reset
     }
 
-    const instance = {
+    instance = {
         getMaxIndex: getMaxIndex,
         reset: reset
     };
+
+    setup();
 
     return instance;
 }

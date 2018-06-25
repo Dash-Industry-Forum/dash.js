@@ -82,13 +82,14 @@ function MediaPlayer() {
     const SOURCE_NOT_ATTACHED_ERROR = 'You must first call attachSource() with a valid source before calling this method';
     const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
     const MEDIA_PLAYER_BAD_ARGUMENT_ERROR = 'MediaPlayer Invalid Arguments!';
+    const PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR = 'Playback catchup rate invalid argument! Use a number from 1 to 1.2';
 
-    let context = this.context;
-    let eventBus = EventBus(context).getInstance();
-    let debug = Debug(context).getInstance();
-    let log = debug.log;
+    const context = this.context;
+    const eventBus = EventBus(context).getInstance();
+    const debug = Debug(context).getInstance();
 
     let instance,
+        logger,
         source,
         protectionData,
         mediaPlayerInitialized,
@@ -123,6 +124,7 @@ function MediaPlayer() {
     ---------------------------------------------------------------------------
     */
     function setup() {
+        logger = debug.getLogger(instance);
         mediaPlayerInitialized = false;
         playbackInitialized = false;
         streamingInitialized = false;
@@ -184,7 +186,6 @@ function MediaPlayer() {
      * @instance
      */
     function initialize(view, source, AutoPlay) {
-
         if (!capabilities) {
             capabilities = Capabilities(context).getInstance();
         }
@@ -248,7 +249,7 @@ function MediaPlayer() {
             attachSource(source);
         }
 
-        log('[dash.js ' + getVersion() + '] ' + 'MediaPlayer has been initialized');
+        logger.info('[dash.js ' + getVersion() + '] ' + 'MediaPlayer has been initialized');
     }
 
     /**
@@ -483,6 +484,39 @@ function MediaPlayer() {
     }
 
     /**
+     * Use this method to set the catch up rate, as a percentage, for low latency live streams. In low latency mode,
+     * when measured latency is higher than the target one ({@link module:MediaPlayer#setLiveDelay setLiveDelay()}),
+     * dash.js increases playback rate the percentage defined with this method until target is reached.
+     *
+     * Valid values for catch up rate are in range 0-20%. Set it to 0% to turn off live catch up feature.
+     *
+     * Note: Catch-up mechanism is only applied when playing low latency live streams.
+     *
+     * @param {number} value Percentage in which playback rate is increased when live catch up mechanism is activated.
+     * @memberof module:MediaPlayer
+     * @see {@link module:MediaPlayer#setLiveDelay setLiveDelay()}
+     * @default {number} 0.05
+     * @instance
+     */
+    function setCatchUpPlaybackRate(value) {
+        if (isNaN(value) || value < 0.0 || value > 0.20) {
+            throw PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR;
+        }
+        playbackController.setCatchUpPlaybackRate(value);
+    }
+
+    /**
+     * Returns the current catchup playback rate.
+     * @returns {number}
+     * @see {@link module:MediaPlayer#setCatchUpPlaybackRate setCatchUpPlaybackRate()}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getCatchUpPlaybackRate() {
+        return playbackController.getCatchUpPlaybackRate();
+    }
+
+    /**
      * Use this method to set the native Video Element's muted state. Takes a Boolean that determines whether audio is muted. true if the audio is muted and false otherwise.
      * @param {boolean} value
      * @memberof module:MediaPlayer
@@ -563,7 +597,7 @@ function MediaPlayer() {
                 const buffer = getDashMetrics().getCurrentBufferLevel(getMetricsFor(type));
                 return buffer ? buffer : NaN;
             } else {
-                log('Warning  - getBufferLength requested for invalid type');
+                logger.warn('getBufferLength requested for invalid type');
                 return NaN;
             }
         }
@@ -1239,7 +1273,7 @@ function MediaPlayer() {
         if (value === Constants.ABR_STRATEGY_DYNAMIC || value === Constants.ABR_STRATEGY_BOLA || value === Constants.ABR_STRATEGY_THROUGHPUT) {
             mediaPlayerModel.setABRStrategy(value);
         } else {
-            log('Warning: Ignoring setABRStrategy(' + value + ') - unknown value.');
+            logger.warn('Ignoring setABRStrategy(' + value + ') - unknown value.');
         }
     }
 
@@ -1321,7 +1355,7 @@ function MediaPlayer() {
         if (value === Constants.MOVING_AVERAGE_SLIDING_WINDOW || value === Constants.MOVING_AVERAGE_EWMA) {
             mediaPlayerModel.setMovingAverageMethod(value);
         } else {
-            log('Warning: Ignoring setMovingAverageMethod(' + value + ') - unknown value.');
+            logger.warn('Warning: Ignoring setMovingAverageMethod(' + value + ') - unknown value.');
         }
     }
 
@@ -1509,6 +1543,10 @@ function MediaPlayer() {
      * When the time is set higher than the default you will have to wait longer
      * to see automatic bitrate switches but will have a larger buffer which
      * will increase stability.
+     *
+     * Note: The value set for Stable Buffer Time is not considered when Low Latency Mode is enabled.
+     * When in Low Latency mode dash.js takes ownership of Stable Buffer Time value to minimize latency
+     * that comes from buffer filling process.
      *
      * @default 12 seconds.
      * @param {int} value
@@ -1703,6 +1741,9 @@ function MediaPlayer() {
      * Total number of retry attempts that will occur on a fragment load before it fails.
      * Increase this value to a maximum in order to achieve an automatic playback resume
      * in case of completely lost internet connection.
+     *
+     * Note: This parameter is not taken into account when Low Latency Mode is enabled. For Low Latency
+     * Playback dash.js takes control and sets a number of retry attempts that ensures playback stability.
      *
      * @default 3
      * @param {int} value
@@ -2611,9 +2652,8 @@ function MediaPlayer() {
     }
 
     function createPlaybackControllers() {
-
         // creates or get objects instances
-        let manifestLoader = createManifestLoader();
+        const manifestLoader = createManifestLoader();
 
         if (!streamController) {
             streamController = StreamController(context).getInstance();
@@ -2708,7 +2748,7 @@ function MediaPlayer() {
                 capabilities = Capabilities(context).getInstance();
             }
             protectionController = protection.createProtectionSystem({
-                log: log,
+                debug: debug,
                 errHandler: errHandler,
                 videoModel: videoModel,
                 capabilities: capabilities,
@@ -2733,7 +2773,7 @@ function MediaPlayer() {
             let metricsReporting = MetricsReporting(context).create();
 
             metricsReportingController = metricsReporting.createMetricsReporting({
-                log: log,
+                debug: debug,
                 eventBus: eventBus,
                 mediaElement: getVideoElement(),
                 dashManifestModel: dashManifestModel,
@@ -2761,7 +2801,7 @@ function MediaPlayer() {
                 errHandler: errHandler,
                 events: Events,
                 constants: Constants,
-                log: log,
+                debug: debug,
                 initSegmentType: HTTPRequest.INIT_SEGMENT_TYPE,
                 BASE64: BASE64,
                 ISOBoxer: ISOBoxer
@@ -2798,7 +2838,7 @@ function MediaPlayer() {
     function initializePlayback() {
         if (!streamingInitialized && source) {
             streamingInitialized = true;
-            log('Streaming Initialized');
+            logger.info('Streaming Initialized');
             createPlaybackControllers();
 
             if (typeof source === 'string') {
@@ -2810,7 +2850,7 @@ function MediaPlayer() {
 
         if (!playbackInitialized && isReady()) {
             playbackInitialized = true;
-            log('Playback Initialized');
+            logger.info('Playback Initialized');
         }
     }
 
@@ -2832,6 +2872,8 @@ function MediaPlayer() {
         seek: seek,
         setPlaybackRate: setPlaybackRate,
         getPlaybackRate: getPlaybackRate,
+        setCatchUpPlaybackRate: setCatchUpPlaybackRate,
+        getCatchUpPlaybackRate: getCatchUpPlaybackRate,
         setMute: setMute,
         isMuted: isMuted,
         setVolume: setVolume,
@@ -2970,7 +3012,7 @@ function MediaPlayer() {
 }
 
 MediaPlayer.__dashjs_factory_name = 'MediaPlayer';
-let factory = FactoryMaker.getClassFactory(MediaPlayer);
+const factory = FactoryMaker.getClassFactory(MediaPlayer);
 factory.events = MediaPlayerEvents;
 FactoryMaker.updateClassFactory(MediaPlayer.__dashjs_factory_name, factory);
 

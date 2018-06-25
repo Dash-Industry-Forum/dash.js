@@ -2,9 +2,31 @@ export = dashjs;
 export as namespace dashjs;
 
 declare namespace dashjs {
+    interface Logger {
+        debug(...params): void;
+        info(...params): void;
+        warn(...params): void;
+        error(...params): void;
+        fatal(...params): void;
+    }
+
+    enum LogLevel {
+        LOG_LEVEL_NONE = 0,
+        LOG_LEVEL_FATAL = 1,
+        LOG_LEVEL_ERROR = 2,
+        LOG_LEVEL_WARNING = 3,
+        LOG_LEVEL_INFO = 4,
+        LOG_LEVEL_DEBUG = 5
+    }
+
     interface Debug {
+        getLogger(): Logger;
+        setLogTimestampVisible(flag: boolean): void;
+        setCalleeNameVisible(flag: boolean): void;
         getLogToBrowserConsole(): boolean;
         setLogToBrowserConsole(flag: boolean): void;
+        setLogLevel(level: LogLevel): void;
+        getLogLevel(): LogLevel;
     }
 
     interface VideoModel { }
@@ -101,7 +123,7 @@ declare namespace dashjs {
         isMuted(): boolean;
         setVolume(value: number): void;
         getVolume(): number;
-        time(streamId: string | undefined): number;
+        time(streamId?: string): number;
         duration(): number;
         timeAsUTC(): number;
         durationAsUTC(): number;
@@ -247,6 +269,8 @@ declare namespace dashjs {
         METRIC_UPDATED: 'metricUpdated';
         PERIOD_SWITCH_COMPLETED: 'periodSwitchCompleted';
         PERIOD_SWITCH_STARTED: 'periodSwitchStarted';
+        PLAYBACK_CATCHUP_END: 'playbackCatchupEnd';
+        PLAYBACK_CATCHUP_START: 'playbackCatchupStart';
         PLAYBACK_ENDED: 'playbackEnded';
         PLAYBACK_ERROR: 'playbackError';
         PLAYBACK_METADATA_LOADED: 'playbackMetaDataLoaded';
@@ -257,6 +281,7 @@ declare namespace dashjs {
         PLAYBACK_RATE_CHANGED: 'playbackRateChanged';
         PLAYBACK_SEEKED: 'playbackSeeked';
         PLAYBACK_SEEKING: 'playbackSeeking';
+        PLAYBACK_STALLED: 'playbackStalled';
         PLAYBACK_STARTED: 'playbackStarted';
         PLAYBACK_TIME_UPDATED: 'playbackTimeUpdated';
         PLAYBACK_WAITING: 'playbackWaiting';

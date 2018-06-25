@@ -34,6 +34,8 @@
                 video = document.querySelector(".dash-video-player video");
                 player = dashjs.MediaPlayer().create();
                 player.initialize(video, null, true);
+                player.setMute(true);
+                player.setAutoPlay(true);
                 player.attachVideoContainer(document.querySelector(".dash-video-player"));
             }
         }

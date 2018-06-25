@@ -71,7 +71,9 @@ const MANIFEST_RETRY_INTERVAL = 500;
 const XLINK_RETRY_ATTEMPTS = 1;
 const XLINK_RETRY_INTERVAL = 500;
 
-const DEFAULT_LOW_LATENCY_LIVE_DELAY = 3;
+const DEFAULT_LOW_LATENCY_LIVE_DELAY = 2.8;
+const LOW_LATENCY_REDUCTION_FACTOR = 10;
+const LOW_LATENCY_MULTIPLY_FACTOR = 5;
 
 //This value influences the startup time for live (in ms).
 const WALLCLOCK_TIME_UPDATE_INTERVAL = 50;
@@ -260,7 +262,8 @@ function MediaPlayerModel() {
     }
 
     function getStableBufferTime() {
-        return !isNaN(stableBufferTime) ? stableBufferTime : fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
+        const result = !isNaN(stableBufferTime) ? stableBufferTime : fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
+        return getLowLatencyEnabled() ? result / LOW_LATENCY_REDUCTION_FACTOR : result;
     }
 
     function setBufferTimeAtTopQuality(value) {
@@ -370,7 +373,7 @@ function MediaPlayerModel() {
     }
 
     function getRetryAttemptsForType(type) {
-        return retryAttempts[type];
+        return getLowLatencyEnabled() ? retryAttempts[type] * LOW_LATENCY_MULTIPLY_FACTOR : retryAttempts[type];
     }
 
     function setFragmentRetryInterval(value) {
@@ -394,7 +397,7 @@ function MediaPlayerModel() {
     }
 
     function getRetryIntervalForType(type) {
-        return retryIntervals[type];
+        return getLowLatencyEnabled() ? retryIntervals[type] / LOW_LATENCY_REDUCTION_FACTOR : retryIntervals[type];
     }
 
     function setWallclockTimeUpdateInterval(value) {
@@ -614,7 +617,7 @@ function MediaPlayerModel() {
 
 //TODO see if you can move this and not export and just getter to get default value.
 MediaPlayerModel.__dashjs_factory_name = 'MediaPlayerModel';
-let factory = FactoryMaker.getSingletonFactory(MediaPlayerModel);
+const factory = FactoryMaker.getSingletonFactory(MediaPlayerModel);
 factory.DEFAULT_UTC_TIMING_SOURCE = DEFAULT_UTC_TIMING_SOURCE;
 FactoryMaker.updateSingletonFactory(MediaPlayerModel.__dashjs_factory_name, factory);
 export default factory;

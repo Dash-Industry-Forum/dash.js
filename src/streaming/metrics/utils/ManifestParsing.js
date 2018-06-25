@@ -54,7 +54,6 @@ function ManifestParsing (config) {
                 if (metric.hasOwnProperty('metrics')) {
                     metricEntry.metrics = metric.metrics;
                 } else {
-                    //console.log("Invalid Metrics. metrics must be set. Ignoring.");
                     return;
                 }
 

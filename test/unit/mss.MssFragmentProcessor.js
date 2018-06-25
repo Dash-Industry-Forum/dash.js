@@ -4,6 +4,7 @@ import PlaybackController from '../../src/streaming/controllers/PlaybackControll
 import EventBus from '../../src/core/EventBus';
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 import StreamProcessorMock from './mocks/StreamProcessorMock';
+import DebugMock from './mocks/DebugMock';
 import ISOBoxer from 'codem-isoboxer';
 
 const expect = require('chai').expect;
@@ -14,10 +15,11 @@ const metricsModel = MetricsModel(context).getInstance();
 const playbackController = PlaybackController(context).getInstance();
 const eventBus = EventBus(context).getInstance();
 const errorHandlerMock = new ErrorHandlerMock();
-const mssFragmentProcessor = MssFragmentProcessor(context).create({metricsModel: metricsModel, playbackController: playbackController, eventBus: eventBus, ISOBoxer: ISOBoxer, errHandler: errorHandlerMock});
+const mssFragmentProcessor = MssFragmentProcessor(context).create({metricsModel: metricsModel,
+    playbackController: playbackController, eventBus: eventBus, ISOBoxer: ISOBoxer,
+    errHandler: errorHandlerMock, debug: new DebugMock()});
 
 describe('MssFragmentProcessor', function () {
-
     const testType = 'video';
     const streamInfo = {
         id: 'id'

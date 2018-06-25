@@ -97,8 +97,9 @@ class MediaPlayerEvents extends EventsBase {
         this.FRAGMENT_LOADING_ABANDONED = 'fragmentLoadingAbandoned';
 
         /**
-         * Triggered when {@link module:Debug} log method is called.
+         * Triggered when {@link module:Debug} logger methods are called.
          * @event MediaPlayerEvents#LOG
+         * @deprecated
          */
         this.LOG = 'log';
 
@@ -214,6 +215,23 @@ class MediaPlayerEvents extends EventsBase {
         this.CAN_PLAY = 'canPlay';
 
         /**
+         * Sent when live catch mechanism has been activated, which implies the measured latency of the low latency
+         * stream that is been played has gone beyond the target one.
+         * @see {@link module:MediaPlayer#setCatchUpPlaybackRate setCatchUpPlaybackRate()}
+         * @see {@link module:MediaPlayer#setLiveDelay setLiveDelay()}
+         * @event MediaPlayerEvents#PLAYBACK_CATCHUP_START
+         */
+        this.PLAYBACK_CATCHUP_START = 'playbackCatchupStart';
+
+        /**
+         * Sent live catch up mechanism has been deactivated.
+         * @see {@link module:MediaPlayer#setCatchUpPlaybackRate setCatchUpPlaybackRate()}
+         * @see {@link module:MediaPlayer#setLiveDelay setLiveDelay()}
+         * @event MediaPlayerEvents#PLAYBACK_CATCHUP_END
+         */
+        this.PLAYBACK_CATCHUP_END = 'playbackCatchupEnd';
+
+        /**
          * Sent when playback completes.
          * @event MediaPlayerEvents#PLAYBACK_ENDED
          */
@@ -284,6 +302,12 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#PLAYBACK_SEEK_ASKED
          */
         this.PLAYBACK_SEEK_ASKED = 'playbackSeekAsked';
+
+        /**
+         * Sent when the video element reports stalled
+         * @event MediaPlayerEvents#PLAYBACK_STALLED
+         */
+        this.PLAYBACK_STALLED = 'playbackStalled';
 
         /**
          * Sent when playback of the media starts after having been paused;

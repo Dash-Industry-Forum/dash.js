@@ -376,7 +376,7 @@ module.exports = function (grunt) {
                         src: [
                             'contrib/**',
                             'dist/**',
-                            'test/functional/test.html',
+                            'test/functional/tests.html',
                             'test/functional/testsCommon.js',
                             'test/functional/config/**',
                             'test/functional/tests/**',

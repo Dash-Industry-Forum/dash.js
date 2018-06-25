@@ -41,7 +41,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     sources.query(function (data) {
         $scope.availableStreams = data.items;
         // if no mss package, remove mss samples.
-        let MssHandler = dashjs.MssHandler; /* jshint ignore:line */
+        var MssHandler = dashjs.MssHandler; /* jshint ignore:line */
         if (typeof MssHandler !== 'function') {
             for (var i = $scope.availableStreams.length - 1; i >= 0; i--) {
                 if ($scope.availableStreams[i].name === 'Smooth Streaming') {
@@ -233,6 +233,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         $("#errorModal").modal('show');
     }, $scope);
 
+    $scope.player.getDebug().setLogLevel(dashjs.Debug.LOG_LEVEL_INFO);
     $scope.player.initialize($scope.video, null, $scope.autoPlaySelected);
     $scope.player.setFastSwitchEnabled($scope.fastSwitchSelected);
     $scope.player.setJumpGaps($scope.jumpGapsSelected);
@@ -472,6 +473,35 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     $scope.changeTrackSwitchMode = function (mode, type) {
         $scope.player.setTrackSwitchModeFor(type, mode);
     };
+
+    $scope.setLogLevel = function (mode) {
+        var level = $("input[name='log-level']:checked").val();
+        switch(level) {
+            case 'none':
+            $scope.player.getDebug().setLogLevel(dashjs.Debug.LOG_LEVEL_NONE);
+            break;
+
+            case 'fatal':
+            $scope.player.getDebug().setLogLevel(dashjs.Debug.LOG_LEVEL_FATAL);
+            break;
+
+            case 'error':
+            $scope.player.getDebug().setLogLevel(dashjs.Debug.LOG_LEVEL_ERROR);
+            break;
+
+            case 'warning':
+            $scope.player.getDebug().setLogLevel(dashjs.Debug.LOG_LEVEL_WARNING);
+            break;
+
+            case 'info':
+            $scope.player.getDebug().setLogLevel(dashjs.Debug.LOG_LEVEL_INFO);
+            break;
+
+            default:
+            $scope.player.getDebug().setLogLevel(dashjs.Debug.LOG_LEVEL_DEBUG);
+        }
+
+    }
 
     $scope.hasLogo = function (item) {
         return (item.hasOwnProperty('logo') && item.logo);

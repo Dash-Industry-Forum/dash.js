@@ -40,12 +40,12 @@ function EmbeddedTextHtmlRender() {
         let line = '';
 
         for (let c = 0; c < chars.length; ++c) {
-            let uc = chars[c];
+            const uc = chars[c];
             line += uc.uchar;
         }
 
-        let l = line.length;
-        let ll = line.replace(/^\s+/,'').length;
+        const l = line.length;
+        const ll = line.replace(/^\s+/,'').length;
         return l - ll;
     }
 
@@ -84,30 +84,27 @@ function EmbeddedTextHtmlRender() {
     }
 
     function ltrim(s) {
-        let trimmed = s.replace(/^\s+/g, '');
-        return trimmed;
+        return s.replace(/^\s+/g, '');
     }
     function rtrim(s) {
-        let trimmed = s.replace(/\s+$/g, '');
-        return trimmed;
+        return s.replace(/\s+$/g, '');
     }
 
 
     function createHTMLCaptionsFromScreen(videoElement, startTime, endTime, captionScreen) {
-
         let currRegion = null;
         let existingRegion = null;
         let lastRowHasText = false;
         let lastRowIndentL = -1;
-        let currP = { start: startTime, end: endTime, spans: [] };
+        let currP = {start: startTime, end: endTime, spans: []};
         let currentStyle = 'style_cea608_white_black';
-        let seenRegions = { };
-        let styleStates = { };
-        let regions = [];
+        const seenRegions = {};
+        const styleStates = {};
+        const regions = [];
         let r, s;
 
         for (r = 0; r < 15; ++r) {
-            let row = captionScreen.rows[r];
+            const row = captionScreen.rows[r];
             let line = '';
             let prevPenState = null;
 
@@ -115,7 +112,7 @@ function EmbeddedTextHtmlRender() {
                 /* Row is not empty */
 
                 /* Get indentation of this row */
-                let rowIndent = checkIndent(row.chars);
+                const rowIndent = checkIndent(row.chars);
 
                 /* Create a new region is there is none */
                 if (currRegion === null) {
@@ -140,8 +137,8 @@ function EmbeddedTextHtmlRender() {
                 }
 
                 for (let c = 0; c < row.chars.length; ++c) {
-                    let uc = row.chars[c];
-                    let currPenState = uc.penState;
+                    const uc = row.chars[c];
+                    const currPenState = uc.penState;
                     if ((prevPenState === null) || (!currPenState.equals(prevPenState))) {
                         if (line.trim().length > 0) {
                             currP.spans.push({ name: currentStyle, line: line, row: r });
@@ -213,37 +210,34 @@ function EmbeddedTextHtmlRender() {
             currRegion = null;
         }
 
-        //log(styleStates);
-        //log(regions);
-
-        let captionsArray = [];
+        const captionsArray = [];
 
         /* Loop thru regions */
         for (r = 0; r < regions.length; ++r) {
-            let region = regions[r];
+            const region = regions[r];
 
-            let cueID = 'sub_cea608_' + (captionId++);
-            let finalDiv = document.createElement('div');
+            const cueID = 'sub_cea608_' + (captionId++);
+            const finalDiv = document.createElement('div');
             finalDiv.id = cueID;
-            let cueRegionProperties = getRegionProperties(region);
+            const cueRegionProperties = getRegionProperties(region);
             finalDiv.style.cssText = 'position: absolute; margin: 0; display: flex; box-sizing: border-box; pointer-events: none;' + cueRegionProperties;
 
-            let bodyDiv = document.createElement('div');
+            const bodyDiv = document.createElement('div');
             bodyDiv.className = 'paragraph bodyStyle';
             bodyDiv.style.cssText = getStyle(videoElement);
 
-            let cueUniWrapper = document.createElement('div');
+            const cueUniWrapper = document.createElement('div');
             cueUniWrapper.className = 'cueUniWrapper';
             cueUniWrapper.style.cssText = 'unicode-bidi: normal; direction: ltr;';
 
             for (let p = 0; p < region.p.length; ++p) {
-                let ptag = region.p[p];
+                const ptag = region.p[p];
                 let lastSpanRow = 0;
                 for (s = 0; s < ptag.spans.length; ++s) {
                     let span = ptag.spans[s];
                     if (span.line.length > 0) {
                         if ((s !== 0) && lastSpanRow != span.row) {
-                            let brElement = document.createElement('br');
+                            const brElement = document.createElement('br');
                             brElement.className = 'lineBreak';
                             cueUniWrapper.appendChild(brElement);
                         }
@@ -252,8 +246,8 @@ function EmbeddedTextHtmlRender() {
                             sameRow = true;
                         }
                         lastSpanRow = span.row;
-                        let spanStyle = styleStates[span.name];
-                        let spanElement = document.createElement('span');
+                        const spanStyle = styleStates[span.name];
+                        const spanElement = document.createElement('span');
                         spanElement.className = 'spanPadding ' + span.name + ' customSpanColor';
                         spanElement.style.cssText = getStyle(videoElement, spanStyle);
                         /* If this is not the first span, and it's on the same
@@ -288,11 +282,10 @@ function EmbeddedTextHtmlRender() {
             }
 
             bodyDiv.appendChild(cueUniWrapper);
-
             finalDiv.appendChild(bodyDiv);
 
-            let fontSize = { 'bodyStyle': ['%', 90] };
-            for (s in styleStates) {
+            const fontSize = { 'bodyStyle': ['%', 90] };
+            for (const s in styleStates) {
                 if (styleStates.hasOwnProperty(s)) {
                     fontSize[s] = ['%', 90];
                 }

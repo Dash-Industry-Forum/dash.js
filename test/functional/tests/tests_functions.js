@@ -1,7 +1,7 @@
 define([
     'test/functional/config/testsConfig'
     ], function (testsConfig) {
-    var defaultTimeout = 5000;
+    var defaultTimeout = 15000;
 
     return {
 

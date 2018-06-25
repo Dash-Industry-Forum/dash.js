@@ -1,0 +1,176 @@
+[
+    {
+        "section": "Getting Started",
+        "active": true,
+        "samples": [
+            {
+                "title": "Auto load single video src",
+                "description": "The simplest means of using a dash.js player in a web page. The mpd src is specified within the @src attribute of the video element. The \"auto-load\" refers to the fact that this page calls the Dash.createAll() method onLoad in order to automatically convert all video elements of class 'dashjs-player' in to a functioning DASH player.",
+                "href": "getting-started/auto-load-single-video-src.html",
+                "width": "25rem"
+            },
+            {
+                "title": "Auto load single video",
+                "description": "The mpd source is specified within the child Source element of the video element. Note that the Source@type attribute must be set to \"application/dash+xml\" in order for it to be automatically used.",
+                "href": "getting-started/auto-load-single-video.html"
+            },
+            {
+                "title": "Auto load single video with reference",
+                "description": "While the Dash.CreateAll() method is handy for automated instantiation within a page, the Dash.create() method takes three optional parameters to give you more control. This example illustrates calling Dash.create() in four different ways. The first simply specifies a target video element with a child source element. The second specifies a target video element with a src attribute. The third specifies the video element and a dynamically generated source object. The fourth specifies the video element, a source object and a custom DashContext object.",
+                "href": "getting-started/auto-load-single-video-with-reference.html",
+                "width": "30rem"
+            },
+            {
+                "title": "Auto load multi video",
+                "description": "This example shows how to auto-embed multiple instances of dash.js players in a page. To make it more difficult, one of the available video elements specifies a non-DASH source.",
+                "href": "getting-started/auto-load-multi-video.html"
+            },
+            {
+                "title": "Manual load single video",
+                "description": "A sample showing how to load a single video",
+                "href": "getting-started/manual-load-single-video.html"
+            },
+            {
+                "title": "Manual load with custom settings",
+                "description": "A sample showing how to load a video using custom settings",
+                "href": "getting-started/manual-load-with-custom-settings.html"
+            },
+            {
+                "title": "Listening to events",
+                "description": "Example showing how to listen to DASH.js events",
+                "href": "getting-started/listening-to-events.html"
+            },
+            {
+                "title": "Monitoring the stream",
+                "description": "This example shows how to add monitoring to the stream, fetch values from the Player etc",
+                "href": "monitoring/index.html"
+            }
+        ]
+    },
+    {
+        "section": "Live",
+        "samples": [
+            {
+                "title": "Live delay comparison custom manifest",
+                "description": "Example showing how to use the two MediaPlayer APIS which control live delay: setLiveDelay and setLiveDelayFragmentCount.",
+                "href": "live-streaming/live-delay-comparison-custom-manifest.html"
+            },
+            {
+                "title": "Live delay comparison using fragment count",
+                "description": "Example showing the combined effects of segment duration and the setLiveDelayFragmentCount MediaPlayer method on the latency of live stream playback",
+                "href": "live-streaming/live-delay-comparison-using-fragmentCount.html"
+            },
+            {
+                "title": "Live delay comparison using setLiveDelay",
+                "description": "Example showing the combined effects of segment duration and the setLiveDelay MediaPlayer method on the latency of live stream playback.",
+                "href": "live-streaming/live-delay-comparison-using-setLiveDelay.html"
+            },
+            {
+                "title": "Low latency",
+                "description": "Example showing how to use dash.js to play low latency streams.",
+                "href": "low-latency/index.html"
+            }
+        ]
+    },
+    {
+        "section": "MSS",
+        "samples": [
+            {
+                "title": "Microsoft Smooth Streaming",
+                "description": "Example showing how to use dash.js to play Microsoft Smooth Streaming streams.",
+                "href": "smooth-streaming/mss.html"
+            }
+        ]
+    },
+    {
+        "section": "Thumbnails",
+        "samples": [
+            {
+                "title": "Thumbnails",
+                "description": "Example showing how to use streams with thumbnails representations.",
+                "href": "thumbnails/thumbnails.html"
+            }
+        ]
+    },
+    {
+        "section": "DRM",
+        "samples": [
+            {
+                "title": "Widevine",
+                "description": "Example showing how to use dash.js to play streams with Widevine DRM protection.",
+                "href": "drm/widevine.html"
+            },
+            {
+                "title": "PlayReady",
+                "description": "Example showing how to use dash.js to play streams with PlayReady DRM protection (Windows only)",
+                "href": "drm/playready.html"
+            },
+            {
+                "title": "ClearKey",
+                "description": "Example showing how to use dash.js to play streams with ClearKey DRM protection.",
+                "href": "drm/clearkey.html"
+            }
+            
+        ]
+    },
+    {
+        "section": "Multi Period",
+        "samples": [
+            {
+                "title": "Two periods",
+                "description": "Example showing how dash.js handles streams with two periods.",
+                "href": "multiperiod/index.html"
+            }
+        ]
+    },
+    {
+        "section": "Audio only",
+        "samples": [
+            {
+                "title": "Only audio stream",
+                "description": "This example shows how to play audio-only streams in dash.js.",
+                "href": "audio-only/index.html"
+            }
+        ]
+    },
+    {
+        "section": "Captioning",
+        "samples": [
+            {
+                "title": "Caption VTT",
+                "description": "example showing how content with VTT captions can be played back by the dash.js player. First captions appear at the 15s mark.",
+                "href": "captioning/caption_vtt.html"
+            },
+            {
+                "title": "Multi Track Captions",
+                "description": "example showing content with multiple timed text tracks",
+                "href": "captioning/multi-track-captions.html"
+            },
+            {
+                "title": "TTML EBU timeted text tracks",
+                "description": "example showing content with TTML EBU timed text tracks",
+                "href": "captioning/ttml-ebutt-sample.html"
+            }
+        ]
+    },
+    {
+        "section": "Ad Insertion",
+        "samples": [
+            {
+                "title": "Ad insertion",
+                "description": "Demonstration of different implementation approaches for advert insertion, specifically inband, inline and X-Link onLoad. Provided by Fraunhofer Fokus.",
+                "href": "ad-insertion/index.html"
+            }
+        ]
+    },
+    {
+        "section": "Preload",
+        "samples": [
+            {
+                "title": "Preload video",
+                "description": "This examples shows how to use preload feature of dash.js, which allows to initialize streaming and starts downloading the content before the player is attached to a video element.",
+                "href": "getting-started/pre-load-video.html"
+            }
+        ]
+    }
+]
