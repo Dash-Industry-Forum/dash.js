@@ -256,6 +256,7 @@ declare namespace dashjs {
         setManifestUpdateRetryInterval(value: number): void;        
         getManifestUpdateRetryInterval(): number;
         setSegmentOverlapToleranceTime(value: number): void;
+        keepProtectionMediaKeys(value: boolean): void;
     }
 
     export interface MediaPlayerFactory {
