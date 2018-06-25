@@ -2670,9 +2670,13 @@ function MediaPlayer() {
         mediaController.reset();
         textController.reset();
         if (protectionController) {
-            protectionController.reset();
-            protectionController = null;
-            detectProtection();
+            if (mediaPlayerModel.getKeepProtectionMediaKeys()) {
+                protectionController.stop();
+            } else {
+                protectionController.reset();
+                protectionController = null;
+                detectProtection();
+            }
         }
     }
 
