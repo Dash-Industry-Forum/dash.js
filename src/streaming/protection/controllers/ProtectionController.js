@@ -295,7 +295,7 @@ function ProtectionController(config) {
      *
      * @memberof module:ProtectionController
      * @instance
-     */    
+     */
     function stop() {
         if (protectionModel) {
             protectionModel.stop();
@@ -442,6 +442,9 @@ function ProtectionController(config) {
                 eventBus.off(events.INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
                 eventBus.off(events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
                 if (!event.error) {
+                    if (!protectionModel) {
+                        return;
+                    }
                     keySystem = protectionModel.getKeySystem();
                     eventBus.trigger(events.KEY_SYSTEM_SELECTED, {data: keySystemAccess});
                     // Set server certificate from protData
@@ -577,6 +580,9 @@ function ProtectionController(config) {
         xhr.open(licenseServerData.getHTTPMethod(messageType), url, true);
         xhr.responseType = licenseServerData.getResponseType(keySystemString, messageType);
         xhr.onload = function () {
+            if (!protectionModel) {
+                return;
+            }
             if (this.status == 200) {
                 const licenseMessage = licenseServerData.getLicenseMessage(this.response, keySystemString, messageType);
                 if (licenseMessage !== null) {
