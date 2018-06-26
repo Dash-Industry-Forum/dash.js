@@ -138,11 +138,21 @@ function PlaybackController() {
         return streamInfo && videoModel ? videoModel.isSeeking() : null;
     }
 
-    function seek(time, stickToBuffered) {
+    function seek(time, stickToBuffered, internalSeek) {
         if (streamInfo && videoModel) {
-            eventBus.trigger(Events.PLAYBACK_SEEK_ASKED);
-            logger.info('Requesting seek to time: ' + time);
-            videoModel.setCurrentTime(time, stickToBuffered);
+            if (internalSeek === true) {
+                if (time !== videoModel.getTime()) {
+                    // Internal seek = seek video model only (disable 'seeking' listener),
+                    // buffer(s) are already appended at given time (see onBytesAppended())
+                    videoModel.removeEventListener('seeking', onPlaybackSeeking);
+                    logger.info('Requesting seek to time: ' + time);
+                    videoModel.setCurrentTime(time, stickToBuffered);
+                }
+            } else {
+                eventBus.trigger(Events.PLAYBACK_SEEK_ASKED);
+                logger.info('Requesting seek to time: ' + time);
+                videoModel.setCurrentTime(time, stickToBuffered);
+            }
         }
     }
 
@@ -495,6 +505,8 @@ function PlaybackController() {
     function onPlaybackSeeked() {
         logger.info('Native video element event: seeked');
         eventBus.trigger(Events.PLAYBACK_SEEKED);
+        // Reactivate 'seeking' event listener (see seek())
+        videoModel.addEventListener('seeking', onPlaybackSeeking);
     }
 
     function onPlaybackTimeUpdated() {
@@ -652,7 +664,7 @@ function PlaybackController() {
                 }
                 if (checkTimeInRanges(earliestTime, ranges)) {
                     if (!isSeeking() && !compatibleWithPreviousStream) {
-                        seek(earliestTime, true);
+                        seek(earliestTime, true, true);
                     }
                     commonEarliestTime[streamInfo.id].started = true;
                 }
@@ -662,7 +674,7 @@ function PlaybackController() {
             if (commonEarliestTime[streamInfo.id][type]) {
                 earliestTime = commonEarliestTime[streamInfo.id][type] > initialStartTime ? commonEarliestTime[streamInfo.id][type] : initialStartTime;
                 if (!isSeeking() && !compatibleWithPreviousStream) {
-                    seek(earliestTime);
+                    seek(earliestTime, false, true);
                 }
                 commonEarliestTime[streamInfo.id].started = true;
             }
