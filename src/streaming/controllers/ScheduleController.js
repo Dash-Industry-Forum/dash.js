@@ -402,6 +402,7 @@ function ScheduleController(config) {
                 logger.debug('setLiveEdgeSeekTarget : getFragmentRequestForTime returned undefined request object');
             }
             seekTarget = playbackController.getStreamStartTime(false, liveEdge);
+            streamProcessor.getBufferController().setSeekStartTime(seekTarget);
 
             //special use case for multi period stream. If the startTime is out of the current period, send a seek command.
             //in onPlaybackSeeking callback (StreamController), the detection of switch stream is done.
