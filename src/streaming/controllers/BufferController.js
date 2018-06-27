@@ -118,6 +118,7 @@ function BufferController(config) {
         eventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
         eventBus.on(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
         eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
+        eventBus.on(Events.PLAYBACK_SEEKED, onPlaybackSeeked, this);
         eventBus.on(Events.PLAYBACK_STALLED, onPlaybackStalled, this);
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
         eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this, EventBus.EVENT_PRIORITY_HIGH);
@@ -334,6 +335,9 @@ function BufferController(config) {
         } else {
             onPlaybackProgression();
         }
+    }
+
+    function onPlaybackSeeked() {
         seekStartTime = undefined;
     }
 
@@ -884,6 +888,7 @@ function BufferController(config) {
         eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
         eventBus.off(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
         eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
+        eventBus.off(Events.PLAYBACK_SEEKED, onPlaybackSeeked, this);
         eventBus.off(Events.PLAYBACK_STALLED, onPlaybackStalled, this);
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
         eventBus.off(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
