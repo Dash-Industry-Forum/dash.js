@@ -30,16 +30,7 @@
             .card {
                 align-self: auto;
                 position: relative;
-                padding-bottom: 40px;
                 flex-grow: 1;
-            }
-
-            .card-footer {
-                position: absolute;
-                bottom: 0;
-                border: none;
-                background: none;
-                padding-left: 0;
             }
 
         </style>
@@ -70,11 +61,10 @@
             <div style="display: none">
                 <div id="card-sample" class="card">
                     <div class="card-body">
-                        <h5 class="card-title">Card title</h5>
+                        <a>
+                            <h5 class="card-title">Card title</h5>
+                        </a>
                         <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-                        <div class="card-footer">
-                            <a href="#" target="_blank" class="btn btn-primary">Go somewhere</a>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -91,7 +81,6 @@
         <script>
             var sampleData = [];
             $(document).ready(function() {
-                console.log($);
                 $.getJSON("samples.json", function(json) {
                     sampleData = json;
                     drawSampleData();
@@ -125,13 +114,11 @@
                 $('#content').append($tabContent);
 
                 section.samples.forEach(function(sample) {
-                    console.log('sample', sample);
                     var $card = $('#card-sample').clone(true);
-                    console.log($card);
                     $card.attr('id', '');
                     $card.find('h5').text(sample.title);
                     $card.find('p').html(sample.description);
-                    $card.find('a').attr('href', sample.href).text(sample.linkTitle || 'Check it now');
+                    $card.find('a').attr('href', sample.href);
                     $card.css('width', sample.width || '18rem');
                     $tabContent.append($card);
                 });
