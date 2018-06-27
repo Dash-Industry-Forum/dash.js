@@ -484,6 +484,9 @@ function MediaPlayerModel() {
     }
 
     function setFastSwitchEnabled(value) {
+        if (typeof value !== 'boolean') {
+            return;
+        }
         fastSwitchEnabled = value;
     }
 
@@ -516,6 +519,9 @@ function MediaPlayerModel() {
     }
 
     function setLowLatencyEnabled(value) {
+        if (typeof value !== 'boolean') {
+            return;
+        }
         lowLatencyEnabled = value;
     }
 
