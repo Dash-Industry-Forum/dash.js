@@ -207,6 +207,12 @@ class MediaPlayerEvents extends EventsBase {
         this.TTML_TO_PARSE = 'ttmlToParse';
 
         /**
+         * Triggered when a caption is rendered.
+         * @event MediaPlayerEvents#CAPTION_RENDERED
+         */
+        this.CAPTION_RENDERED = 'captionRendered';
+
+        /**
          * Sent when enough data is available that the media can be played,
          * at least for a couple of frames.  This corresponds to the
          * HAVE_ENOUGH_DATA readyState.

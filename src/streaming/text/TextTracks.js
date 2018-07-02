@@ -386,6 +386,7 @@ function TextTracks() {
                 //TODO add ErrorHandler management
             }, previousISDState, true /*enableRollUp*/);
             finalCue.id = cue.cueID;
+            eventBus.trigger(Events.CAPTION_RENDERED, {captionDiv: finalCue, currentTrackIdx});
         }
     }
 
