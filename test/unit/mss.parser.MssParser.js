@@ -1,11 +1,10 @@
 import MssParser from '../../src/mss/parser/MssParser';
 import MediaPlayerModel from '../../src/streaming/models/MediaPlayerModel';
-import Debug from '../../src/core/Debug';
+import DebugMock from './mocks/DebugMock';
 
 const expect = require('chai').expect;
 const fs = require('fs');
 const jsdom = require('jsdom').JSDOM;
-const context = {};
 
 describe('MssParser', function () {
 
@@ -32,7 +31,7 @@ describe('MssParser', function () {
     beforeEach(function () {
         mssParser = MssParser().create({
             mediaPlayerModel: mediaPlayerModel,
-            log: Debug(context).getInstance().log
+            debug: new DebugMock()
         });
 
         expect(mssParser).to.exist; // jshint ignore:line
@@ -46,7 +45,6 @@ describe('MssParser', function () {
 
         let adaptation;
         for (let i = 0; i < manifest.Period.AdaptationSet_asArray.length; i++) {
-
             adaptation = manifest.Period.AdaptationSet_asArray[i];
             expect(adaptation.id).to.exist; // jshint ignore:line
             expect(adaptation.id).not.to.be.empty; // jshint ignore:line

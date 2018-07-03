@@ -1,0 +1,14 @@
+class DebugMock {
+    getLogger() {
+        const nop = function () {};
+        return {
+            fatal: nop,
+            error: nop,
+            warning: nop,
+            info: nop,
+            debug: nop
+        };
+    }
+}
+
+export default DebugMock;

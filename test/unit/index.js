@@ -31,6 +31,7 @@
 
 import FactoryMaker from '../../src/core/FactoryMaker';
 
+
 // Shove both of these into the global scope
 var context = (typeof window !== 'undefined' && window) || global;
 

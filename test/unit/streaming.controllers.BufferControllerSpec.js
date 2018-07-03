@@ -15,6 +15,7 @@ import StreamProcessorMock from './mocks/StreamProcessorMock';
 import MetricsModelMock from './mocks/MetricsModelMock';
 import AdapterMock from './mocks/AdapterMock';
 import MediaSourceMock from './mocks/MediaSourceMock';
+import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
 
 const chai = require('chai');
 const expect = chai.expect;
@@ -37,6 +38,7 @@ describe('BufferController', function () {
     const adapterMock = new AdapterMock();
     const metricsModelMock = new MetricsModelMock();
     const playbackControllerMock = new PlaybackControllerMock();
+    const mediaPlayerModelMock = new MediaPlayerModelMock();
     let bufferController;
     let mediaSourceMock;
     const mediaInfo = { codec: 'video/webm; codecs="vp8, vorbis"' };
@@ -57,7 +59,8 @@ describe('BufferController', function () {
             abrController: AbrController(context).getInstance(),
             streamProcessor: streamProcessor,
             type: testType,
-            playbackController: playbackControllerMock
+            playbackController: playbackControllerMock,
+            mediaPlayerModel: mediaPlayerModelMock
         });
     });
 

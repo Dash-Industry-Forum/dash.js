@@ -46,6 +46,7 @@ function NotFragmentedTextBufferController(config) {
 
     let errHandler = config.errHandler;
     let type = config.type;
+    let mimeType = config.mimeType;
     let streamProcessor = config.streamProcessor;
 
     let instance,
@@ -86,11 +87,11 @@ function NotFragmentedTextBufferController(config) {
             if (!initialized) {
                 const textBuffer = buffer.getBuffer();
                 if (textBuffer.hasOwnProperty(Constants.INITIALIZE)) {
-                    textBuffer.initialize(type, streamProcessor);
+                    textBuffer.initialize(mimeType, streamProcessor);
                 }
                 initialized = true;
             }
-
+            return buffer;
         } catch (e) {
             if ((mediaInfo.isText) || (mediaInfo.codec.indexOf('codecs="stpp') !== -1) || (mediaInfo.codec.indexOf('codecs="wvtt') !== -1)) {
                 try {
@@ -158,26 +159,36 @@ function NotFragmentedTextBufferController(config) {
             return;
         }
 
-        eventBus.trigger(Events.TIMED_TEXT_REQUESTED, {
-            index: 0,
-            sender: e.sender
-        }); //TODO make index dynamic if referring to MP?
+        const chunk = initCache.extract(streamProcessor.getStreamInfo().id, e.sender.getCurrentRepresentation().id);
+
+        if (!chunk) {
+            eventBus.trigger(Events.TIMED_TEXT_REQUESTED, {
+                index: 0,
+                sender: e.sender
+            }); //TODO make index dynamic if referring to MP?
+        }
     }
 
     function onInitFragmentLoaded(e) {
         if (e.fragmentModel !== streamProcessor.getFragmentModel() || (!e.chunk.bytes)) {
             return;
         }
+
         initCache.save(e.chunk);
         buffer.append(e.chunk);
+
+        eventBus.trigger(Events.STREAM_COMPLETED, {
+            request: e.request,
+            fragmentModel: e.fragmentModel
+        });
     }
 
     function switchInitData(streamId, representationId) {
         const chunk = initCache.extract(streamId, representationId);
-        if (chunk) {
-            buffer.append(chunk);
-        } else {
-            eventBus.trigger(Events.INIT_REQUESTED, {
+
+        if (!chunk) {
+            eventBus.trigger(Events.TIMED_TEXT_REQUESTED, {
+                index: 0,
                 sender: instance
             });
         }
@@ -185,6 +196,12 @@ function NotFragmentedTextBufferController(config) {
 
     function getRangeAt() {
         return null;
+    }
+
+    function updateTimestampOffset(MSETimeOffset) {
+        if (buffer.timestampOffset !== MSETimeOffset && !isNaN(MSETimeOffset)) {
+            buffer.timestampOffset = MSETimeOffset;
+        }
     }
 
     instance = {
@@ -203,7 +220,8 @@ function NotFragmentedTextBufferController(config) {
         dischargePreBuffer: dischargePreBuffer,
         switchInitData: switchInitData,
         getRangeAt: getRangeAt,
-        reset: reset
+        reset: reset,
+        updateTimestampOffset: updateTimestampOffset
     };
 
     setup();

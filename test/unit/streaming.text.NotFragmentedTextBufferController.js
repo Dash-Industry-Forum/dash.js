@@ -133,7 +133,7 @@ describe('NotFragmentedTextBufferController', function () {
         });
 
         describe('Method switchInitData', function () {
-            it('should append init data to source buffer if data have been cached', function () {
+            it('should not append init data to source buffer if data have already been cached', function () {
                 let chunk = {
                     bytes: 'initData',
                     quality: 2,
@@ -148,19 +148,19 @@ describe('NotFragmentedTextBufferController', function () {
                 notFragmentedTextBufferController.createBuffer(mockMediaInfo);
                 const buffer = notFragmentedTextBufferController.getBuffer().getBuffer();
                 notFragmentedTextBufferController.switchInitData(chunk.streamId, chunk.representationId);
-                expect(buffer.chunk).to.equal(chunk.bytes);
+                expect(buffer.chunk).to.equal(null);
             });
 
-            it('should trigger INIT_REQUESTED if no init data is cached', function (done) {
+            it('should trigger TIMED_TEXT_REQUESTED if no init data is cached', function (done) {
 
                 // reset cache
                 initCache.reset();
 
                 let onInitRequest = function () {
-                    eventBus.off(Events.INIT_REQUESTED, onInitRequest);
+                    eventBus.off(Events.TIMED_TEXT_REQUESTED, onInitRequest);
                     done();
                 };
-                eventBus.on(Events.INIT_REQUESTED, onInitRequest, this);
+                eventBus.on(Events.TIMED_TEXT_REQUESTED, onInitRequest, this);
 
                 notFragmentedTextBufferController.switchInitData('streamId', 'representationId');
             });
@@ -172,7 +172,8 @@ describe('NotFragmentedTextBufferController', function () {
 
                 let event = {
                     sender: {
-                        getStreamProcessor: function () { return streamProcessorMock; }
+                        getStreamProcessor: function () { return streamProcessorMock; },
+                        getCurrentRepresentation: function () { return { id: 0}; }
                     }
                 };
 

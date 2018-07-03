@@ -1,6 +1,6 @@
 {
   "name": "dashjs",
-  "version": "2.7.0",
+  "version": "2.8.0",
   "description": "A reference client implementation for the playback of MPEG DASH via Javascript and compliant browsers.",
   "main": "build/es5/index.js",
   "types": "build/typings/index.d.ts",
@@ -58,7 +58,7 @@
   "dependencies": {
     "codem-isoboxer": "0.3.5",
     "fast-deep-equal": "1.1.0",
-    "imsc": "^1.0.1-rc.1"
+    "imsc": "^1.0.1-rc.2"
   },
   "repository": {
     "type": "git",

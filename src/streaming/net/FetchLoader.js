@@ -130,6 +130,8 @@ function FetchLoader(cfg) {
             let offset = 0;
 
             httpRequest.reader = response.body.getReader();
+            let downLoadedData = [];
+
             const processResult = function ({ value, done }) {
                 if (done) {
                     if (remaining) {
@@ -139,7 +141,8 @@ function FetchLoader(cfg) {
                         httpRequest.progress({
                             loaded: bytesReceived,
                             total: isNaN(totalBytes) ? bytesReceived : totalBytes,
-                            lengthComputable: true
+                            lengthComputable: true,
+                            time: calculateDownloadedTime(downLoadedData, bytesReceived)
                         });
 
                         httpRequest.response.response = remaining.buffer;
@@ -152,6 +155,10 @@ function FetchLoader(cfg) {
                 if (value && value.length > 0) {
                     remaining = concatTypedArray(remaining, value);
                     bytesReceived += value.length;
+                    downLoadedData.push({
+                        ts: Date.now(),
+                        bytes: value.length
+                    });
 
                     const boxesInfo = BoxParser().getInstance().findLastTopIsoBoxCompleted(['moov', 'mdat'], remaining, offset);
                     if (boxesInfo.found) {
@@ -238,9 +245,28 @@ function FetchLoader(cfg) {
         }
     }
 
+    function calculateDownloadedTime(datum, bytesReceived) {
+        datum = datum.filter(data => data.bytes > ((bytesReceived / 4) / datum.length) );
+        if (datum.length > 1) {
+            let time = 0;
+            const avgTimeDistance = (datum[datum.length - 1].ts - datum[0].ts) / datum.length;
+            datum.forEach((data, index) => {
+                // To be counted the data has to be over a threshold
+                const next = datum[index + 1];
+                if (next) {
+                    const distance = next.ts - data.ts;
+                    time += distance < avgTimeDistance ? distance : 0;
+                }
+            });
+            return time;
+        }
+        return null;
+    }
+
     instance = {
         load: load,
-        abort: abort
+        abort: abort,
+        calculateDownloadedTime: calculateDownloadedTime
     };
 
     return instance;

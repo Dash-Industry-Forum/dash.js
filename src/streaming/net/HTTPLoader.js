@@ -167,7 +167,7 @@ function HTTPLoader(cfg) {
             if (!event.noTrace) {
                 traces.push({
                     s: lastTraceTime,
-                    d: currentTime.getTime() - lastTraceTime.getTime(),
+                    d: event.time ? event.time : currentTime.getTime() - lastTraceTime.getTime(),
                     b: [event.loaded ? event.loaded - lastTraceReceivedCount : 0]
                 });
 
@@ -175,8 +175,8 @@ function HTTPLoader(cfg) {
                 lastTraceReceivedCount = event.loaded;
             }
 
-            if (config.progress && event.data) {
-                config.progress(event.data);
+            if (config.progress && event) {
+                config.progress(event);
             }
         };
 

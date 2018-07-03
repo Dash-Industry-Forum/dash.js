@@ -36,19 +36,23 @@ import { fromXML, generateISD } from 'imsc';
 
 function TTMLParser() {
 
-    let context = this.context;
-    let log = Debug(context).getInstance().log;
-    let eventBus = EventBus(context).getInstance();
+    const context = this.context;
+    const eventBus = EventBus(context).getInstance();
 
     /*
      * This TTML parser follows "EBU-TT-D SUBTITLING DISTRIBUTION FORMAT - tech3380" spec - https://tech.ebu.ch/docs/tech/tech3380.pdf.
      * */
-    let instance;
+    let instance,
+        logger;
 
     let cueCounter = 0; // Used to give every cue a unique ID.
 
+    function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
+    }
+
     function getCueID() {
-        let id = 'cue_TTML_' + cueCounter;
+        const id = 'cue_TTML_' + cueCounter;
         cueCounter++;
         return id;
     }
@@ -67,13 +71,13 @@ function TTMLParser() {
         let i;
 
         let errorMsg = '';
-        let captionArray = [];
+        const captionArray = [];
         let startTime,
             endTime;
 
-        let content = {};
+        const content = {};
 
-        let embeddedImages = {};
+        const embeddedImages = {};
         let currentImageId = '';
         let accumulated_image_data = '';
         let metadataHandler = {
@@ -81,7 +85,7 @@ function TTMLParser() {
             onOpenTag: function (ns, name, attrs) {
                 if (name === 'image' && ns === 'http://www.smpte-ra.org/schemas/2052-1/2010/smpte-tt') {
                     if (!attrs[' imagetype'] || attrs[' imagetype'].value !== 'PNG') {
-                        log('Warning: smpte-tt imagetype != PNG. Discarded');
+                        logger.warn('smpte-tt imagetype != PNG. Discarded');
                         return;
                     }
                     currentImageId = attrs['http://www.w3.org/XML/1998/namespace id'].value;
@@ -112,13 +116,13 @@ function TTMLParser() {
 
         eventBus.trigger(Events.TTML_TO_PARSE, content);
 
-        let imsc1doc = fromXML(content.data, function (msg) {
+        const imsc1doc = fromXML(content.data, function (msg) {
             errorMsg = msg;
         }, metadataHandler);
 
         eventBus.trigger(Events.TTML_PARSED, {ttmlString: content.data, ttmlDoc: imsc1doc});
 
-        let mediaTimeEvents = imsc1doc.getMediaTimeEvents();
+        const mediaTimeEvents = imsc1doc.getMediaTimeEvents();
 
         for (i = 0; i < mediaTimeEvents.length; i++) {
             let isd = generateISD(imsc1doc, mediaTimeEvents[i], function (error) {
@@ -145,14 +149,11 @@ function TTMLParser() {
         }
 
         if (errorMsg !== '') {
-            log(errorMsg);
+            logger.error(errorMsg);
             throw new Error(errorMsg);
         }
 
         return captionArray;
-    }
-
-    function setup() {
     }
 
     instance = {

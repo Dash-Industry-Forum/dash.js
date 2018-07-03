@@ -46,5 +46,5 @@ function DroppedFramesHistory() {
 }
 
 DroppedFramesHistory.__dashjs_factory_name = 'DroppedFramesHistory';
-let factory = FactoryMaker.getClassFactory(DroppedFramesHistory);
+const factory = FactoryMaker.getClassFactory(DroppedFramesHistory);
 export default factory;

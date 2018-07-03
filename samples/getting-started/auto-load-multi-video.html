@@ -17,28 +17,29 @@
     </style>
     </head>
     <body>
-        <div>
+        <div class="code">
             <video autoplay controls>
                 <source src="https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd" type="application/dash+xml"/>
             </video>
-            <br/>This is a dash.js player that should autostart<p/>
+            <br/>This is a dash.js player that should autostart
         </div>
-        <div>
+        <div class="code">
             <video autoplay controls="true">
                 <source src="http://mediapm.edgesuite.net/ovp/content/test/video/spacealonehd_sounas_640_300.mp4" type="video/mp4"/>
             </video>
-            <br/>This is a standard mp4 (non-dash)<p/>
+            <br/>This is a standard mp4 (non-dash)
         </div>
-        <div>
+        <div class="code">
             <video poster="http://mediapm.edgesuite.net/will/dash/temp/poster.png" controls="true">
                 <source src="https://dash.akamaized.net/digitalprimates/fraunhofer/480p_video/heaac_2_0_with_video/Sintel/sintel_480p_heaac2_0.mpd" type="application/dash+xml"/>
             </video>
-            <br/>This is a dash.js player that should not autostart<p/>
+            <br/>This is a dash.js player that should not autostart
         </div>
-        <div>
+        <div class="code">
             <video data-dashjs-player autoplay src="https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd" controls="true">
             </video>
             <br/>This is a dash.js player that where the manifest is defined via the src attribute of the video element.
         </div>
+        <script src="../highlighter.js"></script>
     </body>
 </html>

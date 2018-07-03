@@ -113,7 +113,7 @@ describe('XHRLoader', function () {
         sinon.assert.notCalled(callbackError);
         sinon.assert.notCalled(callbackSucceeded);
         // abort triggers both onloadend and onabort
-        sinon.assert.calledOnce(callbackCompleted);
+        sinon.assert.notCalled(callbackCompleted);
         sinon.assert.calledOnce(callbackAbort);
     });
 
