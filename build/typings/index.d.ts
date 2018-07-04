@@ -230,6 +230,8 @@ declare namespace dashjs {
         addABRCustomRule(type: string, rulename: string, rule: object): void;
         removeABRCustomRule(rulename: string): void;
         removeAllABRCustomRule(): void;
+        getLowLatencyEnabled(): boolean;
+        setLowLatencyEnabled(value: boolean): void;
     }
 
     export interface MediaPlayerFactory {

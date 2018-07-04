@@ -1390,7 +1390,7 @@ function MediaPlayer() {
      * @instance
      */
     function setLowLatencyEnabled(value) {
-        return mediaPlayerModel.setLowLatencyEnabled(value);
+        mediaPlayerModel.setLowLatencyEnabled(value);
     }
 
     /**
