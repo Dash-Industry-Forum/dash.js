@@ -350,6 +350,9 @@ describe('MediaPlayer', function () {
                 expect(() => {player.setCatchUpPlaybackRate('string');}).to.throw(MediaPlayer.PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR);
                 expect(() => {player.setCatchUpPlaybackRate(true);}).to.throw(MediaPlayer.PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR);
                 expect(() => {player.setCatchUpPlaybackRate(false);}).to.throw(MediaPlayer.PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR);
+            it('Method setUseDeadTimeLatencyForAbr should throw an exception if given bad values', function () {
+                expect(player.setUseDeadTimeLatencyForAbr.bind(player, 13)).to.throw('MediaPlayer Invalid Arguments!');
+                expect(player.setUseDeadTimeLatencyForAbr.bind(player, 'string')).to.throw('MediaPlayer Invalid Arguments!');
             });
         });
     });

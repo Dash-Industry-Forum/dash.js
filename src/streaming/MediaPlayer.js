@@ -1054,6 +1054,9 @@ function MediaPlayer() {
      * @instance
      */
     function setUseDeadTimeLatencyForAbr(useDeadTimeLatency) {
+        if (typeof useDeadTimeLatency !== 'boolean') {
+            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
+        }
         abrController.setUseDeadTimeLatency(useDeadTimeLatency);
     }
 
