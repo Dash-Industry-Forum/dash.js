@@ -34,16 +34,6 @@
                 "title": "Manual load with custom settings",
                 "description": "A sample showing how to load a video using custom settings",
                 "href": "getting-started/manual-load-with-custom-settings.html"
-            },
-            {
-                "title": "Listening to events",
-                "description": "Example showing how to listen to DASH.js events",
-                "href": "getting-started/listening-to-events.html"
-            },
-            {
-                "title": "Monitoring the stream",
-                "description": "This example shows how to add monitoring to the stream, fetch values from the Player etc",
-                "href": "monitoring/index.html"
             }
         ]
     },
@@ -170,6 +160,31 @@
                 "title": "Preload video",
                 "description": "This examples shows how to use preload feature of dash.js, which allows to initialize streaming and starts downloading the content before the player is attached to a video element.",
                 "href": "getting-started/pre-load-video.html"
+            }
+        ]
+    },
+    {
+        "section": "Player Control",
+        "samples": [
+            {
+                "title": "Using the Control Bar",
+                "description": "Example showing how add a custom Control Bar to Dash",
+                "href": "control/controlbar.html"
+            },
+            {
+                "title": "Logging to console",
+                "description": "This examples shows how to enable internal logging to get traces from Dash.",
+                "href": "control/logging.html"
+            },
+            {
+                "title": "Listening to events",
+                "description": "Example showing how to listen to DASH.js events",
+                "href": "getting-started/listening-to-events.html"
+            },
+            {
+                "title": "Monitoring the stream",
+                "description": "This example shows how to add monitoring to the stream, fetch values from the Player etc",
+                "href": "monitoring/index.html"
             }
         ]
     }
