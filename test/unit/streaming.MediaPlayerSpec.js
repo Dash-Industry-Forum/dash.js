@@ -345,11 +345,14 @@ describe('MediaPlayer', function () {
             });
 
             it('Method setCatchUpPlaybackRate should throw an exception if given bad values', function () {
-                expect(() => {player.setCatchUpPlaybackRate(0.9);}).to.throw(MediaPlayer.PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR);
-                expect(() => {player.setCatchUpPlaybackRate(13);}).to.throw(MediaPlayer.PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR);
-                expect(() => {player.setCatchUpPlaybackRate('string');}).to.throw(MediaPlayer.PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR);
-                expect(() => {player.setCatchUpPlaybackRate(true);}).to.throw(MediaPlayer.PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR);
-                expect(() => {player.setCatchUpPlaybackRate(false);}).to.throw(MediaPlayer.PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR);
+                expect(() => {player.setCatchUpPlaybackRate(0.9);}).to.throw('Playback catchup rate invalid argument! Use a number from 0 to 0.2');
+                expect(() => {player.setCatchUpPlaybackRate(13);}).to.throw('Playback catchup rate invalid argument! Use a number from 0 to 0.2');
+                expect(() => {player.setCatchUpPlaybackRate(0.1);}).to.not.throw('Playback catchup rate invalid argument! Use a number from 0 to 0.2');
+                expect(() => {player.setCatchUpPlaybackRate('string');}).to.throw('Playback catchup rate invalid argument! Use a number from 0 to 0.2');
+                expect(() => {player.setCatchUpPlaybackRate(true);}).to.throw('Playback catchup rate invalid argument! Use a number from 0 to 0.2');
+                expect(() => {player.setCatchUpPlaybackRate(false);}).to.throw('Playback catchup rate invalid argument! Use a number from 0 to 0.2');
+            });
+
             it('Method setUseDeadTimeLatencyForAbr should throw an exception if given bad values', function () {
                 expect(player.setUseDeadTimeLatencyForAbr.bind(player, 13)).to.throw('MediaPlayer Invalid Arguments!');
                 expect(player.setUseDeadTimeLatencyForAbr.bind(player, 'string')).to.throw('MediaPlayer Invalid Arguments!');
