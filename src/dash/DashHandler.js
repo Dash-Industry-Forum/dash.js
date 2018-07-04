@@ -407,14 +407,6 @@ function DashHandler(config) {
         return request;
     }
 
-    function generateSegmentRequestForTime(representation, time) {
-        const step = (representation.segmentAvailabilityRange.end - representation.segmentAvailabilityRange.start) / 2;
-
-        representation.segments = null;
-        representation.segmentAvailabilityRange = {start: time - step, end: time + step};
-        return getSegmentRequestForTime(representation, time, {keepIdx: false, ignoreIsFinished: true});
-    }
-
     function getNextSegmentRequest(representation) {
         let request,
             segment,
@@ -524,7 +516,6 @@ function DashHandler(config) {
         getInitRequest: getInitRequest,
         getSegmentRequestForTime: getSegmentRequestForTime,
         getNextSegmentRequest: getNextSegmentRequest,
-        generateSegmentRequestForTime: generateSegmentRequestForTime,
         updateRepresentation: updateRepresentation,
         updateSegmentList: updateSegmentList,
         setCurrentTime: setCurrentTime,

@@ -395,20 +395,6 @@ function DashAdapter() {
         return indexHandler ? indexHandler.getSegmentRequestForTime(representation, time, options) : null;
     }
 
-    function generateFragmentRequestForTime(streamProcessor, representationInfo, time) {
-        let representationController,
-            representation,
-            indexHandler;
-
-        checkStreamProcessor(streamProcessor);
-
-        representationController = streamProcessor.getRepresentationController();
-        representation = getRepresentationForRepresentationInfo(representationInfo, representationController);
-        indexHandler = streamProcessor.getIndexHandler();
-
-        return indexHandler ? indexHandler.generateSegmentRequestForTime(representation, time) : null;
-    }
-
     function getIndexHandlerTime(streamProcessor) {
         checkStreamProcessor(streamProcessor);
 
@@ -526,7 +512,6 @@ function DashAdapter() {
         getInitRequest: getInitRequest,
         getNextFragmentRequest: getNextFragmentRequest,
         getFragmentRequestForTime: getFragmentRequestForTime,
-        generateFragmentRequestForTime: generateFragmentRequestForTime,
         getIndexHandlerTime: getIndexHandlerTime,
         setIndexHandlerTime: setIndexHandlerTime,
         getEventsFor: getEventsFor,
