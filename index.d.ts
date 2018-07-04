@@ -233,6 +233,28 @@ declare namespace dashjs {
         removeAllABRCustomRule(): void;
         getLowLatencyEnabled(): boolean;
         setLowLatencyEnabled(value: boolean): void;
+        getCatchUpPlaybackRate(): number;
+        setCatchUpPlaybackRate(value: number): void;
+        getUseDeadTimeLatencyForAbr(): boolean;
+        setUseDeadTimeLatencyForAbr(value: boolean): void;
+        getCurrentLiveLatency(): number;
+        enableForcedTextStreaming(value: boolean): void;        
+        isTextEnabled(): boolean;
+        getBufferTimeAtTopQualityLongForm(): number;
+        setMovingAverageMethod(value: string): void;
+        getMovingAverageMethod(): string;
+        setABRStrategy(value: string): void;
+        getABRStrategy(): string;
+        useDefaultABRRules(value: boolean): void;       
+        getAverageThroughput(value: number): void;
+        setBufferAheadToKeep(value: number): void;
+        getStableBufferTime(): number;
+        getBufferTimeAtTopQuality(): number;
+        setManifestLoaderRetryAttempts(value: number): void;
+        setManifestLoaderRetryInterval(value: number): void;
+        setManifestUpdateRetryInterval(value: number): void;        
+        getManifestUpdateRetryInterval(): number;
+        setSegmentOverlapToleranceTime(value: number): void;
     }
 
     export interface MediaPlayerFactory {
