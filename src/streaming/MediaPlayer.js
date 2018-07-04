@@ -499,7 +499,7 @@ function MediaPlayer() {
      * @instance
      */
     function setCatchUpPlaybackRate(value) {
-        if (isNaN(value) || value < 0.0 || value > 0.20) {
+        if ( typeof value !== 'number' || value < 0.0 || value > 0.20) {
             throw PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR;
         }
         playbackController.setCatchUpPlaybackRate(value);

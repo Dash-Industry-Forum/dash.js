@@ -348,6 +348,8 @@ describe('MediaPlayer', function () {
                 expect(() => {player.setCatchUpPlaybackRate(0.9);}).to.throw(MediaPlayer.PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR);
                 expect(() => {player.setCatchUpPlaybackRate(13);}).to.throw(MediaPlayer.PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR);
                 expect(() => {player.setCatchUpPlaybackRate('string');}).to.throw(MediaPlayer.PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR);
+                expect(() => {player.setCatchUpPlaybackRate(true);}).to.throw(MediaPlayer.PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR);
+                expect(() => {player.setCatchUpPlaybackRate(false);}).to.throw(MediaPlayer.PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR);
             });
         });
     });
