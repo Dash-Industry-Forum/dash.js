@@ -400,10 +400,7 @@ function DashAdapter() {
 
         const indexHandler = streamProcessor.getIndexHandler();
 
-        if (indexHandler) {
-            return indexHandler.getCurrentTime();
-        }
-        return NaN;
+        return indexHandler ? indexHandler.getCurrentTime() : NaN;
     }
 
     function setIndexHandlerTime(streamProcessor, value) {
