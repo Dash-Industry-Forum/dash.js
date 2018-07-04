@@ -1086,7 +1086,7 @@ describe('MediaPlayer', function () {
             });
 
             it('Method getCurrentLiveLatency should throw an exception', function () {
-                expect(player.getCurrentLiveLatency).to.throw(MediaPlayer.MEDIA_PLAYER_NOT_INITIALIZED_ERROR);
+                expect(player.getCurrentLiveLatency).to.throw(MEDIA_PLAYER_NOT_INITIALIZED_ERROR);
             });
         });
     });

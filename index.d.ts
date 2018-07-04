@@ -237,6 +237,7 @@ declare namespace dashjs {
         setCatchUpPlaybackRate(value: number): void;
         getUseDeadTimeLatencyForAbr(): boolean;
         setUseDeadTimeLatencyForAbr(value: boolean): void;
+        getCurrentLiveLatency(): number;
     }
 
     export interface MediaPlayerFactory {
