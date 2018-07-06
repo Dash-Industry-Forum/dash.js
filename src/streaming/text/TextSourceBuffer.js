@@ -62,14 +62,14 @@ function TextSourceBuffer() {
         fragmentedTextBoxParser,
         mediaInfos,
         textTracks,
-        isFragmented,
-        fragmentModel,
+        fragmentedFragmentModel,
         initializationSegmentReceived,
+        notEmbeddedMediaInfosCreated,
         timescale,
         fragmentedTracks,
         videoModel,
         streamController,
-        firstSubtitleStart,
+        firstFragmentedSubtitleStart,
         currFragmentedTrackIdx,
         embeddedTracks,
         embeddedInitializationSegmentReceived,
@@ -82,35 +82,54 @@ function TextSourceBuffer() {
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
+
+        resetInitialSettings();
+    }
+
+    function resetFragmented () {
+        fragmentedFragmentModel = null;
+        timescale = NaN;
+        fragmentedTracks = [];
+        firstFragmentedSubtitleStart = null;
+        initializationSegmentReceived = false;
+    }
+
+    function resetInitialSettings() {
+        resetFragmented();
+
+        mediaInfos = [];
+        parser = null;
+        notEmbeddedMediaInfosCreated = false;
     }
 
     function initialize(mimeType, streamProcessor) {
-        parser = null;
-        fragmentModel = null;
-        initializationSegmentReceived = false;
-        timescale = NaN;
-        fragmentedTracks = [];
-        firstSubtitleStart = null;
-
         if (!embeddedInitialized) {
             initEmbedded();
         }
 
-        mediaInfos = streamProcessor.getMediaInfoArr();
         textTracks.setConfig({
             videoModel: videoModel
         });
         textTracks.initialize();
-        isFragmented = !dashManifestModel.getIsTextTrack(mimeType);
-        boxParser = BoxParser(context).getInstance();
-        fragmentedTextBoxParser = FragmentedTextBoxParser(context).getInstance();
-        fragmentedTextBoxParser.setConfig({
-            boxParser: boxParser
-        });
+
+        if (!boxParser) {
+            boxParser = BoxParser(context).getInstance();
+            fragmentedTextBoxParser = FragmentedTextBoxParser(context).getInstance();
+            fragmentedTextBoxParser.setConfig({
+                boxParser: boxParser
+            });
+        }
+
+        addMediaInfos(mimeType, streamProcessor);
+    }
+
+    function addMediaInfos(mimeType, streamProcessor) {
+        const isFragmented = !dashManifestModel.getIsTextTrack(mimeType);
+        mediaInfos = mediaInfos.concat(streamProcessor.getMediaInfoArr());
 
         if (isFragmented) {
-            fragmentModel = streamProcessor.getFragmentModel();
-            this.buffered = CustomTimeRanges(context).create();
+            fragmentedFragmentModel = streamProcessor.getFragmentModel();
+            instance.buffered = CustomTimeRanges(context).create();
             fragmentedTracks = mediaController.getTracksFor(Constants.FRAGMENTED_TEXT, streamController.getActiveStreamInfo());
             const currFragTrack = mediaController.getCurrentTrackFor(Constants.FRAGMENTED_TEXT, streamController.getActiveStreamInfo());
             for (let i = 0; i < fragmentedTracks.length; i++) {
@@ -126,18 +145,18 @@ function TextSourceBuffer() {
         textTracks.deleteAllTextTracks();
         fragmentedTextBoxParser = null;
         boxParser = null;
-        mediaInfos = null;
-        isFragmented = false;
-        fragmentModel = null;
+        mediaInfos = [];
+        fragmentedFragmentModel = null;
         initializationSegmentReceived = false;
+        notEmbeddedMediaInfosCreated = false;
         fragmentedTracks = [];
     }
 
     function reset() {
-        parser = null;
+        resetInitialSettings();
+
         streamController = null;
         videoModel = null;
-        timescale = NaN;
         textTracks = null;
     }
 
@@ -151,7 +170,6 @@ function TextSourceBuffer() {
 
     function initEmbedded() {
         embeddedTracks = [];
-        mediaInfos = [];
         textTracks = TextTracks(context).getInstance();
         textTracks.setConfig({
             videoModel: videoModel
@@ -162,7 +180,6 @@ function TextSourceBuffer() {
         fragmentedTextBoxParser.setConfig({
             boxParser: boxParser
         });
-        isFragmented = false;
         currFragmentedTrackIdx = null;
         embeddedInitializationSegmentReceived = false;
         embeddedTimescale = 0;
@@ -246,15 +263,7 @@ function TextSourceBuffer() {
 
     function getConfig() {
         const config = {
-            errHandler: errHandler,
-            dashManifestModel: dashManifestModel,
-            mediaController: mediaController,
-            videoModel: videoModel,
-            fragmentModel: fragmentModel,
-            streamController: streamController,
-            textTracks: textTracks,
-            isFragmented: isFragmented,
-            embeddedTracks: embeddedTracks,
+            fragmentModel: fragmentedFragmentModel,
             fragmentedTracks: fragmentedTracks
         };
 
@@ -306,7 +315,7 @@ function TextSourceBuffer() {
             textTrackInfo.index = mediaInfo.index; // AdaptationSet index in manifest
             textTrackInfo.isTTML = checkTTML();
             textTrackInfo.defaultTrack = getIsDefault(mediaInfo);
-            textTrackInfo.isFragmented = isFragmented;
+            textTrackInfo.isFragmented = !dashManifestModel.getIsTextTrack(mediaInfo.mimeType);
             textTrackInfo.isEmbedded = mediaInfo.isEmbedded ? true : false;
             textTrackInfo.kind = getKind();
             textTrackInfo.roles = mediaInfo.roles;
@@ -315,25 +324,29 @@ function TextSourceBuffer() {
             textTracks.addTextTrack(textTrackInfo, totalNrTracks);
         }
 
+        if (mediaType !== Constants.VIDEO && !notEmbeddedMediaInfosCreated) {
+            notEmbeddedMediaInfosCreated = true;
+            for (i = 0; i < mediaInfos.length; i++) {
+                createTextTrackFromMediaInfo(null, mediaInfos[i]);
+            }
+        }
+
         if (mediaType === Constants.FRAGMENTED_TEXT) {
             if (!initializationSegmentReceived) {
                 initializationSegmentReceived = true;
-                for (i = 0; i < mediaInfos.length; i++) {
-                    createTextTrackFromMediaInfo(null, mediaInfos[i]);
-                }
                 timescale = fragmentedTextBoxParser.getMediaTimescaleFromMoov(bytes);
             } else {
                 samplesInfo = fragmentedTextBoxParser.getSamplesInfo(bytes);
                 sampleList = samplesInfo.sampleList;
-                if (!firstSubtitleStart && sampleList.length > 0) {
-                    firstSubtitleStart = sampleList[0].cts - chunk.start * timescale;
+                if (!firstFragmentedSubtitleStart && sampleList.length > 0) {
+                    firstFragmentedSubtitleStart = sampleList[0].cts - chunk.start * timescale;
                 }
                 if (codecType.search(Constants.STPP) >= 0) {
                     parser = parser !== null ? parser : getParser(codecType);
                     for (i = 0; i < sampleList.length; i++) {
                         const sample = sampleList[i];
                         const sampleStart = sample.cts;
-                        const sampleRelStart = sampleStart - firstSubtitleStart;
+                        const sampleRelStart = sampleStart - firstFragmentedSubtitleStart;
                         this.buffered.add(sampleRelStart / timescale, (sampleRelStart + sample.duration) / timescale);
                         const dataView = new DataView(bytes, sample.offset, sample.subSizes[0]);
                         ccContent = ISOBoxer.Utils.dataViewToString(dataView, Constants.UTF8);
@@ -350,9 +363,9 @@ function TextSourceBuffer() {
                             const manifest = manifestModel.getValue();
                             const offsetTime = manifest.ttmlTimeIsRelative ? sampleStart / timescale : 0;
                             result = parser.parse(ccContent, offsetTime, sampleStart / timescale, (sampleStart + sample.duration) / timescale, images);
-                            textTracks.addCaptions(currFragmentedTrackIdx, firstSubtitleStart / timescale, result);
+                            textTracks.addCaptions(currFragmentedTrackIdx, firstFragmentedSubtitleStart / timescale, result);
                         } catch (e) {
-                            fragmentModel.removeExecutedRequestsBeforeTime();
+                            fragmentedFragmentModel.removeExecutedRequestsBeforeTime();
                             this.remove();
                             logger.error('TTML parser error: ' + e.message);
                         }
@@ -362,7 +375,7 @@ function TextSourceBuffer() {
                     const captionArray = [];
                     for (i = 0 ; i < sampleList.length; i++) {
                         const sample = sampleList[i];
-                        sample.cts -= firstSubtitleStart;
+                        sample.cts -= firstFragmentedSubtitleStart;
                         this.buffered.add(sample.cts / timescale, (sample.cts + sample.duration) / timescale);
                         const sampleData = bytes.slice(sample.offset, sample.offset + sample.size);
                         // There are boxes inside the sampleData, so we need a ISOBoxer to get at it.
@@ -407,9 +420,6 @@ function TextSourceBuffer() {
 
             try {
                 result = getParser(codecType).parse(ccContent, 0);
-                for (i = 0; i < mediaInfos.length; i++) {
-                    createTextTrackFromMediaInfo(null, mediaInfos[i]);
-                }
                 textTracks.addCaptions(textTracks.getCurrentTrackIdx(), 0, result);
             } catch (e) {
                 errHandler.timedTextError(e, 'parse', ccContent);
