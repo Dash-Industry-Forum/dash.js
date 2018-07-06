@@ -337,6 +337,8 @@ function Stream(config) {
                 abrController.updateTopQualityIndex(mediaInfo);
                 processor.switchTrackAsked();
                 processor.getFragmentModel().abortRequests();
+            } else {
+                adapter.setIndexHandlerTime(processor, currentTime);
             }
         }
     }
