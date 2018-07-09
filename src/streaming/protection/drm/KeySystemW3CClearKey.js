@@ -41,7 +41,7 @@ const schemeIdURI = 'urn:uuid:' + uuid;
 function KeySystemW3CClearKey(config) {
     let instance;
     const BASE64 = config.BASE64;
-    const debug = config.debug;
+    const logger = config.debug.getLogger(instance);
     /**
      * Returns desired clearkeys (as specified in the CDM message) from protection data
      *
@@ -70,7 +70,7 @@ function KeySystemW3CClearKey(config) {
             }
             clearkeySet = new ClearKeyKeySet(keyPairs);
 
-            debug.warn('ClearKey schemeIdURI is using W3C Common PSSH systemID (1077efec-c0b2-4d02-ace3-3c1e52e2fb4b) in Content Protection. See DASH-IF IOP v4.1 section 7.6.2.4');
+            logger.warn('ClearKey schemeIdURI is using W3C Common PSSH systemID (1077efec-c0b2-4d02-ace3-3c1e52e2fb4b) in Content Protection. See DASH-IF IOP v4.1 section 7.6.2.4');
         }
         return clearkeySet;
     }
