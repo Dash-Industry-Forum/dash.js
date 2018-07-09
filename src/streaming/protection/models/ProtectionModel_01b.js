@@ -182,6 +182,14 @@ function ProtectionModel_01b(config) {
         // Replacing the previous element
         if (videoElement) {
             removeEventListeners();
+
+            // VUDU Rik - close any open sessions
+            if (sessions) {
+                for (var i = 0; i < sessions.length; i++) {
+                    closeKeySession(sessions[i]);
+                }
+                sessions = [];
+            }
         }
 
         videoElement = mediaElement;
