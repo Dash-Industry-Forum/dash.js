@@ -266,7 +266,7 @@ function TextTracks() {
                 containerStyle.width = actualVideoWidth + 'px';
                 containerStyle.height = actualVideoHeight + 'px';
                 containerStyle.zIndex = (fullscreenAttribute && document[fullscreenAttribute]) || displayCCOnTop ? topZIndex : null;
-                eventBus.trigger(Events.CAPTION_CONTAINER_RESIZED, {});
+                eventBus.trigger(Events.CAPTION_CONTAINER_RESIZE, {});
             }
 
             // Video view has changed size, so resize any active cues
