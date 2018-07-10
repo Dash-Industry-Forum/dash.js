@@ -393,7 +393,7 @@ describe('DashManifestModel', function () {
         };
         dashManifestModel.getRegularPeriods(manifest);
 
-        expect(errorHandlerMock.error).to.equal('Must have @mediaPresentationDuration on MPD or an explicit @duration on the last period.');
+        expect(errorHandlerMock.errorValue).to.equal('Must have @mediaPresentationDuration on MPD or an explicit @duration on the last period.');
     });
 
     it('should return an empty array when getRegularPeriods is called and mpd is undefined', () => {

@@ -44,17 +44,9 @@ function ErrorHandler() {
         eventBus.trigger(Events.ERROR, {error: 'capability', event: err});
     }
 
-    function capabilityErrorNew(err) {
-        eventBus.trigger(Events.ERROR, {error: 'capabilityError', event: err});
-    }
-
     // {id: "manifest"|"SIDX"|"content"|"initialization"|"xlink", url: "", request: {XMLHttpRequest instance}}
     function downloadError(id, url, request) {
         eventBus.trigger(Events.ERROR, {error: 'download', event: {id: id, url: url, request: request}});
-    }
-
-    function downloadErrorNew(err) {
-        eventBus.trigger(Events.ERROR, {error: 'downloadError', event: err});
     }
 
     // {message: "", id: "parse"|"nostreams", manifest: {parsed manifest}}
@@ -62,63 +54,39 @@ function ErrorHandler() {
         eventBus.trigger(Events.ERROR, {error: 'manifestError', event: {message: message, id: id, manifest: manifest, event: err}});
     }
 
-    function manifestErrorNew(err) {
-        eventBus.trigger(Events.ERROR, {error: 'manifestError', event: err});
-    }
-
     // {message: '', id: 'parse', cc: ''}
     function timedTextError(message, id, ccContent) {
         eventBus.trigger(Events.ERROR, {error: 'cc', event: {message: message, id: id, cc: ccContent}});
-    }
-
-    function timedTextErrorNew(err) {
-        eventBus.trigger(Events.ERROR, {error: 'timedTextError', event: err});
     }
 
     function mediaSourceError(err) {
         eventBus.trigger(Events.ERROR, {error: 'mediasource', event: err});
     }
 
-    function mediaSourceErrorNew(err) {
-        eventBus.trigger(Events.ERROR, {error: 'mediaSourceError', event: err});
-    }
-
     function mediaKeySessionError(err) {
         eventBus.trigger(Events.ERROR, {error: 'key_session', event: err});
-    }
-
-    function mediaKeySessionErrorNew(err) {
-        eventBus.trigger(Events.ERROR, {error: 'keySessionError', event: err});
     }
 
     function mediaKeyMessageError(err) {
         eventBus.trigger(Events.ERROR, {error: 'key_message', event: err});
     }
 
-    function mediaKeyMessageErrorNew(err) {
-        eventBus.trigger(Events.ERROR, {error: 'mediaKeyMessageError', event: err});
-    }
-
-    function mssError(err) {
-        eventBus.trigger(Events.ERROR, {error: 'mssError', event: err});
+    /**
+     * @param {object} err DashJSError with code, message and data attributes
+     */
+    function error(err) {
+        eventBus.trigger(Events.ERROR, {error: err});
     }
 
     instance = {
         capabilityError: capabilityError,
-        capabilityErrorNew: capabilityErrorNew,
         downloadError: downloadError,
-        downloadErrorNew: downloadErrorNew,
         manifestError: manifestError,
-        manifestErrorNew: manifestErrorNew,
         timedTextError: timedTextError,
-        timedTextErrorNew: timedTextErrorNew,
         mediaSourceError: mediaSourceError,
-        mediaSourceErrorNew: mediaSourceErrorNew,
         mediaKeySessionError: mediaKeySessionError,
-        mediaKeySessionErrorNew: mediaKeySessionErrorNew,
         mediaKeyMessageError: mediaKeyMessageError,
-        mediaKeyMessageErrorNew: mediaKeyMessageErrorNew,
-        mssError: mssError
+        error: error
     };
 
     return instance;

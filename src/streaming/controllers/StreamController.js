@@ -647,7 +647,7 @@ function StreamController() {
 
         } catch (e) {
             errHandler.manifestError(e.message, 'nostreamscomposed', manifestModel.getValue());
-            errHandler.manifestErrorNew(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS, e.message + 'nostreamscomposed', manifestModel.getValue()));
+            errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS, e.message + 'nostreamscomposed', manifestModel.getValue()));
             hasInitialisationError = true;
             reset();
         }
@@ -812,7 +812,7 @@ function StreamController() {
             logger.fatal(e.error);
         }
         errHandler.mediaSourceError(msg);
-        errHandler.mediaSourceErrorNew(new DashJSError(e.error.code, msg));
+        errHandler.error(new DashJSError(e.error.code, msg));
         reset();
     }
 

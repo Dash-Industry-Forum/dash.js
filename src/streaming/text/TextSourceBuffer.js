@@ -424,7 +424,7 @@ function TextSourceBuffer() {
                 textTracks.addCaptions(textTracks.getCurrentTrackIdx(), 0, result);
             } catch (e) {
                 errHandler.timedTextError(e, 'parse', ccContent);
-                errHandler.timedTextErrorNew(new DashJSError(Errors.TIMED_TEXT_ERROR_ID_PARSE, Errors.TIMED_TEXT_ERROR_MESSAGE_PARSE + e.message, ccContent));
+                errHandler.error(new DashJSError(Errors.TIMED_TEXT_ERROR_ID_PARSE, Errors.TIMED_TEXT_ERROR_MESSAGE_PARSE + e.message, ccContent));
             }
         } else if (mediaType === Constants.VIDEO) { //embedded text
             if (chunk.segmentType === HTTPRequest.INIT_SEGMENT_TYPE) {

@@ -139,7 +139,7 @@ function HTTPLoader(cfg) {
                         request
                     );
 
-                    errHandler.downloadErrorNew(new DashJSError(downloadErrorToRequestTypeMap[request.type], request.url + ' is not available', {request: request, response: httpRequest.response}));
+                    errHandler.error(new DashJSError(downloadErrorToRequestTypeMap[request.type], request.url + ' is not available', {request: request, response: httpRequest.response}));
 
                     if (config.error) {
                         config.error(request, 'error', httpRequest.response.statusText);
