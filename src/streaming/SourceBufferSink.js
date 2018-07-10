@@ -140,7 +140,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
         if (!chunk) {
             onAppended({
                 chunk: chunk,
-                error: new DashJSError(Errors.APPEND_ERROR_CODE, Errors.APPEND_ERROR_MESSAGE, null)
+                error: new DashJSError(Errors.APPEND_ERROR_CODE, Errors.APPEND_ERROR_MESSAGE)
             });
             return;
         }
@@ -181,7 +181,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
                     from: start,
                     to: end,
                     unintended: false,
-                    error: new DashJSError(err.code, err.message, null)
+                    error: new DashJSError(err.code, err.message)
                 });
             }
         });
@@ -235,7 +235,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
                 if (onAppended) {
                     onAppended({
                         chunk: nextChunk,
-                        error: new DashJSError(err.code, err.message, null)
+                        error: new DashJSError(err.code, err.message)
                     });
                 }
             }
