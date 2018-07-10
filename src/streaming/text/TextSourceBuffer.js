@@ -64,7 +64,6 @@ function TextSourceBuffer() {
         textTracks,
         fragmentedFragmentModel,
         initializationSegmentReceived,
-        notEmbeddedMediaInfosCreated,
         timescale,
         fragmentedTracks,
         videoModel,
@@ -99,7 +98,6 @@ function TextSourceBuffer() {
 
         mediaInfos = [];
         parser = null;
-        notEmbeddedMediaInfosCreated = false;
     }
 
     function initialize(mimeType, streamProcessor) {
@@ -139,6 +137,10 @@ function TextSourceBuffer() {
                 }
             }
         }
+
+        for (let i = 0; i < mediaInfos.length; i++) {
+            createTextTrackFromMediaInfo(null, mediaInfos[i]);
+        }
     }
 
     function abort() {
@@ -148,7 +150,6 @@ function TextSourceBuffer() {
         mediaInfos = [];
         fragmentedFragmentModel = null;
         initializationSegmentReceived = false;
-        notEmbeddedMediaInfosCreated = false;
         fragmentedTracks = [];
     }
 
@@ -274,6 +275,41 @@ function TextSourceBuffer() {
         currFragmentedTrackIdx = idx;
     }
 
+    function createTextTrackFromMediaInfo(captionData, mediaInfo) {
+        const textTrackInfo = new TextTrackInfo();
+        const trackKindMap = { subtitle: 'subtitles', caption: 'captions' }; //Dash Spec has no "s" on end of KIND but HTML needs plural.
+        const getKind = function () {
+            let kind = (mediaInfo.roles.length > 0) ? trackKindMap[mediaInfo.roles[0]] : trackKindMap.caption;
+            kind = (kind === trackKindMap.caption || kind === trackKindMap.subtitle) ? kind : trackKindMap.caption;
+            return kind;
+        };
+
+        const checkTTML = function () {
+            let ttml = false;
+            if (mediaInfo.codec && mediaInfo.codec.search(Constants.STPP) >= 0) {
+                ttml = true;
+            }
+            if (mediaInfo.mimeType && mediaInfo.mimeType.search(Constants.TTML) >= 0) {
+                ttml = true;
+            }
+            return ttml;
+        };
+
+        textTrackInfo.captionData = captionData;
+        textTrackInfo.lang = mediaInfo.lang;
+        textTrackInfo.label = mediaInfo.id ? mediaInfo.id : mediaInfo.index; // AdaptationSet id (an unsigned int) as it's optionnal parameter, use mediaInfo.index
+        textTrackInfo.index = mediaInfo.index; // AdaptationSet index in manifest
+        textTrackInfo.isTTML = checkTTML();
+        textTrackInfo.defaultTrack = getIsDefault(mediaInfo);
+        textTrackInfo.isFragmented = !dashManifestModel.getIsTextTrack(mediaInfo.mimeType);
+        textTrackInfo.isEmbedded = mediaInfo.isEmbedded ? true : false;
+        textTrackInfo.kind = getKind();
+        textTrackInfo.roles = mediaInfo.roles;
+        textTrackInfo.accessibility = mediaInfo.accessibility;
+        const totalNrTracks = (mediaInfos ? mediaInfos.length : 0) + embeddedTracks.length;
+        textTracks.addTextTrack(textTrackInfo, totalNrTracks);
+    }
+
     function append(bytes, chunk) {
         let result,
             sampleList,
@@ -287,48 +323,6 @@ function TextSourceBuffer() {
         if (!codecType) {
             logger.error('No text type defined');
             return;
-        }
-
-        function createTextTrackFromMediaInfo(captionData, mediaInfo) {
-            const textTrackInfo = new TextTrackInfo();
-            const trackKindMap = { subtitle: 'subtitles', caption: 'captions' }; //Dash Spec has no "s" on end of KIND but HTML needs plural.
-            const getKind = function () {
-                let kind = (mediaInfo.roles.length > 0) ? trackKindMap[mediaInfo.roles[0]] : trackKindMap.caption;
-                kind = (kind === trackKindMap.caption || kind === trackKindMap.subtitle) ? kind : trackKindMap.caption;
-                return kind;
-            };
-
-            const checkTTML = function () {
-                let ttml = false;
-                if (mediaInfo.codec && mediaInfo.codec.search(Constants.STPP) >= 0) {
-                    ttml = true;
-                }
-                if (mediaInfo.mimeType && mediaInfo.mimeType.search(Constants.TTML) >= 0) {
-                    ttml = true;
-                }
-                return ttml;
-            };
-
-            textTrackInfo.captionData = captionData;
-            textTrackInfo.lang = mediaInfo.lang;
-            textTrackInfo.label = mediaInfo.id ? mediaInfo.id : mediaInfo.index; // AdaptationSet id (an unsigned int) as it's optionnal parameter, use mediaInfo.index
-            textTrackInfo.index = mediaInfo.index; // AdaptationSet index in manifest
-            textTrackInfo.isTTML = checkTTML();
-            textTrackInfo.defaultTrack = getIsDefault(mediaInfo);
-            textTrackInfo.isFragmented = !dashManifestModel.getIsTextTrack(mediaInfo.mimeType);
-            textTrackInfo.isEmbedded = mediaInfo.isEmbedded ? true : false;
-            textTrackInfo.kind = getKind();
-            textTrackInfo.roles = mediaInfo.roles;
-            textTrackInfo.accessibility = mediaInfo.accessibility;
-            const totalNrTracks = (mediaInfos ? mediaInfos.length : 0) + embeddedTracks.length;
-            textTracks.addTextTrack(textTrackInfo, totalNrTracks);
-        }
-
-        if (mediaType !== Constants.VIDEO && !notEmbeddedMediaInfosCreated) {
-            notEmbeddedMediaInfosCreated = true;
-            for (i = 0; i < mediaInfos.length; i++) {
-                createTextTrackFromMediaInfo(null, mediaInfos[i]);
-            }
         }
 
         if (mediaType === Constants.FRAGMENTED_TEXT) {

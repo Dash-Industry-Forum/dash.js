@@ -542,7 +542,10 @@ function ScheduleController(config) {
             return;
         }
 
-        getInitRequest(e.index);
+        //if subtitles are disabled, do not download subtitles file.
+        if (textController.getCurrentTrackIdx() !== -1) {
+            getInitRequest(e.index);
+        }
     }
 
     function onPlaybackStarted() {
