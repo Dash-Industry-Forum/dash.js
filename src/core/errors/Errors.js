@@ -54,19 +54,19 @@ class Errors extends ErrorsBase {
         this.CAPABILITY_MEDIASOURCE_ERROR_CODE = 14;//'mediasource';
         this.CAPABILITY_MEDIAKEYS_ERROR_CODE   = 15;//'mediakeys';
 
-        this.DOWNLOAD_ERROR_ID_MANIFEST        = 16;//'manifest';
-        this.DOWNLOAD_ERROR_ID_SIDX            = 17;//'SIDX';
-        this.DOWNLOAD_ERROR_ID_CONTENT         = 18;//'content';
-        this.DOWNLOAD_ERROR_ID_INITIALIZATION  = 19;//'initialization';
-        this.DOWNLOAD_ERROR_ID_XLINK           = 20;//'xlink';
+        this.DOWNLOAD_ERROR_ID_MANIFEST_CODE        = 16;//'manifest';
+        this.DOWNLOAD_ERROR_ID_SIDX_CODE            = 17;//'SIDX';
+        this.DOWNLOAD_ERROR_ID_CONTENT_CODE         = 18;//'content';
+        this.DOWNLOAD_ERROR_ID_INITIALIZATION_CODE  = 19;//'initialization';
+        this.DOWNLOAD_ERROR_ID_XLINK_CODE           = 20;//'xlink';
 
-        this.MANIFEST_ERROR_ID_CODEC           = 21;//'codec';
-        this.MANIFEST_ERROR_ID_PARSE           = 22;//'parse';
-        this.MANIFEST_ERROR_ID_NOSTREAMS       = 23;//'nostreams';
+        this.MANIFEST_ERROR_ID_CODEC_CODE           = 21;//'codec';
+        this.MANIFEST_ERROR_ID_PARSE_CODE           = 22;//'parse';
+        this.MANIFEST_ERROR_ID_NOSTREAMS_CODE       = 23;//'nostreams';
 
-        this.TIMED_TEXT_ERROR_ID_PARSE         = 24;//'parse';
+        this.TIMED_TEXT_ERROR_ID_PARSE_CODE         = 24;//'parse';
 
-        this.MANIFEST_ERROR_ID_MULTIPLEXED     = 25;
+        this.MANIFEST_ERROR_ID_MULTIPLEXED_CODE     = 25;
         this.MEDIASOURCE_TYPE_UNSUPPORTED_CODE = 26;
 
         this.MANIFEST_LOADER_PARSING_FAILURE_ERROR_MESSAGE = 'parsing failed for ';

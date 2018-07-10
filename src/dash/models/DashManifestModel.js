@@ -763,7 +763,7 @@ function DashManifestModel(config) {
         } else if (isDynamic) {
             periodEnd = Number.POSITIVE_INFINITY;
         } else {
-            errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_PARSE, 'Must have @mediaPresentationDuration on MPD or an explicit @duration on the last period.', voPeriod));
+            errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_PARSE_CODE, 'Must have @mediaPresentationDuration on MPD or an explicit @duration on the last period.', voPeriod));
         }
 
         return periodEnd;

@@ -180,7 +180,7 @@ function Stream(config) {
         if (streamProcessors.length === 0) {
             let msg = 'No streams to play.';
             errHandler.manifestError(msg, 'nostreams', manifestModel.getValue());
-            errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS, msg +  'nostreams', manifestModel.getValue()));
+            errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, msg +  'nostreams', manifestModel.getValue()));
             logger.fatal(msg);
         }
     }
@@ -298,7 +298,7 @@ function Stream(config) {
             msg = 'Multiplexed representations are intentionally not supported, as they are not compliant with the DASH-AVC/264 guidelines';
             logger.fatal(msg);
             errHandler.manifestError(msg, 'multiplexedrep', manifestModel.getValue());
-            errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_MULTIPLEXED, msg, manifestModel.getValue()));
+            errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_MULTIPLEXED_CODE, msg, manifestModel.getValue()));
             return false;
         }
 
@@ -493,7 +493,7 @@ function Stream(config) {
         if (streamProcessors.length === 0) {
             const msg = 'No streams to play.';
             errHandler.manifestError(msg, 'nostreams', manifestModel.getValue());
-            errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS, msg, manifestModel.getValue()));
+            errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, msg, manifestModel.getValue()));
             logger.fatal(msg);
         } else {
             checkIfInitializationCompleted();

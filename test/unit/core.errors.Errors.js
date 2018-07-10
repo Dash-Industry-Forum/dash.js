@@ -20,16 +20,16 @@ describe('Errors', function () {
         expect(Errors.DATA_UPDATE_FAILED_ERROR_CODE).to.equal(13);
         expect(Errors.CAPABILITY_MEDIASOURCE_ERROR_CODE).to.equal(14);
         expect(Errors.CAPABILITY_MEDIAKEYS_ERROR_CODE).to.equal(15);
-        expect(Errors.DOWNLOAD_ERROR_ID_MANIFEST).to.equal(16);
-        expect(Errors.DOWNLOAD_ERROR_ID_SIDX).to.equal(17);
-        expect(Errors.DOWNLOAD_ERROR_ID_CONTENT).to.equal(18);
-        expect(Errors.DOWNLOAD_ERROR_ID_INITIALIZATION).to.equal(19);
-        expect(Errors.DOWNLOAD_ERROR_ID_XLINK).to.equal(20);
-        expect(Errors.MANIFEST_ERROR_ID_CODEC).to.equal(21);
-        expect(Errors.MANIFEST_ERROR_ID_PARSE).to.equal(22);
-        expect(Errors.MANIFEST_ERROR_ID_NOSTREAMS).to.equal(23);
-        expect(Errors.TIMED_TEXT_ERROR_ID_PARSE).to.equal(24);
-        expect(Errors.MANIFEST_ERROR_ID_MULTIPLEXED).to.equal(25);
+        expect(Errors.DOWNLOAD_ERROR_ID_MANIFEST_CODE).to.equal(16);
+        expect(Errors.DOWNLOAD_ERROR_ID_SIDX_CODE).to.equal(17);
+        expect(Errors.DOWNLOAD_ERROR_ID_CONTENT_CODE).to.equal(18);
+        expect(Errors.DOWNLOAD_ERROR_ID_INITIALIZATION_CODE).to.equal(19);
+        expect(Errors.DOWNLOAD_ERROR_ID_XLINK_CODE).to.equal(20);
+        expect(Errors.MANIFEST_ERROR_ID_CODEC_CODE).to.equal(21);
+        expect(Errors.MANIFEST_ERROR_ID_PARSE_CODE).to.equal(22);
+        expect(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE).to.equal(23);
+        expect(Errors.TIMED_TEXT_ERROR_ID_PARSE_CODE).to.equal(24);
+        expect(Errors.MANIFEST_ERROR_ID_MULTIPLEXED_CODE).to.equal(25);
         expect(Errors.MEDIASOURCE_TYPE_UNSUPPORTED_CODE).to.equal(26);
     });
 
