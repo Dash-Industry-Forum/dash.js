@@ -159,14 +159,10 @@ function NotFragmentedTextBufferController(config) {
             return;
         }
 
-        const chunk = initCache.extract(streamProcessor.getStreamInfo().id, e.sender.getCurrentRepresentation().id);
-
-        if (!chunk) {
-            eventBus.trigger(Events.TIMED_TEXT_REQUESTED, {
-                index: 0,
-                sender: e.sender
-            }); //TODO make index dynamic if referring to MP?
-        }
+        eventBus.trigger(Events.TIMED_TEXT_REQUESTED, {
+            index: 0,
+            sender: e.sender
+        }); //TODO make index dynamic if referring to MP?
     }
 
     function onInitFragmentLoaded(e) {
