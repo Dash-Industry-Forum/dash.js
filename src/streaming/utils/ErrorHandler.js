@@ -39,34 +39,65 @@ function ErrorHandler() {
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
 
-    // "mediasource"|"mediakeys"
+    /**
+     * @param {number} err  "mediasource"|"mediakeys"
+     * @deprecated
+     */
     function capabilityError(err) {
         eventBus.trigger(Events.ERROR, {error: 'capability', event: err});
     }
 
-    // {id: "manifest"|"SIDX"|"content"|"initialization"|"xlink", url: "", request: {XMLHttpRequest instance}}
+    /**
+     * @param {string} id "manifest"|"SIDX"|"content"|"initialization"|"xlink"
+     * @param {string} url ""
+     * @param {object} request {XMLHttpRequest instance}
+     * @deprecated
+     */
     function downloadError(id, url, request) {
         eventBus.trigger(Events.ERROR, {error: 'download', event: {id: id, url: url, request: request}});
     }
 
-    // {message: "", id: "parse"|"nostreams", manifest: {parsed manifest}}
+    /**
+     * @param {string} message ""
+     * @param {string} id "parse"|"nostreams"
+     * @param {obj} manifest {parsed manifest}
+     * @param {obj} err
+     * @deprecated
+     */
     function manifestError(message, id, manifest, err) {
         eventBus.trigger(Events.ERROR, {error: 'manifestError', event: {message: message, id: id, manifest: manifest, event: err}});
     }
 
-    // {message: '', id: 'parse', cc: ''}
+    /**
+     * @param {string} message ''
+     * @param {string} id 'parse'
+     * @param {string} ccContent ''
+     * @deprecated
+     */
     function timedTextError(message, id, ccContent) {
         eventBus.trigger(Events.ERROR, {error: 'cc', event: {message: message, id: id, cc: ccContent}});
     }
 
+    /**
+     * @param {string} err
+     * @deprecated
+     */
     function mediaSourceError(err) {
         eventBus.trigger(Events.ERROR, {error: 'mediasource', event: err});
     }
 
+    /**
+     * @param {string} err
+     * @deprecated
+     */
     function mediaKeySessionError(err) {
         eventBus.trigger(Events.ERROR, {error: 'key_session', event: err});
     }
 
+    /**
+     * @param {string} err
+     * @deprecated
+     */
     function mediaKeyMessageError(err) {
         eventBus.trigger(Events.ERROR, {error: 'key_message', event: err});
     }
