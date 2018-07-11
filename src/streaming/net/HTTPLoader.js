@@ -56,6 +56,7 @@ function HTTPLoader(cfg) {
     let delayedRequests;
     let retryTimers;
     let downloadErrorToRequestTypeMap;
+    let newDownloadErrorToRequestTypeMap;
 
     function setup() {
         requests = [];
@@ -63,6 +64,16 @@ function HTTPLoader(cfg) {
         retryTimers = [];
 
         downloadErrorToRequestTypeMap = {
+            [HTTPRequest.MPD_TYPE]: Errors.DOWNLOAD_ERROR_ID_MANIFEST,
+            [HTTPRequest.XLINK_EXPANSION_TYPE]: Errors.DOWNLOAD_ERROR_ID_XLINK,
+            [HTTPRequest.INIT_SEGMENT_TYPE]: Errors.DOWNLOAD_ERROR_ID_INITIALIZATION,
+            [HTTPRequest.MEDIA_SEGMENT_TYPE]: Errors.DOWNLOAD_ERROR_ID_CONTENT,
+            [HTTPRequest.INDEX_SEGMENT_TYPE]: Errors.DOWNLOAD_ERROR_ID_CONTENT,
+            [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: Errors.DOWNLOAD_ERROR_ID_CONTENT,
+            [HTTPRequest.OTHER_TYPE]: Errors.DOWNLOAD_ERROR_ID_CONTENT
+        };
+
+        newDownloadErrorToRequestTypeMap = {
             [HTTPRequest.MPD_TYPE]: Errors.DOWNLOAD_ERROR_ID_MANIFEST_CODE,
             [HTTPRequest.XLINK_EXPANSION_TYPE]: Errors.DOWNLOAD_ERROR_ID_XLINK_CODE,
             [HTTPRequest.INIT_SEGMENT_TYPE]: Errors.DOWNLOAD_ERROR_ID_INITIALIZATION_CODE,
@@ -139,7 +150,7 @@ function HTTPLoader(cfg) {
                         request
                     );
 
-                    errHandler.error(new DashJSError(downloadErrorToRequestTypeMap[request.type], request.url + ' is not available', {request: request, response: httpRequest.response}));
+                    errHandler.error(new DashJSError(newDownloadErrorToRequestTypeMap[request.type], request.url + ' is not available', {request: request, response: httpRequest.response}));
 
                     if (config.error) {
                         config.error(request, 'error', httpRequest.response.statusText);

@@ -51,20 +51,36 @@ class Errors extends ErrorsBase {
         this.REMOVE_ERROR_CODE = 12;
         this.DATA_UPDATE_FAILED_ERROR_CODE = 13;
 
-        this.CAPABILITY_MEDIASOURCE_ERROR_CODE = 14;//'mediasource';
-        this.CAPABILITY_MEDIAKEYS_ERROR_CODE   = 15;//'mediakeys';
+        this.CAPABILITY_MEDIASOURCE_ERROR_CODE = 14;
+        this.CAPABILITY_MEDIAKEYS_ERROR_CODE   = 15;
 
-        this.DOWNLOAD_ERROR_ID_MANIFEST_CODE        = 16;//'manifest';
-        this.DOWNLOAD_ERROR_ID_SIDX_CODE            = 17;//'SIDX';
-        this.DOWNLOAD_ERROR_ID_CONTENT_CODE         = 18;//'content';
-        this.DOWNLOAD_ERROR_ID_INITIALIZATION_CODE  = 19;//'initialization';
-        this.DOWNLOAD_ERROR_ID_XLINK_CODE           = 20;//'xlink';
+        this.DOWNLOAD_ERROR_ID_MANIFEST_CODE        = 16;
+        /*
+         *@deprecated
+         */
+        this.DOWNLOAD_ERROR_ID_MANIFEST        = 'manifest';
+        this.DOWNLOAD_ERROR_ID_SIDX_CODE            = 17;
+        this.DOWNLOAD_ERROR_ID_CONTENT_CODE         = 18;
+        /*
+         *@deprecated
+         */
+        this.DOWNLOAD_ERROR_ID_CONTENT         = 'content';
+        this.DOWNLOAD_ERROR_ID_INITIALIZATION_CODE  = 19;
+        /*
+         *@deprecated
+         */
+        this.DOWNLOAD_ERROR_ID_INITIALIZATION  = 'initialization';
+        this.DOWNLOAD_ERROR_ID_XLINK_CODE           = 20;
+        /*
+         *@deprecated
+         */
+        this.DOWNLOAD_ERROR_ID_XLINK           = 'xlink';
 
-        this.MANIFEST_ERROR_ID_CODEC_CODE           = 21;//'codec';
-        this.MANIFEST_ERROR_ID_PARSE_CODE           = 22;//'parse';
-        this.MANIFEST_ERROR_ID_NOSTREAMS_CODE       = 23;//'nostreams';
+        this.MANIFEST_ERROR_ID_CODEC_CODE           = 21;
+        this.MANIFEST_ERROR_ID_PARSE_CODE           = 22;
+        this.MANIFEST_ERROR_ID_NOSTREAMS_CODE       = 23;
 
-        this.TIMED_TEXT_ERROR_ID_PARSE_CODE         = 24;//'parse';
+        this.TIMED_TEXT_ERROR_ID_PARSE_CODE         = 24;
 
         this.MANIFEST_ERROR_ID_MULTIPLEXED_CODE     = 25;
         this.MEDIASOURCE_TYPE_UNSUPPORTED_CODE = 26;

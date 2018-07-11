@@ -309,7 +309,7 @@ function Stream(config) {
         logger.debug(type + ' codec: ' + codec);
 
         if (!!mediaInfo.contentProtection && !capabilities.supportsEncryptedMedia()) {
-            errHandler.capabilityError(Errors.CAPABILITY_MEDIAKEYS_ERROR_CODE);
+            errHandler.capabilityError('encryptedmedia');
             errHandler.error(new DashJSError(Errors.CAPABILITY_MEDIAKEYS_ERROR_CODE, Errors.CAPABILITY_MEDIAKEYS_ERROR_MESSAGE));
         } else if (!capabilities.supportsCodec(codec)) {
             msg = type + 'Codec (' + codec + ') is not supported.';
