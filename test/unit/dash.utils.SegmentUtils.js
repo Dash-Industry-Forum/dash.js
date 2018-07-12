@@ -5,7 +5,7 @@ import {
     decideSegmentListRangeForTemplate
 } from '../../src/dash/utils/SegmentsUtils';
 
-import TimelineConverter from '../../src/dash/utils/TimeLineConverter';
+import TimelineConverter from '../../src/dash/utils/TimelineConverter';
 import VoHelper from './helpers/VOHelper';
 
 const expect = require('chai').expect;
