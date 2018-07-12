@@ -124,12 +124,11 @@ function Stream(config) {
             let result;
             if (!getPreloaded()) {
                 result = initializeMedia(mediaSource, previousBuffers);
-                eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
             } else {
                 initializeAfterPreload();
                 result = previousBuffers;
-                eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
             }
+            eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
             isStreamActivated = true;
             return result;
         }
