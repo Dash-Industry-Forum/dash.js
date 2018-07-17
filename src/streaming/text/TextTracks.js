@@ -260,23 +260,22 @@ function TextTracks() {
             actualVideoHeight = newVideoHeight;
 
             if (captionContainer) {
-                captionContainer.style.left = actualVideoLeft + 'px';
-                captionContainer.style.top = actualVideoTop + 'px';
-                captionContainer.style.width = actualVideoWidth + 'px';
-                captionContainer.style.height = actualVideoHeight + 'px';
+                const containerStyle = captionContainer.style;
+                containerStyle.left = actualVideoLeft + 'px';
+                containerStyle.top = actualVideoTop + 'px';
+                containerStyle.width = actualVideoWidth + 'px';
+                containerStyle.height = actualVideoHeight + 'px';
+                containerStyle.zIndex = (fullscreenAttribute && document[fullscreenAttribute]) || displayCCOnTop ? topZIndex : null;
+                eventBus.trigger(Events.CAPTION_CONTAINER_RESIZE, {});
             }
 
             // Video view has changed size, so resize any active cues
-            for (let i = 0; track.activeCues && i < track.activeCues.length; ++i) {
-                const cue = track.activeCues[i];
-                cue.scaleCue(cue);
-            }
-
-            if (captionContainer) {
-                if ((fullscreenAttribute && document[fullscreenAttribute]) || displayCCOnTop) {
-                    captionContainer.style.zIndex = topZIndex;
-                } else {
-                    captionContainer.style.zIndex = null;
+            const activeCues = track.activeCues;
+            if (activeCues) {
+                const len = activeCues.length;
+                for (let i = 0; i < len; ++i) {
+                    const cue = activeCues[i];
+                    cue.scaleCue(cue);
                 }
             }
         }
