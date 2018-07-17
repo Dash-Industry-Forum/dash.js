@@ -111,11 +111,11 @@ function MssFragmentMoofProcessor(config) {
             t = segment.t;
 
             // Determine the segments' availability start time
-            availabilityStartTime = t - (manifest.timeShiftBufferDepth * timescale);
+            availabilityStartTime = Math.round((t - (manifest.timeShiftBufferDepth * timescale)) / timescale);
 
             // Remove segments prior to availability start time
             segment = segments[0];
-            while (segment.t < availabilityStartTime) {
+            while (Math.round(segment.t / timescale) < availabilityStartTime) {
                 logger.debug('Remove segment  - t = ' + (segment.t / timescale));
                 segments.splice(0, 1);
                 segment = segments[0];
