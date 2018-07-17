@@ -1,6 +1,6 @@
 import EventBus from '../../src/core/EventBus';
 import VoHelper from './helpers/VOHelper';
-import TimeLineConverter from '../../src/dash/utils/TimelineConverter';
+import TimelineConverter from '../../src/dash/utils/TimelineConverter';
 import Events from '../../src/core/events/Events';
 import SpecHelper from './helpers/SpecHelper';
 
@@ -14,41 +14,41 @@ describe('TimelineConverter', function () {
     const specHelper = new SpecHelper();
     const eventBus = EventBus(context).getInstance();
     const representation = voHelper.getDummyRepresentation(testType);
-    const timeLineConverter = TimeLineConverter(context).getInstance();
+    const timelineConverter = TimelineConverter(context).getInstance();
 
-    timeLineConverter.initialize();
+    timelineConverter.initialize();
 
     it('should calculate timestamp offset', function () {
         const expectedValue = -10;
 
-        expect(timeLineConverter.calcMSETimeOffset(representation)).to.be.equal(expectedValue);
+        expect(timelineConverter.calcMSETimeOffset(representation)).to.be.equal(expectedValue);
     });
 
     it('should set an expected live edge', function () {
         const expectedValue = 10;
 
-        timeLineConverter.setExpectedLiveEdge(expectedValue);
-        expect(timeLineConverter.getExpectedLiveEdge()).to.be.equal(expectedValue);
+        timelineConverter.setExpectedLiveEdge(expectedValue);
+        expect(timelineConverter.getExpectedLiveEdge()).to.be.equal(expectedValue);
     });
 
     it('should calculate presentation time from media time', function () {
         const expectedValue = 0;
         const mediaTime = 10;
 
-        expect(timeLineConverter.calcPresentationTimeFromMediaTime(mediaTime, representation)).to.be.equal(expectedValue);
+        expect(timelineConverter.calcPresentationTimeFromMediaTime(mediaTime, representation)).to.be.equal(expectedValue);
     });
 
     it('should calculate media time from representation time', function () {
         const expectedValue = 10;
         const representationTime = 0;
 
-        expect(timeLineConverter.calcMediaTimeFromPresentationTime(representationTime, representation)).to.be.equal(expectedValue);
+        expect(timelineConverter.calcMediaTimeFromPresentationTime(representationTime, representation)).to.be.equal(expectedValue);
     });
 
     it('should calculate presentation time from wall-clock time', function () {
         const expectedValue = 10;
         const wallClock = new Date(specHelper.getUnixTime().getTime() + expectedValue * 1000);
-        expect(timeLineConverter.calcPresentationTimeFromWallTime(wallClock, representation.adaptation.period)).to.be.equal(expectedValue);
+        expect(timelineConverter.calcPresentationTimeFromWallTime(wallClock, representation.adaptation.period)).to.be.equal(expectedValue);
     });
 
     it('should calculate availability window for static mpd', function () {
@@ -56,7 +56,7 @@ describe('TimelineConverter', function () {
         representation.adaptation.period.start = 0;
         representation.adaptation.period.duration = 100;
         representation.adaptation.period.mpd.manifest.type = 'static';
-        const range = timeLineConverter.calcSegmentAvailabilityRange(representation, false);
+        const range = timelineConverter.calcSegmentAvailabilityRange(representation, false);
         expect(range.start).to.be.equal(representation.adaptation.period.start);
         expect(range.end).to.be.equal(representation.adaptation.period.duration);
     });
@@ -74,16 +74,16 @@ describe('TimelineConverter', function () {
         });
 
         it('should set isTimeSyncCompleted', function () {
-            expect(timeLineConverter.isTimeSyncCompleted()).to.be.ok; // jshint ignore:line
+            expect(timelineConverter.isTimeSyncCompleted()).to.be.ok; // jshint ignore:line
         });
 
         it('should calculate availability window for dynamic mpd', function () {
 
             var clock = sinon.useFakeTimers(new Date().getTime());
             representation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
-            timeLineConverter.setExpectedLiveEdge(100);
+            timelineConverter.setExpectedLiveEdge(100);
 
-            const range = timeLineConverter.calcSegmentAvailabilityRange(representation, true);
+            const range = timelineConverter.calcSegmentAvailabilityRange(representation, true);
             expect(range.start).to.be.equal(0);
             expect(range.end).to.be.equal(49);
             clock.restore();
