@@ -691,6 +691,9 @@ function Stream(config) {
     }
 
     function compareCodecs( stream, type ) {
+        if (!stream) {
+            return false;
+        }
         const newStreamInfo = stream.getStreamInfo();
         const currentStreamInfo = getStreamInfo();
 
