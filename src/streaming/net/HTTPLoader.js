@@ -107,7 +107,8 @@ function HTTPLoader(cfg) {
                     request.requestEndDate,
                     httpRequest.response ? httpRequest.response.status : null,
                     request.duration,
-                    httpRequest.response && httpRequest.response.getAllResponseHeaders ? httpRequest.response.getAllResponseHeaders() : httpRequest.response.responseHeaders,
+                    httpRequest.response && httpRequest.response.getAllResponseHeaders ? httpRequest.response.getAllResponseHeaders() :
+                        httpRequest.response ? httpRequest.response.responseHeaders : [],
                     success ? traces : null
                 );
             }
