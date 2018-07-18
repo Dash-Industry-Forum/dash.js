@@ -124,8 +124,12 @@ function DashHandler(config) {
         return earliestTime;
     }
 
-    function resetInitialSettings() {
+    function resetIndex() {
         index = -1;
+    }
+
+    function resetInitialSettings() {
+        resetIndex();
         currentTime = 0;
         earliestTime = NaN;
         requestedTime = null;
@@ -263,7 +267,9 @@ function DashHandler(config) {
             return;
         }
 
-        if (!keepIdx) index = -1;
+        if (!keepIdx) {
+            resetIndex();
+        }
 
         if (voRepresentation.segmentDuration) {
             updateSegmentList(voRepresentation);
@@ -521,7 +527,8 @@ function DashHandler(config) {
         setCurrentTime: setCurrentTime,
         getCurrentTime: getCurrentTime,
         getEarliestTime: getEarliestTime,
-        reset: reset
+        reset: reset,
+        resetIndex: resetIndex
     };
 
     setup();

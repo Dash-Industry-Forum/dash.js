@@ -412,6 +412,15 @@ function DashAdapter() {
         }
     }
 
+    function resetIndexHandler(streamProcessor) {
+        checkStreamProcessor(streamProcessor);
+
+        const indexHandler = streamProcessor.getIndexHandler();
+        if (indexHandler) {
+            indexHandler.resetIndex();
+        }
+    }
+
     function updateData(streamProcessor) {
         checkStreamProcessor(streamProcessor);
 
@@ -515,7 +524,8 @@ function DashAdapter() {
         getEvent: getEvent,
         setConfig: setConfig,
         updatePeriods: updatePeriods,
-        reset: reset
+        reset: reset,
+        resetIndexHandler: resetIndexHandler
     };
 
     setup();

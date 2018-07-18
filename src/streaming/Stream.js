@@ -339,6 +339,7 @@ function Stream(config) {
                 processor.getFragmentModel().abortRequests();
             } else {
                 adapter.setIndexHandlerTime(processor, currentTime);
+                adapter.resetIndexHandler(processor);
             }
         }
     }
