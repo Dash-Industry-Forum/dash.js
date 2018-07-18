@@ -543,7 +543,7 @@ function ScheduleController(config) {
         }
 
         //if subtitles are disabled, do not download subtitles file.
-        if (textController.getCurrentTrackIdx() !== -1) {
+        if (textController.isTextEnabled()) {
             getInitRequest(e.index);
         }
     }
