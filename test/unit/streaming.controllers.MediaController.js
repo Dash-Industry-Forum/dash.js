@@ -313,6 +313,30 @@ describe('MediaController', function () {
             expect(currentTrack).to.be.true; // jshint ignore:line
         });
 
+        it('should check current track', function () {
+
+            let trackType = 'audio';
+            let streamInfo = {
+                id: 'id'
+            };
+            let track = {
+                type: trackType,
+                streamInfo: streamInfo,
+                lang: 'fr',
+                viewpoint: 'viewpoint',
+                roles: 1,
+                accessibility: 1,
+                audioChannelConfiguration: 1
+            };
+
+            mediaController.addTrack(track);
+            mediaController.setTrack(track);
+
+            // check that track has been added
+            let currentTrack = mediaController.isCurrentTrack(null);
+            expect(currentTrack).to.be.false; // jshint ignore:line
+        });
+
         it('should emit Events.CURRENT_TRACK_CHANGED when track has changed', function (done) {
 
             let trackType = 'audio';

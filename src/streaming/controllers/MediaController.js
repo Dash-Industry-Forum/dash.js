@@ -175,6 +175,9 @@ function MediaController() {
      * @memberof MediaController#
      */
     function isCurrentTrack(track) {
+        if (!track) {
+            return false;
+        }
         const type = track.type;
         const id = track.streamInfo.id;
 
@@ -193,7 +196,7 @@ function MediaController() {
         const id = streamInfo.id;
         const current = getCurrentTrackFor(type, streamInfo);
 
-        if (!tracks[id] || !tracks[id][type] || (current && isTracksEqual(track, current))) return;
+        if (!tracks[id] || !tracks[id][type] || isTracksEqual(track, current)) return;
 
         tracks[id][type].current = track;
 
