@@ -177,6 +177,11 @@ function TextController() {
             return;
         }
         textDefaultEnabled = enable;
+
+        if (!textDefaultEnabled) {
+            // disable text at startup
+            this.setTextTrack(-1);
+        }
     }
 
     function getTextDefaultEnabled() {
