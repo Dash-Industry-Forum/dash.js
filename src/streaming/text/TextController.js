@@ -230,8 +230,11 @@ function TextController() {
         let config = textSourceBuffer.getConfig();
         let fragmentModel = config.fragmentModel;
         let fragmentedTracks = config.fragmentedTracks;
+        let videoModel = config.videoModel;
         let mediaInfosArr,
             streamProcessor;
+
+        allTracksAreDisabled = idx === -1 ? true : false;
 
         let oldTrackIdx = textTracks.getCurrentTrackIdx();
         if (oldTrackIdx !== idx) {
@@ -254,6 +257,19 @@ function TextController() {
                             textTracks.deleteCuesFromTrackIdx(oldTrackIdx);
                             mediaController.setTrack(mediaInfo);
                             textSourceBuffer.setCurrentFragmentedTrackIdx(i);
+                        } else if (oldTrackIdx === -1) {
+                            //in fragmented use case, if the user selects the older track (the one selected before disabled text track)
+                            //no CURRENT_TRACK_CHANGED event will be trigger, so dashHandler current time has to be updated and the scheduleController
+                            //has to be restarted.
+                            const streamProcessors = streamController.getActiveStreamProcessors();
+                            for (let i = 0; i < streamProcessors.length; i++) {
+                                if (streamProcessors[i].getType() === Constants.FRAGMENTED_TEXT) {
+                                    streamProcessor = streamProcessors[i];
+                                    break;
+                                }
+                            }
+                            streamProcessor.getIndexHandler().setCurrentTime(videoModel.getTime());
+                            streamProcessor.getScheduleController().start();
                         }
                     }
                 }
@@ -277,8 +293,6 @@ function TextController() {
                 }
             }
         }
-
-        allTracksAreDisabled = idx === -1 ? true : false;
     }
 
     function getCurrentTrackIdx() {

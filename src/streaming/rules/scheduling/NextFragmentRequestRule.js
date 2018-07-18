@@ -59,14 +59,13 @@ function NextFragmentRequestRule(config) {
         let time = hasSeekTarget ? seekTarget : adapter.getIndexHandlerTime(streamProcessor);
         let bufferIsDivided = false;
 
-        if (isNaN(time) || (mediaType === Constants.FRAGMENTED_TEXT && !textController.isTextEnabled())) {
-            return null;
-        }
-
         if (hasSeekTarget) {
             scheduleController.setSeekTarget(NaN);
         }
 
+        if (isNaN(time) || (mediaType === Constants.FRAGMENTED_TEXT && !textController.isTextEnabled())) {
+            return null;
+        }
         /**
          * This is critical for IE/Safari/EDGE
          * */

@@ -200,7 +200,7 @@ function MediaController() {
 
         tracks[id][type].current = track;
 
-        if (current) {
+        if (tracks[id][type].current) {
             eventBus.trigger(Events.CURRENT_TRACK_CHANGED, {oldMediaInfo: current, newMediaInfo: track, switchMode: switchMode[type]});
         }
 

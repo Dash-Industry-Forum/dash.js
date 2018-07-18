@@ -265,7 +265,8 @@ function TextSourceBuffer() {
     function getConfig() {
         const config = {
             fragmentModel: fragmentedFragmentModel,
-            fragmentedTracks: fragmentedTracks
+            fragmentedTracks: fragmentedTracks,
+            videoModel: videoModel
         };
 
         return config;
