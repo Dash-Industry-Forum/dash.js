@@ -180,8 +180,49 @@ describe('MediaController', function () {
                 roles: 1,
                 accessibility: 1,
                 audioChannelConfiguration: 1
-
             };
+            let equal = mediaController.isTracksEqual(track1, track2);
+            expect(equal).to.be.true; // jshint ignore:line
+        });
+
+        it('should return false if track1 is undefined or null', function () {
+
+            let track1 = null;
+
+            let track2 = {
+                id: 'id',
+                viewpoint: 'viewpoint',
+                lang: 'lang',
+                roles: 1,
+                accessibility: 1,
+                audioChannelConfiguration: 1
+            };
+            let equal = mediaController.isTracksEqual(track1, track2);
+            expect(equal).to.be.false; // jshint ignore:line
+        });
+
+        it('should return false if track2 is undefined or null', function () {
+
+            let track1 = {
+                id: 'id',
+                viewpoint: 'viewpoint',
+                lang: 'lang',
+                roles: 1,
+                accessibility: 1,
+                audioChannelConfiguration: 1
+            };
+
+            let track2 = null;
+
+            let equal = mediaController.isTracksEqual(track1, track2);
+            expect(equal).to.be.false; // jshint ignore:line
+        });
+
+        it('should return true if both tracks are undefined or null', function () {
+
+            let track1 = null;
+
+            let track2 = null;
             let equal = mediaController.isTracksEqual(track1, track2);
             expect(equal).to.be.true; // jshint ignore:line
         });
