@@ -22,6 +22,24 @@ describe('TextController', function () {
     let textController;
 
     beforeEach(function () {
+        if (typeof document === 'undefined') {
+            global.document = {
+                getElementById: function () {
+                    return 1;
+                },
+                head: {
+                    removeChild: function () {
+                    }
+                }
+            };
+        }
+    });
+
+    afterEach(function () {
+        delete global.document;
+    });
+
+    beforeEach(function () {
         textTracks = TextTracks(context).getInstance();
         textTracks.setConfig({
             videoModel: videoModelMock
