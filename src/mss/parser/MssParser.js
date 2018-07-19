@@ -368,6 +368,7 @@ function MssParser(config) {
                     } else {
                         prevSegment.d = segment.t - prevSegment.t;
                     }
+                    duration += prevSegment.d;
                 }
                 // Set segment absolute timestamp if not set in manifest
                 if (!segment.t) {
@@ -380,7 +381,9 @@ function MssParser(config) {
                 }
             }
 
-            duration += segment.d;
+            if (segment.d) {
+                duration += segment.d;
+            }
 
             // Create new segment
             segments.push(segment);
