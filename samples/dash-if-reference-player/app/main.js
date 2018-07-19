@@ -458,6 +458,12 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         // Check if persistent license session ID is stored for current stream
         var sessionId = $scope.persistentSessionId[$scope.selectedItem.url];
         if (sessionId) {
+            if (!protData) {
+                protData = {};
+            }
+            if (!protData[$scope.selectedKeySystem]) {
+                protData[$scope.selectedKeySystem] = {};
+            }
             protData[$scope.selectedKeySystem].sessionId = sessionId;
         }
 
