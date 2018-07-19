@@ -29,10 +29,18 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import FactoryMaker from '../../core/FactoryMaker';
+import Debug from '../../core/Debug';
 
 function MediaSourceController() {
 
-    let instance;
+    let instance,
+        logger;
+
+    const context = this.context;
+
+    function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
+    }
 
     function createMediaSource() {
 
@@ -94,7 +102,7 @@ function MediaSourceController() {
                 return;
             }
         }
-
+        logger.info('call to mediaSource endOfStream');
         source.endOfStream();
     }
 
@@ -106,6 +114,8 @@ function MediaSourceController() {
         setSeekable: setSeekable,
         signalEndOfStream: signalEndOfStream
     };
+
+    setup();
 
     return instance;
 }
