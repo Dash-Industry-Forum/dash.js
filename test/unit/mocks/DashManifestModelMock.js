@@ -21,6 +21,18 @@ class DashManifestModelMock {
             ]
         };
     }
+
+    setRepresentation(res) {
+        this.representation = res;
+    }
+
+    getRepresentationsForAdaptation() {
+        if (this.representation) {
+            return [this.representation];
+        } else {
+            return [];
+        }
+    }
 }
 
 export default DashManifestModelMock;

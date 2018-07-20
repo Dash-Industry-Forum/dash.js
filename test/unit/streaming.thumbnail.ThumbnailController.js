@@ -2,21 +2,10 @@ import ThumbnailController from '../../src/streaming/thumbnail/ThumbnailControll
 import ThumbnailTracks from '../../src/streaming/thumbnail/ThumbnailTracks';
 import ObjectsHelper from './helpers/ObjectsHelper';
 
+import DashManifestModelMock from './mocks/DashManifestModelMock';
+
 const expect = require('chai').expect;
 const context = {};
-
-class DashManifestModelMock {
-    setRepresentation(res) {
-        this.representation = res;
-    }
-    getRepresentationsForAdaptation() {
-        if (this.representation) {
-            return [this.representation];
-        } else {
-            return [];
-        }
-    }
-}
 
 class DashAdapterMock {
     getMediaInfoForType() {
