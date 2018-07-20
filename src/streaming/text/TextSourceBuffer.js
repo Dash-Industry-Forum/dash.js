@@ -123,23 +123,25 @@ function TextSourceBuffer() {
 
     function addMediaInfos(mimeType, streamProcessor) {
         const isFragmented = !dashManifestModel.getIsTextTrack(mimeType);
-        mediaInfos = mediaInfos.concat(streamProcessor.getMediaInfoArr());
+        if (streamProcessor) {
+            mediaInfos = mediaInfos.concat(streamProcessor.getMediaInfoArr());
 
-        if (isFragmented) {
-            fragmentedFragmentModel = streamProcessor.getFragmentModel();
-            instance.buffered = CustomTimeRanges(context).create();
-            fragmentedTracks = mediaController.getTracksFor(Constants.FRAGMENTED_TEXT, streamController.getActiveStreamInfo());
-            const currFragTrack = mediaController.getCurrentTrackFor(Constants.FRAGMENTED_TEXT, streamController.getActiveStreamInfo());
-            for (let i = 0; i < fragmentedTracks.length; i++) {
-                if (fragmentedTracks[i] === currFragTrack) {
-                    currFragmentedTrackIdx = i;
-                    break;
+            if (isFragmented) {
+                fragmentedFragmentModel = streamProcessor.getFragmentModel();
+                instance.buffered = CustomTimeRanges(context).create();
+                fragmentedTracks = mediaController.getTracksFor(Constants.FRAGMENTED_TEXT, streamController.getActiveStreamInfo());
+                const currFragTrack = mediaController.getCurrentTrackFor(Constants.FRAGMENTED_TEXT, streamController.getActiveStreamInfo());
+                for (let i = 0; i < fragmentedTracks.length; i++) {
+                    if (fragmentedTracks[i] === currFragTrack) {
+                        currFragmentedTrackIdx = i;
+                        break;
+                    }
                 }
             }
-        }
 
-        for (let i = 0; i < mediaInfos.length; i++) {
-            createTextTrackFromMediaInfo(null, mediaInfos[i]);
+            for (let i = 0; i < mediaInfos.length; i++) {
+                createTextTrackFromMediaInfo(null, mediaInfos[i]);
+            }
         }
     }
 
@@ -217,15 +219,17 @@ function TextSourceBuffer() {
         if (!embeddedInitialized) {
             initEmbedded();
         }
-        if (mediaInfo.id === Constants.CC1 || mediaInfo.id === Constants.CC3) {
-            for (let i = 0; i < embeddedTracks.length; i++) {
-                if (embeddedTracks[i].id === mediaInfo.id) {
-                    return;
+        if (mediaInfo) {
+            if (mediaInfo.id === Constants.CC1 || mediaInfo.id === Constants.CC3) {
+                for (let i = 0; i < embeddedTracks.length; i++) {
+                    if (embeddedTracks[i].id === mediaInfo.id) {
+                        return;
+                    }
                 }
+                embeddedTracks.push(mediaInfo);
+            } else {
+                logger.warn('Embedded track ' + mediaInfo.id + ' not supported!');
             }
-            embeddedTracks.push(mediaInfo);
-        } else {
-            logger.warn('Embedded track ' + mediaInfo.id + ' not supported!');
         }
     }
 

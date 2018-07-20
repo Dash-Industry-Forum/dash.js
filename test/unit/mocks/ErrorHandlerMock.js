@@ -12,6 +12,10 @@ function ErrorHandlerMock () {
     this.mssError = function (error) {
         this.error = error;
     };
+
+    this.timedTextError = function (error, msg) {
+        this.error = msg;
+    };
 }
 
 export default ErrorHandlerMock;
