@@ -546,8 +546,8 @@ function StreamController() {
         });
     }
 
-    function setMediaDuration() {
-        const manifestDuration = activeStream.getStreamInfo().manifestInfo.duration;
+    function setMediaDuration(duration) {
+        const manifestDuration = duration ? duration : activeStream.getStreamInfo().manifestInfo.duration;
         const mediaDuration = mediaSourceController.setDuration(mediaSource, manifestDuration);
         logger.debug('Duration successfully set to: ' + mediaDuration);
     }
