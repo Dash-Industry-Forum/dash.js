@@ -1,3 +1,5 @@
+import PlaybackControllerMock from './PlaybackControllerMock';
+
 class FragmentModelMock {
     constructor() {
         this.requests = [];
@@ -5,6 +7,10 @@ class FragmentModelMock {
 
     getRequests() {
         return this.requests;
+    }
+
+    isFragmentLoaded() {
+        return false;
     }
 }
 
@@ -19,6 +25,16 @@ class BufferControllerMock {
 
     isBufferingCompleted() {
         return false;
+    }
+
+    getRangeAt() {
+        return null;
+    }
+
+    getBuffer() {
+        return {
+            getAllBufferRanges: () => {}
+        };
     }
 }
 
@@ -66,6 +82,16 @@ class StreamProcessorMock {
         return {
             getBufferTarget() {
                 return 20;
+            },
+            getSeekTarget() {
+                return 1;
+            },
+            setSeekTarget() {
+            },
+            getTimeToLoadDelay() {
+                return 0;
+            },
+            setTimeToLoadDelay() {
             }
         };
     }
@@ -103,6 +129,10 @@ class StreamProcessorMock {
 
     getFragmentController() {
         return null;
+    }
+
+    getPlaybackController() {
+        return new PlaybackControllerMock();
     }
 
     switchInitData() {}

@@ -48,6 +48,9 @@ function NextFragmentRequestRule(config) {
     }
 
     function execute(streamProcessor, requestToReplace) {
+        if (!streamProcessor) {
+            return null;
+        }
         const representationInfo = streamProcessor.getCurrentRepresentationInfo();
         const mediaInfo = representationInfo.mediaInfo;
         const mediaType = mediaInfo.type;
@@ -58,6 +61,7 @@ function NextFragmentRequestRule(config) {
         const currentTime = streamProcessor.getPlaybackController().getTime();
         let time = hasSeekTarget ? seekTarget : adapter.getIndexHandlerTime(streamProcessor);
         let bufferIsDivided = false;
+        let request;
 
         if (hasSeekTarget) {
             scheduleController.setSeekTarget(NaN);
@@ -87,7 +91,6 @@ function NextFragmentRequestRule(config) {
             }
         }
 
-        let request;
         if (requestToReplace) {
             time = requestToReplace.startTime + (requestToReplace.duration / 2);
             request = adapter.getFragmentRequestForTime(streamProcessor, representationInfo, time, {

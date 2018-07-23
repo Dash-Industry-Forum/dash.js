@@ -22,6 +22,13 @@ class AdapterMock {
         return {};
     }
 
+    getFragmentRequestForTime() {
+        return {startTime: 0,
+                duration: 2};
+    }
+
+    setIndexHandlerTime () {
+    }
 }
 
 export default AdapterMock;
