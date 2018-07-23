@@ -50,11 +50,12 @@ function ProtectionModel_01b(config) {
     const context = this.context;
     const eventBus = config.eventBus;//Need to pass in here so we can use same instance since this is optional module
     const events = config.events;
-    const log = config.log;
+    const debug = config.debug;
     const api = config.api;
     const errHandler = config.errHandler;
 
     let instance,
+        logger,
         videoElement,
         keySystem,
         protectionKeyController,
@@ -83,6 +84,7 @@ function ProtectionModel_01b(config) {
         eventHandler;
 
     function setup() {
+        logger = debug.getLogger(instance);
         videoElement = null;
         keySystem = null;
         pendingSessions = [];
@@ -246,7 +248,11 @@ function ProtectionModel_01b(config) {
 
     function closeKeySession(sessionToken) {
         // Send our request to the CDM
-        videoElement[api.cancelKeyRequest](keySystem.systemString, sessionToken.sessionID);
+        try {
+            videoElement[api.cancelKeyRequest](keySystem.systemString, sessionToken.sessionID);
+        } catch (error) {
+            eventBus.trigger(events.KEY_SESSION_CLOSED, {data: null, error: 'Error closing session (' + sessionToken.sessionID + ') ' + error.message});
+        }
     }
 
     function setServerCertificate(/*serverCertificate*/) { /* Not supported */ }
@@ -295,7 +301,7 @@ function ProtectionModel_01b(config) {
                             // TODO: Build error string based on key error
                             eventBus.trigger(events.KEY_ERROR, {data: new KeyError(sessionToken, msg)});
                         } else {
-                            log('No session token found for key error');
+                            logger.error('No session token found for key error');
                         }
                         break;
 
@@ -306,10 +312,10 @@ function ProtectionModel_01b(config) {
                         }
 
                         if (sessionToken) {
-                            log('DRM: Key added.');
+                            logger.debug('DRM: Key added.');
                             eventBus.trigger(events.KEY_ADDED, {data: sessionToken});//TODO not sure anything is using sessionToken? why there?
                         } else {
-                            log('No session token found for key added');
+                            logger.debug('No session token found for key added');
                         }
                         break;
 
@@ -329,6 +335,8 @@ function ProtectionModel_01b(config) {
                                 sessionToken = pendingSessions.shift();
                                 sessions.push(sessionToken);
                                 sessionToken.sessionID = event.sessionId;
+
+                                eventBus.trigger(events.KEY_SESSION_CREATED, {data: sessionToken});
                             }
                         } else if (pendingSessions.length > 0) { // SessionIDs not supported
                             sessionToken = pendingSessions.shift();
@@ -349,7 +357,7 @@ function ProtectionModel_01b(config) {
                             eventBus.trigger(events.INTERNAL_KEY_MESSAGE, {data: new KeyMessage(sessionToken, message, event.defaultURL)});
 
                         } else {
-                            log('No session token found for key message');
+                            logger.warn('No session token found for key message');
                         }
                         break;
                 }

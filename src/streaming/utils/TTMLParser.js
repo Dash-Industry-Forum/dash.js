@@ -30,22 +30,29 @@
  */
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
+import EventBus from '../../core/EventBus';
+import Events from '../../core/events/Events';
 import { fromXML, generateISD } from 'imsc';
 
 function TTMLParser() {
 
-    let context = this.context;
-    let log = Debug(context).getInstance().log;
+    const context = this.context;
+    const eventBus = EventBus(context).getInstance();
 
     /*
      * This TTML parser follows "EBU-TT-D SUBTITLING DISTRIBUTION FORMAT - tech3380" spec - https://tech.ebu.ch/docs/tech/tech3380.pdf.
      * */
-    let instance;
+    let instance,
+        logger;
 
     let cueCounter = 0; // Used to give every cue a unique ID.
 
+    function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
+    }
+
     function getCueID() {
-        let id = 'cue_TTML_' + cueCounter;
+        const id = 'cue_TTML_' + cueCounter;
         cueCounter++;
         return id;
     }
@@ -61,15 +68,16 @@ function TTMLParser() {
      * @param {Array} images - images array referenced by subs MP4 box
      */
     function parse(data, offsetTime, startTimeSegment, endTimeSegment, images) {
-        let i,
-            j;
+        let i;
 
         let errorMsg = '';
-        let captionArray = [];
+        const captionArray = [];
         let startTime,
             endTime;
 
-        let embeddedImages = {};
+        const content = {};
+
+        const embeddedImages = {};
         let currentImageId = '';
         let accumulated_image_data = '';
         let metadataHandler = {
@@ -77,7 +85,7 @@ function TTMLParser() {
             onOpenTag: function (ns, name, attrs) {
                 if (name === 'image' && ns === 'http://www.smpte-ra.org/schemas/2052-1/2010/smpte-tt') {
                     if (!attrs[' imagetype'] || attrs[' imagetype'].value !== 'PNG') {
-                        log('Warning: smpte-tt imagetype != PNG. Discarded');
+                        logger.warn('smpte-tt imagetype != PNG. Discarded');
                         return;
                     }
                     currentImageId = attrs['http://www.w3.org/XML/1998/namespace id'].value;
@@ -104,49 +112,48 @@ function TTMLParser() {
             throw new Error(errorMsg);
         }
 
-        let imsc1doc = fromXML(data, function (msg) {
+        content.data = data;
+
+        eventBus.trigger(Events.TTML_TO_PARSE, content);
+
+        const imsc1doc = fromXML(content.data, function (msg) {
             errorMsg = msg;
-        },
-            metadataHandler);
-        let mediaTimeEvents = imsc1doc.getMediaTimeEvents();
+        }, metadataHandler);
+
+        eventBus.trigger(Events.TTML_PARSED, {ttmlString: content.data, ttmlDoc: imsc1doc});
+
+        const mediaTimeEvents = imsc1doc.getMediaTimeEvents();
 
         for (i = 0; i < mediaTimeEvents.length; i++) {
             let isd = generateISD(imsc1doc, mediaTimeEvents[i], function (error) {
                 errorMsg = error;
             });
-            for (j = 0; j < isd.contents.length; j++) {
-                if (isd.contents[j].contents.length >= 1) {
-                    //be sure that mediaTimeEvents values are in the mp4 segment time ranges.
-                    startTime = (mediaTimeEvents[i] + offsetTime) < startTimeSegment ? startTimeSegment : (mediaTimeEvents[i] + offsetTime);
-                    endTime = (mediaTimeEvents[i + 1] + offsetTime) > endTimeSegment ? endTimeSegment : (mediaTimeEvents[i + 1] + offsetTime);
 
-                    if (startTime < endTime) {
-                        captionArray.push({
-                            start: startTime,
-                            end: endTime,
-                            type: 'html',
-                            cueID: getCueID(),
-                            isd: isd,
-                            images: images,
-                            embeddedImages: embeddedImages
-                        });
-                    }
+            if (isd.contents.some(topLevelContents => topLevelContents.contents.length)) {
+                //be sure that mediaTimeEvents values are in the mp4 segment time ranges.
+                startTime = (mediaTimeEvents[i] + offsetTime) < startTimeSegment ? startTimeSegment : (mediaTimeEvents[i] + offsetTime);
+                endTime = (mediaTimeEvents[i + 1] + offsetTime) > endTimeSegment ? endTimeSegment : (mediaTimeEvents[i + 1] + offsetTime);
+
+                if (startTime < endTime) {
+                    captionArray.push({
+                        start: startTime,
+                        end: endTime,
+                        type: 'html',
+                        cueID: getCueID(),
+                        isd: isd,
+                        images: images,
+                        embeddedImages: embeddedImages
+                    });
                 }
             }
         }
 
         if (errorMsg !== '') {
-            log(errorMsg);
-        }
-
-        if (captionArray.length > 0) {
-            return captionArray;
-        } else { // This seems too strong given that there are segments with no TTML subtitles
+            logger.error(errorMsg);
             throw new Error(errorMsg);
         }
-    }
 
-    function setup() {
+        return captionArray;
     }
 
     instance = {

@@ -57,7 +57,6 @@ function StreamProcessor(config) {
     let streamController = config.streamController;
     let mediaController = config.mediaController;
     let textController = config.textController;
-    let sourceBufferController = config.sourceBufferController;
     let domStorage = config.domStorage;
     let metricsModel = config.metricsModel;
     let dashMetrics = config.dashMetrics;
@@ -84,7 +83,6 @@ function StreamProcessor(config) {
     }
 
     function initialize(mediaSource) {
-
         indexHandler = DashHandler(context).create({
             mimeType: mimeType,
             timelineConverter: timelineConverter,
@@ -105,6 +103,7 @@ function StreamProcessor(config) {
         bufferController = createBufferControllerForType(type);
         scheduleController = ScheduleController(context).create({
             type: type,
+            mimeType: mimeType,
             metricsModel: metricsModel,
             adapter: adapter,
             dashMetrics: dashMetrics,
@@ -115,12 +114,10 @@ function StreamProcessor(config) {
             playbackController: playbackController,
             streamController: streamController,
             textController: textController,
-            sourceBufferController: sourceBufferController,
-            streamProcessor: instance
+            streamProcessor: instance,
+            mediaController: mediaController
         });
-
         representationController = RepresentationController(context).create();
-
         representationController.setConfig({
             abrController: abrController,
             domStorage: domStorage,
@@ -163,12 +160,12 @@ function StreamProcessor(config) {
         unregisterAllExternalController();
     }
 
-    function reset(errored) {
+    function reset(errored, keepBuffers) {
 
         indexHandler.reset();
 
         if (bufferController) {
-            bufferController.reset(errored);
+            bufferController.reset(errored, keepBuffers);
             bufferController = null;
         }
 
@@ -246,14 +243,21 @@ function StreamProcessor(config) {
         return stream ? stream.getEventController() : null;
     }
 
-    function updateMediaInfo(newMediaInfo) {
+    function selectMediaInfo(newMediaInfo) {
         if (newMediaInfo !== mediaInfo && (!newMediaInfo || !mediaInfo || (newMediaInfo.type === mediaInfo.type))) {
             mediaInfo = newMediaInfo;
         }
+        adapter.updateData(this);
+    }
+
+    function addMediaInfo(newMediaInfo, selectNewMediaInfo) {
         if (mediaInfoArr.indexOf(newMediaInfo) === -1) {
             mediaInfoArr.push(newMediaInfo);
         }
-        adapter.updateData(this);
+
+        if (selectNewMediaInfo) {
+            this.selectMediaInfo(newMediaInfo);
+        }
     }
 
     function getMediaInfoArr() {
@@ -266,6 +270,14 @@ function StreamProcessor(config) {
 
     function getMediaSource() {
         return bufferController.getMediaSource();
+    }
+
+    function setMediaSource(mediaSource) {
+        bufferController.setMediaSource(mediaSource, getMediaInfo());
+    }
+
+    function dischargePreBuffer() {
+        bufferController.dischargePreBuffer();
     }
 
     function getScheduleController() {
@@ -288,18 +300,26 @@ function StreamProcessor(config) {
         return false;
     }
 
+    function timeIsBuffered(time) {
+        if (bufferController) {
+            return bufferController.getRangeAt(time, 0) !== null;
+        }
+
+        return false;
+    }
+
     function getBufferLevel() {
         return bufferController.getBufferLevel();
     }
 
-    function switchInitData(representationId) {
+    function switchInitData(representationId, bufferResetEnabled) {
         if (bufferController) {
-            bufferController.switchInitData(getStreamInfo().id, representationId);
+            bufferController.switchInitData(getStreamInfo().id, representationId, bufferResetEnabled);
         }
     }
 
-    function createBuffer() {
-        return (bufferController.getBuffer() || bufferController.createBuffer(mediaInfo));
+    function createBuffer(previousBuffers) {
+        return (bufferController.getBuffer() || bufferController.createBuffer(mediaInfo, previousBuffers));
     }
 
     function switchTrackAsked() {
@@ -315,7 +335,6 @@ function StreamProcessor(config) {
                 metricsModel: metricsModel,
                 mediaPlayerModel: mediaPlayerModel,
                 manifestModel: manifestModel,
-                sourceBufferController: sourceBufferController,
                 errHandler: errHandler,
                 streamController: streamController,
                 mediaController: mediaController,
@@ -328,10 +347,10 @@ function StreamProcessor(config) {
         } else {
             controller = TextBufferController(context).create({
                 type: type,
+                mimeType: mimeType,
                 metricsModel: metricsModel,
                 mediaPlayerModel: mediaPlayerModel,
                 manifestModel: manifestModel,
-                sourceBufferController: sourceBufferController,
                 errHandler: errHandler,
                 streamController: streamController,
                 mediaController: mediaController,
@@ -346,6 +365,10 @@ function StreamProcessor(config) {
         return controller;
     }
 
+    function getPlaybackController() {
+        return playbackController;
+    }
+
     instance = {
         initialize: initialize,
         isUpdating: isUpdating,
@@ -358,18 +381,23 @@ function StreamProcessor(config) {
         getFragmentController: getFragmentController,
         getRepresentationController: getRepresentationController,
         getIndexHandler: getIndexHandler,
+        getPlaybackController: getPlaybackController,
         getCurrentRepresentationInfo: getCurrentRepresentationInfo,
         getRepresentationInfoForQuality: getRepresentationInfoForQuality,
         getBufferLevel: getBufferLevel,
         switchInitData: switchInitData,
         isBufferingCompleted: isBufferingCompleted,
+        timeIsBuffered: timeIsBuffered,
         createBuffer: createBuffer,
         getStreamInfo: getStreamInfo,
-        updateMediaInfo: updateMediaInfo,
+        selectMediaInfo: selectMediaInfo,
+        addMediaInfo: addMediaInfo,
         switchTrackAsked: switchTrackAsked,
         getMediaInfoArr: getMediaInfoArr,
         getMediaInfo: getMediaInfo,
         getMediaSource: getMediaSource,
+        setMediaSource: setMediaSource,
+        dischargePreBuffer: dischargePreBuffer,
         getBuffer: getBuffer,
         setBuffer: setBuffer,
         registerExternalController: registerExternalController,

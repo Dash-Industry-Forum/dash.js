@@ -35,9 +35,10 @@ import MSSFragmentMoofProcessor from './MssFragmentMoofProcessor';
 function MssFragmentInfoController(config) {
 
     config = config || {};
-    let context = this.context;
+    const context = this.context;
 
     let instance;
+    let logger;
     let fragmentModel;
     let indexHandler;
     let started;
@@ -49,16 +50,16 @@ function MssFragmentInfoController(config) {
     let deltaTime;
     let segmentDuration;
 
-    let streamProcessor = config.streamProcessor;
-    let eventBus = config.eventBus;
-    let metricsModel = config.metricsModel;
-    let playbackController = config.playbackController;
+    const streamProcessor = config.streamProcessor;
+    const eventBus = config.eventBus;
+    const metricsModel = config.metricsModel;
+    const playbackController = config.playbackController;
     const ISOBoxer = config.ISOBoxer;
-    const log = config.log;
-
+    const debug = config.debug;
     const controllerType = 'MssFragmentInfoController';
 
     function setup() {
+        logger = debug.getLogger(instance);
     }
 
     function initialize() {
@@ -77,8 +78,8 @@ function MssFragmentInfoController(config) {
     }
 
     function getCurrentRepresentation() {
-        let representationController = streamProcessor.getRepresentationController();
-        let representation = representationController.getCurrentRepresentation();
+        const representationController = streamProcessor.getRepresentationController();
+        const representation = representationController.getCurrentRepresentation();
 
         return representation;
     }
@@ -97,7 +98,6 @@ function MssFragmentInfoController(config) {
     }
 
     function onFragmentRequest(request) {
-
         // Check if current request signals end of stream
         if ((request !== null) && (request.action === request.ACTION_COMPLETE)) {
             doStop();
@@ -114,40 +114,40 @@ function MssFragmentInfoController(config) {
                 return;
             }
 
-            log('[FragmentInfoController][' + type + '] onFragmentRequest ' + request.url);
+            logger.debug('onFragmentRequest ' + request.url);
 
             // Download the fragment info segment
             sendRequest(request);
         } else {
             // No more fragment in current list
-            log('[FragmentInfoController][' + type + '] bufferFragmentInfo failed');
+            logger.debug('bufferFragmentInfo failed');
         }
     }
 
     function bufferFragmentInfo() {
-        var segmentTime;
+        let segmentTime;
 
         // Check if running state
         if (!started) {
             return;
         }
 
-        log('[FragmentInfoController][' + type + '] Start buffering process...');
+        logger.debug('Start buffering process...');
 
         // Get next segment time
         segmentTime = _fragmentInfoTime;
 
-        log('[FragmentInfoController][' + type + '] loadNextFragment for time: ' + segmentTime);
+        logger.debug('LoadNextFragment for time: ' + segmentTime);
 
-        let representation = getCurrentRepresentation();
-        let request = indexHandler.getSegmentRequestForTime(representation, segmentTime);
+        const representation = getCurrentRepresentation();
+        const request = indexHandler.getSegmentRequestForTime(representation, segmentTime);
         onFragmentRequest(request);
     }
 
     function delayLoadNextFragmentInfo(delay) {
-        var delayMs = Math.round(Math.min((delay * 1000), 2000));
+        const delayMs = Math.round(Math.min((delay * 1000), 2000));
 
-        log('[FragmentInfoController][' + type + '] Check buffer delta = ' + delayMs + ' ms');
+        logger.debug('Check buffer delta = ' + delayMs + ' ms');
 
         clearTimeout(bufferTimeout);
         bufferTimeout = setTimeout(function () {
@@ -161,26 +161,25 @@ function MssFragmentInfoController(config) {
             return;
         }
 
-        let request = e.fragmentInfo.request;
+        const request = e.fragmentInfo.request;
         let deltaDate,
             deltaTimeStamp;
 
 
         if (!e.fragmentInfo.response) {
-            log('[FragmentInfoController][' + type + '] ERROR loading ', request.url);
+            logger.error('Load error', request.url);
             return;
         }
 
         segmentDuration = request.duration;
-        log('[FragmentInfoController][' + type + '] FragmentInfo loaded ', request.url);
+        logger.debug('FragmentInfo loaded ', request.url);
         try {
-
             // update segment list
-            let mssFragmentMoofProcessor = MSSFragmentMoofProcessor(context).create({
+            const mssFragmentMoofProcessor = MSSFragmentMoofProcessor(context).create({
                 metricsModel: metricsModel,
                 playbackController: playbackController,
                 ISOBoxer: ISOBoxer,
-                log: log
+                debug: debug
             });
             mssFragmentMoofProcessor.updateSegmentList(e.fragmentInfo, streamProcessor);
 
@@ -189,7 +188,7 @@ function MssFragmentInfoController(config) {
             deltaTime = (deltaTimeStamp - deltaDate) > 0 ? (deltaTimeStamp - deltaDate) : 0;
             delayLoadNextFragmentInfo(deltaTime);
         } catch (e) {
-            log('[FragmentInfoController][' + type + '] ERROR - Internal error while processing fragment info segment ');
+            logger.fatal('Internal error while processing fragment info segment ');
         }
     }
 
@@ -201,14 +200,13 @@ function MssFragmentInfoController(config) {
         startFragmentInfoDate = new Date().getTime();
         startTimeStampValue = _fragmentInfoTime;
 
-        log('[FragmentInfoController][' + type + '] startPlayback');
+        logger.debug('startPlayback');
 
         // Start buffering process
         bufferFragmentInfo.call(this);
     }
 
     function doStart() {
-
         let segments;
 
         if (started === true) {
@@ -218,19 +216,21 @@ function MssFragmentInfoController(config) {
         eventBus.on(MssEvents.FRAGMENT_INFO_LOADING_COMPLETED, onFragmentInfoLoadedCompleted, instance);
 
         started = true;
-        log('[FragmentInfoController][' + type + '] START');
+        logger.debug('Do start');
 
         let representation = getCurrentRepresentation();
         segments = representation.segments;
 
-        if (segments) {
+        if (segments && segments.length > 0) {
             _fragmentInfoTime = segments[segments.length - 1].presentationStartTime - segments[segments.length - 1].duration;
 
             startPlayback();
         } else {
             indexHandler.updateSegmentList(representation);
             segments = representation.segments;
-            _fragmentInfoTime = segments[segments.length - 1].presentationStartTime - segments[segments.length - 1].duration;
+            if (segments && segments.length > 0) {
+                _fragmentInfoTime = segments[segments.length - 1].presentationStartTime - segments[segments.length - 1].duration;
+            }
 
             startPlayback();
         }
@@ -240,7 +240,7 @@ function MssFragmentInfoController(config) {
         if (!started) {
             return;
         }
-        log('[FragmentInfoController][' + type + '] STOP');
+        logger.debug('Do stop');
 
         eventBus.off(MssEvents.FRAGMENT_INFO_LOADING_COMPLETED, onFragmentInfoLoadedCompleted, instance);
 
@@ -252,6 +252,10 @@ function MssFragmentInfoController(config) {
         startTimeStampValue = null;
     }
 
+    function getType() {
+        return type;
+    }
+
     function reset() {
         doStop();
         streamProcessor.unregisterExternalController(instance);
@@ -261,6 +265,7 @@ function MssFragmentInfoController(config) {
         initialize: initialize,
         controllerType: controllerType,
         start: doStart,
+        getType: getType,
         reset: reset
     };
 

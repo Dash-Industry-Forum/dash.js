@@ -100,9 +100,8 @@ const APIS_ProtectionModel_3Feb2014 = [
 ];
 
 function Protection() {
-
     let instance;
-    let context = this.context;
+    const context = this.context;
 
     /**
      * Create a ProtectionController and associated ProtectionModel for use with
@@ -113,11 +112,10 @@ function Protection() {
      *
      */
     function createProtectionSystem(config) {
-
         let controller = null;
 
-        let protectionKeyController = ProtectionKeyController(context).getInstance();
-        protectionKeyController.setConfig({log: config.log, BASE64: config.BASE64});
+        const protectionKeyController = ProtectionKeyController(context).getInstance();
+        protectionKeyController.setConfig({ debug: config.debug, BASE64: config.BASE64 });
         protectionKeyController.initialize();
 
         let protectionModel =  getProtectionModel(config);
@@ -126,12 +124,11 @@ function Protection() {
             controller = ProtectionController(context).create({
                 protectionModel: protectionModel,
                 protectionKeyController: protectionKeyController,
-                adapter: config.adapter,
                 eventBus: config.eventBus,
-                log: config.log,
+                debug: config.debug,
                 events: config.events,
                 BASE64: config.BASE64,
-                Constants: config.Constants
+                constants: config.constants
             });
             config.capabilities.setEncryptedMediaSupported(true);
         }
@@ -139,42 +136,31 @@ function Protection() {
     }
 
     function getProtectionModel(config) {
+        const debug = config.debug;
+        const logger = debug.getLogger(instance);
+        const eventBus = config.eventBus;
+        const errHandler = config.errHandler;
+        const videoElement = config.videoModel ? config.videoModel.getElement() : null;
 
-        let log = config.log;
-        let eventBus = config.eventBus;
-        let errHandler = config.errHandler;
-        let videoElement = config.videoModel.getElement();
-
-        if (videoElement.onencrypted !== undefined &&
-            videoElement.mediaKeys !== undefined &&
-            navigator.requestMediaKeySystemAccess !== undefined &&
-            typeof navigator.requestMediaKeySystemAccess === 'function') {
-
-            log('EME detected on this user agent! (ProtectionModel_21Jan2015)');
-            return ProtectionModel_21Jan2015(context).create({log: log, eventBus: eventBus, events: config.events});
-
+        if ((!videoElement || videoElement.onencrypted !== undefined) &&
+            (!videoElement || videoElement.mediaKeys !== undefined)) {
+            logger.info('EME detected on this user agent! (ProtectionModel_21Jan2015)');
+            return ProtectionModel_21Jan2015(context).create({ debug: debug, eventBus: eventBus, events: config.events });
         } else if (getAPI(videoElement, APIS_ProtectionModel_3Feb2014)) {
-
-            log('EME detected on this user agent! (ProtectionModel_3Feb2014)');
-            return ProtectionModel_3Feb2014(context).create({log: log, eventBus: eventBus, events: config.events, api: getAPI(videoElement, APIS_ProtectionModel_3Feb2014)});
-
+            logger.info('EME detected on this user agent! (ProtectionModel_3Feb2014)');
+            return ProtectionModel_3Feb2014(context).create({ debug: debug, eventBus: eventBus, events: config.events, api: getAPI(videoElement, APIS_ProtectionModel_3Feb2014) });
         } else if (getAPI(videoElement, APIS_ProtectionModel_01b)) {
-
-            log('EME detected on this user agent! (ProtectionModel_01b)');
-            return ProtectionModel_01b(context).create({log: log, eventBus: eventBus, errHandler: errHandler, events: config.events, api: getAPI(videoElement, APIS_ProtectionModel_01b)});
-
+            logger.info('EME detected on this user agent! (ProtectionModel_01b)');
+            return ProtectionModel_01b(context).create({ debug: debug, eventBus: eventBus, errHandler: errHandler, events: config.events, api: getAPI(videoElement, APIS_ProtectionModel_01b) });
         } else {
-
-            log('No supported version of EME detected on this user agent! - Attempts to play encrypted content will fail!');
+            logger.warn('No supported version of EME detected on this user agent! - Attempts to play encrypted content will fail!');
             return null;
-
         }
     }
 
     function getAPI(videoElement, apis) {
-
         for (let i = 0; i < apis.length; i++) {
-            let api = apis[i];
+            const api = apis[i];
             // detect if api is supported by browser
             // check only first function in api -> should be fine
             if (typeof videoElement[api[Object.keys(api)[0]]] !== 'function') {
@@ -195,7 +181,7 @@ function Protection() {
 }
 
 Protection.__dashjs_factory_name = 'Protection';
-let factory = dashjs.FactoryMaker.getClassFactory(Protection); /* jshint ignore:line */
+const factory = dashjs.FactoryMaker.getClassFactory(Protection); /* jshint ignore:line */
 factory.events = ProtectionEvents;
 dashjs.FactoryMaker.updateClassFactory(Protection.__dashjs_factory_name, factory); /* jshint ignore:line */
 export default factory;

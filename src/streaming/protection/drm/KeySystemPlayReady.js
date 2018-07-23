@@ -79,26 +79,34 @@ function KeySystemPlayReady(config) {
             headers['Content-Type'] = headers.Content;
             delete headers.Content;
         }
+        // some devices (Ex: LG SmartTVs) require content-type to be defined
+        if (!headers.hasOwnProperty('Content-Type')) {
+            headers['Content-Type'] = 'text/xml; charset=' + messageFormat;
+        }
         return headers;
     }
 
     function getLicenseRequestFromMessage(message) {
-        let msg,
-            xmlDoc;
         let licenseRequest = null;
         const parser = new DOMParser();
         const dataview = (messageFormat === 'utf16') ? new Uint16Array(message) : new Uint8Array(message);
 
         checkConfig();
-        msg = String.fromCharCode.apply(null, dataview);
-        xmlDoc = parser.parseFromString(msg, 'application/xml');
+        const msg = String.fromCharCode.apply(null, dataview);
+        const xmlDoc = parser.parseFromString(msg, 'application/xml');
 
         if (xmlDoc.getElementsByTagName('Challenge')[0]) {
             const Challenge = xmlDoc.getElementsByTagName('Challenge')[0].childNodes[0].nodeValue;
             if (Challenge) {
                 licenseRequest = BASE64.decode(Challenge);
             }
+        } else if (xmlDoc.getElementsByTagName('parsererror').length) {
+            // In case it is not an XML doc, return the message itself
+            // There are CDM implementations of some devices (example: some smartTVs) that
+            // return directly the challenge without wrapping it in an xml doc
+            return message;
         }
+
         return licenseRequest;
     }
 
@@ -273,6 +281,10 @@ function KeySystemPlayReady(config) {
         return null;
     }
 
+    function getSessionId(/*cp*/) {
+        return null;
+    }
+
     instance = {
         uuid: uuid,
         schemeIdURI: schemeIdURI,
@@ -282,6 +294,7 @@ function KeySystemPlayReady(config) {
         getLicenseRequestFromMessage: getLicenseRequestFromMessage,
         getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
         getCDMData: getCDMData,
+        getSessionId: getSessionId,
         setPlayReadyMessageFormat: setPlayReadyMessageFormat,
         init: init
     };

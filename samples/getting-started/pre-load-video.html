@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Preload Video example</title>
+
+    <script src="../../dist/dash.all.debug.js"></script>
+    <!--dash.all.min.js should be used in production over dash.all.debug.js
+        Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
+    <!--<script src="../../dist/dash.all.min.js"></script>-->
+
+    <script class="code">
+        var video,
+            player;
+
+        function init() {
+            var url = "https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd";
+
+            player = dashjs.MediaPlayer().create();
+            player.initialize(null, url, true);
+            player.preload();
+        }
+
+        function attachVideoPlayer() {
+            var videoContainer = document.getElementById('videoContainer');
+            if (!video) {
+                video = document.createElement('video');
+                video.controls = true;
+                videoContainer.appendChild(video);
+            }
+
+            player.attachView(video);
+        }
+    </script>
+
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+        This sample shows how to use preload feature of dash.js. In this sample, streaming is initialized and dash.js starts downloading stream segments as soon as the page is loaded. Right when the user clicks "Attach View" the video element is created,
+        attached to the already initialized dash.js MediaPlayer and then playback starts.
+    </div>
+    <div>
+        <button onclick="attachVideoPlayer()">Attach View</button>
+    </div>
+    <div id="videoContainer">
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            init();
+        });
+    </script>
+    <script src="../highlighter.js"></script>
+</body>
+
+</html>

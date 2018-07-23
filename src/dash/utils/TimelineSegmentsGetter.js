@@ -131,13 +131,13 @@ function TimelineSegmentsGetter(config, isDynamic) {
                 repeat = frag.r;
             }
 
-            //For a repeated S element, t belongs only to the first segment
+            // For a repeated S element, t belongs only to the first segment
             if (frag.hasOwnProperty('t')) {
                 time = frag.t;
                 scaledTime = time / fTimescale;
             }
 
-            //This is a special case: "A negative value of the @r attribute of the S element indicates that the duration indicated in @d attribute repeats until the start of the next S element, the end of the Period or until the
+            // This is a special case: "A negative value of the @r attribute of the S element indicates that the duration indicated in @d attribute repeats until the start of the next S element, the end of the Period or until the
             // next MPD update."
             if (repeat < 0) {
                 nextFrag = fragments[i + 1];

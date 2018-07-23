@@ -41,24 +41,32 @@ import EventStream from '../vo/EventStream';
 import ObjectUtils from '../../streaming/utils/ObjectUtils';
 import URLUtils from '../../streaming/utils/URLUtils';
 import FactoryMaker from '../../core/FactoryMaker';
+import Debug from '../../core/Debug';
 
 function DashManifestModel(config) {
 
     config = config || {};
-    let instance;
-    const context = this.context;
 
+    let instance,
+        logger;
+
+    const context = this.context;
     const urlUtils = URLUtils(context).getInstance();
     const mediaController = config.mediaController;
     const timelineConverter = config.timelineConverter;
     const adapter = config.adapter;
 
     const PROFILE_DVB = 'urn:dvb:dash:profile:dvb-dash:2014';
+
     const isInteger = Number.isInteger || function (value) {
         return typeof value === 'number' &&
             isFinite(value) &&
             Math.floor(value) === value;
     };
+
+    function setup () {
+        logger = Debug(context).getInstance().getLogger(instance);
+    }
 
     function getIsTypeOf(adaptation, type) {
 
@@ -262,11 +270,15 @@ function DashManifestModel(config) {
         if (adaptations.length > 1 && streamInfo) {
             const currentTrack = mediaController.getCurrentTrackFor(type, streamInfo);
             const allMediaInfoForType = adapter.getAllMediaInfoForType(streamInfo, type);
-            for (let i = 0, ln = adaptations.length; i < ln; i++) {
-                if (currentTrack && mediaController.isTracksEqual(currentTrack, allMediaInfoForType[i])) {
-                    return adaptations[i];
+
+            if (currentTrack) {
+                for (let i = 0, ln = adaptations.length; i < ln; i++) {
+                    if (mediaController.isTracksEqual(currentTrack, allMediaInfoForType[i])) {
+                        return adaptations[i];
+                    }
                 }
             }
+
             for (let i = 0, ln = adaptations.length; i < ln; i++) {
                 if (getIsMain(adaptations[i])) {
                     return adaptations[i];
@@ -392,27 +404,59 @@ function DashManifestModel(config) {
             isInteger(index) ? adaptation.Representation_asArray[index] : null;
     }
 
-    function getRepresentationsForAdaptation(voAdaptation) {
-        const voRepresentations = [];
-        let voRepresentation,
-            initialization,
-            segmentInfo,
-            processedRealAdaptation,
-            realRepresentation,
-            i,
-            s;
-
+    function getRealAdaptationFor(voAdaptation) {
         if (voAdaptation && voAdaptation.period && isInteger(voAdaptation.period.index)) {
             const periodArray = voAdaptation.period.mpd.manifest.Period_asArray[voAdaptation.period.index];
             if (periodArray && periodArray.AdaptationSet_asArray && isInteger(voAdaptation.index)) {
-                processedRealAdaptation = processAdaptation(periodArray.AdaptationSet_asArray[voAdaptation.index]);
+                return processAdaptation(periodArray.AdaptationSet_asArray[voAdaptation.index]);
+            }
+        }
+    }
+
+    function isLastRepeatAttributeValid(segmentTimeline) {
+        let s = segmentTimeline.S_asArray[segmentTimeline.S_asArray.length - 1];
+        return !s.hasOwnProperty('r') || s.r >= 0;
+    }
+
+    function getUseCalculatedLiveEdgeTimeForAdaptation(voAdaptation) {
+        let realRepresentation = getRealAdaptationFor(voAdaptation).Representation_asArray[0];
+        let segmentInfo;
+        if (realRepresentation.hasOwnProperty(DashConstants.SEGMENT_LIST)) {
+            segmentInfo = realRepresentation.SegmentList;
+            return segmentInfo.hasOwnProperty(DashConstants.SEGMENT_TIMELINE) ?
+                isLastRepeatAttributeValid(segmentInfo.SegmentTimeline) :
+                true;
+        } else if (realRepresentation.hasOwnProperty(DashConstants.SEGMENT_TEMPLATE)) {
+            segmentInfo = realRepresentation.SegmentTemplate;
+            if (segmentInfo.hasOwnProperty(DashConstants.SEGMENT_TIMELINE)) {
+                return isLastRepeatAttributeValid(segmentInfo.SegmentTimeline);
+            }
+        }
+
+        return false;
+    }
+
+    function getRepresentationsForAdaptation(voAdaptation) {
+        const voRepresentations = [];
+        const processedRealAdaptation = getRealAdaptationFor(voAdaptation);
+        let segmentInfo;
+        let baseUrl;
+
+        // TODO: TO BE REMOVED. We should get just the baseUrl elements that affects to the representations
+        // that we are processing. Making it works properly will require much further changes and given
+        // parsing base Urls parameters is needed for our ultra low latency examples, we will
+        // keep this "tricky" code until the real (and good) solution comes
+        if (voAdaptation && voAdaptation.period && isInteger(voAdaptation.period.index)) {
+            const baseUrls = getBaseURLsFromElement(voAdaptation.period.mpd.manifest);
+            if (baseUrls) {
+                baseUrl = baseUrls[0];
             }
         }
 
         if (processedRealAdaptation && processedRealAdaptation.Representation_asArray) {
-            for (i = 0; processedRealAdaptation && i < processedRealAdaptation.Representation_asArray.length; i++) {
-                realRepresentation = processedRealAdaptation.Representation_asArray[i];
-                voRepresentation = new Representation();
+            for (let i = 0, len = processedRealAdaptation.Representation_asArray.length; i < len; ++i) {
+                const realRepresentation = processedRealAdaptation.Representation_asArray[i];
+                const voRepresentation = new Representation();
                 voRepresentation.index = i;
                 voRepresentation.adaptation = voAdaptation;
 
@@ -440,6 +484,7 @@ function DashManifestModel(config) {
                 if (realRepresentation.hasOwnProperty(DashConstants.MAX_PLAYOUT_RATE)) {
                     voRepresentation.maxPlayoutRate = realRepresentation.maxPlayoutRate;
                 }
+
                 if (realRepresentation.hasOwnProperty(DashConstants.SEGMENT_BASE)) {
                     segmentInfo = realRepresentation.SegmentBase;
                     voRepresentation.segmentInfoType = DashConstants.SEGMENT_BASE;
@@ -448,10 +493,7 @@ function DashManifestModel(config) {
 
                     if (segmentInfo.hasOwnProperty(DashConstants.SEGMENT_TIMELINE)) {
                         voRepresentation.segmentInfoType = DashConstants.SEGMENT_TIMELINE;
-                        s = segmentInfo.SegmentTimeline.S_asArray[segmentInfo.SegmentTimeline.S_asArray.length - 1];
-                        if (!s.hasOwnProperty('r') || s.r >= 0) {
-                            voRepresentation.useCalculatedLiveEdgeTime = true;
-                        }
+                        voRepresentation.useCalculatedLiveEdgeTime = isLastRepeatAttributeValid(segmentInfo.SegmentTimeline);
                     } else {
                         voRepresentation.segmentInfoType = DashConstants.SEGMENT_LIST;
                         voRepresentation.useCalculatedLiveEdgeTime = true;
@@ -461,10 +503,7 @@ function DashManifestModel(config) {
 
                     if (segmentInfo.hasOwnProperty(DashConstants.SEGMENT_TIMELINE)) {
                         voRepresentation.segmentInfoType = DashConstants.SEGMENT_TIMELINE;
-                        s = segmentInfo.SegmentTimeline.S_asArray[segmentInfo.SegmentTimeline.S_asArray.length - 1];
-                        if (!s.hasOwnProperty('r') || s.r >= 0) {
-                            voRepresentation.useCalculatedLiveEdgeTime = true;
-                        }
+                        voRepresentation.useCalculatedLiveEdgeTime = isLastRepeatAttributeValid(segmentInfo.SegmentTimeline);
                     } else {
                         voRepresentation.segmentInfoType = DashConstants.SEGMENT_TEMPLATE;
                     }
@@ -481,7 +520,7 @@ function DashManifestModel(config) {
 
                 if (segmentInfo) {
                     if (segmentInfo.hasOwnProperty(DashConstants.INITIALIZATION)) {
-                        initialization = segmentInfo.Initialization;
+                        let initialization = segmentInfo.Initialization;
 
                         if (initialization.hasOwnProperty(DashConstants.SOURCE_URL)) {
                             voRepresentation.initialization = initialization.sourceURL;
@@ -516,6 +555,16 @@ function DashManifestModel(config) {
                     }
                     if (segmentInfo.hasOwnProperty(DashConstants.PRESENTATION_TIME_OFFSET)) {
                         voRepresentation.presentationTimeOffset = segmentInfo.presentationTimeOffset / voRepresentation.timescale;
+                    }
+                    if (segmentInfo.hasOwnProperty(DashConstants.AVAILABILITY_TIME_OFFSET)) {
+                        voRepresentation.availabilityTimeOffset = segmentInfo.availabilityTimeOffset;
+                    } else if (baseUrl && baseUrl.availabilityTimeOffset !== undefined) {
+                        voRepresentation.availabilityTimeOffset = baseUrl.availabilityTimeOffset;
+                    }
+                    if (segmentInfo.hasOwnProperty(DashConstants.AVAILABILITY_TIME_COMPLETE)) {
+                        voRepresentation.availabilityTimeComplete = segmentInfo.availabilityTimeComplete !== 'false';
+                    } else if (baseUrl && baseUrl.availabilityTimeComplete !== undefined) {
+                        voRepresentation.availabilityTimeComplete = baseUrl.availabilityTimeComplete;
                     }
                 }
 
@@ -555,7 +604,7 @@ function DashManifestModel(config) {
                     voAdaptationSet.type = Constants.FRAGMENTED_TEXT;
                 } else if (getIsImage(realAdaptationSet)) {
                     voAdaptationSet.type = Constants.IMAGE;
-                }else {
+                } else {
                     voAdaptationSet.type = Constants.TEXT;
                 }
                 voAdaptations.push(voAdaptationSet);
@@ -568,9 +617,9 @@ function DashManifestModel(config) {
     function getRegularPeriods(mpd) {
         const isDynamic = mpd ? getIsDynamic(mpd.manifest) : false;
         const voPeriods = [];
-        let realPeriod1 = null;
+        let realPreviousPeriod = null;
         let realPeriod = null;
-        let voPeriod1 = null;
+        let voPreviousPeriod = null;
         let voPeriod = null;
         let len,
             i;
@@ -591,10 +640,9 @@ function DashManifestModel(config) {
             // Period PeriodStart is the sum of the start time of the previous
             // Period PeriodStart and the value of the attribute @duration
             // of the previous Period.
-            else if (realPeriod1 !== null && realPeriod.hasOwnProperty(DashConstants.DURATION) && voPeriod1 !== null) {
+            else if (realPreviousPeriod !== null && realPreviousPeriod.hasOwnProperty(DashConstants.DURATION) && voPreviousPeriod !== null) {
                 voPeriod = new Period();
-                voPeriod.start = parseFloat((voPeriod1.start + voPeriod1.duration).toFixed(5));
-                voPeriod.duration = realPeriod.duration;
+                voPeriod.start = parseFloat((voPreviousPeriod.start + voPreviousPeriod.duration).toFixed(5));
             }
             // If (i) @start attribute is absent, and (ii) the Period element
             // is the first in the MPD, and (iii) the MPD@type is 'static',
@@ -607,24 +655,26 @@ function DashManifestModel(config) {
             // The Period extends until the PeriodStart of the next Period.
             // The difference between the PeriodStart time of a Period and
             // the PeriodStart time of the following Period.
-            if (voPeriod1 !== null && isNaN(voPeriod1.duration)) {
-                voPeriod1.duration = parseFloat((voPeriod.start - voPeriod1.start).toFixed(5));
+            if (voPreviousPeriod !== null && isNaN(voPreviousPeriod.duration)) {
+                if (voPeriod !== null) {
+                    voPreviousPeriod.duration = parseFloat((voPeriod.start - voPreviousPeriod.start).toFixed(5));
+                } else {
+                    logger.warn('First period duration could not be calculated because lack of start and duration period properties. This will cause timing issues during playback');
+                }
             }
 
             if (voPeriod !== null) {
                 voPeriod.id = getPeriodId(realPeriod, i);
-            }
-
-            if (voPeriod !== null && realPeriod.hasOwnProperty(DashConstants.DURATION)) {
-                voPeriod.duration = realPeriod.duration;
-            }
-
-            if (voPeriod !== null) {
                 voPeriod.index = i;
                 voPeriod.mpd = mpd;
+
+                if (realPeriod.hasOwnProperty(DashConstants.DURATION)) {
+                    voPeriod.duration = realPeriod.duration;
+                }
+
                 voPeriods.push(voPeriod);
-                realPeriod1 = realPeriod;
-                voPeriod1 = voPeriod;
+                realPreviousPeriod = realPeriod;
+                voPreviousPeriod = voPeriod;
             }
 
             realPeriod = null;
@@ -638,8 +688,8 @@ function DashManifestModel(config) {
         // The last Period extends until the end of the Media Presentation.
         // The difference between the PeriodStart time of the last Period
         // and the mpd duration
-        if (voPeriod1 !== null && isNaN(voPeriod1.duration)) {
-            voPeriod1.duration = parseFloat((getEndTimeForLastPeriod(voPeriod1) - voPeriod1.start).toFixed(5));
+        if (voPreviousPeriod !== null && isNaN(voPreviousPeriod.duration)) {
+            voPreviousPeriod.duration = parseFloat((getEndTimeForLastPeriod(voPreviousPeriod) - voPreviousPeriod.start).toFixed(5));
         }
 
         return voPeriods;
@@ -711,7 +761,7 @@ function DashManifestModel(config) {
         } else if (isDynamic) {
             periodEnd = Number.POSITIVE_INFINITY;
         } else {
-            throw new Error('Must have @mediaPresentationDuratio on MPD or an explicit @duration on the last period.');
+            throw new Error('Must have @mediaPresentationDuration on MPD or an explicit @duration on the last period.');
         }
 
         return periodEnd;
@@ -756,6 +806,15 @@ function DashManifestModel(config) {
                     if (eventStreams[i].Event_asArray[j].hasOwnProperty(DashConstants.ID)) {
                         event.id = eventStreams[i].Event_asArray[j].id;
                     }
+
+                    // From Cor.1: 'NOTE: this attribute is an alternative
+                    // to specifying a complete XML element(s) in the Event.
+                    // It is useful when an event leans itself to a compact
+                    // string representation'.
+                    event.messageData =
+                        eventStreams[i].Event_asArray[j].messageData ||
+                        eventStreams[i].Event_asArray[j].__text;
+
                     events.push(event);
                 }
             }
@@ -928,8 +987,14 @@ function DashManifestModel(config) {
                     baseUrl.dvb_weight = entry[DashConstants.DVB_WEIGHT];
                 }
 
-                /* NOTE: byteRange, availabilityTimeOffset,
-                 * availabilityTimeComplete currently unused
+                if (entry.hasOwnProperty(DashConstants.AVAILABILITY_TIME_OFFSET)) {
+                    baseUrl.availabilityTimeOffset = entry[DashConstants.AVAILABILITY_TIME_OFFSET];
+                }
+
+                if (entry.hasOwnProperty(DashConstants.AVAILABILITY_TIME_COMPLETE)) {
+                    baseUrl.availabilityTimeComplete = entry[DashConstants.AVAILABILITY_TIME_COMPLETE] !== 'false';
+                }
+                /* NOTE: byteRange currently unused
                  */
 
                 baseUrls.push(baseUrl);
@@ -996,8 +1061,11 @@ function DashManifestModel(config) {
         getUTCTimingSources: getUTCTimingSources,
         getBaseURLsFromElement: getBaseURLsFromElement,
         getRepresentationSortFunction: getRepresentationSortFunction,
-        getLocation: getLocation
+        getLocation: getLocation,
+        getUseCalculatedLiveEdgeTimeForAdaptation: getUseCalculatedLiveEdgeTimeForAdaptation
     };
+
+    setup();
 
     return instance;
 }

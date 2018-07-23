@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Auto-player instantiation example</title>
+
+    <script src="../../dist/dash.all.debug.js"></script>
+    <!--dash.all.min.js should be used in production over dash.all.debug.js
+        Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
+    <!--<script src="../../dist/dash.all.min.js"></script>-->
+
+    <style>
+        video {
+            width: 320px;
+            height: 180px;
+        }
+    </style>
+    </head>
+    <body>
+        <div class="code">
+            <video autoplay controls>
+                <source src="https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd" type="application/dash+xml"/>
+            </video>
+            <br/>This is a dash.js player that should autostart
+        </div>
+        <div class="code">
+            <video autoplay controls="true">
+                <source src="http://mediapm.edgesuite.net/ovp/content/test/video/spacealonehd_sounas_640_300.mp4" type="video/mp4"/>
+            </video>
+            <br/>This is a standard mp4 (non-dash)
+        </div>
+        <div class="code">
+            <video poster="http://mediapm.edgesuite.net/will/dash/temp/poster.png" controls="true">
+                <source src="https://dash.akamaized.net/digitalprimates/fraunhofer/480p_video/heaac_2_0_with_video/Sintel/sintel_480p_heaac2_0.mpd" type="application/dash+xml"/>
+            </video>
+            <br/>This is a dash.js player that should not autostart
+        </div>
+        <div class="code">
+            <video data-dashjs-player autoplay src="https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd" controls="true">
+            </video>
+            <br/>This is a dash.js player that where the manifest is defined via the src attribute of the video element.
+        </div>
+        <script src="../highlighter.js"></script>
+    </body>
+</html>

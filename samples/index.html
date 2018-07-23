@@ -1,50 +1,136 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head lang="en">
-    <meta charset="UTF-8">
-    <title>Samples players for dash.js</title>
-</head>
-<body>
-<img src="https://cloud.githubusercontent.com/assets/2762250/7824984/985c3e76-03bc-11e5-807b-1402bde4fe56.png" width="300">
-<p/>
-dash.js is a framework which enables the creation of many different MSE/EME players. This page provides a starting point to examine all the various samples available. Many samples ship with this code base, others are hosted elsewhere.
-<p/>
-<strong>Local examples </strong> available in the /samples/ folder. They are described according to the subfolder name in which they are located:
-<table style="width:1000px">
-    <tr><td colspan="2">/dash-if-reference-player</td></tr>
-    <tr><td style="width:80px"></td><td><a href="dash-if-reference-player/index.html">index.html</a> - The DASH IF Reference player. The <a href="http://dashif.org">DASH Industry Forum</a> is  a non-profit industry forum formed to catalyze the adoption of MPEG-DASH. They define common versions of DASH which other standards bodies (such as DVB and HbbTV) then formalize. This player is intended to provide a reference implementation. Note the player is just a UI on top of the same framework used in all these samples. In using dash.js you are inheriting much of the latest thinking of the DASH ecosystem.</td></tr>
+    <head lang="en">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <title>Samples players for dash.js</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+        <style>
+            .container {
+                min-width: 1200px;
+            }
+            .nav-tabs {
+                overflow-x: auto;
+                overflow-y: hidden;
+                display: flex;
+            }
 
-    <tr><td colspan="2">/basic-page-embed</td></tr>
-    <tr><td style="width:80px"></td><td><a href="getting-started-basic-embed/auto-load-single-video-src.html">auto-load-single-video-src.html</a> - the simplest means of using a dash.js player in a web page. The mpd src is specified within the @src attribute of the video element. The "auto-load" refers to the fact that this page calls the Dash.createAll() method onLoad in order to automatically convert all video elements of class 'dashjs-player' in to a functioning DASH player.</td></tr>
-    <tr><td style="width:80px"></td><td><a href="getting-started-basic-embed/auto-load-single-video.html">auto-load-single-video.html</a> - the mpd source is specified within the child Source element of the video element. Note that the Source@type attribute must be set to "application/dash+xml" in order for it to be automatically used. </td></tr>
-    <tr><td style="width:80px"></td><td><a href="getting-started-basic-embed/auto-load-single-video-with-context-and-source.html">auto-load-single-video-with-context-and-source.html</a> - while the Dash.CreateAll() method is handy for automated instantiation within a page, the Dash.create() method takes three optional parameters to give you more control. This example illustrates calling Dash.create() in four different ways. The first simply specifies a target video element with a child source element. The second specifies a target video element with a src attribute. The third specifies the video element and a dynamically generated source object. The fourth specifies the video element, a source object and a custom DashContext object.  </td></tr>
-    <tr><td style="width:80px"></td><td><a href="getting-started-basic-embed/auto-load-single-video-with-reference.html">auto-load-single-video-with-reference.html</a> - this example shows how to auto-embed the player while still obtaining a reference to the MediaPlayer instance. This is useful for calling its public API, which the example illustrates by tracing out the players buffer length. </td></tr>
-    <tr><td style="width:80px"></td><td><a href="getting-started-basic-embed/auto-load-multi-video.html">auto-load-multi-video.html</a> - this example shows how to auto-embed multiple instances of dash.js players in a page. To make it more difficult, one of the available video elements specifies a non-DASH source. </td></tr>
-    <tr><td style="width:80px"></td><td><a href="getting-started-basic-embed/manual-load-single-video.html">manual-load-single-video.html</a> - for the fullest embed control, go back to basics. This example shows how to instantiate and initialize a dash.js player without using any of the Dash.create() methods. Consider this the baseline embed example. </td></tr>
+            .tab-pane {
+                display: flex;
+                flex-direction: row;
+                align-items: stretch;
+                justify-content: flex-start;
+                flex-wrap: wrap;
+            }
 
-    <tr><td colspan="2">/live-streaming</td></tr>
-    <tr><td style="width:80px"></td><td><a href="live-streaming/live-delay-comparison-custom-manifest.html">live-delay-comparison-custom-manifest.html</a> - example showing how to use the two MediaPlayer APIS which control live delay: setLiveDelay and setLiveDelayFragmentCount.</td></tr>
-    <tr><td style="width:80px"></td><td><a href="live-streaming/live-delay-comparison-using-fragmentCount.html">live-delay-comparison-using-fragmentCount.html</a> - example showing the combined effects of segment duration and the setLiveDelayFragmentCount MediaPlayer method on the latency of live stream playback.</td></tr>
-    <tr><td style="width:80px"></td><td><a href="live-streaming/live-delay-comparison-using-setLiveDelay.html">live-delay-comparison-using-setLiveDelay.html</a> - example showing the combined effects of segment duration and the setLiveDelay MediaPlayer method on the latency of live stream playback.</td></tr>
+            .tab-content>.active {
+                display: flex !important;
+            }
 
-    <tr><td colspan="2">/ad-insertion</td></tr>
-    <tr><td style="width:80px"></td><td><a href="ad-insertion/index.html">index.html</a> - Demonstration of different implementation approaches for advert insertion, specifically inband, inline and X-Link onLoad. Provided by Fraunhofer Fokus.  </td></tr>
+            .card {
+                align-self: auto;
+                position: relative;
+                flex-grow: 1;
+            }
 
-    <tr><td colspan="2">/captioning</td></tr>
-    <tr><td style="width:80px"></td><td><a href="captioning/caption_vtt.html">caption_vtt.html</a> - example showing how content with VTT captions can be played back by the dash.js player. First captions appear at the 15s mark. </td></tr>
-    <tr><td style="width:80px"></td><td><a href="captioning/multi-track-captions.html">multi-track-captions.html</a> - example showing content with multiple timed text tracks</td></tr>
-    <tr><td style="width:80px"></td><td><a href="captioning/ttml-ebutt-sample.html">ttml-ebutt-sample.html</a> - example showing content with TTML EBU timed text tracks</td></tr>
-    <tr><td colspan="2">/chromecast</td></tr>
-    <tr><td style="width:80px"></td><td><a href="chromecast/index.html">index.html</a> - features both receiver and sender examples of chromecast integration. </td></tr>
-    <tr><td colspan="2">/thumbnails</td></tr>
-    <tr><td style="width:80px"></td><td><a href="thumbnails/thumbnails.html">thumbnails.html</a> - example showing how to use streams with thumbnails representations. </td></tr>
+        </style>
+    </head>
+    <body class="bg-light">
+        <div class="container">
+            <div class="pt-5 pb-3 text-center">
+                <img class="d-block mx-auto mb-4" src="https://cloud.githubusercontent.com/assets/2762250/7824984/985c3e76-03bc-11e5-807b-1402bde4fe56.png" width="300">
+                <h2>Dash.js Samples</h2>
+                <p class="lead"> Dash.js is a framework which enables the creation of many different MSE/EME players. This page provides a starting point to examine all the various samples available. Many samples ship with this code base, others are hosted elsewhere.</p>
+            </div>
 
-</table>
-<p/>
+            <p class="pb-3 text-center">
+                <strong>
+                    Reference Player:
+                </strong>
+                The <a target="_blank" href="dash-if-reference-player/index.html">DASH IF Reference player</a>. The <a href="http://dashif.org">DASH Industry Forum</a> is
+                a non-profit industry forum formed to catalyze the adoption of MPEG-DASH. They define common versions of DASH which other standards bodies (such as DVB and HbbTV) then formalize.
+                This player is intended to provide a reference implementation. Note the player is just a UI on top of the same framework used in all these samples. In using dash.js you are inheriting
+                much of the latest thinking of the DASH ecosystem.
+            </p>
 
-<strong>Remote examples </strong> hosted on website and by contributors around the world.
-<table style="width:1000px">
-    <tr><td style="width:80px"></td><td><a href="http://pLayers.akamai.com/dash/">Akamai debug player</a> - written on top of dash.js, this player is used by Akamai for reference playback and debugging of its customer's streams. It features a flexible dynamic charting solution, real-time filtering of the debug traces and a layout that adjusts for debugging on mobile devices as well as laptops/desktops.</td></tr>
-</table>
-</body>
+            <ul class="nav nav-tabs" id="tabs" role="tablist">
+            </ul>
+            <div class="tab-content mb-5" id="content">
+            </div>
+
+            <div style="display: none">
+                <div id="card-sample" class="card">
+                    <div class="card-body">
+                        <a>
+                            <h5 class="card-title">Card title</h5>
+                        </a>
+                        <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+                    </div>
+                </div>
+            </div>
+            <p class="py-3">
+                Dash.js also provides examples of how to integrate it with different module bundler and devices. Check <a target="_blank" href="modules/typescript/index.html">Typescript</a>,
+                <a target="_blank" href="modules/webpack/index.html">Webpack</a> or <a target="_blank" href="chromecast/index.html">Chromecast</a> integrations.
+            </p>
+        </div>
+
+        <script src="https://code.jquery.com/jquery-3.2.1.min.js"  crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+        <script>
+            var sampleData = [];
+            $(document).ready(function() {
+                $.getJSON("samples.json", function(json) {
+                    sampleData = json;
+                    drawSampleData();
+                });
+            });
+
+            function drawSampleData() {
+                sampleData.forEach(function(section){
+                    drawSection(section);
+                    drawSectionSamples(section);
+                });
+            }
+
+            function drawSection(section) {
+                var $tab = $('<li class="nav-item"><a class="nav-link" data-toggle="tab" role="tab" ></a></li>');
+                var $link = $tab.find('a');
+                $link.attr('id', nameToId(section.section) + '-tab');
+                $link.attr('aria-controls', nameToId(section.section));
+                $link.attr('href', '#' + nameToId(section.section));
+                $link.html(section.section);
+                if (section.active) {
+                    $link.addClass('active');
+                }
+                $('#tabs').append($tab);
+            }
+
+            function drawSectionSamples(section) {
+                var $tabContent = $('<div class="tab-pane fade" role="tabpanel"></div>');
+                $tabContent.attr('id', nameToId(section.section));
+                $tabContent.attr('aria-labelledby', nameToId(section.section) + '-tab');
+                $('#content').append($tabContent);
+
+                section.samples.forEach(function(sample) {
+                    var $card = $('#card-sample').clone(true);
+                    $card.attr('id', '');
+                    $card.find('h5').text(sample.title);
+                    $card.find('p').html(sample.description);
+                    $card.find('a').attr('href', sample.href);
+                    $card.css('width', sample.width || '18rem');
+                    $tabContent.append($card);
+                });
+
+                if (section.active) {
+                    $tabContent.addClass('active show');
+                }
+            }
+
+            function nameToId(name) {
+                return name.replace(/[^a-z0-9]/gmi, "");
+            }
+        </script>
+    </body>
 </html>

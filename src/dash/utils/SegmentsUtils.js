@@ -116,8 +116,6 @@ export function replaceTokenForTemplate(url, token, value) {
                     paddedValue = zeroPadToLength(value.toString(8), width);
                     break;
                 default:
-                    //TODO: commented out logging to supress jshint warning -- `log` is undefined here
-                    //log('Unsupported/invalid IEEE 1003.1 format identifier string in URL');
                     return url;
             }
         } else {
@@ -237,13 +235,12 @@ export function decideSegmentListRangeForTemplate(timelineConverter, isDynamic, 
     const minBufferTime = representation.adaptation.period.mpd.manifest.minBufferTime;
     const availabilityWindow = representation.segmentAvailabilityRange;
     let periodRelativeRange = {
-        start: timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, availabilityWindow.start),
-        end: timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, availabilityWindow.end)
+        start: timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, availabilityWindow ? availabilityWindow.start : NaN),
+        end: timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, availabilityWindow ? availabilityWindow.end : NaN)
     };
     const currentSegmentList = representation.segments;
     const availabilityLowerLimit = 2 * duration;
     const availabilityUpperLimit = givenAvailabilityUpperLimit || Math.max(2 * minBufferTime, 10 * duration);
-
     let originAvailabilityTime = NaN;
     let originSegment = null;
 

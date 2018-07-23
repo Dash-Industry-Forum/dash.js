@@ -39,9 +39,9 @@ function TextTracks() {
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
-    const log = Debug(context).getInstance().log;
 
     let instance,
+        logger,
         Cue,
         videoModel,
         textTrackQueue,
@@ -56,7 +56,12 @@ function TextTracks() {
         isChrome,
         fullscreenAttribute,
         displayCCOnTop,
+        previousISDState,
         topZIndex;
+
+    function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
+    }
 
     function initialize() {
         if (typeof window === 'undefined' || typeof navigator === 'undefined') {
@@ -75,6 +80,7 @@ function TextTracks() {
         videoSizeCheckInterval = null;
         displayCCOnTop = false;
         topZIndex = 2147483647;
+        previousISDState = null;
 
         //TODO Check if IE has resolved issues: Then revert to not using the addTextTrack API for all browsers.
         // https://connect.microsoft.com/IE/feedbackdetail/view/1660701/text-tracks-do-not-fire-change-addtrack-or-removetrack-events
@@ -101,13 +107,7 @@ function TextTracks() {
         const lang = textTrackQueue[i].lang;
         const isTTML = textTrackQueue[i].isTTML;
         const isEmbedded = textTrackQueue[i].isEmbedded;
-        const track = isChrome ? document.createElement('track') : videoModel.addTextTrack(kind, label, lang);
-
-        if (isChrome) {
-            track.kind = kind;
-            track.label = label;
-            track.srclang = lang;
-        }
+        const track = videoModel.addTextTrack(kind, label, lang);
 
         track.isEmbedded = isEmbedded;
         track.isTTML = isTTML;
@@ -125,7 +125,7 @@ function TextTracks() {
 
     function addTextTrack(textTrackInfoVO, totalTextTracks) {
         if (textTrackQueue.length === totalTextTracks) {
-            log('Trying to add too many tracks.');
+            logger.error('Trying to add too many tracks.');
             return;
         }
 
@@ -147,9 +147,6 @@ function TextTracks() {
                     /*jshint -W024 */
                     track.default = true;
                     defaultIndex = i;
-                }
-                if (isChrome) {
-                    videoModel.appendChild(track);
                 }
 
                 const textTrack = getTrackByIdx(i);
@@ -234,7 +231,7 @@ function TextTracks() {
         }
     }
 
-    function checkVideoSize(track) {
+    function checkVideoSize(track, forceDrawing) {
         const clientWidth = videoModel.getClientWidth();
         const clientHeight = videoModel.getClientHeight();
         const videoWidth = videoModel.getVideoWidth();
@@ -256,26 +253,30 @@ function TextTracks() {
         const newVideoLeft = realVideoSize.x;
         const newVideoTop = realVideoSize.y;
 
-        if (newVideoWidth != actualVideoWidth || newVideoHeight != actualVideoHeight || newVideoLeft != actualVideoLeft || newVideoTop != actualVideoTop) {
+        if (newVideoWidth != actualVideoWidth || newVideoHeight != actualVideoHeight || newVideoLeft != actualVideoLeft || newVideoTop != actualVideoTop || forceDrawing) {
             actualVideoLeft = newVideoLeft + videoOffsetLeft;
             actualVideoTop = newVideoTop + videoOffsetTop;
             actualVideoWidth = newVideoWidth;
             actualVideoHeight = newVideoHeight;
-            captionContainer.style.left = actualVideoLeft + 'px';
-            captionContainer.style.top = actualVideoTop + 'px';
-            captionContainer.style.width = actualVideoWidth + 'px';
-            captionContainer.style.height = actualVideoHeight + 'px';
 
-            // Video view has changed size, so resize any active cues
-            for (let i = 0; track.activeCues && i < track.activeCues.length; ++i) {
-                const cue = track.activeCues[i];
-                cue.scaleCue(cue);
+            if (captionContainer) {
+                const containerStyle = captionContainer.style;
+                containerStyle.left = actualVideoLeft + 'px';
+                containerStyle.top = actualVideoTop + 'px';
+                containerStyle.width = actualVideoWidth + 'px';
+                containerStyle.height = actualVideoHeight + 'px';
+                containerStyle.zIndex = (fullscreenAttribute && document[fullscreenAttribute]) || displayCCOnTop ? topZIndex : null;
+                eventBus.trigger(Events.CAPTION_CONTAINER_RESIZE, {});
             }
 
-            if ((fullscreenAttribute && document[fullscreenAttribute]) || displayCCOnTop) {
-                captionContainer.style.zIndex = topZIndex;
-            } else {
-                captionContainer.style.zIndex = null;
+            // Video view has changed size, so resize any active cues
+            const activeCues = track.activeCues;
+            if (activeCues) {
+                const len = activeCues.length;
+                for (let i = 0; i < len; ++i) {
+                    const cue = activeCues[i];
+                    cue.scaleCue(cue);
+                }
             }
         }
     }
@@ -353,33 +354,39 @@ function TextTracks() {
             let htmlCaptionDiv = document.getElementById(activeCue.cueID);
             if (htmlCaptionDiv) {
                 captionContainer.removeChild(htmlCaptionDiv);
-                renderCaption(activeCue);
             }
+            renderCaption(activeCue);
         }
     }
 
     function renderCaption(cue) {
-        const finalCue = document.createElement('div');
-        captionContainer.appendChild(finalCue);
-        renderHTML(cue.isd, finalCue, function (uri) {
-            const imsc1ImgUrnTester = /^(urn:)(mpeg:[a-z0-9][a-z0-9-]{0,31}:)(subs:)([0-9])$/;
-            const smpteImgUrnTester = /^#(.*)$/;
-            if (imsc1ImgUrnTester.test(uri)) {
-                const match = imsc1ImgUrnTester.exec(uri);
-                const imageId = parseInt(match[4], 10) - 1;
-                const imageData = btoa(cue.images[imageId]);
-                const dataUrl = 'data:image/png;base64,' + imageData;
-                return dataUrl;
-            } else if (smpteImgUrnTester.test(uri)) {
-                const match = smpteImgUrnTester.exec(uri);
-                const imageId = match[1];
-                const dataUrl = 'data:image/png;base64,' + cue.embeddedImages[imageId];
-                return dataUrl;
-            } else {
-                return null;
-            }
-        }, captionContainer.clientHeight, captionContainer.clientWidth);
-        finalCue.id = cue.cueID;
+        if (captionContainer) {
+            const finalCue = document.createElement('div');
+            captionContainer.appendChild(finalCue);
+            previousISDState = renderHTML(cue.isd, finalCue, function (uri) {
+                const imsc1ImgUrnTester = /^(urn:)(mpeg:[a-z0-9][a-z0-9-]{0,31}:)(subs:)([0-9]+)$/;
+                const smpteImgUrnTester = /^#(.*)$/;
+                if (imsc1ImgUrnTester.test(uri)) {
+                    const match = imsc1ImgUrnTester.exec(uri);
+                    const imageId = parseInt(match[4], 10) - 1;
+                    const imageData = btoa(cue.images[imageId]);
+                    const dataUrl = 'data:image/png;base64,' + imageData;
+                    return dataUrl;
+                } else if (smpteImgUrnTester.test(uri)) {
+                    const match = smpteImgUrnTester.exec(uri);
+                    const imageId = match[1];
+                    const dataUrl = 'data:image/png;base64,' + cue.embeddedImages[imageId];
+                    return dataUrl;
+                } else {
+                    return null;
+                }
+            }, captionContainer.clientHeight, captionContainer.clientWidth, false/*displayForcedOnlyMode*/, function (err) {
+                logger.info('renderCaption :', err);
+                //TODO add ErrorHandler management
+            }, previousISDState, true /*enableRollUp*/);
+            finalCue.id = cue.cueID;
+            eventBus.trigger(Events.CAPTION_RENDERED, {captionDiv: finalCue, currentTrackIdx});
+        }
     }
 
     /*
@@ -397,14 +404,14 @@ function TextTracks() {
             return;
         }
 
-        for (let item in captionData) {
+        for (let item = 0; item < captionData.length; item++) {
             let cue;
             const currentItem = captionData[item];
 
             track.cellResolution = currentItem.cellResolution;
             track.isFromCEA608 = currentItem.isFromCEA608;
 
-            if (currentItem.type === 'html') {
+            if (currentItem.type === 'html' && captionContainer) {
                 cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, '');
                 cue.cueHTMLElement = currentItem.cueHTMLElement;
                 cue.isd = currentItem.isd;
@@ -427,7 +434,7 @@ function TextTracks() {
                     if (track.mode === Constants.TEXT_SHOWING) {
                         if (this.isd) {
                             renderCaption(this);
-                            log('Cue enter id:' + this.cueID);
+                            logger.debug('Cue enter id:' + this.cueID);
                         } else {
                             captionContainer.appendChild(this.cueHTMLElement);
                             scaleCue.call(self, this);
@@ -436,33 +443,48 @@ function TextTracks() {
                 };
 
                 cue.onexit = function () {
-                    const divs = captionContainer.childNodes;
-                    for (let i = 0; i < divs.length; ++i) {
-                        if (divs[i].id === this.cueID) {
-                            log('Cue exit id:' + divs[i].id);
-                            captionContainer.removeChild(divs[i]);
+                    if (captionContainer) {
+                        const divs = captionContainer.childNodes;
+                        for (let i = 0; i < divs.length; ++i) {
+                            if (divs[i].id === this.cueID) {
+                                logger.debug('Cue exit id:' + divs[i].id);
+                                captionContainer.removeChild(divs[i]);
+                            }
                         }
                     }
                 };
             } else {
-                cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, currentItem.data);
-                if (currentItem.styles) {
-                    if (currentItem.styles.align !== undefined && 'align' in cue) {
-                        cue.align = currentItem.styles.align;
-                    }
-                    if (currentItem.styles.line !== undefined && 'line' in cue) {
-                        cue.line = currentItem.styles.line;
-                    }
-                    if (currentItem.styles.position !== undefined && 'position' in cue) {
-                        cue.position = currentItem.styles.position;
-                    }
-                    if (currentItem.styles.size !== undefined && 'size' in cue) {
-                        cue.size = currentItem.styles.size;
+                if (currentItem.data) {
+                    cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, currentItem.data);
+                    if (currentItem.styles) {
+                        if (currentItem.styles.align !== undefined && 'align' in cue) {
+                            cue.align = currentItem.styles.align;
+                        }
+                        if (currentItem.styles.line !== undefined && 'line' in cue) {
+                            cue.line = currentItem.styles.line;
+                        }
+                        if (currentItem.styles.position !== undefined && 'position' in cue) {
+                            cue.position = currentItem.styles.position;
+                        }
+                        if (currentItem.styles.size !== undefined && 'size' in cue) {
+                            cue.size = currentItem.styles.size;
+                        }
                     }
                 }
             }
-
-            track.addCue(cue);
+            try {
+                if (cue) {
+                    track.addCue(cue);
+                } else {
+                    logger.error('impossible to display subtitles.');
+                }
+            } catch (e) {
+                // Edge crash, delete everything and start adding again
+                // @see https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/11979877/
+                deleteTrackCues(track);
+                track.addCue(cue);
+                throw e;
+            }
         }
     }
 
@@ -501,7 +523,7 @@ function TextTracks() {
         }
 
         if (track && track.renderingType === 'html') {
-            checkVideoSize.call(this, track);
+            checkVideoSize.call(this, track, true);
             videoSizeCheckInterval = setInterval(checkVideoSize.bind(this, track), 500);
         }
     }
@@ -540,14 +562,10 @@ function TextTracks() {
     function deleteAllTextTracks() {
         const ln = trackElementArr ? trackElementArr.length : 0;
         for (let i = 0; i < ln; i++) {
-            if (isChrome) {
-                videoModel.removeChild(trackElementArr[i]);
-            } else {
-                const track = getTrackByIdx(i);
-                if (track) {
-                    deleteTrackCues.call(this, track);
-                    track.mode = 'disabled';
-                }
+            const track = getTrackByIdx(i);
+            if (track) {
+                deleteTrackCues.call(this, track);
+                track.mode = 'disabled';
             }
         }
         trackElementArr = [];
@@ -645,6 +663,8 @@ function TextTracks() {
         deleteTextTrack: deleteTextTrack,
         setConfig: setConfig
     };
+
+    setup();
 
     return instance;
 }

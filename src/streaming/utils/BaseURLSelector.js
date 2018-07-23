@@ -114,7 +114,9 @@ function BaseURLSelector() {
                     )
                 }
             );
-
+            if (selector === basicSelector) {
+                reset();
+            }
             return;
         }
 
@@ -140,7 +142,7 @@ function BaseURLSelector() {
 }
 
 BaseURLSelector.__dashjs_factory_name = 'BaseURLSelector';
-let factory = FactoryMaker.getClassFactory(BaseURLSelector);
+const factory = FactoryMaker.getClassFactory(BaseURLSelector);
 factory.URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE = URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE;
 factory.URL_RESOLUTION_FAILED_GENERIC_ERROR_MESSAGE = URL_RESOLUTION_FAILED_GENERIC_ERROR_MESSAGE;
 FactoryMaker.updateClassFactory(BaseURLSelector.__dashjs_factory_name, factory);

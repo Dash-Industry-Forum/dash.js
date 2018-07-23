@@ -77,7 +77,7 @@ class VoHelper {
         return rep;
     }
 
-    createRequest(type) {
+    createRequest(type, state) {
         var req = {};
         req.action = FragmentRequest.ACTION_DOWNLOAD;
         req.quality = 0;
@@ -92,8 +92,10 @@ class VoHelper {
             req.startTime = 0;
             req.duration = 4;
             req.index = 0;
-        } else if (type === FragmentRequest.ACTION_COMPLETE) {
-            req.action = type;
+        } 
+
+        if (state === FragmentRequest.ACTION_COMPLETE) {
+            req.action = FragmentRequest.ACTION_COMPLETE;
             req.url = undefined;
             req.quality = NaN;
         }
@@ -121,8 +123,8 @@ class VoHelper {
         return this.createRequest(HTTPRequest.INIT_SEGMENT_TYPE);
     }
 
-    getCompleteRequest() {
-        return this.createRequest(FragmentRequest.ACTION_COMPLETE);
+    getCompleteRequest(type) {
+        return this.createRequest(type, FragmentRequest.ACTION_COMPLETE);
     }
 
     getDummyStreamInfo() {

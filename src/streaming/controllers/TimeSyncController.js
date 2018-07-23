@@ -42,13 +42,12 @@ const HTTP_TIMEOUT_MS = 5000;
 
 function TimeSyncController() {
 
-    let context = this.context;
-    let log = Debug(context).getInstance().log;
-    let eventBus = EventBus(context).getInstance();
-
+    const context = this.context;
+    const eventBus = EventBus(context).getInstance();
     const urlUtils = URLUtils(context).getInstance();
 
     let instance,
+        logger,
         offsetToDeviceTimeMs,
         isSynchronizing,
         isInitialised,
@@ -57,6 +56,10 @@ function TimeSyncController() {
         metricsModel,
         dashMetrics,
         baseURLController;
+
+    function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
+    }
 
     function initialize(timingSources, useManifestDateHeader) {
         useManifestDateHeaderTimeSource = useManifestDateHeader;
@@ -286,7 +289,7 @@ function TimeSyncController() {
         if (!isNaN(dateHeaderTime)) {
             setOffsetMs(dateHeaderTime - new Date().getTime());
             completeTimeSyncSequence(false, dateHeaderTime / 1000, offsetToDeviceTimeMs);
-        }else {
+        } else {
             completeTimeSyncSequence(true);
         }
     }
@@ -327,14 +330,14 @@ function TimeSyncController() {
                     source.value,
                     function (serverTime) {
                         // the timing source returned something useful
-                        let deviceTime = new Date().getTime();
-                        let offset = serverTime - deviceTime;
+                        const deviceTime = new Date().getTime();
+                        const offset = Math.trunc((serverTime - deviceTime) / 1000) * 1000;
 
                         setOffsetMs(offset);
 
-                        log('Local time:      ' + new Date(deviceTime));
-                        log('Server time:     ' + new Date(serverTime));
-                        log('Difference (ms): ' + offset);
+                        logger.debug('Local time: ' + new Date(deviceTime));
+                        logger.debug('Server time: ' + new Date(serverTime));
+                        logger.info('Server Time - Local Time (ms): ' + offset);
 
                         onComplete(serverTime, offset);
                     },
@@ -369,11 +372,13 @@ function TimeSyncController() {
         reset: reset
     };
 
+    setup();
+
     return instance;
 }
 
 TimeSyncController.__dashjs_factory_name = 'TimeSyncController';
-let factory = FactoryMaker.getSingletonFactory(TimeSyncController);
+const factory = FactoryMaker.getSingletonFactory(TimeSyncController);
 factory.TIME_SYNC_FAILED_ERROR_CODE = TIME_SYNC_FAILED_ERROR_CODE;
 factory.HTTP_TIMEOUT_MS = HTTP_TIMEOUT_MS;
 FactoryMaker.updateSingletonFactory(TimeSyncController.__dashjs_factory_name, factory);

@@ -115,7 +115,7 @@ define([
                     return tests.executeAsync(command, video.isPlaying, [0], ASYNC_TIMEOUT)
                     .then(function(playing) {
                         assert.isTrue(playing);
-                        return  command.execute(video.getCurrentTime);
+                        return command.execute(video.getCurrentTime);
                     })
                     .then(function(time) {
                         tests.log(NAME, 'Check current time ' + time);
@@ -152,10 +152,10 @@ define([
         }
 
         // Performs (fast) seeks, do not wait for playing before each seek, check if playing after last seek
-        for (j = 0; j < testConfig.seekCount; j++) {
-            testSeek(j < (testConfig.seekCount - 1) ? false : true);
-        }
-        // testPlaying(PROGRESS_DELAY);
+        // for (j = 0; j < testConfig.seekCount; j++) {
+        //     testSeek(j < (testConfig.seekCount - 1) ? false : true);
+        // }
+        // // testPlaying(PROGRESS_DELAY);
     }
 
 });

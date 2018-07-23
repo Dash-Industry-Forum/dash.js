@@ -47,13 +47,20 @@ const DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION = 360000;
 const BANDWIDTH_SAFETY_FACTOR = 0.9;
 const ABANDON_LOAD_TIMEOUT = 10000;
 
-const BUFFER_TO_KEEP = 30;
-const BUFFER_PRUNING_INTERVAL = 30;
+const BUFFER_TO_KEEP = 20;
+const BUFFER_AHEAD_TO_KEEP = 80;
+const BUFFER_PRUNING_INTERVAL = 10;
 const DEFAULT_MIN_BUFFER_TIME = 12;
 const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
 const BUFFER_TIME_AT_TOP_QUALITY = 30;
 const BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 60;
 const LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;
+const SEGMENT_OVERLAP_TOLERANCE_TIME = 0.2;
+const SMALL_GAP_LIMIT = 0.8;
+const MANIFEST_UPDATE_RETRY_INTERVAL = 100;
+
+const CACHE_LOAD_THRESHOLD_VIDEO = 50;
+const CACHE_LOAD_THRESHOLD_AUDIO = 5;
 
 const FRAGMENT_RETRY_ATTEMPTS = 3;
 const FRAGMENT_RETRY_INTERVAL = 1000;
@@ -63,6 +70,10 @@ const MANIFEST_RETRY_INTERVAL = 500;
 
 const XLINK_RETRY_ATTEMPTS = 1;
 const XLINK_RETRY_INTERVAL = 500;
+
+const DEFAULT_LOW_LATENCY_LIVE_DELAY = 2.8;
+const LOW_LATENCY_REDUCTION_FACTOR = 10;
+const LOW_LATENCY_MULTIPLY_FACTOR = 5;
 
 //This value influences the startup time for live (in ms).
 const WALLCLOCK_TIME_UPDATE_INTERVAL = 50;
@@ -79,6 +90,7 @@ function MediaPlayerModel() {
         liveDelay,
         scheduleWhilePaused,
         bufferToKeep,
+        bufferAheadToKeep,
         bufferPruningInterval,
         lastBitrateCachingInfo,
         lastMediaSettingsCachingInfo,
@@ -86,6 +98,7 @@ function MediaPlayerModel() {
         bufferTimeAtTopQuality,
         bufferTimeAtTopQualityLongForm,
         longFormContentDurationThreshold,
+        segmentOverlapToleranceTime,
         bandwidthSafetyFactor,
         abandonLoadTimeout,
         retryAttempts,
@@ -96,7 +109,12 @@ function MediaPlayerModel() {
         xhrWithCredentials,
         fastSwitchEnabled,
         customABRRule,
-        movingAverageMethod;
+        movingAverageMethod,
+        cacheLoadThresholds,
+        jumpGaps,
+        smallGapLimit,
+        lowLatencyEnabled,
+        manifestUpdateRetryInterval;
 
     function setup() {
         UTCTimingSources = [];
@@ -117,19 +135,25 @@ function MediaPlayerModel() {
         liveDelayFragmentCount = LIVE_DELAY_FRAGMENT_COUNT;
         liveDelay = undefined; // Explicitly state that default is undefined
         bufferToKeep = BUFFER_TO_KEEP;
+        bufferAheadToKeep = BUFFER_AHEAD_TO_KEEP;
         bufferPruningInterval = BUFFER_PRUNING_INTERVAL;
         stableBufferTime = NaN;
         bufferTimeAtTopQuality = BUFFER_TIME_AT_TOP_QUALITY;
         bufferTimeAtTopQualityLongForm = BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM;
         longFormContentDurationThreshold = LONG_FORM_CONTENT_DURATION_THRESHOLD;
+        segmentOverlapToleranceTime = SEGMENT_OVERLAP_TOLERANCE_TIME;
         bandwidthSafetyFactor = BANDWIDTH_SAFETY_FACTOR;
         abandonLoadTimeout = ABANDON_LOAD_TIMEOUT;
         wallclockTimeUpdateInterval = WALLCLOCK_TIME_UPDATE_INTERVAL;
+        jumpGaps = false;
+        smallGapLimit = SMALL_GAP_LIMIT;
+        manifestUpdateRetryInterval = MANIFEST_UPDATE_RETRY_INTERVAL;
         xhrWithCredentials = {
             default: DEFAULT_XHR_WITH_CREDENTIALS
         };
         customABRRule = [];
         movingAverageMethod = Constants.MOVING_AVERAGE_SLIDING_WINDOW;
+        lowLatencyEnabled = false;
 
         retryAttempts = {
             [HTTPRequest.MPD_TYPE]:                         MANIFEST_RETRY_ATTEMPTS,
@@ -150,6 +174,10 @@ function MediaPlayerModel() {
             [HTTPRequest.INDEX_SEGMENT_TYPE]:               FRAGMENT_RETRY_INTERVAL,
             [HTTPRequest.OTHER_TYPE]:                       FRAGMENT_RETRY_INTERVAL
         };
+
+        cacheLoadThresholds = {};
+        cacheLoadThresholds[Constants.VIDEO] = CACHE_LOAD_THRESHOLD_VIDEO;
+        cacheLoadThresholds[Constants.AUDIO] = CACHE_LOAD_THRESHOLD_AUDIO;
     }
 
     //TODO Should we use Object.define to have setters/getters? makes more readable code on other side.
@@ -234,7 +262,8 @@ function MediaPlayerModel() {
     }
 
     function getStableBufferTime() {
-        return !isNaN(stableBufferTime) ? stableBufferTime : fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
+        const result = !isNaN(stableBufferTime) ? stableBufferTime : fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
+        return getLowLatencyEnabled() ? result / LOW_LATENCY_REDUCTION_FACTOR : result;
     }
 
     function setBufferTimeAtTopQuality(value) {
@@ -261,12 +290,36 @@ function MediaPlayerModel() {
         return longFormContentDurationThreshold;
     }
 
+    function setSegmentOverlapToleranceTime(value) {
+        segmentOverlapToleranceTime = value;
+    }
+
+    function getSegmentOverlapToleranceTime() {
+        return segmentOverlapToleranceTime;
+    }
+
+    function setCacheLoadThresholdForType(type, value) {
+        cacheLoadThresholds[type] = value;
+    }
+
+    function getCacheLoadThresholdForType(type) {
+        return cacheLoadThresholds[type];
+    }
+
     function setBufferToKeep(value) {
         bufferToKeep = value;
     }
 
     function getBufferToKeep() {
         return bufferToKeep;
+    }
+
+    function setBufferAheadToKeep(value) {
+        bufferAheadToKeep = value;
+    }
+
+    function getBufferAheadToKeep() {
+        return bufferAheadToKeep;
     }
 
     function setLastBitrateCachingInfo(enable, ttl) {
@@ -320,7 +373,7 @@ function MediaPlayerModel() {
     }
 
     function getRetryAttemptsForType(type) {
-        return retryAttempts[type];
+        return getLowLatencyEnabled() ? retryAttempts[type] * LOW_LATENCY_MULTIPLY_FACTOR : retryAttempts[type];
     }
 
     function setFragmentRetryInterval(value) {
@@ -344,7 +397,7 @@ function MediaPlayerModel() {
     }
 
     function getRetryIntervalForType(type) {
-        return retryIntervals[type];
+        return getLowLatencyEnabled() ? retryIntervals[type] / LOW_LATENCY_REDUCTION_FACTOR : retryIntervals[type];
     }
 
     function setWallclockTimeUpdateInterval(value) {
@@ -376,6 +429,9 @@ function MediaPlayerModel() {
     }
 
     function getLiveDelay() {
+        if (lowLatencyEnabled) {
+            return liveDelay || DEFAULT_LOW_LATENCY_LIVE_DELAY;
+        }
         return liveDelay;
     }
 
@@ -423,12 +479,14 @@ function MediaPlayerModel() {
         return useCreds;
     }
 
-
     function getFastSwitchEnabled() {
         return fastSwitchEnabled;
     }
 
     function setFastSwitchEnabled(value) {
+        if (typeof value !== 'boolean') {
+            return;
+        }
         fastSwitchEnabled = value;
     }
 
@@ -438,6 +496,41 @@ function MediaPlayerModel() {
 
     function getMovingAverageMethod() {
         return movingAverageMethod;
+    }
+
+    function setJumpGaps(value) {
+        jumpGaps = value;
+    }
+
+    function getJumpGaps() {
+        return jumpGaps;
+    }
+
+    function setSmallGapLimit(value) {
+        smallGapLimit = value;
+    }
+
+    function getSmallGapLimit() {
+        return smallGapLimit;
+    }
+
+    function getLowLatencyEnabled() {
+        return lowLatencyEnabled;
+    }
+
+    function setLowLatencyEnabled(value) {
+        if (typeof value !== 'boolean') {
+            return;
+        }
+        lowLatencyEnabled = value;
+    }
+
+    function setManifestUpdateRetryInterval(value) {
+        manifestUpdateRetryInterval = value;
+    }
+
+    function getManifestUpdateRetryInterval() {
+        return manifestUpdateRetryInterval;
     }
 
     function reset() {
@@ -470,8 +563,14 @@ function MediaPlayerModel() {
         getBufferTimeAtTopQualityLongForm: getBufferTimeAtTopQualityLongForm,
         setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,
         getLongFormContentDurationThreshold: getLongFormContentDurationThreshold,
+        setSegmentOverlapToleranceTime: setSegmentOverlapToleranceTime,
+        getSegmentOverlapToleranceTime: getSegmentOverlapToleranceTime,
+        getCacheLoadThresholdForType: getCacheLoadThresholdForType,
+        setCacheLoadThresholdForType: setCacheLoadThresholdForType,
         setBufferToKeep: setBufferToKeep,
         getBufferToKeep: getBufferToKeep,
+        setBufferAheadToKeep: setBufferAheadToKeep,
+        getBufferAheadToKeep: getBufferAheadToKeep,
         setBufferPruningInterval: setBufferPruningInterval,
         getBufferPruningInterval: getBufferPruningInterval,
         setFragmentRetryAttempts: setFragmentRetryAttempts,
@@ -506,6 +605,14 @@ function MediaPlayerModel() {
         getFastSwitchEnabled: getFastSwitchEnabled,
         setMovingAverageMethod: setMovingAverageMethod,
         getMovingAverageMethod: getMovingAverageMethod,
+        setJumpGaps: setJumpGaps,
+        getJumpGaps: getJumpGaps,
+        setSmallGapLimit: setSmallGapLimit,
+        getSmallGapLimit: getSmallGapLimit,
+        getLowLatencyEnabled: getLowLatencyEnabled,
+        setLowLatencyEnabled: setLowLatencyEnabled,
+        setManifestUpdateRetryInterval: setManifestUpdateRetryInterval,
+        getManifestUpdateRetryInterval: getManifestUpdateRetryInterval,
         reset: reset
     };
 
@@ -516,7 +623,7 @@ function MediaPlayerModel() {
 
 //TODO see if you can move this and not export and just getter to get default value.
 MediaPlayerModel.__dashjs_factory_name = 'MediaPlayerModel';
-let factory = FactoryMaker.getSingletonFactory(MediaPlayerModel);
+const factory = FactoryMaker.getSingletonFactory(MediaPlayerModel);
 factory.DEFAULT_UTC_TIMING_SOURCE = DEFAULT_UTC_TIMING_SOURCE;
 FactoryMaker.updateSingletonFactory(MediaPlayerModel.__dashjs_factory_name, factory);
 export default factory;

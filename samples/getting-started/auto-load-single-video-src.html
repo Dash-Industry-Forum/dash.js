@@ -1,0 +1,25 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Auto-player instantiation example, single videoElement, using src attribute</title>
+    <script src="../../dist/dash.all.debug.js"></script>
+    <!--dash.all.min.js should be used in production over dash.all.debug.js
+        Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
+    <!--<script src="../../dist/dash.all.min.js"></script>-->
+
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+        }
+    </style>
+    </head>
+    <body>
+        <div class="code">
+            <video data-dashjs-player autoplay src="https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd" controls="true"></video>
+        </div>
+        <script src="../highlighter.js"></script>
+    </body>
+</html>

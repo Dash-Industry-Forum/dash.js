@@ -30,7 +30,7 @@
  */
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
-import ObjectIron from '../../../externals/objectiron';
+import ObjectIron from './objectiron';
 import X2JS from '../../../externals/xml2json';
 import StringMatcher from './matchers/StringMatcher';
 import DurationMatcher from './matchers/DurationMatcher';
@@ -39,19 +39,18 @@ import NumericMatcher from './matchers/NumericMatcher';
 import RepresentationBaseValuesMap from './maps/RepresentationBaseValuesMap';
 import SegmentValuesMap from './maps/SegmentValuesMap';
 
-function DashParser(config) {
+function DashParser() {
 
-    config = config || {};
     const context = this.context;
-    const log = Debug(context).getInstance().log;
-    const errorHandler = config.errorHandler;
 
     let instance,
+        logger,
         matchers,
         converter,
         objectIron;
 
     function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
         matchers = [
             new DurationMatcher(),
             new DateTimeMatcher(),
@@ -70,16 +69,10 @@ function DashParser(config) {
             matchers:           matchers
         });
 
-        objectIron = new ObjectIron([
-            new RepresentationBaseValuesMap(),
-            new SegmentValuesMap()
-        ]);
-    }
-
-    function checkConfig() {
-        if (!errorHandler || !errorHandler.hasOwnProperty('manifestError')) {
-            throw new Error('Missing config parameter(s)');
-        }
+        objectIron = ObjectIron(context).create({
+            adaptationset: new RepresentationBaseValuesMap(),
+            period: new SegmentValuesMap()
+        });
     }
 
     function getMatchers() {
@@ -92,29 +85,19 @@ function DashParser(config) {
 
     function parse(data) {
         let manifest;
+        const startTime = window.performance.now();
 
-        checkConfig();
+        manifest = converter.xml_str2json(data);
 
-        try {
-            const startTime = window.performance.now();
-
-            manifest = converter.xml_str2json(data);
-
-            if (!manifest) {
-                throw new Error('parser error');
-            }
-
-            const jsonTime = window.performance.now();
-
-            objectIron.run(manifest);
-
-            const ironedTime = window.performance.now();
-
-            log('Parsing complete: ( xml2json: ' + (jsonTime - startTime).toPrecision(3) + 'ms, objectiron: ' + (ironedTime - jsonTime).toPrecision(3) + 'ms, total: ' + ((ironedTime - startTime) / 1000).toPrecision(3) + 's)');
-        } catch (err) {
-            errorHandler.manifestError('parsing the manifest failed', 'parse', data, err);
-            return null;
+        if (!manifest) {
+            throw new Error('parsing the manifest failed');
         }
+
+        const jsonTime = window.performance.now();
+        objectIron.run(manifest);
+
+        const ironedTime = window.performance.now();
+        logger.info('Parsing complete: ( xml2json: ' + (jsonTime - startTime).toPrecision(3) + 'ms, objectiron: ' + (ironedTime - jsonTime).toPrecision(3) + 'ms, total: ' + ((ironedTime - startTime) / 1000).toPrecision(3) + 's)');
 
         return manifest;
     }

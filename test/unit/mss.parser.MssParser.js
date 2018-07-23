@@ -1,11 +1,10 @@
 import MssParser from '../../src/mss/parser/MssParser';
 import MediaPlayerModel from '../../src/streaming/models/MediaPlayerModel';
-import Debug from '../../src/core/Debug';
+import DebugMock from './mocks/DebugMock';
 
 const expect = require('chai').expect;
 const fs = require('fs');
-const domParser = require('xmldom').DOMParser;
-const context = {};
+const jsdom = require('jsdom').JSDOM;
 
 describe('MssParser', function () {
 
@@ -20,7 +19,7 @@ describe('MssParser', function () {
                         return Date.now();
                     }
                 },
-                DOMParser: domParser
+                DOMParser:  new jsdom().window.DOMParser
             };
         }
     });
@@ -32,7 +31,7 @@ describe('MssParser', function () {
     beforeEach(function () {
         mssParser = MssParser().create({
             mediaPlayerModel: mediaPlayerModel,
-            log: Debug(context).getInstance().log
+            debug: new DebugMock()
         });
 
         expect(mssParser).to.exist; // jshint ignore:line
@@ -46,7 +45,6 @@ describe('MssParser', function () {
 
         let adaptation;
         for (let i = 0; i < manifest.Period.AdaptationSet_asArray.length; i++) {
-
             adaptation = manifest.Period.AdaptationSet_asArray[i];
             expect(adaptation.id).to.exist; // jshint ignore:line
             expect(adaptation.id).not.to.be.empty; // jshint ignore:line
@@ -71,5 +69,8 @@ describe('MssParser', function () {
         expect(adaptations).to.be.an.instanceof(Array);
         expect(adaptations).to.have.lengthOf(1);
         expect(adaptations[0].contentType).to.equal('audio');
+    });
+    it('should throw an error when parse is called with invalid smooth data', function () {
+        expect(mssParser.parse.bind('<SmoothStreamingMedia')).to.be.throw('parsing the manifest failed');
     });
 });

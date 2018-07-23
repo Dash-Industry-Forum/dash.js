@@ -56,50 +56,8 @@ function KeySystemWidevine(config) {
         }
     }
 
-    function replaceKID(pssh, KID) {
-        let pssh_array;
-        let replace = true;
-        let kidLen = 16;
-        let pos;
-        let i, j;
-
-        pssh_array = new Uint8Array(pssh);
-
-        for (i = 0; i <= pssh_array.length - (kidLen + 2); i++) {
-            if (pssh_array[i] === 0x12 && pssh_array[i + 1] === 0x10) {
-                pos = i + 2;
-                for (j = pos; j < (pos + kidLen); j++) {
-                    if (pssh_array[j] !== 0xFF) {
-                        replace = false;
-                        break;
-                    }
-                }
-                break;
-            }
-        }
-
-        if (replace) {
-            pssh_array.set(KID, pos);
-        }
-
-        return pssh_array.buffer;
-    }
-
     function getInitData(cp) {
-        var pssh = null;
-        // Get pssh from protectionData or from manifest
-        if (protData && protData.pssh) {
-            pssh = BASE64.decodeArray(protData.pssh).buffer;
-        } else {
-            pssh = CommonEncryption.parseInitDataFromContentProtection(cp, BASE64);
-        }
-
-        // Check if KID within pssh is empty, in that case set KID value according to 'cenc:default_KID' value
-        if (pssh) {
-            pssh = replaceKID(pssh, cp['cenc:default_KID']);
-        }
-
-        return pssh;
+        return CommonEncryption.parseInitDataFromContentProtection(cp, BASE64);
     }
 
     function getRequestHeadersFromMessage( /*message*/ ) {
@@ -118,6 +76,16 @@ function KeySystemWidevine(config) {
         return null;
     }
 
+    function getSessionId(cp) {
+        // Get sessionId from protectionData or from manifest
+        if (protData && protData.sessionId) {
+            return protData.sessionId;
+        } else if (cp && cp.sessionId) {
+            return cp.sessionId;
+        }
+        return null;
+    }
+
     instance = {
         uuid: uuid,
         schemeIdURI: schemeIdURI,
@@ -127,7 +95,8 @@ function KeySystemWidevine(config) {
         getRequestHeadersFromMessage: getRequestHeadersFromMessage,
         getLicenseRequestFromMessage: getLicenseRequestFromMessage,
         getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
-        getCDMData: getCDMData
+        getCDMData: getCDMData,
+        getSessionId: getSessionId
     };
 
     return instance;

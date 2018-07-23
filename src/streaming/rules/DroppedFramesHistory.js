@@ -9,11 +9,14 @@ function DroppedFramesHistory() {
     let lastTotalFrames = 0;
 
     function push(index, playbackQuality) {
-        let intervalDroppedFrames = playbackQuality.droppedVideoFrames - lastDroppedFrames;
-        lastDroppedFrames = playbackQuality.droppedVideoFrames;
+        let droppedVideoFrames = playbackQuality && playbackQuality.droppedVideoFrames ? playbackQuality.droppedVideoFrames : 0;
+        let totalVideoFrames = playbackQuality && playbackQuality.totalVideoFrames ? playbackQuality.totalVideoFrames : 0;
 
-        let intervalTotalFrames = playbackQuality.totalVideoFrames - lastTotalFrames;
-        lastTotalFrames = playbackQuality.totalVideoFrames;
+        let intervalDroppedFrames = droppedVideoFrames - lastDroppedFrames;
+        lastDroppedFrames = droppedVideoFrames;
+
+        let intervalTotalFrames = totalVideoFrames - lastTotalFrames;
+        lastTotalFrames = totalVideoFrames;
 
         if (!isNaN(index)) {
             if (!values[index]) {
@@ -43,5 +46,5 @@ function DroppedFramesHistory() {
 }
 
 DroppedFramesHistory.__dashjs_factory_name = 'DroppedFramesHistory';
-let factory = FactoryMaker.getClassFactory(DroppedFramesHistory);
+const factory = FactoryMaker.getClassFactory(DroppedFramesHistory);
 export default factory;

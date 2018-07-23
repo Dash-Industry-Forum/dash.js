@@ -33,14 +33,12 @@
  */
 
 class CommonProperty {
-    constructor(name, merge) {
+    constructor(name) {
         const getDefaultMergeForName =
               (n) => n && n.length && n.charAt(0) === n.charAt(0).toUpperCase();
 
         this._name = name;
-        this._merge = merge !== undefined ?
-            merge :
-            getDefaultMergeForName(name);
+        this._merge = getDefaultMergeForName(name);
     }
 
     get name() {

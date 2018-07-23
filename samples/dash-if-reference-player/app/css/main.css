@@ -60,7 +60,6 @@ a:hover {
         OPTIONS PANEL
 *****************************/
 .options-show {
-    height: 235px;
     transition-property: all;
     transition-duration: .5s;
 }
@@ -134,6 +133,8 @@ a:hover {
 
 .col-md-9 video {
     width: 100%;
+    height: auto;
+    margin: auto;
 }
 
 .col-md-9 {
@@ -203,6 +204,15 @@ a:hover {
 
 .tab-pane {
     font-size: 14px;
+}
+
+/****************************
+    ERROR MODAL
+*****************************/
+
+.errorModalHeader {
+    background-color: #ff1a1a;
+    color: white;
 }
 
 /****************************

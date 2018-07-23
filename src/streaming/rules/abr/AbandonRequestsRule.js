@@ -40,17 +40,18 @@ function AbandonRequestsRule(config) {
     const MIN_LENGTH_TO_AVERAGE = 5;
 
     const context = this.context;
-    const log = Debug(context).getInstance().log;
-
     const mediaPlayerModel = config.mediaPlayerModel;
     const metricsModel = config.metricsModel;
     const dashMetrics = config.dashMetrics;
 
-    let fragmentDict,
+    let instance,
+        logger,
+        fragmentDict,
         abandonDict,
         throughputArray;
 
     function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
         reset();
     }
 
@@ -128,7 +129,7 @@ function AbandonRequestsRule(config) {
                         switchRequest.reason.throughput = fragmentInfo.measuredBandwidthInKbps;
                         switchRequest.reason.fragmentID = fragmentInfo.id;
                         abandonDict[fragmentInfo.id] = fragmentInfo;
-                        log('AbandonRequestsRule ( ', mediaType, 'frag id',fragmentInfo.id,') is asking to abandon and switch to quality to ', newQuality, ' measured bandwidth was', fragmentInfo.measuredBandwidthInKbps);
+                        logger.debug('( ', mediaType, 'frag id',fragmentInfo.id,') is asking to abandon and switch to quality to ', newQuality, ' measured bandwidth was', fragmentInfo.measuredBandwidthInKbps);
                         delete fragmentDict[mediaType][fragmentInfo.id];
                     }
                 }
@@ -146,7 +147,7 @@ function AbandonRequestsRule(config) {
         throughputArray = [];
     }
 
-    const instance = {
+    instance = {
         shouldAbandon: shouldAbandon,
         reset: reset
     };

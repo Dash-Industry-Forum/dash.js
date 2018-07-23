@@ -32,6 +32,7 @@ import {
     HTTPRequest
 }
 from '../../../src/streaming/vo/metrics/HTTPRequest';
+import Constants from '../../../src/streaming/constants/Constants';
 
 const DEFAULT_UTC_TIMING_SOURCE = {
     scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
@@ -45,13 +46,14 @@ const DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION = 360000;
 const BANDWIDTH_SAFETY_FACTOR = 0.9;
 const ABANDON_LOAD_TIMEOUT = 10000;
 
-const BUFFER_TO_KEEP = 30;
-const BUFFER_PRUNING_INTERVAL = 30;
+const BUFFER_TO_KEEP = 20;
+const BUFFER_PRUNING_INTERVAL = 10;
 const DEFAULT_MIN_BUFFER_TIME = 12;
 const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
 const BUFFER_TIME_AT_TOP_QUALITY = 30;
 const BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 60;
 const LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;
+const SEGMENT_OVERLAP_TOLERANCE_TIME = 0.05;
 
 const FRAGMENT_RETRY_ATTEMPTS = 3;
 const FRAGMENT_RETRY_INTERVAL = 1000;
@@ -66,6 +68,13 @@ const XLINK_RETRY_INTERVAL = 500;
 const WALLCLOCK_TIME_UPDATE_INTERVAL = 50;
 
 const DEFAULT_XHR_WITH_CREDENTIALS = false;
+
+const CACHE_LOAD_THRESHOLD_VIDEO = 50;
+const CACHE_LOAD_THRESHOLD_AUDIO = 5;
+
+const SMALL_GAP_LIMIT = 0.8;
+
+const MANIFEST_UPDATE_RETRY_INTERVAL = 100;
 
 class MediaPlayerModelMock {
 
@@ -134,6 +143,10 @@ class MediaPlayerModelMock {
         return MANIFEST_RETRY_INTERVAL;
     }
 
+    static get MANIFEST_UPDATE_RETRY_INTERVAL() {
+        return MANIFEST_UPDATE_RETRY_INTERVAL;
+    }
+
     static get XLINK_RETRY_ATTEMPTS() {
         return XLINK_RETRY_ATTEMPTS;
     }
@@ -176,6 +189,7 @@ class MediaPlayerModelMock {
         this.bufferTimeAtTopQuality = BUFFER_TIME_AT_TOP_QUALITY;
         this.bufferTimeAtTopQualityLongForm = BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM;
         this.longFormContentDurationThreshold = LONG_FORM_CONTENT_DURATION_THRESHOLD;
+        this.segmentOverlapToleranceTime = SEGMENT_OVERLAP_TOLERANCE_TIME;
         this.bandwidthSafetyFactor = BANDWIDTH_SAFETY_FACTOR;
         this.abandonLoadTimeout = ABANDON_LOAD_TIMEOUT;
         this.wallclockTimeUpdateInterval = WALLCLOCK_TIME_UPDATE_INTERVAL;
@@ -191,6 +205,14 @@ class MediaPlayerModelMock {
         this.retryIntervals = {
             [HTTPRequest.MPD_TYPE]: MANIFEST_RETRY_INTERVAL, [HTTPRequest.XLINK_EXPANSION_TYPE]: XLINK_RETRY_INTERVAL, [HTTPRequest.MEDIA_SEGMENT_TYPE]: FRAGMENT_RETRY_INTERVAL, [HTTPRequest.INIT_SEGMENT_TYPE]: FRAGMENT_RETRY_INTERVAL, [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: FRAGMENT_RETRY_INTERVAL, [HTTPRequest.INDEX_SEGMENT_TYPE]: FRAGMENT_RETRY_INTERVAL, [HTTPRequest.OTHER_TYPE]: FRAGMENT_RETRY_INTERVAL
         };
+
+        this.cacheLoadThresholds = {};
+        this.cacheLoadThresholds[Constants.VIDEO] = CACHE_LOAD_THRESHOLD_VIDEO;
+        this.cacheLoadThresholds[Constants.AUDIO] = CACHE_LOAD_THRESHOLD_AUDIO;
+        this.jumpGaps = false;
+        this.smallGapLimit = SMALL_GAP_LIMIT;
+        this.lowLatencyEnabled = false;
+        this.manifestUpdateRetryInterval = MANIFEST_UPDATE_RETRY_INTERVAL;
     }
 
     //TODO Should we use Object.define to have setters/getters? makes more readable code on other side.
@@ -292,6 +314,22 @@ class MediaPlayerModelMock {
 
     getLongFormContentDurationThreshold() {
         return this.longFormContentDurationThreshold;
+    }
+
+    setSegmentOverlapToleranceTime(value) {
+        this.segmentOverlapToleranceTime = value;
+    }
+
+    getSegmentOverlapToleranceTime() {
+        return this.segmentOverlapToleranceTime;
+    }
+
+    setCacheLoadThresholdForType(type, value) {
+        this.cacheLoadThresholds[type] = value;
+    }
+
+    getCacheLoadThresholdForType(type) {
+        return this.cacheLoadThresholds[type];
     }
 
     setBufferToKeep(value) {
@@ -456,13 +494,44 @@ class MediaPlayerModelMock {
         return useCreds;
     }
 
-
     getFastSwitchEnabled() {
         return this.fastSwitchEnabled;
     }
 
     setFastSwitchEnabled(value) {
         this.fastSwitchEnabled = value;
+    }
+
+    setJumpGaps(value) {
+        this.jumpGaps = value;
+    }
+
+    getJumpGaps() {
+        return this.jumpGaps;
+    }
+
+    setManifestUpdateRetryInterval(value) {
+        this.manifestUpdateRetryInterval = value;
+    }
+
+    getManifestUpdateRetryInterval() {
+        return this.manifestUpdateRetryInterval;
+    }
+
+    setSmallGapLimit(value) {
+        this.smallGapLimit = value;
+    }
+
+    getSmallGapLimit() {
+        return this.smallGapLimit;
+    }
+
+    setLowLatencyEnabled(value) {
+        this.lowLatencyEnabled = value;
+    }
+
+    getLowLatencyEnabled() {
+        return this.lowLatencyEnabled;
     }
 
     reset() {

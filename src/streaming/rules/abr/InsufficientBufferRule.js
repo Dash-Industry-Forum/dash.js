@@ -41,16 +41,17 @@ function InsufficientBufferRule(config) {
     const INSUFFICIENT_BUFFER_SAFETY_FACTOR = 0.5;
 
     const context = this.context;
-    const log = Debug(context).getInstance().log;
 
     const eventBus = EventBus(context).getInstance();
     const metricsModel = config.metricsModel;
     const dashMetrics = config.dashMetrics;
 
     let instance,
+        logger,
         bufferStateDict;
 
     function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
         resetInitialSettings();
         eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
     }
@@ -91,7 +92,7 @@ function InsufficientBufferRule(config) {
         }
 
         if (lastBufferStateVO.state === BufferController.BUFFER_EMPTY) {
-            log('Switch to index 0; buffer is empty.');
+            logger.info('Switch to index 0; buffer is empty.');
             switchRequest.quality = 0;
             switchRequest.reason = 'InsufficientBufferRule: Buffer is empty';
         } else {

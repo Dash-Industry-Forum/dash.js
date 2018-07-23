@@ -56,13 +56,15 @@ function TextController() {
         defaultLanguage,
         lastEnabledIndex,
         textDefaultEnabled, // this is used for default settings (each time a file is loaded, we check value of this settings )
-        allTracksAreDisabled; // this is used for one session (when a file has been loaded, we use this settings to enable/disable text)
+        allTracksAreDisabled, // this is used for one session (when a file has been loaded, we use this settings to enable/disable text)
+        forceTextStreaming;
 
     function setup() {
 
         defaultLanguage = '';
         lastEnabledIndex = -1;
         textDefaultEnabled = true;
+        forceTextStreaming = false;
         textTracks = TextTracks(context).getInstance();
         vttParser = VTTParser(context).getInstance();
         ttmlParser = TTMLParser(context).getInstance();
@@ -148,15 +150,14 @@ function TextController() {
     function onTextTracksAdded(e) {
         let tracks = e.tracks;
         let index = e.index;
-        // find track corresponding to default subtitle and apply it
-        let defaultLanguageIndex = tracks.findIndex((item) => {
-            return (item.lang === defaultLanguage);
-        });
 
-        if (defaultLanguageIndex !== -1) {
-            this.setTextTrack(defaultLanguageIndex);
-            index = defaultLanguageIndex;
-        }
+        tracks.some((item, idx) => {
+            if (item.lang === defaultLanguage) {
+                this.setTextTrack(idx);
+                index = idx;
+                return true;
+            }
+        });
 
         if (!textDefaultEnabled) {
             // disable text at startup
@@ -165,7 +166,7 @@ function TextController() {
 
         lastEnabledIndex = index;
         eventBus.trigger(Events.TEXT_TRACKS_ADDED, {
-            enabled: !allTracksAreDisabled,
+            enabled: isTextEnabled(),
             index: index,
             tracks: tracks
         });
@@ -186,8 +187,8 @@ function TextController() {
         if (typeof enable !== 'boolean') {
             return;
         }
-        let isTextEnabled = (!allTracksAreDisabled);
-        if (isTextEnabled !== enable) {
+
+        if (isTextEnabled() !== enable) {
             // change track selection
             if (enable) {
                 // apply last enabled tractk
@@ -203,16 +204,29 @@ function TextController() {
     }
 
     function isTextEnabled() {
-        return !allTracksAreDisabled;
+        let enabled = true;
+        if (allTracksAreDisabled && !forceTextStreaming) {
+            enabled = false;
+        }
+        return enabled;
+    }
+
+    // when set to true NextFragmentRequestRule will allow schedule of chunks even if tracks are all disabled. Allowing streaming to hidden track for external players to work with.
+    function enableForcedTextStreaming(enable) {
+        if (typeof enable !== 'boolean') {
+            return;
+        }
+        forceTextStreaming = enable;
     }
 
     function setTextTrack(idx) {
         //For external time text file,  the only action needed to change a track is marking the track mode to showing.
         // Fragmented text tracks need the additional step of calling TextController.setTextTrack();
-
         let config = textSourceBuffer.getConfig();
         let fragmentModel = config.fragmentModel;
         let fragmentedTracks = config.fragmentedTracks;
+        let mediaInfosArr,
+            streamProcessor;
 
         let oldTrackIdx = textTracks.getCurrentTrackIdx();
         if (oldTrackIdx !== idx) {
@@ -226,7 +240,7 @@ function TextController() {
                 for (let i = 0; i < fragmentedTracks.length; i++) {
                     let mediaInfo = fragmentedTracks[i];
                     if (currentTrackInfo.lang === mediaInfo.lang && currentTrackInfo.index === mediaInfo.index &&
-                        (currentTrackInfo.label ? currentTrackInfo.label === mediaInfo.id : true)) {
+                        (mediaInfo.id ? currentTrackInfo.label === mediaInfo.id : currentTrackInfo.label === mediaInfo.index)) {
                         let currentFragTrack = mediaController.getCurrentTrackFor(Constants.FRAGMENTED_TEXT, streamController.getActiveStreamInfo());
                         if (mediaInfo !== currentFragTrack) {
                             fragmentModel.abortRequests();
@@ -235,6 +249,24 @@ function TextController() {
                             textTracks.deleteCuesFromTrackIdx(oldTrackIdx);
                             mediaController.setTrack(mediaInfo);
                             textSourceBuffer.setCurrentFragmentedTrackIdx(i);
+                        }
+                    }
+                }
+            } else if (currentTrackInfo && !currentTrackInfo.isFragmented) {
+                const streamProcessors = streamController.getActiveStreamProcessors();
+                for (let i = 0; i < streamProcessors.length; i++) {
+                    if (streamProcessors[i].getType() === Constants.TEXT) {
+                        streamProcessor = streamProcessors[i];
+                        mediaInfosArr = streamProcessor.getMediaInfoArr();
+                        break;
+                    }
+                }
+
+                if (streamProcessor && mediaInfosArr) {
+                    for (let i = 0; i < mediaInfosArr.length; i++) {
+                        if (mediaInfosArr[i].index === currentTrackInfo.index && mediaInfosArr[i].lang === currentTrackInfo.lang) {
+                            streamProcessor.selectMediaInfo(mediaInfosArr[i]);
+                            break;
                         }
                     }
                 }
@@ -255,6 +287,7 @@ function TextController() {
     function reset() {
         resetInitialSettings();
         textSourceBuffer.resetEmbedded();
+        textSourceBuffer.reset();
     }
 
     instance = {
@@ -270,6 +303,7 @@ function TextController() {
         isTextEnabled: isTextEnabled,
         setTextTrack: setTextTrack,
         getCurrentTrackIdx: getCurrentTrackIdx,
+        enableForcedTextStreaming: enableForcedTextStreaming,
         reset: reset
     };
     setup();

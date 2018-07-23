@@ -12,6 +12,10 @@ class StreamControllerMock {
         return true;
     }
 
+    switchToVideoElement() {
+
+    }
+
     getAutoPlay() {
         return false;
     }
@@ -42,6 +46,8 @@ class StreamControllerMock {
     setConfig() {}
 
     reset() {}
+
+    getActiveStreamProcessors() { return [];}
 }
 
 export default StreamControllerMock;

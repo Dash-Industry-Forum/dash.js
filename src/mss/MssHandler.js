@@ -53,7 +53,8 @@ function MssHandler(config) {
         eventBus: eventBus,
         constants: constants,
         ISOBoxer: config.ISOBoxer,
-        log: config.log
+        debug: config.debug,
+        errHandler: config.errHandler
     });
     let mssParser;
 
@@ -81,7 +82,7 @@ function MssHandler(config) {
         request.mediaInfo = streamProcessor.getMediaInfo();
         request.representationId = representation.id;
 
-        const chunk = createDataChunk(request, streamProcessor.getStreamInfo().id);
+        const chunk = createDataChunk(request, streamProcessor.getStreamInfo().id, e.type !== events.FRAGMENT_LOADING_PROGRESS);
 
         // Generate initialization segment (moov)
         chunk.bytes = mssFragmentProcessor.generateMoov(representation);
@@ -95,7 +96,7 @@ function MssHandler(config) {
         e.sender = null;
     }
 
-    function createDataChunk(request, streamId) {
+    function createDataChunk(request, streamId, endFragment) {
         const chunk = new DataChunk();
 
         chunk.streamId = streamId;
@@ -107,11 +108,15 @@ function MssHandler(config) {
         chunk.index = request.index;
         chunk.quality = request.quality;
         chunk.representationId = request.representationId;
+        chunk.endFragment = endFragment;
 
         return chunk;
     }
 
     function onSegmentMediaLoaded(e) {
+        if (e.error) {
+            return;
+        }
         // Process moof to transcode it from MSS to DASH
         let streamProcessor = e.sender.getStreamProcessor();
         mssFragmentProcessor.processFragment(e, streamProcessor);
@@ -129,7 +134,7 @@ function MssHandler(config) {
                         processor.getType() === constants.AUDIO ||
                         processor.getType() === constants.FRAGMENTED_TEXT) {
 
-                        // check taht there is no fragment info controller registered to processor
+                        // check that there is no fragment info controller registered to processor
                         let i;
                         let alreadyRegistered = false;
                         let externalControllers = processor.getExternalControllers();
@@ -147,7 +152,7 @@ function MssHandler(config) {
                                 metricsModel: metricsModel,
                                 playbackController: playbackController,
                                 ISOBoxer: config.ISOBoxer,
-                                log: config.log
+                                debug: config.debug
                             });
                             fragmentInfoController.initialize();
                             fragmentInfoController.start();
@@ -158,16 +163,28 @@ function MssHandler(config) {
         }
     }
 
+    function onTTMLPreProcess(ttmlSubtitles) {
+        if (!ttmlSubtitles || !ttmlSubtitles.data) {
+            return;
+        }
+
+        while (ttmlSubtitles.data.indexOf('http://www.w3.org/2006/10/ttaf1') !== -1) {
+            ttmlSubtitles.data = ttmlSubtitles.data.replace('http://www.w3.org/2006/10/ttaf1', 'http://www.w3.org/ns/ttml');
+        }
+    }
+
     function registerEvents() {
         eventBus.on(events.INIT_REQUESTED, onInitializationRequested, instance, dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH); /* jshint ignore:line */
         eventBus.on(events.PLAYBACK_SEEK_ASKED, onPlaybackSeekAsked, instance, dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH); /* jshint ignore:line */
         eventBus.on(events.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, instance, dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH); /* jshint ignore:line */
+        eventBus.on(events.TTML_TO_PARSE, onTTMLPreProcess, instance);
     }
 
     function reset() {
         eventBus.off(events.INIT_REQUESTED, onInitializationRequested, this);
         eventBus.off(events.PLAYBACK_SEEK_ASKED, onPlaybackSeekAsked, this);
         eventBus.off(events.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, this);
+        eventBus.off(events.TTML_TO_PARSE, onTTMLPreProcess, this);
     }
 
     function createMssParser() {

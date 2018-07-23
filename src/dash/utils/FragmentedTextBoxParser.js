@@ -49,7 +49,7 @@ function FragmentedTextBoxParser() {
             throw new Error('boxParser is undefined');
         }
 
-        if (!ab) {
+        if (!ab || ab.byteLength === 0) {
             return {sampleList: [], lastSequenceNumber: NaN, totalDuration: NaN, numSequences: NaN};
         }
         let isoFile = boxParser.parse(ab);

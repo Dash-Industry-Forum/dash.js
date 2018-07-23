@@ -1,4 +1,5 @@
 import PlaybackController from '../../src/streaming/controllers/PlaybackController';
+import URIFragmentModel from '../../src/streaming/models/URIFragmentModel';
 import Events from '../../src/core/events/Events';
 import EventBus from '../../src/core/EventBus';
 
@@ -6,6 +7,7 @@ import MetricsModelMock from './mocks/MetricsModelMock';
 import VideoModelMock from './mocks/VideoModelMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
 import DashMetricsMock from './mocks/DashMetricsMock';
+import StreamControllerMock from './mocks/StreamControllerMock';
 
 const expect = require('chai').expect;
 const context = {};
@@ -19,20 +21,23 @@ describe('PlaybackController', function () {
     let metricsModelMock;
     let dashMetricsMock;
     let mediaPlayerModelMock;
+    let streamControllerMock;
 
     beforeEach(function () {
         videoModelMock = new VideoModelMock();
         metricsModelMock = new MetricsModelMock();
         dashMetricsMock = new DashMetricsMock();
         mediaPlayerModelMock = new MediaPlayerModelMock();
-
+        streamControllerMock = new StreamControllerMock();
         playbackController = PlaybackController(context).getInstance();
+        URIFragmentModel(context).getInstance().initialize('http://urlOfManifest.com/manifest.mpd#t=18.2');
 
         playbackController.setConfig({
             videoModel: videoModelMock,
             metricsModel: metricsModelMock,
             dashMetrics: dashMetricsMock,
-            mediaPlayerModel: mediaPlayerModelMock
+            mediaPlayerModel: mediaPlayerModelMock,
+            streamController: streamControllerMock
         });
     });
 
@@ -46,6 +51,13 @@ describe('PlaybackController', function () {
 
             expect(playbackController.getIsDynamic()).to.not.exist; // jshint ignore:line
             expect(playbackController.getLiveStartTime()).to.be.NaN; // jshint ignore:line
+            expect(playbackController.isPaused()).to.be.null; // jshint ignore:line
+            expect(playbackController.isSeeking()).to.be.null; // jshint ignore:line
+            expect(playbackController.getTime()).to.be.null; // jshint ignore:line
+            expect(playbackController.getPlaybackRate()).to.be.null; // jshint ignore:line
+            expect(playbackController.getPlayedRanges()).to.be.null; // jshint ignore:line
+            expect(playbackController.getEnded()).to.be.null; // jshint ignore:line
+            expect(playbackController.getCurrentLiveLatency()).to.be.NaN; // jshint ignore:line
 
             let streamInfo = {
                 manifestInfo: {
@@ -133,6 +145,12 @@ describe('PlaybackController', function () {
             it('should return video ended ', function () {
                 videoModelMock.ended = true;
                 expect(playbackController.getEnded()).to.equal(videoModelMock.ended);
+            });
+
+            it('getStartTimeFromUriParameters should return the expected value', function () {
+                const uriParameters = playbackController.getStartTimeFromUriParameters();
+                expect(uriParameters.fragT).to.exist; // jshint ignore:line
+                expect(uriParameters.fragT).to.equal(18.2);
             });
         });
 

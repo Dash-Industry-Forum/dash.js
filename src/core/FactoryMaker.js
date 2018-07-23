@@ -31,18 +31,16 @@
 /**
  * @module FactoryMaker
  */
-let FactoryMaker = (function () {
+const FactoryMaker = (function () {
 
     let instance;
-    const extensions = [];
     const singletonContexts = [];
-    const singletonFactories = [];
-    const classFactories = [];
+    const singletonFactories = {};
+    const classFactories = {};
 
     function extend(name, childInstance, override, context) {
-        const extensionContext = getExtensionContext(context);
-        if (!extensionContext[name] && childInstance) {
-            extensionContext[name] = {
+        if (!context[name] && childInstance) {
+            context[name] = {
                 instance: childInstance,
                 override: override
             };
@@ -101,37 +99,13 @@ let FactoryMaker = (function () {
 
     /*------------------------------------------------------------------------------------------*/
 
-    function registerFactory(name, factory, factoriesArray) {
-        for (const i in factoriesArray) {
-            const obj = factoriesArray[i];
-            if (obj.name === name) {
-                factoriesArray[i].factory = factory;
-                return;
-            }
-        }
-        factoriesArray.push({
-            name: name,
-            factory: factory
-        });
-    }
-
     function getFactoryByName(name, factoriesArray) {
-        for (const i in factoriesArray) {
-            const obj = factoriesArray[i];
-            if (obj.name === name) {
-                return factoriesArray[i].factory;
-            }
-        }
-        return null;
+        return factoriesArray[name];
     }
 
     function updateFactory(name, factory, factoriesArray) {
-        for (const i in factoriesArray) {
-            const obj = factoriesArray[i];
-            if (obj.name === name) {
-                factoriesArray[i].factory = factory;
-                return;
-            }
+        if (name in factoriesArray) {
+            factoriesArray[name] = factory;
         }
     }
 
@@ -159,14 +133,12 @@ let FactoryMaker = (function () {
                 }
                 return {
                     create: function () {
-                        return merge(classConstructor.__dashjs_factory_name, classConstructor.apply({
-                            context: context
-                        }, arguments), context, arguments);
+                        return merge(classConstructor, context, arguments);
                     }
                 };
             };
 
-            registerFactory(classConstructor.__dashjs_factory_name, factory, classFactories); // store factory
+            classFactories[classConstructor.__dashjs_factory_name] = factory; // store factory
         }
         return factory;
     }
@@ -201,9 +173,7 @@ let FactoryMaker = (function () {
                         }
                         // If there's no instance on the context then create one
                         if (!instance) {
-                            instance = merge(classConstructor.__dashjs_factory_name, classConstructor.apply({
-                                context: context
-                            }, arguments), context, arguments);
+                            instance = merge(classConstructor, context, arguments);
                             singletonContexts.push({
                                 name: classConstructor.__dashjs_factory_name,
                                 context: context,
@@ -214,53 +184,54 @@ let FactoryMaker = (function () {
                     }
                 };
             };
-            registerFactory(classConstructor.__dashjs_factory_name, factory, singletonFactories); // store factory
+            singletonFactories[classConstructor.__dashjs_factory_name] = factory; // store factory
         }
 
         return factory;
     }
 
-    function merge(name, classConstructor, context, args) {
-        // Add getClassName function to class instance prototype (used by Debug)
-        classConstructor.getClassName = function () {return name;};
+    function merge(classConstructor, context, args) {
 
-        const extensionContext = getExtensionContext(context);
-        const extensionObject = extensionContext[name];
+        let classInstance;
+        const className = classConstructor.__dashjs_factory_name;
+        const extensionObject = context[className];
+
         if (extensionObject) {
+
             let extension = extensionObject.instance;
+
             if (extensionObject.override) { //Override public methods in parent but keep parent.
+
+                classInstance = classConstructor.apply({context}, args);
                 extension = extension.apply({
-                    context: context,
+                    context,
                     factory: instance,
-                    parent: classConstructor
+                    parent: classInstance
                 }, args);
+
                 for (const prop in extension) {
-                    if (classConstructor.hasOwnProperty(prop)) {
-                        classConstructor[prop] = extension[prop];
+                    if (classInstance.hasOwnProperty(prop)) {
+                        classInstance[prop] = extension[prop];
                     }
                 }
+
             } else { //replace parent object completely with new object. Same as dijon.
+
                 return extension.apply({
-                    context: context,
+                    context,
                     factory: instance
                 }, args);
-            }
-        }
-        return classConstructor;
-    }
 
-    function getExtensionContext(context) {
-        let extensionContext;
-        extensions.forEach(function (obj) {
-            if (obj === context) {
-                extensionContext = obj;
             }
-        });
-        if (!extensionContext) {
-            extensions.push(context);
-            extensionContext = context;
+        } else {
+            // Create new instance of the class
+            classInstance = classConstructor.apply({context}, args);
         }
-        return extensionContext;
+
+        // Add getClassName function to class instance prototype (used by Debug)
+        classInstance.getClassName = function () {return className;};
+
+        return classInstance;
     }
 
     instance = {
