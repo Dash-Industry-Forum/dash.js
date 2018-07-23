@@ -1,3 +1,5 @@
+import PlaybackControllerMock from './PlaybackControllerMock';
+
 class FragmentModelMock {
     constructor() {
         this.requests = [];
@@ -66,6 +68,9 @@ class StreamProcessorMock {
         return {
             getBufferTarget() {
                 return 20;
+            },
+            getSeekTarget() {
+                return 1;
             }
         };
     }
@@ -103,6 +108,10 @@ class StreamProcessorMock {
 
     getFragmentController() {
         return null;
+    }
+
+    getPlaybackController() {
+        return new PlaybackControllerMock();
     }
 
     switchInitData() {}

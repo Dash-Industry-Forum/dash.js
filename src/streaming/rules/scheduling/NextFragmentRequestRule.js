@@ -48,6 +48,9 @@ function NextFragmentRequestRule(config) {
     }
 
     function execute(streamProcessor, requestToReplace) {
+        if (!streamProcessor) {
+            return null;
+        }
         const representationInfo = streamProcessor.getCurrentRepresentationInfo();
         const mediaInfo = representationInfo.mediaInfo;
         const mediaType = mediaInfo.type;

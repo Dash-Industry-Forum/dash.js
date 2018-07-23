@@ -50,6 +50,10 @@ function BufferLevelRule(config) {
 
     function getBufferTarget(streamProcessor, type, videoTrackPresent) {
         let bufferTarget = NaN;
+
+        if (!streamProcessor) {
+            return bufferTarget;
+        }
         const representationInfo = streamProcessor.getCurrentRepresentationInfo();
         if (type === Constants.FRAGMENTED_TEXT) {
             bufferTarget = textController.isTextEnabled() ? representationInfo.fragmentDuration : 0;
