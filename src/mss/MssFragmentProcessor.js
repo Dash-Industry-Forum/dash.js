@@ -156,6 +156,7 @@ function MssFragmentProcessor(config) {
                 metricsModel: metricsModel,
                 playbackController: playbackController,
                 ISOBoxer: ISOBoxer,
+                eventBus: config.eventBus,
                 debug: debug,
                 errHandler: config.errHandler
             });
