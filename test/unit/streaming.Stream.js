@@ -49,4 +49,11 @@ describe('Stream', function () {
         const stream = Stream(context).create({});
         expect(stream.activate.bind(stream)).to.be.throw('Missing config parameter(s)');
     });
+
+    it('should return null when isCompatibleWithStream is called but stream attribute is undefined', () => {
+        const stream = Stream(context).create({});
+        const isCompatible = stream.isCompatibleWithStream();
+
+        expect(isCompatible).to.be.false;                // jshint ignore:line
+    });
 });

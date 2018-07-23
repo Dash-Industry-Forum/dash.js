@@ -339,6 +339,8 @@ function ProtectionController(config) {
         const audioRobustness = (protData && protData.audioRobustness && protData.audioRobustness.length > 0) ? protData.audioRobustness : robustnessLevel;
         const videoRobustness = (protData && protData.videoRobustness && protData.videoRobustness.length > 0) ? protData.videoRobustness : robustnessLevel;
         const ksSessionType = getSessionType(keySystem);
+        const distinctiveIdentifier = (protData && protData.distinctiveIdentifier) ? protData.distinctiveIdentifier : 'optional';
+        const persistentState = (protData && protData.persistentState) ? protData.persistentState : (ksSessionType === 'temporary') ? 'optional' : 'required';
 
         mediaInfoArr.forEach((media) => {
             if (media.type === constants.AUDIO) {
@@ -349,8 +351,8 @@ function ProtectionController(config) {
         });
 
         return new KeySystemConfiguration(
-            audioCapabilities, videoCapabilities, 'optional',
-            (ksSessionType === 'temporary') ? 'optional' : 'required',
+            audioCapabilities, videoCapabilities, distinctiveIdentifier,
+            persistentState,
             [ksSessionType]);
     }
 

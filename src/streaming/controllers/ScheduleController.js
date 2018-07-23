@@ -389,15 +389,20 @@ function ScheduleController(config) {
                 ignoreIsFinished: true
             });
 
-            // When low latency mode is selected but browser doesn't support fetch
-            // start at the beginning of the segment to avoid consuming the whole buffer
-            if (mediaPlayerModel.getLowLatencyEnabled()) {
-                const liveStartTime = request.duration < mediaPlayerModel.getLiveDelay() ? request.startTime : request.startTime + request.duration - mediaPlayerModel.getLiveDelay();
-                playbackController.setLiveStartTime(liveStartTime);
+            if (request) {
+                // When low latency mode is selected but browser doesn't support fetch
+                // start at the beginning of the segment to avoid consuming the whole buffer
+                if (mediaPlayerModel.getLowLatencyEnabled()) {
+                    const liveStartTime = request.duration < mediaPlayerModel.getLiveDelay() ? request.startTime : request.startTime + request.duration - mediaPlayerModel.getLiveDelay();
+                    playbackController.setLiveStartTime(liveStartTime);
+                } else {
+                    playbackController.setLiveStartTime(request.startTime);
+                }
             } else {
-                playbackController.setLiveStartTime(request.startTime);
+                logger.debug('setLiveEdgeSeekTarget : getFragmentRequestForTime returned undefined request object');
             }
             seekTarget = playbackController.getStreamStartTime(false, liveEdge);
+            streamProcessor.getBufferController().setSeekStartTime(seekTarget);
 
             //special use case for multi period stream. If the startTime is out of the current period, send a seek command.
             //in onPlaybackSeeking callback (StreamController), the detection of switch stream is done.

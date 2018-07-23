@@ -215,8 +215,11 @@ function FetchLoader(cfg) {
     function read(httpRequest, processResult) {
         httpRequest.reader.read()
         .then(processResult)
-        .catch(function () {
-            // don't do nothing. Manage this error in fetch method promise
+        .catch(function (e) {
+            if (httpRequest.onerror && httpRequest.response.status === 200) {
+                // Error, but response code is 200, trigger error
+                httpRequest.onerror(e);
+            }
         });
     }
 
