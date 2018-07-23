@@ -99,10 +99,6 @@ describe('DashAdapter', function () {
             expect(dashAdapter.getFragmentRequestForTime.bind(dashAdapter)).to.be.throw('streamProcessor parameter is missing or malformed!');
         });
 
-        it('should throw an error when generateFragmentRequestForTime is called and streamProcessor parameter is undefined', function () {
-            expect(dashAdapter.generateFragmentRequestForTime.bind(dashAdapter)).to.be.throw('streamProcessor parameter is missing or malformed!');
-        });
-
         it('should throw an error when getIndexHandlerTime is called and streamProcessor parameter is undefined', function () {
             expect(dashAdapter.getIndexHandlerTime.bind(dashAdapter)).to.be.throw('streamProcessor parameter is missing or malformed!');
         });
@@ -125,10 +121,6 @@ describe('DashAdapter', function () {
 
         it('should throw an error when getFragmentRequestForTime is called and streamProcessor is an empty object', function () {
             expect(dashAdapter.getFragmentRequestForTime.bind(dashAdapter, {})).to.be.throw('streamProcessor parameter is missing or malformed!');
-        });
-
-        it('should throw an error when generateFragmentRequestForTime is called and streamProcessor is an empty object', function () {
-            expect(dashAdapter.generateFragmentRequestForTime.bind(dashAdapter, {})).to.be.throw('streamProcessor parameter is missing or malformed!');
         });
 
         it('should throw an error when getIndexHandlerTime is called and streamProcessor is an empty object', function () {
@@ -168,12 +160,6 @@ describe('DashAdapter', function () {
             const fragRequest = dashAdapter.getFragmentRequestForTime(streamProcessor);
 
             expect(fragRequest).to.be.null;                // jshint ignore:line
-        });
-
-        it('should return null when generateFragmentRequestForTime is called and streamProcessor is defined, without its attributes', function () {
-            const generatedFragRequest = dashAdapter.generateFragmentRequestForTime(streamProcessor);
-
-            expect(generatedFragRequest).to.be.null;                // jshint ignore:line
         });
 
         it('should return NaN when getIndexHandlerTime is called and streamProcessor is defined, without its attributes', function () {

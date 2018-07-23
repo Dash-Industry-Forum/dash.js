@@ -187,8 +187,8 @@ function DashHandler(config) {
     }
 
     function getInitRequest(representation) {
-        const type = streamProcessor ? streamProcessor.getType() : null;
         if (!representation) return null;
+        const type = streamProcessor ? streamProcessor.getType() : null;
         const request = generateInitRequest(representation, type);
         return request;
     }
@@ -358,16 +358,16 @@ function DashHandler(config) {
             segment,
             finished;
 
+        if (!representation) {
+            return null;
+        }
+
         const type = streamProcessor ? streamProcessor.getType() : null;
         const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
         const idx = index;
         const keepIdx = options ? options.keepIdx : false;
         const timeThreshold = options ? options.timeThreshold : null;
         const ignoreIsFinished = (options && options.ignoreIsFinished) ? true : false;
-
-        if (!representation) {
-            return null;
-        }
 
         if (requestedTime !== time) { // When playing at live edge with 0 delay we may loop back with same time and index until it is available. Reduces verboseness of logs.
             requestedTime = time;
@@ -407,25 +407,17 @@ function DashHandler(config) {
         return request;
     }
 
-    function generateSegmentRequestForTime(representation, time) {
-        const step = (representation.segmentAvailabilityRange.end - representation.segmentAvailabilityRange.start) / 2;
-
-        representation.segments = null;
-        representation.segmentAvailabilityRange = {start: time - step, end: time + step};
-        return getSegmentRequestForTime(representation, time, {keepIdx: false, ignoreIsFinished: true});
-    }
-
     function getNextSegmentRequest(representation) {
         let request,
             segment,
             finished;
 
-        const type = streamProcessor ? streamProcessor.getType() : null;
-        const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
-
         if (!representation || index === -1) {
             return null;
         }
+
+        const type = streamProcessor ? streamProcessor.getType() : null;
+        const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
 
         requestedTime = null;
         index++;
@@ -524,7 +516,6 @@ function DashHandler(config) {
         getInitRequest: getInitRequest,
         getSegmentRequestForTime: getSegmentRequestForTime,
         getNextSegmentRequest: getNextSegmentRequest,
-        generateSegmentRequestForTime: generateSegmentRequestForTime,
         updateRepresentation: updateRepresentation,
         updateSegmentList: updateSegmentList,
         setCurrentTime: setCurrentTime,

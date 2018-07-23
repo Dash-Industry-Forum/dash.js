@@ -631,10 +631,11 @@ function MediaPlayer() {
      */
     function getDVRSeekOffset(value) {
         let metric = getDVRInfoMetric();
-        let liveDelay = playbackController.getLiveDelay();
         if (!metric) {
             return 0;
         }
+
+        let liveDelay = playbackController.getLiveDelay();
 
         let val = metric.range.start + value;
 
