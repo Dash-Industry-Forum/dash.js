@@ -7,7 +7,8 @@ import AdapterMock from './mocks/AdapterMock';
 const expect = require('chai').expect;
 
 const context = {};
-const nextFragmentRequestRule = NextFragmentRequestRule(context).create({adapter: new AdapterMock(), textController: new TextControllerMock()});
+const nextFragmentRequestRule = NextFragmentRequestRule(context).create({adapter: new AdapterMock(),
+                                                                         textController: new TextControllerMock()});
 
 describe('NextFragmentRequestRule', function () {
     it('should return null if streamProcessor is undefined', function () {
@@ -24,5 +25,27 @@ describe('NextFragmentRequestRule', function () {
         const result = nextFragmentRequestRule.execute(new StreamProcessorMock(testType, streamInfo));
 
         expect(result).to.be.null;  // jshint ignore:line
+    });
+
+    it('should return a mock request (duration of 2 seconds, and startTime of 0) if streamProcessor is defined and current representation is audio, with requestToReplace defined', function () {
+        const testType = 'audio';
+        const streamInfo = {
+            id: 'id'
+        };
+        const request = nextFragmentRequestRule.execute(new StreamProcessorMock(testType, streamInfo), {startTime: 0, duration: 1});
+
+        expect(request.startTime).to.be.equal(0);  // jshint ignore:line
+        expect(request.duration).to.be.equal(2);  // jshint ignore:line
+    });
+
+    it('should return a mock request (duration of 2 seconds, and startTime of 0) if streamProcessor is defined and current representation is audio, with requestToReplace is undefined', function () {
+        const testType = 'audio';
+        const streamInfo = {
+            id: 'id'
+        };
+        const request = nextFragmentRequestRule.execute(new StreamProcessorMock(testType, streamInfo));
+
+        expect(request.startTime).to.be.equal(0);  // jshint ignore:line
+        expect(request.duration).to.be.equal(2);  // jshint ignore:line
     });
 });

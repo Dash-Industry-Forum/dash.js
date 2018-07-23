@@ -8,6 +8,10 @@ class FragmentModelMock {
     getRequests() {
         return this.requests;
     }
+
+    isFragmentLoaded() {
+        return false;
+    }
 }
 
 class BufferControllerMock {
@@ -21,6 +25,16 @@ class BufferControllerMock {
 
     isBufferingCompleted() {
         return false;
+    }
+
+    getRangeAt() {
+        return null;
+    }
+
+    getBuffer() {
+        return {
+            getAllBufferRanges: () => {}
+        };
     }
 }
 
@@ -71,6 +85,13 @@ class StreamProcessorMock {
             },
             getSeekTarget() {
                 return 1;
+            },
+            setSeekTarget() {
+            },
+            getTimeToLoadDelay() {
+                return 0;
+            },
+            setTimeToLoadDelay() {
             }
         };
     }
