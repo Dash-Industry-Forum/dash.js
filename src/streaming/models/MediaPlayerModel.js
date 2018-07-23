@@ -114,7 +114,8 @@ function MediaPlayerModel() {
         jumpGaps,
         smallGapLimit,
         lowLatencyEnabled,
-        manifestUpdateRetryInterval;
+        manifestUpdateRetryInterval,
+        keepProtectionMediaKeys;
 
     function setup() {
         UTCTimingSources = [];
@@ -178,6 +179,8 @@ function MediaPlayerModel() {
         cacheLoadThresholds = {};
         cacheLoadThresholds[Constants.VIDEO] = CACHE_LOAD_THRESHOLD_VIDEO;
         cacheLoadThresholds[Constants.AUDIO] = CACHE_LOAD_THRESHOLD_AUDIO;
+
+        keepProtectionMediaKeys = false;
     }
 
     //TODO Should we use Object.define to have setters/getters? makes more readable code on other side.
@@ -533,6 +536,14 @@ function MediaPlayerModel() {
         return manifestUpdateRetryInterval;
     }
 
+    function setKeepProtectionMediaKeys(value) {
+        keepProtectionMediaKeys = value;
+    }
+
+    function getKeepProtectionMediaKeys() {
+        return keepProtectionMediaKeys;
+    }
+
     function reset() {
         //TODO need to figure out what props to persist across sessions and which to reset if any.
         //setup();
@@ -613,6 +624,8 @@ function MediaPlayerModel() {
         setLowLatencyEnabled: setLowLatencyEnabled,
         setManifestUpdateRetryInterval: setManifestUpdateRetryInterval,
         getManifestUpdateRetryInterval: getManifestUpdateRetryInterval,
+        setKeepProtectionMediaKeys: setKeepProtectionMediaKeys,
+        getKeepProtectionMediaKeys: getKeepProtectionMediaKeys,
         reset: reset
     };
 

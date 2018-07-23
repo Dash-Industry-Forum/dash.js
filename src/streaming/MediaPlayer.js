@@ -2489,6 +2489,28 @@ function MediaPlayer() {
     /*
     ---------------------------------------------------------------------------
 
+        PROTECTION CONTROLLER MANAGEMENT
+
+    ---------------------------------------------------------------------------
+    */
+
+    /**
+     * Set the value for the ProtectionController and MediaKeys life cycle. If true, the
+     * ProtectionController and then created MediaKeys and MediaKeySessions will be preserved during
+     * the MediaPlayer lifetime.
+     *
+     * @param {boolean=} value - True or false flag.
+     *
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function keepProtectionMediaKeys(value) {
+        mediaPlayerModel.setKeepProtectionMediaKeys(value);
+    }
+
+    /*
+    ---------------------------------------------------------------------------
+
         TOOLS AND OTHERS FUNCTIONS
 
     ---------------------------------------------------------------------------
@@ -2650,9 +2672,13 @@ function MediaPlayer() {
         mediaController.reset();
         textController.reset();
         if (protectionController) {
-            protectionController.reset();
-            protectionController = null;
-            detectProtection();
+            if (mediaPlayerModel.getKeepProtectionMediaKeys()) {
+                protectionController.stop();
+            } else {
+                protectionController.reset();
+                protectionController = null;
+                detectProtection();
+            }
         }
     }
 
@@ -3009,6 +3035,7 @@ function MediaPlayer() {
         getUseDeadTimeLatencyForAbr: getUseDeadTimeLatencyForAbr,
         setUseDeadTimeLatencyForAbr: setUseDeadTimeLatencyForAbr,
         getThumbnail: getThumbnail,
+        keepProtectionMediaKeys: keepProtectionMediaKeys,
         reset: reset
     };
 

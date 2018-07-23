@@ -407,6 +407,7 @@ function ProtectionModel_01b(config) {
         setServerCertificate: setServerCertificate,
         loadKeySession: loadKeySession,
         removeKeySession: removeKeySession,
+        stop: reset,
         reset: reset
     };
 

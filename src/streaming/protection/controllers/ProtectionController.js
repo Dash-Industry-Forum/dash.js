@@ -291,8 +291,21 @@ function ProtectionController(config) {
     }
 
     /**
+     * Stop method is called when current playback is stopped/resetted.
+     *
+     * @memberof module:ProtectionController
+     * @instance
+     */
+    function stop() {
+        if (protectionModel) {
+            protectionModel.stop();
+        }
+    }
+
+
+    /**
      * Destroys all protection data associated with this protection set.  This includes
-     * deleting all key sessions.  In the case of persistent key sessions, the sessions
+     * deleting all key sessions. In the case of persistent key sessions, the sessions
      * will simply be unloaded and not deleted.  Additionally, if this protection set is
      * associated with a HTMLMediaElement, it will be detached from that element.
      *
@@ -429,6 +442,9 @@ function ProtectionController(config) {
                 eventBus.off(events.INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
                 eventBus.off(events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
                 if (!event.error) {
+                    if (!protectionModel) {
+                        return;
+                    }
                     keySystem = protectionModel.getKeySystem();
                     eventBus.trigger(events.KEY_SYSTEM_SELECTED, {data: keySystemAccess});
                     // Set server certificate from protData
@@ -564,6 +580,9 @@ function ProtectionController(config) {
         xhr.open(licenseServerData.getHTTPMethod(messageType), url, true);
         xhr.responseType = licenseServerData.getResponseType(keySystemString, messageType);
         xhr.onload = function () {
+            if (!protectionModel) {
+                return;
+            }
             if (this.status == 200) {
                 const licenseMessage = licenseServerData.getLicenseMessage(this.response, keySystemString, messageType);
                 if (licenseMessage !== null) {
@@ -666,6 +685,7 @@ function ProtectionController(config) {
         setProtectionData: setProtectionData,
         getSupportedKeySystemsFromContentProtection: getSupportedKeySystemsFromContentProtection,
         getKeySystems: getKeySystems,
+        stop: stop,
         reset: reset
     };
 
