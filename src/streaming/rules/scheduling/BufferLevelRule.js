@@ -43,17 +43,18 @@ function BufferLevelRule(config) {
     function setup() {
     }
 
-    function execute(streamProcessor, type, videoTrackPresent) {
-        const bufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor(type));
-        return bufferLevel < getBufferTarget(streamProcessor, type, videoTrackPresent);
+    function execute(streamProcessor, videoTrackPresent) {
+        const bufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor(streamProcessor.getType()));
+        return bufferLevel < getBufferTarget(streamProcessor, videoTrackPresent);
     }
 
-    function getBufferTarget(streamProcessor, type, videoTrackPresent) {
+    function getBufferTarget(streamProcessor, videoTrackPresent) {
         let bufferTarget = NaN;
 
         if (!streamProcessor) {
             return bufferTarget;
         }
+        const type = streamProcessor.getType();
         const representationInfo = streamProcessor.getCurrentRepresentationInfo();
         if (type === Constants.FRAGMENTED_TEXT) {
             bufferTarget = textController.isTextEnabled() ? representationInfo.fragmentDuration : 0;
