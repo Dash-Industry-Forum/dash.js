@@ -173,8 +173,15 @@ function ScheduleController(config) {
     }
 
     function schedule() {
-        if (isStopped || isFragmentProcessingInProgress || !streamProcessor.getBufferController() || playbackController.isPaused() && !scheduleWhilePaused) {
+        const bufferController = streamProcessor.getBufferController();
+
+        if (isStopped || isFragmentProcessingInProgress || !bufferController || playbackController.isPaused() && !scheduleWhilePaused) {
             logger.debug('Schedule stop!');
+            return;
+        }
+
+        if (bufferController.getIsBufferingCompleted()) {
+            logger.debug('Schedule stop because buffering is completed!');
             return;
         }
 
