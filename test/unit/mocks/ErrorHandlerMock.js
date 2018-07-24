@@ -1,5 +1,6 @@
 function ErrorHandlerMock () {
     this.errorValue = undefined;
+    this.errorCode = undefined;
 
     this.manifestError = function (error) {
         this.errorValue = error;
@@ -10,11 +11,12 @@ function ErrorHandlerMock () {
     };
 
     this.error = function (errorObj) {
+        this.errorCode = errorObj.code;
         this.errorValue = errorObj.message;
     };
 
     this.timedTextError = function (error, msg) {
-        this.error = msg;
+        this.errorValue = msg;
     };
 }
 
