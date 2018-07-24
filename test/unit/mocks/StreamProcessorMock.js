@@ -120,7 +120,7 @@ class StreamProcessorMock {
     }
 
     getCurrentRepresentationInfo() {
-        return {mediaInfo: {type: this.type}};
+        return {mediaInfo: {type: this.type}, fragmentDuration: 6};
     }
 
     isBufferingCompleted() {
