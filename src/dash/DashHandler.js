@@ -227,7 +227,7 @@ function DashHandler(config) {
         voRepresentation.segments = segments;
         if (segments && segments.length > 0) {
             earliestTime = isNaN(earliestTime) ? segments[0].presentationStartTime : Math.min(segments[0].presentationStartTime,  earliestTime);
-            if (isDynamic && isNaN(timelineConverter.getExpectedLiveEdge())) {
+            if (isDynamic) {
                 const lastSegment = segments[segments.length - 1];
                 const liveEdge = lastSegment.presentationStartTime;
                 const metrics = metricsModel.getMetricsFor(Constants.STREAM);
