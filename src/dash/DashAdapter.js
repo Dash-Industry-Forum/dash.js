@@ -367,10 +367,12 @@ function DashAdapter() {
         return indexHandler ? indexHandler.getInitRequest(representation) : null;
     }
 
-    function getNextFragmentRequest(streamProcessor, representationInfo) {
+    function getFragmentRequest(streamProcessor, representationInfo, time, options) {
         let representationController,
             representation,
             indexHandler;
+
+        let fragRequest = null;
 
         checkStreamProcessor(streamProcessor);
 
@@ -378,21 +380,15 @@ function DashAdapter() {
         representation = getRepresentationForRepresentationInfo(representationInfo, representationController);
         indexHandler = streamProcessor.getIndexHandler();
 
-        return indexHandler ? indexHandler.getNextSegmentRequest(representation) : null;
-    }
+        if (indexHandler) {
+            if (time !== undefined && options !== undefined) {
+                fragRequest = indexHandler.getSegmentRequestForTime(representation, time, options);
+            } else {
+                fragRequest = indexHandler.getNextSegmentRequest(representation);
+            }
+        }
 
-    function getFragmentRequestForTime(streamProcessor, representationInfo, time, options) {
-        let representationController,
-            representation,
-            indexHandler;
-
-        checkStreamProcessor(streamProcessor);
-
-        representationController = streamProcessor.getRepresentationController();
-        representation = getRepresentationForRepresentationInfo(representationInfo, representationController);
-        indexHandler = streamProcessor.getIndexHandler();
-
-        return indexHandler ? indexHandler.getSegmentRequestForTime(representation, time, options) : null;
+        return fragRequest;
     }
 
     function getIndexHandlerTime(streamProcessor) {
@@ -516,8 +512,7 @@ function DashAdapter() {
         getRepresentationInfoForQuality: getRepresentationInfoForQuality,
         updateData: updateData,
         getInitRequest: getInitRequest,
-        getNextFragmentRequest: getNextFragmentRequest,
-        getFragmentRequestForTime: getFragmentRequestForTime,
+        getFragmentRequest: getFragmentRequest,
         getIndexHandlerTime: getIndexHandlerTime,
         setIndexHandlerTime: setIndexHandlerTime,
         getEventsFor: getEventsFor,

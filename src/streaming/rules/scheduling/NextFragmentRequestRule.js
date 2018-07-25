@@ -93,19 +93,19 @@ function NextFragmentRequestRule(config) {
 
         if (requestToReplace) {
             time = requestToReplace.startTime + (requestToReplace.duration / 2);
-            request = adapter.getFragmentRequestForTime(streamProcessor, representationInfo, time, {
+            request = adapter.getFragmentRequest(streamProcessor, representationInfo, time, {
                 timeThreshold: 0,
                 ignoreIsFinished: true
             });
         } else {
-            request = adapter.getFragmentRequestForTime(streamProcessor, representationInfo, time, {
+            request = adapter.getFragmentRequest(streamProcessor, representationInfo, time, {
                 keepIdx: !hasSeekTarget && !bufferIsDivided
             });
 
             // Then, check if this request was downloaded or not
             while (request && request.action !== FragmentRequest.ACTION_COMPLETE && streamProcessor.getFragmentModel().isFragmentLoaded(request)) {
                 // loop until we found not loaded fragment, or no fragment
-                request = adapter.getNextFragmentRequest(streamProcessor, representationInfo);
+                request = adapter.getFragmentRequest(streamProcessor, representationInfo);
             }
             if (request) {
                 if (!isNaN(request.startTime + request.duration)) {

@@ -91,12 +91,8 @@ describe('DashAdapter', function () {
             expect(dashAdapter.getInitRequest.bind(dashAdapter)).to.be.throw('streamProcessor parameter is missing or malformed!');
         });
 
-        it('should throw an error when getNextFragmentRequest is called and streamProcessor parameter is undefined', function () {
-            expect(dashAdapter.getNextFragmentRequest.bind(dashAdapter)).to.be.throw('streamProcessor parameter is missing or malformed!');
-        });
-
-        it('should throw an error when getFragmentRequestForTime is called and streamProcessor parameter is undefined', function () {
-            expect(dashAdapter.getFragmentRequestForTime.bind(dashAdapter)).to.be.throw('streamProcessor parameter is missing or malformed!');
+        it('should throw an error when getFragmentRequest is called and streamProcessor parameter is undefined', function () {
+            expect(dashAdapter.getFragmentRequest.bind(dashAdapter)).to.be.throw('streamProcessor parameter is missing or malformed!');
         });
 
         it('should throw an error when getIndexHandlerTime is called and streamProcessor parameter is undefined', function () {
@@ -115,12 +111,8 @@ describe('DashAdapter', function () {
             expect(dashAdapter.getInitRequest.bind(dashAdapter, {})).to.be.throw('streamProcessor parameter is missing or malformed!');
         });
 
-        it('should throw an error when getNextFragmentRequest is called and streamProcessor is an empty object', function () {
-            expect(dashAdapter.getNextFragmentRequest.bind(dashAdapter, {})).to.be.throw('streamProcessor parameter is missing or malformed!');
-        });
-
-        it('should throw an error when getFragmentRequestForTime is called and streamProcessor is an empty object', function () {
-            expect(dashAdapter.getFragmentRequestForTime.bind(dashAdapter, {})).to.be.throw('streamProcessor parameter is missing or malformed!');
+        it('should throw an error when getFragmentRequest is called and streamProcessor is an empty object', function () {
+            expect(dashAdapter.getFragmentRequest.bind(dashAdapter, {})).to.be.throw('streamProcessor parameter is missing or malformed!');
         });
 
         it('should throw an error when getIndexHandlerTime is called and streamProcessor is an empty object', function () {
@@ -150,16 +142,10 @@ describe('DashAdapter', function () {
             expect(initRequest).to.be.null;                // jshint ignore:line
         });
 
-        it('should return null when getNextFragmentRequest is called and streamProcessor is defined, without its attributes', function () {
-            const nextFragRequest = dashAdapter.getNextFragmentRequest(streamProcessor);
+        it('should return null when getFragmentRequest is called and streamProcessor is defined, without its attributes', function () {
+            const nextFragRequest = dashAdapter.getFragmentRequest(streamProcessor);
 
             expect(nextFragRequest).to.be.null;                // jshint ignore:line
-        });
-
-        it('should return null when getFragmentRequestForTime is called and streamProcessor is defined, without its attributes', function () {
-            const fragRequest = dashAdapter.getFragmentRequestForTime(streamProcessor);
-
-            expect(fragRequest).to.be.null;                // jshint ignore:line
         });
 
         it('should return NaN when getIndexHandlerTime is called and streamProcessor is defined, without its attributes', function () {

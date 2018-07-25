@@ -392,7 +392,7 @@ function ScheduleController(config) {
             const liveEdge = liveEdgeFinder.getLiveEdge();
             const dvrWindowSize = currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo.DVRWindowSize / 2;
             const startTime = liveEdge - playbackController.computeLiveDelay(currentRepresentationInfo.fragmentDuration, dvrWindowSize);
-            const request = adapter.getFragmentRequestForTime(streamProcessor, currentRepresentationInfo, startTime, {
+            const request = adapter.getFragmentRequest(streamProcessor, currentRepresentationInfo, startTime, {
                 ignoreIsFinished: true
             });
 
@@ -406,7 +406,7 @@ function ScheduleController(config) {
                     playbackController.setLiveStartTime(request.startTime);
                 }
             } else {
-                logger.debug('setLiveEdgeSeekTarget : getFragmentRequestForTime returned undefined request object');
+                logger.debug('setLiveEdgeSeekTarget : getFragmentRequest returned undefined request object');
             }
             seekTarget = playbackController.getStreamStartTime(false, liveEdge);
             streamProcessor.getBufferController().setSeekStartTime(seekTarget);
