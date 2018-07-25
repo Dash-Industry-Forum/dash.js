@@ -147,10 +147,6 @@ function DashManifestModel(config) {
         return getIsTypeOf(adaptation, Constants.FRAGMENTED_TEXT);
     }
 
-    function getIsText(adaptation) {
-        return getIsTypeOf(adaptation, Constants.TEXT);
-    }
-
     function getIsMuxed(adaptation) {
         return getIsTypeOf(adaptation, Constants.MUXED);
     }
@@ -1025,14 +1021,7 @@ function DashManifestModel(config) {
 
     instance = {
         getIsTypeOf: getIsTypeOf,
-        getIsAudio: getIsAudio,
-        getIsVideo: getIsVideo,
-        getIsText: getIsText,
-        getIsMuxed: getIsMuxed,
         getIsTextTrack: getIsTextTrack,
-        getIsFragmentedText: getIsFragmentedText,
-        getIsImage: getIsImage,
-        getIsMain: getIsMain,
         getLanguageForAdaptation: getLanguageForAdaptation,
         getViewpointForAdaptation: getViewpointForAdaptation,
         getRolesForAdaptation: getRolesForAdaptation,
