@@ -381,6 +381,8 @@ function DashAdapter() {
         indexHandler = streamProcessor.getIndexHandler();
 
         if (indexHandler) {
+            //if time and options are undefined, it means the next segment is requested
+            //otherwise, the segment at this specific time is requested.
             if (time !== undefined && options !== undefined) {
                 fragRequest = indexHandler.getSegmentRequestForTime(representation, time, options);
             } else {
