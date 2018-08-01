@@ -663,7 +663,7 @@ function PlaybackController() {
                     ranges = bufferedRange[streamInfo.id].video;
                 }
                 if (checkTimeInRanges(earliestTime, ranges)) {
-                    if (!isSeeking() && !compatibleWithPreviousStream) {
+                    if (!isSeeking() && !compatibleWithPreviousStream && earliestTime !== 0) {
                         seek(earliestTime, true, true);
                     }
                     commonEarliestTime[streamInfo.id].started = true;
@@ -688,7 +688,6 @@ function PlaybackController() {
     }
 
     function onPlaybackStalled(e) {
-        logger.info('Native video element event: stalled', e);
         eventBus.trigger(Events.PLAYBACK_STALLED, {
             e: e
         });

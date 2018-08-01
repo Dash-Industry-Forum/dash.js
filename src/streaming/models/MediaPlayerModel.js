@@ -114,7 +114,8 @@ function MediaPlayerModel() {
         jumpGaps,
         smallGapLimit,
         lowLatencyEnabled,
-        manifestUpdateRetryInterval;
+        manifestUpdateRetryInterval,
+        keepProtectionMediaKeys;
 
     function setup() {
         UTCTimingSources = [];
@@ -178,6 +179,8 @@ function MediaPlayerModel() {
         cacheLoadThresholds = {};
         cacheLoadThresholds[Constants.VIDEO] = CACHE_LOAD_THRESHOLD_VIDEO;
         cacheLoadThresholds[Constants.AUDIO] = CACHE_LOAD_THRESHOLD_AUDIO;
+
+        keepProtectionMediaKeys = false;
     }
 
     //TODO Should we use Object.define to have setters/getters? makes more readable code on other side.
@@ -484,6 +487,9 @@ function MediaPlayerModel() {
     }
 
     function setFastSwitchEnabled(value) {
+        if (typeof value !== 'boolean') {
+            return;
+        }
         fastSwitchEnabled = value;
     }
 
@@ -516,6 +522,9 @@ function MediaPlayerModel() {
     }
 
     function setLowLatencyEnabled(value) {
+        if (typeof value !== 'boolean') {
+            return;
+        }
         lowLatencyEnabled = value;
     }
 
@@ -525,6 +534,14 @@ function MediaPlayerModel() {
 
     function getManifestUpdateRetryInterval() {
         return manifestUpdateRetryInterval;
+    }
+
+    function setKeepProtectionMediaKeys(value) {
+        keepProtectionMediaKeys = value;
+    }
+
+    function getKeepProtectionMediaKeys() {
+        return keepProtectionMediaKeys;
     }
 
     function reset() {
@@ -607,6 +624,8 @@ function MediaPlayerModel() {
         setLowLatencyEnabled: setLowLatencyEnabled,
         setManifestUpdateRetryInterval: setManifestUpdateRetryInterval,
         getManifestUpdateRetryInterval: getManifestUpdateRetryInterval,
+        setKeepProtectionMediaKeys: setKeepProtectionMediaKeys,
+        getKeepProtectionMediaKeys: getKeepProtectionMediaKeys,
         reset: reset
     };
 

@@ -2,36 +2,12 @@ import ThumbnailController from '../../src/streaming/thumbnail/ThumbnailControll
 import ThumbnailTracks from '../../src/streaming/thumbnail/ThumbnailTracks';
 import ObjectsHelper from './helpers/ObjectsHelper';
 
+import DashManifestModelMock from './mocks/DashManifestModelMock';
+import AdapterMock from './mocks/AdapterMock';
+import StreamMock from './mocks/StreamMock';
+
 const expect = require('chai').expect;
 const context = {};
-
-class DashManifestModelMock {
-    setRepresentation(res) {
-        this.representation = res;
-    }
-    getRepresentationsForAdaptation() {
-        if (this.representation) {
-            return [this.representation];
-        } else {
-            return [];
-        }
-    }
-}
-
-class DashAdapterMock {
-    getMediaInfoForType() {
-        return {};
-    }
-    getDataForMedia() {
-        return {};
-    }
-}
-
-class StreamMock {
-    getStreamInfo() {
-        return {};
-    }
-}
 
 const sampleRepresentation = {
     id: 'rep_id',
@@ -74,7 +50,7 @@ describe('Thumbnails', function () {
         beforeEach(function () {
             thumbnailController = ThumbnailController(context).create({
                 dashManifestModel: dashManifestModel,
-                adapter: new DashAdapterMock(),
+                adapter: new AdapterMock(),
                 baseURLController: objectsHelper.getDummyBaseURLController(),
                 stream: new StreamMock()
             });
@@ -95,7 +71,7 @@ describe('Thumbnails', function () {
             dashManifestModel.setRepresentation(sampleRepresentation);
             thumbnailController = ThumbnailController(context).create({
                 dashManifestModel: dashManifestModel,
-                adapter: new DashAdapterMock(),
+                adapter: new AdapterMock(),
                 baseURLController: objectsHelper.getDummyBaseURLController(),
                 stream: new StreamMock()
             });
@@ -128,7 +104,7 @@ describe('Thumbnails', function () {
             dashManifestModel.setRepresentation(sampleRepresentation2);
             thumbnailController = ThumbnailController(context).create({
                 dashManifestModel: dashManifestModel,
-                adapter: new DashAdapterMock(),
+                adapter: new AdapterMock(),
                 baseURLController: objectsHelper.getDummyBaseURLController(),
                 stream: new StreamMock()
             });
@@ -162,7 +138,7 @@ describe('Thumbnails', function () {
             dashManifestModel.setRepresentation();
             thumbnailController = ThumbnailController(context).create({
                 dashManifestModel: dashManifestModel,
-                adapter: new DashAdapterMock(),
+                adapter: new AdapterMock(),
                 baseURLController: objectsHelper.getDummyBaseURLController(),
                 stream: new StreamMock()
             });
@@ -175,7 +151,7 @@ describe('Thumbnails', function () {
             dashManifestModel.setRepresentation(sampleRepresentation);
             thumbnailController = ThumbnailController(context).create({
                 dashManifestModel: dashManifestModel,
-                adapter: new DashAdapterMock(),
+                adapter: new AdapterMock(),
                 baseURLController: objectsHelper.getDummyBaseURLController(),
                 stream: new StreamMock()
             });
@@ -189,7 +165,7 @@ describe('Thumbnails', function () {
             dashManifestModel.setRepresentation(sampleRepresentation);
             thumbnailController = ThumbnailController(context).create({
                 dashManifestModel: dashManifestModel,
-                adapter: new DashAdapterMock(),
+                adapter: new AdapterMock(),
                 baseURLController: objectsHelper.getDummyBaseURLController(),
                 stream: new StreamMock()
             });
@@ -208,7 +184,7 @@ describe('Thumbnails', function () {
         beforeEach(function () {
             thumbnailTracks = ThumbnailTracks(context).create({
                 dashManifestModel: dashManifestModel,
-                adapter: new DashAdapterMock(),
+                adapter: new AdapterMock(),
                 baseURLController: objectsHelper.getDummyBaseURLController(),
                 stream: new StreamMock()
             });

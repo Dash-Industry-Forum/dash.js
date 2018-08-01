@@ -76,6 +76,8 @@ declare namespace dashjs {
         initialize(view?: HTMLElement, source?: string, autoPlay?: boolean): void;
         on(type: AstInFutureEvent['type'], listener: (e: AstInFutureEvent) => void, scope?: object): void;
         on(type: BufferEvent['type'], listener: (e: BufferEvent) => void, scope?: object): void;
+        on(type: CaptionRenderedEvent['type'], listener: (e: CaptionRenderedEvent) => void, scope?: object): void;
+        on(type: CaptionContainerResizeEvent['type'], listener: (e: CaptionContainerResizeEvent) => void, scope?: object): void;
         on(type: ErrorEvent['type'], listener: (e: ErrorEvent) => void, scope?: object): void;
         on(type: FragmentLoadingCompletedEvent['type'], listener: (e: FragmentLoadingCompletedEvent) => void, scope?: object): void;
         on(type: FragmentLoadingAbandonedEvent['type'], listener: (e: FragmentLoadingAbandonedEvent) => void, scope?: object): void;
@@ -230,6 +232,31 @@ declare namespace dashjs {
         addABRCustomRule(type: string, rulename: string, rule: object): void;
         removeABRCustomRule(rulename: string): void;
         removeAllABRCustomRule(): void;
+        getLowLatencyEnabled(): boolean;
+        setLowLatencyEnabled(value: boolean): void;
+        getCatchUpPlaybackRate(): number;
+        setCatchUpPlaybackRate(value: number): void;
+        getUseDeadTimeLatencyForAbr(): boolean;
+        setUseDeadTimeLatencyForAbr(value: boolean): void;
+        getCurrentLiveLatency(): number;
+        enableForcedTextStreaming(value: boolean): void;        
+        isTextEnabled(): boolean;
+        getBufferTimeAtTopQualityLongForm(): number;
+        setMovingAverageMethod(value: string): void;
+        getMovingAverageMethod(): string;
+        setABRStrategy(value: string): void;
+        getABRStrategy(): string;
+        useDefaultABRRules(value: boolean): void;       
+        getAverageThroughput(value: number): void;
+        setBufferAheadToKeep(value: number): void;
+        getStableBufferTime(): number;
+        getBufferTimeAtTopQuality(): number;
+        setManifestLoaderRetryAttempts(value: number): void;
+        setManifestLoaderRetryInterval(value: number): void;
+        setManifestUpdateRetryInterval(value: number): void;        
+        getManifestUpdateRetryInterval(): number;
+        setSegmentOverlapToleranceTime(value: number): void;
+        keepProtectionMediaKeys(value: boolean): void;
     }
 
     export interface MediaPlayerFactory {
@@ -248,6 +275,8 @@ declare namespace dashjs {
         BUFFER_LEVEL_STATE_CHANGED: 'bufferStateChanged';
         BUFFER_LOADED: 'bufferLoaded';
         CAN_PLAY: 'canPlay';
+        CAPTION_RENDERED: 'captionRendered';
+        CAPTION_CONTAINER_RESIZE: 'captionContainerResize';
         ERROR: 'error';
         FRAGMENT_LOADING_ABANDONED: 'fragmentLoadingAbandoned';
         FRAGMENT_LOADING_COMPLETED: 'fragmentLoadingCompleted';
@@ -356,6 +385,15 @@ declare namespace dashjs {
     }
 
     export type ErrorEvent = GenericErrorEvent | DownloadErrorEvent | ManifestErrorEvent | TimedTextErrorEvent;
+
+    export interface CaptionRenderedEvent extends Event {
+        type: MediaPlayerEvents['CAPTION_RENDERED'];
+        captionDiv: HTMLDivElement;
+        currentTrackIdx: number;
+
+    export interface CaptionContainerResizeEvent extends Event {
+        type: MediaPlayerEvents['CAPTION_CONTAINER_RESIZE'];
+    }
 
     export interface FragmentLoadingCompletedEvent extends Event {
         type: MediaPlayerEvents['FRAGMENT_LOADING_COMPLETED'];

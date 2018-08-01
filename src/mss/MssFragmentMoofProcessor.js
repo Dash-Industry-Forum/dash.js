@@ -29,6 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+import Events from '../streaming/MediaPlayerEvents';
+
 /**
  * @module MssFragmentMoovProcessor
  * @param {Object} config object
@@ -37,15 +39,18 @@ function MssFragmentMoofProcessor(config) {
 
     config = config || {};
     let instance,
+        type,
         logger;
     const metricsModel = config.metricsModel;
     const playbackController = config.playbackController;
     const errorHandler = config.errHandler;
+    const eventBus = config.eventBus;
     const ISOBoxer = config.ISOBoxer;
     const debug = config.debug;
 
     function setup() {
         logger = debug.getLogger(instance);
+        type = '';
     }
 
     function processTfrf(request, tfrf, tfdt, streamProcessor) {
@@ -57,7 +62,9 @@ function MssFragmentMoofProcessor(config) {
         const adaptation = manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index];
         const timescale = adaptation.SegmentTemplate.timescale;
 
-        if (manifest.type !== 'dynamic') {
+        type = streamProcessor.getType();
+
+        if (manifest.type !== 'dynamic' && !manifest.timeShiftBufferDepth) {
             return;
         }
 
@@ -83,16 +90,29 @@ function MssFragmentMoofProcessor(config) {
         // Consider only first tfrf entry (to avoid pre-condition failure on fragment info requests)
         entry = entries[0];
 
+        // In case of start-over streams, check if we have reached end of original manifest duration (set in timeShiftBufferDepth)
+        // => then do not update anymore timeline
+        if (manifest.type === 'static') {
+            // Get first segment time
+            segmentTime = segments[0].tManifest ? parseFloat(segments[0].tManifest) : segments[0].t;
+            if (entry.fragment_absolute_time > (segmentTime + (manifest.timeShiftBufferDepth * timescale))) {
+                return;
+            }
+        }
+
+        logger.debug('entry - t = ', (entry.fragment_absolute_time / timescale));
+
         // Get last segment time
         segmentTime = segments[segments.length - 1].tManifest ? parseFloat(segments[segments.length - 1].tManifest) : segments[segments.length - 1].t;
+        logger.debug('Last segment - t = ', (segmentTime / timescale));
 
         // Check if we have to append new segment to timeline
         if (entry.fragment_absolute_time <= segmentTime) {
             // Update DVR window range
             // => set range end to end time of current segment
             range = {
-                start: segments[0].t / adaptation.SegmentTemplate.timescale,
-                end: (tfdt.baseMediaDecodeTime / adaptation.SegmentTemplate.timescale) + request.duration
+                start: segments[0].t / timescale,
+                end: (tfdt.baseMediaDecodeTime / timescale) + request.duration
             };
 
             updateDVR(request.mediaType, range, streamProcessor.getStreamInfo().manifestInfo);
@@ -103,32 +123,48 @@ function MssFragmentMoofProcessor(config) {
         segment = {};
         segment.t = entry.fragment_absolute_time;
         segment.d = entry.fragment_duration;
+        // If timestamps starts at 0 relative to 1st segment (dynamic to static) then update segment time
+        if (segments[0].tManifest) {
+            segment.t -= parseFloat(segments[0].tManifest) - segments[0].t;
+            segment.tManifest = entry.fragment_absolute_time;
+        }
         segments.push(segment);
 
-        if (manifest.timeShiftBufferDepth && manifest.timeShiftBufferDepth > 0) {
+        // In case of static start-over streams, update content duration
+        if (manifest.type === 'static') {
+            if (type === 'video') {
+                segment = segments[segments.length - 1];
+                var end = (segment.t + segment.d) / timescale;
+                if (end > representation.adaptation.period.duration) {
+                    eventBus.trigger(Events.MANIFEST_VALIDITY_CHANGED, { sender: this, newDuration: end });
+                }
+            }
+            return;
+        }
+        // In case of live streams, update segment timeline according to DVR window
+        else if (manifest.timeShiftBufferDepth && manifest.timeShiftBufferDepth > 0) {
             // Get timestamp of the last segment
             segment = segments[segments.length - 1];
             t = segment.t;
 
             // Determine the segments' availability start time
-            availabilityStartTime = t - (manifest.timeShiftBufferDepth * timescale);
+            availabilityStartTime = Math.round((t - (manifest.timeShiftBufferDepth * timescale)) / timescale);
 
             // Remove segments prior to availability start time
             segment = segments[0];
-            while (segment.t < availabilityStartTime) {
+            while (Math.round(segment.t / timescale) < availabilityStartTime) {
                 logger.debug('Remove segment  - t = ' + (segment.t / timescale));
                 segments.splice(0, 1);
                 segment = segments[0];
             }
 
-            // Update DVR window range
-            // => set range end to end time of current segment
+            // Update DVR window range => set range end to end time of current segment
             range = {
-                start: segments[0].t / adaptation.SegmentTemplate.timescale,
-                end: (tfdt.baseMediaDecodeTime / adaptation.SegmentTemplate.timescale) + request.duration
+                start: segments[0].t / timescale,
+                end: (tfdt.baseMediaDecodeTime / timescale) + request.duration
             };
 
-            updateDVR(request.mediaType, range, streamProcessor.getStreamInfo().manifestInfo);
+            updateDVR(type, range, streamProcessor.getStreamInfo().manifestInfo);
         }
 
         indexHandler.updateSegmentList(representation);
@@ -285,9 +321,14 @@ function MssFragmentMoofProcessor(config) {
         }
     }
 
+    function getType() {
+        return type;
+    }
+
     instance = {
         convertFragment: convertFragment,
-        updateSegmentList: updateSegmentList
+        updateSegmentList: updateSegmentList,
+        getType: getType
     };
 
     setup();

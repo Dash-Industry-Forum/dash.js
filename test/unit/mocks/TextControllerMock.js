@@ -7,6 +7,9 @@ class TextControllerMock {
     getTextSourceBuffer() {
         return new TextBufferMock();
     }
+    isTextEnabled() {
+        return false;
+    }
 }
 
 export default TextControllerMock;

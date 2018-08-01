@@ -202,9 +202,21 @@ class MediaPlayerEvents extends EventsBase {
 
         /**
          * Triggered when a ttml chunk has to be parsed.
-         * @event MediaPlayerEvents#TTML_PARSED
+         * @event MediaPlayerEvents#TTML_TO_PARSE
          */
         this.TTML_TO_PARSE = 'ttmlToParse';
+
+        /**
+         * Triggered when a caption is rendered.
+         * @event MediaPlayerEvents#CAPTION_RENDERED
+         */
+        this.CAPTION_RENDERED = 'captionRendered';
+
+        /**
+         * Triggered when the caption container is resized.
+         * @event MediaPlayerEvents#CAPTION_CONTAINER_RESIZE
+         */
+        this.CAPTION_CONTAINER_RESIZE = 'captionContainerResize';
 
         /**
          * Sent when enough data is available that the media can be played,

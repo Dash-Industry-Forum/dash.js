@@ -433,7 +433,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
                 bufferConfig.bufferTimeAtTopQualityLongForm = selectedConfig.bufferTimeAtTopQualityLongForm;
             }
 
-            if (selectedConfig.lowLatencyMode) {
+            if (selectedConfig.lowLatencyMode !== undefined) {
                 bufferConfig.lowLatencyMode = selectedConfig.lowLatencyMode;
             }
         }

@@ -53,7 +53,6 @@ function TextTracks() {
         actualVideoHeight,
         captionContainer,
         videoSizeCheckInterval,
-        isChrome,
         fullscreenAttribute,
         displayCCOnTop,
         previousISDState,
@@ -82,13 +81,6 @@ function TextTracks() {
         topZIndex = 2147483647;
         previousISDState = null;
 
-        //TODO Check if IE has resolved issues: Then revert to not using the addTextTrack API for all browsers.
-        // https://connect.microsoft.com/IE/feedbackdetail/view/1660701/text-tracks-do-not-fire-change-addtrack-or-removetrack-events
-        // https://connect.microsoft.com/IE/feedback/details/1573380/htmltrackelement-track-addcue-throws-invalidstateerror-when-adding-new-cue
-        // Same issue with Firefox.
-        //isIE11orEdge = !!navigator.userAgent.match(/Trident.*rv[ :]*11\./) || navigator.userAgent.match(/Edge/);
-        //isFirefox = !!navigator.userAgent.match(/Firefox/);
-        isChrome = !!navigator.userAgent.match(/Chrome/) && !navigator.userAgent.match(/Edge/);
         if (document.fullscreenElement !== undefined) {
             fullscreenAttribute = 'fullscreenElement'; // Standard and Edge
         } else if (document.webkitIsFullScreen !== undefined) {
@@ -260,23 +252,22 @@ function TextTracks() {
             actualVideoHeight = newVideoHeight;
 
             if (captionContainer) {
-                captionContainer.style.left = actualVideoLeft + 'px';
-                captionContainer.style.top = actualVideoTop + 'px';
-                captionContainer.style.width = actualVideoWidth + 'px';
-                captionContainer.style.height = actualVideoHeight + 'px';
+                const containerStyle = captionContainer.style;
+                containerStyle.left = actualVideoLeft + 'px';
+                containerStyle.top = actualVideoTop + 'px';
+                containerStyle.width = actualVideoWidth + 'px';
+                containerStyle.height = actualVideoHeight + 'px';
+                containerStyle.zIndex = (fullscreenAttribute && document[fullscreenAttribute]) || displayCCOnTop ? topZIndex : null;
+                eventBus.trigger(Events.CAPTION_CONTAINER_RESIZE, {});
             }
 
             // Video view has changed size, so resize any active cues
-            for (let i = 0; track.activeCues && i < track.activeCues.length; ++i) {
-                const cue = track.activeCues[i];
-                cue.scaleCue(cue);
-            }
-
-            if (captionContainer) {
-                if ((fullscreenAttribute && document[fullscreenAttribute]) || displayCCOnTop) {
-                    captionContainer.style.zIndex = topZIndex;
-                } else {
-                    captionContainer.style.zIndex = null;
+            const activeCues = track.activeCues;
+            if (activeCues) {
+                const len = activeCues.length;
+                for (let i = 0; i < len; ++i) {
+                    const cue = activeCues[i];
+                    cue.scaleCue(cue);
                 }
             }
         }
@@ -386,6 +377,7 @@ function TextTracks() {
                 //TODO add ErrorHandler management
             }, previousISDState, true /*enableRollUp*/);
             finalCue.id = cue.cueID;
+            eventBus.trigger(Events.CAPTION_RENDERED, {captionDiv: finalCue, currentTrackIdx});
         }
     }
 
@@ -585,9 +577,6 @@ function TextTracks() {
 
     /* Set native cue style to transparent background to avoid it being displayed. */
     function setNativeCueStyle() {
-        if (!isChrome) {
-            return;
-        }
         let styleElement = document.getElementById('native-cue-style');
         if (styleElement) {
             return; //Already set
@@ -598,22 +587,23 @@ function TextTracks() {
         document.head.appendChild(styleElement);
         const stylesheet = styleElement.sheet;
         const video = videoModel.getElement();
-        if (video) {
-            if (video.id) {
-                stylesheet.insertRule('#' + video.id + '::cue {background: transparent}', 0);
-            } else if (video.classList.length !== 0) {
-                stylesheet.insertRule('.' + video.className + '::cue {background: transparent}', 0);
-            } else {
-                stylesheet.insertRule('video::cue {background: transparent}', 0);
+        try {
+            if (video) {
+                if (video.id) {
+                    stylesheet.insertRule('#' + video.id + '::cue {background: transparent}', 0);
+                } else if (video.classList.length !== 0) {
+                    stylesheet.insertRule('.' + video.className + '::cue {background: transparent}', 0);
+                } else {
+                    stylesheet.insertRule('video::cue {background: transparent}', 0);
+                }
             }
+        } catch (e) {
+            logger.info('' + e.message);
         }
     }
 
     /* Remove the extra cue style with transparent background for native cues. */
     function removeNativeCueStyle() {
-        if (!isChrome) {
-            return;
-        }
         const styleElement = document.getElementById('native-cue-style');
         if (styleElement) {
             document.head.removeChild(styleElement);

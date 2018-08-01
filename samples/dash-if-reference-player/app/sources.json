@@ -93,6 +93,11 @@
           "url": "https://akamai-axtest.akamaized.net/routes/lapd-v1-acceptance/www_c4/Manifest.mpd",
           "name": "Axinom reference stream (Live-Clear)",
           "moreInfo": "https://github.com/Axinom/dash-test-vectors#live-clear"
+        },
+        {
+           "url": "https://live.unified-streaming.com/scte35/scte35.isml/.mpd",
+           "name": "Unified Streaming reference stream with scte35 markers",
+           "moreInfo": "http://demo.unified-streaming.com/features.html"
         }
       ]
     },

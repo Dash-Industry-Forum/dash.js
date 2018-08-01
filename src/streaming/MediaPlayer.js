@@ -34,6 +34,7 @@ import UTCTiming from '../dash/vo/UTCTiming';
 import PlaybackController from './controllers/PlaybackController';
 import StreamController from './controllers/StreamController';
 import MediaController from './controllers/MediaController';
+import BaseURLController from './controllers/BaseURLController';
 import ManifestLoader from './ManifestLoader';
 import ErrorHandler from './utils/ErrorHandler';
 import Capabilities from './utils/Capabilities';
@@ -82,7 +83,7 @@ function MediaPlayer() {
     const SOURCE_NOT_ATTACHED_ERROR = 'You must first call attachSource() with a valid source before calling this method';
     const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
     const MEDIA_PLAYER_BAD_ARGUMENT_ERROR = 'MediaPlayer Invalid Arguments!';
-    const PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR = 'Playback catchup rate invalid argument! Use a number from 1 to 1.2';
+    const PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR = 'Playback catchup rate invalid argument! Use a number from 0 to 0.2';
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
@@ -499,7 +500,7 @@ function MediaPlayer() {
      * @instance
      */
     function setCatchUpPlaybackRate(value) {
-        if (isNaN(value) || value < 0.0 || value > 0.20) {
+        if ( typeof value !== 'number' || isNaN(value) || value < 0.0 || value > 0.20) {
             throw PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR;
         }
         playbackController.setCatchUpPlaybackRate(value);
@@ -631,10 +632,11 @@ function MediaPlayer() {
      */
     function getDVRSeekOffset(value) {
         let metric = getDVRInfoMetric();
-        let liveDelay = playbackController.getLiveDelay();
         if (!metric) {
             return 0;
         }
+
+        let liveDelay = playbackController.getLiveDelay();
 
         let val = metric.range.start + value;
 
@@ -1054,6 +1056,9 @@ function MediaPlayer() {
      * @instance
      */
     function setUseDeadTimeLatencyForAbr(useDeadTimeLatency) {
+        if (typeof useDeadTimeLatency !== 'boolean') {
+            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
+        }
         abrController.setUseDeadTimeLatency(useDeadTimeLatency);
     }
 
@@ -1390,7 +1395,7 @@ function MediaPlayer() {
      * @instance
      */
     function setLowLatencyEnabled(value) {
-        return mediaPlayerModel.setLowLatencyEnabled(value);
+        mediaPlayerModel.setLowLatencyEnabled(value);
     }
 
     /**
@@ -2484,6 +2489,28 @@ function MediaPlayer() {
     /*
     ---------------------------------------------------------------------------
 
+        PROTECTION CONTROLLER MANAGEMENT
+
+    ---------------------------------------------------------------------------
+    */
+
+    /**
+     * Set the value for the ProtectionController and MediaKeys life cycle. If true, the
+     * ProtectionController and then created MediaKeys and MediaKeySessions will be preserved during
+     * the MediaPlayer lifetime.
+     *
+     * @param {boolean=} value - True or false flag.
+     *
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function keepProtectionMediaKeys(value) {
+        mediaPlayerModel.setKeepProtectionMediaKeys(value);
+    }
+
+    /*
+    ---------------------------------------------------------------------------
+
         TOOLS AND OTHERS FUNCTIONS
 
     ---------------------------------------------------------------------------
@@ -2645,9 +2672,13 @@ function MediaPlayer() {
         mediaController.reset();
         textController.reset();
         if (protectionController) {
-            protectionController.reset();
-            protectionController = null;
-            detectProtection();
+            if (mediaPlayerModel.getKeepProtectionMediaKeys()) {
+                protectionController.stop();
+            } else {
+                protectionController.reset();
+                protectionController = null;
+                detectProtection();
+            }
         }
     }
 
@@ -2798,6 +2829,7 @@ function MediaPlayer() {
                 metricsModel: metricsModel,
                 playbackController: playbackController,
                 protectionController: protectionController,
+                baseURLController: BaseURLController(context).getInstance(),
                 errHandler: errHandler,
                 events: Events,
                 constants: Constants,
@@ -3003,6 +3035,7 @@ function MediaPlayer() {
         getUseDeadTimeLatencyForAbr: getUseDeadTimeLatencyForAbr,
         setUseDeadTimeLatencyForAbr: setUseDeadTimeLatencyForAbr,
         getThumbnail: getThumbnail,
+        keepProtectionMediaKeys: keepProtectionMediaKeys,
         reset: reset
     };
 

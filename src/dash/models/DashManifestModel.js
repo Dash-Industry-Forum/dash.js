@@ -806,6 +806,15 @@ function DashManifestModel(config) {
                     if (eventStreams[i].Event_asArray[j].hasOwnProperty(DashConstants.ID)) {
                         event.id = eventStreams[i].Event_asArray[j].id;
                     }
+
+                    // From Cor.1: 'NOTE: this attribute is an alternative
+                    // to specifying a complete XML element(s) in the Event.
+                    // It is useful when an event leans itself to a compact
+                    // string representation'.
+                    event.messageData =
+                        eventStreams[i].Event_asArray[j].messageData ||
+                        eventStreams[i].Event_asArray[j].__text;
+
                     events.push(event);
                 }
             }
