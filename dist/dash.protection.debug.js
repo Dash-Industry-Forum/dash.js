@@ -852,6 +852,9 @@ var _voKeySystemConfiguration = _dereq_(24);
 
 var _voKeySystemConfiguration2 = _interopRequireDefault(_voKeySystemConfiguration);
 
+var NEEDKEY_BEFORE_INITIALIZE_RETRIES = 5;
+var NEEDKEY_BEFORE_INITIALIZE_TIMEOUT = 500;
+
 /**
  * @module ProtectionController
  * @description Provides access to media protection information and functionality.  Each
@@ -876,6 +879,7 @@ function ProtectionController(config) {
     var debug = config.debug;
     var BASE64 = config.BASE64;
     var constants = config.constants;
+    var needkeyRetries = [];
 
     var instance = undefined,
         logger = undefined,
@@ -1110,8 +1114,20 @@ function ProtectionController(config) {
     }
 
     /**
+     * Stop method is called when current playback is stopped/resetted.
+     *
+     * @memberof module:ProtectionController
+     * @instance
+     */
+    function stop() {
+        if (protectionModel) {
+            protectionModel.stop();
+        }
+    }
+
+    /**
      * Destroys all protection data associated with this protection set.  This includes
-     * deleting all key sessions.  In the case of persistent key sessions, the sessions
+     * deleting all key sessions. In the case of persistent key sessions, the sessions
      * will simply be unloaded and not deleted.  Additionally, if this protection set is
      * associated with a HTMLMediaElement, it will be detached from that element.
      *
@@ -1131,6 +1147,11 @@ function ProtectionController(config) {
             protectionModel.reset();
             protectionModel = null;
         }
+
+        needkeyRetries.forEach(function (retryTimeout) {
+            return clearTimeout(retryTimeout);
+        });
+        needkeyRetries = [];
 
         mediaInfoArr = [];
     }
@@ -1158,6 +1179,8 @@ function ProtectionController(config) {
         var audioRobustness = protData && protData.audioRobustness && protData.audioRobustness.length > 0 ? protData.audioRobustness : robustnessLevel;
         var videoRobustness = protData && protData.videoRobustness && protData.videoRobustness.length > 0 ? protData.videoRobustness : robustnessLevel;
         var ksSessionType = getSessionType(keySystem);
+        var distinctiveIdentifier = protData && protData.distinctiveIdentifier ? protData.distinctiveIdentifier : 'optional';
+        var persistentState = protData && protData.persistentState ? protData.persistentState : ksSessionType === 'temporary' ? 'optional' : 'required';
 
         mediaInfoArr.forEach(function (media) {
             if (media.type === constants.AUDIO) {
@@ -1167,7 +1190,7 @@ function ProtectionController(config) {
             }
         });
 
-        return new _voKeySystemConfiguration2['default'](audioCapabilities, videoCapabilities, 'optional', ksSessionType === 'temporary' ? 'optional' : 'required', [ksSessionType]);
+        return new _voKeySystemConfiguration2['default'](audioCapabilities, videoCapabilities, distinctiveIdentifier, persistentState, [ksSessionType]);
     }
 
     function getSessionType(keySystem) {
@@ -1250,6 +1273,9 @@ function ProtectionController(config) {
                     eventBus.off(events.INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
                     eventBus.off(events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
                     if (!event.error) {
+                        if (!protectionModel) {
+                            return;
+                        }
                         keySystem = protectionModel.getKeySystem();
                         eventBus.trigger(events.KEY_SYSTEM_SELECTED, { data: keySystemAccess });
                         // Set server certificate from protData
@@ -1387,6 +1413,9 @@ function ProtectionController(config) {
         xhr.open(licenseServerData.getHTTPMethod(messageType), url, true);
         xhr.responseType = licenseServerData.getResponseType(keySystemString, messageType);
         xhr.onload = function () {
+            if (!protectionModel) {
+                return;
+            }
             if (this.status == 200) {
                 var licenseMessage = licenseServerData.getLicenseMessage(this.response, keySystemString, messageType);
                 if (licenseMessage !== null) {
@@ -1430,12 +1459,23 @@ function ProtectionController(config) {
         xhr.send(keySystem.getLicenseRequestFromMessage(message));
     }
 
-    function onNeedKey(event) {
+    function onNeedKey(event, retry) {
         logger.debug('DRM: onNeedKey');
         // Ignore non-cenc initData
         if (event.key.initDataType !== 'cenc') {
             logger.warn('DRM:  Only \'cenc\' initData is supported!  Ignoring initData of type: ' + event.key.initDataType);
             return;
+        }
+
+        if (mediaInfoArr.length === 0) {
+            logger.warn('DRM: onNeedKey called before initializeForMedia, wait until initialized');
+            retry = typeof retry === 'undefined' ? 1 : retry + 1;
+            if (retry < NEEDKEY_BEFORE_INITIALIZE_RETRIES) {
+                needkeyRetries.push(setTimeout(function () {
+                    onNeedKey(event, retry);
+                }, NEEDKEY_BEFORE_INITIALIZE_TIMEOUT));
+                return;
+            }
         }
 
         // Some browsers return initData as Uint8Array (IE), some as ArrayBuffer (Chrome).
@@ -1489,6 +1529,7 @@ function ProtectionController(config) {
         setProtectionData: setProtectionData,
         getSupportedKeySystemsFromContentProtection: getSupportedKeySystemsFromContentProtection,
         getKeySystems: getKeySystems,
+        stop: stop,
         reset: reset
     };
 
@@ -2415,7 +2456,7 @@ var schemeIdURI = 'urn:uuid:' + uuid;
 function KeySystemW3CClearKey(config) {
     var instance = undefined;
     var BASE64 = config.BASE64;
-    var debug = config.debug;
+    var logger = config.debug.getLogger(instance);
     /**
      * Returns desired clearkeys (as specified in the CDM message) from protection data
      *
@@ -2444,7 +2485,7 @@ function KeySystemW3CClearKey(config) {
             }
             clearkeySet = new _voClearKeyKeySet2['default'](keyPairs);
 
-            debug.warn('ClearKey schemeIdURI is using W3C Common PSSH systemID (1077efec-c0b2-4d02-ace3-3c1e52e2fb4b) in Content Protection. See DASH-IF IOP v4.1 section 7.6.2.4');
+            logger.warn('ClearKey schemeIdURI is using W3C Common PSSH systemID (1077efec-c0b2-4d02-ace3-3c1e52e2fb4b) in Content Protection. See DASH-IF IOP v4.1 section 7.6.2.4');
         }
         return clearkeySet;
     }
@@ -3046,6 +3087,7 @@ function ProtectionModel_01b(config) {
         setServerCertificate: setServerCertificate,
         loadKeySession: loadKeySession,
         removeKeySession: removeKeySession,
+        stop: reset,
         reset: reset
     };
 
@@ -3195,6 +3237,18 @@ function ProtectionModel_21Jan2015(config) {
             })();
         } else {
             eventBus.trigger(events.TEARDOWN_COMPLETE);
+        }
+    }
+
+    function stop() {
+        // Close and remove not usable sessions
+        var session = undefined;
+        for (var i = 0; i < sessions.length; i++) {
+            session = sessions[i];
+            if (!session.getUsable()) {
+                removeSession(session);
+                closeKeySessionInternal(session);
+            }
         }
     }
 
@@ -3410,9 +3464,37 @@ function ProtectionModel_21Jan2015(config) {
         for (var i = 0; i < sessions.length; i++) {
             if (sessions[i] === token) {
                 sessions.splice(i, 1);
+                logger.debug('DRM: Session removed.  SessionID = ' + token.getSessionID());
                 break;
             }
         }
+    }
+
+    function parseKeyStatus(args) {
+        // Edge and Chrome implement different version of keystatues, param are not on same order
+        var status = undefined,
+            keyId = undefined;
+        if (args && args.length > 0) {
+            if (args[0]) {
+                if (typeof args[0] === 'string') {
+                    status = args[0];
+                } else {
+                    keyId = args[0];
+                }
+            }
+
+            if (args[1]) {
+                if (typeof args[1] === 'string') {
+                    status = args[1];
+                } else {
+                    keyId = args[1];
+                }
+            }
+        }
+        return {
+            status: status,
+            keyId: keyId
+        };
     }
 
     // Function to create our session token objects which manage the EME
@@ -3431,32 +3513,13 @@ function ProtectionModel_21Jan2015(config) {
                     case 'keystatuseschange':
                         eventBus.trigger(events.KEY_STATUSES_CHANGED, { data: this });
                         event.target.keyStatuses.forEach(function () {
-                            // Edge and Chrome implement different version of keystatues, param are not on same order
-                            var status = undefined,
-                                keyId = undefined;
-                            if (arguments && arguments.length > 0) {
-                                if (arguments[0]) {
-                                    if (typeof arguments[0] === 'string') {
-                                        status = arguments[0];
-                                    } else {
-                                        keyId = arguments[0];
-                                    }
-                                }
-
-                                if (arguments[1]) {
-                                    if (typeof arguments[1] === 'string') {
-                                        status = arguments[1];
-                                    } else {
-                                        keyId = arguments[1];
-                                    }
-                                }
-                            }
-                            switch (status) {
+                            var keyStatus = parseKeyStatus(arguments);
+                            switch (keyStatus.status) {
                                 case 'expired':
                                     eventBus.trigger(events.INTERNAL_KEY_STATUS_CHANGED, { error: 'License has expired' });
                                     break;
                                 default:
-                                    eventBus.trigger(events.INTERNAL_KEY_STATUS_CHANGED, { status: status, keyId: keyId });
+                                    eventBus.trigger(events.INTERNAL_KEY_STATUS_CHANGED, keyStatus);
                                     break;
                             }
                         });
@@ -3479,6 +3542,17 @@ function ProtectionModel_21Jan2015(config) {
 
             getKeyStatuses: function getKeyStatuses() {
                 return session.keyStatuses;
+            },
+
+            getUsable: function getUsable() {
+                var usable = false;
+                session.keyStatuses.forEach(function () {
+                    var keyStatus = parseKeyStatus(arguments);
+                    if (keyStatus.status === 'usable') {
+                        usable = true;
+                    }
+                });
+                return usable;
             },
 
             getSessionType: function getSessionType() {
@@ -3515,6 +3589,7 @@ function ProtectionModel_21Jan2015(config) {
         loadKeySession: loadKeySession,
         removeKeySession: removeKeySession,
         closeKeySession: closeKeySession,
+        stop: stop,
         reset: reset
     };
 
@@ -3920,6 +3995,7 @@ function ProtectionModel_3Feb2014(config) {
         setServerCertificate: setServerCertificate,
         loadKeySession: loadKeySession,
         removeKeySession: removeKeySession,
+        stop: reset,
         reset: reset
     };
 
