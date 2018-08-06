@@ -390,6 +390,7 @@ declare namespace dashjs {
         type: MediaPlayerEvents['CAPTION_RENDERED'];
         captionDiv: HTMLDivElement;
         currentTrackIdx: number;
+    }
 
     export interface CaptionContainerResizeEvent extends Event {
         type: MediaPlayerEvents['CAPTION_CONTAINER_RESIZE'];
