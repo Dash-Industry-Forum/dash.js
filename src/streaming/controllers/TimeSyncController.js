@@ -299,6 +299,19 @@ function TimeSyncController() {
         eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED, { time: time, offset: offset, error: failed ? new DashJSError(TIME_SYNC_FAILED_ERROR_CODE) : null });
     }
 
+    function calculateTimeOffset(serverTime, deviceTime) {
+        const v = (serverTime - deviceTime) / 1000;
+        let offset;
+        // Math.trunc not implemented by IE11
+        if (Math.trunc) {
+            offset = Math.trunc(v);
+        } else {
+            offset = (v - v % 1) || (!isFinite(v) || v === 0 ? v : v < 0 ? -0 : 0);
+        }
+
+        return offset * 1000;
+    }
+
     function attemptSync(sources, sourceIndex) {
 
         // if called with no sourceIndex, use zero (highest priority)
@@ -331,7 +344,7 @@ function TimeSyncController() {
                     function (serverTime) {
                         // the timing source returned something useful
                         const deviceTime = new Date().getTime();
-                        const offset = Math.trunc((serverTime - deviceTime) / 1000) * 1000;
+                        const offset = calculateTimeOffset(serverTime, deviceTime);
 
                         setOffsetMs(offset);
 
