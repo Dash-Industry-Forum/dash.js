@@ -11,13 +11,13 @@
 
     <script class="code">
         function init() {
-            var video,
+            var audio,
                 player,
                 url = "https://vm2.dashif.org/dash/vod/testpic_2s/audio.mpd";
 
-            video = document.querySelector("video");
+            audio = document.querySelector("audio");
             player = dashjs.MediaPlayer().create();
-            player.initialize(video, url, true);
+            player.initialize(audio, url, true);
         }
     </script>
 
@@ -30,8 +30,7 @@
 </head>
 <body>
 <div>
-    <video controls="true">
-    </video>
+    <audio></audio>
 </div>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
