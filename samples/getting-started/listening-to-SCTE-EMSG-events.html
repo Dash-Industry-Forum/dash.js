@@ -9,44 +9,35 @@
         Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
     <!--<script src="../../dist/dash.all.min.js"></script>-->
 
-    <script>
+    <script class="code">
         var player;
         const URL = "https://vm2.dashif.org/livesim/scte35_2/testpic_2s/Manifest.mpd";
         const SCHEMEIDURI = "urn:scte:scte35:2013:xml";
 
         function init() {
-       
             player = dashjs.MediaPlayer().create();
             player.getDebug().setLogToBrowserConsole(false);
-            player.on(SCHEMEIDURI,showEvent);
+            player.on(SCHEMEIDURI, showEvent);
             player.initialize(document.querySelector("video"), URL, true);
-            
         }
 
-        function showEvent(e)
-        {
+        function showEvent(e) {
             log("EVENT RECEIVED: " + e.type);
             // We double process in order to pretty-print. Only two levels of object properties are exposed.
-            for (var name in e)
-            {
-
+            for (var name in e) {
                 if (typeof e[name] != 'object') {
                     log("    " + name + ": " + e[name]);
                 }
             }
-            for (name in e)
-            {
-                if (typeof e[name] == 'object' )
-                {
+            for (name in e) {
+                if (typeof e[name] == 'object' ) {
                     log("    " + name + ":");
-                    for (name2 in e[name])
-                    {
+                    for (name2 in e[name]) {
                         log("        " + name2 + ": " + JSON.stringify(e[name][name2]));
                     }
                 }
             }
         }
-
 
         function log(msg) {
             msg = msg.length > 200 ? msg.substring(0, 200) + "..." : msg; // to avoid repeated wrapping with large objects
@@ -55,8 +46,6 @@
             tracePanel.scrollTop = tracePanel.scrollHeight;
             console.log(msg);
         }
-        
-        
     </script>
 
     <style>
@@ -86,5 +75,6 @@
                 init();
             });
         </script>
+        <script src="../highlighter.js"></script>
     </body>
 </html>
