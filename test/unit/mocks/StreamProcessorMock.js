@@ -17,14 +17,15 @@ class FragmentModelMock {
 class BufferControllerMock {
     constructor() {
         this.seekStartTime = 0;
+        this.isBufferingCompleted = false;
     }
 
     setSeekStartTime(time) {
         this.seekStartTime = time;
     }
 
-    isBufferingCompleted() {
-        return false;
+    getIsBufferingCompleted() {
+        return this.isBufferingCompleted;
     }
 
     getRangeAt() {
@@ -124,7 +125,7 @@ class StreamProcessorMock {
     }
 
     isBufferingCompleted() {
-        return this.bufferController.isBufferingCompleted();
+        return this.bufferController.getIsBufferingCompleted();
     }
 
     getFragmentController() {
