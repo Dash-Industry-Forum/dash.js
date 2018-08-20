@@ -55,7 +55,7 @@ function ThumbnailController(config) {
 
     function getThumbnail(time) {
         const track = thumbnailTracks.getCurrentTrack();
-        if (!track || track.segmentDuration <= 0) {
+        if (!track || track.segmentDuration <= 0 || time === undefined || time === null) {
             return null;
         }
 
@@ -92,11 +92,8 @@ function ThumbnailController(config) {
 
     function getBitrateList() {
         const tracks = thumbnailTracks.getTracks();
-        if (!tracks || tracks.length === 0) {
-            return [];
-        }
-
         let i = 0;
+
         return tracks.map((t) => {
             const bitrateInfo = new BitrateInfo();
             bitrateInfo.mediaType = Constants.IMAGE;
