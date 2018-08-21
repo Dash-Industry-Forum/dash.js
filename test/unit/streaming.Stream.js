@@ -1,10 +1,23 @@
 import Stream from '../../src/streaming/Stream';
+import Events from '../../src/core/events/Events';
+import EventBus from '../../src/core/EventBus';
+
+import DashManifestModelMock from './mocks/DashManifestModelMock';
+import ManifestModelMock from './mocks/ManifestModelMock';
 
 const expect = require('chai').expect;
+const sinon = require('sinon');
 
 const context = {};
+const eventBus = EventBus(context).getInstance();
 
 describe('Stream', function () {
+    const dashManifestModelMock = new DashManifestModelMock();
+    const manifestModelMock = new ManifestModelMock();
+    const streamInfo = {
+        index: 'id'
+    };
+
     it('should return an empty array when getProcessors is called but streamProcessors attribute is an empty array', () => {
         const stream = Stream(context).create({});
 
@@ -55,5 +68,19 @@ describe('Stream', function () {
         const isCompatible = stream.isCompatibleWithStream();
 
         expect(isCompatible).to.be.false;                // jshint ignore:line
+    });
+
+    it('should not call STREAM_INITIALIZED event if initializeMedia has not been called when updateData is called', () => {
+        const spy = sinon.spy();
+
+        eventBus.on(Events.STREAM_INITIALIZED, spy);
+
+        const stream = Stream(context).create({dashManifestModel: dashManifestModelMock,
+                                               manifestModel: manifestModelMock});
+        stream.updateData(streamInfo);
+
+        expect(spy.notCalled).to.be.true;                // jshint ignore:line
+
+        eventBus.off(Events.STREAM_INITIALIZED, spy);
     });
 });

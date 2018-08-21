@@ -61,7 +61,7 @@ function ThumbnailTracks(config) {
             return;
         }
 
-        const streamInfo = stream ? stream.getStreamInfo() : null;
+        const streamInfo = stream.getStreamInfo();
         if (!streamInfo) {
             return;
         }

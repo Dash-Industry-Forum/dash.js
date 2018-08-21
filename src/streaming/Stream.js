@@ -630,7 +630,7 @@ function Stream(config) {
 
     function getProcessorForMediaInfo(mediaInfo) {
         if (!mediaInfo) {
-            return false;
+            return null;
         }
 
         let processors = getProcessors();

@@ -44,6 +44,9 @@ function BufferLevelRule(config) {
     }
 
     function execute(streamProcessor, videoTrackPresent) {
+        if (!streamProcessor) {
+            return true;
+        }
         const bufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor(streamProcessor.getType()));
         return bufferLevel < getBufferTarget(streamProcessor, videoTrackPresent);
     }

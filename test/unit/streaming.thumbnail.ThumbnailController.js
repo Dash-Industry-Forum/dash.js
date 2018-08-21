@@ -75,7 +75,11 @@ describe('Thumbnails', function () {
                 baseURLController: objectsHelper.getDummyBaseURLController(),
                 stream: new StreamMock()
             });
-            let thumbnail = thumbnailController.get(0);
+
+            let thumbnail = thumbnailController.get();
+            expect(thumbnail).to.be.null; // jshint ignore:line
+
+            thumbnail = thumbnailController.get(0);
             expect(thumbnail).to.be.not.null; // jshint ignore:line
             expect(thumbnail.x).to.equal(0);
             expect(thumbnail.y).to.equal(0);
