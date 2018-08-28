@@ -100,7 +100,8 @@ function DashHandler(config) {
     function initialize(StreamProcessor) {
         streamProcessor = StreamProcessor;
 
-        const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
+        const streamInfo = streamProcessor ? streamProcessor.getStreamInfo() : null;
+        const isDynamic =  streamInfo ? streamInfo.manifestInfo.isDynamic : null;
 
         segmentBaseLoader.initialize();
 
