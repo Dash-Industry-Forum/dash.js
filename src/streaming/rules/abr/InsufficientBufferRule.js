@@ -28,13 +28,25 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+<<<<<<< HEAD
+||||||| merged common ancestors
+import BufferController from '../../controllers/BufferController';
+=======
+import Constants from '../../constants/Constants';
+import BufferController from '../../controllers/BufferController';
+>>>>>>> Make InsufficientBufferRule have no side effects; clear seek reset on fragments loaded, make fragment loaded count 2, for close to segment boundary seeks
 import EventBus from '../../../core/EventBus';
 import Events from '../../../core/events/Events';
 import FactoryMaker from '../../../core/FactoryMaker';
 import Debug from '../../../core/Debug';
 import SwitchRequest from '../SwitchRequest';
+<<<<<<< HEAD
 import Constants from '../../constants/Constants';
 import MetricsConstants from '../../constants/MetricsConstants';
+||||||| merged common ancestors
+import Constants from '../../constants/Constants';
+=======
+>>>>>>> Make InsufficientBufferRule have no side effects; clear seek reset on fragments loaded, make fragment loaded count 2, for close to segment boundary seeks
 
 function InsufficientBufferRule(config) {
 
@@ -54,6 +66,7 @@ function InsufficientBufferRule(config) {
         logger = Debug(context).getInstance().getLogger(instance);
         resetInitialSettings();
         eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
+        eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, onEndFragment, instance);
     }
 
     function checkConfig() {
@@ -86,7 +99,7 @@ function InsufficientBufferRule(config) {
         const fragmentDuration = representationInfo.fragmentDuration;
 
         // Don't ask for a bitrate change if there is not info about buffer state or if fragmentDuration is not defined
-        if (!currentBufferState || !wasFirstBufferLoadedEventTriggered(mediaType, currentBufferState) || !fragmentDuration) {
+        if (!lastBufferStateVO || shouldIgnore(mediaType) || !fragmentDuration) {
             return switchRequest;
         }
 
@@ -111,30 +124,32 @@ function InsufficientBufferRule(config) {
         return switchRequest;
     }
 
-    function wasFirstBufferLoadedEventTriggered(mediaType, currentBufferState) {
-        bufferStateDict[mediaType] = bufferStateDict[mediaType] || {};
-
-        let wasTriggered = false;
-        if (bufferStateDict[mediaType].firstBufferLoadedEvent) {
-            wasTriggered = true;
-        } else if (currentBufferState && currentBufferState.state === MetricsConstants.BUFFER_LOADED) {
-            bufferStateDict[mediaType].firstBufferLoadedEvent = true;
-            wasTriggered = true;
-        }
-        return wasTriggered;
+    function shouldIgnore(mediaType) {
+        return bufferStateDict[mediaType].ignoreCount > 0;
     }
 
     function resetInitialSettings() {
         bufferStateDict = {};
+        bufferStateDict[Constants.VIDEO] = {ignoreCount: 2};
+        bufferStateDict[Constants.AUDIO] = {ignoreCount: 2};
     }
 
     function onPlaybackSeeking() {
         resetInitialSettings();
     }
 
+    function onEndFragment(e) {
+        if (e.mediaType === Constants.AUDIO || e.mediaType === Constants.VIDEO) {
+            if (bufferStateDict[e.mediaType].ignoreCount > 0) {
+                bufferStateDict[e.mediaType].ignoreCount --;
+            }
+        }
+    }
+
     function reset() {
         resetInitialSettings();
         eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
+        eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, onEndFragment, instance);
     }
 
     instance = {
