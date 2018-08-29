@@ -195,7 +195,7 @@ function TextSourceBuffer() {
         const streamProcessors = streamController.getActiveStreamProcessors();
         for (const i in streamProcessors) {
             if (streamProcessors[i].getType() === 'video') {
-                mseTimeOffset = streamProcessors[i].getCurrentRepresentationInfo().MSETimeOffset;
+                mseTimeOffset = streamProcessors[i].getRepresentationInfo().MSETimeOffset;
                 break;
             }
         }

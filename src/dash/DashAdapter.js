@@ -437,17 +437,23 @@ function DashAdapter() {
         }
     }
 
-    function getRepresentationInfoForQuality(representationController, quality) {
+    /**
+     * Get a specific voRepresentation. If quality parameter is defined, this function will return the voRepresentation for this quality.
+     * Otherwise, this function will return the current voRepresentation used by the representationController.
+     * @param {RepresentationController} representationController - RepresentationController reference
+     * @param {number} quality - quality index of the voRepresentaion expected.
+     */
+    function getRepresentationInfo(representationController, quality) {
         checkRepresentationController(representationController);
-        checkQuality(quality);
+        let voRepresentation;
 
-        const voRepresentation = representationController.getRepresentationForQuality(quality);
-        return voRepresentation ? convertRepresentationToRepresentationInfo(voRepresentation) : null;
-    }
+        if (quality !== undefined) {
+            checkQuality(quality);
+            voRepresentation = representationController.getRepresentationForQuality(quality);
+        } else {
+            voRepresentation = representationController.getCurrentRepresentation();
+        }
 
-    function getCurrentRepresentationInfo(representationController) {
-        checkRepresentationController(representationController);
-        let voRepresentation = representationController.getCurrentRepresentation();
         return voRepresentation ? convertRepresentationToRepresentationInfo(voRepresentation) : null;
     }
 
@@ -510,8 +516,7 @@ function DashAdapter() {
         getStreamsInfo: getStreamsInfo,
         getMediaInfoForType: getMediaInfoForType,
         getAllMediaInfoForType: getAllMediaInfoForType,
-        getCurrentRepresentationInfo: getCurrentRepresentationInfo,
-        getRepresentationInfoForQuality: getRepresentationInfoForQuality,
+        getRepresentationInfo: getRepresentationInfo,
         updateData: updateData,
         getInitRequest: getInitRequest,
         getFragmentRequest: getFragmentRequest,

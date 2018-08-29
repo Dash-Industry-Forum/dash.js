@@ -315,7 +315,7 @@ function ScheduleController(config) {
             return;
         }
 
-        currentRepresentationInfo = streamProcessor.getRepresentationInfoForQuality(e.newQuality);
+        currentRepresentationInfo = streamProcessor.getRepresentationInfo(e.newQuality);
 
         if (currentRepresentationInfo === null || currentRepresentationInfo === undefined) {
             throw new Error('Unexpected error! - currentRepresentationInfo is null or undefined');
@@ -369,7 +369,7 @@ function ScheduleController(config) {
             return;
         }
 
-        currentRepresentationInfo = streamProcessor.getCurrentRepresentationInfo();
+        currentRepresentationInfo = streamProcessor.getRepresentationInfo();
 
         if (initialRequest) {
             if (playbackController.getIsDynamic()) {

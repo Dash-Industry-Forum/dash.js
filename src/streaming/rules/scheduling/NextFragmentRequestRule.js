@@ -51,7 +51,7 @@ function NextFragmentRequestRule(config) {
         if (!streamProcessor) {
             return null;
         }
-        const representationInfo = streamProcessor.getCurrentRepresentationInfo();
+        const representationInfo = streamProcessor.getRepresentationInfo();
         const mediaInfo = representationInfo.mediaInfo;
         const mediaType = mediaInfo.type;
         const scheduleController = streamProcessor.getScheduleController();

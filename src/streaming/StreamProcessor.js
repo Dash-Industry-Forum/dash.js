@@ -284,12 +284,8 @@ function StreamProcessor(config) {
         return scheduleController;
     }
 
-    function getCurrentRepresentationInfo() {
-        return adapter.getCurrentRepresentationInfo(representationController);
-    }
-
-    function getRepresentationInfoForQuality(quality) {
-        return adapter.getRepresentationInfoForQuality(representationController, quality);
+    function getRepresentationInfo(quality) {
+        return adapter.getRepresentationInfo(representationController, quality);
     }
 
     function isBufferingCompleted() {
@@ -382,8 +378,7 @@ function StreamProcessor(config) {
         getRepresentationController: getRepresentationController,
         getIndexHandler: getIndexHandler,
         getPlaybackController: getPlaybackController,
-        getCurrentRepresentationInfo: getCurrentRepresentationInfo,
-        getRepresentationInfoForQuality: getRepresentationInfoForQuality,
+        getRepresentationInfo: getRepresentationInfo,
         getBufferLevel: getBufferLevel,
         switchInitData: switchInitData,
         isBufferingCompleted: isBufferingCompleted,

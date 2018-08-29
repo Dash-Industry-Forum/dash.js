@@ -43,14 +43,14 @@ function LiveEdgeFinder(config) {
     let streamProcessor = config.streamProcessor;
 
     function checkConfig() {
-        if (!timelineConverter || !timelineConverter.hasOwnProperty('getExpectedLiveEdge') || !streamProcessor || !streamProcessor.hasOwnProperty('getCurrentRepresentationInfo')) {
+        if (!timelineConverter || !timelineConverter.hasOwnProperty('getExpectedLiveEdge') || !streamProcessor || !streamProcessor.hasOwnProperty('getRepresentationInfo')) {
             throw new Error('Missing config parameter(s)');
         }
     }
 
     function getLiveEdge() {
         checkConfig();
-        const representationInfo = streamProcessor.getCurrentRepresentationInfo();
+        const representationInfo = streamProcessor.getRepresentationInfo();
         let liveEdge = representationInfo.DVRWindow.end;
         if (representationInfo.useCalculatedLiveEdgeTime) {
             liveEdge = timelineConverter.getExpectedLiveEdge();

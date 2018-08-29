@@ -168,12 +168,8 @@ describe('DashAdapter', function () {
     });
 
     describe('representationController parameter is missing or malformed', () => {
-        it('should throw an error when getRepresentationInfoForQuality is called and representationController parameter is undefined', function () {
-            expect(dashAdapter.getRepresentationInfoForQuality.bind(dashAdapter)).to.be.throw('representationController parameter is missing or malformed!');
-        });
-
-        it('should throw an error when getCurrentRepresentationInfo is called and representationController parameter is undefined', function () {
-            expect(dashAdapter.getCurrentRepresentationInfo.bind(dashAdapter)).to.be.throw('representationController parameter is missing or malformed!');
+        it('should throw an error when getRepresentationInfo is called and representationController parameter is undefined', function () {
+            expect(dashAdapter.getRepresentationInfo.bind(dashAdapter)).to.be.throw('representationController parameter is missing or malformed!');
         });
     });
 
@@ -181,8 +177,8 @@ describe('DashAdapter', function () {
         Events.extend(MediaPlayerEvents);
         const representationController = RepresentationController(context).create();
 
-        it('should throw an error when getRepresentationInfoForQuality is called and representationController parameter is defined, but quality is not a number', function () {
-            expect(dashAdapter.getRepresentationInfoForQuality.bind(dashAdapter, representationController, {})).to.be.throw('quality argument is not an integer');
+        it('should throw an error when getRepresentationInfo is called and representationController parameter is defined, but quality is not a number', function () {
+            expect(dashAdapter.getRepresentationInfo.bind(dashAdapter, representationController, {})).to.be.throw('quality argument is not an integer');
         });
     });
 });
