@@ -139,7 +139,7 @@ function InsufficientBufferRule(config) {
     }
 
     function onEndFragment(e) {
-        if (e.mediaType === Constants.AUDIO || e.mediaType === Constants.VIDEO) {
+        if (!isNaN(e.startTime) && (e.mediaType === Constants.AUDIO || e.mediaType === Constants.VIDEO)) {
             if (bufferStateDict[e.mediaType].ignoreCount > 0) {
                 bufferStateDict[e.mediaType].ignoreCount --;
             }

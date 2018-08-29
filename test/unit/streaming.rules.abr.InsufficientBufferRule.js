@@ -105,10 +105,10 @@ describe('InsufficientBufferRule', function () {
             dashMetrics: dashMetricsMock
         });
 
-        let e = { mediaType: 'video' };
+        let e = { mediaType: 'video', startTime: 0 };
         eventBus.trigger(Events.BYTES_APPENDED_END_FRAGMENT, e);
 
-        e = { mediaType: 'video' };//Event objects can't be reused because they get annotated by eventBus.
+        e = { mediaType: 'video', startTime: 4 };//Event objects can't be reused because they get annotated by eventBus.
         eventBus.trigger(Events.BYTES_APPENDED_END_FRAGMENT, e);
 
         bufferState.state = 'bufferStalled';
@@ -146,12 +146,12 @@ describe('InsufficientBufferRule', function () {
         let maxIndexRequest = rule.getMaxIndex(rulesContextMock);
         expect(maxIndexRequest.quality).to.be.equal(-1);
 
-        let e = { mediaType: 'video' };
+        let e = { mediaType: 'video', startTime: 0 };
         eventBus.trigger(Events.BYTES_APPENDED_END_FRAGMENT, e);
         maxIndexRequest = rule.getMaxIndex(rulesContextMock);
         expect(maxIndexRequest.quality).to.be.equal(-1);
 
-        e = { mediaType: 'video' };
+        e = { mediaType: 'video', startTime: 4 };
         eventBus.trigger(Events.BYTES_APPENDED_END_FRAGMENT, e);
         maxIndexRequest = rule.getMaxIndex(rulesContextMock);
         expect(maxIndexRequest.quality).to.be.equal(0);
