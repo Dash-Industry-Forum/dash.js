@@ -50,7 +50,6 @@ function EventController() {
         eventInterval, // variable holding the setInterval
         refreshDelay, // refreshTime for the setInterval
         presentationTimeThreshold,
-        manifestModel,
         manifestUpdater,
         playbackController,
         isStarted;
@@ -71,7 +70,7 @@ function EventController() {
     }
 
     function checkSetConfigCall() {
-        if (!manifestModel || !manifestUpdater || !playbackController) {
+        if (!manifestUpdater || !playbackController) {
             throw new Error('setConfig function has to be called previously');
         }
     }
@@ -221,10 +220,6 @@ function EventController() {
 
     function setConfig(config) {
         if (!config) return;
-
-        if (config.manifestModel) {
-            manifestModel = config.manifestModel;
-        }
 
         if (config.manifestUpdater) {
             manifestUpdater = config.manifestUpdater;

@@ -457,7 +457,6 @@ function Stream(config) {
             eventController = EventController(context).create();
 
             eventController.setConfig({
-                manifestModel: manifestModel,
                 manifestUpdater: manifestUpdater,
                 playbackController: playbackController
             });
@@ -762,7 +761,6 @@ function Stream(config) {
             eventController = EventController(context).create();
 
             eventController.setConfig({
-                manifestModel: manifestModel,
                 manifestUpdater: manifestUpdater,
                 playbackController: playbackController
             });
