@@ -40,6 +40,7 @@ import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import MediaController from './MediaController';
+import {replaceTokenForTemplate} from '../../dash/utils/SegmentsUtils';
 
 function ScheduleController(config) {
 
@@ -298,6 +299,7 @@ function ScheduleController(config) {
         const request = adapter.getInitRequest(streamProcessor, quality);
         if (request) {
             setFragmentProcessState(true);
+            request.url = replaceTokenForTemplate(request.url, 'Bandwidth', currentRepresentationInfo.bandwidth);
             fragmentModel.executeRequest(request);
         }
     }
