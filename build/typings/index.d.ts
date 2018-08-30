@@ -1,3 +1,5 @@
+import ClearKeyKeySet from "./src/streaming/protection/vo/ClearKeyKeySet";
+
 export = dashjs;
 export as namespace dashjs;
 
@@ -32,13 +34,19 @@ declare namespace dashjs {
     interface VideoModel { }
 
     interface ProtectionController {
-        initialize(manifest: object | null, audioInfo: ProtectionMediaInfo, videoInfo: ProtectionMediaInfo): void;
-        setProtectionData(protData: object): void;
-        setRobustnessLevel(level: string): void;
-        setSessionType(type: string): void;
-        loadKeySession(id: string): void;
-        closeKeySession(session: SessionToken): void;
+        initializeForMedia(mediaInfo: ProtectionMediaInfo): void;
+        createKeySession(initData: ArrayBuffer, cdmData: Uint8Array): void;
         removeKeySession(session: SessionToken): void;
+        closeKeySession(session: SessionToken): void;
+        setServerCertificate(serverCertificate: ArrayBuffer): void;
+        setMediaElement(element: HTMLMediaElement): void;
+        setSessionType(type: string): void;
+        setRobustnessLevel(level: string): void;
+        setProtectionData(protData: ProtectionData): void;
+        getSupportedKeySystemsFromContentProtection(cps: any[]): SupportedKeySystem[];
+        getKeySystems(): KeySystem[];
+        stop(): void;
+        reset(): void;
     }
 
     export interface Bitrate {
@@ -239,21 +247,21 @@ declare namespace dashjs {
         getUseDeadTimeLatencyForAbr(): boolean;
         setUseDeadTimeLatencyForAbr(value: boolean): void;
         getCurrentLiveLatency(): number;
-        enableForcedTextStreaming(value: boolean): void;        
+        enableForcedTextStreaming(value: boolean): void;
         isTextEnabled(): boolean;
         getBufferTimeAtTopQualityLongForm(): number;
         setMovingAverageMethod(value: string): void;
         getMovingAverageMethod(): string;
         setABRStrategy(value: string): void;
         getABRStrategy(): string;
-        useDefaultABRRules(value: boolean): void;       
+        useDefaultABRRules(value: boolean): void;
         getAverageThroughput(value: number): void;
         setBufferAheadToKeep(value: number): void;
         getStableBufferTime(): number;
         getBufferTimeAtTopQuality(): number;
         setManifestLoaderRetryAttempts(value: number): void;
         setManifestLoaderRetryInterval(value: number): void;
-        setManifestUpdateRetryInterval(value: number): void;        
+        setManifestUpdateRetryInterval(value: number): void;
         getManifestUpdateRetryInterval(): number;
         setSegmentOverlapToleranceTime(value: number): void;
         keepProtectionMediaKeys(value: boolean): void;
@@ -705,6 +713,25 @@ declare namespace dashjs {
          * Corresponding property values are keys, base64-encoded (no padding).
          */
         clearkeys?: { [key: string]: string };
+    }
+
+    export interface KeySystem {
+        systemString: string;
+        uuid: string;
+        schemeIdURI: string;
+        getInitData(cp: object): ArrayBuffer;
+        getRequestHeadersFromMessage(message: ArrayBuffer): object | null;
+        getLicenseRequestFromMessage(message: ArrayBuffer): Uint8Array;
+        getLicenseServerURLFromInitData(initData: ArrayBuffer): string | null;
+        getCDMData(): ArrayBuffer | null;
+        getSessionId(): string | null;
+    }
+
+    export interface SupportedKeySystem {
+        ks: KeySystem;
+        initData: ArrayBuffer;
+        cdmData: ArrayBuffer | null;;
+        sessionId: string | null;
     }
 
     export class MetricsList {
