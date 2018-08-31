@@ -115,9 +115,9 @@ class StreamProcessorMock {
 
     getRepresentationInfo(quality) {
         if (quality !== undefined) {
-            let offest = quality ? 2 : 1;
+            let offset = quality ? 2 : 1;
             return {
-                MSETimeOffset: offest
+                MSETimeOffset: offset
             };
         } else {
             return {mediaInfo: {type: this.type}, fragmentDuration: 6};
