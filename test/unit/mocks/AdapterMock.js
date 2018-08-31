@@ -22,7 +22,7 @@ class AdapterMock {
         return {};
     }
 
-    getFragmentRequestForTime() {
+    getFragmentRequest() {
         return {startTime: 0,
                 duration: 2};
     }

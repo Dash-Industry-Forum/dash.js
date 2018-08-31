@@ -147,10 +147,6 @@ function DashManifestModel(config) {
         return getIsTypeOf(adaptation, Constants.FRAGMENTED_TEXT);
     }
 
-    function getIsText(adaptation) {
-        return getIsTypeOf(adaptation, Constants.TEXT);
-    }
-
     function getIsMuxed(adaptation) {
         return getIsTypeOf(adaptation, Constants.MUXED);
     }
@@ -290,17 +286,20 @@ function DashManifestModel(config) {
     }
 
     function getCodec(adaptation, representationId, addResolutionInfo) {
+        let codec = null;
+
         if (adaptation && adaptation.Representation_asArray && adaptation.Representation_asArray.length > 0) {
             const representation = isInteger(representationId) && representationId >= 0 && representationId < adaptation.Representation_asArray.length ?
                 adaptation.Representation_asArray[representationId] : adaptation.Representation_asArray[0];
-            let codec = representation.mimeType + ';codecs="' + representation.codecs + '"';
-            if (addResolutionInfo && representation.width !== undefined) {
-                codec += ';width="' + representation.width + '";height="' + representation.height + '"';
+            if (representation) {
+                codec = representation.mimeType + ';codecs="' + representation.codecs + '"';
+                if (addResolutionInfo && representation.width !== undefined) {
+                    codec += ';width="' + representation.width + '";height="' + representation.height + '"';
+                }
             }
-            return codec;
         }
 
-        return null;
+        return codec;
     }
 
     function getMimeType(adaptation) {
@@ -1021,14 +1020,7 @@ function DashManifestModel(config) {
 
     instance = {
         getIsTypeOf: getIsTypeOf,
-        getIsAudio: getIsAudio,
-        getIsVideo: getIsVideo,
-        getIsText: getIsText,
-        getIsMuxed: getIsMuxed,
         getIsTextTrack: getIsTextTrack,
-        getIsFragmentedText: getIsFragmentedText,
-        getIsImage: getIsImage,
-        getIsMain: getIsMain,
         getLanguageForAdaptation: getLanguageForAdaptation,
         getViewpointForAdaptation: getViewpointForAdaptation,
         getRolesForAdaptation: getRolesForAdaptation,

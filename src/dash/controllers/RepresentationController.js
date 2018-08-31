@@ -210,7 +210,7 @@ function RepresentationController() {
     }
 
     function getRepresentationForQuality(quality) {
-        return voAvailableRepresentations[quality];
+        return quality === null || quality === undefined || quality >= voAvailableRepresentations.length ? null : voAvailableRepresentations[quality];
     }
 
     function getQualityForRepresentation(voRepresentation) {

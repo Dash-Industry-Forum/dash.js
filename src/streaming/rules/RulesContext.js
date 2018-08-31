@@ -37,7 +37,7 @@ function RulesContext(config) {
     let instance;
     const abrController = config.abrController;
     const streamProcessor = config.streamProcessor;
-    const representationInfo = config.streamProcessor.getCurrentRepresentationInfo();
+    const representationInfo = config.streamProcessor.getRepresentationInfo();
     const switchHistory = config.switchHistory;
     const droppedFramesHistory = config.droppedFramesHistory;
     const currentRequest = config.currentRequest;

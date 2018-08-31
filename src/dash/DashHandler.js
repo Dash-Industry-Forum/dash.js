@@ -73,7 +73,6 @@ function DashHandler(config) {
         index,
         requestedTime,
         currentTime,
-        earliestTime,
         streamProcessor,
         segmentsGetter;
 
@@ -101,7 +100,8 @@ function DashHandler(config) {
     function initialize(StreamProcessor) {
         streamProcessor = StreamProcessor;
 
-        const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
+        const streamInfo = streamProcessor ? streamProcessor.getStreamInfo() : null;
+        const isDynamic =  streamInfo ? streamInfo.manifestInfo.isDynamic : null;
 
         segmentBaseLoader.initialize();
 
@@ -120,10 +120,6 @@ function DashHandler(config) {
         return currentTime;
     }
 
-    function getEarliestTime() {
-        return earliestTime;
-    }
-
     function resetIndex() {
         index = -1;
     }
@@ -131,7 +127,6 @@ function DashHandler(config) {
     function resetInitialSettings() {
         resetIndex();
         currentTime = 0;
-        earliestTime = NaN;
         requestedTime = null;
         streamProcessor = null;
         segmentsGetter = null;
@@ -226,7 +221,6 @@ function DashHandler(config) {
         const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
         voRepresentation.segments = segments;
         if (segments && segments.length > 0) {
-            earliestTime = isNaN(earliestTime) ? segments[0].presentationStartTime : Math.min(segments[0].presentationStartTime,  earliestTime);
             if (isDynamic) {
                 const lastSegment = segments[segments.length - 1];
                 const liveEdge = lastSegment.presentationStartTime;
@@ -526,7 +520,6 @@ function DashHandler(config) {
         updateSegmentList: updateSegmentList,
         setCurrentTime: setCurrentTime,
         getCurrentTime: getCurrentTime,
-        getEarliestTime: getEarliestTime,
         reset: reset,
         resetIndex: resetIndex
     };

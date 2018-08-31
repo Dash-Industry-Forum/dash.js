@@ -457,7 +457,6 @@ function Stream(config) {
             eventController = EventController(context).create();
 
             eventController.setConfig({
-                manifestModel: manifestModel,
                 manifestUpdater: manifestUpdater,
                 playbackController: playbackController
             });
@@ -517,7 +516,7 @@ function Stream(config) {
     function filterCodecs(type) {
         const realAdaptation = dashManifestModel.getAdaptationForType(manifestModel.getValue(), streamInfo.index, type, streamInfo);
 
-        if (!realAdaptation || !Array.isArray(realAdaptation.Representation_asArray)) return null;
+        if (!realAdaptation || !Array.isArray(realAdaptation.Representation_asArray)) return;
 
         // Filter codecs that are not supported
         realAdaptation.Representation_asArray = realAdaptation.Representation_asArray.filter((_, i) => {
@@ -762,7 +761,6 @@ function Stream(config) {
             eventController = EventController(context).create();
 
             eventController.setConfig({
-                manifestModel: manifestModel,
                 manifestUpdater: manifestUpdater,
                 playbackController: playbackController
             });

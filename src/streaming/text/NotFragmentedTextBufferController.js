@@ -54,13 +54,11 @@ function NotFragmentedTextBufferController(config) {
         initialized,
         mediaSource,
         buffer,
-        representationController,
         initCache;
 
     function setup() {
         initialized = false;
         mediaSource = null;
-        representationController = null;
         isBufferingCompleted = false;
 
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
@@ -73,7 +71,6 @@ function NotFragmentedTextBufferController(config) {
 
     function initialize(source) {
         setMediaSource(source);
-        representationController = streamProcessor.getRepresentationController();
         initCache = InitCache(context).getInstance();
     }
 

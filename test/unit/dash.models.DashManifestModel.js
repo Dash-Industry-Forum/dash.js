@@ -231,6 +231,12 @@ describe('DashManifestModel', function () {
         expect(codec).to.be.null;    // jshint ignore:line
     });
 
+    it('should return null when getCodec is called and representationId is not an integer', () => {
+        const codec = dashManifestModel.getCodec({ Representation_asArray: { length: 1 } }, true);
+
+        expect(codec).to.be.null;    // jshint ignore:line
+    });
+
     it('should return null when getMimeType is called and adaptation is undefined', () => {
         const mimeType = dashManifestModel.getMimeType();
 

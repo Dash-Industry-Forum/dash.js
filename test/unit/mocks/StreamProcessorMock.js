@@ -109,19 +109,19 @@ class StreamProcessorMock {
         return true;
     }
 
-    getRepresentationInfoForQuality(quality) {
-        let offest = quality ? 2 : 1;
-        return {
-            MSETimeOffset: offest
-        };
-    }
-
     getStreamInfo() {
         return this.streamInfo;
     }
 
-    getCurrentRepresentationInfo() {
-        return {mediaInfo: {type: this.type}, fragmentDuration: 6};
+    getRepresentationInfo(quality) {
+        if (quality !== undefined) {
+            let offset = quality ? 2 : 1;
+            return {
+                MSETimeOffset: offset
+            };
+        } else {
+            return {mediaInfo: {type: this.type}, fragmentDuration: 6};
+        }
     }
 
     isBufferingCompleted() {

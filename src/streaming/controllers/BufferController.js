@@ -144,7 +144,7 @@ function BufferController(config) {
         } else {
             buffer = PreBufferSink(context).create(onAppended.bind(this));
         }
-        updateBufferTimestampOffset(streamProcessor.getRepresentationInfoForQuality(requiredQuality).MSETimeOffset);
+        updateBufferTimestampOffset(streamProcessor.getRepresentationInfo(requiredQuality).MSETimeOffset);
         return buffer;
     }
 
@@ -210,7 +210,7 @@ function BufferController(config) {
         const chunk = e.chunk;
         const bytes = chunk.bytes;
         const quality = chunk.quality;
-        const currentRepresentation = streamProcessor.getRepresentationInfoForQuality(quality);
+        const currentRepresentation = streamProcessor.getRepresentationInfo(quality);
         const eventStreamMedia = adapter.getEventsFor(currentRepresentation.mediaInfo, streamProcessor);
         const eventStreamTrack = adapter.getEventsFor(currentRepresentation, streamProcessor);
 
@@ -315,7 +315,7 @@ function BufferController(config) {
     function onQualityChanged(e) {
         if (requiredQuality === e.newQuality || type !== e.mediaType || streamProcessor.getStreamInfo().id !== e.streamInfo.id) return;
 
-        updateBufferTimestampOffset(streamProcessor.getRepresentationInfoForQuality(e.newQuality).MSETimeOffset);
+        updateBufferTimestampOffset(streamProcessor.getRepresentationInfo(e.newQuality).MSETimeOffset);
         requiredQuality = e.newQuality;
     }
 
