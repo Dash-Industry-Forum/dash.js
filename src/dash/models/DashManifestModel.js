@@ -297,7 +297,6 @@ function DashManifestModel(config) {
                     codec += ';width="' + representation.width + '";height="' + representation.height + '"';
                 }
             }
-            return codec;
         }
 
         return codec;
