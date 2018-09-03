@@ -709,7 +709,7 @@ function Stream(config) {
         return compareCodecs(stream, Constants.VIDEO) && compareCodecs(stream, Constants.AUDIO);
     }
 
-    function compareCodecs( stream, type ) {
+    function compareCodecs(stream, type) {
         if (!stream) {
             return false;
         }
