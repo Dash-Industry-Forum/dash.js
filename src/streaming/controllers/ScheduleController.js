@@ -191,7 +191,7 @@ function ScheduleController(config) {
         const streamInfo = streamProcessor.getStreamInfo();
         if (bufferResetInProgress || isNaN(lastInitQuality) || switchTrack || isReplacement ||
             hasTopQualityChanged(currentRepresentationInfo.mediaInfo.type, streamInfo.id) ||
-            bufferLevelRule.execute(streamProcessor, streamController.isVideoTrackPresent())) {
+            bufferLevelRule.execute(streamProcessor, streamController.isTrackTypePresent(Constants.VIDEO))) {
 
             const getNextFragment = function () {
                 const fragmentController = streamProcessor.getFragmentController();
@@ -601,7 +601,7 @@ function ScheduleController(config) {
     }
 
     function getBufferTarget() {
-        return bufferLevelRule.getBufferTarget(streamProcessor, streamController.isVideoTrackPresent());
+        return bufferLevelRule.getBufferTarget(streamProcessor, streamController.isTrackTypePresent(Constants.VIDEO));
     }
 
     function getType() {

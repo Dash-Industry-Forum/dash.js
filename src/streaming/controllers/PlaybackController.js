@@ -643,8 +643,8 @@ function PlaybackController() {
             commonEarliestTime[streamInfo.id][type] = Math.max(ranges.start(0), streamInfo.start);
         }
 
-        const hasVideoTrack = streamController.isVideoTrackPresent();
-        const hasAudioTrack = streamController.isAudioTrackPresent();
+        const hasVideoTrack = streamController.isTrackTypePresent(Constants.VIDEO);
+        const hasAudioTrack = streamController.isTrackTypePresent(Constants.AUDIO);
 
         initialStartTime = getStreamStartTime(false);
         if (hasAudioTrack && hasVideoTrack) {

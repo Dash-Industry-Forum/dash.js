@@ -92,14 +92,20 @@ describe('StreamController', function () {
             expect(activeStreamProcessorsArray).to.be.empty;                // jshint ignore:line
         });
 
-        it('should return undefined when attempting to call isAudioTrackPresent while no activeStream has been defined', function () {
-            const isAudioTrackPresent = streamController.isAudioTrackPresent();
+        it('should return undefined when attempting to call isTrackTypePresent with no track type', function () {
+            const isAudioTrackPresent = streamController.isTrackTypePresent();
 
             expect(isAudioTrackPresent).to.be.undefined;    // jshint ignore:line
         });
 
-        it('should return undefined when attempting to call isVideoTrackPresent while no activeStream has been defined', function () {
-            const isVideoTrackPresent = streamController.isVideoTrackPresent();
+        it('should return undefined when attempting to call isTrackTypePresent, for audio type, while no activeStream has been defined', function () {
+            const isAudioTrackPresent = streamController.isTrackTypePresent('audio');
+
+            expect(isAudioTrackPresent).to.be.undefined;    // jshint ignore:line
+        });
+
+        it('should return undefined when attempting to call isTrackTypePresent, for video type, while no activeStream has been defined', function () {
+            const isVideoTrackPresent = streamController.isTrackTypePresent('video');
 
             expect(isVideoTrackPresent).to.be.undefined;    // jshint ignore:line
         });
