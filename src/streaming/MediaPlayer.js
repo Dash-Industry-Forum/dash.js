@@ -2696,7 +2696,6 @@ function MediaPlayer() {
 
         // configure controllers
         mediaController.setConfig({
-            errHandler: errHandler,
             domStorage: domStorage
         });
 
