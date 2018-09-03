@@ -452,11 +452,8 @@ function Stream(config) {
         createStreamProcessor(initialMediaInfo, allMediaForType, mediaSource);
     }
 
-    function initializeMedia(mediaSource, previousBuffers) {
-        checkConfig();
+    function initializeEventController () {
         let events;
-        let element = videoModel.getElement();
-
         //if initializeMedia is called from a switch period, eventController could have been already created.
         if (!eventController) {
             eventController = EventController(context).create();
@@ -468,6 +465,13 @@ function Stream(config) {
             events = adapter.getEventsFor(streamInfo);
             eventController.addInlineEvents(events);
         }
+    }
+
+    function initializeMedia(mediaSource, previousBuffers) {
+        checkConfig();
+        let element = videoModel.getElement();
+
+        initializeEventController();
 
         isUpdating = true;
 
@@ -761,19 +765,7 @@ function Stream(config) {
     }
 
     function preload(mediaSource, previousBuffers) {
-        let events;
-
-        //if initializeMedia is called from a switch period, eventController could have been already created.
-        if (!eventController) {
-            eventController = EventController(context).create();
-
-            eventController.setConfig({
-                manifestUpdater: manifestUpdater,
-                playbackController: playbackController
-            });
-            events = adapter.getEventsFor(streamInfo);
-            eventController.addInlineEvents(events);
-        }
+        initializeEventController();
 
         initializeMediaForType(Constants.VIDEO, mediaSource);
         initializeMediaForType(Constants.AUDIO, mediaSource);
