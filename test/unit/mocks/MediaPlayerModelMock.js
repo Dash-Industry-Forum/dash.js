@@ -371,24 +371,8 @@ class MediaPlayerModelMock {
         return this.bufferPruningInterval;
     }
 
-    setFragmentRetryAttempts(value) {
-        this.retryAttempts[HTTPRequest.MEDIA_SEGMENT_TYPE] = value;
-    }
-
-    setManifestRetryAttempts(value) {
-        this.retryAttempts[HTTPRequest.MPD_TYPE] = value;
-    }
-
     setRetryAttemptsForType(type, value) {
         this.retryAttempts[type] = value;
-    }
-
-    getFragmentRetryAttempts() {
-        return this.retryAttempts[HTTPRequest.MEDIA_SEGMENT_TYPE];
-    }
-
-    getManifestRetryAttempts() {
-        return this.retryAttempts[HTTPRequest.MPD_TYPE];
     }
 
     getRetryAttemptsForType(type) {
@@ -397,10 +381,6 @@ class MediaPlayerModelMock {
 
     setRetryIntervalForType(type, value) {
         this.retryIntervals[type] = value;
-    }
-
-    getFragmentRetryInterval() {
-        return this.retryIntervals[HTTPRequest.MEDIA_SEGMENT_TYPE];
     }
 
     getRetryIntervalForType(type) {

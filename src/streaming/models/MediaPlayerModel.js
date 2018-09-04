@@ -357,24 +357,8 @@ function MediaPlayerModel() {
         return bufferPruningInterval;
     }
 
-    function setFragmentRetryAttempts(value) {
-        retryAttempts[HTTPRequest.MEDIA_SEGMENT_TYPE] = value;
-    }
-
-    function setManifestRetryAttempts(value) {
-        retryAttempts[HTTPRequest.MPD_TYPE] = value;
-    }
-
     function setRetryAttemptsForType(type, value) {
         retryAttempts[type] = value;
-    }
-
-    function getFragmentRetryAttempts() {
-        return retryAttempts[HTTPRequest.MEDIA_SEGMENT_TYPE];
-    }
-
-    function getManifestRetryAttempts() {
-        return retryAttempts[HTTPRequest.MPD_TYPE];
     }
 
     function getRetryAttemptsForType(type) {
@@ -569,10 +553,6 @@ function MediaPlayerModel() {
         getBufferAheadToKeep: getBufferAheadToKeep,
         setBufferPruningInterval: setBufferPruningInterval,
         getBufferPruningInterval: getBufferPruningInterval,
-        setFragmentRetryAttempts: setFragmentRetryAttempts,
-        getFragmentRetryAttempts: getFragmentRetryAttempts,
-        setManifestRetryAttempts: setManifestRetryAttempts,
-        getManifestRetryAttempts: getManifestRetryAttempts,
         setRetryAttemptsForType: setRetryAttemptsForType,
         getRetryAttemptsForType: getRetryAttemptsForType,
         setRetryIntervalForType: setRetryIntervalForType,

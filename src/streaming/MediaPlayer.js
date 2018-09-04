@@ -1760,7 +1760,7 @@ function MediaPlayer() {
      * @instance
      */
     function setFragmentLoaderRetryAttempts(value) {
-        mediaPlayerModel.setFragmentRetryAttempts(value);
+        mediaPlayerModel.setRetryAttemptsForType(HTTPRequest.MEDIA_SEGMENT_TYPE, value);
     }
 
     /**
@@ -1784,7 +1784,7 @@ function MediaPlayer() {
      * @instance
      */
     function setManifestLoaderRetryAttempts(value) {
-        mediaPlayerModel.setManifestRetryAttempts(value);
+        mediaPlayerModel.setRetryAttemptsForType(HTTPRequest.MPD_TYPE, value);
     }
 
     /**
