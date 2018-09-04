@@ -487,7 +487,7 @@ function Stream(config) {
 
     function addInbandEvents (events) {
         if (eventController) {
-            eventController.addInbanEvents(events);
+            eventController.addInbandEvents(events);
         }
     }
 
