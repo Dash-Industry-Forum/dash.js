@@ -201,7 +201,7 @@ function MediaPlayerModel() {
         return useDefaultABRRules;
     }
 
-    function findABRCustomRule(rulename) {
+    function findABRCustomRuleIndex(rulename) {
         let i;
         for (i = 0; i < customABRRule.length; i++) {
             if (customABRRule[i].rulename === rulename) {
@@ -217,7 +217,7 @@ function MediaPlayerModel() {
 
     function addABRCustomRule(type, rulename, rule) {
 
-        let index = findABRCustomRule(rulename);
+        let index = findABRCustomRuleIndex(rulename);
         if (index === -1) {
             // add rule
             customABRRule.push({
