@@ -225,7 +225,7 @@ function BufferController(config) {
             })[0];
 
             const events = handleInbandEvents(bytes, request, eventStreamMedia, eventStreamTrack);
-            streamProcessor.getEventController().addInbandEvents(events);
+            streamProcessor.addInbandEvents(events);
         }
 
         if (bufferResetInProgress) {

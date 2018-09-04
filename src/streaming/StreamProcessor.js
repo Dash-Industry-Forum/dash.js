@@ -239,8 +239,10 @@ function StreamProcessor(config) {
         return stream ? stream.getStreamInfo() : null;
     }
 
-    function getEventController() {
-        return stream ? stream.getEventController() : null;
+    function addInbandEvents(events) {
+        if (stream) {
+            stream.addInbandEvents(events);
+        }
     }
 
     function selectMediaInfo(newMediaInfo) {
@@ -373,7 +375,6 @@ function StreamProcessor(config) {
         getFragmentModel: getFragmentModel,
         getScheduleController: getScheduleController,
         getLiveEdgeFinder: getLiveEdgeFinder,
-        getEventController: getEventController,
         getFragmentController: getFragmentController,
         getRepresentationController: getRepresentationController,
         getIndexHandler: getIndexHandler,
@@ -399,6 +400,7 @@ function StreamProcessor(config) {
         unregisterExternalController: unregisterExternalController,
         getExternalControllers: getExternalControllers,
         unregisterAllExternalController: unregisterAllExternalController,
+        addInbandEvents: addInbandEvents,
         reset: reset
     };
 

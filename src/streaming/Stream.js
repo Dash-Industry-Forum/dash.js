@@ -233,10 +233,6 @@ function Stream(config) {
         return streamInfo;
     }
 
-    function getEventController() {
-        return eventController;
-    }
-
     function getFragmentController() {
         return fragmentController;
     }
@@ -461,13 +457,19 @@ function Stream(config) {
                 manifestUpdater: manifestUpdater,
                 playbackController: playbackController
             });
-            addEvents();
+            addInlineEvents();
         }
     }
 
-    function addEvents () {
+    function addInlineEvents () {
         const events = adapter.getEventsFor(streamInfo);
         eventController.addInlineEvents(events);
+    }
+
+    function addInbandEvents (events) {
+        if (eventController) {
+            eventController.addInbanEvents(events);
+        }
     }
 
     function initializeMedia(mediaSource, previousBuffers) {
@@ -680,7 +682,7 @@ function Stream(config) {
         streamInfo = updatedStreamInfo;
 
         if (eventController) {
-            addEvents();
+            addInlineEvents();
         }
 
         filterCodecs(Constants.VIDEO);
@@ -799,7 +801,6 @@ function Stream(config) {
         preload: preload,
         getFragmentController: getFragmentController,
         getThumbnailController: getThumbnailController,
-        getEventController: getEventController,
         getBitrateListFor: getBitrateListFor,
         startEventController: startEventController,
         stopEventController: stopEventController,
@@ -808,7 +809,8 @@ function Stream(config) {
         getProcessors: getProcessors,
         setMediaSource: setMediaSource,
         isCompatibleWithStream: isCompatibleWithStream,
-        getPreloaded: getPreloaded
+        getPreloaded: getPreloaded,
+        addInbandEvents: addInbandEvents
     };
 
     setup();
