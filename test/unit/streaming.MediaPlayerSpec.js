@@ -920,12 +920,12 @@ describe('MediaPlayer', function () {
         });
 
         it('should configure ManifestLoaderRetryInterval', function () {
-            let ManifestLoaderRetryInterval = mediaPlayerModel.getManifestRetryInterval();
+            let ManifestLoaderRetryInterval = mediaPlayerModel.getRetryIntervalForType('MPD');
             expect(ManifestLoaderRetryInterval).to.equal(500);
 
             player.setManifestLoaderRetryInterval(50);
 
-            ManifestLoaderRetryInterval = mediaPlayerModel.getManifestRetryInterval();
+            ManifestLoaderRetryInterval = mediaPlayerModel.getRetryIntervalForType('MPD');
             expect(ManifestLoaderRetryInterval).to.equal(50);
         });
 

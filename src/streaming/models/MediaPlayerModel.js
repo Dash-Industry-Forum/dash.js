@@ -381,24 +381,8 @@ function MediaPlayerModel() {
         return getLowLatencyEnabled() ? retryAttempts[type] * LOW_LATENCY_MULTIPLY_FACTOR : retryAttempts[type];
     }
 
-    function setFragmentRetryInterval(value) {
-        retryIntervals[HTTPRequest.MEDIA_SEGMENT_TYPE] = value;
-    }
-
-    function setManifestRetryInterval(value) {
-        retryIntervals[HTTPRequest.MPD_TYPE] = value;
-    }
-
     function setRetryIntervalForType(type, value) {
         retryIntervals[type] = value;
-    }
-
-    function getFragmentRetryInterval() {
-        return retryIntervals[HTTPRequest.MEDIA_SEGMENT_TYPE];
-    }
-
-    function getManifestRetryInterval() {
-        return retryIntervals[HTTPRequest.MPD_TYPE];
     }
 
     function getRetryIntervalForType(type) {
@@ -591,10 +575,6 @@ function MediaPlayerModel() {
         getManifestRetryAttempts: getManifestRetryAttempts,
         setRetryAttemptsForType: setRetryAttemptsForType,
         getRetryAttemptsForType: getRetryAttemptsForType,
-        setFragmentRetryInterval: setFragmentRetryInterval,
-        getFragmentRetryInterval: getFragmentRetryInterval,
-        setManifestRetryInterval: setManifestRetryInterval,
-        getManifestRetryInterval: getManifestRetryInterval,
         setRetryIntervalForType: setRetryIntervalForType,
         getRetryIntervalForType: getRetryIntervalForType,
         setWallclockTimeUpdateInterval: setWallclockTimeUpdateInterval,

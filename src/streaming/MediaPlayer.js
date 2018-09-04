@@ -1772,7 +1772,7 @@ function MediaPlayer() {
      * @instance
      */
     function setFragmentLoaderRetryInterval(value) {
-        mediaPlayerModel.setFragmentRetryInterval(value);
+        mediaPlayerModel.setRetryIntervalForType(HTTPRequest.MEDIA_SEGMENT_TYPE, value);
     }
 
     /**
@@ -1796,7 +1796,7 @@ function MediaPlayer() {
      * @instance
      */
     function setManifestLoaderRetryInterval(value) {
-        mediaPlayerModel.setManifestRetryInterval(value);
+        mediaPlayerModel.setRetryIntervalForType(HTTPRequest.MPD_TYPE, value);
     }
 
     /**
