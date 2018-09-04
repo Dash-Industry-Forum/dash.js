@@ -233,15 +233,17 @@ function MediaPlayerModel() {
     }
 
     function removeABRCustomRule(rulename) {
-        let index = findABRCustomRule(rulename);
-        if (index !== -1) {
-            // remove rule
-            customABRRule.splice(index, 1);
+        if (rulename) {
+            let index = findABRCustomRuleIndex(rulename);
+            //if no rulename custom rule has been found, do nothing
+            if (index !== -1) {
+                // remove rule
+                customABRRule.splice(index, 1);
+            }
+        } else {
+            //if no rulename is defined, remove all ABR custome rules
+            customABRRule = [];
         }
-    }
-
-    function removeAllABRCustomRule() {
-        customABRRule = [];
     }
 
     function setBandwidthSafetyFactor(value) {
@@ -557,7 +559,6 @@ function MediaPlayerModel() {
         getABRCustomRules: getABRCustomRules,
         addABRCustomRule: addABRCustomRule,
         removeABRCustomRule: removeABRCustomRule,
-        removeAllABRCustomRule: removeAllABRCustomRule,
         setBandwidthSafetyFactor: setBandwidthSafetyFactor,
         getBandwidthSafetyFactor: getBandwidthSafetyFactor,
         setAbandonLoadTimeout: setAbandonLoadTimeout,

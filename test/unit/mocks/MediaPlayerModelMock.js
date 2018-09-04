@@ -225,7 +225,7 @@ class MediaPlayerModelMock {
         return this.useDefaultABRRules;
     }
 
-    findABRCustomRule(rulename) {
+    findABRCustomRuleIndex(rulename) {
         let i;
         for (i = 0; i < this.customABRRule.length; i++) {
             if (this.customABRRule[i].rulename === rulename) {
@@ -241,7 +241,7 @@ class MediaPlayerModelMock {
 
     addABRCustomRule(type, rulename, rule) {
 
-        let index = this.findABRCustomRule(rulename);
+        let index = this.findABRCustomRuleIndex(rulename);
         if (index === -1) {
             // add rule
             this.customABRRule.push({
@@ -257,15 +257,16 @@ class MediaPlayerModelMock {
     }
 
     removeABRCustomRule(rulename) {
-        let index = this.findABRCustomRule(rulename);
-        if (index !== -1) {
-            // remove rule
-            this.customABRRule.splice(index, 1);
+        if (rulename) {
+            let index = this.findABRCustomRuleIndex(rulename);
+            if (index !== -1) {
+                // remove rule
+                this.customABRRule.splice(index, 1);
+            }
+        } else {
+            //if no rulename is defined, remove all ABR custome rules
+            this.customABRRule = [];
         }
-    }
-
-    removeAllABRCustomRule() {
-        this.customABRRule = [];
     }
 
     setBandwidthSafetyFactor(value) {

@@ -705,7 +705,7 @@ describe('MediaPlayer', function () {
             customRules = mediaPlayerModel.getABRCustomRules();
             expect(customRules.length).to.equal(2);
 
-            player.removeAllABRCustomRule();
+            player.removeABRCustomRule();
 
             customRules = mediaPlayerModel.getABRCustomRules();
             expect(customRules.length).to.equal(0);

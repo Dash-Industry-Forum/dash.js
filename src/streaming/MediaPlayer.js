@@ -1339,7 +1339,7 @@ function MediaPlayer() {
      * @instance
      */
     function removeAllABRCustomRule() {
-        mediaPlayerModel.removeAllABRCustomRule();
+        mediaPlayerModel.removeABRCustomRule();
     }
 
     /**
