@@ -393,12 +393,12 @@ function MediaPlayerModel() {
         liveDelayFragmentCount = value;
     }
 
-    function setLiveDelay(value) {
-        liveDelay = value;
-    }
-
     function getLiveDelayFragmentCount() {
         return liveDelayFragmentCount;
+    }
+
+    function setLiveDelay(value) {
+        liveDelay = value;
     }
 
     function getLiveDelay() {
