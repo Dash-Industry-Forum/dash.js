@@ -453,7 +453,6 @@ function Stream(config) {
     }
 
     function initializeEventController () {
-        let events;
         //if initializeMedia is called from a switch period, eventController could have been already created.
         if (!eventController) {
             eventController = EventController(context).create();
@@ -462,9 +461,13 @@ function Stream(config) {
                 manifestUpdater: manifestUpdater,
                 playbackController: playbackController
             });
-            events = adapter.getEventsFor(streamInfo);
-            eventController.addInlineEvents(events);
+            addEvents();
         }
+    }
+
+    function addEvents () {
+        const events = adapter.getEventsFor(streamInfo);
+        eventController.addInlineEvents(events);
     }
 
     function initializeMedia(mediaSource, previousBuffers) {
@@ -677,8 +680,7 @@ function Stream(config) {
         streamInfo = updatedStreamInfo;
 
         if (eventController) {
-            let events = adapter.getEventsFor(streamInfo);
-            eventController.addInlineEvents(events);
+            addEvents();
         }
 
         filterCodecs(Constants.VIDEO);
