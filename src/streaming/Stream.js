@@ -97,13 +97,20 @@ function Stream(config) {
             errHandler: errHandler
         });
 
+        registerEvents();
+    }
+
+    function registerEvents() {
         eventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
     }
 
-    function initialize(StreamInfo, ProtectionController) {
-        streamInfo = StreamInfo;
-        protectionController = ProtectionController;
+    function unRegisterEvents() {
+        eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
+        eventBus.off(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
+    }
+
+    function registerProtectionEvents() {
         if (protectionController) {
             eventBus.on(Events.KEY_ERROR, onProtectionError, instance);
             eventBus.on(Events.SERVER_CERTIFICATE_UPDATED, onProtectionError, instance);
@@ -112,6 +119,23 @@ function Stream(config) {
             eventBus.on(Events.KEY_SESSION_CREATED, onProtectionError, instance);
             eventBus.on(Events.KEY_STATUSES_CHANGED, onProtectionError, instance);
         }
+    }
+
+    function unRegisterProtectionEvents() {
+        if (protectionController) {
+            eventBus.off(Events.KEY_ERROR, onProtectionError, instance);
+            eventBus.off(Events.SERVER_CERTIFICATE_UPDATED, onProtectionError, instance);
+            eventBus.off(Events.LICENSE_REQUEST_COMPLETE, onProtectionError, instance);
+            eventBus.off(Events.KEY_SYSTEM_SELECTED, onProtectionError, instance);
+            eventBus.off(Events.KEY_SESSION_CREATED, onProtectionError, instance);
+            eventBus.off(Events.KEY_STATUSES_CHANGED, onProtectionError, instance);
+        }
+    }
+
+    function initialize(StreamInfo, ProtectionController) {
+        streamInfo = StreamInfo;
+        protectionController = ProtectionController;
+        registerProtectionEvents();
     }
 
     /**
@@ -205,14 +229,9 @@ function Stream(config) {
 
         resetInitialSettings();
 
-        eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
-        eventBus.off(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
-        eventBus.off(Events.KEY_ERROR, onProtectionError, instance);
-        eventBus.off(Events.SERVER_CERTIFICATE_UPDATED, onProtectionError, instance);
-        eventBus.off(Events.LICENSE_REQUEST_COMPLETE, onProtectionError, instance);
-        eventBus.off(Events.KEY_SYSTEM_SELECTED, onProtectionError, instance);
-        eventBus.off(Events.KEY_SESSION_CREATED, onProtectionError, instance);
-        eventBus.off(Events.KEY_STATUSES_CHANGED, onProtectionError, instance);
+        unRegisterEvents();
+
+        unRegisterProtectionEvents();
 
         setPreloaded(false);
     }
