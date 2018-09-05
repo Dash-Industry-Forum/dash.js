@@ -436,12 +436,19 @@ function AbrController() {
         }
     }
 
+    function checkQuality(quality) {
+        const isInt = quality !== null && !isNaN(quality) && (quality % 1 === 0);
+
+        if (!isInt) {
+            throw new Error('argument is not an integer');
+        }
+    }
+
     function setPlaybackQuality(type, streamInfo, newQuality, reason) {
         const id = streamInfo.id;
         const oldQuality = getQualityFor(type);
-        const isInt = newQuality !== null && !isNaN(newQuality) && (newQuality % 1 === 0);
 
-        if (!isInt) throw new Error('argument is not an integer');
+        checkQuality(newQuality);
 
         const topQualityIdx = getTopQualityIndexFor(type, id);
         if (newQuality !== oldQuality && newQuality >= 0 && newQuality <= topQualityIdx) {
@@ -490,9 +497,6 @@ function AbrController() {
         }
 
         const bitrateList = getBitrateList(mediaInfo);
-        if (!bitrateList || bitrateList.length === 0) {
-            return QUALITY_DEFAULT;
-        }
 
         for (let i = bitrateList.length - 1; i >= 0; i--) {
             const bitrateInfo = bitrateList[i];
@@ -500,7 +504,7 @@ function AbrController() {
                 return i;
             }
         }
-        return 0;
+        return QUALITY_DEFAULT;
     }
 
     /**
@@ -509,12 +513,12 @@ function AbrController() {
      * @memberof AbrController#
      */
     function getBitrateList(mediaInfo) {
-        if (!mediaInfo || !mediaInfo.bitrateList) return null;
+        const infoList = [];
+        if (!mediaInfo || !mediaInfo.bitrateList) return infoList;
 
         const bitrateList = mediaInfo.bitrateList;
         const type = mediaInfo.type;
 
-        const infoList = [];
         let bitrateInfo;
 
         for (let i = 0, ln = bitrateList.length; i < ln; i++) {
