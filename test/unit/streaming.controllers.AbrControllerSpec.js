@@ -58,6 +58,11 @@ describe('AbrController', function () {
         expect(state).to.be.null;    // jshint ignore:line
     });
 
+    it('should return 0 when calling getQualityForBitrate with no mediaInfo', function () {
+        const quality = abrCtrl.getQualityForBitrate(undefined, undefined, true);
+        expect(quality).to.be.equal(0);    // jshint ignore:line
+    });
+
     it('should update top quality index', function () {
         const expectedTopQuality = representationCount - 1;
         let actualTopQuality;

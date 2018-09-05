@@ -478,7 +478,7 @@ function AbrController() {
      * @memberof AbrController#
      */
     function getQualityForBitrate(mediaInfo, bitrate, latency) {
-        if (useDeadTimeLatency && latency && streamProcessorDict[mediaInfo.type].getRepresentationInfo() && streamProcessorDict[mediaInfo.type].getRepresentationInfo().fragmentDuration) {
+        if (useDeadTimeLatency && latency && mediaInfo && streamProcessorDict[mediaInfo.type].getRepresentationInfo() && streamProcessorDict[mediaInfo.type].getRepresentationInfo().fragmentDuration) {
             latency = latency / 1000;
             const fragmentDuration = streamProcessorDict[mediaInfo.type].getRepresentationInfo().fragmentDuration;
             if (latency > fragmentDuration) {
