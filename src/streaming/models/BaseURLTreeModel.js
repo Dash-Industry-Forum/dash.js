@@ -90,7 +90,7 @@ function BaseURLTreeModel() {
             root.data.selectedIdx = DEFAULT_INDEX;
         }
 
-        if (manifest.Period_asArray) {
+        if (manifest && manifest.Period_asArray) {
             manifest.Period_asArray.forEach((p, pi) => {
                 updateChildData(root.children, pi, p);
 
