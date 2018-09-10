@@ -363,6 +363,9 @@ function AbrController() {
     }
 
     function setAutoSwitchBitrateFor(type, value) {
+        if (typeof value !== 'boolean') {
+            return;
+        }
         autoSwitchBitrate[type] = value;
     }
 

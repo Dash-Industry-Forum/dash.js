@@ -83,6 +83,27 @@ describe('AbrController', function () {
         expect(usePixelRatioInLimitBitrateByPortal).to.be.true; // jshint ignore:line
     });
 
+    it('should not set setAutoSwitchBitrateFor value if it\'s not a boolean type', function () {
+        let autoSwitchBitrateForVideo = abrCtrl.getAutoSwitchBitrateFor('video');
+        expect(autoSwitchBitrateForVideo).to.be.true; // jshint ignore:line
+
+        abrCtrl.setAutoSwitchBitrateFor('video', 'string');
+        autoSwitchBitrateForVideo = abrCtrl.getAutoSwitchBitrateFor('video');
+
+        expect(autoSwitchBitrateForVideo).to.be.true; // jshint ignore:line
+
+        abrCtrl.setAutoSwitchBitrateFor('video', 1);
+        autoSwitchBitrateForVideo = abrCtrl.getAutoSwitchBitrateFor('video');
+
+        expect(autoSwitchBitrateForVideo).to.be.true; // jshint ignore:line
+
+        abrCtrl.setAutoSwitchBitrateFor('video', false);
+        autoSwitchBitrateForVideo = abrCtrl.getAutoSwitchBitrateFor('video');
+
+        expect(autoSwitchBitrateForVideo).to.be.false; // jshint ignore:line
+    });
+
+
     it('should update top quality index', function () {
         const expectedTopQuality = representationCount - 1;
         let actualTopQuality;
