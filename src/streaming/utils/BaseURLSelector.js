@@ -93,6 +93,9 @@ function BaseURLSelector() {
     }
 
     function select(data) {
+        if (!data) {
+            return;
+        }
         const baseUrls = data.baseUrls;
         const selectedIdx = data.selectedIdx;
 

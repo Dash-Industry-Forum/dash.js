@@ -45,10 +45,9 @@ class Node {
 }
 
 function BaseURLTreeModel() {
-
-    let instance;
-    let root;
-    let dashManifestModel;
+    let instance,
+        root,
+        dashManifestModel;
 
     const context = this.context;
     const objectUtils = ObjectUtils(context).getInstance();
@@ -60,6 +59,12 @@ function BaseURLTreeModel() {
     function setConfig(config) {
         if (config.dashManifestModel) {
             dashManifestModel = config.dashManifestModel;
+        }
+    }
+
+    function checkSetConfigCall() {
+        if (!dashManifestModel || !dashManifestModel.hasOwnProperty('getBaseURLsFromElement') || !dashManifestModel.hasOwnProperty('getRepresentationSortFunction')) {
+            throw new Error('setConfig function has to be called previously');
         }
     }
 
@@ -77,6 +82,7 @@ function BaseURLTreeModel() {
     }
 
     function getBaseURLCollectionsFromManifest(manifest) {
+        checkSetConfigCall();
         let baseUrls = dashManifestModel.getBaseURLsFromElement(manifest);
 
         if (!objectUtils.areEqual(baseUrls, root.data.baseUrls)) {
@@ -84,7 +90,7 @@ function BaseURLTreeModel() {
             root.data.selectedIdx = DEFAULT_INDEX;
         }
 
-        if (manifest.Period_asArray) {
+        if (manifest && manifest.Period_asArray) {
             manifest.Period_asArray.forEach((p, pi) => {
                 updateChildData(root.children, pi, p);
 
