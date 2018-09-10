@@ -299,7 +299,7 @@ function ScheduleController(config) {
         const request = adapter.getInitRequest(streamProcessor, quality);
         if (request) {
             setFragmentProcessState(true);
-            request.url = replaceTokenForTemplate(request.url, 'Bandwidth', currentRepresentationInfo.bandwidth);
+            request.url = replaceTokenForTemplate(request.url, 'Bandwidth', currentRepresentationInfo ? currentRepresentationInfo.bandwidth : null);
             fragmentModel.executeRequest(request);
         }
     }
