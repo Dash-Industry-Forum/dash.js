@@ -379,6 +379,9 @@ function AbrController() {
     }
 
     function setUsePixelRatioInLimitBitrateByPortal(value) {
+        if (typeof value !== 'boolean') {
+            return;
+        }
         usePixelRatioInLimitBitrateByPortal = value;
     }
 
