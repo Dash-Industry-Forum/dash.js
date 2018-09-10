@@ -69,7 +69,8 @@ class StreamProcessorMock {
     getMediaInfo() {
         return {
             bitrateList: [],
-            mimeType: 'video/mp4'
+            mimeType: 'video/mp4',
+            streamInfo: this.streamInfo
         };
     }
 
@@ -120,7 +121,7 @@ class StreamProcessorMock {
                 MSETimeOffset: offset
             };
         } else {
-            return {mediaInfo: {type: this.type}, fragmentDuration: 6};
+            return {mediaInfo: {type: this.type, streamInfo: this.streamInfo}, fragmentDuration: 6};
         }
     }
 

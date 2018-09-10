@@ -32,6 +32,16 @@ function RulesContextMock () {
             fragmentDuration: NaN
         };
     };
+
+    this.getScheduleController = function () {
+        return {
+            start: function () {}
+        };
+    };
+
+    this.useBufferOccupancyABR = function () {
+
+    };
 }
 
 export default RulesContextMock;
