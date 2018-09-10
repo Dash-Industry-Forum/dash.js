@@ -80,7 +80,7 @@ function NextFragmentRequestRule(config) {
             const numberOfBuffers = bufferRanges ? bufferRanges.length : 0;
             if ((range !== null || playingRange !== null) && !hasSeekTarget) {
                 if ( !range || (playingRange && playingRange.start != range.start && playingRange.end != range.end) ) {
-                    if (numberOfBuffers > 1 ) {
+                    if (numberOfBuffers > 1 && mediaType !== Constants.FRAGMENTED_TEXT) {
                         streamProcessor.getFragmentModel().removeExecutedRequestsAfterTime(playingRange.end);
                         bufferIsDivided = true;
                     }
