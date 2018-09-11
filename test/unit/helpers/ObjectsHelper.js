@@ -32,6 +32,9 @@ class ObjectsHelper {
 
     getDummyTimelineConverter() {
         return {
+            initialize: () => {},
+            reset: () => {},
+            getClientTimeOffset: () => {},
             calcAvailabilityStartTimeFromPresentationTime: () => 0,
             calcAvailabilityEndTimeFromPresentationTime: () => 0
         };

@@ -29,6 +29,10 @@ class AdapterMock {
 
     setIndexHandlerTime () {
     }
+
+    getStreamsInfo() {
+        return [];
+    }
 }
 
 export default AdapterMock;
