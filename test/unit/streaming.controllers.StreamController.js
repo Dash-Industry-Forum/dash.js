@@ -22,6 +22,12 @@ describe('StreamController', function () {
             expect(stream).to.be.undefined; // jshint ignore:line
         });
 
+        it('should return undefined if getStreamById is called but no stream has been composed', () => {
+            const stream = streamController.getStreamById('idx');
+
+            expect(stream).to.be.undefined; // jshint ignore:line
+        });
+
         it('should return null if getActiveStreamInfo is called without parameters, activeStream is undefined', () => {
             const activeStream = streamController.getActiveStreamInfo();
 
@@ -66,6 +72,12 @@ describe('StreamController', function () {
             const isVideoTrackPresent = streamController.isVideoTrackPresent();
 
             expect(isVideoTrackPresent).to.be.undefined;    // jshint ignore:line
+        });
+
+        it('should return null when attempting to call getStreamForTime, and no stream has been composed', function () {
+            const stream = streamController.getStreamForTime(10);
+
+            expect(stream).to.be.null;    // jshint ignore:line
         });
     });
 });
