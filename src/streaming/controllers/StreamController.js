@@ -443,8 +443,8 @@ function StreamController() {
 
     function getNextStream() {
         if (activeStream) {
-            const start = activeStream.getStreamInfo().start;
-            const duration = activeStream.getStreamInfo().duration;
+            const start = getActiveStreamInfo().start;
+            const duration = getActiveStreamInfo().duration;
 
             return streams.filter(function (stream) {
                 return (stream.getStreamInfo().start === parseFloat((start + duration).toFixed(5)));
@@ -470,7 +470,7 @@ function StreamController() {
 
         activeStream = newStream;
         preloading = false;
-        playbackController.initialize(activeStream.getStreamInfo(), compatible);
+        playbackController.initialize(getActiveStreamInfo(), compatible);
         if (videoModel.getElement()) {
             //TODO detect if we should close jump to activateStream.
             openMediaSource(seekTime, oldStream, false, compatible);
@@ -485,7 +485,7 @@ function StreamController() {
 
     function switchToVideoElement(seekTime) {
         if (activeStream) {
-            playbackController.initialize(activeStream.getStreamInfo());
+            playbackController.initialize(getActiveStreamInfo());
             openMediaSource(seekTime, null, true, false);
         }
     }
@@ -561,12 +561,12 @@ function StreamController() {
 
         isStreamSwitchingInProgress = false;
         eventBus.trigger(Events.PERIOD_SWITCH_COMPLETED, {
-            toStreamInfo: activeStream.getStreamInfo()
+            toStreamInfo: getActiveStreamInfo()
         });
     }
 
     function setMediaDuration(duration) {
-        const manifestDuration = duration ? duration : activeStream.getStreamInfo().manifestInfo.duration;
+        const manifestDuration = duration ? duration : getActiveStreamInfo().manifestInfo.duration;
         const mediaDuration = mediaSourceController.setDuration(mediaSource, manifestDuration);
         logger.debug('Duration successfully set to: ' + mediaDuration);
     }
