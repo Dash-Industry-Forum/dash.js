@@ -2481,12 +2481,12 @@ function MediaPlayer() {
         }
 
         const thumbnailController = stream.getThumbnailController();
-        const streamInfo = stream.getStreamInfo();
-        if (!thumbnailController || !streamInfo) {
+        const streamId = stream.getId();
+        if (!thumbnailController || isNaN(streamId)) {
             return null;
         }
 
-        const timeInPeriod = streamController.getTimeRelativeToStreamId(s, stream.getId());
+        const timeInPeriod = streamController.getTimeRelativeToStreamId(s, streamId);
         return thumbnailController.get(timeInPeriod);
     }
 
