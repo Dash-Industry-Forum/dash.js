@@ -116,8 +116,9 @@ function ProtectionModel_21Jan2015(config) {
         for (let i = 0; i < sessions.length; i++) {
             session = sessions[i];
             if (!session.getUsable()) {
-                removeSession(session);
-                closeKeySessionInternal(session);
+                closeKeySessionInternal(session).catch(function () {
+                    removeSession(session);
+                });
             }
         }
     }
