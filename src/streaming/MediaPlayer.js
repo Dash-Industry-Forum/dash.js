@@ -1421,7 +1421,7 @@ function MediaPlayer() {
      * @default
      * <ul>
      *     <li>schemeIdUri:urn:mpeg:dash:utc:http-xsdate:2014</li>
-     *     <li>value:http://time.akamai.com</li>
+     *     <li>value:http://time.akamai.com/?iso&ms/li>
      * </ul>
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#removeUTCTimingSource removeUTCTimingSource()}
@@ -1474,7 +1474,7 @@ function MediaPlayer() {
      * @default
      * <ul>
      *     <li>schemeIdUri:urn:mpeg:dash:utc:http-xsdate:2014</li>
-     *     <li>value:http://time.akamai.com</li>
+     *     <li>value:http://time.akamai.com/?iso&ms</li>
      * </ul>
      *
      * @memberof module:MediaPlayer
