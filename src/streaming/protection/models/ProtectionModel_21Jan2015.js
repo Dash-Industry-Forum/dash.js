@@ -116,8 +116,9 @@ function ProtectionModel_21Jan2015(config) {
         for (let i = 0; i < sessions.length; i++) {
             session = sessions[i];
             if (!session.getUsable()) {
-                removeSession(session);
-                closeKeySessionInternal(session);
+                closeKeySessionInternal(session).catch(function () {
+                    removeSession(session);
+                });
             }
         }
     }
@@ -340,7 +341,6 @@ function ProtectionModel_21Jan2015(config) {
         for (let i = 0; i < sessions.length; i++) {
             if (sessions[i] === token) {
                 sessions.splice(i,1);
-                logger.debug('DRM: Session removed.  SessionID = ' + token.getSessionID());
                 break;
             }
         }
