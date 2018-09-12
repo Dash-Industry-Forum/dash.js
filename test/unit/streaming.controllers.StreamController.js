@@ -1,5 +1,6 @@
 import StreamController from '../../src/streaming/controllers/StreamController';
 import Events from '../../src/core/events/Events';
+import ProtectionEvents from '../../src/streaming/protection/ProtectionEvents';
 import EventBus from '../../src/core/EventBus';
 
 import ObjectsHelper from './helpers/ObjectsHelper';
@@ -8,8 +9,14 @@ import ManifestLoaderMock from './mocks/ManifestLoaderMock';
 import ManifestModelMock from './mocks/ManifestModelMock';
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 import MetricsModelMock from './mocks/MetricsModelMock';
+import ProtectionControllerMock from './mocks/ProtectionControllerMock';
+import VideoModelMock from './mocks/VideoModelMock';
+import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 
 const chai = require('chai');
+const spies = require('chai-spies');
+
+chai.use(spies);
 const expect = chai.expect;
 
 const context = {};
@@ -23,6 +30,11 @@ const timelineConverterMock = objectsHelper.getDummyTimelineConverter();
 const manifestModelMock = new ManifestModelMock();
 const errHandlerMock = new ErrorHandlerMock();
 const metricsModelMock = new MetricsModelMock();
+const protectionControllerMock = new ProtectionControllerMock();
+const videoModelMock = new VideoModelMock();
+const playbackControllerMock = new PlaybackControllerMock();
+
+Events.extend(ProtectionEvents);
 
 describe('StreamController', function () {
 
@@ -107,14 +119,20 @@ describe('StreamController', function () {
                                         timelineConverter: timelineConverterMock,
                                         manifestModel: manifestModelMock,
                                         errHandler: errHandlerMock,
-                                        metricsModel: metricsModelMock});
+                                        metricsModel: metricsModelMock,
+                                        protectionController: protectionControllerMock,
+                                        videoModel: videoModelMock,
+                                        playbackController: playbackControllerMock});
 
             streamController.initialize(false);
         });
 
         it('should throw an exception when attempting to composeStreams while no manifest has been parsed', function () {
-            eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+            let spy = chai.spy();
+            eventBus.on(Events.PROTECTION_CREATED, spy);
 
+            eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+            expect(spy).to.have.been.called.exactly(1);
             expect(errHandlerMock.error).to.equal('There are no streams');
         });
 
@@ -152,6 +170,14 @@ describe('StreamController', function () {
             eventBus.trigger(Events.PLAYBACK_ERROR, {error: {code: 6}});
 
             expect(errHandlerMock.error).to.include('UNKNOWN');
+        });
+
+        it('should call reset if MANIFEST_UPDATED event is triggered with an error parameter', function () {
+            let spy = chai.spy();
+            eventBus.on(Events.STREAM_TEARDOWN_COMPLETE, spy);
+
+            eventBus.trigger(Events.MANIFEST_UPDATED, {error: {}});
+            expect(spy).to.have.been.called.exactly(1);
         });
     });
 });

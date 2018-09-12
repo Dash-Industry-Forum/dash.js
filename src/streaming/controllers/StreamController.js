@@ -826,7 +826,7 @@ function StreamController() {
     function checkSetConfigCall() {
         if (!manifestLoader || !manifestLoader.hasOwnProperty('load') || !timelineConverter || !timelineConverter.hasOwnProperty('initialize') ||
             !timelineConverter.hasOwnProperty('reset') || !timelineConverter.hasOwnProperty('getClientTimeOffset') || !manifestModel || !errHandler ||
-            !metricsModel) {
+            !metricsModel || !playbackController) {
             throw new Error('setConfig function has to be called previously');
         }
     }
