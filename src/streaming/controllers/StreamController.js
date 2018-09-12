@@ -780,7 +780,6 @@ function StreamController() {
         }
     }
 
-
     function onPlaybackError(e) {
         if (!e.error) return;
 

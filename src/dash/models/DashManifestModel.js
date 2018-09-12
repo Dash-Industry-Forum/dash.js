@@ -445,8 +445,8 @@ function DashManifestModel(config) {
     function getRepresentationsForAdaptation(voAdaptation) {
         const voRepresentations = [];
         const processedRealAdaptation = getRealAdaptationFor(voAdaptation);
-        let segmentInfo;
-        let baseUrl;
+        let segmentInfo,
+            baseUrl;
 
         // TODO: TO BE REMOVED. We should get just the baseUrl elements that affects to the representations
         // that we are processing. Making it works properly will require much further changes and given
