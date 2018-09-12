@@ -36,7 +36,7 @@ import Constants from '../../../src/streaming/constants/Constants';
 
 const DEFAULT_UTC_TIMING_SOURCE = {
     scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
-    value: 'http://time.akamai.com/?iso'
+    value: 'http://time.akamai.com/?iso&ms'
 };
 const LIVE_DELAY_FRAGMENT_COUNT = 4;
 
