@@ -1,7 +1,8 @@
 import DashManifestModel from '../../src/dash/models/DashManifestModel';
-import TimelineConverter from '../../src/dash/utils/TimelineConverter';
 import BaseURL from '../../src/dash/vo/BaseURL';
+
 import MpdHelper from './helpers/MPDHelper';
+import ObjectsHelper from './helpers/ObjectsHelper';
 
 import AdapterMock from './mocks/AdapterMock';
 import MediaControllerMock from './mocks/MediaControllerMock';
@@ -10,13 +11,14 @@ import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 const expect = require('chai').expect;
 
 const context = {};
+const objectsHelper = new ObjectsHelper();
 const adapterMock = new AdapterMock();
 const mediaControllerMock = new MediaControllerMock();
 const errorHandlerMock = new ErrorHandlerMock();
-const timelineConverter = TimelineConverter(context).getInstance();
+const timelineConverterMock = objectsHelper.getDummyTimelineConverter();
 const dashManifestModel = DashManifestModel(context).getInstance({
     mediaController: mediaControllerMock,
-    timelineConverter: timelineConverter,
+    timelineConverter: timelineConverterMock,
     adapter: adapterMock,
     errHandler: errorHandlerMock
 });

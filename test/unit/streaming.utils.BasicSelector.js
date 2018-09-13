@@ -1,5 +1,6 @@
-import ObjectsHelper from './helpers/ObjectsHelper';
 import BasicSelector from '../../src/streaming/utils/baseUrlResolution/BasicSelector';
+
+import ObjectsHelper from './helpers/ObjectsHelper';
 
 const chai = require('chai');
 const expect = chai.expect;
