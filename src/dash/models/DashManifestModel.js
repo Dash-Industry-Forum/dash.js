@@ -544,6 +544,9 @@ function DashManifestModel() {
                     if (segmentInfo.hasOwnProperty(DashConstants.PRESENTATION_TIME_OFFSET)) {
                         voRepresentation.presentationTimeOffset = segmentInfo.presentationTimeOffset / voRepresentation.timescale;
                     }
+                    if (segmentInfo.hasOwnProperty(DashConstants.PRESENTATION_DURATION)) {
+                        voRepresentation.presentationDuration = segmentInfo.presentationDuration / voRepresentation.timescale;
+                    }
                     if (segmentInfo.hasOwnProperty(DashConstants.AVAILABILITY_TIME_OFFSET)) {
                         voRepresentation.availabilityTimeOffset = segmentInfo.availabilityTimeOffset;
                     } else if (baseUrl && baseUrl.availabilityTimeOffset !== undefined) {

@@ -61,6 +61,7 @@ class Representation {
         this.maxPlayoutRate = NaN;
         this.availabilityTimeOffset = 0;
         this.availabilityTimeComplete = true;
+        this.presentationDuration = null;
     }
 
     static hasInitialization(r) {

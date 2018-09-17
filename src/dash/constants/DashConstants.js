@@ -104,6 +104,7 @@ class DashConstants {
         this.MAIN = 'main';
         this.DYNAMIC = 'dynamic';
         this.MEDIA_PRESENTATION_DURATION = 'mediaPresentationDuration';
+        this.PRESENTATION_DURATION = 'presentationDuration';
         this.MINIMUM_UPDATE_PERIOD = 'minimumUpdatePeriod';
         this.CODEC_PRIVATE_DATA = 'codecPrivateData';
         this.BANDWITH = 'bandwidth';
