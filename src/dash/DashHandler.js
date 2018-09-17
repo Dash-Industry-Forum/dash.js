@@ -213,7 +213,11 @@ function DashHandler(config) {
                 const time = parseFloat((seg.presentationStartTime - representation.adaptation.period.start).toFixed(5));
                 const duration = representation.adaptation.period.duration;
                 logger.debug(representation.segmentInfoType + ': ' + time + ' / ' + duration);
-                isFinished = representation.segmentInfoType === DashConstants.SEGMENT_TIMELINE && isDynamicStream ? false : time >= duration;
+                if (representation.segmentInfoType === DashConstants.SEGMENT_TIMELINE) {
+                    isFinished = isDynamicStream ? false : time >= duration;
+                } else if (representation.segmentInfoType === DashConstants.SEGMENT_BASE) {
+                    isFinished = representation.presentationDuration && representation.presentationDuration > 0 && time >= representation.presentationDuration ? true : false;
+                }
             } else {
                 logger.debug('isMediaFinished - no segment found');
             }
