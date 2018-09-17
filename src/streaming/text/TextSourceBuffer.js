@@ -133,7 +133,7 @@ function TextSourceBuffer() {
                 const currFragTrack = mediaController.getCurrentTrackFor(Constants.FRAGMENTED_TEXT, streamController.getActiveStreamInfo());
                 for (let i = 0; i < fragmentedTracks.length; i++) {
                     if (fragmentedTracks[i] === currFragTrack) {
-                        currFragmentedTrackIdx = i;
+                        setCurrentFragmentedTrackIdx(i);
                         break;
                     }
                 }
