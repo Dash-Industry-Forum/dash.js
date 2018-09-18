@@ -133,43 +133,43 @@ describe('StreamController', function () {
 
             eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
             expect(spy).to.have.been.called.exactly(1);
-            expect(errHandlerMock.error).to.equal('There are no streams');
+            expect(errHandlerMock.errorValue).to.include('There are no streams');
         });
 
         it('should return the correct error when a playback error occurs : MEDIA_ERR_ABORTED', function () {
             eventBus.trigger(Events.PLAYBACK_ERROR, {error: {code: 1}});
 
-            expect(errHandlerMock.error).to.include('MEDIA_ERR_ABORTED');
+            expect(errHandlerMock.errorValue).to.include('MEDIA_ERR_ABORTED');
         });
 
         it('should return the correct error when a playback error occurs : MEDIA_ERR_NETWORK', function () {
             eventBus.trigger(Events.PLAYBACK_ERROR, {error: {code: 2}});
 
-            expect(errHandlerMock.error).to.include('MEDIA_ERR_NETWORK');
+            expect(errHandlerMock.errorValue).to.include('MEDIA_ERR_NETWORK');
         });
 
         it('should return the correct error when a playback error occurs : MEDIA_ERR_DECODE', function () {
             eventBus.trigger(Events.PLAYBACK_ERROR, {error: {code: 3}});
 
-            expect(errHandlerMock.error).to.include('MEDIA_ERR_DECODE');
+            expect(errHandlerMock.errorValue).to.include('MEDIA_ERR_DECODE');
         });
 
         it('should return the correct error when a playback error occurs : MEDIA_ERR_SRC_NOT_SUPPORTED', function () {
             eventBus.trigger(Events.PLAYBACK_ERROR, {error: {code: 4}});
 
-            expect(errHandlerMock.error).to.include('MEDIA_ERR_SRC_NOT_SUPPORTED');
+            expect(errHandlerMock.errorValue).to.include('MEDIA_ERR_SRC_NOT_SUPPORTED');
         });
 
         it('should return the correct error when a playback error occurs : MEDIA_ERR_ENCRYPTED', function () {
             eventBus.trigger(Events.PLAYBACK_ERROR, {error: {code: 5}});
 
-            expect(errHandlerMock.error).to.include('MEDIA_ERR_ENCRYPTED');
+            expect(errHandlerMock.errorValue).to.include('MEDIA_ERR_ENCRYPTED');
         });
 
         it('should return the correct error when a playback error occurs : UNKNOWN', function () {
             eventBus.trigger(Events.PLAYBACK_ERROR, {error: {code: 6}});
 
-            expect(errHandlerMock.error).to.include('UNKNOWN');
+            expect(errHandlerMock.errorValue).to.include('UNKNOWN');
         });
 
         it('should call reset if MANIFEST_UPDATED event is triggered with an error parameter', function () {

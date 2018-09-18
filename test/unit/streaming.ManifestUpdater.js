@@ -8,7 +8,8 @@ import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
 import ManifestLoaderMock from './mocks/ManifestLoaderMock';
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 
-const expect = require('chai').expect;
+const chai = require('chai');
+const expect = chai.expect;
 
 describe('ManifestUpdater', function () {
     const context = {};
@@ -38,6 +39,16 @@ describe('ManifestUpdater', function () {
         eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
             error: {message: manifestErrorMockText}
         });
-        expect(errHandlerMock.error).to.equal(manifestErrorMockText);
+
+        const spy = chai.spy();
+        eventBus.on(Events.MANIFEST_UPDATED, spy);
+
+        eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
+            error: {message: manifestErrorMockText}
+        });
+
+        expect(spy).to.have.not.been.called(); // jshint ignore:line
+
+        eventBus.off(Events.MANIFEST_UPDATED, spy);
     });
 });

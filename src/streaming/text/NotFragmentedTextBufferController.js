@@ -35,6 +35,8 @@ import FactoryMaker from '../../core/FactoryMaker';
 import InitCache from '../utils/InitCache';
 import SourceBufferSink from '../SourceBufferSink';
 import TextController from '../../streaming/text/TextController';
+import DashJSError from '../../streaming/vo/DashJSError';
+import Errors from '../../core/errors/Errors';
 
 const BUFFER_CONTROLLER_TYPE = 'NotFragmentedTextBufferController';
 function NotFragmentedTextBufferController(config) {
@@ -95,9 +97,11 @@ function NotFragmentedTextBufferController(config) {
                     buffer = textController.getTextSourceBuffer();
                 } catch (e) {
                     errHandler.mediaSourceError('Error creating ' + type + ' source buffer.');
+                    errHandler.error(new DashJSError(Errors.MEDIASOURCE_TYPE_UNSUPPORTED_CODE, Errors.MEDIASOURCE_TYPE_UNSUPPORTED_MESSAGE + type + ' : ' + e.message));
                 }
             } else {
                 errHandler.mediaSourceError('Error creating ' + type + ' source buffer.');
+                errHandler.error(new DashJSError(Errors.MEDIASOURCE_TYPE_UNSUPPORTED_CODE, Errors.MEDIASOURCE_TYPE_UNSUPPORTED_MESSAGE + type));
             }
         }
     }

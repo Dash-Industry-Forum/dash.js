@@ -31,6 +31,7 @@
 import ProtectionController from './controllers/ProtectionController';
 import ProtectionKeyController from './controllers/ProtectionKeyController';
 import ProtectionEvents from './ProtectionEvents';
+import ProtectionErrors from './errors/ProtectionErrors';
 import ProtectionModel_21Jan2015 from './models/ProtectionModel_21Jan2015';
 import ProtectionModel_3Feb2014 from './models/ProtectionModel_3Feb2014';
 import ProtectionModel_01b from './models/ProtectionModel_01b';
@@ -183,5 +184,6 @@ function Protection() {
 Protection.__dashjs_factory_name = 'Protection';
 const factory = dashjs.FactoryMaker.getClassFactory(Protection); /* jshint ignore:line */
 factory.events = ProtectionEvents;
+factory.errors = ProtectionErrors;
 dashjs.FactoryMaker.updateClassFactory(Protection.__dashjs_factory_name, factory); /* jshint ignore:line */
 export default factory;

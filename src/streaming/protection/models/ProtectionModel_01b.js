@@ -39,10 +39,11 @@
  */
 import ProtectionKeyController from '../controllers/ProtectionKeyController';
 import NeedKey from '../vo/NeedKey';
-import KeyError from '../vo/KeyError';
+import DashJSError from '../../vo/DashJSError';
 import KeyMessage from '../vo/KeyMessage';
 import KeySystemConfiguration from '../vo/KeySystemConfiguration';
 import KeySystemAccess from '../vo/KeySystemAccess';
+import ProtectionErrors from '../errors/ProtectionErrors';
 
 function ProtectionModel_01b(config) {
 
@@ -276,30 +277,37 @@ function ProtectionModel_01b(config) {
                         }
 
                         if (sessionToken) {
+                            let code = ProtectionErrors.MEDIA_KEYERR_CODE;
                             let msg = '';
                             switch (event.errorCode.code) {
                                 case 1:
-                                    msg += 'MEDIA_KEYERR_UNKNOWN - An unspecified error occurred. This value is used for errors that don\'t match any of the other codes.';
+                                    code = ProtectionErrors.MEDIA_KEYERR_UNKNOWN_CODE;
+                                    msg += 'MEDIA_KEYERR_UNKNOWN - ' + ProtectionErrors.MEDIA_KEYERR_UNKNOWN_MESSAGE;
                                     break;
                                 case 2:
-                                    msg += 'MEDIA_KEYERR_CLIENT - The Key System could not be installed or updated.';
+                                    code = ProtectionErrors.MEDIA_KEYERR_CLIENT_CODE;
+                                    msg += 'MEDIA_KEYERR_CLIENT - ' + ProtectionErrors.MEDIA_KEYERR_CLIENT_MESSAGE;
                                     break;
                                 case 3:
-                                    msg += 'MEDIA_KEYERR_SERVICE - The message passed into update indicated an error from the license service.';
+                                    code = ProtectionErrors.MEDIA_KEYERR_SERVICE_CODE;
+                                    msg += 'MEDIA_KEYERR_SERVICE - ' + ProtectionErrors.MEDIA_KEYERR_SERVICE_MESSAGE;
                                     break;
                                 case 4:
-                                    msg += 'MEDIA_KEYERR_OUTPUT - There is no available output device with the required characteristics for the content protection system.';
+                                    code = ProtectionErrors.MEDIA_KEYERR_OUTPUT_CODE;
+                                    msg += 'MEDIA_KEYERR_OUTPUT - ' + ProtectionErrors.MEDIA_KEYERR_OUTPUT_MESSAGE;
                                     break;
                                 case 5:
-                                    msg += 'MEDIA_KEYERR_HARDWARECHANGE - A hardware configuration change caused a content protection error.';
+                                    code = ProtectionErrors.MEDIA_KEYERR_HARDWARECHANGE_CODE;
+                                    msg += 'MEDIA_KEYERR_HARDWARECHANGE - ' + ProtectionErrors.MEDIA_KEYERR_HARDWARECHANGE_MESSAGE;
                                     break;
                                 case 6:
-                                    msg += 'MEDIA_KEYERR_DOMAIN - An error occurred in a multi-device domain licensing configuration. The most common error is a failure to join the domain.';
+                                    code = ProtectionErrors.MEDIA_KEYERR_DOMAIN_CODE;
+                                    msg += 'MEDIA_KEYERR_DOMAIN - ' + ProtectionErrors.MEDIA_KEYERR_DOMAIN_MESSAGE;
                                     break;
                             }
                             msg += '  System Code = ' + event.systemCode;
                             // TODO: Build error string based on key error
-                            eventBus.trigger(events.KEY_ERROR, {data: new KeyError(sessionToken, msg)});
+                            eventBus.trigger(events.KEY_ERROR, {data: new DashJSError(code, msg, sessionToken)});
                         } else {
                             logger.error('No session token found for key error');
                         }
@@ -343,7 +351,8 @@ function ProtectionModel_01b(config) {
                             sessions.push(sessionToken);
 
                             if (pendingSessions.length !== 0) {
-                                errHandler.mediaKeyMessageError('Multiple key sessions were creates with a user-agent that does not support sessionIDs!! Unpredictable behavior ahead!');
+                                errHandler.mediaKeyMessageError(ProtectionErrors.MEDIA_KEY_MESSAGE_ERROR_MESSAGE);
+                                errHandler.error(new DashJSError(ProtectionErrors.MEDIA_KEY_MESSAGE_ERROR_CODE, ProtectionErrors.MEDIA_KEY_MESSAGE_ERROR_MESSAGE));
                             }
                         }
 

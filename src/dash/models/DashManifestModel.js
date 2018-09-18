@@ -42,6 +42,8 @@ import ObjectUtils from '../../streaming/utils/ObjectUtils';
 import URLUtils from '../../streaming/utils/URLUtils';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
+import DashJSError from '../../streaming/vo/DashJSError';
+import Errors from '../../core/errors/Errors';
 
 function DashManifestModel(config) {
 
@@ -55,6 +57,7 @@ function DashManifestModel(config) {
     const mediaController = config.mediaController;
     const timelineConverter = config.timelineConverter;
     const adapter = config.adapter;
+    const errHandler = config.errHandler;
 
     const PROFILE_DVB = 'urn:dvb:dash:profile:dvb-dash:2014';
 
@@ -760,7 +763,7 @@ function DashManifestModel(config) {
         } else if (isDynamic) {
             periodEnd = Number.POSITIVE_INFINITY;
         } else {
-            throw new Error('Must have @mediaPresentationDuration on MPD or an explicit @duration on the last period.');
+            errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_PARSE_CODE, 'Must have @mediaPresentationDuration on MPD or an explicit @duration on the last period.', voPeriod));
         }
 
         return periodEnd;

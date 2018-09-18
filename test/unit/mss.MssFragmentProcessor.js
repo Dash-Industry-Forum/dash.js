@@ -43,6 +43,6 @@ describe('MssFragmentProcessor', function () {
         const arrayBuffer = new Uint8Array(file).buffer;
         const e = {request: {type: 'MediaSegment', mediaInfo: {index: 0}}, response: arrayBuffer};
         mssFragmentProcessor.processFragment(e, streamProcessorMock);
-        expect(errorHandlerMock.error).to.equal('MSS_NO_TFRF : Missing tfrf in live media segment');
+        expect(errorHandlerMock.errorValue).to.equal('Missing tfrf in live media segment');
     });
 });

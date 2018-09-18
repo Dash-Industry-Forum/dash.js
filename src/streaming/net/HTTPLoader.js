@@ -32,7 +32,8 @@ import XHRLoader from './XHRLoader';
 import FetchLoader from './FetchLoader';
 import { HTTPRequest } from '../vo/metrics/HTTPRequest';
 import FactoryMaker from '../../core/FactoryMaker';
-import ErrorHandler from '../utils/ErrorHandler';
+import Errors from '../../core/errors/Errors';
+import DashJSError from '../vo/DashJSError';
 
 /**
  * @module HTTPLoader
@@ -55,6 +56,7 @@ function HTTPLoader(cfg) {
     let delayedRequests;
     let retryTimers;
     let downloadErrorToRequestTypeMap;
+    let newDownloadErrorToRequestTypeMap;
 
     function setup() {
         requests = [];
@@ -62,13 +64,23 @@ function HTTPLoader(cfg) {
         retryTimers = [];
 
         downloadErrorToRequestTypeMap = {
-            [HTTPRequest.MPD_TYPE]: ErrorHandler.DOWNLOAD_ERROR_ID_MANIFEST,
-            [HTTPRequest.XLINK_EXPANSION_TYPE]: ErrorHandler.DOWNLOAD_ERROR_ID_XLINK,
-            [HTTPRequest.INIT_SEGMENT_TYPE]: ErrorHandler.DOWNLOAD_ERROR_ID_INITIALIZATION,
-            [HTTPRequest.MEDIA_SEGMENT_TYPE]: ErrorHandler.DOWNLOAD_ERROR_ID_CONTENT,
-            [HTTPRequest.INDEX_SEGMENT_TYPE]: ErrorHandler.DOWNLOAD_ERROR_ID_CONTENT,
-            [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: ErrorHandler.DOWNLOAD_ERROR_ID_CONTENT,
-            [HTTPRequest.OTHER_TYPE]: ErrorHandler.DOWNLOAD_ERROR_ID_CONTENT
+            [HTTPRequest.MPD_TYPE]: Errors.DOWNLOAD_ERROR_ID_MANIFEST,
+            [HTTPRequest.XLINK_EXPANSION_TYPE]: Errors.DOWNLOAD_ERROR_ID_XLINK,
+            [HTTPRequest.INIT_SEGMENT_TYPE]: Errors.DOWNLOAD_ERROR_ID_INITIALIZATION,
+            [HTTPRequest.MEDIA_SEGMENT_TYPE]: Errors.DOWNLOAD_ERROR_ID_CONTENT,
+            [HTTPRequest.INDEX_SEGMENT_TYPE]: Errors.DOWNLOAD_ERROR_ID_CONTENT,
+            [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: Errors.DOWNLOAD_ERROR_ID_CONTENT,
+            [HTTPRequest.OTHER_TYPE]: Errors.DOWNLOAD_ERROR_ID_CONTENT
+        };
+
+        newDownloadErrorToRequestTypeMap = {
+            [HTTPRequest.MPD_TYPE]: Errors.DOWNLOAD_ERROR_ID_MANIFEST_CODE,
+            [HTTPRequest.XLINK_EXPANSION_TYPE]: Errors.DOWNLOAD_ERROR_ID_XLINK_CODE,
+            [HTTPRequest.INIT_SEGMENT_TYPE]: Errors.DOWNLOAD_ERROR_ID_INITIALIZATION_CODE,
+            [HTTPRequest.MEDIA_SEGMENT_TYPE]: Errors.DOWNLOAD_ERROR_ID_CONTENT_CODE,
+            [HTTPRequest.INDEX_SEGMENT_TYPE]: Errors.DOWNLOAD_ERROR_ID_CONTENT_CODE,
+            [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: Errors.DOWNLOAD_ERROR_ID_CONTENT_CODE,
+            [HTTPRequest.OTHER_TYPE]: Errors.DOWNLOAD_ERROR_ID_CONTENT_CODE
         };
     }
 
@@ -137,6 +149,8 @@ function HTTPLoader(cfg) {
                         request.url,
                         request
                     );
+
+                    errHandler.error(new DashJSError(newDownloadErrorToRequestTypeMap[request.type], request.url + ' is not available', {request: request, response: httpRequest.response}));
 
                     if (config.error) {
                         config.error(request, 'error', httpRequest.response.statusText);

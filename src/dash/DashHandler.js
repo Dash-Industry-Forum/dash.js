@@ -35,6 +35,7 @@ import DashJSError from '../streaming/vo/DashJSError';
 import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
 import Events from '../core/events/Events';
 import EventBus from '../core/EventBus';
+import Errors from '../core/errors/Errors';
 import FactoryMaker from '../core/FactoryMaker';
 import Debug from '../core/Debug';
 import URLUtils from '../streaming/utils/URLUtils';
@@ -50,8 +51,6 @@ import SegmentsGetter from './utils/SegmentsGetter';
 
 import SegmentBaseLoader from './SegmentBaseLoader';
 import WebmSegmentBaseLoader from './WebmSegmentBaseLoader';
-
-const SEGMENTS_UNAVAILABLE_ERROR_CODE = 1;
 
 function DashHandler(config) {
 
@@ -256,7 +255,7 @@ function DashHandler(config) {
         voRepresentation.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(voRepresentation, isDynamic);
 
         if ((voRepresentation.segmentAvailabilityRange.end < voRepresentation.segmentAvailabilityRange.start) && !voRepresentation.useCalculatedLiveEdgeTime) {
-            error = new DashJSError(SEGMENTS_UNAVAILABLE_ERROR_CODE, 'no segments are available yet', {availabilityDelay: voRepresentation.segmentAvailabilityRange.start - voRepresentation.segmentAvailabilityRange.end});
+            error = new DashJSError(Errors.SEGMENTS_UNAVAILABLE_ERROR_CODE, Errors.SEGMENTS_UNAVAILABLE_ERROR_MESSAGE, {availabilityDelay: voRepresentation.segmentAvailabilityRange.start - voRepresentation.segmentAvailabilityRange.end});
             eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: voRepresentation, error: error});
             return;
         }
@@ -530,7 +529,4 @@ function DashHandler(config) {
 }
 
 DashHandler.__dashjs_factory_name = 'DashHandler';
-const factory = FactoryMaker.getClassFactory(DashHandler);
-factory.SEGMENTS_UNAVAILABLE_ERROR_CODE = SEGMENTS_UNAVAILABLE_ERROR_CODE;
-FactoryMaker.updateClassFactory(DashHandler.__dashjs_factory_name, factory);
-export default factory;
+export default FactoryMaker.getClassFactory(DashHandler);

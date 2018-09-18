@@ -33,11 +33,11 @@ import DashJSError from './../vo/DashJSError';
 import {HTTPRequest} from './../vo/metrics/HTTPRequest';
 import EventBus from './../../core/EventBus';
 import Events from './../../core/events/Events';
+import Errors from './../../core/errors/Errors';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import URLUtils from '../utils/URLUtils';
 
-const TIME_SYNC_FAILED_ERROR_CODE = 1;
 const HTTP_TIMEOUT_MS = 5000;
 
 function TimeSyncController() {
@@ -296,7 +296,7 @@ function TimeSyncController() {
 
     function completeTimeSyncSequence(failed, time, offset) {
         setIsSynchronizing(false);
-        eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED, { time: time, offset: offset, error: failed ? new DashJSError(TIME_SYNC_FAILED_ERROR_CODE) : null });
+        eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED, { time: time, offset: offset, error: failed ? new DashJSError(Errors.TIME_SYNC_FAILED_ERROR_CODE, Errors.TIME_SYNC_FAILED_ERROR_MESSAGE) : null });
     }
 
     function calculateTimeOffset(serverTime, deviceTime) {
@@ -392,7 +392,6 @@ function TimeSyncController() {
 
 TimeSyncController.__dashjs_factory_name = 'TimeSyncController';
 const factory = FactoryMaker.getSingletonFactory(TimeSyncController);
-factory.TIME_SYNC_FAILED_ERROR_CODE = TIME_SYNC_FAILED_ERROR_CODE;
 factory.HTTP_TIMEOUT_MS = HTTP_TIMEOUT_MS;
 FactoryMaker.updateSingletonFactory(TimeSyncController.__dashjs_factory_name, factory);
 export default factory;

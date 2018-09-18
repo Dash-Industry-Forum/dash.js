@@ -39,7 +39,8 @@
  */
 import ProtectionKeyController from '../controllers/ProtectionKeyController';
 import NeedKey from '../vo/NeedKey';
-import KeyError from '../vo/KeyError';
+import ProtectionErrors from '../errors/ProtectionErrors';
+import DashJSError from '../../vo/DashJSError';
 import KeyMessage from '../vo/KeyMessage';
 import KeySystemAccess from '../vo/KeySystemAccess';
 import ProtectionConstants from '../../constants/ProtectionConstants';
@@ -223,7 +224,7 @@ function ProtectionModel_21Jan2015(config) {
             message = message.toJWK();
         }
         session.update(message).catch(function (error) {
-            eventBus.trigger(events.KEY_ERROR, {data: new KeyError(sessionToken, 'Error sending update() message! ' + error.name)});
+            eventBus.trigger(events.KEY_ERROR, {data: new DashJSError(ProtectionErrors.MEDIA_KEYERR_CODE, 'Error sending update() message! ' + error.name, sessionToken)});
         });
     }
 

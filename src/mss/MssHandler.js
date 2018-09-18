@@ -34,6 +34,7 @@ import FragmentRequest from '../streaming/vo/FragmentRequest';
 import MssFragmentInfoController from './MssFragmentInfoController';
 import MssFragmentProcessor from './MssFragmentProcessor';
 import MssParser from './parser/MssParser';
+import MssErrors from './errors/MssErrors';
 
 function MssHandler(config) {
 
@@ -225,4 +226,7 @@ function MssHandler(config) {
 }
 
 MssHandler.__dashjs_factory_name = 'MssHandler';
-export default dashjs.FactoryMaker.getClassFactory(MssHandler); /* jshint ignore:line */
+const factory = dashjs.FactoryMaker.getClassFactory(MssHandler); /* jshint ignore:line */
+factory.errors = MssErrors;
+dashjs.FactoryMaker.updateClassFactory(MssHandler.__dashjs_factory_name, factory); /* jshint ignore:line */
+export default factory; /* jshint ignore:line */

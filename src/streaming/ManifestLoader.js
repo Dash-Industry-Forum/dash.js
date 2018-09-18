@@ -37,13 +37,10 @@ import DashJSError from './vo/DashJSError';
 import {HTTPRequest} from './vo/metrics/HTTPRequest';
 import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
+import Errors from '../core/errors/Errors';
 import FactoryMaker from '../core/FactoryMaker';
 import DashParser from '../dash/parser/DashParser';
 import Debug from '../core/Debug';
-
-const MANIFEST_LOADER_ERROR_PARSING_FAILURE = 1;
-const MANIFEST_LOADER_ERROR_LOADING_FAILURE = 2;
-const MANIFEST_LOADER_MESSAGE_PARSING_FAILURE = 'parsing failed';
 
 function ManifestLoader(config) {
 
@@ -57,6 +54,7 @@ function ManifestLoader(config) {
         httpLoader,
         xlinkController,
         parser;
+
     let mssHandler = config.mssHandler;
     let errHandler = config.errHandler;
 
@@ -145,8 +143,8 @@ function ManifestLoader(config) {
                         Events.INTERNAL_MANIFEST_LOADED, {
                             manifest: null,
                             error: new DashJSError(
-                                MANIFEST_LOADER_ERROR_PARSING_FAILURE,
-                                `Failed detecting manifest type or manifest type unsupported : ${url}`
+                                Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE,
+                                Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_MESSAGE + `${url}`
                             )
                         }
                     );
@@ -164,8 +162,8 @@ function ManifestLoader(config) {
                         Events.INTERNAL_MANIFEST_LOADED, {
                             manifest: null,
                             error: new DashJSError(
-                               MANIFEST_LOADER_ERROR_PARSING_FAILURE,
-                                `Failed parsing manifest : ${url}`
+                                Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE,
+                                Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_MESSAGE + `${url}`
                            )
                         }
                     );
@@ -195,8 +193,8 @@ function ManifestLoader(config) {
                         Events.INTERNAL_MANIFEST_LOADED, {
                             manifest: null,
                             error: new DashJSError(
-                                MANIFEST_LOADER_ERROR_PARSING_FAILURE,
-                                MANIFEST_LOADER_MESSAGE_PARSING_FAILURE
+                                Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE,
+                                Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_MESSAGE + `${url}`
                             )
                         }
                     );
@@ -207,8 +205,8 @@ function ManifestLoader(config) {
                     Events.INTERNAL_MANIFEST_LOADED, {
                         manifest: null,
                         error: new DashJSError(
-                            MANIFEST_LOADER_ERROR_LOADING_FAILURE,
-                            `Failed loading manifest: ${url}, ${errorText}`
+                            Errors.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE,
+                            Errors.MANIFEST_LOADER_LOADING_FAILURE_ERROR_MESSAGE + `${url}, ${errorText}`
                         )
                     }
                 );
@@ -247,7 +245,4 @@ function ManifestLoader(config) {
 ManifestLoader.__dashjs_factory_name = 'ManifestLoader';
 
 const factory = FactoryMaker.getClassFactory(ManifestLoader);
-factory.MANIFEST_LOADER_ERROR_PARSING_FAILURE = MANIFEST_LOADER_ERROR_PARSING_FAILURE;
-factory.MANIFEST_LOADER_ERROR_LOADING_FAILURE = MANIFEST_LOADER_ERROR_LOADING_FAILURE;
-FactoryMaker.updateClassFactory(ManifestLoader.__dashjs_factory_name, factory);
 export default factory;

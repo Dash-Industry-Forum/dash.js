@@ -47,8 +47,7 @@ function ManifestUpdater() {
         manifestLoader,
         manifestModel,
         dashManifestModel,
-        mediaPlayerModel,
-        errHandler;
+        mediaPlayerModel;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -68,9 +67,6 @@ function ManifestUpdater() {
         }
         if (config.manifestLoader) {
             manifestLoader = config.manifestLoader;
-        }
-        if (config.errHandler) {
-            errHandler = config.errHandler;
         }
     }
 
@@ -169,8 +165,6 @@ function ManifestUpdater() {
     function onManifestLoaded(e) {
         if (!e.error) {
             update(e.manifest);
-        } else {
-            errHandler.manifestError(e.error.message, e.error.code);
         }
     }
 
