@@ -245,7 +245,7 @@ function Stream(config) {
     }
 
     function getId() {
-        return streamInfo ? streamInfo.id : NaN;
+        return streamInfo ? streamInfo.id : null;
     }
 
     function getStreamInfo() {
