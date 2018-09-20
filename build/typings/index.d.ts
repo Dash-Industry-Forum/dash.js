@@ -115,6 +115,7 @@ declare namespace dashjs {
         on(type: StreamInitializedEvent['type'], listener: (e: StreamInitializedEvent) => void, scope?: object): void;
         on(type: TextTracksAddedEvent['type'], listener: (e: TextTracksAddedEvent) => void, scope?: object): void;
         on(type: TtmlParsedEvent['type'], listener: (e: TtmlParsedEvent) => void, scope?: object): void;
+        on(type: TtmlToParseEvent['type'], listener: (e: TtmlToParseEvent) => void, scope?: object): void;
         on(type: string, listener: (e: Event) => void, scope?: object): void;
         off(type: string, listener: (e: any) => void, scope?: object): void;
         extend(parentNameString: string, childInstance: object, override: boolean): void;
@@ -331,6 +332,7 @@ declare namespace dashjs {
         TEXT_TRACKS_ADDED: 'allTextTracksAdded';
         TEXT_TRACK_ADDED: 'textTrackAdded';
         TTML_PARSED: 'ttmlParsed';
+        TTML_TO_PARSE: 'ttmlToParse';
     }
 
     export interface Event {
@@ -597,6 +599,11 @@ declare namespace dashjs {
         type: MediaPlayerEvents['TTML_PARSED'];
         ttmlString: string;
         ttmlDoc: object;
+    }
+
+    export interface TtmlToParseEvent extends Event {
+        type: MediaPlayerEvents['TTML_TO_PARSE'];
+        content: object;
     }
 
     export class BitrateInfo {
