@@ -730,7 +730,7 @@ declare namespace dashjs {
     export interface SupportedKeySystem {
         ks: KeySystem;
         initData: ArrayBuffer;
-        cdmData: ArrayBuffer | null;;
+        cdmData: ArrayBuffer | null;
         sessionId: string | null;
     }
 
