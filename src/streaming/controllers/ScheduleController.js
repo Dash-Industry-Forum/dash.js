@@ -76,7 +76,6 @@ function ScheduleController(config) {
         seekTarget,
         bufferLevelRule,
         nextFragmentRequestRule,
-        scheduleWhilePaused,
         lastFragmentRequest,
         topQualityIndex,
         lastInitQuality,
@@ -92,7 +91,6 @@ function ScheduleController(config) {
 
     function initialize() {
         fragmentModel = streamProcessor.getFragmentModel();
-        scheduleWhilePaused = mediaPlayerModel.getScheduleWhilePaused();
 
         bufferLevelRule = BufferLevelRule(context).create({
             abrController: abrController,
@@ -175,7 +173,8 @@ function ScheduleController(config) {
 
     function schedule() {
         const bufferController = streamProcessor.getBufferController();
-        if (isStopped || isFragmentProcessingInProgress || !bufferController || playbackController.isPaused() && !scheduleWhilePaused ||
+        if (isStopped || isFragmentProcessingInProgress || !bufferController ||
+            (playbackController.isPaused() && !mediaPlayerModel.getScheduleWhilePaused()) ||
             ((type === Constants.FRAGMENTED_TEXT || type === Constants.TEXT) && !textController.isTextEnabled())) {
             logger.debug('Schedule stop!');
             return;
@@ -551,7 +550,7 @@ function ScheduleController(config) {
     }
 
     function onPlaybackStarted() {
-        if (isStopped || !scheduleWhilePaused) {
+        if (isStopped || !mediaPlayerModel.getScheduleWhilePaused()) {
             start();
         }
     }
