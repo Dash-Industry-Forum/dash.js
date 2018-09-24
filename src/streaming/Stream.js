@@ -97,13 +97,20 @@ function Stream(config) {
             errHandler: errHandler
         });
 
+        registerEvents();
+    }
+
+    function registerEvents() {
         eventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
     }
 
-    function initialize(StreamInfo, ProtectionController) {
-        streamInfo = StreamInfo;
-        protectionController = ProtectionController;
+    function unRegisterEvents() {
+        eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
+        eventBus.off(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
+    }
+
+    function registerProtectionEvents() {
         if (protectionController) {
             eventBus.on(Events.KEY_ERROR, onProtectionError, instance);
             eventBus.on(Events.SERVER_CERTIFICATE_UPDATED, onProtectionError, instance);
@@ -112,6 +119,23 @@ function Stream(config) {
             eventBus.on(Events.KEY_SESSION_CREATED, onProtectionError, instance);
             eventBus.on(Events.KEY_STATUSES_CHANGED, onProtectionError, instance);
         }
+    }
+
+    function unRegisterProtectionEvents() {
+        if (protectionController) {
+            eventBus.off(Events.KEY_ERROR, onProtectionError, instance);
+            eventBus.off(Events.SERVER_CERTIFICATE_UPDATED, onProtectionError, instance);
+            eventBus.off(Events.LICENSE_REQUEST_COMPLETE, onProtectionError, instance);
+            eventBus.off(Events.KEY_SYSTEM_SELECTED, onProtectionError, instance);
+            eventBus.off(Events.KEY_SESSION_CREATED, onProtectionError, instance);
+            eventBus.off(Events.KEY_STATUSES_CHANGED, onProtectionError, instance);
+        }
+    }
+
+    function initialize(StreamInfo, ProtectionController) {
+        streamInfo = StreamInfo;
+        protectionController = ProtectionController;
+        registerProtectionEvents();
     }
 
     /**
@@ -205,14 +229,9 @@ function Stream(config) {
 
         resetInitialSettings();
 
-        eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
-        eventBus.off(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
-        eventBus.off(Events.KEY_ERROR, onProtectionError, instance);
-        eventBus.off(Events.SERVER_CERTIFICATE_UPDATED, onProtectionError, instance);
-        eventBus.off(Events.LICENSE_REQUEST_COMPLETE, onProtectionError, instance);
-        eventBus.off(Events.KEY_SYSTEM_SELECTED, onProtectionError, instance);
-        eventBus.off(Events.KEY_SESSION_CREATED, onProtectionError, instance);
-        eventBus.off(Events.KEY_STATUSES_CHANGED, onProtectionError, instance);
+        unRegisterEvents();
+
+        unRegisterProtectionEvents();
 
         setPreloaded(false);
     }
@@ -226,15 +245,11 @@ function Stream(config) {
     }
 
     function getId() {
-        return streamInfo ? streamInfo.id : NaN;
+        return streamInfo ? streamInfo.id : null;
     }
 
     function getStreamInfo() {
         return streamInfo;
-    }
-
-    function getEventController() {
-        return eventController;
     }
 
     function getFragmentController() {
@@ -452,11 +467,7 @@ function Stream(config) {
         createStreamProcessor(initialMediaInfo, allMediaForType, mediaSource);
     }
 
-    function initializeMedia(mediaSource, previousBuffers) {
-        checkConfig();
-        let events;
-        let element = videoModel.getElement();
-
+    function initializeEventController () {
         //if initializeMedia is called from a switch period, eventController could have been already created.
         if (!eventController) {
             eventController = EventController(context).create();
@@ -465,9 +476,26 @@ function Stream(config) {
                 manifestUpdater: manifestUpdater,
                 playbackController: playbackController
             });
-            events = adapter.getEventsFor(streamInfo);
-            eventController.addInlineEvents(events);
+            addInlineEvents();
         }
+    }
+
+    function addInlineEvents () {
+        const events = adapter.getEventsFor(streamInfo);
+        eventController.addInlineEvents(events);
+    }
+
+    function addInbandEvents (events) {
+        if (eventController) {
+            eventController.addInbandEvents(events);
+        }
+    }
+
+    function initializeMedia(mediaSource, previousBuffers) {
+        checkConfig();
+        let element = videoModel.getElement();
+
+        initializeEventController();
 
         isUpdating = true;
 
@@ -673,8 +701,7 @@ function Stream(config) {
         streamInfo = updatedStreamInfo;
 
         if (eventController) {
-            let events = adapter.getEventsFor(streamInfo);
-            eventController.addInlineEvents(events);
+            addInlineEvents();
         }
 
         filterCodecs(Constants.VIDEO);
@@ -705,7 +732,7 @@ function Stream(config) {
         return compareCodecs(stream, Constants.VIDEO) && compareCodecs(stream, Constants.AUDIO);
     }
 
-    function compareCodecs( stream, type ) {
+    function compareCodecs(stream, type) {
         if (!stream) {
             return false;
         }
@@ -761,19 +788,7 @@ function Stream(config) {
     }
 
     function preload(mediaSource, previousBuffers) {
-        let events;
-
-        //if initializeMedia is called from a switch period, eventController could have been already created.
-        if (!eventController) {
-            eventController = EventController(context).create();
-
-            eventController.setConfig({
-                manifestUpdater: manifestUpdater,
-                playbackController: playbackController
-            });
-            events = adapter.getEventsFor(streamInfo);
-            eventController.addInlineEvents(events);
-        }
+        initializeEventController();
 
         initializeMediaForType(Constants.VIDEO, mediaSource);
         initializeMediaForType(Constants.AUDIO, mediaSource);
@@ -805,7 +820,6 @@ function Stream(config) {
         preload: preload,
         getFragmentController: getFragmentController,
         getThumbnailController: getThumbnailController,
-        getEventController: getEventController,
         getBitrateListFor: getBitrateListFor,
         startEventController: startEventController,
         stopEventController: stopEventController,
@@ -814,7 +828,8 @@ function Stream(config) {
         getProcessors: getProcessors,
         setMediaSource: setMediaSource,
         isCompatibleWithStream: isCompatibleWithStream,
-        getPreloaded: getPreloaded
+        getPreloaded: getPreloaded,
+        addInbandEvents: addInbandEvents
     };
 
     setup();

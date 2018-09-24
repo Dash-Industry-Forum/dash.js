@@ -27,11 +27,11 @@ describe('Stream', function () {
         expect(processors).to.be.empty;            // jshint ignore:line
     });
 
-    it('should return an NaN when getId is called but streamInfo attribute is null or undefined', () => {
+    it('should return an null when getId is called but streamInfo attribute is null or undefined', () => {
         const stream = Stream(context).create({});
         const id = stream.getId();
 
-        expect(id).to.be.NaN; // jshint ignore:line
+        expect(id).to.be.null; // jshint ignore:line
     });
 
     it('should return an NaN when getStartTime is called but streamInfo attribute is null or undefined', () => {

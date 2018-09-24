@@ -173,7 +173,7 @@ function StreamController() {
      * Used to determine the time current stream is finished and we should switch to the next stream.
      */
     function onPlaybackTimeUpdated(/*e*/) {
-        if (isVideoTrackPresent()) {
+        if (isTrackTypePresent(Constants.VIDEO)) {
             const playbackQuality = videoModel.getPlaybackQuality();
             if (playbackQuality) {
                 metricsModel.addDroppedFrames(Constants.VIDEO, playbackQuality);
@@ -717,12 +717,22 @@ function StreamController() {
         }
     }
 
-    function isAudioTrackPresent() {
-        return audioTrackDetected;
-    }
+    function isTrackTypePresent(trackType) {
+        let isTrackTypeDetected;
 
-    function isVideoTrackPresent() {
-        return videoTrackDetected;
+        if (!trackType) {
+            return isTrackTypeDetected;
+        }
+
+        switch (trackType) {
+            case Constants.VIDEO :
+                isTrackTypeDetected = videoTrackDetected;
+                break;
+            case Constants.AUDIO :
+                isTrackTypeDetected = audioTrackDetected;
+                break;
+        }
+        return isTrackTypeDetected;
     }
 
     function checkTrackPresence(type) {
@@ -769,7 +779,6 @@ function StreamController() {
             });
         }
     }
-
 
     function onPlaybackError(e) {
         if (!e.error) return;
@@ -994,8 +1003,7 @@ function StreamController() {
     instance = {
         initialize: initialize,
         getActiveStreamInfo: getActiveStreamInfo,
-        isVideoTrackPresent: isVideoTrackPresent,
-        isAudioTrackPresent: isAudioTrackPresent,
+        isTrackTypePresent: isTrackTypePresent,
         switchToVideoElement: switchToVideoElement,
         getStreamById: getStreamById,
         getStreamForTime: getStreamForTime,

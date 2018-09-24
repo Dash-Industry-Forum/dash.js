@@ -705,7 +705,7 @@ describe('MediaPlayer', function () {
             customRules = mediaPlayerModel.getABRCustomRules();
             expect(customRules.length).to.equal(2);
 
-            player.removeAllABRCustomRule();
+            player.removeABRCustomRule();
 
             customRules = mediaPlayerModel.getABRCustomRules();
             expect(customRules.length).to.equal(0);
@@ -890,42 +890,42 @@ describe('MediaPlayer', function () {
         });
 
         it('should configure FragmentLoaderRetryAttempts', function () {
-            let FragmentLoaderRetryAttempts = mediaPlayerModel.getFragmentRetryAttempts();
+            let FragmentLoaderRetryAttempts = mediaPlayerModel.getRetryAttemptsForType('MediaSegment');
             expect(FragmentLoaderRetryAttempts).to.equal(3);
 
             player.setFragmentLoaderRetryAttempts(50);
 
-            FragmentLoaderRetryAttempts = mediaPlayerModel.getFragmentRetryAttempts();
+            FragmentLoaderRetryAttempts = mediaPlayerModel.getRetryAttemptsForType('MediaSegment');
             expect(FragmentLoaderRetryAttempts).to.equal(50);
         });
 
         it('should configure FragmentLoaderRetryInterval', function () {
-            let FragmentLoaderRetryInterval = mediaPlayerModel.getFragmentRetryInterval();
+            let FragmentLoaderRetryInterval = mediaPlayerModel.getRetryIntervalForType('MediaSegment');
             expect(FragmentLoaderRetryInterval).to.equal(1000);
 
             player.setFragmentLoaderRetryInterval(50);
 
-            FragmentLoaderRetryInterval = mediaPlayerModel.getFragmentRetryInterval();
+            FragmentLoaderRetryInterval = mediaPlayerModel.getRetryIntervalForType('MediaSegment');
             expect(FragmentLoaderRetryInterval).to.equal(50);
         });
 
         it('should configure ManifestLoaderRetryAttempts', function () {
-            let ManifestLoaderRetryAttempts = mediaPlayerModel.getManifestRetryAttempts();
+            let ManifestLoaderRetryAttempts = mediaPlayerModel.getRetryAttemptsForType('MPD');
             expect(ManifestLoaderRetryAttempts).to.equal(3);
 
             player.setManifestLoaderRetryAttempts(50);
 
-            ManifestLoaderRetryAttempts = mediaPlayerModel.getManifestRetryAttempts();
+            ManifestLoaderRetryAttempts = mediaPlayerModel.getRetryAttemptsForType('MPD');
             expect(ManifestLoaderRetryAttempts).to.equal(50);
         });
 
         it('should configure ManifestLoaderRetryInterval', function () {
-            let ManifestLoaderRetryInterval = mediaPlayerModel.getManifestRetryInterval();
+            let ManifestLoaderRetryInterval = mediaPlayerModel.getRetryIntervalForType('MPD');
             expect(ManifestLoaderRetryInterval).to.equal(500);
 
             player.setManifestLoaderRetryInterval(50);
 
-            ManifestLoaderRetryInterval = mediaPlayerModel.getManifestRetryInterval();
+            ManifestLoaderRetryInterval = mediaPlayerModel.getRetryIntervalForType('MPD');
             expect(ManifestLoaderRetryInterval).to.equal(50);
         });
 

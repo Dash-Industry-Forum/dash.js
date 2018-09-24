@@ -207,8 +207,12 @@ function DashManifestModel(config) {
         return realAdaptation;
     }
 
+    function getRealAdaptations(manifest, periodIndex) {
+        return manifest && manifest.Period_asArray && isInteger(periodIndex) ? manifest.Period_asArray[periodIndex] ? manifest.Period_asArray[periodIndex].AdaptationSet_asArray : [] : [];
+    }
+
     function getAdaptationForId(id, manifest, periodIndex) {
-        const realAdaptations = manifest && manifest.Period_asArray && isInteger(periodIndex) ? manifest.Period_asArray[periodIndex] ? manifest.Period_asArray[periodIndex].AdaptationSet_asArray : [] : [];
+        const realAdaptations = getRealAdaptations(manifest, periodIndex);
         let i,
             len;
 
@@ -222,8 +226,8 @@ function DashManifestModel(config) {
     }
 
     function getAdaptationForIndex(index, manifest, periodIndex) {
-        const realAdaptations = manifest && manifest.Period_asArray && isInteger(periodIndex) ? manifest.Period_asArray[periodIndex] ? manifest.Period_asArray[periodIndex].AdaptationSet_asArray : null : null;
-        if (realAdaptations && isInteger(index)) {
+        const realAdaptations = getRealAdaptations(manifest, periodIndex);
+        if (realAdaptations.length > 0 && isInteger(index)) {
             return realAdaptations[index];
         } else {
             return null;
@@ -231,7 +235,7 @@ function DashManifestModel(config) {
     }
 
     function getIndexForAdaptation(realAdaptation, manifest, periodIndex) {
-        const realAdaptations = manifest && manifest.Period_asArray && isInteger(periodIndex) ? manifest.Period_asArray[periodIndex] ? manifest.Period_asArray[periodIndex].AdaptationSet_asArray : [] : [];
+        const realAdaptations = getRealAdaptations(manifest, periodIndex);
         const len = realAdaptations.length;
 
         if (realAdaptation) {
@@ -247,14 +251,14 @@ function DashManifestModel(config) {
     }
 
     function getAdaptationsForType(manifest, periodIndex, type) {
-        const realAdaptationSet = manifest && manifest.Period_asArray && isInteger(periodIndex) ? manifest.Period_asArray[periodIndex] ? manifest.Period_asArray[periodIndex].AdaptationSet_asArray : [] : [];
+        const realAdaptations = getRealAdaptations(manifest, periodIndex);
         let i,
             len;
         const adaptations = [];
 
-        for (i = 0, len = realAdaptationSet.length; i < len; i++) {
-            if (getIsTypeOf(realAdaptationSet[i], type)) {
-                adaptations.push(processAdaptation(realAdaptationSet[i]));
+        for (i = 0, len = realAdaptations.length; i < len; i++) {
+            if (getIsTypeOf(realAdaptations[i], type)) {
+                adaptations.push(processAdaptation(realAdaptations[i]));
             }
         }
 
@@ -441,8 +445,8 @@ function DashManifestModel(config) {
     function getRepresentationsForAdaptation(voAdaptation) {
         const voRepresentations = [];
         const processedRealAdaptation = getRealAdaptationFor(voAdaptation);
-        let segmentInfo;
-        let baseUrl;
+        let segmentInfo,
+            baseUrl;
 
         // TODO: TO BE REMOVED. We should get just the baseUrl elements that affects to the representations
         // that we are processing. Making it works properly will require much further changes and given

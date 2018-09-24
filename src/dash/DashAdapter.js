@@ -56,7 +56,6 @@ function DashAdapter() {
         }
     }
 
-
     function getRepresentationForRepresentationInfo(representationInfo, representationController) {
         return representationController && representationInfo ? representationController.getRepresentationForQuality(representationInfo.quality) : null;
     }

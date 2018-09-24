@@ -1339,7 +1339,7 @@ function MediaPlayer() {
      * @instance
      */
     function removeAllABRCustomRule() {
-        mediaPlayerModel.removeAllABRCustomRule();
+        mediaPlayerModel.removeABRCustomRule();
     }
 
     /**
@@ -1760,7 +1760,7 @@ function MediaPlayer() {
      * @instance
      */
     function setFragmentLoaderRetryAttempts(value) {
-        mediaPlayerModel.setFragmentRetryAttempts(value);
+        mediaPlayerModel.setRetryAttemptsForType(HTTPRequest.MEDIA_SEGMENT_TYPE, value);
     }
 
     /**
@@ -1772,7 +1772,7 @@ function MediaPlayer() {
      * @instance
      */
     function setFragmentLoaderRetryInterval(value) {
-        mediaPlayerModel.setFragmentRetryInterval(value);
+        mediaPlayerModel.setRetryIntervalForType(HTTPRequest.MEDIA_SEGMENT_TYPE, value);
     }
 
     /**
@@ -1784,7 +1784,7 @@ function MediaPlayer() {
      * @instance
      */
     function setManifestLoaderRetryAttempts(value) {
-        mediaPlayerModel.setManifestRetryAttempts(value);
+        mediaPlayerModel.setRetryAttemptsForType(HTTPRequest.MPD_TYPE, value);
     }
 
     /**
@@ -1796,7 +1796,7 @@ function MediaPlayer() {
      * @instance
      */
     function setManifestLoaderRetryInterval(value) {
-        mediaPlayerModel.setManifestRetryInterval(value);
+        mediaPlayerModel.setRetryIntervalForType(HTTPRequest.MPD_TYPE, value);
     }
 
     /**
@@ -2481,8 +2481,7 @@ function MediaPlayer() {
         }
 
         const thumbnailController = stream.getThumbnailController();
-        const streamInfo = stream.getStreamInfo();
-        if (!thumbnailController || !streamInfo) {
+        if (!thumbnailController) {
             return null;
         }
 

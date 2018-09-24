@@ -58,6 +58,52 @@ describe('AbrController', function () {
         expect(state).to.be.null;    // jshint ignore:line
     });
 
+    it('should return 0 when calling getQualityForBitrate with no mediaInfo', function () {
+        const quality = abrCtrl.getQualityForBitrate(undefined, undefined, true);
+        expect(quality).to.be.equal(0);    // jshint ignore:line
+    });
+
+    it('should not set UsePixelRatioInLimitBitrateByPortal value if it\'s not a boolean type', function () {
+        let usePixelRatioInLimitBitrateByPortal = abrCtrl.getUsePixelRatioInLimitBitrateByPortal();
+        expect(usePixelRatioInLimitBitrateByPortal).to.be.false; // jshint ignore:line
+
+        abrCtrl.setUsePixelRatioInLimitBitrateByPortal('string');
+        usePixelRatioInLimitBitrateByPortal = abrCtrl.getUsePixelRatioInLimitBitrateByPortal();
+
+        expect(usePixelRatioInLimitBitrateByPortal).to.be.false; // jshint ignore:line
+
+        abrCtrl.setUsePixelRatioInLimitBitrateByPortal(1);
+        usePixelRatioInLimitBitrateByPortal = abrCtrl.getUsePixelRatioInLimitBitrateByPortal();
+
+        expect(usePixelRatioInLimitBitrateByPortal).to.be.false; // jshint ignore:line
+
+        abrCtrl.setUsePixelRatioInLimitBitrateByPortal(true);
+        usePixelRatioInLimitBitrateByPortal = abrCtrl.getUsePixelRatioInLimitBitrateByPortal();
+
+        expect(usePixelRatioInLimitBitrateByPortal).to.be.true; // jshint ignore:line
+    });
+
+    it('should not set setAutoSwitchBitrateFor value if it\'s not a boolean type', function () {
+        let autoSwitchBitrateForVideo = abrCtrl.getAutoSwitchBitrateFor('video');
+        expect(autoSwitchBitrateForVideo).to.be.true; // jshint ignore:line
+
+        abrCtrl.setAutoSwitchBitrateFor('video', 'string');
+        autoSwitchBitrateForVideo = abrCtrl.getAutoSwitchBitrateFor('video');
+
+        expect(autoSwitchBitrateForVideo).to.be.true; // jshint ignore:line
+
+        abrCtrl.setAutoSwitchBitrateFor('video', 1);
+        autoSwitchBitrateForVideo = abrCtrl.getAutoSwitchBitrateFor('video');
+
+        expect(autoSwitchBitrateForVideo).to.be.true; // jshint ignore:line
+
+        abrCtrl.setAutoSwitchBitrateFor('video', false);
+        autoSwitchBitrateForVideo = abrCtrl.getAutoSwitchBitrateFor('video');
+
+        expect(autoSwitchBitrateForVideo).to.be.false; // jshint ignore:line
+    });
+
+
     it('should update top quality index', function () {
         const expectedTopQuality = representationCount - 1;
         let actualTopQuality;
