@@ -162,7 +162,8 @@ function FragmentModel(config) {
 
     function removeExecutedRequestsAfterTime(time) {
         executedRequests = executedRequests.filter(req => {
-            return isNaN(req.startTime) || (time !== undefined ? req.startTime + req.duration < time : false);
+            const threshold = getRequestThreshold(req);
+            return isNaN(req.startTime) || (time !== undefined ? req.startTime + req.duration < time + threshold : false);
         });
     }
 
