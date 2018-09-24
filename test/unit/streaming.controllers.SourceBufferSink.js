@@ -2,6 +2,7 @@ import SourceBufferSink from '../../src/streaming/SourceBufferSink';
 import Events from '../../src/core/events/Events';
 import EventBus from '../../src/core/EventBus';
 import FactoryMaker from '../../src/core/FactoryMaker.js';
+import Errors from '../../src/core/errors/Errors';
 
 import TextBufferMock from './mocks/TextBufferMock';
 import TextControllerMock from './mocks/TextControllerMock';
@@ -190,7 +191,7 @@ describe('SourceBufferSink', function () {
             };
             let mediaSource = new MediaSourceMock();
             function onAppend(e) {
-                expect(e.error.code).to.equal(11);
+                expect(e.error.code).to.equal(Errors.APPEND_ERROR_CODE);
                 expect(e.error.message).to.equal('chunk is not defined');
                 done();
             }
