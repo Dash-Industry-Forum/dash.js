@@ -71,7 +71,7 @@ function MssFragmentMoofProcessor(config) {
         }
 
         if (!tfrf) {
-            errorHandler.error(new DashJSError(MssErrors.MSS_NO_TFRF, MssErrors.MSS_NO_TFRF_MESSAGE));
+            errorHandler.error(new DashJSError(MssErrors.MSS_NO_TFRF_CODE, MssErrors.MSS_NO_TFRF_MESSAGE));
             return;
         }
 
