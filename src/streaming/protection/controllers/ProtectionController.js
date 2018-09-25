@@ -573,7 +573,7 @@ function ProtectionController(config) {
 
         // Ensure valid license server URL
         if (!url) {
-            sendLicenseRequestCompleteEvent(eventData, 'DRM: No license server URL specified!');
+            sendLicenseRequestCompleteEvent(eventData, new DashJSError(ProtectionErrors.MEDIA_KEY_MESSAGE_NO_LICENSE_SERVER_URL_ERROR_CODE, ProtectionErrors.MEDIA_KEY_MESSAGE_NO_LICENSE_SERVER_URL_ERROR_MESSAGE));
             return;
         }
 

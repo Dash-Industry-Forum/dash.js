@@ -16,6 +16,7 @@ describe('ProtectionErrors', function () {
         expect(ProtectionErrors.MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_CODE).to.equal(108);
         expect(ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_CODE).to.equal(109);
         expect(ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE).to.equal(110);
+        expect(ProtectionErrors.MEDIA_KEY_MESSAGE_NO_LICENSE_SERVER_URL_ERROR_CODE).to.equal(111);
     });
 
     it('ProtectionErrors should return the correct error message', () => {
@@ -30,5 +31,6 @@ describe('ProtectionErrors', function () {
         expect(ProtectionErrors.MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_MESSAGE).to.equal('DRM: Empty key message from CDM');
         expect(ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_MESSAGE).to.equal('Error updating server certificate -- ');
         expect(ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_MESSAGE).to.equal('DRM: KeyStatusChange error! -- License has expired');
+        expect(ProtectionErrors.MEDIA_KEY_MESSAGE_NO_LICENSE_SERVER_URL_ERROR_MESSAGE).to.equal('DRM: No license server URL specified!');
     });
 });
