@@ -1,9 +1,13 @@
 import Stream from '../../src/streaming/Stream';
 import Events from '../../src/core/events/Events';
+import ProtectionEvents from '../../src/streaming/protection/ProtectionEvents';
 import EventBus from '../../src/core/EventBus';
+import DashJSError from '../../src/streaming/vo/DashJSError';
+import ProtectionErrors from '../../src/streaming/protection/errors/ProtectionErrors';
 
 import DashManifestModelMock from './mocks/DashManifestModelMock';
 import ManifestModelMock from './mocks/ManifestModelMock';
+import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 
 const expect = require('chai').expect;
 const sinon = require('sinon');
@@ -14,9 +18,11 @@ const eventBus = EventBus(context).getInstance();
 describe('Stream', function () {
     const dashManifestModelMock = new DashManifestModelMock();
     const manifestModelMock = new ManifestModelMock();
+    const errHandlerMock = new ErrorHandlerMock();
     const streamInfo = {
         index: 'id'
     };
+    Events.extend(ProtectionEvents);
 
     it('should return an empty array when getProcessors is called but streamProcessors attribute is an empty array', () => {
         const stream = Stream(context).create({});
@@ -82,5 +88,15 @@ describe('Stream', function () {
         expect(spy.notCalled).to.be.true;                // jshint ignore:line
 
         eventBus.off(Events.STREAM_INITIALIZED, spy);
+    });
+
+    describe('License expired behavior', function () {
+        const stream = Stream(context).create({errHandler: errHandlerMock});
+        stream.initialize(null,{});
+
+        eventBus.trigger(Events.KEY_STATUSES_CHANGED, {data: null, error: new DashJSError(ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE, ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_MESSAGE)});
+
+        expect(errHandlerMock.errorCode).to.be.equal(ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE); // jshint ignore:line
+        expect(errHandlerMock.errorValue).to.be.equal(ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_MESSAGE); // jshint ignore:line
     });
 });

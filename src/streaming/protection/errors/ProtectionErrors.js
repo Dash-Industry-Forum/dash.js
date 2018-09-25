@@ -51,6 +51,8 @@ class ProtectionErrors extends ErrorsBase {
 
         this.SERVER_CERTIFICATE_UPDATED_ERROR_CODE = 109;
 
+        this.KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE = 110;
+
         this.MEDIA_KEYERR_UNKNOWN_MESSAGE = 'An unspecified error occurred. This value is used for errors that don\'t match any of the other codes.';
         this.MEDIA_KEYERR_CLIENT_MESSAGE = 'The Key System could not be installed or updated.';
         this.MEDIA_KEYERR_SERVICE_MESSAGE = 'The message passed into update indicated an error from the license service.';
@@ -60,6 +62,7 @@ class ProtectionErrors extends ErrorsBase {
         this.MEDIA_KEY_MESSAGE_ERROR_MESSAGE = 'Multiple key sessions were creates with a user-agent that does not support sessionIDs!! Unpredictable behavior ahead!';
         this.MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_MESSAGE = 'DRM: Empty key message from CDM';
         this.SERVER_CERTIFICATE_UPDATED_ERROR_MESSAGE = 'Error updating server certificate -- ';
+        this.KEY_STATUS_CHANGED_EXPIRED_ERROR_MESSAGE = 'DRM: KeyStatusChange error! -- License has expired';
     }
 }
 

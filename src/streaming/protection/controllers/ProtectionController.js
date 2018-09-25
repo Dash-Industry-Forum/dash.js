@@ -503,7 +503,7 @@ function ProtectionController(config) {
 
     function onKeyStatusChanged(e) {
         if (e.error) {
-            eventBus.trigger(events.KEY_STATUSES_CHANGED, {data: null, error: 'DRM: KeyStatusChange error! -- ' + e.error});
+            eventBus.trigger(events.KEY_STATUSES_CHANGED, {data: null, error: e.error});
         } else {
             logger.debug('DRM: key status = ' + e.status);
         }
