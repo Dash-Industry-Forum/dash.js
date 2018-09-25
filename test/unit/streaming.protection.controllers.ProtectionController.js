@@ -6,6 +6,7 @@ import EventBus from '../../src/core/EventBus';
 import DebugMock from './mocks/DebugMock';
 
 import ProtectionKeyControllerMock from './mocks/ProtectionKeyControllerMock';
+import ProtectionModelMock from './mocks/ProtectionModelMock';
 
 const expect = require('chai').expect;
 const context = {};
@@ -44,6 +45,28 @@ describe('ProtectionController', function () {
             protectionController.initializeForMedia({});
 
             eventBus.trigger(ProtectionEvents.INTERNAL_KEY_MESSAGE, {data: {}});
+        });
+    });
+
+    describe('setServerCertificate behavior', function () {
+        it('', function (done) {
+            const protectionKeyControllerMock = new ProtectionKeyControllerMock();
+            let protectionController = ProtectionController(context).create({protectionKeyController: protectionKeyControllerMock,
+                                                                             events: ProtectionEvents,
+                                                                             debug: new DebugMock(),
+                                                                             protectionModel: new ProtectionModelMock({events: ProtectionEvents, eventBus: eventBus}),
+                                                                             eventBus: eventBus});
+
+            let onDRMError = function (data) {
+                eventBus.off(ProtectionEvents.SERVER_CERTIFICATE_UPDATED, onDRMError);
+                expect(data.error.code).to.be.equal(ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_CODE); // jshint ignore:line
+                expect(data.error.message).to.be.equal(ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_MESSAGE); // jshint ignore:line
+                done();
+            };
+
+            eventBus.on(ProtectionEvents.SERVER_CERTIFICATE_UPDATED, onDRMError, this);
+
+            protectionController.setServerCertificate();
         });
     });
 });
