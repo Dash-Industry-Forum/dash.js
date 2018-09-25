@@ -52,6 +52,7 @@ class ProtectionErrors extends ErrorsBase {
         this.SERVER_CERTIFICATE_UPDATED_ERROR_CODE = 109;
         this.KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE = 110;
         this.MEDIA_KEY_MESSAGE_NO_LICENSE_SERVER_URL_ERROR_CODE = 111;
+        this.KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE = 112;
 
         this.MEDIA_KEYERR_UNKNOWN_MESSAGE = 'An unspecified error occurred. This value is used for errors that don\'t match any of the other codes.';
         this.MEDIA_KEYERR_CLIENT_MESSAGE = 'The Key System could not be installed or updated.';
@@ -64,6 +65,7 @@ class ProtectionErrors extends ErrorsBase {
         this.SERVER_CERTIFICATE_UPDATED_ERROR_MESSAGE = 'Error updating server certificate -- ';
         this.KEY_STATUS_CHANGED_EXPIRED_ERROR_MESSAGE = 'DRM: KeyStatusChange error! -- License has expired';
         this.MEDIA_KEY_MESSAGE_NO_LICENSE_SERVER_URL_ERROR_MESSAGE = 'DRM: No license server URL specified!';
+        this.KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE = 'DRM: KeySystem Access Denied! -- ';
     }
 }
 
