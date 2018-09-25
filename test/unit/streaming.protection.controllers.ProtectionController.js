@@ -1,5 +1,7 @@
 import ProtectionController from '../../src/streaming/protection/controllers/ProtectionController';
 import ProtectionEvents from '../../src/streaming/protection/ProtectionEvents';
+import ProtectionErrors from '../../src/streaming/protection/errors/ProtectionErrors';
+
 import EventBus from '../../src/core/EventBus';
 import DebugMock from './mocks/DebugMock';
 
@@ -32,7 +34,8 @@ describe('ProtectionController', function () {
 
             let onDRMError = function (data) {
                 eventBus.off(ProtectionEvents.LICENSE_REQUEST_COMPLETE, onDRMError);
-                expect(data.error).to.be.equal('DRM: Empty key message from CDM'); // jshint ignore:line
+                expect(data.error.code).to.be.equal(ProtectionErrors.MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_CODE); // jshint ignore:line
+                expect(data.error.message).to.be.equal(ProtectionErrors.MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_MESSAGE); // jshint ignore:line
                 done();
             };
 

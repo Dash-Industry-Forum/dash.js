@@ -32,6 +32,8 @@
 import CommonEncryption from '../CommonEncryption';
 import MediaCapability from '../vo/MediaCapability';
 import KeySystemConfiguration from '../vo/KeySystemConfiguration';
+import ProtectionErrors from '../errors/ProtectionErrors';
+import DashJSError from '../../vo/DashJSError';
 
 const NEEDKEY_BEFORE_INITIALIZE_RETRIES = 5;
 const NEEDKEY_BEFORE_INITIALIZE_TIMEOUT = 500;
@@ -523,7 +525,7 @@ function ProtectionController(config) {
 
         // Ensure message from CDM is not empty
         if (!message || message.byteLength === 0) {
-            sendLicenseRequestCompleteEvent(eventData, 'DRM: Empty key message from CDM');
+            sendLicenseRequestCompleteEvent(eventData, new DashJSError(ProtectionErrors.MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_CODE, ProtectionErrors.MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_MESSAGE));
             return;
         }
 
