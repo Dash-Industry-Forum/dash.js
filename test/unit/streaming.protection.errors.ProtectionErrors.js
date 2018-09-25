@@ -18,6 +18,7 @@ describe('ProtectionErrors', function () {
         expect(ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE).to.equal(110);
         expect(ProtectionErrors.MEDIA_KEY_MESSAGE_NO_LICENSE_SERVER_URL_ERROR_CODE).to.equal(111);
         expect(ProtectionErrors.KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE).to.equal(112);
+        expect(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE).to.equal(113);
     });
 
     it('ProtectionErrors should return the correct error message', () => {
@@ -34,5 +35,6 @@ describe('ProtectionErrors', function () {
         expect(ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_MESSAGE).to.equal('DRM: KeyStatusChange error! -- License has expired');
         expect(ProtectionErrors.MEDIA_KEY_MESSAGE_NO_LICENSE_SERVER_URL_ERROR_MESSAGE).to.equal('DRM: No license server URL specified!');
         expect(ProtectionErrors.KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE).to.equal('DRM: KeySystem Access Denied! -- ');
+        expect(ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE).to.equal('DRM: unable to create session! --');
     });
 });

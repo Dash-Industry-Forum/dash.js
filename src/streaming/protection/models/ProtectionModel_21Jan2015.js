@@ -212,7 +212,7 @@ function ProtectionModel_21Jan2015(config) {
         }).catch(function (error) {
             // TODO: Better error string
             removeSession(sessionToken);
-            eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: 'Error generating key request -- ' + error.name});
+            eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + 'Error generating key request -- ' + error.name)});
         });
     }
 
@@ -251,11 +251,11 @@ function ProtectionModel_21Jan2015(config) {
                 eventBus.trigger(events.KEY_SESSION_CREATED, {data: sessionToken});
             } else {
                 removeSession(sessionToken);
-                eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: 'Could not load session! Invalid Session ID (' + sessionID + ')'});
+                eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + 'Could not load session! Invalid Session ID (' + sessionID + ')')});
             }
         }).catch(function (error) {
             removeSession(sessionToken);
-            eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: 'Could not load session (' + sessionID + ')! ' + error.name});
+            eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + 'Could not load session (' + sessionID + ')! ' + error.name)});
         });
     }
 
