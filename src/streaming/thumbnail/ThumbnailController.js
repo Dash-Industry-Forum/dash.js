@@ -56,7 +56,6 @@ function ThumbnailController(config) {
 
     function getThumbnail(time, callback) {
         const track = thumbnailTracks.getCurrentTrack();
-        
         if (!track || track.segmentDuration <= 0 || time === undefined || time === null) {
             return null;
         }
@@ -73,15 +72,15 @@ function ThumbnailController(config) {
         thumbnail.x = Math.floor(thumbIndex % track.tilesHor) * track.widthPerTile;
         thumbnail.y = Math.floor(thumbIndex / track.tilesHor) * track.heightPerTile;
 
-        if('readThumbnail' in track){
+        if ('readThumbnail' in track) {
             return track.readThumbnail(time, (url) => {
                 thumbnail.url = url;
-                if(callback)
+                if (callback)
                     callback(thumbnail);
             });
-        }else{
+        } else {
             thumbnail.url = buildUrlFromTemplate(track, seq);
-            if(callback)
+            if (callback)
                 callback(thumbnail);
         }
     }

@@ -55,7 +55,6 @@ function ThumbnailTracks(config) {
     const metricsModel = config.metricsModel;
     const mediaPlayerModel = config.mediaPlayerModel;
     const errHandler = config.errHandler;
-    
 
     let instance,
         tracks,
@@ -72,7 +71,7 @@ function ThumbnailTracks(config) {
             mediaPlayerModel: mediaPlayerModel,
             errHandler: errHandler
         });
-        
+
         // parse representation and create tracks
         addTracks();
     }
@@ -101,13 +100,13 @@ function ThumbnailTracks(config) {
                 count);
 
             segments.push(seg);
-            
+
             seg = null;
             count++;
         }
         return segments;
     }
-    
+
     //Todo: share this with FragmentedTextBoxParser
     function getSamplesInfo(ab) {
         if (!boxParser) {
@@ -250,8 +249,6 @@ function ThumbnailTracks(config) {
         track.tilesHor = 1;
         track.tilesVert = 1;
 
-        
-        
         if (representation.essentialProperties) {
             representation.essentialProperties.forEach((p) => {
                 if (THUMBNAILS_SCHEME_ID_URIS.indexOf(p.schemeIdUri) >= 0 && p.value) {
@@ -270,27 +267,27 @@ function ThumbnailTracks(config) {
             tracks.push(track);
         }
 
-        segmentBaseLoader.loadSegments(representation, Constants.IMAGE, representation.indexRange, {}, function(segments, representation){
+        segmentBaseLoader.loadSegments(representation, Constants.IMAGE, representation.indexRange, {}, function (segments, representation) {
             var cache = [];
-            
+
             //todo:
             segments = normalizeSegments(segments, representation);
 
             track.segmentDuration = segments[0].duration; //todo
-            track.readThumbnail = function(time, callback){
+            track.readThumbnail = function (time, callback) {
 
                 let cached = null;
                 cache.some(el => {
-                    if(el.start <= time && el.end > time){
+                    if (el.start <= time && el.end > time) {
                         cached = el.url;
                         return true;
                     }
                 });
-                if(cached){
+                if (cached) {
                     callback(cached);
-                }else{
+                } else {
                     segments.some((ss) => {
-                        if(ss.mediaStartTime <= time && ss.mediaStartTime + ss.duration > time){
+                        if (ss.mediaStartTime <= time && ss.mediaStartTime + ss.duration > time) {
                             const baseURL = baseURLController.resolve(representation.path);
                             loader.load({
                                 method: 'get',
@@ -299,16 +296,16 @@ function ThumbnailTracks(config) {
                                     range: ss.mediaRange,
                                     responseType: 'arraybuffer'
                                 },
-                                onload: function(e){
+                                onload: function (e) {
                                     let info = getSamplesInfo(e.target.response);
-                                    let blob = new Blob( [ e.target.response.slice(info.sampleList[0].offset, info.sampleList[0].offset + info.sampleList[0].size) ], { type: "image/jpeg" } );
+                                    let blob = new Blob( [ e.target.response.slice(info.sampleList[0].offset, info.sampleList[0].offset + info.sampleList[0].size) ], { type: 'image/jpeg' } );
                                     let imageUrl = window.URL.createObjectURL( blob );
                                     cache.push({
                                         start: ss.mediaStartTime,
                                         end: ss.mediaStartTime + ss.duration,
                                         url: imageUrl
                                     });
-                                    if(callback)
+                                    if (callback)
                                         callback(imageUrl);
                                 }
                             });
@@ -319,7 +316,7 @@ function ThumbnailTracks(config) {
             };
         });
     }
-    
+
     function createTrack(representation) {
         const track = new ThumbnailTrackInfo();
         track.id = representation.id;
