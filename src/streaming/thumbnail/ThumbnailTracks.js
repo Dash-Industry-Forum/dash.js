@@ -270,7 +270,7 @@ function ThumbnailTracks(config) {
             tracks.push(track);
         }
 
-        segmentBaseLoader.loadSegments(representation, Constants.IMAGE, representation.indexRange, {}, function(segments, representation, type){
+        segmentBaseLoader.loadSegments(representation, Constants.IMAGE, representation.indexRange, {}, function(segments, representation){
             var cache = [];
             
             //todo:
@@ -307,7 +307,7 @@ function ThumbnailTracks(config) {
                                         start: ss.mediaStartTime,
                                         end: ss.mediaStartTime + ss.duration,
                                         url: imageUrl
-                                    })
+                                    });
                                     if(callback)
                                         callback(imageUrl);
                                 }
