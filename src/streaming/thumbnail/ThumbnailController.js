@@ -49,12 +49,14 @@ function ThumbnailController(config) {
             dashManifestModel: config.dashManifestModel,
             adapter: config.adapter,
             baseURLController: config.baseURLController,
-            stream: config.stream
+            stream: config.stream,
+            timelineConverter: config.timelineConverter
         });
     }
 
-    function getThumbnail(time) {
+    function getThumbnail(time, callback) {
         const track = thumbnailTracks.getCurrentTrack();
+        
         if (!track || track.segmentDuration <= 0 || time === undefined || time === null) {
             return null;
         }
@@ -65,13 +67,23 @@ function ThumbnailController(config) {
         const thumbIndex = Math.floor((offset * track.tilesHor * track.tilesVert) / track.segmentDuration);
         // Create and return the thumbnail
         const thumbnail = new Thumbnail();
-        thumbnail.url = buildUrlFromTemplate(track, seq);
+
         thumbnail.width = Math.floor(track.widthPerTile);
         thumbnail.height = Math.floor(track.heightPerTile);
         thumbnail.x = Math.floor(thumbIndex % track.tilesHor) * track.widthPerTile;
         thumbnail.y = Math.floor(thumbIndex / track.tilesHor) * track.heightPerTile;
 
-        return thumbnail;
+        if('readThumbnail' in track){
+            return track.readThumbnail(time, (url) => {
+                thumbnail.url = url;
+                if(callback)
+                    callback(thumbnail);
+            });
+        }else{
+            thumbnail.url = buildUrlFromTemplate(track, seq);
+            if(callback)
+                callback(thumbnail);
+        }
     }
 
     function buildUrlFromTemplate(track, seq) {

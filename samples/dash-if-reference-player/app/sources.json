@@ -175,6 +175,10 @@
         {
           "name": "Live stream, Single adaptation set, 1x1 tiles (livesim)",
           "url": "http://livesim.dashif.org/livesim/testpic_2s/Manifest_thumbs.mpd"
+        },
+        {
+          "name": "SegmentBase, Single adaption set, 3x4 tiles",
+          "url": "https://demo.unified-streaming.com/video/tiled-thumbnails/tos.mpd"
         }
       ]
     },

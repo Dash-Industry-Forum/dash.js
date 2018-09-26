@@ -447,7 +447,8 @@ function Stream(config) {
                 dashManifestModel: dashManifestModel,
                 adapter: adapter,
                 baseURLController: config.baseURLController,
-                stream: instance
+                stream: instance,
+                timelineConverter: config.timelineConverter
             });
             return;
         }
