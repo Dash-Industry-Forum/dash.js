@@ -297,9 +297,9 @@ function Stream(config) {
 
     function onProtectionError(event) {
         if (event.error) {
-            errHandler.mediaKeySessionError(event.error);
+            errHandler.mediaKeySessionError(event.error.message);
             errHandler.error(event.error);
-            logger.fatal(event.error);
+            logger.fatal(event.error.message);
             reset();
         }
     }
