@@ -114,7 +114,7 @@ function FragmentedTextBoxParser() {
                         if (subsBoxes) {
                             for (m = 0; m < subsBoxes.length; m++) {
                                 let subsBox = subsBoxes[m];
-                                if (subsIndex < subsBox.entry_count && i > nextSubsSample) {
+                                if (subsIndex < (subsBox.entry_count - 1) && i > nextSubsSample) {
                                     subsIndex++;
                                     nextSubsSample += subsBox.entries[subsIndex].sample_delta;
                                 }
