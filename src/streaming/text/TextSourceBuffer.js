@@ -339,7 +339,7 @@ function TextSourceBuffer() {
             } else {
                 samplesInfo = fragmentedTextBoxParser.getSamplesInfo(bytes);
                 sampleList = samplesInfo.sampleList;
-                if (!firstFragmentedSubtitleStart && sampleList.length > 0) {
+                if (firstFragmentedSubtitleStart === null && sampleList.length > 0) {
                     firstFragmentedSubtitleStart = sampleList[0].cts - chunk.start * timescale;
                 }
                 if (codecType.search(Constants.STPP) >= 0) {
