@@ -35,6 +35,7 @@ import MssFragmentInfoController from './MssFragmentInfoController';
 import MssFragmentProcessor from './MssFragmentProcessor';
 import MssParser from './parser/MssParser';
 import MssErrors from './errors/MssErrors';
+import DashJSError from '../streaming/vo/DashJSError';
 
 function MssHandler(config) {
 
@@ -85,8 +86,12 @@ function MssHandler(config) {
 
         const chunk = createDataChunk(request, streamProcessor.getStreamInfo().id, e.type !== events.FRAGMENT_LOADING_PROGRESS);
 
-        // Generate initialization segment (moov)
-        chunk.bytes = mssFragmentProcessor.generateMoov(representation);
+        try {
+            // Generate initialization segment (moov)
+            chunk.bytes = mssFragmentProcessor.generateMoov(representation);
+        } catch (e) {
+            config.errHandler.error(new DashJSError(e.code, e.message, e.data));
+        }
 
         eventBus.trigger(events.INIT_FRAGMENT_LOADED, {
             chunk: chunk,

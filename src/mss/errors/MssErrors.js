@@ -38,7 +38,9 @@ class MssErrors extends ErrorsBase {
         super();
 
         this.MSS_NO_TFRF_CODE = 200;
+        this.MSS_UNSUPPORTED_CODEC_CODE = 201;
         this.MSS_NO_TFRF_MESSAGE = 'Missing tfrf in live media segment';
+        this.MSS_UNSUPPORTED_CODEC_MESSAGE = 'Unsupported codec';
     }
 }
 
