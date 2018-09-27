@@ -59,8 +59,10 @@ class Errors extends ErrorsBase {
          *@deprecated
          */
         this.DOWNLOAD_ERROR_ID_MANIFEST        = 'manifest';
+
         this.DOWNLOAD_ERROR_ID_SIDX_CODE            = 26;
         this.DOWNLOAD_ERROR_ID_CONTENT_CODE         = 27;
+
         /*
          *@deprecated
          */
