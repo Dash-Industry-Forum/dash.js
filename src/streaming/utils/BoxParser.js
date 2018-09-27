@@ -225,11 +225,39 @@ function BoxParser(/*config*/) {
             String.fromCharCode(data[offset]);
     }
 
+    function findInitRange(data) {
+        let initRange = null;
+        let start,
+            end;
+
+        const isoFile = parse(data);
+
+        if (!isoFile) {
+            return initRange;
+        }
+
+        const ftyp = isoFile.getBox('ftyp');
+        const moov = isoFile.getBox('moov');
+
+        logger.debug('Searching for initialization.');
+
+        if (moov && moov.isComplete) {
+            start = ftyp ? ftyp.offset : moov.offset;
+            end = moov.offset + moov.size - 1;
+            initRange = start + '-' + end;
+
+            logger.debug('Found the initialization.  Range: ' + initRange);
+        }
+
+        return initRange;
+    }
+
     instance = {
         parse: parse,
         findLastTopIsoBoxCompleted: findLastTopIsoBoxCompleted,
         getMediaTimescaleFromMoov: getMediaTimescaleFromMoov,
         getSamplesInfo: getSamplesInfo,
+        findInitRange: findInitRange
     };
 
     setup();
