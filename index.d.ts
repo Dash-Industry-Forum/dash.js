@@ -278,30 +278,46 @@ declare namespace dashjs {
     }
 
     interface Errors {
-        MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE: 10;
-        MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE: 12;
-        XLINK_LOADER_LOADING_FAILURE_ERROR_CODE:    13;
-        SEGMENTS_UPDATE_FAILED_ERROR_CODE:          14;
-        SEGMENTS_UNAVAILABLE_ERROR_CODE:            15;
-        SEGMENT_BASE_LOADER_ERROR_CODE:             16;
-        TIME_SYNC_FAILED_ERROR_CODE:                17;
-        FRAGMENT_LOADER_LOADING_FAILURE_ERROR_CODE: 18;
-        FRAGMENT_LOADER_NULL_REQUEST_ERROR_CODE:    19;
-        URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE:   20;
-        APPEND_ERROR_CODE:                          21;
-        REMOVE_ERROR_CODE:                          22;
-        DATA_UPDATE_FAILED_ERROR_CODE:              23;
-        CAPABILITY_MEDIASOURCE_ERROR_CODE:          24;
-        CAPABILITY_MEDIAKEYS_ERROR_CODE:            25;
-        DOWNLOAD_ERROR_ID_MANIFEST_CODE:            26;
-        DOWNLOAD_ERROR_ID_CONTENT_CODE:             28;
-        DOWNLOAD_ERROR_ID_INITIALIZATION_CODE:      29;
-        DOWNLOAD_ERROR_ID_XLINK_CODE:               30;
-        MANIFEST_ERROR_ID_PARSE_CODE:               32;
-        MANIFEST_ERROR_ID_NOSTREAMS_CODE:           33;
-        TIMED_TEXT_ERROR_ID_PARSE_CODE:             34;
-        MANIFEST_ERROR_ID_MULTIPLEXED_CODE:         35;
-        MEDIASOURCE_TYPE_UNSUPPORTED_CODE:          36;
+        MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE:          10;
+        MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE:          12;
+        XLINK_LOADER_LOADING_FAILURE_ERROR_CODE:             13;
+        SEGMENTS_UPDATE_FAILED_ERROR_CODE:                   14;
+        SEGMENTS_UNAVAILABLE_ERROR_CODE:                     15;
+        SEGMENT_BASE_LOADER_ERROR_CODE:                      16;
+        TIME_SYNC_FAILED_ERROR_CODE:                         17;
+        FRAGMENT_LOADER_LOADING_FAILURE_ERROR_CODE:          18;
+        FRAGMENT_LOADER_NULL_REQUEST_ERROR_CODE:             19;
+        URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE:            20;
+        APPEND_ERROR_CODE:                                   21;
+        REMOVE_ERROR_CODE:                                   22;
+        DATA_UPDATE_FAILED_ERROR_CODE:                       23;
+        CAPABILITY_MEDIASOURCE_ERROR_CODE:                   24;
+        CAPABILITY_MEDIAKEYS_ERROR_CODE:                     25;
+        DOWNLOAD_ERROR_ID_MANIFEST_CODE:                     26;
+        DOWNLOAD_ERROR_ID_CONTENT_CODE:                      28;
+        DOWNLOAD_ERROR_ID_INITIALIZATION_CODE:               29;
+        DOWNLOAD_ERROR_ID_XLINK_CODE:                        30;
+        MANIFEST_ERROR_ID_PARSE_CODE:                        32;
+        MANIFEST_ERROR_ID_NOSTREAMS_CODE:                    33;
+        TIMED_TEXT_ERROR_ID_PARSE_CODE:                      34;
+        MANIFEST_ERROR_ID_MULTIPLEXED_CODE:                  35;
+        MEDIASOURCE_TYPE_UNSUPPORTED_CODE:                   36;
+        MEDIA_KEYERR_CODE:                                  100;
+        MEDIA_KEYERR_UNKNOWN_CODE:                          101;
+        MEDIA_KEYERR_CLIENT_CODE:                           102;
+        MEDIA_KEYERR_SERVICE_CODE:                          103;
+        MEDIA_KEYERR_OUTPUT_CODE:                           104;
+        MEDIA_KEYERR_HARDWARECHANGE_CODE:                   105;
+        MEDIA_KEYERR_DOMAIN_CODE:                           106;
+        MEDIA_KEY_MESSAGE_ERROR_CODE:                       107;
+        MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_CODE:          108;
+        SERVER_CERTIFICATE_UPDATED_ERROR_CODE:              109;
+        KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE:              110;
+        MEDIA_KEY_MESSAGE_NO_LICENSE_SERVER_URL_ERROR_CODE: 111;
+        KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE:                112;
+        KEY_SESSION_CREATED_ERROR_CODE:                     113;
+        MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE:              114;
+        MSS_NO_TFRF_CODE:                                   200;        
     }
 
     interface MediaPlayerEvents {
@@ -446,7 +462,23 @@ declare namespace dashjs {
                   Errors['MANIFEST_ERROR_ID_NOSTREAMS_CODE'] |
                   Errors['TIMED_TEXT_ERROR_ID_PARSE_CODE'] |
                   Errors['MANIFEST_ERROR_ID_MULTIPLEXED_CODE'] |
-                  Errors['MEDIASOURCE_TYPE_UNSUPPORTED_CODE'] ,
+                  Errors['MEDIASOURCE_TYPE_UNSUPPORTED_CODE'] |
+                  Errors['MEDIA_KEYERR_CODE'] |
+                  Errors['MEDIA_KEYERR_UNKNOWN_CODE'] |
+                  Errors['MEDIA_KEYERR_CLIENT_CODE'] |
+                  Errors['MEDIA_KEYERR_SERVICE_CODE'] |
+                  Errors['MEDIA_KEYERR_OUTPUT_CODE'] |
+                  Errors['MEDIA_KEYERR_HARDWARECHANGE_CODE'] |
+                  Errors['MEDIA_KEYERR_DOMAIN_CODE'] |
+                  Errors['MEDIA_KEY_MESSAGE_ERROR_CODE'] |
+                  Errors['MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_CODE'] |
+                  Errors['SERVER_CERTIFICATE_UPDATED_ERROR_CODE'] |
+                  Errors['KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE'] |
+                  Errors['MEDIA_KEY_MESSAGE_NO_LICENSE_SERVER_URL_ERROR_CODE'] |
+                  Errors['KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE'] |
+                  Errors['KEY_SESSION_CREATED_ERROR_CODE'] |
+                  Errors['MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE'] |
+                  Errors['MSS_NO_TFRF_CODE'],
             message:string,
             data:object,
         }
