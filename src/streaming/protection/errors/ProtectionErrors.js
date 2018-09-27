@@ -37,23 +37,66 @@ class ProtectionErrors extends ErrorsBase {
 	constructor () {
         super();
 
+        /**
+         *  Generid key Error code
+         */
         this.MEDIA_KEYERR_CODE = 100;
+        /**
+         *  Error code returned by keyerror api for ProtectionModel_01b
+         */
         this.MEDIA_KEYERR_UNKNOWN_CODE = 101;
+        /**
+         *  Error code returned by keyerror api for ProtectionModel_01b
+         */
         this.MEDIA_KEYERR_CLIENT_CODE = 102;
+        /**
+         *  Error code returned by keyerror api for ProtectionModel_01b
+         */
         this.MEDIA_KEYERR_SERVICE_CODE = 103;
+        /**
+         *  Error code returned by keyerror api for ProtectionModel_01b
+         */
         this.MEDIA_KEYERR_OUTPUT_CODE = 104;
+        /**
+         *  Error code returned by keyerror api for ProtectionModel_01b
+         */
         this.MEDIA_KEYERR_HARDWARECHANGE_CODE = 105;
+        /**
+         *  Error code returned by keyerror api for ProtectionModel_01b
+         */
         this.MEDIA_KEYERR_DOMAIN_CODE = 106;
 
+        /**
+         *  Error code returned when an error occured in keymessage event for ProtectionModel_01b
+         */
         this.MEDIA_KEY_MESSAGE_ERROR_CODE = 107;
-
+        /**
+         *  Error code returned when challenge is invalid in keymessage event (event triggered by CDM)
+         */
         this.MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_CODE = 108;
-
+        /**
+         *  Error code returned when License server certificate has not been successfully updated
+         */
         this.SERVER_CERTIFICATE_UPDATED_ERROR_CODE = 109;
+        /**
+         *  Error code returned when license validity has expired
+         */
         this.KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE = 110;
+        /**
+         *  Error code returned when no licenser url is defined
+         */
         this.MEDIA_KEY_MESSAGE_NO_LICENSE_SERVER_URL_ERROR_CODE = 111;
+        /**
+         *  Error code returned when key system access is denied
+         */
         this.KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE = 112;
+        /**
+         *  Error code returned when key session has not been successfully created
+         */
         this.KEY_SESSION_CREATED_ERROR_CODE = 113;
+        /**
+         *  Error code returned when license request failed after a keymessage event has been triggered
+         */
         this.MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE = 114;
 
         this.MEDIA_KEYERR_UNKNOWN_MESSAGE = 'An unspecified error occurred. This value is used for errors that don\'t match any of the other codes.';
