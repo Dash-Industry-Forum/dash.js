@@ -267,7 +267,7 @@ function PlaybackController() {
             if (playbackRate !== currentRate) {
                 logger.info('Starting live catchup mechanism. Setting playback rate to', playbackRate);
                 originalPlaybackRate = currentRate;
-                videoModel.getElement().playbackRate = playbackRate;
+                videoModel.setPlaybackRate(playbackRate);
 
                 eventBus.trigger(Events.PLAYBACK_CATCHUP_START, { sender: instance });
             }
@@ -279,7 +279,7 @@ function PlaybackController() {
             const playbackRate = originalPlaybackRate || 1;
             if (playbackRate !== getPlaybackRate()) {
                 logger.info('Stopping live catchup mechanism. Setting playback rate to', playbackRate);
-                videoModel.getElement().playbackRate = playbackRate;
+                videoModel.setPlaybackRate(playbackRate);
 
                 eventBus.trigger(Events.PLAYBACK_CATCHUP_END, { sender: instance });
             }
@@ -643,8 +643,8 @@ function PlaybackController() {
             commonEarliestTime[streamInfo.id][type] = Math.max(ranges.start(0), streamInfo.start);
         }
 
-        const hasVideoTrack = streamController.isVideoTrackPresent();
-        const hasAudioTrack = streamController.isAudioTrackPresent();
+        const hasVideoTrack = streamController.isTrackTypePresent(Constants.VIDEO);
+        const hasAudioTrack = streamController.isTrackTypePresent(Constants.AUDIO);
 
         initialStartTime = getStreamStartTime(false);
         if (hasAudioTrack && hasVideoTrack) {

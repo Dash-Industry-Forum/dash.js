@@ -237,7 +237,7 @@ function AbrController() {
     function getTopBitrateInfoFor(type) {
         if (type  && streamProcessorDict && streamProcessorDict[type]) {
             const streamInfo = streamProcessorDict[type].getStreamInfo();
-            if (streamInfo.id) {
+            if (streamInfo && streamInfo.id) {
                 const idx = getTopQualityIndexFor(type, streamInfo.id);
                 const bitrates = getBitrateList(streamProcessorDict[type].getMediaInfo());
                 return bitrates[idx] ? bitrates[idx] : null;
@@ -333,10 +333,12 @@ function AbrController() {
 
     function getMinAllowedIndexFor(type) {
         const minBitrate = getMinAllowedBitrateFor(type);
+
         if (minBitrate) {
-            const bitrateList = getBitrateList(streamProcessorDict[type].getMediaInfo());
+            const mediaInfo = streamProcessorDict[type].getMediaInfo();
+            const bitrateList = getBitrateList(mediaInfo);
             // This returns the quality index <= for the given bitrate
-            let minIdx = getQualityForBitrate(streamProcessorDict[type].getMediaInfo(), minBitrate);
+            let minIdx = getQualityForBitrate(mediaInfo, minBitrate);
             if (bitrateList[minIdx] && minIdx < bitrateList.length - 1 && bitrateList[minIdx].bitrate < minBitrate * 1000) {
                 minIdx++; // Go to the next bitrate
             }
@@ -363,6 +365,9 @@ function AbrController() {
     }
 
     function setAutoSwitchBitrateFor(type, value) {
+        if (typeof value !== 'boolean') {
+            return;
+        }
         autoSwitchBitrate[type] = value;
     }
 
@@ -379,6 +384,9 @@ function AbrController() {
     }
 
     function setUsePixelRatioInLimitBitrateByPortal(value) {
+        if (typeof value !== 'boolean') {
+            return;
+        }
         usePixelRatioInLimitBitrateByPortal = value;
     }
 
@@ -436,12 +444,19 @@ function AbrController() {
         }
     }
 
+    function checkQuality(quality) {
+        const isInt = quality !== null && !isNaN(quality) && (quality % 1 === 0);
+
+        if (!isInt) {
+            throw new Error('argument is not an integer');
+        }
+    }
+
     function setPlaybackQuality(type, streamInfo, newQuality, reason) {
         const id = streamInfo.id;
         const oldQuality = getQualityFor(type);
-        const isInt = newQuality !== null && !isNaN(newQuality) && (newQuality % 1 === 0);
 
-        if (!isInt) throw new Error('argument is not an integer');
+        checkQuality(newQuality);
 
         const topQualityIdx = getTopQualityIndexFor(type, id);
         if (newQuality !== oldQuality && newQuality >= 0 && newQuality <= topQualityIdx) {
@@ -478,9 +493,11 @@ function AbrController() {
      * @memberof AbrController#
      */
     function getQualityForBitrate(mediaInfo, bitrate, latency) {
-        if (useDeadTimeLatency && latency && streamProcessorDict[mediaInfo.type].getCurrentRepresentationInfo() && streamProcessorDict[mediaInfo.type].getCurrentRepresentationInfo().fragmentDuration) {
+        const voRepresentation = mediaInfo && mediaInfo.type ? streamProcessorDict[mediaInfo.type].getRepresentationInfo() : null;
+
+        if (useDeadTimeLatency && latency && voRepresentation && voRepresentation.fragmentDuration) {
             latency = latency / 1000;
-            const fragmentDuration = streamProcessorDict[mediaInfo.type].getCurrentRepresentationInfo().fragmentDuration;
+            const fragmentDuration = voRepresentation.fragmentDuration;
             if (latency > fragmentDuration) {
                 return 0;
             } else {
@@ -490,9 +507,6 @@ function AbrController() {
         }
 
         const bitrateList = getBitrateList(mediaInfo);
-        if (!bitrateList || bitrateList.length === 0) {
-            return QUALITY_DEFAULT;
-        }
 
         for (let i = bitrateList.length - 1; i >= 0; i--) {
             const bitrateInfo = bitrateList[i];
@@ -500,7 +514,7 @@ function AbrController() {
                 return i;
             }
         }
-        return 0;
+        return QUALITY_DEFAULT;
     }
 
     /**
@@ -509,12 +523,12 @@ function AbrController() {
      * @memberof AbrController#
      */
     function getBitrateList(mediaInfo) {
-        if (!mediaInfo || !mediaInfo.bitrateList) return null;
+        const infoList = [];
+        if (!mediaInfo || !mediaInfo.bitrateList) return infoList;
 
         const bitrateList = mediaInfo.bitrateList;
         const type = mediaInfo.type;
 
-        const infoList = [];
         let bitrateInfo;
 
         for (let i = 0, ln = bitrateList.length; i < ln; i++) {

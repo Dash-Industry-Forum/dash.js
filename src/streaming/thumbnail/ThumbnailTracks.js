@@ -35,7 +35,8 @@ import ThumbnailTrackInfo from '../vo/ThumbnailTrackInfo';
 import URLUtils from '../../streaming/utils/URLUtils';
 import {replaceIDForTemplate} from '../../dash/utils/SegmentsUtils';
 
-const THUMBNAILS_SCHEME_ID_URI = 'http://dashif.org/thumbnail_tile';
+const THUMBNAILS_SCHEME_ID_URIS = ['http://dashif.org/thumbnail_tile',
+                                   'http://dashif.org/guidelines/thumbnail_tile'];
 
 function ThumbnailTracks(config) {
 
@@ -61,7 +62,7 @@ function ThumbnailTracks(config) {
             return;
         }
 
-        const streamInfo = stream ? stream.getStreamInfo() : null;
+        const streamInfo = stream.getStreamInfo();
         if (!streamInfo) {
             return;
         }
@@ -107,7 +108,7 @@ function ThumbnailTracks(config) {
 
         if (representation.essentialProperties) {
             representation.essentialProperties.forEach((p) => {
-                if (p.schemeIdUri === THUMBNAILS_SCHEME_ID_URI && p.value) {
+                if (THUMBNAILS_SCHEME_ID_URIS.indexOf(p.schemeIdUri) >= 0 && p.value) {
                     const vars = p.value.split('x');
                     if (vars.length === 2 && !isNaN(vars[0]) && !isNaN(vars[1])) {
                         track.tilesHor = parseInt(vars[0], 10);

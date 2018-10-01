@@ -28,22 +28,19 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
+import ErrorsBase from '../../core/errors/ErrorsBase';
 /**
- * @classdesc EME-independent KeyError
- * @ignore
+ * @class
+ *
  */
-class KeyError {
-    /**
-     * @param {Object} sessionToken the key session to which this error is associated
-     * @param {string} errorString an informational error message
-     * @class
-     * @deprecated Newest versions of EME APIs will not use this error object
-     */
-    constructor(sessionToken, errorString) {
-        this.sessionToken = sessionToken;
-        this.error = errorString;
+class MssErrors extends ErrorsBase {
+	constructor () {
+        super();
+
+        this.MSS_NO_TFRF_CODE = 200;
+        this.MSS_NO_TFRF_MESSAGE = 'Missing tfrf in live media segment';
     }
 }
 
-export default KeyError;
+let mssErrors = new MssErrors();
+export default mssErrors;

@@ -16,6 +16,10 @@ function MetricsModelMock () {
             BufferState: ['bufferStalled']
         };
     };
+
+    this.clearAllCurrentMetrics = function () {
+
+    };
 }
 
 export default MetricsModelMock;

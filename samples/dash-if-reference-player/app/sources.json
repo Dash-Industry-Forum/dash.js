@@ -38,19 +38,19 @@
       "name": "LIVE (Dynamic MPD)",
       "submenu": [
         {
-          "url": "https://vm2.dashif.org/livesim/testpic_2s/Manifest.mpd",
+          "url": "https://livesim.dashif.org/livesim/testpic_2s/Manifest.mpd",
           "name": "SegmentTemplate without manifest updates (livesim)"
         },
         {
-          "url": "https://vm2.dashif.org/livesim/mup_30/testpic_2s/Manifest.mpd",
+          "url": "https://livesim.dashif.org/livesim/mup_30/testpic_2s/Manifest.mpd",
           "name": "SegmentTemplate with manifest updates every 30s (livesim)"
         },
         {
-          "url": "https://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_2s/Manifest.mpd",
-          "name": "SegmentTimeline (livesim-dev)"
+          "url": "https://livesim.dashif.org/livesim/segtimeline_1/testpic_2s/Manifest.mpd",
+          "name": "SegmentTimeline (livesim)"
         },
         {
-          "url": "https://vm2.dashif.org/livesim-dev/periods_60/continuous_1/testpic_2s/Manifest.mpd",
+          "url": "https://livesim.dashif.org/livesim/periods_60/continuous_1/testpic_2s/Manifest.mpd",
           "name": "Multiperiod SegmentTemplate. New period every minute (livesim)"
         },
         {
@@ -62,24 +62,24 @@
             "name": "IRT CMAF reference with subtitles"
         },
         {
-          "url": " https://vm2.dashif.org/livesim-dev/ato_10/testpic_2s/Manifest.mpd",
+          "url": " https://livesim.dashif.org/livesim/ato_10/testpic_2s/Manifest.mpd",
           "name": "10 seconds availabilityTimeOffset (livesim)"
         },
         {
-          "url": "https://vm2.dashif.org/livesim-dev/ato_inf/testpic_2s/Manifest.mpd",
+          "url": "https://livesim.dashif.org/livesim/ato_inf/testpic_2s/Manifest.mpd",
           "name": "Infinite offset - all segments available at availability start (livesim)"
         },
         {
-          "url": "https://vm2.dashif.org/livesim-chunked/chunkdur_1/ato_7/testpic4_8s/Manifest300.mpd",
-          "name": "Low Latency (Single-Rate)",
+          "url": "https://livesim.dashif.org/livesim-chunked/chunkdur_1/ato_7/testpic4_8s/Manifest300.mpd",
+          "name": "Low Latency (Single-Rate) (livesim-chunked)",
           "bufferConfig" : {
             "lowLatencyMode": true,
             "liveDelay": 2.8
           }
         },
         {
-          "url": "https://vm2.dashif.org/livesim-chunked/chunkdur_1/ato_7/testpic4_8s/Manifest.mpd",
-          "name": "Low Latency (Multi-Rate)",
+          "url": "https://livesim.dashif.org/livesim-chunked/chunkdur_1/ato_7/testpic4_8s/Manifest.mpd",
+          "name": "Low Latency (Multi-Rate) (livesim-chunked)",
           "bufferConfig" : {
             "lowLatencyMode": true,
             "liveDelay": 2.8
@@ -106,31 +106,31 @@
       "submenu": [
         {
           "name": "TTML Segmented Subtitles VoD",
-          "url": "https://vm2.dashif.org/dash/vod/testpic_2s/multi_subs.mpd"
+          "url": "https://livesim.dashif.org/dash/vod/testpic_2s/multi_subs.mpd"
         },
         {
           "name": "TTML Segmented Subtitles Live (livesim)",
-          "url": "https://vm2.dashif.org/livesim/testpic_2s/multi_subs.mpd"
+          "url": "https://livesim.dashif.org/livesim/testpic_2s/multi_subs.mpd"
         },
         {
           "name": "TTML Sideloaded XML Subtitles",
-          "url": "https://vm2.dashif.org/dash/vod/testpic_2s/xml_subs.mpd"
+          "url": "https://livesim.dashif.org/dash/vod/testpic_2s/xml_subs.mpd"
         },
         {
           "name": "Embedded CEA-608 Closed Captions",
-          "url": "https://vm2.dashif.org/dash/vod/testpic_2s/cea608.mpd"
+          "url": "https://livesim.dashif.org/dash/vod/testpic_2s/cea608.mpd"
         },
         {
           "name": "Embedded CEA-608 Closed Captions (livesim)",
-          "url": "https://vm2.dashif.org/livesim/testpic_2s/cea608.mpd"
+          "url": "https://livesim.dashif.org/livesim/testpic_2s/cea608.mpd"
         },
         {
           "name": "Embedded CEA-608 Closed Captions and TTML segments VoD",
-          "url": "https://vm2.dashif.org/dash/vod/testpic_2s/cea608_and_segs.mpd"
+          "url": "https://livesim.dashif.org/dash/vod/testpic_2s/cea608_and_segs.mpd"
         },
         {
           "name": "Embedded CEA-608 Closed Captions and TTML segments Live (livesim)",
-          "url": "https://vm2.dashif.org/livesim/testpic_2s/cea608_and_segs.mpd"
+          "url": "https://livesim.dashif.org/livesim/testpic_2s/cea608_and_segs.mpd"
         },
         {
           "name": "TTML Segmented 'snaking' subtitles (with random text) (Ondemand)",
@@ -142,14 +142,14 @@
             "name": "IMSC1 Text Subtitles via sidecar file"
         },
         {
-          "url": "https://vm2.dashif.org/dash/vod/testpic_2s/imsc1_img.mpd",
+          "url": "https://livesim.dashif.org/dash/vod/testpic_2s/imsc1_img.mpd",
           "name": "IMSC1 (CMAF) Image Subtitles",
-          "moreInfo": "https://vm2.dashif.org/dash/vod/testpic_2s/imsc1_img_subs_info.html"
+          "moreInfo": "https://livesim.dashif.org/dash/vod/testpic_2s/imsc1_img_subs_info.html"
         },
         {
           "name": "TTML Image Subtitles embedded (VoD)",
-          "url": "https://vm2.dashif.org/dash/vod/testpic_2s/img_subs.mpd",
-          "moreInfo": "https://vm2.dashif.org/dash/vod/testpic_2s/img_subs_info.html"
+          "url": "https://livesim.dashif.org/dash/vod/testpic_2s/img_subs.mpd",
+          "moreInfo": "https://livesim.dashif.org/dash/vod/testpic_2s/img_subs_info.html"
         }
       ]
     },
@@ -173,8 +173,8 @@
           "url": "http://dash.edgesuite.net/akamai/bbb_30fps/bbb_with_multiple_tiled_thumbnails.mpd"
         },
         {
-          "name": "Live stream, Single adaptation set, 1x1 tiles",
-          "url": "http://vm2.dashif.org/livesim-dev/testpic_2s/Manifest_thumbs.mpd"
+          "name": "Live stream, Single adaptation set, 1x1 tiles (livesim)",
+          "url": "http://livesim.dashif.org/livesim/testpic_2s/Manifest_thumbs.mpd"
         }
       ]
     },
@@ -183,11 +183,11 @@
       "submenu": [
         {
           "name": "48k AAC-LC Stereo Beeps (Live)",
-          "url": "https://vm2.dashif.org/livesim/testpic_2s/audio.mpd"
+          "url": "https://livesim.dashif.org/livesim/testpic_2s/audio.mpd"
         },
         {
           "name": "48k AAC-LC Stereo Beeps (Ondemand)",
-          "url": "https://vm2.dashif.org/dash/vod/testpic_2s/audio.mpd"
+          "url": "https://livesim.dashif.org/dash/vod/testpic_2s/audio.mpd"
         },
         {
           "name": "128k AAC-LC Stereo 1kHz Tone (Ondemand)",

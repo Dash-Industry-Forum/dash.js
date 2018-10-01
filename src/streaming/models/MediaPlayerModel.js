@@ -37,7 +37,7 @@ import Constants from '../constants/Constants';
 
 const DEFAULT_UTC_TIMING_SOURCE = {
     scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
-    value: 'http://time.akamai.com/?iso'
+    value: 'http://time.akamai.com/?iso&ms'
 };
 const LIVE_DELAY_FRAGMENT_COUNT = 4;
 
@@ -201,7 +201,7 @@ function MediaPlayerModel() {
         return useDefaultABRRules;
     }
 
-    function findABRCustomRule(rulename) {
+    function findABRCustomRuleIndex(rulename) {
         let i;
         for (i = 0; i < customABRRule.length; i++) {
             if (customABRRule[i].rulename === rulename) {
@@ -217,7 +217,7 @@ function MediaPlayerModel() {
 
     function addABRCustomRule(type, rulename, rule) {
 
-        let index = findABRCustomRule(rulename);
+        let index = findABRCustomRuleIndex(rulename);
         if (index === -1) {
             // add rule
             customABRRule.push({
@@ -233,15 +233,17 @@ function MediaPlayerModel() {
     }
 
     function removeABRCustomRule(rulename) {
-        let index = findABRCustomRule(rulename);
-        if (index !== -1) {
-            // remove rule
-            customABRRule.splice(index, 1);
+        if (rulename) {
+            let index = findABRCustomRuleIndex(rulename);
+            //if no rulename custom rule has been found, do nothing
+            if (index !== -1) {
+                // remove rule
+                customABRRule.splice(index, 1);
+            }
+        } else {
+            //if no rulename is defined, remove all ABR custome rules
+            customABRRule = [];
         }
-    }
-
-    function removeAllABRCustomRule() {
-        customABRRule = [];
     }
 
     function setBandwidthSafetyFactor(value) {
@@ -355,48 +357,16 @@ function MediaPlayerModel() {
         return bufferPruningInterval;
     }
 
-    function setFragmentRetryAttempts(value) {
-        retryAttempts[HTTPRequest.MEDIA_SEGMENT_TYPE] = value;
-    }
-
-    function setManifestRetryAttempts(value) {
-        retryAttempts[HTTPRequest.MPD_TYPE] = value;
-    }
-
     function setRetryAttemptsForType(type, value) {
         retryAttempts[type] = value;
-    }
-
-    function getFragmentRetryAttempts() {
-        return retryAttempts[HTTPRequest.MEDIA_SEGMENT_TYPE];
-    }
-
-    function getManifestRetryAttempts() {
-        return retryAttempts[HTTPRequest.MPD_TYPE];
     }
 
     function getRetryAttemptsForType(type) {
         return getLowLatencyEnabled() ? retryAttempts[type] * LOW_LATENCY_MULTIPLY_FACTOR : retryAttempts[type];
     }
 
-    function setFragmentRetryInterval(value) {
-        retryIntervals[HTTPRequest.MEDIA_SEGMENT_TYPE] = value;
-    }
-
-    function setManifestRetryInterval(value) {
-        retryIntervals[HTTPRequest.MPD_TYPE] = value;
-    }
-
     function setRetryIntervalForType(type, value) {
         retryIntervals[type] = value;
-    }
-
-    function getFragmentRetryInterval() {
-        return retryIntervals[HTTPRequest.MEDIA_SEGMENT_TYPE];
-    }
-
-    function getManifestRetryInterval() {
-        return retryIntervals[HTTPRequest.MPD_TYPE];
     }
 
     function getRetryIntervalForType(type) {
@@ -423,12 +393,12 @@ function MediaPlayerModel() {
         liveDelayFragmentCount = value;
     }
 
-    function setLiveDelay(value) {
-        liveDelay = value;
-    }
-
     function getLiveDelayFragmentCount() {
         return liveDelayFragmentCount;
+    }
+
+    function setLiveDelay(value) {
+        liveDelay = value;
     }
 
     function getLiveDelay() {
@@ -557,7 +527,6 @@ function MediaPlayerModel() {
         getABRCustomRules: getABRCustomRules,
         addABRCustomRule: addABRCustomRule,
         removeABRCustomRule: removeABRCustomRule,
-        removeAllABRCustomRule: removeAllABRCustomRule,
         setBandwidthSafetyFactor: setBandwidthSafetyFactor,
         getBandwidthSafetyFactor: getBandwidthSafetyFactor,
         setAbandonLoadTimeout: setAbandonLoadTimeout,
@@ -584,16 +553,8 @@ function MediaPlayerModel() {
         getBufferAheadToKeep: getBufferAheadToKeep,
         setBufferPruningInterval: setBufferPruningInterval,
         getBufferPruningInterval: getBufferPruningInterval,
-        setFragmentRetryAttempts: setFragmentRetryAttempts,
-        getFragmentRetryAttempts: getFragmentRetryAttempts,
-        setManifestRetryAttempts: setManifestRetryAttempts,
-        getManifestRetryAttempts: getManifestRetryAttempts,
         setRetryAttemptsForType: setRetryAttemptsForType,
         getRetryAttemptsForType: getRetryAttemptsForType,
-        setFragmentRetryInterval: setFragmentRetryInterval,
-        getFragmentRetryInterval: getFragmentRetryInterval,
-        setManifestRetryInterval: setManifestRetryInterval,
-        getManifestRetryInterval: getManifestRetryInterval,
         setRetryIntervalForType: setRetryIntervalForType,
         getRetryIntervalForType: getRetryIntervalForType,
         setWallclockTimeUpdateInterval: setWallclockTimeUpdateInterval,

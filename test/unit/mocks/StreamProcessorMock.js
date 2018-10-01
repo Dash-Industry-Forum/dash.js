@@ -17,14 +17,15 @@ class FragmentModelMock {
 class BufferControllerMock {
     constructor() {
         this.seekStartTime = 0;
+        this.isBufferingCompleted = false;
     }
 
     setSeekStartTime(time) {
         this.seekStartTime = time;
     }
 
-    isBufferingCompleted() {
-        return false;
+    getIsBufferingCompleted() {
+        return this.isBufferingCompleted;
     }
 
     getRangeAt() {
@@ -68,7 +69,8 @@ class StreamProcessorMock {
     getMediaInfo() {
         return {
             bitrateList: [],
-            mimeType: 'video/mp4'
+            mimeType: 'video/mp4',
+            streamInfo: this.streamInfo
         };
     }
 
@@ -108,23 +110,23 @@ class StreamProcessorMock {
         return true;
     }
 
-    getRepresentationInfoForQuality(quality) {
-        let offest = quality ? 2 : 1;
-        return {
-            MSETimeOffset: offest
-        };
-    }
-
     getStreamInfo() {
         return this.streamInfo;
     }
 
-    getCurrentRepresentationInfo() {
-        return {mediaInfo: {type: this.type}};
+    getRepresentationInfo(quality) {
+        if (quality !== undefined) {
+            let offset = quality ? 2 : 1;
+            return {
+                MSETimeOffset: offset
+            };
+        } else {
+            return {mediaInfo: {type: this.type, streamInfo: this.streamInfo}, fragmentDuration: 6};
+        }
     }
 
     isBufferingCompleted() {
-        return this.bufferController.isBufferingCompleted();
+        return this.bufferController.getIsBufferingCompleted();
     }
 
     getFragmentController() {

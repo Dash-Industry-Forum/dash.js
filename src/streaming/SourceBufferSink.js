@@ -34,6 +34,8 @@ import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import FactoryMaker from '../core/FactoryMaker';
 import TextController from './text/TextController';
+import Errors from '../core/errors/Errors';
+
 /**
  * @class SourceBufferSink
  * @implements FragmentSink
@@ -135,6 +137,13 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
     }
 
     function append(chunk) {
+        if (!chunk) {
+            onAppended({
+                chunk: chunk,
+                error: new DashJSError(Errors.APPEND_ERROR_CODE, Errors.APPEND_ERROR_MESSAGE)
+            });
+            return;
+        }
         appendQueue.push(chunk);
         if (!isAppendingInProgress) {
             waitForUpdateEnd(buffer, appendNextInQueue.bind(this));
@@ -172,7 +181,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
                     from: start,
                     to: end,
                     unintended: false,
-                    error: new DashJSError(err.code, err.message, null)
+                    error: new DashJSError(err.code, err.message)
                 });
             }
         });
@@ -226,7 +235,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
                 if (onAppended) {
                     onAppended({
                         chunk: nextChunk,
-                        error: new DashJSError(err.code, err.message, null)
+                        error: new DashJSError(err.code, err.message)
                     });
                 }
             }

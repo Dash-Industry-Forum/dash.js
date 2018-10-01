@@ -136,8 +136,8 @@ function ThroughputHistory(config) {
     }
 
     function getSampleSize(isThroughput, mediaType, isLive) {
-        let arr;
-        let sampleSize;
+        let arr,
+            sampleSize;
 
         if (isThroughput) {
             arr = throughputDict[mediaType];

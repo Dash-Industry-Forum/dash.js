@@ -44,6 +44,9 @@ function BufferLevelRule(config) {
     }
 
     function execute(streamProcessor, videoTrackPresent) {
+        if (!streamProcessor) {
+            return true;
+        }
         const bufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor(streamProcessor.getType()));
         return bufferLevel < getBufferTarget(streamProcessor, videoTrackPresent);
     }
@@ -55,7 +58,7 @@ function BufferLevelRule(config) {
             return bufferTarget;
         }
         const type = streamProcessor.getType();
-        const representationInfo = streamProcessor.getCurrentRepresentationInfo();
+        const representationInfo = streamProcessor.getRepresentationInfo();
         if (type === Constants.FRAGMENTED_TEXT) {
             bufferTarget = textController.isTextEnabled() ? representationInfo.fragmentDuration : 0;
         } else if (type === Constants.AUDIO && videoTrackPresent) {

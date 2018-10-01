@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <title>Dash JavaScript Player</title>
     <meta name="description" content="" />
-    <link rel="icon" type="image/x-icon" href="http://dashif.org/wp-content/uploads/2014/12/dashif.ico" />
+    <link rel="icon" type="image/x-icon" href="https://dashif.org/wp-content/uploads/2014/12/dashif.ico" />
     <meta name="viewport" content="width=device-width, height=device-height, user-scalable=no">
 
     <link rel="stylesheet" href="app/lib/bootstrap/css/bootstrap.min.css">
@@ -222,6 +222,11 @@
                            title="Enable subtitle on loading text">
                         <input type="checkbox" id="enableTextAtLoading" ng-model="initialSettings.textEnabled">
                         Enable Text At Loading
+                    </label>
+                    <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                           title="Force text streaming">
+                        <input type="checkbox" id="enableForceTextStreaming" ng-model="initialSettings.forceTextStreaming">
+                        Force Text Streaming
                     </label>
 
                 </div>

@@ -49,6 +49,7 @@ import AbrController from './controllers/AbrController';
 import VideoModel from './models/VideoModel';
 import DOMStorage from './utils/DOMStorage';
 import Debug from './../core/Debug';
+import Errors from './../core/errors/Errors';
 import EventBus from './../core/EventBus';
 import Events from './../core/events/Events';
 import MediaPlayerEvents from './MediaPlayerEvents';
@@ -68,6 +69,7 @@ import {
 } from './vo/metrics/HTTPRequest';
 import BASE64 from '../../externals/base64';
 import ISOBoxer from 'codem-isoboxer';
+import DashJSError from './vo/DashJSError';
 
 /**
  * @module MediaPlayer
@@ -194,6 +196,7 @@ function MediaPlayer() {
 
         if (!capabilities.supportsMediaSource()) {
             errHandler.capabilityError('mediasource');
+            errHandler.error(new DashJSError(Errors.CAPABILITY_MEDIASOURCE_ERROR_CODE, Errors.CAPABILITY_MEDIASOURCE_ERROR_MESSAGE));
             return;
         }
 
@@ -218,7 +221,8 @@ function MediaPlayer() {
         dashManifestModel = DashManifestModel(context).getInstance({
             mediaController: mediaController,
             timelineConverter: timelineConverter,
-            adapter: adapter
+            adapter: adapter,
+            errHandler: errHandler
         });
         manifestModel = ManifestModel(context).getInstance();
         dashMetrics = DashMetrics(context).getInstance({
@@ -1335,7 +1339,7 @@ function MediaPlayer() {
      * @instance
      */
     function removeAllABRCustomRule() {
-        mediaPlayerModel.removeAllABRCustomRule();
+        mediaPlayerModel.removeABRCustomRule();
     }
 
     /**
@@ -1421,7 +1425,7 @@ function MediaPlayer() {
      * @default
      * <ul>
      *     <li>schemeIdUri:urn:mpeg:dash:utc:http-xsdate:2014</li>
-     *     <li>value:http://time.akamai.com</li>
+     *     <li>value:http://time.akamai.com/?iso&ms/li>
      * </ul>
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#removeUTCTimingSource removeUTCTimingSource()}
@@ -1474,7 +1478,7 @@ function MediaPlayer() {
      * @default
      * <ul>
      *     <li>schemeIdUri:urn:mpeg:dash:utc:http-xsdate:2014</li>
-     *     <li>value:http://time.akamai.com</li>
+     *     <li>value:http://time.akamai.com/?iso&ms</li>
      * </ul>
      *
      * @memberof module:MediaPlayer
@@ -1756,7 +1760,7 @@ function MediaPlayer() {
      * @instance
      */
     function setFragmentLoaderRetryAttempts(value) {
-        mediaPlayerModel.setFragmentRetryAttempts(value);
+        mediaPlayerModel.setRetryAttemptsForType(HTTPRequest.MEDIA_SEGMENT_TYPE, value);
     }
 
     /**
@@ -1768,7 +1772,7 @@ function MediaPlayer() {
      * @instance
      */
     function setFragmentLoaderRetryInterval(value) {
-        mediaPlayerModel.setFragmentRetryInterval(value);
+        mediaPlayerModel.setRetryIntervalForType(HTTPRequest.MEDIA_SEGMENT_TYPE, value);
     }
 
     /**
@@ -1780,7 +1784,7 @@ function MediaPlayer() {
      * @instance
      */
     function setManifestLoaderRetryAttempts(value) {
-        mediaPlayerModel.setManifestRetryAttempts(value);
+        mediaPlayerModel.setRetryAttemptsForType(HTTPRequest.MPD_TYPE, value);
     }
 
     /**
@@ -1792,7 +1796,7 @@ function MediaPlayer() {
      * @instance
      */
     function setManifestLoaderRetryInterval(value) {
-        mediaPlayerModel.setManifestRetryInterval(value);
+        mediaPlayerModel.setRetryIntervalForType(HTTPRequest.MPD_TYPE, value);
     }
 
     /**
@@ -2477,8 +2481,7 @@ function MediaPlayer() {
         }
 
         const thumbnailController = stream.getThumbnailController();
-        const streamInfo = stream.getStreamInfo();
-        if (!thumbnailController || !streamInfo) {
+        if (!thumbnailController) {
             return null;
         }
 
@@ -2692,7 +2695,6 @@ function MediaPlayer() {
 
         // configure controllers
         mediaController.setConfig({
-            errHandler: errHandler,
             domStorage: domStorage
         });
 
@@ -2775,6 +2777,7 @@ function MediaPlayer() {
             MediaPlayerEvents.extend(Protection.events, {
                 publicOnly: true
             });
+            Errors.extend(Protection.errors);
             if (!capabilities) {
                 capabilities = Capabilities(context).getInstance();
             }
@@ -2823,6 +2826,7 @@ function MediaPlayer() {
         // do not require MssHandler as dependencies as this is optional and intended to be loaded separately
         let MssHandler = dashjs.MssHandler; /* jshint ignore:line */
         if (typeof MssHandler === 'function') { //TODO need a better way to register/detect plugin components
+            Errors.extend(MssHandler.errors);
             mssHandler = MssHandler(context).create({
                 eventBus: eventBus,
                 mediaPlayerModel: mediaPlayerModel,
@@ -3047,6 +3051,7 @@ function MediaPlayer() {
 MediaPlayer.__dashjs_factory_name = 'MediaPlayer';
 const factory = FactoryMaker.getClassFactory(MediaPlayer);
 factory.events = MediaPlayerEvents;
+factory.errors = Errors;
 FactoryMaker.updateClassFactory(MediaPlayer.__dashjs_factory_name, factory);
 
 export default factory;

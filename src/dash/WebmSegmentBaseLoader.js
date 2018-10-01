@@ -10,6 +10,8 @@ import {
 } from '../streaming/vo/metrics/HTTPRequest';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
 import HTTPLoader from '../streaming/net/HTTPLoader';
+import DashJSError from '../streaming/vo/DashJSError';
+import Errors from '../core/errors/Errors';
 
 function WebmSegmentBaseLoader() {
 
@@ -394,7 +396,7 @@ function WebmSegmentBaseLoader() {
                 segments: null,
                 representation: representation,
                 mediaType: type,
-                error: new Error(null, 'error loading segments', null)
+                error: new DashJSError(Errors.SEGMENT_BASE_LOADER_ERROR_CODE, Errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE)
             });
         }
     }

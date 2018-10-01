@@ -40,6 +40,8 @@ import BoxParser from '../utils/BoxParser';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import InitCache from '../utils/InitCache';
+import DashJSError from '../vo/DashJSError';
+import Errors from '../../core/errors/Errors';
 
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 
@@ -140,11 +142,12 @@ function BufferController(config) {
             } catch (e) {
                 logger.fatal('Caught error on create SourceBuffer: ' + e);
                 errHandler.mediaSourceError('Error creating ' + type + ' source buffer.');
+                errHandler.error(new DashJSError(Errors.MEDIASOURCE_TYPE_UNSUPPORTED_CODE, Errors.MEDIASOURCE_TYPE_UNSUPPORTED_MESSAGE + type));
             }
         } else {
             buffer = PreBufferSink(context).create(onAppended.bind(this));
         }
-        updateBufferTimestampOffset(streamProcessor.getRepresentationInfoForQuality(requiredQuality).MSETimeOffset);
+        updateBufferTimestampOffset(streamProcessor.getRepresentationInfo(requiredQuality).MSETimeOffset);
         return buffer;
     }
 
@@ -210,7 +213,7 @@ function BufferController(config) {
         const chunk = e.chunk;
         const bytes = chunk.bytes;
         const quality = chunk.quality;
-        const currentRepresentation = streamProcessor.getRepresentationInfoForQuality(quality);
+        const currentRepresentation = streamProcessor.getRepresentationInfo(quality);
         const eventStreamMedia = adapter.getEventsFor(currentRepresentation.mediaInfo, streamProcessor);
         const eventStreamTrack = adapter.getEventsFor(currentRepresentation, streamProcessor);
 
@@ -222,7 +225,7 @@ function BufferController(config) {
             })[0];
 
             const events = handleInbandEvents(bytes, request, eventStreamMedia, eventStreamTrack);
-            streamProcessor.getEventController().addInbandEvents(events);
+            streamProcessor.addInbandEvents(events);
         }
 
         if (bufferResetInProgress) {
@@ -315,7 +318,7 @@ function BufferController(config) {
     function onQualityChanged(e) {
         if (requiredQuality === e.newQuality || type !== e.mediaType || streamProcessor.getStreamInfo().id !== e.streamInfo.id) return;
 
-        updateBufferTimestampOffset(streamProcessor.getRepresentationInfoForQuality(e.newQuality).MSETimeOffset);
+        updateBufferTimestampOffset(streamProcessor.getRepresentationInfo(e.newQuality).MSETimeOffset);
         requiredQuality = e.newQuality;
     }
 

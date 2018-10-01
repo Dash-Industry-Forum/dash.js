@@ -2,6 +2,7 @@ import SourceBufferSink from '../../src/streaming/SourceBufferSink';
 import Events from '../../src/core/events/Events';
 import EventBus from '../../src/core/EventBus';
 import FactoryMaker from '../../src/core/FactoryMaker.js';
+import Errors from '../../src/core/errors/Errors';
 
 import TextBufferMock from './mocks/TextBufferMock';
 import TextControllerMock from './mocks/TextControllerMock';
@@ -182,6 +183,25 @@ describe('SourceBufferSink', function () {
 
             sink.append({bytes: 'toto'});
         });
+
+        it('should return an error if data to append is null or undefined', function (done) {
+
+            let mediaInfo = {
+                codec: 'video/webm; codecs="vp8, vorbis"'
+            };
+            let mediaSource = new MediaSourceMock();
+            function onAppend(e) {
+                expect(e.error.code).to.equal(Errors.APPEND_ERROR_CODE);
+                expect(e.error.message).to.equal('chunk is not defined');
+                done();
+            }
+
+            sink = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppend);
+            expect(mediaSource.buffers).to.have.lengthOf(1);
+
+            sink.append();
+        });
+
     });
 
     describe('Method remove', function () {

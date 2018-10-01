@@ -125,6 +125,14 @@ describe('RepresentationController', function () {
 
             expect(representationController.getRepresentationForQuality(quality).index).to.equal(expectedValue);
         });
+
+        it('should return null if quality is undefined', function () {
+            expect(representationController.getRepresentationForQuality()).to.equal(null);
+        });
+
+        it('should return null if quality is greater than voAvailableRepresentations.length - 1', function () {
+            expect(representationController.getRepresentationForQuality(150)).to.equal(null);
+        });
     });
 
     describe('when a call to reset is done', function () {

@@ -5,17 +5,20 @@ import MpdHelper from './helpers/MPDHelper';
 
 import AdapterMock from './mocks/AdapterMock';
 import MediaControllerMock from './mocks/MediaControllerMock';
+import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 
 const expect = require('chai').expect;
 
 const context = {};
 const adapterMock = new AdapterMock();
 const mediaControllerMock = new MediaControllerMock();
+const errorHandlerMock = new ErrorHandlerMock();
 const timelineConverter = TimelineConverter(context).getInstance();
 const dashManifestModel = DashManifestModel(context).getInstance({
     mediaController: mediaControllerMock,
     timelineConverter: timelineConverter,
-    adapter: adapterMock
+    adapter: adapterMock,
+    errHandler: errorHandlerMock
 });
 
 const TEST_URL = 'http://www.example.com/';
@@ -231,6 +234,12 @@ describe('DashManifestModel', function () {
         expect(codec).to.be.null;    // jshint ignore:line
     });
 
+    it('should return null when getCodec is called and representationId is not an integer', () => {
+        const codec = dashManifestModel.getCodec({ Representation_asArray: { length: 1 } }, true);
+
+        expect(codec).to.be.null;    // jshint ignore:line
+    });
+
     it('should return null when getMimeType is called and adaptation is undefined', () => {
         const mimeType = dashManifestModel.getMimeType();
 
@@ -356,6 +365,35 @@ describe('DashManifestModel', function () {
         const mpd = dashManifestModel.getMpd();
 
         expect(mpd.manifest).to.be.null;                // jshint ignore:line
+    });
+
+    it('should return an error when getRegularPeriods and getEndTimeForLastPeriod are called and duration is undefined', () => {
+        const manifest = {
+            'manifest': {
+                'Period': [
+                    {
+                        'id': '153199'
+                    },
+                    {
+                        'id': '153202'
+                    }
+                ],
+                'Period_asArray': [
+                    {
+                        'id': '153199'
+                    },
+                    {
+                        'id': '153202'
+                    }
+                ],
+                'type': 'static'
+            },
+            'maxSegmentDuration': 4.5,
+            'mediaPresentationDuration': 300.0
+        };
+        dashManifestModel.getRegularPeriods(manifest);
+
+        expect(errorHandlerMock.errorValue).to.equal('Must have @mediaPresentationDuration on MPD or an explicit @duration on the last period.');
     });
 
     it('should return an empty array when getRegularPeriods is called and mpd is undefined', () => {

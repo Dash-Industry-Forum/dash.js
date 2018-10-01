@@ -34,6 +34,7 @@ import FragmentRequest from '../streaming/vo/FragmentRequest';
 import MssFragmentInfoController from './MssFragmentInfoController';
 import MssFragmentProcessor from './MssFragmentProcessor';
 import MssParser from './parser/MssParser';
+import MssErrors from './errors/MssErrors';
 
 function MssHandler(config) {
 
@@ -187,9 +188,7 @@ function MssHandler(config) {
             return;
         }
 
-        while (ttmlSubtitles.data.indexOf('http://www.w3.org/2006/10/ttaf1') !== -1) {
-            ttmlSubtitles.data = ttmlSubtitles.data.replace('http://www.w3.org/2006/10/ttaf1', 'http://www.w3.org/ns/ttml');
-        }
+        ttmlSubtitles.data = ttmlSubtitles.data.replace(/http:\/\/www.w3.org\/2006\/10\/ttaf1/gi, 'http://www.w3.org/ns/ttml');
     }
 
     function registerEvents() {
@@ -225,4 +224,7 @@ function MssHandler(config) {
 }
 
 MssHandler.__dashjs_factory_name = 'MssHandler';
-export default dashjs.FactoryMaker.getClassFactory(MssHandler); /* jshint ignore:line */
+const factory = dashjs.FactoryMaker.getClassFactory(MssHandler); /* jshint ignore:line */
+factory.errors = MssErrors;
+dashjs.FactoryMaker.updateClassFactory(MssHandler.__dashjs_factory_name, factory); /* jshint ignore:line */
+export default factory; /* jshint ignore:line */

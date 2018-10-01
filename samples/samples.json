@@ -23,7 +23,8 @@
             {
                 "title": "Auto load multi video",
                 "description": "This example shows how to auto-embed multiple instances of dash.js players in a page. To make it more difficult, one of the available video elements specifies a non-DASH source.",
-                "href": "getting-started/auto-load-multi-video.html"
+                "href": "getting-started/auto-load-multi-video.html",
+                "width": "25rem"
             },
             {
                 "title": "Manual load single video",
@@ -33,7 +34,18 @@
             {
                 "title": "Manual load with custom settings",
                 "description": "A sample showing how to load a video using custom settings",
-                "href": "getting-started/manual-load-with-custom-settings.html"
+                "href": "getting-started/manual-load-with-custom-settings.html",
+                "width": "30rem"
+            },
+            {
+                "title": "Listening to events",
+                "description": "Example showing how to listen to dash.js events",
+                "href": "getting-started/listening-to-events.html"
+            },
+            {
+                "title": "Listening to SCTE-EMSG Events",
+                "description": "Example showing how to listen to SCTE EMSG events raised by dash.js",
+                "href": "getting-started/listening-to-SCTE-EMSG-events.html"
             }
         ]
     },
@@ -87,27 +99,26 @@
         "samples": [
             {
                 "title": "Widevine",
-                "description": "Example showing how to use dash.js to play streams with Widevine DRM protection.",
+                "description": "This example shows how to use dash.js to play streams with Widevine DRM protection.",
                 "href": "drm/widevine.html"
             },
             {
                 "title": "PlayReady",
-                "description": "Example showing how to use dash.js to play streams with PlayReady DRM protection (Windows only)",
+                "description": "This example shows how to use dash.js to play streams with PlayReady DRM protection (Windows only).",
                 "href": "drm/playready.html"
             },
             {
                 "title": "ClearKey",
-                "description": "Example showing how to use dash.js to play streams with ClearKey DRM protection.",
+                "description": "This example shows how to use dash.js to play streams with ClearKey DRM protection.",
                 "href": "drm/clearkey.html"
             }
-            
         ]
     },
     {
         "section": "Multi Period",
         "samples": [
             {
-                "title": "Two periods",
+                "title": "Play streams with two periods",
                 "description": "Example showing how dash.js handles streams with two periods.",
                 "href": "multiperiod/index.html"
             }
@@ -128,17 +139,17 @@
         "samples": [
             {
                 "title": "Caption VTT",
-                "description": "example showing how content with VTT captions can be played back by the dash.js player. First captions appear at the 15s mark.",
+                "description": "This example shows how content with VTT captions can be played back by the dash.js player. First captions appear at the 15s mark.",
                 "href": "captioning/caption_vtt.html"
             },
             {
                 "title": "Multi Track Captions",
-                "description": "example showing content with multiple timed text tracks",
+                "description": "Example showing content with multiple timed text tracks.",
                 "href": "captioning/multi-track-captions.html"
             },
             {
                 "title": "TTML EBU timeted text tracks",
-                "description": "example showing content with TTML EBU timed text tracks",
+                "description": "Example showing content with TTML EBU timed text tracks.",
                 "href": "captioning/ttml-ebutt-sample.html"
             }
         ]
@@ -158,7 +169,7 @@
         "samples": [
             {
                 "title": "Preload video",
-                "description": "This examples shows how to use preload feature of dash.js, which allows to initialize streaming and starts downloading the content before the player is attached to a video element.",
+                "description": "This example shows how to use preload feature of dash.js, which allows to initialize streaming and starts downloading the content before the player is attached to a video element.",
                 "href": "getting-started/pre-load-video.html"
             }
         ]
@@ -168,22 +179,17 @@
         "samples": [
             {
                 "title": "Using the Control Bar",
-                "description": "Example showing how add a custom Control Bar to Dash",
+                "description": "This example shows how to add and configure the Akamai control bar with dash.js player.",
                 "href": "control/controlbar.html"
             },
             {
                 "title": "Logging to console",
-                "description": "This examples shows how to enable internal logging to get traces from Dash.",
+                "description": "This examples shows how to enable internal logging to get traces from dash.js.",
                 "href": "control/logging.html"
             },
             {
-                "title": "Listening to events",
-                "description": "Example showing how to listen to DASH.js events",
-                "href": "getting-started/listening-to-events.html"
-            },
-            {
                 "title": "Monitoring the stream",
-                "description": "This example shows how to add monitoring to the stream, fetch values from the Player etc",
+                "description": "This example shows how to add monitoring to the stream, fetch values from the Player, etc.",
                 "href": "monitoring/index.html"
             }
         ]

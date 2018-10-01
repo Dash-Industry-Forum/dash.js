@@ -2,6 +2,8 @@ import MssFragmentProcessor from '../../src/mss/MssFragmentProcessor';
 import MetricsModel from '../../src/streaming/models/MetricsModel';
 import PlaybackController from '../../src/streaming/controllers/PlaybackController';
 import EventBus from '../../src/core/EventBus';
+import MssErrors from '../../src/mss/errors/MssErrors';
+
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 import StreamProcessorMock from './mocks/StreamProcessorMock';
 import DebugMock from './mocks/DebugMock';
@@ -43,6 +45,7 @@ describe('MssFragmentProcessor', function () {
         const arrayBuffer = new Uint8Array(file).buffer;
         const e = {request: {type: 'MediaSegment', mediaInfo: {index: 0}}, response: arrayBuffer};
         mssFragmentProcessor.processFragment(e, streamProcessorMock);
-        expect(errorHandlerMock.error).to.equal('MSS_NO_TFRF : Missing tfrf in live media segment');
+        expect(errorHandlerMock.errorValue).to.equal(MssErrors.MSS_NO_TFRF_MESSAGE);
+        expect(errorHandlerMock.errorCode).to.equal(MssErrors.MSS_NO_TFRF_CODE);
     });
 });

@@ -63,7 +63,7 @@ describe('NotFragmentedTextBufferController', function () {
                 notFragmentedTextBufferController.createBuffer(mockMediaInfo);
                 const buffer = notFragmentedTextBufferController.getBuffer();
                 expect(buffer).to.not.exist; // jshint ignore:line
-                expect(errorHandlerMock.error).to.equal('Error creating ' + testType + ' source buffer.');
+                expect(errorHandlerMock.errorValue).to.equal('Error creating source buffer of type : ' + testType);
             });
         });
 

@@ -20,7 +20,7 @@ const sampleRepresentation = {
     timescale: 1,
     media: 'http://media/$RepresentationID$/$Number$.jpg',
     essentialProperties: [{
-        schemeIdUri: 'http://dashif.org/thumbnail_tile',
+        schemeIdUri: 'http://dashif.org/guidelines/thumbnail_tile',
         value: '10x1'
     }]
 };
@@ -36,8 +36,24 @@ const sampleRepresentation2 = {
     timescale: 1,
     media: 'http://media/$RepresentationID$/$Number$.jpg',
     essentialProperties: [{
-        schemeIdUri: 'http://dashif.org/thumbnail_tile',
+        schemeIdUri: 'http://dashif.org/guidelines/thumbnail_tile',
         value: '10x20'
+    }]
+};
+
+const sampleRepresentation3 = {
+    id: 'rep_id',
+    segmentInfoType: 'SegmentTemplate',
+    bandwidth: 2000,
+    width: 1024,
+    height: 1152,
+    startNumber: 1,
+    segmentDuration: 634.566,
+    timescale: 1,
+    media: 'http://media/$RepresentationID$/$Number$.jpg',
+    essentialProperties: [{
+        schemeIdUri: 'http://dashif.org/thumbnail_tile',
+        value: '50x10'
     }]
 };
 
@@ -75,7 +91,11 @@ describe('Thumbnails', function () {
                 baseURLController: objectsHelper.getDummyBaseURLController(),
                 stream: new StreamMock()
             });
-            let thumbnail = thumbnailController.get(0);
+
+            let thumbnail = thumbnailController.get();
+            expect(thumbnail).to.be.null; // jshint ignore:line
+
+            thumbnail = thumbnailController.get(0);
             expect(thumbnail).to.be.not.null; // jshint ignore:line
             expect(thumbnail.x).to.equal(0);
             expect(thumbnail.y).to.equal(0);
@@ -270,6 +290,42 @@ describe('Thumbnails', function () {
             expect(thumbnailTracks.getCurrentTrackIndex()).to.equal(-1);
             thumbnailTracks.setTrackByIndex(100);
             expect(thumbnailTracks.getCurrentTrackIndex()).to.equal(0);
+        });
+    });
+
+    describe('CR URI schema', function () {
+        const objectsHelper = new ObjectsHelper();
+        const dashManifestModel = new DashManifestModelMock();
+        let thumbnailController;
+        let thumbnailTracks;
+
+        beforeEach(function () {
+            thumbnailTracks = ThumbnailTracks(context).create({
+                dashManifestModel: dashManifestModel,
+                adapter: new AdapterMock(),
+                baseURLController: objectsHelper.getDummyBaseURLController(),
+                stream: new StreamMock()
+            });
+        });
+
+        afterEach(function () {
+            thumbnailTracks.reset();
+        });
+
+        it('should support CR URI schema', function () {
+            dashManifestModel.setRepresentation(sampleRepresentation3);
+            thumbnailController = ThumbnailController(context).create({
+                dashManifestModel: dashManifestModel,
+                adapter: new AdapterMock(),
+                baseURLController: objectsHelper.getDummyBaseURLController(),
+                stream: new StreamMock()
+            });
+
+            thumbnailTracks.initialize();
+            const tracks = thumbnailTracks.getTracks();
+
+            expect(tracks[0].tilesHor).to.equal(50);
+            expect(tracks[0].tilesVert).to.equal(10);
         });
     });
 });

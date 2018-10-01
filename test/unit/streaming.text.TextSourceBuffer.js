@@ -1,4 +1,6 @@
 import TextSourceBuffer from '../../src/streaming/text/TextSourceBuffer';
+import TTMLParser from '../../src/streaming/utils/TTMLParser';
+import Errors from '../../src/core/errors/Errors';
 
 import StreamControllerMock from './mocks/StreamControllerMock';
 import DashManifestModelMock from './mocks/DashManifestModelMock';
@@ -11,13 +13,15 @@ const context = {};
 const streamControllerMock = new StreamControllerMock();
 const dashManifestModelMock = new DashManifestModelMock();
 const errorHandlerMock = new ErrorHandlerMock();
+const ttmlParser = TTMLParser(context).getInstance();
 
 describe('TextSourceBuffer', function () {
 
     let textSourceBuffer = TextSourceBuffer(context).getInstance();
     textSourceBuffer.setConfig({streamController: streamControllerMock,
                                 dashManifestModel: dashManifestModelMock,
-                                errHandler: errorHandlerMock});
+                                errHandler: errorHandlerMock,
+                                ttmlParser: ttmlParser});
 
     it('call to addEmbeddedTrack function with no mediaInfo parameter should not throw an error', function () {
         expect(textSourceBuffer.addEmbeddedTrack.bind(textSourceBuffer)).to.not.throw();
@@ -30,6 +34,6 @@ describe('TextSourceBuffer', function () {
     it('call to append function with invalid tttml data should triggered a parse error', function () {
         const buffer = new ArrayBuffer(8);
         textSourceBuffer.append(buffer, {mediaInfo: {type: 'text', mimeType: 'application/ttml+xml', codec: 'application/ttml+xml;codecs=\'undefined\''}});
-        expect(errorHandlerMock.error).to.equal('parse');
+        expect(errorHandlerMock.errorCode).to.equal(Errors.TIMED_TEXT_ERROR_ID_PARSE_CODE);
     });
 });

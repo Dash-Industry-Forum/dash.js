@@ -387,7 +387,7 @@ function BolaRule(config) {
         const mediaInfo = rulesContext.getMediaInfo();
         const mediaType = rulesContext.getMediaType();
         const metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
-        const streamProcessor = rulesContext.getStreamProcessor();
+        const scheduleController = rulesContext.getScheduleController();
         const streamInfo = rulesContext.getStreamInfo();
         const abrController = rulesContext.getAbrController();
         const throughputHistory = abrController.getThroughputHistory();
@@ -401,7 +401,7 @@ function BolaRule(config) {
             return switchRequest;
         }
 
-        streamProcessor.getScheduleController().setTimeToLoadDelay(0);
+        scheduleController.setTimeToLoadDelay(0);
 
         const bolaState = getBolaState(rulesContext);
 
@@ -476,7 +476,7 @@ function BolaRule(config) {
 
                     if (quality < abrController.getTopQualityIndexFor(mediaType, streamId)) {
                         // At top quality, allow schedule controller to decide how far to fill buffer.
-                        streamProcessor.getScheduleController().setTimeToLoadDelay(1000 * delayS);
+                        scheduleController.setTimeToLoadDelay(1000 * delayS);
                     } else {
                         delayS = 0;
                     }
