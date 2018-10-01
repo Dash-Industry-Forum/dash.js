@@ -148,7 +148,7 @@ describe('MediaPlayer', function () {
             });
 
             it('Method setMute should throw an exception', function () {
-                expect(player.setMute).to.throw(ELEMENT_NOT_ATTACHED_ERROR);
+                expect(player.setMute.bind(player, true)).to.throw(ELEMENT_NOT_ATTACHED_ERROR);
             });
 
             it('Method isMuted should throw an exception', function () {
@@ -231,6 +231,16 @@ describe('MediaPlayer', function () {
 
                 isSeeking = playbackControllerMock.isSeeking();
                 expect(isSeeking).to.be.false; // jshint ignore:line
+            });
+
+            it('Method setMute should throw an exception', function () {
+                let isMuted = player.isMuted();
+                expect(isMuted).to.be.false; // jshint ignore:line
+
+                expect(player.setMute.bind(player, 1)).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+
+                isMuted = player.isMuted();
+                expect(isMuted).to.be.false; // jshint ignore:line
             });
 
             it('Method isDynamic should get dynamic value', function () {

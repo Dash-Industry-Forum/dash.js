@@ -524,6 +524,8 @@ function MediaPlayer() {
      * @instance
      */
     function setMute(value) {
+        if (typeof value !== 'boolean') {
+            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
         }
         getVideoElement().muted = value;
     }
