@@ -599,8 +599,10 @@ function BufferController(config) {
 
     /* prune buffer on our own in background to avoid browsers pruning buffer silently */
     function pruneBuffer() {
-        if (!buffer) return;
-        if (type === Constants.FRAGMENTED_TEXT) return;
+        if (!buffer || type === Constants.FRAGMENTED_TEXT) {
+            return;
+        }
+
         if (!isBufferingCompleted) {
             clearBuffers(getClearRanges());
         }
