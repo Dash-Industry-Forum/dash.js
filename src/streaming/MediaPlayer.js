@@ -117,6 +117,7 @@ function MediaPlayer() {
         manifestModel,
         videoModel,
         textController,
+        uriFragmentModel,
         domStorage;
 
     /*
@@ -138,6 +139,7 @@ function MediaPlayer() {
         Events.extend(MediaPlayerEvents);
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
         videoModel = VideoModel(context).getInstance();
+        uriFragmentModel = URIFragmentModel(context).getInstance();
     }
 
     /**
@@ -2545,7 +2547,7 @@ function MediaPlayer() {
 
         eventBus.on(Events.INTERNAL_MANIFEST_LOADED, handler, self);
 
-        URIFragmentModel(context).getInstance().initialize(url);
+        uriFragmentModel.initialize(url);
         manifestLoader.load(url);
     }
 
@@ -2582,7 +2584,7 @@ function MediaPlayer() {
         }
 
         if (typeof urlOrManifest === 'string') {
-            URIFragmentModel(context).getInstance().initialize(urlOrManifest);
+            uriFragmentModel.initialize(urlOrManifest);
         }
 
         source = urlOrManifest;
@@ -2727,7 +2729,8 @@ function MediaPlayer() {
             mediaPlayerModel: mediaPlayerModel,
             dashManifestModel: dashManifestModel,
             adapter: adapter,
-            videoModel: videoModel
+            videoModel: videoModel,
+            uriFragmentModel: uriFragmentModel
         });
 
         abrController.setConfig({
