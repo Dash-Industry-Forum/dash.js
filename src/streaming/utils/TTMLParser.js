@@ -68,12 +68,11 @@ function TTMLParser() {
      * @param {Array} images - images array referenced by subs MP4 box
      */
     function parse(data, offsetTime, startTimeSegment, endTimeSegment, images) {
-        let i;
-
         let errorMsg = '';
         const captionArray = [];
         let startTime,
-            endTime;
+            endTime,
+            i;
 
         const content = {};
 

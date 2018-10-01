@@ -672,7 +672,6 @@ function MediaPlayer() {
 
         if (streamId !== undefined) {
             t = streamController.getTimeRelativeToStreamId(t, streamId);
-
         } else if (playbackController.getIsDynamic()) {
             let metric = getDVRInfoMetric();
             t = (metric === null) ? 0 : duration() - (metric.range.end - metric.time);

@@ -86,10 +86,10 @@ function EmbeddedTextHtmlRender() {
     function ltrim(s) {
         return s.replace(/^\s+/g, '');
     }
+
     function rtrim(s) {
         return s.replace(/\s+$/g, '');
     }
-
 
     function createHTMLCaptionsFromScreen(videoElement, startTime, endTime, captionScreen) {
         let currRegion = null;
