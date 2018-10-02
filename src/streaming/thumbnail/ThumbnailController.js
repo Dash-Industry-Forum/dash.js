@@ -82,6 +82,7 @@ function ThumbnailController(config) {
             thumbnail.url = buildUrlFromTemplate(track, seq);
             if (callback)
                 callback(thumbnail);
+            return thumbnail;
         }
     }
 
