@@ -247,6 +247,11 @@ describe('MediaPlayer', function () {
                 expect(player.setVolume.bind(player, true)).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
             });
 
+            it('Method setAutoPlay should throw an exception', function () {
+                expect(player.setAutoPlay.bind(player, 'string')).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+                expect(player.setAutoPlay.bind(player, 12)).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+            });
+
             it('Method isDynamic should get dynamic value', function () {
                 let isDynamic = player.isDynamic();
                 expect(isDynamic).to.be.false; // jshint ignore:line

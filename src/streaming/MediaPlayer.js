@@ -1071,6 +1071,9 @@ function MediaPlayer() {
      *
      */
     function setAutoPlay(value) {
+        if (typeof value !== 'boolean') {
+            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
+        }
         autoPlay = value;
     }
 
