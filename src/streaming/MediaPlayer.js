@@ -342,7 +342,6 @@ function MediaPlayer() {
         return debug;
     }
 
-
     /*
     ---------------------------------------------------------------------------
 
@@ -388,7 +387,6 @@ function MediaPlayer() {
             playbackController.play();
         }
     }
-
 
     /**
      * This method will call pause on the native Video Element.
@@ -547,6 +545,9 @@ function MediaPlayer() {
      * @instance
      */
     function setVolume(value) {
+        if ( typeof value !== 'number' || isNaN(value) || value < 0.0 || value > 1.0) {
+            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
+        }
         getVideoElement().volume = value;
     }
 

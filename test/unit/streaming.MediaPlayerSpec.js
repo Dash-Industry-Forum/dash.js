@@ -156,7 +156,7 @@ describe('MediaPlayer', function () {
             });
 
             it('Method setVolume should throw an exception', function () {
-                expect(player.setVolume).to.throw(ELEMENT_NOT_ATTACHED_ERROR);
+                expect(player.setVolume.bind(player, 0.6)).to.throw(ELEMENT_NOT_ATTACHED_ERROR);
             });
 
             it('Method getVolume should throw an exception', function () {
@@ -243,6 +243,10 @@ describe('MediaPlayer', function () {
                 expect(isMuted).to.be.false; // jshint ignore:line
             });
 
+            it('Method setVolume should throw an exception', function () {
+                expect(player.setVolume.bind(player, true)).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+            });
+
             it('Method isDynamic should get dynamic value', function () {
                 let isDynamic = player.isDynamic();
                 expect(isDynamic).to.be.false; // jshint ignore:line
@@ -250,7 +254,6 @@ describe('MediaPlayer', function () {
                 playbackControllerMock.setIsDynamic(true);
                 isDynamic = player.isDynamic();
                 expect(isDynamic).to.be.true; // jshint ignore:line
-
             });
 
             it('Method setPlaybackRate should change playback value of video element', function () {
@@ -299,26 +302,26 @@ describe('MediaPlayer', function () {
                 let volume = videoElementMock.volume;
                 expect(volume).to.equal(0);
 
-                player.setVolume(15);
+                player.setVolume(0.5);
                 volume = videoElementMock.volume;
-                expect(volume).to.equal(15);
+                expect(volume).to.equal(0.5);
 
-                player.setVolume(4);
+                player.setVolume(0.4);
                 volume = videoElementMock.volume;
-                expect(volume).to.equal(4);
+                expect(volume).to.equal(0.4);
             });
 
             it('Method getVolume should return mute state', function () {
                 let volume = player.getVolume();
                 expect(volume).to.equal(0);
 
-                player.setVolume(15);
+                player.setVolume(0.2);
                 volume = player.getVolume();
-                expect(volume).to.equal(15);
+                expect(volume).to.equal(0.2);
 
-                player.setVolume(4);
+                player.setVolume(0.6);
                 volume = player.getVolume();
-                expect(volume).to.equal(4);
+                expect(volume).to.equal(0.6);
             });
 
             it('Method time should return time of playback', function () {
