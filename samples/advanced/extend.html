@@ -17,6 +17,8 @@
 
             video = document.querySelector("video");
             player = dashjs.MediaPlayer().create();
+
+            // Extend RequestModifier class and implement our own behaviour
             player.extend("RequestModifier", function () {
                 return {
                     modifyRequestHeader: function (xhr) {
