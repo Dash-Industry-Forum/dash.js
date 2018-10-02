@@ -57,7 +57,6 @@ function TTMLParser() {
         return id;
     }
 
-
     /**
      * Parse the raw data and process it to return the HTML element representing the cue.
      * Return the region to be processed and controlled (hide/show) by the caption controller.
@@ -163,5 +162,4 @@ function TTMLParser() {
     return instance;
 }
 TTMLParser.__dashjs_factory_name = 'TTMLParser';
-export
-default FactoryMaker.getSingletonFactory(TTMLParser);
+export default FactoryMaker.getSingletonFactory(TTMLParser);
