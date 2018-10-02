@@ -126,4 +126,19 @@ describe('BoxParser', function () {
             expect(res.lastCompletedOffset).to.equal(36); // jshint ignore:line
         });
     });
+
+    describe('when no sample is defined', () => {
+        it('should return an object with an empty array called samplesInfo.sampleList when getSamplesInfo is called and sample is undefined', () => {
+            const samplesInfo = boxParser.getSamplesInfo();
+
+            expect(samplesInfo.sampleList).to.be.instanceOf(Array);    // jshint ignore:line
+            expect(samplesInfo.sampleList).to.be.empty;    // jshint ignore:line
+        });
+
+        it('should return NaN when getMediaTimescaleFromMoov is called and sample is undefined', () => {
+            const timeScale = boxParser.getMediaTimescaleFromMoov();
+
+            expect(timeScale).to.be.NaN;    // jshint ignore:line
+        });
+    });
 });

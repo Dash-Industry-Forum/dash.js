@@ -10,6 +10,10 @@ function ErrorHandlerMock () {
         this.errorValue = error;
     };
 
+    this.mediaKeySessionError = function (error) {
+        this.errorValue = error;
+    };
+
     this.error = function (errorObj) {
         this.errorCode = errorObj.code;
         this.errorValue = errorObj.message;
