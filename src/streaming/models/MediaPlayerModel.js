@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import UTCTiming from '../../dash/vo/UTCTiming';
 import FactoryMaker from '../../core/FactoryMaker';
 import {
     HTTPRequest
@@ -424,12 +425,32 @@ function MediaPlayerModel() {
         return useSuggestedPresentationDelay;
     }
 
-    function setUTCTimingSources(value) {
-        UTCTimingSources = value;
+    function addUTCTimingSource(schemeIdUri, value) {
+        removeUTCTimingSource(schemeIdUri, value); //check if it already exists and remove if so.
+        let vo = new UTCTiming();
+        vo.schemeIdUri = schemeIdUri;
+        vo.value = value;
+        UTCTimingSources.push(vo);
     }
 
     function getUTCTimingSources() {
         return UTCTimingSources;
+    }
+
+    function removeUTCTimingSource(schemeIdUri, value) {
+        UTCTimingSources.forEach(function (obj, idx) {
+            if (obj.schemeIdUri === schemeIdUri && obj.value === value) {
+                UTCTimingSources.splice(idx, 1);
+            }
+        });
+    }
+
+    function clearDefaultUTCTimingSources() {
+        UTCTimingSources = [];
+    }
+
+    function restoreDefaultUTCTimingSources() {
+        addUTCTimingSource(DEFAULT_UTC_TIMING_SOURCE.scheme, DEFAULT_UTC_TIMING_SOURCE.value);
     }
 
     function setXHRWithCredentialsForType(type, value) {
@@ -569,8 +590,11 @@ function MediaPlayerModel() {
         setLiveDelay: setLiveDelay,
         setUseManifestDateHeaderTimeSource: setUseManifestDateHeaderTimeSource,
         getUseManifestDateHeaderTimeSource: getUseManifestDateHeaderTimeSource,
-        setUTCTimingSources: setUTCTimingSources,
+        addUTCTimingSource: addUTCTimingSource,
+        removeUTCTimingSource: removeUTCTimingSource,
         getUTCTimingSources: getUTCTimingSources,
+        clearDefaultUTCTimingSources: clearDefaultUTCTimingSources,
+        restoreDefaultUTCTimingSources: restoreDefaultUTCTimingSources,
         setXHRWithCredentialsForType: setXHRWithCredentialsForType,
         getXHRWithCredentialsForType: getXHRWithCredentialsForType,
         setFastSwitchEnabled: setFastSwitchEnabled,
@@ -597,7 +621,4 @@ function MediaPlayerModel() {
 
 //TODO see if you can move this and not export and just getter to get default value.
 MediaPlayerModel.__dashjs_factory_name = 'MediaPlayerModel';
-const factory = FactoryMaker.getSingletonFactory(MediaPlayerModel);
-factory.DEFAULT_UTC_TIMING_SOURCE = DEFAULT_UTC_TIMING_SOURCE;
-FactoryMaker.updateSingletonFactory(MediaPlayerModel.__dashjs_factory_name, factory);
-export default factory;
+export default FactoryMaker.getSingletonFactory(MediaPlayerModel);
