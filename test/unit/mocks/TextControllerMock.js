@@ -1,4 +1,4 @@
-import TextBufferMock from './TextBufferMock';
+import TextSourceBufferMock from './TextSourceBufferMock';
 
 class TextControllerMock {
     constructor() {
@@ -6,7 +6,7 @@ class TextControllerMock {
         this.buffers = [];
     }
     getTextSourceBuffer() {
-        return new TextBufferMock();
+        return new TextSourceBufferMock();
     }
     isTextEnabled() {
         return this.textEnabled;

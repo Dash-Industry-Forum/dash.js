@@ -1,6 +1,7 @@
+import DashHandler from '../../src/dash/DashHandler';
+
 import ObjectsHelper from './helpers/ObjectsHelper';
 import VoHelper from './helpers/VOHelper';
-import DashHandler from '../../src/dash/DashHandler';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
 
 const expect = require('chai').expect;

@@ -36,7 +36,11 @@ class ObjectsHelper {
             reset: () => {},
             getClientTimeOffset: () => {},
             calcAvailabilityStartTimeFromPresentationTime: () => 0,
-            calcAvailabilityEndTimeFromPresentationTime: () => 0
+            calcAvailabilityEndTimeFromPresentationTime: () => 0,
+            calcPeriodRelativeTimeFromMpdRelativeTime: () => NaN,
+            calcMediaTimeFromPresentationTime: () => undefined,
+            calcSegmentAvailabilityRange: () =>  { return {start: undefined, end: undefined};},
+            isTimeSyncCompleted: () => {return true;}
         };
     }
 
