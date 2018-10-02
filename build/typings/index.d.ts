@@ -1,5 +1,3 @@
-import ClearKeyKeySet from "./src/streaming/protection/vo/ClearKeyKeySet";
-
 export = dashjs;
 export as namespace dashjs;
 
