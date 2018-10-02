@@ -31,7 +31,6 @@
 import Constants from '../constants/Constants';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import TextTrackInfo from '../vo/TextTrackInfo';
-import FragmentedTextBoxParser from '../../dash/utils/FragmentedTextBoxParser';
 import BoxParser from '../utils/BoxParser';
 import CustomTimeRanges from '../utils/CustomTimeRanges';
 import FactoryMaker from '../../core/FactoryMaker';
@@ -61,7 +60,6 @@ function TextSourceBuffer() {
         parser,
         vttParser,
         ttmlParser,
-        fragmentedTextBoxParser,
         mediaInfos,
         textTracks,
         fragmentedFragmentModel,
@@ -114,10 +112,6 @@ function TextSourceBuffer() {
 
         if (!boxParser) {
             boxParser = BoxParser(context).getInstance();
-            fragmentedTextBoxParser = FragmentedTextBoxParser(context).getInstance();
-            fragmentedTextBoxParser.setConfig({
-                boxParser: boxParser
-            });
         }
 
         addMediaInfos(mimeType, streamProcessor);
@@ -149,7 +143,6 @@ function TextSourceBuffer() {
 
     function abort() {
         textTracks.deleteAllTextTracks();
-        fragmentedTextBoxParser = null;
         boxParser = null;
         mediaInfos = [];
         fragmentedFragmentModel = null;
@@ -181,10 +174,6 @@ function TextSourceBuffer() {
         });
         textTracks.initialize();
         boxParser = BoxParser(context).getInstance();
-        fragmentedTextBoxParser = FragmentedTextBoxParser(context).getInstance();
-        fragmentedTextBoxParser.setConfig({
-            boxParser: boxParser
-        });
         currFragmentedTrackIdx = null;
         embeddedInitializationSegmentReceived = false;
         embeddedTimescale = 0;
@@ -335,9 +324,9 @@ function TextSourceBuffer() {
         if (mediaType === Constants.FRAGMENTED_TEXT) {
             if (!initializationSegmentReceived) {
                 initializationSegmentReceived = true;
-                timescale = fragmentedTextBoxParser.getMediaTimescaleFromMoov(bytes);
+                timescale = boxParser.getMediaTimescaleFromMoov(bytes);
             } else {
-                samplesInfo = fragmentedTextBoxParser.getSamplesInfo(bytes);
+                samplesInfo = boxParser.getSamplesInfo(bytes);
                 sampleList = samplesInfo.sampleList;
                 if (firstFragmentedSubtitleStart === null && sampleList.length > 0) {
                     firstFragmentedSubtitleStart = sampleList[0].cts - chunk.start * timescale;
@@ -429,7 +418,7 @@ function TextSourceBuffer() {
         } else if (mediaType === Constants.VIDEO) { //embedded text
             if (chunk.segmentType === HTTPRequest.INIT_SEGMENT_TYPE) {
                 if (embeddedTimescale === 0) {
-                    embeddedTimescale = fragmentedTextBoxParser.getMediaTimescaleFromMoov(bytes);
+                    embeddedTimescale = boxParser.getMediaTimescaleFromMoov(bytes);
                     for (i = 0; i < embeddedTracks.length; i++) {
                         createTextTrackFromMediaInfo(null, embeddedTracks[i]);
                     }
@@ -460,7 +449,7 @@ function TextSourceBuffer() {
                     return newCue;
                 };
 
-                samplesInfo = fragmentedTextBoxParser.getSamplesInfo(bytes);
+                samplesInfo = boxParser.getSamplesInfo(bytes);
 
                 const sequenceNumber = samplesInfo.lastSequenceNumber;
 
