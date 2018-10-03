@@ -2467,10 +2467,11 @@ function MediaPlayer() {
      * @returns {Thumbnail|null} - Thumbnail for the given time position. It returns null in case there are is not a thumbnails representation or
      * if it doesn't contain a thumbnail for the given time position.
      * @param {number} time - A relative time, in seconds, based on the return value of the {@link module:MediaPlayer#duration duration()} method is expected
+     * @param {function} callback - A Callback function provided when retrieving thumbnail
      * @memberof module:MediaPlayer
      * @instance
      */
-    function getThumbnail(time) {
+    function getThumbnail(time, callback) {
         if (time < 0) {
             return null;
         }
@@ -2486,7 +2487,7 @@ function MediaPlayer() {
         }
 
         const timeInPeriod = streamController.getTimeRelativeToStreamId(s, stream.getId());
-        return thumbnailController.get(timeInPeriod);
+        return thumbnailController.get(timeInPeriod, callback);
     }
 
     /*
