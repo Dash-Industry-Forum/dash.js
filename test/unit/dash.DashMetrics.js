@@ -1,16 +1,17 @@
 import DashMetrics from '../../src/dash/DashMetrics';
+
 import MpdHelper from './helpers/MPDHelper';
-import ManifestModel from '../../src/streaming/models/ManifestModel';
+import ManifestModelMock from './mocks/ManifestModelMock';
 
 const expect = require('chai').expect;
 
 const context = {};
 const mpdHelper = new MpdHelper();
 const mpd = mpdHelper.getMpd('static');
-const manifestModel = ManifestModel(context).getInstance();
-const dashMetrics = DashMetrics(context).getInstance({dashManifestModel: {}, manifestModel: manifestModel });
+const manifestModelMock = new ManifestModelMock();
+const dashMetrics = DashMetrics(context).getInstance({dashManifestModel: {}, manifestModel: manifestModelMock });
 
-manifestModel.setValue(mpd);
+manifestModelMock.setValue(mpd);
 
 describe('DashMetrics', function () {
 

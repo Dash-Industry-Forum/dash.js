@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Custom ABR Rules</title>
+
+    <script src="../../dist/dash.all.debug.js"></script>
+    <!--dash.all.min.js should be used in production over dash.all.debug.js
+        Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
+    <!--<script src="../../dist/dash.all.min.js"></script>-->
+
+    <script class="code">
+        function init() {
+            var video,
+                player,
+                url = "https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd";
+
+            video = document.querySelector("video");
+            player = dashjs.MediaPlayer().create();
+
+            // Extend RequestModifier class and implement our own behaviour
+            player.extend("RequestModifier", function () {
+                return {
+                    modifyRequestHeader: function (xhr) {
+                        // Add custom header. Requires to set up Access-Control-Allow-Headers in your
+                        // response header in the server side. Reference: https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/setRequestHeader
+                        // xhr.setRequestHeader('DASH-CUSTOM-HEADER', 'MyValue');
+                        return xhr;
+                    },
+                    modifyRequestURL: function (url) {
+                        // Modify url adding a custom query string parameter
+                        return url + '?customQuery=value';
+                    }
+                };
+            });
+            player.initialize(video, url, true);
+        }
+    </script>
+
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <video></video>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        init();
+    });
+</script>
+<script src="../highlighter.js"></script>
+</body>
+</html>
+
+

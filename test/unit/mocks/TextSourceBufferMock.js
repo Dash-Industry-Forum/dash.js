@@ -1,4 +1,4 @@
-class TextBufferMock {
+class TextSourceBufferMock {
     constructor() {
         this.updating = false;
         this.chunk = null;
@@ -10,4 +10,4 @@ class TextBufferMock {
     }
 }
 
-export default TextBufferMock;
+export default TextSourceBufferMock;

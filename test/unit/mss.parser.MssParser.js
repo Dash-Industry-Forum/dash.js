@@ -70,6 +70,7 @@ describe('MssParser', function () {
         expect(adaptations).to.have.lengthOf(1);
         expect(adaptations[0].contentType).to.equal('audio');
     });
+
     it('should throw an error when parse is called with invalid smooth data', function () {
         expect(mssParser.parse.bind('<SmoothStreamingMedia')).to.be.throw('parsing the manifest failed');
     });

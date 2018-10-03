@@ -1,7 +1,7 @@
 import ThumbnailController from '../../src/streaming/thumbnail/ThumbnailController';
 import ThumbnailTracks from '../../src/streaming/thumbnail/ThumbnailTracks';
-import ObjectsHelper from './helpers/ObjectsHelper';
 
+import ObjectsHelper from './helpers/ObjectsHelper';
 import DashManifestModelMock from './mocks/DashManifestModelMock';
 import AdapterMock from './mocks/AdapterMock';
 import StreamMock from './mocks/StreamMock';
