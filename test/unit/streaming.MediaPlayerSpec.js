@@ -247,6 +247,36 @@ describe('MediaPlayer', function () {
                 expect(player.setVolume.bind(player, true)).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
             });
 
+            it('Method setStableBufferTime should throw an exception', function () {
+                expect(player.setStableBufferTime.bind(player, true)).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+                expect(player.setStableBufferTime.bind(player, 'true')).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+            });
+
+            it('Method setBufferTimeAtTopQuality should throw an exception', function () {
+                expect(player.setBufferTimeAtTopQuality.bind(player, true)).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+                expect(player.setBufferTimeAtTopQuality.bind(player, 'true')).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+            });
+
+            it('Method setSmallGapLimit should throw an exception', function () {
+                expect(player.setSmallGapLimit.bind(player, true)).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+                expect(player.setSmallGapLimit.bind(player, 'true')).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+            });
+
+            it('Method setBufferTimeAtTopQualityLongForm should throw an exception', function () {
+                expect(player.setBufferTimeAtTopQualityLongForm.bind(player, true)).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+                expect(player.setBufferTimeAtTopQualityLongForm.bind(player, 'true')).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+            });
+
+            it('Method setLongFormContentDurationThreshold should throw an exception', function () {
+                expect(player.setLongFormContentDurationThreshold.bind(player, true)).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+                expect(player.setLongFormContentDurationThreshold.bind(player, 'true')).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+            });
+
+            it('Method setJumpGaps should throw an exception', function () {
+                expect(player.setJumpGaps.bind(player, 1)).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+                expect(player.setJumpGaps.bind(player, 'true')).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+            });
+
             it('Method setAutoPlay should throw an exception', function () {
                 expect(player.setAutoPlay.bind(player, 'string')).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
                 expect(player.setAutoPlay.bind(player, 12)).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);

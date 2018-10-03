@@ -1368,7 +1368,6 @@ function MediaPlayer() {
         return mediaPlayerModel.getMovingAverageMethod();
     }
 
-
     /**
      * Returns if low latency mode is enabled. Disabled by default.
      * @return {boolean} true - if enabled
@@ -1542,6 +1541,9 @@ function MediaPlayer() {
      * @instance
      */
     function setStableBufferTime(value) {
+        if (typeof value !== 'number') {
+            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
+        }
         mediaPlayerModel.setStableBufferTime(value);
     }
 
@@ -1580,6 +1582,9 @@ function MediaPlayer() {
      * @instance
      */
     function setBufferTimeAtTopQuality(value) {
+        if (typeof value !== 'number') {
+            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
+        }
         mediaPlayerModel.setBufferTimeAtTopQuality(value);
     }
 
@@ -1608,6 +1613,9 @@ function MediaPlayer() {
      * @instance
      */
     function setBufferTimeAtTopQualityLongForm(value) {
+        if (typeof value !== 'number') {
+            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
+        }
         mediaPlayerModel.setBufferTimeAtTopQualityLongForm(value);
     }
 
@@ -1635,6 +1643,9 @@ function MediaPlayer() {
      * @instance
      */
     function setLongFormContentDurationThreshold(value) {
+        if (typeof value !== 'number') {
+            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
+        }
         mediaPlayerModel.setLongFormContentDurationThreshold(value);
     }
 
@@ -1815,6 +1826,9 @@ function MediaPlayer() {
      *
      */
     function setJumpGaps(value) {
+        if (typeof value !== 'boolean') {
+            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
+        }
         mediaPlayerModel.setJumpGaps(value);
     }
 
@@ -1838,6 +1852,9 @@ function MediaPlayer() {
      *
      */
     function setSmallGapLimit(value) {
+        if (typeof value !== 'number') {
+            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
+        }
         mediaPlayerModel.setSmallGapLimit(value);
     }
 
@@ -2012,8 +2029,6 @@ function MediaPlayer() {
 
         textController.enableForcedTextStreaming(enable);
     }
-
-
 
     /**
      * Return if text is enabled
