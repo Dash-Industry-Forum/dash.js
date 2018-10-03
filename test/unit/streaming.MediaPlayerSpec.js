@@ -272,6 +272,31 @@ describe('MediaPlayer', function () {
                 expect(player.setLongFormContentDurationThreshold.bind(player, 'true')).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
             });
 
+            it('Method setManifestUpdateRetryInterval should throw an exception', function () {
+                expect(player.setManifestUpdateRetryInterval.bind(player, true)).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+                expect(player.setManifestUpdateRetryInterval.bind(player, 'true')).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+            });
+
+            it('Method setFragmentLoaderRetryAttempts should throw an exception', function () {
+                expect(player.setFragmentLoaderRetryAttempts.bind(player, true)).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+                expect(player.setFragmentLoaderRetryAttempts.bind(player, 'true')).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+            });
+
+            it('Method setFragmentLoaderRetryInterval should throw an exception', function () {
+                expect(player.setFragmentLoaderRetryInterval.bind(player, true)).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+                expect(player.setFragmentLoaderRetryInterval.bind(player, 'true')).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+            });
+
+            it('Method setManifestLoaderRetryAttempts should throw an exception', function () {
+                expect(player.setManifestLoaderRetryAttempts.bind(player, true)).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+                expect(player.setManifestLoaderRetryAttempts.bind(player, 'true')).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+            });
+
+            it('Method setManifestLoaderRetryInterval should throw an exception', function () {
+                expect(player.setManifestLoaderRetryInterval.bind(player, true)).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+                expect(player.setManifestLoaderRetryInterval.bind(player, 'true')).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+            });
+
             it('Method setJumpGaps should throw an exception', function () {
                 expect(player.setJumpGaps.bind(player, 1)).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
                 expect(player.setJumpGaps.bind(player, 'true')).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
@@ -280,6 +305,29 @@ describe('MediaPlayer', function () {
             it('Method setAutoPlay should throw an exception', function () {
                 expect(player.setAutoPlay.bind(player, 'string')).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
                 expect(player.setAutoPlay.bind(player, 12)).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+            });
+
+            it('Method setAbandonLoadTimeout should throw an exception', function () {
+                expect(player.setAbandonLoadTimeout.bind(player, 'string')).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+                expect(player.setAbandonLoadTimeout.bind(player, true)).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+            });
+
+            it('Method setBandwidthSafetyFactor should throw an exception', function () {
+                expect(player.setBandwidthSafetyFactor.bind(player, 'string')).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+                expect(player.setBandwidthSafetyFactor.bind(player, true)).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+            });
+
+            it('Method setSegmentOverlapToleranceTime should throw an exception', function () {
+                expect(player.setSegmentOverlapToleranceTime.bind(player, 'string')).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+                expect(player.setSegmentOverlapToleranceTime.bind(player, true)).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+            });
+
+            it('Method setCacheLoadThresholdForType should throw an exception', function () {
+                expect(player.setCacheLoadThresholdForType.bind(player, Constants.AUDIO, 'string')).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+                expect(player.setCacheLoadThresholdForType.bind(player, Constants.AUDIO, true)).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+                expect(player.setCacheLoadThresholdForType.bind(player, true, 5)).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+                expect(player.setCacheLoadThresholdForType.bind(player, 1, 5)).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+                expect(player.setCacheLoadThresholdForType.bind(player, 'text', 5)).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
             });
 
             it('Method isDynamic should get dynamic value', function () {

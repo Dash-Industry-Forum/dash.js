@@ -1666,6 +1666,9 @@ function MediaPlayer() {
      * @instance
     */
     function setSegmentOverlapToleranceTime(value) {
+        if (typeof value !== 'number') {
+            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
+        }
         mediaPlayerModel.setSegmentOverlapToleranceTime(value);
     }
 
@@ -1681,6 +1684,9 @@ function MediaPlayer() {
      * @instance
      */
     function setCacheLoadThresholdForType(type, value) {
+        if (typeof value !== 'number' || typeof type !== 'string' || (type !== Constants.AUDIO && type !== Constants.VIDEO)) {
+            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
+        }
         mediaPlayerModel.setCacheLoadThresholdForType(type, value);
     }
 
@@ -1695,6 +1701,9 @@ function MediaPlayer() {
      * @instance
      */
     function setBandwidthSafetyFactor(value) {
+        if (typeof value !== 'number') {
+            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
+        }
         mediaPlayerModel.setBandwidthSafetyFactor(value);
     }
 
@@ -1733,6 +1742,9 @@ function MediaPlayer() {
      * @instance
      */
     function setAbandonLoadTimeout(value) {
+        if (typeof value !== 'number') {
+            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
+        }
         mediaPlayerModel.setAbandonLoadTimeout(value);
     }
 
@@ -1750,6 +1762,9 @@ function MediaPlayer() {
      * @instance
      */
     function setFragmentLoaderRetryAttempts(value) {
+        if (typeof value !== 'number') {
+            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
+        }
         mediaPlayerModel.setRetryAttemptsForType(HTTPRequest.MEDIA_SEGMENT_TYPE, value);
     }
 
@@ -1762,6 +1777,9 @@ function MediaPlayer() {
      * @instance
      */
     function setFragmentLoaderRetryInterval(value) {
+        if (typeof value !== 'number') {
+            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
+        }
         mediaPlayerModel.setRetryIntervalForType(HTTPRequest.MEDIA_SEGMENT_TYPE, value);
     }
 
@@ -1774,6 +1792,9 @@ function MediaPlayer() {
      * @instance
      */
     function setManifestLoaderRetryAttempts(value) {
+        if (typeof value !== 'number') {
+            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
+        }
         mediaPlayerModel.setRetryAttemptsForType(HTTPRequest.MPD_TYPE, value);
     }
 
@@ -1786,6 +1807,9 @@ function MediaPlayer() {
      * @instance
      */
     function setManifestLoaderRetryInterval(value) {
+        if (typeof value !== 'number') {
+            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
+        }
         mediaPlayerModel.setRetryIntervalForType(HTTPRequest.MPD_TYPE, value);
     }
 
@@ -1881,6 +1905,9 @@ function MediaPlayer() {
      *
      */
     function setManifestUpdateRetryInterval(value) {
+        if (typeof value !== 'number') {
+            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
+        }
         mediaPlayerModel.setManifestUpdateRetryInterval(value);
     }
 
@@ -2012,7 +2039,6 @@ function MediaPlayer() {
 
         textController.enableText(enable);
     }
-
 
     /**
      * Enable/disable text
