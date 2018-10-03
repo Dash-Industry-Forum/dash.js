@@ -83,7 +83,6 @@ function MediaPlayer() {
     const ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the video element before calling this method';
     const SOURCE_NOT_ATTACHED_ERROR = 'You must first call attachSource() with a valid source before calling this method';
     const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
-    const MEDIA_PLAYER_BAD_ARGUMENT_ERROR = 'MediaPlayer Invalid Arguments!';
     const PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR = 'Playback catchup rate invalid argument! Use a number from 0 to 0.2';
 
     const context = this.context;
@@ -428,7 +427,7 @@ function MediaPlayer() {
         }
 
         if (typeof value !== 'number' || isNaN(value)) {
-            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
+            throw Constants.BAD_ARGUMENT_ERROR;
         }
 
         let s = playbackController.getIsDynamic() ? getDVRSeekOffset(value) : value;
@@ -522,7 +521,7 @@ function MediaPlayer() {
      */
     function setMute(value) {
         if (typeof value !== 'boolean') {
-            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
+            throw Constants.BAD_ARGUMENT_ERROR;
         }
         getVideoElement().muted = value;
     }
@@ -545,7 +544,7 @@ function MediaPlayer() {
      */
     function setVolume(value) {
         if ( typeof value !== 'number' || isNaN(value) || value < 0.0 || value > 1.0) {
-            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
+            throw Constants.BAD_ARGUMENT_ERROR;
         }
         getVideoElement().volume = value;
     }
@@ -1046,9 +1045,6 @@ function MediaPlayer() {
      * @instance
      */
     function setUseDeadTimeLatencyForAbr(useDeadTimeLatency) {
-        if (typeof useDeadTimeLatency !== 'boolean') {
-            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
-        }
         abrController.setUseDeadTimeLatency(useDeadTimeLatency);
     }
 
@@ -1071,7 +1067,7 @@ function MediaPlayer() {
      */
     function setAutoPlay(value) {
         if (typeof value !== 'boolean') {
-            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
+            throw Constants.BAD_ARGUMENT_ERROR;
         }
         autoPlay = value;
     }
@@ -1268,11 +1264,7 @@ function MediaPlayer() {
      * @instance
      */
     function setABRStrategy(value) {
-        if (value === Constants.ABR_STRATEGY_DYNAMIC || value === Constants.ABR_STRATEGY_BOLA || value === Constants.ABR_STRATEGY_THROUGHPUT) {
-            mediaPlayerModel.setABRStrategy(value);
-        } else {
-            logger.warn('Ignoring setABRStrategy(' + value + ') - unknown value.');
-        }
+        mediaPlayerModel.setABRStrategy(value);
     }
 
     /**
@@ -1541,9 +1533,6 @@ function MediaPlayer() {
      * @instance
      */
     function setStableBufferTime(value) {
-        if (typeof value !== 'number') {
-            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
-        }
         mediaPlayerModel.setStableBufferTime(value);
     }
 
@@ -1570,21 +1559,10 @@ function MediaPlayer() {
      *
      * @default 30 seconds.
      * @param {int} value
-    /**
-     * The time that the internal buffer target will be set to once playing the top quality.
-     * If there are multiple bitrates in your adaptation, and the media is playing at the highest
-     * bitrate, then we try to build a larger buffer at the top quality to increase stability
-     * and to maintain media quality.
-     *
-     * @default 30 seconds.
-     * @param {int} value
      * @memberof module:MediaPlayer
      * @instance
      */
     function setBufferTimeAtTopQuality(value) {
-        if (typeof value !== 'number') {
-            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
-        }
         mediaPlayerModel.setBufferTimeAtTopQuality(value);
     }
 
@@ -1613,9 +1591,6 @@ function MediaPlayer() {
      * @instance
      */
     function setBufferTimeAtTopQualityLongForm(value) {
-        if (typeof value !== 'number') {
-            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
-        }
         mediaPlayerModel.setBufferTimeAtTopQualityLongForm(value);
     }
 
@@ -1643,9 +1618,6 @@ function MediaPlayer() {
      * @instance
      */
     function setLongFormContentDurationThreshold(value) {
-        if (typeof value !== 'number') {
-            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
-        }
         mediaPlayerModel.setLongFormContentDurationThreshold(value);
     }
 
@@ -1666,9 +1638,6 @@ function MediaPlayer() {
      * @instance
     */
     function setSegmentOverlapToleranceTime(value) {
-        if (typeof value !== 'number') {
-            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
-        }
         mediaPlayerModel.setSegmentOverlapToleranceTime(value);
     }
 
@@ -1684,9 +1653,6 @@ function MediaPlayer() {
      * @instance
      */
     function setCacheLoadThresholdForType(type, value) {
-        if (typeof value !== 'number' || typeof type !== 'string' || (type !== Constants.AUDIO && type !== Constants.VIDEO)) {
-            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
-        }
         mediaPlayerModel.setCacheLoadThresholdForType(type, value);
     }
 
@@ -1701,9 +1667,6 @@ function MediaPlayer() {
      * @instance
      */
     function setBandwidthSafetyFactor(value) {
-        if (typeof value !== 'number') {
-            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
-        }
         mediaPlayerModel.setBandwidthSafetyFactor(value);
     }
 
@@ -1742,9 +1705,6 @@ function MediaPlayer() {
      * @instance
      */
     function setAbandonLoadTimeout(value) {
-        if (typeof value !== 'number') {
-            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
-        }
         mediaPlayerModel.setAbandonLoadTimeout(value);
     }
 
@@ -1762,9 +1722,6 @@ function MediaPlayer() {
      * @instance
      */
     function setFragmentLoaderRetryAttempts(value) {
-        if (typeof value !== 'number') {
-            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
-        }
         mediaPlayerModel.setRetryAttemptsForType(HTTPRequest.MEDIA_SEGMENT_TYPE, value);
     }
 
@@ -1777,9 +1734,6 @@ function MediaPlayer() {
      * @instance
      */
     function setFragmentLoaderRetryInterval(value) {
-        if (typeof value !== 'number') {
-            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
-        }
         mediaPlayerModel.setRetryIntervalForType(HTTPRequest.MEDIA_SEGMENT_TYPE, value);
     }
 
@@ -1792,9 +1746,6 @@ function MediaPlayer() {
      * @instance
      */
     function setManifestLoaderRetryAttempts(value) {
-        if (typeof value !== 'number') {
-            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
-        }
         mediaPlayerModel.setRetryAttemptsForType(HTTPRequest.MPD_TYPE, value);
     }
 
@@ -1807,9 +1758,6 @@ function MediaPlayer() {
      * @instance
      */
     function setManifestLoaderRetryInterval(value) {
-        if (typeof value !== 'number') {
-            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
-        }
         mediaPlayerModel.setRetryIntervalForType(HTTPRequest.MPD_TYPE, value);
     }
 
@@ -1850,9 +1798,6 @@ function MediaPlayer() {
      *
      */
     function setJumpGaps(value) {
-        if (typeof value !== 'boolean') {
-            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
-        }
         mediaPlayerModel.setJumpGaps(value);
     }
 
@@ -1876,9 +1821,6 @@ function MediaPlayer() {
      *
      */
     function setSmallGapLimit(value) {
-        if (typeof value !== 'number') {
-            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
-        }
         mediaPlayerModel.setSmallGapLimit(value);
     }
 
@@ -1905,9 +1847,6 @@ function MediaPlayer() {
      *
      */
     function setManifestUpdateRetryInterval(value) {
-        if (typeof value !== 'number') {
-            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
-        }
         mediaPlayerModel.setManifestUpdateRetryInterval(value);
     }
 

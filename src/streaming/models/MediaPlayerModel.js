@@ -35,6 +35,7 @@ import {
 }
 from '../vo/metrics/HTTPRequest';
 import Constants from '../constants/Constants';
+import ABRRulesCollection from '../rules/abr/ABRRulesCollection';
 
 const DEFAULT_UTC_TIMING_SOURCE = {
     scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
@@ -187,7 +188,11 @@ function MediaPlayerModel() {
     //TODO Should we use Object.define to have setters/getters? makes more readable code on other side.
 
     function setABRStrategy(value) {
-        ABRStrategy = value;
+        if (value === Constants.ABR_STRATEGY_DYNAMIC || value === Constants.ABR_STRATEGY_BOLA || value === Constants.ABR_STRATEGY_THROUGHPUT) {
+            ABRStrategy = value;
+        } else {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
     }
 
     function getABRStrategy() {
@@ -195,6 +200,9 @@ function MediaPlayerModel() {
     }
 
     function setUseDefaultABRRules(value) {
+        if (typeof value !== 'boolean') {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         useDefaultABRRules = value;
     }
 
@@ -217,7 +225,10 @@ function MediaPlayerModel() {
     }
 
     function addABRCustomRule(type, rulename, rule) {
-
+        if (typeof type !== 'string' && ( type !== ABRRulesCollection.ABANDON_FRAGMENT_RULES || type !== ABRRulesCollection.QUALITY_SWITCH_RULES) ||
+            typeof rulename !== 'string') {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         let index = findABRCustomRuleIndex(rulename);
         if (index === -1) {
             // add rule
@@ -248,6 +259,9 @@ function MediaPlayerModel() {
     }
 
     function setBandwidthSafetyFactor(value) {
+        if (typeof value !== 'number') {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         bandwidthSafetyFactor = value;
     }
 
@@ -256,6 +270,9 @@ function MediaPlayerModel() {
     }
 
     function setAbandonLoadTimeout(value) {
+        if (typeof value !== 'number') {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         abandonLoadTimeout = value;
     }
 
@@ -264,6 +281,9 @@ function MediaPlayerModel() {
     }
 
     function setStableBufferTime(value) {
+        if (typeof value !== 'number') {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         stableBufferTime = value;
     }
 
@@ -273,6 +293,9 @@ function MediaPlayerModel() {
     }
 
     function setBufferTimeAtTopQuality(value) {
+        if (typeof value !== 'number') {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         bufferTimeAtTopQuality = value;
     }
 
@@ -281,6 +304,9 @@ function MediaPlayerModel() {
     }
 
     function setBufferTimeAtTopQualityLongForm(value) {
+        if (typeof value !== 'number') {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         bufferTimeAtTopQualityLongForm = value;
     }
 
@@ -289,6 +315,9 @@ function MediaPlayerModel() {
     }
 
     function setLongFormContentDurationThreshold(value) {
+        if (typeof value !== 'number') {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         longFormContentDurationThreshold = value;
     }
 
@@ -297,6 +326,9 @@ function MediaPlayerModel() {
     }
 
     function setSegmentOverlapToleranceTime(value) {
+        if (typeof value !== 'number') {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         segmentOverlapToleranceTime = value;
     }
 
@@ -305,6 +337,9 @@ function MediaPlayerModel() {
     }
 
     function setCacheLoadThresholdForType(type, value) {
+        if (typeof value !== 'number' || typeof type !== 'string' || (type !== Constants.AUDIO && type !== Constants.VIDEO)) {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         cacheLoadThresholds[type] = value;
     }
 
@@ -313,6 +348,9 @@ function MediaPlayerModel() {
     }
 
     function setBufferToKeep(value) {
+        if (typeof value !== 'number') {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         bufferToKeep = value;
     }
 
@@ -321,6 +359,9 @@ function MediaPlayerModel() {
     }
 
     function setBufferAheadToKeep(value) {
+        if (typeof value !== 'number') {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         bufferAheadToKeep = value;
     }
 
@@ -329,8 +370,11 @@ function MediaPlayerModel() {
     }
 
     function setLastBitrateCachingInfo(enable, ttl) {
+        if (typeof enable !== 'boolean' || (ttl !== undefined && (typeof ttl !== 'number' || isNaN(ttl)))) {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         lastBitrateCachingInfo.enabled = enable;
-        if (ttl !== undefined && !isNaN(ttl) && typeof (ttl) === 'number') {
+        if (ttl !== undefined) {
             lastBitrateCachingInfo.ttl = ttl;
         }
     }
@@ -340,8 +384,11 @@ function MediaPlayerModel() {
     }
 
     function setLastMediaSettingsCachingInfo(enable, ttl) {
+        if (typeof enable !== 'boolean' || (ttl !== undefined && (typeof ttl !== 'number' || isNaN(ttl)))) {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         lastMediaSettingsCachingInfo.enabled = enable;
-        if (ttl !== undefined && !isNaN(ttl) && typeof (ttl) === 'number') {
+        if (ttl !== undefined) {
             lastMediaSettingsCachingInfo.ttl = ttl;
         }
     }
@@ -351,6 +398,9 @@ function MediaPlayerModel() {
     }
 
     function setBufferPruningInterval(value) {
+        if (typeof value !== 'number') {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         bufferPruningInterval = value;
     }
 
@@ -359,6 +409,9 @@ function MediaPlayerModel() {
     }
 
     function setRetryAttemptsForType(type, value) {
+        if (typeof value !== 'number' || typeof type !== 'string' || (type !== HTTPRequest.MPD_TYPE && type !== HTTPRequest.MEDIA_SEGMENT_TYPE)) {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         retryAttempts[type] = value;
     }
 
@@ -367,6 +420,9 @@ function MediaPlayerModel() {
     }
 
     function setRetryIntervalForType(type, value) {
+        if (typeof value !== 'number') {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         retryIntervals[type] = value;
     }
 
@@ -410,6 +466,9 @@ function MediaPlayerModel() {
     }
 
     function setUseManifestDateHeaderTimeSource(value) {
+        if (typeof value !== 'boolean') {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         useManifestDateHeaderTimeSource = value;
     }
 
@@ -438,6 +497,9 @@ function MediaPlayerModel() {
     }
 
     function removeUTCTimingSource(schemeIdUri, value) {
+        if (typeof schemeIdUri !== 'string' || typeof value !== 'string') {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         UTCTimingSources.forEach(function (obj, idx) {
             if (obj.schemeIdUri === schemeIdUri && obj.value === value) {
                 UTCTimingSources.splice(idx, 1);
@@ -479,13 +541,17 @@ function MediaPlayerModel() {
 
     function setFastSwitchEnabled(value) {
         if (typeof value !== 'boolean') {
-            return;
+            throw Constants.BAD_ARGUMENT_ERROR;
         }
         fastSwitchEnabled = value;
     }
 
     function setMovingAverageMethod(value) {
-        movingAverageMethod = value;
+        if (value === Constants.MOVING_AVERAGE_SLIDING_WINDOW || value === Constants.MOVING_AVERAGE_EWMA) {
+            movingAverageMethod = value;
+        } else {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
     }
 
     function getMovingAverageMethod() {
@@ -493,6 +559,9 @@ function MediaPlayerModel() {
     }
 
     function setJumpGaps(value) {
+        if (typeof value !== 'boolean') {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         jumpGaps = value;
     }
 
@@ -501,6 +570,9 @@ function MediaPlayerModel() {
     }
 
     function setSmallGapLimit(value) {
+        if (typeof value !== 'number') {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         smallGapLimit = value;
     }
 
@@ -520,6 +592,9 @@ function MediaPlayerModel() {
     }
 
     function setManifestUpdateRetryInterval(value) {
+        if (typeof value !== 'number') {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         manifestUpdateRetryInterval = value;
     }
 
@@ -528,6 +603,9 @@ function MediaPlayerModel() {
     }
 
     function setKeepProtectionMediaKeys(value) {
+        if (typeof value !== 'boolean') {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         keepProtectionMediaKeys = value;
     }
 
