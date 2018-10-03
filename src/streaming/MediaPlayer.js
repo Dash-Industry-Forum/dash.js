@@ -2640,6 +2640,14 @@ function MediaPlayer() {
         FactoryMaker.extend(parentNameString, childInstance, override, context);
     }
 
+    function getActiveStream() {
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR;
+        }
+        let streamInfo = streamController.getActiveStreamInfo();
+        return streamInfo ? streamController.getStreamById(streamInfo.id) : null;
+    }
+
     //***********************************
     // PRIVATE METHODS
     //***********************************
@@ -2841,14 +2849,6 @@ function MediaPlayer() {
         availableFrom = metric.manifestInfo.availableFrom.getTime() / 1000;
         utcValue = valToConvert + (availableFrom + metric.range.start);
         return utcValue;
-    }
-
-    function getActiveStream() {
-        if (!streamingInitialized) {
-            throw STREAMING_NOT_INITIALIZED_ERROR;
-        }
-        let streamInfo = streamController.getActiveStreamInfo();
-        return streamInfo ? streamController.getStreamById(streamInfo.id) : null;
     }
 
     function initializePlayback() {
