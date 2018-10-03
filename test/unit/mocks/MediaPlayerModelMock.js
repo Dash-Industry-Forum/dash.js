@@ -464,7 +464,7 @@ class MediaPlayerModelMock {
     }
 
     restoreDefaultUTCTimingSources() {
-
+        this.addUTCTimingSource(DEFAULT_UTC_TIMING_SOURCE.scheme, DEFAULT_UTC_TIMING_SOURCE.value);
     }
 
     setXHRWithCredentialsForType(type, value) {
