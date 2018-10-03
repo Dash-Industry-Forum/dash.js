@@ -38,52 +38,52 @@ class Errors extends ErrorsBase {
     constructor () {
         super();
         this.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE = 10;
-        this.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE = 12;
-        this.XLINK_LOADER_LOADING_FAILURE_ERROR_CODE = 13;
-        this.SEGMENTS_UPDATE_FAILED_ERROR_CODE = 14;
-        this.SEGMENTS_UNAVAILABLE_ERROR_CODE = 15;
-        this.SEGMENT_BASE_LOADER_ERROR_CODE = 16;
-        this.TIME_SYNC_FAILED_ERROR_CODE = 17;
-        this.FRAGMENT_LOADER_LOADING_FAILURE_ERROR_CODE = 18;
-        this.FRAGMENT_LOADER_NULL_REQUEST_ERROR_CODE = 19;
-        this.URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE = 20;
-        this.APPEND_ERROR_CODE = 21;
-        this.REMOVE_ERROR_CODE = 22;
-        this.DATA_UPDATE_FAILED_ERROR_CODE = 23;
+        this.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE = 11;
+        this.XLINK_LOADER_LOADING_FAILURE_ERROR_CODE = 12;
+        this.SEGMENTS_UPDATE_FAILED_ERROR_CODE = 13;
+        this.SEGMENTS_UNAVAILABLE_ERROR_CODE = 14;
+        this.SEGMENT_BASE_LOADER_ERROR_CODE = 15;
+        this.TIME_SYNC_FAILED_ERROR_CODE = 16;
+        this.FRAGMENT_LOADER_LOADING_FAILURE_ERROR_CODE = 17;
+        this.FRAGMENT_LOADER_NULL_REQUEST_ERROR_CODE = 18;
+        this.URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE = 19;
+        this.APPEND_ERROR_CODE = 20;
+        this.REMOVE_ERROR_CODE = 21;
+        this.DATA_UPDATE_FAILED_ERROR_CODE = 22;
 
-        this.CAPABILITY_MEDIASOURCE_ERROR_CODE = 24;
-        this.CAPABILITY_MEDIAKEYS_ERROR_CODE   = 25;
+        this.CAPABILITY_MEDIASOURCE_ERROR_CODE = 23;
+        this.CAPABILITY_MEDIAKEYS_ERROR_CODE   = 24;
 
-        this.DOWNLOAD_ERROR_ID_MANIFEST_CODE   = 26;
+        this.DOWNLOAD_ERROR_ID_MANIFEST_CODE   = 25;
         /*
          *@deprecated
          */
         this.DOWNLOAD_ERROR_ID_MANIFEST        = 'manifest';
-        this.DOWNLOAD_ERROR_ID_SIDX_CODE            = 27;
-        this.DOWNLOAD_ERROR_ID_CONTENT_CODE         = 28;
+        this.DOWNLOAD_ERROR_ID_SIDX_CODE            = 26;
+        this.DOWNLOAD_ERROR_ID_CONTENT_CODE         = 27;
         /*
          *@deprecated
          */
         this.DOWNLOAD_ERROR_ID_CONTENT         = 'content';
-        this.DOWNLOAD_ERROR_ID_INITIALIZATION_CODE  = 29;
+        this.DOWNLOAD_ERROR_ID_INITIALIZATION_CODE  = 28;
         /*
          *@deprecated
          */
         this.DOWNLOAD_ERROR_ID_INITIALIZATION  = 'initialization';
-        this.DOWNLOAD_ERROR_ID_XLINK_CODE           = 30;
+        this.DOWNLOAD_ERROR_ID_XLINK_CODE           = 29;
         /*
          *@deprecated
          */
         this.DOWNLOAD_ERROR_ID_XLINK           = 'xlink';
 
-        this.MANIFEST_ERROR_ID_CODEC_CODE           = 31;
-        this.MANIFEST_ERROR_ID_PARSE_CODE           = 32;
-        this.MANIFEST_ERROR_ID_NOSTREAMS_CODE       = 33;
+        this.MANIFEST_ERROR_ID_CODEC_CODE           = 30;
+        this.MANIFEST_ERROR_ID_PARSE_CODE           = 31;
+        this.MANIFEST_ERROR_ID_NOSTREAMS_CODE       = 32;
 
-        this.TIMED_TEXT_ERROR_ID_PARSE_CODE         = 34;
+        this.TIMED_TEXT_ERROR_ID_PARSE_CODE         = 33;
 
-        this.MANIFEST_ERROR_ID_MULTIPLEXED_CODE     = 35;
-        this.MEDIASOURCE_TYPE_UNSUPPORTED_CODE = 36;
+        this.MANIFEST_ERROR_ID_MULTIPLEXED_CODE     = 34;
+        this.MEDIASOURCE_TYPE_UNSUPPORTED_CODE = 35;
 
         this.MANIFEST_LOADER_PARSING_FAILURE_ERROR_MESSAGE = 'parsing failed for ';
         this.MANIFEST_LOADER_LOADING_FAILURE_ERROR_MESSAGE = 'Failed loading manifest: ';
