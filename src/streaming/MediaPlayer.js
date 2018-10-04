@@ -1341,11 +1341,7 @@ function MediaPlayer() {
      * @instance
      */
     function setMovingAverageMethod(value) {
-        if (value === Constants.MOVING_AVERAGE_SLIDING_WINDOW || value === Constants.MOVING_AVERAGE_EWMA) {
-            mediaPlayerModel.setMovingAverageMethod(value);
-        } else {
-            logger.warn('Warning: Ignoring setMovingAverageMethod(' + value + ') - unknown value.');
-        }
+        mediaPlayerModel.setMovingAverageMethod(value);
     }
 
     /**
