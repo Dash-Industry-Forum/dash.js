@@ -252,12 +252,19 @@ function PlaybackController() {
         if (!isDynamic || isNaN(availabilityStartTime)) {
             return NaN;
         }
-        const currentTime = getTime();
+        let currentTime = getTime();
         if (isNaN(currentTime) || currentTime === 0) {
             return 0;
         }
 
-        return ((Math.round(new Date().getTime() - (currentTime * 1000 + availabilityStartTime))) / 1000).toFixed(3);
+        const timeOffset = availabilityStartTime / 1000;
+        // Fix current time for firefox and safari (returned as an absolute time)
+        if (currentTime > availabilityStartTime / 1000) {
+            currentTime -= timeOffset;
+        }
+
+        const now = new Date().getTime();
+        return ((Math.round(now - (currentTime * 1000 + availabilityStartTime))) / 1000).toFixed(3);
     }
 
     function startPlaybackCatchUp() {
