@@ -2235,9 +2235,6 @@ function MediaPlayer() {
             throw STREAMING_NOT_INITIALIZED_ERROR;
         }
         let streamInfo = streamController.getActiveStreamInfo();
-
-        if (!streamInfo) return null;
-
         return mediaController.getCurrentTrackFor(type, streamInfo);
     }
 
