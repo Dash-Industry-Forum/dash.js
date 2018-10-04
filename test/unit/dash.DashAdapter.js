@@ -1,4 +1,5 @@
 import DashAdapter from '../../src/dash/DashAdapter';
+import Constants from '../../src/streaming/constants/Constants';
 
 import RepresentationControllerMock from './mocks/RepresentationControllerMock';
 import StreamProcessorMock from './mocks/StreamProcessorMock';
@@ -157,7 +158,7 @@ describe('DashAdapter', function () {
         });
 
         it('should throw an error when getInitRequest is called and streamProcessor is defined, but quality is not a number', function () {
-            expect(dashAdapter.getInitRequest.bind(dashAdapter, streamProcessorMock, {})).to.be.throw('quality argument is not an integer');
+            expect(dashAdapter.getInitRequest.bind(dashAdapter, streamProcessorMock, {})).to.be.throw(Constants.BAD_ARGUMENT_ERROR + ' : argument is not an integer');
         });
     });
 
@@ -171,7 +172,7 @@ describe('DashAdapter', function () {
         const representationControllerMock = new RepresentationControllerMock();
 
         it('should throw an error when getRepresentationInfo is called and representationController parameter is defined, but quality is not a number', function () {
-            expect(dashAdapter.getRepresentationInfo.bind(dashAdapter, representationControllerMock, {})).to.be.throw('quality argument is not an integer');
+            expect(dashAdapter.getRepresentationInfo.bind(dashAdapter, representationControllerMock, {})).to.be.throw(Constants.BAD_ARGUMENT_ERROR + ' : argument is not an integer');
         });
     });
 });

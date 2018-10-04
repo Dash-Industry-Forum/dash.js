@@ -230,6 +230,11 @@ describe('MediaPlayer', function () {
 
                 isSeeking = playbackControllerMock.isSeeking();
                 expect(isSeeking).to.be.false; // jshint ignore:line
+
+                expect(player.seek.bind(player, NaN)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+
+                isSeeking = playbackControllerMock.isSeeking();
+                expect(isSeeking).to.be.false; // jshint ignore:line
             });
 
             it('Method setMute should throw an exception', function () {

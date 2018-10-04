@@ -161,7 +161,7 @@ describe('AbrController', function () {
         expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testType, dummyMediaInfo.streamInfo, testQuality)).to.throw(Constants.BAD_ARGUMENT_ERROR + ' : argument is not an integer');
 
         testQuality = {};
-        expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testType, dummyMediaInfo.streamInfo, testQuality)).to.throw('argument is not an integer');
+        expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testType, dummyMediaInfo.streamInfo, testQuality)).to.throw(Constants.BAD_ARGUMENT_ERROR + ' : argument is not an integer');
     });
 
     it('should ignore an attempt to set a negative quality value', function () {

@@ -69,6 +69,7 @@ import {
 import BASE64 from '../../externals/base64';
 import ISOBoxer from 'codem-isoboxer';
 import DashJSError from './vo/DashJSError';
+import { checkParameterType } from './utils/SupervisorTools';
 
 /**
  * @module MediaPlayer
@@ -426,7 +427,9 @@ function MediaPlayer() {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
 
-        if (typeof value !== 'number' || isNaN(value)) {
+        checkParameterType(value, 'number');
+
+        if (isNaN(value)) {
             throw Constants.BAD_ARGUMENT_ERROR;
         }
 
@@ -520,9 +523,7 @@ function MediaPlayer() {
      * @instance
      */
     function setMute(value) {
-        if (typeof value !== 'boolean') {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
+        checkParameterType(value, 'boolean');
         getVideoElement().muted = value;
     }
 
@@ -1066,9 +1067,7 @@ function MediaPlayer() {
      *
      */
     function setAutoPlay(value) {
-        if (typeof value !== 'boolean') {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
+        checkParameterType(value, 'boolean');
         autoPlay = value;
     }
 

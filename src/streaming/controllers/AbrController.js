@@ -44,6 +44,7 @@ import DroppedFramesHistory from '../rules/DroppedFramesHistory';
 import ThroughputHistory from '../rules/ThroughputHistory';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import Debug from '../../core/Debug';
+import { checkParameterType, checkInteger } from '../utils/SupervisorTools';
 
 const ABANDON_LOAD = 'abandonload';
 const ALLOW_LOAD = 'allowload';
@@ -376,9 +377,7 @@ function AbrController() {
     }
 
     function setLimitBitrateByPortal(value) {
-        if (typeof value !== 'boolean') {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
+        checkParameterType(value, 'boolean');
         limitBitrateByPortal = value;
     }
 
@@ -387,9 +386,7 @@ function AbrController() {
     }
 
     function setUsePixelRatioInLimitBitrateByPortal(value) {
-        if (typeof value !== 'boolean') {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
+        checkParameterType(value, 'boolean');
         usePixelRatioInLimitBitrateByPortal = value;
     }
 
@@ -398,9 +395,7 @@ function AbrController() {
     }
 
     function setUseDeadTimeLatency(value) {
-        if (typeof value !== 'boolean') {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
+        checkParameterType(value, 'boolean');
         useDeadTimeLatency = value;
     }
 
@@ -450,19 +445,11 @@ function AbrController() {
         }
     }
 
-    function checkQuality(quality) {
-        const isInt = quality !== null && !isNaN(quality) && (quality % 1 === 0);
-
-        if (!isInt) {
-            throw Constants.BAD_ARGUMENT_ERROR + ' : argument is not an integer';
-        }
-    }
-
     function setPlaybackQuality(type, streamInfo, newQuality, reason) {
         const id = streamInfo.id;
         const oldQuality = getQualityFor(type);
 
-        checkQuality(newQuality);
+        checkInteger(newQuality);
 
         const topQualityIdx = getTopQualityIndexFor(type, id);
         if (newQuality !== oldQuality && newQuality >= 0 && newQuality <= topQualityIdx) {

@@ -36,6 +36,7 @@ import {
 from '../vo/metrics/HTTPRequest';
 import Constants from '../constants/Constants';
 import ABRRulesCollection from '../rules/abr/ABRRulesCollection';
+import { checkParameterType } from '../utils/SupervisorTools';
 
 const DEFAULT_UTC_TIMING_SOURCE = {
     scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
@@ -200,9 +201,7 @@ function MediaPlayerModel() {
     }
 
     function setUseDefaultABRRules(value) {
-        if (typeof value !== 'boolean') {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
+        checkParameterType(value, 'boolean');
         useDefaultABRRules = value;
     }
 
@@ -225,7 +224,7 @@ function MediaPlayerModel() {
     }
 
     function addABRCustomRule(type, rulename, rule) {
-        if (typeof type !== 'string' && ( type !== ABRRulesCollection.ABANDON_FRAGMENT_RULES || type !== ABRRulesCollection.QUALITY_SWITCH_RULES) ||
+        if (typeof type !== 'string' || (type !== ABRRulesCollection.ABANDON_FRAGMENT_RULES && type !== ABRRulesCollection.QUALITY_SWITCH_RULES) ||
             typeof rulename !== 'string') {
             throw Constants.BAD_ARGUMENT_ERROR;
         }
@@ -259,9 +258,7 @@ function MediaPlayerModel() {
     }
 
     function setBandwidthSafetyFactor(value) {
-        if (typeof value !== 'number') {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
+        checkParameterType(value, 'number');
         bandwidthSafetyFactor = value;
     }
 
@@ -270,9 +267,7 @@ function MediaPlayerModel() {
     }
 
     function setAbandonLoadTimeout(value) {
-        if (typeof value !== 'number') {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
+        checkParameterType(value, 'number');
         abandonLoadTimeout = value;
     }
 
@@ -281,9 +276,7 @@ function MediaPlayerModel() {
     }
 
     function setStableBufferTime(value) {
-        if (typeof value !== 'number') {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
+        checkParameterType(value, 'number');
         stableBufferTime = value;
     }
 
@@ -293,9 +286,7 @@ function MediaPlayerModel() {
     }
 
     function setBufferTimeAtTopQuality(value) {
-        if (typeof value !== 'number') {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
+        checkParameterType(value, 'number');
         bufferTimeAtTopQuality = value;
     }
 
@@ -304,9 +295,7 @@ function MediaPlayerModel() {
     }
 
     function setBufferTimeAtTopQualityLongForm(value) {
-        if (typeof value !== 'number') {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
+        checkParameterType(value, 'number');
         bufferTimeAtTopQualityLongForm = value;
     }
 
@@ -315,9 +304,7 @@ function MediaPlayerModel() {
     }
 
     function setLongFormContentDurationThreshold(value) {
-        if (typeof value !== 'number') {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
+        checkParameterType(value, 'number');
         longFormContentDurationThreshold = value;
     }
 
@@ -326,9 +313,7 @@ function MediaPlayerModel() {
     }
 
     function setSegmentOverlapToleranceTime(value) {
-        if (typeof value !== 'number') {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
+        checkParameterType(value, 'number');
         segmentOverlapToleranceTime = value;
     }
 
@@ -348,9 +333,7 @@ function MediaPlayerModel() {
     }
 
     function setBufferToKeep(value) {
-        if (typeof value !== 'number') {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
+        checkParameterType(value, 'number');
         bufferToKeep = value;
     }
 
@@ -359,9 +342,7 @@ function MediaPlayerModel() {
     }
 
     function setBufferAheadToKeep(value) {
-        if (typeof value !== 'number') {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
+        checkParameterType(value, 'number');
         bufferAheadToKeep = value;
     }
 
@@ -398,9 +379,7 @@ function MediaPlayerModel() {
     }
 
     function setBufferPruningInterval(value) {
-        if (typeof value !== 'number') {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
+        checkParameterType(value, 'number');
         bufferPruningInterval = value;
     }
 
@@ -420,9 +399,7 @@ function MediaPlayerModel() {
     }
 
     function setRetryIntervalForType(type, value) {
-        if (typeof value !== 'number') {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
+        checkParameterType(value, 'number');
         retryIntervals[type] = value;
     }
 
@@ -431,9 +408,7 @@ function MediaPlayerModel() {
     }
 
     function setWallclockTimeUpdateInterval(value) {
-        if (typeof value !== 'number') {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
+        checkParameterType(value, 'number');
         wallclockTimeUpdateInterval = value;
     }
 
@@ -442,9 +417,7 @@ function MediaPlayerModel() {
     }
 
     function setScheduleWhilePaused(value) {
-        if (typeof value !== 'boolean') {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
+        checkParameterType(value, 'boolean');
         scheduleWhilePaused = value;
     }
 
@@ -453,9 +426,7 @@ function MediaPlayerModel() {
     }
 
     function setLiveDelayFragmentCount(value) {
-        if (typeof value !== 'number') {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
+        checkParameterType(value, 'number');
         liveDelayFragmentCount = value;
     }
 
@@ -464,9 +435,7 @@ function MediaPlayerModel() {
     }
 
     function setLiveDelay(value) {
-        if (typeof value !== 'number') {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
+        checkParameterType(value, 'number');
         liveDelay = value;
     }
 
@@ -478,9 +447,7 @@ function MediaPlayerModel() {
     }
 
     function setUseManifestDateHeaderTimeSource(value) {
-        if (typeof value !== 'boolean') {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
+        checkParameterType(value, 'boolean');
         useManifestDateHeaderTimeSource = value;
     }
 
@@ -489,9 +456,7 @@ function MediaPlayerModel() {
     }
 
     function setUseSuggestedPresentationDelay(value) {
-        if (typeof value !== 'boolean') {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
+        checkParameterType(value, 'boolean');
         useSuggestedPresentationDelay = value;
     }
 
@@ -512,9 +477,8 @@ function MediaPlayerModel() {
     }
 
     function removeUTCTimingSource(schemeIdUri, value) {
-        if (typeof schemeIdUri !== 'string' || typeof value !== 'string') {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
+        checkParameterType(schemeIdUri, 'string');
+        checkParameterType(value, 'string');
         UTCTimingSources.forEach(function (obj, idx) {
             if (obj.schemeIdUri === schemeIdUri && obj.value === value) {
                 UTCTimingSources.splice(idx, 1);
@@ -551,9 +515,7 @@ function MediaPlayerModel() {
     }
 
     function setFastSwitchEnabled(value) {
-        if (typeof value !== 'boolean') {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
+        checkParameterType(value, 'boolean');
         fastSwitchEnabled = value;
     }
 
@@ -570,9 +532,7 @@ function MediaPlayerModel() {
     }
 
     function setJumpGaps(value) {
-        if (typeof value !== 'boolean') {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
+        checkParameterType(value, 'boolean');
         jumpGaps = value;
     }
 
@@ -581,9 +541,7 @@ function MediaPlayerModel() {
     }
 
     function setSmallGapLimit(value) {
-        if (typeof value !== 'number') {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
+        checkParameterType(value, 'number');
         smallGapLimit = value;
     }
 
@@ -596,16 +554,12 @@ function MediaPlayerModel() {
     }
 
     function setLowLatencyEnabled(value) {
-        if (typeof value !== 'boolean') {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
+        checkParameterType(value, 'boolean');
         lowLatencyEnabled = value;
     }
 
     function setManifestUpdateRetryInterval(value) {
-        if (typeof value !== 'number') {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
+        checkParameterType(value, 'number');
         manifestUpdateRetryInterval = value;
     }
 
@@ -614,9 +568,7 @@ function MediaPlayerModel() {
     }
 
     function setKeepProtectionMediaKeys(value) {
-        if (typeof value !== 'boolean') {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
+        checkParameterType(value, 'boolean');
         keepProtectionMediaKeys = value;
     }
 
