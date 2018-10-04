@@ -69,12 +69,12 @@ describe('AbrController', function () {
         let usePixelRatioInLimitBitrateByPortal = abrCtrl.getUsePixelRatioInLimitBitrateByPortal();
         expect(usePixelRatioInLimitBitrateByPortal).to.be.false; // jshint ignore:line
 
-        abrCtrl.setUsePixelRatioInLimitBitrateByPortal('string');
+        expect(abrCtrl.setUsePixelRatioInLimitBitrateByPortal.bind(abrCtrl, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
         usePixelRatioInLimitBitrateByPortal = abrCtrl.getUsePixelRatioInLimitBitrateByPortal();
 
         expect(usePixelRatioInLimitBitrateByPortal).to.be.false; // jshint ignore:line
 
-        abrCtrl.setUsePixelRatioInLimitBitrateByPortal(1);
+        expect(abrCtrl.setUsePixelRatioInLimitBitrateByPortal.bind(abrCtrl, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
         usePixelRatioInLimitBitrateByPortal = abrCtrl.getUsePixelRatioInLimitBitrateByPortal();
 
         expect(usePixelRatioInLimitBitrateByPortal).to.be.false; // jshint ignore:line
@@ -83,6 +83,26 @@ describe('AbrController', function () {
         usePixelRatioInLimitBitrateByPortal = abrCtrl.getUsePixelRatioInLimitBitrateByPortal();
 
         expect(usePixelRatioInLimitBitrateByPortal).to.be.true; // jshint ignore:line
+    });
+
+    it('should not set setLimitBitrateByPortal value if it\'s not a boolean type', function () {
+        let limitBitrateByPortal = abrCtrl.getLimitBitrateByPortal();
+        expect(limitBitrateByPortal).to.be.false; // jshint ignore:line
+
+        expect(abrCtrl.setLimitBitrateByPortal.bind(abrCtrl, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        limitBitrateByPortal = abrCtrl.getLimitBitrateByPortal();
+
+        expect(limitBitrateByPortal).to.be.false; // jshint ignore:line
+
+        expect(abrCtrl.setLimitBitrateByPortal.bind(abrCtrl, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        limitBitrateByPortal = abrCtrl.getLimitBitrateByPortal();
+
+        expect(limitBitrateByPortal).to.be.false; // jshint ignore:line
+
+        abrCtrl.setLimitBitrateByPortal(true);
+        limitBitrateByPortal = abrCtrl.getLimitBitrateByPortal();
+
+        expect(limitBitrateByPortal).to.be.true; // jshint ignore:line
     });
 
     it('should not set setAutoSwitchBitrateFor value if it\'s not a boolean type', function () {
@@ -132,13 +152,13 @@ describe('AbrController', function () {
 
     it('should throw an exception when attempting to set not a number value for a quality', function () {
         let testQuality = 'a';
-        expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testType, dummyMediaInfo.streamInfo, testQuality)).to.throw('argument is not an integer');
+        expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testType, dummyMediaInfo.streamInfo, testQuality)).to.throw(Constants.BAD_ARGUMENT_ERROR + ' : argument is not an integer');
 
         testQuality = null;
-        expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testType, dummyMediaInfo.streamInfo, testQuality)).to.throw('argument is not an integer');
+        expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testType, dummyMediaInfo.streamInfo, testQuality)).to.throw(Constants.BAD_ARGUMENT_ERROR + ' : argument is not an integer');
 
         testQuality = 2.5;
-        expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testType, dummyMediaInfo.streamInfo, testQuality)).to.throw('argument is not an integer');
+        expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testType, dummyMediaInfo.streamInfo, testQuality)).to.throw(Constants.BAD_ARGUMENT_ERROR + ' : argument is not an integer');
 
         testQuality = {};
         expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testType, dummyMediaInfo.streamInfo, testQuality)).to.throw('argument is not an integer');

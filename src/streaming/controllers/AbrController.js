@@ -376,6 +376,9 @@ function AbrController() {
     }
 
     function setLimitBitrateByPortal(value) {
+        if (typeof value !== 'boolean') {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         limitBitrateByPortal = value;
     }
 
@@ -385,7 +388,7 @@ function AbrController() {
 
     function setUsePixelRatioInLimitBitrateByPortal(value) {
         if (typeof value !== 'boolean') {
-            return;
+            throw Constants.BAD_ARGUMENT_ERROR;
         }
         usePixelRatioInLimitBitrateByPortal = value;
     }
@@ -451,7 +454,7 @@ function AbrController() {
         const isInt = quality !== null && !isNaN(quality) && (quality % 1 === 0);
 
         if (!isInt) {
-            throw new Error('argument is not an integer');
+            throw Constants.BAD_ARGUMENT_ERROR + ' : argument is not an integer';
         }
     }
 

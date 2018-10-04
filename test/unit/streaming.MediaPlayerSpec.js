@@ -16,7 +16,6 @@ const ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the 
 const PLAYBACK_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a valid source and view before calling this method';
 const STREAMING_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a source before calling this method';
 const PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR = 'Playback catchup rate invalid argument! Use a number from 0 to 0.2';
-const BAD_ARGUMENT_ERROR = 'Invalid Arguments!';
 const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
 
 describe('MediaPlayer', function () {
@@ -227,7 +226,7 @@ describe('MediaPlayer', function () {
                 let isSeeking = playbackControllerMock.isSeeking();
                 expect(isSeeking).to.be.false; // jshint ignore:line
 
-                expect(player.seek).to.throw(BAD_ARGUMENT_ERROR);
+                expect(player.seek).to.throw(Constants.BAD_ARGUMENT_ERROR);
 
                 isSeeking = playbackControllerMock.isSeeking();
                 expect(isSeeking).to.be.false; // jshint ignore:line
@@ -237,19 +236,19 @@ describe('MediaPlayer', function () {
                 let isMuted = player.isMuted();
                 expect(isMuted).to.be.false; // jshint ignore:line
 
-                expect(player.setMute.bind(player, 1)).to.throw(BAD_ARGUMENT_ERROR);
+                expect(player.setMute.bind(player, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
 
                 isMuted = player.isMuted();
                 expect(isMuted).to.be.false; // jshint ignore:line
             });
 
             it('Method setVolume should throw an exception', function () {
-                expect(player.setVolume.bind(player, true)).to.throw(BAD_ARGUMENT_ERROR);
+                expect(player.setVolume.bind(player, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
             });
 
             it('Method setAutoPlay should throw an exception', function () {
-                expect(player.setAutoPlay.bind(player, 'string')).to.throw(BAD_ARGUMENT_ERROR);
-                expect(player.setAutoPlay.bind(player, 12)).to.throw(BAD_ARGUMENT_ERROR);
+                expect(player.setAutoPlay.bind(player, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setAutoPlay.bind(player, 12)).to.throw(Constants.BAD_ARGUMENT_ERROR);
             });
 
             it('Method isDynamic should get dynamic value', function () {
