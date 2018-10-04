@@ -431,6 +431,9 @@ function MediaPlayerModel() {
     }
 
     function setWallclockTimeUpdateInterval(value) {
+        if (typeof value !== 'number') {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         wallclockTimeUpdateInterval = value;
     }
 
@@ -439,6 +442,9 @@ function MediaPlayerModel() {
     }
 
     function setScheduleWhilePaused(value) {
+        if (typeof value !== 'boolean') {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         scheduleWhilePaused = value;
     }
 
@@ -447,6 +453,9 @@ function MediaPlayerModel() {
     }
 
     function setLiveDelayFragmentCount(value) {
+        if (typeof value !== 'number') {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         liveDelayFragmentCount = value;
     }
 
@@ -455,6 +464,9 @@ function MediaPlayerModel() {
     }
 
     function setLiveDelay(value) {
+        if (typeof value !== 'number') {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         liveDelay = value;
     }
 
@@ -477,6 +489,9 @@ function MediaPlayerModel() {
     }
 
     function setUseSuggestedPresentationDelay(value) {
+        if (typeof value !== 'boolean') {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         useSuggestedPresentationDelay = value;
     }
 
@@ -528,11 +543,7 @@ function MediaPlayerModel() {
     function getXHRWithCredentialsForType(type) {
         const useCreds = xhrWithCredentials[type];
 
-        if (useCreds === undefined) {
-            return xhrWithCredentials.default;
-        }
-
-        return useCreds;
+        return useCreds === undefined ? xhrWithCredentials.default : useCreds;
     }
 
     function getFastSwitchEnabled() {
@@ -586,7 +597,7 @@ function MediaPlayerModel() {
 
     function setLowLatencyEnabled(value) {
         if (typeof value !== 'boolean') {
-            return;
+            throw Constants.BAD_ARGUMENT_ERROR;
         }
         lowLatencyEnabled = value;
     }
