@@ -38,10 +38,6 @@ import Constants from '../constants/Constants';
 import ABRRulesCollection from '../rules/abr/ABRRulesCollection';
 import { checkParameterType } from '../utils/SupervisorTools';
 
-const DEFAULT_UTC_TIMING_SOURCE = {
-    scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
-    value: 'http://time.akamai.com/?iso&ms'
-};
 const LIVE_DELAY_FRAGMENT_COUNT = 4;
 
 const DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION = 360000;
@@ -119,6 +115,11 @@ function MediaPlayerModel() {
         lowLatencyEnabled,
         manifestUpdateRetryInterval,
         keepProtectionMediaKeys;
+
+    const DEFAULT_UTC_TIMING_SOURCE = {
+            scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
+            value: 'http://time.akamai.com/?iso&ms'
+        };
 
     function setup() {
         UTCTimingSources = [];
@@ -578,6 +579,10 @@ function MediaPlayerModel() {
         return keepProtectionMediaKeys;
     }
 
+    function getDefaultUtcTimingSource() {
+        return DEFAULT_UTC_TIMING_SOURCE;
+    }
+
     function reset() {
         //TODO need to figure out what props to persist across sessions and which to reset if any.
         //setup();
@@ -654,6 +659,7 @@ function MediaPlayerModel() {
         getManifestUpdateRetryInterval: getManifestUpdateRetryInterval,
         setKeepProtectionMediaKeys: setKeepProtectionMediaKeys,
         getKeepProtectionMediaKeys: getKeepProtectionMediaKeys,
+        getDefaultUtcTimingSource: getDefaultUtcTimingSource,
         reset: reset
     };
 
