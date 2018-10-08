@@ -435,7 +435,9 @@ function MediaPlayerModel() {
     }
 
     function setLiveDelay(value) {
-        checkParameterType(value, 'number');
+        if (value !== undefined) { // undefined is the default value...
+            checkParameterType(value, 'number');
+        }
         liveDelay = value;
     }
 
