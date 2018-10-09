@@ -43,3 +43,9 @@ export function checkInteger(parameter) {
         throw Constants.BAD_ARGUMENT_ERROR + ' : argument is not an integer';
     }
 }
+
+export function checkIsVideoOrAudioType(type) {
+    if (typeof type !== 'string' || (type !== Constants.AUDIO && type !== Constants.VIDEO)) {
+        throw Constants.BAD_ARGUMENT_ERROR;
+    }
+}

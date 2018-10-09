@@ -36,7 +36,7 @@ import {
 from '../vo/metrics/HTTPRequest';
 import Constants from '../constants/Constants';
 import ABRRulesCollection from '../rules/abr/ABRRulesCollection';
-import { checkParameterType } from '../utils/SupervisorTools';
+import { checkParameterType, checkIsVideoOrAudioType } from '../utils/SupervisorTools';
 
 const LIVE_DELAY_FRAGMENT_COUNT = 4;
 
@@ -323,9 +323,8 @@ function MediaPlayerModel() {
     }
 
     function setCacheLoadThresholdForType(type, value) {
-        if (typeof value !== 'number' || typeof type !== 'string' || (type !== Constants.AUDIO && type !== Constants.VIDEO)) {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
+        checkParameterType(value, 'number');
+        checkIsVideoOrAudioType(type);
         cacheLoadThresholds[type] = value;
     }
 

@@ -44,7 +44,7 @@ import DroppedFramesHistory from '../rules/DroppedFramesHistory';
 import ThroughputHistory from '../rules/ThroughputHistory';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import Debug from '../../core/Debug';
-import { checkParameterType, checkInteger } from '../utils/SupervisorTools';
+import { checkParameterType, checkInteger, checkIsVideoOrAudioType } from '../utils/SupervisorTools';
 
 const ABANDON_LOAD = 'abandonload';
 const ALLOW_LOAD = 'allowload';
@@ -314,17 +314,15 @@ function AbrController() {
     //TODO  change bitrateDict structure to hold one object for video and audio with initial and max values internal.
     // This means you need to update all the logic around initial bitrate DOMStorage, RebController etc...
     function setMaxAllowedBitrateFor(type, value) {
-        if (typeof value !== 'number' || typeof type !== 'string' || (type !== Constants.AUDIO && type !== Constants.VIDEO)) {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
+        checkParameterType(value, 'number');
+        checkIsVideoOrAudioType(type);
         bitrateDict.max = bitrateDict.max || {};
         bitrateDict.max[type] = value;
     }
 
     function setMinAllowedBitrateFor(type, value) {
-        if (typeof value !== 'number' || typeof type !== 'string' || (type !== Constants.AUDIO && type !== Constants.VIDEO)) {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
+        checkParameterType(value, 'number');
+        checkIsVideoOrAudioType(type);
         bitrateDict.min = bitrateDict.min || {};
         bitrateDict.min[type] = value;
     }
@@ -372,9 +370,8 @@ function AbrController() {
     }
 
     function setAutoSwitchBitrateFor(type, value) {
-        if (typeof value !== 'boolean' || typeof type !== 'string' || (type !== Constants.AUDIO && type !== Constants.VIDEO)) {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
+        checkParameterType(value, 'boolean');
+        checkIsVideoOrAudioType(type);
         autoSwitchBitrate[type] = value;
     }
 
