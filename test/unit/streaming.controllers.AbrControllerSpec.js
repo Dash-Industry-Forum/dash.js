@@ -126,6 +126,24 @@ describe('AbrController', function () {
         expect(autoSwitchBitrateForVideo).to.be.false; // jshint ignore:line
     });
 
+    it('should not set setMaxAllowedBitrateFor value if it\'s not a number type or NaN or if type is not Video or Audio', function () {
+        expect(abrCtrl.setMaxAllowedBitrateFor.bind(abrCtrl, Constants.TEXT, 12)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(abrCtrl.setMaxAllowedBitrateFor.bind(abrCtrl, true, 12)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(abrCtrl.setMaxAllowedBitrateFor.bind(abrCtrl, 1, 12)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(abrCtrl.setMaxAllowedBitrateFor.bind(abrCtrl, Constants.VIDEO, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(abrCtrl.setMaxAllowedBitrateFor.bind(abrCtrl, Constants.VIDEO, NaN)).not.to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(abrCtrl.setMaxAllowedBitrateFor.bind(abrCtrl, Constants.VIDEO, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+    });
+
+    it('should not set setMinAllowedBitrateFor value if it\'s not a number type or NaN or if type is not Video or Audio', function () {
+        expect(abrCtrl.setMinAllowedBitrateFor.bind(abrCtrl, Constants.TEXT, 12)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(abrCtrl.setMinAllowedBitrateFor.bind(abrCtrl, true, 12)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(abrCtrl.setMinAllowedBitrateFor.bind(abrCtrl, 1, 12)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(abrCtrl.setMinAllowedBitrateFor.bind(abrCtrl, Constants.VIDEO, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(abrCtrl.setMinAllowedBitrateFor.bind(abrCtrl, Constants.VIDEO, NaN)).not.to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(abrCtrl.setMinAllowedBitrateFor.bind(abrCtrl, Constants.VIDEO, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+    });
+
     it('Method setUseDeadTimeLatency should throw an exception if given bad values', function () {
         expect(abrCtrl.setUseDeadTimeLatency.bind(abrCtrl, 13)).to.throw(Constants.BAD_ARGUMENT_ERROR);
         expect(abrCtrl.setUseDeadTimeLatency.bind(abrCtrl, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);

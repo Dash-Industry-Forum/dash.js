@@ -314,11 +314,17 @@ function AbrController() {
     //TODO  change bitrateDict structure to hold one object for video and audio with initial and max values internal.
     // This means you need to update all the logic around initial bitrate DOMStorage, RebController etc...
     function setMaxAllowedBitrateFor(type, value) {
+        if (typeof value !== 'number' || typeof type !== 'string' || (type !== Constants.AUDIO && type !== Constants.VIDEO)) {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         bitrateDict.max = bitrateDict.max || {};
         bitrateDict.max[type] = value;
     }
 
     function setMinAllowedBitrateFor(type, value) {
+        if (typeof value !== 'number' || typeof type !== 'string' || (type !== Constants.AUDIO && type !== Constants.VIDEO)) {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         bitrateDict.min = bitrateDict.min || {};
         bitrateDict.min[type] = value;
     }
