@@ -12,6 +12,7 @@ import Constants from '../../src/streaming/constants/Constants';
 
 import DashManifestModelMock from './mocks/DashManifestModelMock';
 import VideoModelMock from './mocks/VideoModelMock';
+import DomStorageMock from './mocks/DomStorageMock';
 
 const expect = require('chai').expect;
 
@@ -39,6 +40,7 @@ describe('AbrController', function () {
     const manifestModel = ManifestModel().getInstance();
     const dashManifestModelMock = new DashManifestModelMock();
     const videoModelMock = new VideoModelMock();
+    const domStorageMock = new DomStorageMock();
 
     beforeEach(function () {
         abrCtrl.setConfig({
@@ -46,7 +48,8 @@ describe('AbrController', function () {
             dashMetrics: dashMetrics,
             videoModel: videoModelMock,
             manifestModel: manifestModel,
-            dashManifestModel: dashManifestModelMock
+            dashManifestModel: dashManifestModelMock,
+            domStorage: domStorageMock
         });
         abrCtrl.registerStreamType('video', streamProcessor);
     });
@@ -142,6 +145,19 @@ describe('AbrController', function () {
         expect(abrCtrl.setMinAllowedBitrateFor.bind(abrCtrl, Constants.VIDEO, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
         expect(abrCtrl.setMinAllowedBitrateFor.bind(abrCtrl, Constants.VIDEO, NaN)).not.to.throw(Constants.BAD_ARGUMENT_ERROR);
         expect(abrCtrl.setMinAllowedBitrateFor.bind(abrCtrl, Constants.VIDEO, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+    });
+
+    it('should not set setInitialBitrateFor value if it\'s not a number type or NaN or if type is not Video or Audio', function () {
+        expect(abrCtrl.setInitialBitrateFor.bind(abrCtrl, Constants.TEXT, 12)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(abrCtrl.setInitialBitrateFor.bind(abrCtrl, true, 12)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(abrCtrl.setInitialBitrateFor.bind(abrCtrl, 1, 12)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(abrCtrl.setInitialBitrateFor.bind(abrCtrl, Constants.VIDEO, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(abrCtrl.setInitialBitrateFor.bind(abrCtrl, Constants.VIDEO, NaN)).not.to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(abrCtrl.setInitialBitrateFor.bind(abrCtrl, Constants.VIDEO, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+
+        abrCtrl.setInitialBitrateFor(Constants.VIDEO, 180);
+        const initialBitrate = abrCtrl.getInitialBitrateFor(Constants.VIDEO);
+        expect(initialBitrate).to.equal(180);
     });
 
     it('Method setUseDeadTimeLatency should throw an exception if given bad values', function () {

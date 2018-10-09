@@ -199,6 +199,12 @@ function AbrController() {
         }
     }
 
+    function checkConfig() {
+        if (!domStorage || !domStorage.hasOwnProperty('getSavedBitrateSettings')) {
+            throw new Error(Constants.MISSING_CONFIG_ERROR);
+        }
+    }
+
     function onQualityChangeRendered(e) {
         if (e.mediaType === Constants.VIDEO) {
             playbackIndex = e.oldQuality;
@@ -253,6 +259,7 @@ function AbrController() {
      * @memberof AbrController#
      */
     function getInitialBitrateFor(type) {
+        checkConfig();
         const savedBitrate = domStorage.getSavedBitrateSettings(type);
 
         if (!bitrateDict.hasOwnProperty(type)) {
@@ -282,6 +289,8 @@ function AbrController() {
      * @memberof AbrController#
      */
     function setInitialBitrateFor(type, value) {
+        checkIsVideoOrAudioType(type);
+        checkParameterType(value, 'number');
         bitrateDict[type] = value;
     }
 
