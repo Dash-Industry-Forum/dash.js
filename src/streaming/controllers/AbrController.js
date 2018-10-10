@@ -62,11 +62,8 @@ function AbrController() {
         logger,
         abrRulesCollection,
         streamController,
-        autoSwitchBitrate,
-        topQualities,
-        qualityDict,
-        bitrateDict,
-        ratioDict,
+        bitrateStore,
+        ratioStore,
         streamProcessorDict,
         abandonmentStateDict,
         abandonmentTimeout,
@@ -128,11 +125,8 @@ function AbrController() {
     }
 
     function resetInitialSettings() {
-        autoSwitchBitrate = {video: true, audio: true};
-        topQualities = {};
-        qualityDict = {};
-        bitrateDict = {};
-        ratioDict = {};
+        bitrateStore = { video: {autoSwitch: true }, audio: {autoSwitch: true}};
+        ratioStore = {};
         abandonmentStateDict = {};
         streamProcessorDict = {};
         switchHistoryDict = {};
@@ -213,16 +207,17 @@ function AbrController() {
         }
     }
 
-    function getTopQualityIndexFor(type, id) {
+    function getTopQualityIndexFor(type, streamId) {
         let idx;
-        topQualities[id] = topQualities[id] || {};
 
-        if (!topQualities[id].hasOwnProperty(type)) {
-            topQualities[id][type] = 0;
+        bitrateStore[type][streamId] = bitrateStore[type][streamId] || {};
+
+        if (!bitrateStore[type][streamId].hasOwnProperty('topQualityIndex')) {
+            bitrateStore[type][streamId].topQualityIndex = 0;
         }
 
-        idx = checkMaxBitrate(topQualities[id][type], type);
-        idx = checkMaxRepresentationRatio(idx, type, topQualities[id][type]);
+        idx = checkMaxBitrate(bitrateStore[type][streamId].topQualityIndex, type);
+        idx = checkMaxRepresentationRatio(idx, type, bitrateStore[type][streamId].topQualityIndex);
         idx = checkPortalSize(idx, type);
         return idx;
     }
@@ -253,24 +248,54 @@ function AbrController() {
         checkConfig();
         const savedBitrate = domStorage.getSavedBitrateSettings(type);
 
-        if (!bitrateDict.hasOwnProperty(type)) {
-            if (ratioDict.hasOwnProperty(type)) {
+        if (!bitrateStore[type].hasOwnProperty('init')) {
+            if (ratioStore.hasOwnProperty(type) && ratioStore[type].hasOwnProperty('init')) {
                 const representation = adapter.getAdaptationForType(0, type).Representation;
                 if (Array.isArray(representation)) {
-                    const repIdx = Math.max(Math.round(representation.length * ratioDict[type]) - 1, 0);
-                    bitrateDict[type] = representation[repIdx].bandwidth;
+                    const repIdx = Math.max(Math.round(representation.length * ratioStore[type].init) - 1, 0);
+                    _setPlayerData(bitrateStore, type, 'init', representation[repIdx].bandwidth);
                 } else {
-                    bitrateDict[type] = 0;
+                    _setPlayerData(bitrateStore, type, 'init', 0);
                 }
             } else if (!isNaN(savedBitrate)) {
-                bitrateDict[type] = savedBitrate;
+                _setPlayerData(bitrateStore, type, 'init', savedBitrate);
             } else {
-                bitrateDict[type] = (type === Constants.VIDEO) ? DEFAULT_VIDEO_BITRATE : DEFAULT_AUDIO_BITRATE;
+                _setPlayerData(bitrateStore, type, 'init', (type === Constants.VIDEO) ? DEFAULT_VIDEO_BITRATE : DEFAULT_AUDIO_BITRATE);
             }
         }
 
-        return bitrateDict[type];
+        return bitrateStore[type].init;
     }
+    //***********************************
+    // PRIVATE METHODS
+    //***********************************
+    /**
+     * @param {Array} dict
+     * @param {string} mediaType
+     * @param {string} valueType
+     * @param {number} value
+     * @memberof AbrController#
+     */
+    function _setPlayerData(dict, mediaType, valueType, value) {
+        checkIsVideoOrAudioType(type);
+        checkParameterType(value, 'number');        
+        dict[mediaType] = dict[mediaType] || {};
+        dict[mediaType][valueType] = dict[mediaType][valueType] || {};
+        dict[mediaType][valueType] = value;
+    }
+
+    /**
+    * @param {string} mediaType
+    * @param {string} streamId
+    * @param {string} valueType
+    * @param {number} value
+    * @memberof AbrController#
+    */
+    function _setStreamData(mediaType, streamId, valueType, value) {
+        bitrateStore[mediaType][streamId] = bitrateStore[mediaType][streamId] || {};
+        bitrateStore[mediaType][streamId][valueType] = value;
+    }
+    //***********************************
 
     /**
      * @param {string} type
@@ -278,51 +303,43 @@ function AbrController() {
      * @memberof AbrController#
      */
     function setInitialBitrateFor(type, value) {
-        checkIsVideoOrAudioType(type);
-        checkParameterType(value, 'number');
-        bitrateDict[type] = value;
+        _setPlayerData(bitrateStore, type, 'init', value);
     }
 
     function getInitialRepresentationRatioFor(type) {
-        if (!ratioDict.hasOwnProperty(type)) {
+        if (!ratioStore.hasOwnProperty(type) || !ratioStore[type].hasOwnProperty('init')) {
             return null;
         }
 
-        return ratioDict[type];
+        return ratioStore[type].init;
     }
 
     function setInitialRepresentationRatioFor(type, value) {
-        ratioDict[type] = value;
+        _setPlayerData(ratioStore, type, 'init', value);
     }
 
     function getMaxAllowedBitrateFor(type) {
-        if (bitrateDict.hasOwnProperty('max') && bitrateDict.max.hasOwnProperty(type)) {
-            return bitrateDict.max[type];
+        if (bitrateStore[type].hasOwnProperty('max')) {
+            return bitrateStore[type].max;
         }
+
         return NaN;
     }
 
     function getMinAllowedBitrateFor(type) {
-        if (bitrateDict.hasOwnProperty('min') && bitrateDict.min.hasOwnProperty(type)) {
-            return bitrateDict.min[type];
+        if (bitrateStore[type].hasOwnProperty('min')) {
+            return bitrateStore[type].min;
         }
+
         return NaN;
     }
 
-    //TODO  change bitrateDict structure to hold one object for video and audio with initial and max values internal.
-    // This means you need to update all the logic around initial bitrate DOMStorage, RebController etc...
     function setMaxAllowedBitrateFor(type, value) {
-        checkParameterType(value, 'number');
-        checkIsVideoOrAudioType(type);
-        bitrateDict.max = bitrateDict.max || {};
-        bitrateDict.max[type] = value;
+        _setPlayerData(bitrateStore, type, 'max', value);
     }
 
     function setMinAllowedBitrateFor(type, value) {
-        checkParameterType(value, 'number');
-        checkIsVideoOrAudioType(type);
-        bitrateDict.min = bitrateDict.min || {};
-        bitrateDict.min[type] = value;
+        _setPlayerData(bitrateStore, type, 'min', value);
     }
 
     function getMaxAllowedIndexFor(type) {
@@ -352,25 +369,24 @@ function AbrController() {
     }
 
     function getMaxAllowedRepresentationRatioFor(type) {
-        if (ratioDict.hasOwnProperty('max') && ratioDict.max.hasOwnProperty(type)) {
-            return ratioDict.max[type];
+        if (ratioStore.hasOwnProperty(type) && ratioStore[type].hasOwnProperty('max')) {
+            return ratioStore[type].max;
         }
         return 1;
     }
 
     function setMaxAllowedRepresentationRatioFor(type, value) {
-        ratioDict.max = ratioDict.max || {};
-        ratioDict.max[type] = value;
+        _setPlayerData(ratioStore, type, 'max', value);
     }
 
     function getAutoSwitchBitrateFor(type) {
-        return autoSwitchBitrate[type];
+        return bitrateStore[type].autoSwitch;
     }
 
     function setAutoSwitchBitrateFor(type, value) {
         checkParameterType(value, 'boolean');
         checkIsVideoOrAudioType(type);
-        autoSwitchBitrate[type] = value;
+        bitrateStore[type].autoSwitch = value;
     }
 
     function getLimitBitrateByPortal() {
@@ -466,7 +482,7 @@ function AbrController() {
                 const bufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor(type));
                 logger.info('AbrController (' + type + ') switch from ' + oldQuality + ' to ' + newQuality + '/' + topQualityIdx + ' (buffer: ' + bufferLevel + ') ' + (reason ? JSON.stringify(reason) : '.'));
             }
-            setQualityFor(type, id, newQuality);
+            _setStreamData(type, id, 'currentQualityIndex', newQuality);
             eventBus.trigger(Events.QUALITY_CHANGE_REQUESTED, {mediaType: type, streamInfo: streamInfo, oldQuality: oldQuality, newQuality: newQuality, reason: reason});
             const bitrate = throughputHistory.getAverageThroughput(type);
             if (!isNaN(bitrate)) {
@@ -585,7 +601,7 @@ function AbrController() {
         const streamId = mediaInfo.streamInfo.id;
         const max = mediaInfo.representationCount - 1;
 
-        setTopQualityIndex(type, streamId, max);
+        _setStreamData(type, streamId, 'topQualityIndex', max);
 
         return max;
     }
@@ -608,27 +624,17 @@ function AbrController() {
             let quality;
 
             if (id) {
-                qualityDict[id] = qualityDict[id] || {};
+                bitrateStore[type][id] = bitrateStore[type][id] || {};
 
-                if (!qualityDict[id].hasOwnProperty(type)) {
-                    qualityDict[id][type] = QUALITY_DEFAULT;
+                if (!bitrateStore[type][id].hasOwnProperty('currentQualityIndex')) {
+                    bitrateStore[type][id].currentQualityIndex = QUALITY_DEFAULT;
                 }
 
-                quality = qualityDict[id][type];
+                quality = bitrateStore[type][id].currentQualityIndex;
                 return quality;
             }
         }
         return QUALITY_DEFAULT;
-    }
-
-    function setQualityFor(type, id, value) {
-        qualityDict[id] = qualityDict[id] || {};
-        qualityDict[id][type] = value;
-    }
-
-    function setTopQualityIndex(type, id, value) {
-        topQualities[id] = topQualities[id] || {};
-        topQualities[id][type] = value;
     }
 
     function checkMaxBitrate(idx, type) {
