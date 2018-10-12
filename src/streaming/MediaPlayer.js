@@ -940,7 +940,9 @@ function MediaPlayer() {
      * @instance
      */
     function setMaxAllowedRepresentationRatioFor(type, value) {
-        abrController.setMaxAllowedRepresentationRatioFor(type, value);
+        const s = { streaming: { abr: { maxRepresentationRatio: {}}}};
+        s.streaming.abr.maxRepresentationRatio[type] = value;
+        settings.update(s);
     }
 
     /**
@@ -951,7 +953,7 @@ function MediaPlayer() {
      * @instance
      */
     function getMaxAllowedRepresentationRatioFor(type) {
-        return abrController.getMaxAllowedRepresentationRatioFor(type);
+        return settings.get().streaming.abr.maxRepresentationRatio[type];
     }
 
     /**
@@ -2689,6 +2691,50 @@ function MediaPlayer() {
     }
 
     /**
+     * Get the current settings object being used on the player.
+     * @returns {Settings.Schema} The settings object being used.
+     *
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getSettings() {
+        return settings.get();
+    }
+
+    /**
+     * @summary Update the current settings object being used on the player. Anything left unspecified is not modified.
+     * @param {module:Settings.Schema} settingsObj - An object corresponding to the settings definition.
+     * @description This function does not update the entire object, only properties in the passed in object are updated.
+     *
+     * This means that updateSettings({a: x}) and updateSettings({b: y}) are functionally equivalent to
+     * updateSettings({a: x, b: y}). If the default values are required again, @see{@link resetSettings}.
+     * @example
+     * player.updateSettings({
+     *      streaming: {
+     *          liveDelayFragmentCount: 8
+     *          abr: {
+     *              maxBitrate: { audio: 100, video: 1000 }
+     *          }
+     *      }
+     *  });
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function updateSettings(settingsObj) {
+        settings.update(settingsObj);
+    }
+
+    /**
+     * Resets the settings object back to the default.
+     *
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function resetSettings() {
+        settings.reset();
+    }
+
+    /**
      * A utility methods which converts UTC timestamp value into a valid time and date string.
      *
      * @param {number} time - UTC timestamp to be converted into date and time.
@@ -3144,6 +3190,9 @@ function MediaPlayer() {
         getThumbnail: getThumbnail,
         keepProtectionMediaKeys: keepProtectionMediaKeys,
         getDashAdapter: getDashAdapter,
+        getSettings: getSettings,
+        updateSettings: updateSettings,
+        resetSettings: resetSettings,
         reset: reset
     };
 

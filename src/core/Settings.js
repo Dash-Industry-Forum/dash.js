@@ -242,7 +242,7 @@ function Settings() {
                  * When switching multi-bitrate content (auto or manual mode) this property specifies the maximum representation allowed,
                  * as a proportion of the size of the representation set.
                  *
-                 * You can set or remove this cap at anytime before or during playback. To clear this setting you set the value to NaN.
+                 * You can set or remove this cap at anytime before or during playback. To clear this setting you set the value to 1.
                  *
                  * If both this and maxAllowedBitrate are defined, maxAllowedBitrate is evaluated first, then maxAllowedRepresentation,
                  * i.e. the lowest value from executing these rules is used.
@@ -251,10 +251,10 @@ function Settings() {
                  * @property audio {number} Max ratio for audio
                  * @property video {number} Max ratio for video
                  * @alias streaming.abr.maxRepresentationRatio
-                 * @default NaN
+                 * @default 1
                  * @memberof module:Settings.Schema
                  */
-                maxRepresentationRatio: { audio: NaN, video: NaN },
+                maxRepresentationRatio: { audio: 1, video: 1 },
                 /**
                  * Explicitly set the starting bitrate for audio or video
                  * @property audio {number} Bitrate for audio

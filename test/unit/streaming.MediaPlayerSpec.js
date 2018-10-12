@@ -421,16 +421,10 @@ describe('MediaPlayer', function () {
         });
 
         it('should configure MaxAllowedRepresentationRatioFor', function () {
-            let MaxAllowedRepresentationRatioFor = abrControllerMock.getMaxAllowedRepresentationRatioFor('audio');
-            expect(MaxAllowedRepresentationRatioFor).to.equal(1);
-
-            MaxAllowedRepresentationRatioFor = player.getMaxAllowedRepresentationRatioFor('audio');
+            let MaxAllowedRepresentationRatioFor = player.getMaxAllowedRepresentationRatioFor('audio');
             expect(MaxAllowedRepresentationRatioFor).to.equal(1);
 
             player.setMaxAllowedRepresentationRatioFor('audio', 5);
-
-            MaxAllowedRepresentationRatioFor = abrControllerMock.getMaxAllowedRepresentationRatioFor('audio');
-            expect(MaxAllowedRepresentationRatioFor).to.equal(5);
 
             MaxAllowedRepresentationRatioFor = player.getMaxAllowedRepresentationRatioFor('audio');
             expect(MaxAllowedRepresentationRatioFor).to.equal(5);
