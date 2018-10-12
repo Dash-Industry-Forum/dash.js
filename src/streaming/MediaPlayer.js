@@ -1035,7 +1035,7 @@ function MediaPlayer() {
      * @instance
      */
     function getLimitBitrateByPortal() {
-        return abrController.getLimitBitrateByPortal();
+        return settings.get().streaming.abr.limitBitrateByPortal;
     }
 
     /**
@@ -1046,7 +1046,8 @@ function MediaPlayer() {
      * @instance
      */
     function setLimitBitrateByPortal(value) {
-        abrController.setLimitBitrateByPortal(value);
+        const s = { streaming: { abr: { limitBitrateByPortal: value }}};
+        settings.update(s);
     }
 
     /**

@@ -451,16 +451,10 @@ describe('MediaPlayer', function () {
         });
 
         it('should configure bitrate according to playback area size', function () {
-            let limitBitrateByPortal = abrControllerMock.getLimitBitrateByPortal();
-            expect(limitBitrateByPortal).to.be.false; // jshint ignore:line
-
-            limitBitrateByPortal = player.getLimitBitrateByPortal();
+            let limitBitrateByPortal = player.getLimitBitrateByPortal();
             expect(limitBitrateByPortal).to.be.false; // jshint ignore:line
 
             player.setLimitBitrateByPortal(true);
-
-            limitBitrateByPortal = abrControllerMock.getLimitBitrateByPortal();
-            expect(limitBitrateByPortal).to.be.true; // jshint ignore:line
 
             limitBitrateByPortal = player.getLimitBitrateByPortal();
             expect(limitBitrateByPortal).to.be.true; // jshint ignore:line

@@ -72,7 +72,6 @@ function AbrController() {
         streamProcessorDict,
         abandonmentStateDict,
         abandonmentTimeout,
-        limitBitrateByPortal,
         usePixelRatioInLimitBitrateByPortal,
         windowResizeEventCalled,
         elementWidth,
@@ -137,7 +136,6 @@ function AbrController() {
         streamProcessorDict = {};
         switchHistoryDict = {};
         isUsingBufferOccupancyABRDict = {};
-        limitBitrateByPortal = false;
         useDeadTimeLatency = true;
         usePixelRatioInLimitBitrateByPortal = false;
         if (windowResizeEventCalled === undefined) {
@@ -338,15 +336,6 @@ function AbrController() {
         checkParameterType(value, 'boolean');
         checkIsVideoOrAudioType(type);
         autoSwitchBitrate[type] = value;
-    }
-
-    function getLimitBitrateByPortal() {
-        return limitBitrateByPortal;
-    }
-
-    function setLimitBitrateByPortal(value) {
-        checkParameterType(value, 'boolean');
-        limitBitrateByPortal = value;
     }
 
     function getUsePixelRatioInLimitBitrateByPortal() {
@@ -640,7 +629,7 @@ function AbrController() {
     }
 
     function checkPortalSize(idx, type) {
-        if (type !== Constants.VIDEO || !limitBitrateByPortal || !streamProcessorDict[type]) {
+        if (type !== Constants.VIDEO || !settings.get().streaming.abr.limitBitrateByPortal || !streamProcessorDict[type]) {
             return idx;
         }
 
@@ -717,8 +706,6 @@ function AbrController() {
         getAutoSwitchBitrateFor: getAutoSwitchBitrateFor,
         getUseDeadTimeLatency: getUseDeadTimeLatency,
         setUseDeadTimeLatency: setUseDeadTimeLatency,
-        setLimitBitrateByPortal: setLimitBitrateByPortal,
-        getLimitBitrateByPortal: getLimitBitrateByPortal,
         getUsePixelRatioInLimitBitrateByPortal: getUsePixelRatioInLimitBitrateByPortal,
         setUsePixelRatioInLimitBitrateByPortal: setUsePixelRatioInLimitBitrateByPortal,
         getQualityFor: getQualityFor,

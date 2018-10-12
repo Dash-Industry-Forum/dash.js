@@ -83,14 +83,6 @@ class AbrControllerMock{
         this.autoSwitchBitrate[type] = value;
     }
 
-    getLimitBitrateByPortal() {
-        return this.limitBitrateByPortal;
-    }
-
-    setLimitBitrateByPortal(value) {
-        this.limitBitrateByPortal = value;
-    }
-
     getUsePixelRatioInLimitBitrateByPortal() {
         return this.usePixelRatioInLimitBitrateByPortal;
     }

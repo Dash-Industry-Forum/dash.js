@@ -341,7 +341,9 @@ describe('AbrController', function () {
         expect(bitrateInfo.bitrate).to.be.equal(3000000);
         expect(bitrateInfo.qualityIndex).to.be.equal(2);
 
-        abrCtrl.setLimitBitrateByPortal(true);
+        const s = { streaming: { abr: { limitBitrateByPortal: true }}};
+        settings.update(s);
+
         bitrateInfo = abrCtrl.getTopBitrateInfoFor(testType);
         expect(bitrateInfo).to.be.an.instanceOf(BitrateInfo);
         expect(bitrateInfo.bitrate).to.be.equal(2000000);
