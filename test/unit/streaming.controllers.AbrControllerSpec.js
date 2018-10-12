@@ -293,6 +293,18 @@ describe('AbrController', function () {
         expect(minAllowedIndex).to.be.equal(0);
     });
 
+    it('should configure initial bitrate for type', function () {
+        let initialBitrateFor = abrCtrl.getInitialBitrateFor(testType);
+        expect(initialBitrateFor).to.be.NaN; // jshint ignore:line
+
+        const s = { streaming: { abr: { initialBitrate: {}}}};
+        s.streaming.abr.initialBitrate[testType] = 10;
+        settings.update(s);
+
+        initialBitrateFor = abrCtrl.getInitialBitrateFor(testType);
+        expect(initialBitrateFor).to.equal(10);
+    });
+
     it('should return an appropriate BitrateInfo when calling getTopBitrateInfoFor', function () {
         abrCtrl.updateTopQualityIndex(dummyMediaInfo);
 

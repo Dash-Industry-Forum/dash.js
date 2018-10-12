@@ -273,7 +273,7 @@ function Settings() {
                  * @default NaN
                  * @memberof module:Settings.Schema
                  */
-                initialRepresentationRatio: { audio: NaN, video: NaN },
+                initialRepresentationRatio: { audio: null, video: null },
                 /**
                  * Indicates whether the player should enable ABR algorithms to switch the bitrate.
                  * @property audio {number} Flag for audio

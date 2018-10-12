@@ -471,16 +471,10 @@ describe('MediaPlayer', function () {
         });
 
         it('should configure initialRepresentationRatioFor', function () {
-            let initialRepresentationRatioFor = abrControllerMock.getInitialRepresentationRatioFor('video');
-            expect(initialRepresentationRatioFor).to.be.null; // jshint ignore:line
-
-            initialRepresentationRatioFor = player.getInitialRepresentationRatioFor('video');
+            let initialRepresentationRatioFor = player.getInitialRepresentationRatioFor('video');
             expect(initialRepresentationRatioFor).to.be.null; // jshint ignore:line
 
             player.setInitialRepresentationRatioFor('video', 10);
-
-            initialRepresentationRatioFor = abrControllerMock.getInitialRepresentationRatioFor('video');
-            expect(initialRepresentationRatioFor).to.equal(10);
 
             initialRepresentationRatioFor = player.getInitialRepresentationRatioFor('video');
             expect(initialRepresentationRatioFor).to.equal(10);
@@ -549,22 +543,6 @@ describe('MediaPlayer', function () {
 
                 qualityFor = player.getQualityFor('video');
                 expect(qualityFor).to.equal(10);
-            });
-
-            it('should configure initial bitrate for type', function () {
-                let initialBitrateFor = abrControllerMock.getInitialBitrateFor('video');
-                expect(initialBitrateFor).to.be.null; // jshint ignore:line
-
-                initialBitrateFor = player.getInitialBitrateFor('video');
-                expect(initialBitrateFor).to.be.null; // jshint ignore:line
-
-                player.setInitialBitrateFor('video', 10);
-
-                initialBitrateFor = abrControllerMock.getInitialBitrateFor('video');
-                expect(initialBitrateFor).to.equal(10);
-
-                initialBitrateFor = player.getInitialBitrateFor('video');
-                expect(initialBitrateFor).to.equal(10);
             });
         });
     });

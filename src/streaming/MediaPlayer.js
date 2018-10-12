@@ -1084,7 +1084,9 @@ function MediaPlayer() {
      * @instance
      */
     function setInitialBitrateFor(type, value) {
-        abrController.setInitialBitrateFor(type, value);
+        const s = { streaming: { abr: { initialBitrate: {}}}};
+        s.streaming.abr.initialBitrate[type] = value;
+        settings.update(s);
     }
 
     /**
@@ -1108,7 +1110,9 @@ function MediaPlayer() {
      * @instance
      */
     function setInitialRepresentationRatioFor(type, value) {
-        abrController.setInitialRepresentationRatioFor(type, value);
+        const s = { streaming: { abr: { initialRepresentationRatio: {}}}};
+        s.streaming.abr.initialRepresentationRatio[type] = value;
+        settings.update(s);
     }
 
     /**
@@ -1118,7 +1122,7 @@ function MediaPlayer() {
      * @instance
      */
     function getInitialRepresentationRatioFor(type) {
-        return abrController.getInitialRepresentationRatioFor(type);
+        return settings.get().streaming.abr.initialRepresentationRatio[type];
     }
 
     /**

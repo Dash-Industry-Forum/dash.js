@@ -67,8 +67,6 @@ function AbrController() {
         autoSwitchBitrate,
         topQualities,
         qualityDict,
-        bitrateDict,
-        ratioDict,
         streamProcessorDict,
         abandonmentStateDict,
         abandonmentTimeout,
@@ -129,8 +127,6 @@ function AbrController() {
         autoSwitchBitrate = {video: true, audio: true};
         topQualities = {};
         qualityDict = {};
-        bitrateDict = {};
-        ratioDict = {};
         abandonmentStateDict = {};
         streamProcessorDict = {};
         switchHistoryDict = {};
@@ -245,47 +241,28 @@ function AbrController() {
     function getInitialBitrateFor(type) {
         checkConfig();
         const savedBitrate = domStorage.getSavedBitrateSettings(type);
+        let configBitrate = settings.get().streaming.abr.initialBitrate[type];
+        let configRatio = settings.get().streaming.abr.initialRepresentationRatio[type];
 
-        if (!bitrateDict.hasOwnProperty(type)) {
-            if (ratioDict.hasOwnProperty(type)) {
+        if (isNaN(configBitrate)) {
+            const s = { streaming: { abr: { initialBitrate: {}}}};
+            if (configRatio) {
                 const representation = adapter.getAdaptationForType(0, type).Representation;
                 if (Array.isArray(representation)) {
-                    const repIdx = Math.max(Math.round(representation.length * ratioDict[type]) - 1, 0);
-                    bitrateDict[type] = representation[repIdx].bandwidth;
+                    const repIdx = Math.max(Math.round(representation.length * configRatio) - 1, 0);
+                    s.streaming.abr.initialBitrate[type] = representation[repIdx].bandwidth;
                 } else {
-                    bitrateDict[type] = 0;
+                    s.streaming.abr.initialBitrate[type] = 0;
                 }
             } else if (!isNaN(savedBitrate)) {
-                bitrateDict[type] = savedBitrate;
+                s.streaming.abr.initialBitrate[type] = savedBitrate;
             } else {
-                bitrateDict[type] = (type === Constants.VIDEO) ? DEFAULT_VIDEO_BITRATE : DEFAULT_AUDIO_BITRATE;
+                s.streaming.abr.initialBitrate[type] = (type === Constants.VIDEO) ? DEFAULT_VIDEO_BITRATE : DEFAULT_AUDIO_BITRATE;
             }
+            settings.update(s);
         }
 
-        return bitrateDict[type];
-    }
-
-    /**
-     * @param {string} type
-     * @param {number} value A value of the initial bitrate, kbps
-     * @memberof AbrController#
-     */
-    function setInitialBitrateFor(type, value) {
-        checkIsVideoOrAudioType(type);
-        checkParameterType(value, 'number');
-        bitrateDict[type] = value;
-    }
-
-    function getInitialRepresentationRatioFor(type) {
-        if (!ratioDict.hasOwnProperty(type)) {
-            return null;
-        }
-
-        return ratioDict[type];
-    }
-
-    function setInitialRepresentationRatioFor(type, value) {
-        ratioDict[type] = value;
+        return configBitrate;
     }
 
     function getMaxAllowedBitrateFor(type) {
@@ -688,9 +665,6 @@ function AbrController() {
         getMaxAllowedIndexFor: getMaxAllowedIndexFor,
         getMinAllowedIndexFor: getMinAllowedIndexFor,
         getInitialBitrateFor: getInitialBitrateFor,
-        setInitialBitrateFor: setInitialBitrateFor,
-        getInitialRepresentationRatioFor: getInitialRepresentationRatioFor,
-        setInitialRepresentationRatioFor: setInitialRepresentationRatioFor,
         setAutoSwitchBitrateFor: setAutoSwitchBitrateFor,
         getAutoSwitchBitrateFor: getAutoSwitchBitrateFor,
         getUseDeadTimeLatency: getUseDeadTimeLatency,

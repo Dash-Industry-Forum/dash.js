@@ -19,8 +19,6 @@ class AbrControllerMock{
     }
 
     setup() {
-        this.bitrateDict = {};
-        this.ratioDict = {};
         this.qualityDict = {};
         this.elementWidth = undefined;
         this.elementHeight = undefined;
@@ -46,33 +44,8 @@ class AbrControllerMock{
 
     getTopBitrateInfoFor() {}
 
-    getInitialBitrateFor(type) {
-        if (!this.bitrateDict.hasOwnProperty(type)) {
-            return null;
-        }
-
-        return this.bitrateDict[type];
-    }
-
-    /**
-     * @param {string} type
-     * @param {number} value A value of the initial bitrate, kbps
-     * @memberof AbrController#
-     */
-    setInitialBitrateFor(type, value) {
-        this.bitrateDict[type] = value;
-    }
-
-    getInitialRepresentationRatioFor(type) {
-        if (!this.ratioDict.hasOwnProperty(type)) {
-            return null;
-        }
-
-        return this.ratioDict[type];
-    }
-
-    setInitialRepresentationRatioFor(type, value) {
-        this.ratioDict[type] = value;
+    getInitialBitrateFor(/*type*/) {
+        return null;
     }
 
     getAutoSwitchBitrateFor(type) {
