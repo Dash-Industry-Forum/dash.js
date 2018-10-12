@@ -45,6 +45,7 @@ import ThroughputHistory from '../rules/ThroughputHistory';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import Debug from '../../core/Debug';
 import { checkParameterType, checkInteger, checkIsVideoOrAudioType } from '../utils/SupervisorTools';
+import Settings from '../../core/Settings';
 
 const ABANDON_LOAD = 'abandonload';
 const ALLOW_LOAD = 'allowload';
@@ -57,6 +58,7 @@ function AbrController() {
     const context = this.context;
     const debug = Debug(context).getInstance();
     const eventBus = EventBus(context).getInstance();
+    const settings = Settings(context).getInstance();
 
     let instance,
         logger,
@@ -291,33 +293,11 @@ function AbrController() {
     }
 
     function getMaxAllowedBitrateFor(type) {
-        if (bitrateDict.hasOwnProperty('max') && bitrateDict.max.hasOwnProperty(type)) {
-            return bitrateDict.max[type];
-        }
-        return NaN;
+        return settings.get().streaming.abr.maxBitrate[type];
     }
 
     function getMinAllowedBitrateFor(type) {
-        if (bitrateDict.hasOwnProperty('min') && bitrateDict.min.hasOwnProperty(type)) {
-            return bitrateDict.min[type];
-        }
-        return NaN;
-    }
-
-    //TODO  change bitrateDict structure to hold one object for video and audio with initial and max values internal.
-    // This means you need to update all the logic around initial bitrate DOMStorage, RebController etc...
-    function setMaxAllowedBitrateFor(type, value) {
-        checkParameterType(value, 'number');
-        checkIsVideoOrAudioType(type);
-        bitrateDict.max = bitrateDict.max || {};
-        bitrateDict.max[type] = value;
-    }
-
-    function setMinAllowedBitrateFor(type, value) {
-        checkParameterType(value, 'number');
-        checkIsVideoOrAudioType(type);
-        bitrateDict.min = bitrateDict.min || {};
-        bitrateDict.min[type] = value;
+        return settings.get().streaming.abr.minBitrate[type];
     }
 
     function getMaxAllowedIndexFor(type) {
@@ -734,11 +714,7 @@ function AbrController() {
         getThroughputHistory: getThroughputHistory,
         getBitrateList: getBitrateList,
         getQualityForBitrate: getQualityForBitrate,
-        getMaxAllowedBitrateFor: getMaxAllowedBitrateFor,
         getTopBitrateInfoFor: getTopBitrateInfoFor,
-        getMinAllowedBitrateFor: getMinAllowedBitrateFor,
-        setMaxAllowedBitrateFor: setMaxAllowedBitrateFor,
-        setMinAllowedBitrateFor: setMinAllowedBitrateFor,
         getMaxAllowedIndexFor: getMaxAllowedIndexFor,
         getMinAllowedIndexFor: getMinAllowedIndexFor,
         getMaxAllowedRepresentationRatioFor: getMaxAllowedRepresentationRatioFor,

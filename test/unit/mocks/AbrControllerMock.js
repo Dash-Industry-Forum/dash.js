@@ -75,32 +75,8 @@ class AbrControllerMock{
         this.ratioDict[type] = value;
     }
 
-    getMaxAllowedBitrateFor(type) {
-        if (this.bitrateDict.hasOwnProperty('max') && this.bitrateDict.max.hasOwnProperty(type)) {
-            return this.bitrateDict.max[type];
-        }
-        return NaN;
-    }
-
-    getMinAllowedBitrateFor(type) {
-        if (this.bitrateDict.hasOwnProperty('min') && this.bitrateDict.min.hasOwnProperty(type)) {
-            return this.bitrateDict.min[type];
-        }
-        return NaN;
-    }
-
     //TODO  change this.bitrateDict structure to hold one object for video and audio with initial and max values internal.
     // This means you need to update all the logic around initial bitrate DOMStorage, RebController etc...
-    setMaxAllowedBitrateFor(type, value) {
-        this.bitrateDict.max = this.bitrateDict.max || {};
-        this.bitrateDict.max[type] = value;
-    }
-
-    setMinAllowedBitrateFor(type, value) {
-        this.bitrateDict.min = this.bitrateDict.min || {};
-        this.bitrateDict.min[type] = value;
-    }
-
     getMaxAllowedRepresentationRatioFor(type) {
         if (this.ratioDict.hasOwnProperty('max') && this.ratioDict.max.hasOwnProperty(type)) {
             return this.ratioDict.max[type];

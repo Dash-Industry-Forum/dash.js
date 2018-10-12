@@ -53,6 +53,7 @@ import EventBus from './../core/EventBus';
 import Events from './../core/events/Events';
 import MediaPlayerEvents from './MediaPlayerEvents';
 import FactoryMaker from '../core/FactoryMaker';
+import Settings from '../core/Settings';
 import {
     getVersionString
 }
@@ -116,6 +117,7 @@ function MediaPlayer() {
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
     const debug = Debug(context).getInstance();
+    const settings = Settings(context).getInstance();
 
     let instance,
         logger,
@@ -297,6 +299,8 @@ function MediaPlayer() {
             metricsReportingController.reset();
             metricsReportingController = null;
         }
+
+        settings.reset();
     }
 
     /**
@@ -853,7 +857,9 @@ function MediaPlayer() {
      * @instance
      */
     function setMaxAllowedBitrateFor(type, value) {
-        abrController.setMaxAllowedBitrateFor(type, value);
+        const s = { streaming: { abr: { maxBitrate: {}}}};
+        s.streaming.abr.maxBitrate[type] = value;
+        settings.update(s);
     }
 
     /**
@@ -873,7 +879,9 @@ function MediaPlayer() {
      * @instance
      */
     function setMinAllowedBitrateFor(type, value) {
-        abrController.setMinAllowedBitrateFor(type, value);
+        const s = { streaming: { abr: { minBitrate: {}}}};
+        s.streaming.abr.minBitrate[type] = value;
+        settings.update(s);
     }
 
     /**
@@ -883,7 +891,7 @@ function MediaPlayer() {
      * @instance
      */
     function getMaxAllowedBitrateFor(type) {
-        return abrController.getMaxAllowedBitrateFor(type);
+        return settings.get().streaming.abr.maxBitrate[type];
     }
 
     /**
@@ -911,7 +919,7 @@ function MediaPlayer() {
      * @instance
      */
     function getMinAllowedBitrateFor(type) {
-        return abrController.getMinAllowedBitrateFor(type);
+        return settings.get().streaming.abr.minBitrate[type];
     }
 
     /**

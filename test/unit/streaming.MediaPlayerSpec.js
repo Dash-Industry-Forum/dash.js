@@ -401,32 +401,20 @@ describe('MediaPlayer', function () {
             abrControllerMock.reset();
         });
         it('should configure MaxAllowedBitrateFor', function () {
-            let MaxAllowedBitrateFor = abrControllerMock.getMaxAllowedBitrateFor('audio');
-            expect(isNaN(MaxAllowedBitrateFor)).to.be.true; // jshint ignore:line
-
-            MaxAllowedBitrateFor = player.getMaxAllowedBitrateFor('audio');
+            let MaxAllowedBitrateFor = player.getMaxAllowedBitrateFor('audio');
             expect(isNaN(MaxAllowedBitrateFor)).to.be.true; // jshint ignore:line
 
             player.setMaxAllowedBitrateFor('audio', 5);
-
-            MaxAllowedBitrateFor = abrControllerMock.getMaxAllowedBitrateFor('audio');
-            expect(MaxAllowedBitrateFor).to.equal(5);
 
             MaxAllowedBitrateFor = player.getMaxAllowedBitrateFor('audio');
             expect(MaxAllowedBitrateFor).to.equal(5);
         });
 
         it('should configure MinAllowedBitrateFor', function () {
-            let MinAllowedBitrateFor = abrControllerMock.getMinAllowedBitrateFor('audio');
-            expect(isNaN(MinAllowedBitrateFor)).to.be.true; // jshint ignore:line
-
-            MinAllowedBitrateFor = player.getMinAllowedBitrateFor('audio');
+            let MinAllowedBitrateFor = player.getMinAllowedBitrateFor('audio');
             expect(isNaN(MinAllowedBitrateFor)).to.be.true; // jshint ignore:line
 
             player.setMinAllowedBitrateFor('audio', 5);
-
-            MinAllowedBitrateFor = abrControllerMock.getMinAllowedBitrateFor('audio');
-            expect(MinAllowedBitrateFor).to.equal(5);
 
             MinAllowedBitrateFor = player.getMinAllowedBitrateFor('audio');
             expect(MinAllowedBitrateFor).to.equal(5);
