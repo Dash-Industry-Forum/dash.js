@@ -461,16 +461,10 @@ describe('MediaPlayer', function () {
         });
 
         it('should configure usePixelRatioInLimitBitrateByPortal', function () {
-            let UsePixelRatioInLimitBitrateByPortal = abrControllerMock.getUsePixelRatioInLimitBitrateByPortal();
-            expect(UsePixelRatioInLimitBitrateByPortal).to.be.false; // jshint ignore:line
-
-            UsePixelRatioInLimitBitrateByPortal = player.getUsePixelRatioInLimitBitrateByPortal();
+            let UsePixelRatioInLimitBitrateByPortal = player.getUsePixelRatioInLimitBitrateByPortal();
             expect(UsePixelRatioInLimitBitrateByPortal).to.be.false; // jshint ignore:line
 
             player.setUsePixelRatioInLimitBitrateByPortal(true);
-
-            UsePixelRatioInLimitBitrateByPortal = abrControllerMock.getUsePixelRatioInLimitBitrateByPortal();
-            expect(UsePixelRatioInLimitBitrateByPortal).to.be.true; // jshint ignore:line
 
             UsePixelRatioInLimitBitrateByPortal = player.getUsePixelRatioInLimitBitrateByPortal();
             expect(UsePixelRatioInLimitBitrateByPortal).to.be.true; // jshint ignore:line

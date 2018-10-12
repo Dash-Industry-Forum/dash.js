@@ -72,7 +72,6 @@ function AbrController() {
         streamProcessorDict,
         abandonmentStateDict,
         abandonmentTimeout,
-        usePixelRatioInLimitBitrateByPortal,
         windowResizeEventCalled,
         elementWidth,
         elementHeight,
@@ -137,7 +136,6 @@ function AbrController() {
         switchHistoryDict = {};
         isUsingBufferOccupancyABRDict = {};
         useDeadTimeLatency = true;
-        usePixelRatioInLimitBitrateByPortal = false;
         if (windowResizeEventCalled === undefined) {
             windowResizeEventCalled = false;
         }
@@ -336,15 +334,6 @@ function AbrController() {
         checkParameterType(value, 'boolean');
         checkIsVideoOrAudioType(type);
         autoSwitchBitrate[type] = value;
-    }
-
-    function getUsePixelRatioInLimitBitrateByPortal() {
-        return usePixelRatioInLimitBitrateByPortal;
-    }
-
-    function setUsePixelRatioInLimitBitrateByPortal(value) {
-        checkParameterType(value, 'boolean');
-        usePixelRatioInLimitBitrateByPortal = value;
     }
 
     function getUseDeadTimeLatency() {
@@ -621,7 +610,7 @@ function AbrController() {
 
     function setElementSize() {
         if (videoModel) {
-            const hasPixelRatio = usePixelRatioInLimitBitrateByPortal && window.hasOwnProperty('devicePixelRatio');
+            const hasPixelRatio = settings.get().streaming.abr.usePixelRatioInLimitBitrateByPortal && window.hasOwnProperty('devicePixelRatio');
             const pixelRatio = hasPixelRatio ? window.devicePixelRatio : 1;
             elementWidth = videoModel.getClientWidth() * pixelRatio;
             elementHeight = videoModel.getClientHeight() * pixelRatio;
@@ -706,8 +695,6 @@ function AbrController() {
         getAutoSwitchBitrateFor: getAutoSwitchBitrateFor,
         getUseDeadTimeLatency: getUseDeadTimeLatency,
         setUseDeadTimeLatency: setUseDeadTimeLatency,
-        getUsePixelRatioInLimitBitrateByPortal: getUsePixelRatioInLimitBitrateByPortal,
-        setUsePixelRatioInLimitBitrateByPortal: setUsePixelRatioInLimitBitrateByPortal,
         getQualityFor: getQualityFor,
         getAbandonmentStateFor: getAbandonmentStateFor,
         setPlaybackQuality: setPlaybackQuality,

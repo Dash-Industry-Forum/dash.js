@@ -57,46 +57,6 @@ describe('AbrController', function () {
         expect(quality).to.be.equal(0);    // jshint ignore:line
     });
 
-    it('should not set UsePixelRatioInLimitBitrateByPortal value if it\'s not a boolean type', function () {
-        let usePixelRatioInLimitBitrateByPortal = abrCtrl.getUsePixelRatioInLimitBitrateByPortal();
-        expect(usePixelRatioInLimitBitrateByPortal).to.be.false; // jshint ignore:line
-
-        expect(abrCtrl.setUsePixelRatioInLimitBitrateByPortal.bind(abrCtrl, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        usePixelRatioInLimitBitrateByPortal = abrCtrl.getUsePixelRatioInLimitBitrateByPortal();
-
-        expect(usePixelRatioInLimitBitrateByPortal).to.be.false; // jshint ignore:line
-
-        expect(abrCtrl.setUsePixelRatioInLimitBitrateByPortal.bind(abrCtrl, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        usePixelRatioInLimitBitrateByPortal = abrCtrl.getUsePixelRatioInLimitBitrateByPortal();
-
-        expect(usePixelRatioInLimitBitrateByPortal).to.be.false; // jshint ignore:line
-
-        abrCtrl.setUsePixelRatioInLimitBitrateByPortal(true);
-        usePixelRatioInLimitBitrateByPortal = abrCtrl.getUsePixelRatioInLimitBitrateByPortal();
-
-        expect(usePixelRatioInLimitBitrateByPortal).to.be.true; // jshint ignore:line
-    });
-
-    it('should not set setLimitBitrateByPortal value if it\'s not a boolean type', function () {
-        let limitBitrateByPortal = abrCtrl.getLimitBitrateByPortal();
-        expect(limitBitrateByPortal).to.be.false; // jshint ignore:line
-
-        expect(abrCtrl.setLimitBitrateByPortal.bind(abrCtrl, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        limitBitrateByPortal = abrCtrl.getLimitBitrateByPortal();
-
-        expect(limitBitrateByPortal).to.be.false; // jshint ignore:line
-
-        expect(abrCtrl.setLimitBitrateByPortal.bind(abrCtrl, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        limitBitrateByPortal = abrCtrl.getLimitBitrateByPortal();
-
-        expect(limitBitrateByPortal).to.be.false; // jshint ignore:line
-
-        abrCtrl.setLimitBitrateByPortal(true);
-        limitBitrateByPortal = abrCtrl.getLimitBitrateByPortal();
-
-        expect(limitBitrateByPortal).to.be.true; // jshint ignore:line
-    });
-
     it('should not set setAutoSwitchBitrateFor value if it\'s not a boolean type', function () {
         let autoSwitchBitrateForVideo = abrCtrl.getAutoSwitchBitrateFor(Constants.VIDEO);
         expect(autoSwitchBitrateForVideo).to.be.true; // jshint ignore:line

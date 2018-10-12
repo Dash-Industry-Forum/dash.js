@@ -1055,7 +1055,7 @@ function MediaPlayer() {
      * @instance
      */
     function getUsePixelRatioInLimitBitrateByPortal() {
-        return abrController.getUsePixelRatioInLimitBitrateByPortal();
+        return settings.get().streaming.abr.usePixelRatioInLimitBitrateByPortal;
     }
 
     /**
@@ -1068,7 +1068,11 @@ function MediaPlayer() {
      * @default {boolean} false
      */
     function setUsePixelRatioInLimitBitrateByPortal(value) {
-        abrController.setUsePixelRatioInLimitBitrateByPortal(value);
+        if (typeof value !== 'boolean') {
+            return;
+        }
+        const s = { streaming: { abr: { usePixelRatioInLimitBitrateByPortal: value } } };
+        settings.update(s);
     }
 
     /**

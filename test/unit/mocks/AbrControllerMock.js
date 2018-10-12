@@ -83,14 +83,6 @@ class AbrControllerMock{
         this.autoSwitchBitrate[type] = value;
     }
 
-    getUsePixelRatioInLimitBitrateByPortal() {
-        return this.usePixelRatioInLimitBitrateByPortal;
-    }
-
-    setUsePixelRatioInLimitBitrateByPortal(value) {
-        this.usePixelRatioInLimitBitrateByPortal = value;
-    }
-
     checkPlaybackQuality() {}
 
     setPlaybackQuality(type, streamInfo, newQuality) {
