@@ -71,9 +71,11 @@ const MANIFEST_RETRY_INTERVAL = 500;
 const XLINK_RETRY_ATTEMPTS = 1;
 const XLINK_RETRY_INTERVAL = 500;
 
-const DEFAULT_LOW_LATENCY_LIVE_DELAY = 2.8;
+const DEFAULT_LOW_LATENCY_LIVE_DELAY = 3.0;
 const LOW_LATENCY_REDUCTION_FACTOR = 10;
 const LOW_LATENCY_MULTIPLY_FACTOR = 5;
+const LOW_LATENCY_CATCH_UP_MIN_DRIFT = 0.02;
+const LOW_LATENCY_CATCH_UP_MAX_DRIFT = 0;
 
 //This value influences the startup time for live (in ms).
 const WALLCLOCK_TIME_UPDATE_INTERVAL = 50;
@@ -114,8 +116,11 @@ function MediaPlayerModel() {
         jumpGaps,
         smallGapLimit,
         lowLatencyEnabled,
+        useLowLatencyCatchUp,
         manifestUpdateRetryInterval,
-        keepProtectionMediaKeys;
+        keepProtectionMediaKeys,
+        liveCatchUpMinDrift,
+        liveCatchUpMaxDrift;
 
     function setup() {
         UTCTimingSources = [];
@@ -155,6 +160,9 @@ function MediaPlayerModel() {
         customABRRule = [];
         movingAverageMethod = Constants.MOVING_AVERAGE_SLIDING_WINDOW;
         lowLatencyEnabled = false;
+        useLowLatencyCatchUp = true;
+        liveCatchUpMinDrift = LOW_LATENCY_CATCH_UP_MIN_DRIFT;
+        liveCatchUpMaxDrift = LOW_LATENCY_CATCH_UP_MAX_DRIFT;
 
         retryAttempts = {
             [HTTPRequest.MPD_TYPE]:                         MANIFEST_RETRY_ATTEMPTS,
@@ -498,6 +506,34 @@ function MediaPlayerModel() {
         lowLatencyEnabled = value;
     }
 
+    function setUseLowLatencyCatchUp(value) {
+        if (typeof value !== 'boolean') {
+            return;
+        }
+
+        useLowLatencyCatchUp = value;
+    }
+
+    function getUseLowLatencyCatchUp() {
+        return useLowLatencyCatchUp;
+    }
+
+    function setLowLatencyMinDrift(value) {
+        liveCatchUpMinDrift = value;
+    }
+
+    function getLowLatencyMinDrift() {
+        return liveCatchUpMinDrift;
+    }
+
+    function setLowLatencyMaxDriftBeforeSeeking(value) {
+        liveCatchUpMaxDrift = value;
+    }
+
+    function getLowLatencyMaxDriftBeforeSeeking() {
+        return liveCatchUpMaxDrift;
+    }
+
     function setManifestUpdateRetryInterval(value) {
         manifestUpdateRetryInterval = value;
     }
@@ -583,6 +619,12 @@ function MediaPlayerModel() {
         getSmallGapLimit: getSmallGapLimit,
         getLowLatencyEnabled: getLowLatencyEnabled,
         setLowLatencyEnabled: setLowLatencyEnabled,
+        setUseLowLatencyCatchUp: setUseLowLatencyCatchUp,
+        getUseLowLatencyCatchUp: getUseLowLatencyCatchUp,
+        setLowLatencyMinDrift: setLowLatencyMinDrift,
+        getLowLatencyMinDrift: getLowLatencyMinDrift,
+        setLowLatencyMaxDriftBeforeSeeking: setLowLatencyMaxDriftBeforeSeeking,
+        getLowLatencyMaxDriftBeforeSeeking: getLowLatencyMaxDriftBeforeSeeking,
         setManifestUpdateRetryInterval: setManifestUpdateRetryInterval,
         getManifestUpdateRetryInterval: getManifestUpdateRetryInterval,
         setKeepProtectionMediaKeys: setKeepProtectionMediaKeys,

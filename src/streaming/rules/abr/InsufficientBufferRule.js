@@ -92,7 +92,7 @@ function InsufficientBufferRule(config) {
         }
 
         if (lastBufferStateVO.state === BufferController.BUFFER_EMPTY) {
-            logger.info('Switch to index 0; buffer is empty.');
+            logger.debug('Switch to index 0; buffer is empty.');
             switchRequest.quality = 0;
             switchRequest.reason = 'InsufficientBufferRule: Buffer is empty';
         } else {

@@ -37,11 +37,6 @@ import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 
 const LIVE_UPDATE_PLAYBACK_TIME_INTERVAL_MS = 500;
-const DEFAULT_CATCHUP_PLAYBACK_RATE = 0.05;
-
-// Start catching up mechanism for low latency live streaming
-// when latency goes beyong targetDelay * (1 + LIVE_CATCHUP_START_THRESHOLD)
-const LIVE_CATCHUP_START_THRESHOLD = 0.35;
 
 function PlaybackController() {
 
@@ -57,7 +52,6 @@ function PlaybackController() {
         dashManifestModel,
         adapter,
         videoModel,
-        currentTime,
         liveStartTime,
         wallclockTimeIntervalId,
         commonEarliestTime,
@@ -68,11 +62,9 @@ function PlaybackController() {
         mediaPlayerModel,
         playOnceInitialized,
         lastLivePlaybackTime,
-        originalPlaybackRate,
         availabilityStartTime,
-        compatibleWithPreviousStream;
-
-    let catchUpPlaybackRate = DEFAULT_CATCHUP_PLAYBACK_RATE;
+        compatibleWithPreviousStream,
+        isLowLatencySeekingInProgress;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -83,6 +75,7 @@ function PlaybackController() {
         streamInfo = StreamInfo;
         addAllListeners();
         isDynamic = streamInfo.manifestInfo.isDynamic;
+        isLowLatencySeekingInProgress = false;
         liveStartTime = streamInfo.start;
         compatibleWithPreviousStream = compatible;
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
@@ -107,7 +100,7 @@ function PlaybackController() {
     }
 
     function getTimeToStreamEnd() {
-        return parseFloat(( getStreamEndTime() - getTime()).toFixed(5));
+        return parseFloat((getStreamEndTime() - getTime()).toFixed(5));
     }
 
     function getStreamEndTime() {
@@ -156,8 +149,30 @@ function PlaybackController() {
         }
     }
 
+    function seekToLive() {
+        const metrics = metricsModel.getReadOnlyMetricsFor(Constants.VIDEO) || metricsModel.getReadOnlyMetricsFor(Constants.AUDIO);
+        const DVRMetrics = dashMetrics.getCurrentDVRInfo(metrics);
+        const DVRWindow = DVRMetrics ? DVRMetrics.range : null;
+
+        seek(DVRWindow.end - mediaPlayerModel.getLiveDelay(), true, false);
+    }
+
     function getTime() {
         return streamInfo && videoModel ? videoModel.getTime() : null;
+    }
+
+    function getNormalizedTime() {
+        let t = getTime();
+
+        if (isDynamic && !isNaN(availabilityStartTime)) {
+            const timeOffset = availabilityStartTime / 1000;
+            // Fix current time for firefox and safari (returned as an absolute time)
+            if (t > timeOffset) {
+                t -= timeOffset;
+            }
+        }
+
+        return t;
     }
 
     function getPlaybackRate() {
@@ -186,19 +201,6 @@ function PlaybackController() {
 
     function getLiveStartTime() {
         return liveStartTime;
-    }
-
-    function setCatchUpPlaybackRate(value) {
-        catchUpPlaybackRate = value;
-
-        // If value == 0.0, deactivate catchup mechanism
-        if (value === 0.0 && getPlaybackRate() > 1.0) {
-            stopPlaybackCatchUp();
-        }
-    }
-
-    function getCatchUpPlaybackRate() {
-        return catchUpPlaybackRate;
     }
 
     /**
@@ -252,55 +254,21 @@ function PlaybackController() {
         if (!isDynamic || isNaN(availabilityStartTime)) {
             return NaN;
         }
-        let currentTime = getTime();
+        let currentTime = getNormalizedTime();
         if (isNaN(currentTime) || currentTime === 0) {
             return 0;
         }
 
-        const timeOffset = availabilityStartTime / 1000;
-        // Fix current time for firefox and safari (returned as an absolute time)
-        if (currentTime > availabilityStartTime / 1000) {
-            currentTime -= timeOffset;
-        }
-
         const now = new Date().getTime();
-        return ((Math.round(now - (currentTime * 1000 + availabilityStartTime))) / 1000).toFixed(3);
-    }
-
-    function startPlaybackCatchUp() {
-        if (videoModel) {
-            const playbackRate = 1 + getCatchUpPlaybackRate();
-            const currentRate = getPlaybackRate();
-            if (playbackRate !== currentRate) {
-                logger.info('Starting live catchup mechanism. Setting playback rate to', playbackRate);
-                originalPlaybackRate = currentRate;
-                videoModel.setPlaybackRate(playbackRate);
-
-                eventBus.trigger(Events.PLAYBACK_CATCHUP_START, { sender: instance });
-            }
-        }
-    }
-
-    function stopPlaybackCatchUp() {
-        if (videoModel) {
-            const playbackRate = originalPlaybackRate || 1;
-            if (playbackRate !== getPlaybackRate()) {
-                logger.info('Stopping live catchup mechanism. Setting playback rate to', playbackRate);
-                videoModel.setPlaybackRate(playbackRate);
-
-                eventBus.trigger(Events.PLAYBACK_CATCHUP_END, { sender: instance });
-            }
-        }
+        return Math.max(((now - availabilityStartTime - currentTime * 1000 ) / 1000).toFixed(3), 0);
     }
 
     function reset() {
-        currentTime = 0;
         liveStartTime = NaN;
         playOnceInitialized = false;
         commonEarliestTime = {};
         liveDelay = 0;
         availabilityStartTime = 0;
-        catchUpPlaybackRate = DEFAULT_CATCHUP_PLAYBACK_RATE;
         bufferedRange = {};
         if (videoModel) {
             eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
@@ -372,17 +340,16 @@ function PlaybackController() {
     function getStreamStartTime(ignoreStartOffset, liveEdge) {
         let presentationStartTime;
         let startTimeOffset = NaN;
-        const uriParameters = getStartTimeFromUriParameters();
 
-        if (uriParameters) {
-            if (!ignoreStartOffset) {
+        if (!ignoreStartOffset) {
+            const uriParameters = getStartTimeFromUriParameters();
+            if (uriParameters) {
                 startTimeOffset = !isNaN(uriParameters.fragS) ? uriParameters.fragS : uriParameters.fragT;
             } else {
-                startTimeOffset = streamInfo.start;
+                startTimeOffset = 0;
             }
         } else {
-            // handle case where no media fragments are parsed from the manifest URL
-            startTimeOffset = 0;
+            startTimeOffset = streamInfo.start;
         }
 
         if (isDynamic) {
@@ -446,8 +413,9 @@ function PlaybackController() {
 
     function updateCurrentTime() {
         if (isPaused() || !isDynamic || videoModel.getReadyState() === 0) return;
-        const currentTime = getTime();
+        const currentTime = getNormalizedTime();
         const actualTime = getActualPresentationTime(currentTime);
+
         const timeChanged = (!isNaN(actualTime) && actualTime !== currentTime);
         if (timeChanged) {
             seek(actualTime);
@@ -517,11 +485,9 @@ function PlaybackController() {
     }
 
     function onPlaybackTimeUpdated() {
-        const time = getTime();
-        currentTime = time;
         eventBus.trigger(Events.PLAYBACK_TIME_UPDATED, {
             timeToEnd: getTimeToStreamEnd(),
-            time: time
+            time: getTime()
         });
     }
 
@@ -563,7 +529,7 @@ function PlaybackController() {
     function onPlaybackEnded(e) {
         if (wallclockTimeIntervalId && e.isLast) {
             // PLAYBACK_ENDED was triggered elsewhere, react.
-            logger.info('[PlaybackController] onPlaybackEnded -- PLAYBACK_ENDED but native video element didn\'t fire ended');
+            logger.info('onPlaybackEnded -- PLAYBACK_ENDED but native video element didn\'t fire ended');
             videoModel.setCurrentTime(getStreamEndTime());
             pause();
             stopUpdatingWallclockTime();
@@ -602,25 +568,47 @@ function PlaybackController() {
     }
 
     function onPlaybackProgression() {
-        if (isDynamic && mediaPlayerModel.getLowLatencyEnabled() && getCatchUpPlaybackRate() > 0.0) {
-            if (!isCatchingUp() && needToCatchUp()) {
+        if (isDynamic && mediaPlayerModel.getLowLatencyEnabled() && mediaPlayerModel.getUseLowLatencyCatchUp() && !isPaused() && !isSeeking()) {
+            if (needToCatchUp()) {
                 startPlaybackCatchUp();
-            } else if (stopCatchingUp()) {
+            } else {
                 stopPlaybackCatchUp();
             }
         }
     }
 
     function needToCatchUp() {
-        return getCurrentLiveLatency() > (mediaPlayerModel.getLiveDelay() * (1 + LIVE_CATCHUP_START_THRESHOLD));
+        return getTime() > 0 &&
+            Math.abs(getCurrentLiveLatency() - mediaPlayerModel.getLiveDelay()) > mediaPlayerModel.getLowLatencyMinDrift();
     }
 
-    function stopCatchingUp() {
-        return getCurrentLiveLatency() <= (mediaPlayerModel.getLiveDelay() );
+    function startPlaybackCatchUp() {
+        if (videoModel) {
+            const deltaLatency = getCurrentLiveLatency() - mediaPlayerModel.getLiveDelay();
+            const d = deltaLatency * 5;
+            const s = 1 / (1 + Math.pow(Math.E, -d));
+            const newRate = 0.5 + s;
+
+            // don't change playbackrate for small variations (don't overload element with playbackrate changes)
+            if (Math.abs(videoModel.getPlaybackRate() - newRate) > 0.02) {
+                videoModel.setPlaybackRate(newRate);
+            }
+
+            if (mediaPlayerModel.getLowLatencyMaxDriftBeforeSeeking() > 0 && !isLowLatencySeekingInProgress &&
+                deltaLatency > mediaPlayerModel.getLowLatencyMaxDriftBeforeSeeking()) {
+                logger.info('Low Latency catchup mechanism. Latency too high, doing a seek to live point');
+                isLowLatencySeekingInProgress = true;
+                seekToLive();
+            } else {
+                isLowLatencySeekingInProgress = false;
+            }
+        }
     }
 
-    function isCatchingUp() {
-        return getCatchUpPlaybackRate() + 1 === getPlaybackRate();
+    function stopPlaybackCatchUp() {
+        if (videoModel) {
+            videoModel.setPlaybackRate(1.0);
+        }
     }
 
     function onBytesAppended(e) {
@@ -741,12 +729,12 @@ function PlaybackController() {
         getStreamStartTime: getStreamStartTime,
         getTimeToStreamEnd: getTimeToStreamEnd,
         getTime: getTime,
+        getNormalizedTime: getNormalizedTime,
         getPlaybackRate: getPlaybackRate,
         getPlayedRanges: getPlayedRanges,
         getEnded: getEnded,
         getIsDynamic: getIsDynamic,
         getStreamController: getStreamController,
-        setCatchUpPlaybackRate: setCatchUpPlaybackRate,
         setLiveStartTime: setLiveStartTime,
         getLiveStartTime: getLiveStartTime,
         computeLiveDelay: computeLiveDelay,

@@ -49,6 +49,7 @@ function HTTPLoader(cfg) {
     const metricsModel = cfg.metricsModel;
     const mediaPlayerModel = cfg.mediaPlayerModel;
     const requestModifier = cfg.requestModifier;
+    const boxParser = cfg.boxParser;
     const useFetch = cfg.useFetch || false;
 
     let instance;
@@ -218,11 +219,13 @@ function HTTPLoader(cfg) {
         let loader;
         if (useFetch && window.fetch && request.responseType === 'arraybuffer') {
             loader = FetchLoader(context).create({
-                requestModifier: requestModifier
+                requestModifier: requestModifier,
+                boxParser: boxParser
             });
         } else {
             loader = XHRLoader(context).create({
-                requestModifier: requestModifier
+                requestModifier: requestModifier,
+                boxParser: boxParser
             });
         }
 

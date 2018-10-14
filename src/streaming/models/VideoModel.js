@@ -198,7 +198,6 @@ function VideoModel() {
     }
 
     function addStalledStream(type) {
-
         let event;
 
         if (type === null || element.seeking || stalledStreams.indexOf(type) !== -1) {

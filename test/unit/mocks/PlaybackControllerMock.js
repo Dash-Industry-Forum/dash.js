@@ -56,6 +56,10 @@ class PlaybackControllerMock {
         return null;
     }
 
+    getNormalizedTime() {
+        return null;
+    }
+
     getPlaybackRate() {
         return null;
     }
@@ -97,14 +101,6 @@ class PlaybackControllerMock {
 
     getStreamStartTime() {
         return 0;
-    }
-
-    setCatchUpPlaybackRate(value) {
-        this.catchUpPlaybackRate = value;
-    }
-
-    getCatchUpPlaybackRate() {
-        return this.catchUpPlaybackRate;
     }
 }
 

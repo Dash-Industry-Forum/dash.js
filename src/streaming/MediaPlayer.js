@@ -85,7 +85,8 @@ function MediaPlayer() {
     const SOURCE_NOT_ATTACHED_ERROR = 'You must first call attachSource() with a valid source before calling this method';
     const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
     const MEDIA_PLAYER_BAD_ARGUMENT_ERROR = 'MediaPlayer Invalid Arguments!';
-    const PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR = 'Playback catchup rate invalid argument! Use a number from 0 to 0.2';
+    const PLAYBACK_LOW_LATENCY_MIN_DRIFT_BAD_ARGUMENT_ERROR = 'Playback minimum drift has an invalid value! Use a number from 0 to 0.5';
+    const PLAYBACK_LOW_LATENCY_MAX_DRIFT_BAD_ARGUMENT_ERROR = 'Playback maximum drift has an invalid value! Use a number greater or equal to 0';
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
@@ -489,36 +490,87 @@ function MediaPlayer() {
     }
 
     /**
-     * Use this method to set the catch up rate, as a percentage, for low latency live streams. In low latency mode,
-     * when measured latency is higher than the target one ({@link module:MediaPlayer#setLiveDelay setLiveDelay()}),
-     * dash.js increases playback rate the percentage defined with this method until target is reached.
+     * Set to false if you would like to disable the catch-up mechanism applied to low latency live streams
+     * when estimated latency minus target one is higher than a defined limit (({@link module:MediaPlayer#setLowLatencyMinDrift setLowLatencyMinDrift()}))
      *
-     * Valid values for catch up rate are in range 0-20%. Set it to 0% to turn off live catch up feature.
+     * @param {boolean} enable - Will toggle if feature is enabled. True to enable, False to disable.
+     * @default enable = True
+     * @memberof module:MediaPlayer
+     * @instance
+     *
+     */
+    function enableLowLatencyCatchUp(enable) {
+        mediaPlayerModel.setUseLowLatencyCatchUp(enable);
+    }
+
+    /**
+     * Use this method to set the minimum latency deviation allowed before activating catch-up mechanism. In low latency mode,
+     * when the difference between the measured latency and the target one ({@link module:MediaPlayer#setLiveDelay setLiveDelay()}),
+     * as an absolute number, is higher than the one sets with this method, then dash.js increases/decreases
+     * playback rate until target latency is reached.
+     *
+     * LowLatencyMinDrift should be provided in seconds, and it uses values between 0.0 and 0.5.
      *
      * Note: Catch-up mechanism is only applied when playing low latency live streams.
      *
-     * @param {number} value Percentage in which playback rate is increased when live catch up mechanism is activated.
+     * @param {number} value Maximum difference between measured latency and the target one before applying playback rate modifications.
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#setLiveDelay setLiveDelay()}
      * @default {number} 0.05
      * @instance
      */
-    function setCatchUpPlaybackRate(value) {
-        if ( typeof value !== 'number' || isNaN(value) || value < 0.0 || value > 0.20) {
-            throw PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR;
+    function setLowLatencyMinDrift(value) {
+        if ( typeof value !== 'number' || isNaN(value) || value < 0.0 || value > 0.50) {
+            throw PLAYBACK_LOW_LATENCY_MIN_DRIFT_BAD_ARGUMENT_ERROR;
         }
-        playbackController.setCatchUpPlaybackRate(value);
+        mediaPlayerModel.setLowLatencyMinDrift(value);
     }
 
     /**
-     * Returns the current catchup playback rate.
+     * Returns the current latency minimum allowed drift.
      * @returns {number}
-     * @see {@link module:MediaPlayer#setCatchUpPlaybackRate setCatchUpPlaybackRate()}
+     * @see {@link module:MediaPlayer#setLowLatencyMinDrift setLowLatencyMinDrift()}
      * @memberof module:MediaPlayer
      * @instance
      */
-    function getCatchUpPlaybackRate() {
-        return playbackController.getCatchUpPlaybackRate();
+    function getLowLatencyMinDrift() {
+        return mediaPlayerModel.getLowLatencyMinDrift();
+    }
+
+    /**
+     * Use this method to set the maxium latency deviation allowed before dash.js to do a seeking to live position. In low latency mode,
+     * when the difference between the measured latency and the target one ({@link module:MediaPlayer#setLiveDelay setLiveDelay()}),
+     * as an absolute number, is higher than the one sets with this method, then dash.js does a seek to live edge position minus
+     * the target live delay.
+     *
+     * LowLatencyMaxDriftBeforeSeeking should be provided in seconds. If 0, then seeking operations won't be used for
+     * fixing latency deviations.
+     *
+     * Note: Catch-up mechanism is only applied when playing low latency live streams.
+     *
+     * @param {number} value Maximum difference between measured latency and the target one before using seek to
+     * fix drastically live latency deviations.
+     * @memberof module:MediaPlayer
+     * @see {@link module:MediaPlayer#setLiveDelay setLiveDelay()}
+     * @default {number} 0
+     * @instance
+     */
+    function setLowLatencyMaxDriftBeforeSeeking(value) {
+        if ( typeof value !== 'number' || isNaN(value) || value < 0) {
+            throw PLAYBACK_LOW_LATENCY_MAX_DRIFT_BAD_ARGUMENT_ERROR;
+        }
+        mediaPlayerModel.setLowLatencyMaxDriftBeforeSeeking(value);
+    }
+
+    /**
+     * Returns the maximum latency drift before applying a seek operation to reduce the latency.
+     * @returns {number}
+     * @see {@link module:MediaPlayer#setLowLatencyMaxDriftBeforeSeeking setLowLatencyMaxDriftBeforeSeeking()}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getLowLatencyMaxDriftBeforeSeeking() {
+        return mediaPlayerModel.getLowLatencyMaxDriftBeforeSeeking();
     }
 
     /**
@@ -2909,8 +2961,6 @@ function MediaPlayer() {
         seek: seek,
         setPlaybackRate: setPlaybackRate,
         getPlaybackRate: getPlaybackRate,
-        setCatchUpPlaybackRate: setCatchUpPlaybackRate,
-        getCatchUpPlaybackRate: getCatchUpPlaybackRate,
         setMute: setMute,
         isMuted: isMuted,
         setVolume: setVolume,
@@ -3022,8 +3072,13 @@ function MediaPlayer() {
         getJumpGaps: getJumpGaps,
         setSmallGapLimit: setSmallGapLimit,
         getSmallGapLimit: getSmallGapLimit,
-        getLowLatencyEnabled: getLowLatencyEnabled,
         setLowLatencyEnabled: setLowLatencyEnabled,
+        getLowLatencyEnabled: getLowLatencyEnabled,
+        enableLowLatencyCatchUp: enableLowLatencyCatchUp,
+        setLowLatencyMinDrift: setLowLatencyMinDrift,
+        getLowLatencyMinDrift: getLowLatencyMinDrift,
+        setLowLatencyMaxDriftBeforeSeeking: setLowLatencyMaxDriftBeforeSeeking,
+        getLowLatencyMaxDriftBeforeSeeking: getLowLatencyMaxDriftBeforeSeeking,
         setManifestUpdateRetryInterval: setManifestUpdateRetryInterval,
         getManifestUpdateRetryInterval: getManifestUpdateRetryInterval,
         setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,

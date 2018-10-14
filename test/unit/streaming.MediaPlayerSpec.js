@@ -15,7 +15,7 @@ const expect = require('chai').expect;
 const ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the video element before calling this method';
 const PLAYBACK_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a valid source and view before calling this method';
 const STREAMING_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a source before calling this method';
-const PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR = 'Playback catchup rate invalid argument! Use a number from 0 to 0.2';
+const PLAYBACK_LOW_LATENCY_MIN_DRIFT_BAD_ARGUMENT_ERROR = 'Playback minimum drift has an invalid value! Use a number from 0 to 0.5';
 const MEDIA_PLAYER_BAD_ARGUMENT_ERROR = 'MediaPlayer Invalid Arguments!';
 const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
 
@@ -337,26 +337,38 @@ describe('MediaPlayer', function () {
                 expect(duration).to.equal(4);
             });
 
-            it('Method setCatchUpPlaybackRate should change catchUpPlaybackRate', function () {
-                let rate = player.getCatchUpPlaybackRate();
-                expect(rate).to.equal(0.05);
+            it('Method setLowLatencyMinDrift should change lowLatencyMinDrift', function () {
+                let rate = player.getLowLatencyMinDrift();
+                expect(rate).to.equal(0.02);
 
-                player.setCatchUpPlaybackRate(0.2);
-                rate = player.getCatchUpPlaybackRate();
-                expect(rate).to.equal(0.2);
+                player.setLowLatencyMinDrift(0.1);
+                rate = player.getLowLatencyMinDrift();
+                expect(rate).to.equal(0.1);
 
-                player.setCatchUpPlaybackRate(0.0);
-                rate = player.getCatchUpPlaybackRate();
+                player.setLowLatencyMinDrift(0.0);
+                rate = player.getLowLatencyMinDrift();
                 expect(rate).to.equal(0.0);
             });
 
+            it('Method enableLowLatencyCatchUp should enable/disable live catchup mechanism', function () {
+                player.enableLowLatencyCatchUp(false);
+
+                let enableLowLatency = mediaPlayerModel.getUseLowLatencyCatchUp();
+                expect(enableLowLatency).to.equal(false);
+
+                player.enableLowLatencyCatchUp(true);
+                enableLowLatency = mediaPlayerModel.getUseLowLatencyCatchUp();
+
+                expect(enableLowLatency).to.equal(true);
+            });
+
             it('Method setCatchUpPlaybackRate should throw an exception if given bad values', function () {
-                expect(() => {player.setCatchUpPlaybackRate(0.9);}).to.throw(PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR);
-                expect(() => {player.setCatchUpPlaybackRate(13);}).to.throw(PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR);
-                expect(() => {player.setCatchUpPlaybackRate(0.1);}).to.not.throw(PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR);
-                expect(() => {player.setCatchUpPlaybackRate('string');}).to.throw(PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR);
-                expect(() => {player.setCatchUpPlaybackRate(true);}).to.throw(PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR);
-                expect(() => {player.setCatchUpPlaybackRate(false);}).to.throw(PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR);
+                expect(() => {player.setLowLatencyMinDrift(0.9);}).to.throw(PLAYBACK_LOW_LATENCY_MIN_DRIFT_BAD_ARGUMENT_ERROR);
+                expect(() => {player.setLowLatencyMinDrift(13);}).to.throw(PLAYBACK_LOW_LATENCY_MIN_DRIFT_BAD_ARGUMENT_ERROR);
+                expect(() => {player.setLowLatencyMinDrift(0.1);}).to.not.throw(PLAYBACK_LOW_LATENCY_MIN_DRIFT_BAD_ARGUMENT_ERROR);
+                expect(() => {player.setLowLatencyMinDrift('string');}).to.throw(PLAYBACK_LOW_LATENCY_MIN_DRIFT_BAD_ARGUMENT_ERROR);
+                expect(() => {player.setLowLatencyMinDrift(true);}).to.throw(PLAYBACK_LOW_LATENCY_MIN_DRIFT_BAD_ARGUMENT_ERROR);
+                expect(() => {player.setLowLatencyMinDrift(false);}).to.throw(PLAYBACK_LOW_LATENCY_MIN_DRIFT_BAD_ARGUMENT_ERROR);
             });
 
             it('Method setUseDeadTimeLatencyForAbr should throw an exception if given bad values', function () {

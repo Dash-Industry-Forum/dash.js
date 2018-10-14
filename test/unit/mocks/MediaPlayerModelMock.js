@@ -76,6 +76,8 @@ const SMALL_GAP_LIMIT = 0.8;
 
 const MANIFEST_UPDATE_RETRY_INTERVAL = 100;
 
+const LOW_LATENCY_CATCH_UP_MIN_DRIFT = 0.02;
+
 class MediaPlayerModelMock {
 
     // Constants
@@ -158,8 +160,13 @@ class MediaPlayerModelMock {
     static get WALLCLOCK_TIME_UPDATE_INTERVAL() {
         return WALLCLOCK_TIME_UPDATE_INTERVAL;
     }
+
     static get DEFAULT_XHR_WITH_CREDENTIALS() {
         return DEFAULT_XHR_WITH_CREDENTIALS;
+    }
+
+    static get LOW_LATENCY_CATCH_UP_MIN_DRIFT() {
+        return LOW_LATENCY_CATCH_UP_MIN_DRIFT;
     }
 
     constructor() {
@@ -212,6 +219,8 @@ class MediaPlayerModelMock {
         this.jumpGaps = false;
         this.smallGapLimit = SMALL_GAP_LIMIT;
         this.lowLatencyEnabled = false;
+        this.useLowLatencyCatchUp = true;
+        this.liveCatchUpMinDrift = LOW_LATENCY_CATCH_UP_MIN_DRIFT;
         this.manifestUpdateRetryInterval = MANIFEST_UPDATE_RETRY_INTERVAL;
     }
 
@@ -501,6 +510,22 @@ class MediaPlayerModelMock {
 
     getLowLatencyEnabled() {
         return this.lowLatencyEnabled;
+    }
+
+    setLowLatencyMinDrift(value) {
+        this.liveCatchUpMinDrift = value;
+    }
+
+    getLowLatencyMinDrift() {
+        return this.liveCatchUpMinDrift;
+    }
+
+    setUseLowLatencyCatchUp(value) {
+        this.useLowLatencyCatchUp = value;
+    }
+
+    getUseLowLatencyCatchUp() {
+        return this.useLowLatencyCatchUp;
     }
 
     reset() {
