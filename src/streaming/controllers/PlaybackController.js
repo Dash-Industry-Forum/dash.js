@@ -52,6 +52,7 @@ function PlaybackController() {
         dashManifestModel,
         adapter,
         videoModel,
+        timelineConverter,
         liveStartTime,
         wallclockTimeIntervalId,
         commonEarliestTime,
@@ -64,10 +65,13 @@ function PlaybackController() {
         lastLivePlaybackTime,
         availabilityStartTime,
         compatibleWithPreviousStream,
-        isLowLatencySeekingInProgress;
+        isLowLatencySeekingInProgress,
+        playbackStalled,
+        minPlaybackRateChange;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
+
         reset();
     }
 
@@ -76,8 +80,16 @@ function PlaybackController() {
         addAllListeners();
         isDynamic = streamInfo.manifestInfo.isDynamic;
         isLowLatencySeekingInProgress = false;
+        playbackStalled = false;
         liveStartTime = streamInfo.start;
         compatibleWithPreviousStream = compatible;
+
+        const ua = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '';
+
+        // Detect safari browser (special behavior for low latency streams)
+        const isSafari = /safari/.test(ua) && !/chrome/.test(ua);
+        minPlaybackRateChange = isSafari ? 0.25 : 0.02;
+
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
@@ -259,8 +271,8 @@ function PlaybackController() {
             return 0;
         }
 
-        const now = new Date().getTime();
-        return Math.max(((now - availabilityStartTime - currentTime * 1000 ) / 1000).toFixed(3), 0);
+        const now = new Date().getTime() + timelineConverter.getClientTimeOffset() * 1000;
+        return Math.max(((now - availabilityStartTime - currentTime * 1000) / 1000).toFixed(3), 0);
     }
 
     function reset() {
@@ -313,6 +325,9 @@ function PlaybackController() {
         }
         if (config.videoModel) {
             videoModel = config.videoModel;
+        }
+        if (config.timelineConverter) {
+            timelineConverter = config.timelineConverter;
         }
     }
 
@@ -577,6 +592,20 @@ function PlaybackController() {
         }
     }
 
+    function getBufferLevel() {
+        let bufferLevel = null;
+        streamController.getActiveStreamProcessors().forEach(p => {
+            const bl = p.getBufferLevel();
+            if (bufferLevel === null) {
+                bufferLevel = bl;
+            } else {
+                bufferLevel = Math.min(bufferLevel, bl);
+            }
+        });
+
+        return bufferLevel;
+    }
+
     function needToCatchUp() {
         return getTime() > 0 &&
             Math.abs(getCurrentLiveLatency() - mediaPlayerModel.getLiveDelay()) > mediaPlayerModel.getLowLatencyMinDrift();
@@ -584,13 +613,26 @@ function PlaybackController() {
 
     function startPlaybackCatchUp() {
         if (videoModel) {
-            const deltaLatency = getCurrentLiveLatency() - mediaPlayerModel.getLiveDelay();
+            const liveDelay = mediaPlayerModel.getLiveDelay();
+            const deltaLatency = getCurrentLiveLatency() - liveDelay;
             const d = deltaLatency * 5;
             const s = 1 / (1 + Math.pow(Math.E, -d));
-            const newRate = 0.5 + s;
+            let newRate = 0.5 + s;
+
+            // take into account situations in which there are buffer stalls,
+            // in which increasing playbackRate to reach target latency will
+            // just cause more and more stall situations
+            if (playbackStalled) {
+                const bufferLevel = getBufferLevel();
+                if (bufferLevel > liveDelay / 2) {
+                    playbackStalled = false;
+                } else if (deltaLatency > 0) {
+                    newRate = 1.0;
+                }
+            }
 
             // don't change playbackrate for small variations (don't overload element with playbackrate changes)
-            if (Math.abs(videoModel.getPlaybackRate() - newRate) > 0.02) {
+            if (Math.abs(videoModel.getPlaybackRate() - newRate) > minPlaybackRateChange) {
                 videoModel.setPlaybackRate(newRate);
             }
 
@@ -679,7 +721,15 @@ function PlaybackController() {
     function onBufferLevelStateChanged(e) {
         // do not stall playback when get an event from Stream that is not active
         if (e.streamInfo.id !== streamInfo.id) return;
-        videoModel.setStallState(e.mediaType, e.state === BufferController.BUFFER_EMPTY);
+
+        if (e.state === BufferController.BUFFER_EMPTY && !isSeeking()) {
+            if (!playbackStalled) {
+                playbackStalled = true;
+                if (!mediaPlayerModel.getLowLatencyEnabled()) {
+                    stopPlaybackCatchUp();
+                }
+            }
+        }
     }
 
     function onPlaybackStalled(e) {

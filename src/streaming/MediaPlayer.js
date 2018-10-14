@@ -2779,7 +2779,8 @@ function MediaPlayer() {
             mediaPlayerModel: mediaPlayerModel,
             dashManifestModel: dashManifestModel,
             adapter: adapter,
-            videoModel: videoModel
+            videoModel: videoModel,
+            timelineConverter: timelineConverter
         });
 
         abrController.setConfig({
