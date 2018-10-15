@@ -287,6 +287,23 @@ describe('MediaPlayer', function () {
                 expect(player.setUsePixelRatioInLimitBitrateByPortal.bind(player, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
             });
 
+            it('should not setLimitBitrateByPortal value if it\'s not a boolean type', function () {
+                expect(player.setLimitBitrateByPortal.bind(player, 12)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setLimitBitrateByPortal.bind(player, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+            });
+
+            it('should not setInitialRepresentationRatioFor value if type is not Video or Audio', function () {
+                expect(player.setInitialRepresentationRatioFor.bind(player, 12, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setInitialRepresentationRatioFor.bind(player, 'string', 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+            });
+
+            it('should not setMaxAllowedRepresentationRatioFor value if it\'s not a number type or if type is not Video or Audio', function () {
+                expect(player.setMaxAllowedRepresentationRatioFor.bind(player, 12, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setMaxAllowedRepresentationRatioFor.bind(player, 'string', 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setMaxAllowedRepresentationRatioFor.bind(player, Constants.VIDEO, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setMaxAllowedRepresentationRatioFor.bind(player, Constants.VIDEO, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+            });
+
             it('Method isDynamic should get dynamic value', function () {
                 let isDynamic = player.isDynamic();
                 expect(isDynamic).to.be.false; // jshint ignore:line

@@ -944,6 +944,8 @@ function MediaPlayer() {
      * @instance
      */
     function setMaxAllowedRepresentationRatioFor(type, value) {
+        checkParameterType(value, 'number');
+        checkIsVideoOrAudioType(type);
         const s = { streaming: { abr: { maxRepresentationRatio: {}}}};
         s.streaming.abr.maxRepresentationRatio[type] = value;
         settings.update(s);
@@ -1050,6 +1052,7 @@ function MediaPlayer() {
      * @instance
      */
     function setLimitBitrateByPortal(value) {
+        checkParameterType(value, 'boolean');
         const s = { streaming: { abr: { limitBitrateByPortal: value }}};
         settings.update(s);
     }
@@ -1114,6 +1117,7 @@ function MediaPlayer() {
      * @instance
      */
     function setInitialRepresentationRatioFor(type, value) {
+        checkIsVideoOrAudioType(type);
         const s = { streaming: { abr: { initialRepresentationRatio: {}}}};
         s.streaming.abr.initialRepresentationRatio[type] = value;
         settings.update(s);
