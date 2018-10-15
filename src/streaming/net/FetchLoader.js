@@ -110,7 +110,8 @@ function FetchLoader(cfg) {
                     httpRequest.response.response = buffer;
                     const event = {
                         loaded: buffer.byteLength,
-                        total: buffer.byteLength
+                        total: buffer.byteLength,
+                        stream: false
                     };
                     httpRequest.progress(event);
                     httpRequest.onload();
@@ -138,7 +139,8 @@ function FetchLoader(cfg) {
                             loaded: bytesReceived,
                             total: isNaN(totalBytes) ? bytesReceived : totalBytes,
                             lengthComputable: true,
-                            time: calculateDownloadedTime(downLoadedData, bytesReceived)
+                            time: calculateDownloadedTime(downLoadedData, bytesReceived),
+                            stream: true
                         });
 
                         httpRequest.response.response = remaining.buffer;

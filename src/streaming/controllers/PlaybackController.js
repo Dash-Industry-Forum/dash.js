@@ -92,6 +92,7 @@ function PlaybackController() {
 
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
+        eventBus.on(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
         eventBus.on(Events.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, this);
         eventBus.on(Events.PLAYBACK_PROGRESS, onPlaybackProgression, this);
@@ -286,6 +287,7 @@ function PlaybackController() {
             eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
             eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
+            eventBus.off(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
             eventBus.off(Events.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, this);
             eventBus.off(Events.PLAYBACK_PROGRESS, onPlaybackProgression, this);
             eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
@@ -717,6 +719,17 @@ function PlaybackController() {
                     seek(earliestTime, false, true);
                 }
                 commonEarliestTime[streamInfo.id].started = true;
+            }
+        }
+    }
+
+    function onFragmentLoadProgress(e) {
+        // If using fetch and stream mode is not available, readjust live latency so it is 20% higher than segment duration
+        if (e.stream === false && mediaPlayerModel.getLowLatencyEnabled() && !isNaN(e.request.duration)) {
+            const minDelay = 1.2 * e.request.duration;
+            if (minDelay > mediaPlayerModel.getLiveDelay()) {
+                logger.warn('Browser does not support fetch API with StreamReader. Increasing live delay to be 20% higher than segment duration:', minDelay.toFixed(2));
+                mediaPlayerModel.setLiveDelay(minDelay);
             }
         }
     }

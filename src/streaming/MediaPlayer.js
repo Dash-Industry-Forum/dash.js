@@ -533,7 +533,7 @@ function MediaPlayer() {
     }
 
     /**
-     * Use this method to set the maxium latency deviation allowed before dash.js to do a seeking to live position. In low latency mode,
+     * Use this method to set the maximum latency deviation allowed before dash.js to do a seeking to live position. In low latency mode,
      * when the difference between the measured latency and the target one ({@link module:MediaPlayer#setLiveDelay setLiveDelay()}),
      * as an absolute number, is higher than the one sets with this method, then dash.js does a seek to live edge position minus
      * the target live delay.

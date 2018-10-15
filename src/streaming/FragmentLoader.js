@@ -100,7 +100,8 @@ function FragmentLoader(config) {
                 request: request,
                 progress: function (event) {
                     eventBus.trigger(Events.LOADING_PROGRESS, {
-                        request: request
+                        request: request,
+                        stream: event.stream
                     });
                     if (event.data) {
                         eventBus.trigger(Events.LOADING_DATA_PROGRESS, {
