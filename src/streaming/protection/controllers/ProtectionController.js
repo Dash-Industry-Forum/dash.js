@@ -40,6 +40,7 @@ const NEEDKEY_BEFORE_INITIALIZE_TIMEOUT = 500;
 
 const LICENSE_SERVER_REQUEST_RETRIES = 3;
 const LICENSE_SERVER_REQUEST_RETRY_INTERVAL = 1000;
+const LICENSE_SERVER_REQUEST_DEFAULT_TIMEOUT = 8000;
 
 /**
  * @module ProtectionController
@@ -641,19 +642,22 @@ function ProtectionController(config) {
         const reqPayload = keySystem.getLicenseRequestFromMessage(message);
         const reqMethod = licenseServerData.getHTTPMethod(messageType);
         const responseType = licenseServerData.getResponseType(keySystemString, messageType);
+        const timeout = protData && !isNaN(protData.httpTimeout) ? protData.httpTimeout : LICENSE_SERVER_REQUEST_DEFAULT_TIMEOUT;
 
         doLicenseRequest(url, reqHeaders, reqMethod, responseType, withCredentials, reqPayload,
-            LICENSE_SERVER_REQUEST_RETRIES, onLoad, onAbort, onError);
+            LICENSE_SERVER_REQUEST_RETRIES, timeout, onLoad, onAbort, onError);
     }
 
     // Implement license requests with a retry mechanism to avoid temporary network issues to affect playback experience
-    function doLicenseRequest(url, headers, method, responseType, withCredentials, payload, retriesCount, onLoad, onAbort, onError) {
+    function doLicenseRequest(url, headers, method, responseType, withCredentials, payload, retriesCount, timeout, onLoad, onAbort, onError) {
         const xhr = new XMLHttpRequest();
 
         xhr.open(method, url, true);
         xhr.responseType = responseType;
         xhr.withCredentials = withCredentials;
-
+        if (timeout > 0) {
+            xhr.timeout = timeout;
+        }
         for (const key in headers) {
             xhr.setRequestHeader(key, headers[key]);
         }
@@ -663,7 +667,7 @@ function ProtectionController(config) {
             retriesCount--;
             setTimeout(function () {
                 doLicenseRequest(url, headers, method, responseType, withCredentials, payload,
-                    retriesCount, onLoad, onAbort, onError);
+                    retriesCount, timeout, onLoad, onAbort, onError);
             }, LICENSE_SERVER_REQUEST_RETRY_INTERVAL);
         };
 
