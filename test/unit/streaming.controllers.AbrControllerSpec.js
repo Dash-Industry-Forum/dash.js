@@ -8,6 +8,8 @@ import DashManifestModel from '../../src/dash/models/DashManifestModel';
 import ManifestModel from '../../src/streaming/models/ManifestModel';
 import TimelineConverter from '../../src/dash/utils/TimelineConverter';
 import BitrateInfo from '../../src/streaming/vo/BitrateInfo';
+import Constants from '../../src/streaming/constants/Constants';
+
 import DashManifestModelMock from './mocks/DashManifestModelMock';
 import VideoModelMock from './mocks/VideoModelMock';
 
@@ -54,7 +56,7 @@ describe('AbrController', function () {
     });
 
     it('should return null when attempting to get abandonment state when abandonmentStateDict array is empty', function () {
-        const state = abrCtrl.getAbandonmentStateFor('audio');
+        const state = abrCtrl.getAbandonmentStateFor(Constants.AUDIO);
         expect(state).to.be.null;    // jshint ignore:line
     });
 
@@ -84,25 +86,30 @@ describe('AbrController', function () {
     });
 
     it('should not set setAutoSwitchBitrateFor value if it\'s not a boolean type', function () {
-        let autoSwitchBitrateForVideo = abrCtrl.getAutoSwitchBitrateFor('video');
+        let autoSwitchBitrateForVideo = abrCtrl.getAutoSwitchBitrateFor(Constants.VIDEO);
         expect(autoSwitchBitrateForVideo).to.be.true; // jshint ignore:line
 
-        abrCtrl.setAutoSwitchBitrateFor('video', 'string');
-        autoSwitchBitrateForVideo = abrCtrl.getAutoSwitchBitrateFor('video');
+        expect(abrCtrl.setAutoSwitchBitrateFor.bind(abrCtrl, Constants.VIDEO, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
 
-        expect(autoSwitchBitrateForVideo).to.be.true; // jshint ignore:line
-
-        abrCtrl.setAutoSwitchBitrateFor('video', 1);
-        autoSwitchBitrateForVideo = abrCtrl.getAutoSwitchBitrateFor('video');
+        autoSwitchBitrateForVideo = abrCtrl.getAutoSwitchBitrateFor(Constants.VIDEO);
 
         expect(autoSwitchBitrateForVideo).to.be.true; // jshint ignore:line
 
-        abrCtrl.setAutoSwitchBitrateFor('video', false);
-        autoSwitchBitrateForVideo = abrCtrl.getAutoSwitchBitrateFor('video');
+        expect(abrCtrl.setAutoSwitchBitrateFor.bind(abrCtrl, Constants.VIDEO, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        autoSwitchBitrateForVideo = abrCtrl.getAutoSwitchBitrateFor(Constants.VIDEO);
+
+        expect(autoSwitchBitrateForVideo).to.be.true; // jshint ignore:line
+
+        abrCtrl.setAutoSwitchBitrateFor(Constants.VIDEO, false);
+        autoSwitchBitrateForVideo = abrCtrl.getAutoSwitchBitrateFor(Constants.VIDEO);
 
         expect(autoSwitchBitrateForVideo).to.be.false; // jshint ignore:line
     });
 
+    it('Method setUseDeadTimeLatency should throw an exception if given bad values', function () {
+        expect(abrCtrl.setUseDeadTimeLatency.bind(abrCtrl, 13)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(abrCtrl.setUseDeadTimeLatency.bind(abrCtrl, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+    });
 
     it('should update top quality index', function () {
         const expectedTopQuality = representationCount - 1;

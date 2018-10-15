@@ -40,8 +40,8 @@ function ThumbnailController(config) {
 
     const context = this.context;
 
-    let instance;
-    let thumbnailTracks;
+    let instance,
+        thumbnailTracks;
 
     function setup() {
         reset();
