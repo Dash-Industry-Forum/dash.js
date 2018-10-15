@@ -86,6 +86,14 @@
           }
         },
         {
+          "url": "https://akamaibroadcasteruseast.akamaized.net/cmaf/live/657078/akasource/out.mpd",
+          "name": "Akamai Low Latency Stream",
+          "bufferConfig" : {
+            "lowLatencyMode": true,
+            "liveDelay": 3
+          }
+        },
+        {
           "url": "http://24x7dash-i.akamaihd.net/dash/live/900080/dash-demo/dash.mpd",
           "name": "Akamai 24x7 reference stream - segmentTemplate"
         },
