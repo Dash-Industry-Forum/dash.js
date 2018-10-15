@@ -275,8 +275,10 @@ function MediaPlayerModel() {
     }
 
     function getStableBufferTime() {
-        const result = !isNaN(stableBufferTime) ? stableBufferTime : fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
-        return getLowLatencyEnabled() ? result / LOW_LATENCY_REDUCTION_FACTOR : result;
+        if (getLowLatencyEnabled()) {
+            return getLiveDelay() * 0.6;
+        }
+        return !isNaN(stableBufferTime) ? stableBufferTime : fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
     }
 
     function setBufferTimeAtTopQuality(value) {
@@ -510,7 +512,6 @@ function MediaPlayerModel() {
         if (typeof value !== 'boolean') {
             return;
         }
-
         useLowLatencyCatchUp = value;
     }
 

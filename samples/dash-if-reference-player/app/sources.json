@@ -74,7 +74,7 @@
           "name": "Low Latency (Single-Rate) (livesim-chunked)",
           "bufferConfig" : {
             "lowLatencyMode": true,
-            "liveDelay": 2.8
+            "liveDelay": 4
           }
         },
         {
@@ -82,7 +82,7 @@
           "name": "Low Latency (Multi-Rate) (livesim-chunked)",
           "bufferConfig" : {
             "lowLatencyMode": true,
-            "liveDelay": 2.8
+            "liveDelay": 4
           }
         },
         {
