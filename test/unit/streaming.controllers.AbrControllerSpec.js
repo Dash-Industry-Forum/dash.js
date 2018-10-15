@@ -8,8 +8,11 @@ import DashManifestModel from '../../src/dash/models/DashManifestModel';
 import ManifestModel from '../../src/streaming/models/ManifestModel';
 import TimelineConverter from '../../src/dash/utils/TimelineConverter';
 import BitrateInfo from '../../src/streaming/vo/BitrateInfo';
+import Constants from '../../src/streaming/constants/Constants';
+
 import DashManifestModelMock from './mocks/DashManifestModelMock';
 import VideoModelMock from './mocks/VideoModelMock';
+import DomStorageMock from './mocks/DomStorageMock';
 
 const expect = require('chai').expect;
 
@@ -37,6 +40,7 @@ describe('AbrController', function () {
     const manifestModel = ManifestModel().getInstance();
     const dashManifestModelMock = new DashManifestModelMock();
     const videoModelMock = new VideoModelMock();
+    const domStorageMock = new DomStorageMock();
 
     beforeEach(function () {
         abrCtrl.setConfig({
@@ -44,7 +48,8 @@ describe('AbrController', function () {
             dashMetrics: dashMetrics,
             videoModel: videoModelMock,
             manifestModel: manifestModel,
-            dashManifestModel: dashManifestModelMock
+            dashManifestModel: dashManifestModelMock,
+            domStorage: domStorageMock
         });
         abrCtrl.registerStreamType('video', streamProcessor);
     });
@@ -54,7 +59,7 @@ describe('AbrController', function () {
     });
 
     it('should return null when attempting to get abandonment state when abandonmentStateDict array is empty', function () {
-        const state = abrCtrl.getAbandonmentStateFor('audio');
+        const state = abrCtrl.getAbandonmentStateFor(Constants.AUDIO);
         expect(state).to.be.null;    // jshint ignore:line
     });
 
@@ -67,12 +72,12 @@ describe('AbrController', function () {
         let usePixelRatioInLimitBitrateByPortal = abrCtrl.getUsePixelRatioInLimitBitrateByPortal();
         expect(usePixelRatioInLimitBitrateByPortal).to.be.false; // jshint ignore:line
 
-        abrCtrl.setUsePixelRatioInLimitBitrateByPortal('string');
+        expect(abrCtrl.setUsePixelRatioInLimitBitrateByPortal.bind(abrCtrl, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
         usePixelRatioInLimitBitrateByPortal = abrCtrl.getUsePixelRatioInLimitBitrateByPortal();
 
         expect(usePixelRatioInLimitBitrateByPortal).to.be.false; // jshint ignore:line
 
-        abrCtrl.setUsePixelRatioInLimitBitrateByPortal(1);
+        expect(abrCtrl.setUsePixelRatioInLimitBitrateByPortal.bind(abrCtrl, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
         usePixelRatioInLimitBitrateByPortal = abrCtrl.getUsePixelRatioInLimitBitrateByPortal();
 
         expect(usePixelRatioInLimitBitrateByPortal).to.be.false; // jshint ignore:line
@@ -83,26 +88,82 @@ describe('AbrController', function () {
         expect(usePixelRatioInLimitBitrateByPortal).to.be.true; // jshint ignore:line
     });
 
+    it('should not set setLimitBitrateByPortal value if it\'s not a boolean type', function () {
+        let limitBitrateByPortal = abrCtrl.getLimitBitrateByPortal();
+        expect(limitBitrateByPortal).to.be.false; // jshint ignore:line
+
+        expect(abrCtrl.setLimitBitrateByPortal.bind(abrCtrl, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        limitBitrateByPortal = abrCtrl.getLimitBitrateByPortal();
+
+        expect(limitBitrateByPortal).to.be.false; // jshint ignore:line
+
+        expect(abrCtrl.setLimitBitrateByPortal.bind(abrCtrl, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        limitBitrateByPortal = abrCtrl.getLimitBitrateByPortal();
+
+        expect(limitBitrateByPortal).to.be.false; // jshint ignore:line
+
+        abrCtrl.setLimitBitrateByPortal(true);
+        limitBitrateByPortal = abrCtrl.getLimitBitrateByPortal();
+
+        expect(limitBitrateByPortal).to.be.true; // jshint ignore:line
+    });
+
     it('should not set setAutoSwitchBitrateFor value if it\'s not a boolean type', function () {
-        let autoSwitchBitrateForVideo = abrCtrl.getAutoSwitchBitrateFor('video');
+        let autoSwitchBitrateForVideo = abrCtrl.getAutoSwitchBitrateFor(Constants.VIDEO);
         expect(autoSwitchBitrateForVideo).to.be.true; // jshint ignore:line
 
-        abrCtrl.setAutoSwitchBitrateFor('video', 'string');
-        autoSwitchBitrateForVideo = abrCtrl.getAutoSwitchBitrateFor('video');
+        expect(abrCtrl.setAutoSwitchBitrateFor.bind(abrCtrl, Constants.VIDEO, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
 
-        expect(autoSwitchBitrateForVideo).to.be.true; // jshint ignore:line
-
-        abrCtrl.setAutoSwitchBitrateFor('video', 1);
-        autoSwitchBitrateForVideo = abrCtrl.getAutoSwitchBitrateFor('video');
+        autoSwitchBitrateForVideo = abrCtrl.getAutoSwitchBitrateFor(Constants.VIDEO);
 
         expect(autoSwitchBitrateForVideo).to.be.true; // jshint ignore:line
 
-        abrCtrl.setAutoSwitchBitrateFor('video', false);
-        autoSwitchBitrateForVideo = abrCtrl.getAutoSwitchBitrateFor('video');
+        expect(abrCtrl.setAutoSwitchBitrateFor.bind(abrCtrl, Constants.VIDEO, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        autoSwitchBitrateForVideo = abrCtrl.getAutoSwitchBitrateFor(Constants.VIDEO);
+
+        expect(autoSwitchBitrateForVideo).to.be.true; // jshint ignore:line
+
+        abrCtrl.setAutoSwitchBitrateFor(Constants.VIDEO, false);
+        autoSwitchBitrateForVideo = abrCtrl.getAutoSwitchBitrateFor(Constants.VIDEO);
 
         expect(autoSwitchBitrateForVideo).to.be.false; // jshint ignore:line
     });
 
+    it('should not set setMaxAllowedBitrateFor value if it\'s not a number type or NaN or if type is not Video or Audio', function () {
+        expect(abrCtrl.setMaxAllowedBitrateFor.bind(abrCtrl, Constants.TEXT, 12)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(abrCtrl.setMaxAllowedBitrateFor.bind(abrCtrl, true, 12)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(abrCtrl.setMaxAllowedBitrateFor.bind(abrCtrl, 1, 12)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(abrCtrl.setMaxAllowedBitrateFor.bind(abrCtrl, Constants.VIDEO, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(abrCtrl.setMaxAllowedBitrateFor.bind(abrCtrl, Constants.VIDEO, NaN)).not.to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(abrCtrl.setMaxAllowedBitrateFor.bind(abrCtrl, Constants.VIDEO, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+    });
+
+    it('should not set setMinAllowedBitrateFor value if it\'s not a number type or NaN or if type is not Video or Audio', function () {
+        expect(abrCtrl.setMinAllowedBitrateFor.bind(abrCtrl, Constants.TEXT, 12)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(abrCtrl.setMinAllowedBitrateFor.bind(abrCtrl, true, 12)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(abrCtrl.setMinAllowedBitrateFor.bind(abrCtrl, 1, 12)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(abrCtrl.setMinAllowedBitrateFor.bind(abrCtrl, Constants.VIDEO, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(abrCtrl.setMinAllowedBitrateFor.bind(abrCtrl, Constants.VIDEO, NaN)).not.to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(abrCtrl.setMinAllowedBitrateFor.bind(abrCtrl, Constants.VIDEO, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+    });
+
+    it('should not set setInitialBitrateFor value if it\'s not a number type or NaN or if type is not Video or Audio', function () {
+        expect(abrCtrl.setInitialBitrateFor.bind(abrCtrl, Constants.TEXT, 12)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(abrCtrl.setInitialBitrateFor.bind(abrCtrl, true, 12)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(abrCtrl.setInitialBitrateFor.bind(abrCtrl, 1, 12)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(abrCtrl.setInitialBitrateFor.bind(abrCtrl, Constants.VIDEO, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(abrCtrl.setInitialBitrateFor.bind(abrCtrl, Constants.VIDEO, NaN)).not.to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(abrCtrl.setInitialBitrateFor.bind(abrCtrl, Constants.VIDEO, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+
+        abrCtrl.setInitialBitrateFor(Constants.VIDEO, 180);
+        const initialBitrate = abrCtrl.getInitialBitrateFor(Constants.VIDEO);
+        expect(initialBitrate).to.equal(180);
+    });
+
+    it('Method setUseDeadTimeLatency should throw an exception if given bad values', function () {
+        expect(abrCtrl.setUseDeadTimeLatency.bind(abrCtrl, 13)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(abrCtrl.setUseDeadTimeLatency.bind(abrCtrl, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+    });
 
     it('should update top quality index', function () {
         const expectedTopQuality = representationCount - 1;
@@ -125,16 +186,16 @@ describe('AbrController', function () {
 
     it('should throw an exception when attempting to set not a number value for a quality', function () {
         let testQuality = 'a';
-        expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testType, dummyMediaInfo.streamInfo, testQuality)).to.throw('argument is not an integer');
+        expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testType, dummyMediaInfo.streamInfo, testQuality)).to.throw(Constants.BAD_ARGUMENT_ERROR + ' : argument is not an integer');
 
         testQuality = null;
-        expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testType, dummyMediaInfo.streamInfo, testQuality)).to.throw('argument is not an integer');
+        expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testType, dummyMediaInfo.streamInfo, testQuality)).to.throw(Constants.BAD_ARGUMENT_ERROR + ' : argument is not an integer');
 
         testQuality = 2.5;
-        expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testType, dummyMediaInfo.streamInfo, testQuality)).to.throw('argument is not an integer');
+        expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testType, dummyMediaInfo.streamInfo, testQuality)).to.throw(Constants.BAD_ARGUMENT_ERROR + ' : argument is not an integer');
 
         testQuality = {};
-        expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testType, dummyMediaInfo.streamInfo, testQuality)).to.throw('argument is not an integer');
+        expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testType, dummyMediaInfo.streamInfo, testQuality)).to.throw(Constants.BAD_ARGUMENT_ERROR + ' : argument is not an integer');
     });
 
     it('should ignore an attempt to set a negative quality value', function () {

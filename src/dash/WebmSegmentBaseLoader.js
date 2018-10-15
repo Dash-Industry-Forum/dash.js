@@ -1,6 +1,7 @@
 import Events from '../core/events/Events';
 import EventBus from '../core/EventBus';
 import EBMLParser from '../streaming/utils/EBMLParser';
+import Constants from '../streaming/constants/Constants';
 import FactoryMaker from '../core/FactoryMaker';
 import Debug from '../core/Debug';
 import RequestModifier from '../streaming/utils/RequestModifier';
@@ -107,7 +108,7 @@ function WebmSegmentBaseLoader() {
 
     function setConfig(config) {
         if (!config.baseURLController || !config.metricsModel || !config.mediaPlayerModel || !config.errHandler) {
-            throw new Error('Missing config parameter(s)');
+            throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
         baseURLController = config.baseURLController;
         metricsModel = config.metricsModel;

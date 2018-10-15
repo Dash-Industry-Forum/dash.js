@@ -32,14 +32,25 @@ import ErrorsBase from './ErrorsBase';
 /**
  * Errors declaration
  * @class
- * @ignore
  */
 class Errors extends ErrorsBase {
     constructor () {
         super();
+        /**
+         * Error code returned when a manifest parsing error occurs
+         */
         this.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE = 10;
+        /**
+         * Error code returned when a manifest loading error occurs
+         */
         this.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE = 11;
+        /**
+         * Error code returned when a xlink loading error occurs
+         */
         this.XLINK_LOADER_LOADING_FAILURE_ERROR_CODE = 12;
+        /**
+         * Error code returned when the update of segments list has failed
+         */
         this.SEGMENTS_UPDATE_FAILED_ERROR_CODE = 13;
         this.SEGMENTS_UNAVAILABLE_ERROR_CODE = 14;
         this.SEGMENT_BASE_LOADER_ERROR_CODE = 15;
@@ -50,8 +61,13 @@ class Errors extends ErrorsBase {
         this.APPEND_ERROR_CODE = 20;
         this.REMOVE_ERROR_CODE = 21;
         this.DATA_UPDATE_FAILED_ERROR_CODE = 22;
-
+        /**
+         * Error code returned when MediaSource is not supported by the browser
+         */
         this.CAPABILITY_MEDIASOURCE_ERROR_CODE = 23;
+        /**
+         * Error code returned when Protected contents are not supported
+         */
         this.CAPABILITY_MEDIAKEYS_ERROR_CODE   = 24;
 
         this.DOWNLOAD_ERROR_ID_MANIFEST_CODE   = 25;
@@ -61,6 +77,7 @@ class Errors extends ErrorsBase {
         this.DOWNLOAD_ERROR_ID_MANIFEST        = 'manifest';
         this.DOWNLOAD_ERROR_ID_SIDX_CODE            = 26;
         this.DOWNLOAD_ERROR_ID_CONTENT_CODE         = 27;
+
         /*
          *@deprecated
          */
@@ -76,13 +93,25 @@ class Errors extends ErrorsBase {
          */
         this.DOWNLOAD_ERROR_ID_XLINK           = 'xlink';
 
+
         this.MANIFEST_ERROR_ID_CODEC_CODE           = 30;
         this.MANIFEST_ERROR_ID_PARSE_CODE           = 31;
+
+        /**
+         * Error code returned when no stream (period) has been detected in the manifest
+         */
         this.MANIFEST_ERROR_ID_NOSTREAMS_CODE       = 32;
-
+        /**
+         * Error code returned when something wrong has append during subtitles parsing (TTML or VTT)
+         */
         this.TIMED_TEXT_ERROR_ID_PARSE_CODE         = 33;
-
+        /**
+         * Error code returned when a 'muxed' media type has been detected in the manifest. This type is not supported
+         */
         this.MANIFEST_ERROR_ID_MULTIPLEXED_CODE     = 34;
+        /**
+         * Error code returned when a media source type is not supported
+         */
         this.MEDIASOURCE_TYPE_UNSUPPORTED_CODE = 35;
 
         this.MANIFEST_LOADER_PARSING_FAILURE_ERROR_MESSAGE = 'parsing failed for ';

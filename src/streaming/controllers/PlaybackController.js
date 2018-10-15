@@ -30,7 +30,6 @@
  */
 import Constants from '../constants/Constants';
 import BufferController from './BufferController';
-import URIFragmentModel from '../models/URIFragmentModel';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
@@ -67,7 +66,8 @@ function PlaybackController() {
         compatibleWithPreviousStream,
         isLowLatencySeekingInProgress,
         playbackStalled,
-        minPlaybackRateChange;
+        minPlaybackRateChange,
+        uriFragmentModel;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -329,10 +329,13 @@ function PlaybackController() {
         if (config.timelineConverter) {
             timelineConverter = config.timelineConverter;
         }
+        if (config.uriFragmentModel) {
+            uriFragmentModel = config.uriFragmentModel;
+        }
     }
 
     function getStartTimeFromUriParameters() {
-        const fragData = URIFragmentModel(context).getInstance().getURIFragmentData();
+        const fragData = uriFragmentModel.getURIFragmentData();
         let uriParameters;
         if (fragData) {
             uriParameters = {};

@@ -261,8 +261,7 @@ function VideoModel() {
 
         if (hasQuality) {
             result = element.getVideoPlaybackQuality();
-        }
-        else if (hasWebKit) {
+        } else if (hasWebKit) {
             result = {
                 droppedVideoFrames: element.webkitDroppedFrameCount,
                 totalVideoFrames: element.webkitDroppedFrameCount + element.webkitDecodedFrameCount,
@@ -369,7 +368,7 @@ function VideoModel() {
 
     function getTextTrack(kind, label, lang, isTTML, isEmbedded) {
         if (element) {
-            for (var i = 0; i < element.textTracks.length; i++) {
+            for (let i = 0; i < element.textTracks.length; i++) {
                 //label parameter could be a number (due to adaptationSet), but label, the attribute of textTrack, is a string => to modify...
                 //label could also be undefined (due to adaptationSet)
                 if (element.textTracks[i].kind === kind && (label ? element.textTracks[i].label == label : true) &&

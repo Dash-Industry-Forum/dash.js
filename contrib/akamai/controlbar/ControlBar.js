@@ -201,7 +201,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             if (typeof value === "number") {
                 volumebar.value = value;
             }
-            player.setVolume(volumebar.value);
+            player.setVolume(parseFloat(volumebar.value));
             player.setMute(player.getVolume() === 0);
             if (isNaN(lastVolumeLevel)) {
                 lastVolumeLevel = player.getVolume();

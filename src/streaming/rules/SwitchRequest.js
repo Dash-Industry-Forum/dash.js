@@ -40,10 +40,10 @@ const PRIORITY = {
 
 function SwitchRequest(q, r, p) {
     //TODO refactor all the calls to this to use config to be like everything else.
-    let instance;
-    let quality;
-    let priority;
-    let reason;
+    let instance,
+        quality,
+        priority,
+        reason;
 
     // check priority value
     function getPriority(p) {

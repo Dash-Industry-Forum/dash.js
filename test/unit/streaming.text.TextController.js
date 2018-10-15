@@ -4,6 +4,7 @@ import TextSourceBuffer from '../../src/streaming/text/TextSourceBuffer';
 import ObjectUtils from '../../src/streaming/utils/ObjectUtils';
 import EventBus from '../../src/core/EventBus';
 import Events from '../../src/core/events/Events';
+import Constants from '../../src/streaming/constants/Constants';
 
 import VideoModelMock from './mocks/VideoModelMock';
 import StreamControllerMock from './mocks/StreamControllerMock';
@@ -66,10 +67,10 @@ describe('TextController', function () {
 
     describe('Method setTextDefaultLanguage', function () {
         it('should not set text default language if language is not a string', function () {
-            textController.setTextDefaultLanguage(-1);
+            expect(textController.setTextDefaultLanguage.bind(textController, -1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
             expect(textController.getTextDefaultLanguage()).to.equal(''); // jshint ignore:line
 
-            textController.setTextDefaultLanguage();
+            expect(textController.setTextDefaultLanguage.bind(textController)).to.throw(Constants.BAD_ARGUMENT_ERROR);
             expect(textController.getTextDefaultLanguage()).to.equal(''); // jshint ignore:line
         });
 
@@ -82,10 +83,10 @@ describe('TextController', function () {
 
     describe('Method setTextDefaultEnabled', function () {
         it('should not set text default enabled if enable is not a boolean', function () {
-            textController.setTextDefaultEnabled(-1);
+            expect(textController.setTextDefaultEnabled.bind(textController, -1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
             expect(textController.getTextDefaultEnabled()).to.equal(true); // jshint ignore:line
 
-            textController.setTextDefaultEnabled();
+            expect(textController.setTextDefaultEnabled.bind(textController)).to.throw(Constants.BAD_ARGUMENT_ERROR);
             expect(textController.getTextDefaultEnabled()).to.equal(true); // jshint ignore:line
         });
 
@@ -122,13 +123,13 @@ describe('TextController', function () {
 
             let textEnabled = textController.isTextEnabled();
 
-            textController.enableText(-1);
+            expect(textController.enableText.bind(textController, -1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
             expect(textController.isTextEnabled()).to.equal(textEnabled); // jshint ignore:line
 
-            textController.enableText();
+            expect(textController.enableText.bind(textController)).to.throw(Constants.BAD_ARGUMENT_ERROR);
             expect(textController.isTextEnabled()).to.equal(textEnabled); // jshint ignore:line
 
-            textController.enableText('toto');
+            expect(textController.enableText.bind(textController,'toto')).to.throw(Constants.BAD_ARGUMENT_ERROR);
             expect(textController.isTextEnabled()).to.equal(textEnabled); // jshint ignore:line
         });
 

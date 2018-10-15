@@ -223,7 +223,8 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     ////////////////////////////////////////
 
     $scope.video = document.querySelector('.dash-video-player video');
-    $scope.player = dashjs.MediaPlayer().create(); /* jshint ignore:line */
+    // store a ref in window.player to provide an easy way to play with dash.js API
+    window.player = $scope.player = dashjs.MediaPlayer().create(); /* jshint ignore:line */
 
     $scope.player.on(dashjs.MediaPlayer.events.ERROR, function (e) { /* jshint ignore:line */
         //use the new error callback
@@ -454,7 +455,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
             stableBufferTime: $scope.defaultStableBufferDelay,
             bufferTimeAtTopQuality: $scope.defaultBufferTimeAtTopQuality,
             bufferTimeAtTopQualityLongForm: $scope.defaultBufferTimeAtTopQualityLongForm,
-            lowLatencyMode: $scope.lowLatencyMode
+            lowLatencyMode: $scope.lowLatencyModeSelected
         };
         if ($scope.selectedItem.hasOwnProperty('bufferConfig')) {
             var selectedConfig = $scope.selectedItem.bufferConfig;

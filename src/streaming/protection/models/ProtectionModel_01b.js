@@ -183,6 +183,12 @@ function ProtectionModel_01b(config) {
         // Replacing the previous element
         if (videoElement) {
             removeEventListeners();
+
+            // Close any open sessions - avoids memory leak on LG webOS 2016/2017 TVs
+            for (var i = 0; i < sessions.length; i++) {
+                closeKeySession(sessions[i]);
+            }
+            sessions = [];
         }
 
         videoElement = mediaElement;

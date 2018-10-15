@@ -44,6 +44,7 @@ import DroppedFramesHistory from '../rules/DroppedFramesHistory';
 import ThroughputHistory from '../rules/ThroughputHistory';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import Debug from '../../core/Debug';
+import { checkParameterType, checkInteger, checkIsVideoOrAudioType } from '../utils/SupervisorTools';
 
 const ABANDON_LOAD = 'abandonload';
 const ALLOW_LOAD = 'allowload';
@@ -198,6 +199,12 @@ function AbrController() {
         }
     }
 
+    function checkConfig() {
+        if (!domStorage || !domStorage.hasOwnProperty('getSavedBitrateSettings')) {
+            throw new Error(Constants.MISSING_CONFIG_ERROR);
+        }
+    }
+
     function onQualityChangeRendered(e) {
         if (e.mediaType === Constants.VIDEO) {
             playbackIndex = e.oldQuality;
@@ -252,6 +259,7 @@ function AbrController() {
      * @memberof AbrController#
      */
     function getInitialBitrateFor(type) {
+        checkConfig();
         const savedBitrate = domStorage.getSavedBitrateSettings(type);
 
         if (!bitrateDict.hasOwnProperty(type)) {
@@ -281,6 +289,8 @@ function AbrController() {
      * @memberof AbrController#
      */
     function setInitialBitrateFor(type, value) {
+        checkIsVideoOrAudioType(type);
+        checkParameterType(value, 'number');
         bitrateDict[type] = value;
     }
 
@@ -313,11 +323,15 @@ function AbrController() {
     //TODO  change bitrateDict structure to hold one object for video and audio with initial and max values internal.
     // This means you need to update all the logic around initial bitrate DOMStorage, RebController etc...
     function setMaxAllowedBitrateFor(type, value) {
+        checkParameterType(value, 'number');
+        checkIsVideoOrAudioType(type);
         bitrateDict.max = bitrateDict.max || {};
         bitrateDict.max[type] = value;
     }
 
     function setMinAllowedBitrateFor(type, value) {
+        checkParameterType(value, 'number');
+        checkIsVideoOrAudioType(type);
         bitrateDict.min = bitrateDict.min || {};
         bitrateDict.min[type] = value;
     }
@@ -365,9 +379,8 @@ function AbrController() {
     }
 
     function setAutoSwitchBitrateFor(type, value) {
-        if (typeof value !== 'boolean') {
-            return;
-        }
+        checkParameterType(value, 'boolean');
+        checkIsVideoOrAudioType(type);
         autoSwitchBitrate[type] = value;
     }
 
@@ -376,6 +389,7 @@ function AbrController() {
     }
 
     function setLimitBitrateByPortal(value) {
+        checkParameterType(value, 'boolean');
         limitBitrateByPortal = value;
     }
 
@@ -384,9 +398,7 @@ function AbrController() {
     }
 
     function setUsePixelRatioInLimitBitrateByPortal(value) {
-        if (typeof value !== 'boolean') {
-            return;
-        }
+        checkParameterType(value, 'boolean');
         usePixelRatioInLimitBitrateByPortal = value;
     }
 
@@ -395,6 +407,7 @@ function AbrController() {
     }
 
     function setUseDeadTimeLatency(value) {
+        checkParameterType(value, 'boolean');
         useDeadTimeLatency = value;
     }
 
@@ -444,19 +457,11 @@ function AbrController() {
         }
     }
 
-    function checkQuality(quality) {
-        const isInt = quality !== null && !isNaN(quality) && (quality % 1 === 0);
-
-        if (!isInt) {
-            throw new Error('argument is not an integer');
-        }
-    }
-
     function setPlaybackQuality(type, streamInfo, newQuality, reason) {
         const id = streamInfo.id;
         const oldQuality = getQualityFor(type);
 
-        checkQuality(newQuality);
+        checkInteger(newQuality);
 
         const topQualityIdx = getTopQualityIndexFor(type, id);
         if (newQuality !== oldQuality && newQuality >= 0 && newQuality <= topQualityIdx) {
