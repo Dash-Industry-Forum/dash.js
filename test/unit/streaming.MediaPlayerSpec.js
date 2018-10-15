@@ -16,7 +16,7 @@ const ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the 
 const PLAYBACK_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a valid source and view before calling this method';
 const STREAMING_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a source before calling this method';
 const PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR = 'Playback catchup rate invalid argument! Use a number from 0 to 0.2';
-const MEDIA_PLAYER_BAD_ARGUMENT_ERROR = 'MediaPlayer Invalid Arguments!';
+const BAD_ARGUMENT_ERROR = 'Invalid Arguments!';
 const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
 
 describe('MediaPlayer', function () {
@@ -148,7 +148,7 @@ describe('MediaPlayer', function () {
             });
 
             it('Method setMute should throw an exception', function () {
-                expect(player.setMute).to.throw(ELEMENT_NOT_ATTACHED_ERROR);
+                expect(player.setMute.bind(player, true)).to.throw(ELEMENT_NOT_ATTACHED_ERROR);
             });
 
             it('Method isMuted should throw an exception', function () {
@@ -156,7 +156,7 @@ describe('MediaPlayer', function () {
             });
 
             it('Method setVolume should throw an exception', function () {
-                expect(player.setVolume).to.throw(ELEMENT_NOT_ATTACHED_ERROR);
+                expect(player.setVolume.bind(player, 0.6)).to.throw(ELEMENT_NOT_ATTACHED_ERROR);
             });
 
             it('Method getVolume should throw an exception', function () {
@@ -227,10 +227,29 @@ describe('MediaPlayer', function () {
                 let isSeeking = playbackControllerMock.isSeeking();
                 expect(isSeeking).to.be.false; // jshint ignore:line
 
-                expect(player.seek).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
+                expect(player.seek).to.throw(BAD_ARGUMENT_ERROR);
 
                 isSeeking = playbackControllerMock.isSeeking();
                 expect(isSeeking).to.be.false; // jshint ignore:line
+            });
+
+            it('Method setMute should throw an exception', function () {
+                let isMuted = player.isMuted();
+                expect(isMuted).to.be.false; // jshint ignore:line
+
+                expect(player.setMute.bind(player, 1)).to.throw(BAD_ARGUMENT_ERROR);
+
+                isMuted = player.isMuted();
+                expect(isMuted).to.be.false; // jshint ignore:line
+            });
+
+            it('Method setVolume should throw an exception', function () {
+                expect(player.setVolume.bind(player, true)).to.throw(BAD_ARGUMENT_ERROR);
+            });
+
+            it('Method setAutoPlay should throw an exception', function () {
+                expect(player.setAutoPlay.bind(player, 'string')).to.throw(BAD_ARGUMENT_ERROR);
+                expect(player.setAutoPlay.bind(player, 12)).to.throw(BAD_ARGUMENT_ERROR);
             });
 
             it('Method isDynamic should get dynamic value', function () {
@@ -240,7 +259,6 @@ describe('MediaPlayer', function () {
                 playbackControllerMock.setIsDynamic(true);
                 isDynamic = player.isDynamic();
                 expect(isDynamic).to.be.true; // jshint ignore:line
-
             });
 
             it('Method setPlaybackRate should change playback value of video element', function () {
@@ -289,26 +307,26 @@ describe('MediaPlayer', function () {
                 let volume = videoElementMock.volume;
                 expect(volume).to.equal(0);
 
-                player.setVolume(15);
+                player.setVolume(0.5);
                 volume = videoElementMock.volume;
-                expect(volume).to.equal(15);
+                expect(volume).to.equal(0.5);
 
-                player.setVolume(4);
+                player.setVolume(0.4);
                 volume = videoElementMock.volume;
-                expect(volume).to.equal(4);
+                expect(volume).to.equal(0.4);
             });
 
             it('Method getVolume should return mute state', function () {
                 let volume = player.getVolume();
                 expect(volume).to.equal(0);
 
-                player.setVolume(15);
+                player.setVolume(0.2);
                 volume = player.getVolume();
-                expect(volume).to.equal(15);
+                expect(volume).to.equal(0.2);
 
-                player.setVolume(4);
+                player.setVolume(0.6);
                 volume = player.getVolume();
-                expect(volume).to.equal(4);
+                expect(volume).to.equal(0.6);
             });
 
             it('Method time should return time of playback', function () {
@@ -357,11 +375,6 @@ describe('MediaPlayer', function () {
                 expect(() => {player.setCatchUpPlaybackRate('string');}).to.throw(PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR);
                 expect(() => {player.setCatchUpPlaybackRate(true);}).to.throw(PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR);
                 expect(() => {player.setCatchUpPlaybackRate(false);}).to.throw(PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR);
-            });
-
-            it('Method setUseDeadTimeLatencyForAbr should throw an exception if given bad values', function () {
-                expect(player.setUseDeadTimeLatencyForAbr.bind(player, 13)).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
-                expect(player.setUseDeadTimeLatencyForAbr.bind(player, 'string')).to.throw(MEDIA_PLAYER_BAD_ARGUMENT_ERROR);
             });
         });
     });

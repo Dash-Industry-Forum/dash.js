@@ -30,7 +30,6 @@
  */
 import Constants from '../constants/Constants';
 import BufferController from './BufferController';
-import URIFragmentModel from '../models/URIFragmentModel';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
@@ -70,7 +69,8 @@ function PlaybackController() {
         lastLivePlaybackTime,
         originalPlaybackRate,
         availabilityStartTime,
-        compatibleWithPreviousStream;
+        compatibleWithPreviousStream,
+        uriFragmentModel;
 
     let catchUpPlaybackRate = DEFAULT_CATCHUP_PLAYBACK_RATE;
 
@@ -339,10 +339,13 @@ function PlaybackController() {
         if (config.videoModel) {
             videoModel = config.videoModel;
         }
+        if (config.uriFragmentModel) {
+            uriFragmentModel = config.uriFragmentModel;
+        }
     }
 
     function getStartTimeFromUriParameters() {
-        const fragData = URIFragmentModel(context).getInstance().getURIFragmentData();
+        const fragData = uriFragmentModel.getURIFragmentData();
         let uriParameters;
         if (fragData) {
             uriParameters = {};

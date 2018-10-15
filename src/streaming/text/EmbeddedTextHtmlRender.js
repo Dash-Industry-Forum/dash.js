@@ -86,10 +86,10 @@ function EmbeddedTextHtmlRender() {
     function ltrim(s) {
         return s.replace(/^\s+/g, '');
     }
+
     function rtrim(s) {
         return s.replace(/\s+$/g, '');
     }
-
 
     function createHTMLCaptionsFromScreen(videoElement, startTime, endTime, captionScreen) {
         let currRegion = null;
@@ -298,10 +298,6 @@ function EmbeddedTextHtmlRender() {
                                 cueID: cueID,
                                 cellResolution: [32, 15],
                                 isFromCEA608: true,
-                                regions: regions,
-                                regionID: region.name,
-                                videoHeight: videoElement.videoHeight,
-                                videoWidth: videoElement.videoWidth,
                                 fontSize: fontSize,
                                 lineHeight: {},
                                 linePadding: {}

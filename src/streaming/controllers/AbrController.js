@@ -365,8 +365,8 @@ function AbrController() {
     }
 
     function setAutoSwitchBitrateFor(type, value) {
-        if (typeof value !== 'boolean') {
-            return;
+        if (typeof value !== 'boolean' || typeof type !== 'string' || (type !== Constants.AUDIO && type !== Constants.VIDEO)) {
+            throw Constants.BAD_ARGUMENT_ERROR;
         }
         autoSwitchBitrate[type] = value;
     }
@@ -395,6 +395,9 @@ function AbrController() {
     }
 
     function setUseDeadTimeLatency(value) {
+        if (typeof value !== 'boolean') {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         useDeadTimeLatency = value;
     }
 

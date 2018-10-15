@@ -30,7 +30,6 @@
  */
 import Constants from './constants/Constants';
 import MetricsConstants from './constants/MetricsConstants';
-import UTCTiming from '../dash/vo/UTCTiming';
 import PlaybackController from './controllers/PlaybackController';
 import StreamController from './controllers/StreamController';
 import MediaController from './controllers/MediaController';
@@ -84,7 +83,6 @@ function MediaPlayer() {
     const ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the video element before calling this method';
     const SOURCE_NOT_ATTACHED_ERROR = 'You must first call attachSource() with a valid source before calling this method';
     const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
-    const MEDIA_PLAYER_BAD_ARGUMENT_ERROR = 'MediaPlayer Invalid Arguments!';
     const PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR = 'Playback catchup rate invalid argument! Use a number from 0 to 0.2';
 
     const context = this.context;
@@ -117,6 +115,7 @@ function MediaPlayer() {
         manifestModel,
         videoModel,
         textController,
+        uriFragmentModel,
         domStorage;
 
     /*
@@ -138,6 +137,7 @@ function MediaPlayer() {
         Events.extend(MediaPlayerEvents);
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
         videoModel = VideoModel(context).getInstance();
+        uriFragmentModel = URIFragmentModel(context).getInstance();
     }
 
     /**
@@ -340,7 +340,6 @@ function MediaPlayer() {
         return debug;
     }
 
-
     /*
     ---------------------------------------------------------------------------
 
@@ -387,7 +386,6 @@ function MediaPlayer() {
         }
     }
 
-
     /**
      * This method will call pause on the native Video Element.
      *
@@ -429,7 +427,7 @@ function MediaPlayer() {
         }
 
         if (typeof value !== 'number' || isNaN(value)) {
-            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
+            throw Constants.BAD_ARGUMENT_ERROR;
         }
 
         let s = playbackController.getIsDynamic() ? getDVRSeekOffset(value) : value;
@@ -469,9 +467,6 @@ function MediaPlayer() {
      * @instance
      */
     function setPlaybackRate(value) {
-        if (!videoModel.getElement()) {
-            throw ELEMENT_NOT_ATTACHED_ERROR;
-        }
         getVideoElement().playbackRate = value;
     }
 
@@ -482,9 +477,6 @@ function MediaPlayer() {
      * @instance
      */
     function getPlaybackRate() {
-        if (!videoModel.getElement()) {
-            throw ELEMENT_NOT_ATTACHED_ERROR;
-        }
         return getVideoElement().playbackRate;
     }
 
@@ -528,8 +520,8 @@ function MediaPlayer() {
      * @instance
      */
     function setMute(value) {
-        if (!videoModel.getElement()) {
-            throw ELEMENT_NOT_ATTACHED_ERROR;
+        if (typeof value !== 'boolean') {
+            throw Constants.BAD_ARGUMENT_ERROR;
         }
         getVideoElement().muted = value;
     }
@@ -541,9 +533,6 @@ function MediaPlayer() {
      * @instance
      */
     function isMuted() {
-        if (!videoModel.getElement()) {
-            throw ELEMENT_NOT_ATTACHED_ERROR;
-        }
         return getVideoElement().muted;
     }
 
@@ -554,8 +543,8 @@ function MediaPlayer() {
      * @instance
      */
     function setVolume(value) {
-        if (!videoModel.getElement()) {
-            throw ELEMENT_NOT_ATTACHED_ERROR;
+        if ( typeof value !== 'number' || isNaN(value) || value < 0.0 || value > 1.0) {
+            throw Constants.BAD_ARGUMENT_ERROR;
         }
         getVideoElement().volume = value;
     }
@@ -567,9 +556,6 @@ function MediaPlayer() {
      * @instance
      */
     function getVolume() {
-        if (!videoModel.getElement()) {
-            throw ELEMENT_NOT_ATTACHED_ERROR;
-        }
         return getVideoElement().volume;
     }
 
@@ -670,7 +656,6 @@ function MediaPlayer() {
 
         if (streamId !== undefined) {
             t = streamController.getTimeRelativeToStreamId(t, streamId);
-
         } else if (playbackController.getIsDynamic()) {
             let metric = getDVRInfoMetric();
             t = (metric === null) ? 0 : duration() - (metric.range.end - metric.time);
@@ -1060,9 +1045,6 @@ function MediaPlayer() {
      * @instance
      */
     function setUseDeadTimeLatencyForAbr(useDeadTimeLatency) {
-        if (typeof useDeadTimeLatency !== 'boolean') {
-            throw MEDIA_PLAYER_BAD_ARGUMENT_ERROR;
-        }
         abrController.setUseDeadTimeLatency(useDeadTimeLatency);
     }
 
@@ -1084,6 +1066,9 @@ function MediaPlayer() {
      *
      */
     function setAutoPlay(value) {
+        if (typeof value !== 'boolean') {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         autoPlay = value;
     }
 
@@ -1279,11 +1264,7 @@ function MediaPlayer() {
      * @instance
      */
     function setABRStrategy(value) {
-        if (value === Constants.ABR_STRATEGY_DYNAMIC || value === Constants.ABR_STRATEGY_BOLA || value === Constants.ABR_STRATEGY_THROUGHPUT) {
-            mediaPlayerModel.setABRStrategy(value);
-        } else {
-            logger.warn('Ignoring setABRStrategy(' + value + ') - unknown value.');
-        }
+        mediaPlayerModel.setABRStrategy(value);
     }
 
     /**
@@ -1379,7 +1360,6 @@ function MediaPlayer() {
         return mediaPlayerModel.getMovingAverageMethod();
     }
 
-
     /**
      * Returns if low latency mode is enabled. Disabled by default.
      * @return {boolean} true - if enabled
@@ -1432,11 +1412,7 @@ function MediaPlayer() {
      * @instance
      */
     function addUTCTimingSource(schemeIdUri, value) {
-        removeUTCTimingSource(schemeIdUri, value); //check if it already exists and remove if so.
-        let vo = new UTCTiming();
-        vo.schemeIdUri = schemeIdUri;
-        vo.value = value;
-        mediaPlayerModel.getUTCTimingSources().push(vo);
+        mediaPlayerModel.addUTCTimingSource(schemeIdUri, value);
     }
 
     /**
@@ -1449,12 +1425,7 @@ function MediaPlayer() {
      * @instance
      */
     function removeUTCTimingSource(schemeIdUri, value) {
-        let UTCTimingSources = mediaPlayerModel.getUTCTimingSources();
-        UTCTimingSources.forEach(function (obj, idx) {
-            if (obj.schemeIdUri === schemeIdUri && obj.value === value) {
-                UTCTimingSources.splice(idx, 1);
-            }
-        });
+        mediaPlayerModel.removeUTCTimingSource(schemeIdUri, value);
     }
 
     /**
@@ -1469,7 +1440,7 @@ function MediaPlayer() {
      * @instance
      */
     function clearDefaultUTCTimingSources() {
-        mediaPlayerModel.setUTCTimingSources([]);
+        mediaPlayerModel.clearDefaultUTCTimingSources();
     }
 
     /**
@@ -1486,9 +1457,8 @@ function MediaPlayer() {
      * @instance
      */
     function restoreDefaultUTCTimingSources() {
-        addUTCTimingSource(MediaPlayerModel.DEFAULT_UTC_TIMING_SOURCE.scheme, MediaPlayerModel.DEFAULT_UTC_TIMING_SOURCE.value);
+        mediaPlayerModel.restoreDefaultUTCTimingSources();
     }
-
 
     /**
      * <p>Allows you to enable the use of the Date Header, if exposed with CORS, as a timing source for live edge detection. The
@@ -1581,14 +1551,6 @@ function MediaPlayer() {
         return mediaPlayerModel.getStableBufferTime();
     }
 
-    /**
-     * The time that the internal buffer target will be set to once playing the top quality.
-     * If there are multiple bitrates in your adaptation, and the media is playing at the highest
-     * bitrate, then we try to build a larger buffer at the top quality to increase stability
-     * and to maintain media quality.
-     *
-     * @default 30 seconds.
-     * @param {int} value
     /**
      * The time that the internal buffer target will be set to once playing the top quality.
      * If there are multiple bitrates in your adaptation, and the media is playing at the highest
@@ -2017,7 +1979,6 @@ function MediaPlayer() {
         textController.enableText(enable);
     }
 
-
     /**
      * Enable/disable text
      * When enabling dash will keep downloading and process fragmented text tracks even if all tracks are in mode "hidden"
@@ -2033,8 +1994,6 @@ function MediaPlayer() {
 
         textController.enableForcedTextStreaming(enable);
     }
-
-
 
     /**
      * Return if text is enabled
@@ -2242,7 +2201,6 @@ function MediaPlayer() {
             throw STREAMING_NOT_INITIALIZED_ERROR;
         }
         let streamInfo = streamController.getActiveStreamInfo();
-        if (!streamInfo) return [];
         return mediaController.getTracksFor(type, streamInfo);
     }
 
@@ -2545,7 +2503,7 @@ function MediaPlayer() {
 
         eventBus.on(Events.INTERNAL_MANIFEST_LOADED, handler, self);
 
-        URIFragmentModel(context).getInstance().initialize(url);
+        uriFragmentModel.initialize(url);
         manifestLoader.load(url);
     }
 
@@ -2582,7 +2540,7 @@ function MediaPlayer() {
         }
 
         if (typeof urlOrManifest === 'string') {
-            URIFragmentModel(context).getInstance().initialize(urlOrManifest);
+            uriFragmentModel.initialize(urlOrManifest);
         }
 
         source = urlOrManifest;
@@ -2662,6 +2620,14 @@ function MediaPlayer() {
         FactoryMaker.extend(parentNameString, childInstance, override, context);
     }
 
+    function getActiveStream() {
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR;
+        }
+        let streamInfo = streamController.getActiveStreamInfo();
+        return streamInfo ? streamController.getStreamById(streamInfo.id) : null;
+    }
+
     //***********************************
     // PRIVATE METHODS
     //***********************************
@@ -2727,7 +2693,8 @@ function MediaPlayer() {
             mediaPlayerModel: mediaPlayerModel,
             dashManifestModel: dashManifestModel,
             adapter: adapter,
-            videoModel: videoModel
+            videoModel: videoModel,
+            uriFragmentModel: uriFragmentModel
         });
 
         abrController.setConfig({
@@ -2862,14 +2829,6 @@ function MediaPlayer() {
         availableFrom = metric.manifestInfo.availableFrom.getTime() / 1000;
         utcValue = valToConvert + (availableFrom + metric.range.start);
         return utcValue;
-    }
-
-    function getActiveStream() {
-        if (!streamingInitialized) {
-            throw STREAMING_NOT_INITIALIZED_ERROR;
-        }
-        let streamInfo = streamController.getActiveStreamInfo();
-        return streamInfo ? streamController.getStreamById(streamInfo.id) : null;
     }
 
     function initializePlayback() {

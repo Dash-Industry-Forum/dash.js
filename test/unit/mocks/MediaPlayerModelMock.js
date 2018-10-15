@@ -439,8 +439,32 @@ class MediaPlayerModelMock {
         this.UTCTimingSources = value;
     }
 
+    addUTCTimingSource(schemeIdUri, value) {
+        this.removeUTCTimingSource(schemeIdUri, value); //check if it already exists and remove if so.
+        let vo = {};
+        vo.schemeIdUri = schemeIdUri;
+        vo.value = value;
+        this.UTCTimingSources.push(vo);
+    }
+
     getUTCTimingSources() {
         return this.UTCTimingSources;
+    }
+
+    removeUTCTimingSource(schemeIdUri, value) {
+        for (let i = 0; i < this.UTCTimingSources.length; i++) {
+            if (this.UTCTimingSources[i].schemeIdUri === schemeIdUri && this.UTCTimingSources[i].value === value) {
+                this.UTCTimingSources.splice(i, 1);
+            }
+        }
+    }
+
+    clearDefaultUTCTimingSources() {
+        this.UTCTimingSources = [];
+    }
+
+    restoreDefaultUTCTimingSources() {
+        this.addUTCTimingSource(DEFAULT_UTC_TIMING_SOURCE.scheme, DEFAULT_UTC_TIMING_SOURCE.value);
     }
 
     setXHRWithCredentialsForType(type, value) {

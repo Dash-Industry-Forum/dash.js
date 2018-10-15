@@ -42,9 +42,9 @@ function PreBufferSink(onAppendedCallback) {
     const context = this.context;
 
     let instance,
-        logger;
+        logger,
+        outstandingInit;
     let chunks = [];
-    let outstandingInit;
     let onAppended = onAppendedCallback;
 
     function setup() {

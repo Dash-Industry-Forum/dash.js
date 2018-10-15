@@ -26,5 +26,6 @@ describe('Constants', function () {
         expect(Constants.SUGGESTED_PRESENTATION_DELAY).to.equal('suggestedPresentationDelay');
         expect(Constants.SCHEME_ID_URI).to.equal('schemeIdUri');
         expect(Constants.START_TIME).to.equal('starttime');
+        expect(Constants.BAD_ARGUMENT_ERROR).to.equal('Invalid Arguments!');
     });
 });
