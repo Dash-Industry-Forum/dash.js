@@ -260,6 +260,7 @@ function AbrController() {
                 s.streaming.abr.initialBitrate[type] = (type === Constants.VIDEO) ? DEFAULT_VIDEO_BITRATE : DEFAULT_AUDIO_BITRATE;
             }
             settings.update(s);
+            configBitrate = settings.get().streaming.abr.initialBitrate[type];
         }
 
         return configBitrate;

@@ -294,15 +294,10 @@ describe('AbrController', function () {
     });
 
     it('should configure initial bitrate for type', function () {
+        domStorageMock.setSavedBitrateSettings(testType, 50);
+
         let initialBitrateFor = abrCtrl.getInitialBitrateFor(testType);
-        expect(initialBitrateFor).to.be.NaN; // jshint ignore:line
-
-        const s = { streaming: { abr: { initialBitrate: {}}}};
-        s.streaming.abr.initialBitrate[testType] = 10;
-        settings.update(s);
-
-        initialBitrateFor = abrCtrl.getInitialBitrateFor(testType);
-        expect(initialBitrateFor).to.equal(10);
+        expect(initialBitrateFor).to.equal(50);
     });
 
     it('should return an appropriate BitrateInfo when calling getTopBitrateInfoFor', function () {
