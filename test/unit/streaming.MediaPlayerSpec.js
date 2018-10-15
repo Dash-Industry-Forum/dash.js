@@ -255,6 +255,38 @@ describe('MediaPlayer', function () {
                 expect(player.setAutoPlay.bind(player, 12)).to.throw(Constants.BAD_ARGUMENT_ERROR);
             });
 
+            it('should not set setMaxAllowedBitrateFor value if it\'s not a number type or NaN or if type is not Video or Audio', function () {
+                expect(player.setMaxAllowedBitrateFor.bind(player, Constants.TEXT, 12)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setMaxAllowedBitrateFor.bind(player, true, 12)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setMaxAllowedBitrateFor.bind(player, 1, 12)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setMaxAllowedBitrateFor.bind(player, Constants.VIDEO, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setMaxAllowedBitrateFor.bind(player, Constants.VIDEO, NaN)).not.to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setMaxAllowedBitrateFor.bind(player, Constants.VIDEO, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+            });
+
+            it('should not set setMinAllowedBitrateFor value if it\'s not a number type or NaN or if type is not Video or Audio', function () {
+                expect(player.setMinAllowedBitrateFor.bind(player, Constants.TEXT, 12)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setMinAllowedBitrateFor.bind(player, true, 12)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setMinAllowedBitrateFor.bind(player, 1, 12)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setMinAllowedBitrateFor.bind(player, Constants.VIDEO, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setMinAllowedBitrateFor.bind(player, Constants.VIDEO, NaN)).not.to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setMinAllowedBitrateFor.bind(player, Constants.VIDEO, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+            });
+
+            it('should not set setInitialBitrateFor value if it\'s not a number type or NaN or if type is not Video or Audio', function () {
+                expect(player.setInitialBitrateFor.bind(player, Constants.TEXT, 12)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setInitialBitrateFor.bind(player, true, 12)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setInitialBitrateFor.bind(player, 1, 12)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setInitialBitrateFor.bind(player, Constants.VIDEO, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setInitialBitrateFor.bind(player, Constants.VIDEO, NaN)).not.to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setInitialBitrateFor.bind(player, Constants.VIDEO, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+            });
+
+            it('should not setUsePixelRatioInLimitBitrateByPortal value if it\'s not a boolean type', function () {
+                expect(player.setUsePixelRatioInLimitBitrateByPortal.bind(player, 12)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setUsePixelRatioInLimitBitrateByPortal.bind(player, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+            });
+
             it('Method isDynamic should get dynamic value', function () {
                 let isDynamic = player.isDynamic();
                 expect(isDynamic).to.be.false; // jshint ignore:line

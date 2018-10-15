@@ -7,11 +7,11 @@ function DomStorageMock () {
             return this.mediaSettings[type];
         }
         return null;
-    }
+    };
 
-    this.setSavedBitrateSettings = function(type, bitrate) {
+    this.setSavedBitrateSettings = function (type, bitrate) {
         this.bitrateSettings[type] = bitrate;
-    }
+    };
 
     this.getSavedBitrateSettings = function (type) {
         return this.bitrateSettings[type];

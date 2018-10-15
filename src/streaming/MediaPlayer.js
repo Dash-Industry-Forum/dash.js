@@ -69,7 +69,7 @@ import {
 import BASE64 from '../../externals/base64';
 import ISOBoxer from 'codem-isoboxer';
 import DashJSError from './vo/DashJSError';
-import { checkParameterType } from './utils/SupervisorTools';
+import { checkParameterType, checkIsVideoOrAudioType } from './utils/SupervisorTools';
 
 /**
  * @module MediaPlayer
@@ -857,6 +857,8 @@ function MediaPlayer() {
      * @instance
      */
     function setMaxAllowedBitrateFor(type, value) {
+        checkParameterType(value, 'number');
+        checkIsVideoOrAudioType(type);
         const s = { streaming: { abr: { maxBitrate: {}}}};
         s.streaming.abr.maxBitrate[type] = value;
         settings.update(s);
@@ -879,6 +881,8 @@ function MediaPlayer() {
      * @instance
      */
     function setMinAllowedBitrateFor(type, value) {
+        checkParameterType(value, 'number');
+        checkIsVideoOrAudioType(type);
         const s = { streaming: { abr: { minBitrate: {}}}};
         s.streaming.abr.minBitrate[type] = value;
         settings.update(s);
@@ -1068,9 +1072,7 @@ function MediaPlayer() {
      * @default {boolean} false
      */
     function setUsePixelRatioInLimitBitrateByPortal(value) {
-        if (typeof value !== 'boolean') {
-            return;
-        }
+        checkParameterType(value, 'boolean');
         const s = { streaming: { abr: { usePixelRatioInLimitBitrateByPortal: value } } };
         settings.update(s);
     }
@@ -1084,6 +1086,8 @@ function MediaPlayer() {
      * @instance
      */
     function setInitialBitrateFor(type, value) {
+        checkParameterType(value, 'number');
+        checkIsVideoOrAudioType(type);
         const s = { streaming: { abr: { initialBitrate: {}}}};
         s.streaming.abr.initialBitrate[type] = value;
         settings.update(s);
