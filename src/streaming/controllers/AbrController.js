@@ -277,8 +277,8 @@ function AbrController() {
      * @memberof AbrController#
      */
     function _setPlayerData(dict, mediaType, valueType, value) {
-        checkIsVideoOrAudioType(type);
-        checkParameterType(value, 'number');        
+        checkIsVideoOrAudioType(mediaType);
+        checkParameterType(value, 'number');
         dict[mediaType] = dict[mediaType] || {};
         dict[mediaType][valueType] = dict[mediaType][valueType] || {};
         dict[mediaType][valueType] = value;
