@@ -1,5 +1,7 @@
 import InsufficientBufferRule from '../../src/streaming/rules/abr/InsufficientBufferRule';
 import SwitchRequest from '../../src/streaming/rules/SwitchRequest';
+import Constants from '../../src/streaming/constants/Constants';
+
 import DashMetricsMock from './mocks/DashMetricsMock';
 
 const expect = require('chai').expect;
@@ -25,7 +27,7 @@ describe('InsufficientBufferRule', function () {
     });
 
     it('should throw an exception when attempting to call getMaxIndex While the config attribute has not been set properly', function () {
-        expect(insufficientBufferRule.getMaxIndex.bind(insufficientBufferRule, {getMediaType: {}})).to.throw('Missing config parameter(s)');
+        expect(insufficientBufferRule.getMaxIndex.bind(insufficientBufferRule, {getMediaType: {}})).to.throw(Constants.MISSING_CONFIG_ERROR);
     });
 
     it('should return an empty switch request when bufferState is empty', function () {

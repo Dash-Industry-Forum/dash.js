@@ -36,6 +36,7 @@ import VTTParser from '../utils/VTTParser';
 import TTMLParser from '../utils/TTMLParser';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
+import { checkParameterType } from '../utils/SupervisorTools';
 
 function TextController() {
 
@@ -136,10 +137,7 @@ function TextController() {
     }
 
     function setTextDefaultLanguage(lang) {
-        if (typeof lang !== 'string') {
-            return;
-        }
-
+        checkParameterType(lang, 'string');
         defaultLanguage = lang;
     }
 
@@ -173,9 +171,7 @@ function TextController() {
     }
 
     function setTextDefaultEnabled(enable) {
-        if (typeof enable !== 'boolean') {
-            return;
-        }
+        checkParameterType(enable,'boolean');
         textDefaultEnabled = enable;
 
         if (!textDefaultEnabled) {
@@ -189,9 +185,7 @@ function TextController() {
     }
 
     function enableText(enable) {
-        if (typeof enable !== 'boolean') {
-            return;
-        }
+        checkParameterType(enable,'boolean');
 
         if (isTextEnabled() !== enable) {
             // change track selection
@@ -218,9 +212,7 @@ function TextController() {
 
     // when set to true NextFragmentRequestRule will allow schedule of chunks even if tracks are all disabled. Allowing streaming to hidden track for external players to work with.
     function enableForcedTextStreaming(enable) {
-        if (typeof enable !== 'boolean') {
-            return;
-        }
+        checkParameterType(enable,'boolean');
         forceTextStreaming = enable;
     }
 

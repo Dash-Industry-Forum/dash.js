@@ -33,6 +33,7 @@ import AbrController from '../../controllers/AbrController';
 import FactoryMaker from '../../../core/FactoryMaker';
 import Debug from '../../../core/Debug';
 import SwitchRequest from '../SwitchRequest';
+import Constants from '../../constants/Constants';
 
 function ThroughputRule(config) {
 
@@ -49,7 +50,7 @@ function ThroughputRule(config) {
 
     function checkConfig() {
         if (!metricsModel || !metricsModel.hasOwnProperty('getReadOnlyMetricsFor')) {
-            throw new Error('Missing config parameter(s)');
+            throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
     }
 

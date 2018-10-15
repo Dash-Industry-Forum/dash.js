@@ -37,6 +37,7 @@ import DVBSelector from './baseUrlResolution/DVBSelector';
 import BasicSelector from './baseUrlResolution/BasicSelector';
 import FactoryMaker from '../../core/FactoryMaker';
 import DashJSError from '../vo/DashJSError';
+import Constants from '../constants/Constants';
 
 function BaseURLSelector() {
 
@@ -78,7 +79,7 @@ function BaseURLSelector() {
 
     function checkConfig() {
         if (!dashManifestModel || !dashManifestModel.hasOwnProperty('getIsDVB')) {
-            throw new Error('Missing config parameter(s)');
+            throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
     }
 

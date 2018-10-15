@@ -262,7 +262,7 @@ function Stream(config) {
 
     function checkConfig() {
         if (!abrController || !abrController.hasOwnProperty('getBitrateList') || !adapter || !adapter.hasOwnProperty('getAllMediaInfoForType') || !adapter.hasOwnProperty('getEventsFor')) {
-            throw new Error('Missing config parameter(s)');
+            throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
     }
 

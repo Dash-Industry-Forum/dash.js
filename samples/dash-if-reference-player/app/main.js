@@ -455,7 +455,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
             stableBufferTime: $scope.defaultStableBufferDelay,
             bufferTimeAtTopQuality: $scope.defaultBufferTimeAtTopQuality,
             bufferTimeAtTopQualityLongForm: $scope.defaultBufferTimeAtTopQualityLongForm,
-            lowLatencyMode: $scope.lowLatencyMode
+            lowLatencyMode: $scope.lowLatencyModeSelected
         };
         if ($scope.selectedItem.hasOwnProperty('bufferConfig')) {
             var selectedConfig = $scope.selectedItem.bufferConfig;

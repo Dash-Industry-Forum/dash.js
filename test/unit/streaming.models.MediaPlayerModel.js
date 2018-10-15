@@ -14,9 +14,9 @@ describe('MediaPlayerModel', function () {
 
     it('should not set a value to lowLatencyEnabled attribute that is not a boolean type', function () {
         expect(mediaPlayerModel.getLowLatencyEnabled()).to.be.equal(false);
-        mediaPlayerModel.setLowLatencyEnabled(undefined);
+        expect(mediaPlayerModel.setLowLatencyEnabled.bind(mediaPlayerModel, undefined)).to.throw(Constants.BAD_ARGUMENT_ERROR);
         expect(mediaPlayerModel.getLowLatencyEnabled()).to.be.equal(false);
-        mediaPlayerModel.setLowLatencyEnabled(1);
+        expect(mediaPlayerModel.setLowLatencyEnabled.bind(mediaPlayerModel, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
         expect(mediaPlayerModel.getLowLatencyEnabled()).to.be.equal(false);
         mediaPlayerModel.setLowLatencyEnabled(true);
         expect(mediaPlayerModel.getLowLatencyEnabled()).to.be.equal(true);
@@ -24,9 +24,9 @@ describe('MediaPlayerModel', function () {
 
     it('should not set a value to fastSwitchEnabled attribute that is not a boolean type', function () {
         expect(mediaPlayerModel.getFastSwitchEnabled()).to.be.equal(false);
-        expect(mediaPlayerModel.setFastSwitchEnabled.bind(mediaPlayerModel, undefined));
+        expect(mediaPlayerModel.setFastSwitchEnabled.bind(mediaPlayerModel, undefined)).to.throw(Constants.BAD_ARGUMENT_ERROR);
         expect(mediaPlayerModel.getFastSwitchEnabled()).to.be.equal(false);
-        expect(mediaPlayerModel.setFastSwitchEnabled.bind(mediaPlayerModel, 1));
+        expect(mediaPlayerModel.setFastSwitchEnabled.bind(mediaPlayerModel, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
         expect(mediaPlayerModel.getFastSwitchEnabled()).to.be.equal(false);
         mediaPlayerModel.setFastSwitchEnabled(true);
         expect(mediaPlayerModel.getFastSwitchEnabled()).to.be.equal(true);
@@ -151,10 +151,35 @@ describe('MediaPlayerModel', function () {
         expect(mediaPlayerModel.setUseDefaultABRRules.bind(mediaPlayerModel, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
     });
 
+    it('Method setUseSuggestedPresentationDelay should throw an exception', function () {
+        expect(mediaPlayerModel.setUseSuggestedPresentationDelay.bind(mediaPlayerModel, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(mediaPlayerModel.setUseSuggestedPresentationDelay.bind(mediaPlayerModel, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+    });
+
+    it('Method setWallclockTimeUpdateInterval should throw an exception', function () {
+        expect(mediaPlayerModel.setWallclockTimeUpdateInterval.bind(mediaPlayerModel, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(mediaPlayerModel.setWallclockTimeUpdateInterval.bind(mediaPlayerModel, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+    });
+
+    it('Method setScheduleWhilePaused should throw an exception', function () {
+        expect(mediaPlayerModel.setScheduleWhilePaused.bind(mediaPlayerModel, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(mediaPlayerModel.setScheduleWhilePaused.bind(mediaPlayerModel, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+    });
+
+    it('Method setLiveDelayFragmentCount should throw an exception', function () {
+        expect(mediaPlayerModel.setLiveDelayFragmentCount.bind(mediaPlayerModel, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(mediaPlayerModel.setLiveDelayFragmentCount.bind(mediaPlayerModel, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+    });
+
+    it('Method setLiveDelay should throw an exception', function () {
+        expect(mediaPlayerModel.setLiveDelay.bind(mediaPlayerModel, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(mediaPlayerModel.setLiveDelay.bind(mediaPlayerModel, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+    });
+
     it('Method addABRCustomRule should throw an exception', function () {
-        expect(mediaPlayerModel.addABRCustomRule.bind(mediaPlayerModel, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.addABRCustomRule.bind(mediaPlayerModel, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.addABRCustomRule.bind(mediaPlayerModel, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(mediaPlayerModel.addABRCustomRule.bind(mediaPlayerModel, 'unknownRuleType', 'newRuleName')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(mediaPlayerModel.addABRCustomRule.bind(mediaPlayerModel, true, 'newRuleName')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(mediaPlayerModel.addABRCustomRule.bind(mediaPlayerModel, 1, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
         expect(mediaPlayerModel.addABRCustomRule.bind(mediaPlayerModel, ABRRulesCollection.ABANDON_FRAGMENT_RULES, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
         expect(mediaPlayerModel.addABRCustomRule.bind(mediaPlayerModel, ABRRulesCollection.ABANDON_FRAGMENT_RULES, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
     });
