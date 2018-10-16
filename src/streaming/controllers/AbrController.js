@@ -44,7 +44,7 @@ import DroppedFramesHistory from '../rules/DroppedFramesHistory';
 import ThroughputHistory from '../rules/ThroughputHistory';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import Debug from '../../core/Debug';
-import { checkParameterType, checkInteger, checkIsVideoOrAudioType } from '../utils/SupervisorTools';
+import { checkParameterType, checkInteger } from '../utils/SupervisorTools';
 import Settings from '../../core/Settings';
 
 const ABANDON_LOAD = 'abandonload';
@@ -64,7 +64,6 @@ function AbrController() {
         logger,
         abrRulesCollection,
         streamController,
-        autoSwitchBitrate,
         topQualities,
         qualityDict,
         streamProcessorDict,
@@ -124,7 +123,6 @@ function AbrController() {
     }
 
     function resetInitialSettings() {
-        autoSwitchBitrate = {video: true, audio: true};
         topQualities = {};
         qualityDict = {};
         abandonmentStateDict = {};
@@ -304,16 +302,6 @@ function AbrController() {
         return settings.get().streaming.abr.maxRepresentationRatio[type];
     }
 
-    function getAutoSwitchBitrateFor(type) {
-        return autoSwitchBitrate[type];
-    }
-
-    function setAutoSwitchBitrateFor(type, value) {
-        checkParameterType(value, 'boolean');
-        checkIsVideoOrAudioType(type);
-        autoSwitchBitrate[type] = value;
-    }
-
     function getUseDeadTimeLatency() {
         return useDeadTimeLatency;
     }
@@ -321,6 +309,10 @@ function AbrController() {
     function setUseDeadTimeLatency(value) {
         checkParameterType(value, 'boolean');
         useDeadTimeLatency = value;
+    }
+
+    function getAutoSwitchBitrateFor(type) {
+        return !!settings.get().streaming.abr.autoSwitchBitrate[type];
     }
 
     function checkPlaybackQuality(type) {
@@ -666,8 +658,6 @@ function AbrController() {
         getMaxAllowedIndexFor: getMaxAllowedIndexFor,
         getMinAllowedIndexFor: getMinAllowedIndexFor,
         getInitialBitrateFor: getInitialBitrateFor,
-        setAutoSwitchBitrateFor: setAutoSwitchBitrateFor,
-        getAutoSwitchBitrateFor: getAutoSwitchBitrateFor,
         getUseDeadTimeLatency: getUseDeadTimeLatency,
         setUseDeadTimeLatency: setUseDeadTimeLatency,
         getQualityFor: getQualityFor,

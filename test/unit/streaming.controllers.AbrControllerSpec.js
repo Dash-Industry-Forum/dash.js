@@ -57,27 +57,6 @@ describe('AbrController', function () {
         expect(quality).to.be.equal(0);    // jshint ignore:line
     });
 
-    it('should not set setAutoSwitchBitrateFor value if it\'s not a boolean type', function () {
-        let autoSwitchBitrateForVideo = abrCtrl.getAutoSwitchBitrateFor(Constants.VIDEO);
-        expect(autoSwitchBitrateForVideo).to.be.true; // jshint ignore:line
-
-        expect(abrCtrl.setAutoSwitchBitrateFor.bind(abrCtrl, Constants.VIDEO, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-
-        autoSwitchBitrateForVideo = abrCtrl.getAutoSwitchBitrateFor(Constants.VIDEO);
-
-        expect(autoSwitchBitrateForVideo).to.be.true; // jshint ignore:line
-
-        expect(abrCtrl.setAutoSwitchBitrateFor.bind(abrCtrl, Constants.VIDEO, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        autoSwitchBitrateForVideo = abrCtrl.getAutoSwitchBitrateFor(Constants.VIDEO);
-
-        expect(autoSwitchBitrateForVideo).to.be.true; // jshint ignore:line
-
-        abrCtrl.setAutoSwitchBitrateFor(Constants.VIDEO, false);
-        autoSwitchBitrateForVideo = abrCtrl.getAutoSwitchBitrateFor(Constants.VIDEO);
-
-        expect(autoSwitchBitrateForVideo).to.be.false; // jshint ignore:line
-    });
-
     it('should return true if isPlayingAtTopQuality function is called without parameter', function () {
         let isPlayingTopQuality = abrCtrl.isPlayingAtTopQuality();
         expect(isPlayingTopQuality).to.be.true; // jshint ignore:line

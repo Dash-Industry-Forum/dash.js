@@ -1140,7 +1140,7 @@ function MediaPlayer() {
      * @instance
      */
     function getAutoSwitchQualityFor(type) {
-        return abrController.getAutoSwitchBitrateFor(type);
+        return settings.get().streaming.abr.autoSwitchBitrate[type];
     }
 
     /**
@@ -1153,7 +1153,11 @@ function MediaPlayer() {
      * @instance
      */
     function setAutoSwitchQualityFor(type, value) {
-        abrController.setAutoSwitchBitrateFor(type, value);
+        checkParameterType(value, 'boolean');
+        checkIsVideoOrAudioType(type);
+        const s = { streaming: { abr: { autoSwitchBitrate: {}}}};
+        s.streaming.abr.autoSwitchBitrate[type] = value;
+        settings.update(s);
     }
 
     /**

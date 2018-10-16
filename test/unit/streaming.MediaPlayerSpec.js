@@ -529,14 +529,25 @@ describe('MediaPlayer', function () {
             expect(initialRepresentationRatioFor).to.equal(10);
         });
 
-        it('should configure AutoSwitchBitrateForType', function () {
-            let AutoSwitchBitrateFor = abrControllerMock.getAutoSwitchBitrateFor('video');
-            expect(AutoSwitchBitrateFor).to.be.true; // jshint ignore:line
+        it('should not set setAutoSwitchBitrateFor value if it\'s not a boolean type', function () {
+            let autoSwitchBitrateForVideo = player.getAutoSwitchQualityFor(Constants.VIDEO);
+            expect(autoSwitchBitrateForVideo).to.be.true; // jshint ignore:line
 
-            player.setAutoSwitchQualityFor('video', false);
+            expect(player.setAutoSwitchQualityFor.bind(player, Constants.VIDEO, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
 
-            AutoSwitchBitrateFor = abrControllerMock.getAutoSwitchBitrateFor('video');
-            expect(AutoSwitchBitrateFor).to.be.false; // jshint ignore:line
+            autoSwitchBitrateForVideo = player.getAutoSwitchQualityFor(Constants.VIDEO);
+
+            expect(autoSwitchBitrateForVideo).to.be.true; // jshint ignore:line
+
+            expect(player.setAutoSwitchQualityFor.bind(player, Constants.VIDEO, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+            autoSwitchBitrateForVideo = player.getAutoSwitchQualityFor(Constants.VIDEO);
+
+            expect(autoSwitchBitrateForVideo).to.be.true; // jshint ignore:line
+
+            player.setAutoSwitchQualityFor(Constants.VIDEO, false);
+            autoSwitchBitrateForVideo = player.getAutoSwitchQualityFor(Constants.VIDEO);
+
+            expect(autoSwitchBitrateForVideo).to.be.false; // jshint ignore:line
         });
 
         it('Method getAverageThroughput should return 0 when throughputHistory is not set up', function () {
