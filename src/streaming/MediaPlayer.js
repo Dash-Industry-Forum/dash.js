@@ -2666,7 +2666,9 @@ function MediaPlayer() {
      * @instance
      */
     function keepProtectionMediaKeys(value) {
-        mediaPlayerModel.setKeepProtectionMediaKeys(value);
+        checkParameterType(value, 'boolean');
+        const s = { streaming: { keepProtectionMediaKeys: value }};
+        settings.update(s);
     }
 
     /*
@@ -2893,7 +2895,7 @@ function MediaPlayer() {
         mediaController.reset();
         textController.reset();
         if (protectionController) {
-            if (mediaPlayerModel.getKeepProtectionMediaKeys()) {
+            if (settings.get().streaming.keepProtectionMediaKeys) {
                 protectionController.stop();
             } else {
                 protectionController.reset();

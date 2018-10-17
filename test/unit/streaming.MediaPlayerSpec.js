@@ -408,6 +408,11 @@ describe('MediaPlayer', function () {
                 expect(player.setSmallGapLimit.bind(player, 'true')).to.throw(Constants.BAD_ARGUMENT_ERROR);
             });
 
+            it('Method setKeepProtectionMediaKeys should throw an exception', function () {
+                expect(player.keepProtectionMediaKeys.bind(player, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.keepProtectionMediaKeys.bind(player, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+            });
+
             it('Method isDynamic should get dynamic value', function () {
                 let isDynamic = player.isDynamic();
                 expect(isDynamic).to.be.false; // jshint ignore:line

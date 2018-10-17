@@ -195,6 +195,16 @@ function Settings() {
              * @memberof module:Settings.Schema
              */
             lowLatencyEnabled: false,
+            /**
+             * Set the value for the ProtectionController and MediaKeys life cycle. If true, the
+             * ProtectionController and then created MediaKeys and MediaKeySessions will be preserved during
+             * the MediaPlayer lifetime.
+             *
+             * @param {boolean=} value - True or false flag.
+             * @default false
+             * @memberof module:Settings.Schema
+             */
+            keepProtectionMediaKeys: false,
             abr: {
                 /**
                  * Standard ABR throughput rules multiply the throughput by this value. It should be between 0 and 1,
