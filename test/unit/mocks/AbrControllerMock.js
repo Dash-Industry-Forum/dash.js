@@ -23,9 +23,6 @@ class AbrControllerMock{
         this.elementWidth = undefined;
         this.elementHeight = undefined;
         this.windowResizeEventCalled = false;
-        this.limitBitrateByPortal = false;
-        this.usePixelRatioInLimitBitrateByPortal = false;
-        this.autoSwitchBitrate = {video: true, audio: true};
         this.throughputHistory = undefined;
         this.currentStreamId = undefined;
     }
@@ -46,14 +43,6 @@ class AbrControllerMock{
 
     getInitialBitrateFor(/*type*/) {
         return null;
-    }
-
-    getAutoSwitchBitrateFor(type) {
-        return this.autoSwitchBitrate[type];
-    }
-
-    setAutoSwitchBitrateFor(type, value) {
-        this.autoSwitchBitrate[type] = value;
     }
 
     checkPlaybackQuality() {}

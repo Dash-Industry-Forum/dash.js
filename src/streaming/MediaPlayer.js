@@ -117,7 +117,6 @@ function MediaPlayer() {
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
     const debug = Debug(context).getInstance();
-    const settings = Settings(context).getInstance();
 
     let instance,
         logger,
@@ -144,7 +143,8 @@ function MediaPlayer() {
         videoModel,
         textController,
         uriFragmentModel,
-        domStorage;
+        domStorage,
+        settings;
 
     /*
     ---------------------------------------------------------------------------
@@ -166,6 +166,7 @@ function MediaPlayer() {
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
         videoModel = VideoModel(context).getInstance();
         uriFragmentModel = URIFragmentModel(context).getInstance();
+        settings = Settings(context).getInstance();
     }
 
     /**
@@ -196,6 +197,9 @@ function MediaPlayer() {
         }
         if (config.mediaController) {
             mediaController = config.mediaController;
+        }
+        if (config.settings) {
+            settings = config.settings;
         }
     }
 
@@ -1169,7 +1173,7 @@ function MediaPlayer() {
      * @instance
      */
     function getUseDeadTimeLatencyForAbr() {
-        return abrController.getUseDeadTimeLatency();
+        return settings.get().streaming.abr.useDeadTimeLatency;
     }
 
     /**
@@ -1184,7 +1188,9 @@ function MediaPlayer() {
      * @instance
      */
     function setUseDeadTimeLatencyForAbr(useDeadTimeLatency) {
-        abrController.setUseDeadTimeLatency(useDeadTimeLatency);
+        checkParameterType(useDeadTimeLatency, 'boolean');
+        const s = { streaming: { abr: { useDeadTimeLatency: useDeadTimeLatency }}};
+        settings.update(s);
     }
 
     /*
@@ -1232,7 +1238,9 @@ function MediaPlayer() {
      * @instance
      */
     function setLiveDelayFragmentCount(value) {
-        mediaPlayerModel.setLiveDelayFragmentCount(value);
+        checkParameterType(value, 'number');
+        const s = { streaming: { liveDelayFragmentCount: value }};
+        settings.update(s);
     }
 
     /**
@@ -1249,7 +1257,11 @@ function MediaPlayer() {
      * @instance
      */
     function setLiveDelay(value) {
-        mediaPlayerModel.setLiveDelay(value);
+        if (value !== undefined) { // undefined is the default value...
+            checkParameterType(value, 'number');
+        }
+        const s = { streaming: { liveDelay: value }};
+        settings.update(s);
     }
 
     /**
@@ -1342,7 +1354,9 @@ function MediaPlayer() {
      * @instance
      */
     function setScheduleWhilePaused(value) {
-        mediaPlayerModel.setScheduleWhilePaused(value);
+        checkParameterType(value, 'boolean');
+        const s = { streaming: { scheduleWhilePaused: value }};
+        settings.update(s);
     }
 
     /**
@@ -1353,7 +1367,7 @@ function MediaPlayer() {
      * @instance
      */
     function getScheduleWhilePaused() {
-        return mediaPlayerModel.getScheduleWhilePaused();
+        return settings.get().streaming.scheduleWhilePaused;
     }
 
     /**
@@ -1381,7 +1395,9 @@ function MediaPlayer() {
      * @instance
      */
     function setFastSwitchEnabled(value) { //TODO we need to look at track switches for adaptation sets.  If always replace it works much like this but clears buffer. Maybe too many ways to do same thing.
-        mediaPlayerModel.setFastSwitchEnabled(value);
+        checkParameterType(value, 'boolean');
+        const s = { streaming: { fastSwitchEnabled: value } };
+        settings.update(s);
     }
 
     /**
@@ -1392,7 +1408,7 @@ function MediaPlayer() {
      * @instance
      */
     function getFastSwitchEnabled() {
-        return mediaPlayerModel.getFastSwitchEnabled();
+        return settings.get().streaming.fastSwitchEnabled;
     }
 
     /**
@@ -1433,7 +1449,9 @@ function MediaPlayer() {
      * @instance
      */
     function useDefaultABRRules(value) {
-        mediaPlayerModel.setUseDefaultABRRules(value);
+        checkParameterType(value, 'boolean');
+        const s = { streaming: { abr: { useDefaultABRRules: value } } };
+        settings.update(s);
     }
 
     /**
@@ -1513,7 +1531,7 @@ function MediaPlayer() {
      * @instance
      */
     function getLowLatencyEnabled() {
-        return mediaPlayerModel.getLowLatencyEnabled();
+        return settings.get().streaming.lowLatencyEnabled;
     }
 
     /**
@@ -1525,7 +1543,9 @@ function MediaPlayer() {
      * @instance
      */
     function setLowLatencyEnabled(value) {
-        mediaPlayerModel.setLowLatencyEnabled(value);
+        checkParameterType(value, 'boolean');
+        const s = { streaming: { lowLatencyEnabled: value }};
+        settings.update(s);
     }
 
     /**
@@ -1635,7 +1655,9 @@ function MediaPlayer() {
      * @instance
      */
     function setBufferToKeep(value) {
-        mediaPlayerModel.setBufferToKeep(value);
+        checkParameterType(value, 'number');
+        const s = { streaming: { bufferToKeep: value } };
+        settings.update(s);
     }
 
     /**
@@ -1664,7 +1686,10 @@ function MediaPlayer() {
      * @instance
      */
     function setBufferPruningInterval(value) {
-        mediaPlayerModel.setBufferPruningInterval(value);
+        checkParameterType(value, 'number');
+        const s = { streaming: { bufferPruningInterval: value } };
+        settings.update(s);
+
     }
 
     /**
@@ -1685,7 +1710,9 @@ function MediaPlayer() {
      * @instance
      */
     function setStableBufferTime(value) {
-        mediaPlayerModel.setStableBufferTime(value);
+        checkParameterType(value, 'number');
+        const s = { streaming: { stableBufferTime: value } };
+        settings.update(s);
     }
 
     /**
@@ -1716,7 +1743,9 @@ function MediaPlayer() {
      * @instance
      */
     function setBufferTimeAtTopQuality(value) {
-        mediaPlayerModel.setBufferTimeAtTopQuality(value);
+        checkParameterType(value, 'number');
+        const s = { streaming: { bufferTimeAtTopQuality: value } };
+        settings.update(s);
     }
 
     /**
@@ -1730,7 +1759,7 @@ function MediaPlayer() {
      * @instance
      */
     function getBufferTimeAtTopQuality() {
-        return mediaPlayerModel.getBufferTimeAtTopQuality();
+        return settings.get().streaming.bufferTimeAtTopQuality;
     }
 
     /**
@@ -1745,7 +1774,9 @@ function MediaPlayer() {
      * @instance
      */
     function setBufferTimeAtTopQualityLongForm(value) {
-        mediaPlayerModel.setBufferTimeAtTopQualityLongForm(value);
+        checkParameterType(value, 'number');
+        const s = { streaming: { bufferTimeAtTopQualityLongForm: value } };
+        settings.update(s);
     }
 
     /**
@@ -1758,7 +1789,7 @@ function MediaPlayer() {
      * @instance
      */
     function getBufferTimeAtTopQualityLongForm() {
-        return mediaPlayerModel.getBufferTimeAtTopQualityLongForm();
+        return settings.get().streaming.bufferTimeAtTopQualityLongForm;
     }
 
     /**
@@ -1773,7 +1804,9 @@ function MediaPlayer() {
      * @instance
      */
     function setLongFormContentDurationThreshold(value) {
-        mediaPlayerModel.setLongFormContentDurationThreshold(value);
+        checkParameterType(value, 'number');
+        const s = { streaming: { longFormContentDurationThreshold: value } };
+        settings.update(s);
     }
 
     /**
@@ -1825,7 +1858,9 @@ function MediaPlayer() {
      * @instance
      */
     function setBandwidthSafetyFactor(value) {
-        mediaPlayerModel.setBandwidthSafetyFactor(value);
+        checkParameterType(value, 'number');
+        const s = { streaming: { abr: { bandwidthSafetyFactor: value } } };
+        settings.update(s);
     }
 
     /**
@@ -1837,7 +1872,7 @@ function MediaPlayer() {
      * @instance
      */
     function getBandwidthSafetyFactor() {
-        return mediaPlayerModel.getBandwidthSafetyFactor();
+        return settings.get().streaming.abr.bandwidthSafetyFactor;
     }
 
     /**
@@ -1864,7 +1899,9 @@ function MediaPlayer() {
      * @instance
      */
     function setAbandonLoadTimeout(value) {
-        mediaPlayerModel.setAbandonLoadTimeout(value);
+        checkParameterType(value, 'number');
+        const s = { streaming: { abandonLoadTimeout: value } };
+        settings.update(s);
     }
 
     /**
@@ -2887,7 +2924,8 @@ function MediaPlayer() {
             playbackController: playbackController,
             abrController: abrController,
             mediaController: mediaController,
-            textController: textController
+            textController: textController,
+            settings: settings
         });
 
         playbackController.setConfig({
@@ -2897,7 +2935,8 @@ function MediaPlayer() {
             adapter: adapter,
             videoModel: videoModel,
             timelineConverter: timelineConverter,
-            uriFragmentModel: uriFragmentModel
+            uriFragmentModel: uriFragmentModel,
+            settings: settings
         });
 
         abrController.setConfig({
@@ -2906,7 +2945,8 @@ function MediaPlayer() {
             mediaPlayerModel: mediaPlayerModel,
             dashMetrics: dashMetrics,
             adapter: adapter,
-            videoModel: videoModel
+            videoModel: videoModel,
+            settings: settings
         });
         abrController.createAbrRulesCollection();
 

@@ -68,10 +68,10 @@ function Settings() {
              * <p>This value should be less than the manifest duration by a couple of segment durations to avoid playback issues</p>
              * <p>If set, this parameter will take precedence over setLiveDelayFragmentCount and manifest info</p>
              * @alias streaming.liveDelay
-             * @default NaN
+             * @default undefined
              * @memberof module:Settings.Schema
              */
-            liveDelay: NaN,
+            liveDelay: undefined,
             /**
              * Set to true if you would like dash.js to keep downloading fragments in the background
              * when the video element is paused.
@@ -105,20 +105,20 @@ function Settings() {
             /**
              * The interval of pruning buffer in seconds.
              * @alias streaming.bufferPruningInterval
-             * @default 30
+             * @default 10
              * @memberof module:Settings.Schema
              */
-            bufferPruningInterval: 30,
+            bufferPruningInterval: 10,
             /**
              * This value influences the buffer pruning logic.
              * Allows you to modify the buffer that is kept in source buffer in seconds.
              *  0|-----------bufferToPrune-----------|-----bufferToKeep-----|currentTime|
              *
              * @alias streaming.bufferToKeep
-             * @default 30
+             * @default 20
              * @memberof module:Settings.Schema
              */
-            bufferToKeep: 30,
+            bufferToKeep: 20,
             /**
              * The time that the internal buffer target will be set to post startup/seeks (NOT top quality).
              *
@@ -126,10 +126,10 @@ function Settings() {
              * to see automatic bitrate switches but will have a larger buffer which
              * will increase stability.
              * @alias streaming.stableBufferTime
-             * @default 12
+             * @default NaN
              * @memberof module:Settings.Schema
              */
-            stableBufferTime: 12,
+            stableBufferTime: NaN,
             /**
              * The time that the internal buffer target will be set to once playing the top quality.
              * If there are multiple bitrates in your adaptation, and the media is playing at the highest
@@ -156,22 +156,19 @@ function Settings() {
              */
             longFormContentDurationThreshold: 600,
             /**
-             * A threshold, in seconds, of when dashjs abr becomes less conservative since we have a
-             * larger "rich" buffer.
-             * The BufferOccupancyRule.js rule will override the ThroughputRule's decision when the
-             * buffer level surpasses this value and while it remains greater than this value.
-             * @alias streaming.richBufferThreshold
-             * @default 20
-             * @memberof module:Settings.Schema
-             */
-            richBufferThreshold: 20,
-            /**
              * How frequently the wallclockTimeUpdated internal event is triggered (in milliseconds).
              * @alias streaming.wallclockTimeUpdateInterval
              * @default 50
              * @memberof module:Settings.Schema
              */
             wallclockTimeUpdateInterval: 50,
+            /**
+             * Enable or disable low latency mode
+             * @alias streaming.lowLatencyEnabled
+             * @default false
+             * @memberof module:Settings.Schema
+             */
+            lowLatencyEnabled: false,
             abr: {
                 /**
                  * Standard ABR throughput rules multiply the throughput by this value. It should be between 0 and 1,

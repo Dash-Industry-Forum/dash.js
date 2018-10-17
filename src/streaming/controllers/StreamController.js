@@ -98,7 +98,8 @@ function StreamController() {
         useSmoothPeriodTransition,
         preloading,
         lastPlaybackTime,
-        supportsChangeType;
+        supportsChangeType,
+        settings;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -646,7 +647,8 @@ function StreamController() {
                         mediaController: mediaController,
                         textController: textController,
                         videoModel: videoModel,
-                        streamController: instance
+                        streamController: instance,
+                        settings: settings
                     });
                     streams.push(stream);
                     stream.initialize(streamInfo, protectionController);
@@ -914,6 +916,9 @@ function StreamController() {
         }
         if (config.textController) {
             textController = config.textController;
+        }
+        if (config.settings) {
+            settings = config.settings;
         }
     }
 

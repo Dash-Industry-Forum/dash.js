@@ -53,6 +53,7 @@ function ThroughputHistory(config) {
     const EWMA_LATENCY_FAST_HALF_LIFE_COUNT = 1;
 
     const mediaPlayerModel = config.mediaPlayerModel;
+    const settings = config.settings;
 
     let throughputDict,
         latencyDict,
@@ -87,7 +88,7 @@ function ThroughputHistory(config) {
         const downloadBytes = httpRequest.trace.reduce((a, b) => a + b.b[0], 0);
 
         let throughputMeasureTime;
-        if (mediaPlayerModel.getLowLatencyEnabled()) {
+        if (settings.get().streaming.lowLatencyEnabled) {
             throughputMeasureTime = httpRequest.trace.reduce((a, b) => a + b.d, 0);
         } else {
             throughputMeasureTime = useDeadTimeLatency ? downloadTimeInMilliseconds : latencyTimeInMilliseconds + downloadTimeInMilliseconds;
@@ -213,7 +214,7 @@ function ThroughputHistory(config) {
     function getSafeAverageThroughput(mediaType, isDynamic) {
         let average = getAverageThroughput(mediaType, isDynamic);
         if (!isNaN(average)) {
-            average *= mediaPlayerModel.getBandwidthSafetyFactor();
+            average *= settings.get().streaming.abr.bandwidthSafetyFactor;
         }
         return average;
     }

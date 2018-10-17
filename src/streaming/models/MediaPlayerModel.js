@@ -36,24 +36,15 @@ import {
 from '../vo/metrics/HTTPRequest';
 import Constants from '../constants/Constants';
 import ABRRulesCollection from '../rules/abr/ABRRulesCollection';
-import { checkParameterType, checkRange, checkIsVideoOrAudioType } from '../utils/SupervisorTools';
-
-const LIVE_DELAY_FRAGMENT_COUNT = 4;
+import Settings from '../../core/Settings';
+import { checkParameterType, checkIsVideoOrAudioType, checkRange } from '../utils/SupervisorTools';
 
 const DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION = 360000;
 const DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION = 360000;
 
-const BANDWIDTH_SAFETY_FACTOR = 0.9;
-const ABANDON_LOAD_TIMEOUT = 10000;
-
-const BUFFER_TO_KEEP = 20;
 const BUFFER_AHEAD_TO_KEEP = 80;
-const BUFFER_PRUNING_INTERVAL = 10;
 const DEFAULT_MIN_BUFFER_TIME = 12;
 const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
-const BUFFER_TIME_AT_TOP_QUALITY = 30;
-const BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 60;
-const LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;
 const SEGMENT_OVERLAP_TOLERANCE_TIME = 0.2;
 const SMALL_GAP_LIMIT = 0.8;
 const MANIFEST_UPDATE_RETRY_INTERVAL = 100;
@@ -77,9 +68,6 @@ const LOW_LATENCY_CATCH_UP_MIN_DRIFT = 0.02;
 const LOW_LATENCY_CATCH_UP_MAX_DRIFT = 0;
 const LOW_LATENCY_CATCH_UP_PLAYBACK_RATE = 0.5;
 
-//This value influences the startup time for live (in ms).
-const WALLCLOCK_TIME_UPDATE_INTERVAL = 50;
-
 const DEFAULT_XHR_WITH_CREDENTIALS = false;
 
 function MediaPlayerModel() {
@@ -88,34 +76,19 @@ function MediaPlayerModel() {
         useManifestDateHeaderTimeSource,
         useSuggestedPresentationDelay,
         UTCTimingSources,
-        liveDelayFragmentCount,
-        liveDelay,
-        scheduleWhilePaused,
-        bufferToKeep,
         bufferAheadToKeep,
-        bufferPruningInterval,
         lastBitrateCachingInfo,
         lastMediaSettingsCachingInfo,
-        stableBufferTime,
-        bufferTimeAtTopQuality,
-        bufferTimeAtTopQualityLongForm,
-        longFormContentDurationThreshold,
         segmentOverlapToleranceTime,
-        bandwidthSafetyFactor,
-        abandonLoadTimeout,
         retryAttempts,
         retryIntervals,
-        wallclockTimeUpdateInterval,
         ABRStrategy,
-        useDefaultABRRules,
         xhrWithCredentials,
-        fastSwitchEnabled,
         customABRRule,
         movingAverageMethod,
         cacheLoadThresholds,
         jumpGaps,
         smallGapLimit,
-        lowLatencyEnabled,
         manifestUpdateRetryInterval,
         keepProtectionMediaKeys,
         liveCatchUpMinDrift,
@@ -126,15 +99,14 @@ function MediaPlayerModel() {
             scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
             value: 'http://time.akamai.com/?iso&ms'
         };
+    const context = this.context;
+    const settings = Settings(context).getInstance();
 
     function setup() {
         UTCTimingSources = [];
         useSuggestedPresentationDelay = false;
         useManifestDateHeaderTimeSource = true;
-        scheduleWhilePaused = true;
         ABRStrategy = Constants.ABR_STRATEGY_DYNAMIC;
-        useDefaultABRRules = true;
-        fastSwitchEnabled = false;
         lastBitrateCachingInfo = {
             enabled: true,
             ttl: DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION
@@ -143,19 +115,8 @@ function MediaPlayerModel() {
             enabled: true,
             ttl: DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION
         };
-        liveDelayFragmentCount = LIVE_DELAY_FRAGMENT_COUNT;
-        liveDelay = undefined; // Explicitly state that default is undefined
-        bufferToKeep = BUFFER_TO_KEEP;
         bufferAheadToKeep = BUFFER_AHEAD_TO_KEEP;
-        bufferPruningInterval = BUFFER_PRUNING_INTERVAL;
-        stableBufferTime = NaN;
-        bufferTimeAtTopQuality = BUFFER_TIME_AT_TOP_QUALITY;
-        bufferTimeAtTopQualityLongForm = BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM;
-        longFormContentDurationThreshold = LONG_FORM_CONTENT_DURATION_THRESHOLD;
         segmentOverlapToleranceTime = SEGMENT_OVERLAP_TOLERANCE_TIME;
-        bandwidthSafetyFactor = BANDWIDTH_SAFETY_FACTOR;
-        abandonLoadTimeout = ABANDON_LOAD_TIMEOUT;
-        wallclockTimeUpdateInterval = WALLCLOCK_TIME_UPDATE_INTERVAL;
         jumpGaps = false;
         smallGapLimit = SMALL_GAP_LIMIT;
         manifestUpdateRetryInterval = MANIFEST_UPDATE_RETRY_INTERVAL;
@@ -164,7 +125,7 @@ function MediaPlayerModel() {
         };
         customABRRule = [];
         movingAverageMethod = Constants.MOVING_AVERAGE_SLIDING_WINDOW;
-        lowLatencyEnabled = false;
+
         liveCatchUpMinDrift = LOW_LATENCY_CATCH_UP_MIN_DRIFT;
         liveCatchUpMaxDrift = LOW_LATENCY_CATCH_UP_MAX_DRIFT;
         liveCatchUpPlaybackRate = LOW_LATENCY_CATCH_UP_PLAYBACK_RATE;
@@ -208,15 +169,6 @@ function MediaPlayerModel() {
 
     function getABRStrategy() {
         return ABRStrategy;
-    }
-
-    function setUseDefaultABRRules(value) {
-        checkParameterType(value, 'boolean');
-        useDefaultABRRules = value;
-    }
-
-    function getUseDefaultABRRules() {
-        return useDefaultABRRules;
     }
 
     function findABRCustomRuleIndex(rulename) {
@@ -267,61 +219,11 @@ function MediaPlayerModel() {
         }
     }
 
-    function setBandwidthSafetyFactor(value) {
-        checkParameterType(value, 'number');
-        bandwidthSafetyFactor = value;
-    }
-
-    function getBandwidthSafetyFactor() {
-        return bandwidthSafetyFactor;
-    }
-
-    function setAbandonLoadTimeout(value) {
-        checkParameterType(value, 'number');
-        abandonLoadTimeout = value;
-    }
-
-    function getAbandonLoadTimeout() {
-        return abandonLoadTimeout;
-    }
-
-    function setStableBufferTime(value) {
-        checkParameterType(value, 'number');
-        stableBufferTime = value;
-    }
-
     function getStableBufferTime() {
         if (getLowLatencyEnabled()) {
             return getLiveDelay() * 0.6;
         }
-        return !isNaN(stableBufferTime) ? stableBufferTime : fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
-    }
-
-    function setBufferTimeAtTopQuality(value) {
-        checkParameterType(value, 'number');
-        bufferTimeAtTopQuality = value;
-    }
-
-    function getBufferTimeAtTopQuality() {
-        return bufferTimeAtTopQuality;
-    }
-
-    function setBufferTimeAtTopQualityLongForm(value) {
-        checkParameterType(value, 'number');
-        bufferTimeAtTopQualityLongForm = value;
-    }
-
-    function getBufferTimeAtTopQualityLongForm() {
-        return bufferTimeAtTopQualityLongForm;
-    }
-
-    function setLongFormContentDurationThreshold(value) {
-        checkParameterType(value, 'number');
-        longFormContentDurationThreshold = value;
-    }
-
-    function getLongFormContentDurationThreshold() {
-        return longFormContentDurationThreshold;
+        return !isNaN(settings.get().streaming.stableBufferTime) ? settings.get().streaming.stableBufferTime : settings.get().streaming.fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
     }
 
     function setSegmentOverlapToleranceTime(value) {
@@ -341,15 +243,6 @@ function MediaPlayerModel() {
 
     function getCacheLoadThresholdForType(type) {
         return cacheLoadThresholds[type];
-    }
-
-    function setBufferToKeep(value) {
-        checkParameterType(value, 'number');
-        bufferToKeep = value;
-    }
-
-    function getBufferToKeep() {
-        return bufferToKeep;
     }
 
     function setBufferAheadToKeep(value) {
@@ -389,15 +282,6 @@ function MediaPlayerModel() {
         return lastMediaSettingsCachingInfo;
     }
 
-    function setBufferPruningInterval(value) {
-        checkParameterType(value, 'number');
-        bufferPruningInterval = value;
-    }
-
-    function getBufferPruningInterval() {
-        return bufferPruningInterval;
-    }
-
     function setRetryAttemptsForType(type, value) {
         if (typeof value !== 'number' || typeof type !== 'string' || (type !== HTTPRequest.MPD_TYPE && type !== HTTPRequest.MEDIA_SEGMENT_TYPE)) {
             throw Constants.BAD_ARGUMENT_ERROR;
@@ -418,45 +302,11 @@ function MediaPlayerModel() {
         return getLowLatencyEnabled() ? retryIntervals[type] / LOW_LATENCY_REDUCTION_FACTOR : retryIntervals[type];
     }
 
-    function setWallclockTimeUpdateInterval(value) {
-        checkParameterType(value, 'number');
-        wallclockTimeUpdateInterval = value;
-    }
-
-    function getWallclockTimeUpdateInterval() {
-        return wallclockTimeUpdateInterval;
-    }
-
-    function setScheduleWhilePaused(value) {
-        checkParameterType(value, 'boolean');
-        scheduleWhilePaused = value;
-    }
-
-    function getScheduleWhilePaused() {
-        return scheduleWhilePaused;
-    }
-
-    function setLiveDelayFragmentCount(value) {
-        checkParameterType(value, 'number');
-        liveDelayFragmentCount = value;
-    }
-
-    function getLiveDelayFragmentCount() {
-        return liveDelayFragmentCount;
-    }
-
-    function setLiveDelay(value) {
-        if (value !== undefined) { // undefined is the default value...
-            checkParameterType(value, 'number');
-        }
-        liveDelay = value;
-    }
-
     function getLiveDelay() {
-        if (lowLatencyEnabled) {
-            return liveDelay || DEFAULT_LOW_LATENCY_LIVE_DELAY;
+        if (getLowLatencyEnabled()) {
+            return settings.get().streaming.liveDelay || DEFAULT_LOW_LATENCY_LIVE_DELAY;
         }
-        return liveDelay;
+        return settings.get().streaming.liveDelay;
     }
 
     function setUseManifestDateHeaderTimeSource(value) {
@@ -523,15 +373,6 @@ function MediaPlayerModel() {
         return useCreds === undefined ? xhrWithCredentials.default : useCreds;
     }
 
-    function getFastSwitchEnabled() {
-        return fastSwitchEnabled;
-    }
-
-    function setFastSwitchEnabled(value) {
-        checkParameterType(value, 'boolean');
-        fastSwitchEnabled = value;
-    }
-
     function setMovingAverageMethod(value) {
         if (value === Constants.MOVING_AVERAGE_SLIDING_WINDOW || value === Constants.MOVING_AVERAGE_EWMA) {
             movingAverageMethod = value;
@@ -563,12 +404,7 @@ function MediaPlayerModel() {
     }
 
     function getLowLatencyEnabled() {
-        return lowLatencyEnabled;
-    }
-
-    function setLowLatencyEnabled(value) {
-        checkParameterType(value, 'boolean');
-        lowLatencyEnabled = value;
+        return settings.get().streaming.lowLatencyEnabled;
     }
 
     function setCatchUpPlaybackRate(value) {
@@ -630,51 +466,27 @@ function MediaPlayerModel() {
     instance = {
         setABRStrategy: setABRStrategy,
         getABRStrategy: getABRStrategy,
-        setUseDefaultABRRules: setUseDefaultABRRules,
-        getUseDefaultABRRules: getUseDefaultABRRules,
         getABRCustomRules: getABRCustomRules,
         addABRCustomRule: addABRCustomRule,
         removeABRCustomRule: removeABRCustomRule,
-        setBandwidthSafetyFactor: setBandwidthSafetyFactor,
-        getBandwidthSafetyFactor: getBandwidthSafetyFactor,
-        setAbandonLoadTimeout: setAbandonLoadTimeout,
-        getAbandonLoadTimeout: getAbandonLoadTimeout,
         setLastBitrateCachingInfo: setLastBitrateCachingInfo,
         getLastBitrateCachingInfo: getLastBitrateCachingInfo,
         setLastMediaSettingsCachingInfo: setLastMediaSettingsCachingInfo,
         getLastMediaSettingsCachingInfo: getLastMediaSettingsCachingInfo,
-        setStableBufferTime: setStableBufferTime,
         getStableBufferTime: getStableBufferTime,
-        setBufferTimeAtTopQuality: setBufferTimeAtTopQuality,
-        getBufferTimeAtTopQuality: getBufferTimeAtTopQuality,
-        setBufferTimeAtTopQualityLongForm: setBufferTimeAtTopQualityLongForm,
-        getBufferTimeAtTopQualityLongForm: getBufferTimeAtTopQualityLongForm,
-        setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,
-        getLongFormContentDurationThreshold: getLongFormContentDurationThreshold,
         setSegmentOverlapToleranceTime: setSegmentOverlapToleranceTime,
         getSegmentOverlapToleranceTime: getSegmentOverlapToleranceTime,
         getCacheLoadThresholdForType: getCacheLoadThresholdForType,
         setCacheLoadThresholdForType: setCacheLoadThresholdForType,
-        setBufferToKeep: setBufferToKeep,
-        getBufferToKeep: getBufferToKeep,
         setBufferAheadToKeep: setBufferAheadToKeep,
         getBufferAheadToKeep: getBufferAheadToKeep,
-        setBufferPruningInterval: setBufferPruningInterval,
-        getBufferPruningInterval: getBufferPruningInterval,
         setRetryAttemptsForType: setRetryAttemptsForType,
         getRetryAttemptsForType: getRetryAttemptsForType,
         setRetryIntervalForType: setRetryIntervalForType,
         getRetryIntervalForType: getRetryIntervalForType,
-        setWallclockTimeUpdateInterval: setWallclockTimeUpdateInterval,
-        getWallclockTimeUpdateInterval: getWallclockTimeUpdateInterval,
-        setScheduleWhilePaused: setScheduleWhilePaused,
-        getScheduleWhilePaused: getScheduleWhilePaused,
         getUseSuggestedPresentationDelay: getUseSuggestedPresentationDelay,
         setUseSuggestedPresentationDelay: setUseSuggestedPresentationDelay,
-        setLiveDelayFragmentCount: setLiveDelayFragmentCount,
-        getLiveDelayFragmentCount: getLiveDelayFragmentCount,
         getLiveDelay: getLiveDelay,
-        setLiveDelay: setLiveDelay,
         setUseManifestDateHeaderTimeSource: setUseManifestDateHeaderTimeSource,
         getUseManifestDateHeaderTimeSource: getUseManifestDateHeaderTimeSource,
         addUTCTimingSource: addUTCTimingSource,
@@ -684,16 +496,12 @@ function MediaPlayerModel() {
         restoreDefaultUTCTimingSources: restoreDefaultUTCTimingSources,
         setXHRWithCredentialsForType: setXHRWithCredentialsForType,
         getXHRWithCredentialsForType: getXHRWithCredentialsForType,
-        setFastSwitchEnabled: setFastSwitchEnabled,
-        getFastSwitchEnabled: getFastSwitchEnabled,
         setMovingAverageMethod: setMovingAverageMethod,
         getMovingAverageMethod: getMovingAverageMethod,
         setJumpGaps: setJumpGaps,
         getJumpGaps: getJumpGaps,
         setSmallGapLimit: setSmallGapLimit,
         getSmallGapLimit: getSmallGapLimit,
-        getLowLatencyEnabled: getLowLatencyEnabled,
-        setLowLatencyEnabled: setLowLatencyEnabled,
         setCatchUpPlaybackRate: setCatchUpPlaybackRate,
         getCatchUpPlaybackRate: getCatchUpPlaybackRate,
         setLowLatencyMinDrift: setLowLatencyMinDrift,

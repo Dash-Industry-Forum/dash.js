@@ -70,6 +70,7 @@ function BufferController(config) {
     const playbackController = config.playbackController;
     const type = config.type;
     const streamProcessor = config.streamProcessor;
+    const settings = config.settings;
 
     let instance,
         logger,
@@ -550,7 +551,7 @@ function BufferController(config) {
         // When the player is working in low latency mode, the buffer is often below STALL_THRESHOLD.
         // So, when in low latency mode, change dash.js behavior so it notifies a stall just when
         // buffer reach 0 seconds
-        if (((!mediaPlayerModel.getLowLatencyEnabled() && bufferLevel < STALL_THRESHOLD) || bufferLevel === 0) && !isBufferingCompleted) {
+        if (((!settings.get().streaming.lowLatencyEnabled && bufferLevel < STALL_THRESHOLD) || bufferLevel === 0) && !isBufferingCompleted) {
             notifyBufferStateChanged(BUFFER_EMPTY);
         } else {
             if (isBufferingCompleted || bufferLevel >= streamProcessor.getStreamInfo().manifestInfo.minBufferTime) {
@@ -619,7 +620,7 @@ function BufferController(config) {
 
         const currentTime = playbackController.getTime();
         const rangeToKeep = {
-            start: Math.max(0, currentTime - mediaPlayerModel.getBufferToKeep()),
+            start: Math.max(0, currentTime - settings.get().streaming.bufferToKeep),
             end: currentTime + mediaPlayerModel.getBufferAheadToKeep()
         };
 
@@ -780,8 +781,8 @@ function BufferController(config) {
 
     function onWallclockTimeUpdated() {
         wallclockTicked++;
-        const secondsElapsed = (wallclockTicked * (mediaPlayerModel.getWallclockTimeUpdateInterval() / 1000));
-        if ((secondsElapsed >= mediaPlayerModel.getBufferPruningInterval())) {
+        const secondsElapsed = (wallclockTicked * (settings.get().streaming.wallclockTimeUpdateInterval / 1000));
+        if ((secondsElapsed >= settings.get().streaming.bufferPruningInterval)) {
             wallclockTicked = 0;
             pruneBuffer();
         }

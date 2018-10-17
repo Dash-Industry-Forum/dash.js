@@ -64,7 +64,8 @@ function PlaybackController() {
         isLowLatencySeekingInProgress,
         playbackStalled,
         minPlaybackRateChange,
-        uriFragmentModel;
+        uriFragmentModel,
+        settings;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -229,12 +230,12 @@ function PlaybackController() {
 
         if (mediaPlayerModel.getUseSuggestedPresentationDelay() && suggestedPresentationDelay !== null) {
             delay = suggestedPresentationDelay;
-        } else if (mediaPlayerModel.getLowLatencyEnabled()) {
+        } else if (settings.get().streaming.lowLatencyEnabled) {
             delay = 0;
         } else if (mediaPlayerModel.getLiveDelay()) {
             delay = mediaPlayerModel.getLiveDelay(); // If set by user, this value takes precedence
         } else if (!isNaN(fragmentDuration)) {
-            delay = fragmentDuration * mediaPlayerModel.getLiveDelayFragmentCount();
+            delay = fragmentDuration * settings.get().streaming.liveDelayFragmentCount;
         } else {
             delay = streamInfo.manifestInfo.minBufferTime * 2;
         }
@@ -323,6 +324,9 @@ function PlaybackController() {
         }
         if (config.uriFragmentModel) {
             uriFragmentModel = config.uriFragmentModel;
+        }
+        if (config.settings) {
+            settings = config.settings;
         }
     }
 
@@ -414,7 +418,7 @@ function PlaybackController() {
             onWallclockTime();
         };
 
-        wallclockTimeIntervalId = setInterval(tick, mediaPlayerModel.getWallclockTimeUpdateInterval());
+        wallclockTimeIntervalId = setInterval(tick, settings.get().streaming.wallclockTimeUpdateInterval);
     }
 
     function stopUpdatingWallclockTime() {

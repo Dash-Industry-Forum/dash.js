@@ -44,8 +44,7 @@ import DroppedFramesHistory from '../rules/DroppedFramesHistory';
 import ThroughputHistory from '../rules/ThroughputHistory';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import Debug from '../../core/Debug';
-import { checkParameterType, checkInteger } from '../utils/SupervisorTools';
-import Settings from '../../core/Settings';
+import { checkInteger } from '../utils/SupervisorTools';
 
 const ABANDON_LOAD = 'abandonload';
 const ALLOW_LOAD = 'allowload';
@@ -58,7 +57,6 @@ function AbrController() {
     const context = this.context;
     const debug = Debug(context).getInstance();
     const eventBus = EventBus(context).getInstance();
-    const settings = Settings(context).getInstance();
 
     let instance,
         logger,
@@ -82,7 +80,7 @@ function AbrController() {
         throughputHistory,
         isUsingBufferOccupancyABRDict,
         dashMetrics,
-        useDeadTimeLatency;
+        settings;
 
     function setup() {
         logger = debug.getLogger(instance);
@@ -105,7 +103,8 @@ function AbrController() {
         eventBus.on(Events.PERIOD_SWITCH_COMPLETED, createAbrRulesCollection, this);
 
         throughputHistory = throughputHistory || ThroughputHistory(context).create({
-            mediaPlayerModel: mediaPlayerModel
+            mediaPlayerModel: mediaPlayerModel,
+            settings: settings
         });
     }
 
@@ -116,7 +115,8 @@ function AbrController() {
     function createAbrRulesCollection() {
         abrRulesCollection = ABRRulesCollection(context).create({
             dashMetrics: dashMetrics,
-            mediaPlayerModel: mediaPlayerModel
+            mediaPlayerModel: mediaPlayerModel,
+            settings: settings
         });
 
         abrRulesCollection.initialize();
@@ -129,7 +129,6 @@ function AbrController() {
         streamProcessorDict = {};
         switchHistoryDict = {};
         isUsingBufferOccupancyABRDict = {};
-        useDeadTimeLatency = true;
         if (windowResizeEventCalled === undefined) {
             windowResizeEventCalled = false;
         }
@@ -175,6 +174,9 @@ function AbrController() {
         if (config.videoModel) {
             videoModel = config.videoModel;
         }
+        if (config.settings) {
+            settings = config.settings;
+        }
     }
 
     function checkConfig() {
@@ -192,7 +194,7 @@ function AbrController() {
 
     function onMetricAdded(e) {
         if (e.metric === MetricsConstants.HTTP_REQUEST && e.value && e.value.type === HTTPRequest.MEDIA_SEGMENT_TYPE && (e.mediaType === Constants.AUDIO || e.mediaType === Constants.VIDEO)) {
-            throughputHistory.push(e.mediaType, e.value, useDeadTimeLatency);
+            throughputHistory.push(e.mediaType, e.value, settings.get().streaming.abr.useDeadTimeLatency);
         }
 
         if (e.metric === MetricsConstants.BUFFER_LEVEL && (e.mediaType === Constants.AUDIO || e.mediaType === Constants.VIDEO)) {
@@ -302,15 +304,6 @@ function AbrController() {
         return settings.get().streaming.abr.maxRepresentationRatio[type];
     }
 
-    function getUseDeadTimeLatency() {
-        return useDeadTimeLatency;
-    }
-
-    function setUseDeadTimeLatency(value) {
-        checkParameterType(value, 'boolean');
-        useDeadTimeLatency = value;
-    }
-
     function getAutoSwitchBitrateFor(type) {
         return !!settings.get().streaming.abr.autoSwitchBitrate[type];
     }
@@ -408,7 +401,7 @@ function AbrController() {
     function getQualityForBitrate(mediaInfo, bitrate, latency) {
         const voRepresentation = mediaInfo && mediaInfo.type ? streamProcessorDict[mediaInfo.type].getRepresentationInfo() : null;
 
-        if (useDeadTimeLatency && latency && voRepresentation && voRepresentation.fragmentDuration) {
+        if (settings.get().streaming.abr.useDeadTimeLatency && latency && voRepresentation && voRepresentation.fragmentDuration) {
             latency = latency / 1000;
             const fragmentDuration = voRepresentation.fragmentDuration;
             if (latency > fragmentDuration) {
@@ -641,7 +634,7 @@ function AbrController() {
                     clearTimeout(abandonmentTimeout);
                     abandonmentTimeout = setTimeout(
                         () => {setAbandonmentStateFor(type, ALLOW_LOAD); abandonmentTimeout = null;},
-                        mediaPlayerModel.getAbandonLoadTimeout()
+                        settings.get().streaming.abandonLoadTimeout
                     );
                 }
             }
@@ -658,8 +651,6 @@ function AbrController() {
         getMaxAllowedIndexFor: getMaxAllowedIndexFor,
         getMinAllowedIndexFor: getMinAllowedIndexFor,
         getInitialBitrateFor: getInitialBitrateFor,
-        getUseDeadTimeLatency: getUseDeadTimeLatency,
-        setUseDeadTimeLatency: setUseDeadTimeLatency,
         getQualityFor: getQualityFor,
         getAbandonmentStateFor: getAbandonmentStateFor,
         setPlaybackQuality: setPlaybackQuality,

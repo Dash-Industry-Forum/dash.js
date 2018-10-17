@@ -59,6 +59,7 @@ function StreamProcessor(config) {
     let textController = config.textController;
     let domStorage = config.domStorage;
     let dashMetrics = config.dashMetrics;
+    let settings = config.settings;
 
     let instance,
         mediaInfo,
@@ -111,7 +112,8 @@ function StreamProcessor(config) {
             streamController: streamController,
             textController: textController,
             streamProcessor: instance,
-            mediaController: mediaController
+            mediaController: mediaController,
+            settings: settings
         });
         representationController = RepresentationController(context).create();
         representationController.setConfig({
@@ -343,7 +345,8 @@ function StreamProcessor(config) {
                 textController: textController,
                 abrController: abrController,
                 playbackController: playbackController,
-                streamProcessor: instance
+                streamProcessor: instance,
+                settings: settings
             });
         } else {
             controller = TextBufferController(context).create({

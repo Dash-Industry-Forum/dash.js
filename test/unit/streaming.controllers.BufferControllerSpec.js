@@ -4,6 +4,7 @@ import EventBus from '../../src/core/EventBus';
 import Events from '../../src/core/events/Events';
 import InitCache from '../../src/streaming/utils/InitCache';
 import Debug from '../../src/core/Debug';
+import Settings from '../../src/core/Settings';
 
 import StreamControllerMock from './mocks/StreamControllerMock';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
@@ -28,6 +29,7 @@ const streamInfo = {
 const eventBus = EventBus(context).getInstance();
 const objectUtils = ObjectUtils(context).getInstance();
 const initCache = InitCache(context).getInstance();
+const settings = Settings(context).getInstance();
 
 describe('BufferController', function () {
     // disable log
@@ -64,7 +66,8 @@ describe('BufferController', function () {
             streamProcessor: streamProcessor,
             type: testType,
             playbackController: playbackControllerMock,
-            mediaPlayerModel: mediaPlayerModelMock
+            mediaPlayerModel: mediaPlayerModelMock,
+            settings: settings
         });
     });
 

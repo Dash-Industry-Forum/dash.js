@@ -47,6 +47,7 @@ function ABRRulesCollection(config) {
 
     const mediaPlayerModel = config.mediaPlayerModel;
     const dashMetrics = config.dashMetrics;
+    const settings = config.settings;
 
     let instance,
         qualitySwitchRules,
@@ -56,7 +57,7 @@ function ABRRulesCollection(config) {
         qualitySwitchRules = [];
         abandonFragmentRules = [];
 
-        if (mediaPlayerModel.getUseDefaultABRRules()) {
+        if (settings.get().streaming.abr.useDefaultABRRules) {
             // Only one of BolaRule and ThroughputRule will give a switchRequest.quality !== SwitchRequest.NO_CHANGE.
             // This is controlled by useBufferOccupancyABR mechanism in AbrController.
             qualitySwitchRules.push(
@@ -84,7 +85,8 @@ function ABRRulesCollection(config) {
             abandonFragmentRules.push(
                 AbandonRequestsRule(context).create({
                     dashMetrics: dashMetrics,
-                    mediaPlayerModel: mediaPlayerModel
+                    mediaPlayerModel: mediaPlayerModel,
+                    settings: settings
                 })
             );
         }

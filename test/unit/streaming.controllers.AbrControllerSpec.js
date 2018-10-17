@@ -37,7 +37,8 @@ describe('AbrController', function () {
             videoModel: videoModelMock,
             adapter: adapterMock,
             domStorage: domStorageMock,
-            mediaPlayerModel: mediaPlayerModelMock
+            mediaPlayerModel: mediaPlayerModelMock,
+            settings: settings
         });
         abrCtrl.registerStreamType('video', streamProcessor);
     });
@@ -60,11 +61,6 @@ describe('AbrController', function () {
     it('should return true if isPlayingAtTopQuality function is called without parameter', function () {
         let isPlayingTopQuality = abrCtrl.isPlayingAtTopQuality();
         expect(isPlayingTopQuality).to.be.true; // jshint ignore:line
-    });
-
-    it('Method setUseDeadTimeLatency should throw an exception if given bad values', function () {
-        expect(abrCtrl.setUseDeadTimeLatency.bind(abrCtrl, 13)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(abrCtrl.setUseDeadTimeLatency.bind(abrCtrl, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
     });
 
     it('should update top quality index', function () {
@@ -146,14 +142,12 @@ describe('AbrController', function () {
     });
 
     it('should return the appropriate max allowed index for the max allowed bitrate set', function () {
-        let maxAllowedIndex;
-
         // Max allowed bitrate in kbps, bandwidth is in bps
         const s = { streaming: { abr: { maxBitrate: {}}}};
         s.streaming.abr.maxBitrate[testType] = streamProcessor.getMediaInfo().bitrateList[0].bandwidth / 1000;
         settings.update(s);
 
-        maxAllowedIndex = abrCtrl.getMaxAllowedIndexFor(testType);
+        let maxAllowedIndex = abrCtrl.getMaxAllowedIndexFor(testType);
         expect(maxAllowedIndex).to.be.equal(0);
 
         s.streaming.abr.maxBitrate[testType] = streamProcessor.getMediaInfo().bitrateList[1].bandwidth / 1000;
@@ -194,14 +188,12 @@ describe('AbrController', function () {
     });
 
     it('should return the appropriate min allowed index for the min allowed bitrate set', function () {
-        let minAllowedIndex;
-
         // Min allowed bitrate in kbps, bandwidth is in bps
         const s = { streaming: { abr: { minBitrate: {}}}};
         s.streaming.abr.minBitrate[testType] = streamProcessor.getMediaInfo().bitrateList[0].bandwidth / 1000;
         settings.update(s);
 
-        minAllowedIndex = abrCtrl.getMinAllowedIndexFor(testType);
+        let minAllowedIndex = abrCtrl.getMinAllowedIndexFor(testType);
         expect(minAllowedIndex).to.be.equal(0);
 
         s.streaming.abr.minBitrate[testType] = streamProcessor.getMediaInfo().bitrateList[1].bandwidth / 1000;
