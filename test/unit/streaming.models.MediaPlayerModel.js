@@ -56,11 +56,6 @@ describe('MediaPlayerModel', function () {
         expect(mediaPlayerModel.setRetryIntervalForType.bind(mediaPlayerModel, HTTPRequest.MPD_TYPE, 'true')).to.throw(Constants.BAD_ARGUMENT_ERROR);
     });
 
-    it('Method setBufferAheadToKeep should throw an exception', function () {
-        expect(mediaPlayerModel.setBufferAheadToKeep.bind(mediaPlayerModel, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setBufferAheadToKeep.bind(mediaPlayerModel, 'true')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
-
     it('Method setUseManifestDateHeaderTimeSource should throw an exception', function () {
         expect(mediaPlayerModel.setUseManifestDateHeaderTimeSource.bind(mediaPlayerModel, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
         expect(mediaPlayerModel.setUseManifestDateHeaderTimeSource.bind(mediaPlayerModel, 'true')).to.throw(Constants.BAD_ARGUMENT_ERROR);

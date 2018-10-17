@@ -621,7 +621,7 @@ function BufferController(config) {
         const currentTime = playbackController.getTime();
         const rangeToKeep = {
             start: Math.max(0, currentTime - settings.get().streaming.bufferToKeep),
-            end: currentTime + mediaPlayerModel.getBufferAheadToKeep()
+            end: currentTime + settings.get().streaming.bufferAheadToKeep
         };
 
         const currentTimeRequest = streamProcessor.getFragmentModel().getRequests({

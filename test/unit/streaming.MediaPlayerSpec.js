@@ -393,6 +393,11 @@ describe('MediaPlayer', function () {
                 expect(player.setAbandonLoadTimeout.bind(player, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
             });
 
+            it('Method setBufferAheadToKeep should throw an exception', function () {
+                expect(player.setBufferAheadToKeep.bind(player, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setBufferAheadToKeep.bind(player, 'true')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+            });
+
             it('Method isDynamic should get dynamic value', function () {
                 let isDynamic = player.isDynamic();
                 expect(isDynamic).to.be.false; // jshint ignore:line

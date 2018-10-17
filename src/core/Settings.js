@@ -120,6 +120,15 @@ function Settings() {
              */
             bufferToKeep: 20,
             /**
+             * This value influences the buffer pruning logic.
+             * Allows you to modify the buffer ahead of current time position that is kept in source buffer in seconds.
+             * <pre>0|--------|currentTime|-----bufferAheadToKeep----|----bufferToPrune-----------|end|</pre>
+             * @alias streaming.bufferToKeep
+             * @default 80
+             * @memberof module:Settings.Schema
+             */
+            bufferAheadToKeep: 80,
+            /**
              * The time that the internal buffer target will be set to post startup/seeks (NOT top quality).
              *
              * When the time is set higher than the default you will have to wait longer

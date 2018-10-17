@@ -42,7 +42,6 @@ import { checkParameterType, checkIsVideoOrAudioType, checkRange } from '../util
 const DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION = 360000;
 const DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION = 360000;
 
-const BUFFER_AHEAD_TO_KEEP = 80;
 const DEFAULT_MIN_BUFFER_TIME = 12;
 const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
 const SEGMENT_OVERLAP_TOLERANCE_TIME = 0.2;
@@ -76,7 +75,6 @@ function MediaPlayerModel() {
         useManifestDateHeaderTimeSource,
         useSuggestedPresentationDelay,
         UTCTimingSources,
-        bufferAheadToKeep,
         lastBitrateCachingInfo,
         lastMediaSettingsCachingInfo,
         segmentOverlapToleranceTime,
@@ -115,7 +113,6 @@ function MediaPlayerModel() {
             enabled: true,
             ttl: DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION
         };
-        bufferAheadToKeep = BUFFER_AHEAD_TO_KEEP;
         segmentOverlapToleranceTime = SEGMENT_OVERLAP_TOLERANCE_TIME;
         jumpGaps = false;
         smallGapLimit = SMALL_GAP_LIMIT;
@@ -243,15 +240,6 @@ function MediaPlayerModel() {
 
     function getCacheLoadThresholdForType(type) {
         return cacheLoadThresholds[type];
-    }
-
-    function setBufferAheadToKeep(value) {
-        checkParameterType(value, 'number');
-        bufferAheadToKeep = value;
-    }
-
-    function getBufferAheadToKeep() {
-        return bufferAheadToKeep;
     }
 
     function setLastBitrateCachingInfo(enable, ttl) {
@@ -478,8 +466,6 @@ function MediaPlayerModel() {
         getSegmentOverlapToleranceTime: getSegmentOverlapToleranceTime,
         getCacheLoadThresholdForType: getCacheLoadThresholdForType,
         setCacheLoadThresholdForType: setCacheLoadThresholdForType,
-        setBufferAheadToKeep: setBufferAheadToKeep,
-        getBufferAheadToKeep: getBufferAheadToKeep,
         setRetryAttemptsForType: setRetryAttemptsForType,
         getRetryAttemptsForType: getRetryAttemptsForType,
         setRetryIntervalForType: setRetryIntervalForType,

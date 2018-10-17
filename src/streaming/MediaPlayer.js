@@ -1672,7 +1672,9 @@ function MediaPlayer() {
      * @instance
      */
     function setBufferAheadToKeep(value) {
-        mediaPlayerModel.setBufferAheadToKeep(value);
+        checkParameterType(value, 'number');
+        const s = { streaming: { bufferAheadToKeep: value } };
+        settings.update(s);
     }
 
     /**
