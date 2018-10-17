@@ -74,7 +74,7 @@
           "name": "Low Latency (Single-Rate) (livesim-chunked)",
           "bufferConfig" : {
             "lowLatencyMode": true,
-            "liveDelay": 2.8
+            "liveDelay": 4
           }
         },
         {
@@ -82,7 +82,15 @@
           "name": "Low Latency (Multi-Rate) (livesim-chunked)",
           "bufferConfig" : {
             "lowLatencyMode": true,
-            "liveDelay": 2.8
+            "liveDelay": 4
+          }
+        },
+        {
+          "url": "https://akamaibroadcasteruseast.akamaized.net/cmaf/live/657078/akasource/out.mpd",
+          "name": "Akamai Low Latency Stream",
+          "bufferConfig" : {
+            "lowLatencyMode": true,
+            "liveDelay": 3
           }
         },
         {

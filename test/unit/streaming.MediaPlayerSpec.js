@@ -15,7 +15,6 @@ const expect = require('chai').expect;
 const ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the video element before calling this method';
 const PLAYBACK_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a valid source and view before calling this method';
 const STREAMING_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a source before calling this method';
-const PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR = 'Playback catchup rate invalid argument! Use a number from 0 to 0.2';
 const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
 
 describe('MediaPlayer', function () {
@@ -361,7 +360,7 @@ describe('MediaPlayer', function () {
 
             it('Method setCatchUpPlaybackRate should change catchUpPlaybackRate', function () {
                 let rate = player.getCatchUpPlaybackRate();
-                expect(rate).to.equal(0.05);
+                expect(rate).to.equal(0.5);
 
                 player.setCatchUpPlaybackRate(0.2);
                 rate = player.getCatchUpPlaybackRate();
@@ -372,13 +371,27 @@ describe('MediaPlayer', function () {
                 expect(rate).to.equal(0.0);
             });
 
-            it('Method setCatchUpPlaybackRate should throw an exception if given bad values', function () {
-                expect(() => {player.setCatchUpPlaybackRate(0.9);}).to.throw(PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR);
-                expect(() => {player.setCatchUpPlaybackRate(13);}).to.throw(PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR);
-                expect(() => {player.setCatchUpPlaybackRate(0.1);}).to.not.throw(PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR);
-                expect(() => {player.setCatchUpPlaybackRate('string');}).to.throw(PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR);
-                expect(() => {player.setCatchUpPlaybackRate(true);}).to.throw(PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR);
-                expect(() => {player.setCatchUpPlaybackRate(false);}).to.throw(PLAYBACK_CATCHUP_RATE_BAD_ARGUMENT_ERROR);
+            it('Method setLowLatencyMinDrift should change lowLatencyMinDrift', function () {
+                let rate = player.getLowLatencyMinDrift();
+                expect(rate).to.equal(0.02);
+
+                player.setLowLatencyMinDrift(0.1);
+                rate = player.getLowLatencyMinDrift();
+                expect(rate).to.equal(0.1);
+
+                player.setLowLatencyMinDrift(0.0);
+                rate = player.getLowLatencyMinDrift();
+                expect(rate).to.equal(0.0);
+            });
+
+            it('Method setLowLatencyEnabled should enable/disable low latency mode', function () {
+                let enableLowLatency = mediaPlayerModel.getLowLatencyEnabled();
+                expect(enableLowLatency).to.equal(false);
+
+                player.setLowLatencyEnabled(true);
+
+                enableLowLatency = mediaPlayerModel.getLowLatencyEnabled();
+                expect(enableLowLatency).to.equal(true);
             });
         });
     });

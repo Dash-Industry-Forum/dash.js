@@ -36,7 +36,7 @@ import {
 from '../vo/metrics/HTTPRequest';
 import Constants from '../constants/Constants';
 import ABRRulesCollection from '../rules/abr/ABRRulesCollection';
-import { checkParameterType, checkIsVideoOrAudioType } from '../utils/SupervisorTools';
+import { checkParameterType, checkRange, checkIsVideoOrAudioType } from '../utils/SupervisorTools';
 
 const LIVE_DELAY_FRAGMENT_COUNT = 4;
 
@@ -70,9 +70,12 @@ const MANIFEST_RETRY_INTERVAL = 500;
 const XLINK_RETRY_ATTEMPTS = 1;
 const XLINK_RETRY_INTERVAL = 500;
 
-const DEFAULT_LOW_LATENCY_LIVE_DELAY = 2.8;
+const DEFAULT_LOW_LATENCY_LIVE_DELAY = 3.0;
 const LOW_LATENCY_REDUCTION_FACTOR = 10;
 const LOW_LATENCY_MULTIPLY_FACTOR = 5;
+const LOW_LATENCY_CATCH_UP_MIN_DRIFT = 0.02;
+const LOW_LATENCY_CATCH_UP_MAX_DRIFT = 0;
+const LOW_LATENCY_CATCH_UP_PLAYBACK_RATE = 0.5;
 
 //This value influences the startup time for live (in ms).
 const WALLCLOCK_TIME_UPDATE_INTERVAL = 50;
@@ -114,7 +117,10 @@ function MediaPlayerModel() {
         smallGapLimit,
         lowLatencyEnabled,
         manifestUpdateRetryInterval,
-        keepProtectionMediaKeys;
+        keepProtectionMediaKeys,
+        liveCatchUpMinDrift,
+        liveCatchUpMaxDrift,
+        liveCatchUpPlaybackRate;
 
     const DEFAULT_UTC_TIMING_SOURCE = {
             scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
@@ -159,6 +165,9 @@ function MediaPlayerModel() {
         customABRRule = [];
         movingAverageMethod = Constants.MOVING_AVERAGE_SLIDING_WINDOW;
         lowLatencyEnabled = false;
+        liveCatchUpMinDrift = LOW_LATENCY_CATCH_UP_MIN_DRIFT;
+        liveCatchUpMaxDrift = LOW_LATENCY_CATCH_UP_MAX_DRIFT;
+        liveCatchUpPlaybackRate = LOW_LATENCY_CATCH_UP_PLAYBACK_RATE;
 
         retryAttempts = {
             [HTTPRequest.MPD_TYPE]:                         MANIFEST_RETRY_ATTEMPTS,
@@ -282,8 +291,10 @@ function MediaPlayerModel() {
     }
 
     function getStableBufferTime() {
-        const result = !isNaN(stableBufferTime) ? stableBufferTime : fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
-        return getLowLatencyEnabled() ? result / LOW_LATENCY_REDUCTION_FACTOR : result;
+        if (getLowLatencyEnabled()) {
+            return getLiveDelay() * 0.6;
+        }
+        return !isNaN(stableBufferTime) ? stableBufferTime : fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
     }
 
     function setBufferTimeAtTopQuality(value) {
@@ -560,6 +571,35 @@ function MediaPlayerModel() {
         lowLatencyEnabled = value;
     }
 
+    function setCatchUpPlaybackRate(value) {
+        checkParameterType(value, 'number');
+        checkRange(value, 0.0, 0.5);
+
+        liveCatchUpPlaybackRate = value;
+    }
+
+    function getCatchUpPlaybackRate() {
+        return liveCatchUpPlaybackRate;
+    }
+
+    function setLowLatencyMinDrift(value) {
+        checkParameterType(value, 'number');
+        liveCatchUpMinDrift = value;
+    }
+
+    function getLowLatencyMinDrift() {
+        return liveCatchUpMinDrift;
+    }
+
+    function setLowLatencyMaxDriftBeforeSeeking(value) {
+        checkParameterType(value, 'number');
+        liveCatchUpMaxDrift = value;
+    }
+
+    function getLowLatencyMaxDriftBeforeSeeking() {
+        return liveCatchUpMaxDrift;
+    }
+
     function setManifestUpdateRetryInterval(value) {
         checkParameterType(value, 'number');
         manifestUpdateRetryInterval = value;
@@ -654,6 +694,12 @@ function MediaPlayerModel() {
         getSmallGapLimit: getSmallGapLimit,
         getLowLatencyEnabled: getLowLatencyEnabled,
         setLowLatencyEnabled: setLowLatencyEnabled,
+        setCatchUpPlaybackRate: setCatchUpPlaybackRate,
+        getCatchUpPlaybackRate: getCatchUpPlaybackRate,
+        setLowLatencyMinDrift: setLowLatencyMinDrift,
+        getLowLatencyMinDrift: getLowLatencyMinDrift,
+        setLowLatencyMaxDriftBeforeSeeking: setLowLatencyMaxDriftBeforeSeeking,
+        getLowLatencyMaxDriftBeforeSeeking: getLowLatencyMaxDriftBeforeSeeking,
         setManifestUpdateRetryInterval: setManifestUpdateRetryInterval,
         getManifestUpdateRetryInterval: getManifestUpdateRetryInterval,
         setKeepProtectionMediaKeys: setKeepProtectionMediaKeys,

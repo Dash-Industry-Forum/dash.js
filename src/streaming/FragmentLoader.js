@@ -32,6 +32,7 @@ import HTTPLoader from './net/HTTPLoader';
 import HeadRequest from './vo/HeadRequest';
 import DashJSError from './vo/DashJSError';
 import EventBus from './../core/EventBus';
+import BoxParser from '../streaming/utils/BoxParser';
 import Events from './../core/events/Events';
 import Errors from './../core/errors/Errors';
 import FactoryMaker from '../core/FactoryMaker';
@@ -46,11 +47,13 @@ function FragmentLoader(config) {
         httpLoader;
 
     function setup() {
+        const boxParser = BoxParser(context).getInstance();
         httpLoader = HTTPLoader(context).create({
             errHandler: config.errHandler,
             metricsModel: config.metricsModel,
             mediaPlayerModel: config.mediaPlayerModel,
             requestModifier: config.requestModifier,
+            boxParser: boxParser,
             useFetch: config.mediaPlayerModel.getLowLatencyEnabled()
         });
     }
@@ -97,7 +100,8 @@ function FragmentLoader(config) {
                 request: request,
                 progress: function (event) {
                     eventBus.trigger(Events.LOADING_PROGRESS, {
-                        request: request
+                        request: request,
+                        stream: event.stream
                     });
                     if (event.data) {
                         eventBus.trigger(Events.LOADING_DATA_PROGRESS, {

@@ -134,6 +134,11 @@ describe('PlaybackController', function () {
                 expect(playbackController.getTime()).to.equal(videoModelMock.time);
             });
 
+            it('should return current normalized video time', function () {
+                videoModelMock.time = 5;
+                expect(playbackController.getNormalizedTime()).to.equal(videoModelMock.time);
+            });
+
             it('should return video playback rate', function () {
                 videoModelMock.playbackRate = 2;
                 expect(playbackController.getPlaybackRate()).to.equal(videoModelMock.playbackRate);

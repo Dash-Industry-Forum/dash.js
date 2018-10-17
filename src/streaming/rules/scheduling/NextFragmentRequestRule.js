@@ -58,7 +58,7 @@ function NextFragmentRequestRule(config) {
         const seekTarget = scheduleController.getSeekTarget();
         const hasSeekTarget = !isNaN(seekTarget);
         const bufferController = streamProcessor.getBufferController();
-        const currentTime = streamProcessor.getPlaybackController().getTime();
+        const currentTime = streamProcessor.getPlaybackController().getNormalizedTime();
         let time = hasSeekTarget ? seekTarget : adapter.getIndexHandlerTime(streamProcessor);
         let bufferIsDivided = false;
         let request;

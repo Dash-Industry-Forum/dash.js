@@ -17,6 +17,7 @@ jsdoc
 dist
 build/temp
 build/es5
+build/typings
 coverage
 
 #################

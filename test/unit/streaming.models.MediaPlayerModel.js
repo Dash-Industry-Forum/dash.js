@@ -22,6 +22,15 @@ describe('MediaPlayerModel', function () {
         expect(mediaPlayerModel.getLowLatencyEnabled()).to.be.equal(true);
     });
 
+    it('setCatchUpPlaybackRate should throw an exception if input argument is not a number or out of 0-0.5 range', function () {
+        expect(() => {mediaPlayerModel.setCatchUpPlaybackRate(0.9);}).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(() => {mediaPlayerModel.setCatchUpPlaybackRate(13);}).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(() => {mediaPlayerModel.setCatchUpPlaybackRate(0.1);}).to.not.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(() => {mediaPlayerModel.setCatchUpPlaybackRate('string');}).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(() => {mediaPlayerModel.setCatchUpPlaybackRate(true);}).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(() => {mediaPlayerModel.setCatchUpPlaybackRate(false);}).to.throw(Constants.BAD_ARGUMENT_ERROR);
+    });
+
     it('should not set a value to fastSwitchEnabled attribute that is not a boolean type', function () {
         expect(mediaPlayerModel.getFastSwitchEnabled()).to.be.equal(false);
         expect(mediaPlayerModel.setFastSwitchEnabled.bind(mediaPlayerModel, undefined)).to.throw(Constants.BAD_ARGUMENT_ERROR);

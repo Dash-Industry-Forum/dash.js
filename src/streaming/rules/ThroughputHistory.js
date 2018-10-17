@@ -84,10 +84,15 @@ function ThroughputHistory(config) {
 
         const latencyTimeInMilliseconds = (httpRequest.tresponse.getTime() - httpRequest.trequest.getTime()) || 1;
         const downloadTimeInMilliseconds = (httpRequest._tfinish.getTime() - httpRequest.tresponse.getTime()) || 1; //Make sure never 0 we divide by this value. Avoid infinity!
-        const downloadTime = httpRequest.trace.reduce((a, b) => a + b.d, 0);
         const downloadBytes = httpRequest.trace.reduce((a, b) => a + b.b[0], 0);
-        let throughputMeasureTime = useDeadTimeLatency ? downloadTimeInMilliseconds : latencyTimeInMilliseconds + downloadTimeInMilliseconds;
-        throughputMeasureTime = mediaPlayerModel.getLowLatencyEnabled() ? downloadTime : throughputMeasureTime;
+
+        let throughputMeasureTime;
+        if (mediaPlayerModel.getLowLatencyEnabled()) {
+            throughputMeasureTime = httpRequest.trace.reduce((a, b) => a + b.d, 0);
+        } else {
+            throughputMeasureTime = useDeadTimeLatency ? downloadTimeInMilliseconds : latencyTimeInMilliseconds + downloadTimeInMilliseconds;
+        }
+
         const throughput = Math.round((8 * downloadBytes) / throughputMeasureTime); // bits/ms = kbits/s
 
         checkSettingsForMediaType(mediaType);

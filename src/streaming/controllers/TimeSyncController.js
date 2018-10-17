@@ -300,16 +300,7 @@ function TimeSyncController() {
     }
 
     function calculateTimeOffset(serverTime, deviceTime) {
-        const v = (serverTime - deviceTime) / 1000;
-        let offset;
-        // Math.trunc not implemented by IE11
-        if (Math.trunc) {
-            offset = Math.trunc(v);
-        } else {
-            offset = (v - v % 1) || (!isFinite(v) || v === 0 ? v : v < 0 ? -0 : 0);
-        }
-
-        return offset * 1000;
+        return serverTime - deviceTime;
     }
 
     function attemptSync(sources, sourceIndex) {
@@ -348,8 +339,8 @@ function TimeSyncController() {
 
                         setOffsetMs(offset);
 
-                        logger.debug('Local time: ' + new Date(deviceTime));
-                        logger.debug('Server time: ' + new Date(serverTime));
+                        logger.info('Local time: ' + new Date(deviceTime));
+                        logger.info('Server time: ' + new Date(serverTime));
                         logger.info('Server Time - Local Time (ms): ' + offset);
 
                         onComplete(serverTime, offset);
