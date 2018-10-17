@@ -37,7 +37,8 @@ import Debug from '../core/Debug';
  * @module Settings
  */
 function Settings() {
-    let log = Debug(this.context).getInstance().log;
+    let instance;
+    let logger = Debug(this.context).getInstance().getLogger(instance);
 
     /**
      * @namespace Schema
@@ -128,6 +129,22 @@ function Settings() {
              * @memberof module:Settings.Schema
              */
             bufferAheadToKeep: 80,
+            /**
+             * Sets whether player should jump small gaps (discontinuities) in the buffer.
+             *
+             * @param {boolean} value
+             * @default false
+             * @memberof module:Settings.Schema
+             */
+            jumpGaps: false,
+            /**
+             * Time in seconds for a gap to be considered small.
+             *
+             * @param {boolean} value
+             * @default 0.8
+             * @memberof module:Settings.Schema
+             */
+            smallGapLimit: 0.8,
             /**
              * The time that the internal buffer target will be set to post startup/seeks (NOT top quality).
              *
@@ -307,7 +324,7 @@ function Settings() {
                         dest[n] = Utils.clone(source[n]);
                     }
                 } else {
-                    log('Warning: the settings option \'' + path + n + '\' wasn\'t found and will be ignored.');
+                    logger.warn('Warning: the settings option \'' + path + n + '\' wasn\'t found and will be ignored.');
                     //If you're getting this warning, then the passed in partial object doesn't match whats expected.
                     //Check it against the defaultSettings object.
                 }
@@ -354,7 +371,7 @@ function Settings() {
         settings = Utils.clone(defaultSettings);
     }
 
-    const instance = {
+    instance = {
         get: get,
         update: update,
         reset: reset

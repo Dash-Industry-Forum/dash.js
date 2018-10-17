@@ -46,11 +46,6 @@ describe('MediaPlayerModel', function () {
         expect(mediaPlayerModel.setKeepProtectionMediaKeys.bind(mediaPlayerModel, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
     });
 
-    it('Method setJumpGaps should throw an exception', function () {
-        expect(mediaPlayerModel.setJumpGaps.bind(mediaPlayerModel, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setJumpGaps.bind(mediaPlayerModel, 'true')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
-
     it('Method setRetryIntervalForType should throw an exception', function () {
         expect(mediaPlayerModel.setRetryIntervalForType.bind(mediaPlayerModel, HTTPRequest.MPD_TYPE, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
         expect(mediaPlayerModel.setRetryIntervalForType.bind(mediaPlayerModel, HTTPRequest.MPD_TYPE, 'true')).to.throw(Constants.BAD_ARGUMENT_ERROR);
@@ -80,11 +75,6 @@ describe('MediaPlayerModel', function () {
         expect(mediaPlayerModel.setCacheLoadThresholdForType.bind(mediaPlayerModel, true, 5)).to.throw(Constants.BAD_ARGUMENT_ERROR);
         expect(mediaPlayerModel.setCacheLoadThresholdForType.bind(mediaPlayerModel, 1, 5)).to.throw(Constants.BAD_ARGUMENT_ERROR);
         expect(mediaPlayerModel.setCacheLoadThresholdForType.bind(mediaPlayerModel, 'text', 5)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
-
-    it('Method setSmallGapLimit should throw an exception', function () {
-        expect(mediaPlayerModel.setSmallGapLimit.bind(mediaPlayerModel, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setSmallGapLimit.bind(mediaPlayerModel, 'true')).to.throw(Constants.BAD_ARGUMENT_ERROR);
     });
 
     it('Method setManifestUpdateRetryInterval should throw an exception', function () {

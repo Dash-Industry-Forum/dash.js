@@ -182,7 +182,7 @@ function StreamController() {
     }
 
     function onWallclockTimeUpdated(/*e*/) {
-        if (!mediaPlayerModel.getJumpGaps() || getActiveStreamProcessors() === 0 ||
+        if (!settings.get().streaming.jumpGaps || getActiveStreamProcessors() === 0 ||
             playbackController.isSeeking() || isPaused || isStreamSwitchingInProgress ||
             hasMediaError || hasInitialisationError) {
             return;
@@ -202,7 +202,7 @@ function StreamController() {
 
     function jumpGap(time) {
         const streamProcessors = getActiveStreamProcessors();
-        const smallGapLimit = mediaPlayerModel.getSmallGapLimit();
+        const smallGapLimit = settings.get().streaming.smallGapLimit;
         let seekToPosition;
 
         // Find out what is the right time position to jump to taking

@@ -59,7 +59,8 @@ function TextBufferController(config) {
                 textController: config.textController,
                 abrController: config.abrController,
                 playbackController: config.playbackController,
-                streamProcessor: config.streamProcessor
+                streamProcessor: config.streamProcessor,
+                settings: config.settings
             });
         } else {
 

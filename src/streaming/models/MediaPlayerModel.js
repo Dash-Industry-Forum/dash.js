@@ -45,7 +45,6 @@ const DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION = 360000;
 const DEFAULT_MIN_BUFFER_TIME = 12;
 const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
 const SEGMENT_OVERLAP_TOLERANCE_TIME = 0.2;
-const SMALL_GAP_LIMIT = 0.8;
 const MANIFEST_UPDATE_RETRY_INTERVAL = 100;
 
 const CACHE_LOAD_THRESHOLD_VIDEO = 50;
@@ -85,8 +84,6 @@ function MediaPlayerModel() {
         customABRRule,
         movingAverageMethod,
         cacheLoadThresholds,
-        jumpGaps,
-        smallGapLimit,
         manifestUpdateRetryInterval,
         keepProtectionMediaKeys,
         liveCatchUpMinDrift,
@@ -114,8 +111,6 @@ function MediaPlayerModel() {
             ttl: DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION
         };
         segmentOverlapToleranceTime = SEGMENT_OVERLAP_TOLERANCE_TIME;
-        jumpGaps = false;
-        smallGapLimit = SMALL_GAP_LIMIT;
         manifestUpdateRetryInterval = MANIFEST_UPDATE_RETRY_INTERVAL;
         xhrWithCredentials = {
             default: DEFAULT_XHR_WITH_CREDENTIALS
@@ -373,24 +368,6 @@ function MediaPlayerModel() {
         return movingAverageMethod;
     }
 
-    function setJumpGaps(value) {
-        checkParameterType(value, 'boolean');
-        jumpGaps = value;
-    }
-
-    function getJumpGaps() {
-        return jumpGaps;
-    }
-
-    function setSmallGapLimit(value) {
-        checkParameterType(value, 'number');
-        smallGapLimit = value;
-    }
-
-    function getSmallGapLimit() {
-        return smallGapLimit;
-    }
-
     function getLowLatencyEnabled() {
         return settings.get().streaming.lowLatencyEnabled;
     }
@@ -484,10 +461,6 @@ function MediaPlayerModel() {
         getXHRWithCredentialsForType: getXHRWithCredentialsForType,
         setMovingAverageMethod: setMovingAverageMethod,
         getMovingAverageMethod: getMovingAverageMethod,
-        setJumpGaps: setJumpGaps,
-        getJumpGaps: getJumpGaps,
-        setSmallGapLimit: setSmallGapLimit,
-        getSmallGapLimit: getSmallGapLimit,
         setCatchUpPlaybackRate: setCatchUpPlaybackRate,
         getCatchUpPlaybackRate: getCatchUpPlaybackRate,
         setLowLatencyMinDrift: setLowLatencyMinDrift,

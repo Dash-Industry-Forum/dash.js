@@ -398,6 +398,16 @@ describe('MediaPlayer', function () {
                 expect(player.setBufferAheadToKeep.bind(player, 'true')).to.throw(Constants.BAD_ARGUMENT_ERROR);
             });
 
+            it('Method setJumpGaps should throw an exception', function () {
+                expect(player.setJumpGaps.bind(player, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setJumpGaps.bind(player, 'true')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+            });
+
+            it('Method setSmallGapLimit should throw an exception', function () {
+                expect(player.setSmallGapLimit.bind(player, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setSmallGapLimit.bind(player, 'true')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+            });
+
             it('Method isDynamic should get dynamic value', function () {
                 let isDynamic = player.isDynamic();
                 expect(isDynamic).to.be.false; // jshint ignore:line
@@ -939,20 +949,20 @@ describe('MediaPlayer', function () {
         });
 
         it('should configure jumpGap feature', function () {
-            let jumpGaps = mediaPlayerModel.getJumpGaps();
+            let jumpGaps = player.getJumpGaps();
             expect(jumpGaps).to.equal(false);
 
             player.setJumpGaps(true);
 
-            jumpGaps = mediaPlayerModel.getJumpGaps();
+            jumpGaps = player.getJumpGaps();
             expect(jumpGaps).to.equal(true);
 
-            let smallGapLimit = mediaPlayerModel.getSmallGapLimit();
+            let smallGapLimit = player.getSmallGapLimit();
             expect(smallGapLimit).to.equal(0.8);
 
             player.setSmallGapLimit(0.5);
 
-            smallGapLimit = mediaPlayerModel.getSmallGapLimit();
+            smallGapLimit = player.getSmallGapLimit();
             expect(smallGapLimit).to.equal(0.5);
         });
 

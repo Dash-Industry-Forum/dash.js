@@ -1999,7 +1999,9 @@ function MediaPlayer() {
      *
      */
     function setJumpGaps(value) {
-        mediaPlayerModel.setJumpGaps(value);
+        checkParameterType(value, 'boolean');
+        const s = { streaming: { jumpGaps: value } };
+        settings.update(s);
     }
 
     /**
@@ -2009,7 +2011,7 @@ function MediaPlayer() {
      * @instance
      */
     function getJumpGaps() {
-        return mediaPlayerModel.getJumpGaps();
+        return settings.get().streaming.jumpGaps;
     }
 
     /**
@@ -2023,7 +2025,9 @@ function MediaPlayer() {
      *
      */
     function setSmallGapLimit(value) {
-        mediaPlayerModel.setSmallGapLimit(value);
+        checkParameterType(value, 'number');
+        const s = { streaming: { smallGapLimit: value } };
+        settings.update(s);
     }
 
     /**
@@ -2033,7 +2037,7 @@ function MediaPlayer() {
      * @instance
      */
     function getSmallGapLimit() {
-        return mediaPlayerModel.getSmallGapLimit();
+        return settings.get().streaming.smallGapLimit;
     }
 
     /**

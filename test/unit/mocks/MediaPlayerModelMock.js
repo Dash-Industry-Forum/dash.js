@@ -60,8 +60,6 @@ const DEFAULT_XHR_WITH_CREDENTIALS = false;
 const CACHE_LOAD_THRESHOLD_VIDEO = 50;
 const CACHE_LOAD_THRESHOLD_AUDIO = 5;
 
-const SMALL_GAP_LIMIT = 0.8;
-
 const MANIFEST_UPDATE_RETRY_INTERVAL = 100;
 
 const LOW_LATENCY_CATCH_UP_MIN_DRIFT = 0.02;
@@ -163,8 +161,6 @@ class MediaPlayerModelMock {
         this.cacheLoadThresholds = {};
         this.cacheLoadThresholds[Constants.VIDEO] = CACHE_LOAD_THRESHOLD_VIDEO;
         this.cacheLoadThresholds[Constants.AUDIO] = CACHE_LOAD_THRESHOLD_AUDIO;
-        this.jumpGaps = false;
-        this.smallGapLimit = SMALL_GAP_LIMIT;
         this.lowLatencyCatchUpPlaybackRate = LOW_LATENCY_CATCH_UP_PLAYBACK_RATE;
         this.liveCatchUpMinDrift = LOW_LATENCY_CATCH_UP_MIN_DRIFT;
         this.manifestUpdateRetryInterval = MANIFEST_UPDATE_RETRY_INTERVAL;
@@ -345,28 +341,12 @@ class MediaPlayerModelMock {
         return useCreds;
     }
 
-    setJumpGaps(value) {
-        this.jumpGaps = value;
-    }
-
-    getJumpGaps() {
-        return this.jumpGaps;
-    }
-
     setManifestUpdateRetryInterval(value) {
         this.manifestUpdateRetryInterval = value;
     }
 
     getManifestUpdateRetryInterval() {
         return this.manifestUpdateRetryInterval;
-    }
-
-    setSmallGapLimit(value) {
-        this.smallGapLimit = value;
-    }
-
-    getSmallGapLimit() {
-        return this.smallGapLimit;
     }
 
     setLowLatencyMinDrift(value) {

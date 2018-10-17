@@ -362,7 +362,8 @@ function StreamProcessor(config) {
                 textController: textController,
                 abrController: abrController,
                 playbackController: playbackController,
-                streamProcessor: instance
+                streamProcessor: instance,
+                settings: settings
             });
         }
 
