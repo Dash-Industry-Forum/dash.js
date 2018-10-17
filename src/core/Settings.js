@@ -205,6 +205,14 @@ function Settings() {
              * @memberof module:Settings.Schema
              */
             keepProtectionMediaKeys: false,
+            /**
+             * <p>Allows you to enable the use of the Date Header, if exposed with CORS, as a timing source for live edge detection. The
+             * use of the date header will happen only after the other timing source that take precedence fail or are omitted as described.
+             * @param {boolean} value - true to enable
+             * @default {boolean} True
+             * @memberof module:Settings.Schema
+             */
+            useManifestDateHeaderTimeSource: true,
             abr: {
                 /**
                  * Standard ABR throughput rules multiply the throughput by this value. It should be between 0 and 1,

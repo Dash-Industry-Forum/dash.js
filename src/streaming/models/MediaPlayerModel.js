@@ -71,7 +71,6 @@ const DEFAULT_XHR_WITH_CREDENTIALS = false;
 function MediaPlayerModel() {
 
     let instance,
-        useManifestDateHeaderTimeSource,
         useSuggestedPresentationDelay,
         UTCTimingSources,
         lastBitrateCachingInfo,
@@ -99,7 +98,6 @@ function MediaPlayerModel() {
     function setup() {
         UTCTimingSources = [];
         useSuggestedPresentationDelay = false;
-        useManifestDateHeaderTimeSource = true;
         ABRStrategy = Constants.ABR_STRATEGY_DYNAMIC;
         lastBitrateCachingInfo = {
             enabled: true,
@@ -289,15 +287,6 @@ function MediaPlayerModel() {
         return settings.get().streaming.liveDelay;
     }
 
-    function setUseManifestDateHeaderTimeSource(value) {
-        checkParameterType(value, 'boolean');
-        useManifestDateHeaderTimeSource = value;
-    }
-
-    function getUseManifestDateHeaderTimeSource() {
-        return useManifestDateHeaderTimeSource;
-    }
-
     function setUseSuggestedPresentationDelay(value) {
         checkParameterType(value, 'boolean');
         useSuggestedPresentationDelay = value;
@@ -438,8 +427,6 @@ function MediaPlayerModel() {
         getUseSuggestedPresentationDelay: getUseSuggestedPresentationDelay,
         setUseSuggestedPresentationDelay: setUseSuggestedPresentationDelay,
         getLiveDelay: getLiveDelay,
-        setUseManifestDateHeaderTimeSource: setUseManifestDateHeaderTimeSource,
-        getUseManifestDateHeaderTimeSource: getUseManifestDateHeaderTimeSource,
         addUTCTimingSource: addUTCTimingSource,
         removeUTCTimingSource: removeUTCTimingSource,
         getUTCTimingSources: getUTCTimingSources,

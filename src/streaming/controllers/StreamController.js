@@ -736,7 +736,7 @@ function StreamController() {
                 dashMetrics: dashMetrics,
                 baseURLController: baseURLController
             });
-            timeSyncController.initialize(allUTCTimingSources, mediaPlayerModel.getUseManifestDateHeaderTimeSource());
+            timeSyncController.initialize(allUTCTimingSources, settings.get().streaming.useManifestDateHeaderTimeSource);
         } else {
             hasInitialisationError = true;
             reset();

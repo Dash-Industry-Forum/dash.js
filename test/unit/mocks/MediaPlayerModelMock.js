@@ -132,7 +132,6 @@ class MediaPlayerModelMock {
     setup() {
         this.UTCTimingSources = [];
         this.useSuggestedPresentationDelay = false;
-        this.useManifestDateHeaderTimeSource = true;
         this.fastSwitchEnabled = false;
         this.lastBitrateCachingInfo = {
             enabled: true,
@@ -271,14 +270,6 @@ class MediaPlayerModelMock {
 
     getLiveDelay() {
         return this.liveDelay;
-    }
-
-    setUseManifestDateHeaderTimeSource(value) {
-        this.useManifestDateHeaderTimeSource = value;
-    }
-
-    getUseManifestDateHeaderTimeSource() {
-        return this.useManifestDateHeaderTimeSource;
     }
 
     setUseSuggestedPresentationDelay(value) {

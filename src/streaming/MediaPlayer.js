@@ -1640,7 +1640,9 @@ function MediaPlayer() {
      * @instance
      */
     function enableManifestDateHeaderTimeSource(value) {
-        mediaPlayerModel.setUseManifestDateHeaderTimeSource(value);
+        checkParameterType(value, 'boolean');
+        const s = { streaming: { useManifestDateHeaderTimeSource: value } };
+        settings.update(s);
     }
 
     /**

@@ -408,9 +408,14 @@ describe('MediaPlayer', function () {
                 expect(player.setSmallGapLimit.bind(player, 'true')).to.throw(Constants.BAD_ARGUMENT_ERROR);
             });
 
-            it('Method setKeepProtectionMediaKeys should throw an exception', function () {
+            it('Method keepProtectionMediaKeys should throw an exception', function () {
                 expect(player.keepProtectionMediaKeys.bind(player, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
                 expect(player.keepProtectionMediaKeys.bind(player, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+            });
+
+            it('Method enableManifestDateHeaderTimeSource should throw an exception', function () {
+                expect(player.enableManifestDateHeaderTimeSource.bind(player, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.enableManifestDateHeaderTimeSource.bind(player, 'true')).to.throw(Constants.BAD_ARGUMENT_ERROR);
             });
 
             it('Method isDynamic should get dynamic value', function () {
@@ -862,12 +867,12 @@ describe('MediaPlayer', function () {
         });
 
         it('should configure useManifestDateHeaderTimeSource', function () {
-            let useManifestDateHeaderTimeSource = mediaPlayerModel.getUseManifestDateHeaderTimeSource();
+            let useManifestDateHeaderTimeSource = settings.get().streaming.useManifestDateHeaderTimeSource;
             expect(useManifestDateHeaderTimeSource).to.be.true; // jshint ignore:line
 
             player.enableManifestDateHeaderTimeSource(false);
 
-            useManifestDateHeaderTimeSource = mediaPlayerModel.getUseManifestDateHeaderTimeSource();
+            useManifestDateHeaderTimeSource = settings.get().streaming.useManifestDateHeaderTimeSource;
             expect(useManifestDateHeaderTimeSource).to.be.false; // jshint ignore:line
         });
 
