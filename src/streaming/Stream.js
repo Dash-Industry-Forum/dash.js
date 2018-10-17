@@ -752,6 +752,13 @@ function Stream(config) {
             return !newAdaptation && !currentAdaptation;
         }
 
+        // If any of the periods requires EME, we can't do smooth transition
+        if ((newAdaptation.ContentProtection && !currentAdaptation.ContentProtection) ||
+            (!newAdaptation.ContentProtection && currentAdaptation.ContentProtection)) {
+            return false;
+        }
+
+
         const sameMimeType =  newAdaptation && currentAdaptation && newAdaptation.mimeType === currentAdaptation.mimeType;
         const oldCodecs = currentAdaptation.Representation_asArray.map((representation) => {
             return representation.codecs;
