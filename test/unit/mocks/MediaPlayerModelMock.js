@@ -78,6 +78,8 @@ const MANIFEST_UPDATE_RETRY_INTERVAL = 100;
 
 const LOW_LATENCY_CATCH_UP_MIN_DRIFT = 0.02;
 
+const LOW_LATENCY_CATCH_UP_PLAYBACK_RATE = 0.5;
+
 class MediaPlayerModelMock {
 
     // Constants
@@ -219,7 +221,7 @@ class MediaPlayerModelMock {
         this.jumpGaps = false;
         this.smallGapLimit = SMALL_GAP_LIMIT;
         this.lowLatencyEnabled = false;
-        this.useLowLatencyCatchUp = true;
+        this.lowLatencyCatchUpPlaybackRate = LOW_LATENCY_CATCH_UP_PLAYBACK_RATE;
         this.liveCatchUpMinDrift = LOW_LATENCY_CATCH_UP_MIN_DRIFT;
         this.manifestUpdateRetryInterval = MANIFEST_UPDATE_RETRY_INTERVAL;
     }
@@ -544,12 +546,12 @@ class MediaPlayerModelMock {
         return this.liveCatchUpMinDrift;
     }
 
-    setUseLowLatencyCatchUp(value) {
-        this.useLowLatencyCatchUp = value;
+    setCatchUpPlaybackRate(value) {
+        this.lowLatencyCatchUpPlaybackRate = value;
     }
 
-    getUseLowLatencyCatchUp() {
-        return this.useLowLatencyCatchUp;
+    getCatchUpPlaybackRate() {
+        return this.lowLatencyCatchUpPlaybackRate;
     }
 
     reset() {

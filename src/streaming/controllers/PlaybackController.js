@@ -588,7 +588,7 @@ function PlaybackController() {
     }
 
     function onPlaybackProgression() {
-        if (isDynamic && mediaPlayerModel.getLowLatencyEnabled() && mediaPlayerModel.getUseLowLatencyCatchUp() && !isPaused() && !isSeeking()) {
+        if (isDynamic && mediaPlayerModel.getLowLatencyEnabled() && !isPaused() && !isSeeking()) {
             if (needToCatchUp()) {
                 startPlaybackCatchUp();
             } else {
@@ -612,18 +612,20 @@ function PlaybackController() {
     }
 
     function needToCatchUp() {
-        return getTime() > 0 &&
+        return mediaPlayerModel.getCatchUpPlaybackRate() > 0 && getTime() > 0 &&
             Math.abs(getCurrentLiveLatency() - mediaPlayerModel.getLiveDelay()) > mediaPlayerModel.getLowLatencyMinDrift();
     }
 
     function startPlaybackCatchUp() {
         if (videoModel) {
+            const cpr = mediaPlayerModel.getCatchUpPlaybackRate();
             const liveDelay = mediaPlayerModel.getLiveDelay();
             const deltaLatency = getCurrentLiveLatency() - liveDelay;
             const d = deltaLatency * 5;
-            const s = 1 / (1 + Math.pow(Math.E, -d));
-            let newRate = 0.5 + s;
-
+            // Playback rate must be between (1 - cpr) - (1 + cpr)
+            // ex: if cpr is 0.5, it can have values between 0.5 - 1.5
+            const s = (cpr * 2) / (1 + Math.pow(Math.E, -d));
+            let newRate = (1 - cpr) + s;
             // take into account situations in which there are buffer stalls,
             // in which increasing playbackRate to reach target latency will
             // just cause more and more stall situations

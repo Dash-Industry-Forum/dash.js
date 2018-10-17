@@ -36,7 +36,7 @@ import {
 from '../vo/metrics/HTTPRequest';
 import Constants from '../constants/Constants';
 import ABRRulesCollection from '../rules/abr/ABRRulesCollection';
-import { checkParameterType, checkIsVideoOrAudioType } from '../utils/SupervisorTools';
+import { checkParameterType, checkRange, checkIsVideoOrAudioType } from '../utils/SupervisorTools';
 
 const LIVE_DELAY_FRAGMENT_COUNT = 4;
 
@@ -75,6 +75,7 @@ const LOW_LATENCY_REDUCTION_FACTOR = 10;
 const LOW_LATENCY_MULTIPLY_FACTOR = 5;
 const LOW_LATENCY_CATCH_UP_MIN_DRIFT = 0.02;
 const LOW_LATENCY_CATCH_UP_MAX_DRIFT = 0;
+const LOW_LATENCY_CATCH_UP_PLAYBACK_RATE = 0.5;
 
 //This value influences the startup time for live (in ms).
 const WALLCLOCK_TIME_UPDATE_INTERVAL = 50;
@@ -115,11 +116,11 @@ function MediaPlayerModel() {
         jumpGaps,
         smallGapLimit,
         lowLatencyEnabled,
-        useLowLatencyCatchUp,
         manifestUpdateRetryInterval,
         keepProtectionMediaKeys,
         liveCatchUpMinDrift,
-        liveCatchUpMaxDrift;
+        liveCatchUpMaxDrift,
+        liveCatchUpPlaybackRate;
 
     const DEFAULT_UTC_TIMING_SOURCE = {
             scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
@@ -164,9 +165,9 @@ function MediaPlayerModel() {
         customABRRule = [];
         movingAverageMethod = Constants.MOVING_AVERAGE_SLIDING_WINDOW;
         lowLatencyEnabled = false;
-        useLowLatencyCatchUp = true;
         liveCatchUpMinDrift = LOW_LATENCY_CATCH_UP_MIN_DRIFT;
         liveCatchUpMaxDrift = LOW_LATENCY_CATCH_UP_MAX_DRIFT;
+        liveCatchUpPlaybackRate = LOW_LATENCY_CATCH_UP_PLAYBACK_RATE;
 
         retryAttempts = {
             [HTTPRequest.MPD_TYPE]:                         MANIFEST_RETRY_ATTEMPTS,
@@ -570,18 +571,19 @@ function MediaPlayerModel() {
         lowLatencyEnabled = value;
     }
 
-    function setUseLowLatencyCatchUp(value) {
-        if (typeof value !== 'boolean') {
-            return;
-        }
-        useLowLatencyCatchUp = value;
+    function setCatchUpPlaybackRate(value) {
+        checkParameterType(value, 'number');
+        checkRange(value, 0.0, 0.5);
+
+        liveCatchUpPlaybackRate = value;
     }
 
-    function getUseLowLatencyCatchUp() {
-        return useLowLatencyCatchUp;
+    function getCatchUpPlaybackRate() {
+        return liveCatchUpPlaybackRate;
     }
 
     function setLowLatencyMinDrift(value) {
+        checkParameterType(value, 'number');
         liveCatchUpMinDrift = value;
     }
 
@@ -590,6 +592,7 @@ function MediaPlayerModel() {
     }
 
     function setLowLatencyMaxDriftBeforeSeeking(value) {
+        checkParameterType(value, 'number');
         liveCatchUpMaxDrift = value;
     }
 
@@ -691,8 +694,8 @@ function MediaPlayerModel() {
         getSmallGapLimit: getSmallGapLimit,
         getLowLatencyEnabled: getLowLatencyEnabled,
         setLowLatencyEnabled: setLowLatencyEnabled,
-        setUseLowLatencyCatchUp: setUseLowLatencyCatchUp,
-        getUseLowLatencyCatchUp: getUseLowLatencyCatchUp,
+        setCatchUpPlaybackRate: setCatchUpPlaybackRate,
+        getCatchUpPlaybackRate: getCatchUpPlaybackRate,
         setLowLatencyMinDrift: setLowLatencyMinDrift,
         getLowLatencyMinDrift: getLowLatencyMinDrift,
         setLowLatencyMaxDriftBeforeSeeking: setLowLatencyMaxDriftBeforeSeeking,

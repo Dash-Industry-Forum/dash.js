@@ -485,18 +485,35 @@ function MediaPlayer() {
     }
 
     /**
-     * Set to false if you would like to disable the catch-up mechanism applied to low latency live streams
-     * when estimated latency minus target one is higher than a defined limit (({@link module:MediaPlayer#setLowLatencyMinDrift setLowLatencyMinDrift()}))
+     * Use this method to set the maximum catch up rate, as a percentage, for low latency live streams. In low latency mode,
+     * when measured latency is higher/lower than the target one ({@link module:MediaPlayer#setLiveDelay setLiveDelay()}),
+     * dash.js increases/decreases playback rate respectively up to (+/-) the percentage defined with this method until target is reached.
      *
-     * @param {boolean} enable - Will toggle if feature is enabled. True to enable, False to disable.
-     * @default enable = True
+     * Valid values for catch up rate are in range 0-0.5 (0-50%). Set it to 0 to turn off live catch up feature.
+     *
+     * Note: Catch-up mechanism is only applied when playing low latency live streams.
+     *
+     * @param {number} value Percentage in which playback rate is increased/decreased when live catch up mechanism is activated.
+     * @memberof module:MediaPlayer
+     * @see {@link module:MediaPlayer#setLiveDelay setLiveDelay()}
+     * @default {number} 0.5
+     * @instance
+     */
+    function setCatchUpPlaybackRate(value) {
+        mediaPlayerModel.setCatchUpPlaybackRate(value);
+    }
+
+    /**
+     * Returns the current catchup playback rate.
+     * @returns {number}
+     * @see {@link module:MediaPlayer#setCatchUpPlaybackRate setCatchUpPlaybackRate()}
      * @memberof module:MediaPlayer
      * @instance
-     *
      */
-    function enableLowLatencyCatchUp(enable) {
-        mediaPlayerModel.setUseLowLatencyCatchUp(enable);
+    function getCatchUpPlaybackRate() {
+        return mediaPlayerModel.getCatchUpPlaybackRate();
     }
+
 
     /**
      * Use this method to set the minimum latency deviation allowed before activating catch-up mechanism. In low latency mode,
@@ -3026,7 +3043,8 @@ function MediaPlayer() {
         getSmallGapLimit: getSmallGapLimit,
         setLowLatencyEnabled: setLowLatencyEnabled,
         getLowLatencyEnabled: getLowLatencyEnabled,
-        enableLowLatencyCatchUp: enableLowLatencyCatchUp,
+        setCatchUpPlaybackRate: setCatchUpPlaybackRate,
+        getCatchUpPlaybackRate: getCatchUpPlaybackRate,
         setLowLatencyMinDrift: setLowLatencyMinDrift,
         getLowLatencyMinDrift: getLowLatencyMinDrift,
         setLowLatencyMaxDriftBeforeSeeking: setLowLatencyMaxDriftBeforeSeeking,
