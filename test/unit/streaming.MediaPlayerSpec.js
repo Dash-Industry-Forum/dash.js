@@ -528,12 +528,12 @@ describe('MediaPlayer', function () {
             });
 
             it('Method setLowLatencyEnabled should enable/disable low latency mode', function () {
-                let enableLowLatency = mediaPlayerModel.getLowLatencyEnabled();
+                let enableLowLatency = player.getLowLatencyEnabled();
                 expect(enableLowLatency).to.equal(false);
 
                 player.setLowLatencyEnabled(true);
 
-                enableLowLatency = mediaPlayerModel.getLowLatencyEnabled();
+                enableLowLatency = player.getLowLatencyEnabled();
                 expect(enableLowLatency).to.equal(true);
             });
         });

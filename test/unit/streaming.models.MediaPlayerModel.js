@@ -13,7 +13,7 @@ describe('MediaPlayerModel', function () {
     const context = {};
     const mediaPlayerModel = MediaPlayerModel(context).getInstance();
     const settings = Settings(context).getInstance();
-    
+
     it('setCatchUpPlaybackRate should throw an exception if input argument is not a number or out of 0-0.5 range', function () {
         expect(() => {mediaPlayerModel.setCatchUpPlaybackRate(0.9);}).to.throw(Constants.BAD_ARGUMENT_ERROR);
         expect(() => {mediaPlayerModel.setCatchUpPlaybackRate(13);}).to.throw(Constants.BAD_ARGUMENT_ERROR);
