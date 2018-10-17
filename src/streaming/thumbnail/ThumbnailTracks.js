@@ -39,7 +39,7 @@ import SegmentBaseLoader from '../../dash/SegmentBaseLoader';
 import BoxParser from '../../streaming/utils/BoxParser';
 import XHRLoader from '../../streaming/net/XHRLoader';
 
-const THUMBNAILS_SCHEME_ID_URIS = ['http://dashif.org/thumbnail_tile',
+export const THUMBNAILS_SCHEME_ID_URIS = ['http://dashif.org/thumbnail_tile',
                                    'http://dashif.org/guidelines/thumbnail_tile'];
 
 function ThumbnailTracks(config) {

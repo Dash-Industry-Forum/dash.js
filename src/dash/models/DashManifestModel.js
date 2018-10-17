@@ -44,6 +44,7 @@ import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import DashJSError from '../../streaming/vo/DashJSError';
 import Errors from '../../core/errors/Errors';
+import { THUMBNAILS_SCHEME_ID_URIS } from '../../streaming/thumbnail/ThumbnailTracks';
 
 function DashManifestModel(config) {
 
@@ -96,12 +97,17 @@ function DashManifestModel(config) {
 
         mimeTypeRegEx = (type !== Constants.TEXT) ? new RegExp(type) : new RegExp('(vtt|ttml)');
 
-        if ((adaptation.Representation_asArray && adaptation.Representation_asArray.length && adaptation.Representation_asArray.length > 0) &&
-            (adaptation.Representation_asArray[0].hasOwnProperty(DashConstants.CODECS))) {
-            // Just check the start of the codecs string
-            codecs = adaptation.Representation_asArray[0].codecs;
-            if (codecs.search(Constants.STPP) === 0 || codecs.search(Constants.WVTT) === 0) {
-                return type === Constants.FRAGMENTED_TEXT;
+        if (adaptation.Representation_asArray && adaptation.Representation_asArray.length && adaptation.Representation_asArray.length > 0) {
+            let essentialProperties = getEssentialPropertiesForRepresentation(adaptation.Representation_asArray[0]);
+            if (essentialProperties && essentialProperties.length > 0 && THUMBNAILS_SCHEME_ID_URIS.indexOf(essentialProperties[0].schemeIdUri) >= 0) {
+                return type == Constants.IMAGE;
+            }
+            if (adaptation.Representation_asArray[0].hasOwnProperty(DashConstants.CODECS)) {
+                // Just check the start of the codecs string
+                codecs = adaptation.Representation_asArray[0].codecs;
+                if (codecs.search(Constants.STPP) === 0 || codecs.search(Constants.WVTT) === 0) {
+                    return type === Constants.FRAGMENTED_TEXT;
+                }
             }
         }
 
