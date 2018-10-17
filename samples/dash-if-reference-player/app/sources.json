@@ -921,10 +921,6 @@
           "url": "http://demo.unified-streaming.com/video/ateam/ateam.ism/ateam.mpd"
         },
         {
-          "name": "Unified Streaming Live",
-          "url": "https://live.unified-streaming.com/smptebitc/smptebitc.isml/.mpd"
-        },
-        {
           "name": "Unified Streaming (Widevine, persistent)",
           "url": "http://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-dash-widevine.ism/.mpd",
           "protData": {
