@@ -452,7 +452,7 @@ function AbrController() {
     }
 
     function updateIsUsingBufferOccupancyABR(mediaType, bufferLevel) {
-        const strategy = mediaPlayerModel.getABRStrategy();
+        const strategy = settings.get().streaming.ABRStrategy;
 
         if (strategy === Constants.ABR_STRATEGY_BOLA) {
             isUsingBufferOccupancyABRDict[mediaType] = true;

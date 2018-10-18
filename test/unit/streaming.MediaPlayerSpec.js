@@ -428,6 +428,13 @@ describe('MediaPlayer', function () {
                 expect(player.useSuggestedPresentationDelay.bind(player, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
             });
 
+            it('Method setABRStrategy should throw an exception', function () {
+                expect(player.setABRStrategy.bind(player, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setABRStrategy.bind(player, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setABRStrategy.bind(player, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setABRStrategy.bind(player, Constants.ABR_STRATEGY_BOLA)).not.to.throw(Constants.BAD_ARGUMENT_ERROR);
+            });
+
             it('Method isDynamic should get dynamic value', function () {
                 let isDynamic = player.isDynamic();
                 expect(isDynamic).to.be.false; // jshint ignore:line

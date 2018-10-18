@@ -31,6 +31,7 @@
 import FactoryMaker from './FactoryMaker';
 import Utils from './Utils.js';
 import Debug from '../core/Debug';
+import Constants from '../streaming/constants/Constants';
 
 /**
  * @class
@@ -237,6 +238,14 @@ function Settings() {
              */
             useSuggestedPresentationDelay: false,
             abr: {
+                /**
+                 * Returns the current ABR strategy being used.
+                 * @return {string} "abrDynamic", "abrBola" or "abrThroughput"
+                 * @default "abrDynamic"
+                 * @memberof module:Settings.Schema
+                 * @instance
+                 */
+                ABRStrategy: Constants.ABR_STRATEGY_DYNAMIC,
                 /**
                  * Standard ABR throughput rules multiply the throughput by this value. It should be between 0 and 1,
                  * with lower values giving less rebuffering (but also lower quality).

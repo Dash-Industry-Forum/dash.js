@@ -75,7 +75,6 @@ function MediaPlayerModel() {
         lastMediaSettingsCachingInfo,
         retryAttempts,
         retryIntervals,
-        ABRStrategy,
         xhrWithCredentials,
         customABRRule,
         movingAverageMethod,
@@ -94,7 +93,6 @@ function MediaPlayerModel() {
 
     function setup() {
         UTCTimingSources = [];
-        ABRStrategy = Constants.ABR_STRATEGY_DYNAMIC;
         lastBitrateCachingInfo = {
             enabled: true,
             ttl: DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION
@@ -140,19 +138,6 @@ function MediaPlayerModel() {
     }
 
     //TODO Should we use Object.define to have setters/getters? makes more readable code on other side.
-
-    function setABRStrategy(value) {
-        if (value === Constants.ABR_STRATEGY_DYNAMIC || value === Constants.ABR_STRATEGY_BOLA || value === Constants.ABR_STRATEGY_THROUGHPUT) {
-            ABRStrategy = value;
-        } else {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
-    }
-
-    function getABRStrategy() {
-        return ABRStrategy;
-    }
-
     function findABRCustomRuleIndex(rulename) {
         let i;
         for (i = 0; i < customABRRule.length; i++) {
@@ -383,8 +368,6 @@ function MediaPlayerModel() {
     }
 
     instance = {
-        setABRStrategy: setABRStrategy,
-        getABRStrategy: getABRStrategy,
         getABRCustomRules: getABRCustomRules,
         addABRCustomRule: addABRCustomRule,
         removeABRCustomRule: removeABRCustomRule,

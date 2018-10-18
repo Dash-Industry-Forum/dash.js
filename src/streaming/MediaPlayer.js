@@ -1428,7 +1428,12 @@ function MediaPlayer() {
      * @instance
      */
     function setABRStrategy(value) {
-        mediaPlayerModel.setABRStrategy(value);
+        if (value === Constants.ABR_STRATEGY_DYNAMIC || value === Constants.ABR_STRATEGY_BOLA || value === Constants.ABR_STRATEGY_THROUGHPUT) {
+            const s = { streaming: { abr: { ABRStrategy: value } } };
+            settings.update(s);
+        } else {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
     }
 
     /**
@@ -1439,7 +1444,7 @@ function MediaPlayer() {
      * @instance
      */
     function getABRStrategy() {
-        return mediaPlayerModel.getABRStrategy();
+        return settings.get().streaming.abr.ABRStrategy;
     }
 
     /**
