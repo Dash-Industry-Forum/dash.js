@@ -100,7 +100,7 @@ function DashManifestModel(config) {
         if (adaptation.Representation_asArray && adaptation.Representation_asArray.length && adaptation.Representation_asArray.length > 0) {
             let essentialProperties = getEssentialPropertiesForRepresentation(adaptation.Representation_asArray[0]);
             if (essentialProperties && essentialProperties.length > 0 && THUMBNAILS_SCHEME_ID_URIS.indexOf(essentialProperties[0].schemeIdUri) >= 0) {
-                return type == Constants.IMAGE;
+                return type === Constants.IMAGE;
             }
             if (adaptation.Representation_asArray[0].hasOwnProperty(DashConstants.CODECS)) {
                 // Just check the start of the codecs string
