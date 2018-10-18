@@ -239,6 +239,24 @@ function Settings() {
             useSuggestedPresentationDelay: false,
             abr: {
                 /**
+                 * Sets the moving average method used for smoothing throughput estimates. Valid methods are
+                 * "slidingWindow" and "ewma". The call has no effect if an invalid method is passed.
+                 *
+                 * The sliding window moving average method computes the average throughput using the last four segments downloaded.
+                 * If the stream is live (as opposed to VOD), then only the last three segments are used.
+                 * If wide variations in throughput are detected, the number of segments can be dynamically increased to avoid oscillations.
+                 *
+                 * The exponentially weighted moving average (EWMA) method computes the average using exponential smoothing.
+                 * Two separate estimates are maintained, a fast one with a three-second half life and a slow one with an eight-second half life.
+                 * The throughput estimate at any time is the minimum of the fast and slow estimates.
+                 * This allows a fast reaction to a bandwidth drop and prevents oscillations on bandwidth spikes.
+                 *
+                 * @param {string} value
+                 * @default {string} 'slidingWindow'
+                 * @memberof module:Settings.Schema
+                 */
+                movingAverageMethod: Constants.MOVING_AVERAGE_SLIDING_WINDOW,
+                /**
                  * Returns the current ABR strategy being used.
                  * @return {string} "abrDynamic", "abrBola" or "abrThroughput"
                  * @default "abrDynamic"

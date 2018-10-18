@@ -175,7 +175,7 @@ function ThroughputHistory(config) {
 
     function getAverage(isThroughput, mediaType, isDynamic) {
         // only two moving average methods defined at the moment
-        return mediaPlayerModel.getMovingAverageMethod() !== Constants.MOVING_AVERAGE_SLIDING_WINDOW ?
+        return settings.get().streaming.abr.movingAverageMethod !== Constants.MOVING_AVERAGE_SLIDING_WINDOW ?
             getAverageEwma(isThroughput, mediaType) : getAverageSlidingWindow(isThroughput, mediaType, isDynamic);
     }
 

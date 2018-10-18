@@ -1516,7 +1516,12 @@ function MediaPlayer() {
      * @instance
      */
     function setMovingAverageMethod(value) {
-        mediaPlayerModel.setMovingAverageMethod(value);
+        if (value === Constants.MOVING_AVERAGE_SLIDING_WINDOW || value === Constants.MOVING_AVERAGE_EWMA) {
+            const s = { streaming: { abr: { movingAverageMethod: value } } };
+            settings.update(s);
+        } else {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
     }
 
     /**
@@ -1527,7 +1532,7 @@ function MediaPlayer() {
      * @instance
      */
     function getMovingAverageMethod() {
-        return mediaPlayerModel.getMovingAverageMethod();
+        return settings.get().streaming.abr.movingAverageMethod;
     }
 
     /**

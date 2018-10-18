@@ -77,7 +77,6 @@ function MediaPlayerModel() {
         retryIntervals,
         xhrWithCredentials,
         customABRRule,
-        movingAverageMethod,
         cacheLoadThresholds,
         manifestUpdateRetryInterval,
         liveCatchUpMinDrift,
@@ -106,7 +105,6 @@ function MediaPlayerModel() {
             default: DEFAULT_XHR_WITH_CREDENTIALS
         };
         customABRRule = [];
-        movingAverageMethod = Constants.MOVING_AVERAGE_SLIDING_WINDOW;
 
         liveCatchUpMinDrift = LOW_LATENCY_CATCH_UP_MIN_DRIFT;
         liveCatchUpMaxDrift = LOW_LATENCY_CATCH_UP_MAX_DRIFT;
@@ -304,18 +302,6 @@ function MediaPlayerModel() {
         return useCreds === undefined ? xhrWithCredentials.default : useCreds;
     }
 
-    function setMovingAverageMethod(value) {
-        if (value === Constants.MOVING_AVERAGE_SLIDING_WINDOW || value === Constants.MOVING_AVERAGE_EWMA) {
-            movingAverageMethod = value;
-        } else {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
-    }
-
-    function getMovingAverageMethod() {
-        return movingAverageMethod;
-    }
-
     function getLowLatencyEnabled() {
         return settings.get().streaming.lowLatencyEnabled;
     }
@@ -390,8 +376,6 @@ function MediaPlayerModel() {
         restoreDefaultUTCTimingSources: restoreDefaultUTCTimingSources,
         setXHRWithCredentialsForType: setXHRWithCredentialsForType,
         getXHRWithCredentialsForType: getXHRWithCredentialsForType,
-        setMovingAverageMethod: setMovingAverageMethod,
-        getMovingAverageMethod: getMovingAverageMethod,
         setCatchUpPlaybackRate: setCatchUpPlaybackRate,
         getCatchUpPlaybackRate: getCatchUpPlaybackRate,
         setLowLatencyMinDrift: setLowLatencyMinDrift,
