@@ -464,6 +464,14 @@ describe('MediaPlayer', function () {
                 expect(() => {player.setCatchUpPlaybackRate(false);}).to.throw(Constants.BAD_ARGUMENT_ERROR);
             });
 
+            it('Method setLowLatencyMaxDriftBeforeSeeking should throw an exception', function () {
+                expect(player.setLowLatencyMaxDriftBeforeSeeking.bind(player, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setLowLatencyMaxDriftBeforeSeeking.bind(player, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setLowLatencyMaxDriftBeforeSeeking.bind(player, NaN)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setLowLatencyMaxDriftBeforeSeeking.bind(player, -3)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setLowLatencyMaxDriftBeforeSeeking.bind(player, 0.4)).not.to.throw(Constants.BAD_ARGUMENT_ERROR);
+            });
+
             it('Method isDynamic should get dynamic value', function () {
                 let isDynamic = player.isDynamic();
                 expect(isDynamic).to.be.false; // jshint ignore:line

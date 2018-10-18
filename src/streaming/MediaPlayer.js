@@ -103,7 +103,6 @@ function MediaPlayer() {
     * @inner
     */
     const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
-    const PLAYBACK_LOW_LATENCY_MAX_DRIFT_BAD_ARGUMENT_ERROR = 'Playback maximum drift has an invalid value! Use a number greater or equal to 0';
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
@@ -600,10 +599,12 @@ function MediaPlayer() {
      * @instance
      */
     function setLowLatencyMaxDriftBeforeSeeking(value) {
-        if ( typeof value !== 'number' || isNaN(value) || value < 0) {
-            throw PLAYBACK_LOW_LATENCY_MAX_DRIFT_BAD_ARGUMENT_ERROR;
+        checkParameterType(value, 'number');
+        if (isNaN(value) || value < 0) {
+            throw Constants.BAD_ARGUMENT_ERROR;
         }
-        mediaPlayerModel.setLowLatencyMaxDriftBeforeSeeking(value);
+        const s = { streaming: { liveCatchUpMaxDrift: value }};
+        settings.update(s);
     }
 
     /**
@@ -614,7 +615,7 @@ function MediaPlayer() {
      * @instance
      */
     function getLowLatencyMaxDriftBeforeSeeking() {
-        return mediaPlayerModel.getLowLatencyMaxDriftBeforeSeeking();
+        return settings.get().streaming.liveCatchUpMaxDrift;
     }
 
     /**

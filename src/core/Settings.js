@@ -263,6 +263,23 @@ function Settings() {
              */
             liveCatchUpMinDrift: 0.02,
             /**
+             * Use this method to set the maximum latency deviation allowed before dash.js to do a seeking to live position. In low latency mode,
+             * when the difference between the measured latency and the target one,
+             * as an absolute number, is higher than the one sets with this method, then dash.js does a seek to live edge position minus
+             * the target live delay.
+             *
+             * LowLatencyMaxDriftBeforeSeeking should be provided in seconds. If 0, then seeking operations won't be used for
+             * fixing latency deviations.
+             *
+             * Note: Catch-up mechanism is only applied when playing low latency live streams.
+             *
+             * @param {number} value Maximum difference between measured latency and the target one before using seek to
+             * fix drastically live latency deviations.
+             * @default {number} 0
+             * @memberof module:Settings.Schema
+             */
+            liveCatchUpMaxDrift: 0,
+            /**
              * Use this method to set the maximum catch up rate, as a percentage, for low latency live streams. In low latency mode,
              * when measured latency is higher/lower than the target one,
              * dash.js increases/decreases playback rate respectively up to (+/-) the percentage defined with this method until target is reached.

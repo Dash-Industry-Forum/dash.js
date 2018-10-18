@@ -646,8 +646,8 @@ function PlaybackController() {
                 videoModel.setPlaybackRate(newRate);
             }
 
-            if (mediaPlayerModel.getLowLatencyMaxDriftBeforeSeeking() > 0 && !isLowLatencySeekingInProgress &&
-                deltaLatency > mediaPlayerModel.getLowLatencyMaxDriftBeforeSeeking()) {
+            if (settings.get().streaming.liveCatchUpMaxDrift > 0 && !isLowLatencySeekingInProgress &&
+                deltaLatency > settings.get().streaming.liveCatchUpMaxDrift) {
                 logger.info('Low Latency catchup mechanism. Latency too high, doing a seek to live point');
                 isLowLatencySeekingInProgress = true;
                 seekToLive();

@@ -60,7 +60,6 @@ const XLINK_RETRY_INTERVAL = 500;
 const DEFAULT_LOW_LATENCY_LIVE_DELAY = 3.0;
 const LOW_LATENCY_REDUCTION_FACTOR = 10;
 const LOW_LATENCY_MULTIPLY_FACTOR = 5;
-const LOW_LATENCY_CATCH_UP_MAX_DRIFT = 0;
 
 const DEFAULT_XHR_WITH_CREDENTIALS = false;
 
@@ -74,8 +73,7 @@ function MediaPlayerModel() {
         retryIntervals,
         xhrWithCredentials,
         customABRRule,
-        cacheLoadThresholds,
-        liveCatchUpMaxDrift;
+        cacheLoadThresholds;
 
     const DEFAULT_UTC_TIMING_SOURCE = {
             scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
@@ -98,8 +96,6 @@ function MediaPlayerModel() {
             default: DEFAULT_XHR_WITH_CREDENTIALS
         };
         customABRRule = [];
-
-        liveCatchUpMaxDrift = LOW_LATENCY_CATCH_UP_MAX_DRIFT;
 
         retryAttempts = {
             [HTTPRequest.MPD_TYPE]:                         MANIFEST_RETRY_ATTEMPTS,
@@ -297,15 +293,6 @@ function MediaPlayerModel() {
         return settings.get().streaming.lowLatencyEnabled;
     }
 
-    function setLowLatencyMaxDriftBeforeSeeking(value) {
-        checkParameterType(value, 'number');
-        liveCatchUpMaxDrift = value;
-    }
-
-    function getLowLatencyMaxDriftBeforeSeeking() {
-        return liveCatchUpMaxDrift;
-    }
-
     function getDefaultUtcTimingSource() {
         return DEFAULT_UTC_TIMING_SOURCE;
     }
@@ -338,8 +325,6 @@ function MediaPlayerModel() {
         restoreDefaultUTCTimingSources: restoreDefaultUTCTimingSources,
         setXHRWithCredentialsForType: setXHRWithCredentialsForType,
         getXHRWithCredentialsForType: getXHRWithCredentialsForType,
-        setLowLatencyMaxDriftBeforeSeeking: setLowLatencyMaxDriftBeforeSeeking,
-        getLowLatencyMaxDriftBeforeSeeking: getLowLatencyMaxDriftBeforeSeeking,
         getDefaultUtcTimingSource: getDefaultUtcTimingSource,
         reset: reset
     };
