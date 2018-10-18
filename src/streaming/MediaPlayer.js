@@ -525,7 +525,10 @@ function MediaPlayer() {
      * @instance
      */
     function setCatchUpPlaybackRate(value) {
-        mediaPlayerModel.setCatchUpPlaybackRate(value);
+        checkParameterType(value, 'number');
+        checkRange(value, 0.0, 0.5);
+        const s = { streaming: { liveCatchUpPlaybackRate: value }};
+        settings.update(s);
     }
 
     /**
@@ -536,7 +539,7 @@ function MediaPlayer() {
      * @instance
      */
     function getCatchUpPlaybackRate() {
-        return mediaPlayerModel.getCatchUpPlaybackRate();
+        return settings.get().streaming.liveCatchUpPlaybackRate;
     }
 
     /**

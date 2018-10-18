@@ -14,15 +14,6 @@ describe('MediaPlayerModel', function () {
     const mediaPlayerModel = MediaPlayerModel(context).getInstance();
     const settings = Settings(context).getInstance();
 
-    it('setCatchUpPlaybackRate should throw an exception if input argument is not a number or out of 0-0.5 range', function () {
-        expect(() => {mediaPlayerModel.setCatchUpPlaybackRate(0.9);}).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(() => {mediaPlayerModel.setCatchUpPlaybackRate(13);}).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(() => {mediaPlayerModel.setCatchUpPlaybackRate(0.1);}).to.not.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(() => {mediaPlayerModel.setCatchUpPlaybackRate('string');}).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(() => {mediaPlayerModel.setCatchUpPlaybackRate(true);}).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(() => {mediaPlayerModel.setCatchUpPlaybackRate(false);}).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
-
     it('Method removeUTCTimingSource should throw an exception', function () {
         expect(mediaPlayerModel.removeUTCTimingSource.bind(mediaPlayerModel, true, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
         expect(mediaPlayerModel.removeUTCTimingSource.bind(mediaPlayerModel, 1, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);

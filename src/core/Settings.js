@@ -262,6 +262,20 @@ function Settings() {
              * @memberof module:Settings.Schema
              */
             liveCatchUpMinDrift: 0.02,
+            /**
+             * Use this method to set the maximum catch up rate, as a percentage, for low latency live streams. In low latency mode,
+             * when measured latency is higher/lower than the target one,
+             * dash.js increases/decreases playback rate respectively up to (+/-) the percentage defined with this method until target is reached.
+             *
+             * Valid values for catch up rate are in range 0-0.5 (0-50%). Set it to 0 to turn off live catch up feature.
+             *
+             * Note: Catch-up mechanism is only applied when playing low latency live streams.
+             *
+             * @param {number} value Percentage in which playback rate is increased/decreased when live catch up mechanism is activated.
+             * @default {number} 0.5
+             * @memberof module:Settings.Schema
+             */
+            liveCatchUpPlaybackRate: 0.5,
             abr: {
                 /**
                  * Sets the moving average method used for smoothing throughput estimates. Valid methods are

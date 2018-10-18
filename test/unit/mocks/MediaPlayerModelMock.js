@@ -61,8 +61,6 @@ const CACHE_LOAD_THRESHOLD_AUDIO = 5;
 
 const MANIFEST_UPDATE_RETRY_INTERVAL = 100;
 
-const LOW_LATENCY_CATCH_UP_PLAYBACK_RATE = 0.5;
-
 class MediaPlayerModelMock {
 
     // Constants
@@ -151,7 +149,6 @@ class MediaPlayerModelMock {
         this.cacheLoadThresholds = {};
         this.cacheLoadThresholds[Constants.VIDEO] = CACHE_LOAD_THRESHOLD_VIDEO;
         this.cacheLoadThresholds[Constants.AUDIO] = CACHE_LOAD_THRESHOLD_AUDIO;
-        this.lowLatencyCatchUpPlaybackRate = LOW_LATENCY_CATCH_UP_PLAYBACK_RATE;
     }
 
     //TODO Should we use Object.define to have setters/getters? makes more readable code on other side.
@@ -303,18 +300,6 @@ class MediaPlayerModelMock {
         }
 
         return useCreds;
-    }
-
-    setCatchUpPlaybackRate(value) {
-        this.lowLatencyCatchUpPlaybackRate = value;
-    }
-
-    getCatchUpPlaybackRate() {
-        return this.lowLatencyCatchUpPlaybackRate;
-    }
-
-    getMovingAverageMethod() {
-        return Constants.MOVING_AVERAGE_SLIDING_WINDOW;
     }
 
     reset() {

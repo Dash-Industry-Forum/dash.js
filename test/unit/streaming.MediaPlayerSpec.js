@@ -455,6 +455,15 @@ describe('MediaPlayer', function () {
                 expect(player.setLowLatencyMinDrift.bind(player, 0.4)).not.to.throw(Constants.BAD_ARGUMENT_ERROR);
             });
 
+            it('setCatchUpPlaybackRate should throw an exception if input argument is not a number or out of 0-0.5 range', function () {
+                expect(() => {player.setCatchUpPlaybackRate(0.9);}).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(() => {player.setCatchUpPlaybackRate(13);}).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(() => {player.setCatchUpPlaybackRate(0.1);}).to.not.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(() => {player.setCatchUpPlaybackRate('string');}).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(() => {player.setCatchUpPlaybackRate(true);}).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(() => {player.setCatchUpPlaybackRate(false);}).to.throw(Constants.BAD_ARGUMENT_ERROR);
+            });
+
             it('Method isDynamic should get dynamic value', function () {
                 let isDynamic = player.isDynamic();
                 expect(isDynamic).to.be.false; // jshint ignore:line

@@ -37,7 +37,7 @@ from '../vo/metrics/HTTPRequest';
 import Constants from '../constants/Constants';
 import ABRRulesCollection from '../rules/abr/ABRRulesCollection';
 import Settings from '../../core/Settings';
-import { checkParameterType, checkIsVideoOrAudioType, checkRange } from '../utils/SupervisorTools';
+import { checkParameterType, checkIsVideoOrAudioType } from '../utils/SupervisorTools';
 
 const DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION = 360000;
 const DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION = 360000;
@@ -61,7 +61,6 @@ const DEFAULT_LOW_LATENCY_LIVE_DELAY = 3.0;
 const LOW_LATENCY_REDUCTION_FACTOR = 10;
 const LOW_LATENCY_MULTIPLY_FACTOR = 5;
 const LOW_LATENCY_CATCH_UP_MAX_DRIFT = 0;
-const LOW_LATENCY_CATCH_UP_PLAYBACK_RATE = 0.5;
 
 const DEFAULT_XHR_WITH_CREDENTIALS = false;
 
@@ -76,8 +75,7 @@ function MediaPlayerModel() {
         xhrWithCredentials,
         customABRRule,
         cacheLoadThresholds,
-        liveCatchUpMaxDrift,
-        liveCatchUpPlaybackRate;
+        liveCatchUpMaxDrift;
 
     const DEFAULT_UTC_TIMING_SOURCE = {
             scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
@@ -102,7 +100,6 @@ function MediaPlayerModel() {
         customABRRule = [];
 
         liveCatchUpMaxDrift = LOW_LATENCY_CATCH_UP_MAX_DRIFT;
-        liveCatchUpPlaybackRate = LOW_LATENCY_CATCH_UP_PLAYBACK_RATE;
 
         retryAttempts = {
             [HTTPRequest.MPD_TYPE]:                         MANIFEST_RETRY_ATTEMPTS,
@@ -300,17 +297,6 @@ function MediaPlayerModel() {
         return settings.get().streaming.lowLatencyEnabled;
     }
 
-    function setCatchUpPlaybackRate(value) {
-        checkParameterType(value, 'number');
-        checkRange(value, 0.0, 0.5);
-
-        liveCatchUpPlaybackRate = value;
-    }
-
-    function getCatchUpPlaybackRate() {
-        return liveCatchUpPlaybackRate;
-    }
-
     function setLowLatencyMaxDriftBeforeSeeking(value) {
         checkParameterType(value, 'number');
         liveCatchUpMaxDrift = value;
@@ -352,8 +338,6 @@ function MediaPlayerModel() {
         restoreDefaultUTCTimingSources: restoreDefaultUTCTimingSources,
         setXHRWithCredentialsForType: setXHRWithCredentialsForType,
         getXHRWithCredentialsForType: getXHRWithCredentialsForType,
-        setCatchUpPlaybackRate: setCatchUpPlaybackRate,
-        getCatchUpPlaybackRate: getCatchUpPlaybackRate,
         setLowLatencyMaxDriftBeforeSeeking: setLowLatencyMaxDriftBeforeSeeking,
         getLowLatencyMaxDriftBeforeSeeking: getLowLatencyMaxDriftBeforeSeeking,
         getDefaultUtcTimingSource: getDefaultUtcTimingSource,

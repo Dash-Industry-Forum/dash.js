@@ -615,13 +615,13 @@ function PlaybackController() {
     }
 
     function needToCatchUp() {
-        return mediaPlayerModel.getCatchUpPlaybackRate() > 0 && getTime() > 0 &&
+        return settings.get().streaming.liveCatchUpPlaybackRate > 0 && getTime() > 0 &&
             Math.abs(getCurrentLiveLatency() - mediaPlayerModel.getLiveDelay()) > settings.get().streaming.liveCatchUpMinDrift;
     }
 
     function startPlaybackCatchUp() {
         if (videoModel) {
-            const cpr = mediaPlayerModel.getCatchUpPlaybackRate();
+            const cpr = settings.get().streaming.liveCatchUpPlaybackRate;
             const liveDelay = mediaPlayerModel.getLiveDelay();
             const deltaLatency = getCurrentLiveLatency() - liveDelay;
             const d = deltaLatency * 5;
