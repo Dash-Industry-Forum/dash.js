@@ -1824,14 +1824,16 @@ function MediaPlayer() {
      *                        |-o-|---- segment X+1 -----|-o-|
      *                                                   |-o-|---- segment X+2 -----|-o-|
      * </pre>
-     * @default 0.05 seconds.
+     * @default 0.2 seconds.
      * @param {number} value
      * @memberof module:MediaPlayer
      * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type.
      * @instance
     */
     function setSegmentOverlapToleranceTime(value) {
-        mediaPlayerModel.setSegmentOverlapToleranceTime(value);
+        checkParameterType(value, 'number');
+        const s = { streaming: { segmentOverlapToleranceTime: value } };
+        settings.update(s);
     }
 
     /**

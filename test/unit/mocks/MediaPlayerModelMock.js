@@ -44,7 +44,6 @@ const DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION = 360000;
 
 const DEFAULT_MIN_BUFFER_TIME = 12;
 const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
-const SEGMENT_OVERLAP_TOLERANCE_TIME = 0.05;
 
 const FRAGMENT_RETRY_ATTEMPTS = 3;
 const FRAGMENT_RETRY_INTERVAL = 1000;
@@ -143,7 +142,6 @@ class MediaPlayerModelMock {
         };
         this.liveDelay = undefined; // Explicitly state that default is undefined
         this.stableBufferTime = NaN;
-        this.segmentOverlapToleranceTime = SEGMENT_OVERLAP_TOLERANCE_TIME;
         this.xhrWithCredentials = {
             default: DEFAULT_XHR_WITH_CREDENTIALS
         };
@@ -212,14 +210,6 @@ class MediaPlayerModelMock {
 
     getStableBufferTime() {
         return !isNaN(this.stableBufferTime) ? this.stableBufferTime : this.fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
-    }
-
-    setSegmentOverlapToleranceTime(value) {
-        this.segmentOverlapToleranceTime = value;
-    }
-
-    getSegmentOverlapToleranceTime() {
-        return this.segmentOverlapToleranceTime;
     }
 
     setCacheLoadThresholdForType(type, value) {

@@ -44,7 +44,6 @@ const DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION = 360000;
 
 const DEFAULT_MIN_BUFFER_TIME = 12;
 const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
-const SEGMENT_OVERLAP_TOLERANCE_TIME = 0.2;
 const MANIFEST_UPDATE_RETRY_INTERVAL = 100;
 
 const CACHE_LOAD_THRESHOLD_VIDEO = 50;
@@ -75,7 +74,6 @@ function MediaPlayerModel() {
         UTCTimingSources,
         lastBitrateCachingInfo,
         lastMediaSettingsCachingInfo,
-        segmentOverlapToleranceTime,
         retryAttempts,
         retryIntervals,
         ABRStrategy,
@@ -107,7 +105,6 @@ function MediaPlayerModel() {
             enabled: true,
             ttl: DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION
         };
-        segmentOverlapToleranceTime = SEGMENT_OVERLAP_TOLERANCE_TIME;
         manifestUpdateRetryInterval = MANIFEST_UPDATE_RETRY_INTERVAL;
         xhrWithCredentials = {
             default: DEFAULT_XHR_WITH_CREDENTIALS
@@ -211,15 +208,6 @@ function MediaPlayerModel() {
             return getLiveDelay() * 0.6;
         }
         return !isNaN(settings.get().streaming.stableBufferTime) ? settings.get().streaming.stableBufferTime : settings.get().streaming.fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
-    }
-
-    function setSegmentOverlapToleranceTime(value) {
-        checkParameterType(value, 'number');
-        segmentOverlapToleranceTime = value;
-    }
-
-    function getSegmentOverlapToleranceTime() {
-        return segmentOverlapToleranceTime;
     }
 
     function setCacheLoadThresholdForType(type, value) {
@@ -416,8 +404,6 @@ function MediaPlayerModel() {
         setLastMediaSettingsCachingInfo: setLastMediaSettingsCachingInfo,
         getLastMediaSettingsCachingInfo: getLastMediaSettingsCachingInfo,
         getStableBufferTime: getStableBufferTime,
-        setSegmentOverlapToleranceTime: setSegmentOverlapToleranceTime,
-        getSegmentOverlapToleranceTime: getSegmentOverlapToleranceTime,
         getCacheLoadThresholdForType: getCacheLoadThresholdForType,
         setCacheLoadThresholdForType: setCacheLoadThresholdForType,
         setRetryAttemptsForType: setRetryAttemptsForType,

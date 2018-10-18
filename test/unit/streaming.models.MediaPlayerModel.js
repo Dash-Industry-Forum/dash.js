@@ -54,11 +54,6 @@ describe('MediaPlayerModel', function () {
         expect(mediaPlayerModel.setRetryAttemptsForType.bind(mediaPlayerModel, true, 10)).to.throw(Constants.BAD_ARGUMENT_ERROR);
     });
 
-    it('Method setSegmentOverlapToleranceTime should throw an exception', function () {
-        expect(mediaPlayerModel.setSegmentOverlapToleranceTime.bind(mediaPlayerModel, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setSegmentOverlapToleranceTime.bind(mediaPlayerModel, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
-
     it('Method setCacheLoadThresholdForType should throw an exception', function () {
         expect(mediaPlayerModel.setCacheLoadThresholdForType.bind(mediaPlayerModel, Constants.AUDIO, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
         expect(mediaPlayerModel.setCacheLoadThresholdForType.bind(mediaPlayerModel, Constants.AUDIO, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);

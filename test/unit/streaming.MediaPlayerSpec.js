@@ -418,6 +418,11 @@ describe('MediaPlayer', function () {
                 expect(player.enableManifestDateHeaderTimeSource.bind(player, 'true')).to.throw(Constants.BAD_ARGUMENT_ERROR);
             });
 
+            it('Method setSegmentOverlapToleranceTime should throw an exception', function () {
+                expect(player.setSegmentOverlapToleranceTime.bind(player, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setSegmentOverlapToleranceTime.bind(player, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+            });
+
             it('Method isDynamic should get dynamic value', function () {
                 let isDynamic = player.isDynamic();
                 expect(isDynamic).to.be.false; // jshint ignore:line
@@ -932,11 +937,11 @@ describe('MediaPlayer', function () {
         });
 
         it('should configure setSegmentOverlapToleranceTime', function () {
-            let val = mediaPlayerModel.getSegmentOverlapToleranceTime();
-            expect(val).to.equal(0.05);
+            let val = settings.get().streaming.segmentOverlapToleranceTime;
+            expect(val).to.equal(0.2);
 
             player.setSegmentOverlapToleranceTime(1.5);
-            val = mediaPlayerModel.getSegmentOverlapToleranceTime();
+            val = settings.get().streaming.segmentOverlapToleranceTime;
             expect(val).to.equal(1.5);
         });
 
