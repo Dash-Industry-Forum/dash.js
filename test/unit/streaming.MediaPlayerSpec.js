@@ -447,6 +447,14 @@ describe('MediaPlayer', function () {
                 expect(player.setManifestUpdateRetryInterval.bind(player, 'true')).to.throw(Constants.BAD_ARGUMENT_ERROR);
             });
 
+            it('Method setLowLatencyMinDrift should throw an exception', function () {
+                expect(player.setLowLatencyMinDrift.bind(player, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setLowLatencyMinDrift.bind(player, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setLowLatencyMinDrift.bind(player, NaN)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setLowLatencyMinDrift.bind(player, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setLowLatencyMinDrift.bind(player, 0.4)).not.to.throw(Constants.BAD_ARGUMENT_ERROR);
+            });
+
             it('Method isDynamic should get dynamic value', function () {
                 let isDynamic = player.isDynamic();
                 expect(isDynamic).to.be.false; // jshint ignore:line

@@ -247,6 +247,21 @@ function Settings() {
              * @memberof module:Settings.Schema
              */
             manifestUpdateRetryInterval: 100,
+            /**
+             * Use this method to set the minimum latency deviation allowed before activating catch-up mechanism. In low latency mode,
+             * when the difference between the measured latency and the target one,
+             * as an absolute number, is higher than the one sets with this method, then dash.js increases/decreases
+             * playback rate until target latency is reached.
+             *
+             * LowLatencyMinDrift should be provided in seconds, and it uses values between 0.0 and 0.5.
+             *
+             * Note: Catch-up mechanism is only applied when playing low latency live streams.
+             *
+             * @param {number} value Maximum difference between measured latency and the target one before applying playback rate modifications.
+             * @default {number} 0.02
+             * @memberof module:Settings.Schema
+             */
+            liveCatchUpMinDrift: 0.02,
             abr: {
                 /**
                  * Sets the moving average method used for smoothing throughput estimates. Valid methods are

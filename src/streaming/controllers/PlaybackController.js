@@ -616,7 +616,7 @@ function PlaybackController() {
 
     function needToCatchUp() {
         return mediaPlayerModel.getCatchUpPlaybackRate() > 0 && getTime() > 0 &&
-            Math.abs(getCurrentLiveLatency() - mediaPlayerModel.getLiveDelay()) > mediaPlayerModel.getLowLatencyMinDrift();
+            Math.abs(getCurrentLiveLatency() - mediaPlayerModel.getLiveDelay()) > settings.get().streaming.liveCatchUpMinDrift;
     }
 
     function startPlaybackCatchUp() {

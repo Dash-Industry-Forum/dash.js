@@ -60,7 +60,6 @@ const XLINK_RETRY_INTERVAL = 500;
 const DEFAULT_LOW_LATENCY_LIVE_DELAY = 3.0;
 const LOW_LATENCY_REDUCTION_FACTOR = 10;
 const LOW_LATENCY_MULTIPLY_FACTOR = 5;
-const LOW_LATENCY_CATCH_UP_MIN_DRIFT = 0.02;
 const LOW_LATENCY_CATCH_UP_MAX_DRIFT = 0;
 const LOW_LATENCY_CATCH_UP_PLAYBACK_RATE = 0.5;
 
@@ -77,7 +76,6 @@ function MediaPlayerModel() {
         xhrWithCredentials,
         customABRRule,
         cacheLoadThresholds,
-        liveCatchUpMinDrift,
         liveCatchUpMaxDrift,
         liveCatchUpPlaybackRate;
 
@@ -103,7 +101,6 @@ function MediaPlayerModel() {
         };
         customABRRule = [];
 
-        liveCatchUpMinDrift = LOW_LATENCY_CATCH_UP_MIN_DRIFT;
         liveCatchUpMaxDrift = LOW_LATENCY_CATCH_UP_MAX_DRIFT;
         liveCatchUpPlaybackRate = LOW_LATENCY_CATCH_UP_PLAYBACK_RATE;
 
@@ -314,15 +311,6 @@ function MediaPlayerModel() {
         return liveCatchUpPlaybackRate;
     }
 
-    function setLowLatencyMinDrift(value) {
-        checkParameterType(value, 'number');
-        liveCatchUpMinDrift = value;
-    }
-
-    function getLowLatencyMinDrift() {
-        return liveCatchUpMinDrift;
-    }
-
     function setLowLatencyMaxDriftBeforeSeeking(value) {
         checkParameterType(value, 'number');
         liveCatchUpMaxDrift = value;
@@ -366,8 +354,6 @@ function MediaPlayerModel() {
         getXHRWithCredentialsForType: getXHRWithCredentialsForType,
         setCatchUpPlaybackRate: setCatchUpPlaybackRate,
         getCatchUpPlaybackRate: getCatchUpPlaybackRate,
-        setLowLatencyMinDrift: setLowLatencyMinDrift,
-        getLowLatencyMinDrift: getLowLatencyMinDrift,
         setLowLatencyMaxDriftBeforeSeeking: setLowLatencyMaxDriftBeforeSeeking,
         getLowLatencyMaxDriftBeforeSeeking: getLowLatencyMaxDriftBeforeSeeking,
         getDefaultUtcTimingSource: getDefaultUtcTimingSource,

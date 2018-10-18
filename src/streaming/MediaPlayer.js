@@ -69,7 +69,7 @@ import {
 import BASE64 from '../../externals/base64';
 import ISOBoxer from 'codem-isoboxer';
 import DashJSError from './vo/DashJSError';
-import { checkParameterType, checkIsVideoOrAudioType } from './utils/SupervisorTools';
+import { checkParameterType, checkIsVideoOrAudioType, checkRange } from './utils/SupervisorTools';
 
 /**
  * @module MediaPlayer
@@ -103,15 +103,6 @@ function MediaPlayer() {
     * @inner
     */
     const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
-    /**
-    * @constant {string} PLAYBACK_LOW_LATENCY_MIN_DRIFT_BAD_ARGUMENT_ERROR error string thrown when setLowLatencyMinDrift function is called with an invalid value.
-    * @inner
-    */
-    const PLAYBACK_LOW_LATENCY_MIN_DRIFT_BAD_ARGUMENT_ERROR = 'Playback minimum drift has an invalid value! Use a number from 0 to 0.5';
-    /**
-    * @constant {string} PLAYBACK_LOW_LATENCY_MAX_DRIFT_BAD_ARGUMENT_ERROR error string thrown when setLowLatencyMaxDriftBeforeSeeking function is called with an invalid value.
-    * @inner
-    */
     const PLAYBACK_LOW_LATENCY_MAX_DRIFT_BAD_ARGUMENT_ERROR = 'Playback maximum drift has an invalid value! Use a number greater or equal to 0';
 
     const context = this.context;
@@ -548,7 +539,6 @@ function MediaPlayer() {
         return mediaPlayerModel.getCatchUpPlaybackRate();
     }
 
-
     /**
      * Use this method to set the minimum latency deviation allowed before activating catch-up mechanism. In low latency mode,
      * when the difference between the measured latency and the target one ({@link module:MediaPlayer#setLiveDelay setLiveDelay()}),
@@ -562,15 +552,18 @@ function MediaPlayer() {
      * @param {number} value Maximum difference between measured latency and the target one before applying playback rate modifications.
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#setLiveDelay setLiveDelay()}
-     * @default {number} 0.05
+     * @default {number} 0.02
      * @throws {@link module:MediaPlayer~PLAYBACK_LOW_LATENCY_MIN_DRIFT_BAD_ARGUMENT_ERROR PLAYBACK_LOW_LATENCY_MIN_DRIFT_BAD_ARGUMENT_ERROR} if called with an invalid argument
      * @instance
      */
     function setLowLatencyMinDrift(value) {
-        if ( typeof value !== 'number' || isNaN(value) || value < 0.0 || value > 0.50) {
-            throw PLAYBACK_LOW_LATENCY_MIN_DRIFT_BAD_ARGUMENT_ERROR;
+        checkParameterType(value, 'number');
+        if (isNaN(value)) {
+            throw Constants.BAD_ARGUMENT_ERROR;
         }
-        mediaPlayerModel.setLowLatencyMinDrift(value);
+        checkRange(value, 0.0, 0.5);
+        const s = { streaming: { liveCatchUpMinDrift: value }};
+        settings.update(s);
     }
 
     /**
@@ -581,7 +574,7 @@ function MediaPlayer() {
      * @instance
      */
     function getLowLatencyMinDrift() {
-        return mediaPlayerModel.getLowLatencyMinDrift();
+        return settings.get().streaming.liveCatchUpMinDrift;
     }
 
     /**
