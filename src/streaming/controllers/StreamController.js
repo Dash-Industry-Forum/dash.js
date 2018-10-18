@@ -125,7 +125,8 @@ function StreamController() {
             adapter: adapter,
             mediaPlayerModel: mediaPlayerModel,
             manifestLoader: manifestLoader,
-            errHandler: errHandler
+            errHandler: errHandler,
+            settings: settings
         });
         manifestUpdater.initialize();
 

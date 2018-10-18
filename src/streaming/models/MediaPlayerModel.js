@@ -44,7 +44,6 @@ const DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION = 360000;
 
 const DEFAULT_MIN_BUFFER_TIME = 12;
 const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
-const MANIFEST_UPDATE_RETRY_INTERVAL = 100;
 
 const CACHE_LOAD_THRESHOLD_VIDEO = 50;
 const CACHE_LOAD_THRESHOLD_AUDIO = 5;
@@ -78,7 +77,6 @@ function MediaPlayerModel() {
         xhrWithCredentials,
         customABRRule,
         cacheLoadThresholds,
-        manifestUpdateRetryInterval,
         liveCatchUpMinDrift,
         liveCatchUpMaxDrift,
         liveCatchUpPlaybackRate;
@@ -100,7 +98,6 @@ function MediaPlayerModel() {
             enabled: true,
             ttl: DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION
         };
-        manifestUpdateRetryInterval = MANIFEST_UPDATE_RETRY_INTERVAL;
         xhrWithCredentials = {
             default: DEFAULT_XHR_WITH_CREDENTIALS
         };
@@ -335,15 +332,6 @@ function MediaPlayerModel() {
         return liveCatchUpMaxDrift;
     }
 
-    function setManifestUpdateRetryInterval(value) {
-        checkParameterType(value, 'number');
-        manifestUpdateRetryInterval = value;
-    }
-
-    function getManifestUpdateRetryInterval() {
-        return manifestUpdateRetryInterval;
-    }
-
     function getDefaultUtcTimingSource() {
         return DEFAULT_UTC_TIMING_SOURCE;
     }
@@ -382,8 +370,6 @@ function MediaPlayerModel() {
         getLowLatencyMinDrift: getLowLatencyMinDrift,
         setLowLatencyMaxDriftBeforeSeeking: setLowLatencyMaxDriftBeforeSeeking,
         getLowLatencyMaxDriftBeforeSeeking: getLowLatencyMaxDriftBeforeSeeking,
-        setManifestUpdateRetryInterval: setManifestUpdateRetryInterval,
-        getManifestUpdateRetryInterval: getManifestUpdateRetryInterval,
         getDefaultUtcTimingSource: getDefaultUtcTimingSource,
         reset: reset
     };

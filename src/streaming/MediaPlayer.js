@@ -2070,7 +2070,9 @@ function MediaPlayer() {
      *
      */
     function setManifestUpdateRetryInterval(value) {
-        mediaPlayerModel.setManifestUpdateRetryInterval(value);
+        checkParameterType(value, 'number');
+        const s = { streaming: { manifestUpdateRetryInterval: value } };
+        settings.update(s);
     }
 
     /**
@@ -2084,7 +2086,7 @@ function MediaPlayer() {
      * @see {@link module:MediaPlayer#setManifestUpdateRetryInterval setManifestUpdateRetryInterval()}
      */
     function getManifestUpdateRetryInterval() {
-        return mediaPlayerModel.getManifestUpdateRetryInterval();
+        return settings.get().streaming.manifestUpdateRetryInterval;
     }
 
     /*

@@ -442,6 +442,11 @@ describe('MediaPlayer', function () {
                 expect(player.setMovingAverageMethod.bind(player, Constants.MOVING_AVERAGE_SLIDING_WINDOW)).not.to.throw(Constants.BAD_ARGUMENT_ERROR);
             });
 
+            it('Method setManifestUpdateRetryInterval should throw an exception', function () {
+                expect(player.setManifestUpdateRetryInterval.bind(player, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setManifestUpdateRetryInterval.bind(player, 'true')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+            });
+
             it('Method isDynamic should get dynamic value', function () {
                 let isDynamic = player.isDynamic();
                 expect(isDynamic).to.be.false; // jshint ignore:line
@@ -1002,12 +1007,9 @@ describe('MediaPlayer', function () {
 
         it('should configure manifestUpdateRetryInterval', function () {
             let manifestUpdateRetryInterval = player.getManifestUpdateRetryInterval();
-            expect(manifestUpdateRetryInterval).to.equal(MediaPlayerModelMock.MANIFEST_UPDATE_RETRY_INTERVAL);
+            expect(manifestUpdateRetryInterval).to.equal(100);
 
             player.setManifestUpdateRetryInterval(200);
-
-            manifestUpdateRetryInterval = mediaPlayerModel.getManifestUpdateRetryInterval();
-            expect(manifestUpdateRetryInterval).to.equal(200);
 
             manifestUpdateRetryInterval = player.getManifestUpdateRetryInterval();
             expect(manifestUpdateRetryInterval).to.equal(200);

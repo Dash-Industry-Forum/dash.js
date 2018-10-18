@@ -237,6 +237,16 @@ function Settings() {
              * @memberof module:Settings.Schema
              */
             useSuggestedPresentationDelay: false,
+            /**
+             * For live streams, set the interval-frequency in milliseconds at which
+             * dash.js will check if the current manifest is still processed before
+             * downloading the next manifest once the minimumUpdatePeriod time has
+             * expired.
+             * @param {int} value
+             * @default 100
+             * @memberof module:Settings.Schema
+             */
+            manifestUpdateRetryInterval: 100,
             abr: {
                 /**
                  * Sets the moving average method used for smoothing throughput estimates. Valid methods are
