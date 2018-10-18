@@ -67,11 +67,6 @@ describe('MediaPlayerModel', function () {
         expect(mediaPlayerModel.setManifestUpdateRetryInterval.bind(mediaPlayerModel, 'true')).to.throw(Constants.BAD_ARGUMENT_ERROR);
     });
 
-    it('Method setUseSuggestedPresentationDelay should throw an exception', function () {
-        expect(mediaPlayerModel.setUseSuggestedPresentationDelay.bind(mediaPlayerModel, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setUseSuggestedPresentationDelay.bind(mediaPlayerModel, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
-
     it('Method addABRCustomRule should throw an exception', function () {
         expect(mediaPlayerModel.addABRCustomRule.bind(mediaPlayerModel, 'unknownRuleType', 'newRuleName')).to.throw(Constants.BAD_ARGUMENT_ERROR);
         expect(mediaPlayerModel.addABRCustomRule.bind(mediaPlayerModel, true, 'newRuleName')).to.throw(Constants.BAD_ARGUMENT_ERROR);

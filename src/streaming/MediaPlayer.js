@@ -1302,7 +1302,9 @@ function MediaPlayer() {
      * @instance
      */
     function useSuggestedPresentationDelay(value) {
-        mediaPlayerModel.setUseSuggestedPresentationDelay(value);
+        checkParameterType(value, 'boolean');
+        const s = { streaming: { useSuggestedPresentationDelay: value }};
+        settings.update(s);
     }
 
     /**

@@ -229,6 +229,13 @@ function Settings() {
              * @memberof module:Settings.Schema
              */
             segmentOverlapToleranceTime: 0.2,
+            /**
+             * <p>Set to true if you would like to override the default live delay and honor the SuggestedPresentationDelay attribute in by the manifest.</p>
+             * @param {boolean} value
+             * @default false
+             * @memberof module:Settings.Schema
+             */
+            useSuggestedPresentationDelay: false,
             abr: {
                 /**
                  * Standard ABR throughput rules multiply the throughput by this value. It should be between 0 and 1,

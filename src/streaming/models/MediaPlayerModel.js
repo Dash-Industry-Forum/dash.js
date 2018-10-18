@@ -70,7 +70,6 @@ const DEFAULT_XHR_WITH_CREDENTIALS = false;
 function MediaPlayerModel() {
 
     let instance,
-        useSuggestedPresentationDelay,
         UTCTimingSources,
         lastBitrateCachingInfo,
         lastMediaSettingsCachingInfo,
@@ -95,7 +94,6 @@ function MediaPlayerModel() {
 
     function setup() {
         UTCTimingSources = [];
-        useSuggestedPresentationDelay = false;
         ABRStrategy = Constants.ABR_STRATEGY_DYNAMIC;
         lastBitrateCachingInfo = {
             enabled: true,
@@ -275,15 +273,6 @@ function MediaPlayerModel() {
         return settings.get().streaming.liveDelay;
     }
 
-    function setUseSuggestedPresentationDelay(value) {
-        checkParameterType(value, 'boolean');
-        useSuggestedPresentationDelay = value;
-    }
-
-    function getUseSuggestedPresentationDelay() {
-        return useSuggestedPresentationDelay;
-    }
-
     function addUTCTimingSource(schemeIdUri, value) {
         removeUTCTimingSource(schemeIdUri, value); //check if it already exists and remove if so.
         let vo = new UTCTiming();
@@ -410,8 +399,6 @@ function MediaPlayerModel() {
         getRetryAttemptsForType: getRetryAttemptsForType,
         setRetryIntervalForType: setRetryIntervalForType,
         getRetryIntervalForType: getRetryIntervalForType,
-        getUseSuggestedPresentationDelay: getUseSuggestedPresentationDelay,
-        setUseSuggestedPresentationDelay: setUseSuggestedPresentationDelay,
         getLiveDelay: getLiveDelay,
         addUTCTimingSource: addUTCTimingSource,
         removeUTCTimingSource: removeUTCTimingSource,

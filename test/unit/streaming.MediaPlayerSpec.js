@@ -423,6 +423,11 @@ describe('MediaPlayer', function () {
                 expect(player.setSegmentOverlapToleranceTime.bind(player, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
             });
 
+            it('Method useSuggestedPresentationDelay should throw an exception', function () {
+                expect(player.useSuggestedPresentationDelay.bind(player, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.useSuggestedPresentationDelay.bind(player, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+            });
+
             it('Method isDynamic should get dynamic value', function () {
                 let isDynamic = player.isDynamic();
                 expect(isDynamic).to.be.false; // jshint ignore:line
@@ -758,12 +763,12 @@ describe('MediaPlayer', function () {
         });
 
         it('should configure useSuggestedPresentationDelay', function () {
-            let useSuggestedPresentationDelay = mediaPlayerModel.getUseSuggestedPresentationDelay();
+            let useSuggestedPresentationDelay = settings.get().streaming.useSuggestedPresentationDelay;
             expect(useSuggestedPresentationDelay).to.be.false; // jshint ignore:line
 
             player.useSuggestedPresentationDelay(true);
 
-            useSuggestedPresentationDelay = mediaPlayerModel.getUseSuggestedPresentationDelay();
+            useSuggestedPresentationDelay = settings.get().streaming.useSuggestedPresentationDelay;
             expect(useSuggestedPresentationDelay).to.be.true; // jshint ignore:line
         });
 

@@ -228,7 +228,7 @@ function PlaybackController() {
 
         let suggestedPresentationDelay = adapter.getSuggestedPresentationDelay();
 
-        if (mediaPlayerModel.getUseSuggestedPresentationDelay() && suggestedPresentationDelay !== null) {
+        if (settings.get().streaming.useSuggestedPresentationDelay && suggestedPresentationDelay !== null) {
             delay = suggestedPresentationDelay;
         } else if (settings.get().streaming.lowLatencyEnabled) {
             delay = 0;
