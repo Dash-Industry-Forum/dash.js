@@ -39,9 +39,6 @@ import ABRRulesCollection from '../rules/abr/ABRRulesCollection';
 import Settings from '../../core/Settings';
 import { checkParameterType, checkIsVideoOrAudioType } from '../utils/SupervisorTools';
 
-const DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION = 360000;
-const DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION = 360000;
-
 const DEFAULT_MIN_BUFFER_TIME = 12;
 const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
 
@@ -67,8 +64,6 @@ function MediaPlayerModel() {
 
     let instance,
         UTCTimingSources,
-        lastBitrateCachingInfo,
-        lastMediaSettingsCachingInfo,
         retryAttempts,
         retryIntervals,
         xhrWithCredentials,
@@ -84,14 +79,6 @@ function MediaPlayerModel() {
 
     function setup() {
         UTCTimingSources = [];
-        lastBitrateCachingInfo = {
-            enabled: true,
-            ttl: DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION
-        };
-        lastMediaSettingsCachingInfo = {
-            enabled: true,
-            ttl: DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION
-        };
         xhrWithCredentials = {
             default: DEFAULT_XHR_WITH_CREDENTIALS
         };
@@ -188,34 +175,6 @@ function MediaPlayerModel() {
         return cacheLoadThresholds[type];
     }
 
-    function setLastBitrateCachingInfo(enable, ttl) {
-        if (typeof enable !== 'boolean' || (ttl !== undefined && (typeof ttl !== 'number' || isNaN(ttl)))) {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
-        lastBitrateCachingInfo.enabled = enable;
-        if (ttl !== undefined) {
-            lastBitrateCachingInfo.ttl = ttl;
-        }
-    }
-
-    function getLastBitrateCachingInfo() {
-        return lastBitrateCachingInfo;
-    }
-
-    function setLastMediaSettingsCachingInfo(enable, ttl) {
-        if (typeof enable !== 'boolean' || (ttl !== undefined && (typeof ttl !== 'number' || isNaN(ttl)))) {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
-        lastMediaSettingsCachingInfo.enabled = enable;
-        if (ttl !== undefined) {
-            lastMediaSettingsCachingInfo.ttl = ttl;
-        }
-    }
-
-    function getLastMediaSettingsCachingInfo() {
-        return lastMediaSettingsCachingInfo;
-    }
-
     function setRetryAttemptsForType(type, value) {
         if (typeof value !== 'number' || typeof type !== 'string' || (type !== HTTPRequest.MPD_TYPE && type !== HTTPRequest.MEDIA_SEGMENT_TYPE)) {
             throw Constants.BAD_ARGUMENT_ERROR;
@@ -306,10 +265,6 @@ function MediaPlayerModel() {
         getABRCustomRules: getABRCustomRules,
         addABRCustomRule: addABRCustomRule,
         removeABRCustomRule: removeABRCustomRule,
-        setLastBitrateCachingInfo: setLastBitrateCachingInfo,
-        getLastBitrateCachingInfo: getLastBitrateCachingInfo,
-        setLastMediaSettingsCachingInfo: setLastMediaSettingsCachingInfo,
-        getLastMediaSettingsCachingInfo: getLastMediaSettingsCachingInfo,
         getStableBufferTime: getStableBufferTime,
         getCacheLoadThresholdForType: getCacheLoadThresholdForType,
         setCacheLoadThresholdForType: setCacheLoadThresholdForType,

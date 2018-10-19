@@ -472,6 +472,56 @@ describe('MediaPlayer', function () {
                 expect(player.setLowLatencyMaxDriftBeforeSeeking.bind(player, 0.4)).not.to.throw(Constants.BAD_ARGUMENT_ERROR);
             });
 
+            it('Method enableLastBitrateCaching should throw an exception if needed', function () {
+                expect(player.enableLastBitrateCaching.bind(player, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.enableLastBitrateCaching.bind(player, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.enableLastBitrateCaching.bind(player, true, NaN)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.enableLastBitrateCaching.bind(player, true, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.enableLastBitrateCaching.bind(player, true, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+
+                let lastBitrateCachingInfo = settings.get().streaming.lastBitrateCachingInfo;
+
+                expect(lastBitrateCachingInfo.enabled).to.be.equal(true);
+                expect(lastBitrateCachingInfo.ttl).to.be.equal(360000);
+
+                player.enableLastBitrateCaching(false, 40);
+
+                lastBitrateCachingInfo = settings.get().streaming.lastBitrateCachingInfo;
+
+                expect(lastBitrateCachingInfo.enabled).to.be.equal(false);
+                expect(lastBitrateCachingInfo.ttl).to.be.equal(40);
+
+                player.enableLastBitrateCaching(true);
+
+                expect(lastBitrateCachingInfo.enabled).to.be.equal(true);
+                expect(lastBitrateCachingInfo.ttl).to.be.equal(40);
+            });
+
+            it('Method enableLastMediaSettingsCaching should throw an exception if needed', function () {
+                expect(player.enableLastMediaSettingsCaching.bind(player, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.enableLastMediaSettingsCaching.bind(player, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.enableLastMediaSettingsCaching.bind(player, true, NaN)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.enableLastMediaSettingsCaching.bind(player, true, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.enableLastMediaSettingsCaching.bind(player, true, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+
+                let lastMediaSettingsCachingInfo = settings.get().streaming.lastMediaSettingsCachingInfo;
+
+                expect(lastMediaSettingsCachingInfo.enabled).to.be.equal(true);
+                expect(lastMediaSettingsCachingInfo.ttl).to.be.equal(360000);
+
+                player.enableLastMediaSettingsCaching(false, 40);
+
+                lastMediaSettingsCachingInfo = settings.get().streaming.lastMediaSettingsCachingInfo;
+
+                expect(lastMediaSettingsCachingInfo.enabled).to.be.equal(false);
+                expect(lastMediaSettingsCachingInfo.ttl).to.be.equal(40);
+
+                player.enableLastMediaSettingsCaching(true);
+
+                expect(lastMediaSettingsCachingInfo.enabled).to.be.equal(true);
+                expect(lastMediaSettingsCachingInfo.ttl).to.be.equal(40);
+            });
+
             it('Method isDynamic should get dynamic value', function () {
                 let isDynamic = player.isDynamic();
                 expect(isDynamic).to.be.false; // jshint ignore:line
@@ -814,30 +864,6 @@ describe('MediaPlayer', function () {
 
             useSuggestedPresentationDelay = settings.get().streaming.useSuggestedPresentationDelay;
             expect(useSuggestedPresentationDelay).to.be.true; // jshint ignore:line
-        });
-
-        it('should configure LastBitrateCachingInfo', function () {
-            let lastBitrateCachingInfo = mediaPlayerModel.getLastBitrateCachingInfo();
-            expect(lastBitrateCachingInfo.enabled).to.be.true; // jshint ignore:line
-            expect(lastBitrateCachingInfo.ttl).to.equal(360000);
-
-            player.enableLastBitrateCaching(false, 10000);
-
-            lastBitrateCachingInfo = mediaPlayerModel.getLastBitrateCachingInfo();
-            expect(lastBitrateCachingInfo.enabled).to.be.false; // jshint ignore:line
-            expect(lastBitrateCachingInfo.ttl).to.equal(10000);
-        });
-
-        it('should configure lastMediaSettingsCaching', function () {
-            let lastMediaSettingsCaching = mediaPlayerModel.getLastMediaSettingsCachingInfo();
-            expect(lastMediaSettingsCaching.enabled).to.be.true; // jshint ignore:line
-            expect(lastMediaSettingsCaching.ttl).to.equal(360000);
-
-            player.enableLastMediaSettingsCaching(false, 10000);
-
-            lastMediaSettingsCaching = mediaPlayerModel.getLastMediaSettingsCachingInfo();
-            expect(lastMediaSettingsCaching.enabled).to.be.false; // jshint ignore:line
-            expect(lastMediaSettingsCaching.ttl).to.equal(10000);
         });
 
         it('should configure scheduleWhilePaused', function () {

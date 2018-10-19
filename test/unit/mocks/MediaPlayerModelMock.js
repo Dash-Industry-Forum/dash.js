@@ -39,9 +39,6 @@ const DEFAULT_UTC_TIMING_SOURCE = {
     value: 'http://time.akamai.com/?iso&ms'
 };
 
-const DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION = 360000;
-const DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION = 360000;
-
 const DEFAULT_MIN_BUFFER_TIME = 12;
 const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
 
@@ -66,14 +63,6 @@ class MediaPlayerModelMock {
     // Constants
     static get DEFAULT_UTC_TIMING_SOURCE() {
         return DEFAULT_UTC_TIMING_SOURCE;
-    }
-
-    static get DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION() {
-        return DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION;
-    }
-
-    static get DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION() {
-        return DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION;
     }
 
     static get DEFAULT_MIN_BUFFER_TIME() {
@@ -123,14 +112,6 @@ class MediaPlayerModelMock {
     setup() {
         this.UTCTimingSources = [];
         this.fastSwitchEnabled = false;
-        this.lastBitrateCachingInfo = {
-            enabled: true,
-            ttl: DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION
-        };
-        this.lastMediaSettingsCachingInfo = {
-            enabled: true,
-            ttl: DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION
-        };
         this.liveDelay = undefined; // Explicitly state that default is undefined
         this.stableBufferTime = NaN;
         this.xhrWithCredentials = {
@@ -206,17 +187,6 @@ class MediaPlayerModelMock {
 
     getCacheLoadThresholdForType(type) {
         return this.cacheLoadThresholds[type];
-    }
-
-    setLastBitrateCachingInfo(enable, ttl) {
-        this.lastBitrateCachingInfo.enabled = enable;
-        if (ttl !== undefined && !isNaN(ttl) && typeof (ttl) === 'number') {
-            this.lastBitrateCachingInfo.ttl = ttl;
-        }
-    }
-
-    getLastBitrateCachingInfo() {
-        return this.lastBitrateCachingInfo;
     }
 
     setLastMediaSettingsCachingInfo(enable, ttl) {

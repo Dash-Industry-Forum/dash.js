@@ -293,6 +293,32 @@ function Settings() {
              * @memberof module:Settings.Schema
              */
             liveCatchUpPlaybackRate: 0.5,
+            /**
+             * Set to false if you would like to disable the last known bit rate from being stored during playback and used
+             * to set the initial bit rate for subsequent playback within the expiration window.
+             *
+             * The default expiration is one hour, defined in milliseconds. If expired, the default initial bit rate (closest to 1000 kbps) will be used
+             * for that session and a new bit rate will be stored during that session.
+             *
+             * @param {boolean} enable - Will toggle if feature is enabled. True to enable, False to disable.
+             * @param {number=} ttl - (Optional) A value defined in milliseconds representing how long to cache the bit rate for. Time to live.
+             * @default enable = True, ttl = 360000 (1 hour)
+             * @memberof module:Settings.Schema
+             */
+            lastBitrateCachingInfo: { enabled: true, ttl: 360000},
+            /**
+             * Set to false if you would like to disable the last known lang for audio (or camera angle for video) from being stored during playback and used
+             * to set the initial settings for subsequent playback within the expiration window.
+             *
+             * The default expiration is one hour, defined in milliseconds. If expired, the default settings will be used
+             * for that session and a new settings will be stored during that session.
+             *
+             * @param {boolean} enable - Will toggle if feature is enabled. True to enable, False to disable.
+             * @param {number=} [ttl] - (Optional) A value defined in milliseconds representing how long to cache the settings for. Time to live.
+             * @default enable = True, ttl = 360000 (1 hour)
+             * @memberof module:Settings.Schema
+             */
+            lastMediaSettingsCachingInfo: { enabled: true, ttl: 360000},
             abr: {
                 /**
                  * Sets the moving average method used for smoothing throughput estimates. Valid methods are

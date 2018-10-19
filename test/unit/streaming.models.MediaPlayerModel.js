@@ -61,56 +61,6 @@ describe('MediaPlayerModel', function () {
         expect(mediaPlayerModel.addABRCustomRule.bind(mediaPlayerModel, ABRRulesCollection.ABANDON_FRAGMENT_RULES, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
     });
 
-    it('Method setLastBitrateCachingInfo should throw an exception if needed', function () {
-        expect(mediaPlayerModel.setLastBitrateCachingInfo.bind(mediaPlayerModel, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setLastBitrateCachingInfo.bind(mediaPlayerModel, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setLastBitrateCachingInfo.bind(mediaPlayerModel, true, NaN)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setLastBitrateCachingInfo.bind(mediaPlayerModel, true, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setLastBitrateCachingInfo.bind(mediaPlayerModel, true, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-
-        let lastBitrateCachingInfo = mediaPlayerModel.getLastBitrateCachingInfo();
-
-        expect(lastBitrateCachingInfo.enabled).to.be.equal(true);
-        expect(lastBitrateCachingInfo.ttl).to.be.equal(360000);
-
-        mediaPlayerModel.setLastBitrateCachingInfo(false, 40);
-
-        lastBitrateCachingInfo = mediaPlayerModel.getLastBitrateCachingInfo();
-
-        expect(lastBitrateCachingInfo.enabled).to.be.equal(false);
-        expect(lastBitrateCachingInfo.ttl).to.be.equal(40);
-
-        mediaPlayerModel.setLastBitrateCachingInfo(true);
-
-        expect(lastBitrateCachingInfo.enabled).to.be.equal(true);
-        expect(lastBitrateCachingInfo.ttl).to.be.equal(40);
-    });
-
-    it('Method setLastMediaSettingsCachingInfo should throw an exception if needed', function () {
-        expect(mediaPlayerModel.setLastMediaSettingsCachingInfo.bind(mediaPlayerModel, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setLastMediaSettingsCachingInfo.bind(mediaPlayerModel, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setLastMediaSettingsCachingInfo.bind(mediaPlayerModel, true, NaN)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setLastMediaSettingsCachingInfo.bind(mediaPlayerModel, true, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setLastMediaSettingsCachingInfo.bind(mediaPlayerModel, true, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-
-        let lastMediaSettingsCachingInfo = mediaPlayerModel.getLastMediaSettingsCachingInfo();
-
-        expect(lastMediaSettingsCachingInfo.enabled).to.be.equal(true);
-        expect(lastMediaSettingsCachingInfo.ttl).to.be.equal(360000);
-
-        mediaPlayerModel.setLastMediaSettingsCachingInfo(false, 40);
-
-        lastMediaSettingsCachingInfo = mediaPlayerModel.getLastMediaSettingsCachingInfo();
-
-        expect(lastMediaSettingsCachingInfo.enabled).to.be.equal(false);
-        expect(lastMediaSettingsCachingInfo.ttl).to.be.equal(40);
-
-        mediaPlayerModel.setLastMediaSettingsCachingInfo(true);
-
-        expect(lastMediaSettingsCachingInfo.enabled).to.be.equal(true);
-        expect(lastMediaSettingsCachingInfo.ttl).to.be.equal(40);
-    });
-
     it('should configure LiveDelay', function () {
         const s = { streaming: { liveDelay: 5 }};
         settings.update(s);

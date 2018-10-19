@@ -248,7 +248,7 @@ function MediaPlayer() {
 
         textController = TextController(context).getInstance();
         domStorage = DOMStorage(context).getInstance({
-            mediaPlayerModel: mediaPlayerModel
+            settings: settings
         });
 
         adapter.setConfig({
@@ -1320,7 +1320,14 @@ function MediaPlayer() {
      *
      */
     function enableLastBitrateCaching(enable, ttl) {
-        mediaPlayerModel.setLastBitrateCachingInfo(enable, ttl);
+        if (typeof enable !== 'boolean' || (ttl !== undefined && (typeof ttl !== 'number' || isNaN(ttl)))) {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
+        let s = { streaming: { lastBitrateCachingInfo: {enabled: enable}}};
+        if (ttl !== undefined) {
+            s.streaming.lastBitrateCachingInfo.ttl = ttl;
+        }
+        settings.update(s);
     }
 
     /**
@@ -1339,7 +1346,14 @@ function MediaPlayer() {
      *
      */
     function enableLastMediaSettingsCaching(enable, ttl) {
-        mediaPlayerModel.setLastMediaSettingsCachingInfo(enable, ttl);
+        if (typeof enable !== 'boolean' || (ttl !== undefined && (typeof ttl !== 'number' || isNaN(ttl)))) {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
+        let s = { streaming: { lastMediaSettingsCachingInfo: {enabled: enable}}};
+        if (ttl !== undefined) {
+            s.streaming.lastMediaSettingsCachingInfo.ttl = ttl;
+        }
+        settings.update(s);
     }
 
     /**
