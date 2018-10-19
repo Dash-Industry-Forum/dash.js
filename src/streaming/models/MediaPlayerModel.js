@@ -37,13 +37,10 @@ from '../vo/metrics/HTTPRequest';
 import Constants from '../constants/Constants';
 import ABRRulesCollection from '../rules/abr/ABRRulesCollection';
 import Settings from '../../core/Settings';
-import { checkParameterType, checkIsVideoOrAudioType } from '../utils/SupervisorTools';
+import { checkParameterType} from '../utils/SupervisorTools';
 
 const DEFAULT_MIN_BUFFER_TIME = 12;
 const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
-
-const CACHE_LOAD_THRESHOLD_VIDEO = 50;
-const CACHE_LOAD_THRESHOLD_AUDIO = 5;
 
 const FRAGMENT_RETRY_ATTEMPTS = 3;
 const FRAGMENT_RETRY_INTERVAL = 1000;
@@ -67,8 +64,7 @@ function MediaPlayerModel() {
         retryAttempts,
         retryIntervals,
         xhrWithCredentials,
-        customABRRule,
-        cacheLoadThresholds;
+        customABRRule;
 
     const DEFAULT_UTC_TIMING_SOURCE = {
             scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
@@ -103,10 +99,6 @@ function MediaPlayerModel() {
             [HTTPRequest.INDEX_SEGMENT_TYPE]:               FRAGMENT_RETRY_INTERVAL,
             [HTTPRequest.OTHER_TYPE]:                       FRAGMENT_RETRY_INTERVAL
         };
-
-        cacheLoadThresholds = {};
-        cacheLoadThresholds[Constants.VIDEO] = CACHE_LOAD_THRESHOLD_VIDEO;
-        cacheLoadThresholds[Constants.AUDIO] = CACHE_LOAD_THRESHOLD_AUDIO;
     }
 
     //TODO Should we use Object.define to have setters/getters? makes more readable code on other side.
@@ -163,16 +155,6 @@ function MediaPlayerModel() {
             return getLiveDelay() * 0.6;
         }
         return !isNaN(settings.get().streaming.stableBufferTime) ? settings.get().streaming.stableBufferTime : settings.get().streaming.fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
-    }
-
-    function setCacheLoadThresholdForType(type, value) {
-        checkParameterType(value, 'number');
-        checkIsVideoOrAudioType(type);
-        cacheLoadThresholds[type] = value;
-    }
-
-    function getCacheLoadThresholdForType(type) {
-        return cacheLoadThresholds[type];
     }
 
     function setRetryAttemptsForType(type, value) {
@@ -266,8 +248,6 @@ function MediaPlayerModel() {
         addABRCustomRule: addABRCustomRule,
         removeABRCustomRule: removeABRCustomRule,
         getStableBufferTime: getStableBufferTime,
-        getCacheLoadThresholdForType: getCacheLoadThresholdForType,
-        setCacheLoadThresholdForType: setCacheLoadThresholdForType,
         setRetryAttemptsForType: setRetryAttemptsForType,
         getRetryAttemptsForType: getRetryAttemptsForType,
         setRetryIntervalForType: setRetryIntervalForType,

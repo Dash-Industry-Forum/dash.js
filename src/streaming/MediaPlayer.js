@@ -1872,7 +1872,11 @@ function MediaPlayer() {
      * @instance
      */
     function setCacheLoadThresholdForType(type, value) {
-        mediaPlayerModel.setCacheLoadThresholdForType(type, value);
+        checkParameterType(value, 'number');
+        checkIsVideoOrAudioType(type);
+        const s = { streaming: { cacheLoadThresholds: {}}};
+        s.streaming.cacheLoadThresholds[type] = value;
+        settings.update(s);
     }
 
     /**

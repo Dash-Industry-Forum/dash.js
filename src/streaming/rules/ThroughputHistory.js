@@ -52,7 +52,6 @@ function ThroughputHistory(config) {
     const EWMA_LATENCY_SLOW_HALF_LIFE_COUNT = 2;
     const EWMA_LATENCY_FAST_HALF_LIFE_COUNT = 1;
 
-    const mediaPlayerModel = config.mediaPlayerModel;
     const settings = config.settings;
 
     let throughputDict,
@@ -72,9 +71,9 @@ function ThroughputHistory(config) {
 
     function isCachedResponse(mediaType, latencyMs, downloadTimeMs) {
         if (mediaType === Constants.VIDEO) {
-            return downloadTimeMs < mediaPlayerModel.getCacheLoadThresholdForType(Constants.VIDEO);
+            return downloadTimeMs < settings.get().streaming.cacheLoadThresholds[Constants.VIDEO];
         } else if (mediaType === Constants.AUDIO) {
-            return downloadTimeMs < mediaPlayerModel.getCacheLoadThresholdForType(Constants.AUDIO);
+            return downloadTimeMs < settings.get().streaming.cacheLoadThresholds[Constants.AUDIO];
         }
     }
 

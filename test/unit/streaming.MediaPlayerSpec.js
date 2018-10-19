@@ -522,6 +522,14 @@ describe('MediaPlayer', function () {
                 expect(lastMediaSettingsCachingInfo.ttl).to.be.equal(40);
             });
 
+            it('Method setCacheLoadThresholdForType should throw an exception', function () {
+                expect(player.setCacheLoadThresholdForType.bind(player, Constants.AUDIO, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setCacheLoadThresholdForType.bind(player, Constants.AUDIO, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setCacheLoadThresholdForType.bind(player, true, 5)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setCacheLoadThresholdForType.bind(player, 1, 5)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setCacheLoadThresholdForType.bind(player, 'text', 5)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+            });
+
             it('Method isDynamic should get dynamic value', function () {
                 let isDynamic = player.isDynamic();
                 expect(isDynamic).to.be.false; // jshint ignore:line
@@ -1021,20 +1029,20 @@ describe('MediaPlayer', function () {
         });
 
         it('should configure cacheLoadThresholds', function () {
-            let cacheLoadThresholdForVideo = mediaPlayerModel.getCacheLoadThresholdForType(Constants.VIDEO);
+            let cacheLoadThresholdForVideo = settings.get().streaming.cacheLoadThresholds[Constants.VIDEO];
             expect(cacheLoadThresholdForVideo).to.equal(50);
 
             player.setCacheLoadThresholdForType(Constants.VIDEO, 10);
 
-            cacheLoadThresholdForVideo = mediaPlayerModel.getCacheLoadThresholdForType(Constants.VIDEO);
+            cacheLoadThresholdForVideo = settings.get().streaming.cacheLoadThresholds[Constants.VIDEO];
             expect(cacheLoadThresholdForVideo).to.equal(10);
 
-            let cacheLoadThresholdForAudio = mediaPlayerModel.getCacheLoadThresholdForType(Constants.AUDIO);
+            let cacheLoadThresholdForAudio = settings.get().streaming.cacheLoadThresholds[Constants.AUDIO];
             expect(cacheLoadThresholdForAudio).to.equal(5);
 
             player.setCacheLoadThresholdForType(Constants.AUDIO, 2);
 
-            cacheLoadThresholdForAudio = mediaPlayerModel.getCacheLoadThresholdForType(Constants.AUDIO);
+            cacheLoadThresholdForAudio = settings.get().streaming.cacheLoadThresholds[Constants.AUDIO];
             expect(cacheLoadThresholdForAudio).to.equal(2);
         });
 

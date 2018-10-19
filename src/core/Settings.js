@@ -319,6 +319,15 @@ function Settings() {
              * @memberof module:Settings.Schema
              */
             lastMediaSettingsCachingInfo: { enabled: true, ttl: 360000},
+            /**
+             * For a given media type, the threshold which defines if the response to a fragment
+             * request is coming from browser cache or not.
+             *
+             * @param {number} value Threshold value in milliseconds.
+             * @default 50 milliseconds for video fragment requests; 5 milliseconds for audio fragment requests.
+             * @memberof module:Settings.Schema
+             */
+            cacheLoadThresholds: {video: 50, audio: 5},
             abr: {
                 /**
                  * Sets the moving average method used for smoothing throughput estimates. Valid methods are

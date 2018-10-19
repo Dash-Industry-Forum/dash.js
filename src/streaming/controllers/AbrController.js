@@ -103,7 +103,6 @@ function AbrController() {
         eventBus.on(Events.PERIOD_SWITCH_COMPLETED, createAbrRulesCollection, this);
 
         throughputHistory = throughputHistory || ThroughputHistory(context).create({
-            mediaPlayerModel: mediaPlayerModel,
             settings: settings
         });
     }
